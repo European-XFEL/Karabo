@@ -149,8 +149,9 @@ class DeviceServerBase(SignalSlotable):
         yield from self.scanPluginsOnce()
         self.updateInstanceInfo(self.deviceClassesHash())
 
-        self.logger.info("Starting Karabo DeviceServer on host: %s",
-                         self.hostName)
+        self.logger.info("Starting Karabo DeviceServer on host "
+                         f"{self.hostName}, topic {get_event_loop().topic}")
+
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
 
