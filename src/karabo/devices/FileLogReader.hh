@@ -141,6 +141,9 @@ namespace karabo {
             virtual void slotGetConfigurationFromPast(const std::string &deviceId,
                                                       const std::string &timepoint) override;
 
+            void slotGetConfigurationFromPastImpl(const std::string& deviceId, const std::string& timepoint,
+                                                  SignalSlotable::AsyncReply& reply);
+
         private:
 
             /**
