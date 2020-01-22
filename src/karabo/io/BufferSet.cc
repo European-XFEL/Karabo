@@ -210,7 +210,7 @@ namespace karabo {
             os << "\tBuffer sizes ...\t" << toString(size_vec) << '\n';
 
             os << "\tNon-copied buffers...\t" << toString(contentType_vec) << '\n';
-            os << "\tSize of buffer group is\t" << bs.m_buffers.size() << '\n';
+            os << "\tSize of buffer group is\t" << bs.m_buffers.size() << ", total size is " << bs.totalSize() << '\n';
             os << "\tBuffer content ...\n";
             std::vector<size_t> badBuffers;
             size_t i = 0;
