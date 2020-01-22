@@ -532,16 +532,21 @@ class EventLoop(SelectorEventLoop):
 
     def __init__(self, topic=None):
         super().__init__(selector=AlarmSelector())
+        self.connection = None
         if EventLoop.global_loop is not None:
             raise RuntimeError("there can only be one Karabo event loop")
         EventLoop.global_loop = self
+
         if topic is not None:
             self.topic = topic
         elif "KARABO_BROKER_TOPIC" in os.environ:
             self.topic = os.environ["KARABO_BROKER_TOPIC"]
         else:
             self.topic = getpass.getuser()
-        self.connection = None
+        if self.topic.endswith("_beats"):
+            raise RuntimeError(f"Topic ('{self.topic}') must not end with "
+                               f"'_beats'")
+
         self.changedFutures = set()  # call if some property changes
         self.set_default_executor(ThreadPoolExecutor(200))
         self.set_exception_handler(EventLoop.exceptionHandler)
