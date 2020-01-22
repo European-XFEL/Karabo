@@ -33,6 +33,7 @@ namespace karabo {
 
         /// Milliseconds of timeout when asking for validity of my id at startup:
         const int msPingTimeoutInIsValidInstanceId = 1000;
+        const char* beatsTopicSuffix = "_beats";
 
         // Static initializations
         boost::mutex SignalSlotable::m_uuidGeneratorMutex;
@@ -362,7 +363,7 @@ namespace karabo {
                                             bind_weak(&SignalSlotable::consumerErrorNotifier, this,
                                                       std::string(), _1, _2));
             ensureInstanceIdIsValid(m_instanceId);
-            KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id " << m_instanceId;
+            KARABO_LOG_FRAMEWORK_INFO << "Instance starts up in topic '" << getTopic() << "' as '" << m_instanceId << "'";
             m_randPing = 0; // Allows to answer on slotPing with argument rand = 0.
             registerForShortcutMessaging();
             startPerformanceMonitor();
@@ -977,7 +978,7 @@ namespace karabo {
             Signal::Pointer heartbeatSignal = boost::make_shared<Signal>(this, m_heartbeatProducerChannel,
                                                                          m_instanceId, "signalHeartbeat",
                                                                          KARABO_PUB_PRIO, KARABO_SYS_TTL);
-            heartbeatSignal->setTopic(m_topic + "_beats");
+            heartbeatSignal->setTopic(m_topic + beatsTopicSuffix);
             storeSignal("signalHeartbeat", heartbeatSignal);
 
 
@@ -1027,7 +1028,7 @@ namespace karabo {
 
         void SignalSlotable::trackAllInstances() {
             m_trackAllInstances = true;
-            m_heartbeatConsumerChannel = m_connection->createConsumer(m_topic + "_beats",
+            m_heartbeatConsumerChannel = m_connection->createConsumer(m_topic + beatsTopicSuffix,
                                                                       "signalFunction = 'signalHeartbeat'");
             m_heartbeatConsumerChannel->startReading(bind_weak(&SignalSlotable::onHeartbeatMessage, this, _1, _2),
                                                      bind_weak(&SignalSlotable::consumerErrorNotifier, this,
@@ -2804,12 +2805,27 @@ namespace karabo {
 
 
         void SignalSlotable::setTopic(const std::string& topic) {
+            // Set topic as given as argument.
+            // If empty, look for environment variables KARABO_BROKER_TOPIC and USER - the former has precedence.
             if (topic.empty()) {
                 m_topic = "karabo";
-                char* env = getenv("USER");
-                if (env != 0) m_topic = string(env);
-                env = getenv("KARABO_BROKER_TOPIC");
-                if (env != 0) m_topic = string(env);
+                char* env = getenv("KARABO_BROKER_TOPIC");
+                if (env != 0 && strlen(env) > 0) {
+                    m_topic = env;
+                } else {
+                    env = getenv("USER");
+                    if (env != 0 && strlen(env) > 0) {
+                        m_topic = string(env);
+                    }
+                }
+            } else {
+                m_topic = topic;
+            }
+
+            // Exclude what is reserved for heart beats
+            if (boost::algorithm::ends_with(m_topic, beatsTopicSuffix)) {
+                throw KARABO_SIGNALSLOT_EXCEPTION(("Topic ('" + (m_topic + "') must not end with '")
+                                                   += beatsTopicSuffix) += "'");
             }
         }
 
