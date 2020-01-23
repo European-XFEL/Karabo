@@ -6,5 +6,8 @@ The **most relevant improvements**, fixes and changes are:
 
 - GUI: The EditableOptionsBox has been deprecated and is no longer supported
 
+- Bound API: Method 'validate' of Validator object returns tuple: (flag, error, validated)
+             In case 'flag' is false, it would have raised an exception before.
+
 Detailed Merge-Log
 ==================
