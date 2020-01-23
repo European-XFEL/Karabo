@@ -31,6 +31,14 @@ class Schema_Injection_TestCase(unittest.TestCase):
         device.set("injectedInt32", 5)
         self.assertEqual(device.get("injectedInt32"), 5)
 
+        # Test validation exception to raise while attempting to set property
+        # not defined in the schema, for example "unknownProperty" ...
+        with self.assertRaises(RuntimeError):
+            # attempt to set "unknownProperty"
+            device.set("unknownProperty", 42)
+        currentConfig = device.getCurrentConfiguration()
+        self.assertNotIn("unknownProperty", currentConfig.getPaths())
+
         # Test that injecting a new attribute keeps the set value
         schema = Schema()
         (
