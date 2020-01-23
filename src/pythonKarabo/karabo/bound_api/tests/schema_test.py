@@ -675,12 +675,16 @@ class Schema_TestCase(unittest.TestCase):
             schema = Configurator(SomeClass).getSchema("SomeClassId")
             validator = Validator()
             configuration = Hash('somelist', [])
-            validated = validator.validate(schema, configuration)
+            ok, error, validated = validator.validate(schema, configuration)
+            if not ok:
+                raise RuntimeError(error)
             somelist = validated['somelist']
             somelist.append(99)
             somelist.append(55)
             configuration['somelist'] = somelist
-            validated = validator.validate(schema, configuration)
+            ok, error, validated = validator.validate(schema, configuration)
+            if not ok:
+                raise RuntimeError(error)
             self.assertIsNotNone(validated)
         except Exception as e:
             self.fail("test_vectorElement exception 2: " + str(e))
