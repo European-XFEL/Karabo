@@ -65,6 +65,7 @@ void GuiVersion_Test::appTestRunner() {
     testExecute();
     testReconfigure();
     testDeviceConfigUpdates();
+    testDisconnect();
 
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
@@ -566,4 +567,47 @@ void GuiVersion_Test::testDeviceConfigUpdates() {
     CPPUNIT_ASSERT(success.first);
 
     std::clog << "testDeviceConfigUpdates: OK" << std::endl;
+}
+
+
+void GuiVersion_Test::testDisconnect() {
+    std::clog << "testDisconnect: " << std::flush;
+
+    resetClientConnection();
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+
+    // Use server to send message (instead of creating an extra SignalSlotable for that)
+    // until DeviceClient understands slots with arguments.
+
+    //
+    // Test bad client identifier
+    //
+    bool disconnected = true;
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("testGuiServerDevice", "slotDisconnectClient", "BLAnoPORT")
+                            .timeout(1000).receive(disconnected));
+    CPPUNIT_ASSERT(!disconnected);
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+
+    //
+    // Test valid client identifier
+    //
+    Hash result;
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("testGuiServerDevice", "slotDumpDebugInfo", Hash("clients", 0))
+                            .timeout(1000).receive(result));
+    std::vector<std::string> keys;
+    result.getKeys(keys);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Expected single key for one client only, but there are " + toString(keys),
+                                 1ul, result.size()); // Just a single client
+    std::string clientIdentifier = result.begin()->getKey();
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("testGuiServerDevice", "slotDisconnectClient", clientIdentifier)
+                            .timeout(1000).receive(disconnected));
+    CPPUNIT_ASSERT_MESSAGE("Failed to disconnect '" + clientIdentifier + "'", disconnected);
+    // Wait until disconnected (disconnection delayed by one second in GUI server)
+    int timeout = 2000;
+    while (m_tcpAdapter->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+        timeout -= 50;
+    }
+    CPPUNIT_ASSERT(!m_tcpAdapter->connected());
+    std::clog << "OK" << std::endl;
 }
