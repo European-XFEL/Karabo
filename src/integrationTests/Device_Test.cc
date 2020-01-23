@@ -112,6 +112,8 @@ public:
         KARABO_SLOT(slotToggleState, const Hash);
 
         KARABO_SLOT(node_slot);
+
+        KARABO_SLOT(slotSetUnknownProperty);
     }
 
 
@@ -153,6 +155,12 @@ public:
 
     void node_slot() {
         // Nothing to do!
+    }
+
+
+    void slotSetUnknownProperty() {
+        // attempt to set a property which is not defined in the schema
+        this->set("unknownProperty", 42);
     }
 };
 
@@ -217,6 +225,26 @@ void Device_Test::appTestRunner() {
     testNodedSlot();
     testGetSet();
     testUpdateState();
+    testSetUnknownProperty();
+}
+
+
+void Device_Test::testSetUnknownProperty() {
+    // This test expects to receive RemoteExption while attempting to set "unknowProperty"
+
+    // Setup a communication helper
+    auto sigSlotA = m_signalSlotable;
+
+    bool remoteExcept = false;
+    const int timeOutInMs = 1000;
+    try {
+        sigSlotA->request("TestDevice", "slotSetUnknownProperty").timeout(timeOutInMs).receive();
+        remoteExcept = false;
+    } catch (const karabo::util::RemoteException& re) {
+        CPPUNIT_ASSERT(re.detailedMsg().find("Bad parameter setting attempted, validation reports: ") != std::string::npos);
+        remoteExcept = true;
+    }
+    CPPUNIT_ASSERT(remoteExcept);
 }
 
 
