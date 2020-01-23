@@ -191,13 +191,31 @@ namespace karabo {
                                const std::string &valueAsString);
 
            /**
-            * Unescapes a logged string. A logged string has its new lines mangled, then its double slashes
-            * escaped and then its double quotes scaped. This functions applies those transformations in the
-            * reverse order.
-            * @param loggedStr The string as it has been escaped by the Influx Logger.
-            * @return The unescaped original string.
-            */
+             * Unescapes a logged string. A logged string has its new lines mangled, then its double slashes
+             * escaped and then its double quotes scaped. This functions applies those transformations in the
+             * reverse order.
+             * @param loggedStr The string as it has been escaped by the Influx Logger.
+             * @return The unescaped original string.
+             */
             std::string unescapeLoggedString(const std::string &loggedStr);
+
+            /**
+             * Handles a given Http response whenever it indicates an error.
+             *
+             * In the InfluxDb client <-> server communication context, any response with a status
+             * code greater or equal to 300 is considered an error and will be handled by this method.
+             *
+             * The error handling consists of sending the appropriate error reply to the caller of
+             * the InfluxLogReader slot affected by the error.
+             *
+             * @param httpResponse the response that potentially indicates an error.
+             * @param asyncReply the reply to be sent to the caller of the slot where the error
+             *                   happened.
+             * @return true if the httpResponse indicated an error that has been handled. false if
+             *              the httpResponse didn't indicate an error.
+             */
+            bool handleHttpResponseError(const karabo::net::HttpResponse &httpResponse,
+                                         const karabo::xms::SignalSlotable::AsyncReply &asyncReply);
 
             karabo::net::InfluxDbClient::Pointer m_influxClient;
             std::string m_durationUnit;

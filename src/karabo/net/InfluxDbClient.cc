@@ -34,6 +34,7 @@ namespace karabo {
         const unsigned int InfluxDbClient::k_connTimeoutMs = 1500u;
 
 
+        // TODO: pass the shared pointer to the DbClient as an argument and remove InfluxDbClient::setDbClient(...)
         InfluxDbClient::InfluxDbClient(const karabo::util::Hash& input)
             : m_url(input.get<std::string>("url"))
             , m_dbConnection()
@@ -47,7 +48,12 @@ namespace karabo {
             , m_registeredInfluxResponseHandlers()
             , m_dbname(input.get<std::string>("dbname"))
             , m_durationUnit(input.get<std::string>("durationUnit"))
-            , m_currentUuid("") {
+            , m_currentUuid("")
+            , m_bufferMutex()
+            , m_buffer()
+            , m_bufferLen(0)
+            , m_nPoints(0)
+            , m_startTimePoint() {
             const boost::tuple<std::string, std::string,
                     std::string, std::string, std::string> parts = karabo::net::parseUrl(m_url);
             m_hostname = parts.get<1>();
@@ -77,10 +83,10 @@ namespace karabo {
 
 
         void InfluxDbClient::tryNextRequest() {
-            if (!m_active) {         // activate processing
+            if (!m_active) { // activate processing
+                m_active = true;
                 m_requestQueue.front()();
                 m_requestQueue.pop();
-                m_active = true;
             }
         }
 
@@ -150,9 +156,69 @@ namespace karabo {
 
 
         void InfluxDbClient::writeDb(const std::string& message) {
-            auto datap = boost::make_shared<std::vector<char> >(std::vector<char>(message.begin(), message.end()));
-            m_dbChannel->writeAsyncVectorPointer(datap, bind_weak(&InfluxDbClient::onDbWrite, this, _1, datap));
-            KARABO_LOG_FRAMEWORK_DEBUG << "writeDb: \n" << message;
+            if (m_dbChannel) {
+                auto datap = boost::make_shared<std::vector<char> >(std::vector<char>(message.begin(), message.end()));
+                m_dbChannel->writeAsyncVectorPointer(datap, bind_weak(&InfluxDbClient::onDbWrite, this, _1, datap));
+                KARABO_LOG_FRAMEWORK_DEBUG << "writeDb: \n" << message;
+            } else {
+                // TODO: Add a fallback - save message to file in case there's no channel to the database anymore.
+                KARABO_LOG_FRAMEWORK_ERROR << "No channel available for communicating will InfluxDb.\n"
+                        << "Message that couldn't be saved:\n" << message;
+            }
+        }
+
+
+        void InfluxDbClient::enqueueQuery(const std::string& line) {
+            boost::mutex::scoped_lock lock(m_bufferMutex);
+            m_buffer << line;
+            ++m_nPoints;
+            std::streampos readpos = m_buffer.tellg();
+            m_buffer.seekg(0, std::ios::end);
+            m_bufferLen = m_buffer.tellg();
+            m_buffer.seekg(readpos);
+        }
+
+
+        void InfluxDbClient::flushOne(std::uint32_t maxBatchPoints,
+                                      std::uint32_t flushInterval) {
+             boost::mutex::scoped_lock lock(m_bufferMutex);
+            // Check when we need to flush ...
+            // ... by size ( number of points) ...
+            if (m_nPoints >= maxBatchPoints) {
+                flushBatchImpl();
+            }
+            if (m_nPoints == 0) return;
+            // ... by time ...
+            auto endTimePoint = std::chrono::high_resolution_clock::now();
+            auto dur = endTimePoint - m_startTimePoint;
+            auto elapsedTimeInSeconds = std::chrono::duration_cast<std::chrono::seconds>(dur).count();
+            if (elapsedTimeInSeconds >= flushInterval) {
+                flushBatchImpl();
+            }
+        }
+
+
+        void InfluxDbClient::flushBatch(const InfluxResponseHandler &respHandler) {
+            boost::mutex::scoped_lock lock(m_bufferMutex);
+            flushBatchImpl(respHandler);
+        }
+
+        void InfluxDbClient::flushBatchImpl(const InfluxResponseHandler &respHandler) {
+            if (m_bufferLen > 0 && m_nPoints > 0) {
+                // Post accumulated batch ...
+                postWriteDb(m_buffer.str(), [respHandler](const HttpResponse & response) {
+                    if (response.code != 204) {
+                        KARABO_LOG_FRAMEWORK_ERROR << "Code " << response.code << " " << response.message;
+                    }
+                    if (respHandler) {
+                        respHandler(response);
+                    }
+                });
+            }
+            m_buffer.str(""); // clear buffer stream
+            m_bufferLen = 0;
+            m_nPoints = 0;
+            m_startTimePoint = std::chrono::high_resolution_clock::now();
         }
 
 
@@ -161,8 +227,8 @@ namespace karabo {
                                          const AsyncHandler& hook) {
             if (ec) {
                 std::ostringstream oss;
-                oss << "Connection to InfluxDB failed: code #" << ec.value() << " -- " << ec.message();
-                KARABO_LOG_FRAMEWORK_WARN << oss.str();
+                oss << "Connection to InfluxDB failed: code #" << ec.value() << ", message: '" << ec.message() << "'";
+                KARABO_LOG_FRAMEWORK_ERROR << oss.str();
                 {
                     boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
                     m_dbChannel.reset();
@@ -348,8 +414,21 @@ namespace karabo {
             if (!this->connectWait(k_connTimeoutMs)) {
                 std::ostringstream oss;
                 oss << "No connection to InfluxDb server available. "
-                    << "Timed out after waiting for " << k_connTimeoutMs << " ms.";
-                throw KARABO_TIMEOUT_EXCEPTION(oss.str());
+                        << "Timed out after waiting for " << k_connTimeoutMs << " ms.";
+                const std::string errMsg = oss.str();
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                // Synthetizes a 503 (Service Unavailable) response and sends it back to the client.
+                if (action != nullptr) {
+                    HttpResponse resp;
+                    resp.code = 503;
+                    resp.payload = errMsg;
+                    resp.contentType = "text/plain";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Will call action with response:\n" << resp;
+                    action(resp);
+                }
+                // Resets m_active to allow the m_requestQueue consumption to keep going.
+                m_active = false;
+                return;
             }
             m_currentUuid.assign(generateUUID());
             std::ostringstream oss;
@@ -370,7 +449,9 @@ namespace karabo {
                 prom.set_value();
             });
             auto status = fut.wait_for(std::chrono::milliseconds(millis));
-            if (status != std::future_status::ready) return false;
+            if (status != std::future_status::ready) {
+                return false;
+            }
             fut.get();
             return true;
         }
