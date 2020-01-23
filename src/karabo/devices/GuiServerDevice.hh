@@ -65,7 +65,7 @@ namespace karabo {
                 std::vector<karabo::util::Hash> updates;
             };
 
-            typedef boost::weak_ptr<karabo::net::Channel> WeakChannelPointer;
+            typedef karabo::net::Channel::WeakPointer WeakChannelPointer;
             // There is no way to have a reliable unordered_set of weak pointers...
             // Before C++14 we cannot use unordered_map since that does not (yet) guarantee that we can erase
             // entries while looping over it.
@@ -191,14 +191,6 @@ namespace karabo {
              * @param channel
              */
             void onError(const karabo::net::ErrorCode& e, WeakChannelPointer channel);
-
-            /**
-             * The GUI-server will attempt to close the connection on this channels,
-             * and perform a clean-up of members related to this channel.
-             *
-             * @param channel
-             */
-            void disconnectChannel(WeakChannelPointer channel);
 
             /**
              * an error further specified by hash occurred on a connection to a GUI
@@ -601,6 +593,13 @@ namespace karabo {
             void slotProjectUpdate(const karabo::util::Hash& info, const std::string& instanceId);
 
             void slotDumpDebugInfo(const karabo::util::Hash& info);
+
+            /**
+             * Slot to force disconnection of client. Reply is whether specified client found.
+             *
+             * @param client string to identify client, as can be received via slotDumpDebugInfo(Hash("clients", 0))
+             */
+            void slotDisconnectClient(const std::string& client);
 
             /**
              * Called from instanceNewHandler to handle schema attribute updates which
