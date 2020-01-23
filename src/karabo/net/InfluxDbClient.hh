@@ -105,21 +105,25 @@ namespace karabo {
              */
             void postQueryDb(const std::string& statement, const InfluxResponseHandler& action);
 
+            void enqueueQuery(const std::string& line);
+
+            /**
+             * Flushes the contents of the write buffer to the InfluxDb.
+             *
+             * @param respHandler If defined, the handler function will be called with the response
+             * sent by Influx after it accepted and processed the current batch of updates. If not
+             * defined, the flushBatch will work in a call-and-forget mode.
+             */
+            void flushBatch(const InfluxResponseHandler &respHandler = InfluxResponseHandler());
+
+            void flushOne(std::uint32_t maxBatchPoints, std::uint32_t flushInterval);
+
             /**
              * HTTP request "GET /ping ..." to InfluxDB server is registered in internal queue.
              * @param action callback: void(const HttpResponse&) is called when response comes
              *               from InfluxDB server
              */
             void getPingDb(const InfluxResponseHandler& action);
-
-            /**
-             * HTTP request "POST /write ..." to InfluxDB server is registered in internal queue.
-             * @param batch is a bunch of lines following InfluxDB "line protocol" separated by newline
-             * @param action callback is called when acknowledgment (response) comes from InfluxDB
-             *               server.  The callback signature is void(const HttpResponse&).  The success
-             *               error code in HttpResponse structure is 204.
-             */
-            void postWriteDb(const std::string& batch, const InfluxResponseHandler& action);
 
             /**
              * Returns UUID used as Request-ID for HTTP requests
@@ -165,6 +169,17 @@ namespace karabo {
             void getQueryDbTask(const std::string& digest, const InfluxResponseHandler& action);
 
             /**
+             * HTTP request "POST /write ..." to InfluxDB server is registered in internal queue.
+             * @param batch is a bunch of lines following InfluxDB "line protocol" separated by newline ('\n')
+             *        the "line protocol" is detailed at
+             *        https://influxdbcom.readthedocs.io/en/latest/content/docs/v0.9/write_protocols/write_syntax/
+             * @param action callback is called when acknowledgment (response) comes from InfluxDB
+             *               server.  The callback signature is void(const HttpResponse&).  The success
+             *               error code in HttpResponse structure is 204.
+             */
+            void postWriteDb(const std::string& batch, const InfluxResponseHandler& action);
+
+            /**
              * Actual "POST /query ..." is accomplished. Non-blocking call. The connection to InfluxDB
              * has to be established before this call
              */
@@ -204,6 +219,8 @@ namespace karabo {
              */
             void sendToInfluxDb(const std::string& msg, const InfluxResponseHandler& action);
 
+            void flushBatchImpl(const InfluxResponseHandler &respHandler = InfluxResponseHandler());
+
        private:
 
             std::string m_url;
@@ -225,6 +242,11 @@ namespace karabo {
             static boost::uuids::random_generator m_uuidGenerator;
             static const unsigned int k_connTimeoutMs;
             std::string m_currentUuid;
+            boost::mutex m_bufferMutex;
+            std::stringstream m_buffer;
+            std::size_t m_bufferLen;
+            std::uint32_t m_nPoints;
+            std::chrono::high_resolution_clock::time_point m_startTimePoint;
         };
 
     } // namespace net
