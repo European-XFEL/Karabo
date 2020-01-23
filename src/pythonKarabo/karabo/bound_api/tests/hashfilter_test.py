@@ -14,7 +14,7 @@ class HashfilterTestCase(unittest.TestCase):
             schema = Configurator(GraphicsRenderer2).getSchema(
                 "GraphicsRenderer2")
             validator = Validator()
-            config = validator.validate(schema, Hash())
+            _, _, config = validator.validate(schema, Hash())
             result = HashFilter.byTag(schema, config, "KW;KW,BH", ",;")
 
             self.assertFalse("antiAlias" in result)

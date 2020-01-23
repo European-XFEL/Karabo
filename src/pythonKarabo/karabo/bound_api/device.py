@@ -378,9 +378,11 @@ class PythonDevice(NoFsm):
             # Validate first time to assign timestamps
             # Note that invalid property keys are already caught via
             # Configurator(PythonDevice).create in launchPythonDevice below.
-            validated = self.validatorIntern.validate(
+            result, error, validated = self.validatorIntern.validate(
                 self._fullSchema, self._parameters,
                 self.getActualTimestamp())
+            if not result:
+                raise RuntimeError(error)
             self._parameters.merge(validated,
                                    HashMergePolicy.REPLACE_ATTRIBUTES)
 
@@ -600,17 +602,14 @@ class PythonDevice(NoFsm):
                     .getParametersInWarnOrAlarm()
 
                 if validate:
-                    try:
-                        validated = self.validatorIntern \
-                            .validate(self._fullSchema, hash, stamp)
-                    except RuntimeError as e:
-                        # As in C++, just warn. But note that here (in contrast
-                        # to C++) setting a non-existing parameter skips the
-                        # setting of all other parameters in the same hash.
-                        self.log.WARN("Bad parameter setting attempted, ignore"
-                                      " keys " + str(hash.keys())
-                                      + ". Validation reports: " + str(e))
-                        validated = Hash()
+                    result, error, validated = self.validatorIntern.validate(
+                        self._fullSchema, hash, stamp)
+                    if not result:
+                        raise RuntimeError("Bad parameter setting attempted, "
+                                           "ignore keys {}. Validation "
+                                           "reports: {}".format(hash.keys(),
+                                                                error))
+
                     resultingCondition = self._evaluateAndUpdateAlarmCondition(
                         forceUpdate=not prevAlarmParams.empty(),
                         prevParamsInAlarm=prevAlarmParams, silent=False)
@@ -889,8 +888,9 @@ class PythonDevice(NoFsm):
         rules.injectTimestamps = True
         validator = Validator()
         validator.setValidationRules(rules)
-        validated = validator.validate(schema, Hash(),
-                                       self.getActualTimestamp())
+        _, _, validated = validator.validate(schema, Hash(),
+                                             self.getActualTimestamp())
+
         with self._stateChangeLock:
             for path in self._injectedSchema.getPaths():
                 if not (self._staticSchema.has(path) or schema.has(path)):
@@ -934,8 +934,9 @@ class PythonDevice(NoFsm):
         rules.injectTimestamps = True
         validator = Validator()
         validator.setValidationRules(rules)
-        validated = validator.validate(schema, Hash(),
-                                       self.getActualTimestamp())
+        _, _, validated = validator.validate(schema, Hash(),
+                                             self.getActualTimestamp())
+
         with self._stateChangeLock:
             self._stateDependentSchema = {}
             self._injectedSchema += schema
@@ -1436,15 +1437,9 @@ class PythonDevice(NoFsm):
     def _validate(self, unvalidated):
         currentState = self["state"]
         whiteList = self._getStateDependentSchema(currentState)
-
-        try:
-            validated = self.validatorExtern.validate(
+        flag, error, validated = self.validatorExtern.validate(
                 whiteList, unvalidated, self.getActualTimestamp())
-        except RuntimeError as e:
-            errorText = str(e) + " in '" + str(currentState) + "'"
-            return False, errorText, unvalidated
-        self.log.DEBUG("Validated reconfiguration:\n{}".format(validated))
-        return True, "", validated
+        return (flag, error, validated)
 
     def _applyReconfiguration(self, reconfiguration):
 
