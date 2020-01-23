@@ -19,6 +19,7 @@
 #include <nlohmann/json.hpp>
 
 #include "karabo/net/EventLoop.hh"
+#include "karabo/net/HttpResponse.hh"
 #include "karabo/util/Base64.hh"
 #include "karabo/util/ClassInfo.hh"
 #include "karabo/util/DataLogUtils.hh"
@@ -217,6 +218,14 @@ namespace karabo {
         void InfluxLogReader::onDataCountForProperty(const karabo::net::HttpResponse& dataCountResp,
                                                      const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
 
+            bool errorHandled = handleHttpResponseError(dataCountResp, ctxt->aReply);
+
+            if (errorHandled) {
+                // An error happened and has been reported to the slot caller.
+                // Nothing left for the execution of this slot.
+                return;
+            }
+
             nl::json respObj = nl::json::parse(dataCountResp.payload);
             const auto &values = respObj["results"][0]["series"][0]["values"];
             int dataCount = 0;
@@ -279,6 +288,14 @@ namespace karabo {
         void InfluxLogReader::onPropertyValues(const karabo::net::HttpResponse &valuesResp,
                                                const std::string &columnPrefixToRemove,
                                                const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
+
+            bool errorHandled = handleHttpResponseError(valuesResp, ctxt->aReply);
+
+            if (errorHandled) {
+                // An error happened and has been reported to the slot caller.
+                // Nothing left for the execution of this slot.
+                return;
+            }
 
             try {
                 InfluxResultSet influxResult;
@@ -345,6 +362,14 @@ namespace karabo {
         void InfluxLogReader::onLastLoginBeforeTime(const karabo::net::HttpResponse &valueResp,
                                                     const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
 
+            bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
+
+            if (errorHandled) {
+                // An error happened and has been reported to the slot caller.
+                // Nothing left for the execution of this slot.
+                return;
+            }
+
             unsigned long long lastLoginBeforeTime = 0UL;
 
             nl::json respObj = nl::json::parse(valueResp.payload);
@@ -382,6 +407,14 @@ namespace karabo {
 
         void InfluxLogReader::onLastLogoutBeforeTime(const karabo::net::HttpResponse &valueResp,
                                                      const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+
+            bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
+
+            if (errorHandled) {
+                // An error happened and has been reported to the slot caller.
+                // Nothing left for the execution of this slot.
+                return;
+            }
 
             unsigned long long lastLogoutBeforeTime = 0UL;
 
@@ -421,6 +454,13 @@ namespace karabo {
         void InfluxLogReader::onLastSchemaDigestBeforeTime(const karabo::net::HttpResponse &valueResp,
                                                            const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
 
+            bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
+
+            if (errorHandled) {
+                // An error happened and has been reported to the slot caller.
+                // Nothing left for the execution of this slot.
+                return;
+            }
 
             // If no digest is found returns an empty config and schema from this point.
             // Otherwise proceeds to schema retrieval.
@@ -460,6 +500,14 @@ namespace karabo {
 
         void InfluxLogReader::onSchemaForDigest(const karabo::net::HttpResponse &schemaResp,
                                                 const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+
+            bool errorHandled = handleHttpResponseError(schemaResp, ctxt->aReply);
+
+            if (errorHandled) {
+                // An error happened and has been reported to the slot caller.
+                // Nothing left for the execution of this slot.
+                return;
+            }
 
             nl::json respObj = nl::json::parse(schemaResp.payload);
             const auto &value = respObj["results"][0]["series"][0]["values"][0][1];
@@ -538,6 +586,14 @@ namespace karabo {
                                                     const karabo::util::Types::ReferenceType &propType,
                                                     const karabo::net::HttpResponse &propValueResp,
                                                     const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+
+            bool errorHandled = handleHttpResponseError(propValueResp, ctxt->aReply);
+
+            if (errorHandled) {
+                // An error happened and has been reported to the slot caller.
+                // Nothing left for the execution of this slot.
+                return;
+            }
 
             nl::json respObj = nl::json::parse(propValueResp.payload);
             const auto &value = respObj["results"][0]["series"][0]["values"][0][1];
@@ -780,6 +836,29 @@ namespace karabo {
             // It is safe to use substr(1) because fractionalSecondToString fills the remaining positions with zeros.
             epStr << ep.getSeconds() << fract.substr(1);
             return epStr.str();
+        }
+
+
+        bool InfluxLogReader::handleHttpResponseError(const karabo::net::HttpResponse &httpResponse,
+                                                      const karabo::xms::SignalSlotable::AsyncReply &asyncReply) {
+
+            bool errorHandled = false;
+
+            if (httpResponse.code >= 300) {
+                // Some error happened while processing the request.
+                std::ostringstream errMsg;
+                errMsg << "InfluxDb response status code: " << httpResponse.code << ". ";
+                if (httpResponse.payload.empty() && httpResponse.message.empty()) {
+                    errMsg << "Description: Could not process request.";
+                } else {
+                    errMsg << "Response payload: " << httpResponse.payload
+                    << "\nResponse message: " << httpResponse.message;
+                }
+                asyncReply.error(errMsg.str());
+                errorHandled = true;
+            }
+
+            return errorHandled;
         }
 
     } // namespace devices

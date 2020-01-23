@@ -17,6 +17,7 @@ class DataLogging_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST(fileAllTestRunner);
     CPPUNIT_TEST(influxAllTestRunner);
+    CPPUNIT_TEST(testNoInfluxServerHandling);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -48,9 +49,23 @@ private:
     void testLastKnownConfiguration();
     void testCfgFromPastRestart();
 
+    /**
+     * Checks that the Influx logger and reader fail as soon as 
+     * possible when there's no Influx server available. Uses an
+     * invalid url configuration for simulating the scenario of
+     * the Influx server not being available.
+     *
+     * Note: During the test run in the CI machine, the docker
+     * command is not available (the CI test is already executed
+     * in a container), so the karabo-startinfluxdb and
+     * karabo-stopinfluxdb commands cannot be run. That's the
+     * reason behind the forced invalid configuration.
+     */
+    void testNoInfluxServerHandling();
+
     template <class T> void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
 
-    std::pair<bool, std::string> startLoggers(const std::string& loggerType);
+    std::pair<bool, std::string> startLoggers(const std::string& loggerType, bool useInvalidInfluxUrl = false);
 
     const std::string m_server;
     const std::string m_deviceId;
