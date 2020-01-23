@@ -68,7 +68,7 @@ class ValidatorWrap {
 public:
 
 
-    static bp::object validate(Validator& self, const Schema& schema, const Hash& configuration, const bp::object& stamp) {
+    static bp::tuple validate(Validator& self, const Schema& schema, const Hash& configuration, const bp::object& stamp) {
         Hash::Pointer validated = Hash::Pointer(new Hash);
         Timestamp tstamp;
         if (stamp.ptr() != Py_None && bp::extract<karabo::util::Timestamp>(stamp).check()) {
@@ -76,9 +76,8 @@ public:
         }
 
         pair<bool, string> result = self.validate(schema, configuration, *validated, tstamp);
-        if (result.first)
-            return bp::object(validated);
-        throw KARABO_PYTHON_EXCEPTION(result.second);
+        bp::tuple t = bp::make_tuple(result.first, result.second, bp::object(validated));
+        return t;
     }
 
 
