@@ -178,10 +178,9 @@ class Configurator(object):
             return Derived(configuration)
         validated = Hash()
         validator = Validator()
-        try:
-            validated = validator.validate(schema, configuration)
-        except RuntimeError as e:
-            raise RuntimeError("Validation Exception: " + str(e))
+        result, error, validated = validator.validate(schema, configuration)
+        if not result:
+            raise RuntimeError("Validation Exception: {}".format(error))
         return Derived(validated)
 
     def createNode(self, nodename, classid, configuration, validation=True):
