@@ -29,7 +29,7 @@ namespace karabo {
 
         InfluxDeviceData::InfluxDeviceData(const karabo::util::Hash& input)
             : DeviceData(input)
-            , m_this(input.get<InfluxDataLogger*>("this"))
+            , m_dbClient(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientPointer"))
             , m_query()
             , m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin"))
             , m_digest("")
@@ -50,7 +50,8 @@ namespace karabo {
             const std::string& deviceId = m_deviceToBeLogged;
             std::stringstream ss;
             ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\"\n";
-            m_this->enqueueQuery(ss.str());
+            m_dbClient->enqueueQuery(ss.str());
+            m_dbClient->flushBatch();
 
             KARABO_LOG_FRAMEWORK_INFO << "Proxy for \"" << deviceId << "\" is destroyed ...";
         }
@@ -130,7 +131,7 @@ namespace karabo {
                     std::stringstream ss;
                     ss << deviceId << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\"\n";
                     m_pendingLogin = false;
-                    m_this->enqueueQuery(ss.str());
+                    m_dbClient->enqueueQuery(ss.str());
                 }
 
                 logValue(deviceId, path, value, leafNode.getType());
@@ -217,12 +218,13 @@ namespace karabo {
                 m_query << " " << ts;
             }
             m_query << "\n";
-            m_this->enqueueQuery(m_query.str());
+            m_dbClient->enqueueQuery(m_query.str());
             m_query.str(""); // Clear content of stringstream
         }
 
 
-        void InfluxDeviceData::handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& devicedata) {
+        void InfluxDeviceData::handleSchemaUpdated(const karabo::util::Schema& schema,
+                                                   const DeviceData::Pointer& devicedata) {
             m_currentSchema = schema;
 
             // Use Binary serializer as soon as we encode into Base64:
@@ -243,7 +245,38 @@ namespace karabo {
 
             std::ostringstream oss;
             oss << "SELECT COUNT(*) FROM \"" << m_deviceToBeLogged << "__SCHEMAS\" WHERE digest='\"" << m_digest << "\"'";
-            m_this->m_client->getQueryDb(oss.str(), bind_weak(&InfluxDataLogger::checkSchemaInDb, m_this, devicedata, _1));
+            m_dbClient->getQueryDb(oss.str(), bind_weak(&InfluxDeviceData::checkSchemaInDb, this, _1));
+        }
+
+
+        void InfluxDeviceData::checkSchemaInDb(const HttpResponse& o) {
+            //TODO: Do error handling ...
+            //...
+            std::stringstream ss;
+            if (m_pendingLogin) {
+                ss << m_deviceToBeLogged << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\"\n";
+                m_pendingLogin = false;
+            }
+
+            ss << m_deviceToBeLogged << "__EVENTS,type=\"SCHEMA\" schema_digest=\"" << m_digest << "\"\n";
+
+            nl::json j = nl::json::parse(o.payload);
+            auto count = j["results"][0]["series"][0]["values"][0][1];
+            if (count.is_null()) {
+                // digest is not found:  json is '{"results":[{"statement_id":0}]}'
+                // Encode serialized schema into Base64
+                const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (m_archive.data());
+                std::string base64Schema = base64Encode(uarchive, m_archive.size());
+                // and write to SCHEMAS table ...
+                ss << m_deviceToBeLogged << "__SCHEMAS," << "digest=\""
+                        << m_digest << "\" schema=\"" << base64Schema << "\"\n";
+                // Flush what was accumulated before ...
+                m_dbClient->flushBatch();
+            }
+            // digest already exists!
+            KARABO_LOG_FRAMEWORK_DEBUG << "checkSchemaInDb ...\n" << o.payload;
+            m_dbClient->enqueueQuery(ss.str());
+            m_dbClient->flushBatch();
         }
 
 
@@ -267,12 +300,7 @@ namespace karabo {
 
         InfluxDataLogger::InfluxDataLogger(const karabo::util::Hash& input)
             : DataLogger(input)
-            , m_bufferMutex()
-            , m_buffer()
-            , m_bufferLen(0)
-            , m_topic(getTopic())
-            , m_nPoints(0)
-            , m_startTimePoint() {
+            , m_topic(getTopic()) {
             Hash config("url", input.get<std::string>("url"), "dbname", m_topic, "durationUnit", DUR);
             m_client = boost::make_shared<InfluxDbClient>(config);
         }
@@ -282,31 +310,20 @@ namespace karabo {
         }
 
 
-	void InfluxDataLogger::preDestruction() {
+        void InfluxDataLogger::preDestruction() {
+
             DataLogger::preDestruction();
+
             std::promise<void> prom;
             std::future<void> fut = prom.get_future();
-            {
-                boost::mutex::scoped_lock lock(m_bufferMutex);
+            m_client->flushBatch([&prom](const HttpResponse & resp) {
+                prom.set_value();
+            });
 
-                if (m_bufferLen > 0 && m_nPoints > 0) {
-                    // Post accumulated batch ...
-                    // This will be the last one in client's circular buffer ...
-                    // All others if they are coming will be destroyed
-                    m_client->postWriteDb(m_buffer.str(), [&prom](const HttpResponse& o) {
-                        prom.set_value();
-                    });
-                } else {
-                    prom.set_value();
-                }
-                m_buffer.str(""); // clear buffer stream
-                m_bufferLen = 0;
-                m_nPoints = 0;
-                m_startTimePoint = std::chrono::high_resolution_clock::now();
-            }
-            auto status = fut.wait_for(std::chrono::milliseconds(k_httpResponseTimeoutMs));
+            auto status = fut.wait_for(std::chrono::milliseconds(1500));
+
             if (status != std::future_status::ready) {
-                KARABO_LOG_FRAMEWORK_WARN << "Timeout in preDestruction while waiting for response from InfluxDB";
+                KARABO_LOG_FRAMEWORK_WARN << "Timeout in flushBatch while waiting for response from InfluxDB.";
                 return;
             }
             fut.get();
@@ -315,9 +332,10 @@ namespace karabo {
 
         DeviceData::Pointer InfluxDataLogger::createDeviceData(const karabo::util::Hash& cfg) {
             Hash config = cfg;
-            config.set("this", this);
-            DeviceData::Pointer devicedata = Factory<DeviceData>::create<karabo::util::Hash>("InfluxDataLoggerDeviceData", config);
-            return devicedata;
+            config.set("dbClientPointer", m_client);
+            DeviceData::Pointer deviceData =
+                    Factory<DeviceData>::create<karabo::util::Hash>("InfluxDataLoggerDeviceData", config);
+            return deviceData;
         }
 
 
@@ -392,85 +410,13 @@ namespace karabo {
         }
 
 
-        void InfluxDataLogger::enqueueQuery(const std::string& line) {
-            boost::mutex::scoped_lock lock(m_bufferMutex);
-            m_buffer << line;
-            ++m_nPoints;
-            std::streampos readpos = m_buffer.tellg();
-            m_buffer.seekg(0, std::ios::end);
-            m_bufferLen = m_buffer.tellg();
-            m_buffer.seekg(readpos);
-        }
-
-
         void InfluxDataLogger::flushOne(const DeviceData::Pointer& devicedata) {
-            boost::mutex::scoped_lock lock(m_bufferMutex);
-            // Check when we need to flush ...
-            // ... by size ( number of points) ...
-            if (m_nPoints >= get<std::uint32_t>("maxBatchPoints")) flushBatch();
-            if (m_nPoints == 0) return;
-            // ... by time ...
-            auto endTimePoint = std::chrono::high_resolution_clock::now();
-            auto dur = endTimePoint - m_startTimePoint;
-            auto elapsedTimeInSeconds = std::chrono::duration_cast<std::chrono::seconds>(dur).count();
-            if (elapsedTimeInSeconds >= get<std::uint32_t>("flushInterval")) flushBatch();
+            m_client->flushOne(get<std::uint32_t>("maxBatchPoints"), get<std::uint32_t>("flushInterval"));
         }
 
 
-        void InfluxDataLogger::flushBatch() {
-            if (m_bufferLen > 0 && m_nPoints > 0) {
-                // Post accumulated batch ...
-                m_client->postWriteDb(m_buffer.str(), [](const HttpResponse & response) {
-                    if (response.code != 204) {
-                        KARABO_LOG_FRAMEWORK_ERROR << "Code " << response.code << " " << response.message;
-                    }
-                });
-            }
-            m_buffer.str(""); // clear buffer stream
-            m_bufferLen = 0;
-            m_nPoints = 0;
-            m_startTimePoint = std::chrono::high_resolution_clock::now();
-        }
-
-
-        void InfluxDataLogger::checkSchemaInDb(const DeviceData::Pointer& devicedata, const HttpResponse& o) {
-            //TODO: Do error handling ...
-            //...
-            InfluxDeviceData::Pointer data = boost::static_pointer_cast<InfluxDeviceData>(devicedata);
-            const std::string& deviceId = data->m_deviceToBeLogged;
-            const std::string& digest   = data->m_digest;
-            const std::vector<char>& archive = data->m_archive;
-
-            std::stringstream ss;
-            if (data->m_pendingLogin) {
-                ss << deviceId << "__EVENTS,type=\"+LOG\" karabo_user=\"" << data->m_user << "\"\n";
-                data->m_pendingLogin = false;
-            }
-
-            ss << deviceId << "__EVENTS,type=\"SCHEMA\" schema_digest=\"" << digest << "\"\n";
-
-            nl::json j = nl::json::parse(o.payload);
-            auto count = j["results"][0]["series"][0]["values"][0][1];
-            if (count.is_null()) {
-                // digest is not found:  json is '{"results":[{"statement_id":0}]}'
-                // Encode serialized schema into Base64
-                const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (archive.data());
-                std::string base64Schema = base64Encode(uarchive, archive.size());
-                // and write to SCHEMAS table ...
-                ss << deviceId << "__SCHEMAS," << "digest=\"" << digest << "\" schema=\"" << base64Schema << "\"\n";
-                // Flush what was accumulated before ...
-                boost::mutex::scoped_lock lock(m_bufferMutex);
-                flushBatch();
-            }
-            // digest already exists!
-            KARABO_LOG_FRAMEWORK_DEBUG << "checkSchemaInDb ...\n" << o.payload;
-            enqueueQuery(ss.str());
-            boost::mutex::scoped_lock lock(m_bufferMutex);
-            flushBatch();
-        }
-
-
-        void InfluxDataLogger::handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& devicedata) {
+        void InfluxDataLogger::handleSchemaUpdated(const karabo::util::Schema& schema,
+                                                   const DeviceData::Pointer& devicedata) {
             if (!m_client->isConnected()) {
                 m_client->connectDbIfDisconnected();
                 KARABO_LOG_FRAMEWORK_WARN << "Skip signalSchemaUpdated: DB connection is requested...";
