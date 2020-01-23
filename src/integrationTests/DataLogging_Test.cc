@@ -10,8 +10,10 @@
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
 #include "karabo/util/DataLogUtils.hh"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <cstdlib>
 #include <sstream>
 
 USING_KARABO_NAMESPACES;
@@ -27,6 +29,10 @@ using karabo::xms::SLOT_ELEMENT;
 
 #define KRB_TEST_MAX_TIMEOUT 10
 
+/* Timeout, in milliseconds, for a slot request. */
+#define SLOT_REQUEST_TIMEOUT_MILLIS 2500
+
+#define PAUSE_BEFORE_RETRY_MILLIS 150
 
 class DataLogTestDevice : public karabo::core::Device<> {
 
@@ -227,7 +233,8 @@ void DataLogging_Test::setUp() {
 }
 
 
-std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& loggerType) {
+std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& loggerType,
+                                                            bool useInvalidInfluxUrl) {
 
     Hash manager_conf;
     manager_conf.set("deviceId", "loggerManager");
@@ -248,12 +255,13 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
             influxUrl << "localhost";
         }
         influxUrl << ":";
-        if (getenv("KARABO_TEST_INFLUXDB_PORT")) {
+        if (useInvalidInfluxUrl) {
+            influxUrl << "8088";
+        } else if (getenv("KARABO_TEST_INFLUXDB_PORT")) {
             influxUrl << getenv("KARABO_TEST_INFLUXDB_PORT");
         } else {
             influxUrl << "8086";
         }
-
         manager_conf.set("logger.InfluxDataLogger.url", influxUrl.str());
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
@@ -339,7 +347,6 @@ void DataLogging_Test::influxAllTestRunner() {
     testLastKnownConfiguration();
 
     testCfgFromPastRestart();
-
 }
 
 
@@ -400,18 +407,18 @@ void DataLogging_Test::testHistoryAfterChanges() {
 
     // FIXME: refactor this once indexing is properly handled.
     // the history retrieval might take more than one try, it could have to index the files.
-    int timeout = 10000;
+    int timeout = SLOT_REQUEST_TIMEOUT_MILLIS * 20;
     unsigned int numTimeouts = 0;
     while (timeout >= 0 && history.size() < 1) {
         try {
             m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, propertyName, params)
-                    .timeout(500).receive(device, property, history);
+                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(device, property, history);
         } catch (const karabo::util::TimeoutException& e) {
             karabo::util::Exception::clearTrace();
             ++numTimeouts;
         }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
-        timeout -= 1000;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(SLOT_REQUEST_TIMEOUT_MILLIS));
+        timeout -= SLOT_REQUEST_TIMEOUT_MILLIS;
     }
     CPPUNIT_ASSERT_EQUAL_MESSAGE("History size should be 1, got " + karabo::util::toString(history.size()) + ".",
                                  1, history.size());
@@ -431,8 +438,6 @@ void DataLogging_Test::testHistoryAfterChanges() {
 
 
 void DataLogging_Test::testLastKnownConfiguration() {
-
-    const int kRequestTimeoutMs = 15000;
 
     // Last value set in previous test cases for property 'int32Property'.
     const int kLastValueSet = 99;
@@ -456,7 +461,8 @@ void DataLogging_Test::testLastKnownConfiguration() {
     try {
         m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
                            m_deviceId, beforeAnything.toIso8601())
-                .timeout(kRequestTimeoutMs).receive(conf, schema, configAtTimepoint, configTimepoint);
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                .receive(conf, schema, configAtTimepoint, configTimepoint);
     } catch (const RemoteException& re) {
         CPPUNIT_ASSERT(re.detailedMsg().find("earlier than anything logged") != std::string::npos);
         remoteExcept = true;
@@ -475,7 +481,8 @@ void DataLogging_Test::testLastKnownConfiguration() {
     // the  previous test cases for the 'int32Property' - even after the device being logged is gone.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
                                                m_deviceId, rightBeforeDeviceGone.toIso8601())
-                            .timeout(kRequestTimeoutMs).receive(conf, schema, configAtTimepoint, configTimepoint));
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                            .receive(conf, schema, configAtTimepoint, configTimepoint));
 
     CPPUNIT_ASSERT_EQUAL(99, conf.get<int>("int32Property"));
 
@@ -518,7 +525,7 @@ void DataLogging_Test::testLastKnownConfiguration() {
     // among the rows of the "lastUpdatesUtc" property of the logger. The "flush" slot guarantees that the property
     // "lastUpdatesUtc" is in sync with devices being logged.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                            .timeout(kRequestTimeoutMs).receive());
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
     const auto lastUpdates =
             m_deviceClient->get<std::vector < Hash >> (karabo::util::DATALOGGER_PREFIX + m_server, "lastUpdatesUtc");
     bool deviceIdFound = false;
@@ -542,7 +549,7 @@ void DataLogging_Test::testLastKnownConfiguration() {
     // previous test cases for the 'int32Property' - even after the device being logged is gone.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
                                                m_deviceId, afterDeviceGone.toIso8601())
-                            .timeout(kRequestTimeoutMs * 10).receive(conf, schema, configAtTimepoint, configTimepoint));
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(conf, schema, configAtTimepoint, configTimepoint));
 
     CPPUNIT_ASSERT_EQUAL(kLastValueSet, conf.get<int>("int32Property"));
     CPPUNIT_ASSERT_EQUAL(false, configAtTimepoint);
@@ -637,13 +644,13 @@ void DataLogging_Test::testCfgFromPastRestart() {
         // Gather full configuration (repeat until success, see above)
         Hash conf;
         Schema schema;
-        int timeout = KRB_TEST_MAX_TIMEOUT * 1000;
+        int timeout = SLOT_REQUEST_TIMEOUT_MILLIS * 20;
         while (timeout >= 0 && conf.empty()) {
             // FIXME: Treat remote exceptions once slot creates them if data not yet on disk
             CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", deviceId, stampAfter.toIso8601())
-                                    .timeout(1000).receive(conf, schema));
-            timeout -= 100;
-            boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+                                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(conf, schema));
+            timeout -= SLOT_REQUEST_TIMEOUT_MILLIS;
+            boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
         }
         CPPUNIT_ASSERT_MESSAGE("Timeout while getting configuration from past", timeout >= 0);
 
@@ -663,6 +670,56 @@ void DataLogging_Test::testCfgFromPastRestart() {
     std::clog << "OK" << std::endl;
 }
 
+
+void DataLogging_Test::testNoInfluxServerHandling() {
+
+    std::clog << "Testing handling of no Influx Server available scenarios ..." << std::endl;
+
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(m_server, "PropertyTest",
+                                                                       Hash("deviceId", m_deviceId),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Starts the loggers with an invalid InfluxDB Server url.
+    success = startLoggers("InfluxDataLogger", true);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    testAllInstantiated();
+
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+
+    // Any attempt to recover a configuration from Influx should fail if the Influx Server is not
+    // available.
+    Epochstamp withNoServer;
+    std::clog << "Requested config at '" << withNoServer.toIso8601() << "' with an invalid server url ... "
+            << std::endl;
+
+    Schema schema;
+    Hash conf;
+    bool cfgAtTime;
+    std::string cfgTime;
+    bool remoteExceptionCaught = false;
+    try {
+        m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
+                           m_deviceId, withNoServer.toIso8601())
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(conf, schema, cfgAtTime, cfgTime);
+    } catch (const karabo::util::RemoteException &exc) {
+        CPPUNIT_ASSERT(exc.detailedMsg().find("No connection to InfluxDb server available") != std::string::npos);
+        remoteExceptionCaught = true;
+    }
+
+    CPPUNIT_ASSERT(remoteExceptionCaught);
+
+    std::clog << "... request failed with RemoteException as expected." << std::endl;
+
+    // By simply starting the devices related to Influx logging, some logging writing activity takes place.
+    // If this point of the test is reached with an invalid url configured for the Influx Server, it is safe
+    // to conclude that the Influx Logger doesn't get stuck when no server is available.
+
+    std::clog << "OK" << std::endl;
+}
+
+
 template <class T>
 void DataLogging_Test::testHistory(const string& key, const std::function<T(int)> &f,
                                    const bool testConf) {
@@ -674,6 +731,8 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
     // get configuration for later checks
     Hash beforeConf;
     CPPUNIT_ASSERT_NO_THROW((m_deviceClient->get(m_deviceId, beforeConf)));
+
+    boost::this_thread::sleep(boost::posix_time::milliseconds(150));
 
     // save this instant as a iso string
     Epochstamp es_before;
@@ -693,8 +752,10 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
     Epochstamp es_after;
     string after = es_after.toIso8601();
 
-    // wait more than the flush time
-    boost::this_thread::sleep(boost::posix_time::milliseconds(m_flushIntervalSec * 1000 + 250));
+    // waits a little for the logged changes to be available for reading - this is specially
+    // important for the InfluxDb case. If there's not enough time, the assertions below on
+    // the number of entries in the response to slotGetPropertyHistory won't match.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(m_flushIntervalSec*1000 + 1500));
 
     // place holders, could be skipped but they are here for future expansions of the tests
     string device;
@@ -708,7 +769,7 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
 
     std::vector<std::string> remoteErrors;
 
-    int timeout = 20000;
+    int timeout = SLOT_REQUEST_TIMEOUT_MILLIS * 20;
     unsigned int numExceptions = 0;
     unsigned int numChecks = 0;
     while (timeout >= 0 && history.size() != max_set) {
@@ -717,22 +778,24 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
             // TODO: use the deviceClient to retrieve the property history
             //history = m_deviceClient->getPropertyHistory(m_deviceId, key, before, after, max_set * 2);
             m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, key, params)
-                    .timeout(1000).receive(device, property, history);
+                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(device, property, history);
         } catch (const karabo::util::TimeoutException& e) {
             karabo::util::Exception::clearTrace();
+            remoteErrors.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
         } catch (const karabo::util::RemoteException& e) {
             karabo::util::Exception::clearTrace();
             remoteErrors.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
         }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(200));
-        timeout -= 200;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
+        timeout -= SLOT_REQUEST_TIMEOUT_MILLIS;
     }
 
     CPPUNIT_ASSERT_MESSAGE("Timeout while getting property history after " + toString(numChecks) +
                            " checks:\n\tdeviceId: " + m_deviceId + "\n\tparam.from: " + before +
                            "\n\tparam.to: " + after + "\n\tparam.maxNumData: " + toString(max_set * 2) +
+                           "\n\thistory.size(): " + toString(history.size()) +
                            "\n\tNumber of Exceptions: " + toString(numExceptions) +
                            "\n\tRemote Errors:\n" + boost::algorithm::join(remoteErrors, "\n"),
                            timeout >= 0);
@@ -759,7 +822,7 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
 
     remoteErrors.clear();
 
-    timeout = 20000;
+    timeout = SLOT_REQUEST_TIMEOUT_MILLIS * 20;
     numExceptions = 0;
     numChecks = 0;
     // place holder schema, could be checked in future tests
@@ -773,7 +836,7 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
         try {
             numChecks++;
             m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, before)
-                    .timeout(1000).receive(conf, schema);
+                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(conf, schema);
         } catch (const karabo::util::TimeoutException &e) {
             karabo::util::Exception::clearTrace();
             ++numExceptions;
@@ -782,12 +845,13 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
             remoteErrors.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
         }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(200));
-        timeout -= 200;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
+        timeout -= SLOT_REQUEST_TIMEOUT_MILLIS;
     }
 
     CPPUNIT_ASSERT_MESSAGE("Timeout while getting configuration from past after " + toString(numChecks) +
                            " checks.\n\tdeviceId: " + m_deviceId + "\n\tparam.before: " + before +
+                           "\n\tconf.size(): " + toString(conf.size()) +
                            "\n\tNumber of Exceptions: " + toString(numExceptions) +
                            "\n\tRemote Errors:\n" + boost::algorithm::join(remoteErrors, "\n"),
                            timeout >= 0);
@@ -800,7 +864,7 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
                                      conf.getAs<string>(leaf));
     }
 
-    timeout = 20000;
+    timeout = SLOT_REQUEST_TIMEOUT_MILLIS * 20;
     numExceptions = 0;
     conf.clear();
     while (timeout >= 0 && conf.size() == 0) {
@@ -809,15 +873,16 @@ void DataLogging_Test::testHistory(const string& key, const std::function<T(int)
             // auto pair = m_deviceClient->getConfigurationFromPast(m_deviceId, before);
             // conf = pair.first;
             m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, after)
-                    .timeout(1000).receive(conf, schema);
+                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(conf, schema);
         } catch (const karabo::util::TimeoutException& e) {
             karabo::util::Exception::clearTrace();
             ++numExceptions;
         }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(200));
-        timeout -= 200;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
+        timeout -= SLOT_REQUEST_TIMEOUT_MILLIS;
     }
-    CPPUNIT_ASSERT_MESSAGE("Timeout while getting configuration from past after settings " + toString(numExceptions), timeout >= 0);
+    CPPUNIT_ASSERT_MESSAGE("Timeout while getting configuration from past after settings " + toString(numExceptions),
+                           timeout >= 0);
     // One needs to check only the content here, therefore only the leaves are examined
     leaves.clear();
     getLeaves(conf, schema, leaves, '.');
