@@ -200,6 +200,7 @@ namespace karabo {
             KARABO_SLOT(slotAlarmSignalsUpdate, std::string, std::string, karabo::util::Hash);
             KARABO_SLOT(slotProjectUpdate, karabo::util::Hash, std::string);
             KARABO_SLOT(slotDumpDebugInfo, karabo::util::Hash);
+            KARABO_SLOT(slotDisconnectClient, std::string);
 
             Hash h;
             h.set("port", config.get<unsigned int>("port"));
@@ -570,7 +571,8 @@ namespace karabo {
                     safeClientWrite(channel, h);
                 }
                 KARABO_LOG_FRAMEWORK_WARN << "Refused login request of user '" << hash.get<string > ("username")
-                        << "' using GUI client version " << clientVersion.getString();
+                        << "' using GUI client version " << clientVersion.getString()
+                        << " (from " << getChannelAddress(channel.lock()) << ")";
                 auto timer(boost::make_shared<boost::asio::deadline_timer>(karabo::net::EventLoop::getIOService()));
                 timer->expires_from_now(boost::posix_time::milliseconds(500));
                 timer->async_wait(bind_weak(&GuiServerDevice::deferredDisconnect, this,
@@ -585,7 +587,12 @@ namespace karabo {
         void GuiServerDevice::deferredDisconnect(const boost::system::error_code& err, WeakChannelPointer channel,
                                                  boost::shared_ptr<boost::asio::deadline_timer> timer) {
             KARABO_LOG_FRAMEWORK_DEBUG << "deferredDisconnect";
-            disconnectChannel(channel);
+
+            auto chan = channel.lock();
+            if (chan) {
+                // Trigger a call to onError that cleans up
+                chan->close();
+            }
         }
 
 
@@ -1469,12 +1476,7 @@ namespace karabo {
 
         void GuiServerDevice::onError(const karabo::net::ErrorCode& errorCode, WeakChannelPointer channel) {
             KARABO_LOG_INFO << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to a client";
-            // TODO (?) Fork on error message
-            disconnectChannel(channel);
-        }
 
-
-        void GuiServerDevice::disconnectChannel(WeakChannelPointer channel) {
             try {
                 karabo::net::Channel::Pointer chan = channel.lock();
                 std::set<std::string> deviceIds; // empty set
@@ -1487,7 +1489,8 @@ namespace karabo {
                         // Remove channel as such
                         m_channels.erase(it);
                     } else {
-                        KARABO_LOG_FRAMEWORK_WARN << "Trying to disconnect non-existing client channel at " << chan.get();
+                        KARABO_LOG_FRAMEWORK_WARN << "Trying to disconnect non-existing client channel at "
+                                << chan.get() << " (address " << getChannelAddress(chan) << ").";
                     }
                     KARABO_LOG_FRAMEWORK_INFO << m_channels.size() << " client(s) left.";
 
@@ -1538,7 +1541,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_INFO << m_networkConnections.size() << " pipeline channel(s) left.";
                 }
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in disconnectChannel(): " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onError(): " << e.what();
             }
         }
 
@@ -1624,6 +1627,47 @@ namespace karabo {
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in slotDebugInfo(): " << e.userFriendlyMsg();
             }
+        }
+
+
+        void GuiServerDevice::slotDisconnectClient(const std::string& client) {
+
+            WeakChannelPointer channel;
+            bool found = false;
+            {
+                boost::mutex::scoped_lock lock(m_channelMutex);
+
+                for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    const karabo::net::Channel::Pointer& chan = it->first;
+                    if (client == getChannelAddress(chan)) {
+                        found = true;
+                        channel = chan;
+                        break;
+                    }
+                }
+            }
+
+            if (found) {
+                const auto& senderInfo = getSenderInfo("slotDisconnectClient");
+                const std::string& user = senderInfo->getUserIdOfSender();
+                const std::string& senderId = senderInfo->getInstanceIdOfSender();
+                std::ostringstream ostr;
+                ostr << "Instance '" << senderId << "' ";
+                if (!user.empty()) { // Once we send this information it might be useful to log...
+                    ostr << " (user '" << user << "') ";
+                }
+                ostr << "enforced GUI server to disconnect.";
+                KARABO_LOG_FRAMEWORK_INFO << client << ": " << ostr.str();
+                safeClientWrite(channel, Hash("type", "notification", "message", ostr.str()));
+
+                // Give client a bit of time to receive the message...
+                auto timer(boost::make_shared<boost::asio::deadline_timer>(karabo::net::EventLoop::getIOService()));
+                timer->expires_from_now(boost::posix_time::milliseconds(1000));
+                timer->async_wait(bind_weak(&GuiServerDevice::deferredDisconnect, this,
+                                            boost::asio::placeholders::error, channel, timer));
+            }
+
+            reply(found);
         }
 
 
