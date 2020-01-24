@@ -44,6 +44,8 @@ private:
      */
     void testDeviceConfigUpdates();
 
+    void testDisconnect();
+
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
 
