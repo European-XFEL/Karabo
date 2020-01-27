@@ -468,8 +468,7 @@ namespace karabo {
             auto value = respObj["results"][0]["series"][0]["values"][0][1];
             if (value.is_null()) {
                 // No digest has been found - it's not possible to go ahead.
-                // Returns an "empty" response to the requestor.
-                ctxt->aReply(Hash(), Schema(), false, ctxt->atTime.toIso8601());
+                ctxt->aReply.error("Failed to query schema digest");
             } else {
                 const std::string digest = value.get<std::string>();
                 asyncSchemaForDigest(digest, ctxt);
@@ -513,8 +512,7 @@ namespace karabo {
             const auto &value = respObj["results"][0]["series"][0]["values"][0][1];
             if (value.is_null()) {
                 // No schema corresponding to the digest has been found - it's not possible to go ahead.
-                // Returns an "empty" response to the requestor.
-                ctxt->aReply(Hash(), Schema(), false, ctxt->atTime.toIso8601());
+                ctxt->aReply.error("Failed to query schema");
             } else {
                 // A schema has been found - processing it means base64 decoding it, deserializing it and
                 // then traverse it capturing all the properties keys and their types for further processing.
@@ -610,6 +608,7 @@ namespace karabo {
                 try {
                     addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, valueAsString);
                 } catch (const std::exception &e) {
+                    // Do not bail out, but just go on with other properties (Is that the correct approach?)
                     KARABO_LOG_FRAMEWORK_ERROR << "Error adding node to hash:"
                             << "\nValue type: " << propType
                             << "\nValue (as string): " << valueAsString

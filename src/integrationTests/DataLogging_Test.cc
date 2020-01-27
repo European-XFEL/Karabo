@@ -453,9 +453,7 @@ void DataLogging_Test::testLastKnownConfiguration() {
     std::string configTimepoint;
 
     std::clog << "... before any logging activity (at " << beforeAnything.toIso8601() << ") ...";
-    // At the beforeAnything timepoint no known configuration existed, so an exception (for file log reader)
-    // or empty configuration (influx log reader) is expected.
-    // FIXME: Unify once influx log reader also throws.
+    // At the beforeAnything timepoint no known configuration existed, so an exception is expected.
     bool remoteExcept = false;
     try {
         m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
@@ -463,14 +461,16 @@ void DataLogging_Test::testLastKnownConfiguration() {
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                 .receive(conf, schema, configAtTimepoint, configTimepoint);
     } catch (const RemoteException& re) {
-        CPPUNIT_ASSERT(re.detailedMsg().find("earlier than anything logged") != std::string::npos);
+        const std::string fileLoggerMsg("Requested time point for device configuration is earlier than anything logged");
+        const std::string influxLoggerMsg("Failed to query schema digest");
+        CPPUNIT_ASSERT_MESSAGE("Exception message: " + re.detailedMsg(),
+                               (re.detailedMsg().find(fileLoggerMsg) != string::npos
+                                || re.detailedMsg().find(influxLoggerMsg) != string::npos));
         remoteExcept = true;
+    } catch (const std::exception& e) {
+        CPPUNIT_ASSERT_MESSAGE(string("Unexpected exception: ") += e.what(), false);
     }
-    if (!remoteExcept) {
-        CPPUNIT_ASSERT_MESSAGE("At timepoint BeforeAnything no last known configuration is expected.", conf.empty());
-        CPPUNIT_ASSERT_EQUAL(false, configAtTimepoint);
-        CPPUNIT_ASSERT_EQUAL(beforeAnything.toIso8601(), configTimepoint);
-    }
+    CPPUNIT_ASSERT_MESSAGE("Expected exception, received " + toString(conf), remoteExcept);
 
     std::clog << "\n... Ok (no configuration retrieved)." << std::endl;
 
@@ -647,7 +647,12 @@ void DataLogging_Test::testCfgFromPastRestart() {
         int nTries = 100;
         int nChecks = 0;
 
-        while (nTries >= 0 && conf.size() == 0) {
+        // Still, conf.empty() check needed here although any non-throwing slotGetConfigurationFromPast should
+        // be trustworthy now! But
+        // - for file logger, data might not have reached the streams when flush was called
+        //   for inlfux logger there is a period between the DB has confirmed arrival of data and that the data is
+        //   ready for reading.
+        while (nTries >= 0 && conf.empty()) {
             try {
                 nChecks++;
                 m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
@@ -663,7 +668,6 @@ void DataLogging_Test::testCfgFromPastRestart() {
             boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
             nTries--;
         }
-
         CPPUNIT_ASSERT_MESSAGE("Failed to retrieve a non-empty configuration for device '" + m_deviceId +
                                "' after " + toString(nChecks) + " attempts.",
                                conf.size() > 0);
@@ -818,7 +822,7 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
         Epochstamp current = Epochstamp::fromHashAttributes(history[i].getAttributes("v"));
         CPPUNIT_ASSERT_MESSAGE("Timestamp later than the requested window", current <= es_afterWrites);
         CPPUNIT_ASSERT_MESSAGE("Timestamp earlier than the requested window", current >= es_beforeWrites);
-        if (i>0) {
+        if (i > 0) {
             Epochstamp previous = Epochstamp::fromHashAttributes(history[i - 1].getAttributes("v"));
             CPPUNIT_ASSERT_MESSAGE("Timestamp earlier than the requested window", current > previous);
         }
@@ -838,11 +842,13 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
     // place holder schema, could be checked in future tests
     Schema schema;
     Hash conf;
-    while (nTries >= 0 && conf.size() == 0) {
+    while (nTries >= 0) { // '&& !conf.empty()' check not needed as in DataLogging_Test::testCfgFromPastRestart:
+        //                   The 'history.size() != max_set' check in the loop above already ensures that all data available
+
         // TODO: use the deviceClient to retrieve the configuration from past
         // auto pair = m_deviceClient->getConfigurationFromPast(m_deviceId, before);
         // conf = pair.first;
-        conf.clear();
+        bool excepted = false;
         try {
             numChecks++;
             m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, beforeWrites)
@@ -851,11 +857,14 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
             karabo::util::Exception::clearTrace();
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
+            bool excepted = true;
         } catch (const karabo::util::RemoteException &e) {
             karabo::util::Exception::clearTrace();
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
+            bool excepted = true;
         }
+        if (!excepted) break; // Any result should be trustworthy!
         boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
         nTries--;
     }
@@ -879,7 +888,8 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
     numExceptions = 0;
     numChecks = 0;
     conf.clear();
-    while (nTries >= 0 && conf.size() == 0) {
+    while (nTries >= 0) {
+        bool excepted = false;
         try {
             // TODO: use the deviceClient to retrieve the configuration from past
             // auto pair = m_deviceClient->getConfigurationFromPast(m_deviceId, before);
@@ -890,10 +900,13 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
         } catch (const karabo::util::TimeoutException& e) {
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
+            excepted = true;
         } catch (const karabo::util::RemoteException &e) {
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
+            excepted = true;
         }
+        if (!excepted) break; // Any result should be trustworthy!
         boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
         nTries--;
     }
