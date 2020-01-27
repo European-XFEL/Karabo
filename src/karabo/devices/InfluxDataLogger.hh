@@ -36,9 +36,9 @@ namespace karabo {
 
             void terminateQuery();
 
-            void checkSchemaInDb(const karabo::net::HttpResponse& o);
+            void checkSchemaInDb(const karabo::util::Timestamp& stamp, const karabo::net::HttpResponse& o);
 
-            void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& devicedata);
+            void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp);
 
             void flushOne();
 
@@ -84,7 +84,8 @@ namespace karabo {
             void handleChanged(const karabo::util::Hash& config, const std::string& user,
                                const DeviceData::Pointer& devicedata) override;
 
-            void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& devicedata) override;
+            void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
+                                     const DeviceData::Pointer& devicedata) override;
 
         private:
 
