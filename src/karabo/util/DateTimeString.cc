@@ -260,7 +260,8 @@ namespace karabo {
         }
 
 
-        const std::string DateTimeString::fractionalSecondToString(const TIME_UNITS precision, const unsigned long long fractionalSeconds) {
+        const std::string DateTimeString::fractionalSecondToString(const TIME_UNITS precision, const unsigned long long fractionalSeconds,
+                                                                   bool skipDot) {
 
             if (precision == NOFRACTION) return "";
 
@@ -280,7 +281,10 @@ namespace karabo {
             unsigned long long multiplier = 1;
             while (zeros-- > 0) multiplier *= 10ULL;
             int numDigits = std::log10(1000000000000000000ULL / multiplier);
-            oss << '.' << std::setw(numDigits) << std::setfill('0') << fractionalSeconds / multiplier;
+            if (!skipDot) {
+                oss << '.';
+            }
+            oss << std::setw(numDigits) << std::setfill('0') << fractionalSeconds / multiplier;
 
             return oss.str();
         }
