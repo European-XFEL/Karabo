@@ -48,8 +48,9 @@ namespace karabo {
             }
 
             const std::string& deviceId = m_deviceToBeLogged;
+            const unsigned long long ts = m_lastDataTimestamp.toTimestamp() * PRECISION_FACTOR;
             std::stringstream ss;
-            ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\"\n";
+            ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\" " << ts << "\n";
             m_dbClient->enqueueQuery(ss.str());
             m_dbClient->flushBatch();
 
@@ -128,8 +129,15 @@ namespace karabo {
                 }
 
                 if (m_pendingLogin) {
+                    // TRICK: 'configuration' is the one requested at the beginning. For devices which have
+                    // properties with older timestamps than the time of their instantiation (as e.g. read from
+                    // hardware), we can claim that logging is active only from the most recent update we receive here.
+                    const auto& attrsOfPathWithMostRecentStamp = configuration.getAttributes(paths.back());
+                    const Epochstamp t = Epochstamp::fromHashAttributes(attrsOfPathWithMostRecentStamp);
+                    const unsigned long long ts = t.toTimestamp() * PRECISION_FACTOR;
                     std::stringstream ss;
-                    ss << deviceId << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\"\n";
+                    ss << deviceId << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\" " << ts << "\n";
+
                     m_pendingLogin = false;
                     m_dbClient->enqueueQuery(ss.str());
                 }
@@ -224,7 +232,7 @@ namespace karabo {
 
 
         void InfluxDeviceData::handleSchemaUpdated(const karabo::util::Schema& schema,
-                                                   const DeviceData::Pointer& devicedata) {
+                                                   const karabo::util::Timestamp& stamp) {
             m_currentSchema = schema;
 
             // Use Binary serializer as soon as we encode into Base64:
@@ -245,20 +253,16 @@ namespace karabo {
 
             std::ostringstream oss;
             oss << "SELECT COUNT(*) FROM \"" << m_deviceToBeLogged << "__SCHEMAS\" WHERE digest='\"" << m_digest << "\"'";
-            m_dbClient->getQueryDb(oss.str(), bind_weak(&InfluxDeviceData::checkSchemaInDb, this, _1));
+            m_dbClient->getQueryDb(oss.str(), bind_weak(&InfluxDeviceData::checkSchemaInDb, this, stamp, _1));
         }
 
 
-        void InfluxDeviceData::checkSchemaInDb(const HttpResponse& o) {
+        void InfluxDeviceData::checkSchemaInDb(const karabo::util::Timestamp& stamp, const HttpResponse& o) {
             //TODO: Do error handling ...
             //...
+            const unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
             std::stringstream ss;
-            if (m_pendingLogin) {
-                ss << m_deviceToBeLogged << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\"\n";
-                m_pendingLogin = false;
-            }
-
-            ss << m_deviceToBeLogged << "__EVENTS,type=\"SCHEMA\" schema_digest=\"" << m_digest << "\"\n";
+            ss << m_deviceToBeLogged << "__EVENTS,type=\"SCHEMA\" schema_digest=\"" << m_digest << "\" " << ts << "\n";
 
             nl::json j = nl::json::parse(o.payload);
             auto count = j["results"][0]["series"][0]["values"][0][1];
@@ -416,6 +420,7 @@ namespace karabo {
 
 
         void InfluxDataLogger::handleSchemaUpdated(const karabo::util::Schema& schema,
+                                                   const karabo::util::Timestamp& stamp,
                                                    const DeviceData::Pointer& devicedata) {
             if (!m_client->isConnected()) {
                 m_client->connectDbIfDisconnected();
@@ -423,7 +428,7 @@ namespace karabo {
                 return;
             }
             InfluxDeviceData::Pointer data = boost::static_pointer_cast<InfluxDeviceData>(devicedata);
-            data->handleSchemaUpdated(schema, devicedata);
+            data->handleSchemaUpdated(schema, stamp);
         }
     }
 }
