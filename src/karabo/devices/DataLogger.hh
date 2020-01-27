@@ -164,7 +164,8 @@ namespace karabo {
             /**
              * Store updated schema into file hierarchy or in database tables
              */
-            virtual void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& data) = 0;
+            virtual void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
+                                             const DeviceData::Pointer& data) = 0;
 
             /**
              * Override preDestruction from Device class
@@ -204,7 +205,8 @@ namespace karabo {
                                       const DeviceData::Pointer& data,
                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
-            void handleSchemaReceived2(const karabo::util::Schema& schema, const DeviceData::Pointer& data,
+            void handleSchemaReceived2(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
+                                       const DeviceData::Pointer& data,
                                        const boost::shared_ptr<std::atomic<unsigned int> >& counter);
 
             /// Helper for connecting to both signalChanged and signalStateChanged

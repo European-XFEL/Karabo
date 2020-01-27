@@ -400,7 +400,7 @@ namespace karabo {
         }
 
 
-        void FileDeviceData::handleSchemaUpdated(const karabo::util::Schema& schema) {
+        void FileDeviceData::handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp) {
             const std::string& deviceId = m_deviceToBeLogged;
 
             m_currentSchema = schema;
@@ -408,7 +408,6 @@ namespace karabo {
             string filename = m_directory + "/" + deviceId + "/raw/archive_schema.txt";
             fstream fileout(filename.c_str(), ios::out | ios::app);
             if (fileout.is_open()) {
-                Timestamp t;
                 // Since schema updates are rare, do not store this serialiser as the one for Hash (data->m_serializer):
                 TextSerializer<Schema>::Pointer serializer = TextSerializer<Schema>::create(Hash("Xml.indentation", -1));
                 string archive;
@@ -423,7 +422,8 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_ERROR << "Failed to serialise Schema of " << deviceId
                             << ", store incomplete XML: " << e.what();
                 }
-                fileout << t.getSeconds() << " " << t.getFractionalSeconds() << " " << t.getTrainId() << " " << archive << "\n";
+                fileout << stamp.getSeconds() << " " << stamp.getFractionalSeconds() << " " << stamp.getTrainId()
+                        << " " << archive << "\n";
                 fileout.close();
             } else {
                 // Should not throw, either (see above).
