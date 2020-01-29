@@ -1,4 +1,5 @@
 #include <iostream>
+#include <boost/pointer_cast.hpp>
 #include "FileDataLogger.hh"
 
 
@@ -106,7 +107,50 @@ namespace karabo {
         }
 
 
-        FileDataLogger::~FileDataLogger() {}
+        FileDataLogger::~FileDataLogger() {
+        }
+
+
+        void FileDataLogger::flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) {
+
+            // We loop on all m_perDeviceData - their flushOne() method needs to run on the strand.
+            // If a reply is needed, we have to instruct the handler to use it if all are ready.
+
+            // Setup all variables needed for sending reply
+            boost::shared_ptr < std::pair < boost::mutex, std::vector<bool>>> fencePtr;
+            boost::function<void(const FileDeviceData::Pointer&, size_t) > callback;
+            boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
+            if (aReplyPtr) {
+                fencePtr = boost::make_shared < std::pair < boost::mutex, std::vector<bool>>>();
+                fencePtr->second.resize(m_perDeviceData.size(), false);
+                callback = [aReplyPtr, fencePtr](const FileDeviceData::Pointer& data, size_t num)->void {
+                    data->flushOne();
+
+                    boost::mutex::scoped_lock lock(fencePtr->first);
+                    fencePtr->second[num] = true;
+                    for (bool ok : fencePtr->second) {
+                        if (!ok) return; // not all done yet, nothing to do
+                    }
+                    // Also last flushOne is done, report that flush has finished
+                    (*aReplyPtr)();
+                };
+
+            }
+            // Actually loop on deviceData
+            size_t counter = 0;
+            for (auto& idData : m_perDeviceData) {
+                FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(idData.second);
+                // We post on strand to exclude parallel access to data->m_configStream and data->m_idxMap.
+                if (aReplyPtr) {
+                    // Bind the shared_ptr data to ensure that reply is given, even if logging is stopped
+                    data->m_strand->post(boost::bind(callback, data, counter));
+                    ++counter;
+                } else {
+                    // Here we could use bind_weak - but FileDeviceData does not inherit from enable_shared_from_this...
+                    data->m_strand->post(boost::bind(&FileDeviceData::flushOne, data));
+                }
+            }
+        }
 
 
         void FileDeviceData::setupDirectory() {
@@ -430,5 +474,6 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Failed to open '" << filename << "'. Check permissions.";
             }
         }
+
     }
 }
