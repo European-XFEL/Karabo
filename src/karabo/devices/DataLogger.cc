@@ -269,16 +269,20 @@ namespace karabo {
                                               const DeviceData::Pointer& data,
                                               const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
             // We need to store the received schema and then connect to configuration updates.
-            // Since the first should not be done concurrently, we just post to the strand here:
-            data->m_strand->post(util::bind_weak(&DataLogger::handleSchemaReceived2, this, schema, data, counter));
+            // Since the first should not be done concurrently, we just post to the strand here,
+            // adding the best timestamp we can get for this change - 'now' (better would be to receive the stamp
+            // from the sender - possibly from the broker message header?):
+            data->m_strand->post(util::bind_weak(&DataLogger::handleSchemaReceived2, this, schema, Timestamp(),
+                                                 data, counter));
         }
 
 
-        void DataLogger::handleSchemaReceived2(const karabo::util::Schema& schema, const DeviceData::Pointer& data,
+        void DataLogger::handleSchemaReceived2(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
+                                               const DeviceData::Pointer& data,
                                                const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
 
             // Set initial Schema - needed for receiving properly in slotChanged
-            handleSchemaUpdated(schema, data);
+            handleSchemaUpdated(schema, stamp, data);
 
             // Now connect concurrently both, signalStateChanged and signalChanged, to the same slot.
             asyncConnect({SignalSlotConnection(data->m_deviceToBeLogged, "signalStateChanged", "", "slotChanged"),
@@ -552,8 +556,9 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             DeviceDataMap::iterator it = m_perDeviceData.find(deviceId);
             if (it != m_perDeviceData.end()) {
+                Timestamp stamp; // Best time stamp we can get for this schema change (or take it from broker message header?)
                 DeviceData::Pointer data = it->second;
-                data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleSchemaUpdated, this, schema, data));
+                data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleSchemaUpdated, this, schema, stamp, data));
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "slotSchemaUpdated called from non-treated device " << deviceId << ".";
             }

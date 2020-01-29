@@ -179,9 +179,10 @@ namespace karabo {
              * 
              * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
              * @param fractionalSeconds - Fractional seconds to be return with the correct desired precision
-             * @return String started with a "." (dot) and followed by the fractional second till the desired precision
+             * @param skipDot - if true, skip leading dot "." in result [Default: false]
+             * @return String started with a "." (dot) (except skipDot is true) and followed by the fractional second till the desired precision
              */
-            static const std::string fractionalSecondToString(const TIME_UNITS precision = MICROSEC, const unsigned long long fractionalSeconds = 0);
+            static const std::string fractionalSecondToString(const TIME_UNITS precision = MICROSEC, const unsigned long long fractionalSeconds = 0, bool skipDot = false);
 
 
             /**
