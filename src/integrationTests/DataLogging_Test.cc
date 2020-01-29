@@ -773,7 +773,9 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
     // waits a little for the logged changes to be available for reading - this is specially
     // important for the InfluxDb case. If there's not enough time, the assertions below on
     // the number of entries in the response to slotGetPropertyHistory won't match.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(m_flushIntervalSec*1000 + 1500));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
 
     // place holders, could be skipped but they are here for future expansions of the tests
     std::string device;
