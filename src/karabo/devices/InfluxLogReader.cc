@@ -831,9 +831,10 @@ namespace karabo {
         std::string InfluxLogReader::epochAsMicrosecString(const Epochstamp &ep) const {
 
             std::ostringstream epStr;
-            std::string fract(DateTimeString::fractionalSecondToString(TIME_UNITS::MICROSEC, ep.getFractionalSeconds()));
-            // It is safe to use substr(1) because fractionalSecondToString fills the remaining positions with zeros.
-            epStr << ep.getSeconds() << fract.substr(1);
+            const std::string fract(DateTimeString::fractionalSecondToString(TIME_UNITS::MICROSEC,
+                                                                             ep.getFractionalSeconds(), true));
+            // It is safe to use fract because fractionalSecondToString fills the leading positions with zeros.
+            epStr << ep.getSeconds() << fract;
             return epStr.str();
         }
 
