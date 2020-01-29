@@ -46,7 +46,7 @@ namespace karabo {
 
             int incrementLastIndex(const std::string& deviceId);
 
-            void handleSchemaUpdated(const karabo::util::Schema& schema);
+            void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp);
 
             void setupDirectory();
 
@@ -92,9 +92,10 @@ namespace karabo {
                 data->handleChanged(config, user);
             }
 
-            void handleSchemaUpdated(const karabo::util::Schema& schema, const DeviceData::Pointer& devicedata) override {
+            void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
+                                     const DeviceData::Pointer& devicedata) override {
                 FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
-                data->handleSchemaUpdated(schema);
+                data->handleSchemaUpdated(schema, stamp);
             }
         };
     }
