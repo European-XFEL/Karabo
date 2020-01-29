@@ -650,7 +650,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
         // Still, conf.empty() check needed here although any non-throwing slotGetConfigurationFromPast should
         // be trustworthy now! But
         // - for file logger, data might not have reached the streams when flush was called
-        //   for inlfux logger there is a period between the DB has confirmed arrival of data and that the data is
+        // - for influx logger there is a period between the DB has confirmed arrival of data and that the data is
         //   ready for reading.
         while (nTries >= 0 && conf.empty()) {
             try {
@@ -660,8 +660,11 @@ void DataLogging_Test::testCfgFromPastRestart() {
                         .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                         .receive(conf, schema);
             } catch (const RemoteException& re) {
+                const std::string fileLoggerMsg("Requested time point for device configuration is earlier than anything logged");
+                const std::string influxLoggerMsg("Failed to query schema digest");
                 CPPUNIT_ASSERT_MESSAGE("Unexpected RemoteException received: " + std::string(re.what()),
-                                       re.detailedMsg().find("earlier than anything logged") != std::string::npos);
+                                       (re.detailedMsg().find(fileLoggerMsg) != std::string::npos
+                                        || re.detailedMsg().find(influxLoggerMsg) != std::string::npos));
             } catch (const TimeoutException &te) {
                 karabo::util::Exception::clearTrace();
             }
@@ -836,6 +839,9 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
 
     exceptionsMsgs.clear();
 
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
+
     nTries = 100;
     numExceptions = 0;
     numChecks = 0;
@@ -854,17 +860,15 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
             m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, beforeWrites)
                     .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(conf, schema);
         } catch (const karabo::util::TimeoutException &e) {
-            karabo::util::Exception::clearTrace();
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
-            bool excepted = true;
+            excepted = true;
         } catch (const karabo::util::RemoteException &e) {
-            karabo::util::Exception::clearTrace();
             exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
             ++numExceptions;
-            bool excepted = true;
+            excepted = true;
         }
-        if (!excepted) break; // Any result should be trustworthy!
+        if (!excepted) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
         nTries--;
     }
