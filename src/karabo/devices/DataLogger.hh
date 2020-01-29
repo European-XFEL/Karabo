@@ -87,19 +87,19 @@ namespace karabo {
          */
         class DataLogger : public karabo::core::Device<> {
 
-        private:
-            bool m_useP2p;
-
+        protected:
             // https://www.quora.com/Is-it-thread-safe-to-write-to-distinct-keys-different-key-for-each-thread-in-a-std-map-in-C-for-keys-that-have-existing-entries-in-the-map
             typedef std::unordered_map<std::string, DeviceData::Pointer> DeviceDataMap;
             DeviceDataMap m_perDeviceData;
             boost::mutex m_perDeviceDataMutex;
+
+        private:
+            bool m_useP2p;
+
             boost::mutex m_changeVectorPropMutex;
 
             boost::asio::deadline_timer m_flushDeadline;
             unsigned int m_flushInterval;
-
-
 
         public:
 
@@ -221,18 +221,20 @@ namespace karabo {
 
             /**
              * Flush data in file hierarchy or to the database tables
+             * @param aReplyPtr if pointer to an AsyncReply that (if non-empty) has to be called without
+             *                  argument when done
              */
-            void doFlush();
+            void updateTableAndFlush(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr
+                                     = boost::shared_ptr<SignalSlotable::AsyncReply>());
 
             // The flush slot
             void flush();
             
             /**
              * "Flush" data accumulated in the internal cache to the external storage (file, database,...)
-             * @param devicedata
              */
-            virtual void flushOne(const DeviceData::Pointer& devicedata) = 0;
-            
+            virtual void flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) = 0;
+
             /**
              * This device may not be locked
              * @return false
