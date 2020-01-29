@@ -10,6 +10,7 @@ import os.path as op
 from PyQt5.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance
 
+from karabo.common.api import BaseSavableModel, walk_traits_object
 from karabo.common.project.api import get_user_cache
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.native import read_project_model
@@ -98,6 +99,10 @@ class SceneController(BaseProjectController):
         get_config()['scene_dir'] = op.dirname(fn)
 
         project = project_controller.model
+        # NOTE: Close the old one first!
+        broadcast_event(KaraboEvent.RemoveProjectModelViews,
+                        {'models': [scene]})
+
         if scene in project.scenes:
             # Read SceneModel for information to replace with! We catch all
             # errors because we can have wrong user input.
@@ -108,12 +113,17 @@ class SceneController(BaseProjectController):
                                       parent=parent)
                 return
 
-            # NOTE: We can successfully read the scene, now close the old one
-            broadcast_event(KaraboEvent.RemoveProjectModelViews,
-                            {'models': [scene]})
             # Only use copyable traits
             scene.copy_traits(new_scene, traits=['width', 'height',
                                                  'children', 'description'])
+
+            def visitor(model):
+                if isinstance(model, BaseSavableModel):
+                    model.initialized = True
+
+            # Mark everything as initialized, otherwise `modified` won't work.
+            walk_traits_object(scene, visitor)
+
             scene.modified = True
 
     def _delete_scene(self, project_controller, parent=None):
