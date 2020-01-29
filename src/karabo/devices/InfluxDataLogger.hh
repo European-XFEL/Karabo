@@ -79,7 +79,7 @@ namespace karabo {
 
             void initializeLoggerSpecific() override;
 
-            void flushOne(const DeviceData::Pointer& devicedata) override;
+            void flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) override;
 
             void handleChanged(const karabo::util::Hash& config, const std::string& user,
                                const DeviceData::Pointer& devicedata) override;

@@ -868,7 +868,7 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
             ++numExceptions;
             excepted = true;
         }
-        if (!excepted) break;
+        if (!excepted) break; // Any result should be trustworthy!
         boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
         nTries--;
     }
