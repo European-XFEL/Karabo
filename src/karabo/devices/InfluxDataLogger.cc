@@ -410,12 +410,25 @@ namespace karabo {
             }
             InfluxDeviceData::Pointer data = boost::static_pointer_cast<InfluxDeviceData>(devicedata);
             data->handleChanged(config, user);
-            flushOne(devicedata);
+            m_client->flushOne(get<std::uint32_t>("maxBatchPoints"), get<std::uint32_t>("flushInterval"));
         }
 
 
-        void InfluxDataLogger::flushOne(const DeviceData::Pointer& devicedata) {
-            m_client->flushOne(get<std::uint32_t>("maxBatchPoints"), get<std::uint32_t>("flushInterval"));
+        void InfluxDataLogger::flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) {
+            karabo::net::InfluxResponseHandler handler;
+            if (aReplyPtr) {
+                handler = [aReplyPtr](const HttpResponse & resp) {
+                    if (resp.code >= 300) {
+                        std::ostringstream errMsg;
+                        errMsg << "Flush request failed - InfluxDb response code/message: " << resp.code
+                                << " '" << resp.message << "'";
+                        aReplyPtr->error(errMsg.str());
+                    } else {
+                        (*aReplyPtr)();
+                    }
+                };
+            }
+            m_client->flushBatch(handler);
         }
 
 

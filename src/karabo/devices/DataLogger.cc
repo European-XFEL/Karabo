@@ -147,7 +147,12 @@ namespace karabo {
                 }
             }
             for (auto it = devices.begin(); it != devices.end(); ++it) {
-                slotTagDeviceToBeDiscontinued("D", *it);
+                try {
+                    slotTagDeviceToBeDiscontinued("D", *it);
+                } catch (const std::exception& e) {
+                    // Just go on with other devices in case something is weird...
+                    KARABO_LOG_FRAMEWORK_WARN << "Problem cleaning up for " << *it << ": " << e.what();
+                }
             }
         }
 
@@ -491,11 +496,19 @@ namespace karabo {
 
         void DataLogger::flush() {
             // If the related asynchronous operation cannot be cancelled, the flush might already be running
-            if (m_flushDeadline.cancel()) {
-                doFlush();
-                m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
-                m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
+            // To have full control when the flush is done (and reply that!), we have to try until it succeeds...
+            // while (true) should be OK, but we cowardly try only for two seconds...
+            int nTries = 2000;
+            while (--nTries >= 0) {
+                if (m_flushDeadline.cancel()) {
+                    updateTableAndFlush(boost::make_shared<SignalSlotable::AsyncReply>(this));
+                    m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
+                    m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
+                    return;
+                }
+                boost::this_thread::sleep(boost::posix_time::milliseconds(1));
             }
+            throw KARABO_TIMEOUT_EXCEPTION("Tried 2000 times to cancel flush timer...");
         }
 
 
@@ -503,16 +516,17 @@ namespace karabo {
             if (e == boost::asio::error::operation_aborted) {
                 return;
             }
-            doFlush();
+            // Use empty reply pointer here: not inside slot, so no reply handling needed
+            updateTableAndFlush(boost::shared_ptr<SignalSlotable::AsyncReply>());
             // arm timer again
             m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
             m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
         }
 
 
-        void DataLogger::doFlush() {
+        void DataLogger::updateTableAndFlush(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) {
 
-            // Flush all files, but also hijack this actor to update lastUpdatesUtc
+            // Update lastUpdatesUtc
             std::vector<Hash> lastStamps;
             bool updatedAnyStamp = false;
             {
@@ -536,9 +550,6 @@ namespace karabo {
                         ts.getEpochstamp().toHashAttributes(node.getAttributes());
                         lastStamps.push_back(std::move(h));
                     }
-
-                    // We post on strand to exclude parallel access to data->m_configStream and data->m_idxMap
-                    data->m_strand->post(karabo::util::bind_weak(&DataLogger::flushOne, this, data));
                 }
             }
 
@@ -547,6 +558,9 @@ namespace karabo {
                 // If sizes are equal, but devices have changed, then at least one time stamp must have changed as well.
                 set("lastUpdatesUtc", lastStamps);
             }
+
+            // And flush
+            flushImpl(aReplyPtr);
         }
 
 
