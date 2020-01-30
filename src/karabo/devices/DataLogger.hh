@@ -22,7 +22,8 @@ namespace karabo {
      */
     namespace devices {
 
-        struct DeviceData {
+        struct DeviceData : public boost::enable_shared_from_this<DeviceData> {
+
 
             KARABO_CLASSINFO(DeviceData, "DataLoggerDeviceData", "2.6")
 
