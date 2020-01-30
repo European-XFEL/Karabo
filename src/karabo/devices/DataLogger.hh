@@ -40,6 +40,20 @@ namespace karabo {
             virtual ~DeviceData();
 
             /**
+             * Called when configuration updates arrive for logging
+             * @param config a Hash with the updates and their timestamps
+             * @param the user responsible for this update - if any
+             */
+            virtual void handleChanged(const karabo::util::Hash& config, const std::string& user) = 0;
+
+            /**
+             * Called when a Schema update arrive for logging
+             * @param schema - the new one
+             * @param stamp - the timestamp to be assigned for that update
+             */
+            virtual void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp) = 0;
+
+            /**
              * Retrieves the paths of the leaf nodes in a given configuration. The paths are returned in
              * ascending order of their corresponding nodes timestamps.
              *
@@ -152,21 +166,6 @@ namespace karabo {
              * @return whether it was added (i.e. false if 'str' was already in the vectorProperty
              */
             bool appendTo(const std::string& str, const std::string& vectorProp);
-
-            /**
-             * Process configuration by writing to files or sending to DB server
-             * @param config
-             * @param user
-             * @param data
-             */
-            virtual void handleChanged(const karabo::util::Hash& config, const std::string& user,
-                                       const DeviceData::Pointer& devicedata) = 0;
-
-            /**
-             * Store updated schema into file hierarchy or in database tables
-             */
-            virtual void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
-                                             const DeviceData::Pointer& data) = 0;
 
             /**
              * Override preDestruction from Device class
