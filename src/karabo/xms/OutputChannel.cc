@@ -129,7 +129,7 @@ namespace karabo {
                     .displayedName("Connections")
                     .description("Table of active connections")
                     .setColumns(columns)
-                    .assignmentOptional().defaultValue(std::vector<util::Hash>())
+                    .readOnly().initialValue(std::vector<util::Hash>())
                     .expertAccess()
                     .commit();
 
