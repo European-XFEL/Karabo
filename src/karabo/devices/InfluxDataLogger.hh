@@ -40,8 +40,6 @@ namespace karabo {
 
             void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp);
 
-            void flushOne();
-
             void stopLogging() override;
 
             karabo::net::InfluxDbClient::Pointer m_dbClient;

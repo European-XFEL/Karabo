@@ -224,8 +224,7 @@ namespace karabo {
              * @param aReplyPtr if pointer to an AsyncReply that (if non-empty) has to be called without
              *                  argument when done
              */
-            void updateTableAndFlush(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr
-                                     = boost::shared_ptr<SignalSlotable::AsyncReply>());
+            void updateTableAndFlush(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr);
 
             // The flush slot
             void flush();
