@@ -20,6 +20,7 @@
 #include "karabo/util/Hash.hh"
 
 #include "InfluxDbClient.hh"
+#include "karabo/util/SimpleElement.hh"
 
 namespace karabo {
 
@@ -32,6 +33,39 @@ namespace karabo {
         boost::mutex InfluxDbClient::m_uuidGeneratorMutex;
         boost::uuids::random_generator InfluxDbClient::m_uuidGenerator;
         const unsigned int InfluxDbClient::k_connTimeoutMs = 1500u;
+
+        KARABO_REGISTER_FOR_CONFIGURATION(InfluxDbClient);
+
+
+        void InfluxDbClient::expectedParameters(karabo::util::Schema& expected) {
+
+            STRING_ELEMENT(expected).key("url")
+                    .displayedName("Influxdb URL")
+                    .description("URL should be given in form: tcp://host:port")
+                    .assignmentMandatory()
+                    .commit();
+
+            STRING_ELEMENT(expected).key("dbname")
+                    .displayedName("Database name")
+                    .description("The name of the database inside the InfluxDB installation")
+                    .assignmentMandatory()
+                    .commit();
+
+            STRING_ELEMENT(expected).key("durationUnit")
+                    .displayedName("Duration unit")
+                    .description("Time unit used: 'd' => day, 'h' => hour, 'm' => minute, 's' => second, "
+                                 "'ms' => millisec., 'u' => microsec., 'ns' => nanosec.")
+                    .assignmentOptional().defaultValue("u")
+                    .options({"d", "h", "m", "s", "ms", "u", "ns"})
+            .commit();
+
+            UINT32_ELEMENT(expected).key("maxPointsInBuffer")
+                    .displayedName("Max. points in buffer")
+                    .description("Maximum number of enqueued points in buffer")
+                    .assignmentOptional()
+                    .defaultValue(200u)
+                    .commit();
+        }
 
 
         // TODO: pass the shared pointer to the DbClient as an argument and remove InfluxDbClient::setDbClient(...)
@@ -49,19 +83,18 @@ namespace karabo {
             , m_dbname(input.get<std::string>("dbname"))
             , m_durationUnit(input.get<std::string>("durationUnit"))
             , m_currentUuid("")
+            , m_maxPointsInBuffer(input.get<std::uint32_t>("maxPointsInBuffer"))
             , m_bufferMutex()
             , m_buffer()
-            , m_bufferLen(0)
-            , m_nPoints(0)
-            , m_startTimePoint() {
+            , m_nPoints(0) {
             const boost::tuple<std::string, std::string,
                     std::string, std::string, std::string> parts = karabo::net::parseUrl(m_url);
             m_hostname = parts.get<1>();
         }
 
 
-        InfluxDbClient::~InfluxDbClient() {}
-
+        InfluxDbClient::~InfluxDbClient() {
+        }
 
         std::string InfluxDbClient::generateUUID() {
             // The generator is not thread safe, but we rely on real uniqueness!
@@ -171,28 +204,7 @@ namespace karabo {
         void InfluxDbClient::enqueueQuery(const std::string& line) {
             boost::mutex::scoped_lock lock(m_bufferMutex);
             m_buffer << line;
-            ++m_nPoints;
-            std::streampos readpos = m_buffer.tellg();
-            m_buffer.seekg(0, std::ios::end);
-            m_bufferLen = m_buffer.tellg();
-            m_buffer.seekg(readpos);
-        }
-
-
-        void InfluxDbClient::flushOne(std::uint32_t maxBatchPoints,
-                                      std::uint32_t flushInterval) {
-             boost::mutex::scoped_lock lock(m_bufferMutex);
-            // Check when we need to flush ...
-            // ... by size ( number of points) ...
-            if (m_nPoints >= maxBatchPoints) {
-                flushBatchImpl();
-            }
-            if (m_nPoints == 0) return;
-            // ... by time ...
-            auto endTimePoint = std::chrono::high_resolution_clock::now();
-            auto dur = endTimePoint - m_startTimePoint;
-            auto elapsedTimeInSeconds = std::chrono::duration_cast<std::chrono::seconds>(dur).count();
-            if (elapsedTimeInSeconds >= flushInterval) {
+            if (++m_nPoints > m_maxPointsInBuffer) {
                 flushBatchImpl();
             }
         }
@@ -204,7 +216,7 @@ namespace karabo {
         }
 
         void InfluxDbClient::flushBatchImpl(const InfluxResponseHandler &respHandler) {
-            if (m_bufferLen > 0 && m_nPoints > 0) {
+            if (m_nPoints > 0) {
                 // Post accumulated batch ...
                 postWriteDb(m_buffer.str(), [respHandler](const HttpResponse & response) {
                     if (response.code != 204) {
@@ -216,9 +228,7 @@ namespace karabo {
                 });
             }
             m_buffer.str(""); // clear buffer stream
-            m_bufferLen = 0;
             m_nPoints = 0;
-            m_startTimePoint = std::chrono::high_resolution_clock::now();
         }
 
 
