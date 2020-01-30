@@ -40,8 +40,6 @@ namespace karabo {
 
             void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp);
 
-            void flushOne();
-
             void stopLogging() override;
 
             karabo::net::InfluxDbClient::Pointer m_dbClient;
@@ -79,7 +77,7 @@ namespace karabo {
 
             void initializeLoggerSpecific() override;
 
-            void flushOne(const DeviceData::Pointer& devicedata) override;
+            void flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) override;
 
             void handleChanged(const karabo::util::Hash& config, const std::string& user,
                                const DeviceData::Pointer& devicedata) override;
