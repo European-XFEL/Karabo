@@ -30,7 +30,7 @@ using karabo::xms::SLOT_ELEMENT;
 #define KRB_TEST_MAX_TIMEOUT 10
 
 /* Timeout, in milliseconds, for a slot request. */
-#define SLOT_REQUEST_TIMEOUT_MILLIS 2500
+#define SLOT_REQUEST_TIMEOUT_MILLIS 5000
 
 #define PAUSE_BEFORE_RETRY_MILLIS 150
 
@@ -180,10 +180,6 @@ namespace CppUnit{
         }
     };
 
-
-    void assertEquals(const float& expected, const float& actual, const SourceLine& s, const std::string& message) {
-        CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(message, expected, actual, expected * 1.e-6);
-    }
 }
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DataLogging_Test);
@@ -421,7 +417,7 @@ void DataLogging_Test::testHistoryAfterChanges() {
         nTries--;
     }
     CPPUNIT_ASSERT_EQUAL_MESSAGE("History size should be 1, got " + karabo::util::toString(history.size()) + ".",
-                                 1, history.size());
+                                 1ul, history.size());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Device name on reply, '" + device + "', differs from expected, '" + m_deviceId + "'.",
                                  m_deviceId, device);
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Property name on reply, '" + property + "', differs from expected, '" + propertyName + "'.",
@@ -594,7 +590,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
         // Get configuration, check expected values, check (static) time stamp of "oldValue" and store stamp of "value"
         Hash cfg;
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
-        CPPUNIT_ASSERT_EQUAL(i + 1, cfg.get<int>("value"));
+        CPPUNIT_ASSERT_EQUAL(static_cast<int> (i) + 1, cfg.get<int>("value"));
 
         CPPUNIT_ASSERT_EQUAL(99, cfg.get<int>("oldValue"));
         const Epochstamp stamp = Epochstamp::fromHashAttributes(cfg.getAttributes("oldValue"));
@@ -675,7 +671,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
                                "' after " + toString(nChecks) + " attempts.",
                                conf.size() > 0);
         CPPUNIT_ASSERT_EQUAL(99, conf.get<int>("oldValue"));
-        CPPUNIT_ASSERT_EQUAL(i + 1, conf.get<int>("value")); // +1: stamp is after update
+        CPPUNIT_ASSERT_EQUAL(static_cast<int> (i + 1), conf.get<int>("value")); // +1: stamp is after update
 
         // Check received stamps: The one of "oldValue is always the same, for "value" be aware that we store with
         // microsec precision only: we might be 1 off since we cut off digits instead of rounding
@@ -739,6 +735,38 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     std::clog << "OK" << std::endl;
 }
 
+
+template <class T>
+void isEqualMessage(const std::string& message, const T& expected, const T& actual,
+                    const std::vector<karabo::util::Hash>& fullHistory) {
+    std::string msg(message);
+    if (expected != actual) {
+        (msg += ": ") += toString(fullHistory);
+    }
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, expected, actual);
+}
+
+
+template <>
+void isEqualMessage(const std::string& message, const float& expected, const float& actual,
+                    const std::vector<karabo::util::Hash>& fullHistory) {
+    std::string msg(message);
+    if (expected != actual) {
+        (msg += ": ") += toString(fullHistory);
+    }
+    CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(msg, expected, actual, expected * 1.e-6);
+}
+
+// Needed in case we add a testDouble():
+//  template <>
+//  void isEqualMessage(const std::string& message, const double& expected, const double& actual,
+//                      const std::vector<karabo::util::Hash>& fullHistory) {
+//      std::string msg(message);
+//      if (expected != actual) {
+//          (msg += ": ") += toString(fullHistory);
+//      }
+//      CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(message, expected, actual, expected * 1.e-6);
+//  }
 
 template <class T>
 void DataLogging_Test::testHistory(const std::string& key, const std::function<T(int)> &f,
@@ -823,7 +851,7 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
 
     for (int i = 0; i < max_set; i++) {
         // checking values and timestamps
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong value in history", f(i), history[i].get<T>("v"));
+        isEqualMessage("Wrong value in history " + toString(i), f(i), history[i].get<T>("v"), history);
         Epochstamp current = Epochstamp::fromHashAttributes(history[i].getAttributes("v"));
         CPPUNIT_ASSERT_MESSAGE("Timestamp later than the requested window", current <= es_afterWrites);
         CPPUNIT_ASSERT_MESSAGE("Timestamp earlier than the requested window", current >= es_beforeWrites);
