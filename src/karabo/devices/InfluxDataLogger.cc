@@ -305,8 +305,11 @@ namespace karabo {
         InfluxDataLogger::InfluxDataLogger(const karabo::util::Hash& input)
             : DataLogger(input)
             , m_topic(getTopic()) {
-            Hash config("url", input.get<std::string>("url"), "dbname", m_topic, "durationUnit", DUR);
-            m_client = boost::make_shared<InfluxDbClient>(config);
+            Hash config("url", input.get<std::string>("url"),
+                        "dbname", m_topic,
+                        "durationUnit", DUR,
+                        "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
+            m_client = Configurator<InfluxDbClient>::create("InfluxDbClient", config);
         }
 
 
@@ -410,7 +413,6 @@ namespace karabo {
             }
             InfluxDeviceData::Pointer data = boost::static_pointer_cast<InfluxDeviceData>(devicedata);
             data->handleChanged(config, user);
-            m_client->flushOne(get<std::uint32_t>("maxBatchPoints"), get<std::uint32_t>("flushInterval"));
         }
 
 

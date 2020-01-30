@@ -31,6 +31,9 @@
 #include "karabo/util/TimeDuration.hh"
 
 namespace karabo {
+    namespace util {
+        class Schema;
+    }
     namespace net {
 
 
@@ -63,6 +66,8 @@ namespace karabo {
             InfluxDbClient(const karabo::util::Hash& input);
 
             virtual ~InfluxDbClient();
+
+            static void expectedParameters(karabo::util::Schema& expected);
 
             /**
              * Check if connection is lost and try to re-establish connection to InfluxDB server
@@ -115,8 +120,6 @@ namespace karabo {
              * defined, the flushBatch will work in a call-and-forget mode.
              */
             void flushBatch(const InfluxResponseHandler &respHandler = InfluxResponseHandler());
-
-            void flushOne(std::uint32_t maxBatchPoints, std::uint32_t flushInterval);
 
             /**
              * HTTP request "GET /ping ..." to InfluxDB server is registered in internal queue.
@@ -242,11 +245,10 @@ namespace karabo {
             static boost::uuids::random_generator m_uuidGenerator;
             static const unsigned int k_connTimeoutMs;
             std::string m_currentUuid;
+            const std::uint32_t m_maxPointsInBuffer;
             boost::mutex m_bufferMutex;
             std::stringstream m_buffer;
-            std::size_t m_bufferLen;
             std::uint32_t m_nPoints;
-            std::chrono::high_resolution_clock::time_point m_startTimePoint;
         };
 
     } // namespace net
