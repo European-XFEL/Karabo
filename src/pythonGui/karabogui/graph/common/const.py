@@ -19,6 +19,9 @@ AXIS_Y = ["left", "right"]
 WIDGET_MIN_HEIGHT = 200  # pixels
 WIDGET_MIN_WIDTH = 300
 
+WIDGET_HEIGHT_HINT = 250  # pixels
+WIDGET_WIDTH_HINT = 450
+
 # Plot Constants
 # --------------------------------------------------------------------------
 
