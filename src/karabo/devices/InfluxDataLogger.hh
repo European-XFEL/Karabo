@@ -29,7 +29,7 @@ namespace karabo {
 
             virtual ~InfluxDeviceData();
 
-            void handleChanged(const karabo::util::Hash& config, const std::string& user);
+            void handleChanged(const karabo::util::Hash& config, const std::string& user) override;
 
             void logValue(const std::string& deviceId, const std::string& path,
                           const std::string& value, const karabo::util::Types::ReferenceType& type);
@@ -38,7 +38,7 @@ namespace karabo {
 
             void checkSchemaInDb(const karabo::util::Timestamp& stamp, const karabo::net::HttpResponse& o);
 
-            void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp);
+            void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp) override;
 
             void stopLogging() override;
 
@@ -78,12 +78,6 @@ namespace karabo {
             void initializeLoggerSpecific() override;
 
             void flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) override;
-
-            void handleChanged(const karabo::util::Hash& config, const std::string& user,
-                               const DeviceData::Pointer& devicedata) override;
-
-            void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
-                                     const DeviceData::Pointer& devicedata) override;
 
         private:
 
