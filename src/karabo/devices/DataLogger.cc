@@ -516,7 +516,8 @@ namespace karabo {
             if (e == boost::asio::error::operation_aborted) {
                 return;
             }
-            updateTableAndFlush();
+            // Use empty reply pointer here: not inside slot, so no reply handling needed
+            updateTableAndFlush(boost::shared_ptr<SignalSlotable::AsyncReply>());
             // arm timer again
             m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
             m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
