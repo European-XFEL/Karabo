@@ -81,11 +81,6 @@ namespace karabo {
 
             DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) override;
 
-            void flushOne(const DeviceData::Pointer& devicedata) override {
-                FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
-                data->flushOne();
-            }
-
             void handleChanged(const karabo::util::Hash& config, const std::string& user,
                                const DeviceData::Pointer& devicedata) override {
                 FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
@@ -97,6 +92,9 @@ namespace karabo {
                 FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
                 data->handleSchemaUpdated(schema, stamp);
             }
+
+            void flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) override;
+
         };
     }
 }
