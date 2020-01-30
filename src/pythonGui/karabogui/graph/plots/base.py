@@ -1,6 +1,6 @@
 from functools import partial
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QSize, Qt
 from PyQt5.QtWidgets import QAction, QGridLayout, QSizePolicy, QWidget
 from pyqtgraph import GraphicsView, mkPen, PlotItem
 
@@ -15,7 +15,7 @@ from karabogui.graph.common.api import (
 from karabogui.graph.common.const import (
     AXIS_ITEMS, ACTION_ITEMS, CHECK_ACTIONS, DEFAULT_BAR_WIDTH,
     EMPTY_SYMBOL_OPTIONS, DEFAULT_SYMBOL, SYMBOL_SIZE, WIDGET_MIN_HEIGHT,
-    WIDGET_MIN_WIDTH)
+    WIDGET_MIN_WIDTH, WIDGET_WIDTH_HINT, WIDGET_HEIGHT_HINT)
 
 from karabogui.graph.plots.dialogs import RangeDialog
 from karabogui.graph.plots.items import (
@@ -81,6 +81,10 @@ class KaraboPlotView(QWidget):
         self._canvas = None
 
         self._show_symbols = False
+
+    def sizeHint(self):
+        """Provide a size hint slightly larger than the minimum size"""
+        return QSize(WIDGET_WIDTH_HINT, WIDGET_HEIGHT_HINT)
 
     def setup_qactions(self, actions):
         """The setup of the basic actions is gathered here!"""
