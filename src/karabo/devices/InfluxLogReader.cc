@@ -142,7 +142,7 @@ namespace karabo {
             dbClientCfg.set<std::string>("dbname", topic);
             dbClientCfg.set<std::string>("url", url);
             dbClientCfg.set<std::string>("durationUnit", "u");
-            m_influxClient = boost::make_shared<InfluxDbClient>(dbClientCfg);
+            m_influxClient = Configurator<InfluxDbClient>::create("InfluxDbClient", dbClientCfg);
             m_durationUnit = toInfluxDurationUnit(TIME_UNITS::MICROSEC);
         }
 
