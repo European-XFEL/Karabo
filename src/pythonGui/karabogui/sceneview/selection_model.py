@@ -37,6 +37,13 @@ class SceneSelectionModel(HasStrictTraits):
         rect.adjust(-2, -2, +3, +3)
         return rect
 
+    def get_item_rect(self):
+        """Return the item rectangle for the objects which are selected.
+
+        This rect is used for position determination and not for drawing!
+        """
+        return QRect(*calc_bounding_rect(self._selection))
+
     def has_selection(self):
         return len(self._selection) > 0
 
