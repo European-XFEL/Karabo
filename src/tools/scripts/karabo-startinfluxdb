@@ -15,7 +15,8 @@ if [[ $? -ne 0 ]]; then
     fi
 fi
 
-mkdir -p $KARABO/var/data/exist_data
+INFLUX_DATA_DIR=$KARABO/var/data/influx_data
+mkdir -p $INFLUX_DATA_DIR
 
 # unfortunately docker ps will always return 0, so we need to grep the output
 docker ps --filter name=$CONTAINER | grep $CONTAINER > /dev/null
@@ -27,18 +28,19 @@ fi
 docker ps --all --filter name=$CONTAINER | grep $CONTAINER > /dev/null
 # if no container from the image is running, start it.
 if [[ $? -ne 0 ]]; then
-    docker run -d -p 8086:8086 -p 8083:8083 -e INFLUXDB_ADMIN_ENABLED=true -v $KARABO/var/data/influx_data:/var/lib/influxdb --name $CONTAINER $IMAGE > /dev/null
+    docker run -d -p 8086:8086 -p 8083:8083 -e INFLUXDB_ADMIN_ENABLED=true -v $INFLUX_DATA_DIR:/var/lib/influxdb --name $CONTAINER $IMAGE > /dev/null
 else
     docker start $CONTAINER > /dev/null
 fi
 
-echo "------------------------------------------"
 
 if [[ $? -eq 0 ]]; then
+    echo "------------------------------------------"
     echo "Influx DB container was started."
     echo "You can access the backend at: http://localhost:8086"
     exit 0
 else
+    echo "------------------------------------------"
     echo "Error Starting the Influx DB container"
     exit 1
 fi
