@@ -15,7 +15,8 @@ if [[ $? -ne 0 ]]; then
     fi
 fi
 
-mkdir -p $KARABO/var/data/exist_data
+EXIST_DATA_DIR=$KARABO/var/data/exist_data
+mkdir -p $EXIST_DATA_DIR
 
 # unfortunately docker ps will always return 0, so we need to grep the output
 docker ps --filter name=$CONTAINER | grep $CONTAINER > /dev/null
@@ -27,18 +28,19 @@ fi
 docker ps --all --filter name=$CONTAINER | grep $CONTAINER > /dev/null
 # if no container from the image is running, start it.
 if [[ $? -ne 0 ]]; then
-    docker run -d -p 8080:8080 -v $KARABO/var/data/exist_data:/opt/exist_data/export/ --name $CONTAINER $IMAGE > /dev/null
+    docker run -d -p 8080:8080 -v $EXIST_DATA_DIR:/opt/exist_data/export/ --name $CONTAINER $IMAGE > /dev/null
 else
     docker start $CONTAINER > /dev/null
 fi
 
-echo "------------------------------------------"
 
 if [[ $? -eq 0 ]]; then
+    echo "------------------------------------------"
     echo "Configuration DB was started."
     echo "You can access the backend at: http://localhost:8080/exist/"
     exit 0
 else
+    echo "------------------------------------------"
     echo "Error Starting the Configuration DB"
     exit 1
 fi
