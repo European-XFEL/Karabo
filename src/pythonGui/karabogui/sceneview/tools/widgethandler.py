@@ -66,7 +66,7 @@ class SceneWidgetHandler(ABCHasStrictTraits):
         """Move the layout selection on the sceneview via a dialog interaction
         """
         selection_model = scene_view.selection_model
-        rect = selection_model.get_selection_bounds()
+        rect = selection_model.get_item_rect()
         max_x = scene_view.scene_model.width - rect.width()
         max_y = scene_view.scene_model.height - rect.height()
         dialog = SceneItemDialog(x=rect.x(), y=rect.y(),
