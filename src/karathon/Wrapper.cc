@@ -16,7 +16,6 @@
 #include <karabo/xms/ImageData.hh>
 
 using namespace std;
-//using namespace karabo::util;
 
 namespace karathon {
 
@@ -248,6 +247,45 @@ namespace karathon {
         return bp::object(hash);
     }
 
+
+    // Helper for Wrapper::toAny below:
+    karabo::util::Types::ReferenceType bestIntegerType(const bp::object& obj) {
+        long long const kNegInt32Min = -(1LL << 31);
+        long long const kPosUint32Max = (1LL << 32) - 1;
+        long long const kPosInt32Max = (1LL << 31) - 1;
+        long long const kPosInt64Max = (1ULL << 63) - 1;
+
+        int overflow = 0;
+        PY_LONG_LONG value = PyLong_AsLongLongAndOverflow(obj.ptr(), &overflow);
+        if (overflow == 0) {
+            if (value < 0) {
+                if (value < kNegInt32Min) {
+                    return karabo::util::Types::INT64;
+                } else {
+                    return karabo::util::Types::INT32;
+                }
+            } else {
+                if (value > kPosUint32Max) {
+                    if (value <= kPosInt64Max) {
+                        return karabo::util::Types::INT64;
+                    } else {
+                        return karabo::util::Types::UINT64;
+                    }
+                } else {
+                    if (value <= kPosInt32Max) {
+                        return karabo::util::Types::INT32;
+                    } else {
+                        return karabo::util::Types::UINT32;
+                    }
+                }
+            }
+        } else {
+            // So 'long long', i.e. INT64, overflows. Best try is UINT64 that needs PyLong_AsUnsignedLongLong
+            // for conversion. Note that that will raise a Python exception if even that overflows.
+            return karabo::util::Types::UINT64;
+        }
+    }
+
     karabo::util::Types::ReferenceType Wrapper::toAny(const bp::object& obj, boost::any& any) {
         if (obj.ptr() == Py_None) {
             any = karabo::util::CppNone();
@@ -259,44 +297,29 @@ namespace karathon {
             return karabo::util::Types::BOOL;
         }
         if (PyLong_Check(obj.ptr())) {
-            long long const kNegInt32Min = -(1LL << 31);
-            long long const kPosUint32Max = (1LL << 32) - 1;
-            long long const kPosInt32Max = (1LL << 31) - 1;
-            long long const kPosInt64Max = (1ULL << 63) - 1;
-            int overflow = 0;
-            PY_LONG_LONG value = PyLong_AsLongLongAndOverflow(obj.ptr(), &overflow);
-            if (overflow == 0) {
-                if (value < 0) {
-                    if (value < kNegInt32Min) {
-                        any = static_cast<long long> (value);
-                        return karabo::util::Types::INT64;
-                    } else {
+            // An integer - let's find out which one fits:
+            const karabo::util::Types::ReferenceType type = bestIntegerType(obj);
+            if (type == karabo::util::Types::UINT64) {
+                // Raises a Python exception if it overflows:
+                any = PyLong_AsUnsignedLongLong(obj.ptr());
+            } else {
+                const PY_LONG_LONG value = PyLong_AsLongLong(obj.ptr());
+                switch (type) {
+                    case karabo::util::Types::INT32:
                         any = static_cast<int> (value);
-                        return karabo::util::Types::INT32;
-                    }
-                } else {
-                    if (value > kPosUint32Max) {
-                        if (value <= kPosInt64Max) {
-                            any = static_cast<long long> (value);
-                            return karabo::util::Types::INT64;
-                        }
-                        any = static_cast<unsigned long long> (value);
-                        return karabo::util::Types::UINT64;
-                    } else {
-                        if (value <= kPosInt32Max) {
-                            any = static_cast<int> (value);
-                            return karabo::util::Types::INT32;
-                        }
+                        break;
+                    case karabo::util::Types::UINT32:
                         any = static_cast<unsigned int> (value);
-                        return karabo::util::Types::UINT32;
-                    }
+                        break;
+                    case karabo::util::Types::INT64:
+                        any = static_cast<long long> (value);
+                        break;
+                    default:
+                        // Should never come here!
+                        throw KARABO_PYTHON_EXCEPTION("Unsupported int type " + toString(type));
                 }
             }
-
-            // Try UINT64. Raises a Python exception if it overflows...
-            unsigned long long val = PyLong_AsUnsignedLongLong(obj.ptr());
-            any = val;
-            return karabo::util::Types::UINT64;
+            return type;
         }
         if (PyFloat_Check(obj.ptr())) {
             double b = bp::extract<double>(obj);
@@ -397,38 +420,48 @@ namespace karathon {
                 return karabo::util::Types::VECTOR_BOOL;
             }
             if (PyLong_Check(list0.ptr())) {
-                try {
+                // First item is an integer - assume that all items are!
+                karabo::util::Types::ReferenceType broadestType = karabo::util::Types::INT32;
+                for (bp::ssize_t i = 0; i < size; ++i) {
+                    const karabo::util::Types::ReferenceType type = bestIntegerType(obj[i]);
+                    // This relies on the fact that the enums ReferenceType have the order INT32, UINT32, INT64, UINT64
+                    if (type > broadestType) {
+                        broadestType = type;
+                        // Stop loop if cannot get broader...
+                        if (broadestType == karabo::util::Types::UINT64) break;
+                    }
+                }
+                if (broadestType == karabo::util::Types::INT32) {
                     std::vector<int> v(size);
                     for (bp::ssize_t i = 0; i < size; ++i) {
-                        v[i] = static_cast<int> (bp::extract<int>(obj[i]));
+                        v[i] = bp::extract<int>(obj[i]);
                     }
-                    any = v;
+                    any = std::move(v);
                     return karabo::util::Types::VECTOR_INT32;
-                } catch (...) {
-                    try {
-                        std::vector<unsigned int> v(size);
-                        for (bp::ssize_t i = 0; i < size; ++i) {
-                            v[i] = static_cast<unsigned int> (bp::extract<unsigned int>(obj[i]));
-                        }
-                        any = v;
-                        return karabo::util::Types::VECTOR_UINT32;
-                    } catch (...) {
-                        try {
-                            std::vector<long long> v(size);
-                            for (bp::ssize_t i = 0; i < size; ++i) {
-                                v[i] = static_cast<long long> (bp::extract<long long>(obj[i]));
-                            }
-                            any = v;
-                            return karabo::util::Types::VECTOR_INT64;
-                        } catch (...) {
-                            std::vector<unsigned long long> v(size);
-                            for (bp::ssize_t i = 0; i < size; ++i) {
-                                v[i] = static_cast<unsigned long long> (bp::extract<unsigned long long>(obj[i]));
-                            }
-                            any = v;
-                            return karabo::util::Types::VECTOR_UINT64;
-                        }
+                } else if (broadestType == karabo::util::Types::UINT32) {
+                    std::vector<unsigned int> v(size);
+                    for (bp::ssize_t i = 0; i < size; ++i) {
+                        v[i] = bp::extract<unsigned int>(obj[i]);
                     }
+                    any = std::move(v);
+                    return karabo::util::Types::VECTOR_UINT32;
+                } else if (broadestType == karabo::util::Types::INT64) {
+                    std::vector<long long > v(size);
+                    for (bp::ssize_t i = 0; i < size; ++i) {
+                        v[i] = bp::extract<long long>(obj[i]);
+                    }
+                    any = std::move(v);
+                    return karabo::util::Types::VECTOR_INT64;
+                } else if (broadestType == karabo::util::Types::UINT64) {
+                    std::vector<unsigned long long> v(size);
+                    for (bp::ssize_t i = 0; i < size; ++i) {
+                        v[i] = bp::extract<unsigned long long>(obj[i]);
+                    }
+                    any = std::move(v);
+                    return karabo::util::Types::VECTOR_UINT64;
+                } else {
+                    // Should never come here!
+                    throw KARABO_PYTHON_EXCEPTION("Unsupported int type " + toString(broadestType));
                 }
             }
             if (PyFloat_Check(list0.ptr())) {
