@@ -17,6 +17,7 @@
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/log/Logger.hh"
 #include "karabo/net/utils.hh"
+#include "karabo/net/EventLoop.hh"
 #include "karabo/util/Hash.hh"
 
 #include "InfluxDbClient.hh"
@@ -220,12 +221,18 @@ namespace karabo {
                 // Post accumulated batch ...
                 postWriteDb(m_buffer.str(), [respHandler](const HttpResponse & response) {
                     if (response.code != 204) {
-                        KARABO_LOG_FRAMEWORK_ERROR << "Code " << response.code << " " << response.message;
+                        KARABO_LOG_FRAMEWORK_ERROR << "Flushing failed: " << response.code << " " << response.message;
                     }
                     if (respHandler) {
                         respHandler(response);
                     }
                 });
+            } else if (respHandler) {
+                // Buffer empty and nothing to do. But a response is requested, so create one with success code:
+                HttpResponse resp;
+                resp.code = 204;
+                // Go via event loop to avoid dead lock in case the handler calls a function that locks m_bufferMutex
+                EventLoop::getIOService().post(boost::bind(respHandler, resp));
             }
             m_buffer.str(""); // clear buffer stream
             m_nPoints = 0;
