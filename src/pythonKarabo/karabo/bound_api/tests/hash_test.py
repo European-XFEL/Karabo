@@ -384,20 +384,50 @@ class Hash_TestCase(unittest.TestCase):
 
     def test_intUnboxingEdgeCases(self):
         values_and_types = {
-            -(2 ** 31): Types.INT32,
-            2 ** 31 - 1: Types.INT32,
-            2 ** 32 - 1: Types.UINT32,
-            2 ** 32: Types.INT64,
-            -(2 ** 63): Types.INT64,
-            2 ** 63 - 1: Types.INT64,
-            2 ** 64 - 1: Types.UINT64,
+            -(2 ** 31): (Types.INT32, Types.VECTOR_INT32),
+            2 ** 31 - 1: (Types.INT32, Types.VECTOR_INT32),
+            2 ** 32 - 1: (Types.UINT32, Types.VECTOR_UINT32),
+            2 ** 32: (Types.INT64, Types.VECTOR_INT64),
+            -(2 ** 63): (Types.INT64, Types.VECTOR_INT64),
+            2 ** 63 - 1: (Types.INT64, Types.VECTOR_INT64),
+            2 ** 64 - 1: (Types.UINT64, Types.VECTOR_UINT64),
         }
+        # Why not OverflowError below? If I try so, my traceback is
+        # OverflowError: int too big to convert
+        #
+        # The above exception was the direct cause of the following exception:
+        #
+        # Traceback (most recent call last):
+        #   File "<snip>/tests/hash_test.py", line 397, in test_<snip>
+        #  h = Hash("b", 2 ** 64)
+        # SystemError: <Boost.Python.function object at 0x242c6c0> returned a
+        #              result with an error set
+        with self.assertRaises(SystemError):
+            h = Hash("b", 2 ** 64)
+        with self.assertRaises(OverflowError):
+            h = Hash("vb", [2 ** 64])
         for value, type_ in values_and_types.items():
             msg = "Failed to unbox {0}".format(value)
             try:
                 h = Hash("a", value)
-                self.assertEqual(h.getType("a"), type_, msg=msg)
+                self.assertEqual(h.getType("a"), type_[0], msg=msg)
                 self.assertEqual(h["a"], value, msg=msg)
+            except OverflowError:
+                self.fail(msg)
+            # Now for vectors:
+            # first most broad int type first
+            msg = "Failed to unbox {0} in list".format(value)
+            try:
+                h = Hash("a", [value, 0])
+                self.assertEqual(h.getType("a"), type_[1], msg=msg)
+                self.assertEqual(h["a"], [value, 0], msg=msg + " - first")
+            except OverflowError:
+                self.fail(msg)
+            # then most broad int type last
+            try:
+                h = Hash("a", [0, value])
+                self.assertEqual(h.getType("a"), type_[1], msg=msg)
+                self.assertEqual(h["a"], [0, value], msg=msg + " - last")
             except OverflowError:
                 self.fail(msg)
 
