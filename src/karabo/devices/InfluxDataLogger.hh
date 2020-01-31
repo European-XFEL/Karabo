@@ -20,8 +20,8 @@ namespace karabo {
         typedef boost::function<void()> AsyncHandler;
         typedef boost::function<void(const karabo::net::HttpResponse&)> InfluxResponseHandler;
 
-        struct InfluxDeviceData :
-        public karabo::devices::DeviceData, boost::enable_shared_from_this<InfluxDeviceData> {
+        struct InfluxDeviceData : public karabo::devices::DeviceData {
+
 
             KARABO_CLASSINFO(InfluxDeviceData, "InfluxDataLoggerDeviceData", "2.6")
 
