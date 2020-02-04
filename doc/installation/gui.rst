@@ -16,7 +16,7 @@ Installing Conda
 
 The following steps are needed in order to obtain Conda.
 
-* Download and install miniconda from `here <https://docs.conda.io/en/latest/miniconda.html>`_
+* Download and install miniconda (Python version >= 3) from `here <https://docs.conda.io/en/latest/miniconda.html>`_
 * Open your terminal (Anaconda Prompt on Windows or a bash on linux)
 * If conda is in your path, you should be able to run **conda --version**
     * If it isn't, you need to activate conda first
