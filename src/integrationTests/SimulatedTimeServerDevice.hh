@@ -48,8 +48,9 @@ namespace karabo {
         
         void initialize();
         void tickTock(const boost::system::error_code& e);
+        void resetId();
 
-        unsigned long long m_id;
+        std::atomic<unsigned long long> m_id;
         unsigned long long m_emitCount;
         boost::asio::deadline_timer m_timeTickerTimer;
         unsigned int m_tickCountdown;
