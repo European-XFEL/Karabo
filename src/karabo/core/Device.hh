@@ -98,18 +98,9 @@ namespace karabo {
              */
             virtual void finalizeInternalInitialization(bool consumeBroadcasts) = 0;
 
-            /*
-             * A pure virtual method to be overwritten to return a tag-filtered
-             * configuration of derived classes
-             *
-             * @param tags: tags to filter the return configuration by
-             * @return: a Hash containing the (filtered) documentation
-             */
-            virtual karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") const = 0;
-
             /**
-             * A slot called by the device server if the external or possibly generated internally time ticks have to be
-             * passed to synchronize this device with the timing system.
+             * A slot called by the device server if the external time ticks update to synchronize
+             * this device with the timing system.
              *
              * @param id: current train id
              * @param sec: current system seconds
@@ -118,7 +109,7 @@ namespace karabo {
              */
             virtual void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
 
-            /**
+/**
              * A hook which is called if the device receives external time-server update, i.e. if slotTimeTick on the
              * device server is called.
              * Can be overwritten by derived classes.
@@ -128,8 +119,22 @@ namespace karabo {
              * @param frac: fractional seconds (i.e. attoseconds)
              * @param period: interval between ids im microseconds
              */
-            virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
+            virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            }
 
+            /**
+             * If the device receives time-server updates via slotTimeTick, this hook will be called for every id
+             * in sequential order. The time stamps (sec + frac) of subsequent ids might be identical - though they
+             * are usually spaced by period.
+             * Can be overwritten in derived classes.
+             *
+             * @param id: train id
+             * @param sec: unix seconds
+             * @param frac: fractional seconds (i.e. attoseconds)
+             * @param period: interval between ids microseconds
+             */
+            virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            }
         };
 
         /**
@@ -176,8 +181,6 @@ namespace karabo {
             unsigned long long m_timeFrac; // attoseconds
             unsigned long long m_timePeriod; // microseconds
             mutable boost::mutex m_timeChangeMutex;
-            unsigned long long m_lastTimeIdUpdated; // used only in onTimeUpdateHelper
-            mutable boost::mutex m_lastTimeIdUpdatedMutex;
 
             krb_log4cpp::Category* m_log;
 
@@ -439,7 +442,6 @@ namespace karabo {
              */
             Device(const karabo::util::Hash& configuration)
                 : m_errorRegex(".*error.*", boost::regex::icase)
-                , m_lastTimeIdUpdated(0ull)
                 , m_globalAlarmCondition(karabo::util::AlarmCondition::NONE)
                 , m_lastBrokerErrorStamp(0ull, 0ull) {
 
@@ -1189,19 +1191,6 @@ namespace karabo {
                         << "\" does not allow a transition for event \"" << eventName << "\".";
             }
 
-            /**
-             * If the device receives time-server updates via slotTimeTick, this hook will be called for every id
-             * in sequential order. The time stamps (sec + frac) of subsequent ids might be identical - though they
-             * are usually spaced by period.
-             * Can be overwritten in derived classes.
-             *
-             * @param id: train id
-             * @param sec: unix seconds
-             * @param frac: fractional seconds (i.e. attoseconds)
-             * @param period: interval between ids microseconds
-             */
-            virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-            }
 
             /**
              * Execute a command on this device
@@ -1375,13 +1364,7 @@ namespace karabo {
                     m_timeFrac = frac;
                     m_timePeriod = period;
                 }
-                // Since directly called from DeviceServer for all devices in sequence, we post the helper since it
-                // might be blocking.
-                karabo::net::EventLoop::getIOService().post(karabo::util::bind_weak(&Device<FSM>::onTimeUpdateHelper, this,
-                                                                                    id, sec, frac, period));
-            }
-
-            void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+                onTimeTick(id, sec, frac, period);
             }
 
             /**
@@ -2095,41 +2078,7 @@ namespace karabo {
 
                 reply(result);
             }
-
-            /**
-             * Internal helper for slotTimeTick
-             */
-            void onTimeUpdateHelper(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-                // This ensure that onTimeUpdate is called with strong monotonically increasing ids:
-                // If some where missing, call with them now - with same time stamp...
-                // If this is called with an id smaller or equal than before, it just skips calling onTimeUpdate with
-                // this id since that has already been done.
-                // This protection is needed since in DeviceServer::onTimeUpdate directly calls
-                // (Base)Device::slotTimeTick with the guarantee to be sequential, but then this helper is posted on
-                // the event loop which does not guarantee to keep the order (and in praxis ids are rarely swapped!).
-                // Another solution would be to use one boost::asio::io_service::strand per Device in DeviceServer,
-                // post slotTimeTick through that and do not post again in Device::slotTimeTick.
-
-                // Protect since several onTimeUpdateHelper could run in parallel:
-                boost::mutex::scoped_lock lock(m_lastTimeIdUpdatedMutex);
-
-                if (m_lastTimeIdUpdated == 0ull) { // Called the first time
-                    m_lastTimeIdUpdated = id - 1ull;
-                }
-                const unsigned long long largestOnTimeUpdateBacklog = 600000000ull / period; // 6*10^8: 10 min in microsec
-                if (id > m_lastTimeIdUpdated + largestOnTimeUpdateBacklog) {
-                    // Don't treat an 'id' older than 10 min - for a period of 100 millisec that is 6000 ids in the past
-                    KARABO_LOG_WARN << "Big gap between trainIds: from " << m_lastTimeIdUpdated << " to " << id
-                            << ". Call hook for time updates only for last " << largestOnTimeUpdateBacklog << " ids.";
-                    m_lastTimeIdUpdated = id - largestOnTimeUpdateBacklog;
-                }
-
-                while (m_lastTimeIdUpdated < id) {
-                    onTimeUpdate(++m_lastTimeIdUpdated, sec, frac, period);
-                }
-            }
         };
-
 
     }
 }
