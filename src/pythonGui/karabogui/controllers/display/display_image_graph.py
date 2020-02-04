@@ -60,6 +60,9 @@ class DisplayImageGraph(BaseBindingController):
         if image_node is None:
             return
         timestamp = image_node.pixels.value.data.timestamp
+        if timestamp is None:
+            # Can happen when we toggle aux plots
+            return
         diff = Timestamp().toTimestamp() - timestamp.toTimestamp()
         self.widget.setToolTip("{} --- Last image received {:.3f} s "
                                "ago".format(self.proxy.key, diff))
