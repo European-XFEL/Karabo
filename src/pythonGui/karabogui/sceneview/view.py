@@ -34,7 +34,7 @@ from .tools.api import (
     ProjectDropHandler, SceneControllerHandler, SceneSelectionTool,
     SceneToolHandler)
 from .utils import save_painter_state
-from .widget.api import ControllerContainer, WorkflowItemWidget
+from .widget.api import ControllerContainer, GridView, WorkflowItemWidget
 from .workflow.api import SceneWorkflowModel, WorkflowOverlay
 
 # The scene widgets handler for mutations and action of the controllers and
@@ -71,7 +71,7 @@ class SceneView(QWidget):
         self.layout = GroupLayout(layout_model, parent=self)
         self.setContentsMargins(0, 0, 0, 0)
 
-        self.inner = QWidget(self)
+        self.inner = GridView(self)
         self.inner.setLayout(self.layout)
         self.inner.setFocusPolicy(Qt.StrongFocus)
         # Also create an overlay for the workflow connections
@@ -98,7 +98,7 @@ class SceneView(QWidget):
         # other tools need the parent widget to handle mouse event won't
         # trigger the design_mode behavior
         self._design_mode = False
-        self.design_mode = design_mode
+        self.set_scene_edit_mode(False)
         self.tab_visible = False
         self._scene_obj_cache = {}
         self._hover_rect = QRect(0, 0, 10, 10)
@@ -132,6 +132,14 @@ class SceneView(QWidget):
         }
         register_for_broadcasts(self.event_map)
 
+    def set_scene_edit_mode(self, value):
+        """Set the edit mode of the scene view and toggle mouse handling in
+        the inner view"""
+        self.enable_mouse_event_handling(value)
+        if not value:
+            self.selection_model.clear_selection()
+            self.set_tool(None)
+
     @property
     def design_mode(self):
         return self._design_mode
@@ -139,11 +147,8 @@ class SceneView(QWidget):
     @design_mode.setter
     def design_mode(self, value):
         self._design_mode = value
-        # Toggle mouse handling in the inner view
-        self.enable_mouse_event_handling(value)
-        if not value:
-            self.selection_model.clear_selection()
-            self.set_tool(None)
+        self.set_scene_edit_mode(value)
+        self.inner.showGrid(value)
 
     def enable_mouse_event_handling(self, enable):
         """Set whether delivery of mouse events to the widget and its children
