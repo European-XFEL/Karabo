@@ -19,7 +19,8 @@
 class Timing_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Timing_Test);
 
-    CPPUNIT_TEST(appTestRunner);
+    CPPUNIT_TEST(testWrongPeriod);
+    CPPUNIT_TEST(testIdReset);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -30,7 +31,8 @@ public:
     void tearDown();
 
 private:
-    void appTestRunner();
+    void testWrongPeriod();
+    void testIdReset();
     
     karabo::core::DeviceServer::Pointer m_deviceServer;
     karabo::core::DeviceServer::Pointer m_deviceServer2;
