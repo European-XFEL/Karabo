@@ -19,7 +19,7 @@ namespace karabo {
 
             virtual ~FileDeviceData();
 
-            void handleChanged(const karabo::util::Hash& config, const std::string& user);
+            void handleChanged(const karabo::util::Hash& config, const std::string& user) override;
 
             void logValue(const std::string& deviceId, const std::string& path,
                           const karabo::util::Timestamp& ts, const std::string& value,
@@ -46,7 +46,7 @@ namespace karabo {
 
             int incrementLastIndex(const std::string& deviceId);
 
-            void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp);
+            void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp) override;
 
             void setupDirectory();
 
@@ -80,18 +80,6 @@ namespace karabo {
         private:
 
             DeviceData::Pointer createDeviceData(const karabo::util::Hash& config) override;
-
-            void handleChanged(const karabo::util::Hash& config, const std::string& user,
-                               const DeviceData::Pointer& devicedata) override {
-                FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
-                data->handleChanged(config, user);
-            }
-
-            void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
-                                     const DeviceData::Pointer& devicedata) override {
-                FileDeviceData::Pointer data = boost::static_pointer_cast<FileDeviceData>(devicedata);
-                data->handleSchemaUpdated(schema, stamp);
-            }
 
             void flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) override;
 
