@@ -60,6 +60,8 @@ namespace karabo {
 
         void InfluxDeviceData::handleChanged(const karabo::util::Hash& configuration, const std::string& user) {
 
+            m_dbClient->connectDbIfDisconnected();
+
             if (user.empty()) {
                 m_user = ".";
             } else {
@@ -233,7 +235,14 @@ namespace karabo {
 
         void InfluxDeviceData::handleSchemaUpdated(const karabo::util::Schema& schema,
                                                    const karabo::util::Timestamp& stamp) {
+            // Before checking client status: enables buffering of property updates in handleChanged:
             m_currentSchema = schema;
+
+            if (!m_dbClient->isConnected()) {
+                m_dbClient->connectDbIfDisconnected();
+                KARABO_LOG_FRAMEWORK_WARN << "Skip schema updated: DB connection is requested...";
+                return;
+            }
 
             // Use Binary serializer as soon as we encode into Base64:
             karabo::io::BinarySerializer<karabo::util::Schema>::Pointer serializer
@@ -406,16 +415,6 @@ namespace karabo {
         }
 
 
-        void InfluxDataLogger::handleChanged(const karabo::util::Hash& config, const std::string& user,
-                           const DeviceData::Pointer& devicedata) {
-            if (!m_client->isConnected()) {
-                m_client->connectDbIfDisconnected();
-            }
-            InfluxDeviceData::Pointer data = boost::static_pointer_cast<InfluxDeviceData>(devicedata);
-            data->handleChanged(config, user);
-        }
-
-
         void InfluxDataLogger::flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) {
             karabo::net::InfluxResponseHandler handler;
             if (aReplyPtr) {
@@ -431,19 +430,6 @@ namespace karabo {
                 };
             }
             m_client->flushBatch(handler);
-        }
-
-
-        void InfluxDataLogger::handleSchemaUpdated(const karabo::util::Schema& schema,
-                                                   const karabo::util::Timestamp& stamp,
-                                                   const DeviceData::Pointer& devicedata) {
-            if (!m_client->isConnected()) {
-                m_client->connectDbIfDisconnected();
-                KARABO_LOG_FRAMEWORK_WARN << "Skip signalSchemaUpdated: DB connection is requested...";
-                return;
-            }
-            InfluxDeviceData::Pointer data = boost::static_pointer_cast<InfluxDeviceData>(devicedata);
-            data->handleSchemaUpdated(schema, stamp);
         }
     }
 }

@@ -287,7 +287,7 @@ namespace karabo {
                                                const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
 
             // Set initial Schema - needed for receiving properly in slotChanged
-            handleSchemaUpdated(schema, stamp, data);
+            data->handleSchemaUpdated(schema, stamp);
 
             // Now connect concurrently both, signalStateChanged and signalChanged, to the same slot.
             asyncConnect({SignalSlotConnection(data->m_deviceToBeLogged, "signalStateChanged", "", "slotChanged"),
@@ -428,8 +428,10 @@ namespace karabo {
                 }
                 // UserId only available in real slot call, before posting to event loop:
                 const std::string& user = getSenderInfo("slotChanged")->getUserIdOfSender();
-                data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleChanged, this,
-                                                             configuration, user, data));
+                // See DataLogger::slotSchemaUpdated for  a consideration about using boost::bind with 'data' instead
+                // of bind_weak with bare pointer
+                data->m_strand->post(karabo::util::bind_weak(&DeviceData::handleChanged, data.get(),
+                                                             configuration, user));
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "slotChanged called from non-treated device " << deviceId << ".";
             }
@@ -572,7 +574,12 @@ namespace karabo {
             if (it != m_perDeviceData.end()) {
                 Timestamp stamp; // Best time stamp we can get for this schema change (or take it from broker message header?)
                 DeviceData::Pointer data = it->second;
-                data->m_strand->post(karabo::util::bind_weak(&DataLogger::handleSchemaUpdated, this, schema, stamp, data));
+                // Or boost::bind the shared pointer instead of bind_weak with this?
+                // That would create a potentially dangerous cyclic reference: data has a strand that has a queue that
+                // contains a handler that has a pointer to data until processed.
+                // The advantage would be a kind of guarantee that our update will be processed,
+                // even if data is removed from m_perDeviceData
+                data->m_strand->post(karabo::util::bind_weak(&DeviceData::handleSchemaUpdated, data.get(), schema, stamp));
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "slotSchemaUpdated called from non-treated device " << deviceId << ".";
             }
