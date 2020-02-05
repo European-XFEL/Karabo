@@ -10,8 +10,8 @@ from karabogui import icons
 from karabogui.graph.common.api import (
     AxesLabelsDialog, AxisType, BaseROIController, create_axis_items,
     ExportTool, ExportToolset, get_default_brush, get_default_pen, make_pen,
-    MouseMode, KaraboLegend, KaraboToolBar, KaraboViewBox, PlotDataExporter,
-    PointCanvas, ROITool, ROIToolset)
+    ImageExporter, MouseMode, KaraboLegend, KaraboToolBar, KaraboViewBox,
+    PlotDataExporter, PointCanvas, ROITool, ROIToolset)
 from karabogui.graph.common.const import (
     AXIS_ITEMS, ACTION_ITEMS, CHECK_ACTIONS, DEFAULT_BAR_WIDTH,
     EMPTY_SYMBOL_OPTIONS, DEFAULT_SYMBOL, SYMBOL_SIZE, WIDGET_MIN_HEIGHT,
@@ -311,8 +311,7 @@ class KaraboPlotView(QWidget):
         # Add Export toolset
         if self._toolbar is not None:
             self._toolbar.addSeparator()
-            export_toolset = self._toolbar.add_toolset(ExportToolset,
-                                                       tools=[ExportTool.Data])
+            export_toolset = self._toolbar.add_toolset(ExportToolset)
             export_toolset.clicked.connect(self.export)
 
     def restore(self, config):
@@ -441,14 +440,16 @@ class KaraboPlotView(QWidget):
 
     @pyqtSlot(object)
     def export(self, export_type=ExportTool.Data):
-        """Exports the image according to the desired format"""
-        if export_type != ExportTool.Data:
-            raise LookupError("No exporter found for {}".format(export_type))
+        """Exports the data or image according to the desired format"""
+        if export_type == ExportTool.Image:
+            scene = self.plotItem.scene()
+            exporter = ImageExporter(scene)
+        elif export_type == ExportTool.Data:
+            if not len(self.plotItem.dataItems):
+                return
+            exporter = PlotDataExporter(self.plotItem.dataItems)
 
-        if len(self.plotItem.dataItems) == 0:
-            return
-
-        PlotDataExporter(self.plotItem.dataItems).export()
+        exporter.export()
 
     # ----------------------------------------------------------------
     # PlotItem methods
