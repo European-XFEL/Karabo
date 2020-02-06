@@ -214,11 +214,6 @@
       <itemPath>../../../src/karabo/net/utils.cc</itemPath>
       <itemPath>../../../src/karabo/net/utils.hh</itemPath>
     </logicalFolder>
-    <logicalFolder name="f3" displayName="pugiXml" projectFiles="true">
-      <itemPath>../../../src/karabo/pugiXml/pugiconfig.hpp</itemPath>
-      <itemPath>../../../src/karabo/pugiXml/pugixml.cpp</itemPath>
-      <itemPath>../../../src/karabo/pugiXml/pugixml.hpp</itemPath>
-    </logicalFolder>
     <logicalFolder name="f1" displayName="util" projectFiles="true">
       <logicalFolder name="f4" displayName="Data Container" projectFiles="true">
         <itemPath>../../../src/karabo/util/Element.hh</itemPath>
@@ -1336,21 +1331,6 @@
       <item path="../../../src/karabo/net/utils.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/utils.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/pugiXml/pugiconfig.hpp"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/pugiXml/pugixml.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/pugiXml/pugixml.hpp"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/core/DeviceClient_Test.cc"
             ex="false"
@@ -3294,21 +3274,6 @@
       </item>
       <item path="../../../src/karabo/net/utils.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/pugiXml/pugiconfig.hpp"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/pugiXml/pugixml.cpp"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/pugiXml/pugixml.hpp"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/core/DeviceClient_Test.cc"
             ex="false"
             tool="1"
@@ -5240,21 +5205,6 @@
       <item path="../../../src/karabo/net/utils.cc" ex="false" tool="1" flavor2="8">
       </item>
       <item path="../../../src/karabo/net/utils.hh" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/pugiXml/pugiconfig.hpp"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/pugiXml/pugixml.cpp"
-            ex="false"
-            tool="1"
-            flavor2="8">
-      </item>
-      <item path="../../../src/karabo/pugiXml/pugixml.hpp"
-            ex="false"
-            tool="3"
-            flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/core/DeviceClient_Test.cc"
             ex="false"
