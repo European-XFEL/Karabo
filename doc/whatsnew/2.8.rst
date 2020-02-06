@@ -9,5 +9,11 @@ The **most relevant improvements**, fixes and changes are:
 - Bound API: Method 'validate' of Validator object returns tuple: (flag, error, validated)
              In case 'flag' is false, it would have raised an exception before.
 
+- C++ API: The pugiXML dependency has been moved as a dependency.
+           Headers can be found in the ``extern/include`` directory instead of
+           ``include/karabo/pugiXml``. e.g. the ``include`` statements like
+           ``#include <karabo/pugiXml/pugixml.hpp>`` should become 
+           ``#include <pugixml.hpp>``
+
 Detailed Merge-Log
 ==================
