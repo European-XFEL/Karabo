@@ -98,6 +98,7 @@ namespace karabo {
              */
             virtual void finalizeInternalInitialization(bool consumeBroadcasts) = 0;
 
+            // public since called by DeviceServer
             /**
              * A slot called by the device server if the external time ticks update to synchronize
              * this device with the timing system.
@@ -109,19 +110,7 @@ namespace karabo {
              */
             virtual void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) = 0;
 
-/**
-             * A hook which is called if the device receives external time-server update, i.e. if slotTimeTick on the
-             * device server is called.
-             * Can be overwritten by derived classes.
-             *
-             * @param id: train id
-             * @param sec: unix seconds
-             * @param frac: fractional seconds (i.e. attoseconds)
-             * @param period: interval between ids im microseconds
-             */
-            virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-            }
-
+            // public since called by DeviceServer
             /**
              * If the device receives time-server updates via slotTimeTick, this hook will be called for every id
              * in sequential order. The time stamps (sec + frac) of subsequent ids might be identical - though they
@@ -131,9 +120,24 @@ namespace karabo {
              * @param id: train id
              * @param sec: unix seconds
              * @param frac: fractional seconds (i.e. attoseconds)
-             * @param period: interval between ids microseconds
+             * @param period: interval between ids in microseconds
              */
             virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            }
+
+        protected:
+            // protected since called in Device<FSM>::slotTimeTick
+            /**
+             * A hook which is called if the device receives external time-server update, i.e. if slotTimeTick on the
+             * device server is called.
+             * Can be overwritten by derived classes.
+             *
+             * @param id: train id
+             * @param sec: unix seconds
+             * @param frac: fractional seconds (i.e. attoseconds)
+             * @param period: interval between ids in microseconds
+             */
+            virtual void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             }
         };
 
@@ -1037,7 +1041,7 @@ namespace karabo {
              * Retrieves the current configuration.
              * If no argument is given, all parameters (those described in the expected parameters section) are returned.
              * A subset of parameters can be retrieved by specifying one or more tags.
-             * @param tags The tags the parameter must carry to be retrieved
+             * @param tags The tags (separated by comma) the parameter must carry to be retrieved
              * @return A Hash containing the current value of the selected configuration
              */
             karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") const {
