@@ -9,7 +9,7 @@
 #ifndef HASHXMLSERIALIZER_H
 #define	HASHXMLSERIALIZER_H
 
-#include <karabo/pugiXml/pugixml.hpp>
+#include <pugixml.hpp>
 #include <karabo/util/Hash.hh>
 
 #include "TextSerializer.hh"
