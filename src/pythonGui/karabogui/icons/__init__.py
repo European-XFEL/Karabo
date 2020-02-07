@@ -33,6 +33,7 @@ def init():
     applyGrey = QIcon(apply.pixmap(32, QIcon.Disabled, QIcon.On))
 
 
+about = Icon("about.svg")
 add = Icon("add.svg")
 alarmGlobal = Icon("critical.svg")
 alarmHigh = Icon("critical.svg")
