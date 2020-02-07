@@ -21,6 +21,8 @@
 #include "karabo/io/Output.hh"
 #include "karabo/io/FileTools.hh"
 #include "karabo/net/JmsConnection.hh"
+#include "karabo/net/EventLoop.hh"
+#include "karabo/net/Strand.hh"
 #include "karabo/net/utils.hh"
 
 #include <boost/filesystem.hpp>
@@ -286,7 +288,7 @@ namespace karabo {
             const std::string& slotInstanceIds = ids->getValue<std::string>();
             boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
             for (const auto& deviceId_ptr : m_deviceInstanceMap) {
-                const std::string& devId = deviceId_ptr.first; // .second is shared_ptr to device...
+                const std::string& devId = deviceId_ptr.first;
                 // Check whether besides to '*', message was also addressed to device directly (theoretically...)
                 if (slotInstanceIds.find(("|" + devId) += "|") == std::string::npos) {
                     if (!tryToCallDirectly(devId, header, body)) {
@@ -319,9 +321,9 @@ namespace karabo {
 
 
         void DeviceServer::slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-            karabo::util::Epochstamp epochNow;
             bool firstCall = false;
             {
+                karabo::util::Epochstamp epochNow; // before mutex lock since that could add a delay
                 boost::mutex::scoped_lock lock(m_timeChangeMutex);
                 m_timeId = id;
                 m_timeSec  = sec;
@@ -335,20 +337,33 @@ namespace karabo {
                 firstCall = m_noTimeTickYet;
                 m_noTimeTickYet = false;
             }
-            // Take care that 'onTimeUpdate' is called every period:
+
+            {
+                // Just forward to devices this external update
+                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                for (auto& kv : m_deviceInstanceMap) {
+                    // We could post via Strand kv.second.second: That would still guarantee ordering and a long
+                    // blocking Device::onTimeTick would not delay the call of slotTimeTick of the following
+                    // devices. On the other hand, posting always adds some delay and the risk is low since
+                    //  Device::onTimeTick is barely used (if at all).
+                    if (kv.second.second) { // otherwise not yet fully initialized
+                        kv.second.first->slotTimeTick(id, sec, frac, period);
+                    }
+                }
+            }
+
+            // Now synchronize the machinery that takes care that devices' onTimeUpdate gets called every period.
+
             // Cancel pending timer if we had an update from the time server...
             if (m_timeTickerTimer.cancel() > 0 || firstCall) { // order matters if timer was already running
                 // ...but start again (or the first time), freshly synchronized.
                 timeTick(boost::system::error_code(), id);
             }
-            // Call hook for each external time tick update.
-            onTimeTick(id, sec, frac, period);
         }
 
 
         void DeviceServer::timeTick(const boost::system::error_code ec, unsigned long long newId) {
             if (ec) return;
-
             // Get values of last 'external' update via slotTimeTick.
             unsigned long long id = 0, period = 0;
             util::Epochstamp stamp(0ull, 0ull);
@@ -375,34 +390,32 @@ namespace karabo {
 
             // Call hook that indicates next id. In case the internal ticker was too slow, call it for
             // each otherwise missed id (with same time...). If it was too fast, do not call again.
+            //
+            // But first some safeguards for first tick at all or if a very big jump happened.
             if (m_timeIdLastTick == 0ull) m_timeIdLastTick = newId - 1; // first time tick
+            const unsigned long long largestOnTimeUpdateBacklog = 600000000ull / period; // 6*10^8: 10 min in microsec
+            if (newId > m_timeIdLastTick + largestOnTimeUpdateBacklog) {
+                // Don't treat an 'id' older than 10 min - for a period of 100 millisec that is 6000 ids in the past
+                KARABO_LOG_WARN << "Big gap between trainIds: from " << m_timeIdLastTick << " to " << newId
+                        << ". Call hook for time updates only for last " << largestOnTimeUpdateBacklog << " ids.";
+                m_timeIdLastTick = newId - largestOnTimeUpdateBacklog;
+            }
             while (m_timeIdLastTick < newId) {
-                onTimeUpdate(++m_timeIdLastTick, stamp.getSeconds(), stamp.getFractionalSeconds(), period);
+                ++m_timeIdLastTick;
+                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                for (auto& kv : m_deviceInstanceMap) {
+                    if (kv.second.second) { // otherwise not yet fully initialized
+                        kv.second.second->post(bind_weak(&BaseDevice::onTimeUpdate, kv.second.first.get(),
+                                                         m_timeIdLastTick,
+                                                         stamp.getSeconds(), stamp.getFractionalSeconds(), period));
+                    }
+                }
             }
 
             // reload timer for next id:
             m_timeTickerTimer.expires_at((stamp += periodDuration).getPtime());
             m_timeTickerTimer.async_wait(util::bind_weak(&DeviceServer::timeTick, this,
                                                          boost::asio::placeholders::error, ++newId));
-        }
-
-
-        void DeviceServer::onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-            boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-            for (auto& kv : m_deviceInstanceMap) {
-                if (kv.second) {
-                    EventLoop::getIOService().post(util::bind_weak(&BaseDevice::onTimeTick, kv.second.get(),
-                                                                   id, sec, frac, period));
-                }
-            }
-        }
-
-
-        void DeviceServer::onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
-            boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
-            for (auto& kv : m_deviceInstanceMap) {
-                if (kv.second) kv.second->slotTimeTick(id, sec, frac, period);
-            }
         }
 
 
@@ -617,12 +630,18 @@ namespace karabo {
                     }
                     // Keep the device instance - doing this before finalizeInternalInitialization to enable the device
                     // to kill itself during instantiation (see slotDeviceGone).
-                    m_deviceInstanceMap[deviceId] = device;
+                    m_deviceInstanceMap[deviceId] = std::make_pair(device, Strand::Pointer());
                     putInMap = true;
                 }
 
                 // This will throw an exception if it can't be started (because of duplicated name for example)
                 device->finalizeInternalInitialization(false); // DeviceServer will forward broadcasts!
+
+                {
+                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                    // After finalizeInternalInitialization, the device participates in time information distribution
+                    m_deviceInstanceMap[deviceId].second = boost::make_shared<Strand>(EventLoop::getIOService());
+                }
 
                 // Answer initiation of device (KARABO_LOG_* is done by device)
                 asyncReply(true, deviceId);

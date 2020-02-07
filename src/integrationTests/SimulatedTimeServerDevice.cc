@@ -16,6 +16,12 @@ USING_KARABO_NAMESPACES
     KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, SimulatedTimeServerDevice)
 
     void SimulatedTimeServerDevice::expectedParameters(Schema& expected) {
+        UINT64_ELEMENT(expected).key("initialId")
+                .displayedName("Initial Id")
+                .description("First id published")
+                .assignmentOptional().defaultValue(1ull)
+                .commit();
+
         UINT64_ELEMENT(expected).key("period")
             .unit(karabo::util::Unit::SECOND)
             .metricPrefix(karabo::util::MetricPrefix::MICRO)
@@ -39,16 +45,22 @@ USING_KARABO_NAMESPACES
                 .maxInc(.9f)
             .reconfigurable()
             .commit();
+
+        SLOT_ELEMENT(expected).key("resetId")
+                .displayedName("Reset id")
+                .description("Reset ids to start again with 1")
+                .commit();
     }
 
 
     SimulatedTimeServerDevice::SimulatedTimeServerDevice(const karabo::util::Hash& config) : Device<>(config),
-        m_id(1ull),
+        m_id(config.get<unsigned long long>("initialId")),
         m_emitCount(0ull),
         m_timeTickerTimer(karabo::net::EventLoop::getIOService()) {
 
         KARABO_INITIAL_FUNCTION(initialize);
         KARABO_SYSTEM_SIGNAL("signalTimeTick", unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
+        KARABO_SLOT(resetId);
     }
 
 
@@ -86,7 +98,7 @@ USING_KARABO_NAMESPACES
                     fakePeriod += periodDiff;
                 }
             }
-            emit("signalTimeTick", m_id, now.getSeconds(), now.getFractionalSeconds(), fakePeriod);
+            emit("signalTimeTick", static_cast<unsigned long long> (m_id), now.getSeconds(), now.getFractionalSeconds(), fakePeriod);
         } else {
             KARABO_LOG_FRAMEWORK_DEBUG << "ticktock does NOT emit: " << m_id << " " << m_tickCountdown
                     << " at " << now.getSeconds() << " " << now.getFractionalSeconds();
@@ -97,6 +109,11 @@ USING_KARABO_NAMESPACES
         m_timeTickerTimer.expires_at(m_timeTickerTimer.expires_at() + boost::posix_time::microseconds(period));
         m_timeTickerTimer.async_wait(util::bind_weak(&SimulatedTimeServerDevice::tickTock, this, boost::asio::placeholders::error));
         ++m_id;
+    }
+
+
+    void SimulatedTimeServerDevice::resetId() {
+        m_id = 1ull;
     }
 
 }
