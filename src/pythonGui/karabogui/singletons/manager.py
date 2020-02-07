@@ -360,6 +360,18 @@ class Manager(QObject):
         for deviceId, config in configurations.items():
             self._topology.device_config_updated(deviceId, config)
 
+    def handle_reconfigureReply(self, **info):
+        """Handle the reconfigure reply of the gui server"""
+        success = info['success']
+        if not success:
+            reason = info['failureReason']
+            input_info = info['input']
+            deviceId = input_info['deviceId']
+            text = ('Device reconfiguration of <b>{}</b> encountered an error.'
+                    ' The values could NOT be applied!\n{}'.format(deviceId,
+                                                                   reason))
+            messagebox.show_error(text)
+
     def handle_propertyHistory(self, deviceId, property, data, success=True,
                                failureReason=""):
         if success:
