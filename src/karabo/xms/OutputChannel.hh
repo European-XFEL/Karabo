@@ -378,22 +378,22 @@ namespace karabo {
             OutputChannelElement& key(const std::string& key) {
                 m_outputChannel.key(key);
                 m_dataSchema.key(key + ".schema");
-                return *(static_cast<OutputChannelElement*> (this));
+                return *this;
             }
 
             OutputChannelElement& displayedName(const std::string& name) {
                 m_outputChannel.displayedName(name);
-                return *(static_cast<OutputChannelElement*> (this));
+                return *this;
             }
 
             OutputChannelElement& description(const std::string& description) {
                 m_outputChannel.description(description);
-                return *(static_cast<OutputChannelElement*> (this));
+                return *this;
             }
 
             OutputChannelElement& dataSchema(const karabo::util::Schema& schema) {
                 m_dataSchema.appendSchema(schema);
-                return *(static_cast<OutputChannelElement*> (this));
+                return *this;
             }
 
             void commit() {
