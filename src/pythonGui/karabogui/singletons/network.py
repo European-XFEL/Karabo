@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import QDialog, QMessageBox, qApp
 from karabo.native import (
     AccessLevel, decodeBinary, encodeBinary, Hash, Timestamp)
 from karabogui import background
+from karabogui.const import REQUEST_REPLY_TIMEOUT
 from karabogui.dialogs.logindialog import LoginDialog
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import get_config
@@ -330,6 +331,8 @@ class Network(QObject):
         h = Hash("type", "reconfigure")
         h["deviceId"] = device_id
         h["configuration"] = configuration
+        h["reply"] = True
+        h["timeout"] = REQUEST_REPLY_TIMEOUT
         self._tcpWriteHash(h)
 
     def onInitDevice(self, server_id, class_id, device_id, config,
