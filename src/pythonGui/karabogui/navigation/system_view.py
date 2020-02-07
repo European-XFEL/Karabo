@@ -54,7 +54,7 @@ class SystemTreeView(QTreeView):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
 
         text = "About"
-        self.acAbout = QAction("About", self)
+        self.acAbout = QAction(icons.about, "About", self)
         self.acAbout.setStatusTip(text)
         self.acAbout.setToolTip(text)
         self.acAbout.triggered.connect(self.onAbout)

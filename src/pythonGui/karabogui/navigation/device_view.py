@@ -56,7 +56,7 @@ class DeviceTreeView(QTreeView):
 
         self.menu = QMenu(self)
         text = "About"
-        self.ac_about = QAction("About", self)
+        self.ac_about = QAction(icons.about, "About", self)
         self.ac_about.setStatusTip(text)
         self.ac_about.setToolTip(text)
         self.ac_about.triggered.connect(self.onAbout)
