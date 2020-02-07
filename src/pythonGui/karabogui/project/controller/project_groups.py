@@ -109,7 +109,7 @@ def _fill_scenes_menu(menu, project_controller):
     load_from_device.triggered.connect(partial(_load_scene_from_device,
                                                project_controller,
                                                parent=menu.parent()))
-    about_action = QAction('About', menu)
+    about_action = QAction(icons.about, 'About', menu)
     about_action.triggered.connect(partial(_about_scene,
                                            project_controller,
                                            parent=menu.parent()))
