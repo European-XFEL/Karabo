@@ -109,7 +109,7 @@ class DeviceInstanceController(BaseProjectGroupController):
                                                   show_confirm=True,
                                                   parent=parent))
         menu.addSeparator()
-        about_action = QAction('About', menu)
+        about_action = QAction(icons.about, 'About', menu)
         about_action.triggered.connect(partial(self._about_device,
                                                parent=parent))
 
