@@ -5,8 +5,12 @@
  */
 
 #include "Timing_Test.hh"
+#include "PropertyTest_Test.hh"
 #include <karabo/net/EventLoop.hh>
 #include <karabo/util/StringTools.hh>
+#include <karabo/util/Trainstamp.hh>
+#include <karabo/util/SimpleElement.hh>
+#include <karabo/devices/PropertyTest.hh>
 #include <cstdlib>
 
 
@@ -15,6 +19,30 @@ using namespace std;
 #define KRB_TEST_MAX_TIMEOUT 5
 
 USING_KARABO_NAMESPACES
+
+class PropertyTestWithOnTimeUpdate : public karabo::devices::PropertyTest {
+
+public:
+
+
+    KARABO_CLASSINFO(PropertyTestWithOnTimeUpdate, "PropertyTestWithOnTimeUpdate", "2.8")
+    PropertyTestWithOnTimeUpdate(const karabo::util::Hash& cfg) : karabo::devices::PropertyTest(cfg) {
+    }
+
+    static void expectedParameters(karabo::util::Schema& expected) {
+        UINT64_ELEMENT(expected).key("lastIdOnTimeUpdate")
+                .readOnly()
+                .initialValue(0ull)
+                .commit();
+    }
+
+    void onTimeUpdate(unsigned long long id,
+                      unsigned long long sec, unsigned long long frac, unsigned long long period) override {
+        set("lastIdOnTimeUpdate", id);
+    }
+};
+
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::PropertyTest, PropertyTestWithOnTimeUpdate)
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Timing_Test);
 
@@ -46,7 +74,7 @@ void Timing_Test::setUp() {
         m_deviceServer2->finalizeInternalInitialization();
     }
     // Create client
-    m_deviceClient = boost::shared_ptr<DeviceClient>(new DeviceClient());
+    m_deviceClient = boost::make_shared<DeviceClient>();
 
 }
 
@@ -54,12 +82,13 @@ void Timing_Test::setUp() {
 void Timing_Test::tearDown() {
     m_deviceServer2.reset();
     m_deviceServer.reset();
+    m_deviceClient.reset();
     EventLoop::stop();
     m_eventLoopThread.join();
 }
 
 
-void Timing_Test::appTestRunner() {
+void Timing_Test::testWrongPeriod() {
 
     // Bring up a (simulated) time server and a time testing device
     const unsigned long long tickPeriodInMicrosec = 50000ull; // 50 ms
@@ -71,17 +100,29 @@ void Timing_Test::appTestRunner() {
                                                                             "tickCountdown", tickCountdown,
                                                                             "periodVariationFraction", periodVarFrac),
                                                                        KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT(success.first);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     const size_t nDevices = 20;
 
+    std::set<std::string> devices;
     for (size_t i = 1; i <= nDevices; ++i) {
-        success = m_deviceClient->instantiate("testServerTimingClient", "TimingTestDevice",
-                                              Hash("deviceId", "timeTester_" + toString(i), "useTimeserver", true),
-                                              KRB_TEST_MAX_TIMEOUT);
-        CPPUNIT_ASSERT(success.first);
+        const std::string& deviceId("timeTester_" + toString(i));
+        devices.insert(deviceId);
+        m_deviceClient->instantiateNoWait("testServerTimingClient", "TimingTestDevice",
+                                          Hash("deviceId", deviceId));
+    }
+    int timeout = 20000;
+    while (timeout > 0) {
+        for (const std::string& onlineDeviceId : m_deviceClient->getDevices()) {
+            devices.erase(onlineDeviceId);
+        }
+        if (devices.empty()) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+        timeout -= 100;
     }
 
+    CPPUNIT_ASSERT_MESSAGE("Some devices did not get online: " + toString(devices) += " " + toString(timeout),
+                           devices.empty());
     // Give some time to connect the timing slot.
     for (size_t i = 1; i <= nDevices; ++i) {
         int counter = 0;
@@ -168,3 +209,75 @@ void Timing_Test::appTestRunner() {
         }
     }
 }
+
+
+void Timing_Test::testIdReset() {
+
+    // Bring up a (simulated) time server and a time testing device
+    const std::string timeServerId("Karabo_TimeServer");
+    const unsigned long long initialId = 1000000000ull; // 10^9
+    const unsigned long long tickPeriodInMs = 10ull;
+    const long long tickCountdown = 10u; // i.e. every 10th id is published
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerTiming", "SimulatedTimeServerDevice",
+                                                                       Hash("deviceId", timeServerId,
+                                                                            "initialId", initialId,
+                                                                            "tickCountdown", tickCountdown,
+                                                                            "period", tickPeriodInMs * 1000ull),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    const std::string testDevice("propTest");
+    success = m_deviceClient->instantiate("testServerTimingClient", "PropertyTestWithOnTimeUpdate",
+                                          Hash("deviceId", testDevice),
+                                          KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(testDevice, "int32Property", 1));
+
+    Hash cfg;
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(testDevice, cfg));
+
+    CPPUNIT_ASSERT_EQUAL(1, cfg.get<int>("int32Property"));
+    CPPUNIT_ASSERT_EQUAL(1, cfg.get<int>("int32PropertyReadOnly"));
+    const unsigned long long lastIdOnTimeUpdate = cfg.get<unsigned long long>("lastIdOnTimeUpdate");
+    // ensure that onTimeUpdate has really been called
+    CPPUNIT_ASSERT_GREATEREQUAL(initialId, lastIdOnTimeUpdate);
+
+    // Get stamp - the newly set values have more recent stamps than the one from device initialisation
+    const Trainstamp stampDevId = Trainstamp::fromHashAttributes(cfg.getAttributes("deviceId"));
+    const Trainstamp stampInt32 = Trainstamp::fromHashAttributes(cfg.getAttributes("int32Property"));
+    const Trainstamp stampInt32ReadOnly = Trainstamp::fromHashAttributes(cfg.getAttributes("int32PropertyReadOnly"));
+
+    CPPUNIT_ASSERT_MESSAGE("devId train " + toString(stampDevId.getTrainId()) += ", initialId " + toString(initialId),
+                           stampDevId.getTrainId() == 0ull // if time stamp assigned before connected to time server
+                           || initialId < stampDevId.getTrainId()); // else
+    // ASSERT_GREATER asserts that 2nd is greater than 1st
+    CPPUNIT_ASSERT_GREATER(stampDevId.getTrainId(), stampInt32.getTrainId());
+    CPPUNIT_ASSERT_GREATER(stampDevId.getTrainId(), stampInt32ReadOnly.getTrainId());
+
+    // Start ticking from 1 again
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(timeServerId, "resetId"));
+
+    // Wait for a tick actually sent so this reset gets seen by devices
+    boost::this_thread::sleep(boost::posix_time::millisec(tickPeriodInMs * tickCountdown));
+
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(testDevice, "int32Property", 100));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(testDevice, cfg));
+
+    CPPUNIT_ASSERT_EQUAL(100, cfg.get<int>("int32Property"));
+    CPPUNIT_ASSERT_EQUAL(100, cfg.get<int>("int32PropertyReadOnly"));
+    // Ticking has restarted, but we guarantee that onTimeUpdate is not called with smaller ids than it has
+    // already been called - so lastIdOnTimeUpdate is still greater than initialId before reset:
+    CPPUNIT_ASSERT_GREATER(initialId, cfg.get<unsigned long long>("lastIdOnTimeUpdate"));
+
+    // Now get stamps again - the newer ones are now smaller than the old ones!
+    const Trainstamp stampInt32_2 = Trainstamp::fromHashAttributes(cfg.getAttributes("int32Property"));
+    const Trainstamp stampInt32ReadOnly_2 = Trainstamp::fromHashAttributes(cfg.getAttributes("int32PropertyReadOnly"));
+
+    // ASSERT_GREATER asserts that 2nd is greater than 1st
+    CPPUNIT_ASSERT_GREATER(stampInt32_2.getTrainId(), stampInt32.getTrainId());
+    CPPUNIT_ASSERT_GREATER(stampInt32ReadOnly_2.getTrainId(), stampInt32ReadOnly.getTrainId());
+
+
+}
+
