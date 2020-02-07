@@ -13,11 +13,14 @@
 
 #include "FsmMacros.hh"
 
+#include "Device.hh"
+
 #include "karabo/log/Logger.hh"
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/PluginLoader.hh"
 #include "karabo/util/Version.hh"
 #include "karabo/util/State.hh"
+#include "karabo/net/Strand.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
 #include "boost/asio/deadline_timer.hpp"
@@ -35,8 +38,6 @@ namespace karabo {
      * Namespace for package core
      */
     namespace core {
-
-        class BaseDevice;
 
         /**
          * @class DeviceServer
@@ -63,7 +64,7 @@ namespace karabo {
             karabo::util::Hash m_availableDevices;
             std::vector<std::string> m_deviceClasses;
 
-            typedef std::unordered_map<std::string, boost::shared_ptr<BaseDevice> > DeviceInstanceMap;
+            typedef std::unordered_map<std::string, std::pair<BaseDevice::Pointer, karabo::net::Strand::Pointer> > DeviceInstanceMap;
             DeviceInstanceMap m_deviceInstanceMap;
             boost::mutex m_deviceInstanceMutex;
             std::map<std::string, unsigned int> m_deviceInstanceCount;
@@ -245,29 +246,6 @@ namespace karabo {
              * @param id: current train id
              */
             void timeTick(const boost::system::error_code ec, unsigned long long newId);
-
-            /**
-             * A hook which is called if the device receives a time-server update, i.e. if slotTimeTick is called.
-             * Can be overwritten by derived classes.
-             *
-             * @param id: train id
-             * @param sec: unix seconds
-             * @param frac: fractional seconds (i.e. attoseconds)
-             * @param period: interval between ids im microseconds
-             */
-            void onTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period);
-
-            /**
-             * If the device receives time-server updates via slotTimeTick, this hook will be called for every id,
-             * irrespective of the frequency of the calls to slotTimeTick.
-             * Can be overwritten by derived classes
-             *
-             * @param id: train id
-             * @param sec: unix seconds
-             * @param frac: fractional seconds (i.e. attoseconds)
-             * @param period: interval between ids microseconds
-             */
-            void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period);
 
             void onBroadcastMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
