@@ -19,10 +19,6 @@ from karabogui.dialogs.dialogs import SceneItemDialog
 from karabogui.sceneview.widget.api import ControllerContainer
 from karabogui.sceneview.tools.api import send_to_back, send_to_front, ungroup
 
-# Padding constrains for resize action
-QPAD_CART = 2
-QPAD_GEO = 4
-
 
 class SceneWidgetHandler(ABCHasStrictTraits):
     # Current widget
@@ -63,7 +59,7 @@ class SceneWidgetHandler(ABCHasStrictTraits):
     # Private interface
 
     def _move_dialog(self, scene_view):
-        """Move the layout selection on the sceneview via a dialog interaction
+        """Move the layout selection on the scene view via a dialog interaction
         """
         selection_model = scene_view.selection_model
         rect = selection_model.get_item_rect()
@@ -80,19 +76,17 @@ class SceneWidgetHandler(ABCHasStrictTraits):
                 c.translate(offset)
 
     def _resize_dialog(self, scene_view):
-        """Resize the given layout selection in the sceneview"""
+        """Resize the given layout selection in the scene view"""
         selection_model = scene_view.selection_model
-        rect = selection_model.get_selection_bounds()
+        rect = selection_model.get_item_rect()
         max_x = scene_view.scene_model.width - rect.x()
         max_y = scene_view.scene_model.height - rect.y()
         dialog = SceneItemDialog(x=rect.width(), y=rect.height(),
                                  title='Resize Layout',
                                  max_x=max_x, max_y=max_y, parent=self.widget)
         if dialog.exec_() == QDialog.Accepted:
-            # The padding has to be considered differently for cartesian
-            # and geometrical magnitudes!
-            new_rect = QRect(rect.x() + QPAD_CART, rect.y() + QPAD_CART,
-                             dialog.x - QPAD_GEO, dialog.y - QPAD_GEO)
+            new_rect = QRect(rect.x(), rect.y(),
+                             dialog.x, dialog.y)
             for c in selection_model:
                 c.set_geometry(new_rect)
 
