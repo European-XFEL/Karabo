@@ -96,6 +96,9 @@ class DeviceInstanceController(BaseProjectGroupController):
         conf_action.setEnabled(can_get_conf)
         conf_action.triggered.connect(partial(
             self._get_configuration_from_past, parent=parent))
+        show_action = QAction(icons.deviceInstance, 'Select in topology', menu)
+        show_action.setVisible(proj_device_online)
+        show_action.triggered.connect(self._show_device)
 
         instantiate_action = QAction(icons.run, 'Instantiate', menu)
         can_instantiate = (server_online and not proj_device_online and
@@ -125,6 +128,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         menu.addAction(macro_action)
         menu.addAction(scene_action)
         menu.addAction(conf_action)
+        menu.addAction(show_action)
         menu.addSeparator()
         menu.addAction(instantiate_action)
         menu.addAction(shutdown_action)
@@ -379,6 +383,10 @@ class DeviceInstanceController(BaseProjectGroupController):
 
     # ----------------------------------------------------------------------
     # QAction handlers
+
+    def _show_device(self):
+        deviceId = self.model.instance_id
+        broadcast_event(KaraboEvent.ShowDevice, {'deviceId': deviceId})
 
     def _delete_device(self, project_controller, parent=None):
         """ Remove the device associated with this item from its device server
