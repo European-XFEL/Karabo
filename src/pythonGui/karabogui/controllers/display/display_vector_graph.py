@@ -83,7 +83,7 @@ class DisplayVectorGraph(BaseBindingController):
         plot = self._curves[proxy]
         # NOTE: With empty data or only inf we clear as NaN will clear as well!
         if not len(y) or np.isinf(y).all():
-            plot.clear()
+            plot.setData([], [])
             return
 
         # NOTE: WE cast boolean as int, as numpy method is deprecated
