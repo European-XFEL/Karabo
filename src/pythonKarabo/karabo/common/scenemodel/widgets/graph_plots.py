@@ -40,6 +40,10 @@ class ScatterGraphModel(BasePlotModel):
     psize = Float(7.0)
 
 
+class MultiCurveGraphModel(BasePlotModel):
+    """ A model for the MultiCurve Graph"""
+
+
 class VectorScatterGraphModel(BasePlotModel):
     """ A model for the VectorScatter Graph"""
     psize = Float(7.0)
@@ -363,6 +367,27 @@ def _alarm_graph_reader(read_func, element):
 def _alarm_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayAlarmGraph')
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+
+    return element
+
+
+@register_scene_reader('MultiCurveGraph')
+def _multi_graph_reader(read_func, element):
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+
+    return MultiCurveGraphModel(**traits)
+
+
+@register_scene_writer(MultiCurveGraphModel)
+def _multi_graph_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'MultiCurveGraph')
     write_basic_label(model, element)
     write_axes_set(model, element)
     write_range_set(model, element)
