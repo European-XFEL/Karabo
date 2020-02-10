@@ -33,8 +33,8 @@ from .widgets.graph_utils import (
 from .widgets.graph_plots import (
     AlarmGraphModel, BasePlotModel, NDArrayGraphModel, ScatterGraphModel,
     VectorGraphModel, VectorHistGraphModel, VectorBarGraphModel,
-    VectorScatterGraphModel, VectorXYGraphModel, VectorFillGraphModel,
-    StateGraphModel, TrendGraphModel)
+    MultiCurveGraphModel, VectorScatterGraphModel, VectorXYGraphModel,
+    VectorFillGraphModel, StateGraphModel, TrendGraphModel)
 from .widgets.image import (
     DisplayAlignedImageModel, DisplayImageElementModel, DisplayImageModel,
     ScientificImageModel, WebcamImageModel)
