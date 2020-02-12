@@ -350,6 +350,8 @@ class Network(QObject):
         h = Hash("type", "execute")
         h["deviceId"] = device_id
         h["command"] = slot_name
+        h["reply"] = True
+        h["timeout"] = REQUEST_REPLY_TIMEOUT
         self._tcpWriteHash(h)
 
     def onExecuteGeneric(self, token, device_id, slot_name, params):
