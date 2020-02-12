@@ -231,12 +231,12 @@ class StatusHandler(web.RequestHandler):
 
 
 class Subscriber():
-    def __init__(self, uris, port):
+    def __init__(self, uris, port, hostname):
         self.uris = uris
         # Port we are sending to
         self.port = port
         self.client = AsyncHTTPClient()
-        self.hostname = socket.gethostname()
+        self.hostname = hostname
 
     async def __call__(self):
         """post the port name of the server to the aggregators
@@ -268,8 +268,11 @@ class Subscriber():
 def run_webserver():
     """karabo-webserver - start a web server to monitor karabo servers
 
-      karabo-webserver serverId=webserver [-h|--help] [--filter list]
-      [--port portnumber ]
+      karabo-webserver serverId=webserver [--hostName network_alias]
+      [-h|--help] [--filter list] [--port portnumber ]
+
+    -- hostName
+      optionally set a network alias
 
     --filter
       limits the list of the services to be controlled
@@ -282,7 +285,11 @@ def run_webserver():
     """
 
     parser = ArgumentParser()
+    default_hostname = socket.gethostname()
     parser.add_argument('serverId')
+    parser.add_argument('--hostName',
+                        default=default_hostname,
+                        help='network alias to be called to')
     parser.add_argument('--filter',
                         default=[],
                         help='list of services to be monitored',
@@ -312,7 +319,7 @@ def run_webserver():
     sys.argv = sys.argv[:1]
 
     uris = args.webserver_aggregators
-    subscribe = Subscriber(uris, args.port)
+    subscribe = Subscriber(uris, args.port, args.hostName)
 
     server_dict = {'service_list': service_list,
                    'service_id': service_id,
