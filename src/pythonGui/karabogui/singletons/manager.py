@@ -372,6 +372,19 @@ class Manager(QObject):
                                                                    reason))
             messagebox.show_error(text)
 
+    def handle_executeReply(self, **info):
+        """Handle the execute reply of the gui server"""
+        success = info['success']
+        if not success:
+            reason = info['failureReason']
+            input_info = info['input']
+            deviceId = input_info['deviceId']
+            command = input_info['command']
+            text = ('Execute slot <b>{}</b> of device <b>{}</b> has '
+                    'encountered an error!\n{}'.format(command, deviceId,
+                                                       reason))
+            messagebox.show_error(text)
+
     def handle_propertyHistory(self, deviceId, property, data, success=True,
                                failureReason=""):
         if success:
