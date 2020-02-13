@@ -346,7 +346,7 @@ void DataLogging_Test::influxAllTestRunner() {
 }
 
 
-void DataLogging_Test::testAllInstantiated() {
+void DataLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
     std::clog << "Testing deviceInstantiation... " << std::flush;
     int timeout = 1500; // milliseconds
     vector<string> devices;
@@ -366,6 +366,29 @@ void DataLogging_Test::testAllInstantiated() {
         timeout -= 50;
     }
     CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for datalogging to be instantiated", timeout > 0);
+
+    if (waitForLoggerReady) {
+        // Makes sure that the DataLogger has reached NORMAL state before proceeding.
+        // Any call to the Flush slot while the DataLogger is in a different state will trigger an exception.
+        // For the Influx Logger case, this initialization time can be quite long - if the db does not exist
+        // yet, the DataLogger must create it before reaching the NORMAL state.
+        int timeout = KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds
+
+        karabo::util::State loggerState = karabo::util::State::UNKNOWN;
+        const std::string &dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+        while (timeout > 0) {
+            loggerState = m_deviceClient->get<karabo::util::State>(dataLoggerId, "state");
+            if (loggerState == karabo::util::State::NORMAL) {
+                break;
+            }
+            boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+            timeout -= 50;
+        }
+
+        CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach NORMAL state.",
+                               loggerState == karabo::util::State::NORMAL);
+    }
+
     std::clog << "Ok" << std::endl;
 }
 
@@ -700,7 +723,7 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     success = startLoggers("InfluxDataLogger", true);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    testAllInstantiated();
+    testAllInstantiated(false);
 
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
 
@@ -798,10 +821,6 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
     Epochstamp es_afterWrites;
     std::string afterWrites = es_afterWrites.toIso8601();
 
-    // waits a little for the logged changes to be available for reading - this is specially
-    // important for the InfluxDb case. If there's not enough time, the assertions below on
-    // the number of entries in the response to slotGetPropertyHistory won't match.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
                             .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
 
