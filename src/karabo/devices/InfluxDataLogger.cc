@@ -330,10 +330,10 @@ namespace karabo {
 
             DataLogger::preDestruction();
 
-            std::promise<void> prom;
-            std::future<void> fut = prom.get_future();
-            m_client->flushBatch([&prom](const HttpResponse & resp) {
-                prom.set_value();
+            auto prom = boost::make_shared<std::promise<void>>();
+            std::future<void> fut = prom->get_future();
+            m_client->flushBatch([prom](const HttpResponse & resp) {
+                prom->set_value();
             });
 
             auto status = fut.wait_for(std::chrono::milliseconds(1500));
