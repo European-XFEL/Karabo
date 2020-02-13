@@ -1,6 +1,7 @@
 from functools import partial
 
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QSize, Qt
+from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import QAction, QGridLayout, QSizePolicy, QWidget
 from pyqtgraph import GraphicsView, mkPen, PlotItem
 
@@ -57,9 +58,13 @@ class KaraboPlotView(QWidget):
             axis_item = self.plotItem.getAxis(axis)
             axis_item.setZValue(0)
 
-        self.graph_view = GraphicsView()
+        self.graph_view = GraphicsView(parent=self)
         self.graph_view.setAntialiasing(False)
         self.graph_view.enableMouse(False)
+
+        palette = self.graph_view.palette()
+        palette.setColor(QPalette.Background, Qt.transparent)
+        self.graph_view.setPalette(palette)
 
         # row, col, row_span, col_span
         self.layout().addWidget(self.graph_view, 0, 0, 1, 1)
