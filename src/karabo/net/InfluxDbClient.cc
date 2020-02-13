@@ -238,7 +238,6 @@ namespace karabo {
             m_nPoints = 0;
         }
 
-
         void InfluxDbClient::onDbConnect(const karabo::net::ErrorCode& ec,
                                          const karabo::net::Channel::Pointer& channel,
                                          const AsyncHandler& hook) {
@@ -460,10 +459,10 @@ namespace karabo {
 
         bool InfluxDbClient::connectWait(std::size_t millis) {
             if (isConnected()) return true;
-            std::promise<void> prom;
-            std::future<void> fut = prom.get_future();
-            connectDbIfDisconnected([&prom]() {
-                prom.set_value();
+            auto prom = boost::make_shared<std::promise<void>>();
+            std::future<void> fut = prom->get_future();
+            connectDbIfDisconnected([prom]() {
+                prom->set_value();
             });
             auto status = fut.wait_for(std::chrono::milliseconds(millis));
             if (status != std::future_status::ready) {
