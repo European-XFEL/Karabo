@@ -30,7 +30,7 @@ public:
 private:
     void fileAllTestRunner();
     void influxAllTestRunner();
-    void testAllInstantiated();
+    void testAllInstantiated(bool waitForLoggerReady = true);
 
     /**
      * Checks that a call to slotGetPropertyHistory within a time
