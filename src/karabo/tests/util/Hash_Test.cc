@@ -233,7 +233,7 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<int>("a") == 1);
         CPPUNIT_ASSERT(tmp.empty() == true);
     }
-    
+
 }
 
 
@@ -2226,4 +2226,25 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
     // But are not fullyEquals
     CPPUNIT_ASSERT_MESSAGE("h8 and h10 should not be fullyEquals, as they have different values for attributes of type Schema ",
                            !h8.fullyEquals(h10));
+}
+
+
+void Hash_Test::testNode() {
+
+    // Hash::Node::setValue
+    {
+        Hash h1, h2;
+        Hash::Node& node1 = h1.set("a", 1);
+        Hash::Node& node2 = h2.set("a", 1);
+
+        // setValue: Template specialization for Hash and the overload for Hash must have the same effect
+        //           concerning __classId attribute:
+        node1.setValue(Hash("1", 2));
+        node2.setValue<Hash>(Hash("1", 2));
+        CPPUNIT_ASSERT(!node1.hasAttribute("__classId"));
+        CPPUNIT_ASSERT(!node2.hasAttribute("__classId"));
+
+        CPPUNIT_ASSERT_EQUAL(0ul, node1.getAttributes().size());
+        CPPUNIT_ASSERT_EQUAL(0ul, node2.getAttributes().size());
+    }
 }
