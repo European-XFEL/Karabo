@@ -60,7 +60,8 @@ namespace karabo {
             boost::any m_value;
 
             /**
-             * Helper struct adding a classId attribute to nested Hashes or classes inheriting Hash.
+             * Helper struct adding a classId attribute for classes inheriting Hash.
+             * See also its specialisations.
              */
             template <typename ValueType, typename isHashTheBase>
             struct SetClassIdAttribute {
@@ -75,16 +76,33 @@ namespace karabo {
             };
 
             /**
-             * Types that aren't Hashes or derived Hashes are not touched.
+             * Types that are neither Hashes nor derived from Hashes are not touched.
              */
             template <typename ValueType>
             struct SetClassIdAttribute<ValueType, boost::false_type> {
                 /**
-                 * For a Hash (-derived) type this is a no-op
+                 * For non Hash(-derived) types this is a no-op
                  * @param value
                  * @param e
                  */
                 SetClassIdAttribute(const ValueType& value, Element& e) {
+                    // Do nothing on purpose!
+                }
+            };
+
+            /**
+             * Hashes are not touched.
+             */
+            template <typename isHashTheBase>
+            struct SetClassIdAttribute<Hash, isHashTheBase> {
+
+                /**
+                 * For the Hash itself (i.e. where boost::is_base_of<Hash, Hash>::type is not boost::false_type),
+                 * this is a no-op as well.
+                 * @param value
+                 * @param e
+                 */
+                SetClassIdAttribute(const Hash& value, Element& e) {
                     // Do nothing on purpose!
                 }
             };
@@ -524,6 +542,10 @@ namespace karabo {
         template<class ValueType, typename is_hash_the_base>
         void Element<KeyType, AttributeType>::setValue(const ValueType& value) {
             m_value = conditional_hash_cast<is_hash_the_base>::cast(value);
+            // When ValueType is derived from Hash, this sets the attribute __classId to the class id name.
+            // If ValueType _is_ Hash [this can only happen when called as setValue<Hash>(Hash(...))
+            // since setValue(Hash(...)) uses the overload and not the template specialisation] or any other class,
+            // nothing is done.
             SetClassIdAttribute<ValueType, is_hash_the_base>(value, *this);
         }
 
