@@ -655,6 +655,8 @@ void Schema_Test::testArrayElements() {
     CPPUNIT_ASSERT(sch.isNode("arrUInt16"));
     CPPUNIT_ASSERT(sch.isCustomNode("arrUInt16"));
     CPPUNIT_ASSERT_EQUAL(sch.getCustomNodeClass("arrUInt16"), std::string("NDArray"));
+    // Before 2.7.2, NDARRAY_ELEMENTs (as custom nodes) erroneously created this attribute in the Schema:
+    CPPUNIT_ASSERT(!sch.getParameterHash().hasAttribute("arrUInt16", "__classId"));
 }
 
 
