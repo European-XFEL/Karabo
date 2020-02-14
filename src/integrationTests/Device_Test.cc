@@ -11,11 +11,13 @@
 #include <karabo/core/Device.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/xms/SignalSlotable.hh>
+#include <karabo/xms/OutputChannel.hh>
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/util/State.hh>
 #include <karabo/util/SimpleElement.hh>
+#include <karabo/util/VectorElement.hh>
 #include <karabo/util/Timestamp.hh>
 
 #define KRB_TEST_MAX_TIMEOUT 5
@@ -33,9 +35,11 @@ using karabo::util::OVERWRITE_ELEMENT;
 using karabo::util::STRING_ELEMENT;
 using karabo::util::TABLE_ELEMENT;
 using karabo::util::UINT32_ELEMENT;
+using karabo::util::VECTOR_FLOAT_ELEMENT;
 using karabo::core::DeviceServer;
 using karabo::core::DeviceClient;
 using karabo::xms::SignalSlotable;
+using karabo::xms::OUTPUT_CHANNEL;
 using karabo::xms::SLOT_ELEMENT;
 
 class TestDevice : public karabo::core::Device<> {
@@ -96,6 +100,31 @@ public:
                 .displayedName("Slot")
                 .description("Device slot under a node, doing nothing")
                 .commit();
+
+        // Schema for output channel
+        Schema dataSchema;
+        NODE_ELEMENT(dataSchema).key("data")
+                .displayedName("Data")
+                .setDaqDataType(karabo::util::DaqDataType::TRAIN)
+                .commit();
+
+        DOUBLE_ELEMENT(dataSchema).key("data.untagged")
+                .alias("UNTAGGED")
+                .displayedName("Untagged")
+                .readOnly()
+                .commit();
+
+        VECTOR_FLOAT_ELEMENT(dataSchema).key("data.intensityTD")
+                .tags("doocs,pulseResolved")
+                .alias("INTENSITY.TD")
+                .displayedName("Intensity TD")
+                .readOnly()
+                .commit();
+
+        OUTPUT_CHANNEL(expected).key("output")
+                .dataSchema(dataSchema)
+                .commit();
+
     }
 
 
@@ -112,6 +141,8 @@ public:
         KARABO_SLOT(slotToggleState, const Hash);
 
         KARABO_SLOT(node_slot);
+
+        KARABO_SLOT(slotGetCurrentConfiguration, const std::string /*tags*/);
     }
 
 
@@ -153,6 +184,11 @@ public:
 
     void node_slot() {
         // Nothing to do!
+    }
+
+
+    void slotGetCurrentConfiguration(const std::string& tags) {
+        reply(getCurrentConfiguration(tags));
     }
 };
 
@@ -214,6 +250,8 @@ void Device_Test::appTestRunner() {
     testSchemaInjection();
     testSchemaWithAttrUpdate();
     testSchemaWithAttrAppend();
+    testChangeSchemaOutputChannel("slotUpdateSchema");
+    testChangeSchemaOutputChannel("slotAppendSchema");
     testNodedSlot();
     testGetSet();
     testUpdateState();
@@ -539,6 +577,11 @@ void Device_Test::testSchemaInjection() {
     CPPUNIT_ASSERT(tableAfterInsert.size() == 2);
     const Hash &firstRowAfterInsert = tableAfterInsert[0];
     CPPUNIT_ASSERT(firstRowAfterInsert.get<std::string>("name") == "firstLine");
+
+    // Reset to static Schema for next test
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchema", Schema())
+                            .timeout(requestTimeoutMs)
+                            .receive());
 }
 
 
@@ -604,6 +647,12 @@ void Device_Test::testSchemaWithAttrUpdate() {
     CPPUNIT_ASSERT(waitForCondition([this] {
         return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") == TestDevice::ALARM_HIGH;
     }, cacheUpdateWaitMs));
+
+
+    // Reset to static Schema for next test
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchema", Schema())
+                            .timeout(requestTimeoutMs)
+                            .receive());
 }
 
 
@@ -659,6 +708,124 @@ void Device_Test::testSchemaWithAttrAppend() {
     CPPUNIT_ASSERT(waitForCondition([this, alarmHighValue] {
         return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") == alarmHighValue;
     }, cacheUpdateWaitMs));
+
+    // Reset to static Schema for next test
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchema", Schema())
+                            .timeout(requestTimeoutMs)
+                            .receive());
+}
+
+
+void Device_Test::testChangeSchemaOutputChannel(const std::string& updateSlot) {
+
+    // Timeout, in milliseconds, for a request for one of the test device slots.
+    const int requestTimeoutMs = 2000;
+
+    Hash filteredCfg;
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotGetCurrentConfiguration", "doocs")
+                            .timeout(requestTimeoutMs)
+                            .receive(filteredCfg));
+    // Check that contains the "doocs" tagged property from output channel schema, but nothing else
+    std::set<std::string> filteredPaths;
+    filteredCfg.getPaths(filteredPaths);
+    CPPUNIT_ASSERT_EQUAL(1ul, filteredPaths.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("output.schema.data.intensityTD"), *(filteredPaths.begin()));
+
+    Schema deviceSchema = m_deviceClient->getDeviceSchema("TestDevice");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("INTENSITY.TD"),
+                                 deviceSchema.getAliasFromKey<std::string>("output.schema.data.intensityTD"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("output.schema.data.intensityTD"),
+                                 deviceSchema.getKeyFromAlias<std::string>("INTENSITY.TD"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("UNTAGGED"),
+                                 deviceSchema.getAliasFromKey<std::string>("output.schema.data.untagged"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("output.schema.data.untagged"),
+                                 deviceSchema.getKeyFromAlias<std::string>("UNTAGGED"));
+
+    // Now inject more things with tags:
+    // * as normal property (taggedProperty)
+    // * as output channel data (data.intensityTD2)
+    // Also deal with aliases:
+    // * inject property with alias (data.intensityTD2)
+    // * change alias of an existing property (untagged)
+    Schema schema;
+    {
+        DOUBLE_ELEMENT(schema).key("taggedProperty")
+                .tags("doocs,pulseResolved")
+                .displayedName("Tagged property")
+                .readOnly()
+                .commit();
+
+        DOUBLE_ELEMENT(schema).key("differentlyTaggedProperty")
+                .tags("nodoocs")
+                .displayedName("Diff. tagged property")
+                .readOnly()
+                .commit();
+
+        Schema dataSchema;
+        NODE_ELEMENT(dataSchema).key("data")
+                .displayedName("Data")
+                .setDaqDataType(karabo::util::DaqDataType::TRAIN)
+                .commit();
+
+        VECTOR_FLOAT_ELEMENT(dataSchema).key("data.intensityTD2")
+                .tags("doocs,pulseResolved")
+                .alias("INTENSITY.TD2")
+                .displayedName("Intensity TD 2")
+                .readOnly()
+                .commit();
+
+        // Here overwrite only alias
+        DOUBLE_ELEMENT(dataSchema).key("data.untagged")
+                .alias("UNTAGGED.CHANGED")
+                .displayedName("Untagged")
+                .readOnly()
+                .commit();
+
+        DOUBLE_ELEMENT(dataSchema).key("data.untagged2")
+                .displayedName("Untagged2")
+                .readOnly()
+                .commit();
+
+        OUTPUT_CHANNEL(schema).key("output")
+                .dataSchema(dataSchema)
+                .commit();
+    }
+
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", updateSlot, schema)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+
+    filteredCfg.clear();
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotGetCurrentConfiguration", "doocs")
+                            .timeout(requestTimeoutMs)
+                            .receive(filteredCfg));
+    // Check that contains also the newly introduced "doocs" tagged properties, but nothing else
+    filteredPaths.clear();
+    filteredCfg.getPaths(filteredPaths);
+    CPPUNIT_ASSERT_EQUAL(3ul, filteredPaths.size());
+    CPPUNIT_ASSERT_MESSAGE(toString(filteredCfg),
+                           std::find(filteredPaths.begin(), filteredPaths.end(), "taggedProperty") != filteredPaths.end());
+    CPPUNIT_ASSERT_MESSAGE(toString(filteredCfg),
+                           std::find(filteredPaths.begin(), filteredPaths.end(), "output.schema.data.intensityTD")
+                           != filteredPaths.end());
+    CPPUNIT_ASSERT_MESSAGE(toString(filteredCfg),
+                           std::find(filteredPaths.begin(), filteredPaths.end(), "output.schema.data.intensityTD2")
+                           != filteredPaths.end());
+    // Check aliases
+    deviceSchema = m_deviceClient->getDeviceSchema("TestDevice");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("UNTAGGED.CHANGED"),
+                                 deviceSchema.getAliasFromKey<std::string>("output.schema.data.untagged"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("output.schema.data.untagged"),
+                                 deviceSchema.getKeyFromAlias<std::string>("UNTAGGED.CHANGED"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("INTENSITY.TD2"),
+                                 deviceSchema.getAliasFromKey<std::string>("output.schema.data.intensityTD2"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("output.schema.data.intensityTD2"),
+                                 deviceSchema.getKeyFromAlias<std::string>("INTENSITY.TD2"));
+
+    // Reset to static Schema for next test
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotUpdateSchema", Schema())
+                            .timeout(requestTimeoutMs)
+                            .receive());
 }
 
 
