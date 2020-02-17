@@ -50,11 +50,6 @@ private:
      */
     void testNodedSlot();
 
-    /**
-     * Test setting some unknown property
-     */
-    void testSetUnknownProperty();
-
     bool waitForCondition(boost::function<bool() > checker, unsigned int timeoutMs);
 
     karabo::core::DeviceServer::Pointer m_deviceServer;
