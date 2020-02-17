@@ -648,10 +648,8 @@ namespace karabo {
 
                 result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
 
-                if (!result.first) {
-                    std::ostringstream oss;
-                    oss << "Bad parameter setting attempted, validation reports: " << result.second;
-                    throw KARABO_PARAMETER_EXCEPTION(oss.str());
+                if (result.first == false) {
+                    KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
                 }
 
                 // Check for parameters being in a bad condition
