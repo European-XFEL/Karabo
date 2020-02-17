@@ -272,8 +272,6 @@ class DeviceServer(object):
         Logger.useOstream()
         Logger.useFile()
         Logger.useNetwork()
-        Logger.useOstream("karabo", False)
-        Logger.useFile("karabo", False)
 
     def _registerAndConnectSignalsAndSlots(self):
         self.ss.registerSlot(self.slotStartDevice)
