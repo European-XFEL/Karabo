@@ -27,6 +27,7 @@ namespace karabo {
 
         // Forward declare
         class Log4CppNetApp;
+        class NetworkFilter;
 
         /**
          * Helper class to configure an underlying log4cpp appender.
@@ -104,8 +105,22 @@ namespace karabo {
             boost::mutex m_mutex;
             std::vector<karabo::util::Hash> m_logCache;
             boost::asio::deadline_timer m_timer;
+            boost::shared_ptr<NetworkFilter> m_filter;
         };
 
+
+        class NetworkFilter : public krb_log4cpp::Filter {
+        public:
+
+            NetworkFilter();
+
+            virtual ~NetworkFilter();
+
+        protected:
+
+            krb_log4cpp::Filter::Decision _decide(const krb_log4cpp::LoggingEvent& event);
+
+        };
     }
 }
 
