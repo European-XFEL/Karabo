@@ -509,8 +509,6 @@ class PythonDevice(NoFsm):
         Logger.useOstream()
         Logger.useFile()
         Logger.useNetwork()
-        Logger.useOstream("karabo", False)
-        Logger.useFile("karabo", False)
 
     def __del__(self):
         """ PythonDevice destructor """
