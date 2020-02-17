@@ -5,6 +5,7 @@
  * Created on September 21, 2011, 4:39 PM
  */
 
+#include <boost/algorithm/string.hpp>
 #include "NetworkAppender.hh"
 #include "Logger.hh"
 #include "karabo/util/Hash.hh"
@@ -78,7 +79,8 @@ namespace karabo {
             m_topic(config.get<std::string>("topic")),
             m_interval(config.get<unsigned int>("interval")),
             m_maxMessages(config.get<unsigned int>("maxNumMessages")),
-            m_timer(EventLoop::getIOService()) {
+            m_timer(EventLoop::getIOService()),
+            m_filter() {
 
             // If we created the connection ourselves we are still disconnected
             if (!m_connection->isConnected()) m_connection->connect();
@@ -90,6 +92,10 @@ namespace karabo {
             m_priorityLayout.setConversionPattern("%p"); // DEBUG, INFO, WARN or ERROR
             m_categoryLayout.setConversionPattern("%c"); // deviceId
             m_messageLayout.setConversionPattern("%m"); // message text
+
+            // Define a filter for this appender that filter out all messages with category name "karabo"
+            m_filter = boost::make_shared<NetworkFilter>();
+            this->setFilter(m_filter.get());
 
             startLogWriting();
         }
@@ -178,6 +184,21 @@ namespace karabo {
 
         bool Log4CppNetApp::reopen() {
             return true;
+        }
+
+
+        NetworkFilter::NetworkFilter() : krb_log4cpp::Filter() {
+        }
+
+
+        NetworkFilter::~NetworkFilter() {
+        }
+
+
+        krb_log4cpp::Filter::Decision NetworkFilter::_decide(const krb_log4cpp::LoggingEvent& event) {
+            // Deny all logging events coming from categories registered in FRAMEWORK category name set
+            if (Logger::isInCategoryNameSet(event.categoryName)) return krb_log4cpp::Filter::DENY;
+            return krb_log4cpp::Filter::NEUTRAL;
         }
     }
 }
