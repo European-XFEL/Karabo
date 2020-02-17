@@ -26,6 +26,8 @@ namespace karabo {
         // Static initialization of LogStreamRegistry
         Logger::CategoryMap Logger::m_categories;
 
+        Logger::CategorySet Logger::m_frameworkCategories;
+
         Hash Logger::m_config;
 
 
@@ -144,6 +146,17 @@ namespace karabo {
                 m_categories[category] = cat;
                 return *cat;
             }
+        }
+
+
+        krb_log4cpp::Category& Logger::getCategory_(const std::string& category) {
+            m_frameworkCategories.insert(category);
+            return getCategory(category);
+        }
+
+
+        bool Logger::isInCategoryNameSet(const std::string& category) {
+            return (m_frameworkCategories.find(category) != m_frameworkCategories.end());
         }
     }
 }

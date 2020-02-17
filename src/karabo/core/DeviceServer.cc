@@ -231,11 +231,6 @@ namespace karabo {
             Logger::useFile();
             Logger::useNetwork();
 
-            // All class logs will have karabo as parent category (outermost namespace)
-            // Those messages should not go via the broker
-            Logger::useOstream("karabo", false); // The false means, that we do not inherit any parent appenders
-            Logger::useFile("karabo", false);
-
             // Initialize category
             m_log = &(karabo::log::Logger::getCategory(m_serverId));
 
