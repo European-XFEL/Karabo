@@ -98,24 +98,23 @@ void PipelinedProcessing_Test::testGetOutputChannelSchema() {
 
     CPPUNIT_ASSERT(dataSchema.has("dataId"));
     CPPUNIT_ASSERT(dataSchema.getType("dataId") == karabo::util::Types::INT32);
-    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("dataId", "valueType") == "INT32");
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("dataId", KARABO_SCHEMA_VALUE_TYPE) == "INT32");
     CPPUNIT_ASSERT(dataSchema.has("sha1"));
     CPPUNIT_ASSERT(dataSchema.getType("sha1") == karabo::util::Types::INT32);
-    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("sha1", "valueType") == "STRING");
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("sha1", KARABO_SCHEMA_VALUE_TYPE) == "STRING");
     CPPUNIT_ASSERT(dataSchema.has("data"));
     CPPUNIT_ASSERT(dataSchema.getType("data") == karabo::util::Types::INT32);
-    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("data", "valueType") == "VECTOR_INT64");
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("data", KARABO_SCHEMA_VALUE_TYPE) == "VECTOR_INT64");
     CPPUNIT_ASSERT(dataSchema.has("array"));
-    CPPUNIT_ASSERT(dataSchema.hasAttribute("array", KARABO_HASH_CLASS_ID));
-    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array", KARABO_HASH_CLASS_ID) == "Hash");
-    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array", "classId") == "NDArray");
-    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.data", "valueType") == "BYTE_ARRAY");
-    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.shape", "valueType") == "VECTOR_UINT64");
-    CPPUNIT_ASSERT(dataSchema.getAttributeAs<std::string>("array.shape", "defaultValue") == "100,200,0");
-    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.type", "valueType") == "INT32");
-    CPPUNIT_ASSERT(dataSchema.getAttributeAs<std::string>("array.type", "defaultValue") == "22");
-    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.isBigEndian", "valueType") == "BOOL");
-    CPPUNIT_ASSERT(dataSchema.getAttributeAs<std::string>("array.isBigEndian", "defaultValue") == "0");
+    CPPUNIT_ASSERT(!dataSchema.hasAttribute("array", KARABO_HASH_CLASS_ID)); // As a Schema it should not carry info about HASH_CLASS_ID
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array", KARABO_SCHEMA_CLASS_ID) == "NDArray");
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.data", KARABO_SCHEMA_VALUE_TYPE) == "BYTE_ARRAY");
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.shape", KARABO_SCHEMA_VALUE_TYPE) == "VECTOR_UINT64");
+    CPPUNIT_ASSERT(dataSchema.getAttributeAs<std::string>("array.shape", KARABO_SCHEMA_DEFAULT_VALUE) == "100,200,0");
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.type", KARABO_SCHEMA_VALUE_TYPE) == "INT32");
+    CPPUNIT_ASSERT(dataSchema.getAttributeAs<std::string>("array.type", KARABO_SCHEMA_DEFAULT_VALUE) == "22");
+    CPPUNIT_ASSERT(dataSchema.getAttribute<std::string>("array.isBigEndian", KARABO_SCHEMA_VALUE_TYPE) == "BOOL");
+    CPPUNIT_ASSERT(dataSchema.getAttributeAs<std::string>("array.isBigEndian", KARABO_SCHEMA_DEFAULT_VALUE) == "0");
 
     std::clog << "Passed!\n\n";
 }
