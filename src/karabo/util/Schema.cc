@@ -1274,9 +1274,25 @@ namespace karabo {
         bool Schema::isCustomNode(const std::string& path) const {
             if (isNode(path)) {
                 const Hash::Attributes& attrs = m_hash.getAttributes(path);
-                // As the code is understood (Nov 2017, GF):
-                // Hash classId is set for everything inheriting from Hash and schema classId contains class name
-                return (attrs.has(KARABO_HASH_CLASS_ID) && attrs.has(KARABO_SCHEMA_CLASS_ID));
+                if (!attrs.has(KARABO_SCHEMA_CLASS_ID)) {
+                    return false;
+                }
+                // HACK: Some are not custom nodes!
+                const std::string& schemaClass = attrs.get<std::string>(KARABO_SCHEMA_CLASS_ID);
+                if (schemaClass == "Slot") {
+                    return false;
+                }
+                // Treat choices of a choice of nodes and entries in list of nodes, i.e. check whether
+                // there is a mother path - if yes, check whether it points to a CHOICE_OF_NODES or LIST_OF_NODES!
+                const size_t lastDot = path.rfind('.');
+                if (lastDot != std::string::npos) {
+                    const std::string motherPath(path.substr(0, lastDot));
+                    if (isChoiceOfNodes(motherPath) || isListOfNodes(motherPath)) {
+                        return false;
+                    }
+                }
+                // HACK end
+                return true;
             }
             return false;
         }

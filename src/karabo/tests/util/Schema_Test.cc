@@ -655,6 +655,8 @@ void Schema_Test::testArrayElements() {
     CPPUNIT_ASSERT(sch.isNode("arrUInt16"));
     CPPUNIT_ASSERT(sch.isCustomNode("arrUInt16"));
     CPPUNIT_ASSERT_EQUAL(sch.getCustomNodeClass("arrUInt16"), std::string("NDArray"));
+    // Before 2.7.2, NDARRAY_ELEMENTs (as custom nodes) erroneously created this attribute in the Schema:
+    CPPUNIT_ASSERT(!sch.getParameterHash().hasAttribute("arrUInt16", "__classId"));
 }
 
 
@@ -694,12 +696,15 @@ void Schema_Test::testImageElement() {
 
     // Hijack this test to test also !isCustomNode(path) for almost all kind of elements:
 
-    // A slot element: has KARABO_SCHEMA_CLASS_ID attribute, but not KARABO_HASH_CLASS_ID
+    // A slot element
     CPPUNIT_ASSERT(!sch.isCustomNode("slotTest"));
     // A TableElement
     CPPUNIT_ASSERT(!sch.isCustomNode("testTable"));
     // A ListElement
     CPPUNIT_ASSERT(!sch.isCustomNode("shapeList"));
+    // ... and its entries
+    CPPUNIT_ASSERT(!sch.isCustomNode("shapeList.Circle"));
+    CPPUNIT_ASSERT(!sch.isCustomNode("shapeList.Rectangle"));
     // A PathElement
     CPPUNIT_ASSERT(!sch.isCustomNode("filename"));
     // A vector element
@@ -709,6 +714,9 @@ void Schema_Test::testImageElement() {
     GraphicsRenderer1::expectedParameters(schemaWithChoice);
     // A ChoiceOfNodes
     CPPUNIT_ASSERT(!schemaWithChoice.isCustomNode("shapes"));
+    // ... and its choices
+    CPPUNIT_ASSERT(!schemaWithChoice.isCustomNode("shapes.circle"));
+    CPPUNIT_ASSERT(!schemaWithChoice.isCustomNode("shapes.rectangle"));
     // An ordinary node
     CPPUNIT_ASSERT(!schemaWithChoice.isCustomNode("triangle"));
     // A StringElement
@@ -1105,11 +1113,12 @@ void Schema_Test::testSubSchema() {
         CPPUNIT_ASSERT(sub.has("antiAlias"));
         CPPUNIT_ASSERT(sub.has("shapes.rectangle.b"));
         CPPUNIT_ASSERT(sub.has("shapes.rectangle.c"));
+        CPPUNIT_ASSERT(sub.has("shapes.circle.radius"));
 
         // All else is WRITE (i.e. reconfigurable))
         std::vector<std::string> finalPaths;
         sub.getParameterHash().getPaths(finalPaths);
-        CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (3), finalPaths.size());
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(sub), static_cast<size_t> (4), finalPaths.size());
     }
 }
 

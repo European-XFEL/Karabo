@@ -45,6 +45,12 @@ private:
     /** Tests that appendSchema preserves attributes in the static schema. */
     void testSchemaWithAttrAppend();
 
+    /** Tests that updateSchema/appendSchema work well for tags, also inside schema of OutputChannel
+     *
+     * @param updateSlot which TestDevice slot to change the schema: "slotUpdateSchema" or "slotAppendSchema"
+     */
+    void testChangeSchemaOutputChannel(const std::string& updateSlot);
+
     /**
      * Test calling a slot under a node
      */
