@@ -85,7 +85,7 @@ namespace karabo {
                 Schema schema = Configurator<ConfigurableClass>::getSchema(classId, m_parentSchemaAssemblyRules);
                 // The produced schema will be rooted with classId, we however want to put its children
                 // under the defined key and ignore the classId root node
-                this->m_node->template setValue<Hash > (schema.getParameterHash());
+                this->m_node->setValue(schema.getParameterHash());
                 return *this;
             }
 
@@ -99,7 +99,7 @@ namespace karabo {
                 // Simply append the expected parameters of T to current node
                 Schema schema("dummyRoot", m_parentSchemaAssemblyRules);
                 T::_KARABO_SCHEMA_DESCRIPTION_FUNCTION(schema);
-                this->m_node->template setValue<Hash > (schema.getParameterHash());
+                this->m_node->setValue(schema.getParameterHash());
                 this->m_node->setAttribute(KARABO_SCHEMA_CLASS_ID, T::classInfo().getClassId());
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, T::classInfo().getClassId());
                 return *this;
@@ -111,7 +111,7 @@ namespace karabo {
              * @return 
              */
             NodeElement& appendSchema(const Schema& schema) {
-                this->m_node->setValue<Hash >(schema.getParameterHash());
+                this->m_node->setValue(schema.getParameterHash());
                 return *this;
             }
             
