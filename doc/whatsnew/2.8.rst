@@ -15,5 +15,16 @@ The **most relevant improvements**, fixes and changes are:
            ``#include <karabo/pugiXml/pugixml.hpp>`` should become 
            ``#include <pugixml.hpp>``
 
+          The ``BaseDevice`` class has only methods used by the ``DeviceServer``.
+          Although no device code should make use of these methods, it is possible
+          that some unit tests working against earlier version of Karabo will
+          break. A pattern that was observed is: A unit test uses `BaseDevice::create`
+          method to test the ability of a server to instantiate a device and
+          tests the device's behaviour using ``Device`` specific methods, e.g.
+          ``getCurrentConfiguration``. This test should be adapted to either
+          cast the ``BaseDevice::Pointer`` to a ``Device::Pointer`` with a
+          ``boost::dynamic_pointer_cast`` or by calling the public method
+          ``slotGetCofiguration``.
+
 Detailed Merge-Log
 ==================
