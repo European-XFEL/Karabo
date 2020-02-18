@@ -381,7 +381,9 @@ else
 fi
 
 if [ "$RUNTESTS" = "y" ]; then
+    runIntegrationTests
     runUnitTests
+    runPythonIntegrationTests
 fi
 
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
