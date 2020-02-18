@@ -198,7 +198,8 @@ class BaseSeriesGraph(BaseBindingController):
         if self._x_detail != UPTIME:
             # Schedule an update for the intervals
             start_secs, end_secs = self._get_start_end_date_secs()
-            self.set_time_interval(start_secs, end_secs)
+            # On button update we always trigger!
+            self.set_time_interval(start_secs, end_secs, force=True)
 
         return True
 
@@ -242,10 +243,10 @@ class BaseSeriesGraph(BaseBindingController):
             if start > timestamp:
                 self._curves[proxy].add_point(value, start)
 
-    def set_time_interval(self, t0, t1):
+    def set_time_interval(self, t0, t1, force=False):
         """Update the x axis scale interval of the curves"""
         for v in self._curves.values():
-            v.changeInterval(t0, t1)
+            v.changeInterval(t0, t1, force=force)
 
 
 @register_binding_controller(
