@@ -141,7 +141,7 @@ class Curve(HasStrictTraits):
     curve_type = Int(0)
 
     def _generations_default(self):
-        return [_Generation() for i in range(4)]
+        return [_Generation() for _ in range(4)]
 
     def _x_default(self):
         arraysize = self.spare + sum([g.size for g in self.generations], 0)
@@ -187,7 +187,7 @@ class Curve(HasStrictTraits):
         t1 = str(datetime.datetime.utcfromtimestamp(t1).isoformat())
         self.proxy.get_history(t0, t1, max_value_count=self.maxHistory)
 
-    def changeInterval(self, t0, t1):
+    def changeInterval(self, t0, t1, force=False):
         """Change the time interval of this Curve
 
         :param t0: new start time of the curve
@@ -199,13 +199,11 @@ class Curve(HasStrictTraits):
         not_enough_data = (p1 - p0) < self.minHistory
         no_data = self.histsize == 0
         zoomed_out = self.histsize > self.sparsesize
-        # NOTE: We use here the new requested interval, otherwise we would not
-        # request!. It means that the historic data did not arrive yet.
-        nearly_left_border = 0.9 * t0 + 0.1 * t1
-        nearly_right_border = 0.1 * t0 + 0.9 * t1
+        nearly_left_border = 0.9 * self.t0 + 0.1 * self.t1
+        nearly_right_border = 0.1 * self.t0 + 0.9 * self.t1
 
         # Request history only needs to be done under certain circumstances
-        if (no_data or (not_enough_data and zoomed_out) or
+        if (force or no_data or (not_enough_data and zoomed_out) or
                 (self.x[p0] > nearly_left_border) or
                 (p1 < self.histsize and self.x[p1 - 1] < nearly_right_border)):
             self.get_property_history(t0, t1)
