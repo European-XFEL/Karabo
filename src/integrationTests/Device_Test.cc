@@ -717,7 +717,7 @@ void Device_Test::testSchemaWithAttrAppend() {
 
 
 void Device_Test::testChangeSchemaOutputChannel(const std::string& updateSlot) {
-
+    std::clog << "Start testChangeSchemaOutputChannel for " << updateSlot << ": " << std::flush;
     // Timeout, in milliseconds, for a request for one of the test device slots.
     const int requestTimeoutMs = 2000;
 
@@ -826,6 +826,7 @@ void Device_Test::testChangeSchemaOutputChannel(const std::string& updateSlot) {
     CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotUpdateSchema", Schema())
                             .timeout(requestTimeoutMs)
                             .receive());
+    std::clog << "OK." << std::endl;
 }
 
 
