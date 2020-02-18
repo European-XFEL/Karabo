@@ -258,7 +258,8 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
         } else {
             influxUrl << "8086";
         }
-        manager_conf.set("logger.InfluxDataLogger.url", influxUrl.str());
+        manager_conf.set("logger.InfluxDataLogger.urlWrite", influxUrl.str());
+        manager_conf.set("logger.InfluxDataLogger.urlRead", influxUrl.str());
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
     }
