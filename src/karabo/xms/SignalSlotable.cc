@@ -355,6 +355,9 @@ namespace karabo {
             // No mutex lock needed yet, see above
             m_instanceInfo.set("heartbeatInterval", m_heartbeatInterval);
             m_instanceInfo.set("karaboVersion", karabo::util::Version::getVersion());
+            if (!m_instanceInfo.has("type")) {
+                m_instanceInfo.set("type", "unknown");
+            }
         }
 
 
