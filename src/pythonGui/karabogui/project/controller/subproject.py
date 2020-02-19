@@ -141,8 +141,8 @@ class SubprojectController(ProjectSubgroupController):
 
         # If a UUID appeared more than once, we have a problem!
         if any(v > 1 for v in project_uuids.values()):
-            msg = ('That project OR one of its sub-projects is already '
-                   'loaded! Please investigate and have a look at the '
+            msg = ('Projects will be OR are loaded already multiple times! '
+                   'Please investigate and have a look at the '
                    'project(s) <b>{}</b>! You have <b>{}</b> projects '
                    'that are loaded with an empty name!'.format(
                     project_names, empty_projects))
