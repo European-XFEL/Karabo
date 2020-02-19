@@ -105,7 +105,6 @@ namespace karabo {
             boost::mutex m_mutex;
             std::vector<karabo::util::Hash> m_logCache;
             boost::asio::deadline_timer m_timer;
-            boost::shared_ptr<NetworkFilter> m_filter;
         };
 
 
