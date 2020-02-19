@@ -79,8 +79,7 @@ namespace karabo {
             m_topic(config.get<std::string>("topic")),
             m_interval(config.get<unsigned int>("interval")),
             m_maxMessages(config.get<unsigned int>("maxNumMessages")),
-            m_timer(EventLoop::getIOService()),
-            m_filter() {
+            m_timer(EventLoop::getIOService()) {
 
             // If we created the connection ourselves we are still disconnected
             if (!m_connection->isConnected()) m_connection->connect();
@@ -93,9 +92,10 @@ namespace karabo {
             m_categoryLayout.setConversionPattern("%c"); // deviceId
             m_messageLayout.setConversionPattern("%m"); // message text
 
-            // Define a filter for this appender that filter out all messages with category name "karabo"
-            m_filter = boost::make_shared<NetworkFilter>();
-            this->setFilter(m_filter.get());
+            // Define a filter for this appender that filter out all messages coming from "framework" flavor of logging
+            // IMPORTANT NOTE: Define NetworkFilter object as bare pointer because
+            // Log4cpp will take ownership and deal with memory management (proper delete)
+            this->setFilter(new NetworkFilter());
 
             startLogWriting();
         }
