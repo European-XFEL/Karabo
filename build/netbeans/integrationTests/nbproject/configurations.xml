@@ -463,10 +463,10 @@
       </folder>
       <folder path="TestFiles/f1">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
           <preprocessorList>
             <Elem>KARABO_TESTPATH="${CND_BASEDIR}/../../../src/integrationTests/"</Elem>
           </preprocessorList>
@@ -474,77 +474,77 @@
         <linkerTool>
           <output>${TESTDIR}/TestFiles/alarmservice_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f10">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f10</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f2">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/pipelinedprocessing_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f3">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/property_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f4">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/runtimeschemaattributes_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f5">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/devicelocking_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
@@ -958,10 +958,10 @@
       </folder>
       <folder path="TestFiles/f1">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
           <preprocessorList>
             <Elem>KARABO_TESTPATH="${CND_BASEDIR}/../../../src/integrationTests/"</Elem>
           </preprocessorList>
@@ -969,80 +969,80 @@
         <linkerTool>
           <output>${TESTDIR}/TestFiles/alarmservice_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f10">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f10</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f2">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/pipelinedprocessing_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f3">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
           <incDir>
             <pElem>.</pElem>
           </incDir>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/property_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f4">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/runtimeschemaattributes_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f5">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/devicelocking_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
@@ -1446,10 +1446,10 @@
       </folder>
       <folder path="TestFiles/f1">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
           <preprocessorList>
             <Elem>KARABO_TESTPATH="${CND_BASEDIR}/../../../src/integrationTests/"</Elem>
           </preprocessorList>
@@ -1457,77 +1457,77 @@
         <linkerTool>
           <output>${TESTDIR}/TestFiles/alarmservice_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f10">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f10</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f2">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/pipelinedprocessing_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f3">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/property_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f4">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/runtimeschemaattributes_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
       <folder path="TestFiles/f5">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/devicelocking_test</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
