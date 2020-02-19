@@ -554,6 +554,23 @@ struct OverwriteElementWrap {
 
 };
 
+
+struct ReadOnlySpecificTableWrap {
+
+    static ReadOnlySpecific<TableElement, std::vector<Hash>>&
+    initialValueTable(ReadOnlySpecific<TableElement, std::vector<Hash>> &self,
+                      const bp::object& obj) {
+        if (PyList_Check(obj.ptr())) {
+            vector<Hash> v = karathon::Wrapper::fromPyListToStdVector<Hash>(obj);
+            return self.initialValue(v);
+        } else {
+            throw KARABO_PYTHON_EXCEPTION("Python type of initialValue for a read-only table must be a list of Hashes");
+        }
+    }
+
+};
+
+
 namespace tableElementWrap {
 
 
@@ -2197,10 +2214,10 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_VECTOR(bool, BOOL)
     KARABO_PYTHON_VECTOR(char, CHAR)
 
-            //////////////////////////////////////////////////////////////////////
-            // Binding NDArrayElement
-            // In Python : NDARRAY_ELEMENT
- {
+    //////////////////////////////////////////////////////////////////////
+    // Binding NDArrayElement
+    // In Python : NDARRAY_ELEMENT
+    {
         bp::implicitly_convertible< Schema &, NDArrayElement >();
         bp::class_<NDArrayElement> ("NDARRAY_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
                 .def("dtype"
@@ -2324,6 +2341,21 @@ void exportPyUtilSchema() {
                 ;
     }
 
+    {
+        typedef ReadOnlySpecific<TableElement, std::vector < Hash>> ReadOnlySpec;
+        bp::class_< ReadOnlySpec, boost::noncopyable >("ReadOnlySpecificTABLE", bp::no_init)
+                .def("initialValue"
+                     , &ReadOnlySpecificTableWrap::initialValueTable
+                     , (bp::arg("self"), bp::arg("pyList"))
+                     , bp::return_internal_reference<> ())
+                .def("archivePolicy"
+                     , (ReadOnlySpec & (ReadOnlySpec::*)(karabo::util::Schema::ArchivePolicy const &))(&ReadOnlySpec::archivePolicy)
+                     , bp::return_internal_reference<> ())
+                .def("commit", (void (ReadOnlySpec::*)())(&ReadOnlySpec::commit))
+                ;
+    }
+
+
     //////////////////////////////////////////////////////////////////////
     // Binding TableElement
     // In Python : TABLE_ELEMENT
@@ -2397,6 +2429,9 @@ void exportPyUtilSchema() {
                      , &TableElement::setColumns, (bp::arg("schema"))
                      , bp::return_internal_reference<> ()
                      , "Set Schema describing the columns")
+                .def("readOnly"
+                     , &TableElement::readOnly
+                     , bp::return_internal_reference<>())
                 /*.def("addRow"
                      , (TableElement & (TableElement::*)(const Hash&))&TableElement::addRow, (bp::arg("nodeHash") = Hash())
                      , bp::return_internal_reference<> ())

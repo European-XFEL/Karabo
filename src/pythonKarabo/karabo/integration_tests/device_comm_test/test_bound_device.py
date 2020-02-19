@@ -14,6 +14,41 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
     def tearDown(self):
         super(TestDeviceDeviceComm, self).tearDown()
 
+    def test_readOnly_table(self):
+
+        SERVER_ID = "PropTestServer"
+        deviceId = "propTestDevice"
+        self.start_server("bound", SERVER_ID, ["PropertyTest"])
+
+        cfg = Hash("classId", "PropertyTest",
+                   "deviceId", deviceId,
+                   "configuration", Hash())
+        ok, msg = self.dc.instantiate(SERVER_ID, cfg, 30)
+        self.assertTrue(ok, msg)
+
+        tbl = self.dc.get(deviceId, "tableReadonly")
+        self.assertEquals(len(tbl), 2)  # tableReadonly has 2 rows.
+
+        tblValue = [
+            Hash("e1", "gfh", "e2", False,
+                 "e3", 14, "e4", 0.0022, "e5", 3.14159)
+        ]
+        self.assertRaises(RuntimeError, self.dc.set,
+                          deviceId, "tableReadonly", tblValue)
+
+        # Checks that a read-only table can be updated internally.
+        # The check is made by first setting table and then calling
+        # the PropertyTest slot 'setReadonly' to set 'tableReadonly'
+        # to the same values a 'table'.
+        self.dc.set(deviceId, "table", tblValue)
+        self.dc.execute(deviceId, "setReadonly")
+        tbl = self.dc.get(deviceId, "tableReadonly")
+        self.assertEquals(len(tbl), 1)  # tableReadonly now has 1 row.
+        self.assertEquals(tbl[0]["e3"], 14)
+
+        ok, msg = self.dc.killDevice(deviceId, 30)
+        self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
+                                                                      msg))
 
     def test_log_level(self):
         SERVER_ID = "logLevelServer"
@@ -209,7 +244,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
         with self.subTest(msg="Test attribute setting"):
             # This tests that attributes relevant for reconfiguring
-            # are taken inot account - here min and max size of vector elements
+            # are taken into account - here min and max size of vector elements
 
             # Allowed size is 1 - 10 elements - no exception expected
             self.dc.set("testComm1", "vectorInt32", [1, 2, 3, 4])  # OK!
