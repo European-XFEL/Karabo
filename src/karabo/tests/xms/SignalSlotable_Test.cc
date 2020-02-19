@@ -176,8 +176,19 @@ void SignalSlotable_Test::tearDown() {
 void SignalSlotable_Test::testUniqueInstanceId() {
 
     auto one = boost::make_shared<SignalSlotable>("one");
-    auto two = boost::make_shared<SignalSlotable>("two");
+    auto two = boost::make_shared<SignalSlotable>("two",
+                                                  "JmsConnection", // connectionClass
+                                                  karabo::util::Hash(), // brokerConfiguration
+                                                  30, // heartbeatInterval
+                                                  karabo::util::Hash("type", "sigslot")); // instanceInfo
     auto one_again = boost::make_shared<SignalSlotable>("one");
+
+    // Hijack test to check default "type"
+    Hash instanceInfo(one->getInstanceInfo());
+    CPPUNIT_ASSERT_EQUAL(std::string("unknown"), instanceInfo.get<std::string>("type"));
+    instanceInfo = two->getInstanceInfo();
+    CPPUNIT_ASSERT_EQUAL(std::string("sigslot"), instanceInfo.get<std::string>("type"));
+    // Done with instanceInfo "type"
 
     one->start();
     two->start();
