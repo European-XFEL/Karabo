@@ -166,7 +166,7 @@ class KaraboPlotView(QWidget):
         viewbox = self.plotItem.vb
         for action in (x_log, y_log):
             if action.name in self.qactions:
-                viewbox.add_action(self.qactions[action.name])
+                viewbox.add_action(self.qactions[action.name], separator=False)
 
         for k_action in (axes, x_range, y_range):
             if k_action.name in actions:
