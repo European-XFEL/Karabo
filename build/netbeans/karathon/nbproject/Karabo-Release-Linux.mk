@@ -280,19 +280,19 @@ ${OBJECTDIR}/_ext/381567218/p2pbinding.o: ../../../src/karathon/p2pbinding.cc
 .build-tests-conf: .build-conf ${TESTFILES}
 ${TESTDIR}/TestFiles/f1: ${TESTDIR}/tests/HashWrap_Test.o ${TESTDIR}/tests/karathonTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
-	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARATHON}/karabo/extern/lib -Wl,-rpath,${KARATHON}/karabo -Wl,-rpath,${KARATHON} `cppunit-config --libs`   
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARATHON}/karabo/extern/lib -Wl,-rpath,${KARATHON}/karabo -Wl,-rpath,${KARATHON} `pkg-config cppunit --libs`   
 
 
 ${TESTDIR}/tests/HashWrap_Test.o: tests/HashWrap_Test.cc 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/HashWrap_Test.o tests/HashWrap_Test.cc
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/HashWrap_Test.o tests/HashWrap_Test.cc
 
 
 ${TESTDIR}/tests/karathonTestRunner.o: tests/karathonTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11 `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/karathonTestRunner.o tests/karathonTestRunner.cc
+	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${PYTHON_HEADER_DIR} -I${NUMPY_HEADER_DIR} -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/karathonTestRunner.o tests/karathonTestRunner.cc
 
 
 ${OBJECTDIR}/_ext/381567218/ChannelWrap_nomain.o: ${OBJECTDIR}/_ext/381567218/ChannelWrap.o ../../../src/karathon/ChannelWrap.cc 
