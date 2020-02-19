@@ -161,8 +161,15 @@ namespace karabo {
                     .description("Influxdb based data logging")
                     .commit();
 
-            STRING_ELEMENT(expected).key("logger.InfluxDataLogger.url")
-                    .displayedName("Influxdb URL")
+            STRING_ELEMENT(expected).key("logger.InfluxDataLogger.urlWrite")
+                    .displayedName("Logger influxdb URL")
+                    .description("URL should be given in form: tcp://host:port")
+                    .assignmentOptional().defaultValue("tcp://localhost:8086")
+                    .init()
+                    .commit();
+
+            STRING_ELEMENT(expected).key("logger.InfluxDataLogger.urlRead")
+                    .displayedName("Reader influxdb URL")
                     .description("URL should be given in form: tcp://host:port")
                     .assignmentOptional().defaultValue("tcp://localhost:8086")
                     .init()
@@ -702,7 +709,7 @@ namespace karabo {
                     } else if (m_logger == "InfluxDataLogger") {
                         hash.set("classId", "InfluxLogReader");
                         hash.set("deviceId", readerId);
-                        config.set("url", get<string>("logger.InfluxDataLogger.url"));
+                        config.set("url", get<string>("logger.InfluxDataLogger.urlRead"));
                     }
                     hash.set("configuration", config);
                     KARABO_LOG_FRAMEWORK_INFO
@@ -916,7 +923,7 @@ namespace karabo {
                 config.set("directory", get<std::string>("logger.FileDataLogger.directory"));
                 config.set("maximumFileSize", get<int>("logger.FileDataLogger.maximumFileSize"));
             } else if (m_logger == "InfluxDataLogger") {
-                config.set("url", get<std::string>("logger.InfluxDataLogger.url"));
+                config.set("url", get<std::string>("logger.InfluxDataLogger.urlWrite"));
                 config.set("maxBatchPoints", get<std::uint32_t>("logger.InfluxDataLogger.maxBatchPoints"));
             }
             config.set("flushInterval", get<int>("flushInterval"));
