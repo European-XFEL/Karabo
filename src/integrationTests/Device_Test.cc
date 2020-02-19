@@ -731,7 +731,13 @@ void Device_Test::testChangeSchemaOutputChannel(const std::string& updateSlot) {
     CPPUNIT_ASSERT_EQUAL(1ul, filteredPaths.size());
     CPPUNIT_ASSERT_EQUAL(std::string("output.schema.data.intensityTD"), *(filteredPaths.begin()));
 
-    Schema deviceSchema = m_deviceClient->getDeviceSchema("TestDevice");
+    // Not using m_deviceClient->getDeviceSchema("TestDevice") since its cache might not be up-to-date yet
+    // from schema "erasure" at the end of the previous run of this method with another 'updateSlot' value.
+    // Our order guarantee does not apply since the m_deviceServer requested the update and not the m_device client...
+    Schema deviceSchema;
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotGetSchema", false)
+                            .timeout(requestTimeoutMs)
+                            .receive(deviceSchema));
     CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("INTENSITY.TD"),
                                  deviceSchema.getAliasFromKey<std::string>("output.schema.data.intensityTD"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("output.schema.data.intensityTD"),
@@ -812,7 +818,9 @@ void Device_Test::testChangeSchemaOutputChannel(const std::string& updateSlot) {
                            std::find(filteredPaths.begin(), filteredPaths.end(), "output.schema.data.intensityTD2")
                            != filteredPaths.end());
     // Check aliases
-    deviceSchema = m_deviceClient->getDeviceSchema("TestDevice");
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotGetSchema", false)
+                            .timeout(requestTimeoutMs)
+                            .receive(deviceSchema));
     CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("UNTAGGED.CHANGED"),
                                  deviceSchema.getAliasFromKey<std::string>("output.schema.data.untagged"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(deviceSchema), std::string("output.schema.data.untagged"),
