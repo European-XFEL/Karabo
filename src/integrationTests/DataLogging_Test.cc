@@ -31,6 +31,7 @@ using karabo::xms::SLOT_ELEMENT;
 
 /* Timeout, in milliseconds, for a slot request. */
 #define SLOT_REQUEST_TIMEOUT_MILLIS 5000
+#define FLUSH_REQUEST_TIMEOUT_MILLIS 10000
 
 #define PAUSE_BEFORE_RETRY_MILLIS 150
 
@@ -349,7 +350,7 @@ void DataLogging_Test::influxAllTestRunner() {
 
 void DataLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
     std::clog << "Testing deviceInstantiation... " << std::flush;
-    int timeout = 1500; // milliseconds
+    int timeout = KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds
     vector<string> devices;
     devices.push_back(karabo::util::DATALOGGER_PREFIX + m_server);
     devices.push_back(karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server));
@@ -373,7 +374,7 @@ void DataLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
         // Any call to the Flush slot while the DataLogger is in a different state will trigger an exception.
         // For the Influx Logger case, this initialization time can be quite long - if the db does not exist
         // yet, the DataLogger must create it before reaching the NORMAL state.
-        int timeout = KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds
+        int timeout = 10 * KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds
 
         karabo::util::State loggerState = karabo::util::State::UNKNOWN;
         const std::string &dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
@@ -544,7 +545,7 @@ void DataLogging_Test::testLastKnownConfiguration() {
     // among the rows of the "lastUpdatesUtc" property of the logger. The "flush" slot guarantees that the property
     // "lastUpdatesUtc" is in sync with devices being logged.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
+                            .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
     const auto lastUpdates =
             m_deviceClient->get<std::vector < Hash >> (karabo::util::DATALOGGER_PREFIX + m_server, "lastUpdatesUtc");
     bool deviceIdFound = false;
@@ -625,7 +626,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
         // Sleep needed before flush to ensure that - for file logger - the output stream has actually seen the data
         boost::this_thread::sleep(boost::posix_time::milliseconds(250)); // locally 100 was always enough
         CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                                .timeout(KRB_TEST_MAX_TIMEOUT * 1000).receive());
+                                .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
         CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "slotTagDeviceToBeDiscontinued", "D", deviceId)
                                 .timeout(KRB_TEST_MAX_TIMEOUT * 1000).receive());
         CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged")),
@@ -653,7 +654,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
     // might be out of sync otherwise - nevertheless for file based logging we need the repeated retries below for the
     // same reason as the sleeps above. :-(
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                            .timeout(KRB_TEST_MAX_TIMEOUT * 1000).receive());
+                            .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
 
     // Now check that for all stored stamps, the stamps gathered for the reader are correct
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
@@ -823,7 +824,7 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
     std::string afterWrites = es_afterWrites.toIso8601();
 
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
+                            .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
 
     // place holders, could be skipped but they are here for future expansions of the tests
     std::string device;
@@ -890,7 +891,7 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
     exceptionsMsgs.clear();
 
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
-                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
+                            .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
 
     nTries = 100;
     numExceptions = 0;
