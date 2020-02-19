@@ -520,15 +520,15 @@
       </folder>
       <folder path="TestFiles/f1">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f1</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
@@ -961,15 +961,15 @@
       </folder>
       <folder path="TestFiles/f1">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f1</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
@@ -1396,15 +1396,15 @@
       </folder>
       <folder path="TestFiles/f1">
         <cTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>`cppunit-config --cflags`</commandLine>
+          <commandLine>`pkg-config cppunit --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <output>${TESTDIR}/TestFiles/f1</output>
           <linkerLibItems>
-            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config cppunit --libs`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </folder>
