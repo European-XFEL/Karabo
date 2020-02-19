@@ -39,8 +39,10 @@ class DeviceClientBase(Device):
     abstract = True
 
     def __init__(self, configuration):
+        # "unknown" is default type for bare C++ SignalSlotable
         self.systemTopology = Hash("device", Hash(), "server", Hash(),
-                                   "macro", Hash(), "client", Hash())
+                                   "macro", Hash(), "client", Hash(),
+                                   "unknown", Hash())
         self.loggerMap = Hash()
         super().__init__(configuration)
 
