@@ -345,6 +345,21 @@ class PropertyTest(PythonDevice):
             .commit(),
         )
 
+        (
+
+            TABLE_ELEMENT(expected).key("tableReadonly")
+            .displayedName("Read-only table property")
+            .description("Read-only table with two values.")
+            .setColumns(columns)
+            .readOnly().initialValue([Hash("e1", "abc", "e2", True,
+                                           "e3", 12, "e4", 0.9837,
+                                           "e5", 1.2345),
+                                      Hash("e1", "xyz", "e2", False,
+                                           "e3", 42, "e4", 2.33333,
+                                           "e5", 7.77777)])
+            .commit(),
+        )
+
         pipeData = Schema()
         (
             NODE_ELEMENT(pipeData).key("node")
@@ -478,7 +493,8 @@ class PropertyTest(PythonDevice):
     def setReadonly(self):
         props = ["int32Property", "uint32Property",
                  "int64Property", "uint64Property",
-                 "floatProperty", "doubleProperty"]
+                 "floatProperty", "doubleProperty",
+                 "table"]
 
         bulkSets = Hash()
         for prop in props:
