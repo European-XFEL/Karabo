@@ -193,15 +193,12 @@ runCondaUnitTests() {
     # Setup the environment
     safeRunCommand source ./build_conda_env.sh clean install
 
-    # Print the installed packages
-    safeRunCommand conda list
-
     # Allow gui tests to crash sometimes - for the time being:
     ACCEPT_SIGSEGV=true
     safeRunCommand "nosetests -v $COVER_FLAGS -e test_get_alarm_pixmap karabogui"
+    unset ACCEPT_SIGSEGV
     safeRunCommand "nosetests -v $COVER_FLAGS karabo.native"
     safeRunCommand "nosetests -v $COVER_FLAGS karabo.common"
-    unset ACCEPT_SIGSEGV
 
     conda deactivate
 }
