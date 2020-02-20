@@ -319,6 +319,7 @@ void DeviceClient_Test::testGetSchema() {
 
     // Check initial maxSize of one exemplary vector
     Schema schema(m_deviceClient->getDeviceSchema("TestedDevice3"));
+    CPPUNIT_ASSERT(schema.has("vectors.floatProperty"));
     CPPUNIT_ASSERT(schema.hasMaxSize("vectors.floatProperty"));
     CPPUNIT_ASSERT_EQUAL(10u, schema.getMaxSize("vectors.floatProperty"));
 
@@ -327,6 +328,7 @@ void DeviceClient_Test::testGetSchema() {
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "slotUpdateSchema", KRB_TEST_MAX_TIMEOUT));
 
     schema = m_deviceClient->getDeviceSchema("TestedDevice3");
+    CPPUNIT_ASSERT(schema.has("vectors.floatProperty"));
     CPPUNIT_ASSERT(schema.hasMaxSize("vectors.floatProperty"));
     CPPUNIT_ASSERT_EQUAL(20u, schema.getMaxSize("vectors.floatProperty"));
 
@@ -368,22 +370,25 @@ void DeviceClient_Test::testGetSchemaNoWait() {
     // Add handler that will be called when schema arrives when triggered by getDeviceSchemaNoWait
     bool schemaReceived = false;
     auto handler = [&schemaReceived, deviceId] (const std::string& id, const karabo::util::Schema& schema) {
-                if (id == deviceId) schemaReceived = true;
+        if (id == deviceId) schemaReceived = true;
     };
+    m_deviceClient->registerSchemaUpdatedMonitor(handler);
 
     Schema schema(m_deviceClient->getDeviceSchemaNoWait(deviceId));
     // noWait and first request: nothing cached yet, so still empty
     CPPUNIT_ASSERT(schema.empty());
 
-    // Wait a bit until schema arrived
+    // Wait a bit until schema arrived and thus handler is called
     unsigned int counter = 0;
     while (counter++ < 500) {
         if (schemaReceived) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     }
+    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for schema update monitor", schemaReceived);
     // Now take from cache
     schema = m_deviceClient->getDeviceSchemaNoWait(deviceId);
     // Check initial maxSize of one exemplary vector
+    CPPUNIT_ASSERT(schema.has("vectors.floatProperty"));
     CPPUNIT_ASSERT(schema.hasMaxSize("vectors.floatProperty"));
     CPPUNIT_ASSERT_EQUAL(10u, schema.getMaxSize("vectors.floatProperty"));
 
@@ -398,8 +403,11 @@ void DeviceClient_Test::testGetSchemaNoWait() {
         if (schemaReceived) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     }
+    CPPUNIT_ASSERT_MESSAGE("Timeout waiting for schema update monitor", schemaReceived);
+
     // Now take from cache
     schema = m_deviceClient->getDeviceSchemaNoWait(deviceId);
+    CPPUNIT_ASSERT(schema.has("vectors.floatProperty"));
     CPPUNIT_ASSERT(schema.hasMaxSize("vectors.floatProperty"));
     CPPUNIT_ASSERT_EQUAL(20u, schema.getMaxSize("vectors.floatProperty"));
 
