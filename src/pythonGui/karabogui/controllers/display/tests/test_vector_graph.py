@@ -70,7 +70,8 @@ class TestVectorGraph(GuiTestCase):
 
         value = [np.inf, np.inf, np.inf]
         set_proxy_value(self.proxy, 'prop', value)
-        self.assertIsNone(curve.yData)
+        # Empty curve on inf values!
+        self.assertEqual(len(curve.yData), 0)
 
         value = [np.NaN, np.NaN, np.NaN]
         set_proxy_value(self.proxy, 'prop', value)
