@@ -34,6 +34,7 @@ class ObjectDuplicateDialog(QDialog):
         self.sbEnd = UIntSpinbox(self)
         self.formLayout.setWidget(2, QFormLayout.FieldRole, self.sbEnd)
         self.sbEnd.valueChanged.connect(self._indexChanged)
+        self.cbNoIndex.stateChanged.connect(self._updateIndex)
 
         validator = InputValidator()
         self.leTitle.setValidator(validator)
@@ -41,12 +42,23 @@ class ObjectDuplicateDialog(QDialog):
         self._update_text()
 
     def _update_text(self):
-        start_index = self.sbStart.value()
-        end_index = self.sbEnd.value()
-        # Update text
-        nb_dupe = end_index - start_index + 1
+        """Update the text for duplicated devices"""
+        if not self.cbNoIndex.isChecked():
+            start_index = self.sbStart.value()
+            end_index = self.sbEnd.value()
+            nb_dupe = end_index - start_index + 1
+        else:
+            nb_dupe = 1
+
         text = 'You are about to create <b>{}</b> duplicate(s)'.format(nb_dupe)
         self.laText.setText(text)
+
+    @pyqtSlot(int)
+    def _updateIndex(self, value):
+        enabled = True if not value else False
+        self.sbStart.setEnabled(enabled)
+        self.sbEnd.setEnabled(enabled)
+        self._update_text()
 
     @pyqtSlot(int)
     def _indexChanged(self, value):
@@ -61,12 +73,20 @@ class ObjectDuplicateDialog(QDialog):
 
     @property
     def duplicate_names(self):
-        start_index = self.sbStart.value()
-        end_index = self.sbEnd.value()
+        """Create duplicated names for the project devices
+
+        If the `noIndex` checkbox is enabled, we only consider the `title`!
+        """
         simple_names = []
-        for index in range(start_index, end_index + 1):
-            dupe_name = '{}{}'.format(self.leTitle.text(), index)
-            simple_names.append(dupe_name)
+        if not self.cbNoIndex.isChecked():
+            start_index = self.sbStart.value()
+            end_index = self.sbEnd.value()
+            for index in range(start_index, end_index + 1):
+                dupe_name = '{}{}'.format(self.leTitle.text(), index)
+                simple_names.append(dupe_name)
+        else:
+            simple_names.append(self.leTitle.text())
+
         return simple_names
 
 
