@@ -13,6 +13,23 @@ __conda_tests() {
     . ci/utils/disable_internet.sh
 }
 
+__cmake_tests() {
+    . ci/utils/enable_internet.sh
+    curl http://exflserv05.desy.de/karabo/miniconda3/Miniconda3-latest-Linux-x86_64.sh -o /root/miniconda.sh
+    bash /root/miniconda.sh -b -f -p /root/miniconda3
+    source /root/miniconda3/etc/profile.d/conda.sh
+    conda create -n cmake -y
+    conda activate cmake
+    conda install cmake
+    pushd ./build/cmake
+    cmake ../..
+    export NUM_JOBS=$(grep "processor" /proc/cpuinfo | wc -l)
+    make -j$NUM_JOBS
+    make test
+    popd
+    . ci/utils/disable_internet.sh
+}
+
 __unit_tests() {
     bash ./auto_build_all.sh Debug --runTests
 }
@@ -38,6 +55,8 @@ export KARABO_TEST_INFLUXDB_PORT=8086
 
 if [ "$TARGET_OS" = "miniconda" ]; then
     __conda_tests
+elif [ "$TARGET_OS" = "miniconda-cmake" ]; then
+    __cmake_tests
 else
     case "$JOB_SCOPE" in
         deps) __deps_build_tests ;;
