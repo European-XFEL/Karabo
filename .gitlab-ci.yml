@@ -167,7 +167,11 @@ unit tests miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
   <<: *unit-tests
 
-# Post-merge integration test builds
+unit tests miniconda-cmake:
+  image: europeanxfel/karabo-ci:ubuntu-16
+  <<: *unit-tests
+
+  # Post-merge integration test builds
 
 integration tests centos7:
   image: europeanxfel/karabo-ci:centos-7
