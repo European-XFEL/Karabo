@@ -12,6 +12,24 @@ __lang_setting() {
     esac
 }
 
+XVFB=/usr/bin/Xvfb
+XVFB_DISP=:99.0
+XVFB_ARGS="$XVFB_DISP -screen 0 1024x768x24 -ac"
+
+__start_Xvfb() {
+    case "$1" in
+        CentOS)
+            export DISPLAY=$XVFB_DISP
+            $XVFB $XVFB_ARGS &
+            ;;
+        Ubuntu|Debian)
+            export DISPLAY=$XVFB_DISP
+            start-stop-daemon --start -b -x $XVFB -- $XVFB_ARGS
+            ;;
+        *) echo "unknown target os for xvfb: $1" ;;
+    esac
+}
+
 echo "Start to prepare environment for job: {$1}"
 
 JOB_SCOPE=$(echo $1 | cut -f1 -d' ')
@@ -22,3 +40,6 @@ REL_OS_NAME=$(lsb_release -is)
 
 __lang_setting $REL_OS_NAME
 git clean -fdx
+if [ "$TARGET_OS" = "miniconda" ]; then
+    __start_Xvfb $REL_OS_NAME
+fi
