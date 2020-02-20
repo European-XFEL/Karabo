@@ -5,7 +5,7 @@
 # environment.
 
 # Help function for checking successful execution of commands
-safeRunCommand() {
+safeRunCondaCommand() {
     typeset cmnd="$*"
     typeset ret_code
 
@@ -85,16 +85,16 @@ SCRIPT_PATH=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
 
 # Clean environment if asked
 if [ "${CLEAN}" = true ]; then
-    safeRunCommand conda deactivate || safeRunCommand source deactivate || return 1
-    safeRunCommand conda env remove -n ${KARABO_ENV} -y || return 1
+    safeRunCondaCommand conda deactivate || safeRunCondaCommand source deactivate || return 1
+    safeRunCondaCommand conda env remove -n ${KARABO_ENV} -y || return 1
 fi
 
 echo
 echo "### Creating conda environment ###"
 echo
-
-safeRunCommand conda devenv --file ${SCRIPT_PATH}/src/pythonGui/environment.devenv.yml || return 1
-safeRunCommand conda activate ${KARABO_ENV} || safeRunCommand source activate ${KARABO_ENV} || return 1
+safeRunCondaCommand conda activate || safeRunCondaCommand source activate || return 1
+safeRunCondaCommand conda devenv --file ${SCRIPT_PATH}/src/pythonGui/environment.devenv.yml || return 1
+safeRunCondaCommand conda activate ${KARABO_ENV} || safeRunCondaCommand source activate ${KARABO_ENV} || return 1
 
 if [ "$SETUP_FLAG" != false ]; then
     # We are breaking the module integrity of pythonKarabo, from which we only need pythonKarabo/common and /native.
@@ -102,9 +102,9 @@ if [ "$SETUP_FLAG" != false ]; then
     # be in their own package
     export BUILD_KARABO_GUI=1
     pushd ${SCRIPT_PATH}/src/pythonKarabo
-    safeRunCommand python setup.py ${SETUP_FLAG} || return 1
+    safeRunCondaCommand python setup.py ${SETUP_FLAG} || return 1
     popd
     pushd ${SCRIPT_PATH}/src/pythonGui
-    safeRunCommand python setup.py ${SETUP_FLAG} || return 1
+    safeRunCondaCommand python setup.py ${SETUP_FLAG} || return 1
     popd
 fi
