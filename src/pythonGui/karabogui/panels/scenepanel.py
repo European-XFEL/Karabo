@@ -29,7 +29,7 @@ from .base import BasePanelWidget
 
 # NOTE: This is the amount of padding added by ScenePanel's QFrame parent
 # We need to take it into account when undocking!!
-QFRAME_PADDING = 6
+QFRAME_PADDING = 4
 
 
 class ScenePanel(BasePanelWidget):
