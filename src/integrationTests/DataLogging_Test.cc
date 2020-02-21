@@ -837,6 +837,7 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
     // the history retrieval might take more than one try, it could have to index the files (or wait
     // for the records to be available for reading in the Influx case).
 
+    const unsigned int numGetPropHist = m_deviceClient->get<unsigned int>(dlreader0, "numGetPropertyHistory");
     std::vector<std::string> exceptionsMsgs;
 
     int nTries = 100;
@@ -870,6 +871,8 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
                                  "\n\tExceptions:\n" + boost::algorithm::join(exceptionsMsgs, "\n"),
                                  static_cast<size_t> (max_set), history.size());
 
+    CPPUNIT_ASSERT_EQUAL(numGetPropHist + numChecks, m_deviceClient->get<unsigned int>(dlreader0, "numGetPropertyHistory"));
+
     for (int i = 0; i < max_set; i++) {
         // checking values and timestamps
         isEqualMessage("Wrong value in history " + toString(i), f(i), history[i].get<T>("v"), history);
@@ -893,6 +896,7 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
                             .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
 
+    const unsigned int numGetCfgFromPast = m_deviceClient->get<unsigned int>(dlreader0, "numGetConfigurationFromPast");
     nTries = 100;
     numExceptions = 0;
     numChecks = 0;
@@ -930,6 +934,8 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
                            "\n\tNumber of Exceptions: " + toString(numExceptions) +
                            "\n\tExceptions:\n" + boost::algorithm::join(exceptionsMsgs, "\n"),
                            conf.size() > 0);
+    CPPUNIT_ASSERT_EQUAL(numGetCfgFromPast + numChecks, m_deviceClient->get<unsigned int>(dlreader0, "numGetConfigurationFromPast"));
+
     // One needs to check only the content here, therefore only the leaves are examined
     std::vector<std::string> leaves;
     getLeaves(conf, schema, leaves, '.');
