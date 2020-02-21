@@ -42,6 +42,8 @@ namespace karabo {
 
             KARABO_CLASSINFO(DataLogReader, "DataLogReader", "1.0")
 
+            static void expectedParameters(karabo::util::Schema& schema);
+
             DataLogReader(const karabo::util::Hash& input);
 
             virtual ~DataLogReader();
@@ -63,7 +65,7 @@ namespace karabo {
              */
             virtual void slotGetPropertyHistory(const std::string& deviceId,
                                                 const std::string& property,
-                                                const karabo::util::Hash& params) = 0;
+                                                const karabo::util::Hash& params);
 
             /**
              * Request the configuration Hash and schema of a device at a given point at time.
@@ -90,8 +92,15 @@ namespace karabo {
              * the third value in the reply will be false and the fourth will be the string form of the Epoch
              * (01/01/1970 at 00:00:00).
              */
-            virtual void slotGetConfigurationFromPast(const std::string& deviceId,
-                                                      const std::string& timepoint) = 0;
+            void slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
+
+        protected:
+            virtual void slotGetPropertyHistoryImpl(const std::string& deviceId,
+                                                    const std::string& property,
+                                                    const karabo::util::Hash& params) = 0;
+
+            virtual void slotGetConfigurationFromPastImpl(const std::string& deviceId,
+                                                          const std::string& timepoint) = 0;
 
         private: // Functions
 
