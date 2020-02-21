@@ -381,6 +381,8 @@ else
 fi
 
 if [ "$RUNTESTS" = "y" ]; then
+    # Temp.!
+    runIntegrationTests
     runUnitTests
 fi
 
