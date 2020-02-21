@@ -103,18 +103,6 @@ namespace karabo {
 
         void FileLogReader::expectedParameters(Schema& expected) {
 
-            OVERWRITE_ELEMENT(expected).key("visibility")
-                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("archive")
-                    .setNewDefaultValue(false)
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("heartbeatInterval")
-                    .setNewDefaultValue(60)
-                    .commit();
-
             PATH_ELEMENT(expected).key("directory")
                     .displayedName("Directory")
                     .description("The directory where the log files should be placed")
@@ -136,9 +124,9 @@ namespace karabo {
         }
 
 
-        void FileLogReader::slotGetPropertyHistory(const std::string& deviceId,
-                                                   const std::string& property,
-                                                   const Hash& params) {
+        void FileLogReader::slotGetPropertyHistoryImpl(const std::string& deviceId,
+                                                       const std::string& property,
+                                                       const Hash& params) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory(" << deviceId << ", "
                         << property << ", from/to parameters)";
@@ -418,16 +406,16 @@ namespace karabo {
         }
 
 
-        void FileLogReader::slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint) {
+        void FileLogReader::slotGetConfigurationFromPastImpl(const std::string& deviceId, const std::string& timepoint) {
             // Go directly to event loop to avoid blocking the slot
             AsyncReply aReply(this);
-            karabo::net::EventLoop::getIOService().post(bind_weak(&FileLogReader::slotGetConfigurationFromPastImpl, this,
+            karabo::net::EventLoop::getIOService().post(bind_weak(&FileLogReader::getConfigurationFromPast, this,
                                                                   deviceId, timepoint, aReply));
         }
 
 
-        void FileLogReader::slotGetConfigurationFromPastImpl(const std::string& deviceId, const std::string& timepoint,
-                                                             SignalSlotable::AsyncReply& aReply) {
+        void FileLogReader::getConfigurationFromPast(const std::string& deviceId, const std::string& timepoint,
+                                                     SignalSlotable::AsyncReply& aReply) {
             try {
 
                 Hash hash;
