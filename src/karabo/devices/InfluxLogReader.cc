@@ -111,18 +111,6 @@ namespace karabo {
 
         void InfluxLogReader::expectedParameters(karabo::util::Schema &expected) {
 
-            OVERWRITE_ELEMENT(expected).key("visibility")
-                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("archive")
-                    .setNewDefaultValue(false)
-                    .commit();
-
-            OVERWRITE_ELEMENT(expected).key("heartbeatInterval")
-                    .setNewDefaultValue(60)
-                    .commit();
-
             STRING_ELEMENT(expected).key("url")
                     .displayedName("Influxdb URL")
                     .description("URL should be given in form: tcp://host:port")
@@ -152,9 +140,9 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::slotGetPropertyHistory(const std::string &deviceId,
-                                                     const std::string &property,
-                                                     const Hash &params) {
+        void InfluxLogReader::slotGetPropertyHistoryImpl(const std::string &deviceId,
+                                                         const std::string &property,
+                                                         const Hash &params) {
             Epochstamp from;
             if (params.has("from"))
                 from = Epochstamp(params.get<std::string>("from"));
@@ -319,8 +307,8 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::slotGetConfigurationFromPast(const std::string &deviceId,
-                                                           const std::string &timepoint) {
+        void InfluxLogReader::slotGetConfigurationFromPastImpl(const std::string &deviceId,
+                                                               const std::string &timepoint) {
 
             Epochstamp atTime(timepoint);
             SignalSlotable::AsyncReply aReply(this);

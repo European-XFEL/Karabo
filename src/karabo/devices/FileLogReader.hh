@@ -134,14 +134,14 @@ namespace karabo {
 
         protected:
 
-            virtual void slotGetPropertyHistory(const std::string &deviceId,
-                                                const std::string &property,
-                                                const karabo::util::Hash &params) override;
+            virtual void slotGetPropertyHistoryImpl(const std::string &deviceId,
+                                                    const std::string &property,
+                                                    const karabo::util::Hash &params) override;
 
-            virtual void slotGetConfigurationFromPast(const std::string &deviceId,
-                                                      const std::string &timepoint) override;
+            virtual void slotGetConfigurationFromPastImpl(const std::string &deviceId,
+                                                          const std::string &timepoint) override;
 
-            void slotGetConfigurationFromPastImpl(const std::string& deviceId, const std::string& timepoint,
+            void getConfigurationFromPast(const std::string& deviceId, const std::string& timepoint,
                                                   SignalSlotable::AsyncReply& reply);
 
         private:
