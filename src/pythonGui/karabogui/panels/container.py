@@ -8,6 +8,7 @@ from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QTabBar, QTabWidget
 
 from .placeholderpanel import PlaceholderPanel
+from .utils import get_panel_icon
 
 
 class PanelContainer(QTabWidget):
@@ -143,11 +144,13 @@ class PanelContainer(QTabWidget):
     def addTab(self, widget, label):
         index = super(PanelContainer, self).addTab(widget, label)
         self._set_tab_text_color(index, widget, widget.tab_text_color)
+        self._set_tab_icon(index, widget)
         return index
 
     def insertTab(self, index, widget, label):
         index = super(PanelContainer, self).insertTab(index, widget, label)
         self._set_tab_text_color(index, widget, widget.tab_text_color)
+        self._set_tab_icon(index, widget)
         return index
 
     # ----------------------------------------------------------------------
@@ -197,6 +200,11 @@ class PanelContainer(QTabWidget):
         if color is not None and color.isValid():
             tab_bar = self.tabBar()
             tab_bar.setTabTextColor(index, color)
+
+    def _set_tab_icon(self, index, widget):
+        icon = get_panel_icon(widget)
+        if icon is not None:
+            self.setTabIcon(index, icon)
 
     def _update_tabs_closable(self):
         if self.count() > 1:
