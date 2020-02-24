@@ -39,6 +39,11 @@ CONSOLE_TITLE = 'Console'
 LOG_TITLE = 'Log'
 AlARM_TITLE = 'Alarms'
 
+CONFIGURATOR_TITLE = 'Configuration Editor'
+SYSTEM_TOPOLOGY_TITLE = 'System Topology'
+DEVICE_TOPOLOGY_TITLE = 'Device Topology'
+PROJECT_TITLE = 'Projects'
+
 
 _PANEL_TITLE_CONFIG = {
     CONSOLE_TITLE: 'console_panel',
@@ -85,10 +90,10 @@ _CLOSABLE_PANELS = {
 
 _PANELS = {
     # Title: (class, position)
-    'Configuration Editor': (ConfigurationPanel, PanelAreaEnum.Right),
-    'System Topology': (TopologyPanel, PanelAreaEnum.Left),
-    'Device Topology': (DevicePanel, PanelAreaEnum.Left),
-    'Projects': (ProjectPanel, PanelAreaEnum.Left),
+    CONFIGURATOR_TITLE: (ConfigurationPanel, PanelAreaEnum.Right),
+    SYSTEM_TOPOLOGY_TITLE: (TopologyPanel, PanelAreaEnum.Left),
+    DEVICE_TOPOLOGY_TITLE: (DevicePanel, PanelAreaEnum.Left),
+    PROJECT_TITLE: (ProjectPanel, PanelAreaEnum.Left),
 }
 
 VIEW_MENU_TITLE = '&View'
@@ -111,13 +116,16 @@ class MainWindow(QMainWindow):
         self._setupToolBar()
         self._setupStatusBar()
 
+        # Keep track of the panels!
+        self._active_panels = {}
+
+        # Keep track of the closable panels!
+        self._active_closable_panels = {}
+
         self._panel_areas = {}
         self._setupPanelAreas()
         for name in _PANELS:
             self._open_panel(name)
-
-        # Keep track of the closable panels!
-        self._active_closable_panels = {}
 
         # Create the menu bar for panels which are by default closed!
         for name, data in _CLOSABLE_PANELS.items():
@@ -171,6 +179,11 @@ class MainWindow(QMainWindow):
             for info in active_panels:
                 panel, area_enum = info
                 self.removePanel(panel, area_enum)
+
+            # On disconnect, we select again the system topology!
+            container = self._panel_areas[PanelAreaEnum.Left]
+            tab = self._active_panels[SYSTEM_TOPOLOGY_TITLE]
+            container.setCurrentIndex(container.indexOf(tab))
 
     def _event_big_data(self, data):
         """Show the big data latency including value set in the gui"""
@@ -454,6 +467,7 @@ class MainWindow(QMainWindow):
 
         klass, area_enum = panel_info
         panel = klass()
+        self._active_panels[name] = panel
         self.addPanel(panel, area_enum)
 
     def _open_closable_panel(self, name):
