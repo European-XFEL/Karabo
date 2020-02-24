@@ -34,13 +34,15 @@ def timeout():
 
     If big data is in the stack, we cut there!
     """
-    items = min(len(queue), MAX_ITEM_PROCESSING)
-    while items > 0:
+    task_counter = MAX_ITEM_PROCESSING
+    while queue and task_counter > 0:
         prio, _, task = heappop(queue)
         task()
         if prio.value > 0:
+            # We found big data and break!
             break
-        items -= 1
+        task_counter -= 1
+
     if not queue:
         timer.stop()
 
