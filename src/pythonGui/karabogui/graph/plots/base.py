@@ -548,6 +548,8 @@ class KaraboPlotView(QWidget):
             return
 
         self._legend = KaraboLegend(size, offset)
+        self._legend.setBackgroundColor(None)
+
         self.plotItem.legend = self._legend
         self._legend.setParentItem(self.plotItem.vb)
         if not visible:

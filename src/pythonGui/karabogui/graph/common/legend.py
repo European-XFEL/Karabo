@@ -6,6 +6,8 @@ from pyqtgraph.graphicsItems.LegendItem import ItemSample, LegendItem
 SYMBOL_COLUMN = 0
 TEXT_COLUMN = 1
 
+TEXT_SIZE = "8pt"
+
 
 class KaraboLegend(LegendItem):
     def __init__(self, size=None, offset=None):
@@ -13,6 +15,7 @@ class KaraboLegend(LegendItem):
         self._pen = QPen(QColor(192, 192, 192, 200), 1)
         self._pen.setCosmetic(True)
         self._brush = QBrush(QColor(0, 0, 0, 50))
+        self._label_item_color = QColor(0, 0, 0, 200)
 
     def addItem(self, item, name):
         """Reimplemented function of LegendItem
@@ -21,7 +24,8 @@ class KaraboLegend(LegendItem):
                      of the item will be determined
         :param name: The title to display for this item. Simple HTML allowed.
         """
-        label = LabelItem(name, justify='left', color='w', size="8pt")
+        label = LabelItem(name, justify='left', color=self._label_item_color,
+                          size=TEXT_SIZE)
         sample = (item if isinstance(item, ItemSample)
                   else ColorBox(item))
         row = self.layout.rowCount()
@@ -29,6 +33,10 @@ class KaraboLegend(LegendItem):
         self.layout.addItem(sample, row, SYMBOL_COLUMN)
         self.layout.addItem(label, row, TEXT_COLUMN)
         self.updateSize()
+
+    def setBackgroundColor(self, color):
+        """External method to apply a different background to our legend"""
+        self._brush = mkBrush(color)
 
     def paint(self, painter, *args):
         """Reimplemented function of LegendItem"""
