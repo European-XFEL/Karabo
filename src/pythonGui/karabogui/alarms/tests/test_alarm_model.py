@@ -20,8 +20,7 @@ def _data(update_type=INIT_UPDATE_TYPE):
             property='rent',
             type=ALARM_HIGH,
             description='rent is too damn high',
-            acknowledge=(True, True),
-            showDevice=None)
+            acknowledge=(True, True))
         entries.append(data)
 
     # we add an interlock
@@ -33,8 +32,7 @@ def _data(update_type=INIT_UPDATE_TYPE):
         property='rent',
         type=INTERLOCK,
         description='rent is too damn high',
-        acknowledge=(True, True),
-        showDevice=None)
+        acknowledge=(True, True))
     entries.append(data)
 
     ret = {
@@ -73,13 +71,13 @@ class TestModel(GuiTestCase):
         self.assertNotEqual(mdl.all_entries, [])
 
     def test_columnCount_filter_model(self):
-        self.assertEqual(self.model.columnCount(), 9)
+        self.assertEqual(self.model.columnCount(), 8)
 
     def test_rowCount_filter_model(self):
         self.assertEqual(self.model.rowCount(), 10)
 
     def test_columnCount_alarm(self):
-        self.assertEqual(self.alarm_model.columnCount(), 9)
+        self.assertEqual(self.alarm_model.columnCount(), 8)
 
     def test_rowCount_alarm(self):
         self.assertEqual(self.alarm_model.rowCount(), 11)

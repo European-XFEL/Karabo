@@ -7,7 +7,7 @@ from PyQt5.QtCore import QDateTime
 
 from karabo.native import Timestamp
 from .const import (ACKNOWLEDGEABLE, ALARM_DATA, ALARM_NONE, ALARM_TYPE,
-                    DEVICE_ID, NEEDS_ACKNOWLEDGING, TIME_OF_FIRST_OCCURENCE,
+                    NEEDS_ACKNOWLEDGING, TIME_OF_FIRST_OCCURENCE,
                     TIME_OF_OCCURENCE, AlarmEntry)
 
 
@@ -45,7 +45,6 @@ def extract_alarms_data(instanceId, rows):
             ack = alarm_hsh.get(ACKNOWLEDGEABLE)
             # Create namedtuple
             entry = AlarmEntry(acknowledge=(needs_ack, ack),
-                               showDevice=params[DEVICE_ID],
                                **params)
             alarm_entries.append(entry)
 
