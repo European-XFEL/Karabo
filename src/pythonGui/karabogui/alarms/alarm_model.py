@@ -51,11 +51,8 @@ class AlarmModel(QAbstractTableModel):
             entryIndex = self._getEntryIndex(alarmEntry.id)
             if upType in UPDATE_ALARM_TYPES:
                 if 0 <= entryIndex < len(self.all_entries):
-                    # Replace entry
+                    # Replace entry, but do not announce a single dataChanged
                     self.all_entries[entryIndex] = alarmEntry
-                    row_begin = self.index(entryIndex, 0, QModelIndex())
-                    row_end = self.index(entryIndex, 7, QModelIndex())
-                    self.dataChanged.emit(row_begin, row_end)
                 else:
                     row = self.rowCount()
                     self.beginInsertRows(QModelIndex(), row, row)
@@ -66,6 +63,11 @@ class AlarmModel(QAbstractTableModel):
                     self.beginRemoveRows(QModelIndex(), entryIndex, entryIndex)
                     self.all_entries.pop(entryIndex)
                     self.endRemoveRows()
+
+        # Doing a layoutChange alltogether is much faster for all
+        # the entries than announcing single updates in Qt5!
+        self.layoutAboutToBeChanged.emit()
+        self.layoutChanged.emit()
 
     def _getEntryIndex(self, entry_id):
         """ The index in ``self.all_entries`` for the given ``entry_id`` is
@@ -94,7 +96,7 @@ class AlarmModel(QAbstractTableModel):
         type_index = get_alarm_key_index(ALARM_TYPE)
         if role in (Qt.DisplayRole, Qt.ToolTipRole):
             return entry[index.column()]
-        elif role == Qt.DecorationRole and index.column() == type_index:
+        if index.column() == type_index and role == Qt.DecorationRole:
             return get_alarm_icon(entry.type)
 
         return None
