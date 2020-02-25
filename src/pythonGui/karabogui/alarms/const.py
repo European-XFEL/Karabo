@@ -41,7 +41,6 @@ ALARM_DATA[PROPERTY] = 'Property'
 ALARM_DATA[ALARM_TYPE] = 'Type'
 ALARM_DATA[DESCRIPTION] = 'Description'
 ALARM_DATA[ACKNOWLEDGE] = 'Acknowledge'
-ALARM_DATA[SHOW_DEVICE] = 'Show Device'
 
 AlarmEntry = namedtuple('AlarmEntry', [key for key in ALARM_DATA.keys()])
 

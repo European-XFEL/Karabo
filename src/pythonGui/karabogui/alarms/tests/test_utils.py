@@ -9,8 +9,6 @@ def test_extract_alarms_data():
     assert ret['update_types'] == ['uptype1', 'uptype1']
     assert ret['alarm_entries'][0].acknowledge == (True, True)
     assert ret['alarm_entries'][1].acknowledge == (False, False)
-    assert ret['alarm_entries'][0].showDevice == 'Bobby'
-    assert ret['alarm_entries'][1].showDevice == 'Jenny'
     sdate = ret['alarm_entries'][0].timeOfFirstOccurrence.toUTC().date()
     sdate = (sdate.dayOfYear(), sdate.year())
     assert sdate == (110, 2017)
