@@ -386,7 +386,8 @@ class DeviceInstanceController(BaseProjectGroupController):
 
     def _show_device(self):
         deviceId = self.model.instance_id
-        broadcast_event(KaraboEvent.ShowDevice, {'deviceId': deviceId})
+        broadcast_event(KaraboEvent.ShowDevice,
+                        {'deviceId': deviceId, 'showTopology': True})
 
     def _delete_device(self, project_controller, parent=None):
         """ Remove the device associated with this item from its device server
