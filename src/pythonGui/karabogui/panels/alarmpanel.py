@@ -6,17 +6,20 @@
 
 from PyQt5.QtCore import pyqtSlot, QModelIndex
 from PyQt5.QtWidgets import (
-    QButtonGroup, QHBoxLayout, QPushButton, QRadioButton, QStyle,
-    QStyledItemDelegate, QTableView, QVBoxLayout, QWidget, QAbstractButton)
+    QAbstractButton, QAbstractItemView, QButtonGroup, QHBoxLayout, QHeaderView,
+    QPushButton, QRadioButton, QStyle, QStyledItemDelegate, QTableView,
+    QVBoxLayout, QWidget)
 from karabogui import icons
 from karabogui.alarms.api import (
-    ACKNOWLEDGE, ALARM_DATA, ALARM_ID, ALARM_WARNING_TYPES,
-    SHOW_DEVICE, AlarmFilterModel, INTERLOCK_TYPES,
-    get_alarm_key_index)
+    ACKNOWLEDGE, ALARM_DATA, ALARM_ID, ALARM_WARNING_TYPES, AlarmFilterModel,
+    INTERLOCK_TYPES, get_alarm_key_index)
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import get_alarm_model, get_network
 
 from .base import BasePanelWidget
+
+DEVICE_COLUMN = 3
+ACKNOWLEDGE_COLUMN = 7
 
 
 class AlarmPanel(BasePanelWidget):
@@ -43,17 +46,23 @@ class AlarmPanel(BasePanelWidget):
         filter_layout.addWidget(self.ui_show_alarm_warn)
         filter_layout.addWidget(self.ui_show_interlock)
         filter_layout.addStretch()
-        # Add custom filter options
 
         self.table_view = QTableView(parent=widget)
+        self.table_view.setSelectionBehavior(QAbstractItemView.SelectItems
+                                             | QAbstractItemView.SelectRows)
         self.table_view.setWordWrap(True)
         self.table_view.setAlternatingRowColors(True)
-        self.table_view.resizeColumnsToContents()
-        self.table_view.horizontalHeader().setStretchLastSection(True)
+        self.table_view.doubleClicked.connect(self.onRowDoubleClicked)
+
+        header = self.table_view.horizontalHeader()
+        header.setResizeMode(QHeaderView.ResizeToContents)
+        header.setStretchLastSection(True)
+
         self.model = AlarmFilterModel(get_alarm_model(), self.table_view)
         self.table_view.setModel(self.model)
-        btn_delegate = ButtonDelegate(parent=self.table_view)
-        self.table_view.setItemDelegate(btn_delegate)
+        self.delegate = ButtonDelegate(parent=self.table_view)
+        self.table_view.setItemDelegateForColumn(
+            ACKNOWLEDGE_COLUMN, self.delegate)
 
         main_layout = QVBoxLayout(widget)
         main_layout.setContentsMargins(5, 5, 5, 5)
@@ -76,6 +85,15 @@ class AlarmPanel(BasePanelWidget):
         if event.isAccepted():
             self.signalPanelClosed.emit(self.windowTitle())
 
+    @pyqtSlot(QModelIndex)
+    def onRowDoubleClicked(self, index):
+        """A double click on a column should select the device in topology"""
+        value = index.data()
+        if value is None:
+            return
+        deviceId = self.model.index(index.row(), DEVICE_COLUMN).data()
+        broadcast_event(KaraboEvent.ShowDevice, {'deviceId': deviceId})
+
 
 class ButtonDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
@@ -96,18 +114,13 @@ class ButtonDelegate(QStyledItemDelegate):
             Otherwise ``False``, an empty string and ``False`` is returned.
         """
         column = index.column()
-        ack_index = get_alarm_key_index(ACKNOWLEDGE)
-        device_index = get_alarm_key_index(SHOW_DEVICE)
-        if not (column == ack_index or column == device_index):
-            return (False, '', False)
+        if column != ACKNOWLEDGE_COLUMN:
+            return (False, 'None', False)
 
-        if column == ack_index:
-            text = ALARM_DATA[ACKNOWLEDGE]
-            needsAck, ack = index.data()
-            clickable = needsAck and ack
-        else:
-            text = ALARM_DATA[SHOW_DEVICE]
-            clickable = True
+        text = ALARM_DATA[ACKNOWLEDGE]
+        needsAck, ack = index.data()
+        clickable = needsAck and ack
+
         return (True, text, clickable)
 
     def _updateButton(self, button, text, enabled):
@@ -160,13 +173,8 @@ class ButtonDelegate(QStyledItemDelegate):
             return
         isRelevant, text, clickable = self._isRelevantColumn(index)
         if isRelevant and clickable:
-            if text == ALARM_DATA[SHOW_DEVICE]:
-                # Send signal to show device
-                broadcast_event(KaraboEvent.ShowDevice,
-                                {'deviceId': index.data()})
-            else:
-                # Send signal to acknowledge alarm
-                id_index = get_alarm_key_index(ALARM_ID)
-                model = index.model()
-                alarm_id = model.index(index.row(), id_index).data()
-                get_network().onAcknowledgeAlarm(model.instanceId, alarm_id)
+            # Send signal to acknowledge alarm
+            id_index = get_alarm_key_index(ALARM_ID)
+            model = index.model()
+            alarm_id = model.index(index.row(), id_index).data()
+            get_network().onAcknowledgeAlarm(model.instanceId, alarm_id)
