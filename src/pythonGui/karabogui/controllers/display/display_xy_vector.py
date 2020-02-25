@@ -68,6 +68,10 @@ class DisplayVectorXYGraph(BaseBindingController):
             self._last_x_value = value
         if proxy is self._y_proxy and self._last_x_value is not None:
             if self.widget is not None:
+                # Be cautious and ask for the size!
+                if len(self._last_x_value) != len(value):
+                    self._plot.setData([], [])
+                    return
                 self._plot.setData(self._last_x_value, value)
 
     # ----------------------------------------------------------------
