@@ -23,7 +23,8 @@ class TopologyPanel(BasePanelWidget):
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.AccessLevelChanged: self._event_access_level,
             KaraboEvent.RemoveDaemonService: self._event_remove_daemon,
-            KaraboEvent.ShowDaemonService: self._event_show_daemon
+            KaraboEvent.ShowDaemonService: self._event_show_daemon,
+            KaraboEvent.ShowDevice: self._event_show_device
         }
         register_for_broadcasts(event_map)
 
@@ -70,6 +71,10 @@ class TopologyPanel(BasePanelWidget):
         instance_id = data.get('instanceId')
         if instance_id == get_config()['daemon_manager']:
             self.daemon_button.setVisible(False)
+
+    def _event_show_device(self, data):
+        if data.get('showTopology'):
+            self.panel_container.switch_to_panel(self)
 
     # -----------------------------------------------------------------------
 
