@@ -138,6 +138,14 @@ class PanelContainer(QTabWidget):
             index = self.indexOf(panel)
             self._set_tab_text_color(index, panel, color)
 
+    def switch_to_panel(self, panel):
+        if panel.parent() is not None and not self.maximized:
+            # The panel is docked and is added as a tab. We switch to it.
+            self.setCurrentIndex(panel.index)
+        else:
+            # The panel is undocked. We put the window in front.
+            panel.raise_()
+
     # --------------------------------------
     # Qt Overrides
 
