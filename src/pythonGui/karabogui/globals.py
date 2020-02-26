@@ -6,6 +6,7 @@
 from os import environ, path
 from sys import platform
 
+from karabogui.enums import AccessRole
 from karabo.common.packaging import utils
 from karabo.native import AccessLevel
 
@@ -24,12 +25,20 @@ except (ImportError, AttributeError):
     print('Version file not found! Please generate the _version.py file.')
     exit(1)
 
-# XXX: Karabo will support an global access level and an exception list which
-# is deviceId specific.
-# This requires a function like in SignalSlotable: getAccessLevel(deviceId) in
-# the end!
+# The globally defined access level variable which is verified and set by the
+# GUI server eventually
 
 GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+
+ACCESS_LEVEL_ROLES = {
+    AccessRole.SCENE_EDIT: AccessLevel.EXPERT,
+    AccessRole.MACRO_EDIT: AccessLevel.OPERATOR}
+
+
+def access_role_allowed(role):
+    """Return on runtime if action in the GUI are allowed"""
+    return GLOBAL_ACCESS_LEVEL >= ACCESS_LEVEL_ROLES[role]
+
 
 # Hidden karabo folder which includes certain karabo related files
 if platform.startswith('win'):
@@ -38,7 +47,6 @@ else:
     HIDDEN_KARABO_FOLDER = path.join(environ['HOME'], '.karabo')
 # Project folder
 KARABO_PROJECT_FOLDER = path.join(HIDDEN_KARABO_FOLDER, 'projects')
-
 
 MAX_UINT8 = (2 ** 8) - 1
 MIN_UINT8 = (2 ** 8)
