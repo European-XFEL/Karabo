@@ -4,7 +4,7 @@
 #############################################################################
 
 import numpy as np
-from PyQt5.QtWidgets import QAction, QInputDialog
+from PyQt5.QtWidgets import QAction
 from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import (
@@ -12,11 +12,9 @@ from karabo.common.scenemodel.api import (
 from karabogui.binding.api import NDArrayBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.graph.common.const import MIN_DOWNSAMPLE, MAX_DOWNSAMPLE
 from karabogui.graph.plots.api import (
     KaraboPlotView, generate_down_sample, generate_baseline, get_view_range,
     TransformDialog)
-from karabogui import icons
 
 
 @register_binding_controller(ui_name='NDArray Graph',
@@ -39,14 +37,9 @@ class DisplayNDArrayGraph(BaseBindingController):
         widget.restore(build_graph_config(self.model))
         widget.enable_data_toggle()
 
-        downsample_action = QAction("Downsample", widget)
-        downsample_action.triggered.connect(self.configure_downsample)
-        downsample_action.setIcon(icons.downsample)
-
         trans_action = QAction("X-Transformation", widget)
         trans_action.triggered.connect(self.configure_transformation)
 
-        widget.addAction(downsample_action)
         widget.addAction(trans_action)
 
         return widget
@@ -64,12 +57,10 @@ class DisplayNDArrayGraph(BaseBindingController):
         if value.ndim == 1:
             model = self.model
             # Generate the baseline for the x-axis
-            base_line = generate_baseline(value, offset=model.offset,
-                                          step=model.step)
+            x = generate_baseline(value, offset=model.offset,
+                                  step=model.step)
             rect = get_view_range(self._plot)
-            x, y = generate_down_sample(value, rect=rect,
-                                        half_samples=self.model.half_samples,
-                                        deviation=True, base_line=base_line)
+            x, y = generate_down_sample(value, rect=rect, x=x, deviation=True)
             self._plot.setData(x, y)
 
     # ----------------------------------------------------------------
@@ -77,14 +68,6 @@ class DisplayNDArrayGraph(BaseBindingController):
 
     def _change_model(self, content):
         self.model.trait_set(**restore_graph_config(content))
-
-    def configure_downsample(self):
-        sample, ok = QInputDialog.getInt(
-            self.widget, 'Downsample', 'Samples half:',
-            self.model.half_samples,
-            MIN_DOWNSAMPLE, MAX_DOWNSAMPLE)
-        if ok:
-            self.model.half_samples = sample
 
     def configure_transformation(self):
         content, ok = TransformDialog.get(build_graph_config(self.model),
