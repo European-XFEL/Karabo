@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import numpy as np
 
 from karabo.common.scenemodel.api import VectorGraphModel
@@ -94,21 +92,6 @@ class TestVectorGraph(GuiTestCase):
         value = [False, False, True]
         set_proxy_value(self.bool_value, 'bool_value', value)
         self.assertEqual(list(curve.yData), [0, 0, 1])
-
-    def test_downsample(self):
-        controller = DisplayVectorGraph(proxy=self.proxy,
-                                        model=VectorGraphModel())
-        controller.create(None)
-        action = controller.widget.actions()[10]
-        self.assertEqual(action.text(), 'Downsample')
-
-        dsym = ('karabogui.controllers.display.'
-                'display_vector_graph.QInputDialog')
-        with patch(dsym) as QInputDialog:
-            QInputDialog.getInt.return_value = 12000, True
-            action.trigger()
-            self.assertEqual(controller.model.half_samples, 12000)
-        controller.destroy()
 
     def test_action_names(self):
         controller = DisplayVectorGraph(proxy=self.proxy,
