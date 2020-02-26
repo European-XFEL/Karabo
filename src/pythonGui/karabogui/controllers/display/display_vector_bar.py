@@ -16,6 +16,7 @@ from karabogui.graph.plots.api import (
     generate_down_sample, get_view_range, KaraboPlotView, VectorBarGraphPlot)
 
 MAX_WIDTH = 100
+MAX_BARS = 3000
 
 
 @register_binding_controller(ui_name='Vector Bar Graph',
@@ -47,7 +48,7 @@ class DisplayBarGraph(BaseBindingController):
     def value_update(self, proxy):
         value = proxy.value
         rect = get_view_range(self._plot)
-        x, y = generate_down_sample(value, rect=rect)
+        x, y = generate_down_sample(value, threshold=MAX_BARS, rect=rect)
         self._plot.setData(x, y)
 
     # ----------------------------------------------------------------

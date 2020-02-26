@@ -25,9 +25,6 @@ WIDGET_WIDTH_HINT = 450
 # Plot Constants
 # --------------------------------------------------------------------------
 
-MIN_DOWNSAMPLE = 6000
-MAX_DOWNSAMPLE = 30000
-
 DEFAULT_BAR_WIDTH = 0.1
 DEFAULT_PEN_WIDTH = 1.0
 

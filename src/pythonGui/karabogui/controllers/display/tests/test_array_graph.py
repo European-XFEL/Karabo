@@ -1,7 +1,4 @@
-from unittest.mock import patch
 import numpy as np
-
-from karabo.common.scenemodel.api import NDArrayGraphModel
 
 from karabo.native import Configurable, Hash, NDArray, UInt32
 from karabogui.testing import (
@@ -41,18 +38,3 @@ class TestArrayGraph(GuiTestCase):
         h = Hash('prop', array_hash)
         set_proxy_hash(self.proxy, h)
         np.testing.assert_array_equal(curve.yData, value)
-
-    def test_downsample(self):
-        controller = DisplayNDArrayGraph(proxy=self.proxy,
-                                         model=NDArrayGraphModel())
-        controller.create(None)
-        action = controller.widget.actions()[10]
-        self.assertEqual(action.text(), 'Downsample')
-
-        dsym = 'karabogui.controllers.display.display_array_graph.QInputDialog'
-        with patch(dsym) as QInputDialog:
-            QInputDialog.getInt.return_value = 12000, True
-            action.trigger()
-            self.assertEqual(controller.model.half_samples, 12000)
-
-        controller.destroy()

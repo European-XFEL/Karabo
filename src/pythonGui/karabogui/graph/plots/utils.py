@@ -1,5 +1,7 @@
 import numpy as np
 
+import lttbc
+
 
 def get_view_range(plot_item):
     """Get the viewing rect of a plot item for the X-Axis"""
@@ -10,11 +12,6 @@ def get_view_range(plot_item):
     return rect
 
 
-STD_SUBSAMPLE = 100
-SUBSAMPLE_THRESHOLD = 20
-MEAN_THRESHOLD = 10
-
-
 def generate_baseline(data, offset=0.0, step=1.0):
     """Generate a baseline for vector data
 
@@ -22,64 +19,78 @@ def generate_baseline(data, offset=0.0, step=1.0):
     :param start: The offset to start the baseline
     :param step: The bin size (step) of the baseline
     """
-
     # XXX: No matter what, prevent ourselves against zero
     step = step if step else 1.0
-
     stop = offset + data.size * step
 
     return np.arange(start=offset, stop=stop, step=step, dtype=np.float)
 
 
-def generate_down_sample(data, rect=None, half_samples=6000, deviation=False,
-                         base_line=None):
-    """This function creates sampled data to keep a plot_item ``live``
+TYPICAL_POINTS = 20000
+STD_SIGNAL_THRESHOLD = 5
 
-    :param data: The actual data to be sampled
-    :param half_samples: The samples after which the data gets down sampled
-    :param rect: The rect of the interesting data (``None``)
-    :param deviation: Mean sample if the standard deviation is not above 5
+# [(size, data points)]
+DIMENSION_DOWNSAMPLE = [
+    (200000, 30000),
+    (400000, 50000),
+    (500000, 60000),
+]
+
+
+def _get_sample_threshold(size):
+    """Calculate the downsample factor by a given data dimension"""
+    threshold = TYPICAL_POINTS
+    for dsize, dpoints in DIMENSION_DOWNSAMPLE:
+        if size > dsize:
+            threshold = dpoints
+        else:
+            # No need to look further!
+            break
+
+    return threshold
+
+
+def generate_down_sample(y, x=None, threshold=None, rect=None,
+                         deviation=False):
+    """This method creates a sampled y to keep a plot_item ``live``
+
+    :param y: The actual y data set from which the downsample is generated
+    :param x: Optional x array for sampling.
+    :param threshold: The threshold of data points
+    :param rect: The view rect of the plot item
+    :param deviation: Boolean flag to take into account standard deviation
     """
-    if base_line is None:
-        size = len(data)
-        base_line = np.arange(size)
+
+    if x is None:
+        size = len(y)
+        x = np.arange(size)
     else:
-        size = len(base_line)
+        size = len(x)
 
-    # NOTE: Only if we are exceed twice the half samples we down sample!
-    if (size // half_samples) > 1:
-        # NOTE: We can make the data set smaller if the view if provided!
-        if rect is not None and size > 1:
-            dx = float(base_line[-1] - base_line[0]) / (size - 1)
-            x_min = np.clip(int((rect.left() - base_line[0]) / dx), 0,
-                            size - 1)
-            x_max = np.clip(int((rect.right() - base_line[0]) / dx), 0,
-                            size - 1)
-            base_line = base_line[x_min:x_max]
-            data = data[x_min:x_max]
+    # Get a new threshold if required based on size!
+    initial = threshold is not None
+    if threshold is None:
+        threshold = _get_sample_threshold(size)
 
-        size = len(data)
-        d_factor = (size // half_samples)
-        if deviation and size and np.std(data) < 5:
-            # NOTE: A valid signal is has a signal-to-noise ratio larger 5!
-            d_factor = max(STD_SUBSAMPLE, d_factor)
-        if d_factor > SUBSAMPLE_THRESHOLD:
-            base_line = base_line[::d_factor]
-            data = data[::d_factor]
-        elif d_factor >= MEAN_THRESHOLD:
-            n = size // d_factor
-            base_line = base_line[:n * d_factor:d_factor]
-            data = data[:n * d_factor].reshape(n, d_factor).mean(axis=1)
-        elif d_factor > 1:
-            # This is the most accurate downsampling, close to the peak value
-            n = size // d_factor
-            x1 = np.empty((n, 2))
-            x1[:] = base_line[:n * d_factor:d_factor, np.newaxis]
-            base_line = x1.reshape(n * 2)
-            data1 = np.empty((n, 2))
-            data2 = data[:n * d_factor].reshape((n, d_factor))
-            data1[:, 0] = data2.max(axis=1)
-            data1[:, 1] = data2.min(axis=1)
-            data = data1.reshape(n * 2)
+    if size > threshold:
+        if rect is not None:
+            sizec = (size - 1)
+            dx = float(x[-1] - x[0]) / sizec
+            x_min = np.clip(int((rect.left() - x[0]) / dx), 0, sizec)
+            x_max = np.clip(int((rect.right() - x[0]) / dx), 0, sizec)
+            x = x[x_min:x_max]
+            y = y[x_min:x_max]
+            if not initial:
+                # Get a new size and recalculate the threshold!
+                size = len(x)
+                threshold = _get_sample_threshold(size)
 
-    return base_line, data
+        if deviation and np.std(y) < STD_SIGNAL_THRESHOLD:
+            # If there is no signal, we can drastically reduce the number of
+            # points we have to plot. This is especially important if we have
+            # noisy curves!
+            threshold = int(threshold / 10)
+
+        x, y = lttbc.downsample(x, y, threshold)
+
+    return x, y
