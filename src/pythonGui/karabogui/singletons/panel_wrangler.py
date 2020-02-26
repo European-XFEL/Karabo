@@ -10,10 +10,10 @@ from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabogui import messagebox
 from karabogui.events import KaraboEvent, register_for_broadcasts
+from karabogui.globals import AccessRole, access_role_allowed
 from karabogui.mainwindow import MainWindow, PanelAreaEnum
 from karabogui.panels.api import MacroPanel, ScenePanel
 from karabogui.singletons.api import get_config, get_project_model, get_db_conn
-
 
 LOGIN_DIALOG_DELAY = 100  # ms
 
@@ -52,7 +52,8 @@ class PanelWrangler(QObject):
             KaraboEvent.MiddlePanelClosed: self._event_middle_panel,
             KaraboEvent.ShowMacroView: self._event_show_macro,
             KaraboEvent.NetworkConnectStatus: self._event_network,
-            KaraboEvent.CreateMainWindow: self._event_mainwindow
+            KaraboEvent.CreateMainWindow: self._event_mainwindow,
+            KaraboEvent.AccessLevelChanged: self._event_access_level
         }
         register_for_broadcasts(event_map)
 
@@ -125,6 +126,17 @@ class PanelWrangler(QObject):
     def _event_mainwindow(self, data):
         self._create_main_window()
 
+    def _event_access_level(self, data):
+        """React on the access level changes and modify scene and macro panel
+        """
+        scene_editable = access_role_allowed(AccessRole.SCENE_EDIT)
+        macro_editable = access_role_allowed(AccessRole.MACRO_EDIT)
+        for panel in self._project_item_panels.values():
+            if isinstance(panel, ScenePanel):
+                panel.ac_design_mode.setVisible(scene_editable)
+            elif isinstance(panel, MacroPanel):
+                panel.ui_editor.setReadOnly(not macro_editable)
+
     # -------------------------------------------------------------------
     # private interface
 
@@ -196,6 +208,9 @@ class PanelWrangler(QObject):
         panel = self._project_item_panels.get(model)
         if panel is None:
             panel = MacroPanel(model)
+
+        editable = access_role_allowed(AccessRole.MACRO_EDIT)
+        panel.ui_editor.setReadOnly(not editable)
         self._show_project_item_panel(model, panel)
 
     def _open_scene(self, model, target_window, attached=True):
@@ -209,8 +224,10 @@ class PanelWrangler(QObject):
             karabo_topic = get_config()['broker_topic']
             panel.set_toolbar_style(karabo_topic)
 
-        # NOTE: Only attached Scene panels are allowed to have design mode!
-        panel.ac_design_mode.setVisible(attached)
+        # XXX: Only attached and access level dependent scene panels are
+        # allowed to have design mode!
+        editable = access_role_allowed(AccessRole.SCENE_EDIT)
+        panel.ac_design_mode.setVisible(attached and editable)
         self._show_project_item_panel(model, panel, attached)
 
         if self.main_window is None:
