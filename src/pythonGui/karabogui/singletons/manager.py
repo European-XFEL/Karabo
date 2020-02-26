@@ -498,6 +498,10 @@ class Manager(QObject):
             data = {'device': device, 'success': success, 'message': message}
             # Create KaraboBroadcastEvent
             broadcast_event(KaraboEvent.DeviceInitReply, data)
+            if not success:
+                text = ("The instance <b>{}</b> could not be instantiated. "
+                        "{}".format(deviceId, message))
+                messagebox.show_error(text, title="Instantiation Error")
 
     def handle_alarmInit(self, instanceId, rows):
         """Show initial update for ``AlarmService`` with given ``instanceId``
