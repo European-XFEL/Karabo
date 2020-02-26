@@ -271,7 +271,6 @@ class DeviceInstanceController(BaseProjectGroupController):
         # Watch for incomplete model and view initialization
         if not self.model.initialized:
             return
-
         config = self.active_config
         if config is not None:
             self.project_device.set_project_config_hash(config.configuration)
@@ -425,14 +424,19 @@ class DeviceInstanceController(BaseProjectGroupController):
             if renamed and check_device_instance_exists(dialog.instance_id):
                 return
 
+            # We might create a new project device here when renaming!
             device.instance_id = dialog.instance_id
-
             # Look for existing DeviceConfigurationModel
-            dev_conf = device.select_config(dialog.active_uuid)
-            if dev_conf is not None:
+            conf_model = device.select_config(dialog.active_uuid)
+            if conf_model is not None:
                 device.active_config_ref = dialog.active_uuid
-                dev_conf.class_id = dialog.class_id
-                dev_conf.description = dialog.description
+                conf_model.class_id = dialog.class_id
+                conf_model.description = dialog.description
+                # When renaming, we have to apply the config hash!
+                if renamed:
+                    project_dev = self.project_device
+                    config_hash = conf_model.configuration
+                    project_dev.set_project_config_hash(config_hash)
 
     def _about_device(self, parent=None):
         device = self.model
