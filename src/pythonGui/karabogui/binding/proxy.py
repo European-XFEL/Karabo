@@ -30,7 +30,7 @@ class BaseDeviceProxy(HasStrictTraits):
     # ID of the server hosting this class
     server_id = String
     # True when the device is online
-    online = Property(Bool, depends_on='status')
+    online = Bool
     # The current status
     status = Enum(*ProxyStatus)
     # An event which fires when the schema is updated or otherwise changes
@@ -44,11 +44,11 @@ class BaseDeviceProxy(HasStrictTraits):
         self.state_binding = self.get_property_binding('state')
         self.locked_binding = self.get_property_binding('lockedBy')
 
-    def _get_online(self):
-        return self.status in ONLINE_STATUSES
-
     def _status_default(self):
         return ProxyStatus.OFFLINE
+
+    def _online_default(self):
+        return self.status in ONLINE_STATUSES
 
     def get_property_binding(self, path):
         """Return the ``BaseBinding``-derived instance for the proxy property
@@ -106,6 +106,7 @@ class DeviceProxy(BaseDeviceProxy):
     def _status_changed(self, new):
         if new is ProxyStatus.ONLINE and self._monitor_count > 0:
             self.refresh_schema()
+        self.online = new in ONLINE_STATUSES
 
     def __monitor_count_changed(self, old, new):
         if self.topology_node is not None:
