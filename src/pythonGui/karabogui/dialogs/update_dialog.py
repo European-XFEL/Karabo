@@ -282,9 +282,10 @@ class UpdateDialog(QDialog):
 
     @pyqtSlot()
     def _on_output(self):
-        size = self._process.size()
-        data = self._process.readData(size)
-        self._update_log(data.decode())
+        while self._process.canReadLine():
+            line = self._process.readLine()
+            data = line.data().decode('utf-8')
+            self._update_log(data)
 
     @pyqtSlot()
     def _on_finished(self, is_update):
