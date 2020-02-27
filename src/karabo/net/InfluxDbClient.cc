@@ -1,6 +1,5 @@
 /*
  * File:   InfluxDbClient.cc
- * Author: <serguei.essenov@xfel.eu>, <raul.costa@xfel.eu>
  *
  * Created on November 14, 2019, 9:57 AM
  *
@@ -8,6 +7,7 @@
  */
 
 #include <cmath>
+#include <cstdlib>
 #include <sstream>
 
 #include <boost/chrono/chrono.hpp>
@@ -18,6 +18,7 @@
 #include "karabo/log/Logger.hh"
 #include "karabo/net/utils.hh"
 #include "karabo/net/EventLoop.hh"
+#include "karabo/util/Base64.hh"
 #include "karabo/util/Hash.hh"
 
 #include "InfluxDbClient.hh"
@@ -52,13 +53,31 @@ namespace karabo {
                     .assignmentMandatory()
                     .commit();
 
+            STRING_ELEMENT(expected).key("dbUser")
+                    .displayedName("Database user name")
+                    .description("The name of the database user for the InfluxDB session")
+                    .assignmentOptional().defaultValue("")
+                    .commit();
+
+            STRING_ELEMENT(expected).key("dbPassword")
+                    .displayedName("Database user password")
+                    .description("The password of the database user for the InfluxDB session")
+                    .assignmentOptional().defaultValue("")
+                    .commit();
+
+            BOOL_ELEMENT(expected).key("useGateway")
+                    .displayedName("Use Influx Gateway")
+                    .description("Use Influx gateway instead of connecting directly to a server instance.")
+                    .assignmentOptional().defaultValue(false)
+                    .commit();
+
             STRING_ELEMENT(expected).key("durationUnit")
                     .displayedName("Duration unit")
                     .description("Time unit used: 'd' => day, 'h' => hour, 'm' => minute, 's' => second, "
                                  "'ms' => millisec., 'u' => microsec., 'ns' => nanosec.")
                     .assignmentOptional().defaultValue("u")
                     .options({"d", "h", "m", "s", "ms", "u", "ns"})
-            .commit();
+                    .commit();
 
             UINT32_ELEMENT(expected).key("maxPointsInBuffer")
                     .displayedName("Max. points in buffer")
@@ -87,7 +106,11 @@ namespace karabo {
             , m_maxPointsInBuffer(input.get<std::uint32_t>("maxPointsInBuffer"))
             , m_bufferMutex()
             , m_buffer()
-            , m_nPoints(0) {
+            , m_nPoints(0)
+            , m_dbUser(input.get<std::string>("dbUser"))
+            , m_dbPassword(input.get<std::string>("dbPassword"))
+            , m_dbUseGateway(input.get<bool>("useGateway")) {
+
             const boost::tuple<std::string, std::string,
                     std::string, std::string, std::string> parts = karabo::net::parseUrl(m_url);
             m_hostname = parts.get<1>();
@@ -97,10 +120,23 @@ namespace karabo {
         InfluxDbClient::~InfluxDbClient() {
         }
 
+
         std::string InfluxDbClient::generateUUID() {
             // The generator is not thread safe, but we rely on real uniqueness!
             boost::mutex::scoped_lock lock(m_uuidGeneratorMutex);
             return boost::uuids::to_string(m_uuidGenerator());
+        }
+
+
+        std::string InfluxDbClient::getRawBasicAuthHeader() {
+            std::string authHeader;
+            if (!m_dbUser.empty() && !m_dbPassword.empty()) {
+                std::string credentials(m_dbUser.append(":").append(m_dbPassword));
+                const unsigned char* pCredentials = reinterpret_cast<const unsigned char*> (credentials.c_str());
+                std::string b64Credent = karabo::util::base64Encode(pCredentials, credentials.length());
+                authHeader = std::string("Authorization: Basic ").append(b64Credent);
+            }
+            return authHeader;
         }
 
 
@@ -163,10 +199,20 @@ namespace karabo {
             m_currentUuid.assign(generateUUID());
             std::ostringstream oss;
 
-            oss << "POST /query?chunked=true&db=&epoch=" << m_durationUnit << "&q=" << urlencode(statement) << " HTTP/1.1\r\n"
+            oss << "POST /query?chunked=true&db=&epoch=" << m_durationUnit << "&q=" << urlencode(statement);
+            if (!m_dbUser.empty() && !m_dbPassword.empty()) {
+                oss << "&u=" << urlencode(m_dbUser) << "&p=" << urlencode(m_dbPassword);
+            }
+            oss << " HTTP/1.1\r\n"
                 << "Host: " << m_hostname << "\r\n"
-                << "Request-Id: " << m_currentUuid << "\r\n\r\n";
-
+                << "Request-Id: " << m_currentUuid << "\r\n";
+            if (m_dbUseGateway) {
+                const std::string rawAuth(getRawBasicAuthHeader());
+                if (!rawAuth.empty()) {
+                    oss << rawAuth << "\r\n";
+                }
+            }
+            oss << "\r\n";
             sendToInfluxDb(oss.str(), action);
         }
 
@@ -181,10 +227,20 @@ namespace karabo {
         void InfluxDbClient::getPingDbTask(const InfluxResponseHandler& action) {
             m_currentUuid.assign(generateUUID());
             std::ostringstream oss;
-            oss << "GET /ping HTTP/1.1\r\n"
+            oss << "GET /ping";
+            if (!m_dbUser.empty() && !m_dbPassword.empty()) {
+                oss << "?u=" << urlencode(m_dbUser) << "&p=" << urlencode(m_dbPassword);
+            }
+            oss << " HTTP/1.1\r\n"
                     << "Host: " << m_hostname << "\r\n"
-                    << "Request-Id: " << m_currentUuid << "\r\n\r\n";
-
+                    << "Request-Id: " << m_currentUuid << "\r\n";
+            if (m_dbUseGateway) {
+                const std::string rawAuth(getRawBasicAuthHeader());
+                if (!rawAuth.empty()) {
+                    oss << rawAuth << "\r\n";
+                }
+            }
+            oss << "\r\n";
             sendToInfluxDb(oss.str(), action);
         }
 
@@ -391,11 +447,20 @@ namespace karabo {
         void InfluxDbClient::postWriteDbTask(const std::string& batch, const InfluxResponseHandler& action) {
             m_currentUuid.assign(generateUUID());
             std::ostringstream oss;
-            oss << "POST /write?db=" << m_dbname << "&precision=" << m_durationUnit << " HTTP/1.1\r\n"
+            oss << "POST /write?db=" << m_dbname << "&precision=" << m_durationUnit;
+            if (!m_dbUser.empty() && !m_dbPassword.empty()) {
+                oss << "&u=" << urlencode(m_dbUser) << "&p=" << urlencode(m_dbPassword);
+            }
+            oss << " HTTP/1.1\r\n"
                     << "Host: " << m_hostname << "\r\n"
-                    << "Request-Id: " << m_currentUuid << "\r\n"
-                    << "Content-Length: " << batch.size() << "\r\n\r\n" << batch;
-
+                    << "Request-Id: " << m_currentUuid << "\r\n";
+            if (m_dbUseGateway) {
+                const std::string rawAuth(getRawBasicAuthHeader());
+                if (!rawAuth.empty()) {
+                    oss << rawAuth << "\r\n";
+                }
+            }
+            oss << "Content-Length: " << batch.size() << "\r\n\r\n" << batch;
             sendToInfluxDb(oss.str(), action);
         }
 
@@ -411,10 +476,20 @@ namespace karabo {
             m_currentUuid.assign(generateUUID());
             std::ostringstream oss;
             oss << "GET /query?chunked=true&db=" << m_dbname << "&epoch=" << m_durationUnit
-                    << "&q=" << urlencode(sel) << " HTTP/1.1\r\n"
+                    << "&q=" << urlencode(sel);
+            if (!m_dbUser.empty() && !m_dbPassword.empty()) {
+                oss << "&u=" << urlencode(m_dbUser) << "&p=" << urlencode(m_dbPassword);
+            }
+            oss << " HTTP/1.1\r\n"
                     << "Host: " << m_hostname << "\r\n"
-                    << "Request-Id: " << m_currentUuid << "\r\n\r\n";
-
+                    << "Request-Id: " << m_currentUuid << "\r\n";
+            if (m_dbUseGateway) {
+                const std::string rawAuth(getRawBasicAuthHeader());
+                if (!rawAuth.empty()) {
+                    oss << rawAuth << "\r\n";
+                }
+            }
+            oss << "\r\n";
             sendToInfluxDb(oss.str(), action);
         }
 
@@ -449,10 +524,20 @@ namespace karabo {
             m_currentUuid.assign(generateUUID());
             std::ostringstream oss;
             oss << "GET /query?chunked=true&db=" << m_dbname << "&epoch=" << m_durationUnit
-                    << "&q=" << urlencode(sel) << " HTTP/1.1\r\n"
+                    << "&q=" << urlencode(sel);
+            if (!m_dbUser.empty() && !m_dbPassword.empty()) {
+                oss << "&u=" << urlencode(m_dbUser) << "&p=" << urlencode(m_dbPassword);
+            }
+            oss << " HTTP/1.1\r\n"
                     << "Host: " << m_hostname << "\r\n"
-                    << "Request-Id: " << m_currentUuid << "\r\n\r\n";
-
+                    << "Request-Id: " << m_currentUuid << "\r\n";
+            if (m_dbUseGateway) {
+                const std::string rawAuth(getRawBasicAuthHeader());
+                if (!rawAuth.empty()) {
+                    oss << rawAuth << "\r\n";
+                }
+            }
+            oss << "\r\n";
             sendToInfluxDb(oss.str(), action);
         }
 
