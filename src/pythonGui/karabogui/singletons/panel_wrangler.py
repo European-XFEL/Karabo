@@ -87,7 +87,15 @@ class PanelWrangler(QObject):
         target_window = data.get('target_window',
                                  SceneTargetWindow.MainWindow)
         model = data['model']
+
+        # Unattached scenes are closed if they are duplicated by simple name!
+        existing = [panel for scene, panel in
+                    self._unattached_scene_panels.items()
+                    if scene.simple_name == model.simple_name]
+
         self._open_scene(model, target_window, attached=False)
+        for panel in existing:
+            self._close_panel(panel)
 
     def _event_scene_link(self, data):
         name = data.get('name', '')
