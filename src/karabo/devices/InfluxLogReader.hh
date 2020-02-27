@@ -1,6 +1,5 @@
 /*
  * File:   InfluxLogReader.hh
- * Author: <raul.costa@xfel.eu>
  *
  * Created on November 4, 2019, 9:09 AM
  *
