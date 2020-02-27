@@ -70,7 +70,8 @@ class DisplayProgressBar(BaseBindingController):
             msg = ('No proper configuration detected.\n'
                    'Please define min and max thresholds for '
                    '{}.'.format(keyname))
-            messagebox.show_warning(msg, title='Wrong property configuration')
+            messagebox.show_warning(msg, title='Wrong property configuration',
+                                    parent=self.widget)
             self._error_shown = True
 
     def value_update(self, proxy):

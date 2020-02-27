@@ -48,7 +48,6 @@ class _AnalogEditorWidget(BaseBindingController):
             with SignalBlocker(self.widget):
                 self.widget.setValue(value)
 
-    # @pyqtSlot(object)
     def _edit_value(self, value):
         if self.proxy.binding is None or self._error_shown:
             return
@@ -62,7 +61,8 @@ class _AnalogEditorWidget(BaseBindingController):
         msg = ('Value limits for {} is not set or too large\n'
                'for this type of widget, please check the\n'
                ' property attributes'.format(keyname))
-        messagebox.show_warning(msg, title='No proper value limit')
+        messagebox.show_warning(msg, title='No proper value limit',
+                                parent=self.widget)
 
 
 @register_binding_controller(ui_name='Knob', can_edit=True, klassname='Knob',

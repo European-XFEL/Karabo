@@ -44,8 +44,7 @@ def add_device_to_server(server, class_id='', parent=None):
         msg = ('A device server with the ID "<b>{}</b>"<br>'
                'needs to be added to the current project before<br>'
                'a device can be added').format(server)
-        messagebox.show_warning(msg,
-                                title='Server doesn\'t exist',
+        messagebox.show_warning(msg, title='Server doesn\'t exist',
                                 parent=parent)
         return ''
 
