@@ -302,6 +302,24 @@ namespace karabo {
                     .init()
                     .commit();
 
+            STRING_ELEMENT(expected).key("dbUser")
+                    .displayedName("Database user name")
+                    .description("The name of the database user for the InfluxDB session")
+                    .assignmentOptional().defaultValue("")
+                    .commit();
+
+            STRING_ELEMENT(expected).key("dbPassword")
+                    .displayedName("Database user password")
+                    .description("The password of the database user for the InfluxDB session")
+                    .assignmentOptional().defaultValue("")
+                    .commit();
+
+            BOOL_ELEMENT(expected).key("useGateway")
+                    .displayedName("Use Influx Gateway")
+                    .description("For logging, use Influx gateway instead of connecting directly to a server instance.")
+                    .assignmentOptional().defaultValue(false)
+                    .commit();
+
             UINT32_ELEMENT(expected).key("maxBatchPoints")
                     .displayedName("Max. batch points")
                     .description("Max number of InfluxDB points in batch")
@@ -314,10 +332,15 @@ namespace karabo {
         InfluxDataLogger::InfluxDataLogger(const karabo::util::Hash& input)
             : DataLogger(input)
             , m_topic(getTopic()) {
+
             Hash config("url", input.get<std::string>("url"),
                         "dbname", m_topic,
                         "durationUnit", DUR,
                         "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
+            config.set<std::string>("dbUser", input.get<std::string>("dbUser"));
+            config.set<std::string>("dbPassword", input.get<std::string>("dbPassword"));
+            config.set<bool>("useGateway", input.get<bool>("useGateway"));
+
             m_client = Configurator<InfluxDbClient>::create("InfluxDbClient", config);
         }
 
