@@ -95,7 +95,8 @@ class LinkWidget(QPushButton):
         device = get_topology().get_device(device_id)
 
         if device is not None and device.status not in ONLINE_STATUSES:
-            messagebox.show_warning("Device is not online!", "Warning", False)
+            messagebox.show_warning("Device is not online!", "Warning",
+                                    parent=self)
             return
 
         scene_name = self.model.target

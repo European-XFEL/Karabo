@@ -184,7 +184,7 @@ class WebLinkWidget(QPushButton):
             try:
                 webbrowser.open_new(self.model.target)
             except webbrowser.Error:
-                messagebox.show_error("No web browser available!")
+                messagebox.show_error("No web browser available!", parent=self)
 
     def add_proxies(self, proxies):
         """Satisfy the informal widget interface."""
