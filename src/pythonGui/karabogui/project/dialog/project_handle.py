@@ -135,7 +135,7 @@ class LoadProjectDialog(QDialog):
                     and it.get('item_type') != 'project'):
                 continue
             if not it.get('success', True):
-                messagebox.show_error(it['reason'])
+                messagebox.show_error(it['reason'], parent=self)
                 break
             domain = it.get('domain')
             self.on_cbDomain_currentIndexChanged(domain)

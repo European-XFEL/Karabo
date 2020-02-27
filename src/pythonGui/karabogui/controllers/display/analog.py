@@ -197,7 +197,8 @@ class DisplayAnalog(BaseBindingController):
             msg = ('No proper configuration detected for property "{}".\n'
                    'Please define alarm and warning thresholds.')
             messagebox.show_warning(msg.format(proxy.path),
-                                    title='Wrong property configuration')
+                                    title='Wrong property configuration',
+                                    parent=self.widget)
 
     def create_widget(self, parent):
         widget = AnalogWidget(parent)
