@@ -189,7 +189,9 @@ const unsigned int DataLogging_Test::m_flushIntervalSec = 1u;
 
 
 DataLogging_Test::DataLogging_Test()
-    : m_server("DataLoggingTestServer"), m_deviceId("PropertyTestDevice"), m_fileLoggerDirectory("dataLoggingTest"),
+    : m_server("DataLoggingTestServer"),
+    m_deviceId("PropertyTestDevice"),
+    m_fileLoggerDirectory("dataLoggingTest"),
     m_changedPath(false), m_oldPath() {
 
 }
@@ -220,7 +222,7 @@ void DataLogging_Test::setUp() {
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
 
     // Create and start server
-    Hash config("serverId", m_server, "scanPlugins", false, "Logger.priority", "FATAL");
+    Hash config("serverId", m_server, "scanPlugins", false, "Logger.priority", "ERROR");
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
@@ -261,6 +263,26 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
         }
         manager_conf.set("logger.InfluxDataLogger.urlWrite", influxUrl.str());
         manager_conf.set("logger.InfluxDataLogger.urlRead", influxUrl.str());
+
+        std::string dbUser;
+        if (getenv("KARABO_TEST_INFLUXDB_ADMUSER")) {
+            dbUser = getenv("KARABO_TEST_INFLUXDB_ADMUSER");
+        } else {
+            dbUser = "infadm";
+        }
+        manager_conf.set("logger.InfluxDataLogger.dbUser", dbUser);
+
+        std::string dbPassword;
+        if (getenv("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD")) {
+            dbPassword = getenv("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD");
+        } else {
+            dbPassword = "admpwd";
+        }
+        manager_conf.set("logger.InfluxDataLogger.dbPassword", dbPassword);
+
+        // The testing environments never use the default gateway.
+        manager_conf.set("logger.InfluxDataLogger.useGateway", false);
+
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
     }

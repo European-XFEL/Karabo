@@ -1,6 +1,5 @@
 /*
  * File:   InfluxLogReader.cc
- * Author: <raul.costa@xfel.eu>
  *
  * Created on November 4, 2019, 9:09 AM
  *
@@ -117,6 +116,18 @@ namespace karabo {
                     .assignmentOptional().defaultValue("tcp://localhost:8086")
                     .commit();
 
+            STRING_ELEMENT(expected).key("dbUser")
+                    .displayedName("Database user name")
+                    .description("The name of the database user for the InfluxDB session")
+                    .assignmentOptional().defaultValue("")
+                    .commit();
+
+            STRING_ELEMENT(expected).key("dbPassword")
+                    .displayedName("Database user password")
+                    .description("The password of the database user for the InfluxDB session")
+                    .assignmentOptional().defaultValue("")
+                    .commit();
+
         }
 
 
@@ -126,10 +137,15 @@ namespace karabo {
             m_schemaSerializer = BinarySerializer<Schema>::create("Bin");
             const std::string topic(getTopic());
             const std::string url(cfg.get<std::string>("url"));
+            const std::string dbUser(cfg.get<std::string>("dbUser"));
+            const std::string dbPassword(cfg.get<std::string>("dbPassword"));
             Hash dbClientCfg;
             dbClientCfg.set<std::string>("dbname", topic);
             dbClientCfg.set<std::string>("url", url);
             dbClientCfg.set<std::string>("durationUnit", "u");
+            dbClientCfg.set<std::string>("dbUser", dbUser);
+            dbClientCfg.set<std::string>("dbPassword", dbPassword);
+            dbClientCfg.set<bool>("useGateway", false); // At least for now, the reader never uses the Influx Gateway.
             m_influxClient = Configurator<InfluxDbClient>::create("InfluxDbClient", dbClientCfg);
             m_durationUnit = toInfluxDurationUnit(TIME_UNITS::MICROSEC);
         }
