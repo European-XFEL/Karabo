@@ -14,7 +14,8 @@ from ..devicescenelink import DisplayDeviceSceneLink
 
 class MockBox(QMessageBox):
 
-    def show_warning(self, text, title):
+    @staticmethod
+    def show_warning(text, title, parent=None):
         """Satisfy messagebox interface"""
 
 
