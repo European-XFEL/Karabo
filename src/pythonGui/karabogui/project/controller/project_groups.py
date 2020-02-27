@@ -229,8 +229,7 @@ def _about_scene(project_controller, parent=None):
     project = project_controller.model
     html = "<ul>" + "".join(["<li>" + child.uuid + "</li>"
                              for child in project.scenes]) + "</ul>"
-    messagebox.show_information(html,
-                                title="List of scene uuid's",
+    messagebox.show_information(html, title="List of scene uuid's",
                                 parent=parent)
 
 
@@ -277,8 +276,7 @@ def _load_scene_from_device(project_controller, parent=None):
         if '{}|{}'.format(device_id, scene_name) in project_scenes:
             msg = ('A scene with that name already exists in the selected '
                    'project.')
-            messagebox.show_warning(msg,
-                                    title='Cannot Load Scene',
+            messagebox.show_warning(msg, title='Cannot Load Scene',
                                     parent=parent)
             return
 

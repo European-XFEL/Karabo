@@ -199,8 +199,8 @@ class Manager(QObject):
         if not success:
             reason = info.get('reason')
             msg = ("The configuration of `{}` requested at time point `{}` "
-                   "was not retrieved! {}".format(deviceId, time, reason))
-            messagebox.show_error(msg)
+                   "was not retrieved!".format(deviceId, time))
+            messagebox.show_error(msg, details=reason)
             return
         config = info.get('config')
         broadcast_event(KaraboEvent.ShowConfigurationFromPast,
@@ -368,9 +368,8 @@ class Manager(QObject):
             input_info = info['input']
             deviceId = input_info['deviceId']
             text = ('Device reconfiguration of <b>{}</b> encountered an error.'
-                    ' The values could NOT be applied!\n{}'.format(deviceId,
-                                                                   reason))
-            messagebox.show_error(text)
+                    ' The values could NOT be applied!'.format(deviceId))
+            messagebox.show_error(text, details=reason)
 
     def handle_executeReply(self, **info):
         """Handle the execute reply of the gui server"""
@@ -381,9 +380,8 @@ class Manager(QObject):
             deviceId = input_info['deviceId']
             command = input_info['command']
             text = ('Execute slot <b>{}</b> of device <b>{}</b> has '
-                    'encountered an error!\n{}'.format(command, deviceId,
-                                                       reason))
-            messagebox.show_error(text)
+                    'encountered an error!'.format(command, deviceId))
+            messagebox.show_error(text, details=reason)
 
     def handle_propertyHistory(self, deviceId, property, data, success=True,
                                failureReason=""):
@@ -499,9 +497,9 @@ class Manager(QObject):
             # Create KaraboBroadcastEvent
             broadcast_event(KaraboEvent.DeviceInitReply, data)
             if not success:
-                text = ("The instance <b>{}</b> could not be instantiated. "
-                        "{}".format(deviceId, message))
-                messagebox.show_error(text, title="Instantiation Error")
+                text = ("The instance <b>{}</b> could not be "
+                        "instantiated.".format(deviceId))
+                messagebox.show_error(text, details=message)
 
     def handle_alarmInit(self, instanceId, rows):
         """Show initial update for ``AlarmService`` with given ``instanceId``
