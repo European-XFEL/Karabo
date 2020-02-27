@@ -105,7 +105,8 @@ class EditableWheelBox(BaseBindingController):
             number = len(value_string.split('.')[0])
             if num_integers < number:
                 messagebox.show_error("The integer setting is not compliant "
-                                      "with the current value")
+                                      "with the current value",
+                                      parent=self.widget)
                 return
             self.model.integers = num_integers
             self._internal_widget.set_number_integers(self.model.integers)
