@@ -94,7 +94,8 @@ class Evaluator(BaseBindingController):
         except SyntaxError as e:
             err = traceback.format_exception_only(type(e), e)
             msg = '<pre>{1}{2}</pre>{3}'.format(*err)
-            messagebox.show_warning(msg, title='Error in expression')
+            messagebox.show_warning(msg, title='Error in expression',
+                                    parent=self.widget)
             return
 
         self.model.expression = text
