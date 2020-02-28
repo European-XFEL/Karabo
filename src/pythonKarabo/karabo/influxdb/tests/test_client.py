@@ -1,24 +1,32 @@
 from asyncio import sleep
+import base64
 from contextlib import contextmanager
 import os
 import string
 from random import choice
 import time
+import shutil
 import unittest
 import uuid
 
 from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
 
 from karabo.influxdb import get_line_fromdicts, InfluxDbClient, Results
-from ..dlraw2influx import DlRaw2Influx
-from ..dlschema2influx import DlSchema2Influx
+from karabo.influxdb.dl_migrator import DlMigrator
+from karabo.native import decodeBinary
 
 _host = os.environ.get("KARABO_TEST_INFLUXDB_HOST", "localhost")
 _port = int(os.environ.get("KARABO_TEST_INFLUXDB_PORT", "8086"))
-_topic = f"test_{uuid.uuid4()}"
-_url = f"http://{_host}:{_port}/query"
+_user = os.environ.get("KARABO_TEST_INFLUXDB_USER", "infusr")
+_password = os.environ.get("KARABO_TEST_INFLUXDB_USER_PASSWORD", "usrpwd")
+_adm_user = os.environ.get("KARABO_TEST_INFLUXDB_ADMUSER", "infadm")
+_adm_user_password = os.environ.get("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD",
+                                    "admpwd")
+_topic = os.environ.get("KARABO_TEST_INFLUXDB_DB", "InfluxLogTest")
 _fake_device = 'DOMAIN/MOTOR/BOB'
 _fake_key = 'position'
+
+MIGRATION_TEST_DEVICE = 'PropertyTestDevice'
 
 
 class Influx_TestCase(DeviceTest):
@@ -27,24 +35,32 @@ class Influx_TestCase(DeviceTest):
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
-        cls.client = InfluxDbClient(_host, _port)
+        cls.adm_client = InfluxDbClient(_host, _port,
+                                        user=_adm_user,
+                                        password=_adm_user_password)
+        cls.client = InfluxDbClient(_host, _port,
+                                    user=_user, password=_password)
         cls.loop.run_until_complete(cls.inject())
         cls.lead = cls.client
         yield
-        cls.loop.run_until_complete(cls.client.drop_db(_topic))
+        cls.loop.run_until_complete(cls.adm_client.drop_db(_topic))
         cls.client.disconnect()
 
     @classmethod
     async def inject(cls):
         """Injects historical data
-        
-        from 0.2 * cls.point seconds to 0.1 * cls.point second (excluded), 
+
+        from 0.2 * cls.point seconds to 0.1 * cls.point second (excluded),
         one value every 0.1 s in the value-FLOAT field
-        from 0.1 * cls.point seconds to 0 (excluded), 
+        from 0.1 * cls.point seconds to 0 (excluded),
         one value every 0.1 s in the value-DOUBLE field
         """
         await cls.client.connect()
-        await cls.client.create_db(_topic)
+        # Tries to create the database if it doesn't exist.
+        dbs = await cls.adm_client.get_dbs()
+        if _topic not in dbs:
+            await cls.adm_client.create_db(_topic)
+            await cls.adm_client.grant_all_to_user(_topic, _user)
         cls.client.db = _topic
         cls.step = 1e5
         timestamp = float(time.time()) * 1e6
@@ -154,7 +170,7 @@ class Influx_TestCase(DeviceTest):
         self.assertTrue(
             attempts > 0,
             "'get_last_value' failed 5 consecutive attempts")
-        
+
         ts, last = next(r)
         self.assertEqual(len(cols), 2)
         self.assertEqual(ts, timestamp)
@@ -170,9 +186,9 @@ class Influx_TestCase(DeviceTest):
         for i, vals in enumerate(r):
             self.assertEqual(len(vals), len(cols))
             if i < self.points:
-                self.assertIsNone(vals[1]) # first half has f"{_fake_key}-FLOAT"
+                self.assertIsNone(vals[1])  # first half has f"{_fake_key}-FLOAT"
             else:
-                self.assertIsNone(vals[2]) # second half has f"{_fake_key}-DOUBLE"
+                self.assertIsNone(vals[2])  # second half has f"{_fake_key}-DOUBLE"
         # because of the silly quotes, `time` is last
         expected_keys = set(('time', f'"{_fake_key}-FLOAT"', f'"{_fake_key}-DOUBLE"'))
 
@@ -224,16 +240,105 @@ class Influx_TestCase(DeviceTest):
 
     @async_tst
     async def test_migration(self):
-        path = os.path.join(
-            os.path.dirname(__file__), 'sample_data', 'archive_0.txt')
-        conf2db = DlRaw2Influx(path=path, topic=_topic, host=_host,
-            port=_port, device_id="cppserver_3_DataGenerator_1", dry_run=False)
-        await conf2db.run()
-        path = os.path.join(
-            os.path.dirname(__file__), 'sample_data', 'archive_schema.txt')
-        schema2db = DlSchema2Influx(path=path, topic=_topic, host=_host,
-            port=_port, device_id="cppserver_3_DataGenerator_1", dry_run=False)
-        await schema2db.run()
+
+        # Creates temporary directories that will hold copies
+        # of the sample data logging files to be migrated and
+        # the output directory where the Migrator will save
+        # fully processed files and partially processed files
+        # along with the errors during their processing.
+        #
+        # The directory path with the copies of the sample data
+        # logging files will follow the expected convention
+        # of terminating in "raw" and have the deviceId in the
+        # component right before "raw".
+        file_dir = os.path.dirname(__file__)
+        src_data_dir = os.path.join(file_dir,
+                                    'sample_data',
+                                    MIGRATION_TEST_DEVICE,
+                                    'raw')
+        output_dir = os.path.join(file_dir,
+                                  'out_dir')
+        tst_data_root = os.path.join(file_dir,
+                                     'test_data')
+        tst_data_dir = os.path.join(tst_data_root,
+                                    MIGRATION_TEST_DEVICE,
+                                    'raw')
+
+        os.makedirs(tst_data_dir, exist_ok=True)
+        os.makedirs(output_dir, exist_ok=True)
+
+        shutil.copy(os.path.join(src_data_dir,
+                                 'archive_4.txt'),
+                    tst_data_dir)
+        shutil.copy(os.path.join(src_data_dir,
+                                 'archive_schema.txt'),
+                    tst_data_dir)
+
+        migrator = DlMigrator(
+            input_dir=tst_data_root, output_dir=output_dir,
+            topic=_topic, host=_host, port=_port,
+            user=_user, password=_password, dry_run=False,
+            use_gateway=False)
+
+        await migrator.run()
+
+        # Checks the expected processed outputs - the 'archive_4.txt' and
+        # 'archive_schema.txt' files are expected to be processed cleanly.
+        self.assertTrue(os.path.exists(os.path.join(output_dir,
+                                                    'processed',
+                                                    MIGRATION_TEST_DEVICE,
+                                                    'archive_4.txt')))
+        self.assertTrue(os.path.exists(os.path.join(output_dir,
+                                                    'processed',
+                                                    MIGRATION_TEST_DEVICE,
+                                                    'archive_schema.txt')))
+
+        # Cleans up the directories with the copies of the sample
+        # data logging files and the results of the migration job
+        # that were created at the start of the test case.
+        shutil.rmtree(tst_data_root)
+        shutil.rmtree(output_dir)
+
+        # Checks that the migrated data can be retrieved and has the
+        # expected values - 2 rows for property table at a specific timestamp.
+        attempts = 5
+        while attempts > 0:
+            try:
+                r, cols = await self.client.get_last_value(
+                                    MIGRATION_TEST_DEVICE, "table-VECTOR_HASH"
+                          )
+                break
+            except RuntimeError as e:
+                print(e)
+                await sleep(0.1)
+                attempts -= 1
+        self.assertTrue(
+            attempts > 0,
+            "'get_last_value' failed 5 consecutive attempts")
+
+        ts, table_enc = next(r)
+
+        self.assertEqual(len(cols), 2)  # One for time and one for value
+        import datetime
+        # The timestamp returned from Influx is in microseconds.
+        dt = datetime.datetime.fromtimestamp(
+                ts/1_000_000, datetime.timezone.utc
+             )
+        # The table property is a base64 encoding of a stream serialized by
+        # Karabo's binary serializer.
+        table = decodeBinary(base64.b64decode(table_enc))
+        self.assertEqual(dt.day, 4)
+        self.assertEqual(dt.month, 2)
+        self.assertEqual(dt.year, 2020)
+        self.assertEqual(dt.hour, 14)
+        self.assertEqual(dt.minute, 32)
+        self.assertEqual(dt.second, 57)
+
+        # FIXME: This is unexpected: the vector of hashes is
+        # under the key 'KRB_Sequence'. table should be a list of Hashes.
+        self.assertEqual(len(table['KRB_Sequence']), 2)
+        self.assertEqual(table['KRB_Sequence'][0]['e3'], 1188)
+        self.assertEqual(table['KRB_Sequence'][1]['e3'], 4158)
 
 
 if __name__ == '__main__':
