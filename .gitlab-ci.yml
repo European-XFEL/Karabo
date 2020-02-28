@@ -4,6 +4,14 @@ services:
   - name: influxdb:1.7.8
     alias: influxdb_host
 
+variables:
+  INFLUXDB_DB: "InfluxLogTest"
+  INFLUXDB_HTTP_AUTH_ENABLED: "true"
+  INFLUXDB_ADMIN_USER: "infadm"
+  INFLUXDB_ADMIN_PASSWORD: "admpwd"
+  INFLUXDB_USER: "infusr"
+  INFLUXDB_USER_PASSWORD: "usrpwd"
+
 .build_template: &build
   script:
     - source ci/prepare "$CI_BUILD_NAME"

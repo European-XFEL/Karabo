@@ -56,7 +56,7 @@ else:
             'static/favicon.ico',
             'templates/*.html'],
         'karabo.testing': ['resources/*.*'],
-        'karabo.influxdb.tests': ['sample_data/*.txt'],
+        'karabo.influxdb.tests': ['sample_data/PropertyTestDevice/raw/*.txt'],
     }
 
     entry_points = {
