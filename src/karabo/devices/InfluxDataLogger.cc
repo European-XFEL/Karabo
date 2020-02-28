@@ -302,18 +302,6 @@ namespace karabo {
                     .init()
                     .commit();
 
-            STRING_ELEMENT(expected).key("dbUser")
-                    .displayedName("Database user name")
-                    .description("The name of the database user for the InfluxDB session")
-                    .assignmentOptional().defaultValue("")
-                    .commit();
-
-            STRING_ELEMENT(expected).key("dbPassword")
-                    .displayedName("Database user password")
-                    .description("The password of the database user for the InfluxDB session")
-                    .assignmentOptional().defaultValue("")
-                    .commit();
-
             BOOL_ELEMENT(expected).key("useGateway")
                     .displayedName("Use Influx Gateway")
                     .description("For logging, use Influx gateway instead of connecting directly to a server instance.")
@@ -337,8 +325,26 @@ namespace karabo {
                         "dbname", m_topic,
                         "durationUnit", DUR,
                         "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
-            config.set<std::string>("dbUser", input.get<std::string>("dbUser"));
-            config.set<std::string>("dbPassword", input.get<std::string>("dbPassword"));
+
+            // TODO: Use more appropriate names for the env var names - the names below are the ones currently used by
+            //       the CI environment.
+
+            std::string dbUser;
+            if (getenv("KARABO_TEST_INFLUXDB_ADMUSER")) {
+                dbUser = getenv("KARABO_TEST_INFLUXDB_ADMUSER");
+            } else {
+                dbUser = "infadm";
+            }
+
+            std::string dbPassword;
+            if (getenv("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD")) {
+                dbPassword = getenv("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD");
+            } else {
+                dbPassword = "admpwd";
+            }
+
+            config.set<std::string>("dbUser", dbUser);
+            config.set<std::string>("dbPassword", dbPassword);
             config.set<bool>("useGateway", input.get<bool>("useGateway"));
 
             m_client = Configurator<InfluxDbClient>::create("InfluxDbClient", config);
