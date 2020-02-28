@@ -1,6 +1,8 @@
 from asyncio import get_event_loop
 import os
 import time
+import uuid
+import unittest
 from contextlib import contextmanager
 from datetime import datetime
 
@@ -12,9 +14,14 @@ from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 from karabo.middlelayer_devices.influxdb_reader import DataLogReader
 from karabo.middlelayer_devices.influxdb_logger import InfluxDBLogger
 
-
 _host = os.environ.get("KARABO_TEST_INFLUXDB_HOST", "localhost")
-_port = int(os.environ.get("KARABO_TEST_INFLUXDB_PORT", 8086))
+_port = int(os.environ.get("KARABO_TEST_INFLUXDB_PORT", "8086"))
+_user = os.environ.get("KARABO_TEST_INFLUXDB_USER", "infusr")
+_password = os.environ.get("KARABO_TEST_INFLUXDB_USER_PASSWORD", "usrpwd")
+_adm_user = os.environ.get("KARABO_TEST_INFLUXDB_ADMUSER", "infadm")
+_adm_user_password = os.environ.get("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD",
+                                    "admpwd")
+_topic = os.environ.get("KARABO_TEST_INFLUXDB_DB", f"test_{uuid.uuid4()}")
 _fake_device = 'DOMAIN/MOTOR/BOB'
 _fake_key = 'position'
 
@@ -26,7 +33,9 @@ class TestInfluxDbReader(DeviceTest):
         cls.loop.run_until_complete(cls.inject())
         cls.reader = DataLogReader({"_deviceId_": "reader",
                                     "host": _host,
-                                    "port": _port})
+                                    "port": _port,
+                                    "user": _adm_user,
+                                    "password": _adm_user_password})
         with cls.deviceManager(lead=cls.reader):
             yield
         cls.loop.run_until_complete(cls.clean_up())
@@ -40,9 +49,14 @@ class TestInfluxDbReader(DeviceTest):
     async def inject(cls):
         _topic = get_event_loop().topic
         cls.points = 600
-        cls.client = InfluxDbClient(_host, _port)
+        cls.client = InfluxDbClient(_host, _port,
+                                    user=_adm_user,
+                                    password=_adm_user_password)
         await cls.client.connect()
-        await cls.client.create_db(_topic)
+        # Tries to create the database if it doesn't exist.
+        dbs = await cls.client.get_dbs()
+        if _topic not in dbs:
+            await cls.client.create_db(_topic)
         cls.client.db = _topic
         step = 1e5
         timestamp = float(time.time()) * 1e6
@@ -83,3 +97,7 @@ class TestInfluxDbReader(DeviceTest):
         self.assertEqual(deviceId, _fake_device)
         self.assertEqual(key, _fake_key)
         self.assertEqual(len(res), 2 * self.points)
+
+
+if __name__ == '__main__':
+    unittest.main()
