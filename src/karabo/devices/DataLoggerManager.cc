@@ -182,18 +182,6 @@ namespace karabo {
                     .init()
                     .commit();
 
-            STRING_ELEMENT(expected).key("logger.InfluxDataLogger.dbUser")
-                    .displayedName("Database user name")
-                    .description("The name of the database user for the InfluxDB session")
-                    .assignmentOptional().defaultValue("")
-                    .commit();
-
-            STRING_ELEMENT(expected).key("logger.InfluxDataLogger.dbPassword")
-                    .displayedName("Database user password")
-                    .description("The password of the database user for the InfluxDB session")
-                    .assignmentOptional().defaultValue("")
-                    .commit();
-
             BOOL_ELEMENT(expected).key("logger.InfluxDataLogger.useGateway")
                     .displayedName("Use Influx Gateway")
                     .description("For logging, use Influx gateway instead of connecting directly to a server instance.")
@@ -728,8 +716,6 @@ namespace karabo {
                         hash.set("classId", "InfluxLogReader");
                         hash.set("deviceId", readerId);
                         config.set("url", get<string>("logger.InfluxDataLogger.urlRead"));
-                        config.set("dbUser", get<string>("logger.InfluxDataLogger.dbUser"));
-                        config.set("dbPassword", get<string>("logger.InfluxDataLogger.dbPassword"));
                     }
                     hash.set("configuration", config);
                     KARABO_LOG_FRAMEWORK_INFO
@@ -945,8 +931,6 @@ namespace karabo {
             } else if (m_logger == "InfluxDataLogger") {
                 config.set("url", get<std::string>("logger.InfluxDataLogger.urlWrite"));
                 config.set("maxBatchPoints", get<std::uint32_t>("logger.InfluxDataLogger.maxBatchPoints"));
-                config.set("dbUser", get<string>("logger.InfluxDataLogger.dbUser"));
-                config.set("dbPassword", get<string>("logger.InfluxDataLogger.dbPassword"));
                 config.set("useGateway", get<bool>("logger.InfluxDataLogger.useGateway"));
             }
             config.set("flushInterval", get<int>("flushInterval"));
