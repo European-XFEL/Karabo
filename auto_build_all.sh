@@ -381,7 +381,7 @@ else
 fi
 
 if [ "$RUNTESTS" = "y" ]; then
-    runUnitTests
+    #runUnitTests
     runIntegrationTests
 fi
 
