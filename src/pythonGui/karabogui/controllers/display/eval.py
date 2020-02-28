@@ -65,7 +65,12 @@ class Evaluator(BaseBindingController):
         widget.setObjectName(objectName)
         sheet = self._style_sheet.format(ALL_OK_COLOR)
         widget.setStyleSheet(sheet)
+
         return widget
+
+    def clear_widget(self):
+        """Clear the internal widget when the device goes offline"""
+        self._internal_widget.clear()
 
     def value_update(self, proxy):
         value = get_binding_value(proxy)

@@ -158,15 +158,17 @@ class ControllerContainer(QWidget):
         if name == 'status':
             existing = proxy.existing
             status = value
+            if status is ProxyStatus.OFFLINE:
+                self.widget_controller.clear_widget()
         elif name == 'existing':
             existing = value
             status = proxy.root_proxy.status
-
         if not existing:
             status = ProxyStatus.MISSING
 
-        error = status is ProxyStatus.ERROR
-        pixmap = get_device_status_pixmap(status, error)
+        # NOTE: The error notification on the scene is DEPRECATED as the online
+        # device status can not anymore be separated from the proxy status
+        pixmap = get_device_status_pixmap(status, False)
         if pixmap is not None:
             self.status_symbol.setPixmap(pixmap)
             self.status_symbol.show()
