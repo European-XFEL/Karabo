@@ -57,6 +57,10 @@ class DisplayLabel(BaseBindingController):
         widget.setStyleSheet(sheet)
         return widget
 
+    def clear_widget(self):
+        """Clear the internal widget when the device goes offline"""
+        self._internal_widget.clear()
+
     def value_update(self, proxy):
         self.widget.update_label(proxy)
 
