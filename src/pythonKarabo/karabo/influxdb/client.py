@@ -160,17 +160,35 @@ class Results():
 
 
 class InfluxDbClient():
-    def __init__(self, host, port, db=""):
+    def __init__(self, host, port, protocol="http", db="",
+                 user="", password="", use_gateway=False):
+        self.protocol = protocol
         self.host = host
         self.port = int(port)
         self.db = db
+        self.user = user
+        self.password = password
+        # if 'use_gateway' is True, urls carrying credentials should
+        # be generated conforming to the conventions of the Influx gateway -
+        # with user and password between the protocol and the hostname.
+        self.use_gateway = use_gateway
         if hasattr(AsyncIOMainLoop, "initialized"):
             if not AsyncIOMainLoop.initialized():
                 AsyncIOMainLoop().install()
-        self.client = AsyncHTTPClient()
+        self.client = AsyncHTTPClient(force_instance=False)
 
-    def get_url(self, path, protocol="http"):
-        return f"{protocol}://{self.host}:{self.port}/{path}"
+    def get_url(self, path):
+        if self.use_gateway and self.user and self.password > 0:
+            return (
+                f"{self.protocol}://{self.user}:{self.password}@"
+                f"{self.host}://{self.port}/{path}"
+            )
+        else:
+            # For all other situations the url will have the same form.
+            # Note that for non gateway urls with user and password defined, the
+            # reader methods are expected to place user, password (and db)
+            # in the url as http query parameters (urlencoded).
+            return f"{self.protocol}://{self.host}:{self.port}/{path}"
 
     async def connect(self):
         uri = self.get_url("ping")
@@ -182,20 +200,41 @@ class InfluxDbClient():
         """http disconnection is handled by tornado"""
         return
 
-    def query(self, args, db=None, method="GET"):
+    def _build_query_uri(self, args, method):
+        uri = self.get_url("query")
+        auth_args = {}
+        if self.user and self.password:
+            auth_args["u"] = self.user
+            auth_args["p"] = self.password
+        if method == "GET":
+            # For GET, both the authentication parameters and the parameters
+            # (including the query itself) go in the uri.
+            args.update(auth_args)
+            uri = f"{uri}?{urlencode(args)}"
+        elif method == "POST":
+            # For POST, the authentication parameters go in the uri, but the
+            # query and any other parameter should go in the body.
+            uri = f"{uri}?{urlencode(auth_args)}" if auth_args else uri
+        return uri
+
+    def query(self, args, method="GET"):
         """Sends a query from a set of arguments
 
         args : dict
             will be passed to the `urlencode`
+        method : str
+            either "GET" or "POST"
         """
-        uri = self.get_url("query")
-        query = urlencode(args)
+        uri = self._build_query_uri(args, method)
         if method == "GET":
             return to_asyncio_future(
-                self.client.fetch(f"{uri}?{query}", method=method))
+                self.client.fetch(uri, method=method))
         elif method == "POST":
+            # For POST requests the user credentials must be URL parameters, not
+            # body data.
+            query = urlencode(args)
             return to_asyncio_future(
-                self.client.fetch(f"{uri}", body=query, method=method))
+                self.client.fetch(uri, body=query, method=method))
         else:
             return
 
@@ -208,7 +247,12 @@ class InfluxDbClient():
             matching a line protocol
         """
         uri = self.get_url("write")
-        query = urlencode({"db": self.db})
+        args = {"db": self.db}
+        if len(self.user) > 0:
+            args["u"] = self.user
+        if len(self.password) > 0:
+            args["p"] = self.password
+        query = urlencode(args)
         future = to_asyncio_future(
             self.client.fetch(f"{uri}?{query}&precision=u", body=data,
                               method="POST"))
@@ -240,6 +284,18 @@ class InfluxDbClient():
             {"q": f"DROP DATABASE \"{db}\""},
             method="POST")
 
+    async def grant_all_to_user(self, db, usr):
+        """Grants all privileges on a database to a user.
+
+        db: str
+            the DB name
+        usr: str
+             the user name
+        """
+        return await self.query(
+            {"q": f"GRANT ALL ON \"{db}\" TO \"{usr}\""},
+            method="POST")
+
     async def db_query(self, query, **kwargs):
         """Queries the database
 
@@ -249,7 +305,7 @@ class InfluxDbClient():
             e.g. the `epoch` or the username and password can be passed
             in this dictionary
         """
-        verb, _ = query.split(' ', 1)
+        verb, _ = query.strip().split(' ', 1)
         if verb.upper() in ('SELECT', 'SHOW'):
             method = "GET"
         else:
@@ -260,7 +316,7 @@ class InfluxDbClient():
         try:
             return await self.query(kwargs, method=method)
         except HTTPError as e:
-            raise RuntimeError(f"{e.response.body} for key {query}")
+            raise RuntimeError(f"{e.response.body} for query {query}")
 
     async def get_results(self, query, measurement, **kwargs):
         """Queries the database
@@ -352,7 +408,7 @@ class InfluxDbClient():
         return results[keys[0]], results.get_columns(keys[0])
 
     async def field_has(self, measurement,
-                            field_key, condition):
+                        field_key, condition):
         """Returns true if the condition is met
 
         measurement: str
@@ -419,7 +475,7 @@ class InfluxDbClient():
             the measurement that will be queried
         field_keys: list or str
             the field key or field keys that will be queried.
-            Can be specified as a regex. 
+            Can be specified as a regex.
         begin: int
             the begin time in microseconds
         end: int
@@ -472,7 +528,7 @@ class InfluxDbClient():
     async def get_field_values_group(self, measurement,
                                      field_keys, begin, end, interval):
         """Returns the last value of one or more field grouped by time interval
-        
+
         measurement: str
             the measurement that will be queried
         field_keys: list or str
@@ -501,7 +557,7 @@ class InfluxDbClient():
     async def get_fields_mean(self, measurement,
                               field_keys, begin, end, interval):
         """Returns the mean of one or more field grouped by time interval
-        
+
         measurement: str
             the measurement that will be queried
         field_keys: list or str
