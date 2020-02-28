@@ -199,6 +199,10 @@ class BaseBindingController(HasStrictTraits):
         was declined.
         """
 
+    def clear_widget(self):
+        """Implemented by subclasses to receive notifications that the root
+        proxy went offline."""
+
     def setEnabled(self, enable):
         """Implemented by subclasses to update controller as requested by
         a change in the access level.
