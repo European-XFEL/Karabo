@@ -1,6 +1,8 @@
+import os
 import os.path as op
 import re
 from struct import calcsize, unpack
+import sys
 import warnings
 from xml.sax import make_parser, SAXException
 from xml.sax.saxutils import unescape
@@ -97,6 +99,15 @@ def escape_measurement(s):
   # Since this is used mainly for migration purposes this inferior practice
   # is tolerated
 
+
+def parsePendingAttrs(to_fill, hashAttrs):
+    while len(to_fill) > 0:
+        name, value, attrs = yield from parseOne()
+        if name in to_fill:
+            hashAttrs[name.split('_')[-1]] = value[name+'_value']
+            to_fill.remove(name)
+
+
 def parseOne():
     name, attrs = yield "Start"
     hashattrs = {}
@@ -112,18 +123,19 @@ def parseOne():
                 to_fill.add(svalue)
             elif dtype is not None:
                 hashattrs[key] = dtype.fromstring(svalue)
+    # Exhaust the child nodes while there are still attribute values to be filled.
+    # Each attribute that has not been filled should be matched by a child with its
+    # name.
+    yield from parsePendingAttrs(to_fill, hashattrs)
+
     typename = hashattrs.pop("KRB_Type", "HASH")
     if typename == "HASH":
         value = yield from parseHash()
     elif typename == "VECTOR_HASH":
         attrs, value = yield from parseVectorHash(to_fill)
-        for k in to_fill:
-            if k.endswith("rowSchema"):
-                value.rowSchema = attrs[k]["{}_value".format(k)]
-            if k.endswith("defaultValue"):
-                value.defaultValue = attrs[k]["{}_value".format(k)]
     else:
         value = yield from parseString(typename)
+
     return name, value, hashattrs
 
 def parseHash():

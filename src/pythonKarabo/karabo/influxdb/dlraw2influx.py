@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import argparse
 import base64
+import os
 import os.path as op
 import numpy as np
 import re
+import shutil
 
 from asyncio import get_event_loop
 
@@ -16,49 +18,73 @@ from karabo.native import decodeXML, encodeBinary
 
 
 class DlRaw2Influx():
-    def __init__(self, path, topic, host, port=8086, device_id=None,
-                 dry_run=True, prints_on=True):
-        self.raw_path = path
+    def __init__(self, raw_path, topic,
+                 user, password, protocol,
+                 host, port=8086, device_id=None,
+                 output_dir='/tmp', dry_run=True,
+                 prints_on=True, use_gateway=False):
+        self.raw_path = raw_path
+        self.output_dir = output_dir
         self.dry_run = dry_run
         self.device_id = device_id
-        self.chunk_queries = 8000 # optimal values are between 5k and 10k
+        self.chunk_queries = 8000  # optimal values are between 5k and 10k
         self.prints_on = prints_on
-        self.db_client = InfluxDbClient(host=host, port=port, db=topic)
+        self.db_client = InfluxDbClient(
+                             host=host, port=port, db=topic,
+                             protocol=protocol, user=user, password=password,
+                             use_gateway=use_gateway
+                         )
         self.db_name = topic
+        self.authenticated_access = len(user) > 0
 
-        if self.device_id is None:  # infer device_id from directory structure
+        if self.device_id is None:  # infers device_id from directory structure
             self.device_id = device_id_from_path(self.raw_path)
+
+        # Derives the proc_out_path and part_proc_out_path using output_dir
+        # as the base path and the device_id as the final directory in the
+        # path.
+        if self.output_dir:
+            self.proc_out_path = op.join(
+                self.output_dir,
+                'processed',
+                self.device_id,
+                op.basename(self.raw_path))
+            self.part_proc_out_path = op.join(
+                self.output_dir,
+                'part_processed',
+                self.device_id,
+                op.basename(self.raw_path))
+        else:
+            self.proc_out_path = None
+            self.part_proc_out_path = None
 
     async def run(self):
         if self.prints_on:
-            print("Connecting to {}:{} --- raw file: {}"
-                  "...".format(self.db_client.host,
-                               self.db_client.port,
-                               self.raw_path))
-        dbs = await self.db_client.get_dbs()
-        if self.db_name not in dbs:
-            await self.db_client.create_db(self.db_name)
+            print("Connecting to host: {} ..."
+                  .format(self.db_client.host))
 
         if self.prints_on:
             print("Feeding to influxDB file {} ...".format(self.raw_path))
 
         data = []
+        part_proc = False  # indicates the file has been partially processed.
         with open(self.raw_path, 'r') as fp:
 
             for i, l in enumerate(fp):
-                line_fields = self.parseRaw(l, i)
-                if line_fields:
-                    # line has been parsed successfully
-                    safe_m = escape_measurement(self.device_id)
-                    safe_user = escape_tag_field_key(
-                                    line_fields["user_name"]
-                                )
-                    safe_f = escape_tag_field_key(line_fields["name"])
-                    safe_v = escape_tag_field_key(line_fields["value"])
+                try:
+                    line_fields = self.parse_raw(l)
+                    if line_fields:
+                        # line has been parsed successfully
+                        safe_m = escape_measurement(self.device_id)
+                        safe_user = escape_tag_field_key(
+                                        line_fields["user_name"]
+                                    )
+                        safe_f = escape_tag_field_key(line_fields["name"])
+                        safe_v = escape_tag_field_key(line_fields["value"])
 
-                    if len(safe_v) > 0:
-                        data.append(
-                            '"{m}",user="{user}" "{f}"={v},_tid="{tid}" {t}'
+                        if len(safe_v) > 0:
+                            data.append(
+                                '{m},user="{user}" "{f}"={v},_tid="{tid}" {t}'
                                 .format(m=safe_m,
                                         user=safe_user,
                                         f=safe_f,
@@ -66,41 +92,82 @@ class DlRaw2Influx():
                                         tid=line_fields["train_id"],
                                         t=line_fields["timestamp"]))
 
-                    upper_flag = line_fields["flag"].upper()
-                    if upper_flag in ("LOGIN", "LOGOUT"):
-                        # A device event to be saved- user is always
-                        # saved to satisfy InfluxDB's requirement of having
-                        # at least one key per line data point
-                        event_type = '+LOG' if upper_flag == 'LOGIN' else '-LOG'
-                        data.append('{m}__EVENTS,type={e} user="{user}" {t}'
-                                    .format(m=safe_m,
-                                            e=event_type,
-                                            user=safe_user,
-                                            t=line_fields["timestamp"]))
-                    if (data and (i+1) % self.chunk_queries == 0):
-                        if not self.dry_run:
-                            r = await self.db_client.write(
-                                format_line_protocol_body(data)
-                            )
-                            if self.prints_on:
-                                self.print_write_result(
-                                    r.code == 204, len(data))
-                        data = []
+                        up_flag = line_fields["flag"].upper()
+                        if up_flag in ("LOGIN", "LOGOUT"):
+                            # A device event to be saved- user is always
+                            # saved to satisfy InfluxDB's requirement of having
+                            # at least one key per line data point
+                            evt_type = '+LOG' if up_flag == 'LOGIN' else '-LOG'
+                            data.append('{m}__EVENTS,type={e} user="{user}" {t}'
+                                        .format(m=safe_m,
+                                                e=evt_type,
+                                                user=safe_user,
+                                                t=line_fields["timestamp"]))
+                        if data and (i+1) % self.chunk_queries == 0:
+                            if not self.dry_run:
+                                lin_proto_data = format_line_protocol_body(data)
+                                r = await self.db_client.write(lin_proto_data)
+                                if r.code != 204:
+                                    raise Exception(
+                                        "Error writing line protocol: "
+                                        "{} - {}\n{}\n\n"
+                                        .format(r.code,
+                                                r.reason,
+                                                lin_proto_data))
+                            data = []
+
+                except Exception as exc:
+                    # Handles an error by logging it in a .err file in the
+                    # partially processed directory if there's an output_dir
+                    # defined. Otherwise just re-raises the exception and
+                    # keep the previously existing behavior of stopping on
+                    # first error.
+                    part_proc = True
+                    if self.part_proc_out_path and not self.dry_run:
+                        if not op.exists(op.dirname(self.part_proc_out_path)):
+                            os.makedirs(op.dirname(self.part_proc_out_path))
+                        err_path = self.part_proc_out_path + ".err"
+                        file_mode = 'a' if op.exists(err_path) else 'w'
+                        with open(err_path, file_mode) as err:
+                            err.write("Error at line {}: {}\n".format(i, exc))
+                    elif not self.part_proc_out_path:
+                        raise
 
             if not self.dry_run:
-                r = await self.db_client.write(format_line_protocol_body(data))
-                if self.prints_on:
-                    self.print_write_result(r.code == 204, len(data))
+                try:
+                    line_protocol_data = format_line_protocol_body(data)
+                    r = await self.db_client.write(line_protocol_data)
+                    if r.code != 204:
+                        raise Exception(
+                            "Error response from Influx: {} - {}"
+                            .format(r.code, r.reason))
+                except Exception as exc:
+                    part_proc = True
+                    if self.part_proc_out_path and not self.dry_run:
+                        if not op.exists(op.dirname(self.part_proc_out_path)):
+                            os.makedirs(op.dirname(self.part_proc_out_path))
+                        err_path = self.part_proc_out_path + ".err"
+                        file_mode = 'a' if op.exists(err_path) else 'w'
+                        with open(err_path, file_mode) as err:
+                            err.write("Error writing line protocol: {}\n{}\n\n"
+                                      .format(exc, line_protocol_data))
+                    elif not self.part_proc_out_path:
+                        raise
 
-    def print_write_result(self, success, num_of_log_lines):
-        if success:
-            print("{} log lines written successfully to InfluxDb!"
-                  .format(num_of_log_lines))
-        else:
-            print("ERROR: failed to write {} log lines to InfluxDb."
-                  .format(num_of_log_lines))
+        # Copies the file either to the partially processed or processed dir, if
+        # the corresponding output paths are defined.
+        if self.proc_out_path and not self.dry_run and not part_proc:
+            if not op.exists(op.dirname(self.proc_out_path)):
+                os.makedirs(op.dirname(self.proc_out_path))
+            shutil.copy(self.raw_path, self.proc_out_path)
+        elif self.part_proc_out_path and not self.dry_run:
+            # No need to check for output directory existence in here; it has
+            # already been created to log the error.
+            shutil.copy(self.raw_path, self.part_proc_out_path)
 
-    def parseRaw(self, line, i):
+        return not part_proc  # True if fully successfully processed.
+
+    def parse_raw(self, line):
         """
         :param line: a line of datalogger raw file with format
         ts iso8601|epoch ts(s)|train_id|name|type|value|user|flag
@@ -110,38 +177,44 @@ class DlRaw2Influx():
         To deal with influx DB types, the KARABO type is appended
         to the name of the field after an '-' (hifen).
 
-        Vector are left as comma separated ascii strings. 
+        Vector are left as comma separated ascii strings.
         """
-        tokens = line.split('|')
+        if len(line.strip()) == 0:
+            # Nothing to parse
+            return None
+
+        line_regex = (
+            r"^([TZ0-9\.]+)\|([0-9\.]+)\|([0-9]+)\|(.+)\|([0-9A-Z_]*)\|(.*)\|"
+            r"([a-z0-9_]*)\|([A-Z]+)$"
+        )
+
         line_fields = {}
         try:
-            timestamp_s = tokens[1].strip()
-            train_id = tokens[2].strip()
-            name = tokens[3].strip()
-            ktype = tokens[4].strip()
-            value = tokens[5].strip()
-            user_name = tokens[6].strip()
-            flag = tokens[7].strip()
-        except IndexError:
-            if self.prints_on:
-                print("Unable to parse line number {}: '{}' "
-                      "in file {}".format(i, line.strip(), self.raw_path))
-            return line_fields
+            matches = re.search(line_regex, line)
+            timestamp_s = matches.group(2)
+            train_id = matches.group(3)
+            name = matches.group(4)
+            ktype = matches.group(5)
+            value = matches.group(6)
+            user_name = matches.group(7)
+            flag = matches.group(8)
+        except Exception as exc:
+            raise Exception(
+                      "\n\tLine: '{}'\n\tMessage: '{}'"
+                      .format(line.strip(), exc))
 
         try:
             timestamp_ns = np.int(np.float(timestamp_s) * 1E9)
             train_id = np.uint32(train_id)
         except ValueError:
-            if self.prints_on:
-                print("Unable to parse timestamp/train_id: '{}' "
-                      "in file {}".format(line.strip(), self.raw_path))
-            return line_fields
+            raise Exception(
+                      "Unable to parse timestamp ({}) and/or "
+                      "train_id ({}).".format(timestamp_s, train_id))
 
         if value == 'nan' or value == "-nan" or value == "inf":
-            if self.prints_on:
-                print("{} unsupported in influxDB "
+            raise Exception(
+                      "{} unsupported in influxDB "
                       "skipping line: '{}'".format(value, line.strip()))
-            return line_fields
 
         if ktype == "BOOL":
             # name += 'b'
@@ -150,10 +223,9 @@ class DlRaw2Influx():
             elif value == '0':
                 value = 'f'
             else:
-                if self.prints_on:
-                    print("Bool parameter with undefined value, '{}'. "
+                raise Exception(
+                          "Bool parameter with undefined value, '{}'. "
                           "skipping line: '{}'".format(value, line.strip()))
-                return line_fields
         elif ktype in ("INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32",
                        "INT64"):
             value = str(value) + "i"
@@ -161,7 +233,7 @@ class DlRaw2Influx():
             value = '"' + value.replace('\\', '\\\\').replace('"', r'\"') + '"'
         elif ktype == "VECTOR_HASH":
             # `value` is a string representing the XML serialization of
-            # we need to decode it and 
+            # we need to decode it and
             content = decodeXML(value)
             binary = encodeBinary(content)
             value = '"' + base64.b64encode(binary).decode('utf-8') + '"'
@@ -181,5 +253,3 @@ class DlRaw2Influx():
         line_fields["flag"] = flag
 
         return line_fields
-
-
