@@ -23,10 +23,12 @@ BUTTON_ICONS = {
     'Reset': icons.mediaBackward,
     'Acquire': icons.mediaRecord,
     'On': icons.on,
-    'Off': icons.off
+    'Off': icons.off,
+    'Abort': icons.stop,
+    'Halt': icons.halt
 }
-NO_SELECTION = icons.imageMissing
 
+NO_SELECTION = icons.imageMissing
 QPADDING = 2
 
 
