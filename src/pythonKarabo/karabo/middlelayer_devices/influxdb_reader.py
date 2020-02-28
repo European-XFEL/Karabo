@@ -57,11 +57,20 @@ class DataLogReader(Device):
                  description="The port to reach InfluxDB",
                  accessMode=AccessMode.INITONLY,
                  defaultValue=8086)
+    user = String(displayedName="InfluxUser",
+                  description="The InfluxDB user name",
+                  accessMode=AccessMode.INITONLY,
+                  defaultValue="")
+    password = String(displayedName="InfluxPassword",
+                      description="The password for the InfluxDB user",
+                      accessMode=AccessMode.INITONLY,
+                      defaultValue="")
 
     client = None
 
     async def onInitialization(self):
-        self.client = InfluxDbClient(self.host, self.port.value)
+        self.client = InfluxDbClient(self.host, self.port.value,
+                                     user=self.user, password=self.password)
         await self.client.connect()
         topic = get_event_loop().topic
         if topic not in (await self.client.get_dbs()):
