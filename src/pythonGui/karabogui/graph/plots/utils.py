@@ -5,11 +5,12 @@ import lttbc
 
 def get_view_range(plot_item):
     """Get the viewing rect of a plot item for the X-Axis"""
-    rect = None
+    view_range = None
     view_box = plot_item.getViewBox()
     if view_box is None or not view_box.autoRangeEnabled()[0]:
-        rect = plot_item.viewRect()
-    return rect
+        view_rect = plot_item.viewRect()
+        view_range = (view_rect.left(), view_rect.right())
+    return view_range
 
 
 def generate_baseline(data, offset=0.0, step=1.0):
@@ -32,16 +33,20 @@ STD_SIGNAL_THRESHOLD = 5
 # [(size, data points)]
 DIMENSION_DOWNSAMPLE = [
     (200000, 30000),
+    (300000, 40000),
     (400000, 50000),
     (500000, 60000),
 ]
 
 
 def _get_sample_threshold(size):
-    """Calculate the downsample factor by a given data dimension"""
+    """Calculate the downsample factor by a given data dimension
+
+    Typically every 10th data point is provided!
+    """
     threshold = TYPICAL_POINTS
     for dsize, dpoints in DIMENSION_DOWNSAMPLE:
-        if size > dsize:
+        if size >= dsize:
             threshold = dpoints
         else:
             # No need to look further!
@@ -57,7 +62,7 @@ def generate_down_sample(y, x=None, threshold=None, rect=None,
     :param y: The actual y data set from which the downsample is generated
     :param x: Optional x array for sampling.
     :param threshold: The threshold of data points
-    :param rect: The view rect of the plot item
+    :param rect: `Tuple` of the view range, e.g. (0, 100)
     :param deviation: Boolean flag to take into account standard deviation
     """
 
@@ -76,8 +81,8 @@ def generate_down_sample(y, x=None, threshold=None, rect=None,
         if rect is not None:
             sizec = (size - 1)
             dx = float(x[-1] - x[0]) / sizec
-            x_min = np.clip(int((rect.left() - x[0]) / dx), 0, sizec)
-            x_max = np.clip(int((rect.right() - x[0]) / dx), 0, sizec)
+            x_min = np.clip(int((rect[0] - x[0]) / dx), 0, sizec)
+            x_max = np.clip(int((rect[1] - x[0]) / dx), 0, sizec)
             x = x[x_min:x_max]
             y = y[x_min:x_max]
             if not initial:
