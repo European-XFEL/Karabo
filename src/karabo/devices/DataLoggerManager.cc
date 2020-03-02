@@ -182,6 +182,12 @@ namespace karabo {
                     .init()
                     .commit();
 
+            BOOL_ELEMENT(expected).key("logger.InfluxDataLogger.useGateway")
+                    .displayedName("Use Influx Gateway")
+                    .description("For logging, use Influx gateway instead of connecting directly to a server instance.")
+                    .assignmentOptional().defaultValue(false)
+                    .commit();
+
             BOOL_ELEMENT(expected).key("useP2p")
                     .displayedName("Use p2p shortcut")
                     .description("Whether to instruct loggers to use point-to-point instead of broker")
@@ -925,6 +931,7 @@ namespace karabo {
             } else if (m_logger == "InfluxDataLogger") {
                 config.set("url", get<std::string>("logger.InfluxDataLogger.urlWrite"));
                 config.set("maxBatchPoints", get<std::uint32_t>("logger.InfluxDataLogger.maxBatchPoints"));
+                config.set("useGateway", get<bool>("logger.InfluxDataLogger.useGateway"));
             }
             config.set("flushInterval", get<int>("flushInterval"));
             config.set("performanceStatistics.enable", get<bool>("enablePerformanceStats"));
@@ -959,7 +966,7 @@ namespace karabo {
             if (type == "device") {
                 // Figure out who logs and tell to stop
                 goneDeviceToLog(instanceId);
-                if (instanceInfo.has("classId") && 
+                if (instanceInfo.has("classId") &&
                         instanceInfo.get<std::string>("classId") == m_logger) {
                     goneLogger(instanceId);
                 }
