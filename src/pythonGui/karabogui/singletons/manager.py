@@ -5,6 +5,7 @@
 #############################################################################
 from datetime import datetime
 from functools import wraps
+from weakref import WeakKeyDictionary, WeakValueDictionary
 
 from PyQt5.QtCore import pyqtSlot, QObject
 from PyQt5.QtWidgets import QMessageBox
@@ -41,7 +42,12 @@ def project_db_handler(fall_through=False):
 class Manager(QObject):
     def __init__(self, parent=None):
         super(Manager, self).__init__(parent=parent)
-
+        # this dictionary maps the deviceIds to a weak reference of the
+        # DeviceProxy instances waiting for a reply from the server
+        self._waiting_devices = WeakValueDictionary()
+        # this dictionary maps a weak reference DeviceProxy with the list of
+        # property proxies waiting to be heard
+        self._waiting_properties = WeakKeyDictionary()
         # The system topology singleton
         self._topology = get_topology()
         self._alarm_model = get_alarm_model()
@@ -58,6 +64,14 @@ class Manager(QObject):
 
     def toggleBigDataPerformanceMonitor(self):
         self._show_big_data_proc = True
+
+    def expect_properties(self, device_proxy, properties):
+        """Register the property proxies as waiting for replies"""
+        device_id = device_proxy.device_id
+        self._waiting_devices[device_id] = device_proxy
+        proxies = self._waiting_properties.get(device_proxy, [])
+        proxies.extend(properties)
+        self._waiting_properties[device_proxy] = proxies
 
     def initDevice(self, serverId, classId, deviceId, config=None):
         schema = self._topology.get_schema(serverId, classId)
@@ -170,6 +184,46 @@ class Manager(QObject):
             pending = list(self._request_handlers.keys())
             for token in pending:
                 self.handle_requestFromSlot(token, False, info=None)
+
+    def handle_reconfigureReply(self, **info):
+        """Handle the reconfigure reply of the gui server"""
+        success = info['success']
+        input_info = info['input']
+        deviceId = input_info['deviceId']
+        if not success:
+            reason = info['failureReason']
+            # clear the waiting queue
+            device = self._waiting_devices.pop(deviceId, None)
+            props = self._waiting_properties.pop(device, [])
+            paths = set(input_info['configuration'].paths())
+            pending = [prop_proxy
+                       for prop_proxy in props
+                       if prop_proxy.path not in paths]
+            if pending:
+                # in case multiple updates are sent and only few failed
+                self.expect_properties(device, pending)
+            text = ('Device reconfiguration of <b>{}</b> encountered an error.'
+                    ' The values could NOT be applied!'.format(deviceId))
+            messagebox.show_error(text, details=reason)
+        else:
+            device_proxy = self._waiting_devices.pop(deviceId, None)
+            if device_proxy is None:
+                return
+            prop_proxies = self._waiting_properties.pop(device_proxy, [])
+            paths = set(input_info['configuration'].paths())
+            pending = []
+            for prop_proxy in prop_proxies:
+                if prop_proxy.path not in paths:
+                    pending.append(prop_proxy)
+                    continue
+                # revert the edit in the properties.
+                prop_proxy.revert_edit()
+            if pending:
+                # in case multiple updates are sent, wait for the pending ones
+                self.expect_properties(device_proxy, pending)
+            broadcast_event(
+                KaraboEvent.UpdateValueConfigurator,
+                {'proxy': device_proxy})
 
     def handle_requestFromSlot(self, token, success, reply=None, info=None):
         handler = self._request_handlers.pop(token, lambda s, r: None)
@@ -359,17 +413,6 @@ class Manager(QObject):
         """
         for deviceId, config in configurations.items():
             self._topology.device_config_updated(deviceId, config)
-
-    def handle_reconfigureReply(self, **info):
-        """Handle the reconfigure reply of the gui server"""
-        success = info['success']
-        if not success:
-            reason = info['failureReason']
-            input_info = info['input']
-            deviceId = input_info['deviceId']
-            text = ('Device reconfiguration of <b>{}</b> encountered an error.'
-                    ' The values could NOT be applied!'.format(deviceId))
-            messagebox.show_error(text, details=reason)
 
     def handle_executeReply(self, **info):
         """Handle the execute reply of the gui server"""
