@@ -12,6 +12,7 @@ from karabo.common.scenemodel.api import (
     DoubleLineEditModel, HexadecimalModel, IntLineEditModel)
 from karabogui.binding.api import (
     get_editor_value, get_min_max, FloatBinding, IntBinding)
+from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, HexValidator, IntValidator,
     is_proxy_allowed, NumberValidator, register_binding_controller)
@@ -31,6 +32,7 @@ class NumberLineEdit(BaseBindingController):
 
     def create_widget(self, parent):
         self._internal_widget = QLineEdit(parent)
+        self._internal_widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
         self._internal_widget.setAlignment(Qt.AlignLeft | Qt.AlignAbsolute)
         self._internal_widget.setValidator(self._validator)
         self._normal_palette = self._internal_widget.palette()
