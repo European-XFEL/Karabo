@@ -381,3 +381,12 @@ class PropertyTestMDL(Device):
         payload.set('data', self.generate_macro(name))
         return Hash('type', 'deviceMacro', 'origin', self.deviceId, 'payload',
                     payload)
+
+    @String(displayedName="Faulty String",
+        description="A string property that could not be set from the system",
+        defaultValue="Karabo")
+    def faultyString(self, value):
+        if value != "Karabo":
+            raise RuntimeError(f"Only 'Karabo' is allowed here not '{value}'")
+        else:
+            self.faultyString = value
