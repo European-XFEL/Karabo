@@ -35,7 +35,8 @@ def create_gui_app(args):
     """Create the QApplication with all necessary fonts and settings"""
     app = QApplication(args)
     # Set the style among all operating systems
-    app.setStyle(QStyleFactory.create("Cleanlooks"))
+    style = QStyleFactory.create("Fusion")
+    app.setStyle(style)
     app.setPalette(QApplication.style().standardPalette())
 
     font = QFont()
