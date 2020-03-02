@@ -1,8 +1,9 @@
 REM HOME variable is current set on our gitlab-ci.yml and is needed so our
 REM ssh work correctly
 set SSH_KEY=%HOME%\.ssh\win-cwrsync
-set REMOTE_SERVER=xdata@exflserv05
-set REMOTE_CHANNEL_PATH=%REMOTE_SERVER%:/var/www/html/karabo/channel/
+set REMOTE_SERVER=xkarabo@exflserv05
+set CONDA_CHANNEL_PATH=/var/www/html/karabo/channel/
+set REMOTE_CHANNEL_PATH=%REMOTE_SERVER%:%CONDA_CHANNEL_PATH%
 set PLATFORM=win-64
 
 REM get conda-bld directory
@@ -40,5 +41,5 @@ call rsync -r --exclude ".git" ^
 IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
 REM rebuild remote channels
-echo y | plink -no-antispoof -pw %XDATA_PWD% %REMOTE_SERVER% bash "~/scripts/rebuild_channel_index.sh
+echo y | plink -no-antispoof -pw %XKARABO_PWD% %REMOTE_SERVER% bash "source ~/miniconda3/bin/activate; cd %CONDA_CHANNEL_PATH%; conda index .;"
 IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
