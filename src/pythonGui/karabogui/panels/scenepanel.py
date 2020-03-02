@@ -16,8 +16,7 @@ from karabogui.indicators import get_topic_color
 from karabogui.sceneview.api import SceneView
 from karabogui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabogui.sceneview.tools.api import (
-    BoxVSceneAction, BoxHSceneAction, CreateToolAction,
-    CreateWorkflowConnectionToolAction, GroupEntireSceneAction,
+    BoxVSceneAction, BoxHSceneAction, CreateToolAction, GroupEntireSceneAction,
     GridSceneAction, GroupSceneAction, UngroupSceneAction, LineSceneTool,
     TextSceneTool, RectangleSceneTool, SceneBringToFrontAction,
     SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneMoveAction,
@@ -230,13 +229,7 @@ class ScenePanel(BasePanelWidget):
             text="Selection Mode",
             tooltip="Select objects in the scene"
         )
-        workflow = CreateWorkflowConnectionToolAction(
-            icon=icons.link,
-            checkable=True,
-            text="Connection Mode",
-            tooltip="Connect workflow items"
-        )
-        q_actions = [self._build_qaction(a) for a in [selection, workflow]]
+        q_actions = [self._build_qaction(a) for a in [selection]]
         # Save a reference to the SceneSelectionTool QAction
         self.ac_selection_tool = q_actions[0]
         return q_actions
