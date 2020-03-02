@@ -3,21 +3,12 @@
 # Created on May 9, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from functools import partial
 from inspect import signature
 import uuid
-from weakref import WeakKeyDictionary
-
-from PyQt5.QtCore import pyqtSlot, QTimer
 
 from karabo.native import Hash
 from karabogui.binding.api import extract_sparse_configurations
-from karabogui.const import REQUEST_REPLY_TIMEOUT
-from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import get_manager, get_network, get_topology
-
-# Devices which are waiting for a configuration to come back from the server
-_waiting_devices = WeakKeyDictionary()
 
 
 def call_device_slot(handler, device_id, slot_name, **kwargs):
@@ -61,76 +52,17 @@ def call_device_slot(handler, device_id, slot_name, **kwargs):
 
 
 def send_property_changes(proxies):
-    """Given a collection of PropertyProxy instances, gather all the user edits
-    and send them to the GUI server. Then wait for an answer to come back.
-
-    If an answer, in the form of a new device configuration, doesn't arrive
-    after `REQUEST_REPLY_TIMEOUT` seconds, a warning dialog is shown. However,
-    if a new configuration does arrive, it is assumed that all property
-    edits were applied and the `edit_value` traits are reset accordingly.
+    """Sends a reconfiguration request to the GUI server
 
     :param proxies: A sequence (list, tuple, set) of PropertyProxy instances
                     with their `edit_value` trait set. See the function
                     `extract_sparse_configurations` for more details.
     """
-
-    def _config_handler(device_proxy, name, new):
-        """Handle a device getting a new configuration
-        """
-        global _waiting_devices
-        properties, timer = _waiting_devices.pop(device_proxy, ([], None))
-        if len(properties) == 0:
-            return
-
-        # Remove the trait handler
-        device_proxy.on_trait_change(_config_handler, 'config_update',
-                                     remove=True)
-
-        # Clear the timer and property edits
-        timer.stop()
-        for proxy in properties:
-            proxy.revert_edit()
-
-        # NOTE: We have to send a signal to the view to asynchronously reset
-        # the apply and decline buttons
-        broadcast_event(KaraboEvent.UpdateValueConfigurator,
-                        {'proxy': device_proxy})
-
-    @pyqtSlot()
-    def _timeout_handler(device_proxy):
-        """Handle our wait timer expiring.
-        """
-        global _waiting_devices
-        properties, _ = _waiting_devices.pop(device_proxy, ([], None))
-        if len(properties) == 0:
-            return
-
-        # Remove the trait handler
-        device_proxy.on_trait_change(_config_handler, 'config_update',
-                                     remove=True)
-
-        # We could potentially inform the user here that our properties were
-        # not acknowledged, but the GUI server takes care of a failure and
-        # informs us with a different protocol. We continue of not removing
-        # the blue background.
-
-    def _wait_for_changes(device_proxy, properties):
-        """Set all the handlers up
-        """
-        global _waiting_devices
-        timer = QTimer()
-        timer.setSingleShot(True)
-        timer.timeout.connect(partial(_timeout_handler, device_proxy))
-        device_proxy.on_trait_change(_config_handler, 'config_update')
-
-        _waiting_devices[device_proxy] = (properties, timer)
-        timer.start(REQUEST_REPLY_TIMEOUT * 1000)
-
     configs = extract_sparse_configurations(proxies)
-    topology, network = get_topology(), get_network()
+    network, manager, topology = get_network(), get_manager(), get_topology()
     for device_id, config in configs.items():
-        device_proxy = topology.get_device(device_id)
         properties = [proxy for proxy in proxies
                       if proxy.root_proxy.device_id == device_id]
-        _wait_for_changes(device_proxy, properties)
+        device_proxy = topology.get_device(device_id)
+        manager.expect_properties(device_proxy, properties)
         network.onReconfigure(device_id, config)
