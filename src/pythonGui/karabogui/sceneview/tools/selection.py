@@ -1,9 +1,12 @@
+import math
+
 from PyQt5.QtCore import Qt, QRect, QPoint
 from traits.api import HasStrictTraits, Any, Enum, Instance, String
 
 from karabogui.binding.api import DeviceProxy
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.sceneview.bases import BaseSceneTool
+from karabogui.sceneview.const import GRID_STEP
 from karabogui.sceneview.utils import save_painter_state
 
 
@@ -194,9 +197,16 @@ class SceneSelectionTool(BaseSceneTool):
         if not og.contains(mouse_pos):
             return
         trans = mouse_pos - self._moving_pos
-        self._moving_pos = mouse_pos
-        for c in scene_view.selection_model:
-            c.translate(trans)
+
+        # Calculate snap translation
+        origin = scene_view.selection_model.get_item_rect().topLeft()
+        trans = _get_snap_offset(origin, offset=trans)
+        # Translate only if the offset on one/both of the axis is greater
+        # than abs(GRID_STEP) (e.g. QPoint(-10, 0))
+        if trans:
+            for c in scene_view.selection_model:
+                c.translate(trans)
+            self._moving_pos += trans
         event.accept()
 
     def _resize_move(self, scene_view, event):
@@ -207,13 +217,13 @@ class SceneSelectionTool(BaseSceneTool):
         g = QRect(og)
         posX, posY = mouse_pos.x(), mouse_pos.y()
         if "t" in self._resize_type:
-            g.setTop(posY)
+            g.setTop(_round_down(posY))
         elif "b" in self._resize_type:
-            g.setBottom(posY)
+            g.setBottom(_round_down(posY))
         if "l" in self._resize_type:
-            g.setLeft(posX)
+            g.setLeft(_round_down(posX))
         elif "r" in self._resize_type:
-            g.setRight(posX)
+            g.setRight(_round_down(posX))
 
         min_size = self._hover_item.minimumSize()
         max_size = self._hover_item.maximumSize()
@@ -224,3 +234,33 @@ class SceneSelectionTool(BaseSceneTool):
             return
 
         self._hover_item.set_geometry(g)
+
+
+def _get_snap_offset(qpoint, offset=QPoint()):
+    """Calculate snap offset from on the grid step and mouse offset"""
+    trans_point = qpoint + offset
+
+    # Get rounding function
+    x_round = _round_func(offset.x())
+    y_round = _round_func(offset.y())
+
+    snapped_point = QPoint(x_round(trans_point.x()), y_round(trans_point.y()))
+
+    return snapped_point - qpoint
+
+
+def _round_func(direction):
+    func = _round_down
+    if direction <= 0:
+        func = _round_up
+    return func
+
+
+def _round_up(num):
+    """Round up to the nearest grid step"""
+    return math.ceil(num / GRID_STEP) * GRID_STEP
+
+
+def _round_down(num):
+    """Round down to the nearest grid step"""
+    return math.floor(num / GRID_STEP) * GRID_STEP
