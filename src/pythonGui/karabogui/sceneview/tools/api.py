@@ -10,8 +10,6 @@ from .clipboard import (SceneCopyAction, SceneCutAction, SceneDeleteAction,
 from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,
                       TextSceneTool, WebLinkTool)
 from .scenedndhandler import (
-    ConfigurationDropHandler, NavigationDropHandler, ProjectDropHandler)
+    ConfigurationDropHandler, ProjectDropHandler)
 from .selection import ProxySelectionTool, SceneSelectionTool
 from .widgethandler import SceneControllerHandler, SceneToolHandler
-from .workflow import (
-    CreateWorkflowConnectionToolAction, WorkflowConnectionTool)

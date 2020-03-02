@@ -7,13 +7,12 @@ from .layout.api import BoxLayout, GridLayout, GroupLayout
 from .shapes import LineShape, PathShape, RectangleShape
 from .widget.api import (
     ControllerContainer, LabelWidget, SceneLinkWidget,
-    UnknownSvgWidget, UnknownWidget, WebLinkWidget, WorkflowItemWidget)
+    UnknownSvgWidget, UnknownWidget, WebLinkWidget)
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
 _SHAPE_CLASSES = (LineShape, PathShape, RectangleShape)
 _WIDGET_CLASSES = (ControllerContainer, LabelWidget, SceneLinkWidget,
-                   WebLinkWidget, UnknownSvgWidget, UnknownWidget,
-                   WorkflowItemWidget)
+                   WebLinkWidget, UnknownSvgWidget, UnknownWidget)
 _SCENE_OBJ_FACTORIES = {
     models.BoxLayoutModel: lambda m, p: BoxLayout(m, QT_BOX_LAYOUT_DIRECTION[m.direction]),  # noqa
     models.FixedLayoutModel: lambda m, p: GroupLayout(m),
@@ -26,7 +25,6 @@ _SCENE_OBJ_FACTORIES = {
     models.WebLinkModel: WebLinkWidget,
     models.UnknownWidgetDataModel: UnknownWidget,
     models.UnknownXMLDataModel: lambda m, p: UnknownSvgWidget.create(m, parent=p),  # noqa
-    models.WorkflowItemModel: WorkflowItemWidget,
 }
 
 

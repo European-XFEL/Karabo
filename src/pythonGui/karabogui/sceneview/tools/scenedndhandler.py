@@ -12,14 +12,12 @@ from PyQt5.QtWidgets import QBoxLayout
 from traits.api import ABCHasStrictTraits
 
 from karabo.common.scenemodel.api import (
-    BoxLayoutModel, LabelModel, SceneLinkModel, WorkflowItemModel)
+    BoxLayoutModel, LabelModel, SceneLinkModel)
 from karabo.common.scenemodel.const import SceneTargetWindow
 from karabo.native import AccessMode
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
-from karabogui.enums import NavigationItemTypes, ProjectItemTypes
-from karabogui.project.utils import (
-    add_device_to_server, validate_device_instance_exists)
+from karabogui.enums import ProjectItemTypes
 from karabogui.sceneview.widget.utils import get_proxy
 
 _STACKED_WIDGET_OFFSET = 30
@@ -104,56 +102,14 @@ class ConfigurationDropHandler(SceneDnDHandler):
         return layout_model
 
 
-class NavigationDropHandler(SceneDnDHandler):
-    """Scene D&D handler for drops originating from the navigation view"""
-
-    def can_handle(self, event):
-        # We can handle a drop if it contains at least one device or class
-        return len(self._extract_items(event.mimeData())) > 0
-
-    def handle(self, scene_view, event):
-        dropped_items = self._extract_items(event.mimeData())
-        if len(dropped_items) == 0:
-            return
-
-        # We ONLY handle one dropped class at a time!
-        item = dropped_items[0]
-        if item.get('type') is NavigationItemTypes.CLASS:
-            device_id = add_device_to_server(item['serverId'],
-                                             class_id=item['classId'])
-            # Adding a device to the project can fail
-            if device_id != '':
-                position = event.pos()
-                model = WorkflowItemModel(device_id=device_id,
-                                          klass='WorkflowItem',
-                                          x=position.x(), y=position.y())
-                scene_view.add_models(model)
-
-        elif item.get('type') is NavigationItemTypes.DEVICE:
-            device_id = item.get('deviceId')
-            # We need a project device for online and offline status!
-            if validate_device_instance_exists(device_id):
-                position = event.pos()
-                model = WorkflowItemModel(device_id=device_id,
-                                          klass='WorkflowItem',
-                                          x=position.x(), y=position.y())
-                scene_view.add_models(model)
-
-    def _extract_items(self, mime_data):
-        known_types = (NavigationItemTypes.CLASS, NavigationItemTypes.DEVICE)
-        items_data = mime_data.data('treeItems').data()
-        if items_data:
-            items = json.loads(items_data.decode())
-            return [it for it in items if it['type'] in known_types]
-        return []
-
-
 class ProjectDropHandler(SceneDnDHandler):
     """Scene D&D handler for drops originating from the project view"""
 
     def can_handle(self, event):
         # We can handle a drop if it contains at least one item
-        return len(self._extract_items(event.mimeData())) > 0
+        items = self._extract_items(event.mimeData())
+        return (len(items) > 0 and
+                items[0].get('type') == ProjectItemTypes.SCENE)
 
     def handle(self, scene_view, event):
         dropped_items = self._extract_items(event.mimeData())
@@ -161,15 +117,7 @@ class ProjectDropHandler(SceneDnDHandler):
             return
 
         item = dropped_items[0]
-        if item.get('type') == ProjectItemTypes.DEVICE:
-            device_id = item.get('deviceId')
-            position = event.pos()
-            model = WorkflowItemModel(device_id=device_id,
-                                      klass='WorkflowItem',
-                                      x=position.x(), y=position.y())
-            scene_view.add_models(model)
-
-        elif item.get('type') == ProjectItemTypes.SCENE:
+        if item.get('type') == ProjectItemTypes.SCENE:
             uuid = item.get('uuid')
             simple_name = item.get('simple_name')
             target = '{}:{}'.format(simple_name, uuid)
