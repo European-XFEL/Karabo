@@ -11,6 +11,10 @@ SCREEN_MAX_VALUE = 100000
 
 SCENE_BORDER_WIDTH = 10
 
+
+GRID_STEP = 10
+
+
 # For convenience association of strings to Qt cursors
 QT_CURSORS = {
     'arrow': Qt.ArrowCursor,
