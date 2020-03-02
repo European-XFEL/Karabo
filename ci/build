@@ -3,7 +3,7 @@
 set -e
 set -o pipefail
 
-SSH_USER_HOST=xdata@exflserv05
+SSH_USER_HOST=xkarabo@exflserv05
 SSH_KARABO_DIR=/var/www/html/karabo
 SSH_PREFIX=$SSH_USER_HOST:$SSH_KARABO_DIR
 CURL_PREFIX=http://exflserv05.desy.de/karabo
@@ -50,14 +50,14 @@ __release_build() {
             __check_existence $CURL_PREFIX/$FRAMEWORK_DEST_DIR/$REL_ARTIFACT_NAME
             bash ./auto_build_all.sh Release --bundle
             mv package/Release/$REL_OS_NAME/$REL_OS_VERS_LONG/x86_64/karabo-*.sh $REL_ARTIFACT_NAME
-            sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "mkdir -p $SSH_KARABO_DIR/$FRAMEWORK_DEST_DIR"
-            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME $SSH_PREFIX/$FRAMEWORK_DEST_DIR
+            sshpass -p "$XKARABO_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "mkdir -p $SSH_KARABO_DIR/$FRAMEWORK_DEST_DIR"
+            sshpass -p "$XKARABO_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $REL_ARTIFACT_NAME $SSH_PREFIX/$FRAMEWORK_DEST_DIR
             ;;
         *) echo "unknown target OS: $1" ;;
     esac
 
     if [ "$REL_TAG" != "$NIGHTLY_TAG" ]; then
-        sshpass -p "$XDATA_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "ln -fs $SSH_KARABO_DIR/$REL_ARTIFACT_DEST_PATH $SSH_KARABO_DIR/$REL_ARTIFACT_LATEST_PATH "
+        sshpass -p "$XKARABO_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "ln -fs $SSH_KARABO_DIR/$REL_ARTIFACT_DEST_PATH $SSH_KARABO_DIR/$REL_ARTIFACT_LATEST_PATH "
     fi
 }
 
@@ -72,11 +72,11 @@ __deps_build() {
 
     case "$1" in
         build)
-            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPS_BASE_NAME*.tar.gz $SSH_PREFIX/karaboDevelopmentDeps/
+            sshpass -p "$XKARABO_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPS_BASE_NAME*.tar.gz $SSH_PREFIX/karaboDevelopmentDeps/
             ;;
         tests)
             mv $DEPS_BASE_NAME*.tar.gz $DEPS_BASE_NAME-$CI_COMMIT_REF_SLUG.tar.gz
-            sshpass -p "$XDATA_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPS_BASE_NAME-$CI_COMMIT_REF_SLUG.tar.gz $SSH_PREFIX/karaboDevelopmentDeps/
+            sshpass -p "$XKARABO_PWD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $DEPS_BASE_NAME-$CI_COMMIT_REF_SLUG.tar.gz $SSH_PREFIX/karaboDevelopmentDeps/
             ;;
         *) echo "unknown job type: $1" ;;
     esac
