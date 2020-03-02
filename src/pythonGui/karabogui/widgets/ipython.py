@@ -42,9 +42,6 @@ class IPythonWidget(RichJupyterWidget):
             self.kernel_client.started_channels.connect(session_start_cb)
         if session_stop_cb:
             self.kernel_client.stopped_channels.connect(session_stop_cb)
-        # The following line avoids a bug in IPython's QtConsole
-        # see https://github.com/jupyter/qtconsole/issues/174
-        self.execute_on_complete_input = False
 
     def stop(self):
         self.kernel_client.stop_channels()
