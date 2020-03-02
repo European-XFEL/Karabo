@@ -12,8 +12,7 @@ from PyQt5.QtGui import QPalette, QPainter, QPen
 from PyQt5.QtWidgets import QSizePolicy, QStackedLayout, QWidget
 
 from karabo.common.scenemodel.api import (
-    FixedLayoutModel, WorkflowItemModel, SCENE_MIN_WIDTH,
-    SCENE_MIN_HEIGHT, SceneTargetWindow)
+    FixedLayoutModel, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT, SceneTargetWindow)
 from karabogui import globals as krb_globals
 from karabogui.events import (
     broadcast_event, KaraboEvent, register_for_broadcasts,
@@ -30,12 +29,11 @@ from .const import QT_CURSORS
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import (
-    ConfigurationDropHandler, NavigationDropHandler, ProxySelectionTool,
+    ConfigurationDropHandler, ProxySelectionTool,
     ProjectDropHandler, SceneControllerHandler, SceneSelectionTool,
     SceneToolHandler)
 from .utils import save_painter_state
-from .widget.api import ControllerContainer, GridView, WorkflowItemWidget
-from .workflow.api import SceneWorkflowModel, WorkflowOverlay
+from .widget.api import ControllerContainer, GridView
 
 # The scene widgets handler for mutations and action of the controllers and
 # layout items on our scene
@@ -74,22 +72,17 @@ class SceneView(QWidget):
         self.inner = GridView(self)
         self.inner.setLayout(self.layout)
         self.inner.setFocusPolicy(Qt.StrongFocus)
-        # Also create an overlay for the workflow connections
-        self.overlay = WorkflowOverlay(self, parent=self)
 
         layout = QStackedLayout(self)
         layout.setStackingMode(QStackedLayout.StackAll)
-        layout.addWidget(self.overlay)
         layout.addWidget(self.inner)
 
         self.scene_model = None
         self._ignore_resize_events = False
         self.selection_model = SceneSelectionModel()
-        self.workflow_model = SceneWorkflowModel()
 
         # List of scene drag n drop handlers
         self.scene_handler_list = [ConfigurationDropHandler(),
-                                   NavigationDropHandler(),
                                    ProjectDropHandler()]
         self.current_scene_handler = None
 
@@ -113,10 +106,6 @@ class SceneView(QWidget):
         self._visible_timer.setInterval(_VISIBILITY_TIMEOUT)
         self._visible_timer.setSingleShot(True)
         self._visible_timer.timeout.connect(self._clean_visible_widgets)
-
-        # Redraw when the workflow model changes
-        self.workflow_model.on_trait_change(lambda *args: self.update(),
-                                            'updated')
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -343,7 +332,6 @@ class SceneView(QWidget):
         for obj in self._scene_obj_cache.values():
             if is_widget(obj):
                 obj.destroy()
-        self.workflow_model.destroy()
 
         unregister_from_broadcasts(self.event_map)
         self._set_scene_model(None)
@@ -373,7 +361,6 @@ class SceneView(QWidget):
             # only hide widgets with got replaced by 'Change Widget...'
             if is_widget(obj) and obj.isVisible():
                 obj.set_visible(True)
-        self.workflow_model.set_visible(True)
         self.tab_visible = True
 
     @pyqtSlot()
@@ -383,7 +370,6 @@ class SceneView(QWidget):
             # NOTE: We must set the visibility of all widgets to `False`!
             if is_widget(obj):
                 obj.set_visible(False)
-        self.workflow_model.set_visible(False)
         self.tab_visible = False
 
     def update_model(self, scene_model):
@@ -429,14 +415,6 @@ class SceneView(QWidget):
         if widget is not None:
             while not is_widget(widget):
                 widget = widget.parent()
-        return widget
-
-    def workflow_at_position(self, pos):
-        """Returns the topmost workflow widget whose bounds contain `pos`."""
-        widget = self.inner.childAt(pos)
-        while (widget is not None
-                and not isinstance(widget, WorkflowItemWidget)):
-            widget = widget.parent()
         return widget
 
     def items_in_rect(self, rect):
@@ -619,7 +597,6 @@ class SceneView(QWidget):
 
         self.scene_model.on_trait_change(self._model_modified,
                                          'children_items')
-        self._add_workflow_items(self.scene_model.children)
 
     def _model_modified(self, event):
         """The scene model got modified."""
@@ -633,22 +610,9 @@ class SceneView(QWidget):
                                           self._scene_obj_cache,
                                           self.tab_visible)
 
-        self._remove_workflow_items(event.removed)
-
         for model in event.added:
             create_object_from_model(self.layout, model, self.inner,
                                      self._scene_obj_cache, self.tab_visible)
-        self._add_workflow_items(event.added)
-
-    def _add_workflow_items(self, models):
-        """Add new WorkflowItemModel instances to the workflow model."""
-        items = [m for m in models if isinstance(m, WorkflowItemModel)]
-        self.workflow_model.add_items(items)
-
-    def _remove_workflow_items(self, models):
-        """Remove WorkflowItemModel instances from the workflow model."""
-        items = [m for m in models if isinstance(m, WorkflowItemModel)]
-        self.workflow_model.remove_items(items)
 
     def _update_widget_states(self):
         """The global access level has changed. Notify all widgets in the
