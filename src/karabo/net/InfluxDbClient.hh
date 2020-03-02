@@ -1,6 +1,5 @@
 /* 
  * File:   InfluxDbClient.hh
- * Author: <serguei.essenov@xfel.eu>, <raul.costa@xfel.eu>
  *
  * Created on November 14, 2019, 9:57 AM
  * 
@@ -224,6 +223,14 @@ namespace karabo {
 
             void flushBatchImpl(const InfluxResponseHandler &respHandler = InfluxResponseHandler());
 
+            /**
+             * Gets the raw form of the http Authorization header with values of dbUser and dbPassword
+             * separated by a colon and base64 encoded.
+             *
+             * @return The raw form of the Authorization header.
+             */
+            std::string getRawBasicAuthHeader();
+
        private:
 
             std::string m_url;
@@ -249,6 +256,9 @@ namespace karabo {
             boost::mutex m_bufferMutex;
             std::stringstream m_buffer;
             std::uint32_t m_nPoints;
+            std::string m_dbUser;
+            std::string m_dbPassword;
+            bool m_dbUseGateway;
         };
 
     } // namespace net
