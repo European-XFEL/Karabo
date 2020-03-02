@@ -212,17 +212,6 @@ class DisplayTimeModel(BaseWidgetObjectData):
     time_format = String('%H:%M:%S')
 
 
-class WorkflowItemModel(BaseWidgetObjectData):
-    """ A model for a WorkflowItem
-    """
-    # The device id for this item
-    device_id = String
-    # A string describing the font for this item
-    font = String
-    # What time of item is this?
-    klass = Enum('WorkflowItem', 'WorkflowGroupItem')
-
-
 class XYPlotModel(BaseWidgetObjectData):
     """ A model for XYPlot"""
 
@@ -404,25 +393,6 @@ def __scene_link_writer(write_func, model, parent):
     if model.background != '':
         element.set(NS_KARABO + 'background', model.background)
 
-    return element
-
-
-@register_scene_reader('WorkflowItem', version=1)
-@register_scene_reader('WorkflowGroupItem', version=1)
-def __workflow_item_reader(read_func, element):
-    traits = _read_geometry_data(element)
-    traits['klass'] = element.get(NS_KARABO + 'class')
-    traits['device_id'] = element.get(NS_KARABO + 'text')
-    traits['font'] = element.get(NS_KARABO + 'font')
-    return WorkflowItemModel(**traits)
-
-
-@register_scene_writer(WorkflowItemModel)
-def __workflow_item_writer(write_func, model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    _write_class_and_geometry(model, element, model.klass)
-    element.set(NS_KARABO + 'text', model.device_id)
-    element.set(NS_KARABO + 'font', model.font)
     return element
 
 
