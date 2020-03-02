@@ -6,7 +6,7 @@ from traits.api import Enum, Instance
 from karabo.common.api import BaseSavableModel
 
 # Hey Code Reviewers! Be sure to ask questions when this value changes!
-EXPECTED_HASH = "b9b46f2703744d709ec124c0242879cb179fd10bfaaf0fd84d957d32bb7abe7e"  # noqa
+EXPECTED_HASH = "4a51d3caa456e07de91d6eddcb79e958e29373985ce13ea0f978528dc447dabf"  # noqa
 FAILURE_MSG = """
 ##############################################################################
                             !!! WARNING !!!
