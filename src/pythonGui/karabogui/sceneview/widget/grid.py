@@ -2,7 +2,9 @@ from PyQt5.QtCore import pyqtSlot, Qt, QTimer
 from PyQt5.QtGui import QPainter, QPen, QColor, QPixmap
 from PyQt5.QtWidgets import QWidget
 
-GRID_STEP = 10
+from karabogui.sceneview.const import GRID_STEP
+
+
 GRID_COLOR = (200, 200, 200, 160)
 RESIZE_THROTTLE = 100
 PEN_SIZE = 0.5
