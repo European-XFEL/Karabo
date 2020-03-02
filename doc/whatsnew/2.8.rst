@@ -27,5 +27,188 @@ The **most relevant improvements**, fixes and changes are:
           ``boost::dynamic_pointer_cast`` or by calling the public method
           ``slotGetCofiguration``.
 
+- MDL API: The `Image` element is now supported natively and DAQ compatible!
+
+
 Detailed Merge-Log
 ==================
+
+Bound/cpp core
+++++++++++++++
+
+- Bound: proper lock protection in deviceSchema and config parameters of the device always need lock protection to avoid race conditions. !4062
+- Bound: PythonDevice.get - copy hash and its vector. It should not be possible to change the content of PythonDevice._parameters without the proper lock. !4081
+- Bound: optionally set server hostname !4094
+- Bound: Fix silent validation exceptions (BOUND API) !4152
+- Bound: 'readOnly' attribute for TableElements in Bound-Python. !4212
+- Bound: Fix putting list into hash with integer as large as uint64 !4167
+- C++: no extra thread for server process !4057
+- C++: Validation parameters in C++ !4158
+- C++: Enforce row schema for table elements. Tables without row description make no sense - and harm the GUI. !4100
+- C++: optionally set server hostname !4095
+- C++: Fix file logger index file !4130
+- C++: Fix synchronous code paths in asyncReadXY. These paths have to read all (not only '_some') data. !4146
+- C++: Table element 'connections' in the 'OutputPanel' configuration is now readOnly. !4178
+- C++: Trust train ids from time server even if reset. Before, the C++ sever assumed strongly monotonous increase of train ids. !4193
+- C++: Add filter for network appender !4204 !4220
+- C++: Log topic and avoid using any _beats topic !4153
+- C++: all SignalSlotable now carry a "type" in instanceInfo !4226
+- C++: Fix for output channel schema updates - schema Hashes must not contain "__classId" key !4209
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+
+- BUILD: Add cmake build alternative !4229
+- DEPS: karabo develop processes DEPENDS tags correctly !4148
+- DEPS: added pugixml to dependencies !4189
+- MDL: add defaultValue to middlelayerserver help !4090
+- MDL: Help option in krabo-middlelayerserver !4079
+- InfluxDB: Add influx migration traceability. Adapt to use authenticated access in the Influx Server. !4183
+- CI: re-enable X server for conda !4231
+- WEB: optionally set hostname on webserver !4201
+
+Tests
++++++
+
+- CI: use a specific broker for tests !4073
+- CI: Fix CI display settings for headless Qt tests !4097
+- C++: Longer timeout in JMS test with 100 messages !4098
+- C++: Stabilise strand test. Ensure that handler cannot be called when captured variables are dead. !4096
+- C++: Take care that the slots in LockTest always reply !4106
+- C++: Fix for failures of DataLogging_Test on the CI !4112
+- C++: Fix device integration test. Order guarantee does not apply per process, but only per sender/receiver. !4218
+- C++: Relax timeouts in signal slotable test. Hijacked this to remove also some confusing casts elsewhere... !4202
+- C++ logger tests: aggressively long timeouts for influxDB !4223
+- C++: relax timing test !4228
+- C++: more reliable DeviceClient_Test::testGetSchemaNoWait. no repeated triggering of schema requests. longer timeout !4219
+- More fixes to Influx Data Logging and its integration tests. !4200
+- Fix for Influx Logger Integration Test getting stuck or crashing when Influx is not available !4147
+- Fix data logging integration tests !4166
+- C++: Fixes for data loggers to stabilise tests !4170
+
+Middlelayer Core
+++++++++++++++++
+
+- MDL: Fix invalid configuration retrieved for PropTestMdl device. !4074
+- MDL: Enforce row schema for vector hashes !4078
+- MDL: Provide a copy of the system topology when working with it !4075
+- MDL: set server hostname !4076 !4113
+- MDL: Implement Image Element and provide ImageData !4145
+
+Core Devices
+++++++++++++
+
+- GUI Server: Send multiple devices configurations changes in a single hash to the connected GUI clients. !4058
+- GUI Server: Forward project manager signal of changed project uuids to GUI clients !4110
+- GUI Server: Fix GuiServerDevice Schema bookkeeping !4137
+- GUI Server: Add slotDisconnectClient !4164
+- Alarm Service: Fix alarm service and thus spurious integration test failures !4117
+- Data Logger: make flush reliable !4171
+- Datalog Reader: Logreader for influxDB properly replies error (and not empty result) !4168
+- Datalog Reader: slotGetConfigurationFromPast now throws instead of reply empty !4157
+- Datalog Reader: Count slot calls for history !4224
+- DataLogger: Get rid of DataLogger::handleChanged and DataLogger::handleSchemaUpdatedDelegate 'handleChanged' and 'handleSChemaUpdated' completely to 'DeviceData' and its derived classes. !4180
+- InfluxDB: InfluxDbClient now configurable and automatically flushing the batch !4177
+- InfluxDB: Separate influx url for read and write !4216
+
+Graphical User Interface
+++++++++++++++++++++++++
+
+- GUI: Provide a const type definition !4071
+- GUI: Refactor if a proxy action is allowed !4024
+- GUI: Fix invalid indices in table element !3967
+- GUI: Clean application on every teardown !4059
+- GUI: Provide generic support for access levels !4043
+- GUI: Cleanup the configuration singleton !4050
+- GUI: More cleanup in the table element !4061
+- GUI: Drastically increase performance of daemon widget !4069
+- GUI: Access level dependent delegates - button clickable state in daemon widget !4044
+- GUI: Rename system and tree in topology !4064
+- GUI: Clean a bit the globals file !4065
+- GUI: Clean and fix the spin box focuses !4066
+- GUI: Remove host node from topology if no servers !4063
+- GUI: Clean even further the table element !4072
+- GUI: provide more colors in the cycler !4080
+- GUI: Align tests without row schema in table element !4086
+- GUI: Deprecate EditableOptionsBox !4085
+- GUI: Clean and unify spinboxes once more !4083
+- GUI: Clean up and unify table element with the schema hash. Fairly speed up the processing !4077
+- GUI: Clean edit list controller !4089
+- GUI: Enable log axis in viewbox if enabled !4093
+- GUI: Move create html hash to native !4088
+- GUI: Color table button edit conf !4087
+- GUI: Cleanup the wheel double edit !4056
+- GUI: Clean hex widget and provide state awareness !4084
+- GUI: Little cleanup of the time axis !4103
+- GUI: Clean table button event state in configurator !4101
+- GUI: Prevent items leaving scene completely by dragging !4105
+- GUI: Clean the display controllers from slots !4099
+- GUI: Align the wheeledit tests !4109
+- GUI: Enable closing of the alarm panel !4102
+- GUI: Let the project manager know which items we store !4108
+- GUI: Histogram auxplot !4111
+- GUI: Fix a typo in the messagebox for scene retrieval !4116
+- GUI: Configurator mandatory optimization !4082
+- GUI: Enable moving of rows in the table element !4115
+- GUI: Provide a bunch of tests for the table element !4118
+- GUI: Don't show documentation link for classes in topology !4120
+- GUI: Add icons in the table context !4119
+- GUI: Provide several icons for the project items context menus !4121
+- GUI: Escape in info popup for value descriptions !4123
+- GUI: Provide more error handling in GUI network !4125
+- GUI: Char editor is validated !4132
+- GUI: Show a reasonable time format in configuration from past !4133
+- GUI server: When disconnecting a client, better trigger device disconnection under mutex !4131
+- GUI: HexLine edit validator !4128
+- GUI: Change font on scene generation: `Ubuntu` -> `Sans Serif` !4139 !4140
+- GUI: Increase border allowance on widget resize !4138
+- GUI: Store the closable panel configuration !4136
+- GUI: Toggle curve visibility by clicking on legend boxes !4135
+- GUI: Implement vector xy graph !4151
+- GUI: Provide local time on conf from past feedback !4156
+- GUI: Initialize the alarm state of the project device correctly !4126
+- GUI: Fix replace scene from file !4161
+- GUI: Provide a size hint for the graph widgets !4176
+- GUI: Accurate movement of items on the scene !4185
+- GUI: Implement GridView in Scene !4175
+- GUI: Align the copyright date in the about dialog !4188
+- GUI: None timestamp protection in tooltip of image widgets !4192
+- GUI: Set the background of the images to transparent !4191
+- GUI: Make double click in project expand and fold nodes !4174
+- GUI: Enable image export on plot items !4173
+- GUI: Account for reconfigure failures in the client !4197
+- GUI: Fix the resizing of layouts on the scene !4186
+- GUI: Setup an about icon in the topology and project for context !4194
+- GUI: Show empty plot when receiving empty vector in vector graph !4181
+- GUI: Select project device in topology !4172
+- GUI: Port MultiCurve widget to PyQtgraph !4154
+- GUI: Executed message boxes automatically close after popup seconds (60) !4203
+- GUI: Request reply of execute errors in the client !4199
+- GUI: Transparent graph view in plots !4182
+- GUI: Separate trendline button click and drag from historic data retrieval !4149
+- GUI: Don't use separators when adding actions to viewbox !4215
+- GUI: Better debug diagnostic when projects are loaded multiple times !4222
+- GUI: Adapt the unit test for inf values in VectorGraphs !4214
+- GUI: Enable duplicate of devices without indexing !4227
+- GUI: Account for scene panel padding in Qt5 !4217
+- GUI: Modify the GUI background processing for GIL !4235
+- GUI: Select the topology on disconnect !4232
+- GUI: Middle panel icons !4241
+- GUI: Show topology panel on show project device !4239
+- GUI: Different legend style for plots !4238
+- GUI: Check vector size in vector xy graph !4237
+- GUI: Performance increase alarm panel - Rework !4236
+- GUI: Fix loss of configuration when renaming a device in project !4225
+- GUI: Implement first AccessRoles for scene and macro editing !4187
+- GUI: Use largest triangle three buckets for downsampling !4210
+- GUI: Provide initReply from instantiation on failure !4243
+- GUI: Close duplicated scenes by simple when they are unattached !4247
+- GUI: Fix update dialog not giving output in Qt5 !4244
+- GUI: Provide detailed text in message boxes and fix a few !4248
+- GUI: Account for None values on the scene for the most important display widgets !4250
+- GUI: Provide `Abort` and `Halt` with icon !4213
+- GUI: Set the application style to Fusion !4234
+- GUI: Scene grid snapping !4254
+- GUI: Fix the console input !4260
+- GUI: Set the minimum height of number line edits !4258
+- GUI: Refactor the downsampling to agnostic range !4261
