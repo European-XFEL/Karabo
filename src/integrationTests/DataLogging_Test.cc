@@ -189,7 +189,9 @@ const unsigned int DataLogging_Test::m_flushIntervalSec = 1u;
 
 
 DataLogging_Test::DataLogging_Test()
-    : m_server("DataLoggingTestServer"), m_deviceId("PropertyTestDevice"), m_fileLoggerDirectory("dataLoggingTest"),
+    : m_server("DataLoggingTestServer"),
+    m_deviceId("PropertyTestDevice"),
+    m_fileLoggerDirectory("dataLoggingTest"),
     m_changedPath(false), m_oldPath() {
 
 }
@@ -261,6 +263,10 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
         }
         manager_conf.set("logger.InfluxDataLogger.urlWrite", influxUrl.str());
         manager_conf.set("logger.InfluxDataLogger.urlRead", influxUrl.str());
+
+        // The testing environments never use the default gateway.
+        manager_conf.set("logger.InfluxDataLogger.useGateway", false);
+
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
     }
