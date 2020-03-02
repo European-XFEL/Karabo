@@ -1,6 +1,5 @@
 /*
  * File:   InfluxLogReader.cc
- * Author: <raul.costa@xfel.eu>
  *
  * Created on November 4, 2019, 9:09 AM
  *
@@ -116,7 +115,6 @@ namespace karabo {
                     .description("URL should be given in form: tcp://host:port")
                     .assignmentOptional().defaultValue("tcp://localhost:8086")
                     .commit();
-
         }
 
 
@@ -124,12 +122,31 @@ namespace karabo {
             karabo::devices::DataLogReader(cfg) {
             m_hashSerializer = BinarySerializer<Hash>::create("Bin");
             m_schemaSerializer = BinarySerializer<Schema>::create("Bin");
+
+            // TODO: Use more appropriate names for the env var names - the names below are the ones currently used by
+            //       the CI environment.
+            std::string dbUser;
+            if (getenv("KARABO_TEST_INFLUXDB_ADMUSER")) {
+                dbUser = getenv("KARABO_TEST_INFLUXDB_ADMUSER");
+            } else {
+                dbUser = "infadm";
+            }
+            std::string dbPassword;
+            if (getenv("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD")) {
+                dbPassword = getenv("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD");
+            } else {
+                dbPassword = "admpwd";
+            }
+
             const std::string topic(getTopic());
             const std::string url(cfg.get<std::string>("url"));
             Hash dbClientCfg;
             dbClientCfg.set<std::string>("dbname", topic);
             dbClientCfg.set<std::string>("url", url);
             dbClientCfg.set<std::string>("durationUnit", "u");
+            dbClientCfg.set<std::string>("dbUser", dbUser);
+            dbClientCfg.set<std::string>("dbPassword", dbPassword);
+            dbClientCfg.set<bool>("useGateway", false); // At least for now, the reader never uses the Influx Gateway.
             m_influxClient = Configurator<InfluxDbClient>::create("InfluxDbClient", dbClientCfg);
             m_durationUnit = toInfluxDurationUnit(TIME_UNITS::MICROSEC);
         }
