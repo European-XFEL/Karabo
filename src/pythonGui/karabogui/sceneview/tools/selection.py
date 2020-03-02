@@ -28,14 +28,6 @@ class ProxySelectionTool(BaseSceneTool):
                                 {'proxy': device})
             return
 
-        workflow = scene_view.workflow_at_position(event.pos())
-        if workflow is not None:
-            # Simply launch the event to show the device with the deviceId
-            # from the workflow widget!
-            deviceId = workflow.model.device_id
-            broadcast_event(KaraboEvent.ShowDevice,
-                            {'deviceId': deviceId})
-
     def mouse_move(self, scene_view, event):
         pass
 

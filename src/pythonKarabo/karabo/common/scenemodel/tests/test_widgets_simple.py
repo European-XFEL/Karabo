@@ -141,17 +141,3 @@ def test_timelabel():
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert read_model.time_format == '%H:%M:%S'
-
-
-def test_workflowitem_model():
-    for klass_name in ('WorkflowItem', 'WorkflowGroupItem'):
-        traits = _geometry_traits()
-        traits['device_id'] = 'bar'
-        traits['font'] = UBUNTU_FONT_SPEC
-        traits['klass'] = klass_name
-        model = api.WorkflowItemModel(**traits)
-        read_model = single_model_round_trip(model)
-        _assert_geometry_traits(read_model)
-        assert read_model.device_id == 'bar'
-        assert read_model.font == UBUNTU_FONT_SPEC
-        assert read_model.klass == klass_name

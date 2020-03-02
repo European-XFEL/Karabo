@@ -4,4 +4,3 @@ from .grid import GridView
 from .label import LabelWidget
 from .link import SceneLinkWidget, WebLinkWidget
 from .unknown import UnknownSvgWidget, UnknownWidget
-from .workflow import WorkflowItemWidget

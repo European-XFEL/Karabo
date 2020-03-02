@@ -197,7 +197,7 @@ class SystemTreeModel(QAbstractItemModel):
             return Qt.NoItemFlags
 
         ret = Qt.ItemIsEnabled | Qt.ItemIsSelectable
-        if node.level > 0:
+        if node.level > 1:
             ret |= Qt.ItemIsDragEnabled
         return ret
 
