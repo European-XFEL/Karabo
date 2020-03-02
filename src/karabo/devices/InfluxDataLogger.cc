@@ -302,6 +302,12 @@ namespace karabo {
                     .init()
                     .commit();
 
+            BOOL_ELEMENT(expected).key("useGateway")
+                    .displayedName("Use Influx Gateway")
+                    .description("For logging, use Influx gateway instead of connecting directly to a server instance.")
+                    .assignmentOptional().defaultValue(false)
+                    .commit();
+
             UINT32_ELEMENT(expected).key("maxBatchPoints")
                     .displayedName("Max. batch points")
                     .description("Max number of InfluxDB points in batch")
@@ -314,10 +320,33 @@ namespace karabo {
         InfluxDataLogger::InfluxDataLogger(const karabo::util::Hash& input)
             : DataLogger(input)
             , m_topic(getTopic()) {
+
             Hash config("url", input.get<std::string>("url"),
                         "dbname", m_topic,
                         "durationUnit", DUR,
                         "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
+
+            // TODO: Use more appropriate names for the env var names - the names below are the ones currently used by
+            //       the CI environment.
+
+            std::string dbUser;
+            if (getenv("KARABO_TEST_INFLUXDB_ADMUSER")) {
+                dbUser = getenv("KARABO_TEST_INFLUXDB_ADMUSER");
+            } else {
+                dbUser = "infadm";
+            }
+
+            std::string dbPassword;
+            if (getenv("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD")) {
+                dbPassword = getenv("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD");
+            } else {
+                dbPassword = "admpwd";
+            }
+
+            config.set<std::string>("dbUser", dbUser);
+            config.set<std::string>("dbPassword", dbPassword);
+            config.set<bool>("useGateway", input.get<bool>("useGateway"));
+
             m_client = Configurator<InfluxDbClient>::create("InfluxDbClient", config);
         }
 
