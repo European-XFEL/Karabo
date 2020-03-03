@@ -1,14 +1,31 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QAction, QFrame, QLabel
 from traits.api import Instance, Str, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayStateColorModel
 from karabogui.binding.api import StringBinding
-from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.indicators import get_state_color
 from karabogui.util import generateObjectName
+
+MINIMUM_SIZE = 10
+SIZE_HINT_WIDTH = 30
+SIZE_HINT_HEIGHT = 20
+
+
+class FrameWidget(QLabel):
+    def __init__(self, parent=None):
+        super(FrameWidget, self).__init__(parent)
+        self.setAutoFillBackground(True)
+        self.setAlignment(Qt.AlignCenter)
+        self.setMinimumWidth(MINIMUM_SIZE)
+        self.setMinimumHeight(MINIMUM_SIZE)
+        self.setWordWrap(True)
+        self.setFrameStyle(QFrame.Box | QFrame.Plain)
+
+    def sizeHint(self):
+        return QSize(SIZE_HINT_WIDTH, SIZE_HINT_HEIGHT)
 
 
 @register_binding_controller(ui_name='State Color Field',
@@ -24,14 +41,7 @@ class DisplayStateColor(BaseBindingController):
     _style_sheet = Str
 
     def create_widget(self, parent):
-        widget = QLabel(parent)
-        widget.setAutoFillBackground(True)
-        widget.setAlignment(Qt.AlignCenter)
-        widget.setMinimumWidth(32)
-        widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
-        widget.setWordWrap(True)
-        widget.setFrameStyle(QFrame.Box | QFrame.Plain)
-
+        widget = FrameWidget(parent)
         objectName = generateObjectName(self)
         self._style_sheet = ("QLabel#{}".format(objectName) +
                              " {{ background-color : rgba{}; }}")
