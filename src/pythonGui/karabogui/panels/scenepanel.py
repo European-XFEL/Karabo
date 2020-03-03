@@ -155,6 +155,10 @@ class ScenePanel(BasePanelWidget):
         self.scene_view.decline_editor_changes()
 
     @pyqtSlot(bool)
+    def toggle_snap_to_grid(self, is_checked):
+        self.scene_view.snap_to_grid = is_checked
+
+    @pyqtSlot(bool)
     def design_mode_changed(self, is_checked):
         self.drawing_tool_bar.setVisible(is_checked)
         text = self.design_mode_text(is_checked)
@@ -201,6 +205,14 @@ class ScenePanel(BasePanelWidget):
                          for a in self.create_tool_actions()]
         self._build_qaction_group(mode_qactions + tool_qactions)
         self.qactions.extend(mode_qactions)
+        self.qactions.append(self._build_separator())
+
+        # Add grid mode action
+        show_grid_action = QAction(icons.grid, 'Snap to Grid', self)
+        show_grid_action.setCheckable(True)
+        show_grid_action.setChecked(self.scene_view.snap_to_grid)
+        show_grid_action.triggered.connect(self.toggle_snap_to_grid)
+        self.qactions.append(show_grid_action)
         self.qactions.append(self._build_separator())
 
         self.qactions.extend(tool_qactions)

@@ -18,13 +18,15 @@ class TestSelectionModel(unittest.TestCase):
 
     def test_selection_model(self):
         self.assertFalse(self.selection_model.has_selection())
+        endpoint_x, endpoint_y = (100, 100)
 
-        line_model = LineModel(x1=0, y1=0, x2=100, y2=100)
+        line_model = LineModel(x1=0, y1=0, x2=endpoint_x, y2=endpoint_y)
         line_shape = LineShape(model=line_model)
         self.selection_model.select_object(line_shape)
         self.assertTrue(self.selection_model.has_selection())
 
-        rect_model = RectangleModel(x=100, y=100, width=100, height=100)
+        rect_model = RectangleModel(x=endpoint_x, y=endpoint_y,
+                                    width=100, height=100)
         rect_shape = RectangleShape(model=rect_model)
         self.selection_model.select_object(rect_shape)
         self.assertTrue(self.selection_model.has_selection())
@@ -38,7 +40,9 @@ class TestSelectionModel(unittest.TestCase):
         for obj in self.selection_model:
             self.assertIn(obj, (line_shape, rect_shape))
 
-        exp_rect = QRect(0, 0, 199, 199)
+        exp_rect = QRect(line_model.x1, line_model.y1,
+                         rect_model.x + rect_model.width,
+                         rect_model.y + rect_model.height)
         sel_rect = self.selection_model.get_selection_bounds()
         self.assertEqual(exp_rect, sel_rect)
 
