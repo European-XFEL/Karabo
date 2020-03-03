@@ -14,7 +14,6 @@ printAndRun() {
     eval $cmnd
 }
 
-. ci/utils/enable_internet.sh
 
 printAndRun pushd ./src/pythonGui/
 printAndRun conda devenv
