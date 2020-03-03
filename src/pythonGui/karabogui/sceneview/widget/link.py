@@ -38,7 +38,7 @@ class SceneLinkWidget(QPushButton):
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
-            boundary = self.rect().adjusted(2, 2, -2, -2)
+            boundary = self.rect().adjusted(0, 0, -1, -1)
             pt = boundary.topLeft()
             rects = [QRectF(QRect((pt), QSize(7, 7))),
                      QRectF(QRect((pt) + QPoint(11, 0), QSize(7, 7)))]
@@ -154,7 +154,7 @@ class WebLinkWidget(QPushButton):
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
-            boundary = self.rect().adjusted(2, 2, -2, -2)
+            boundary = self.rect().adjusted(0, 0, -1, -1)
             pt = boundary.topLeft()
             rects = [QRectF(QRect((pt), QSize(7, 7))),
                      QRectF(QRect((pt) + QPoint(11, 0), QSize(7, 7)))]
