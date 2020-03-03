@@ -54,7 +54,7 @@ class SceneView(QWidget):
 
     resetToSelectionTool = pyqtSignal()
 
-    def __init__(self, model=None, design_mode=False, parent=None):
+    def __init__(self, model=None, parent=None):
         super(SceneView, self).__init__(parent)
 
         layout_model = FixedLayoutModel(x=0, y=0, width=SCENE_MIN_WIDTH,
@@ -91,6 +91,7 @@ class SceneView(QWidget):
         # other tools need the parent widget to handle mouse event won't
         # trigger the design_mode behavior
         self._design_mode = False
+        self.snap_to_grid = True
         self.set_scene_edit_mode(False)
         self.tab_visible = False
         self._scene_obj_cache = {}

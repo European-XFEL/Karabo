@@ -1,13 +1,11 @@
-import math
-
 from PyQt5.QtCore import Qt, QRect, QPoint
 from traits.api import HasStrictTraits, Any, Enum, Instance, String
 
 from karabogui.binding.api import DeviceProxy
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.sceneview.bases import BaseSceneTool
-from karabogui.sceneview.const import GRID_STEP
-from karabogui.sceneview.utils import save_painter_state
+from karabogui.sceneview.utils import (
+    round_down_to_grid, round_up_to_grid, save_painter_state)
 
 
 class ProxySelectionTool(BaseSceneTool):
@@ -191,10 +189,11 @@ class SceneSelectionTool(BaseSceneTool):
         trans = mouse_pos - self._moving_pos
 
         # Calculate snap translation
-        origin = scene_view.selection_model.get_item_rect().topLeft()
-        trans = _get_snap_offset(origin, offset=trans)
-        # Translate only if the offset on one/both of the axis is greater
-        # than abs(GRID_STEP) (e.g. QPoint(-10, 0))
+        if scene_view.snap_to_grid:
+            origin = scene_view.selection_model.get_item_rect().topLeft()
+            trans = _get_snap_offset(origin, offset=trans)
+
+        # Translate only if there is an offset (can be zero from snap calc)
         if trans:
             for c in scene_view.selection_model:
                 c.translate(trans)
@@ -208,14 +207,19 @@ class SceneSelectionTool(BaseSceneTool):
         og = self._hover_item.geometry()
         g = QRect(og)
         posX, posY = mouse_pos.x(), mouse_pos.y()
+
+        # Get snap position if scene is in grid mode
+        if scene_view.snap_to_grid:
+            posX, posY = round_down_to_grid(posX), round_down_to_grid(posY)
+
         if "t" in self._resize_type:
-            g.setTop(_round_down(posY))
+            g.setTop(posY)
         elif "b" in self._resize_type:
-            g.setBottom(_round_down(posY))
+            g.setBottom(posY)
         if "l" in self._resize_type:
-            g.setLeft(_round_down(posX))
+            g.setLeft(posX)
         elif "r" in self._resize_type:
-            g.setRight(_round_down(posX))
+            g.setRight(posX)
 
         min_size = self._hover_item.minimumSize()
         max_size = self._hover_item.maximumSize()
@@ -242,17 +246,7 @@ def _get_snap_offset(qpoint, offset=QPoint()):
 
 
 def _round_func(direction):
-    func = _round_down
+    func = round_down_to_grid
     if direction <= 0:
-        func = _round_up
+        func = round_up_to_grid
     return func
-
-
-def _round_up(num):
-    """Round up to the nearest grid step"""
-    return math.ceil(num / GRID_STEP) * GRID_STEP
-
-
-def _round_down(num):
-    """Round down to the nearest grid step"""
-    return math.floor(num / GRID_STEP) * GRID_STEP
