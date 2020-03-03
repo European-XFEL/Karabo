@@ -4,10 +4,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from contextlib import contextmanager
+import math
 
 from PyQt5.QtGui import QFont, QFontMetrics
 
-from .const import SCREEN_MAX_VALUE
+from .const import GRID_STEP, SCREEN_MAX_VALUE
 
 
 def calc_bounding_rect(collection):
@@ -20,9 +21,12 @@ def calc_bounding_rect(collection):
     for item in collection:
         rect = item.geometry()
         left = min(left, rect.left())
-        right = max(right, rect.right())
         top = min(top, rect.top())
-        bottom = max(bottom, rect.bottom())
+
+        # Qt right and bottom are always width - 1 and height - 1,
+        # respectively. Therefore, we correct it.
+        right = max(right, rect.right() + 1)
+        bottom = max(bottom, rect.bottom() + 1)
 
     # Return an empty rect when nothing is there
     if left == SCREEN_MAX_VALUE and top == SCREEN_MAX_VALUE:
@@ -52,3 +56,13 @@ def save_painter_state(painter):
     painter.save()
     yield
     painter.restore()
+
+
+def round_down_to_grid(num):
+    """Round down to the nearest grid step"""
+    return math.floor(num / GRID_STEP) * GRID_STEP
+
+
+def round_up_to_grid(num):
+    """Round up to the nearest grid step"""
+    return math.ceil(num / GRID_STEP) * GRID_STEP
