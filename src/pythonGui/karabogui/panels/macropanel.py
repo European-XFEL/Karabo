@@ -89,6 +89,12 @@ class MacroPanel(BasePanelWidget):
         return False
 
     # -----------------------------------------------------------------------
+
+    def setReadOnly(self, value):
+        """This method is externally called for `AccessLevel` dependent view"""
+        self.ui_editor.setReadOnly(value)
+
+    # -----------------------------------------------------------------------
     # Karabo Events
 
     def _event_connect(self, data):
