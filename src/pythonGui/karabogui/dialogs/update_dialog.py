@@ -7,6 +7,7 @@ import os.path as op
 import re
 import requests
 from subprocess import check_output, STDOUT, CalledProcessError
+import sys
 
 from lxml import etree
 import pkg_resources
@@ -97,24 +98,25 @@ def download_file_for_tag(tag):
     wheel_file, err = _download_file_for_tag(tag)
 
     yield wheel_file, err
-
     if wheel_file is not None:
         os.remove(wheel_file)
 
 
 def uninstall_package():
     try:
-        output = check_output(['pip', 'uninstall', '--yes', _PKG_NAME],
+        output = check_output([sys.executable, '-m', 'pip',
+                               'uninstall', '--yes', _PKG_NAME],
                               stderr=STDOUT)
         return output.decode()
-    except CalledProcessError:
-        return 'Error uninstalling package. Is it installed?'
+    except CalledProcessError as e:
+        return f'Error uninstalling package. Is it installed? {e}'
 
 
 def install_package(wheel_file):
     """Installs a given wheel file"""
     try:
-        output = check_output(['pip', 'install', '--upgrade', wheel_file],
+        output = check_output([sys.executable, '-m', 'pip',
+                               'install', '--upgrade', wheel_file],
                               stderr=STDOUT)
         # Reload the entry points
         load_extensions()
@@ -325,10 +327,12 @@ def main():
                     help='Desired package version (tag)')
     ap.add_argument('-u', '--uninstall', action='store_true', required=False,
                     help='Uninstalls any previous versions')
+    ap.add_argument('-l', '--latest', action='store_true', required=False,
+                    help='Upgrade to the latest tag')
 
     args = ap.parse_args()
 
-    if not args.uninstall and not args.tag:
+    if not any([args.uninstall, args.tag, args.latest]):
         print('At least one option must be given! Please use -h for help.')
         return
 
@@ -340,6 +344,12 @@ def main():
     if args.tag:
         tag = args.tag[0]
 
+        print('Installing {} version {}\n'.format(_PKG_NAME, tag))
+        output = update_package(tag)
+        print(output)
+
+    if args.latest:
+        tag = get_latest_version()
         print('Installing {} version {}\n'.format(_PKG_NAME, tag))
         output = update_package(tag)
         print(output)
