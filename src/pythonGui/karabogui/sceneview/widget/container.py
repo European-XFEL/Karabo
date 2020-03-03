@@ -195,7 +195,7 @@ class ControllerContainer(QWidget):
             self.is_editable = True
             controller.proxy.on_trait_change(
                 self._on_user_edit, 'edit_value,binding.config_update')
-            layout.setContentsMargins(2, 2, 2, 2)
+            layout.setContentsMargins(1, 1, 1, 1)
         else:
             layout.setContentsMargins(0, 0, 1, 1)
 

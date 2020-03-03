@@ -18,6 +18,7 @@ from karabo.native import AccessMode
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
 from karabogui.enums import ProjectItemTypes
+from karabogui.sceneview.utils import round_down_to_grid
 from karabogui.sceneview.widget.utils import get_proxy
 
 _STACKED_WIDGET_OFFSET = 30
@@ -75,7 +76,8 @@ class ConfigurationDropHandler(SceneDnDHandler):
         """
         # Horizonal layout
         layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight,
-                                      x=pos.x(), y=pos.y())
+                                      x=round_down_to_grid(pos.x()),
+                                      y=round_down_to_grid(pos.y()))
         # Add label to layout model
         label_model = LabelModel(text=item['label'], font=QFont().toString(),
                                  foreground='#000000')
