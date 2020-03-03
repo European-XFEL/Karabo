@@ -3,12 +3,6 @@
 set -e
 set -o pipefail
 
-printAndRun() {
-    typeset cmnd="$*"
-    echo cmnd=$cmnd
-    eval $cmnd
-}
-
 # This script is responsible for deploying the generated package and mirror
 
 CONDA_CHANNEL_PATH=/var/www/html/karabo/channel
@@ -22,18 +16,18 @@ KARABOGUI_PKG=$(conda info --root)/conda-bld/${PLATFORM}/karabogui-${CI_COMMIT_R
 . ci/utils/enable_internet.sh
 
 # Deploy the package
-printAndRun rsync --exclude \".git\" --rsh=\"sshpass -p \"${XKARABO_PWD}\" ssh -o StrictHostKeyChecking=no -l xkarabo\" \
+rsync --exclude \".git\" --rsh="sshpass -p \"${XKARABO_PWD}\" ssh -o StrictHostKeyChecking=no -l xkarabo" \
                   --progress ${KARABOGUI_PKG} ${REMOTE_CHANNEL_PATH}/${PLATFORM}/
 
 # Deploy the mirror if exists
 if [ "$(ls -A /tmp/mirror/)" ]; then
-    printAndRun rsync -r --exclude \".git\" --rsh=\"sshpass -p \"${XKARABO_PWD}\" ssh -o StrictHostKeyChecking=no -l xkarabo\" \
+    rsync -r --exclude \".git\" --rsh="sshpass -p \"${XKARABO_PWD}\" ssh -o StrictHostKeyChecking=no -l xkarabo" \
                          --progress /tmp/mirror/* ${REMOTE_CHANNEL_PATH}/mirror/
 fi
 
 # the remote host should have a conda installation with conda-build available in the home folder
 
 # Rebuild channel indexes
-printAndRun sshpass -p ${XKARABO_PWD} ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} bash \"source ~/miniconda3/bin/activate; cd ${CONDA_CHANNEL_PATH}; conda index .;\"
+sshpass -p ${XKARABO_PWD} ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "source ~/miniconda3/bin/activate; cd ${CONDA_CHANNEL_PATH}; conda index .;"
 
 . ci/utils/disable_internet.sh
