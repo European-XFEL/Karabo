@@ -141,9 +141,9 @@ class PanelWrangler(QObject):
         macro_editable = access_role_allowed(AccessRole.MACRO_EDIT)
         for panel in self._project_item_panels.values():
             if isinstance(panel, ScenePanel):
-                panel.ac_design_mode.setVisible(scene_editable)
+                panel.setReadOnly(scene_editable)
             elif isinstance(panel, MacroPanel):
-                panel.ui_editor.setReadOnly(not macro_editable)
+                panel.setReadOnly(not macro_editable)
 
     # -------------------------------------------------------------------
     # private interface
