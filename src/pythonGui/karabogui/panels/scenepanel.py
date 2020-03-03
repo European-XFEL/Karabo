@@ -170,6 +170,14 @@ class ScenePanel(BasePanelWidget):
         return "Change to design mode"
 
     # ----------------------------
+
+    def setReadOnly(self, value):
+        """This method is externally called for `AccessLevel` dependent view"""
+        if self.scene_view.design_mode and not value:
+            self.scene_view.design_mode = False
+        self.ac_design_mode.setVisible(value)
+
+    # ----------------------------
     # ToolBar and Action creators
 
     def create_toolbar_actions(self, connected_to_server):
