@@ -37,7 +37,7 @@ class TestDisplayColorBool(GuiTestCase):
         assert controller.widget is None
 
     def test_exercise_code_paths(self):
-        target = 'karabogui.controllers.display.colorbool.QSvgWidget'
+        target = 'karabogui.controllers.display.colorbool.SvgWidget'
         with patch(target, new=MockQSvgWidget):
             self.proxy.value = False
 
