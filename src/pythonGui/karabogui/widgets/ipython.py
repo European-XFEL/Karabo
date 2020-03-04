@@ -153,7 +153,7 @@ class KernelClient(inprocess.QtInProcessKernelClient):
 
     def start_channels(self):
         # magic: skip InProcessKernelClient, does stuff we don't want
-        super(InProcessKernelClient, self).start_channels(self)
+        super(InProcessKernelClient, self).start_channels()
 
     def input(self, string):
         msg = self.session.msg('input_reply', {'value': string})
