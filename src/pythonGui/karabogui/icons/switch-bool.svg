@@ -10,11 +10,11 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    version="1.1"
-   width="26.562048"
-   height="26.562048"
+   width="29.992992"
+   height="30.081455"
    id="svg4102"
-   inkscape:version="0.48.4 r9939"
-   sodipodi:docname="switch.svg">
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="switch-bool.svg">
   <sodipodi:namedview
      pagecolor="#ffffff"
      bordercolor="#666666"
@@ -29,12 +29,16 @@
      id="namedview4277"
      showgrid="false"
      inkscape:zoom="12.565085"
-     inkscape:cx="32.039235"
-     inkscape:cy="4.1707917"
+     inkscape:cx="32.035733"
+     inkscape:cy="4.1741378"
      inkscape:window-x="65"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
-     inkscape:current-layer="switch" />
+     inkscape:current-layer="switch"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
   <defs
      id="defs4104" />
   <metadata
@@ -50,7 +54,8 @@
     </rdf:RDF>
   </metadata>
   <g
-     id="layer1">
+     id="layer1"
+     transform="translate(-0.0035019,3.516061)">
     <g
        id="switch"
        inkscape:label="#g2996">
@@ -60,14 +65,15 @@
          id="title2999">switch</title>
       <g
          id="icon_switch"
-         inkscape:label="">
+         inkscape:label=""
+         transform="matrix(1.1292231,0,0,1.1292283,0.00255429,-3.4270406)">
         <desc
            id="desc3318">icon_switch</desc>
         <title
            id="title3316">icon_switch</title>
         <path
            inkscape:connector-curvature="0"
-           style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.14356685;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+           style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1.14356685;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
            id="path4672-9-4-6-4-0-0-0"
            d="m 25.995078,13.278613 a 12.711648,12.711648 0 0 1 -25.4232954,0 12.711648,12.711648 0 1 1 25.4232954,0 z">
           <desc
