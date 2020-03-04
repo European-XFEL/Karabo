@@ -259,6 +259,7 @@ class MainWindow(QMainWindow):
         if not self._quit():
             event.ignore()
             return
+        self._quit_console()
 
         event.accept()
         QMainWindow.closeEvent(self, event)
@@ -450,11 +451,18 @@ class MainWindow(QMainWindow):
             submenu.setEnabled(not submenu.isEmpty())
 
     def _quit(self):
-        # Check for project changes
+        """ Check for project changes"""
         if self._should_save_project_before_closing():
             return False
 
         return True
+
+    def _quit_console(self):
+        """Make sure that we close the console when we exit the GUI! """
+        info = self._active_closable_panels.get(CONSOLE_TITLE, None)
+        if info is not None:
+            panel, area_enum = info
+            self.removePanel(panel, area_enum)
 
     def _enable_toolbar(self, enable):
         self.acServerConnect.setEnabled(enable)
