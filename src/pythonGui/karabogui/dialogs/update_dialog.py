@@ -329,12 +329,21 @@ def main():
                     help='Uninstalls any previous versions')
     ap.add_argument('-l', '--latest', action='store_true', required=False,
                     help='Upgrade to the latest tag')
+    ap.add_argument('-V', '--version', action='store_true', required=False,
+                    help='Print the installed version')
 
     args = ap.parse_args()
 
-    if not any([args.uninstall, args.tag, args.latest]):
+    if not any([args.uninstall, args.tag, args.latest, args.version]):
         print('At least one option must be given! Please use -h for help.')
         return
+
+    if args.version:
+        version = get_current_version()
+        if version == UNDEFINED_VERSION:
+            print('{} package not installed')
+        else:
+            print('{}: version {} installed'.format(_PKG_NAME, version))
 
     if args.uninstall:
         print('Uninstalling {} package'.format(_PKG_NAME))
