@@ -3,7 +3,8 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, QSize
+from PyQt5.QtGui import QFontMetrics
 from PyQt5.QtWidgets import QAction, QDialog, QFrame, QLabel
 
 from karabogui.dialogs.textdialog import TextDialog
@@ -12,7 +13,6 @@ from karabogui.dialogs.textdialog import TextDialog
 class LabelWidget(QLabel):
     """A label which can appear in a scene
     """
-
     def __init__(self, model, parent=None):
         super(LabelWidget, self).__init__(model.text, parent)
         self.setFrameShape(QFrame.Box)
@@ -41,6 +41,13 @@ class LabelWidget(QLabel):
                 model.background))
         self.setStyleSheet("QLabel {{ {} }}".format("".join(styleSheet)))
         self.setGeometry(model.x, model.y, model.width, model.height)
+
+    def sizeHint(self):
+        fm = QFontMetrics(self.font())
+        CONTENT_MARGIN = 10
+        width = fm.width(self.text()) + CONTENT_MARGIN
+
+        return QSize(width, 20)
 
     def add_proxies(self, proxies):
         """Satisfy the informal widget interface."""
