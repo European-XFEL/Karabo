@@ -37,8 +37,10 @@ __release_build() {
 
     case "$1" in
         miniconda)
+            source ./ci/utils/enable_internet.sh
             source ./ci/miniconda/build.sh
             source ./ci/miniconda/deploy.sh
+            source ./ci/utils/disable_internet.sh
             ;;
         ubuntu*|centos*)
             export REL_OS_NAME=$(lsb_release -is)
