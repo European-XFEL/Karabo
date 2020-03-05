@@ -19,6 +19,7 @@ class _MirrorChannel:
 
     def __init__(self, name):
         self.name = name
+        self.conda_exe = os.environ.get('CONDA_EXE', 'conda')
         self.norm_name = name.replace('/', '-')
         self.original_repo = CHANNEL_MAP.get(name, name)
         self.mirror_channel = op.join(KARABO_CHANNEL, 'mirror', self.norm_name)
@@ -36,7 +37,7 @@ class _MirrorChannel:
         """Returns the packages that are already on our mirror channel"""
         try:
             packages_on_mirror= subprocess.check_output(
-                ['conda', 'search', '--override-channels', '-c',
+                [self.conda_exe, 'search', '--override-channels', '-c',
                  self.mirror_channel, f'*[subdir={platform}]', '--json'])
 
             # All these packages are already on exflserv05, so we exclude them
@@ -56,6 +57,7 @@ class Mirrors:
     download for each mirror and platform"""
 
     def __init__(self, reference_environment):
+        self.conda_exe = os.environ.get('CONDA_EXE', 'conda')
         self._mirrors = {}
         self._needed_packages = defaultdict(partial(defaultdict, list))
 
@@ -64,7 +66,7 @@ class Mirrors:
     def _generate_needed_packages(self, reference_environment):
         """Returns the packages we will need to download. This excludes packages
         already present in our mirror channels"""
-        cmd = ['conda', 'list', '-n', reference_environment, '--json']
+        cmd = [self.conda_exe, 'list', '-n', reference_environment, '--json']
         output = subprocess.check_output(cmd)
 
         for pkg in json.loads(output):
@@ -131,7 +133,7 @@ class Mirrors:
         num_threads = 1 if sys.platform.startswith('win') else 0
 
         print(f'Mirroring channel {mirror.name}...')
-        cmd = ['conda', 'mirror',
+        cmd = [self.conda_exe, 'mirror',
                '--upstream-channel', mirror.original_repo,
                '--target-directory', target_mirror_directory,
                '--platform', platform,
