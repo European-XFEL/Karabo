@@ -30,7 +30,7 @@ class BaseSceneTool(ABCHasStrictTraits):
     # If True, this tool will be drawn whenever the scene is drawn
     visible = Bool(False)
 
-    def draw(self, painter):
+    def draw(self, scene_view, painter):
         """The method which is responsible for drawing this tool.
         The tool for a SceneView will be drawn after everything else in
         the view has been drawn.
