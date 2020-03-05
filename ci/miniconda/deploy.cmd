@@ -41,5 +41,5 @@ call rsync -r --exclude ".git" ^
 IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
 REM rebuild remote channels
-echo y | plink -no-antispoof -pw %XKARABO_PWD% %REMOTE_SERVER% bash "source ~/miniconda3/bin/activate; cd %CONDA_CHANNEL_PATH%; conda index .;"
+echo y | plink -no-antispoof -pw %XKARABO_PWD% %REMOTE_SERVER% "source ~/miniconda3/bin/activate; cd %CONDA_CHANNEL_PATH%; conda index .;"
 IF %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
