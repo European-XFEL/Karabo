@@ -6,8 +6,6 @@
 set -e
 set -o pipefail
 
-. ci/utils/enable_internet.sh
-
 printAndRun() {
     typeset cmnd="$*"
     echo cmnd=$cmnd
@@ -39,5 +37,3 @@ rm -rf /tmp/mirror/
 printAndRun python ./scripts/create_mirror_channels.py --target_dir /tmp/mirror/ --env karabogui
 
 popd
-
-. ci/utils/disable_internet.sh
