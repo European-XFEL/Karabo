@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QWidget
 from karabogui.sceneview.const import GRID_STEP
 
 
-GRID_COLOR = (200, 200, 200, 160)
+GRID_COLOR = (200, 200, 200, 100)
 RESIZE_THROTTLE = 100
 PEN_SIZE = 0.5
 

@@ -7,8 +7,8 @@ from contextlib import contextmanager
 import time
 
 from PyQt5.QtCore import (
-    pyqtSignal, pyqtSlot, QEvent, QRect, QSize, Qt, QTimer)
-from PyQt5.QtGui import QPalette, QPainter, QPen
+    pyqtSignal, pyqtSlot, QEvent, QPoint, QRect, QSize, Qt, QTimer)
+from PyQt5.QtGui import QBrush, QColor, QPalette, QPainter, QPen
 from PyQt5.QtWidgets import QSizePolicy, QStackedLayout, QWidget
 
 from karabo.common.scenemodel.api import (
@@ -25,7 +25,7 @@ from .builder import (
     find_top_level_model, is_widget, iter_widgets_and_models,
     remove_object_from_layout, replace_model_in_top_level_model,
     send_object_to_back)
-from .const import QT_CURSORS
+from .const import QT_CURSORS, SELECTION_COLOR
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import (
@@ -38,10 +38,15 @@ from .widget.api import ControllerContainer, GridView
 # The scene widgets handler for mutations and action of the controllers and
 # layout items on our scene
 SCENE_WIDGET_HANDLER = (SceneControllerHandler, SceneToolHandler)
+WIDGET_HANDLES_SIZE = QSize(5, 5)
+WIDGET_HANDLES_OFFSET = QPoint(int(WIDGET_HANDLES_SIZE.width() / 2),
+                               int(WIDGET_HANDLES_SIZE.height() / 2))
 
 _WIDGET_REMOVAL_DELAY = 5000
 _VISIBILITY_TIMEOUT = 3000
 _REMOVAL_TIMEOUT = 1000
+
+SELECTION_QCOLOR = QColor(*SELECTION_COLOR)
 
 
 def _get_time_milli():
@@ -250,8 +255,10 @@ class SceneView(QWidget):
         with QPainter(self) as painter:
             self.layout.draw(painter)
             self._draw_selection(painter)
-            if self.current_tool.visible:
-                self.current_tool.draw(painter)
+
+            current_tool = self.current_tool
+            if current_tool.visible:
+                current_tool.draw(self, painter)
 
     def sizeHint(self):
         model = self.scene_model
@@ -389,6 +396,12 @@ class SceneView(QWidget):
     def item_at_hover(self, pos):
         """Returns the topmost object whose bounds contain `pos`."""
         self._hover_rect.moveCenter(pos)
+
+        # Prioritize items on the selection
+        child = self.selection_model.child_in_rect(self._hover_rect)
+        if child is not None:
+            return child
+
         for child in self.scene_model.children[::-1]:
             obj = self._scene_obj_cache.get(child)
             if obj is not None and obj.geometry().intersects(self._hover_rect):
@@ -396,6 +409,12 @@ class SceneView(QWidget):
 
     def item_at_position(self, pos):
         """Returns the topmost object whose bounds contain `pos`."""
+
+        # Prioritize items on the selection
+        child = self.selection_model.child_in_pos(pos)
+        if child is not None:
+            return child
+
         for child in self.scene_model.children[::-1]:
             obj = self._scene_obj_cache.get(child)
             if obj is not None and obj.geometry().contains(pos):
@@ -571,19 +590,15 @@ class SceneView(QWidget):
 
     def _draw_selection(self, painter):
         """Draw a dashed rect around the selected objects."""
-        if not self.selection_model.has_selection():
+        selection_model = self.selection_model
+        if not selection_model.has_selection():
             return
 
-        black = QPen(Qt.black)
-        black.setStyle(Qt.DashLine)
-        white = QPen(Qt.white)
-
-        rect = self.selection_model.get_selection_bounds()
+        # Paint main selection bounds
+        multiple_selection = selection_model.has_multiple_selection()
+        rect = selection_model.get_selection_bounds()
         with save_painter_state(painter):
-            painter.setPen(white)
-            painter.drawRect(rect)
-            painter.setPen(black)
-            painter.drawRect(rect)
+            paint_bounds(painter, rect, active_handles=not multiple_selection)
 
     def _set_scene_model(self, scene_model):
         """The scene model is set and all notification handlers are defined.
@@ -623,3 +638,29 @@ class SceneView(QWidget):
         for obj in self._scene_obj_cache.values():
             if is_widget(obj):
                 obj.update_global_access_level(level)
+
+
+def paint_bounds(painter, rect, active_handles=True):
+    # Draw borders
+    pen = QPen(SELECTION_QCOLOR)
+    pen.setStyle(Qt.DashLine)
+    painter.setPen(pen)
+    painter.setBrush(QBrush(Qt.NoBrush))
+    painter.drawRect(rect)
+
+    # Draw squares
+    color = SELECTION_QCOLOR if active_handles else Qt.lightGray
+    painter.setPen(SELECTION_QCOLOR)
+    painter.setBrush(QBrush(color))
+
+    left, top, right, bottom = rect.getCoords()
+    center = rect.center()
+    x_center, y_center = center.x(), center.y()
+
+    corners = [(x, y) for x in (left, right) for y in (top, bottom)]
+    mids = [(left, y_center), (right, y_center), (x_center, top),
+            (x_center, bottom)]
+
+    for pos in corners + mids:
+        painter.drawRect(QRect(QPoint(*pos) - WIDGET_HANDLES_OFFSET,
+                               WIDGET_HANDLES_SIZE))
