@@ -39,7 +39,7 @@ class LineSceneTool(BaseSceneTool):
     line = Instance(QLine)
     start_pos = Instance(QPoint)
 
-    def draw(self, painter):
+    def draw(self, scene_view, painter):
         """Draw the line
         """
         if self.line is not None:
@@ -77,7 +77,7 @@ class RectangleSceneTool(BaseSceneTool):
     rect = Instance(QRect)
     start_pos = Instance(QPoint)
 
-    def draw(self, painter):
+    def draw(self, scene_view, painter):
         """Draw the rect
         """
         if self.rect is not None:
