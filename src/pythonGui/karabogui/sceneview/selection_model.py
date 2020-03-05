@@ -43,7 +43,20 @@ class SceneSelectionModel(HasStrictTraits):
     def has_selection(self):
         return len(self._selection) > 0
 
+    def has_multiple_selection(self):
+        return len(self._selection) > 1
+
     def select_object(self, obj):
         """Select an object.
         """
         self._selection.append(obj)
+
+    def child_in_rect(self, rect):
+        for child in self._selection:
+            if child.geometry().intersects(rect):
+                return child
+
+    def child_in_pos(self, pos):
+        for child in self._selection:
+            if child.geometry().contains(pos):
+                return child

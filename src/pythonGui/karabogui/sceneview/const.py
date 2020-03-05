@@ -11,8 +11,11 @@ SCREEN_MAX_VALUE = 100000
 
 SCENE_BORDER_WIDTH = 10
 
-
 GRID_STEP = 10
+
+# Karabo colors
+HOVER_COLOR = (75, 138, 164)
+SELECTION_COLOR = (11, 18, 61)
 
 
 # For convenience association of strings to Qt cursors
