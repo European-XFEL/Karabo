@@ -13,8 +13,6 @@ REMOTE_CHANNEL_PATH=${REMOTE_SERVER}:${CONDA_CHANNEL_PATH}/
 # Get the package
 KARABOGUI_PKG=$(conda info --root)/conda-bld/${PLATFORM}/karabogui-${CI_COMMIT_REF_NAME}*.tar.bz2
 
-. ci/utils/enable_internet.sh
-
 # Deploy the package
 rsync --exclude \".git\" --rsh="sshpass -p \"${XKARABO_PWD}\" ssh -o StrictHostKeyChecking=no -l xkarabo" \
                   --progress ${KARABOGUI_PKG} ${REMOTE_CHANNEL_PATH}/${PLATFORM}/
@@ -30,4 +28,3 @@ fi
 # Rebuild channel indexes
 sshpass -p ${XKARABO_PWD} ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "source ~/miniconda3/bin/activate; cd ${CONDA_CHANNEL_PATH}; conda index .;"
 
-. ci/utils/disable_internet.sh
