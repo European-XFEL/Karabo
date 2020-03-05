@@ -1,9 +1,11 @@
-from PyQt5.QtCore import Qt, QRect, QPoint
-from traits.api import HasStrictTraits, Any, Enum, Instance, String
+from PyQt5.QtCore import QPoint, QRect, Qt
+from PyQt5.QtGui import QColor, QPen
+from traits.api import Any, Enum, HasStrictTraits, Instance, String
 
 from karabogui.binding.api import DeviceProxy
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.sceneview.bases import BaseSceneTool
+from karabogui.sceneview.const import HOVER_COLOR
 from karabogui.sceneview.utils import (
     round_down_to_grid, round_up_to_grid, save_painter_state)
 
@@ -52,6 +54,7 @@ class _SelectionRect(HasStrictTraits):
 
 
 HOVER_TOLERANCE = 7
+HOVER_QCOLOR = QColor(*(HOVER_COLOR + (128,)))
 
 
 class SceneSelectionTool(BaseSceneTool):
@@ -66,9 +69,12 @@ class SceneSelectionTool(BaseSceneTool):
     _resize_type = String
     _selection_rect = Instance(_SelectionRect, args=())
 
-    def draw(self, painter):
+    def draw(self, scene_view, painter):
         """Draw the tool
         """
+        selection_model = scene_view.selection_model
+        self._draw_hovered_item(selection_model, painter)
+
         if self.state == 'draw':
             self._selection_rect.draw(painter)
 
@@ -79,6 +85,7 @@ class SceneSelectionTool(BaseSceneTool):
         selection_model = scene_view.selection_model
 
         if self._hover_item is not None and len(self._resize_type) > 0:
+            # We select the hover item
             self.state = 'resize'
             selection_model.clear_selection()
             selection_model.select_object(self._hover_item)
@@ -86,15 +93,22 @@ class SceneSelectionTool(BaseSceneTool):
             return
 
         mouse_pos = event.pos()
-        item = scene_view.item_at_position(mouse_pos)
-        if item is None:
+
+        if selection_model.has_multiple_selection():
+            # If there is a multiple selection, we start moving it
             if selection_model.get_selection_bounds().contains(mouse_pos):
                 self.state = 'move'
                 self._moving_pos = mouse_pos
-            else:
-                self.state = 'draw'
-                self._selection_rect.start_drag(mouse_pos)
+                event.accept()
+                return
+
+        item = scene_view.item_at_position(mouse_pos)
+        if item is None:
+            # No items are selected. We draw a selection rectangle instead.
+            self.state = 'draw'
+            self._selection_rect.start_drag(mouse_pos)
         else:
+            # There is a selected item. We start moving it.
             self.state = 'move'
             self._moving_pos = mouse_pos
             if event.modifiers() & Qt.ShiftModifier:
@@ -149,34 +163,39 @@ class SceneSelectionTool(BaseSceneTool):
         """
         mouse_pos = event.pos()
         selection_model = scene_view.selection_model
-        self._hover_item = scene_view.item_at_hover(mouse_pos)
         cursor = 'none'
-        if self._hover_item is not None:
-            rect = self._hover_item.geometry()
-            top = abs(rect.top() - mouse_pos.y()) < HOVER_TOLERANCE
-            bottom = abs(rect.bottom() - mouse_pos.y()) < HOVER_TOLERANCE
-            left = abs(rect.left() - mouse_pos.x()) < HOVER_TOLERANCE
-            right = abs(rect.right() - mouse_pos.x()) < HOVER_TOLERANCE
-            on_sides = left or right
-            on_ends = top or bottom
-            if on_ends and not on_sides:
-                cursor = 'resize-vertical'
-                self._resize_type = 't' if top else 'b'
-            elif on_sides and not on_ends:
-                cursor = 'resize-horizontal'
-                self._resize_type = 'l' if left else 'r'
-            elif (top and left) or (bottom and right):
-                cursor = 'resize-diagonal-tlbr'
-                self._resize_type = 'tl' if top else 'br'
-            elif (top and right) or (bottom and left):
-                cursor = 'resize-diagonal-trbl'
-                self._resize_type = 'tr' if top else 'bl'
-            else:
+
+        if selection_model.has_multiple_selection():
+            # Multiple selections. Always in move mode.
+            if selection_model.get_selection_bounds().contains(mouse_pos):
                 cursor = 'open-hand'
                 self._resize_type = ''
-        elif selection_model.get_selection_bounds().contains(mouse_pos):
-            cursor = 'open-hand'
-            self._resize_type = ''
+        else:
+            # Single selection. We check for move or resize mode
+            self._hover_item = scene_view.item_at_hover(mouse_pos)
+            if self._hover_item is not None:
+                rect = self._hover_item.geometry()
+                top = abs(rect.top() - mouse_pos.y()) < HOVER_TOLERANCE
+                bottom = abs(rect.bottom() - mouse_pos.y()) < HOVER_TOLERANCE
+                left = abs(rect.left() - mouse_pos.x()) < HOVER_TOLERANCE
+                right = abs(rect.right() - mouse_pos.x()) < HOVER_TOLERANCE
+                on_sides = left or right
+                on_ends = top or bottom
+                if on_ends and not on_sides:
+                    cursor = 'resize-vertical'
+                    self._resize_type = 't' if top else 'b'
+                elif on_sides and not on_ends:
+                    cursor = 'resize-horizontal'
+                    self._resize_type = 'l' if left else 'r'
+                elif (top and left) or (bottom and right):
+                    cursor = 'resize-diagonal-tlbr'
+                    self._resize_type = 'tl' if top else 'br'
+                elif (top and right) or (bottom and left):
+                    cursor = 'resize-diagonal-trbl'
+                    self._resize_type = 'tr' if top else 'bl'
+                else:
+                    cursor = 'open-hand'
+                    self._resize_type = ''
         scene_view.set_cursor(cursor)
 
     def _move_move(self, scene_view, event):
@@ -230,6 +249,26 @@ class SceneSelectionTool(BaseSceneTool):
             return
 
         self._hover_item.set_geometry(g)
+
+    def _draw_hovered_item(self, selection_model, painter):
+        hovered_item = self._hover_item
+
+        # Don't draw an indicator if there's no hovered item
+        if hovered_item is None:
+            return
+
+        # Also don't draw if the single selection is the hovered item
+        if len(selection_model) == 1:
+            selected_item = list(selection_model)[0]
+            if hovered_item is selected_item:
+                return
+
+        pen = QPen(HOVER_QCOLOR)
+        pen.setWidth(3)
+
+        with save_painter_state(painter):
+            painter.setPen(pen)
+            painter.drawRect(hovered_item.geometry())
 
 
 def _get_snap_offset(qpoint, offset=QPoint()):
