@@ -15,8 +15,6 @@ from karabogui.mainwindow import MainWindow, PanelAreaEnum
 from karabogui.panels.api import MacroPanel, ScenePanel
 from karabogui.singletons.api import get_config, get_project_model, get_db_conn
 
-LOGIN_DIALOG_DELAY = 100  # ms
-
 
 class PanelWrangler(QObject):
     """An object which handles wrangler duties for the myriad panels and
@@ -206,7 +204,7 @@ class PanelWrangler(QObject):
         self.main_window.show()
         # Show the connection dialog after processing all pending events since
         # the main window needs to render and update its geometry first.
-        QApplication.processEvents(QEventLoop.AllEvents, LOGIN_DIALOG_DELAY)
+        QApplication.processEvents(QEventLoop.AllEvents)
         self.main_window.acServerConnect.trigger()
 
     def _open_macro(self, model):
