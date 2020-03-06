@@ -78,13 +78,13 @@ class DeviceInstanceController(BaseProjectGroupController):
                                                 project_controller,
                                                 parent=parent))
 
-        macro_action = QAction('Open device macro', menu)
+        macro_action = QAction(icons.download, 'Open device macro', menu)
         has_macro = _test_mask(capabilities, Capabilities.PROVIDES_MACROS)
         macro_action.setEnabled(has_macro)
         macro_action.triggered.connect(partial(self._load_macro_from_device,
                                                project_controller,
                                                parent=parent))
-        scene_action = QAction('Open device scene', menu)
+        scene_action = QAction(icons.download, 'Open device scene', menu)
         has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
         scene_action.setEnabled(has_scene)
         scene_action.triggered.connect(partial(self._load_scene_from_device,
