@@ -41,8 +41,10 @@ requirements:
     # [[[cog
     # import cog
     # import json
+    # import os
     # import subprocess
-    # output = subprocess.check_output(['conda', 'env', 'export', '-n', 'karabogui', '--json'])
+    # conda = os.environ.get('CONDA_EXE', 'conda')
+    # output = subprocess.check_output([conda, 'env', 'export', '-n', 'karabogui', '--json'])
     # for dep in json.loads(output)['dependencies']:
     #     cog.outl(f'- {dep}')
     # ]]]
