@@ -1,6 +1,7 @@
 from contextlib import closing
 import os.path as op
 import re
+import sys
 import urllib.request
 from urllib.error import URLError
 
@@ -16,8 +17,15 @@ from karabogui.binding.api import FloatBinding, get_min_max
 from karabogui.util import getOpenFileName, temp_file
 
 
+ICON_FILE_SIZE_LIMIT = 102400  # 100 KB
+
+
 class IconError(Exception):
     pass
+
+
+class IconFileSizeLimitError(Exception):
+    """Exception for icons exceeding file size limit"""
 
 
 class IconLabel(QLabel):
@@ -128,11 +136,33 @@ class IconItem(IconData):
         if not new_url.startswith("file:"):
             new_url = "file://" + urllib.request.pathname2url(new_url)
         try:
-            self.data = urllib.request.urlopen(new_url).read()
+            data = urllib.request.urlopen(new_url).read()
+
+            # Check if data size is larger than the limit
+            file_size = sys.getsizeof(data)
+            if file_size > ICON_FILE_SIZE_LIMIT:
+                raise IconFileSizeLimitError
+
+            # Try to load the file as QPixmap to check image validity
+            pixmap = QPixmap()
+            if not pixmap.loadFromData(data):
+                raise IconError
         except URLError:
             # Revert changes
             self.trait_setq(image=old_url)
             messagebox.show_error("Pasted image is invalid.")
+        except IconFileSizeLimitError:
+            self.trait_setq(image=old_url)
+            message = ("Desired file exceeds the file size limit of "
+                       "{size_limit} KB [{file_size:.2f} KB]."
+                       .format(size_limit=int(ICON_FILE_SIZE_LIMIT / 1024),
+                               file_size=file_size / 1024))
+            messagebox.show_error(message)
+        except IconError:
+            self.trait_setq(image=old_url)
+            messagebox.show_error("Could not read image.")
+        else:
+            self.data = data
 
     def _load_pixmap(self):
         """Load the pixmap from the saved bytes"""
