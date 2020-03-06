@@ -46,7 +46,7 @@ def _get_sample_threshold(size):
     """
     threshold = TYPICAL_POINTS
     for dsize, dpoints in DIMENSION_DOWNSAMPLE:
-        if size >= dsize:
+        if size > dsize:
             threshold = dpoints
         else:
             # No need to look further!
