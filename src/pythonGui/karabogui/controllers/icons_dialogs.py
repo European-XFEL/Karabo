@@ -1,13 +1,14 @@
-import re
-import urllib.request
 from contextlib import closing
 import os.path as op
+import re
+import urllib.request
+from urllib.error import URLError
 
 from PyQt5 import uic
-from PyQt5.QtCore import QBuffer, QByteArray, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QBuffer, QByteArray, Qt
+from PyQt5.QtGui import QPixmap, QPixmapCache
 from PyQt5.QtWidgets import QApplication, QDialog, QLabel
-from traits.api import Property
+from traits.api import Instance, Property
 
 from karabo.common.scenemodel.api import IconData
 from karabogui import icons, messagebox
@@ -19,21 +20,58 @@ class IconError(Exception):
     pass
 
 
-def _create_temp_url(item_obj, image_data):
-    """Create temporary URL from given ``image_data``."""
-    ba = QByteArray()
-    buffer = QBuffer(ba)
-    buffer.open(QBuffer.WriteOnly)
-    with closing(buffer):
-        image_data.save(buffer, 'PNG')
-        data = buffer.data()
-        with temp_file() as tmp_path:
-            with open(tmp_path, 'wb') as out:
-                out.write(data)
-            item_obj.image = tmp_path
+class IconLabel(QLabel):
+
+    def __init__(self, parent=None):
+        super(IconLabel, self).__init__(parent=parent)
+        self.setMinimumSize(24, 24)
+        self._pixmap = self._default_pixmap = icons.no.pixmap(100)
+
+    # Qt Overrides
+    # ---------------------------------------------------------------------
+
+    def resizeEvent(self, event):
+        """Reimplemented method to reset the pixmap scale with the
+           widget resize"""
+        if self._pixmap is not None:
+            super(IconLabel, self).setPixmap(self._scaled_pixmap)
+
+        super(IconLabel, self).resizeEvent(event)
+
+    def setPixmap(self, pixmap):
+        """Reimplemented method to store the input pixmap and use the
+           scaled version internally"""
+        self._pixmap = pixmap
+        super(IconLabel, self).setPixmap(self._scaled_pixmap)
+
+    # Properties
+    # ---------------------------------------------------------------------
+
+    @property
+    def _scaled_pixmap(self):
+        """Scales the pixmap only if the pixmap is larger than the widget"""
+        pixmap = self._pixmap
+        if self._is_pixmap_big:
+            pixmap = pixmap.scaled(self.size(),
+                                   Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+        return pixmap
+
+    @property
+    def _is_pixmap_big(self):
+        """Checks if the pixmap is larger than the widget by comparing
+           the widths and heights"""
+        pixmap_size = self._pixmap.size()
+        widget_size = self.size()
+        horizontally_big = pixmap_size.width() > widget_size.width()
+        vertically_big = pixmap_size.height() > widget_size.height()
+        return horizontally_big or vertically_big
+
+    def setDefaultPixmap(self):
+        self.setPixmap(self._default_pixmap)
 
 
-class Label(QLabel):
+class Label(IconLabel):
     """A Custom QLabel subclass which is referenced by the 'icons.ui' file
     """
     newMime = pyqtSignal(str)
@@ -41,7 +79,6 @@ class Label(QLabel):
     def __init__(self, parent):
         super(Label, self).__init__(parent)
         self.setAcceptDrops(True)
-        self.setPixmap(None)
 
     def dragEnterEvent(self, event):
         event.acceptProposedAction()
@@ -49,45 +86,90 @@ class Label(QLabel):
     def dropEvent(self, event):
         self.newMime.emit(event.mimeData())
 
-    def setPixmap(self, pixmap):
-        if pixmap is None:
-            QLabel.setPixmap(self, icons.no.pixmap(100))
-        else:
-            QLabel.setPixmap(self, pixmap)
-
 
 class IconItem(IconData):
     """Inherit from the scene model `IconData` class to give life to the traits
     which are already declared by that class.
     """
-    pixmap = Property()
+    pixmap = Property(Instance(QPixmap))
     re = Property()  # For TextIcons
 
     def _get_pixmap(self):
+        # If no data is added, we use the default pixmap
         if not self.data:
+            # If the default pixmap url is not yet existing, we add the pixmap
             pixmap = icons.no.pixmap(100)
-            # NOTE: This is nice, the ``_create_temp_url will`` create
-            # an image which itself triggers a trait handler to set the data.
-            _create_temp_url(self, pixmap)
+            self._cache_pixmap(pixmap, update=True)
             return pixmap
 
-        pixmap = QPixmap()
-        try:
-            if not pixmap.loadFromData(self.data):
-                raise IconError
+        # If image does not have a temp url, the item is initially loaded from
+        # the model. It needs to be saved in a temp file and has to be added
+        # in the pixmap cache
+        if not self.image:
+            pixmap = self._load_pixmap()
+            self._cache_pixmap(pixmap)
             return pixmap
-        except (KeyError, IconError):
-            messagebox.show_error("Could not read image.")
-        return None
+
+        # Get pixmap from cache
+        pixmap = QPixmapCache.find(self.image)
+
+        # If the pixmap is not in the cache, we need to load and add the data.
+        if pixmap is None:
+            pixmap = self._load_pixmap()
+            self._cache_pixmap(pixmap)
+
+        return pixmap
 
     def _get_re(self):
         return re.compile(self.value)
 
-    def _image_changed(self, url):
+    def _image_changed(self, old_url, new_url):
         """The `image` trait is the URL of the image data of this item"""
-        if not url.startswith("file:"):
-            url = "file://" + urllib.request.pathname2url(url)
-        self.data = urllib.request.urlopen(url).read()
+        if not new_url.startswith("file:"):
+            new_url = "file://" + urllib.request.pathname2url(new_url)
+        try:
+            self.data = urllib.request.urlopen(new_url).read()
+        except URLError:
+            # Revert changes
+            self.trait_setq(image=old_url)
+            messagebox.show_error("Pasted image is invalid.")
+
+    def _load_pixmap(self):
+        """Load the pixmap from the saved bytes"""
+        pixmap = QPixmap()
+        try:
+            if not pixmap.loadFromData(self.data):
+                raise IconError
+        except (KeyError, IconError):
+            messagebox.show_error("Could not read image.")
+            pixmap = icons.no.pixmap(100)
+
+        return pixmap
+
+    def _cache_pixmap(self, pixmap, update=False):
+        """Save the pixmap in the cache, with a temporary file as key.
+           Optionally update the data, which is usually not desired as it is
+           already previously loaded."""
+        temp_url = self.create_temp_url(pixmap, update=update)
+        QPixmapCache.insert(temp_url, pixmap)
+
+    def create_temp_url(self, image_data, update=True):
+        """Create temporary URL from given ``image_data``."""
+        ba = QByteArray()
+        buff = QBuffer(ba)
+        buff.open(QBuffer.WriteOnly)
+        with closing(buff):
+            image_data.save(buff, 'PNG')
+            data = buff.data()
+            with temp_file() as tmp_path:
+                with open(tmp_path, 'wb') as out:
+                    out.write(data)
+
+        if update:
+            self.data = data.data()
+        self.trait_setq(image=tmp_path)
+
+        return tmp_path
 
 
 class _BaseDialog(QDialog):
@@ -118,10 +200,10 @@ class _BaseDialog(QDialog):
 
         item = self.items[self.valueList.currentRow()]
         if mime.hasImage():
-            _create_temp_url(item, mime.imageData())
+            item.create_temp_url(mime.imageData())
         else:
             try:
-                filename = mime.text().split()[0].strip()
+                filename = mime.text().strip()
             except Exception as e:
                 e.message = 'Could not open URL or Image'
                 raise
@@ -130,7 +212,7 @@ class _BaseDialog(QDialog):
 
     @pyqtSlot()
     def on_open_clicked(self):
-        filename, _ = getOpenFileName(
+        filename = getOpenFileName(
             parent=self, caption='Open Icon',
             filter='Images (*.png *.xpm *.jpg *.jpeg *.svg *.gif *.ico '
                    '*.tif *.tiff *.bmp)')
@@ -159,7 +241,7 @@ class _BaseDialog(QDialog):
             self.valueList.takeItem(cr)
             del self.items[cr]
             if len(self.items) == 0:
-                self.image.setPixmap(icons.no.pixmap(100))
+                self.image.setDefaultPixmap()
 
     @pyqtSlot()
     def on_up_clicked(self):
@@ -198,14 +280,22 @@ class DigitDialog(_BaseDialog):
     @pyqtSlot()
     def on_addValue_clicked(self):
         idx = 0
-        number_value = float(self.value.value())
+        entry_value = self.value.value()
+        entry_equal = self.lessEqual.isChecked()
         for idx, item in enumerate(self.items):
-            if (number_value < float(item.value) or
-                    number_value == float(item.value) and item.equal):
+            # Check if entry is already existing
+            item_value = float(item.value)
+            if entry_value == item_value and entry_equal is item.equal:
+                message = "Cannot add new condition; it already exists."
+                messagebox.show_error(message, parent=self)
+                return
+
+            # Find new position in list widget
+            if (entry_value < item_value or
+                    entry_value == item_value and item.equal):
                 break
 
-        item = IconItem(value=self.value.value(),
-                        equal=self.lessEqual.isChecked())
+        item = IconItem(value=entry_value, equal=entry_equal)
         self.items.insert(idx, item)
         self.valueList.insertItem(idx, self.text_for_item(item))
         # Trigger the imageView to generate default data!
@@ -233,9 +323,16 @@ class TextDialog(_BaseDialog):
 
     @pyqtSlot()
     def on_addValue_clicked(self):
-        item = IconItem(value=self.textValue.text())
+        entry_value = self.textValue.text()
+        # Check if entry is already existing
+        if entry_value in [item.value for item in self.items]:
+            message = "Cannot add new condition; it already exists."
+            messagebox.show_error(message, parent=self)
+            return
+
+        item = IconItem(value=entry_value)
         self.items.insert(0, item)
-        self.valueList.insertItem(0, self.textValue.text())
+        self.valueList.insertItem(0, entry_value)
         # Trigger the imageView to generate default data!
         self.valueList.setCurrentRow(0)
 

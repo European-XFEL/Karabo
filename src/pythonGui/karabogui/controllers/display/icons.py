@@ -1,28 +1,54 @@
-from PyQt5.QtWidgets import QAction, QDialog, QLabel
-from traits.api import Instance, on_trait_change, Type, Undefined
+from PyQt5.QtWidgets import QAction, QDialog
+from traits.api import Instance, on_trait_change, Type
 
 from karabo.common.scenemodel.api import (
     DigitIconsModel, SelectionIconsModel, TextIconsModel)
-from karabogui import icons
 from karabogui.binding.api import (
     BaseBinding, FloatBinding, get_binding_value, IntBinding, StringBinding)
 from karabogui.controllers.api import (
     BaseBindingController, has_options, register_binding_controller)
 from karabogui.controllers.icons_dialogs import (
-    DigitDialog, SelectionDialog, TextDialog, IconItem
+    DigitDialog, SelectionDialog, TextDialog, IconItem, IconLabel
 )
 
 NUMERICAL_BINDINGS = (FloatBinding, IntBinding)
+MINIMUM_SIZE = (24, 24)
 
 
 class _BaseIcons(BaseBindingController):
+
+    current_item = Instance(IconItem)
+
     def create_widget(self, parent):
-        widget = QLabel(parent)
-        widget.setMinimumSize(24, 24)
+        widget = IconLabel(parent)
         action = QAction('Change Icons...', widget)
         widget.addAction(action)
         action.triggered.connect(self._on_change_icons)
         return widget
+
+    def value_update(self, proxy):
+        value = get_binding_value(proxy)
+        if value is None:
+            self.current_item = None
+            return
+
+        current_item = None
+        for item in self.model.values:
+            if self.condition(value, item):
+                current_item = item
+                break
+
+        # Update the current item and invoke the pixmap changes
+        self.current_item = current_item
+
+    def condition(self, value, item):
+        """Specifies the condition in which the widget will change the icon
+           into.
+
+           :param value: proxy value. Can be int, float, or string
+           :param item: IconItem value from the collection self.model.values"""
+        raise NotImplementedError("The subclass must specify the condition "
+                                  "for the icon changes.")
 
     @on_trait_change('model.values')
     def _force_update(self):
@@ -37,10 +63,19 @@ class _BaseIcons(BaseBindingController):
                      if not isinstance(it, IconItem) else it
                      for it in self.model.values]
         self.model.trait_setq(values=converted)
+
         # Maybe update the widget
         if (self.widget is not None and
                 get_binding_value(self.proxy) is not None):
+            # Store a reference for the current item
+            current_item = self.current_item
+
             self.value_update(self.proxy)
+
+            # Check if current item is still the same and only the image
+            # has changed, we set the pixmap manually
+            if current_item is not None and self.current_item is current_item:
+                self.widget.setPixmap(current_item.pixmap)
 
     def _on_change_icons(self):
         binding = self.proxy.binding
@@ -52,11 +87,11 @@ class _BaseIcons(BaseBindingController):
             # an update!
             self._force_update()
 
-    def set_pixmap(self, p):
-        if p is None:
-            self.widget.setPixmap(icons.no.pixmap(100))
+    def _current_item_changed(self, item):
+        if item is None:
+            self.widget.setDefaultPixmap()
         else:
-            self.widget.setPixmap(p)
+            self.widget.setPixmap(item.pixmap)
 
 
 @register_binding_controller(ui_name='Icons', binding_type=NUMERICAL_BINDINGS,
@@ -65,15 +100,12 @@ class DigitIcons(_BaseIcons):
     model = Instance(DigitIconsModel, args=())
     dialog_klass = Type(DigitDialog)
 
-    def value_update(self, proxy):
-        value = proxy.value
-        if value is Undefined:
-            return
-        for item in self.model.values:
-            if (value < float(item.value) or
-                    value == float(item.value) and item.equal):
-                self.set_pixmap(item.pixmap)
-                break
+    def condition(self, value, item):
+        """Check if the proxy value satisfy the comparison of one of
+           the options."""
+        return (value < float(item.value)
+                or value == float(item.value)
+                and item.equal)
 
 
 @register_binding_controller(ui_name='Selection Icons',
@@ -92,18 +124,10 @@ class SelectionIcons(_BaseIcons):
                 items.append(newItem)
         self.model.values = items
 
-    def value_update(self, proxy):
-        value = proxy.value
-        if value is Undefined:
-            return
-        for item in self.model.values:
-            if item.value == value:
-                self.set_pixmap(item.pixmap)
-                return
-
-        msg = 'value "{}" of "{}" not in options ({})'
-        raise RuntimeError(msg.format(value, self.proxy.key,
-                                      self.proxy.binding.options))
+    def condition(self, value, item):
+        """Check if the proxy value is the same as the string of one of the
+           options"""
+        return value == item.value
 
 
 @register_binding_controller(ui_name='Icons', binding_type=StringBinding,
@@ -113,11 +137,7 @@ class TextIcons(_BaseIcons):
     model = Instance(TextIconsModel, args=())
     dialog_klass = Type(TextDialog)
 
-    def value_update(self, proxy):
-        value = proxy.value
-        if value is Undefined:
-            return
-        for it in self.model.values:
-            if it.re.match(value):
-                self.set_pixmap(it.pixmap)
-                return
+    def condition(self, value, item):
+        """Check if the proxy value is the same as the string of one of the
+           options"""
+        return item.re.match(value)
