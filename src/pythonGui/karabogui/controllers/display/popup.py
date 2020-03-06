@@ -52,7 +52,7 @@ class PopUp(BaseBindingController):
     def create_widget(self, parent):
         background_svg = op.join(op.dirname(__file__), 'speech-balloon.svg')
         widget = QSvgWidget(background_svg, parent)
-        self._dialog = QMessageBox(parent)
+        self._dialog = QMessageBox(widget)
         self._dialog.setStandardButtons(QMessageBox.Ok)
         self._dialog.setModal(False)
         self._dialog.finished.connect(self._on_finished)
