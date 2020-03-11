@@ -139,7 +139,7 @@ def rescale(array, min_value, max_value, low=0.0, high=100.0):
     """Scale the image with a new range. This is particularly used when
        rescaling to (0, 255)."""
 
-    array = np.array(array)
+    array = np.array(array, dtype=np.float32)
     value_range = max_value - min_value
     if value_range == 0:
         return array
@@ -147,3 +147,15 @@ def rescale(array, min_value, max_value, low=0.0, high=100.0):
     rescaled = high - ((high - low) * ((max_value - array) / value_range))
 
     return rescaled
+
+
+def correct_image_min(image_min, level_min=None):
+    """There could be cases that all image pixels have the same value.
+    Since a valid range is needed to produce a valid colormap, we correct the
+    image minimum for colormap calculation"""
+    if level_min is not None and image_min != level_min:
+        # we use the minimum level as the minimum image value.
+        return level_min
+    else:
+        # We use the decrement as the minimum image value.
+        return image_min - 1
