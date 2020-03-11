@@ -155,7 +155,7 @@ class KaraboImagePlot(PlotItem):
             self._update_axes_transforms()
             should_update = True
 
-        self.imageItem.setImage(image, autoLevels=self.imageItem.auto_levels)
+        self.imageItem.setImage(image)
         if should_update and update:
             self._restore_view()
 
