@@ -5,7 +5,7 @@ from pyqtgraph import functions as fn, ImageItem, Point
 from scipy.ndimage import zoom
 
 from karabogui.graph.common.api import MouseMode
-from .utils import map_rect_to_transform, rescale
+from .utils import correct_image_min, map_rect_to_transform, rescale
 
 
 DIMENSION_DOWNSAMPLE = [(500, 1.5), (1000, 2)]  # [(dimension, min downsample)]
@@ -17,10 +17,11 @@ class KaraboImageItem(ImageItem):
     hovered = pyqtSignal(object, object)
 
     def __init__(self, image=np.zeros((50, 50), dtype=int)):
-        super(KaraboImageItem, self).__init__(image)
+        super(KaraboImageItem, self).__init__()
+        self.auto_levels = True
+        self.setImage(image)
 
         self._origin = np.array([0, 0])
-        self.auto_levels = True
         self._rect = None
         self.autoDownsample = True
 
@@ -134,6 +135,21 @@ class KaraboImageItem(ImageItem):
     # ---------------------------------------------------------------------
     # Render patches
 
+    def setImage(self, image=None, autoLevels=False, **kwargs):
+        """There could be cases that all image pixels have the same value.
+        Since pyqtgraph defaults the levels to (0, 255) for such, we
+        calculate the levels for our own sanity."""
+
+        if image is not None and self.auto_levels:
+            image_min, image_max = image.min(), image.max()
+            if image_min == image_max:
+                image_min = correct_image_min(image_min)
+            levels = [image_min, image_max]
+            super(KaraboImageItem, self).setImage(image=image, levels=levels)
+        else:
+            super(KaraboImageItem, self).setImage(image=image,
+                                                  autoLevels=False)
+
     def render(self):
         """Reimplementing for performance improvements patches"""
 
@@ -155,19 +171,24 @@ class KaraboImageItem(ImageItem):
                 return
 
         # 3. Clip values according to levels
-        low, high = (0, 255)  # default color range
+        low, high = (0.0, 255.0)  # default color range
         if self.levels is None:
             image_min, image_max = image.min(), image.max()
+            if image_min == image_max:
+                image_min = correct_image_min(image_min)
         else:
             level_min, level_max = self.levels
             image = np.clip(image, level_min, level_max)
             image_min, image_max = image.min(), image.max()
 
+            if image_min == image_max:
+                image_min = correct_image_min(image_min, level_min)
+
             # Calculate new color ranges with the ratio of the image extrema
             # and the preset levels.
             low, high = rescale([image_min, image_max],
                                 min_value=level_min, max_value=level_max,
-                                low=low, high=high).astype(np.uint8)
+                                low=low, high=high)
 
         # 4. Rescale values to 0-255 relative to the image min/max
         # for the QImage
