@@ -26,5 +26,15 @@ fi
 # the remote host should have a conda installation with conda-build available in the home folder
 
 # Rebuild channel indexes
-sshpass -p ${XKARABO_PWD} ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "source ~/miniconda3/bin/activate; cd ${CONDA_CHANNEL_PATH}; conda index .;"
+sshpass -p ${XKARABO_PWD} ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} \
+    "source ~/miniconda3/bin/activate;
+     cd ${CONDA_CHANNEL_PATH};
+     conda index .;
+     cd ${CONDA_CHANNEL_PATH}/mirror/anaconda;
+     conda index .;
+     cd ${CONDA_CHANNEL_PATH}/mirror/pkgs-main;
+     conda index .;
+     cd ${CONDA_CHANNEL_PATH}/mirror/conda-forge;
+     conda index .;
+    "
 
