@@ -126,26 +126,31 @@ namespace karabo {
             // TODO: Use more appropriate names for the env var names - the names below are the ones currently used by
             //       the CI environment.
             std::string dbUser;
-            if (getenv("KARABO_TEST_INFLUXDB_ADMUSER")) {
-                dbUser = getenv("KARABO_TEST_INFLUXDB_ADMUSER");
+            if (getenv("KARABO_INFLUXDB_QUERY_USER")) {
+                dbUser = getenv("KARABO_INFLUXDB_QUERY_USER");
             } else {
                 dbUser = "infadm";
             }
             std::string dbPassword;
-            if (getenv("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD")) {
-                dbPassword = getenv("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD");
+            if (getenv("KARABO_INFLUXDB_QUERY_PASSWORD")) {
+                dbPassword = getenv("KARABO_INFLUXDB_QUERY_PASSWORD");
             } else {
                 dbPassword = "admpwd";
             }
 
-            const std::string topic(getTopic());
+            std::string dbName(getTopic());
+            if (getenv("KARABO_INFLUXDB_DBNAME")) dbName = getenv("KARABO_INFLUXDB_DBNAME");
             const std::string url(cfg.get<std::string>("url"));
+
             Hash dbClientCfg;
-            dbClientCfg.set<std::string>("dbname", topic);
-            dbClientCfg.set<std::string>("url", url);
+            dbClientCfg.set<std::string>("dbname", dbName);
+            dbClientCfg.set<std::string>("urlQuery", url);
+            dbClientCfg.set<std::string>("urlWrite", "");
             dbClientCfg.set<std::string>("durationUnit", "u");
-            dbClientCfg.set<std::string>("dbUser", dbUser);
-            dbClientCfg.set<std::string>("dbPassword", dbPassword);
+            dbClientCfg.set<std::string>("dbUserQuery", dbUser);
+            dbClientCfg.set<std::string>("dbPasswordQuery", dbPassword);
+            dbClientCfg.set<std::string>("dbUserWrite", "");
+            dbClientCfg.set<std::string>("dbPasswordWrite", "");
             dbClientCfg.set<bool>("useGateway", false); // At least for now, the reader never uses the Influx Gateway.
             m_influxClient = Configurator<InfluxDbClient>::create("InfluxDbClient", dbClientCfg);
             m_durationUnit = toInfluxDurationUnit(TIME_UNITS::MICROSEC);
@@ -153,7 +158,7 @@ namespace karabo {
 
 
         InfluxLogReader::~InfluxLogReader() {
-            KARABO_LOG_FRAMEWORK_DEBUG << this->getInstanceId() << " being destructed.";
+            KARABO_LOG_FRAMEWORK_DEBUG << this->getInstanceId() << " being destroyed.";
         }
 
 
