@@ -929,7 +929,8 @@ namespace karabo {
                 config.set("directory", get<std::string>("logger.FileDataLogger.directory"));
                 config.set("maximumFileSize", get<int>("logger.FileDataLogger.maximumFileSize"));
             } else if (m_logger == "InfluxDataLogger") {
-                config.set("url", get<std::string>("logger.InfluxDataLogger.urlWrite"));
+                config.set("urlWrite", get<std::string>("logger.InfluxDataLogger.urlWrite"));
+                config.set("urlQuery", get<std::string>("logger.InfluxDataLogger.urlRead"));
                 config.set("maxBatchPoints", get<std::uint32_t>("logger.InfluxDataLogger.maxBatchPoints"));
                 config.set("useGateway", get<bool>("logger.InfluxDataLogger.useGateway"));
             }

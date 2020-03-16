@@ -72,14 +72,24 @@ namespace karabo {
              * Check if connection is lost and try to re-establish connection to InfluxDB server
              * @param  hook function that will be called when connection is established
              */
-            void connectDbIfDisconnected(const AsyncHandler& hook = AsyncHandler());
+            void connectDbIfDisconnectedWrite(const AsyncHandler& hook = AsyncHandler());
+
+            void connectDbIfDisconnectedQuery(const AsyncHandler& hook = AsyncHandler());
 
             /**
              * Returns true if connection is established to InfluxDB server
              */
-            bool isConnected() {
+            bool isConnectedWrite() {
                 boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
-                return m_dbChannel && m_dbChannel->isOpen();
+                return m_dbChannelWrite && m_dbChannelWrite->isOpen();
+            }
+
+            /**
+             * Returns true if connection is established to InfluxDB server
+             */
+            bool isConnectedQuery() {
+                boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
+                return m_dbChannelQuery && m_dbChannelQuery->isOpen();
             }
 
             /**
@@ -138,7 +148,13 @@ namespace karabo {
              * @param millis time in milliseconds to wait for connection to be established
              * @return true if connection establshed, or false in case of timeout
              */
-            bool connectWait(std::size_t millis);
+            bool connectWaitWrite(std::size_t millis);
+
+            bool connectWaitQuery(std::size_t millis);
+
+            void disconnectWrite();
+
+            void disconnectQuery();
 
         private:
 
@@ -147,22 +163,28 @@ namespace karabo {
              * @param message formed in compliance of HTTP protocol
              *        Malformed requests resulting in response code 4xx
              */
-            void writeDb(const std::string& message);
+            void writeDb(const karabo::net::Channel::Pointer& channel, const std::string& message);
 
             /**
              * Low-level callback called when connection to InfluxDB is established
              */
-            void onDbConnect(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const AsyncHandler& hook);
+            void onDbConnectWrite(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const AsyncHandler& hook);
+
+            void onDbConnectQuery(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const AsyncHandler& hook);
 
             /**
              * Low-level callback called when reading is done
              */
-            void onDbRead(const karabo::net::ErrorCode& ec, const std::string& data);
+            void onDbReadWrite(const karabo::net::ErrorCode& ec, const std::string& data);
+
+            void onDbReadQuery(const karabo::net::ErrorCode& ec, const std::string& data);
 
             /**
              * Low-level callback called when writing into networks interface is done
              */
-            void onDbWrite(const karabo::net::ErrorCode& ec, boost::shared_ptr<std::vector<char> > p);
+            void onDbWriteWrite(const karabo::net::ErrorCode& ec, boost::shared_ptr<std::vector<char> > p);
+
+            void onDbWriteQuery(const karabo::net::ErrorCode& ec, boost::shared_ptr<std::vector<char> > p);
 
             /**
              * Actual "GET /query ..." is accomplished. Non-blocking call. The connection to InfluxDB
@@ -219,7 +241,7 @@ namespace karabo {
             /**
              * Send HTTP request to InfluxDb.  Helper function.
              */
-            void sendToInfluxDb(const std::string& msg, const InfluxResponseHandler& action);
+            void sendToInfluxDb(const karabo::net::Channel::Pointer& channel, const std::string& msg, const InfluxResponseHandler& action);
 
             void flushBatchImpl(const InfluxResponseHandler &respHandler = InfluxResponseHandler());
 
@@ -233,19 +255,24 @@ namespace karabo {
 
        private:
 
-            std::string m_url;
-            karabo::net::Connection::Pointer m_dbConnection;
-            karabo::net::Channel::Pointer m_dbChannel;
+            std::string m_urlWrite;
+            std::string m_urlQuery;
+            karabo::net::Connection::Pointer m_dbConnectionWrite;
+            karabo::net::Channel::Pointer m_dbChannelWrite;
+            karabo::net::Connection::Pointer m_dbConnectionQuery;
+            karabo::net::Channel::Pointer m_dbChannelQuery;
             std::queue<boost::function<void()> > m_requestQueue;
             boost::mutex m_requestQueueMutex;
             bool m_active;
             boost::mutex m_connectionRequestedMutex;
-            bool m_connectionRequested;
+            bool m_connectionRequestedWrite;
+            bool m_connectionRequestedQuery;
             // maps Request-Id to pair of HTTP request string and action callback
             boost::mutex m_responseHandlersMutex;
             std::unordered_map<std::string, std::pair<std::string, InfluxResponseHandler> > m_registeredInfluxResponseHandlers;
             HttpResponse m_response;
-            std::string m_hostname;
+            std::string m_hostnameWrite;
+            std::string m_hostnameQuery;
             std::string m_dbname;
             std::string m_durationUnit;
             static boost::mutex m_uuidGeneratorMutex;
@@ -256,8 +283,10 @@ namespace karabo {
             boost::mutex m_bufferMutex;
             std::stringstream m_buffer;
             std::uint32_t m_nPoints;
-            std::string m_dbUser;
-            std::string m_dbPassword;
+            std::string m_dbUserWrite;
+            std::string m_dbPasswordWrite;
+            std::string m_dbUserQuery;
+            std::string m_dbPasswordQuery;
             bool m_dbUseGateway;
         };
 

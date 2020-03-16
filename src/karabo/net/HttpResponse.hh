@@ -27,9 +27,11 @@ namespace karabo {
             std::string xRequestId;
             std::string build;
             std::string version;
+            std::string xError;
             std::string date;
             std::string connection;
             std::string transferEncoding;
+            int contentLength;
 
             std::string payload;
             bool payloadArrived;
@@ -47,9 +49,11 @@ namespace karabo {
                 , xRequestId("")
                 , build("")
                 , version("")
+                , xError("")
                 , date("")
                 , connection("")
                 , transferEncoding("")
+                , contentLength(-1)
                 , payload("")
                 , payloadArrived(true) {
             }

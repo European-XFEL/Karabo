@@ -60,7 +60,7 @@ namespace karabo {
 
         void InfluxDeviceData::handleChanged(const karabo::util::Hash& configuration, const std::string& user) {
 
-            m_dbClient->connectDbIfDisconnected();
+            m_dbClient->connectDbIfDisconnectedWrite();
 
             if (user.empty()) {
                 m_user = ".";
@@ -238,8 +238,8 @@ namespace karabo {
             // Before checking client status: enables buffering of property updates in handleChanged:
             m_currentSchema = schema;
 
-            if (!m_dbClient->isConnected()) {
-                m_dbClient->connectDbIfDisconnected();
+            if (!m_dbClient->isConnectedQuery()) {
+                m_dbClient->connectDbIfDisconnectedQuery();
                 KARABO_LOG_FRAMEWORK_WARN << "Skip schema updated: DB connection is requested...";
                 return;
             }
@@ -295,9 +295,16 @@ namespace karabo {
 
         void InfluxDataLogger::expectedParameters(karabo::util::Schema& expected) {
 
-            STRING_ELEMENT(expected).key("url")
-                    .displayedName("Influxdb URL")
-                    .description("URL should be given in form: tcp://host:port")
+            STRING_ELEMENT(expected).key("urlWrite")
+                    .displayedName("Influxdb URL (write)")
+                    .description("URL should be given in form: tcp://host:port. 'Write' interface")
+                    .assignmentOptional().defaultValue("tcp://localhost:8086")
+                    .init()
+                    .commit();
+
+            STRING_ELEMENT(expected).key("urlQuery")
+                    .displayedName("Influxdb URL (query)")
+                    .description("URL should be given in form: tcp://host:port. 'Query' interface")
                     .assignmentOptional().defaultValue("tcp://localhost:8086")
                     .init()
                     .commit();
@@ -319,33 +326,62 @@ namespace karabo {
 
         InfluxDataLogger::InfluxDataLogger(const karabo::util::Hash& input)
             : DataLogger(input)
-            , m_topic(getTopic()) {
+            , m_dbName(getTopic()) {
 
-            Hash config("url", input.get<std::string>("url"),
-                        "dbname", m_topic,
+            // We have to work in cluster environment where we have 2 nodes and proxy
+            // that runs 'telegraf' working as a proxy and load balancer
+            // All write requests should go to the load balancer
+            // All queries should go to the one of 'influxdb' nodes directly
+            //
+            // We should be able to work in CI and local installation environments as well
+            //
+            // We can run CI with InfluxDB docker or even InfluxDB cluster by setting
+            // the database name registered already in cluster DB
+
+            m_urlWrite = input.get<std::string>("urlWrite");
+            m_urlQuery = input.get<std::string>("urlQuery");
+
+            if (getenv("KARABO_INFLUXDB_DBNAME")) m_dbName = getenv("KARABO_INFLUXDB_DBNAME");
+
+            Hash config("dbname", m_dbName,
+                        "urlWrite", m_urlWrite,
+                        "urlQuery", m_urlQuery,
                         "durationUnit", DUR,
                         "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
 
-            // TODO: Use more appropriate names for the env var names - the names below are the ones currently used by
-            //       the CI environment.
-
-            std::string dbUser;
-            if (getenv("KARABO_TEST_INFLUXDB_ADMUSER")) {
-                dbUser = getenv("KARABO_TEST_INFLUXDB_ADMUSER");
+            std::string dbUserWrite;
+            if (getenv("KARABO_INFLUXDB_WRITE_USER")) {
+                dbUserWrite = getenv("KARABO_INFLUXDB_WRITE_USER");
             } else {
-                dbUser = "infadm";
+                dbUserWrite = "infadm";
             }
 
-            std::string dbPassword;
-            if (getenv("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD")) {
-                dbPassword = getenv("KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD");
+            std::string dbPasswordWrite;
+            if (getenv("KARABO_INFLUXDB_WRITE_PASSWORD")) {
+                dbPasswordWrite = getenv("KARABO_INFLUXDB_WRITE_PASSWORD");
             } else {
-                dbPassword = "admpwd";
+                dbPasswordWrite = "admpwd";
             }
 
-            config.set<std::string>("dbUser", dbUser);
-            config.set<std::string>("dbPassword", dbPassword);
+            std::string dbUserQuery;
+            if (getenv("KARABO_INFLUXDB_QUERY_USER")) {
+                dbUserQuery = getenv("KARABO_INFLUXDB_QUERY_USER");
+            } else {
+                dbUserQuery = dbUserWrite;
+            }
+
+            std::string dbPasswordQuery;
+            if (getenv("KARABO_INFLUXDB_QUERY_PASSWORD")) {
+                dbPasswordQuery = getenv("KARABO_INFLUXDB_QUERY_PASSWORD");
+            } else {
+                dbPasswordQuery = dbPasswordWrite;
+            }
+
+            config.set<std::string>("dbUserWrite", dbUserWrite);
+            config.set<std::string>("dbPasswordWrite", dbPasswordWrite);
             config.set<bool>("useGateway", input.get<bool>("useGateway"));
+            config.set<std::string>("dbUserQuery", dbUserQuery);
+            config.set<std::string>("dbPasswordQuery", dbPasswordQuery);
 
             m_client = Configurator<InfluxDbClient>::create("InfluxDbClient", config);
         }
@@ -385,7 +421,7 @@ namespace karabo {
 
 
         void InfluxDataLogger::initializeLoggerSpecific() {
-            m_client->connectDbIfDisconnected(bind_weak(&InfluxDataLogger::checkDb, this));
+            m_client->connectDbIfDisconnectedQuery(bind_weak(&InfluxDataLogger::checkDb, this));
         }
 
 
@@ -398,13 +434,19 @@ namespace karabo {
 
         void InfluxDataLogger::createDatabase(const std::string& dbname, const InfluxResponseHandler& action) {
             std::string statement = "CREATE DATABASE " + dbname;
+            if (m_urlWrite != m_urlQuery) {
+                // This is cluster scenario:  no permissions to create DB:  it should exist already!
+                throw KARABO_PARAMETER_EXCEPTION("Database \"" + dbname + "\" doesn't exist! No permission to create a database!");
+            }
+            // This is probably CI or local installation scenario and we have right to create DB
+            // CI case:  dbUser should have administrator rights
             m_client->postQueryDb(statement, action);
             KARABO_LOG_FRAMEWORK_INFO << statement << "\n";
         }
 
 
         void InfluxDataLogger::onCreateDatabase(const HttpResponse& o) {
-            KARABO_LOG_FRAMEWORK_INFO << "Database " << m_topic << " created";
+            KARABO_LOG_FRAMEWORK_INFO << "Database " << m_dbName << " created";
             startConnection();
         }
 
@@ -419,14 +461,14 @@ namespace karabo {
             assert(values.is_array());
             // Should we create database?
             for(nl::json::iterator it = values.begin(); it != values.end(); ++it) {
-                if ((*it)[0].get<std::string>() == m_topic) {
-                    KARABO_LOG_FRAMEWORK_INFO << "Database \"" << m_topic << "\" already exists";
+                if ((*it)[0].get<std::string>() == m_dbName) {
+                    KARABO_LOG_FRAMEWORK_INFO << "Database \"" << m_dbName << "\" already exists";
                     startConnection();
                     return;
                 }
             }
-            // CREATE DATABASE m_topic
-            createDatabase(m_topic, bind_weak(&karabo::devices::InfluxDataLogger::onCreateDatabase, this, _1));
+
+            createDatabase(m_dbName, bind_weak(&karabo::devices::InfluxDataLogger::onCreateDatabase, this, _1));
         }
 
 
