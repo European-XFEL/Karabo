@@ -41,8 +41,10 @@ namespace karabo {
             date = "";
             build = "";
             version = "";
+            xError = "";
             connection = "";
             transferEncoding = "";
+            contentLength = -1;
 
             posBegin = posEnd + 2;
             posEnd = line.find("\r\n", posBegin);
@@ -66,10 +68,14 @@ namespace karabo {
                     build = val;
                 } else if (key == "X-Influxdb-Version") {
                     version = val;
+                } else if (key == "X-Influxdb-Error") {
+                    xError = val;
                 } else if (key == "Connection") {
                     connection = val;
                 } else if (key == "Transfer-Encoding") {
                     transferEncoding = val;
+                } else if (key == "Content-Length") {
+                    contentLength = std::atoi(val.c_str());
                 }
                 posBegin = posEnd + 2;
                 posEnd = line.find("\r\n", posBegin);
@@ -99,9 +105,11 @@ namespace karabo {
                 << "X-Influxdb-Build: " << build << '\n'
                 << "X-Influxdb-Version: " << version << '\n'
                 << "X-Request-Id: " << xRequestId << '\n'
+                << "X-Influxdb-Error" << xError << '\n'
                 << "Date: " << date << '\n'
                 << "Connection: " << connection << '\n'
                 << "Transfer-Encoding: " << transferEncoding << '\n'
+                << "Content-Length: " << contentLength << '\n'
                 << "Payload arrived: " << payloadArrived << '\n'
                 << "Payload: " << payload;
             return oss.str();
