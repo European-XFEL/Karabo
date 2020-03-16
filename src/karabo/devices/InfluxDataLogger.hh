@@ -96,8 +96,9 @@ namespace karabo {
         private:
 
             karabo::net::InfluxDbClient::Pointer m_client;
-            std::string m_topic;
-            std::string m_hostname;
+            std::string m_dbName;
+            std::string m_urlWrite;
+            std::string m_urlQuery;
             static const unsigned int k_httpResponseTimeoutMs;
 
         };

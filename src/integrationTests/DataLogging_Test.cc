@@ -245,27 +245,40 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
         manager_conf.set("logger.FileDataLogger.directory",
                          (m_fileLoggerDirectory.empty() ? "" : m_fileLoggerDirectory + "/") + "karaboHistory");
     } else if (loggerType == "InfluxDataLogger") {
-        std::ostringstream influxUrl;
-        influxUrl << "tcp://";
+        std::string influxUrlWrite;
 
-        if (getenv("KARABO_TEST_INFLUXDB_HOST")) {
-            influxUrl << getenv("KARABO_TEST_INFLUXDB_HOST");
+        if (getenv("KARABO_INFLUXDB_WRITE_URL")) {
+            influxUrlWrite = getenv("KARABO_INFLUXDB_WRITE_URL");
         } else {
-            influxUrl << "localhost";
+            influxUrlWrite = "tcp://localhost:8086";
         }
-        influxUrl << ":";
+
+        std::string influxUrlRead;
+        if (getenv("KARABO_INFLUXDB_QUERY_URL")) {
+            influxUrlRead = getenv("KARABO_INFLUXDB_QUERY_URL");
+        } else {
+            influxUrlRead = "tcp://localhost:8086";
+        }
+
         if (useInvalidInfluxUrl) {
-            influxUrl << "8088";
-        } else if (getenv("KARABO_TEST_INFLUXDB_PORT")) {
-            influxUrl << getenv("KARABO_TEST_INFLUXDB_PORT");
-        } else {
-            influxUrl << "8086";
+            if (getenv("KARABO_TEST_INFLUXDB_HOST")) {
+                std::string testHost = getenv("KARABO_TEST_INFLUXDB_HOST");
+                influxUrlWrite = "tcp://" + testHost + ":8088";
+            } else {
+                influxUrlWrite = "tcp://localhost:8088";
+            }
+            influxUrlRead = influxUrlWrite;
         }
-        manager_conf.set("logger.InfluxDataLogger.urlWrite", influxUrl.str());
-        manager_conf.set("logger.InfluxDataLogger.urlRead", influxUrl.str());
+
+        manager_conf.set("logger.InfluxDataLogger.urlWrite", influxUrlWrite);
+        manager_conf.set("logger.InfluxDataLogger.urlRead", influxUrlRead);
 
         // The testing environments never use the default gateway.
-        manager_conf.set("logger.InfluxDataLogger.useGateway", false);
+        if (influxUrlWrite == influxUrlRead) {
+            manager_conf.set("logger.InfluxDataLogger.useGateway", false);
+        } else {
+            manager_conf.set("logger.InfluxDataLogger.useGateway", true);
+        }
 
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
@@ -274,6 +287,7 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
     return m_deviceClient->instantiate(m_server,
                                        "DataLoggerManager", manager_conf, KRB_TEST_MAX_TIMEOUT);
 }
+
 
 void DataLogging_Test::tearDown() {
     m_deviceClient.reset();
@@ -302,7 +316,7 @@ void DataLogging_Test::fileAllTestRunner() {
                                                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    std::clog << "==== Starting sequence of File Logging tests ====" << std::endl;
+    std::clog << "\n==== Starting sequence of File Logging tests ====" << std::endl;
     success = startLoggers("FileDataLogger");
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
@@ -567,7 +581,7 @@ void DataLogging_Test::testLastKnownConfiguration() {
     // There is an interval between the device being killed and the event that it is gone reaching the logger - the
     // delay decreases the chances of the timepoint used in the request for configuration from past to precede the
     // timestamp associated to the device shutdown event.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(1250));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(15250));
 
     Epochstamp afterDeviceGone;
     std::clog << "... after device being logged is gone (requested config at " << afterDeviceGone.toIso8601() << ") ...";
@@ -662,6 +676,8 @@ void DataLogging_Test::testCfgFromPastRestart() {
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
                             .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
 
+    boost::this_thread::sleep(boost::posix_time::milliseconds(15250));
+
     // Now check that for all stored stamps, the stamps gathered for the reader are correct
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
     for (unsigned int i = 0; i < numCycles; ++i) {
@@ -751,7 +767,9 @@ void DataLogging_Test::testNoInfluxServerHandling() {
                            m_deviceId, withNoServer.toIso8601())
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(conf, schema, cfgAtTime, cfgTime);
     } catch (const karabo::util::RemoteException &exc) {
-        CPPUNIT_ASSERT(exc.detailedMsg().find("No connection to InfluxDb server available") != std::string::npos);
+        bool condition = (exc.detailedMsg().find("No connection to InfluxDb (query) server available") != std::string::npos)
+            || (exc.detailedMsg().find("Reading from InfluxDB (query)  failed") != std::string::npos);
+        CPPUNIT_ASSERT(condition);
         remoteExceptionCaught = true;
     }
 
