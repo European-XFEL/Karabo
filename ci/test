@@ -15,17 +15,11 @@ __conda_tests() {
 
 __cmake_tests() {
     . ci/utils/enable_internet.sh
-    curl http://exflserv05.desy.de/karabo/miniconda3/Miniconda3-latest-Linux-x86_64.sh -o /root/miniconda.sh
-    bash /root/miniconda.sh -b -f -p /root/miniconda3
-    source /root/miniconda3/etc/profile.d/conda.sh
-    conda create -n cmake -y
-    conda activate cmake
-    conda install cmake
-    pushd ./build/cmake
-    cmake ../..
-    export NUM_JOBS=$(grep "processor" /proc/cpuinfo | wc -l)
-    make -j$NUM_JOBS
-    make test
+    conda activate || source activate || return 1
+    # create the recipe (setting versions...)
+    pushd conda-recipes/karabo-cpp
+    python -m cogapp -o meta.yaml ./meta_base.yaml
+    conda build .
     popd
     . ci/utils/disable_internet.sh
 }
