@@ -125,10 +125,6 @@ nightly build ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
   <<: *nightly-build
 
-nightly build ubuntu14:
-  image: europeanxfel/karabo-ci:ubuntu-14
-  <<: *nightly-build
-
 # Dependencies build
 
 deps build centos7:
@@ -176,7 +172,7 @@ unit tests miniconda:
   <<: *unit-tests
 
 unit tests miniconda-cmake:
-  image: europeanxfel/karabo-ci:ubuntu-16
+  image: europeanxfel/karabo-ci:miniconda-3
   <<: *unit-tests
 
   # Post-merge integration test builds
