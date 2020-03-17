@@ -1,31 +1,68 @@
+cmake_minimum_required(VERSION 3.12)
+
 project(
         "karabo"
         VERSION 2
-        LANGUAGES CXX
+        LANGUAGES C CXX
 )
-
-#set(CMAKE_CXX_STANDARD 11)
-#set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# All users of this library will need at least C++11
+include(CTest)
+cmake_policy(SET CMP0074 NEW)
 
 # finding dependencies
+set(EXTERN_DEPS_INCLUDE "" )
+set(EXTERN_DEPS_LIBS "" )
+
 find_package(HDF5 REQUIRED)
+list(APPEND EXTERN_DEPS_LIBS ${HDF5_LIBRARIES})
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Karabo currently expect to find the hdf5 libraries in an `hdf5` folder
+# here we trick the system by creating a link.
+# TODO: fix this once the legacy dependencies are gone.
+list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${HDF5_INCLUDE_DIRS})
+set(HDF5_SPOOF_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include")
+file(MAKE_DIRECTORY "${HDF5_SPOOF_INCLUDE_DIR}")
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${HDF5_INCLUDE_DIRS} ${CMAKE_BINARY_DIR}/include/hdf5 )
+
+list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${HDF5_SPOOF_INCLUDE_DIR})
+
+list(APPEND EXTERN_DEPS_INCLUDE_DIRS "${CMAKE_BINARY_DIR}/include/hdf5")
+
 find_package(OpenSSL REQUIRED)
+list(APPEND EXTERN_DEPS_LIBS ${OpenSSL_LIBRARIES})
+list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${OpenSSL_INCLUDE_DIRS})
 
-find_library(OPENMQC openmqc)
-find_library(LOG4CPP log4cpp)
-find_library(SNAPPY snappy)
+find_package(Boost 1.66 REQUIRED
+             COMPONENTS chrono date_time filesystem regex signals system thread)
+list(APPEND EXTERN_DEPS_LIBS ${Boost_LIBRARIES})
+list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${Boost_INCLUDE_DIRS})
 
-message(STATUS "CMAKE_INCLUDE_PATH = ${CMAKE_INCLUDE_PATH}")
+function(add_dep LIBNAME INCLUDE_PATH)
+    find_library(${LIBNAME}_LIB ${LIBNAME})
+    find_path(${LIBNAME}_INC_PATH ${INCLUDE_PATH})
+    list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${${LIBNAME}_INC_PATH})
+    list(APPEND EXTERN_DEPS_LIBS ${${LIBNAME}_LIB})
+    message(STATUS "${LIBNAME}_INC_PATH = ${${LIBNAME}_INC_PATH}")
+    message(STATUS "${LIBNAME}_LIB = ${${LIBNAME}_LIB}")
+endfunction()
+
+add_dep(log4cpp krb_log4cpp)
+add_dep(snappy snappy.h)
+add_dep(pugixml pugixml.hpp)
+add_dep(cppunit cppunit)
+add_dep(openmqc openmqc)
+
+list(REMOVE_DUPLICATES EXTERN_DEPS_INCLUDE_DIRS)
+
 message(STATUS "OPENSSL_INCLUDE_DIR = ${OPENSSL_INCLUDE_DIR}")
-message(STATUS "OPENMQC = ${OPENMQC}")
-message(STATUS "LOG4CPP = ${LOG4CPP}")
-message(STATUS "SNAPPY = ${SNAPPY}")
-
+message(STATUS "OPENMQC = ${OPENMQC_LIB}")
+message(STATUS "LOG4CPP = ${LOG4CPP_LIB}")
+message(STATUS "SNAPPY = ${SNAPPY_LIB}")
 
 set(EXCLUDE_DIR "/tests/")
-
 
 # collect the source files excluding the ones in the `tests` folder
 file(GLOB_RECURSE SOURCE_FILES "*.cc")
@@ -53,14 +90,12 @@ add_library(
         ${SOURCE_FILES}
 )
 
+target_compile_options(${PROJECT_NAME} PUBLIC -Wfatal-errors -Wno-unused-local-typedefs -Wno-deprecated-declarations -Wall -D__SO__)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
-target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
-
-target_compile_options(${PROJECT_NAME} PRIVATE -Wfatal-errors -Wno-unused-local-typedefs -Wno-deprecated-declarations -Wall -D__SO__)
 
 include_directories(
         "${karabo_SOURCE_DIR}/.."
-        "${KARABO_EXTERN_INCLUDE_DIR}"
+        "${EXTERN_DEPS_INCLUDE_DIRS}"
 )
 
 source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${HEADER_LIST})
@@ -82,12 +117,10 @@ target_link_libraries(
         ${Boost_THREAD_LIBRARY}
         ${HDF5_LIBRARIES}
         ${OPENSSL_LIBRARIES}
-        ${OPENMQC}
-        ${SNAPPY}
-        ${LOG4CPP}
-        ${NSS}
-        ${NSPR}
-        ${PUGIXML}
+        ${openmqc_LIB}
+        ${snappy_LIB}
+        ${log4cpp_LIB}
+        ${pugixml_LIB}
 )
 
 # Headers to be installed
@@ -113,9 +146,8 @@ install(TARGETS ${PROJECT_NAME}
         PUBLIC_HEADER DESTINATION "include/${PROJECT_NAME}"
         RUNTIME DESTINATION bin)
 
-enable_testing()
-
 file(WRITE "${CMAKE_BINARY_DIR}/VERSION" ${KARABO_GIT_VERSION})
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/testresults")
 
 # Adding unit test
 if (BUILD_TESTING)
@@ -126,7 +158,7 @@ if (BUILD_TESTING)
         foreach (TMP_PATH ${TEST_SRCS})
             string (FIND ${TMP_PATH} "TestRunner" NAME_FOUND)
             if (NOT ${NAME_FOUND} EQUAL -1)
-                string(REGEX REPLACE ".*/(.+)\.cc" "\\1" RUNNER_NAME "${TMP_PATH}")
+                GET_FILENAME_COMPONENT(RUNNER_NAME ${TMP_PATH} NAME_WE)
                 break()
             endif ()
         endforeach()
