@@ -4,8 +4,8 @@ import shutil
 from unittest import TestCase, main
 
 from karabo.native import (
-    Configurable, encodeXML, decodeXML, Hash, loadFromFile, VectorDouble,
-    saveToFile
+    Configurable, encodeXML, decodeXML, encodeBinary, decodeBinary,
+    Hash, HashList, loadFromFile, VectorDouble, saveToFile
 )
 
 TST_WORKING_DIR = "/tmp/serializers_tests"
@@ -19,9 +19,23 @@ BOUND_HASH_XML = """<?xml version="1.0"?>
   </another>
 </root>
 """
-
 # The following XML is what the middlelayer API generates
 MDL_HASH_XML = '<root KRB_Artificial=""><akey KRB_Type="STRING" >aval</akey><another KRB_Type="HASH" ><nested KRB_Type="DOUBLE" >1.618</nested></another></root>'  # noqa
+
+# XML generated using the C++ api 'saveToFile' for a vector of hash.
+BOUND_VECTOR_HASH_XML = """<?xml version="1.0"?>
+<root KRB_Artificial="" KRB_Type="HASH">
+    <KRB_Sequence KRB_Type="VECTOR_HASH">
+       <KRB_Item>
+           <e1 KRB_Type="STRING">ab.KRB_NEWLINE.c3</e1>
+           <e2 alarmCondition="KRB_STRING:none" KRB_Type="BOOL">0</e2>
+           <e3 alarmCondition="KRB_STRING:none" KRB_Type="INT32">36</e3>
+           <e4 alarmCondition="KRB_STRING:none" KRB_Type="FLOAT">2.9511</e4>
+           <e5 alarmCondition="KRB_STRING:none" KRB_Type="DOUBLE">3.7035</e5>
+        </KRB_Item>
+    </KRB_Sequence>
+</root>
+"""
 
 # The following is used accross all tests as template Hash
 HASH = Hash('akey', 'aval', 'another', Hash('nested', 1.618))
@@ -118,6 +132,21 @@ class TestSerializers(TestCase):
         decoded = decodeXML(encoded)
         self.assertEqual(decoded['vector', 'minSize'], 1)
         self.assertEqual(decoded['vector', 'maxSize'], 2)
+
+    def test_xml_VectorHash_load_bin(self):
+        """Tests binary serialization of vector of hash encoded in XML."""
+        vh_fromxml = decodeXML(BOUND_VECTOR_HASH_XML)
+        # Vector of Hash from XML is actually a hash with the Vector of
+        # Hash as the value of its sole key, 'KRB_Sequence'.
+        self.assertEqual(len(vh_fromxml), 1)
+        self.assertTrue(vh_fromxml.has('KRB_Sequence'))
+        self.assertTrue(isinstance(vh_fromxml['KRB_Sequence'], HashList))
+        # Checks that the MDL binary decoder, like the C++/Bound one
+        # retrieves a vector of hash directly, not a single keyed hash.
+        bin_enc = encodeBinary(vh_fromxml)
+        vh = decodeBinary(bin_enc)
+        self.assertEqual(len(vh), 1)
+        self.assertEqual(vh[0]['e3'], 36)
 
 
 if __name__ == "__main__":
