@@ -334,11 +334,9 @@ class Influx_TestCase(DeviceTest):
         self.assertEqual(dt.minute, 32)
         self.assertEqual(dt.second, 57)
 
-        # FIXME: This is unexpected: the vector of hashes is
-        # under the key 'KRB_Sequence'. table should be a list of Hashes.
-        self.assertEqual(len(table['KRB_Sequence']), 2)
-        self.assertEqual(table['KRB_Sequence'][0]['e3'], 1188)
-        self.assertEqual(table['KRB_Sequence'][1]['e3'], 4158)
+        self.assertEqual(len(table), 2)
+        self.assertEqual(table[0]['e3'], 1188)
+        self.assertEqual(table[1]['e3'], 4158)
 
 
 if __name__ == '__main__':

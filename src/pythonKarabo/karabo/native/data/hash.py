@@ -1232,8 +1232,8 @@ class HashType(Type):
         ret = Hash()
         for i in range(size):
             key = file.readKey()
-            type, = file.readFormat('I')
-            type = cls.types[type]
+            type_idx, = file.readFormat('I')
+            type = cls.types[type_idx]
             asize, = file.readFormat('I')
             attrs = {}
             for i in range(asize):
@@ -1243,6 +1243,11 @@ class HashType(Type):
                 attrs[akey] = atype.read(file)
             # Optimization: Set value and attributes simultaneously
             ret._setelement(key, HashElement(type.read(file), attrs))
+            if type_idx == 31 and key == 'KRB_Sequence':
+                # Special case: This is the equivalent of what is done by the
+                # C++ binary serializer, HashBinarySerializer, in its method
+                # 'load(vector<Hash>&, const char*, const size_t)'
+                ret = ret['KRB_Sequence']
         return ret
 
     @classmethod
