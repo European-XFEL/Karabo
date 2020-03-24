@@ -104,6 +104,9 @@ class GroupLayout(BaseLayout, QLayout):
         return self._child_bounds
 
 
+VERTICAL_LAYOUTS = (QBoxLayout.TopToBottom, QBoxLayout.BottomToTop)
+
+
 class BoxLayout(BaseLayout, QBoxLayout):
     def __init__(self, model, direction, parent=None):
         super(BoxLayout, self).__init__(model, direction, parent)
@@ -115,6 +118,19 @@ class BoxLayout(BaseLayout, QBoxLayout):
 
     def _add_widget(self, widget):
         self.addWidget(widget)
+
+    def sizeHint(self):
+        """Calculate the sizeHint of the layout from the sizeHints of the
+           children. This varies with direction."""
+        sizes = [self.itemAt(i).sizeHint() for i in range(self.count())]
+        widths = [size.width() for size in sizes]
+        heights = [size.height() for size in sizes]
+
+        get_width, get_height = sum, max
+        if self.direction() in VERTICAL_LAYOUTS:
+            get_width, get_height = get_height, get_width
+
+        return QSize(get_width(widths), get_height(heights))
 
 
 class GridLayout(BaseLayout, QGridLayout):
