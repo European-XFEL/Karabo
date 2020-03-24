@@ -11,5 +11,5 @@ from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,
                       TextSceneTool, WebLinkTool)
 from .scenedndhandler import (
     ConfigurationDropHandler, ProjectDropHandler)
-from .selection import ProxySelectionTool, SceneSelectionTool
+from .selection import is_resizable, ProxySelectionTool, SceneSelectionTool
 from .widgethandler import SceneControllerHandler, SceneToolHandler
