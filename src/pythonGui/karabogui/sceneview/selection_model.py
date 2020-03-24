@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QRect
 from traits.api import HasStrictTraits, List
 
+from .tools.api import is_resizable
 from .utils import calc_bounding_rect
 
 
@@ -60,3 +61,14 @@ class SceneSelectionModel(HasStrictTraits):
         for child in self._selection:
             if child.geometry().contains(pos):
                 return child
+
+    def get_single_selection(self):
+        if len(self._selection) == 1:
+            return self._selection[0]
+
+    def has_resizable_selection(self):
+        """Evaluates if the selection is resizable. The rule is:
+           1. There is only one selection object in the scene
+           2. That object can be resized."""
+        gui_obj = self.get_single_selection()
+        return gui_obj is not None and is_resizable(gui_obj)
