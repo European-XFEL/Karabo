@@ -6,8 +6,12 @@ from karabogui.binding.api import DeviceProxy
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.sceneview.bases import BaseSceneTool
 from karabogui.sceneview.const import HOVER_COLOR
+from karabogui.sceneview.layout.layouts import GroupLayout
 from karabogui.sceneview.utils import (
     round_down_to_grid, round_up_to_grid, save_painter_state)
+
+
+NONRESIZABLE_OBJECTS = (GroupLayout, )
 
 
 class ProxySelectionTool(BaseSceneTool):
@@ -164,39 +168,50 @@ class SceneSelectionTool(BaseSceneTool):
         mouse_pos = event.pos()
         selection_model = scene_view.selection_model
         cursor = 'none'
+        self._resize_type = ''
 
         if selection_model.has_multiple_selection():
-            # Multiple selections. Always in move mode.
+            # Multiple selections. Does not support resizing.
+            # Always in move mode.
             if selection_model.get_selection_bounds().contains(mouse_pos):
                 cursor = 'open-hand'
-                self._resize_type = ''
         else:
             # Single selection. We check for move or resize mode
-            self._hover_item = scene_view.item_at_hover(mouse_pos)
-            if self._hover_item is not None:
-                rect = self._hover_item.geometry()
-                top = abs(rect.top() - mouse_pos.y()) < HOVER_TOLERANCE
-                bottom = abs(rect.bottom() - mouse_pos.y()) < HOVER_TOLERANCE
-                left = abs(rect.left() - mouse_pos.x()) < HOVER_TOLERANCE
-                right = abs(rect.right() - mouse_pos.x()) < HOVER_TOLERANCE
-                on_sides = left or right
-                on_ends = top or bottom
-                if on_ends and not on_sides:
-                    cursor = 'resize-vertical'
-                    self._resize_type = 't' if top else 'b'
-                elif on_sides and not on_ends:
-                    cursor = 'resize-horizontal'
-                    self._resize_type = 'l' if left else 'r'
-                elif (top and left) or (bottom and right):
-                    cursor = 'resize-diagonal-tlbr'
-                    self._resize_type = 'tl' if top else 'br'
-                elif (top and right) or (bottom and left):
-                    cursor = 'resize-diagonal-trbl'
-                    self._resize_type = 'tr' if top else 'bl'
-                else:
-                    cursor = 'open-hand'
-                    self._resize_type = ''
+            self._hover_item = hover_item = scene_view.item_at_hover(mouse_pos)
+            if hover_item is not None:
+                # The following objects do not support resizing.
+                # Always in move mode
+                cursor = 'open-hand'
+                if is_resizable(hover_item):
+                    cursor = self._get_cursor(mouse_pos)
+
         scene_view.set_cursor(cursor)
+
+    def _get_cursor(self, mouse_pos):
+        rect = self._hover_item.geometry()
+        top = abs(rect.top() - mouse_pos.y()) < HOVER_TOLERANCE
+        bottom = abs(rect.bottom() - mouse_pos.y()) < HOVER_TOLERANCE
+        left = abs(rect.left() - mouse_pos.x()) < HOVER_TOLERANCE
+        right = abs(rect.right() - mouse_pos.x()) < HOVER_TOLERANCE
+        on_sides = left or right
+        on_ends = top or bottom
+
+        if on_ends and not on_sides:
+            cursor = 'resize-vertical'
+            self._resize_type = 't' if top else 'b'
+        elif on_sides and not on_ends:
+            cursor = 'resize-horizontal'
+            self._resize_type = 'l' if left else 'r'
+        elif (top and left) or (bottom and right):
+            cursor = 'resize-diagonal-tlbr'
+            self._resize_type = 'tl' if top else 'br'
+        elif (top and right) or (bottom and left):
+            cursor = 'resize-diagonal-trbl'
+            self._resize_type = 'tr' if top else 'bl'
+        else:
+            cursor = 'open-hand'
+            self._resize_type = ''
+        return cursor
 
     def _move_move(self, scene_view, event):
         """Handles mouse moves when a scene object is being moved.
@@ -258,10 +273,9 @@ class SceneSelectionTool(BaseSceneTool):
             return
 
         # Also don't draw if the single selection is the hovered item
-        if len(selection_model) == 1:
-            selected_item = list(selection_model)[0]
-            if hovered_item is selected_item:
-                return
+        selected_item = selection_model.get_single_selection()
+        if hovered_item is selected_item:
+            return
 
         pen = QPen(HOVER_QCOLOR)
         pen.setWidth(3)
@@ -289,3 +303,7 @@ def _round_func(direction):
     if direction <= 0:
         func = round_up_to_grid
     return func
+
+
+def is_resizable(gui_obj):
+    return not isinstance(gui_obj, NONRESIZABLE_OBJECTS)
