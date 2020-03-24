@@ -595,10 +595,10 @@ class SceneView(QWidget):
             return
 
         # Paint main selection bounds
-        multiple_selection = selection_model.has_multiple_selection()
         rect = selection_model.get_selection_bounds()
+        resizable = selection_model.has_resizable_selection()
         with save_painter_state(painter):
-            paint_bounds(painter, rect, active_handles=not multiple_selection)
+            paint_bounds(painter, rect, active_handles=resizable)
 
     def _set_scene_model(self, scene_model):
         """The scene model is set and all notification handlers are defined.
