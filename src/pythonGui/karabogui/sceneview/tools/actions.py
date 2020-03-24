@@ -33,7 +33,7 @@ class BaseLayoutAction(BaseSceneAction):
     """
 
     @abstractmethod
-    def create_layout(self, scene_view,  gui_objects, models, selection_rect):
+    def create_layout(self, gui_objects, models, selection_rect):
         """Implemented by derived classes to create and add a layout.
         """
 
@@ -52,21 +52,27 @@ class BaseLayoutAction(BaseSceneAction):
         if len(selection_model) < 2:
             return
 
-        child_objects = []
-        for obj in selection_model:
-            scene_view.remove_model(obj.model)
-            child_objects.append(obj)
-
+        # Get child objects from selection model
+        child_objects = list(selection_model)
         try:
             child_objects.sort(key=self.keyfunc)
         except NotImplementedError:
             pass
 
+        # Get the new layout model
         child_models = [obj.model for obj in child_objects]
         selection_rect = calc_bounding_rect(selection_model)
-        self.create_layout(scene_view, child_objects, child_models,
-                           selection_rect)
+        layout_model = self.create_layout(child_objects, child_models,
+                                          selection_rect)
+
+        # Apply changes by removing the previous child models and add the
+        # models after.
+        for model in child_models:
+            scene_view.remove_model(model)
         selection_model.clear_selection()
+
+        scene_view.add_models(layout_model)
+        scene_view.select_model(layout_model)
 
 
 class BoxSceneAction(BaseLayoutAction):
@@ -75,12 +81,30 @@ class BoxSceneAction(BaseLayoutAction):
     # What's the layout direction?
     direction = Int
 
-    def create_layout(self, scene_view, gui_objects, models, selection_rect):
-        x, y, width, height = selection_rect
+    def create_layout(self, gui_objects, models, selection_rect):
+        x, y, *_ = selection_rect
+        width, height = self._calculate_size(gui_objects)
         layout_model = BoxLayoutModel(x=x, y=y, width=width, height=height,
                                       children=models,
                                       direction=self.direction)
-        scene_view.add_models(layout_model)
+        return layout_model
+
+    def _calculate_size(self, gui_objects):
+        # Collate widths and heights
+        widths, heights = [], []
+        for obj in gui_objects:
+            size = obj.sizeHint()
+            width, height = size.width(), size.height()
+            widths.append(width)
+            heights.append(height)
+
+        # Calculate effective size by using sum and max on the widths and
+        # heights depending on the direction
+        get_width, get_height = sum, max
+        if self.direction == QBoxLayout.TopToBottom:
+            get_width, get_height = get_height, get_width
+
+        return get_width(widths), get_height(heights)
 
 
 class BoxHSceneAction(BoxSceneAction):
@@ -89,7 +113,9 @@ class BoxHSceneAction(BoxSceneAction):
     direction = QBoxLayout.LeftToRight
 
     def keyfunc(self, gui_obj):
-        return gui_obj.geometry().x()
+        # Order by x first, then use y for tiebreaker
+        geometry = gui_obj.geometry()
+        return geometry.x(), geometry.y()
 
 
 class BoxVSceneAction(BoxSceneAction):
@@ -98,18 +124,20 @@ class BoxVSceneAction(BoxSceneAction):
     direction = QBoxLayout.TopToBottom
 
     def keyfunc(self, gui_obj):
-        return gui_obj.geometry().y()
+        # Order by y first, then use x for tiebreaker
+        geometry = gui_obj.geometry()
+        return geometry.y(), geometry.x()
 
 
 class GridSceneAction(BaseLayoutAction):
     """Group in grid action
     """
 
-    def create_layout(self, scene_view, gui_objects, models, selection_rect):
+    def create_layout(self, gui_objects, models, selection_rect):
         x, y, width, height = selection_rect
         layout_model = GridLayoutModel(x=x, y=y, width=width, height=height)
         layout_model.children = self._collect_models(gui_objects)
-        scene_view.add_models(layout_model)
+        return layout_model
 
     @staticmethod
     def _collect_models(gui_objects):
@@ -149,11 +177,11 @@ class GroupSceneAction(BaseLayoutAction):
     """Group without layout action
     """
 
-    def create_layout(self, scene_view, gui_objects, models, selection_rect):
+    def create_layout(self, gui_objects, models, selection_rect):
         x, y, width, height = selection_rect
         model = FixedLayoutModel(x=x, y=y, width=width, height=height,
                                  children=models)
-        scene_view.add_models(model)
+        return model
 
 
 class GroupEntireSceneAction(BaseSceneAction):
