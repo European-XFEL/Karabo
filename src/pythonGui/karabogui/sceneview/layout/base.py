@@ -90,3 +90,6 @@ class BaseLayout(object):
                        width=rect.width(), height=rect.height())
         self.invalidate()  # Important! Force a full layout recalculation
         super(BaseLayout, self).setGeometry(rect)
+
+    def sizeHint(self):
+        return self.geometry().size()
