@@ -137,6 +137,9 @@ class BaseShape(ABCHasStrictTraits):
     def maximumSize(self):
         return QSize(SCREEN_MAX_VALUE, SCREEN_MAX_VALUE)
 
+    def sizeHint(self):
+        return self.geometry()
+
 
 class LineShape(BaseShape):
     """A line which can appear in a scene
