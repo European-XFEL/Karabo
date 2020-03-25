@@ -160,7 +160,7 @@ class DeviceTreeModel(QAbstractItemModel):
         """
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal and section == 0:
-                return "Domain - Type - Member"
+                return "Domain - Type - Name"
 
     def indexInfo(self, index):
         if not index.isValid():
@@ -212,7 +212,7 @@ class DeviceTreeModel(QAbstractItemModel):
             proxy = None
             item_type = 'type'
         if level == 2:
-            deviceId = node.device_id
+            deviceId = node.node_id
             proxy = get_topology().get_device(deviceId)
             item_type = 'device'
 

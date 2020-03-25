@@ -40,12 +40,14 @@ def test_tree_node_levels():
     root.children.append(level_0)
     level_1 = DeviceTreeNode(node_id='MOTOR', parent=level_0, level=1)
     level_0.children.append(level_1)
-    level_2 = DeviceTreeNode(node_id='SCREEN', parent=level_1, level=2)
+    level_2 = DeviceTreeNode(node_id='FXE_OGT1_BIU/MOTOR/SCREEN',
+                             parent=level_1, level=2)
     level_1.children.append(level_2)
 
     assert root.child('FXE_OGT1_BIU') is level_0
     assert level_0.child('MOTOR') is level_1 and level_0.row() == 0
-    assert level_1.child('SCREEN') is level_2 and level_1.row() == 0
+    assert (level_1.child('FXE_OGT1_BIU/MOTOR/SCREEN') is level_2
+            and level_1.row() == 0)
 
     level_0_info = level_0.info()
     assert level_0_info['type'] == NavigationItemTypes.UNDEFINED
@@ -55,5 +57,4 @@ def test_tree_node_levels():
     assert level_1_info['typeId'] == 'MOTOR'
     level_2_info = level_2.info()
     assert level_2_info['type'] == NavigationItemTypes.DEVICE
-    assert level_2_info['memberId'] == 'SCREEN'
-    assert level_2_info['deviceId'] == ''
+    assert level_2_info['deviceId'] == 'FXE_OGT1_BIU/MOTOR/SCREEN'
