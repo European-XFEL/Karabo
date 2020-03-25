@@ -5,8 +5,8 @@
 #############################################################################
 from textwrap import dedent
 
-from PyQt5.QtCore import pyqtSlot, QTimer
-from PyQt5.QtWidgets import QAbstractButton, QMessageBox
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QMessageBox
 
 MESSAGE_POPUP = 60  # Seconds
 
@@ -18,8 +18,11 @@ class KaraboMessageBox(QMessageBox):
     def __init__(self, parent=None):
         super(KaraboMessageBox, self).__init__(parent)
         self.setModal(False)
-        self.setDefaultButton(QMessageBox.Ok)
-        self.buttonClicked.connect(self.buttonPressed)
+
+        # Manually add a button to give it focus
+        button = self.addButton(QMessageBox.Ok)
+        button.clicked.connect(self.close)
+        button.setFocus()
 
         # Set up a ticker to eventually close the pop if not already closed!
         self._ticker = QTimer(self)
@@ -29,14 +32,11 @@ class KaraboMessageBox(QMessageBox):
         # We already start ticking here!
         self._ticker.start()
 
-    @pyqtSlot(QAbstractButton)
-    def buttonPressed(self, button):
-        """Handle the `buttonClicked` signal of the `QMessageBox`
-
-        If the ticker is still `active`, we gracefully stop it here!
-        """
+    def closeEvent(self, event):
+        """Close the ticker before closing the dialog"""
         if self._ticker.isActive():
             self._ticker.stop()
+        super(KaraboMessageBox, self).closeEvent(event)
 
 
 def show_alarm(text, title="Alarm", details=None, parent=None):
