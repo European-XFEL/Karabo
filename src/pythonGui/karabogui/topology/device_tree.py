@@ -24,7 +24,6 @@ MEMBER_LEVEL = 2
 class DeviceTreeNode(HasStrictTraits):
     """A node in the DeviceTree
     """
-    device_id = String
     node_id = String
     server_id = String
     visibility = Enum(*AccessLevel)
@@ -60,9 +59,8 @@ class DeviceTreeNode(HasStrictTraits):
                     'typeId': self.node_id}
         elif level == MEMBER_LEVEL:
             return {'type': NavigationItemTypes.DEVICE,
-                    'memberId': self.node_id,
+                    'deviceId': self.node_id,
                     'serverId': self.server_id,
-                    'deviceId': self.device_id,
                     'capabilities': self.capabilities}
 
     def row(self):
@@ -221,21 +219,20 @@ class DeviceSystemTree(HasStrictTraits):
                                            level=TYPE_LEVEL)
                 handler(domain_node, type_node)
 
-            member_node = type_node.child(member)
-            if member_node is None:
-                member_node = DeviceTreeNode(node_id=member,
-                                             device_id=karabo_name,
+            device_node = type_node.child(karabo_name)
+            if device_node is None:
+                device_node = DeviceTreeNode(node_id=karabo_name,
                                              parent=type_node,
                                              server_id=server_id,
                                              visibility=visibility,
                                              level=MEMBER_LEVEL)
-                handler(type_node, member_node)
+                handler(type_node, device_node)
 
-            member_node.status = status
-            member_node.attributes = attrs
-            member_node.capabilities = capabilities
+            device_node.status = status
+            device_node.attributes = attrs
+            device_node.capabilities = capabilities
 
-            self._device_nodes[karabo_name] = member_node
+            self._device_nodes[karabo_name] = device_node
 
     def find(self, node_id, access_level=None, case_sensitive=True,
              use_reg_ex=True, full_match=False):
