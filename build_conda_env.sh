@@ -22,7 +22,7 @@ safeRunCondaCommand() {
 
 displayHelp() {
     echo "
-Usage: $0 [install|develop|clean]
+Usage: $0 [clean] [install|develop]
 
 This script should be sourced so the environment is activated in the caller shell.
 If you don't source it, just run 'conda activate karabogui' in the end.
@@ -41,11 +41,21 @@ Usage example:
 
 Note: "install" installs karabogui in release mode
       "develop" installs karabogui in development mode
-      "clean" cleans the environment"
+      "clean" cleans the environment
+
+Note: The environment variable XFEL_CONDA_CHANNEL can optionally be used to point
+      the build process to alternative Conda repos.
+      This is useful, e.g. if one needs to tunnel into a private network.
+      If one follows the instructions in doc/installation/gui.rst, this script
+      should be called as:
+      
+      XFEL_CONDA_CHANNEL=localhost:8081 source build_conda_env.sh clean develop"
 }
 
 SETUP_FLAG=false
 CLEAN=false
+KARABO_ENV=karabogui
+KARABO_BUILD_ENV=karabo-build
 
 # Parse command line
 while [ -n "$1" ]; do
@@ -55,7 +65,6 @@ while [ -n "$1" ]; do
                 echo "Can't use 'install' and 'develop' flags at the same time"
                 return 1
             fi
-
             SETUP_FLAG=$1
             shift
             ;;
@@ -65,7 +74,7 @@ while [ -n "$1" ]; do
             ;;
         -h|--help)
             displayHelp
-            return 1
+            return 0
             ;;
         *)
             # Make a little noise
@@ -79,22 +88,55 @@ if [ "${SETUP_FLAG}" == false ]; then
     return 1
 fi
 
-KARABO_ENV=karabogui
+# functions are not exported to subshells.
+source ${CONDA_PREFIX}/etc/profile.d/conda.sh
 
-SCRIPT_PATH=$(dirname $(readlink -f "${BASH_SOURCE[0]}"))
+# make sure we are in the default environment
+if [ -z "${CONDA_DEFAULT_ENV}" ]; then
+    safeRunCondaCommand conda activate || safeRunCondaCommand source activate || safeRunCondaCommand activate base || return 1
+elif [ "${CONDA_DEFAULT_ENV}" != "base" ]; then
+    safeRunCondaCommand conda activate || return 1
+fi
 
 # Clean environment if asked
-if [ "${CLEAN}" = true ]; then
-    safeRunCondaCommand conda deactivate || safeRunCondaCommand source deactivate || return 1
+if [ ${CLEAN} == true ]; then
+    if [ "${CONDA_DEFAULT_ENV}" == "${KARABO_ENV}" ] ; then
+        safeRunCondaCommand conda deactivate || return 1
+    fi
     safeRunCondaCommand conda env remove -n ${KARABO_ENV} -y || return 1
 fi
+
+# check if the base environment is sufficient to setup the recipes
+BUILD_PKGS="conda-build conda-devenv cogapp setuptools_scm"
+for pkg in $BUILD_PKGS; do
+    if [ -z "$(conda list ${pkg} | grep -v '#')" ]; then
+        echo "Conda environment missing package from needed packages ${BUILD_PKGS}"
+        return 1
+    fi
+done
 
 echo
 echo "### Creating conda environment ###"
 echo
-safeRunCondaCommand conda activate || safeRunCondaCommand source activate || return 1
+
+ORIGIN_PWD=$PWD
+SCRIPT_PATH=$(dirname ${BASH_SOURCE[0]})
+cd $SCRIPT_PATH
+TARGET_FILE=$(basename ${BASH_SOURCE[0]})
+# follow the symlinks if any
+while [ -L "$TARGET_FILE" ]
+do
+    TARGET_FILE=`readlink $TARGET_FILE`
+    SCRIPT_PATH=$(dirname $TARGET_FILE)
+    cd $SCRIPT_PATH
+    TARGET_FILE=`basename $TARGET_FILE`
+done
+cd $ORIGIN_PWD
+unset ORIGIN_PWD
+
+# create the dev environment
 safeRunCondaCommand conda devenv --file ${SCRIPT_PATH}/src/pythonGui/environment.devenv.yml || return 1
-safeRunCondaCommand conda activate ${KARABO_ENV} || safeRunCondaCommand source activate ${KARABO_ENV} || return 1
+safeRunCondaCommand conda activate ${KARABO_ENV} || return 1
 
 if [ "$SETUP_FLAG" != false ]; then
     # We are breaking the module integrity of pythonKarabo, from which we only need pythonKarabo/common and /native.
@@ -102,9 +144,10 @@ if [ "$SETUP_FLAG" != false ]; then
     # be in their own package
     export BUILD_KARABO_GUI=1
     pushd ${SCRIPT_PATH}/src/pythonKarabo
-    safeRunCondaCommand python setup.py ${SETUP_FLAG} || return 1
+    safeRunCondaCommand python3 setup.py ${SETUP_FLAG} || return 1
     popd
     pushd ${SCRIPT_PATH}/src/pythonGui
-    safeRunCondaCommand python setup.py ${SETUP_FLAG} || return 1
+    safeRunCondaCommand python3 setup.py ${SETUP_FLAG} || return 1
     popd
+    unset BUILD_KARABO_GUI
 fi
