@@ -18,6 +18,7 @@ from karabogui.indicators import get_state_icon_for_status
 from karabogui.singletons.api import get_topology
 
 from .context import _UpdateContext
+from .utils import get_language_icon
 
 
 class SystemTreeModel(QAbstractItemModel):
@@ -164,22 +165,24 @@ class SystemTreeModel(QAbstractItemModel):
         if column == 0 and role == Qt.DisplayRole:
             return node.node_id
         elif column == 0 and role == Qt.DecorationRole:
-            if hierarchyLevel == 0:
-                return icons.host
-            elif hierarchyLevel == 1:
-                return icons.yes
-            elif hierarchyLevel == 2:
-                return icons.deviceClass
-            elif hierarchyLevel == 3:
+            if hierarchyLevel == 3:
                 if node.status is ProxyStatus.ERROR:
                     return icons.deviceInstanceError
                 if node.monitoring:
                     return icons.deviceMonitored
                 else:
                     return icons.deviceInstance
+            elif hierarchyLevel == 2:
+                return icons.deviceClass
+            elif hierarchyLevel == 1:
+                return icons.yes
+            elif hierarchyLevel == 0:
+                return icons.host
         elif column == 1 and role == Qt.DecorationRole:
             if hierarchyLevel == 3:
                 return get_state_icon_for_status(node.status)
+            elif hierarchyLevel == 1:
+                return get_language_icon(node)
         elif column == 2 and role == Qt.DecorationRole:
             if hierarchyLevel == 3:
                 alarm_type = node.alarm_info.alarm_type
