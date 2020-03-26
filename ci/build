@@ -36,7 +36,7 @@ __release_build() {
     esac
 
     case "$1" in
-        miniconda)
+        miniconda|miniconda-osx64)
             source ./ci/utils/enable_internet.sh
             source ./ci/miniconda/build.sh
             source ./ci/miniconda/deploy.sh
