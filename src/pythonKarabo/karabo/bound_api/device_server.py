@@ -216,6 +216,7 @@ class DeviceServer(object):
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         info["visibility"] = self.visibility
+        info["lang"] = "bound"
         devicesInfo, scanLogs = self.scanPlugins(config["pluginNamespace"])
         info.merge(devicesInfo)
 
