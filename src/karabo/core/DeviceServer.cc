@@ -65,7 +65,7 @@ namespace karabo {
                     .expertAccess()
                     .init()
                     .commit();
-   
+
             INT32_ELEMENT(expected).key("visibility")
                     .displayedName("Visibility")
                     .description("Configures who is allowed to see this server at all")
@@ -188,6 +188,7 @@ namespace karabo {
             instanceInfo.set("serverId", m_serverId);
             instanceInfo.set("version", karabo::util::Version::getVersion());
             instanceInfo.set("host", m_hostname);
+            instanceInfo.set("lang", "cpp");
             instanceInfo.set("visibility", m_visibility);
 
             // Initialize SignalSlotable instance
