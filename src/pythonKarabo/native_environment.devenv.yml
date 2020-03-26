@@ -1,13 +1,15 @@
+{% set xfel_conda_channel = os.environ.get('XFEL_CONDA_CHANNEL', 'exflserv05.desy.de') %}
 name: karabo-native
 
 channels:
-  - http://exflserv05.desy.de/karabo/channel
+  - http://{{ xfel_conda_channel }}/karabo/channel
   - conda-forge
   - defaults
 
 dependencies:
   - python=3.6.7=he025d50_1005 # [win]
   - python=3.6.* # [linux]
+  - python=3.6.7 # [osx]
   - traits=4.6.0
   - python-dateutil=2.8
   - lxml=4.4.1
