@@ -113,7 +113,9 @@ class ScenePanel(BasePanelWidget):
         super(ScenePanel, self).closeEvent(event)
         if event.isAccepted():
             # Tell the scene view to destruct
+            self.scene_view.setParent(None)
             self.scene_view.destroy()
+            self.scene_view = None
             # Remove the window title handler
             self.model.on_trait_change(self.set_title, 'simple_name',
                                        remove=True)
@@ -122,10 +124,12 @@ class ScenePanel(BasePanelWidget):
                             {'model': self.model})
 
     def hideEvent(self, event):
-        self.scene_view.set_tab_visible(False)
+        if self.scene_view is not None:
+            self.scene_view.set_tab_visible(False)
 
     def showEvent(self, event):
-        self.scene_view.set_tab_visible(True)
+        if self.scene_view is not None:
+            self.scene_view.set_tab_visible(True)
 
         # When undocked, make sure our panel has an appropriate size
         if not self.is_docked:
