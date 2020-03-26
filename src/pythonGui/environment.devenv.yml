@@ -1,7 +1,8 @@
+{% set xfel_conda_channel = os.environ.get('XFEL_CONDA_CHANNEL', 'exflserv05.desy.de') %}
 name: karabogui
 
 channels:
-  - http://exflserv05.desy.de/karabo/channel
+  - http://{{ xfel_conda_channel }}/karabo/channel  
   - conda-forge
   - defaults
 
@@ -12,6 +13,7 @@ includes:
 dependencies:
   - python=3.6.7=he025d50_1005 # [win]
   - python=3.6.7 # [linux]
+  - python=3.6.7 # [osx]
   # GUI
   - qt=5.9.7
   - pythonqwt=0.5.5
@@ -30,7 +32,7 @@ dependencies:
   - lxml=4.4.1
   - requests=2.22
   - python-dateutil=2.8
-  - lttbc=0.1.9
+  - lttbc=0.1.9=xfel
   - jupyter_client=5.3.4
 environment:
   PYTHONPATH:
