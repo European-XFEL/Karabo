@@ -32,7 +32,7 @@ from .utils import get_karabo_version
 INIT_DESCRIPTION = """A JSON object representing the devices to be initialized.
 It should be formatted like a dictionary of dictionaries.
 
-For example: 
+For example:
         {"deviceId" :{
             "classId": "TheClassName",
             "stringProperty": "Value",
@@ -136,6 +136,7 @@ class DeviceServerBase(SignalSlotable):
         info["karaboVersion"] = get_karabo_version()
         info["host"] = self.hostName
         info["visibility"] = self.visibility.value
+        info["lang"] = "python"
         info.merge(self.deviceClassesHash())
         return info
 
@@ -632,7 +633,7 @@ class BoundDeviceServer(DeviceServerBase):
 
 class DeviceServer(MiddleLayerDeviceServer, BoundDeviceServer):
     """A Python native Karabo Server
-    
+
     It will load plugins and starts instances of the plugins.
     The plugins are loaded either from specific namespaces
     or from a specific plugin directory.
