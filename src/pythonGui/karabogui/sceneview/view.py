@@ -345,6 +345,7 @@ class SceneView(QWidget):
         self._set_scene_model(None)
         self._scene_obj_cache.clear()
         self._widget_removal_queue.clear()
+        super(SceneView, self).destroy()
 
     def set_tab_visible(self, visible):
         """Sets whether this scene is visible.
