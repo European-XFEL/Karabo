@@ -105,6 +105,11 @@ release build ubuntu16:
 release build miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
   <<: *release-build
+  
+release build miniconda-osx64:
+  tags:
+    - macos
+  <<: *release-build
 
 release build miniconda-win64:
   tags:
@@ -171,6 +176,11 @@ unit tests miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
   <<: *unit-tests
 
+unit tests miniconda-osx64:
+  tags:
+    - macos
+  <<: *unit-tests
+  
 unit tests miniconda-cmake:
   image: europeanxfel/karabo-ci:miniconda-3
   <<: *unit-tests

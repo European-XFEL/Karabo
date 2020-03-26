@@ -66,6 +66,8 @@ export KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD=$INFLUXDB_ADMIN_PASSWORD
 
 if [ "$TARGET_OS" = "miniconda" ]; then
     __conda_tests
+elif [ "$TARGET_OS" = "miniconda-osx64" ]; then
+    __conda_tests
 elif [ "$TARGET_OS" = "miniconda-cmake" ]; then
     __cmake_tests
 else
