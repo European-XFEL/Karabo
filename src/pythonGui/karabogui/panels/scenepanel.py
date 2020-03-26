@@ -7,8 +7,8 @@ from functools import partial
 
 from PyQt5.QtCore import pyqtSlot, QEvent, QSize, Qt
 from PyQt5.QtGui import QKeySequence, QPalette
-from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication,
-                             QMenu, QScrollArea, QSizePolicy)
+from PyQt5.QtWidgets import (
+    QAction, QActionGroup, QApplication, QMenu, QScrollArea)
 
 from karabogui import icons
 from karabogui.events import broadcast_event, KaraboEvent
@@ -60,8 +60,6 @@ class ScenePanel(BasePanelWidget):
         """Called before this panel is docked into the main window.
         """
         self.scroll_widget.setWidgetResizable(False)
-        # The scroll widget will use scene_view's sizeHint
-        self.scene_view.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
     def undock(self, maximized=False):
         """Called before this panel is undocked from the main window.
@@ -75,8 +73,6 @@ class ScenePanel(BasePanelWidget):
             # Enlarge the scene widget to its actual size
             with scene_view.ignore_resize_events():
                 self.scroll_widget.setWidgetResizable(True)
-        # We want to grow with the panel window
-        scene_view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
     def toolbars(self):
         """This should create and return one or more `ToolBar` instances needed
