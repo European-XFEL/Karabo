@@ -6,6 +6,7 @@
 from contextlib import contextmanager
 import math
 
+from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QFont, QFontMetrics
 
 from .const import GRID_STEP, SCREEN_MAX_VALUE
@@ -66,3 +67,9 @@ def round_down_to_grid(num):
 def round_up_to_grid(num):
     """Round up to the nearest grid step"""
     return math.ceil(num / GRID_STEP) * GRID_STEP
+
+
+def calc_snap_pos(pos):
+    """Calculate the snap position by rounding down the x-y points to the
+       nearest grid"""
+    return QPoint(round_down_to_grid(pos.x()), round_down_to_grid(pos.y()))
