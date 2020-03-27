@@ -244,10 +244,18 @@ class ComboBoxDelegate(QItemDelegate):
 
     def setEditorData(self, editor, index):
         """Reimplemented function of QItemDelegate"""
-        editor.blockSignals(True)
         selection = index.model().data(index, Qt.DisplayRole)
-        editor.setCurrentIndex(self._options.index(selection))
-        editor.blockSignals(False)
+        try:
+            selection_index = self._options.index(selection)
+            editor.blockSignals(True)
+            editor.setCurrentIndex(selection_index)
+            editor.blockSignals(False)
+        except ValueError:
+            # XXX: Due to schema injection, a property value might not be in
+            # allowed options and thus not available. This is very rare
+            # and unlikely and we just continue!
+            raise RuntimeError("The value {} is not in the the following "
+                               "options: {}").format(selection, self._options)
 
     def setModelData(self, editor, model, index):
         """Reimplemented function of QItemDelegate"""
