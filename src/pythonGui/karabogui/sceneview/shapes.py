@@ -5,18 +5,18 @@
 #############################################################################
 from abc import abstractmethod
 
-from PyQt5.QtCore import QLine, QRect, QSize, Qt
+from PyQt5.QtCore import QLine, QMargins, QRect, QSize, Qt
 from PyQt5.QtGui import QBrush, QColor, QPainterPath, QPen
 from PyQt5.QtWidgets import QDialog
-from traits.api import (ABCHasStrictTraits, Bool, Instance, Property,
+from traits.api import (ABCHasStrictTraits, Bool, Constant, Instance, Property,
                         cached_property)
 
 from karabo.common.scenemodel.api import BaseShapeObjectData
 from karabogui.dialogs.dialogs import PenDialog
 from karabogui.pathparser import Parser
-from .const import (QT_PEN_CAP_STYLE_FROM_STR, QT_PEN_CAP_STYLE_TO_STR,
-                    QT_PEN_JOIN_STYLE_FROM_STR, QT_PEN_JOIN_STYLE_TO_STR,
-                    SCREEN_MAX_VALUE)
+from .const import (GRID_STEP, QT_PEN_CAP_STYLE_FROM_STR,
+                    QT_PEN_CAP_STYLE_TO_STR, QT_PEN_JOIN_STYLE_FROM_STR,
+                    QT_PEN_JOIN_STYLE_TO_STR, SCREEN_MAX_VALUE)
 
 _BRUSH_ATTRS = ('fill', 'fill_opacity')
 _PEN_ATTRS = ('stroke', 'stroke_opacity', 'stroke_linecap',
@@ -148,6 +148,21 @@ class LineShape(BaseShape):
     shape = Property(Instance(QLine), depends_on=['model.x1', 'model.x2',
                                                   'model.y1', 'model.y2'])
 
+    # The geometry rect of the line. This includes margins that is independent
+    # to the model values
+    rect = Property(Instance(QRect), depends_on="shape")
+
+    # There is a need to put margins to avoid mouse interaction problems.
+    # This does not affect the model, but will most probably have an effect on
+    # line shapes on a group/layout. This is an unavoidable evil.
+    _margins = (GRID_STEP, GRID_STEP, GRID_STEP, GRID_STEP)
+    _qmargins = Constant(QMargins(*_margins))
+
+    # Record the vector direction on class instantiation. This is used to get
+    # the correct line coords as we use its normalized rect in the scene.
+    has_negative_width = Bool
+    has_negative_height = Bool
+
     def _get_brush(self):
         """Reimplement the base-class property getter. No brushes here! """
         return None
@@ -157,6 +172,19 @@ class LineShape(BaseShape):
         model = self.model
         return QLine(model.x1, model.y1, model.x2, model.y2)
 
+    @cached_property
+    def _get_rect(self):
+        line = self.shape
+        return QRect(line.p1(), line.p2())
+
+    def _has_negative_width_default(self):
+        model = self.model
+        return model.x2 < model.x1
+
+    def _has_negative_height_default(self):
+        model = self.model
+        return model.y2 < model.y1
+
     def draw(self, painter):
         """The line gets drawn.
         """
@@ -164,17 +192,38 @@ class LineShape(BaseShape):
         painter.drawLine(self.shape)
 
     def geometry(self):
-        return QRect(self.shape.p1(), self.shape.p2())
+        # We have to return the normalized rect as this is used for mapping
+        # the mouse position.
+        return self.rect.normalized() + self._qmargins
 
     def set_geometry(self, rect):
-        start, end = rect.topLeft(), rect.bottomRight()
-        self.model.set(x1=start.x(), y1=start.y(), x2=end.x(), y2=end.y())
+        """Sets the effective geometry in the model which is without
+           the margins and the normalization."""
+
+        # Correct the rect first by reverting our changes:
+        # 1. margins - we remove them
+        rect -= self._qmargins
+
+        # 2. normalization - we do it manually
+        x1, y1, x2, y2 = rect.getCoords()
+        if self.has_negative_width:
+            x1, x2 = x2, x1
+        if self.has_negative_height:
+            y1, y2 = y2, y1
+
+        self.model.set(x1=x1, y1=y1, x2=x2, y2=y2)
 
     def translate(self, offset):
         x1, y1 = self.model.x1, self.model.y1
         x2, y2 = self.model.x2, self.model.y2
         xoff, yoff = offset.x(), offset.y()
         self.model.set(x1=x1 + xoff, y1=y1 + yoff, x2=x2 + xoff, y2=y2 + yoff)
+
+    def minimumSize(self):
+        """We use the margins for the minimum size. This just means that the
+           effective rect has zero width/height"""
+        left, top, right, bottom = self._margins
+        return QSize(left + right, top + bottom)
 
 
 class RectangleShape(BaseShape):

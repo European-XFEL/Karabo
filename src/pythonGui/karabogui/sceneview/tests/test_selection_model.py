@@ -5,8 +5,6 @@
 #############################################################################
 import unittest
 
-from PyQt5.QtCore import QRect
-
 from karabo.common.scenemodel.api import LineModel, RectangleModel
 from karabogui.sceneview.selection_model import SceneSelectionModel
 from karabogui.sceneview.shapes import LineShape, RectangleShape
@@ -40,9 +38,7 @@ class TestSelectionModel(unittest.TestCase):
         for obj in self.selection_model:
             self.assertIn(obj, (line_shape, rect_shape))
 
-        exp_rect = QRect(line_model.x1, line_model.y1,
-                         rect_model.x + rect_model.width,
-                         rect_model.y + rect_model.height)
+        exp_rect = line_shape.geometry().united(rect_shape.geometry())
         sel_rect = self.selection_model.get_selection_bounds()
         self.assertEqual(exp_rect, sel_rect)
 

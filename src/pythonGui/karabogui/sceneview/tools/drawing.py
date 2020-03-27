@@ -9,6 +9,7 @@ from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
 from karabogui.sceneview.bases import BaseSceneTool
+from karabogui.sceneview.utils import calc_snap_pos
 
 
 class TextSceneTool(BaseSceneTool):
@@ -50,15 +51,21 @@ class LineSceneTool(BaseSceneTool):
         """A callback which is fired whenever the user clicks in the
         SceneView.
         """
-        self.start_pos = event.pos()
-        self.line = QLine(self.start_pos, self.start_pos)
+        pos = event.pos()
+        if scene_view.snap_to_grid:
+            pos = calc_snap_pos(pos)
+        self.start_pos = pos
+        self.line = QLine(pos, pos)
 
     def mouse_move(self, scene_view, event):
         """A callback which is fired whenever the user moves the mouse
         in the SceneView.
         """
         if event.buttons() and self.line is not None:
-            self.line.setPoints(self.start_pos, event.pos())
+            pos = event.pos()
+            if scene_view.snap_to_grid:
+                pos = calc_snap_pos(pos)
+            self.line.setPoints(self.start_pos, pos)
 
     def mouse_up(self, scene_view, event):
         """A callback which is fired whenever the user ends a mouse click
@@ -70,6 +77,7 @@ class LineSceneTool(BaseSceneTool):
                               stroke='#000000')
             scene_view.add_models(model)
             scene_view.set_tool(None)
+            scene_view.select_model(model)
 
 
 class RectangleSceneTool(BaseSceneTool):
