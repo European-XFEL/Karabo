@@ -177,8 +177,8 @@ class ScenePanel(BasePanelWidget):
 
     def setReadOnly(self, value):
         """This method is externally called for `AccessLevel` dependent view"""
-        if self.scene_view.design_mode and not value:
-            self.scene_view.design_mode = False
+        if not value and self.scene_view.design_mode:
+            self.ac_design_mode.setChecked(False)
         self.ac_design_mode.setVisible(value)
 
     # ----------------------------
