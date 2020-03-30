@@ -21,6 +21,7 @@ build/netbeans/*/*/*/nbproject/Package-*.bash
 dist/
 doc/concepts/colors.rst
 /private/*
+cmake-*
 GNU-Linux-x86
 GNU_MacPorts-MacOSX
 *.pyc

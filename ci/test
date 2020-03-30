@@ -15,12 +15,7 @@ __conda_tests() {
 
 __cmake_tests() {
     . ci/utils/enable_internet.sh
-    conda activate || source activate || return 1
-    # create the recipe (setting versions...)
-    pushd conda-recipes/karabo-cpp
-    python -m cogapp -o meta.yaml ./meta_base.yaml
-    conda build .
-    popd
+    source build_conda_env.sh clean install karabo-cpp
     . ci/utils/disable_internet.sh
 }
 
