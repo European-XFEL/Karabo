@@ -5,7 +5,8 @@ import numpy
 from numpy.testing import assert_equal
 
 from karabo.bound import (BinarySerializerHash, TextSerializerHash,
-                          Hash as BoundHash, VectorHash)
+                          Hash as BoundHash, VectorHash, Schema as BoundSchema,
+                          NODE_ELEMENT, NodeType)
 from karabo.middlelayer import (
     Hash, NodeType, Schema, HashList, Int64, decodeBinary, decodeXML,
     encodeBinary, encodeXML, XMLWriter, XMLParser)
@@ -130,33 +131,77 @@ class Hash_TestCase(unittest.TestCase):
         c = Hash(h)
         self.check_hash(c)
 
-    def create_hash(self):
-        h = Hash()
+    @staticmethod
+    def _init_hash(h):
+        """Initializes a given hash (can be either a MDL or a Bound Hash)."""
+
+        use_bound = isinstance(h, BoundHash)
+
         h["bool"] = True
         h["int"] = 4
         h["string"] = "bla ä < / \\ \"' > ]]> & <![CDATA[ =_! (|}"
         h["complex"] = complex(1.0, 0.42)
         h["stringlist"] = ["bla", "blub"]
         h["chars"] = b"bla"
-        h["vector"] = numpy.arange(7, dtype=numpy.int64)
-        h["emptyvector"] = numpy.array([])
-        h["hash"] = Hash("a", 3, "b", 7.1)
-        h["hashlist"] = [Hash("a", 3), Hash()]
         h["emptystringlist"] = []
-        h["emptyhashlist"] = HashList()
-        h["vectorbool"] = numpy.array([True, False, True])
         h["char"] = _Byte("c")
+        if use_bound:
+            # FIXME: refactor this once numpy serialization support is available
+            #        in Bound. 'vectorbool', 'vector' and 'emptyvector' should
+            #        use numpy in their initialization.
+            h["vector"] = [i for i in range(7)]
+            h["emptyvector"] = []
+            h["vectorbool"] = [True, False, True]
+            h["hash"] = BoundHash("a", 3, "b", 7.1)
+            h["hashlist"] = [BoundHash("a", 3), BoundHash()]
+            h["emptyhashlist"] = VectorHash()
+            # Bound uses setAttribute for setting attributes.
+            # TODO: Add one attribute of type VectorHash and one of type Schema.
+            h.setAttribute("bool", "bool", False)
+            h.setAttribute("int", "float", 7.3)
+            h.setAttribute("hash", "int", 3)
+            h.setAttribute("string", "chars", b"blub")
+            h.setAttribute("chars", "string",
+                           "laber &quot; ö \\ \"' ]]> <![CDATA[ (|}")
+            h.setAttribute("vector", "complex", complex(1.0, 2.0))
+            # Bound way for building a similar schema to the one build for
+            # MDL below
+            sch = BoundSchema('blub')
+            (
+                NODE_ELEMENT(sch)
+                .key('a')
+                .commit()
+            )
+            h['schema'] = sch
+        else:
+            h["vector"] = numpy.arange(7, dtype=numpy.int64)
+            h["emptyvector"] = numpy.array([])
+            h["vectorbool"] = numpy.array([True, False, True])
+            h["hash"] = Hash("a", 3, "b", 7.1)
+            h["hashlist"] = [Hash("a", 3), Hash()]
+            h["emptyhashlist"] = HashList()
+            # This idiom for assigning attributes is only supported in MDL.
+            # TODO: add an attribute of type HashList.
+            h["bool", "bool"] = False
+            h["int", "float"] = 7.3
+            h["hash", "int"] = 3
+            h["string", "chars"] = b"blub"
+            h["chars", "string"] = "laber &quot; ö \\ \"' ]]> <![CDATA[ (|}"
+            h["vector", "complex"] = complex(1.0, 2.0)
+            # MDL specific: constructing a schema from its underlying Hash.
+            sh = Hash()
+            sh["a"] = Hash()
+            sh["a", "nodeType"] = NodeType.Node
+            h["schema"] = Schema("blub", hash=sh)
 
-        h["bool", "bool"] = False
-        h["int", "float"] = 7.3
-        h["hash", "int"] = 3
-        h["string", "chars"] = b"blub"
-        h["chars", "string"] = "laber &quot; ö \\ \"' ]]> <![CDATA[ (|}"
-        h["vector", "complex"] = complex(1.0, 2.0)
-        sh = Hash()
-        sh["a"] = Hash()
-        sh["a", "nodeType"] = NodeType.Leaf
-        h["schema"] = Schema("blub", hash=sh)
+    def create_hash(self):
+        h = Hash()
+        Hash_TestCase._init_hash(h)
+        return h
+
+    def create_bound_hash(self):
+        h = BoundHash()
+        Hash_TestCase._init_hash(h)
         return h
 
     def check_hash_simple(self, h):
@@ -165,8 +210,8 @@ class Hash_TestCase(unittest.TestCase):
         This method is simple enough that it works for both C++ and
         Python-only hashes."""
         keys = ["bool", "int", "string", "complex", "stringlist", "chars",
-                "vector", "emptyvector", "hash", "hashlist", "emptystringlist",
-                "emptyhashlist", "vectorbool", "char", "schema"]
+                "emptystringlist", "char", "vector", "emptyvector",
+                "vectorbool", "hash", "hashlist", "emptyhashlist", "schema"]
         self.assertEqual(list(h.keys()), keys)
         self.assertIs(h["bool"], True)
         self.assertEqual(h["int"], 4)
@@ -181,9 +226,9 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(len(h["hashlist"]), 2)
         self.assertEqual(h["hashlist"][0]["a"], 3)
         self.assertEqual(len(h["hashlist"][1]), 0)
-        assert_equal(h["vector"], numpy.arange(7))
-        assert_equal(h["emptyvector"], numpy.array([]))
-        assert_equal(h["vectorbool"], numpy.array([True, False, True]))
+        assert_equal(h["vector"], [i for i in range(7)])
+        assert_equal(h["emptyvector"], [])
+        assert_equal(h["vectorbool"], [True, False, True])
         self.assertEqual(h["emptystringlist"], [])
         self.assertEqual(len(h["emptyhashlist"]), 0)
         self.assertIsInstance(h["emptyhashlist"], (HashList, VectorHash))
@@ -205,10 +250,11 @@ class Hash_TestCase(unittest.TestCase):
                          "laber &quot; ö \\ \"' ]]> <![CDATA[ (|}")
         self.assertEqual(h["vector", "complex"], complex(1.0, 2.0))
         self.assertTrue(isinstance(h["chars", "string"], str))
+
         self.assertEqual(h["schema"].name, "blub")
         sh = h["schema"].hash
         self.assertFalse(sh["a"].keys())
-        self.assertEqual(sh["a", "nodeType"], NodeType.Leaf)
+        self.assertEqual(sh["a", "nodeType"], NodeType.Node)
 
     def test_xml_old(self):
         writer = XMLWriter()
@@ -229,7 +275,7 @@ class Hash_TestCase(unittest.TestCase):
     def test_binary(self):
         s = encodeBinary(self.create_hash())
         self.check_hash(decodeBinary(s))
-        self.assertEqual(adler32(s), 963145160)
+        self.assertEqual(adler32(s), 2931125705)
 
     def test_cpp_bin(self):
         s = encodeBinary(self.create_hash())
@@ -239,13 +285,31 @@ class Hash_TestCase(unittest.TestCase):
         ret = decodeBinary(ser.save(h))
         self.check_hash(ret)
 
-    def test_cpp_xml(self):
-        s = encodeXML(self.create_hash())
-        ser = TextSerializerHash.create("Xml")
-        h = ser.load(s)
-        self.check_hash_simple(h)
-        ret = decodeXML(ser.save(h))
-        self.check_hash(ret)
+    def test_xml_roundtrip(self):
+        """Tests compatibility between the XML Serializers for MDL and Bound
+        Python.
+
+        The test has two parts: the first builds a Bound Hash from the XML
+        serialized form of an MDL Hash, checks the Bound Hash and then rebuilds
+        the original MDL Hash from the XML serialized form of the Bound Hash.
+        The second part is similar to the first, but it starts building an 
+        MDL Hash from the XML serialized form of a Bound Hash.
+        """
+        # Starting from MDL Hash
+        mdl_hash_xml = encodeXML(self.create_hash())
+        bound_ser = TextSerializerHash.create("Xml")
+        bound_hash = bound_ser.load(mdl_hash_xml)
+        self.check_hash_simple(bound_hash)
+        bound_hash_xml = bound_ser.save(bound_hash)
+        mdl_hash = decodeXML(bound_hash_xml)
+        self.check_hash(mdl_hash)
+        # Starting from Bound Hash
+        bound_hash_xml = bound_ser.save(self.create_bound_hash())
+        mdl_hash = decodeXML(bound_hash_xml)
+        self.check_hash(mdl_hash)
+        mdl_hash_xml = encodeXML(mdl_hash)
+        bound_hash = bound_ser.load(mdl_hash_xml)
+        self.check_hash_simple(bound_hash)
 
     def test_ndarray(self):
         bh = BoundHash()
