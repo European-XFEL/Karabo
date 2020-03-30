@@ -2,19 +2,19 @@ export KARABO=${PREFIX}
 export PY_LIB=$(python -c "import sys; print(f'-l python{sys.version_info.major}.{sys.version_info.minor}m')")
 
 # build karabo
-mkdir cmake-${PKG_NAME}
-cd cmake-${PKG_NAME}
-rm -fr *
+rm -fr ${SRC_DIR}/cmake-${PKG_NAME}/*
+mkdir -p ${SRC_DIR}/cmake-${PKG_NAME}
+cd ${SRC_DIR}/cmake-${PKG_NAME}
 CXXFLAGS="" \
 cmake \
   -DCMAKE_PREFIX_PATH=${CONDA_PREFIX}\
   -DCMAKE_INSTALL_PREFIX=${PREFIX}\
   ${SRC_DIR}/src/karabo
 
-make -j${CPU_COUNT}
-# do not build recipe if the tests fail
-ctest -V -j${CPU_COUNT}
-make install
+make -j${CPU_COUNT} || exit $?
+# run tests
+ctest -V 
+make install || exit $?
 
 ACTIVATE_DIR=${PREFIX}/etc/conda/activate.d
 DEACTIVATE_DIR=${PREFIX}/etc/conda/deactivate.d

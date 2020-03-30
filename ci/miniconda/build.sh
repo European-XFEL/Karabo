@@ -13,27 +13,21 @@ printAndRun() {
 }
 
 
-printAndRun pushd ./src/pythonGui/
-printAndRun conda devenv
-printAndRun source activate karabogui
-
-# Generate _version file
-printAndRun python setup.py --version
-
+printAndRun build_conda_env.sh clean install
 # Generate meta.yaml recipe information
-printAndRun conda run -n karabogui python -m cogapp -d -o ./conda-recipe/meta.yaml ./conda-recipe/meta_base.yaml
+printAndRun conda run -n karabogui python -m cogapp -d -o ./conda-recipes/karabogui/meta.yaml ./conda-recipes/karabogui/meta_base.yaml
 
 echo "**********Building KaraboGui with the following Recipe**********"
-cat ./conda-recipe/meta.yaml
+cat ./conda-recipes/karabogui/meta.yaml
 
 # 6. Build the package
-printAndRun conda build ./conda-recipe/ -c http://exflserv05.desy.de/karabo/channel \
+printAndRun conda build ./conda-recipes/karabogui/. -c http://exflserv05.desy.de/karabo/channel \
                -c conda-forge \
                -c defaults \
                --no-anaconda-upload
 
 # Create mirror channel locally
 rm -rf /tmp/mirror/
-printAndRun python ./scripts/create_mirror_channels.py --target_dir /tmp/mirror/ --env karabogui
+printAndRun python ./conda-recipes/scripts/create_mirror_channels.py --target_dir /tmp/mirror/ --env karabogui
 
 popd
