@@ -4,10 +4,9 @@ from unittest import TestCase, main, skip
 from numpy import e, pi
 from pint import DimensionalityError
 
-from karabo.middlelayer import (
+from karabo.native import (
     Int32, MetricPrefix, Timestamp, Unit, VectorComplexDouble, VectorDouble,
-    VectorInt32,
-    )
+    VectorInt32)
 
 from karabo.native.data.basetypes import QuantityValue as QV
 
