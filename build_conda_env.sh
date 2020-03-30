@@ -20,21 +20,150 @@ safeRunCondaCommand() {
     fi
 }
 
+karaboCondaGetScriptPath() {
+    # This function allows to follow links and identify the path of this script.
+    # since this script should run in OsX as well, we cannot simply use the `-f`
+    # option of readlink
+    ORIGIN_PWD=$PWD
+    # get the absolute path
+    # in linux one would not need this trick. This will work also on BSD based systems like OsX
+    SCRIPT_PATH=$(cd "$(dirname ${BASH_SOURCE[0]})" ; pwd -P)
+    cd $SCRIPT_PATH
+    TARGET_FILE=$(basename ${BASH_SOURCE[0]})
+    # follow the symlinks if any
+    while [ -L "$TARGET_FILE" ]
+    do
+        TARGET_FILE=`readlink $TARGET_FILE`
+        SCRIPT_PATH=$(cd "$(dirname ${TARGET_FILE})" ; pwd -P)
+        cd $SCRIPT_PATH
+        TARGET_FILE=`basename $TARGET_FILE`
+    done
+    cd $ORIGIN_PWD
+    unset ORIGIN_PWD
+}
+
+karaboCondaCleanEnvironment() {
+    typeset env_name="$1"
+    if [ "${CLEAN}" != true ]; then
+        # NOP
+        return 0
+    fi
+    # exit environment that will be wiped, if we are in it.
+    if [ "${CONDA_DEFAULT_ENV}" == "${env_name}" ]; then
+        safeRunCondaCommand conda deactivate || safeRunCondaCommand source deactivate || return 1
+    fi
+    # wipe the environment
+    if [[ `conda info --envs | grep ${env_name}` != "" ]]; then
+        echo "### removed '${env_name}' conda environment ###"
+        safeRunCondaCommand conda env remove -n ${env_name} -y || return 1
+    else
+        echo "### '${env_name}' conda environment inexistent, nothing to clean ###"
+    fi
+    if [ "$SETUP_FLAG" != false ]; then
+        _RECIPE_DIR=${SCRIPT_PATH}/conda-recipes/${KARABO_ENV}
+        echo
+        echo "### Creating '${env_name}' conda environment ###"
+        echo
+        # create the base environment programmatically
+        safeRunCondaCommand conda activate || safeRunCondaCommand source activate || return 1
+        safeRunCondaCommand conda devenv --file ${_RECIPE_DIR}/environment.devenv.yml || return 1
+        unset _RECIPE_DIR
+    fi   
+}
+
+karaboCondaCheckBaseEnvironment() {
+    # make sure we are in the default environment
+    if [ -z "${CONDA_DEFAULT_ENV}" ]; then
+        safeRunCondaCommand conda activate || safeRunCondaCommand source activate || safeRunCondaCommand activate base || return 1
+    elif [ "${CONDA_DEFAULT_ENV}" != "base" ]; then
+        safeRunCondaCommand conda activate || return 1
+    fi
+
+    # check if the base environment is sufficient to setup the recipes
+    BUILD_PKGS="conda-build conda-devenv cogapp setuptools_scm"
+    for pkg in $BUILD_PKGS; do
+        if [ -z "$(conda list ${pkg} | grep -v '#')" ]; then
+            echo "Conda environment missing package from needed packages ${BUILD_PKGS}"
+            return 1
+        fi
+    done
+}
+
+karaboCondaInstallGUIEnvironment() {
+    KARABO_ENV=karabogui
+    # Clean environment if needed
+    karaboCondaCleanEnvironment ${KARABO_ENV} || return 1
+    if [ "$SETUP_FLAG" == false ]; then
+        # NOP
+        return 0
+    fi
+
+    safeRunCondaCommand conda activate ${KARABO_ENV} || return 1
+    # We are breaking the module integrity of pythonKarabo, from which we only need pythonKarabo/common and /native.
+    # This flag is used in the setup.py to filter which modules to select. Ideally native and common should
+    # be in their own package or at least their own conda recipe.
+    export BUILD_KARABO_GUI=1
+    pushd ${SCRIPT_PATH}/src/pythonKarabo
+    safeRunCondaCommand python3 setup.py ${SETUP_FLAG} || return 1
+    popd
+    pushd ${SCRIPT_PATH}/src/pythonGui
+    safeRunCondaCommand python3 setup.py ${SETUP_FLAG} || return 1
+    popd
+    unset BUILD_KARABO_GUI
+}
+
+karaboCondaInstallCPPEnvironment() {
+    KARABO_ENV=karabo-cpp
+    # Clean environment if asked
+    karaboCondaCleanEnvironment ${KARABO_ENV} || return 1
+    safeRunCondaCommand conda activate ${KARABO_ENV} || safeRunCondaCommand source activate ${KARABO_ENV} || return 1
+    _RECIPE_DIR=${SCRIPT_PATH}/conda-recipes/${KARABO_ENV}
+    if [[ "${SETUP_FLAG}" == develop ]]; then
+        # using the conda info instead of CONDA_PREFIX to fit older conda versions
+        RECIPE_DIR=${_RECIPE_DIR} \
+        SRC_DIR=${SCRIPT_PATH} \
+        PKG_NAME=${KARABO_ENV} \
+        PREFIX=`conda info --json | grep active_prefix | awk -F ": " '{printf $2;}' | sed  's|[,"]||g'` \
+        CPU_COUNT=`python -c "import multiprocessing as mp; print(mp.cpu_count())"` \
+        bash ${_RECIPE_DIR}/build.sh || return 1
+    elif [[ "${SETUP_FLAG}" == install ]]; then
+        python -m cogapp -o ${_RECIPE_DIR}/meta.yaml ${_RECIPE_DIR}/meta_base.yaml || return 1
+        safeRunCondaCommand conda build ${_RECIPE_DIR} || return 1
+        safeRunCondaCommand conda install -c ${CONDA_LOCAL_CHANNEL} ${KARABO_ENV} || return 1
+    fi
+    unset _RECIPE_DIR
+}
+
 displayHelp() {
     echo "
-Usage: $0 [clean] [install|develop]
+Usage: build_conda_env.sh install|develop|clean [envs]
 
 This script should be sourced so the environment is activated in the caller shell.
 If you don't source it, just run 'conda activate karabogui' in the end.
+The optional list of environments will allow one to develop/install multiple
+conda development environments. No environment means the karabogui environment
+for backward compatibility.
 
 Usage example:
 
     source build_conda_env.sh clean develop
 
     Will:
-        - Clean any environment
+        - Clean the 'karabogui' environment
         - Create it again
-        - Install karabogui in development mode
+        - Install 'karabogui' in development mode
+
+    The installation is usually not needed as all code is added in the PYTHONPATH,
+    but installing it you will have access to the entrypoints (karabo-gui, etc)
+
+Usage example continued:
+
+    source build_conda_env.sh clean install karabo-cpp
+
+    Will:
+        - Clean the 'karabo-cpp' environment
+        - Create it again
+        - Install 'karabo-cpp' the 'karabo-cpp' environment
 
     The installation is usually not needed as all code is added in the PYTHONPATH,
     but installing it you will have access to the entrypoints (karabo-gui, etc)
@@ -54,8 +183,7 @@ Note: The environment variable XFEL_CONDA_CHANNEL can optionally be used to poin
 
 SETUP_FLAG=false
 CLEAN=false
-KARABO_ENV=karabogui
-KARABO_BUILD_ENV=karabo-build
+ENVS=()
 
 # Parse command line
 while [ -n "$1" ]; do
@@ -72,6 +200,14 @@ while [ -n "$1" ]; do
             CLEAN=true
             shift
             ;;
+        karabogui|karabo-cpp)
+            if [ "${SETUP_FLAG}" == false ]; then
+                displayHelp
+                return 1
+            fi
+            ENVS+=($1)
+            shift
+            ;;
         -h|--help)
             displayHelp
             return 0
@@ -83,71 +219,33 @@ while [ -n "$1" ]; do
     esac
 done
 
-if [ "${SETUP_FLAG}" == false ]; then
+
+if [ "${#ENVS[@]}" == "0" ]; then
+    ENVS+=("karabogui")
+fi
+
+if [[ "${SETUP_FLAG}" == false && "${CLEAN}" == false ]]; then
     displayHelp
     return 1
 fi
 
+
+CONDA_ROOT=`conda info --json | grep root_prefix | awk -F ": " '{printf $2;}' | sed  's|[,"]||g'`
+CONDA_LOCAL_CHANNEL="file://${CONDA_ROOT}/conda-bld"
+CONDA_LOCAL_CHANNEL_ENV="  - ${CONDA_LOCAL_CHANNEL}"
 # functions are not exported to subshells.
-source ${CONDA_PREFIX}/etc/profile.d/conda.sh
+source ${CONDA_ROOT}/etc/profile.d/conda.sh
+karaboCondaCheckBaseEnvironment || return 1
+karaboCondaGetScriptPath
 
-# make sure we are in the default environment
-if [ -z "${CONDA_DEFAULT_ENV}" ]; then
-    safeRunCondaCommand conda activate || safeRunCondaCommand source activate || safeRunCondaCommand activate base || return 1
-elif [ "${CONDA_DEFAULT_ENV}" != "base" ]; then
-    safeRunCondaCommand conda activate || return 1
-fi
-
-# Clean environment if asked
-if [ ${CLEAN} == true ]; then
-    if [ "${CONDA_DEFAULT_ENV}" == "${KARABO_ENV}" ] ; then
-        safeRunCondaCommand conda deactivate || return 1
-    fi
-    safeRunCondaCommand conda env remove -n ${KARABO_ENV} -y || return 1
-fi
-
-# check if the base environment is sufficient to setup the recipes
-BUILD_PKGS="conda-build conda-devenv cogapp setuptools_scm"
-for pkg in $BUILD_PKGS; do
-    if [ -z "$(conda list ${pkg} | grep -v '#')" ]; then
-        echo "Conda environment missing package from needed packages ${BUILD_PKGS}"
-        return 1
-    fi
+for ENV_NAME in $ENVS; do
+    case "$ENV_NAME" in
+        karabogui)
+            karaboCondaInstallGUIEnvironment || return 1
+            ;;
+        karabo-cpp)
+            karaboCondaInstallCPPEnvironment || return 1
+            ;;
+    esac
 done
 
-echo
-echo "### Creating conda environment ###"
-echo
-
-ORIGIN_PWD=$PWD
-SCRIPT_PATH=$(dirname ${BASH_SOURCE[0]})
-cd $SCRIPT_PATH
-TARGET_FILE=$(basename ${BASH_SOURCE[0]})
-# follow the symlinks if any
-while [ -L "$TARGET_FILE" ]
-do
-    TARGET_FILE=`readlink $TARGET_FILE`
-    SCRIPT_PATH=$(dirname $TARGET_FILE)
-    cd $SCRIPT_PATH
-    TARGET_FILE=`basename $TARGET_FILE`
-done
-cd $ORIGIN_PWD
-unset ORIGIN_PWD
-
-# create the dev environment
-safeRunCondaCommand conda devenv --file ${SCRIPT_PATH}/src/pythonGui/environment.devenv.yml || return 1
-safeRunCondaCommand conda activate ${KARABO_ENV} || return 1
-
-if [ "$SETUP_FLAG" != false ]; then
-    # We are breaking the module integrity of pythonKarabo, from which we only need pythonKarabo/common and /native.
-    # This flag is therefore used in the setup.py to filter which modules to select. Ideally native and common should
-    # be in their own package
-    export BUILD_KARABO_GUI=1
-    pushd ${SCRIPT_PATH}/src/pythonKarabo
-    safeRunCondaCommand python3 setup.py ${SETUP_FLAG} || return 1
-    popd
-    pushd ${SCRIPT_PATH}/src/pythonGui
-    safeRunCondaCommand python3 setup.py ${SETUP_FLAG} || return 1
-    popd
-    unset BUILD_KARABO_GUI
-fi
