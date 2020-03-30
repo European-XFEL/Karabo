@@ -86,8 +86,8 @@ class BaseLayout(object):
                      self.model.height)
 
     def setGeometry(self, rect):
-        self.model.set(x=rect.x(), y=rect.y(),
-                       width=rect.width(), height=rect.height())
+        self.model.trait_set(x=rect.x(), y=rect.y(),
+                             width=rect.width(), height=rect.height())
         self.invalidate()  # Important! Force a full layout recalculation
         super(BaseLayout, self).setGeometry(rect)
 
