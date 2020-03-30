@@ -58,9 +58,6 @@ add_dep(openmqc openmqc)
 list(REMOVE_DUPLICATES EXTERN_DEPS_INCLUDE_DIRS)
 
 message(STATUS "OPENSSL_INCLUDE_DIR = ${OPENSSL_INCLUDE_DIR}")
-message(STATUS "OPENMQC = ${OPENMQC_LIB}")
-message(STATUS "LOG4CPP = ${LOG4CPP_LIB}")
-message(STATUS "SNAPPY = ${SNAPPY_LIB}")
 
 set(EXCLUDE_DIR "/tests/")
 
