@@ -37,6 +37,11 @@ PIP=$KARABO/extern/bin/pip
 WHEEL_INSTALL_FLAGS=
 
 $PIP --disable-pip-version-check install -U --no-index $WHEEL_INSTALL_FLAGS $WHEELNAME
+retVal=$?
+if [ $retVal -ne 0 ]; then
+    echo "ERROR: pip returned $retval. Exiting."
+    exit $retVal
+fi
 
 echo " done."
 echo
