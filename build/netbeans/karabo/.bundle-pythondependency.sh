@@ -44,6 +44,11 @@ fi
 WHEELNAME=$(basename $DISTDIR/*.whl)
 WHEELFILE=$DISTDIR/$WHEELNAME
 $PIP --disable-pip-version-check install -U --no-index $WHEEL_INSTALL_FLAGS $WHEELFILE
+retVal=$?
+if [ $retVal -ne 0 ]; then
+    echo "ERROR: pip returned $retval. Exiting."
+    exit $retVal
+fi
 
 # Create a self-extracting installation script
 echo -e '#!/bin/bash\n'"VERSION=$VERSION\nDEPNAME=$DEPNAME\nKARABOVERSION=$KARABOVERSION\nWHEELNAME=$WHEELNAME" | cat - $EXTRACT_SCRIPT $WHEELFILE > $INSTALLSCRIPT
