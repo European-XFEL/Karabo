@@ -6,7 +6,8 @@ from numpy.testing import assert_equal
 
 from karabo.bound import (BinarySerializerHash, TextSerializerHash,
                           Hash as BoundHash, VectorHash, Schema as BoundSchema,
-                          NODE_ELEMENT, NodeType)
+                          NODE_ELEMENT, NodeType, setStdVectorDefaultConversion,
+                          isStdVectorDefaultConversion, Types)
 from karabo.middlelayer import (
     Hash, NodeType, Schema, HashList, Int64, decodeBinary, decodeXML,
     encodeBinary, encodeXML, XMLWriter, XMLParser)
@@ -146,15 +147,24 @@ class Hash_TestCase(unittest.TestCase):
         h["emptystringlist"] = []
         h["char"] = _Byte("c")
         if use_bound:
-            # FIXME: refactor this once numpy serialization support is available
-            #        in Bound. 'vectorbool', 'vector' and 'emptyvector' should
-            #        use numpy in their initialization.
+            restore_stdVector = False
+            if isStdVectorDefaultConversion(Types.NUMPY):
+                # Set the stdVectorDefaultConversion back to its default.
+                # The goal is to test the Bound Hash in its default and
+                # most frequently used form.
+                # Specific tests for compatibility between the two types of
+                # default conversion for Bound Hash vectors already exist at
+                # 'bound_api.tests.Hash_TestCase'.
+                restore_stdVector = True
+                setStdVectorDefaultConversion(Types.PYTHON)
             h["vector"] = [i for i in range(7)]
             h["emptyvector"] = []
             h["vectorbool"] = [True, False, True]
             h["hash"] = BoundHash("a", 3, "b", 7.1)
             h["hashlist"] = [BoundHash("a", 3), BoundHash()]
             h["emptyhashlist"] = VectorHash()
+            if restore_stdVector:
+                setStdVectorDefaultConversion(Types.NUMPY)
             # Bound uses setAttribute for setting attributes.
             # TODO: Add one attribute of type VectorHash and one of type Schema.
             h.setAttribute("bool", "bool", False)
@@ -277,13 +287,28 @@ class Hash_TestCase(unittest.TestCase):
         self.check_hash(decodeBinary(s))
         self.assertEqual(adler32(s), 2931125705)
 
-    def test_cpp_bin(self):
-        s = encodeBinary(self.create_hash())
-        ser = BinarySerializerHash.create("Bin")
-        h = ser.load(s)
-        self.check_hash_simple(h)
-        ret = decodeBinary(ser.save(h))
-        self.check_hash(ret)
+    def test_bin_roundtrip(self):
+        """Tests compatibility between the Binary Serializers for MDL and Bound
+        Python.
+
+        The test is analogous to the one in 'test_xml_roundtrips' and has the
+        same two parts.
+        """
+        # Starting from MDL Hash
+        mdl_hash_bin = encodeBinary(self.create_hash())
+        bound_ser = BinarySerializerHash.create("Bin")
+        bound_hash = bound_ser.load(mdl_hash_bin)
+        self.check_hash_simple(bound_hash)
+        bound_hash_bin = bound_ser.save(bound_hash)
+        mdl_hash = decodeBinary(bound_hash_bin)
+        self.check_hash(mdl_hash)
+        # Starting from Bound Hash
+        bound_hash_bin = bound_ser.save(self.create_bound_hash())
+        mdl_hash = decodeBinary(bound_hash_bin)
+        self.check_hash(mdl_hash)
+        mdl_hash_bin = encodeBinary(mdl_hash)
+        bound_hash = bound_ser.load(mdl_hash_bin)
+        self.check_hash_simple(bound_hash)
 
     def test_xml_roundtrip(self):
         """Tests compatibility between the XML Serializers for MDL and Bound
@@ -292,7 +317,7 @@ class Hash_TestCase(unittest.TestCase):
         The test has two parts: the first builds a Bound Hash from the XML
         serialized form of an MDL Hash, checks the Bound Hash and then rebuilds
         the original MDL Hash from the XML serialized form of the Bound Hash.
-        The second part is similar to the first, but it starts building an 
+        The second part is similar to the first, but it starts building an
         MDL Hash from the XML serialized form of a Bound Hash.
         """
         # Starting from MDL Hash
