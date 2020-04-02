@@ -8,10 +8,8 @@ from xml.sax import make_parser, SAXException
 from xml.sax.saxutils import unescape
 from xml.sax.handler import ContentHandler
 
-from karabo.native.data.hash import (
-    _gettype, Hash, HashList, HashType, SchemaHashType, Type, VectorHash)
-from karabo.native.data.serializers import (
-    EndElement, parseString, XMLParser)
+from karabo.native.data.hash import _gettype, Hash, HashList, HashType, Type
+from karabo.native.data.serializers import XMLParser
 
 
 SEC_TO_USEC = 1000000
@@ -91,91 +89,3 @@ def escape_measurement(s):
     s = s.replace(",", "\\,")
     s = s.replace(" ", "\\ ")
     return s
-
-
-  # This portion of the code is temporary and serves only to parse the
-  # XML files created by the bound library. They are mainly a altered version
-  # of the ones in the karabo.native module.
-  # Since this is used mainly for migration purposes this inferior practice
-  # is tolerated
-
-
-def parsePendingAttrs(to_fill, hashAttrs):
-    while len(to_fill) > 0:
-        name, value, attrs = yield from parseOne()
-        if name in to_fill:
-            hashAttrs[name.split('_')[-1]] = value[name+'_value']
-            to_fill.remove(name)
-
-
-def parseOne():
-    name, attrs = yield "Start"
-    hashattrs = {}
-    to_fill = set()
-    for key, value in attrs.items():
-        value = unescape(value)
-        hashattrs[key] = value
-        if value.startswith("KRB_") and ":" in value:
-            dtype, svalue = value.split(":", 1)
-            dtype = Type.fromname.get(dtype[4:], None)
-            if dtype in (SchemaHashType, VectorHash):
-                hashattrs.pop(key)
-                to_fill.add(svalue)
-            elif dtype is not None:
-                hashattrs[key] = dtype.fromstring(svalue)
-    # Exhaust the child nodes while there are still attribute values to be filled.
-    # Each attribute that has not been filled should be matched by a child with its
-    # name.
-    yield from parsePendingAttrs(to_fill, hashattrs)
-
-    typename = hashattrs.pop("KRB_Type", "HASH")
-    if typename == "HASH":
-        value = yield from parseHash()
-    elif typename == "VECTOR_HASH":
-        attrs, value = yield from parseVectorHash(to_fill)
-    else:
-        value = yield from parseString(typename)
-
-    return name, value, hashattrs
-
-def parseHash():
-    ret = Hash()
-    try:
-        while True:
-            name, value, attrs = yield from parseOne()
-            ret[name] = value
-            ret[name, ...] = attrs
-    except EndElement:
-        return ret
-
-def parseVectorHash(schema_attrs):
-    ret = HashList()
-    attrs = {}
-    try:
-        while True:
-            name, _ = yield "Start"
-            if name in schema_attrs:
-                attrs[name] = (yield from parseHash())
-            elif name == "KRB_Item":
-                ret.append((yield from parseHash()))
-    except EndElement:
-        return attrs, ret
-
-
-class SchemaXMLParser(XMLParser):
-    def parseAll(self):
-        self.name, self.value, self.hashattrs = yield from parseOne()
-
-
-def decodeSchemaXML(data):
-    parser = make_parser()
-    handler = SchemaXMLParser()
-    parser.setContentHandler(handler)
-    parser.feed(data)
-    parser.close()
-    if handler.name == "root" and "KRB_Artificial" in handler.hashattrs:
-        return handler.value
-    else:
-        ret = Hash(handler.name, handler.value)
-        ret[handler.name, ...] = handler.hashattrs
-        return ret
