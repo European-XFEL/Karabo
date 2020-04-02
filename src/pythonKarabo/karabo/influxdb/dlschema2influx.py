@@ -13,10 +13,9 @@ from asyncio import get_event_loop
 
 from karabo.influxdb.client import InfluxDbClient
 from karabo.influxdb.dlutils import (
-    decodeSchemaXML, device_id_from_path, escape_measurement,
-    format_line_protocol_body
+    device_id_from_path, escape_measurement, format_line_protocol_body
 )
-from karabo.native import encodeBinary, Schema
+from karabo.native import encodeBinary, Schema, decodeXML
 
 
 class DlSchema2Influx():
@@ -82,7 +81,7 @@ class DlSchema2Influx():
                         # save the event entry for the schema update
                         class_id, xml = line_fields['schema'].split(':', 1)
                         content = Schema(class_id)
-                        content.hash = decodeSchemaXML(xml)
+                        content.hash = decodeXML(xml)
                         b_schema = encodeBinary(content)
                         digest = hashlib.sha1(b_schema).hexdigest()
                         safe_m = escape_measurement(self.device_id)

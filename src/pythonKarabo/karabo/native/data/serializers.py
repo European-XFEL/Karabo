@@ -5,7 +5,8 @@ from xml.sax import make_parser, SAXException
 from xml.sax.saxutils import unescape
 from xml.sax.handler import ContentHandler
 
-from karabo.native.data.hash import _gettype, Hash, HashList, HashType, Type
+from karabo.native.data.hash import (
+    _gettype, Hash, HashList, HashType, SchemaHashType, Type, VectorHash)
 
 
 class BinaryParser(object):
@@ -60,36 +61,62 @@ def parseHash():
         return ret
 
 
+def readPendingAttrs(to_fill, hashAttrs):
+    while len(to_fill) > 0:
+        name, value, attrs = yield from parseOne()
+        if name in to_fill:
+            hashAttrs[name.split('_')[-1]] = value[name+'_value']
+            to_fill.remove(name)
+
+
 def parseOne():
     name, attrs = yield "Start"
     hashattrs = {}
+    to_fill = set()
     for key, value in attrs.items():
         value = unescape(value)
         hashattrs[key] = value
         if value.startswith("KRB_") and ":" in value:
             dtype, svalue = value.split(":", 1)
             dtype = Type.fromname.get(dtype[4:], None)
-            if dtype is not None:
+            if dtype in (SchemaHashType, VectorHash):
+                hashattrs.pop(key)
+                if svalue.startswith('_attr_root_'):
+                    # we are dealing with a VectorHash or Schema attribute
+                    # encoded by Karabo 2.6.0 or later; it originated a child
+                    # node which has to be parsed. Attributes of those types
+                    # prior to Karabo 2.6.0 should be handled as simple strings
+                    to_fill.add(svalue)
+                else:
+                    hashattrs[key] = svalue
+            elif dtype is not None:
                 hashattrs[key] = dtype.fromstring(svalue)
+    # Process any existing child node that corresponds to an attribute of type
+    # Schema or VectorHash as encoded by Karabo 2.6.0 or later.
+    yield from readPendingAttrs(to_fill, hashattrs)
     typename = hashattrs.pop("KRB_Type", "HASH")
     if typename == "HASH":
         value = yield from parseHash()
     elif typename == "VECTOR_HASH":
-        value = yield from parseVectorHash()
+        value, attrs = yield from parseVectorHash(to_fill)
     else:
         value = yield from parseString(typename)
     return name, value, hashattrs
 
 
-def parseVectorHash():
+def parseVectorHash(schema_attrs):
     ret = HashList()
+    attrs = {}
     try:
         while True:
             name, _ = yield "Start"
-            assert name == "KRB_Item"
-            ret.append((yield from parseHash()))
+            if schema_attrs and name in schema_attrs:
+                attrs[name] = (yield from parseHash())
+            else:
+                assert name == "KRB_Item"
+                ret.append((yield from parseHash()))
     except EndElement:
-        return ret
+        return ret, attrs
 
 
 def parseString(typename):
