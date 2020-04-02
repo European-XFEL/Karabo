@@ -5,8 +5,10 @@ from unittest import TestCase, main
 
 from karabo.native import (
     Configurable, encodeXML, decodeXML, encodeBinary, decodeBinary,
-    Hash, HashList, loadFromFile, VectorDouble, saveToFile
+    Hash, HashList, loadFromFile, Schema, VectorDouble, saveToFile
 )
+
+from karabo.native.data.tests.utils import WithTable
 
 TST_WORKING_DIR = "/tmp/serializers_tests"
 
@@ -36,6 +38,79 @@ BOUND_VECTOR_HASH_XML = """<?xml version="1.0"?>
     </KRB_Sequence>
 </root>
 """
+
+# XML generated using the C++ api for a schema with a TableElement.
+BOUND_TABLE_SCHEMA_XML = """<?xml version="1.0"?>
+    <root KRB_Artificial="" KRB_Type="HASH">
+    <table displayedName="KRB_STRING:Table property"
+      description="KRB_STRING:Table containing one node."
+      assignment="KRB_INT32:0"
+      defaultValue="KRB_VECTOR_HASH:_attr_root_table_defaultValue"
+      accessMode="KRB_INT32:4" nodeType="KRB_INT32:0"
+      leafType="KRB_INT32:0" displayType="KRB_STRING:Table"
+      valueType="KRB_STRING:VECTOR_HASH"
+      rowSchema="KRB_SCHEMA:_attr_root_table_rowSchema"
+      requiredAccessLevel="KRB_INT32:1"
+      overwriteRestrictions=
+        "KRB_VECTOR_BOOL:0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0"
+      KRB_Type="INT32">
+        <_attr_root_table_defaultValue>
+            <_attr_root_table_defaultValue_value KRB_Type="VECTOR_HASH">
+                <KRB_Item>
+                    <e1 KRB_Type="STRING">abc</e1>
+                    <e2 alarmCondition="KRB_STRING:none" KRB_Type="BOOL">1</e2>
+                    <e3 alarmCondition="KRB_STRING:none" KRB_Type="INT32">
+                        12
+                    </e3>
+                    <e4 alarmCondition="KRB_STRING:none" KRB_Type="FLOAT">
+                        0.9837
+                    </e4>
+                    <e5 alarmCondition="KRB_STRING:none" KRB_Type="DOUBLE">
+                        1.2345
+                    </e5>
+                </KRB_Item>
+                <KRB_Item>
+                    <e1 KRB_Type="STRING">xyz</e1>
+                    <e2 alarmCondition="KRB_STRING:none" KRB_Type="BOOL">0</e2>
+                    <e3 alarmCondition="KRB_STRING:none" KRB_Type="INT32">
+                        42
+                    </e3>
+                    <e4 alarmCondition="KRB_STRING:none" KRB_Type="FLOAT">
+                        2.33333
+                    </e4>
+                    <e5 alarmCondition="KRB_STRING:none" KRB_Type="DOUBLE">
+                        7.77777
+                    </e5>
+                </KRB_Item>
+            </_attr_root_table_defaultValue_value>
+        </_attr_root_table_defaultValue>
+        <_attr_root_table_rowSchema>
+            <_attr_root_table_rowSchema_value KRB_Type="SCHEMA">
+              :&lt;?xml version="1.0"?&gt;&lt;root KRB_Artificial="" KRB_Type="HASH"&gt;&lt;e1 daqPolicy="KRB_INT32:-1" displayedName="KRB_STRING:E1" description="KRB_STRING:E1 property" assignment="KRB_INT32:0" defaultValue="KRB_STRING:E1" accessMode="KRB_INT32:4" nodeType="KRB_INT32:0" leafType="KRB_INT32:0" valueType="KRB_STRING:STRING" requiredAccessLevel="KRB_INT32:1" KRB_Type="INT32"&gt;0&lt;/e1&gt;&lt;e2 daqPolicy="KRB_INT32:-1" displayedName="KRB_STRING:E2" description="KRB_STRING:E2 property" accessMode="KRB_INT32:4" assignment="KRB_INT32:0" defaultValue="KRB_BOOL:0" nodeType="KRB_INT32:0" leafType="KRB_INT32:0" valueType="KRB_STRING:BOOL" requiredAccessLevel="KRB_INT32:1" KRB_Type="INT32"&gt;0&lt;/e2&gt;&lt;e3 daqPolicy="KRB_INT32:-1" displayedName="KRB_STRING:E3" description="KRB_STRING:E3 property" accessMode="KRB_INT32:4" assignment="KRB_INT32:0" defaultValue="KRB_INT32:77" nodeType="KRB_INT32:0" leafType="KRB_INT32:0" valueType="KRB_STRING:INT32" requiredAccessLevel="KRB_INT32:1" KRB_Type="INT32"&gt;0&lt;/e3&gt;&lt;e4 daqPolicy="KRB_INT32:-1" displayedName="KRB_STRING:E4" description="KRB_STRING:E4 property" assignment="KRB_INT32:0" defaultValue="KRB_FLOAT:3.1415" accessMode="KRB_INT32:4" nodeType="KRB_INT32:0" leafType="KRB_INT32:0" valueType="KRB_STRING:FLOAT" requiredAccessLevel="KRB_INT32:1" KRB_Type="INT32"&gt;0&lt;/e4&gt;&lt;e5 daqPolicy="KRB_INT32:-1" displayedName="KRB_STRING:E5" description="KRB_STRING:E5 property" assignment="KRB_INT32:0" defaultValue="KRB_DOUBLE:2.78" accessMode="KRB_INT32:4" nodeType="KRB_INT32:0" leafType="KRB_INT32:0" valueType="KRB_STRING:DOUBLE" requiredAccessLevel="KRB_INT32:1" KRB_Type="INT32"&gt;0&lt;/e5&gt;&lt;/root&gt;</_attr_root_table_rowSchema_value>
+        </_attr_root_table_rowSchema>0
+    </table>
+    </root>
+"""  # noqa
+
+# XML generated using the C++ api for a schema with a TableElement before the
+# addition of support to VectorHash and Schema attributes (in MR !3592).
+BOUND_TABLE_SCHEMA_LEGACY_XML = """<?xml version="1.0"?>
+    <root KRB_Artificial="" KRB_Type="HASH">
+        <table displayedName="KRB_STRING:Table property"
+          description="KRB_STRING:Table containing one node."
+          assignment="KRB_INT32:0"
+          nodeType="KRB_INT32:0"
+          leafType="KRB_INT32:0"
+          displayType="KRB_STRING:Table"
+          valueType="KRB_STRING:VECTOR_HASH"
+          requiredAccessLevel="KRB_INT32:1"
+          accessMode="KRB_INT32:4"
+          rowSchema="KRB_SCHEMA:Schema Object"
+          defaultValue="KRB_VECTOR_HASH:'e1' =&gt; abc STRING&#10;'e2' alarmCondition=&quot;none&quot; =&gt; 1 BOOL&#10;'e3' alarmCondition=&quot;none&quot; =&gt; 12 INT32&#10;'e4' alarmCondition=&quot;none&quot; =&gt; 0.9837 FLOAT&#10;'e5' alarmCondition=&quot;none&quot; =&gt; 1.2345 DOUBLE&#10;,'e1' =&gt; xyz STRING&#10;'e2' alarmCondition=&quot;none&quot; =&gt; 0 BOOL&#10;'e3' alarmCondition=&quot;none&quot; =&gt; 42 INT32&#10;'e4' alarmCondition=&quot;none&quot; =&gt; 2.33333 FLOAT&#10;'e5' alarmCondition=&quot;none&quot; =&gt; 7.77777 DOUBLE&#10;"
+          KRB_Type="INT32">0
+        </table>
+    </root>
+"""  # noqa
 
 # The following is used accross all tests as template Hash
 HASH = Hash('akey', 'aval', 'another', Hash('nested', 1.618))
@@ -147,6 +222,58 @@ class TestSerializers(TestCase):
         vh = decodeBinary(bin_enc)
         self.assertEqual(len(vh), 1)
         self.assertEqual(vh[0]['e3'], 36)
+
+    def test_xml_BoundSchema_load(self):
+        """Tests that a xml for a Bound Schema with vector of hash and
+        schema attributes can be succesfully loaded by the MDL xml serializer.
+        """
+        sch_hash = decodeXML(BOUND_TABLE_SCHEMA_XML)
+        self.assertTrue(sch_hash.has('table'))
+        self.assertTrue(
+            isinstance(sch_hash['table', 'rowSchema'], Schema)
+        )
+        self.assertTrue(
+            isinstance(sch_hash['table', 'defaultValue'], HashList)
+        )
+
+    def test_legacy_xml_BoundSchema_load(self):
+        """Tests that a legacy xml for a Bound Schema with vector of hash and
+        schema attributes can be loaded cleanly by the MDL xml serializer. As
+        the legacy xml didn't handle serialization of Schema and VectorHash
+        attributes, serializing them as simple strings, their values won't be
+        retrieved properly.
+        """
+        sch_hash = decodeXML(BOUND_TABLE_SCHEMA_LEGACY_XML)
+        self.assertTrue(sch_hash.has('table'))
+        self.assertTrue(
+            isinstance(sch_hash['table', 'rowSchema'], str)
+        )
+        self.assertEqual(sch_hash['table', 'rowSchema'], 'Schema Object')
+        self.assertTrue(
+            isinstance(sch_hash['table', 'defaultValue'], str)
+        )
+        self.assertTrue(sch_hash['table', 'defaultValue'].startswith("'e1'"))
+
+    def test_xml_MDLSchema_load(self):
+        """Tests that a xml for an MDL Hash with vector of hash and schema
+        attributes can be successfully loaded by the xml serializer.
+
+        Those kind of attributes appear in the serialization of schemas with
+        TableElements and support for them currently differ between Bound and
+        MDL.
+        """
+        schema = WithTable().getDeviceSchema()
+        schema_xml = encodeXML(schema.hash)
+        schema_hash = decodeXML(schema_xml)
+        self.assertTrue(schema_hash.has('table'))
+        self.assertTrue(isinstance(schema_hash['table'], Hash))
+        self.assertEqual(schema_hash['table', 'accessMode'], 2)
+        self.assertTrue('rowSchema' in schema_hash.getAttributes('table'))
+        self.assertTrue(isinstance(schema_hash['table', 'rowSchema'], str))
+        # TODO: make encodeXML compatible with the Bound XML serializer from
+        #       Karabo version 2.6.0 and above. Once that is done, 'rowSchema'
+        #       should become an instance of Schema and 'table' should become an
+        #       instance of HashList.
 
 
 if __name__ == "__main__":
