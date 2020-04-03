@@ -48,9 +48,16 @@ namespace karabo {
             }
 
             const std::string& deviceId = m_deviceToBeLogged;
-            const unsigned long long ts = m_lastDataTimestamp.toTimestamp() * PRECISION_FACTOR;
             std::stringstream ss;
-            ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\" " << ts << "\n";
+            {
+                // Timestamp shall be the one of the most recent update - this ensures that all stamps come from
+                // the device and cannot be screwed up if clocks of logger and device are off from each other.
+                // TODO: Since the time when logging stops might be of interest as well (for silent devices), it would
+                //       be nice to store it somehow as well.
+                boost::mutex::scoped_lock lock(m_lastTimestampMutex);
+                const unsigned long long ts = m_lastDataTimestamp.toTimestamp() * PRECISION_FACTOR;
+                ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\" " << ts << "\n";
+            }
             m_dbClient->enqueueQuery(ss.str());
             m_dbClient->flushBatch();
 
@@ -96,8 +103,8 @@ namespace karabo {
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 bool terminateLine = false;
                 {
-                    // Update time stamp for DeviceData destructor and property "lastUpdatesUtc".
-                    // Since the latter is accessing it when not posted on m_strand, need mutex protection:
+                    // Update time stamp for updates of property "lastUpdatesUtc" and terminateQuery().
+                    // Since the former is accessing it when not posted on m_strand, need mutex protection:
                     boost::mutex::scoped_lock lock(m_lastTimestampMutex);
                     if (t.getEpochstamp() != m_lastDataTimestamp.getEpochstamp()) {
                         // If mixed timestamps in single message (or arrival in wrong order), always take most recent one.
@@ -146,8 +153,11 @@ namespace karabo {
 
                 logValue(deviceId, path, value, leafNode.getType());
 
-                boost::mutex::scoped_lock lock(m_lastTimestampMutex);
-                if (terminateLine) terminateQuery();
+                if (terminateLine) {
+                    // Do we really need the member and thus a mutex lock here - or can't we use a local variable?
+                    boost::mutex::scoped_lock lock(m_lastTimestampMutex);
+                    terminateQuery(m_lastDataTimestamp);
+                }
             }
         }
 
@@ -218,12 +228,12 @@ namespace karabo {
         }
 
 
-        void InfluxDeviceData::terminateQuery() {
-            const unsigned long long tid = m_lastDataTimestamp.getTrainId();
+        void InfluxDeviceData::terminateQuery(const karabo::util::Timestamp& stamp) {
+            const unsigned long long tid = stamp.getTrainId();
             if (tid > 0) {
                 m_query << ",tid-UINT64=" << tid << "i";
             }
-            const unsigned long long ts = m_lastDataTimestamp.toTimestamp() * PRECISION_FACTOR;
+            const unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
             if (ts > 0) {
                 m_query << " " << ts;
             }
