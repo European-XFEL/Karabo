@@ -34,7 +34,7 @@ namespace karabo {
             void logValue(const std::string& deviceId, const std::string& path,
                           const std::string& value, const karabo::util::Types::ReferenceType& type);
 
-            void terminateQuery();
+            void terminateQuery(const karabo::util::Timestamp& stamp);
 
             void checkSchemaInDb(const karabo::util::Timestamp& stamp, const karabo::net::HttpResponse& o);
 
