@@ -36,7 +36,10 @@ class KaraboMessageBox(QMessageBox):
         """Close the ticker before closing the dialog"""
         if self._ticker.isActive():
             self._ticker.stop()
-        super(KaraboMessageBox, self).closeEvent(event)
+
+        # Calling the super method will not close the dialog for messageboxes
+        # with details. We just accept the event here.
+        event.accept()
 
 
 def show_alarm(text, title="Alarm", details=None, parent=None):
