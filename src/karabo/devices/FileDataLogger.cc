@@ -42,16 +42,23 @@ namespace karabo {
             // to the DeviceData - so this destructor can only run when all these actions are done.
             try {
                 if (m_configStream.is_open()) {
+                    // Timestamp shall be the one of the most recent update - this ensures that all stamps come from
+                    // the device and cannot be screwed up if clocks of logger and device are off from each other.
+                    // Since the time when logging stops might be of interest as well (for silent devices), we add it to
+                    // value field
                     boost::mutex::scoped_lock lock(m_lastTimestampMutex);
                     karabo::util::Timestamp& lastTs = m_lastDataTimestamp;
                     m_configStream << lastTs.toIso8601Ext() << "|" << fixed << lastTs.toTimestamp()
-                            << "|" << lastTs.getTrainId() << "|.|||" << m_user << "|LOGOUT\n";
+                            << "|" << lastTs.getTrainId() << "|.||"
+                            << karabo::util::Timestamp().toIso8601Ext() // i.e. 'now' from clock of logger
+                            << "|" << m_user << "|LOGOUT\n";
                     m_configStream.flush();
                     std::ostream::pos_type position = m_configStream.tellp();
                     m_configStream.close();
                     if (position >= 0) {
                         string contentPath = m_directory + "/" + deviceId + "/raw/archive_index.txt";
                         ofstream contentStream(contentPath.c_str(), ios::app);
+                        // Again use timestamp from device to ensure consistency for searching in archive_index.txt
                         contentStream << "-LOG " << lastTs.toIso8601Ext() << " " << fixed << lastTs.toTimestamp()
                                 << " " << lastTs.getTrainId() << " " << position << " "
                                 << (m_user.empty() ? "." : m_user) << " " << m_lastIndex << "\n";
@@ -218,8 +225,8 @@ namespace karabo {
 
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 {
-                    // Update time stamp for DeviceData destructor and property "lastUpdatesUtc".
-                    // Since the latter is accessing it when not posted on data->m_strand, need mutex protection:
+                    // Update time stamp for updates of property "lastUpdatesUtc" and for LOGOUT timestamp.
+                    // Since for "lastUpdatesUtc" it is accessed when not posted on m_strand, need mutex protection:
                     boost::mutex::scoped_lock lock(m_lastTimestampMutex);
                     if (t.getEpochstamp() > m_lastDataTimestamp.getEpochstamp()) {
                         // If mixed timestamps in single message (or arrival in wrong order), always take most recent one.

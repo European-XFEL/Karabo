@@ -538,7 +538,6 @@ namespace karabo {
                     DeviceData::Pointer data = idData.second;
                     {
                         // To avoid this mutex lock, access to m_lastTimestampMutex would have to be posted on m_strand.
-                        // Keep as is since this file based DataLogger is supposed to phase out soon...
                         boost::mutex::scoped_lock lock(data->m_lastTimestampMutex);
                         updatedAnyStamp |= data->m_updatedLastTimestamp;
                         data->m_updatedLastTimestamp = false;
