@@ -6,6 +6,8 @@
 from PyQt5.QtCore import Qt
 
 from karabogui.project.topo_listener import SystemTopologyListener
+from karabogui.singletons.api import get_topology
+
 from .device import DeviceInstanceController
 from .device_config import DeviceConfigurationController
 from .macro import MacroController, MacroInstanceController
@@ -93,6 +95,7 @@ def destroy_device_instance_controller(controller):
     model.on_trait_change(controller.items_assigned, 'configs', remove=True)
     model.on_trait_change(controller.items_mutated, 'configs_items',
                           remove=True)
+    get_topology().delete_project_device(model.instance_id)
 
 
 def create_macro_controller(model=None, parent=None, _qt_model=None):
