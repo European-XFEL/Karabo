@@ -34,6 +34,10 @@ from . import openmq
 _MSG_TIME_TO_LIVE = 120000  # in ms - i.e. 2 minutes
 _MSG_PRIORITY_HIGH = 4  # never dropped (except if expired)
 _MSG_PRIORITY_LOW = 3  # can be dropped in case of congestion
+# Number of threads that can be scheduled in the thread pool executor. Since
+# Macro are compiled without an async flag, we need a sufficiently high thread
+# number.
+_NUM_THREADS = 1000
 
 
 class Broker:
@@ -543,7 +547,7 @@ class EventLoop(SelectorEventLoop):
             self.topic = getpass.getuser()
         self.connection = None
         self.changedFutures = set()  # call if some property changes
-        self.set_default_executor(ThreadPoolExecutor(200))
+        self.set_default_executor(ThreadPoolExecutor(_NUM_THREADS))
         self.set_exception_handler(EventLoop.exceptionHandler)
         # we overwrite sys.stderr for macros, so sys.__stderr__ it is
         faulthandler.register(signal.SIGALRM, file=sys.__stderr__)
