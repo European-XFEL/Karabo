@@ -635,12 +635,19 @@ namespace karabo {
                             << e.what();
                 }
 
-                // If the tail is not empty, it means a device became online event (LOG+) has been found. If there's
-                // no device became offline event (LOG-) that comes after the became online event, it means the device
+                // If the tail is not empty, it means a 'device became online event' (LOG+) has been found. If there's
+                // no 'device became offline' event (LOG-) that comes after the 'became online' event, it means the device
                 // was being logged at the timepoint.
                 // FIXME: If -LOG is missing since logger crashed/was killed with -9, we might be fooled here...
-                //        But I see no way to fix this since any exact information lost. Two consecutive +LOG events
+                //        But I see no way to fix this since any exact information is lost. Two consecutive +LOG events
                 //        (separated by =NEW lines only) are a hint that we _might_ be fooled.
+                // NOTE: The -LOG event has the timestamp of the latest update of the device (see ~FileDeviceData() in
+                //       FileDataLogger.cc). If now the device was silent for a long time after the last update and then
+                //       logging stops,  the timespan between the last update and the stop of logging will erroneously
+                //       be considered as 'configAtTimepoint = false'.
+                //       But if the logger stores the time point that it stops logging, that may come from the clock
+                //       of the data logger machine that might be completely off and searching in the _index.txt file
+                //       will not be reliable.
                 if (lastLogMinusEntry.m_event.empty() ||
                     (lastLogMinusEntry.m_event == "-LOG" && lastLogMinusEntry.m_epoch < lastLogPlusEntry.m_epoch)) {
                     configAtTimepoint = true;
