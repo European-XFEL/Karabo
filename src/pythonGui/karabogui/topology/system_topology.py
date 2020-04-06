@@ -171,6 +171,9 @@ class SystemTopology(HasStrictTraits):
 
         return self._project_devices[device_id]
 
+    def delete_project_device(self, device_id):
+        return self._project_devices.pop(device_id, None)
+
     def get_project_device_proxy(self, device_id, server_id, class_id,
                                  create_instance=True):
         """Return the project device proxy (offline version of a device in a
