@@ -1,154 +1,142 @@
-from PyQt5.QtCore import QObject, pyqtSlot
-from pyqtgraph import LabelItem
+from pyqtgraph import GraphicsLayoutWidget, LabelItem
+from traits.api import Dict, Enum, HasStrictTraits, Instance
 
-from karabogui.graph.common.api import AuxPlots
+from karabogui.graph.common.api import AuxPlots, ImageRegion
 
-from .profiling.controller import ProfilePlotController
-from .histogram.controller import HistogramController
+from .profiling.controller import ProfileAggregator
+from .histogram.controller import HistogramAggregator
 
 
-class AuxPlotsController(QObject):
+# Map of the enum and the aux plot aggregator
+AGGREGATOR_MAP = {
+    AuxPlots.ProfilePlot: ProfileAggregator,
+    AuxPlots.Histogram: HistogramAggregator
+}
 
-    PLOT_MAP = {
-        AuxPlots.ProfilePlot: ProfilePlotController,
-        AuxPlots.Histogram: HistogramController
-    }
+# Grid orientation of the image layout, where the center is (1, 1)
+GRID_ORIENTATION = {
+    "top": (0, 1),
+    "left": (1, 0),
+}
 
-    def __init__(self, image_layout):
-        """Controller for showing/hiding aux plots, switching between
-        different classes,
 
-        :param plot_type: A class classes of desired aux plots.
-           e.g.: klass = ProfilePlot, Histogram
-        """
-        super(AuxPlotsController, self).__init__()
+class AuxPlotsController(HasStrictTraits):
+    """This is used by the image base to control the AuxPlots as one entity.
+       This contains the aggregators of each added type, which, in turn,
+       contains the controllers of each plot contents. This also has the
+       shared labelItem that shows the statistics in an HTML format."""
 
-        self._image_layout = image_layout
-        self._region = None
+    # The image layout that contains the image plot and will house the
+    # aux plot items
+    image_layout = Instance(GraphicsLayoutWidget)
 
-        # Bookkeeping of plots
-        self.current_plot = None
-        self._controllers = {}
+    # The region from the image plot
+    _region = Instance(ImageRegion)
 
+    # The current aux plot. Default value is `AuxPlots.NoPlot`
+    current_plot = Enum(*AuxPlots)
+
+    # The added aggregators: e.g., `{AuxPlots.Histogram: HistogramAuxPlot()}`
+    _aggregators = Dict
+
+    # The UI item that shows HTML tables of the statistics
+    labelItem = Instance(LabelItem)
+
+    def __init__(self, **traits):
+        super(AuxPlotsController, self).__init__(**traits)
+
+        # Set up widgets
         self.labelItem = LabelItem()
-        self._image_layout.addItem(self.labelItem, 0, 0)
+        self.image_layout.addItem(self.labelItem, 0, 0)
 
     # -----------------------------------------------------------------------
     # Public methods
 
-    def add_from_type(self, plot_type, **config):
+    def add(self, plot_type, **config):
         """Set the aux plots of specified plot type to the image layout"""
-        # Remove set plots if any
-        plot_klass = self.PLOT_MAP[plot_type]
-
         # Add label item for aux plots stats. This will be shown in the topleft
-        if plot_type in self._controllers:
+        if plot_type in self._aggregators:
             return
 
-        controller = plot_klass(**config)
-        controller.showStatsRequested.connect(self._show_stats)
+        # Remove set plots if any
+        aggregator_klass = AGGREGATOR_MAP[plot_type]
+        aggregator = aggregator_klass(config=config)
+        aggregator.on_trait_change(self._show_stats, 'stats')
 
-        self._controllers[plot_type] = controller
-
-        return controller
-
-    def show(self, plot_type):
-        """Show aux plots of specified type"""
-
-        # Check if requested plot is in instantiated controllers
-        if plot_type not in self._controllers:
-            plot_type = AuxPlots.NoPlot
-
-        # Set visibility of label item and previous plots, if any
-        self.labelItem.setVisible(plot_type != AuxPlots.NoPlot)
-        if self.current_plot is not None:
-            for plot in self.current_plot.plots:
-                self._remove_from_layout(plot)
-
-        # Return intermittently if plot type is None
-        if plot_type is AuxPlots.NoPlot:
-            self.current_plot = None
-            return
-
-        # Add plots to layout
-        controller = self._controllers[plot_type]
-        for plot in controller.plots:
-            self._add_to_layout(plot)
-
-        # Process the changes
-        if self._region is not None:
-            self.analyze(self._region)
-
-        self.current_plot = controller
-        self.labelItem.setText('')  # clear contents
+        self._aggregators[plot_type] = aggregator
+        return aggregator
 
     def destroy(self):
         """Delete all the items and the controller gracefully"""
-        # Delete all plots
-        self.clear()
-        self.deleteLater()
-
-    def clear(self):
         # Check if already cleared
-        if not len(self._image_layout.ci.items):
+        if not len(self.image_layout.ci.items):
             return
 
-        if self.current_plot is not None:
-            for plot in self.current_plot.plots:
-                self._remove_from_layout(plot)
-                plot.deleteLater()
+        self.image_layout.clear()
+        for aggregator in self._aggregators.values():
+            aggregator.destroy()
 
-        self._remove_from_layout(self.labelItem)
-        self.current_plot = None
+        self.labelItem.deleteLater()
 
-    @pyqtSlot(object)
-    def analyze(self, region):
-        """Gather information from the ROI region for our auxiliar plots"""
-        # Store region for reanalyzing
+    def process(self, region):
         self._region = region
+        if self.current_plot is not AuxPlots.NoPlot:
+            aux_plot = self._aggregators.get(self.current_plot)
+            aux_plot.process(region)
 
-        if self.current_plot is None:
-            return
-
-        self.current_plot.analyze(region)
-        stats = self.current_plot.get_html()
-        self._show_stats(stats, update=False)
-
-    def set_image_axes(self, axes):
-        for controller in self._controllers.values():
-            controller.set_axes(x_data=axes[0], y_data=axes[1])
+    def set_axes(self, x_data, y_data):
+        for aux_plot in self._aggregators.values():
+            aux_plot.set_axes(x_data, y_data)
 
     def set_config(self, plot=None, **config):
-        controller = self._controllers.get(plot)
-        if controller is None:
-            return
-
-        if plot is AuxPlots.Histogram:
-            if 'colormap' in config:
-                controller.set_colormap(config['colormap'])
-            if 'levels' in config:
-                controller.set_levels(config['levels'])
+        aggregator = self._aggregators.get(plot)
+        if aggregator is not None:
+            aggregator.trait_set(**config)
 
     # -----------------------------------------------------------------------
     # Private methods
 
-    def _add_to_layout(self, plot_item):
-        if plot_item.orientation == "left":
-            row, col = (1, 0)
-        elif plot_item.orientation == "top":
-            row, col = (0, 1)
-        else:  # "bottom", "right"
-            raise NotImplementedError
+    def _add_item(self, plot_item, orientation="top"):
+        row, col = GRID_ORIENTATION[orientation]
+        self.image_layout.addItem(plot_item, row, col)
 
-        self._image_layout.addItem(plot_item, row, col)
+    def _remove_item(self, item):
+        if item in self.image_layout.ci.items.keys():
+            self.image_layout.removeItem(item)
 
-    def _remove_from_layout(self, plot_item):
-        self._image_layout.removeItem(plot_item)
-
-    @pyqtSlot(str)
-    def _show_stats(self, stats, update=True):
-        self.labelItem.item.setHtml(stats)
-
-        # Update label item size to avoid painting bugs
-        if update:
+    def _show_stats(self, stats):
+        if stats is not None:
+            self.labelItem.item.setHtml(stats.html)
             self.labelItem.resizeEvent(None)
+        else:
+            # Clear labelItem
+            self.labelItem.setText('')
+
+    # -----------------------------------------------------------------------
+    # Trait handlers
+
+    def _current_plot_changed(self, old, new):
+        # Check if requested plot is in instantiated aggregators
+        if new not in self._aggregators:
+            new = AuxPlots.NoPlot
+
+        # Set visibility of label item and previous plots, if any
+        self.labelItem.setVisible(new != AuxPlots.NoPlot)
+
+        # Remove previous plot items
+        if old is not AuxPlots.NoPlot:
+            for plot in self._aggregators[old].plotItems:
+                self._remove_item(plot)
+
+        if new is not AuxPlots.NoPlot:
+            # Add new plot items
+            aggregator = self._aggregators[new]
+            for orientation, plot in aggregator.controllers.items():
+                self._add_item(plot.plotItem, orientation)
+
+        # Clear contents
+        self.labelItem.setText('')
+
+        # Process the changes
+        if self._region is not None:
+            self.process(self._region)

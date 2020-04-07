@@ -1,87 +1,78 @@
-from .histogram import Histogram
+from PyQt5.QtWidgets import QAction, QMenu
+from traits.api import Bool, Dict, Instance, on_trait_change, Property, Type
+
+from .analyzer import HistogramAnalyzer
 from .plot import HistogramPlot
-from ..base import BaseAuxPlotController
-
-HTML_TABLE = """
-<table style='font-size:8px'>
-<tbody>
-<tr>
-<th align="left">Count</th><td>{count}</td>
-</tr>
-<tr>
-<th align="left">Mean</th><td>{mean}</td>
-</tr>
-<tr>
-<th align="left">Minimum</th><td>{min}</td>
-</tr>
-<tr>
-<th align="left">Maximum</th><td>{max}</td>
-</tr>
-<tr>
-<th align="left">Std. Dev.</th><td>{std}</td>
-</tr>
-<tr>
-<th align="left">Mode</th><td>{mode}</td>
-</tr>
-<tr>
-<th align="left">Bins</th><td>{bins}</td>
-</tr>
-<tr>
-<th align="left">Bin Width</th><td>{bin_width}</td>
-</tr>
-</tbody>
-</table>
-"""
+from .stats import HistogramStats
+from ..base.controller import BaseController, ControllerAggregator
 
 
-def _to_string(value):
-    if value is None:
-        return "-"
-    return "{:.2f}".format(value).rstrip('0').rstrip('.')
+class HistogramController(BaseController):
+
+    # The analyzer class for the histogram plot
+    analyzer = Instance(HistogramAnalyzer, args=())
+
+    # The plot item controller class for the histogram plot
+    plot_klass = Type(HistogramPlot)
 
 
-class HistogramController(BaseAuxPlotController):
-    """Histograms counts the image z-value (intensity) """
+class HistogramAggregator(ControllerAggregator):
 
-    def __init__(self, **config):
-        super(HistogramController, self).__init__(**config)
-        plot = HistogramPlot()
-        plot.show_stats_action.triggered.connect(self._show_stats)
+    # The histogram aux plot only contains one histogram plot
+    contents = Dict({"top": HistogramController})
 
-        self._plots = [(plot, Histogram())]
-        self._stats_enabled = True
+    # --- Plot configuration ---
+    # The stats are shown by default
+    show_stats = Bool(True)
 
-    def analyze(self, region):
-        plot, analyzer = self._plots[0]
+    # --- Convenience properties to get/set values on the histogram plot ---
+    controller = Property
+    colormap = Property
+    levels = Property
 
-        if not region.valid():
-            plot.clear_data()
-            analyzer.clear_data()
-            return
+    def __init__(self, **traits):
+        super(HistogramAggregator, self).__init__(**traits)
 
-        edges, hist = analyzer.analyze(region.flatten())
-        plot.set_data(edges, hist)
+        # Create menu
+        menu = QMenu()
+        show_stats_action = QAction("Show statistics", menu)
+        show_stats_action.setCheckable(True)
+        show_stats_action.setChecked(self.show_stats)
+        show_stats_action.triggered.connect(lambda x:
+                                            self.trait_set(show_stats=x))
+        menu.addAction(show_stats_action)
+        self.controller.plot.menu = menu
 
-    def get_html(self):
-        if not self._stats_enabled:
-            return ''
+    # -----------------------------------------------------------------------
+    # Public methods
 
-        stats = self.analyzers[0].get_stats()
-        if stats is None:
-            return ''
-        return HTML_TABLE.format(**{key: _to_string(value)
-                                    for key, value in stats.items()})
+    def process(self, region):
+        self.controller.process(region, axis=0)
+        if self.show_stats:
+            self.stats = HistogramStats(stats=self.controller.analyzer.stats)
 
-    def set_colormap(self, colormap):
-        self.plots[0].set_colormap(colormap)
+    # -----------------------------------------------------------------------
+    # Trait handlers
 
-    def set_levels(self, levels):
-        self.plots[0].set_levels(levels)
+    @on_trait_change("show_stats")
+    def _show_stats(self, show_stats):
+        stats = None
+        if show_stats:
+            stats = HistogramStats(stats=self.controller.analyzer.stats)
+        self.stats = stats
 
-    # ---------------------------------------------------------------------
-    # Private methods
+    def destroy(self):
+        super(HistogramAggregator, self).destroy()
+        self.on_trait_change(self._show_stats, "show_stats", remove=True)
 
-    def _show_stats(self, enabled):
-        self._stats_enabled = enabled
-        stats = self.get_html() if enabled else ''
-        self.showStatsRequested.emit(stats)
+    # -----------------------------------------------------------------------
+    # Trait properties
+
+    def _get_controller(self):
+        return self.controllers["top"]
+
+    def _set_colormap(self, colormap):
+        self.controller.plot.colormap = colormap
+
+    def _set_levels(self, levels):
+        self.controller.plot.levels = levels
