@@ -14,9 +14,9 @@ from karabo.common.scenemodel.api import DisplayTextLogModel
 from karabo.native import Timestamp
 from karabogui import icons
 from karabogui.binding.api import get_binding_value, StringBinding
-from karabogui.const import ALL_OK_COLOR
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
+from karabogui.indicators import ALL_OK_COLOR
 from karabogui.util import generateObjectName
 
 W_SIZE = 32

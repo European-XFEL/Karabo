@@ -3,7 +3,7 @@ from karabo.native import Configurable, Float, String
 from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, build_binding
 )
-from karabogui.const import (
+from karabogui.indicators import (
     ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
 from karabogui.testing import GuiTestCase, set_proxy_value
 from ..label import DisplayLabel

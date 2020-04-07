@@ -15,7 +15,8 @@ from traits.api import Bool, Callable, Dict, Instance, List
 from karabo.common.scenemodel.api import MultiCurvePlotModel
 from karabogui.binding.api import (
     PropertyProxy, BoolBinding, FloatBinding, IntBinding)
-from karabogui.const import ALL_OK_COLOR, MAXNUMPOINTS
+from karabogui.const import MAXNUMPOINTS
+from karabogui.indicators import ALL_OK_COLOR
 from karabogui.controllers.api import (
     BaseBindingController, axis_label, register_binding_controller)
 from karabogui.mplwidget.mplplotwidgets import MplCurvePlot

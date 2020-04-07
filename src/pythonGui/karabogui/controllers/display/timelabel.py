@@ -16,7 +16,8 @@ from karabogui.binding.api import (
     BaseBinding, ChoiceOfNodesBinding, get_binding_value, NodeBinding)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.const import ALL_OK_COLOR, WIDGET_MIN_HEIGHT
+from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.indicators import ALL_OK_COLOR
 from karabogui.util import generateObjectName
 
 FORBIDDEN_BINDING = (ChoiceOfNodesBinding, NodeBinding)
