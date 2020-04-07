@@ -38,8 +38,8 @@ class TestVectorRollGraph(GuiTestCase):
         """Assert that the vector roll auxiliar plots do not smooth the
         images"""
         aux_plots = self.controller.widget._aux_plots
-        controller = aux_plots._controllers[AuxPlots.ProfilePlot]
-        self.assertFalse(controller.config["smooth"])
+        controller = aux_plots._aggregators[AuxPlots.ProfilePlot]
+        self.assertFalse(controller.smooth)
 
     def test_set_value(self):
         """Test the value setting in VectorRollGraph"""
