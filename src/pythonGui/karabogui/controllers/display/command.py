@@ -7,11 +7,11 @@ from traits.api import Instance, List
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayCommandModel
-from karabogui.const import LOCKED_COLOR
 from karabogui import globals as krb_globals
 from karabogui.binding.api import get_binding_value, SlotBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
+from karabogui.indicators import LOCKED_COLOR
 
 # An item contains the slotbinding proxy and its connected qt action
 Item = namedtuple('Item', ['proxy', 'action'])
