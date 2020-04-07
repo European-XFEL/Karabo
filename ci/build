@@ -3,7 +3,7 @@
 set -e
 set -o pipefail
 
-SSH_USER_HOST=xdata@exflserv05
+SSH_USER_HOST=xkarabo@exflserv05
 SSH_KARABO_DIR=/var/www/html/karabo
 SSH_PREFIX=$SSH_USER_HOST:$SSH_KARABO_DIR
 CURL_PREFIX=http://exflserv05.desy.de/karabo
