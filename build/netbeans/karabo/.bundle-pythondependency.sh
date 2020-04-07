@@ -41,13 +41,19 @@ if [ $retVal -ne 0 ]; then
 fi
 
 # Install the wheel which was created
+
 WHEELNAME=$(basename $DISTDIR/*.whl)
 WHEELFILE=$DISTDIR/$WHEELNAME
-$PIP --disable-pip-version-check install -U --no-index $WHEEL_INSTALL_FLAGS $WHEELFILE
-retVal=$?
-if [ $retVal -ne 0 ]; then
-    echo "ERROR: pip returned $retval. Exiting."
-    exit $retVal
+if [ -f $WHEELFILE ]; then
+    $PIP --disable-pip-version-check install -U --no-index $WHEEL_INSTALL_FLAGS $WHEELFILE
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+        echo "ERROR: pip returned $retval. Exiting."
+        exit $retVal
+    fi
+else
+    echo "installation missing wheel in package folder"
+    exit 0
 fi
 
 # Create a self-extracting installation script
