@@ -174,20 +174,20 @@ class KaraboImageView(QWidget):
         if plot is not None:
             if self._aux_plots is None:
                 # Create an instance of the aux plots controller with the klass
-                self._aux_plots = AuxPlotsController(self.image_layout)
+                self._aux_plots = AuxPlotsController(image_layout=self.image_layout)  # noqa
 
                 self.plotItem.imageAxesChanged.connect(self._set_axes_to_aux)
 
                 # If ROI exists
                 if self.roi is not None:
-                    self.roi.updated.connect(self._aux_plots.analyze)
+                    self.roi.updated.connect(self._aux_plots.process)
 
-            controller = self._aux_plots.add_from_type(plot, **config)
-            controller.link_viewbox(self.plotItem.vb)
+            controller = self._aux_plots.add(plot, **config)
+            controller.link_view(self.plotItem.vb)
 
         else:
             if plot is AuxPlots.NoPlot:
-                self._aux_plots.current_plot.link_viewbox(None)
+                self._aux_plots.current_plot.link_view(None)
                 self._aux_plots.clear()
 
                 # If ROI exists
@@ -333,7 +333,7 @@ class KaraboImageView(QWidget):
 
         # Restore auxiliar plots
         if self._aux_plots is not None:
-            if aux_plots_class is not AuxPlots.NoPlot:
+            if aux_plots_class != AuxPlots.NoPlot:
                 self.show_aux_plots(aux_plots_class)
 
     # -----------------------------------------------------------------------
@@ -375,13 +375,13 @@ class KaraboImageView(QWidget):
             self._picker.activate(mode is MouseMode.Picker)
 
     @pyqtSlot(AuxPlots)
-    def show_aux_plots(self, plot_class):
+    def show_aux_plots(self, plot_type):
         """Hides/shows the auxiliar plots set for this controller"""
         if self._aux_plots is not None:
-            self._aux_plots.show(plot_class)
+            self._aux_plots.current_plot = plot_type
 
         if self.roi is not None:
-            self.roi.enable_updates(plot_class != AuxPlots.NoPlot)
+            self.roi.enable_updates(plot_type != AuxPlots.NoPlot)
 
     @pyqtSlot()
     def _show_labels_dialog(self):
@@ -460,7 +460,7 @@ class KaraboImageView(QWidget):
 
     @pyqtSlot()
     def _set_axes_to_aux(self):
-        self._aux_plots.set_image_axes(self.plotItem.transformed_axes)
+        self._aux_plots.set_axes(*self.plotItem.transformed_axes)
 
     # -----------------------------------------------------------------------
     # ROI methods
