@@ -17,10 +17,10 @@ from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, ImageBinding, ListOfNodesBinding,
     NDArrayBinding, NodeBinding, ProjectDeviceProxy, PropertyProxy,
     SlotBinding, get_binding_value, has_changes, WidgetNodeBinding)
-from karabogui.const import (
-    OK_COLOR, ERROR_COLOR_ALPHA, LOCKED_COLOR, PROPERTY_ALARM_COLOR,
-    PROPERTY_ALARM_COLOR_MAP, PROPERTY_READONLY_COLOR, PROPERTY_WARN_COLOR)
-from karabogui.indicators import get_state_color, STATE_COLORS
+from karabogui.indicators import (
+    OK_COLOR, ERROR_COLOR_ALPHA, get_state_color, LOCKED_COLOR,
+    PROPERTY_ALARM_COLOR, PROPERTY_ALARM_COLOR_MAP, PROPERTY_READONLY_COLOR,
+    PROPERTY_WARN_COLOR, STATE_COLORS)
 from karabogui.request import send_property_changes
 from .utils import (
     dragged_configurator_items, get_attr_icon, get_child_names,
