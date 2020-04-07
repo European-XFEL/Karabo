@@ -3,39 +3,41 @@ import numpy as np
 from karabogui.testing import GuiTestCase
 from karabogui.graph.common.api import ImageRegion
 
-from ..controller import HistogramController, HistogramPlot, Histogram
+from ..controller import (
+    HistogramAggregator, HistogramPlot, HistogramController,
+    HistogramAnalyzer)
 
 
-class TestHistogramController(GuiTestCase):
+class TestHistogramAggregator(GuiTestCase):
 
     def setUp(self):
-        super(TestHistogramController, self).setUp()
-        self._controller = HistogramController()
-        self._controller.showStatsRequested.connect(self._mock_slot)
-        self._plot = self._controller.plots[0]
+        super(TestHistogramAggregator, self).setUp()
+        self._aggregator = HistogramAggregator()
+        self._aggregator.on_trait_change(self._mock_slot, "stats")
 
     def tearDown(self):
-        super(TestHistogramController, self).tearDown()
-        self._controller.disconnect()
-        self._controller.deleteLater()
+        super(TestHistogramAggregator, self).tearDown()
+        self._aggregator.on_trait_change(self._mock_slot, "stats", remove=True)
         self._emitted_value = None
 
     def _mock_slot(self, value):
         self._emitted_value = value
 
     def test_basics(self):
-        self.assertEqual(len(self._controller.plots), 1)
-        plot, analyzer = self._controller._plots[0]
-        self.assertIsInstance(plot, HistogramPlot)
-        self.assertIsInstance(analyzer, Histogram)
+        self.assertEqual(len(self._aggregator.controllers), 1)
+        aux_plot = self._aggregator.controller
+        self.assertIsInstance(aux_plot, HistogramController)
+        self.assertIsInstance(aux_plot.plot, HistogramPlot)
+        self.assertIsInstance(aux_plot.analyzer, HistogramAnalyzer)
+        self.assertTrue(self._aggregator.show_stats)
 
     def test_analyze(self):
-        curve_item = self._plot._data_items[0]
-        analyzer = self._controller.analyzers[0]
+        curve_item = self._aggregator.controller.plot._data_item
+        analyzer = self._aggregator.controller.analyzer
 
         # 1. Check default
-        self.assertIsNone(analyzer._hist)
-        self.assertIsNone(analyzer._edges)
+        np.testing.assert_array_equal(analyzer._hist, [])
+        np.testing.assert_array_equal(analyzer._edges, [])
         np.testing.assert_array_equal(curve_item.xData, [])
         np.testing.assert_array_equal(curve_item.yData, [])
 
@@ -48,25 +50,10 @@ class TestHistogramController(GuiTestCase):
 
         # 3. Check invalid region
         self._analyze_region(valid=False)
-        self.assertIsNone(analyzer._hist)
-        self.assertIsNone(analyzer._edges)
+        np.testing.assert_array_equal(analyzer._hist, [])
+        np.testing.assert_array_equal(analyzer._edges, [])
         np.testing.assert_array_equal(curve_item.xData, [])
         np.testing.assert_array_equal(curve_item.yData, [])
-
-    def test_get_html(self):
-        # 1. Check default
-        stats = self._controller.get_html()
-        self.assertEqual(stats, '')
-
-        # 2. Check valid region
-        self._analyze_region(valid=True)
-        stats = self._controller.get_html()
-        self.assertNotEqual(stats, '')
-
-        # 3. Check invalid region
-        self._analyze_region(valid=False)
-        stats = self._controller.get_html()
-        self.assertEqual(stats, '')
 
     def test_show_stats(self):
         # 1. Check default
@@ -89,22 +76,20 @@ class TestHistogramController(GuiTestCase):
                                  y_slice=slice(4))
 
         self.assertTrue(region.valid() is valid)
-        self._controller.analyze(region)
+        self._aggregator.process(region)
 
     def _assert_show_stats(self, valid=True):
         assertion = self.assertNotEqual if valid else self.assertEqual
 
         # Start from disabled stats
-        if self._controller._stats_enabled:
-            self._plot.show_stats_action.trigger()
-            self.assertFalse(self._controller._stats_enabled)
+        if self._aggregator.show_stats:
+            self._aggregator.show_stats = False
+            self.assertIsNone(self._emitted_value)
 
         # Show stats
-        self._plot.show_stats_action.trigger()
-        self.assertTrue(self._controller._stats_enabled)
-        assertion(self._emitted_value, '')
+        self._aggregator.show_stats = True
+        assertion(self._emitted_value.html, '')
 
         # Hide stats
-        self._plot.show_stats_action.trigger()
-        self.assertFalse(self._controller._stats_enabled)
-        self.assertEqual(self._emitted_value, '')
+        self._aggregator.show_stats = False
+        self.assertIsNone(self._emitted_value)
