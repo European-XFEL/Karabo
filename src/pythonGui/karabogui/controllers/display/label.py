@@ -18,9 +18,9 @@ from karabogui.binding.api import (
     CharBinding, ComplexBinding, FloatBinding, get_binding_value, IntBinding,
     StringBinding
 )
-from karabogui.const import (
-    ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR,
-    WIDGET_MIN_HEIGHT)
+from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.indicators import (
+    ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.util import generateObjectName
