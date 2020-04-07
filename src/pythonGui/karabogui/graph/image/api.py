@@ -1,10 +1,14 @@
 # flake8: noqa
 
-from .aux_plots.profiling.controller import ProfilePlotController
-from .aux_plots.profiling.plot import StepPlot
-from .aux_plots.profiling.profiler import IntensityProfiler
 from .aux_plots.controller import AuxPlotsController
-from .aux_plots.viewbox import AuxPlotViewBox
+from .aux_plots.profiling.analyzer import ProfileAnalyzer
+from .aux_plots.profiling.controller import ProfileAggregator, ProfileController
+from .aux_plots.profiling.plot import ProfilePlot
+from .aux_plots.profiling.stats import ProfileStats
+from .aux_plots.histogram.analyzer import HistogramAnalyzer
+from .aux_plots.histogram.controller import HistogramAggregator, HistogramAnalyzer
+from .aux_plots.histogram.stats import HistogramStats
+from .aux_plots.histogram.plot import HistogramPlot
 
 from .dialogs.levels import LevelsDialog
 
