@@ -3,40 +3,37 @@ import numpy as np
 from karabogui.testing import GuiTestCase
 from karabogui.graph.common.api import ImageRegion
 
-from ..controller import IntensityProfiler, ProfilePlotController, StepPlot
+from ..controller import (
+    ProfileAnalyzer, ProfileAggregator, ProfilePlot, ProfileController)
 
 X_LENGTH, Y_LENGTH = (5, 4)
 
 
-class TestProfilingController(GuiTestCase):
+class TestProfileAuxPlot(GuiTestCase):
 
     def setUp(self):
-        super(TestProfilingController, self).setUp()
-        self._controller = ProfilePlotController()
+        super(TestProfileAuxPlot, self).setUp()
+        self._controller = ProfileAggregator()
         self._controller.set_axes(x_data=np.arange(X_LENGTH),
                                   y_data=np.arange(Y_LENGTH))
-        self._controller.showStatsRequested.connect(self._mock_slot)
+        self._controller.on_trait_change(self._mock_slot, "stats")
 
     def tearDown(self):
-        super(TestProfilingController, self).tearDown()
-        self._controller.disconnect()
-        self._controller.deleteLater()
+        super(TestProfileAuxPlot, self).tearDown()
+        self._controller.on_trait_change(self._mock_slot, "stats", remove=True)
         self._emitted_value = None
 
     def _mock_slot(self, value):
         self._emitted_value = value
 
     def test_basics(self):
-        self.assertEqual(len(self._controller.plots), 2)
-        for plot in self._controller.plots:
-            self.assertIsInstance(plot, StepPlot)
+        self.assertEqual(len(self._controller.controllers), 2)
+        for aux_plot in self._controller.controllers.values():
+            self.assertIsInstance(aux_plot, ProfileController)
+            self.assertIsInstance(aux_plot.plot, ProfilePlot)
+            self.assertIsInstance(aux_plot.analyzer, ProfileAnalyzer)
 
-        self.assertEqual(len(self._controller.plots), 2)
-        for profiler in self._controller.analyzers:
-            self.assertIsInstance(profiler, IntensityProfiler)
-
-        self.assertFalse(self._controller._fitted)
-        self.assertFalse(self._controller._stats_enabled)
+        self.assertFalse(self._controller.show_stats)
 
     def test_analyze(self):
         # 1. Check default
@@ -66,63 +63,37 @@ class TestProfilingController(GuiTestCase):
                                  y_slice=slice(Y_LENGTH))
 
         self.assertTrue(region.valid() is valid)
-        self._controller._stats_enabled = self._controller._fitted = fitted
-        self._controller.analyze(region)
+        self._controller._enable_fitting(fitted)
+        self._controller.process(region)
 
     def _assert_analyze(self, valid=True, fitted=True):
-        for plot, analyzer in self._controller._plots:
-            data_curve, fit_curve = plot._data_items
+        for controller in self._controller.controllers.values():
+            plot_item, analyzer = controller.plot, controller.analyzer
+            data_item, fit_item = plot_item._data_item, plot_item._fit_item
 
             # Check profile values
+            x_data, y_data = analyzer._x_profile, analyzer._y_profile
             if valid:
-                data_assertion = self.assertIsNotNone
-                x_data, y_data = analyzer._data
+                data_assertion = self.assertArrayIsNotEmpty
                 # Add one more vestigial data at the end because of step plot
                 x_data = np.hstack((x_data, [x_data[-1] + 1]))
             else:
-                data_assertion = self.assertIsNone
-                x_data, y_data = [], []
+                data_assertion = self.assertArrayIsEmpty
 
-            data_assertion(analyzer._data)
-            np.testing.assert_array_equal(data_curve.xData, x_data)
-            np.testing.assert_array_equal(data_curve.yData, y_data)
+            data_assertion(x_data)
+            data_assertion(x_data)
+            np.testing.assert_array_equal(data_item.xData, x_data)
+            np.testing.assert_array_equal(data_item.yData, y_data)
 
             # Check fit values
-            if fitted:
-                fit_assertion = self.assertIsNotNone
-                x_fit, y_fit = analyzer._fit
-            else:
-                fit_assertion = self.assertIsNone
-                x_fit, y_fit = [], []
+            fit_assertion = (self.assertArrayIsNotEmpty if fitted
+                             else self.assertArrayIsEmpty)
+            x_fit, y_fit = analyzer._x_fit, analyzer._y_fit
 
-            fit_assertion(analyzer._fit)
-            np.testing.assert_array_equal(fit_curve.xData, x_fit)
-            np.testing.assert_array_equal(fit_curve.yData, y_fit)
-
-    def test_get_html(self):
-        # 1. Check default
-        stats = self._controller.get_html()
-        self.assertEqual(stats, '')
-
-        # 2. Check valid region, not fitted
-        self._analyze_region(valid=True, fitted=False)
-        stats = self._controller.get_html()
-        self.assertEqual(stats, '')
-
-        # 2. Check valid region, fitted
-        self._analyze_region(valid=True, fitted=True)
-        stats = self._controller.get_html()
-        self.assertNotEqual(stats, '')
-
-        # 3. Check invalid region
-        self._analyze_region(valid=False, fitted=False)
-        stats = self._controller.get_html()
-        self.assertEqual(stats, '')
-
-        # 4. Check invalid region, fitted
-        self._analyze_region(valid=False, fitted=True)
-        stats = self._controller.get_html()
-        self.assertEqual(stats, '')
+            fit_assertion(x_fit)
+            fit_assertion(y_fit)
+            np.testing.assert_array_equal(fit_item.xData, x_fit)
+            np.testing.assert_array_equal(fit_item.yData, y_fit)
 
     def test_enable_fitting(self):
         # 1. Check default
@@ -140,16 +111,26 @@ class TestProfilingController(GuiTestCase):
         assertion = self.assertNotEqual if valid else self.assertEqual
 
         # Start from disabled stats
-        if self._controller._stats_enabled:
+        if self._controller.show_stats:
             self._controller._enable_fitting(False)
-            self.assertFalse(self._controller._stats_enabled)
+            self.assertFalse(self._controller.show_stats)
+            self.assertIsNone(self._emitted_value)
 
         # Show stats
         self._controller._enable_fitting(True)
-        self.assertTrue(self._controller._stats_enabled)
-        assertion(self._emitted_value, '')
+        self.assertTrue(self._controller.show_stats)
+        assertion(self._emitted_value.html, '')
 
         # Hide stats
         self._controller._enable_fitting(False)
-        self.assertFalse(self._controller._stats_enabled)
-        self.assertEqual(self._emitted_value, '')
+        self.assertFalse(self._controller.show_stats)
+        self.assertIsNone(self._emitted_value)
+
+    @staticmethod
+    def assertArrayIsEmpty(array):
+        np.testing.assert_array_equal(array, [])
+
+    @staticmethod
+    def assertArrayIsNotEmpty(array):
+        np.testing.assert_raises(AssertionError,
+                                 np.testing.assert_array_equal, array, [])

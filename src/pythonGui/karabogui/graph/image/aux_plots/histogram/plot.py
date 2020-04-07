@@ -1,58 +1,92 @@
 from PyQt5.QtCore import QPointF, Qt
 from PyQt5.QtGui import QBrush, QColor, QLinearGradient, QPen
-from PyQt5.QtWidgets import QAction, QMenu
+from pyqtgraph import PlotDataItem
+from traits.api import (
+    Array, cached_property, Constant, Instance, on_trait_change, Property,
+    String)
 
 from karabogui.graph.common.api import COLORMAPS
 from karabogui.graph.image.utils import rescale
 
-from ..plot import BaseAuxPlotItem
+from ..base.plot import BasePlot
 
 
-class HistogramPlot(BaseAuxPlotItem):
+class HistogramPlot(BasePlot):
 
-    def __init__(self, orientation="top"):
-        super(HistogramPlot, self).__init__(orientation,
-                                            x_label="Intensity",
-                                            y_label="Counts")
+    # The x- and y-labels of the plot
+    x_label = Constant("Intensity")
+    y_label = Constant("Counts")
 
-        self._levels = (0, 255)
-        self._gradient = QLinearGradient()
-        self._pen = QPen(Qt.NoPen)
+    # Image levels
+    levels = Array(value=[0, 255])
 
-        line = self.plot([], [])
-        self._data_items = [line]
-        self._adjust_to_orientation()
+    # Colormap of the
+    colormap = String("viridis")
 
-        # Add actions
-        menu = QMenu()
-        self.show_stats_action = QAction("Show statistics", menu)
-        self.show_stats_action.setCheckable(True)
-        self.show_stats_action.setChecked(True)
-        menu.addAction(self.show_stats_action)
-        self.vb.set_menu(menu)
+    # --- plot items ---
+    # The line item of the plot
+    _data_item = Instance(PlotDataItem)
+
+    # --- UI attributes ---
+    # The default pen of the plot.
+    _pen = Instance(QPen, args=(Qt.NoPen,))
+
+    # The gradient of the brush to fill the area under the curve
+    gradient = Property(Instance(QLinearGradient), depends_on='colormap')
+
+    def __init__(self, **traits):
+        super(HistogramPlot, self).__init__(**traits)
+        self._data_item = self._add_plot_item()
+
+    # -----------------------------------------------------------------------
+    # Public methods
 
     def set_data(self, x_data, y_data):
-        start, stop = rescale(self._levels,
+        # Retrieve the gradient range from the input x_data and image levels
+        brush = self._calc_brush(x_data)
+
+        # plot the data with the resulting gradient
+        self._data_item.setData(x_data, y_data, stepMode=True,
+                                pen=self._pen, brush=brush, fillLevel=0)
+
+    def destroy(self):
+        super(HistogramPlot, self).destroy()
+        self.on_trait_change(self._set_brush, "levels", remove=True)
+
+    # -----------------------------------------------------------------------
+    # Private methods
+
+    def _calc_brush(self, x_data):
+        start, stop = rescale(self.levels,
                               min_value=x_data[0],
                               max_value=x_data[-1],
                               low=0, high=1)
-        self._gradient.setStart(round(start, 3), 0)
-        self._gradient.setFinalStop(round(stop, 3), 0)
 
-        self._data_items[0].setData(
-            x_data, y_data,
-            stepMode=True,
-            pen=self._pen, brush=QBrush(self._gradient),
-            fillLevel=0)
+        # Create the brush by modifying the gradient ranges
+        gradient = self.gradient
+        gradient.setStart(round(start, 3), 0)
+        gradient.setFinalStop(round(stop, 3), 0)
+        return QBrush(gradient)
 
-    def set_colormap(self, cmap):
+    # -----------------------------------------------------------------------
+    # Trait handlers
+
+    @on_trait_change("levels")
+    def _set_brush(self):
+        # Get brush with the new levels and from existing data
+        x_data = self._data_item.xData
+        if x_data.size:
+            brush = self._calc_brush(x_data)
+            self._data_item.setBrush(brush)
+
+    # -----------------------------------------------------------------------
+    # Trait properties
+
+    @cached_property
+    def _get_gradient(self):
         gradient = QLinearGradient(QPointF(0, 0), QPointF(1, 0))
         gradient.setCoordinateMode(QLinearGradient.ObjectBoundingMode)
         grad_stops = [(stop, QColor(*color))
-                      for stop, color in COLORMAPS[cmap]]
-
+                      for stop, color in COLORMAPS[self.colormap]]
         gradient.setStops(grad_stops)
-        self._gradient = gradient
-
-    def set_levels(self, levels):
-        self._levels = levels
+        return gradient
