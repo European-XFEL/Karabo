@@ -1,8 +1,8 @@
 import re
 from ast import literal_eval
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPalette, QValidator
+from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtGui import QFontMetrics, QPalette, QValidator
 from PyQt5.QtWidgets import (
     QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget)
 from traits.api import Instance, Int
@@ -17,11 +17,26 @@ from karabogui.binding.api import (
     VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
     VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
     VectorUint32Binding, VectorUint64Binding)
-
+from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.controllers.api import (
     BaseBindingController, is_proxy_allowed, register_binding_controller)
 from karabogui.dialogs.listedit import ListEditDialog
 from karabogui.util import SignalBlocker
+
+
+class LineEdit(QLineEdit):
+    def __init__(self, parent=None):
+        super(LineEdit, self).__init__(parent)
+        self.setMinimumWidth(WIDGET_MIN_WIDTH)
+        self.setMinimumHeight(WIDGET_MIN_HEIGHT)
+        self.setAlignment(Qt.AlignLeft | Qt.AlignAbsolute)
+
+    def sizeHint(self):
+        fm = QFontMetrics(self.font())
+        CONTENT_MARGIN = 10
+        width = min(fm.width(self.text()) + CONTENT_MARGIN, 200)
+
+        return QSize(width, 20)
 
 
 class _BaseListController(BaseBindingController):
@@ -34,9 +49,10 @@ class _BaseListController(BaseBindingController):
 
     def create_widget(self, parent):
         composite_widget = QWidget(parent)
+        composite_widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
         self.layout = QHBoxLayout(composite_widget)
         self.layout.setContentsMargins(0, 0, 0, 0)
-        self._internal_widget = QLineEdit()
+        self._internal_widget = LineEdit()
         self.layout.addWidget(self._internal_widget)
         self._normal_palette = self._internal_widget.palette()
         self._error_palette = QPalette(self._normal_palette)
@@ -65,6 +81,7 @@ class _BaseListController(BaseBindingController):
         tbEdit.setStatusTip(text)
         tbEdit.setToolTip(text)
         tbEdit.setIcon(icons.edit)
+        tbEdit.setMinimumSize(WIDGET_MIN_HEIGHT, WIDGET_MIN_HEIGHT)
         tbEdit.setMaximumSize(25, 25)
         tbEdit.setFocusPolicy(Qt.NoFocus)
         tbEdit.clicked.connect(self._on_edit_clicked)
