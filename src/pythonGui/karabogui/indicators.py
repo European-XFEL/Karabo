@@ -274,3 +274,35 @@ def get_topic_color(topic=None):
     }
 
     return color_map.get(topic, None)
+
+
+# --------------------------------------------------------------------------
+# Commonly used colors
+
+OK_COLOR = (225, 242, 225, 128)
+PROPERTY_READONLY_COLOR = (160, 160, 160, 255)
+ALL_OK_COLOR = (224, 224, 224, 128)  # no alarm and fine
+ERROR_COLOR_ALPHA = (255, 155, 155, 128)  # semitransparent
+PROPERTY_ALARM_COLOR = (255, 125, 125, 128)
+PROPERTY_WARN_COLOR = (255, 255, 125, 128)
+PROPERTY_INTERLOCK_COLOR = (51, 51, 255, 128)
+LOCKED_COLOR = (255, 145, 255, 128)
+
+
+# --------------------------------------------------------------------------
+# Mapping alarms to colors
+
+PROPERTY_ALARM_COLOR_MAP = {
+    None: ALL_OK_COLOR,
+    'none': None,
+    'alarm': PROPERTY_ALARM_COLOR,
+    'alarmLow': PROPERTY_ALARM_COLOR,
+    'alarmHigh': PROPERTY_ALARM_COLOR,
+    'alarmVarianceLow': PROPERTY_ALARM_COLOR,
+    'alarmVarianceHigh': PROPERTY_ALARM_COLOR,
+    'warn': PROPERTY_WARN_COLOR,
+    'warnLow': PROPERTY_WARN_COLOR,
+    'warnHigh': PROPERTY_WARN_COLOR,
+    'warnVarianceLow': PROPERTY_WARN_COLOR,
+    'warnVarianceHigh': PROPERTY_WARN_COLOR,
+    'interlock': PROPERTY_INTERLOCK_COLOR}
