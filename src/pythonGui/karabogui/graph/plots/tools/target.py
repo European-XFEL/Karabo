@@ -1,7 +1,7 @@
 from PyQt5.QtCore import pyqtSlot, QObject
 from pyqtgraph import InfiniteLine, SignalProxy
 
-from karabogui.graph.common.api import CoordsLegend, create_tool_button
+from karabogui.graph.common.api import CoordsLegend, create_button
 from karabogui import icons
 
 
@@ -15,7 +15,7 @@ class CrossTargetController(QObject):
         self.h_line = None
         self.proxy = None
         self.legend = None
-        self.action_button = create_tool_button(
+        self.action_button = create_button(
             checkable=True,
             icon=icons.target,
             tooltip="Get a CrossTarget for the plot",
