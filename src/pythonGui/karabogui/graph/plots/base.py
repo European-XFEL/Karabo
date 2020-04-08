@@ -10,9 +10,9 @@ from karabogui import icons
 
 from karabogui.graph.common.api import (
     AxesLabelsDialog, AxisType, BaseROIController, create_axis_items,
-    ExportTool, ExportToolset, get_default_brush, get_default_pen, make_pen,
-    ImageExporter, MouseMode, KaraboLegend, KaraboToolBar, KaraboViewBox,
-    PlotDataExporter, PointCanvas, ROITool, ROIToolset)
+    ExportTool, get_default_brush, get_default_pen, make_pen,
+    ImageExporter, MouseMode, KaraboLegend, KaraboViewBox, PlotDataExporter,
+    PointCanvas, ROITool, ToolbarController)
 from karabogui.graph.common.const import (
     AXIS_ITEMS, ACTION_ITEMS, CHECK_ACTIONS, DEFAULT_BAR_WIDTH,
     EMPTY_SYMBOL_OPTIONS, DEFAULT_SYMBOL, SYMBOL_SIZE, WIDGET_MIN_HEIGHT,
@@ -25,6 +25,8 @@ from karabogui.graph.plots.tools import CrossTargetController
 
 ALPHA_GRID = 30 / 255
 TICK_AXES = ["bottom", "left"]
+ROI_CANVAS_MAP = {
+    ROITool.DrawCrosshair: (PointCanvas, ROITool.Crosshair)}
 
 
 class KaraboPlotView(QWidget):
@@ -315,9 +317,8 @@ class KaraboPlotView(QWidget):
         """Optionally enable the showing of data points"""
         # Add Export toolset
         if self._toolbar is not None:
-            self._toolbar.addSeparator()
-            export_toolset = self._toolbar.add_toolset(ExportToolset)
-            export_toolset.clicked.connect(self.export)
+            export_toolset = self._toolbar.add_toolset(ExportTool)
+            export_toolset.on_trait_change(self.export, "current_tool")
 
     def restore(self, config):
         """Restore the widget configuration with a config dictionary"""
@@ -357,7 +358,7 @@ class KaraboPlotView(QWidget):
             # Make sure that we checked the tool!
             if self._toolbar is not None:
                 if roi_tool != ROITool.NoROI:
-                    toolset = self._toolbar.toolset[ROITool]
+                    toolset = self._toolbar.toolsets[ROITool]
                     toolset.buttons[roi_tool].setChecked(True)
 
         self.reset_range_x(config=config)
@@ -422,24 +423,26 @@ class KaraboPlotView(QWidget):
             raise ValueError('Toolbar already added')
 
         # Instantiate toolbar, has a default mouse mode toolset
-        self._toolbar = tb = KaraboToolBar(orientation=Qt.Vertical,
-                                           parent=self)
-        tb.toolset[MouseMode].clicked.connect(self.plotItem.vb.set_mouse_mode)
+        self._toolbar = tb = ToolbarController(parent=self)
+        tb.toolsets[MouseMode].on_trait_change(self.plotItem.vb.set_mouse_mode,
+                                               "current_tool")
 
         # Add ROI toolset
         if self._roi is not None:
-            roi_toolset = tb.add_toolset(ROIToolset, tools=[ROITool.Crosshair])
-            roi_toolset.clicked.connect(self._activate_roi_tool)
+            crosshair_button = tb.add_tool(ROITool.Crosshair)
+            crosshair_button.triggered.connect(self._activate_roi_tool)
+
             # Connect signals from the items
-            self._roi.selected.connect(roi_toolset.check_button)
-            self._roi.removed.connect(roi_toolset.uncheck_all)
+            self._roi.selected.connect(crosshair_button.check)
+            uncheck_button = partial(crosshair_button.check, None)
+            self._roi.removed.connect(uncheck_button)
 
         # Add Crosshair toolset
         if self._cross_target is not None:
-            tb.add_button("cross_target", self._cross_target.action_button)
+            tb.add_button(self._cross_target.action_button)
 
         # row, col, row_span, col_span
-        self.layout().addWidget(tb, 0, 1, 1, 1)
+        self.layout().addWidget(tb.widget, 0, 1, 1, 1)
 
         return self._toolbar
 
@@ -621,27 +624,33 @@ class KaraboPlotView(QWidget):
     # ROI methods
 
     @pyqtSlot(object)
-    def _activate_roi_tool(self, roi_tool):
+    def _activate_roi_tool(self, tool):
+        if tool is None:
+            tool = ROITool.NoROI
+
         if self._canvas is not None:
             self._deactivate_canvas()
 
-        if roi_tool in [ROITool.NoROI, ROITool.Crosshair]:
-            self._roi.show(roi_tool)
-        elif roi_tool is ROITool.DrawCrosshair:
+        if tool in [ROITool.NoROI, ROITool.Crosshair]:
+            self._roi.show(tool)
+        elif tool is ROITool.DrawCrosshair:
             # Hide shown ROIs to give way to the canvas
             self._roi.show(ROITool.NoROI)
-            self._activate_canvas(roi_tool)
+            self._activate_canvas(tool)
 
     def _activate_canvas(self, draw_tool):
-        roi_canvas_map = {
-            ROITool.DrawCrosshair: (PointCanvas, ROITool.Crosshair)}
+        # Deactivate the canvas if a previous is applied
+        if self._canvas is not None:
+            self._deactivate_canvas()
 
-        if draw_tool not in roi_canvas_map:
+        # Check if draw tool has an canvas counterpart
+        if draw_tool not in ROI_CANVAS_MAP:
             return
 
-        canvas_class, roi_tool = roi_canvas_map[draw_tool]
-
+        canvas_class, roi_tool = ROI_CANVAS_MAP[draw_tool]
         viewbox_rect = self.plotItem.vb.viewRect()
+
+        # Create and add canvas
         self._canvas = canvas_class(viewbox_rect)
         self.plotItem.vb.addItem(self._canvas, ignoreBounds=True)
         self._canvas.editingFinished.connect(partial(self._draw_roi, roi_tool))
