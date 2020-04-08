@@ -17,7 +17,7 @@ from karabogui.binding.api import (
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui import icons
-from karabogui.graph.common.api import create_tool_button
+from karabogui.graph.common.api import create_button
 from karabogui.graph.plots.api import KaraboPlotView, ScatterGraphPlot
 
 BUTTON_SIZE = (52, 32)
@@ -57,12 +57,11 @@ class DisplayScatterGraph(BaseBindingController):
         widget.add_cross_target()
         toolbar = widget.add_toolbar()
 
-        _btn_reset = create_tool_button(
-            checkable=False,
-            icon=icons.reset,
-            tooltip="Reset the plot",
-            on_clicked=partial(self._reset_plot, True))
-        toolbar.add_button(name="reset", button=_btn_reset)
+        _btn_reset = create_button(checkable=False,
+                                   icon=icons.reset,
+                                   tooltip="Reset the plot",
+                                   on_clicked=partial(self._reset_plot, True))
+        toolbar.add_button(_btn_reset)
         widget.stateChanged.connect(self._change_model)
 
         model = self.model

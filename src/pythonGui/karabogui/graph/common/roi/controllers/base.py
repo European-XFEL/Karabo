@@ -3,7 +3,7 @@ from collections import defaultdict
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from pyqtgraph import Point
 
-from karabogui.graph.common.toolbar import ROITool
+from karabogui.graph.common.enums import ROITool
 from karabogui.graph.common.roi.crosshair import CrosshairROI
 from karabogui.graph.common.roi.rect import RectROI
 
