@@ -8,7 +8,7 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import (
     restore_graph_config, build_graph_config, VectorRollGraphModel)
 from karabo.native import Timestamp
-from karabogui.graph.common.api import AuxPlots, create_tool_button
+from karabogui.graph.common.api import AuxPlots, create_button
 from karabogui.graph.image.api import (
     KaraboImagePlot, KaraboImageView, RollImage)
 from karabogui.binding.api import get_binding_value, VectorNumberBinding
@@ -44,12 +44,12 @@ class DisplayVectorRollGraph(BaseBindingController):
         # Finalize
         toolbar = widget.add_toolbar()
 
-        _btn_reset = create_tool_button(
+        _btn_reset = create_button(
             checkable=False,
             icon=icons.reset,
             tooltip="Reset the image",
             on_clicked=self._reset_image)
-        toolbar.add_button(name="reset", button=_btn_reset)
+        toolbar.add_button(_btn_reset)
 
         widget.plotItem.set_aspect_ratio(0)
         widget.plotItem.vb.disableAutoRange()

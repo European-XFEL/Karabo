@@ -2,7 +2,8 @@ from PyQt5.QtCore import pyqtSlot
 
 from karabogui.testing import GuiTestCase
 from karabogui.graph.common.api import (
-    AuxPlots, ExportTool, ExportToolset, KaraboToolBar, ROITool, ROIToolset)
+    AuxPlots, ExportTool, ExportToolset, ROITool, ROIToolset,
+    ToolbarController)
 
 from karabogui.graph.image.tools.toolbar import AuxPlotsToolset
 
@@ -10,30 +11,31 @@ from karabogui.graph.image.tools.toolbar import AuxPlotsToolset
 class TestCase(GuiTestCase):
     def setUp(self):
         super(TestCase, self).setUp()
-        self.toolbar = KaraboToolBar()
+        self.toolbar = ToolbarController()
 
     def test_add_aux_plots_toolset(self):
-        toolset = self.toolbar.add_toolset(AuxPlotsToolset)
-        self.assertEqual(len(self.toolbar.toolset), 2)
-        self.assertTrue(AuxPlots in self.toolbar.toolset)
-        self.assertTrue(isinstance(self.toolbar.toolset[AuxPlots],
+        self.toolbar.register_toolset(toolset=AuxPlots, klass=AuxPlotsToolset)
+        toolset = self.toolbar.add_toolset(AuxPlots)
+        self.assertEqual(len(self.toolbar.toolsets), 2)
+        self.assertTrue(AuxPlots in self.toolbar.toolsets)
+        self.assertTrue(isinstance(self.toolbar.toolsets[AuxPlots],
                                    AuxPlotsToolset))
-        self.assertTrue(toolset is self.toolbar.toolset[AuxPlots])
+        self.assertTrue(toolset is self.toolbar.toolsets[AuxPlots])
 
     def test_add_roi_toolset(self):
-        toolset = self.toolbar.add_toolset(ROIToolset)
-        self.assertEqual(len(self.toolbar.toolset), 2)
-        self.assertTrue(ROITool in self.toolbar.toolset)
-        self.assertTrue(isinstance(self.toolbar.toolset[ROITool], ROIToolset))
-        self.assertTrue(toolset is self.toolbar.toolset[ROITool])
+        toolset = self.toolbar.add_toolset(ROITool)
+        self.assertEqual(len(self.toolbar.toolsets), 2)
+        self.assertTrue(ROITool in self.toolbar.toolsets)
+        self.assertTrue(isinstance(self.toolbar.toolsets[ROITool], ROIToolset))
+        self.assertTrue(toolset is self.toolbar.toolsets[ROITool])
 
     def test_add_export_toolset(self):
-        toolset = self.toolbar.add_toolset(ExportToolset)
-        self.assertEqual(len(self.toolbar.toolset), 2)
-        self.assertTrue(ExportTool in self.toolbar.toolset)
-        self.assertTrue(isinstance(self.toolbar.toolset[ExportTool],
+        toolset = self.toolbar.add_toolset(ExportTool)
+        self.assertEqual(len(self.toolbar.toolsets), 2)
+        self.assertTrue(ExportTool in self.toolbar.toolsets)
+        self.assertTrue(isinstance(self.toolbar.toolsets[ExportTool],
                                    ExportToolset))
-        self.assertTrue(toolset is self.toolbar.toolset[ExportTool])
+        self.assertTrue(toolset is self.toolbar.toolsets[ExportTool])
 
 
 class TestAuxPlotsToolset(GuiTestCase):
@@ -50,7 +52,7 @@ class TestAuxPlotsToolset(GuiTestCase):
             nonlocal tool
             tool = value
 
-        self.toolset.clicked.connect(set_tool)
+        self.toolset.on_trait_change(set_tool, "current_tool")
         profile_plot_button = self.toolset.buttons[AuxPlots.ProfilePlot]
 
         # Check if profile plot is checked by default
@@ -66,14 +68,14 @@ class TestAuxPlotsToolset(GuiTestCase):
         self.assertTrue(tool is AuxPlots.NoPlot)
         self.assertFalse(profile_plot_button.isChecked())
 
-    def test_check_button(self):
+    def test_check(self):
         profile_plot_button = self.toolset.buttons[AuxPlots.ProfilePlot]
 
         # Check if profile plot is checked by default
         self.assertFalse(profile_plot_button.isChecked())
 
         # Set the button as checked
-        self.toolset.check_button(AuxPlots.ProfilePlot)
+        self.toolset.check(AuxPlots.ProfilePlot)
         self.assertTrue(profile_plot_button.isChecked())
 
     def test_uncheck_all(self):
@@ -103,7 +105,7 @@ class TestROIToolset(GuiTestCase):
             nonlocal tool
             tool = value
 
-        self.toolset.clicked.connect(set_tool)
+        self.toolset.on_trait_change(set_tool, "current_tool")
 
         # Check if ROI buttons are unchecked by default
         for button in self.toolset.buttons.values():
@@ -134,7 +136,7 @@ class TestROIToolset(GuiTestCase):
         self.assertFalse(rect_roi_button.isChecked())
 
         # Set the button as checked
-        self.toolset.check_button(ROITool.Rect)
+        self.toolset.check(ROITool.Rect)
         self.assertTrue(rect_roi_button.isChecked())
 
     def test_uncheck_all(self):
