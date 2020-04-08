@@ -1,63 +1,43 @@
-from functools import partial
-
-from PyQt5.QtCore import pyqtSlot
+from traits.api import Callable, List
 
 from karabogui import icons
-
 from karabogui.graph.common.api import (
-    AuxPlots, BaseToolsetController, create_tool_button)
+    AuxPlots, BaseToolsetController, create_button)
+
+
+def aux_plots_factory(tool):
+    button = None
+    if tool is AuxPlots.ProfilePlot:
+        button = create_button(icon=icons.beamProfile,
+                               checkable=True,
+                               tooltip="Beam Profile")
+    elif tool is AuxPlots.Histogram:
+        button = create_button(icon=icons.histogram,
+                               checkable=True,
+                               tooltip="Histogram")
+    return button
 
 
 class AuxPlotsToolset(BaseToolsetController):
-    tool_type = AuxPlots
+    tools = List([AuxPlots.ProfilePlot, AuxPlots.Histogram])
+    factory = Callable(aux_plots_factory)
 
-    @pyqtSlot(AuxPlots)
-    def _select(self, plot_mode):
+    def select(self, tool):
         """The toolset has can have one or more buttons, with check states
            being exclusive. When a button is unchecked, the toolset returns
            ROITool.NoROI. When selected, on the other hand, the other button
            (if existing), should be unchecked."""
-        if set(self._default_buttons()) == set(self.buttons.keys()):
-            # Toolset has two buttons, check state are then exclusive
-            prof_button = self.buttons[AuxPlots.ProfilePlot]
-            hist_button = self.buttons[AuxPlots.Histogram]
 
-            # Uncheck the other button
-            if not prof_button.isChecked() and not hist_button.isChecked():
-                plot_mode = AuxPlots.NoPlot
-            elif plot_mode is AuxPlots.ProfilePlot and prof_button.isChecked():
-                hist_button.setChecked(False)
-            elif plot_mode is AuxPlots.Histogram and hist_button.isChecked():
-                prof_button.setChecked(False)
-        else:
-            # Only one button is present.
-            if not self.buttons[plot_mode].isChecked():
-                plot_mode = AuxPlots.NoPlot
+        # Toolset has two buttons, check state are then exclusive
+        prof_button = self.buttons[AuxPlots.ProfilePlot]
+        hist_button = self.buttons[AuxPlots.Histogram]
 
-        super(AuxPlotsToolset, self)._select(plot_mode)
+        # Uncheck the other button
+        if not prof_button.isChecked() and not hist_button.isChecked():
+            tool = AuxPlots.NoPlot
+        elif tool is AuxPlots.ProfilePlot and prof_button.isChecked():
+            hist_button.setChecked(False)
+        elif tool is AuxPlots.Histogram and hist_button.isChecked():
+            prof_button.setChecked(False)
 
-    def _button_factory(self, aux_plots):
-        button = None
-        if aux_plots is AuxPlots.ProfilePlot:
-            button = create_tool_button(
-                icon=icons.beamProfile,
-                checkable=True,
-                tooltip="Beam Profile",
-                on_clicked=partial(self._select, AuxPlots.ProfilePlot)
-            )
-        elif aux_plots is AuxPlots.Histogram:
-            button = create_tool_button(
-                icon=icons.histogram,
-                checkable=True,
-                tooltip="Histogram",
-                on_clicked=partial(self._select, AuxPlots.Histogram)
-            )
-
-        return button
-
-    def check_button(self, plot):
-        if plot is not AuxPlots.NoPlot:
-            self.buttons[plot].setChecked(True)
-
-    def _default_buttons(self):
-        return [AuxPlots.ProfilePlot, AuxPlots.Histogram]
+        super(AuxPlotsToolset, self).select(tool)

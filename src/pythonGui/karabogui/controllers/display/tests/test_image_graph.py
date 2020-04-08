@@ -39,9 +39,9 @@ class TestImageGraph(GuiTestCase):
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 
-    def _click_toolbar(self, tool, button):
+    def _click_toolbar(self, tool):
         toolbar = self.controller.widget.toolbar
-        toolbar.toolset[tool].clicked.emit(button)
+        toolbar.toolsets[tool.__class__].buttons[tool].click()
         # give some process event time
         self.process_qt_events()
 
@@ -56,8 +56,8 @@ class TestImageGraph(GuiTestCase):
         self.assertEqual(len(model.roi_items), 0)
 
         # Toolbar configuration
-        self._click_toolbar(AuxPlots, AuxPlots.ProfilePlot)
-        self._click_toolbar(MouseMode, MouseMode.Picker)
+        self._click_toolbar(AuxPlots.ProfilePlot)
+        self._click_toolbar(MouseMode.Picker)
 
         # Add some ROIs
         roi_controller = self.controller.widget.roi
