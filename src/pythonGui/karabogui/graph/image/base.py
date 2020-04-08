@@ -8,8 +8,8 @@ from pyqtgraph import GraphicsLayoutWidget
 from karabogui import icons
 
 from karabogui.graph.common.api import (
-    AxesLabelsDialog, AuxPlots, COLORMAPS, ExportToolset, ImageROIController,
-    KaraboToolBar, MouseMode, PointCanvas, RectCanvas, ROITool, ROIToolset)
+    AxesLabelsDialog, AuxPlots, COLORMAPS, ExportTool, ImageROIController,
+    MouseMode, PointCanvas, RectCanvas, ROITool, ToolbarController)
 from karabogui.graph.common.const import SCALING, X_AXIS_HEIGHT, UNITS
 
 from .aux_plots.controller import AuxPlotsController
@@ -21,6 +21,11 @@ from .tools.picker import PickerController
 from .tools.toolbar import AuxPlotsToolset
 from .utils import (
     create_colormap_menu, create_icon_from_colormap, levels_almost_equal)
+
+
+ROI_CANVAS_MAP = {
+    ROITool.DrawRect: (RectCanvas, ROITool.Rect),
+    ROITool.DrawCrosshair: (PointCanvas, ROITool.Crosshair)}
 
 
 class KaraboImageView(QWidget):
@@ -84,9 +89,9 @@ class KaraboImageView(QWidget):
             raise ValueError('Toolbar already added')
 
         # Instantiate toolbar, has a default mouse mode toolset
-        self.toolbar = tb = KaraboToolBar(orientation=Qt.Vertical,
-                                          parent=self)
-        tb.toolset[MouseMode].clicked.connect(self.set_mouse_mode)
+        self.toolbar = tb = ToolbarController(parent=self)
+        tb.toolsets[MouseMode].on_trait_change(self.set_mouse_mode,
+                                               "current_tool")
 
         # Add the optional mouse mode: picker tool
         if self._picker is not None:
@@ -94,23 +99,26 @@ class KaraboImageView(QWidget):
 
         # Add Aux Plots toolset
         if self._aux_plots is not None:
-            aux_plots_toolset = tb.add_toolset(AuxPlotsToolset)
-            aux_plots_toolset.clicked.connect(self.show_aux_plots)
+            tb.register_toolset(toolset=AuxPlots, klass=AuxPlotsToolset)
+            aux_plots_toolset = tb.add_toolset(AuxPlots)
+            aux_plots_toolset.on_trait_change(self.show_aux_plots,
+                                              "current_tool")
 
         # Add ROI toolset
         if self.roi is not None:
-            roi_toolset = tb.add_toolset(ROIToolset)
-            roi_toolset.clicked.connect(self._activate_roi_tool)
+            roi_toolset = tb.add_toolset(ROITool)
+            roi_toolset.on_trait_change(self._activate_roi_tool,
+                                        "current_tool")
             # Connect signals from the items
-            self.roi.selected.connect(roi_toolset.check_button)
+            self.roi.selected.connect(roi_toolset.check)
             self.roi.removed.connect(roi_toolset.uncheck_all)
 
         # Add Export toolset
-        export_toolset = tb.add_toolset(ExportToolset)
-        export_toolset.clicked.connect(self.plotItem.export)
+        export_toolset = tb.add_toolset(ExportTool)
+        export_toolset.on_trait_change(self.plotItem.export, "current_tool")
 
         # row, col, row_span, col_span
-        self.layout().addWidget(tb, 0, 1, 1, 1)
+        self.layout().addWidget(tb.widget, 0, 1, 1, 1)
 
         return self.toolbar
 
@@ -323,11 +331,11 @@ class KaraboImageView(QWidget):
         # Restore toolbar state
         aux_plots_class = configuration.get('aux_plots', AuxPlots.NoPlot)
         if self.toolbar is not None:
-            toolset = self.toolbar.toolset.get(AuxPlots)
+            toolset = self.toolbar.toolsets.get(AuxPlots)
             if toolset is not None and aux_plots_class != AuxPlots.NoPlot:
-                toolset.buttons[aux_plots_class].setChecked(True)
+                toolset.buttons[AuxPlots(aux_plots_class)].setChecked(True)
 
-            toolset = self.toolbar.toolset.get(ROITool)
+            toolset = self.toolbar.toolsets.get(ROITool)
             if toolset is not None and current_roi_tool != ROITool.NoROI:
                 toolset.buttons[current_roi_tool].setChecked(True)
 
@@ -435,7 +443,7 @@ class KaraboImageView(QWidget):
     @pyqtSlot()
     def _set_roi_configuration(self):
         config = {}
-        aux_plots_tool = self.toolbar.toolset[AuxPlots].current_tool
+        aux_plots_tool = self.toolbar.toolsets[AuxPlots].current_tool
         if aux_plots_tool is not None:
             config['aux_plots'] = aux_plots_tool
 
@@ -478,13 +486,18 @@ class KaraboImageView(QWidget):
             self._activate_canvas(roi_tool)
 
     def _activate_canvas(self, draw_tool):
-        roi_canvas_map = {
-            ROITool.DrawRect: (RectCanvas, ROITool.Rect),
-            ROITool.DrawCrosshair: (PointCanvas, ROITool.Crosshair)}
+        # Deactivate the canvas if a previous is applied
+        if self._canvas is not None:
+            self._deactivate_canvas()
 
-        canvas_class, roi_tool = roi_canvas_map[draw_tool]
+        # Check if draw tool has an canvas counterpart
+        if draw_tool not in ROI_CANVAS_MAP:
+            return
 
+        canvas_class, roi_tool = ROI_CANVAS_MAP[draw_tool]
         rect = self.plotItem.vb.viewRect()
+
+        # Create and add canvas
         self._canvas = canvas_class(rect)
         self.plotItem.vb.addItem(self._canvas)
         self._canvas.editingFinished.connect(partial(self._draw_roi, roi_tool))
