@@ -22,10 +22,11 @@ from .exporters import ArrayExporter, ImageExporter, PlotDataExporter
 
 from .legend import KaraboLegend, CoordsLegend
 
-from .toolbar import (
-    BaseToolsetController, MouseModeToolset, ExportToolset, KaraboToolBar,
-    create_tool_button, create_dropdown_button, DropDownMenu, WidgetAction,
-    ROIToolset)
+from .toolbar.controller import ToolbarController
+from .toolbar.toolsets import (
+    BaseToolsetController, ExportToolset, MouseMode, ROIToolset)
+from .toolbar.widgets import create_button
+
 from .viewbox import KaraboViewBox
 
 from .dialogs.axes_labels import AxesLabelsDialog

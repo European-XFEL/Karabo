@@ -16,7 +16,7 @@ from karabogui.binding.api import (
 from karabogui.const import MAXNUMPOINTS
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.graph.common.api import create_tool_button, get_pen_cycler
+from karabogui.graph.common.api import create_button, get_pen_cycler
 from karabogui.graph.plots.api import KaraboPlotView
 import karabogui.icons as icons
 
@@ -54,12 +54,11 @@ class DisplayMultiCurveGraph(BaseBindingController):
         widget.enable_data_toggle(True)
         toolbar = widget.add_toolbar()
 
-        _btn_reset = create_tool_button(
-            checkable=False,
-            icon=icons.reset,
-            tooltip="Reset the plot",
-            on_clicked=partial(self._reset_plot, True))
-        toolbar.add_button(name="reset", button=_btn_reset)
+        _btn_reset = create_button(checkable=False,
+                                   icon=icons.reset,
+                                   tooltip="Reset the plot",
+                                   on_clicked=partial(self._reset_plot, True))
+        toolbar.add_button(_btn_reset)
         widget.stateChanged.connect(self._change_model)
 
         # A closure to change the button style once a boolean is linked
