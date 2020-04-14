@@ -8,6 +8,7 @@ import re
 import shutil
 
 from asyncio import get_event_loop
+from urllib.parse import urlparse
 
 from karabo.influxdb.client import InfluxDbClient
 from karabo.influxdb.dlutils import (
@@ -18,24 +19,26 @@ from karabo.native import decodeXML, encodeBinary
 
 
 class DlRaw2Influx():
-    def __init__(self, raw_path, topic,
-                 user, password, protocol,
-                 host, port=8086, device_id=None,
-                 output_dir='/tmp', dry_run=True,
-                 prints_on=True, use_gateway=False):
+    def __init__(self, raw_path, topic, user, password, url,
+                 device_id, output_dir, dry_run, prints_on):
         self.raw_path = raw_path
+        self.db_name = topic
         self.output_dir = output_dir
         self.dry_run = dry_run
         self.device_id = device_id
-        self.chunk_queries = 8000  # optimal values are between 5k and 10k
         self.prints_on = prints_on
+
+        url_parts = urlparse(url)  # throws for invalid urls.
+        protocol = url_parts.scheme
+        port = url_parts.port
+        host = url_parts.hostname
+
         self.db_client = InfluxDbClient(
-                             host=host, port=port, db=topic,
-                             protocol=protocol, user=user, password=password,
-                             use_gateway=use_gateway
-                         )
-        self.db_name = topic
-        self.authenticated_access = len(user) > 0
+            host=host, port=port, db=self.db_name, protocol=protocol,
+            user=user, password=password
+            )
+
+        self.chunk_queries = 8000  # optimal values are between 5k and 10k
 
         if self.device_id is None:  # infers device_id from directory structure
             self.device_id = device_id_from_path(self.raw_path)
@@ -80,15 +83,13 @@ class DlRaw2Influx():
                                         line_fields["user_name"]
                                     )
                         safe_f = escape_tag_field_key(line_fields["name"])
-                        safe_v = escape_tag_field_key(line_fields["value"])
+                        safe_v = line_fields["value"]
 
                         if len(safe_v) > 0:
                             data.append(
                                 '{m},user="{user}" "{f}"={v},_tid="{tid}" {t}'
-                                .format(m=safe_m,
-                                        user=safe_user,
-                                        f=safe_f,
-                                        v=safe_v,
+                                .format(m=safe_m, user=safe_user,
+                                        f=safe_f, v=safe_v,
                                         tid=line_fields["train_id"],
                                         t=line_fields["timestamp"]))
 
@@ -99,23 +100,20 @@ class DlRaw2Influx():
                             # at least one key per line data point
                             evt_type = '+LOG' if up_flag == 'LOGIN' else '-LOG'
                             data.append('{m}__EVENTS,type={e} user="{user}" {t}'
-                                        .format(m=safe_m,
-                                                e=evt_type,
+                                        .format(m=safe_m, e=evt_type,
                                                 user=safe_user,
                                                 t=line_fields["timestamp"]))
                         if data and (i+1) % self.chunk_queries == 0:
+                            lin_proto_data = format_line_protocol_body(data)
+                            data = []
                             if not self.dry_run:
-                                lin_proto_data = format_line_protocol_body(data)
                                 r = await self.db_client.write(lin_proto_data)
                                 if r.code != 204:
                                     raise Exception(
                                         "Error writing line protocol: "
-                                        "{} - {}\n{}\n\n"
-                                        .format(r.code,
-                                                r.reason,
-                                                lin_proto_data))
-                            data = []
-
+                                        "{} - {}\n{} ...\n\n".format(
+                                            r.code, r.reason,
+                                            lin_proto_data[:40]))
                 except Exception as exc:
                     # Handles an error by logging it in a .err file in the
                     # partially processed directory if there's an output_dir
@@ -133,7 +131,7 @@ class DlRaw2Influx():
                     elif not self.part_proc_out_path:
                         raise
 
-            if not self.dry_run:
+            if not self.dry_run and data:
                 try:
                     line_protocol_data = format_line_protocol_body(data)
                     r = await self.db_client.write(line_protocol_data)
@@ -149,8 +147,9 @@ class DlRaw2Influx():
                         err_path = self.part_proc_out_path + ".err"
                         file_mode = 'a' if op.exists(err_path) else 'w'
                         with open(err_path, file_mode) as err:
-                            err.write("Error writing line protocol: {}\n{}\n\n"
-                                      .format(exc, line_protocol_data))
+                            err.write("Error writing line protocol: {}\n{} ..."
+                                      "\n\n".format(
+                                          exc, line_protocol_data[:40]))
                     elif not self.part_proc_out_path:
                         raise
 

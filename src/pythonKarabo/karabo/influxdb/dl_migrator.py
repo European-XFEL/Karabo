@@ -4,27 +4,28 @@ import argparse
 from asyncio import get_event_loop
 import os
 import re
+from urllib.parse import urlparse
 
 from karabo.influxdb import DlRaw2Influx, DlSchema2Influx
 from karabo.influxdb.dlutils import device_id_from_path
 
 
 class DlMigrator():
-    def __init__(self, topic, input_dir, output_dir, host,
-                 protocol="http", user="", password="", port=8086,
-                 dry_run=True, prints_on=False, use_gateway=False):
+    def __init__(self, db_name, input_dir, output_dir,
+                 write_url, write_user, write_pwd,
+                 read_url, read_user, read_pwd,
+                 dry_run=True, prints_on=False):
+        self.db_name = db_name
         self.input_dir = input_dir
         self.output_dir = output_dir
+        self.write_url = write_url
+        self.write_user = write_user
+        self.write_pwd = write_pwd
+        self.read_url = read_url
+        self.read_user = read_user
+        self.read_pwd = read_pwd
         self.dry_run = dry_run
-        self.user = user
-        self.password = password
-        self.port = port
-        self.host = host
-        self.protocol = protocol
-        self.chunk_queries = 8000  # optimal values are between 5k and 10k
         self.prints_on = prints_on
-        self.db_name = topic
-        self.use_gateway = use_gateway
 
     async def run(self):
         n_processed = 0
@@ -75,21 +76,34 @@ class DlMigrator():
         print("Files with migration errors:  {}".format(n_part_processed))
 
     async def insert_archive(self, path, output_dir, device_id):
-        conf2db = DlRaw2Influx(
-            raw_path=path, output_dir=output_dir,
-            topic=self.db_name, user=self.user, password=self.password,
-            host=self.host, port=self.port, protocol=self.protocol,
-            dry_run=self.dry_run, device_id=device_id,
-            prints_on=self.prints_on, use_gateway=self.use_gateway)
+        try:
+            conf2db = DlRaw2Influx(
+                raw_path=path, output_dir=output_dir,
+                topic=self.db_name, user=self.write_user,
+                password=self.write_pwd, url=self.write_url,
+                dry_run=self.dry_run, device_id=device_id,
+                prints_on=self.prints_on)
+        except Exception as exc:
+            print("Error creating property file converter:\n"
+                  "File to be converted: {}\n"
+                  "Error message: {}".format(path, exc))
+            return False
         return await conf2db.run()
 
     async def insert_schema(self, path, output_dir, device_id):
-        schema2db = DlSchema2Influx(
-            schema_path=path, output_dir=output_dir,
-            topic=self.db_name, user=self.user, password=self.password,
-            host=self.host, port=self.port, protocol=self.protocol,
-            dry_run=self.dry_run, device_id=device_id,
-            prints_on=self.prints_on, use_gateway=self.use_gateway)
+        try:
+            schema2db = DlSchema2Influx(
+                schema_path=path, topic=self.db_name,
+                read_user=self.read_user, read_pwd=self.read_pwd,
+                read_url=self.read_url, write_user=self.write_user,
+                write_pwd=self.write_pwd, write_url=self.write_url,
+                device_id=device_id, output_dir=output_dir,
+                dry_run=self.dry_run, prints_on=self.prints_on)
+        except Exception as exc:
+            print("Error creating schema file converter:\n"
+                  "File to be converted: {}\n"
+                  "Error message: {}".format(path, exc))
+            return False
         return await schema2db.run()
 
 
@@ -99,7 +113,7 @@ if __name__ == "__main__":
                     "to InfluxDb. Completely and partially "
                     "migrated files are moved to directories "
                     "under a specified output base directory.")
-    parser.add_argument("topic", help="Karabo topic")
+    parser.add_argument("db_name", help="InfluxDB database (Karabo topic)")
     parser.add_argument("input_dir",
                         help="Root firectory for the datalogger raw files: "
                              "every 'raw' directory under this directory "
@@ -115,22 +129,24 @@ if __name__ == "__main__":
                              "Processed and partially processed files will be "
                              "stored on two subdirectories of output_dir, "
                              "'processed' and 'part_processed'.")
-    parser.add_argument("host", help="influxDb hostname")
-    parser.add_argument("--user", dest="user", help="influxDb user name")
-    parser.set_defaults(user="")
-    parser.add_argument("--password", dest="password",
-                        help="influxDb user password")
-    parser.set_defaults(password="")
-    parser.add_argument("--protocol", dest="protocol",
-                        help="protocol: http or https")
-    parser.set_defaults(protocol="http")
-    parser.add_argument("--port", dest="port", help="influxDb port")
-    parser.set_defaults(port=8086)
-    parser.add_argument("--use_gateway", dest="use_gateway",
-                        help="When true, the host is an Influx gateway and "
-                             "credentials should be placed in the url between "
-                             "protocol and hostname.")
-    parser.set_defaults(use_gateway=False)
+    parser.add_argument("--write-url", dest="write_url",
+                        help="Url for write operations")
+    parser.set_defaults(write_url="http://localhost:8086")
+    parser.add_argument("--write-user", dest="write_user",
+                        help="Username for write operations")
+    parser.set_defaults(write_user="")
+    parser.add_argument("--write-pwd", dest="write_pwd",
+                        help="Password for write operations")
+    parser.set_defaults(write_pwd="")
+    parser.add_argument("--read-url", dest="read_url",
+                        help="Url for read operations")
+    parser.set_defaults(read_url="http://localhost:8086")
+    parser.add_argument("--read-user", dest="read_user",
+                        help="Username for read operations")
+    parser.set_defaults(read_user="")
+    parser.add_argument("--read-pwd", dest="read_pwd",
+                        help="Password for read operations")
+    parser.set_defaults(read_pwd="")
     parser.add_argument("--dry_run", dest="dry_run", action="store_true")
     parser.add_argument("--quiet", dest="prints_on", action="store_false")
     parser.set_defaults(dry_run=False)
