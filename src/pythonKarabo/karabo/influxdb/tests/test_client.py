@@ -275,10 +275,10 @@ class Influx_TestCase(DeviceTest):
                     tst_data_dir)
 
         migrator = DlMigrator(
-            input_dir=tst_data_root, output_dir=output_dir,
-            topic=_topic, host=_host, port=_port,
-            user=_user, password=_password, dry_run=False,
-            use_gateway=False)
+            db_name=_topic, input_dir=tst_data_root, output_dir=output_dir,
+            write_url=f'http://{_host}:{_port}', write_user=_user,
+            write_pwd=_password, read_url=f'http://{_host}:{_port}',
+            read_user=_user, read_pwd=_password, dry_run=False, prints_on=True)
 
         await migrator.run()
 
