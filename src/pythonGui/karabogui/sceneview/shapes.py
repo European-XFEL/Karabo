@@ -5,11 +5,13 @@
 #############################################################################
 from abc import abstractmethod
 
-from PyQt5.QtCore import QLine, QMargins, QRect, QSize, Qt
-from PyQt5.QtGui import QBrush, QColor, QPainterPath, QPen
+from PyQt5.QtCore import (
+    QLine, QLineF, QMargins, QPoint, QPointF, QRect, QSize, Qt)
+from PyQt5.QtGui import QBrush, QColor, QPainterPath, QPen, QTransform
 from PyQt5.QtWidgets import QDialog
-from traits.api import (ABCHasStrictTraits, Bool, Constant, Instance, Property,
-                        cached_property)
+from traits.api import (
+    ABCHasStrictTraits, cached_property, Bool, Constant, Float, Instance,
+    List, on_trait_change, Property, Tuple)
 
 from karabo.common.scenemodel.api import BaseShapeObjectData
 from karabogui.dialogs.dialogs import PenDialog
@@ -17,6 +19,8 @@ from karabogui.pathparser import Parser
 from .const import (GRID_STEP, QT_PEN_CAP_STYLE_FROM_STR,
                     QT_PEN_CAP_STYLE_TO_STR, QT_PEN_JOIN_STYLE_FROM_STR,
                     QT_PEN_JOIN_STYLE_TO_STR, SCREEN_MAX_VALUE)
+from .utils import calc_rotated_point
+
 
 _BRUSH_ATTRS = ('fill', 'fill_opacity')
 _PEN_ATTRS = ('stroke', 'stroke_opacity', 'stroke_linecap',
@@ -226,6 +230,129 @@ class LineShape(BaseShape):
         return QSize(left + right, top + bottom)
 
 
+class MarkerShape(BaseShape):
+    """This assumes that the child marker element is a path.
+       Rects, circles, etc. are not yet supported."""
+
+    children = List
+    _offset = Instance(QPoint, args=())
+    _scale = Float(1.0)
+    _angle = Float(0.0)
+
+    ref_point = Property(Instance(QPointF),
+                         depends_on=["_angle", "_offset", "_scale"])
+
+    use_stroke_width = Bool
+
+    def _children_default(self):
+        return [PathShape(model=model) for model in self.model.children]
+
+    def draw(self, painter):
+        for child in self.children:
+            child.draw(painter)
+
+    def geometry(self):
+        rect = QRect()
+        for child in self.children:
+            rect = rect.united(child.geometry())
+        return rect
+
+    def set_geometry(self, rect):
+        """Marker geometry depend on the union of the children geometries.
+           We do not support setting the geometry from here, hence the
+           blank reimplementation"""
+
+    def translate(self, offset):
+        self._offset = offset
+
+    @on_trait_change("_offset, ref_point")
+    def _translate(self):
+        for child in self.children:
+            child.translate(self._offset - self.ref_point)
+
+    def rotate(self, angle):
+        if self.model.orient == "auto":
+            self._angle = angle
+            for child in self.children:
+                child.rotate(angle)
+
+    def scale(self, scale):
+        """SVG markers are scaled wrt strokeWidth or userSpaceOnUse.
+           Currently, we only support strokeWidth scaling."""
+        if self.use_stroke_width:
+            self._scale = scale
+
+            for child in self.children:
+                # Correct scale if stroke width is 0
+                child.scale(scale or 1)
+
+    @cached_property
+    def _get_ref_point(self):
+        return calc_rotated_point(x=self.model.refX, y=self.model.refY,
+                                  angle=self._angle, scale=self._scale)
+
+    def _use_stroke_width_default(self):
+        # This is used for scaling the the arrow and the marker by either the
+        # stroke width or by user space. The current implementation is build by
+        # around stroke width scaling, but we still have to check against
+        # `useSpaceOnUse`. If markerUnits is not specified, we default to
+        # using stroke width.
+        return self.model.markerUnits != "userSpaceOnUse"
+
+
+class ArrowShape(LineShape):
+
+    line = Property(Instance(QLineF), depends_on="shape")
+    marker = Instance(MarkerShape)
+
+    def _marker_default(self):
+        return MarkerShape(model=self.model.marker)
+
+    @cached_property
+    def _get_line(self):
+        return QLineF(self.shape)
+
+    def draw(self, painter):
+        """Draw the line and the marker shapes"""
+        super(ArrowShape, self).draw(painter)  # line
+        self.marker.draw(painter)  # marker
+
+    def geometry(self):
+        """The geometry of the arrow shape depends on the union of the line
+           shape and marker shape geometries."""
+        line_geom = super(ArrowShape, self).geometry()
+        return line_geom.united(self.marker.geometry())
+
+    def set_geometry(self, rect):
+        """Set the geometry by accounting the difference of the rects with the
+           markers and applying the difference on the plain the rect"""
+        diff = tuple(new - old for new, old in
+                     zip(rect.getCoords(), self.geometry().getCoords()))
+
+        # Adjust line rect.
+        line_rect = super(ArrowShape, self).geometry()
+        super(ArrowShape, self).set_geometry(line_rect.adjusted(*diff))
+
+    @on_trait_change("line")
+    def _transform_marker(self):
+        """Rotate the marker with the angle made by the line"""
+        self.marker.translate(self.shape.p2())
+        if self.line.length() != 0:
+            self.marker.rotate(self.line.angle())
+
+    @on_trait_change("model.stroke_width")
+    def _scale_marker(self):
+        self.marker.scale(self.model.stroke_width)
+
+    def minimumSize(self):
+        """We use the line and the marker sizes for the effective
+           minimum size."""
+        line_size = super(ArrowShape, self).minimumSize()
+        marker_size = self.marker.geometry().size()
+        return QSize(max(line_size.width(), marker_size.width()),
+                     max(line_size.height(), marker_size.height()))
+
+
 class RectangleShape(BaseShape):
     """A rectangle which can appear in a scene
     """
@@ -260,12 +387,21 @@ class PathShape(BaseShape):
     """A path which can appear in a scene
     """
     # The path object
-    shape = Property(Instance(QPainterPath), depends_on=['model.svg_data'])
+    path = Instance(QPainterPath)
+    shape = Property(Instance(QPainterPath), depends_on=["path", "transform"])
+    _angle = Float(0.0)
+    _offset = Tuple(0.0, 0.0)
+    _scale = Float(1.0)
+    transform = Property(Instance(QTransform),
+                         depends_on=["_angle", "_offset", "_scale"])
+
+    def _path_default(self):
+        parser = Parser(self.model.svg_data)
+        return parser.parse()
 
     @cached_property
     def _get_shape(self):
-        parser = Parser(self.model.svg_data)
-        return parser.parse()
+        return self.transform.map(self.path)
 
     def draw(self, painter):
         painter.setPen(self.pen)
@@ -279,4 +415,18 @@ class PathShape(BaseShape):
         pass
 
     def translate(self, offset):
-        self.shape.translate(offset)
+        self._offset = offset.x(), offset.y()
+
+    def rotate(self, angle):
+        self._angle = -angle
+
+    def scale(self, scale):
+        self._scale = scale
+
+    @cached_property
+    def _get_transform(self):
+        transform = QTransform()
+        transform.translate(*self._offset)
+        transform.scale(self._scale, self._scale)
+        transform.rotate(self._angle)
+        return transform
