@@ -1,3 +1,4 @@
+import base64
 from json import loads
 import numbers
 import re
@@ -161,34 +162,21 @@ class Results():
 
 class InfluxDbClient():
     def __init__(self, host, port, protocol="http", db="",
-                 user="", password="", use_gateway=False):
+                 user="", password=""):
         self.protocol = protocol
         self.host = host
         self.port = int(port)
         self.db = db
         self.user = user
         self.password = password
-        # if 'use_gateway' is True, urls carrying credentials should
-        # be generated conforming to the conventions of the Influx gateway -
-        # with user and password between the protocol and the hostname.
-        self.use_gateway = use_gateway
         if hasattr(AsyncIOMainLoop, "initialized"):
             if not AsyncIOMainLoop.initialized():
                 AsyncIOMainLoop().install()
         self.client = AsyncHTTPClient(force_instance=False)
+        self.basic_auth_header = self._get_basic_auth_header()
 
     def get_url(self, path):
-        if self.use_gateway and self.user and self.password > 0:
-            return (
-                f"{self.protocol}://{self.user}:{self.password}@"
-                f"{self.host}://{self.port}/{path}"
-            )
-        else:
-            # For all other situations the url will have the same form.
-            # Note that for non gateway urls with user and password defined, the
-            # reader methods are expected to place user, password (and db)
-            # in the url as http query parameters (urlencoded).
-            return f"{self.protocol}://{self.host}:{self.port}/{path}"
+        return f"{self.protocol}://{self.host}:{self.port}/{path}"
 
     async def connect(self):
         uri = self.get_url("ping")
@@ -216,6 +204,14 @@ class InfluxDbClient():
             # query and any other parameter should go in the body.
             uri = f"{uri}?{urlencode(auth_args)}" if auth_args else uri
         return uri
+
+    def _get_basic_auth_header(self):
+        auth_header = None
+        if self.user and self.password:
+            cred = f'{self.user}:{self.password}'.encode('utf-8')
+            b64_cred = base64.b64encode(cred).decode('utf-8')
+            auth_header = {'Authorization': f'Basic {b64_cred}'}
+        return auth_header
 
     def query(self, args, method="GET"):
         """Sends a query from a set of arguments
@@ -255,6 +251,7 @@ class InfluxDbClient():
         query = urlencode(args)
         future = to_asyncio_future(
             self.client.fetch(f"{uri}?{query}&precision=u", body=data,
+                              headers=self.basic_auth_header,
                               method="POST"))
         return future
 
