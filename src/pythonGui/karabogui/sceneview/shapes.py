@@ -224,16 +224,48 @@ class LineShape(BaseShape):
            effective rect has zero width/height"""
         left, top, right, bottom = self._margins
         return QSize(left + right, top + bottom)
-    
-    
-class ArrowShape(LineShape):
 
-    marker = Property
+
+class MarkerShape(BaseShape):
+    """This assumes that the child marker element is a path.
+       Rects, circles, etc. are not yet supported."""
+
+    children = Property(depends_on="model.children")
+
+    @cached_property
+    def _get_children(self):
+        return [PathShape(model=model) for model in self.model.children]
+
+    def draw(self, painter):
+        for child in self.children:
+            child.draw(painter)
+
+    def geometry(self):
+        rect = QRect()
+        for child in self.children:
+            rect = rect.united(child.geometry())
+        return rect
+
+    def set_geometry(self, rect):
+        pass
+
+    def translate(self, offset):
+        for child in self.children:
+            child.translate(offset)
+
+
+class ArrowShape(LineShape):
+    marker = Property(Instance(MarkerShape), depends_on="model.marker")
+
+    @cached_property
+    def _get_marker(self):
+        return MarkerShape(model=self.model.marker)
 
     def draw(self, painter):
         """The line gets drawn.
         """
         super(ArrowShape, self).draw(painter)
+        self.marker.draw(painter)
 
 
 class RectangleShape(BaseShape):
