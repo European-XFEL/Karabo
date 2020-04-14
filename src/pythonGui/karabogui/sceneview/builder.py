@@ -4,7 +4,7 @@ from karabo.common.scenemodel import api as models
 from karabogui.controllers.api import get_model_controller
 from .const import QT_BOX_LAYOUT_DIRECTION
 from .layout.api import BoxLayout, GridLayout, GroupLayout
-from .shapes import LineShape, PathShape, RectangleShape
+from .shapes import ArrowShape, LineShape, PathShape, RectangleShape
 from .widget.api import (
     ControllerContainer, LabelWidget, SceneLinkWidget, StickerWidget,
     UnknownSvgWidget, UnknownWidget, WebLinkWidget)
@@ -20,6 +20,7 @@ _SCENE_OBJ_FACTORIES = {
     models.FixedLayoutModel: lambda m, p: GroupLayout(m),
     models.GridLayoutModel: lambda m, p: GridLayout(m),
     models.LabelModel: LabelWidget,
+    models.ArrowModel: lambda m, p: ArrowShape(model=m),
     models.LineModel: lambda m, p: LineShape(model=m),
     models.PathModel: lambda m, p: PathShape(model=m),
     models.RectangleModel: lambda m, p: RectangleShape(model=m),
