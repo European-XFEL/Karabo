@@ -224,6 +224,16 @@ class LineShape(BaseShape):
            effective rect has zero width/height"""
         left, top, right, bottom = self._margins
         return QSize(left + right, top + bottom)
+    
+    
+class ArrowShape(LineShape):
+
+    marker = Property
+
+    def draw(self, painter):
+        """The line gets drawn.
+        """
+        super(ArrowShape, self).draw(painter)
 
 
 class RectangleShape(BaseShape):
