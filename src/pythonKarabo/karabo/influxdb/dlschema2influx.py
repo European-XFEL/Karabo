@@ -10,6 +10,7 @@ import re
 import shutil
 
 from asyncio import get_event_loop
+from urllib.parse import urlparse
 
 from karabo.influxdb.client import InfluxDbClient
 from karabo.influxdb.dlutils import (
@@ -20,23 +21,37 @@ from karabo.native import encodeBinary, Schema, decodeXML
 
 class DlSchema2Influx():
     def __init__(self, schema_path, topic,
-                 user, password, protocol,
-                 host, port=8086, device_id=None,
-                 output_dir='/tmp', dry_run=True,
-                 prints_on=True, use_gateway=False):
+                 read_user, read_pwd, read_url,
+                 write_user, write_pwd, write_url,
+                 device_id, output_dir,
+                 dry_run, prints_on):
         self.schema_path = schema_path
-        self.output_dir = output_dir
-        self.dry_run = dry_run
-        self.device_id = device_id
-        self.chunk_queries = 8000  # optimal values are between 5k and 10k
-        self.prints_on = prints_on
-        self.db_client = InfluxDbClient(
-                             host=host, port=port, db=topic,
-                             protocol=protocol, user=user, password=password,
-                             use_gateway=use_gateway
-                         )
         self.db_name = topic
-        self.authenticated_access = len(user) > 0
+        self.output_dir = output_dir
+        self.device_id = device_id
+        self.dry_run = dry_run
+        self.prints_on = prints_on
+
+        url_read_parts = urlparse(read_url)  # throws for invalid urls
+        read_protocol = url_read_parts.scheme
+        read_port = url_read_parts.port
+        read_host = url_read_parts.hostname
+
+        url_write_parts = urlparse(write_url)  # throws for invalid urls
+        write_protocol = url_write_parts.scheme
+        write_port = url_write_parts.port
+        write_host = url_write_parts.hostname
+
+        self.read_client = InfluxDbClient(
+                             host=read_host, port=read_port,
+                             protocol=read_protocol, user=read_user,
+                             password=read_pwd, db=self.db_name
+                            )
+        self.write_client = InfluxDbClient(
+                             host=write_host, port=write_port,
+                             protocol=write_protocol, user=write_user,
+                             password=write_pwd, db=self.db_name
+                            )
 
         if self.device_id is None:  # infers device_id from directory structure
             self.device_id = device_id_from_path(self.schema_path)
@@ -62,7 +77,7 @@ class DlSchema2Influx():
     async def run(self):
         if self.prints_on:
             print("Connecting to host: {}..."
-                  .format(self.db_client.host))
+                  .format(self.write_client.host))
 
         if self.prints_on:
             print("Feeding to influxDB file {} ...".format(self.schema_path))
@@ -102,7 +117,7 @@ class DlSchema2Influx():
                                 "where digest='{d}'".format(m=safe_m, d=digest)
                             )
                             qry_args = {"db": self.db_name, "q": qry}
-                            rs = await self.db_client.query(qry_args)
+                            rs = await self.read_client.query(qry_args)
                             rs_body = rs.body.decode("utf-8")
                             rs_obj = json.loads(rs_body)
                             if "series" not in rs_obj['results'][0]:
@@ -126,7 +141,7 @@ class DlSchema2Influx():
 
                     if not self.dry_run:
                         for line in data:
-                            r = await self.db_client.write(line)
+                            r = await self.write_client.write(line)
                             if r.code != 204:
                                 # Error saving the schema; raise.
                                 raise Exception(
