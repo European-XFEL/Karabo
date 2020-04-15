@@ -5,11 +5,12 @@
 #############################################################################
 from abc import abstractmethod
 
-from PyQt5.QtCore import QLine, QMargins, QRect, QSize, Qt
-from PyQt5.QtGui import QBrush, QColor, QPainterPath, QPen
+from PyQt5.QtCore import QLine, QLineF, QMargins, QRect, QSize, Qt
+from PyQt5.QtGui import QBrush, QColor, QPainterPath, QPen, QTransform
 from PyQt5.QtWidgets import QDialog
-from traits.api import (ABCHasStrictTraits, Bool, Constant, Instance, Property,
-                        cached_property)
+from traits.api import (
+    ABCHasStrictTraits, cached_property, Bool, Constant, Float, Instance,
+    on_trait_change, Property, Tuple)
 
 from karabo.common.scenemodel.api import BaseShapeObjectData
 from karabogui.dialogs.dialogs import PenDialog
@@ -253,19 +254,35 @@ class MarkerShape(BaseShape):
         for child in self.children:
             child.translate(offset)
 
+    def rotate(self, angle):
+        if self.model.orient == "auto":
+            for child in self.children:
+                child.rotate(angle)
+
 
 class ArrowShape(LineShape):
+
+    line = Property(Instance(QLineF), depends_on="shape")
     marker = Property(Instance(MarkerShape), depends_on="model.marker")
 
     @cached_property
     def _get_marker(self):
         return MarkerShape(model=self.model.marker)
 
+    @cached_property
+    def _get_line(self):
+        return QLineF(self.shape)
+
     def draw(self, painter):
         """The line gets drawn.
         """
         super(ArrowShape, self).draw(painter)
         self.marker.draw(painter)
+
+    @on_trait_change("line")
+    def _set_transform(self):
+        self.marker.translate(self.shape.p2())
+        self.marker.rotate(self.line.angle())
 
 
 class RectangleShape(BaseShape):
@@ -303,6 +320,10 @@ class PathShape(BaseShape):
     """
     # The path object
     shape = Property(Instance(QPainterPath), depends_on=['model.svg_data'])
+    _angle = Float(0.0)
+    _offset = Tuple(0.0, 0.0)
+    transform = Property(Instance(QTransform),
+                         depends_on=["_angle", "_offset"])
 
     @cached_property
     def _get_shape(self):
@@ -312,7 +333,7 @@ class PathShape(BaseShape):
     def draw(self, painter):
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
-        painter.drawPath(self.shape)
+        painter.drawPath(self.transform.map(self.shape))
 
     def geometry(self):
         return self.shape.boundingRect().toRect()
@@ -321,4 +342,14 @@ class PathShape(BaseShape):
         pass
 
     def translate(self, offset):
-        self.shape.translate(offset)
+        self._offset = offset.x(), offset.y()
+
+    def rotate(self, angle):
+        self._angle = -angle
+
+    @cached_property
+    def _get_transform(self):
+        transform = QTransform()
+        transform.translate(*self._offset)
+        transform.rotate(self._angle)
+        return transform
