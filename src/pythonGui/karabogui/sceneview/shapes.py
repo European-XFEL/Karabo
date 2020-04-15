@@ -5,7 +5,8 @@
 #############################################################################
 from abc import abstractmethod
 
-from PyQt5.QtCore import QLine, QLineF, QMargins, QPointF, QRect, QSize, Qt
+from PyQt5.QtCore import (
+    QLine, QLineF, QMargins, QPoint, QPointF, QRect, QSize, Qt)
 from PyQt5.QtGui import QBrush, QColor, QPainterPath, QPen, QTransform
 from PyQt5.QtWidgets import QDialog
 from traits.api import (
@@ -233,6 +234,7 @@ class MarkerShape(BaseShape):
 
     children = Property(depends_on="model.children")
     ref_point = Instance(QPointF)
+    _offset = Instance(QPoint, args=())
 
     @cached_property
     def _get_children(self):
@@ -252,13 +254,28 @@ class MarkerShape(BaseShape):
         pass
 
     def translate(self, offset):
+        self._offset = offset
+
+    @on_trait_change("_offset, ref_point")
+    def _translate(self):
         for child in self.children:
-            child.translate(offset + self.ref_point)
+            child.translate(self._offset + self.ref_point)
 
     def rotate(self, angle):
         if self.model.orient == "auto":
             for child in self.children:
                 child.rotate(angle)
+
+    def scale(self, scale):
+        # Check if markerUnits == '' == strokeWidth (it is by default)
+        if self.model.markerUnits != "userSpaceOnUse":
+            # Set reference point
+            self.ref_point = QPointF(self.model.refX * scale,
+                                     self.model.refY * scale)
+
+            for child in self.children:
+                # Correct scale if stroke width is 0
+                child.scale(scale or 1)
 
     def _ref_point_default(self):
         return QPointF(self.model.refX, self.model.refY)
@@ -284,9 +301,13 @@ class ArrowShape(LineShape):
         self.marker.draw(painter)
 
     @on_trait_change("line")
-    def _set_transform(self):
+    def _transform_marker(self):
         self.marker.translate(self.shape.p2())
         self.marker.rotate(self.line.angle())
+
+    @on_trait_change("model.stroke_width")
+    def _scale_marker(self):
+        self.marker.scale(self.model.stroke_width)
 
 
 class RectangleShape(BaseShape):
@@ -326,8 +347,9 @@ class PathShape(BaseShape):
     shape = Property(Instance(QPainterPath), depends_on=['model.svg_data'])
     _angle = Float(0.0)
     _offset = Tuple(0.0, 0.0)
+    _scale = Float(1.0)
     transform = Property(Instance(QTransform),
-                         depends_on=["_angle", "_offset"])
+                         depends_on=["_angle", "_offset", "_scale"])
 
     @cached_property
     def _get_shape(self):
@@ -351,9 +373,13 @@ class PathShape(BaseShape):
     def rotate(self, angle):
         self._angle = -angle
 
+    def scale(self, scale):
+        self._scale = scale
+
     @cached_property
     def _get_transform(self):
         transform = QTransform()
         transform.translate(*self._offset)
+        transform.scale(self._scale, self._scale)
         transform.rotate(self._angle)
         return transform
