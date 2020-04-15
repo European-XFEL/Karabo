@@ -7,7 +7,7 @@ from abc import abstractmethod
 
 from PyQt5.QtCore import (
     QLine, QLineF, QMargins, QPoint, QPointF, QRect, QSize, Qt)
-from PyQt5.QtGui import QBrush, QColor, QPainterPath, QPen, QTransform
+from PyQt5.QtGui import QBrush, QColor, QPainterPath, QPen, QRegion, QTransform
 from PyQt5.QtWidgets import QDialog
 from traits.api import (
     ABCHasStrictTraits, cached_property, Bool, Constant, Float, Instance,
@@ -300,6 +300,20 @@ class ArrowShape(LineShape):
         super(ArrowShape, self).draw(painter)
         self.marker.draw(painter)
 
+    def geometry(self):
+        line_geom = super(ArrowShape, self).geometry()
+        return line_geom.united(self.marker.geometry())
+
+    def set_geometry(self, rect):
+        """Set the geometry by accounting the difference of the rects with the
+           markers and applying the difference on the plain the rect"""
+        diff = tuple(new - old for new, old in
+                     zip(rect.getCoords(), self.geometry().getCoords()))
+
+        # Adjust line rect.
+        line_rect = super(ArrowShape, self).geometry()
+        super(ArrowShape, self).set_geometry(line_rect.adjusted(*diff))
+
     @on_trait_change("line")
     def _transform_marker(self):
         self.marker.translate(self.shape.p2())
@@ -344,22 +358,26 @@ class PathShape(BaseShape):
     """A path which can appear in a scene
     """
     # The path object
-    shape = Property(Instance(QPainterPath), depends_on=['model.svg_data'])
+    path = Instance(QPainterPath)
+    shape = Property(Instance(QPainterPath), depends_on=["path", "transform"])
     _angle = Float(0.0)
     _offset = Tuple(0.0, 0.0)
     _scale = Float(1.0)
     transform = Property(Instance(QTransform),
                          depends_on=["_angle", "_offset", "_scale"])
 
-    @cached_property
-    def _get_shape(self):
+    def _path_default(self):
         parser = Parser(self.model.svg_data)
         return parser.parse()
+
+    @cached_property
+    def _get_shape(self):
+        return self.transform.map(self.path)
 
     def draw(self, painter):
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
-        painter.drawPath(self.transform.map(self.shape))
+        painter.drawPath(self.shape)
 
     def geometry(self):
         return self.shape.boundingRect().toRect()
