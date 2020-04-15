@@ -5,7 +5,7 @@
 #############################################################################
 from abc import abstractmethod
 
-from PyQt5.QtCore import QLine, QLineF, QMargins, QRect, QSize, Qt
+from PyQt5.QtCore import QLine, QLineF, QMargins, QPointF, QRect, QSize, Qt
 from PyQt5.QtGui import QBrush, QColor, QPainterPath, QPen, QTransform
 from PyQt5.QtWidgets import QDialog
 from traits.api import (
@@ -232,6 +232,7 @@ class MarkerShape(BaseShape):
        Rects, circles, etc. are not yet supported."""
 
     children = Property(depends_on="model.children")
+    ref_point = Instance(QPointF)
 
     @cached_property
     def _get_children(self):
@@ -252,12 +253,15 @@ class MarkerShape(BaseShape):
 
     def translate(self, offset):
         for child in self.children:
-            child.translate(offset)
+            child.translate(offset + self.ref_point)
 
     def rotate(self, angle):
         if self.model.orient == "auto":
             for child in self.children:
                 child.rotate(angle)
+
+    def _ref_point_default(self):
+        return QPointF(self.model.refX, self.model.refY)
 
 
 class ArrowShape(LineShape):
