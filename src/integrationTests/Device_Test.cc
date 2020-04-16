@@ -195,6 +195,59 @@ public:
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, TestDevice)
 
 
+// =================================================================================
+
+class TestDeviceBadInit : public karabo::core::Device<> {
+
+public:
+
+
+    KARABO_CLASSINFO(TestDeviceBadInit, "TestDeviceBadInit", "2.9")
+
+
+    static void expectedParameters(karabo::util::Schema& expected) {
+
+        OVERWRITE_ELEMENT(expected).key("state")
+                .setNewOptions(State::INIT, State::NORMAL)
+                .setNewDefaultValue(State::INIT)
+                .commit();
+
+        STRING_ELEMENT(expected).key("initProblem")
+                .assignmentMandatory()
+                .options(std::vector<std::string>({"throw", "delay10s"}))
+        .commit();
+    }
+
+
+    TestDeviceBadInit(const karabo::util::Hash& input) : karabo::core::Device<>(input) {
+
+        KARABO_INITIAL_FUNCTION(initialize);
+    }
+
+
+    void initialize() {
+
+        const std::string behaviour(get<std::string>("initProblem"));
+        if (behaviour == "throw") {
+            // This will be caught by the event loop - if logging is enabled, one can see a printout...
+            throw KARABO_SIGNALSLOT_EXCEPTION("Throw during initialization - for test purposes!");
+        } else if (behaviour == "delay10s") {
+            boost::this_thread::sleep(boost::posix_time::seconds(10));
+        } // No else - there are not other options!
+
+        updateState(State::NORMAL);
+    }
+
+
+    virtual ~TestDeviceBadInit() {
+    }
+
+
+};
+
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, TestDeviceBadInit)
+
+
 CPPUNIT_TEST_SUITE_REGISTRATION(Device_Test);
 
 
@@ -221,15 +274,10 @@ void Device_Test::setUp() {
 
     // Create client
     m_deviceClient = boost::make_shared<DeviceClient>();
-
-    // Setup a communication helper
-    m_signalSlotable = boost::make_shared<SignalSlotable>("sigSlotA");
-    m_signalSlotable->start();
 }
 
 
 void Device_Test::tearDown() {
-    m_signalSlotable.reset();
     m_deviceServer.reset();
     m_deviceClient.reset();
 
@@ -255,6 +303,7 @@ void Device_Test::appTestRunner() {
     testNodedSlot();
     testGetSet();
     testUpdateState();
+    testBadInit();
 }
 
 
@@ -263,7 +312,7 @@ void Device_Test::testGetTimestamp() {
     // and Device::slotGetTime().
 
     // Setup a communication helper
-    auto sigSlotA = m_signalSlotable;
+    auto sigSlotA = m_deviceServer;
 
     const int timeOutInMs = 250;
     const unsigned long long periodInMicroSec = 100000ull; // some tests below assume this to be 0.1 s
@@ -360,7 +409,7 @@ void Device_Test::testGetTimestamp() {
 void Device_Test::testSchemaInjection() {
 
     // Setup a communication helper
-    auto sigSlotA = m_signalSlotable;
+    auto sigSlotA = m_deviceServer;
 
     // Timeout, in milliseconds, for a request for one of the test device slots.
     const int requestTimeoutMs = 2000;
@@ -588,7 +637,7 @@ void Device_Test::testSchemaInjection() {
 void Device_Test::testSchemaWithAttrUpdate() {
 
     // Setup a communication helper
-    auto sigSlotA = m_signalSlotable;
+    auto sigSlotA = m_deviceServer;
 
     // Timeout, in milliseconds, for a request for one of the test device slots.
     const int requestTimeoutMs = 2000;
@@ -658,7 +707,7 @@ void Device_Test::testSchemaWithAttrUpdate() {
 
 void Device_Test::testSchemaWithAttrAppend() {
     // Setup a communication helper
-    auto sigSlotA = m_signalSlotable;
+    auto sigSlotA = m_deviceServer;
 
     // Timeout, in milliseconds, for a request for one of the test device slots.
     const int requestTimeoutMs = 2000;
@@ -850,19 +899,19 @@ void Device_Test::testGetSet() {
 
     // Check default visibility value
     Hash hash;
-    CPPUNIT_ASSERT_NO_THROW(m_signalSlotable->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
     CPPUNIT_ASSERT_EQUAL(deviceId, hash.get<std::string>("deviceId"));
     CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::util::Schema::OBSERVER), hash.get<int>("visibility"));
 
     // We can set visibility and check that we really did.
     hash.clear();
-    CPPUNIT_ASSERT_NO_THROW(m_signalSlotable->request(deviceId, "slotReconfigure", Hash("visibility", static_cast<int> (karabo::util::Schema::ADMIN)))
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotReconfigure", Hash("visibility", static_cast<int> (karabo::util::Schema::ADMIN)))
                             .timeout(timeoutInMs).receive());
-    CPPUNIT_ASSERT_NO_THROW(m_signalSlotable->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
     CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::util::Schema::ADMIN), hash.get<int>("visibility"));
 
     // But we cannot set archive since not reconfigurable.
-    CPPUNIT_ASSERT_THROW(m_signalSlotable->request(deviceId, "slotReconfigure", Hash("archive", false))
+    CPPUNIT_ASSERT_THROW(m_deviceServer->request(deviceId, "slotReconfigure", Hash("archive", false))
                          .timeout(timeoutInMs).receive(), karabo::util::RemoteException);
 }
 
@@ -886,7 +935,7 @@ void Device_Test::testUpdateState() {
     // Send state update request and...
     // ... test its (implicit) reply value,
     std::string reply;
-    CPPUNIT_ASSERT_NO_THROW(m_signalSlotable->request(deviceId, "slotToggleState", msg).timeout(5000).receive(reply));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(5000).receive(reply));
     CPPUNIT_ASSERT_EQUAL(std::string("NORMAL"), reply);
 
     // ... test that the state was switched,
@@ -916,6 +965,58 @@ void Device_Test::testUpdateState() {
 
 
 
+}
+
+
+void Device_Test::testBadInit() {
+
+    //
+    // Case 1: A very long lasting initialization method:
+    //
+    std::string devId("BadInitDevice/1");
+    auto requestor = m_deviceServer->request("", "slotStartDevice",
+                                             Hash("classId", "TestDeviceBadInit",
+                                                  "deviceId", devId,
+                                                  "configuration", Hash("initProblem", "delay10s"))
+                                             ).timeout(2000); // starting a device takes at least one second...
+    // Although initialization sleeps 10 seconds, no timeout within the 2 seconds we allow for that
+    bool ok = false;
+    std::string dummy;
+    CPPUNIT_ASSERT_NO_THROW(requestor.receive(ok, dummy));
+    CPPUNIT_ASSERT(ok);
+
+    // After instantiation, state is still INIT...
+    State devState(m_deviceClient->get<State>(devId, "state"));
+    CPPUNIT_ASSERT_MESSAGE(devState.name(), devState == State::INIT);
+
+    // ..., but at end of initialization, state changes to NORMAL - wait for it...
+    waitForCondition([this, &devId]() {
+        return (m_deviceClient->get<State>(devId, "state") == State::NORMAL);
+    }, 11000);
+    devState = m_deviceClient->get<State>(devId, "state");
+    CPPUNIT_ASSERT_MESSAGE(devState.name(), devState == State::NORMAL);
+
+    m_deviceServer->call(devId, "slotKillDevice");
+
+    //
+    // Case 2: The initialization method fails with an exception:
+    //
+    devId.back() = '2'; // let's take a new id to avoid delays until the previous device is down
+    requestor = m_deviceServer->request("", "slotStartDevice",
+                                        Hash("classId", "TestDeviceBadInit",
+                                             "deviceId", devId,
+                                             "configuration", Hash("initProblem", "throw"))
+                                        ).timeout(2000); // starting a device takes at least one second...
+    // Despite the failing initialization, the device instantiates successfully, no timeout:
+    ok = false;
+    CPPUNIT_ASSERT_NO_THROW(requestor.receive(ok, dummy));
+    CPPUNIT_ASSERT(ok);
+
+    // After instantiation, state is INIT (and will stay like that forever...)
+    devState = m_deviceClient->get<State>(devId, "state");
+    CPPUNIT_ASSERT_MESSAGE(devState.name(), devState == State::INIT);
+
+    m_deviceServer->call(devId, "slotKillDevice");
 }
 
 bool Device_Test::waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis) {

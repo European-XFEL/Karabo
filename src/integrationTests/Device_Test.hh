@@ -38,6 +38,7 @@ private:
     void testSchemaInjection();
     void testGetSet();
     void testUpdateState();
+    void testBadInit();
 
     /** Tests that updateSchema resets attributes in the static schema. */
     void testSchemaWithAttrUpdate();
@@ -62,7 +63,6 @@ private:
     boost::thread m_eventLoopThread;
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
-    karabo::xms::SignalSlotable::Pointer m_signalSlotable;
 };
 
 #endif	/* DEVICE_TEST_HH */
