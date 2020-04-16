@@ -1,4 +1,6 @@
+from platform import system
 from unittest.mock import patch, Mock
+from unittest import skipIf
 
 from PyQt5.QtWidgets import QMessageBox
 
@@ -49,6 +51,7 @@ class TestPopUp(GuiTestCase):
         self.cancel_proxy = PropertyProxy(path='cancel', root_proxy=device)
         self.extra_proxy = PropertyProxy(path='extra', root_proxy=device)
 
+    @skipIf(system() in ("Darwin"), reason="MacOS title not set")
     def test_basics(self):
         controller = PopUp(proxy=self.proxy)
         controller.create(None)
@@ -63,6 +66,8 @@ class TestPopUp(GuiTestCase):
         controller.destroy()
         assert controller.widget is None
 
+    @skipIf(system() == "Windows",
+            reason="dialog not visible in Windows' tests")
     def test_set_value(self):
         sym = 'karabogui.controllers.display.popup.QMessageBox'
         with patch(sym, new=MockMessageBox):

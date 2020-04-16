@@ -1,4 +1,6 @@
 from unittest.mock import patch
+from unittest import skipIf
+from platform import system
 
 from karabo.common.states import State
 from karabo.common.scenemodel.api import DoubleLineEditModel
@@ -143,6 +145,7 @@ class TestNumberLineEdit(GuiTestCase):
         self.d_controller._internal_widget.setText('1.1244')
         self.assertIsNone(self.d_proxy.edit_value)
 
+    @skipIf(system() in ("Darwin"), reason="MacOS Palette misbehaves")
     def test_decline_color(self):
         self.d_controller._internal_widget.setText('10000.0')
         self.assertIsNone(self.d_proxy.edit_value)
@@ -180,6 +183,7 @@ class TestNumberIntEdit(GuiTestCase):
         self.i_controller.destroy()
         self.assertIsNone(self.i_controller.widget)
 
+    @skipIf(system() in ("Darwin"), reason="MacOS Palette misbehaves")
     def test_property_proxy_edit_values_from_text_input(self):
         set_proxy_value(self.i_proxy, 'prop', 1234)
 
@@ -214,6 +218,7 @@ class TestHexadecimal(GuiTestCase):
     def palette(self):
         return self.controller._internal_widget.palette()
 
+    @skipIf(system() in ("Darwin"), reason="MacOS Palette misbehaves")
     def test_set_value(self):
         set_proxy_value(self.proxy, 'prop', 0x40)
         self.controller._internal_widget.setText('')
