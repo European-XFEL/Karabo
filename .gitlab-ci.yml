@@ -30,16 +30,9 @@ variables:
     - branches
     - schedules
 
-.release_build_win64: &release-build-win64
+.release_build_conda: &release-build-conda
   script:
-    # Our gitlab runner is not properly logged as xkarabo so we need this little hack for now
-    - $env:Path += ";C:\Users\xkarabo\miniconda3\;C:\Users\xkarabo\miniconda3\Library\mingw-w64\bin;C:\Users\xkarabo\miniconda3\Library\usr\bin;C:\Users\xkarabo\miniconda3\Library\bin;C:\Users\xkarabo\miniconda3\Scripts"
-    - $env:Path += ";C:\Users\xkarabo\cwrsync"
-    - $env:Path += ";C:\Users\xkarabo\plink"
-    # Add xkarabo home
-    - $env:HOME = "C:\Users\xkarabo\"
-    - cmd /c .\ci\miniconda\build.cmd
-    - cmd /c .\ci\miniconda\deploy.cmd
+    - python ci/miniconda/build.py karabogui -c $MIRROR_HOSTNAME -D conda-recipes --clean --upload-to-mirror -P $CONDA_CHANNEL_PATH -C $CONDA_CHANNEL_PATH/mirror --index-mirror
   only:
     - /^(\d+\.)(\d+\.)(\d+)((a|b|rc|\.)\d+)?$/
   except:
@@ -75,6 +68,16 @@ variables:
     - schedules
     - /^deps-mr-.+$/
 
+.unit_tests_conda: &unit-tests-conda
+  script:
+    - python ci/miniconda/build.py karabogui -D conda-recipes --clean --test
+  only:
+    - branches
+  except:
+    - master
+    - schedules
+    - /^deps-mr-.+$/
+        
 .deps_build_tests: &deps-build-tests
   script:
     - source ci/prepare "$CI_BUILD_NAME"
@@ -104,17 +107,17 @@ release build ubuntu16:
 
 release build miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
-  <<: *release-build
+  <<: *release-build-conda
   
 release build miniconda-osx64:
   tags:
     - macos
-  <<: *release-build
+  <<: *release-build-conda
 
 release build miniconda-win64:
   tags:
     - Win10
-  <<: *release-build-win64
+  <<: *release-build-conda
 
 # nightly release build
 
@@ -174,13 +177,18 @@ unit tests ubuntu16:
 
 unit tests miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
-  <<: *unit-tests
+  <<: *unit-tests-conda
 
 unit tests miniconda-osx64:
   tags:
     - macos
-  <<: *unit-tests
-  
+  <<: *unit-tests-conda
+
+unit tests miniconda-win64:
+  tags:
+    - Win10
+  <<: *unit-tests-conda
+        
 unit tests miniconda-cmake:
   image: europeanxfel/karabo-ci:miniconda-3
   <<: *unit-tests
