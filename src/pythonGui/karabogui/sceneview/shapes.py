@@ -4,6 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from abc import abstractmethod
+import math
 
 from PyQt5.QtCore import (
     QLine, QLineF, QMargins, QPoint, QPointF, QRect, QSize, Qt)
@@ -233,8 +234,12 @@ class MarkerShape(BaseShape):
        Rects, circles, etc. are not yet supported."""
 
     children = Property(depends_on="model.children")
-    ref_point = Instance(QPointF)
     _offset = Instance(QPoint, args=())
+    _scale = Float(1.0)
+    _angle = Float(0.0)
+
+    ref_point = Property(Instance(QPointF),
+                         depends_on=["_angle", "_offset", "_scale"])
 
     @cached_property
     def _get_children(self):
@@ -259,26 +264,37 @@ class MarkerShape(BaseShape):
     @on_trait_change("_offset, ref_point")
     def _translate(self):
         for child in self.children:
-            child.translate(self._offset + self.ref_point)
+            child.translate(self._offset - self.ref_point)
 
     def rotate(self, angle):
         if self.model.orient == "auto":
+            self._angle = angle
             for child in self.children:
                 child.rotate(angle)
 
     def scale(self, scale):
         # Check if markerUnits == '' == strokeWidth (it is by default)
         if self.model.markerUnits != "userSpaceOnUse":
-            # Set reference point
-            self.ref_point = QPointF(self.model.refX * scale,
-                                     self.model.refY * scale)
+            self._scale = scale
 
             for child in self.children:
                 # Correct scale if stroke width is 0
                 child.scale(scale or 1)
 
-    def _ref_point_default(self):
-        return QPointF(self.model.refX, self.model.refY)
+    @cached_property
+    def _get_ref_point(self):
+        ref_x = self.model.refX
+        ref_y = self.model.refY
+
+        radians = math.radians(self._angle)
+        cos, sin = math.cos(radians), math.sin(radians)
+
+        # Rotate the reference point with the angle
+        # (for some reason x-rotation not working!
+        rotated_x = ref_x * cos - ref_y * sin
+        rotated_y = ref_x * sin + ref_y * cos
+
+        return QPoint(rotated_x, rotated_y)
 
 
 class ArrowShape(LineShape):
