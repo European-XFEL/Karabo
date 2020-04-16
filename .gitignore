@@ -27,6 +27,7 @@ GNU_MacPorts-MacOSX
 *.pyc
 *.egg-info
 .*
+*.profraw
 *~
 *.orig
 /karabo

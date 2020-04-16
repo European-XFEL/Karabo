@@ -36,12 +36,6 @@ __release_build() {
     esac
 
     case "$1" in
-        miniconda|miniconda-osx64)
-            source ./ci/utils/enable_internet.sh
-            source ./ci/miniconda/build.sh
-            source ./ci/miniconda/deploy.sh
-            source ./ci/utils/disable_internet.sh
-            ;;
         ubuntu*|centos*)
             export REL_OS_NAME=$(lsb_release -is)
             export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
