@@ -1,6 +1,7 @@
-import numpy as np
+from platform import system
+from unittest import TestCase, main, skip, skipIf
 
-from unittest import TestCase, main, skip
+import numpy as np
 from numpy import e, pi
 from pint import DimensionalityError
 
@@ -407,6 +408,8 @@ class Tests(TestCase):
         assert np.true_divide is np.divide
         self.test_divide()
 
+    @skipIf(system() == "Darwin",
+            reason="No RuntimeWarning raised on Mac OS")
     def test_floor_divide(self):
         """
         Return the largest integer smaller or equal to the division of the
@@ -521,6 +524,8 @@ class Tests(TestCase):
         # with self.assertRaises(ValueError):
         #     self.assertBinaryUfunc(ufunc, self.v1, QV(2, unit='m'), self.one)
 
+    @skipIf(system() == "Darwin",
+            reason="No RuntimeWarning raised on Mac OS")
     def test_remainder(self):
         """
         Return element-wise remainder of division
@@ -575,8 +580,9 @@ class Tests(TestCase):
         `mod` is the same as `reminder`, already tested
         """
         assert np.mod is np.remainder
-        self.test_remainder()
 
+    @skipIf(system() == "Darwin",
+            reason="No RuntimeWarning raised on Mac OS")
     def test_fmod(self):
         """
         Return the element-wise remainder of division.

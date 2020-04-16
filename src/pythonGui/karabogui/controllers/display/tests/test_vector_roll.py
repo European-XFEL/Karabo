@@ -1,4 +1,5 @@
-from unittest import mock
+from platform import system
+from unittest import mock, skipIf
 
 import numpy as np
 from PyQt5.QtWidgets import QGraphicsTextItem
@@ -41,6 +42,8 @@ class TestVectorRollGraph(GuiTestCase):
         controller = aux_plots._aggregators[AuxPlots.ProfilePlot]
         self.assertFalse(controller.smooth)
 
+    @skipIf(system() == "Windows",
+            reason="image.data is None in Windows tests")
     def test_set_value(self):
         """Test the value setting in VectorRollGraph"""
         plot = self.controller._plot
@@ -50,6 +53,8 @@ class TestVectorRollGraph(GuiTestCase):
         image = self.controller._image
         np.testing.assert_almost_equal(image.data[0], value)
 
+    @skipIf(system() == "Windows",
+            reason="image.data is None in Windows tests")
     def test_set_value_timestamp(self):
         """Test the value setting with same timestamp in VectorRollGraph"""
         plot = self.controller._plot
