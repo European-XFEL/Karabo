@@ -1,4 +1,6 @@
+from platform import system
 from unittest.mock import patch
+from unittest import skipIf
 
 from ..display_scatter import DisplayScatterGraph
 from karabo.common.scenemodel.api import ScatterGraphModel
@@ -32,12 +34,16 @@ class TestScatterGraph(GuiTestCase):
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 
+    @skipIf(system() == "Windows",
+            reason="curve.getData returns empty arrays in Windows")
     def test_scatter_graph_basics(self):
         set_proxy_value(self.x, 'x', 2.1)
         set_proxy_value(self.y, 'y', 3.2)
         curve = self.controller._plot
         self.assertEqual(list(curve.getData()), [2.1, 3.2])
 
+    @skipIf(system() == "Windows",
+            reason="curve.getData returns empty arrays in Windows")
     def test_scatter_timestamp(self):
         timestamp = Timestamp()
         set_proxy_value(self.x, 'x', 2.1)

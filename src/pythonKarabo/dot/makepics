@@ -1,4 +1,0 @@
-for i in $(ls *.dot)
-do
-    dot -Tpng $i -o ${i/dot/png}
-done

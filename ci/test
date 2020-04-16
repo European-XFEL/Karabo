@@ -5,14 +5,6 @@ __deps_build_tests() {
     bash ./auto_build_all.sh Debug --runTests --runIntegrationTests
 }
 
-__conda_tests() {
-    . ci/utils/enable_internet.sh
-
-    bash ./run_python_tests.sh --runCondaUnitTests --rootDir .
-
-    . ci/utils/disable_internet.sh
-}
-
 __cmake_tests() {
     . ci/utils/enable_internet.sh
     source build_conda_env.sh clean install karabo-cpp
@@ -59,11 +51,7 @@ export KARABO_TEST_INFLUXDB_PASSWORD=$INFLUXDB_USER_PASSWORD
 export KARABO_TEST_INFLUXDB_ADMUSER=$INFLUXDB_ADMIN_USER
 export KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD=$INFLUXDB_ADMIN_PASSWORD
 
-if [ "$TARGET_OS" = "miniconda" ]; then
-    __conda_tests
-elif [ "$TARGET_OS" = "miniconda-osx64" ]; then
-    __conda_tests
-elif [ "$TARGET_OS" = "miniconda-cmake" ]; then
+if [ "$TARGET_OS" = "miniconda-cmake" ]; then
     __cmake_tests
 else
     case "$JOB_SCOPE" in
