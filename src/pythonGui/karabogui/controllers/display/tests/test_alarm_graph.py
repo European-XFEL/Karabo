@@ -1,4 +1,5 @@
 from datetime import datetime
+from platform import system
 import unittest
 
 from karabo.native import Configurable, String
@@ -57,6 +58,8 @@ class TestDisplayAlarmGraph(GuiTestCase):
         self.assertEqual(dt_start.toString(), 'Tue Oct 8 00:21:35 2019')
         self.assertEqual(dt_end.toString(), 'Sun Oct 20 17:54:55 2019')
 
+    @unittest.skipIf(system() == "Windows",
+                     reason="This test is Unix specific")
     def test_range_update(self):
         """When the viewbox change, we must make sure the time axis is
         not overflown"""
