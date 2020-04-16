@@ -1,6 +1,6 @@
 from lxml import etree
 import os
-import shutil
+from tempfile import TemporaryDirectory
 from unittest import TestCase, main
 
 from karabo.native import (
@@ -10,7 +10,6 @@ from karabo.native import (
 
 from karabo.native.data.tests.utils import WithTable
 
-TST_WORKING_DIR = "/tmp/serializers_tests"
 
 # The following XML was generated using the C++ API `saveToFile`
 BOUND_HASH_XML = """<?xml version="1.0"?>
@@ -114,25 +113,23 @@ BOUND_TABLE_SCHEMA_LEGACY_XML = """<?xml version="1.0"?>
 
 # The following is used accross all tests as template Hash
 HASH = Hash('akey', 'aval', 'another', Hash('nested', 1.618))
-FILENAME = "all/the/folders/hash.xml"
+FILENAME = os.path.join("all", "the", "folders", "hash.xml")
 
 
 class TestSerializers(TestCase):
     def setUp(self):
-        self.curr_dir = os.curdir
-        if os.path.isdir(TST_WORKING_DIR):
-            os.rmdir(TST_WORKING_DIR)
-        os.mkdir(TST_WORKING_DIR)
-        os.chdir(TST_WORKING_DIR)  # Change the working dir, to not pollute
+        self.test_dir = TemporaryDirectory()
+        self.oldcwd = os.path.abspath(os.curdir)
+        os.chdir(self.test_dir.name)  # Change the working dir, to not pollute
 
     def tearDown(self):
-        os.chdir(self.curr_dir)
-        shutil.rmtree(TST_WORKING_DIR)
+        os.chdir(self.oldcwd)
+        self.test_dir.cleanup()
 
     def test_saveToFile(self):
         # Test saving in the current directory
         saveToFile(HASH, 'hash.xml')
-        self.assertTrue(os.path.exists('./hash.xml'))
+        self.assertTrue(os.path.exists('hash.xml'))
 
         # Test without any sub-directories existing
         saveToFile(HASH, FILENAME)
@@ -253,6 +250,7 @@ class TestSerializers(TestCase):
             isinstance(sch_hash['table', 'defaultValue'], str)
         )
         self.assertTrue(sch_hash['table', 'defaultValue'].startswith("'e1'"))
+
 
     def test_xml_MDLSchema_load(self):
         """Tests that a xml for an MDL Hash with vector of hash and schema

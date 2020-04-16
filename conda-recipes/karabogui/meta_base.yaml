@@ -1,18 +1,14 @@
 # [[[cog
-# import os, sys
-# try:
-#     from karabogui import _version
-# except ImportError:
-#     print('\nPlease run setup install so the version is generated')
-# else:
-#     from karabogui import globals
-#     cog.outl(f'{{% set version = "{globals.GUI_VERSION}" %}}')
+# from setuptools_scm import get_version
+# from os import path as op
+# root = op.join(op.dirname(cog.inFile), op.pardir, op.pardir)
+# root = op.abspath(root)
+# version = get_version(root=root)
+# project_root = root.replace('\\', '\\\\')
+# cog.outl(f'{{% set version = "{version}" %}}')
+# cog.outl(f'{{% set project_root = "{project_root}" %}}')
 # ]]]
 # [[[end]]]
-{% set project_root = os.environ['CI_PROJECT_DIR'] %}
-
-# set the project root directory by setting the CI_PROJECT_DIR environment var
-# on conda build
 
 package:
   name: karabogui
@@ -23,6 +19,7 @@ source:
   git_rev: {{ version }}
 
 build:
+  noarch: python
   number: 0
   entry_points:
     - karabo-gui=karabogui.programs.gui_runner:main
@@ -46,6 +43,8 @@ requirements:
     # conda = os.environ.get('CONDA_EXE', 'conda')
     # output = subprocess.check_output([conda, 'env', 'export', '-n', 'karabogui', '--json'])
     # for dep in json.loads(output)['dependencies']:
+    #     if isinstance(dep, dict):
+    #         continue
     #     cog.outl(f'- {dep}')
     # ]]]
     # [[[end]]]
