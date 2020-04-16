@@ -1,3 +1,6 @@
+from platform import system
+from unittest import skipIf
+
 from karabogui.testing import GuiTestCase
 from karabogui.widgets.codeeditor import CodeEditor
 
@@ -16,6 +19,8 @@ class TestConst(GuiTestCase):
         self.assertEqual(widget.cache_lines, 1)
         widget.destroy()
 
+    @skipIf(system() == "Windows",
+            reason="numberWidgetArea is 9 on windows")
     def test_margins(self):
         # The line numbers are derived from 8 per digit + 3.
         # Hence, 2 digits give 19 and 3 digits give 27
