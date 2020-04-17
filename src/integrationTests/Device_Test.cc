@@ -992,7 +992,7 @@ void Device_Test::testBadInit() {
     // ..., but at end of initialization, state changes to NORMAL - wait for it...
     waitForCondition([this, &devId]() {
         return (m_deviceClient->get<State>(devId, "state") == State::NORMAL);
-    }, 11000);
+    }, 12000);
     devState = m_deviceClient->get<State>(devId, "state");
     CPPUNIT_ASSERT_MESSAGE(devState.name(), devState == State::NORMAL);
 
@@ -1015,6 +1015,14 @@ void Device_Test::testBadInit() {
     // After instantiation, state is INIT (and will stay like that forever...)
     devState = m_deviceClient->get<State>(devId, "state");
     CPPUNIT_ASSERT_MESSAGE(devState.name(), devState == State::INIT);
+
+    // ..., but the "status" field will tell us about the exception:
+    waitForCondition([this, &devId]() {
+        return (m_deviceClient->get<std::string>(devId, "status").find("Initialization failed: ") == 0ul);
+    }, 2500);
+    const std::string status(m_deviceClient->get<std::string>(devId, "status"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(status, 0ul, status.find("Initialization failed: "));
+    CPPUNIT_ASSERT_MESSAGE(status, status.find("Throw during initialization - for test purposes!") != std::string::npos);
 
     m_deviceServer->call(devId, "slotKillDevice");
 }
