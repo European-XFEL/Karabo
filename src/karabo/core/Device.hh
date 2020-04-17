@@ -1592,18 +1592,19 @@ namespace karabo {
                 this->connectInputChannels();
 
                 // Start the state machine (call initialization methods in case of noFsm)
-                // (This function must be inherited from the templated base class (it's a concept!)
-                // Do that on the event loop since any blocking or even exceptions should not influence the success of
-                // the instantiation procedure, i.e. the device server slot that starts the device should reply
-                // immediately, irrespective of what startFsm() does.
-                // Technical comments: 1) Since startFsm() is a function inherited from FSM and that is not inheriting
-                //                        from enable_shared_from_this, cannot use bind_weak.
-                //                     2) To ensure pointer validity without that, boost::bind a shared pointer.
-                //                     3) This has to be casted, since shared_from_this() returns a SignalSlotable::Pointer
-                //                     4) static_pointer_cast does not work since inheritance is virtual
-                net::EventLoop::getIOService()
-                        .post(boost::bind(&Device<FSM>::startFsm,
-                                          boost::dynamic_pointer_cast<Device < FSM >> (shared_from_this())));
+                // Do that on the event loop since any blocking should not influence the success of the instantiation
+                // procedure, i.e. the device server slot that starts the device should reply immediately, irrespective
+                // of what startFsm() does. We wrap the call to startFsm() to treat exceptions.
+                net::EventLoop::getIOService().post(util::bind_weak(&Device<FSM>::wrapStartFsm, this));
+            }
+
+            void wrapStartFsm() {
+                try {
+                    this->startFsm(); // (This function must be inherited from the templated base class (it's a concept!)
+                } catch (const std::exception& e) {
+                    // Unfortunately, we have no clue here which "state" option would be available to indicate this...
+                    set("status", std::string("Initialization failed: ") += e.what());
+                }
             }
 
             void initClassId() {
