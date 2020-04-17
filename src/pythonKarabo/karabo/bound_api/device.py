@@ -463,11 +463,17 @@ class PythonDevice(NoFsm):
         # Connect input channels
         self._ss.connectInputChannels()
 
+        # TODO 1: A Failing FSM start (e.g. calling the registered
+        #         initialisation methods) should not stop the device,
+        #         i.e. we should post this on the event loop...
         self.startFsm()
 
         if self.timeServerId:
             self.log.DEBUG("Connecting to time server : \"{}\""
                            .format(self.timeServerId))
+            # TODO 2: Better use asyncConnect - but currently it does not
+            #         make a difference: after _finalizeInternalInitialization
+            #         we only wait for the event loop thread to join
             self._ss.connect(self.timeServerId, "signalTimeTick",
                              "", "slotTimeTick")
 
