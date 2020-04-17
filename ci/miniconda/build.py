@@ -333,6 +333,10 @@ class Builder:
         if len(self.recipes) == 0:
             print("Nothing to do!")
             return
+        if (self.args.nightly and
+                os.environ.get("SCHEDULED_JOB", "") == "nightly-build"):
+            print("Not a nightly-build scheduled job!")
+            return
         if self.args.clean:
             for recipe in self.recipes:
                 self.clean(recipe)
@@ -385,8 +389,9 @@ class Builder:
                 self.walk_mirror_dirs(sftp)
                 # upload the recipes for this platform
                 self.upload_recipes(sftp, self.platform)
-                # we might have created an arch independent package
-                self.upload_recipes(sftp, 'noarch')
+                # FIXME: the recipes have strict dependencies
+                # noarch packages would not work.
+                # self.upload_recipes(sftp, 'noarch')
 
     def upload_recipes(self, sftp, plat_dir):
         """Transfers packages using the sftp client"""
@@ -581,6 +586,10 @@ if __name__ == '__main__':
     root_ap.add_argument(
         '-I', '--index-mirror', action='store_true',
         help='trigger remote index building')
+
+    root_ap.add_argument(
+        '-N', '--nightly', action='store_true',
+        help='check if this is a nightly build')
 
     root_ap.add_argument(
         '-P', '--remote-channel-dir', type=str,
