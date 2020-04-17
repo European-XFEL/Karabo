@@ -19,7 +19,6 @@ source:
   git_rev: {{ version }}
 
 build:
-  noarch: python
   number: 0
   entry_points:
     - karabo-gui=karabogui.programs.gui_runner:main
