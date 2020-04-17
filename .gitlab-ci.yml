@@ -39,6 +39,12 @@ variables:
     - branches
     - schedules
 
+.nightly_build_conda: &nightly-build-conda
+  script:
+    - python ci/miniconda/build.py karabogui -c $MIRROR_HOSTNAME -D conda-recipes --clean --upload-to-mirror -P $CONDA_CHANNEL_PATH/nightly -C $CONDA_CHANNEL_PATH/mirror --index-mirror
+  only:
+    - schedules
+
 .nightly_build: &nightly-build
   <<: *build
   only:
@@ -132,6 +138,20 @@ nightly build ubuntu18:
 nightly build ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
   <<: *nightly-build
+
+nightly build miniconda-osx64:
+  tags:
+    - macos
+  <<: *nightly-build-conda
+  
+nightly build miniconda-win64:
+  tags:
+    - Win10
+  <<: *nightly-build-conda
+          
+nightly build miniconda:
+  image: europeanxfel/karabo-ci:miniconda-3
+  <<: *nightly-build-conda
 
 # Dependencies build
 
