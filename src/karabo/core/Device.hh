@@ -17,6 +17,7 @@
 
 #include "karabo/util/MetaTools.hh"
 #include "karabo/util/State.hh"
+#include "karabo/net/EventLoop.hh"
 #include "karabo/util.hpp"
 #include "karabo/util/StackTrace.hh"
 #include "karabo/util/OverwriteElement.hh"
@@ -1591,8 +1592,19 @@ namespace karabo {
                 this->connectInputChannels();
 
                 // Start the state machine (call initialization methods in case of noFsm)
-                this->startFsm(); // This function must be inherited from the templated base class (it's a concept!)
+                // Do that on the event loop since any blocking should not influence the success of the instantiation
+                // procedure, i.e. the device server slot that starts the device should reply immediately, irrespective
+                // of what startFsm() does. We wrap the call to startFsm() to treat exceptions.
+                net::EventLoop::getIOService().post(util::bind_weak(&Device<FSM>::wrapStartFsm, this));
+            }
 
+            void wrapStartFsm() {
+                try {
+                    this->startFsm(); // (This function must be inherited from the templated base class (it's a concept!)
+                } catch (const std::exception& e) {
+                    // Unfortunately, we have no clue here which "state" option would be available to indicate this...
+                    set("status", std::string("Initialization failed: ") += e.what());
+                }
             }
 
             void initClassId() {
