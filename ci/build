@@ -22,6 +22,19 @@ __check_existence() {
 __release_build() {
     case "$2" in
         nightly)
+            # nightly jobs are triggered on *ALL* schedules, due to
+            # gitlab CI limitations.
+            # In order to avoid running nightly on unrelated schedules,
+            # we add a variable to each scheduled pipeline `SCHEDULED_JOB`
+            # if this does not matches, we skip the whole nightly
+            # task.
+            # The only drawback, is that all jobs will appear as successful
+            # even though they are skipped.
+            if [[ "$SCHEDULED_JOB" != "nightly-build" ]]; then
+                # another scheduled job was triggered
+                echo "Not a 'nightly-build' job. Skipping."
+                exit 0
+            fi
             export REL_TAG=$NIGHTLY_TAG
             export FRAMEWORK_DEST_DIR=karaboFramework/nightly
             export GUI_DEST_DIR=$FRAMEWORK_DEST_DIR
