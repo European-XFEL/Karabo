@@ -16,9 +16,11 @@
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/util/State.hh>
+#include <karabo/util/StringTools.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/VectorElement.hh>
 #include <karabo/util/Timestamp.hh>
+#include <karabo/util/TimeDuration.hh>
 
 #define KRB_TEST_MAX_TIMEOUT 5
 
@@ -208,14 +210,19 @@ public:
     static void expectedParameters(karabo::util::Schema& expected) {
 
         OVERWRITE_ELEMENT(expected).key("state")
-                .setNewOptions(State::INIT, State::NORMAL)
-                .setNewDefaultValue(State::INIT)
+                .setNewOptions(State::UNKNOWN, State::INIT, State::NORMAL)
+                .setNewDefaultValue(State::UNKNOWN)
                 .commit();
 
         STRING_ELEMENT(expected).key("initProblem")
                 .assignmentMandatory()
-                .options(std::vector<std::string>({"throw", "delay10s"}))
+                .options(std::vector<std::string>({"throw", "delay"}))
         .commit();
+
+        UINT32_ELEMENT(expected).key("delay")
+                .assignmentOptional()
+                .defaultValue(10u)
+                .commit();
     }
 
 
@@ -227,12 +234,14 @@ public:
 
     void initialize() {
 
+        updateState(State::INIT);
+
         const std::string behaviour(get<std::string>("initProblem"));
         if (behaviour == "throw") {
             // This will be caught by the event loop - if logging is enabled, one can see a printout...
             throw KARABO_SIGNALSLOT_EXCEPTION("Throw during initialization - for test purposes!");
-        } else if (behaviour == "delay10s") {
-            boost::this_thread::sleep(boost::posix_time::seconds(10));
+        } else if (behaviour == "delay") {
+            boost::this_thread::sleep(boost::posix_time::seconds(get<unsigned int>("delay")));
         } // No else - there are not other options!
 
         updateState(State::NORMAL);
@@ -242,6 +251,10 @@ public:
     virtual ~TestDeviceBadInit() {
     }
 
+
+    void preDestruction() override {
+        set("status", "preDestruction called");
+    }
 
 };
 
@@ -303,6 +316,8 @@ void Device_Test::appTestRunner() {
     testNodedSlot();
     testGetSet();
     testUpdateState();
+    // Last tests needs its own device, so clean-up before
+    m_deviceClient->killDeviceNoWait("TestDevice");
     testBadInit();
 }
 
@@ -970,6 +985,18 @@ void Device_Test::testUpdateState() {
 
 void Device_Test::testBadInit() {
 
+    // HACK against topology caching in DeviceClient:
+    // If we do not call getDevices() here, but run this as the last test within appTestRunner() (if it is the first, it's fine!!!),
+    // the getDevices("<serverId>") below in the test case 3 waiting condition is fooled and returns an empty list when
+    // called the first time. The log tells us
+    //    DEBUG  karabo.core.DeviceClient  : testServerDevice still in runtime description - call _slotInstanceGone
+    // and we see that the getDevices(..) call triggered a topology gathering.
+    // So there is bug in the topology caching mechanism...
+    m_deviceClient->getDevices();
+    // HACK end
+
+    const unsigned int delayInSec = 5;
+
     //
     // Case 1: A very long lasting initialization method:
     //
@@ -977,26 +1004,31 @@ void Device_Test::testBadInit() {
     auto requestor = m_deviceServer->request("", "slotStartDevice",
                                              Hash("classId", "TestDeviceBadInit",
                                                   "deviceId", devId,
-                                                  "configuration", Hash("initProblem", "delay10s"))
+                                                  "configuration", Hash("initProblem", "delay",
+                                                                        "delay", delayInSec))
                                              ).timeout(2000); // starting a device takes at least one second...
-    // Although initialization sleeps 10 seconds, no timeout within the 2 seconds we allow for that
+    // Although initialization sleeps delayInSec, no timeout within the 2 seconds we allow for that
     bool ok = false;
     std::string dummy;
     CPPUNIT_ASSERT_NO_THROW(requestor.receive(ok, dummy));
     CPPUNIT_ASSERT(ok);
 
-    // After instantiation, state is still INIT...
-    State devState(m_deviceClient->get<State>(devId, "state"));
-    CPPUNIT_ASSERT_MESSAGE(devState.name(), devState == State::INIT);
+    // After instantiation, state switches to INIT, as soon as initialisation method runs.
+    State devState(State::UNKNOWN);
+    bool waitOk = waitForCondition([this, devId, &devState]() {
+        devState = m_deviceClient->get<State>(devId, "state");
+                                   return (devState == State::INIT);
+    }, 2000);
+    CPPUNIT_ASSERT_MESSAGE(devState.name(), waitOk);
 
-    // ..., but at end of initialization, state changes to NORMAL - wait for it...
-    waitForCondition([this, &devId]() {
-        return (m_deviceClient->get<State>(devId, "state") == State::NORMAL);
-    }, 12000);
-    devState = m_deviceClient->get<State>(devId, "state");
-    CPPUNIT_ASSERT_MESSAGE(devState.name(), devState == State::NORMAL);
+    // At end of initialization, state changes to NORMAL - wait for it...
+    waitOk = waitForCondition([this, devId, &devState]() {
+        devState = m_deviceClient->get<State>(devId, "state");
+                              return (devState == State::NORMAL);
+    }, (delayInSec + 2) * 1000); // wait longer than delaying sleep
+    CPPUNIT_ASSERT_MESSAGE(devState.name(), waitOk);
 
-    m_deviceServer->call(devId, "slotKillDevice");
+    m_deviceClient->killDeviceNoWait(devId);
 
     //
     // Case 2: The initialization method fails with an exception:
@@ -1012,19 +1044,73 @@ void Device_Test::testBadInit() {
     CPPUNIT_ASSERT_NO_THROW(requestor.receive(ok, dummy));
     CPPUNIT_ASSERT(ok);
 
-    // After instantiation, state is INIT (and will stay like that forever...)
-    devState = m_deviceClient->get<State>(devId, "state");
-    CPPUNIT_ASSERT_MESSAGE(devState.name(), devState == State::INIT);
+    // After instantiation, state switches to INIT, as soon as that method runs  (and will stay like that forever...)
+    waitOk = waitForCondition([this, devId, &devState]() {
+        devState = m_deviceClient->get<State>(devId, "state");
+                              return (devState == State::INIT);
+    }, 2000);
+    CPPUNIT_ASSERT_MESSAGE(devState.name(), waitOk);
 
     // ..., but the "status" field will tell us about the exception:
-    waitForCondition([this, &devId]() {
-        return (m_deviceClient->get<std::string>(devId, "status").find("Initialization failed: ") == 0ul);
+    std::string status;
+    waitOk = waitForCondition([this, devId, &status]() {
+        status = m_deviceClient->get<std::string>(devId, "status");
+                              return (status.find("Initialization failed: ") == 0ul);
     }, 2500);
-    const std::string status(m_deviceClient->get<std::string>(devId, "status"));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(status, 0ul, status.find("Initialization failed: "));
+    CPPUNIT_ASSERT_MESSAGE(status, waitOk);
     CPPUNIT_ASSERT_MESSAGE(status, status.find("Throw during initialization - for test purposes!") != std::string::npos);
+    // State stays INIT
+    CPPUNIT_ASSERT_MESSAGE(devState.name(), devState == State::INIT);
 
-    m_deviceServer->call(devId, "slotKillDevice");
+    m_deviceClient->killDeviceNoWait(devId);
+
+    //
+    // Case 3: A very long lasting initialization method (as case 1), with a try to shutdown while initialization:
+    //
+    devId.back() += 1; // another id again, see above ('+= 1' for Alessandro... )
+    requestor = m_deviceServer->request("", "slotStartDevice",
+                                        Hash("classId", "TestDeviceBadInit",
+                                             "deviceId", devId,
+                                             "configuration", Hash("initProblem", "delay",
+                                                                   "delay", delayInSec))
+                                        ).timeout(2000); // starting a device takes at least one second...
+    // Although initialization sleeps 'delayInSec', no timeout within the 2 seconds we allow for that
+    ok = false;
+    CPPUNIT_ASSERT_NO_THROW(requestor.receive(ok, dummy));
+    CPPUNIT_ASSERT(ok);
+
+    // After instantiation, state switches to INIT, as soon as initialize method runs
+    waitOk = waitForCondition([this, devId, &devState]() {
+        devState = m_deviceClient->get<State>(devId, "state");
+                              return (devState == State::INIT);
+    }, 2000);
+    const Epochstamp initStartedTime;
+    CPPUNIT_ASSERT_MESSAGE(devState.name(), waitOk);
+
+    // We kill the device that is still initializing: It will not die immediately (only once initialization is done),
+    // but preDestruction is called.
+    // Do not use client->killDevice(devId): that waits until device is really gone (not only that slotKillDevice is finished).
+    // Neither use m_deviceServer to request slotKillDevice - see Device::slotKillDevice
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(devId, "slotKillDevice"));
+    CPPUNIT_ASSERT_EQUAL(std::string("preDestruction called"), m_deviceClient->get<std::string>(devId, "status"));
+
+    // Now wait until device is gone - will take until initialize method has finished!
+    std::vector<std::string> devs;
+    waitOk = waitForCondition([this, devId, &devs]() {
+        devs = m_deviceClient->getDevices(m_deviceServer->getInstanceId());
+                     return (std::find(devs.begin(), devs.end(), devId) == devs.end());
+    }, (delayInSec + 2) * 1000); // Longer than the delay in initialize()
+    const karabo::util::TimeDuration duration(initStartedTime.elapsed());
+    // Verify that device gone
+    using karabo::util::toString;
+    CPPUNIT_ASSERT_MESSAGE(toString(devs), waitOk);
+
+    // The initialization (that blocked device going down) should have lasted about delayInSec seconds.
+    // We allow for some contingency:
+    const karabo::util::TimeDuration testDuration(delayInSec * 3. / 4., 0ull); // implicit conversions happening....
+    std::stringstream sstr;
+    sstr << duration << " " << testDuration;
+    CPPUNIT_ASSERT_MESSAGE(sstr.str(), duration > testDuration);
 }
 
 bool Device_Test::waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis) {
