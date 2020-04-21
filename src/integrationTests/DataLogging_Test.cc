@@ -31,7 +31,7 @@ using karabo::xms::SLOT_ELEMENT;
 
 /* Timeout, in milliseconds, for a slot request. */
 #define SLOT_REQUEST_TIMEOUT_MILLIS 5000
-#define FLUSH_REQUEST_TIMEOUT_MILLIS 10000
+#define FLUSH_REQUEST_TIMEOUT_MILLIS 20000
 
 #define PAUSE_BEFORE_RETRY_MILLIS 150
 
@@ -259,6 +259,8 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
         } else {
             influxUrlRead = "tcp://localhost:8086";
         }
+        const char* envDbName = getenv("KARABO_INFLUXDB_DBNAME");
+        const std::string dbName(envDbName ? envDbName : ""); // without environment variable, use empty string
 
         if (useInvalidInfluxUrl) {
             if (getenv("KARABO_TEST_INFLUXDB_HOST")) {
@@ -272,6 +274,7 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
 
         manager_conf.set("logger.InfluxDataLogger.urlWrite", influxUrlWrite);
         manager_conf.set("logger.InfluxDataLogger.urlRead", influxUrlRead);
+        manager_conf.set("logger.InfluxDataLogger.dbname", dbName);
 
         // The testing environments never use the default gateway.
         if (influxUrlWrite == influxUrlRead) {
