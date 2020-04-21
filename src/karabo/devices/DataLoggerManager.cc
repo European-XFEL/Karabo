@@ -177,8 +177,7 @@ namespace karabo {
 
             STRING_ELEMENT(expected).key("logger.InfluxDataLogger.dbname")
                     .displayedName("Database name")
-                    .description("Name of the database of the data. If empty, fall back to 1. environment variable "
-                                 "KARABO_INFLUXDB_DBNAME or 2. broker topic.")
+                    .description("Name of the database of the data. If empty, fall back to broker topic.")
                     .assignmentOptional().defaultValue("")
                     .init()
                     .commit();
@@ -327,9 +326,8 @@ namespace karabo {
             }
 
             if (m_logger == "InfluxDataLogger" && get<std::string>("logger.InfluxDataLogger.dbname").empty()) {
-                // Initialise DB name from environment or (as a fall back) use broker topic
-                const char* envDbName = getenv("KARABO_INFLUXDB_DBNAME");
-                const std::string dbName = (envDbName ? envDbName : getTopic());
+                // Initialise DB name from broker topic
+                const std::string dbName(getTopic());
                 KARABO_LOG_FRAMEWORK_INFO << "Switch to Influx DB name '" << dbName << "'";
                 set("logger.InfluxDataLogger.dbname", dbName);
             }
