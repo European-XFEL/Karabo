@@ -10,7 +10,7 @@ from .widget.api import (
     UnknownSvgWidget, UnknownWidget, WebLinkWidget)
 
 _LAYOUT_CLASSES = (BoxLayout, GridLayout, GroupLayout)
-_SHAPE_CLASSES = (LineShape, PathShape, RectangleShape)
+_SHAPE_CLASSES = (ArrowShape, LineShape, PathShape, RectangleShape)
 _WIDGET_CLASSES = (ControllerContainer, LabelWidget, SceneLinkWidget,
                    StickerWidget, WebLinkWidget, UnknownSvgWidget,
                    UnknownWidget)

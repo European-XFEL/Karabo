@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QDialog
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
-    LineModel, RectangleModel, SceneLinkModel, StickerModel, WebLinkModel)
+    ArrowModel, LineModel, RectangleModel, SceneLinkModel, StickerModel, WebLinkModel)
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
@@ -76,6 +76,23 @@ class LineSceneTool(BaseSceneTool):
                               x2=self.line.x2(), y2=self.line.y2(),
                               stroke='#000000')
             scene_view.add_models(model, initialize=True)
+            scene_view.set_tool(None)
+            scene_view.select_model(model)
+
+
+class ArrowSceneTool(LineSceneTool):
+    """The arrow tool is a derivative of the line tool as they are both
+       1D shapes."""
+
+    def mouse_up(self, scene_view, event):
+        """A callback which is fired whenever the user ends a mouse click
+        in the SceneView.
+        """
+        if self.line is not None:
+            model = ArrowModel(x1=self.line.x1(), y1=self.line.y1(),
+                               x2=self.line.x2(), y2=self.line.y2(),
+                               stroke='#000000')
+            scene_view.add_models(model)
             scene_view.set_tool(None)
             scene_view.select_model(model)
 
