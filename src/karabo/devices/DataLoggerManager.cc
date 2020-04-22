@@ -175,6 +175,13 @@ namespace karabo {
                     .init()
                     .commit();
 
+            STRING_ELEMENT(expected).key("logger.InfluxDataLogger.dbname")
+                    .displayedName("Database name")
+                    .description("Name of the database of the data. If empty, fall back to broker topic.")
+                    .assignmentOptional().defaultValue("")
+                    .init()
+                    .commit();
+
             UINT32_ELEMENT(expected).key("logger.InfluxDataLogger.maxBatchPoints")
                     .displayedName("Max batch points")
                     .description("Max number of InfluxDB points in the batch")
@@ -316,6 +323,13 @@ namespace karabo {
                             "devices", std::unordered_set<std::string>());
             for (const std::string& server : m_serverList) {
                 m_loggerData.set(server, data);
+            }
+
+            if (m_logger == "InfluxDataLogger" && get<std::string>("logger.InfluxDataLogger.dbname").empty()) {
+                // Initialise DB name from broker topic
+                const std::string dbName(getTopic());
+                KARABO_LOG_FRAMEWORK_INFO << "Switch to Influx DB name '" << dbName << "'";
+                set("logger.InfluxDataLogger.dbname", dbName);
             }
 
             // Register handlers here
@@ -716,6 +730,7 @@ namespace karabo {
                         hash.set("classId", "InfluxLogReader");
                         hash.set("deviceId", readerId);
                         config.set("url", get<string>("logger.InfluxDataLogger.urlRead"));
+                        config.set("dbname", get<string>("logger.InfluxDataLogger.dbname"));
                     }
                     hash.set("configuration", config);
                     KARABO_LOG_FRAMEWORK_INFO
@@ -931,6 +946,7 @@ namespace karabo {
             } else if (m_logger == "InfluxDataLogger") {
                 config.set("urlWrite", get<std::string>("logger.InfluxDataLogger.urlWrite"));
                 config.set("urlQuery", get<std::string>("logger.InfluxDataLogger.urlRead"));
+                config.set("dbname", get<std::string>("logger.InfluxDataLogger.dbname"));
                 config.set("maxBatchPoints", get<std::uint32_t>("logger.InfluxDataLogger.maxBatchPoints"));
                 config.set("useGateway", get<bool>("logger.InfluxDataLogger.useGateway"));
             }

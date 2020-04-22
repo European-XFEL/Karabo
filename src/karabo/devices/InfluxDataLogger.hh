@@ -89,14 +89,14 @@ namespace karabo {
 
             void onShowDatabases(const karabo::net::HttpResponse& o);
 
-            void createDatabase(const std::string& dbname, const InfluxResponseHandler& action);
+            void createDatabase(const InfluxResponseHandler& action);
 
             void onCreateDatabase(const karabo::net::HttpResponse& o);
 
         private:
 
             karabo::net::InfluxDbClient::Pointer m_client;
-            std::string m_dbName;
+            const std::string m_dbName;
             std::string m_urlWrite;
             std::string m_urlQuery;
             static const unsigned int k_httpResponseTimeoutMs;
