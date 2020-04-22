@@ -115,6 +115,12 @@ namespace karabo {
                     .description("URL should be given in form: tcp://host:port")
                     .assignmentOptional().defaultValue("tcp://localhost:8086")
                     .commit();
+
+            STRING_ELEMENT(expected).key("dbname")
+                    .displayedName("Database name")
+                    .description("Name of the database in which the data resides")
+                    .assignmentMandatory()
+                    .commit();
         }
 
 
@@ -138,8 +144,7 @@ namespace karabo {
                 dbPassword = "admpwd";
             }
 
-            std::string dbName(getTopic());
-            if (getenv("KARABO_INFLUXDB_DBNAME")) dbName = getenv("KARABO_INFLUXDB_DBNAME");
+            const std::string dbName(cfg.get<std::string>("dbname"));
             const std::string url(cfg.get<std::string>("url"));
 
             Hash dbClientCfg;
