@@ -16,13 +16,13 @@ from karabogui.indicators import get_topic_color
 from karabogui.sceneview.api import SceneView
 from karabogui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabogui.sceneview.tools.api import (
-    BoxVSceneAction, BoxHSceneAction, CreateToolAction, GroupEntireSceneAction,
-    GridSceneAction, GroupSceneAction, UngroupSceneAction, LineSceneTool,
-    TextSceneTool, RectangleSceneTool, SceneBringToFrontAction,
-    SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneMoveAction,
-    SceneLinkTool, ScenePasteAction, ScenePasteReplaceAction,
-    SceneSelectAllAction, SceneSendToBackAction, SceneSelectionTool,
-    StickerTool, WebLinkTool)
+    ArrowSceneTool, BoxVSceneAction, BoxHSceneAction, CreateToolAction,
+    GroupEntireSceneAction, GridSceneAction, GroupSceneAction,
+    UngroupSceneAction, LineSceneTool,  TextSceneTool, RectangleSceneTool,
+    SceneBringToFrontAction, SceneCopyAction, SceneCutAction,
+    SceneDeleteAction, SceneMoveAction, SceneLinkTool, ScenePasteAction,
+    ScenePasteReplaceAction, SceneSelectAllAction, SceneSendToBackAction,
+    SceneSelectionTool, StickerTool, WebLinkTool)
 from karabogui.widgets.toolbar import ToolBar
 from .base import BasePanelWidget
 
@@ -264,6 +264,11 @@ class ScenePanel(BasePanelWidget):
         actions.append(CreateToolAction(tool_factory=LineSceneTool,
                                         icon=icons.line, text="Add line",
                                         tooltip="Add line to scene",
+                                        checkable=True))
+        actions.append(CreateToolAction(tool_factory=ArrowSceneTool,
+                                        icon=icons.arrowFancyRight,
+                                        text="Add arrow",
+                                        tooltip="Add arrow to scene",
                                         checkable=True))
         actions.append(CreateToolAction(tool_factory=RectangleSceneTool,
                                         icon=icons.rect, text="Add rectangle",
