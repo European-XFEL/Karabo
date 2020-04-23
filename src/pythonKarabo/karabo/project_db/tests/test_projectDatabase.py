@@ -3,11 +3,10 @@ from unittest import TestCase
 
 from lxml import etree
 
-from karabo.project_db.const import TESTDB_ADMIN_PASSWORD
-from karabo.project_db.project_database import ProjectDatabase
-from karabo.project_db.util import ProjectDBError
-from karabo.project_db.tests.util import (
-    create_hierarchy, stop_local_database, _gen_uuid)
+from ..const import TESTDB_ADMIN_PASSWORD
+from ..project_database import ProjectDatabase
+from ..util import ProjectDBError
+from .util import (create_hierarchy, stop_local_database, _gen_uuid)
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
@@ -16,7 +15,7 @@ def create_trashed_project(db, is_trashed=True):
     uuid = _gen_uuid()
     xml = ('<xml item_type="project" uuid="{uuid}" '
            'simple_name="{name}" is_trashed="{is_trashed}"></xml>').format(
-               uuid=uuid, name=uuid, is_trashed=str(is_trashed).lower())
+        uuid=uuid, name=uuid, is_trashed=str(is_trashed).lower())
 
     db.save_item("LOCAL", uuid, xml)
     return uuid
@@ -150,7 +149,7 @@ class TestProjectDatabase(TestCase):
                 # Save three consecutive versions
                 for i in range(MAX_REV, 0, -1):
                     # consecutive dates beginning a few seconds ago
-                    date = strftime(DATE_FORMAT, gmtime(earlier+i))
+                    date = strftime(DATE_FORMAT, gmtime(earlier + i))
                     xml = xml_rep.format(uuid=versioned_uuid, revision=i,
                                          date=date)
                     path = "{}/{}/{}_{}".format(db.root, 'LOCAL',
@@ -186,6 +185,14 @@ class TestProjectDatabase(TestCase):
                         scenecnt += 1
                     self.assertEqual(i["simple_name"], "Scene!")
                 self.assertGreaterEqual(scenecnt, 4)
+
+            with self.subTest(msg='test_get_projects_and_configs'):
+                _, device_id_conf_map = create_hierarchy(db)
+                for device_id, conf_id in device_id_conf_map.items():
+                    items = db.get_projects_with_conf("LOCAL", device_id)
+                    proj, conf = next(iter(items.items()))
+                    self.assertEqual(proj, "Project")
+                    self.assertEqual(conf_id, conf)
 
             stop_local_database()
 
