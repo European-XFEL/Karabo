@@ -1,5 +1,5 @@
-from PyQt5.QtCore import QLine, QPoint, QRect
-from PyQt5.QtGui import QPen
+from PyQt5.QtCore import QLine, QLineF, QPoint, QRect, Qt
+from PyQt5.QtGui import QBrush, QPainterPath, QPen, QTransform
 from PyQt5.QtWidgets import QDialog
 from traits.api import Instance
 
@@ -9,8 +9,9 @@ from karabo.common.scenemodel.api import (
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
+from karabogui.pathparser import Parser
 from karabogui.sceneview.bases import BaseSceneTool
-from karabogui.sceneview.utils import calc_snap_pos
+from karabogui.sceneview.utils import calc_snap_pos, calc_rotated_point
 
 
 class TextSceneTool(BaseSceneTool):
@@ -85,6 +86,26 @@ class ArrowSceneTool(LineSceneTool):
     """The arrow tool is a derivative of the line tool as they are both
        1D shapes."""
 
+    marker_path = Instance(QPainterPath)
+
+    def draw(self, scene_view, painter):
+        super(ArrowSceneTool, self).draw(scene_view, painter)
+        if self.line is not None:
+            line = QLineF(self.line)
+            if line.length():
+                # Calculate angle
+                angle = line.angle()
+                offset = self.line.p2() - calc_rotated_point(x=0, y=3,
+                                                             angle=angle)
+                # Calculate transform
+                transform = QTransform()
+                transform.translate(offset.x(), offset.y())
+                transform.rotate(-angle)
+
+                # Paint transformed path
+                painter.setBrush(QBrush(Qt.black))
+                painter.drawPath(transform.map(self.marker_path))
+
     def mouse_up(self, scene_view, event):
         """A callback which is fired whenever the user ends a mouse click
         in the SceneView.
@@ -99,6 +120,11 @@ class ArrowSceneTool(LineSceneTool):
             scene_view.add_models(arrow_model, defs_model)
             scene_view.set_tool(None)
             scene_view.select_model(arrow_model)
+
+    def _marker_path_default(self):
+        # TODO: Get this from the ArrowModel
+        ARROW_PATH = "M0,0 L0,6 L9,3 z"
+        return Parser(ARROW_PATH).parse()
 
 
 class RectangleSceneTool(BaseSceneTool):
