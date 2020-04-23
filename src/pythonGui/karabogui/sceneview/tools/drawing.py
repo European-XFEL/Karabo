@@ -4,7 +4,8 @@ from PyQt5.QtWidgets import QDialog
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
-    ArrowModel, LineModel, RectangleModel, SceneLinkModel, StickerModel, WebLinkModel)
+    ArrowModel, LineModel, RectangleModel, SceneLinkModel, StickerModel, WebLinkModel,
+    XMLDefsModel)
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
@@ -89,12 +90,15 @@ class ArrowSceneTool(LineSceneTool):
         in the SceneView.
         """
         if self.line is not None:
-            model = ArrowModel(x1=self.line.x1(), y1=self.line.y1(),
-                               x2=self.line.x2(), y2=self.line.y2(),
-                               stroke='#000000')
-            scene_view.add_models(model)
+            # Define an arrow model from the start and end points
+            arrow_model = ArrowModel(x1=self.line.x1(), y1=self.line.y1(),
+                                     x2=self.line.x2(), y2=self.line.y2(),
+                                     stroke='#000000')
+            # Define an XML Defs model for the marker
+            defs_model = XMLDefsModel(children=[arrow_model.marker])
+            scene_view.add_models(arrow_model, defs_model)
             scene_view.set_tool(None)
-            scene_view.select_model(model)
+            scene_view.select_model(arrow_model)
 
 
 class RectangleSceneTool(BaseSceneTool):
