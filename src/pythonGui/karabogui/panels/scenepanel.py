@@ -266,7 +266,7 @@ class ScenePanel(BasePanelWidget):
                                         tooltip="Add line to scene",
                                         checkable=True))
         actions.append(CreateToolAction(tool_factory=ArrowSceneTool,
-                                        icon=icons.arrowFancyRight,
+                                        icon=icons.arrow,
                                         text="Add arrow",
                                         tooltip="Add arrow to scene",
                                         checkable=True))
