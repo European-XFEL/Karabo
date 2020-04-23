@@ -4,7 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from abc import abstractmethod
-import math
 
 from PyQt5.QtCore import (
     QLine, QLineF, QMargins, QPoint, QPointF, QRect, QSize, Qt)
@@ -20,6 +19,8 @@ from karabogui.pathparser import Parser
 from .const import (GRID_STEP, QT_PEN_CAP_STYLE_FROM_STR,
                     QT_PEN_CAP_STYLE_TO_STR, QT_PEN_JOIN_STYLE_FROM_STR,
                     QT_PEN_JOIN_STYLE_TO_STR, SCREEN_MAX_VALUE)
+from .utils import calc_rotated_point
+
 
 _BRUSH_ATTRS = ('fill', 'fill_opacity')
 _PEN_ATTRS = ('stroke', 'stroke_opacity', 'stroke_linecap',
@@ -264,7 +265,7 @@ class MarkerShape(BaseShape):
     @on_trait_change("_offset, ref_point")
     def _translate(self):
         for child in self.children:
-            child.translate(self._offset + self.ref_point)
+            child.translate(self._offset - self.ref_point)
 
     def rotate(self, angle):
         if self.model.orient == "auto":
@@ -283,16 +284,8 @@ class MarkerShape(BaseShape):
 
     @cached_property
     def _get_ref_point(self):
-        ref_x = self.model.refX * -self._scale
-        ref_y = self.model.refY * self._scale
-
-        radians = math.radians(self._angle)
-        cos, sin = math.cos(radians), math.sin(radians)
-
-        rotated_x = ref_x * cos - ref_y * sin
-        rotated_y = ref_x * sin + ref_y * cos
-
-        return QPoint(rotated_x, -rotated_y)
+        return calc_rotated_point(x=self.model.refX, y=self.model.refY,
+                                  angle=self._angle, scale=self._scale)
 
 
 class ArrowShape(LineShape):
