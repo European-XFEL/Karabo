@@ -337,6 +337,14 @@ class ArrowShape(LineShape):
     def _scale_marker(self):
         self.marker.scale(self.model.stroke_width)
 
+    def minimumSize(self):
+        """We use the line and the marker sizes for the effective
+           minimum size."""
+        line_size = super(ArrowShape, self).minimumSize()
+        marker_size = self.marker.geometry().size()
+        return QSize(max(line_size.width(), marker_size.width()),
+                     max(line_size.height(), marker_size.height()))
+
 
 class RectangleShape(BaseShape):
     """A rectangle which can appear in a scene
