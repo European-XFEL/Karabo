@@ -331,7 +331,8 @@ class ArrowShape(LineShape):
     @on_trait_change("line")
     def _transform_marker(self):
         self.marker.translate(self.shape.p2())
-        self.marker.rotate(self.line.angle())
+        if self.line.length() != 0:
+            self.marker.rotate(self.line.angle())
 
     @on_trait_change("model.stroke_width")
     def _scale_marker(self):
