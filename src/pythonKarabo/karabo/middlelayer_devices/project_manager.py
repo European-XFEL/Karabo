@@ -11,6 +11,7 @@ from karabo.native import read_project_model
 from karabo.project_db.project_database import ProjectDatabase
 from karabo.project_db.util import get_db_credentials, ProjectDBError
 
+
 def dictToHash(d):
     h = Hash()
     for k, v in d.items():
@@ -231,8 +232,8 @@ class ProjectManager(Device):
                 savedItems.append(item)
 
         if projectUuids:
-           self.signalProjectUpdate(Hash("projects", projectUuids),
-                                    self.deviceId)
+            self.signalProjectUpdate(Hash("projects", projectUuids),
+                                     self.deviceId)
 
         return Hash('items', savedItems)
 
@@ -414,6 +415,25 @@ class ProjectManager(Device):
                              'attr_name', r['attr_name'],
                              'attr_value', r['attr_value'])
                     resHashes.append(h)
+            except ProjectDBError as e:
+                exceptionReason = str(e)
+                success = False
+            return Hash('items', resHashes,
+                        'success', success,
+                        'reason', exceptionReason)
+
+    @slot
+    def slotListProjectAndConfForDevice(self, token, domain, deviceId):
+        self._checkDbInitialized(token)
+
+        with self.user_db_sessions[token] as db_session:
+            exceptionReason = ""
+            success = True
+            resHashes = []
+            try:
+                res = db_session.get_projects_with_conf(domain, deviceId)
+                resHashes = [Hash("project_name", k, "active_config_ref", v)
+                             for k, v in res.items()]
             except ProjectDBError as e:
                 exceptionReason = str(e)
                 success = False

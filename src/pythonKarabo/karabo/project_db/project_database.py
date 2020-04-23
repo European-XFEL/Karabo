@@ -288,7 +288,7 @@ class ProjectDatabase(ContextDecorator):
         req_cnk_size = 50
 
         for i in range(0, n_items, req_cnk_size):
-            max_idx = min(i+req_cnk_size, n_items)
+            max_idx = min(i + req_cnk_size, n_items)
             uuids = '","'.join(items[i:max_idx])
             query = """
             xquery version "3.0";
@@ -375,7 +375,7 @@ class ProjectDatabase(ContextDecorator):
                      'description': r.attrib['description']}
                     for r in res.results[0].getchildren()]
         except ExistDBException as e:
-                raise ProjectDBError(e)
+            raise ProjectDBError(e)
 
     def list_named_items(self, domain, item_type, simple_name):
         """
@@ -433,7 +433,7 @@ class ProjectDatabase(ContextDecorator):
                      'description': r.attrib['description']}
                     for r in res.results[0].getchildren()]
         except ExistDBException as e:
-                raise ProjectDBError(e)
+            raise ProjectDBError(e)
 
     def list_domains(self):
         """
@@ -462,7 +462,7 @@ class ProjectDatabase(ContextDecorator):
 
         domain = domain.rstrip('/')
         tstamp = strftime("%Y-%m-%d_%H%M%S", gmtime())
-        origin_base = '/'.join(domain.split('/')[:-1])+"/"
+        origin_base = '/'.join(domain.split('/')[:-1]) + "/"
         base = '{}{}/'.format('/'.join(domain.split('/')[:-2]),
                               self.settings.root_collection_backup)
         source = domain.split('/')[-1]
@@ -492,7 +492,7 @@ class ProjectDatabase(ContextDecorator):
         try:
             res = self.dbhandle.query(query)
         except ExistDBException as e:
-            raise("Failed creating backup: {}".format(e))
+            raise ("Failed creating backup: {}".format(e))
 
         print("Sucessfully created backup, now proceeding with sanitizing")
 
@@ -544,7 +544,7 @@ class ProjectDatabase(ContextDecorator):
         try:
             res = self.dbhandle.query(query).results[0]
         except ExistDBException as e:
-            raise("Failed sanitizing: {}".format(e))
+            raise ("Failed sanitizing: {}".format(e))
 
         msg = dedent("""
             Sanitized database:
@@ -612,5 +612,105 @@ class ProjectDatabase(ContextDecorator):
                                   'attr_name': root.attrib['attr_name'],
                                   'attr_value': root.attrib['attr_value']})
             except ExistDBException as e:
-                raise("Failed updating attribute: {}".format(e))
+                raise ("Failed updating attribute: {}".format(e))
         return res_items
+
+    def get_configurations_from_device_name(self, domain, instance_id):
+        """
+        Returns a list of configurations for a given device
+        :param domain: DB domain
+        :param instance_id: instance id of the device
+        :return: a list of dicts:
+            [{"configid": uuid of the configuration,
+              "instanceid": device instance uuid in the DB},
+              ...
+            ]
+        """
+        query = """
+        xquery version "3.0";
+        let $path := "{path}"
+        let $iid := "{instance_id}"
+        return <items>{{
+        for $doc in collection($path)/xml//device_instance[@instance_id=$iid]
+        let $active := $doc/@active_rev
+        let $configid := $doc/device_config[@revision=$active]/@uuid
+        let $instanceid := $doc/../@uuid
+        return <item configid="{{$configid}}" instanceid="{{$instanceid}}"/>
+        }}</items>
+        """
+        path = "{}/{}".format(self.root, domain)
+        query = query.format(path=path, instance_id=instance_id)
+
+        res = self.dbhandle.query(query)
+
+        return [{"configid": r.attrib["configid"],
+                 "instanceid": r.attrib["instanceid"]} for r in
+                res.results[0].getchildren()]
+
+    def get_projects_from_device(self, domain, uuid):
+        """
+        Returns the projects which contain a device instance with a given uuid
+
+        :param domain: DB domain
+        :param uuid: the uuid of the device instance from the database
+        :return: a set containing project names
+        """
+        query = """
+        xquery version "3.0";
+        let $path := "{path}"
+        let $iid := "{uuid}"
+        return <items>{{
+        for $doc in collection($path)/xml//device_instance[@uuid=$iid]
+        let $serverid := $doc/../../@uuid
+        return <item serverid="{{$serverid}}"/>
+        }}</items>
+        """
+
+        path = "{}/{}".format(self.root, domain)
+        query = query.format(path=path, uuid=uuid)
+        res = self.dbhandle.query(query)
+
+        servers = [{"serverid": r.attrib["serverid"]} for r in
+                   res.results[0].getchildren()]
+
+        query = """
+        xquery version "3.0";
+        let $path := "{path}"
+        let $iid := "{instance}"
+        return <items>{{
+        for $doc in collection($path)/xml//servers[KRB_Item/uuid=$iid]
+        let $projectname := $doc/../../../@simple_name
+        return <item projectname="{{$projectname}}"/>
+        }}</items>
+        """
+        projects = set()
+        for server in servers:
+            queryf = query.format(path=path, instance=server["serverid"])
+            res = self.dbhandle.query(queryf)
+            projects |= set([r.attrib["projectname"] for r in
+                             res.results[0].getchildren()])
+        return projects
+
+    def get_projects_with_conf(self, domain, device_id):
+        """
+        Returns a dict with projects and active configurations from a device
+        name.
+
+        :param domain: DB domain
+        :param device_id: the device to return the information for.
+        :return: a dict:
+            {"project name": configuration uuid,
+             ...}
+        """
+        try:
+            configs = self.get_configurations_from_device_name(domain,
+                                                               device_id)
+            projects = dict()
+            for config in configs:
+                instance_id = config["instanceid"]
+                for project in self.get_projects_from_device(domain,
+                                                             instance_id):
+                    projects[project] = config["configid"]
+            return projects
+        except ExistDBException as e:
+            raise ProjectDBError(e)
