@@ -48,7 +48,7 @@ class TestProjectManager(DeviceTest):
             xml_serv += " </configs></testserver>"
 
             db.save_item('LOCAL', UUIDS[4], xml_serv)
-            create_hierarchy(db)
+            _, self.device_id_conf_map = create_hierarchy(db)
 
     def _cleanDataBase(self):
         with ProjectDatabase(self._user, self._password, test_mode=True) as db:
@@ -133,7 +133,7 @@ class TestProjectManager(DeviceTest):
                                       "slotListItems", 'admin',
                                       "LOCAL"), timeout=5)
             items = ret.get('items')
-            self.assertEqual(len(items), 9)
+            self.assertEqual(len(items), 25)
             scenecnt = 0
             for i in items:
                 if i.get("item_type") == "scene":
@@ -149,3 +149,18 @@ class TestProjectManager(DeviceTest):
                                       "Project"), timeout=5)
             items = ret.get('items')
             self.assertEqual(len(items), 1)
+
+        with self.subTest(msg="Test get projects and configurations"):
+            for device_id, conf_id in self.device_id_conf_map.items():
+                ret = await wait_for(call("projManTest",
+                                          "slotListProjectAndConfForDevice",
+                                          'admin',
+                                          "LOCAL",
+                                          device_id,
+                                          ), timeout=5)
+
+                self.assertTrue(ret["success"])
+                proj = ret["items"][0]["project_name"]
+                conf = ret["items"][0]["active_config_ref"]
+                self.assertEqual(proj, "Project")
+                self.assertEqual(conf_id, conf)
