@@ -1,6 +1,7 @@
 from collections import Iterable
 import copy
 from functools import wraps
+
 import numpy as np
 
 from karabo.common.states import StateSignifier as SignifierBase
