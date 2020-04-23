@@ -208,10 +208,11 @@ unit tests miniconda-win64:
   tags:
     - Win10
   <<: *unit-tests-conda
-        
-unit tests miniconda-cmake:
-  image: europeanxfel/karabo-ci:miniconda-3
-  <<: *unit-tests
+
+# Temporary suspended
+#unit tests miniconda-cmake:
+#  image: europeanxfel/karabo-ci:miniconda-3
+#  <<: *unit-tests
 
   # Post-merge integration test builds
 
