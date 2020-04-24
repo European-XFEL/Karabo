@@ -8,6 +8,7 @@ import os
 import os.path as op
 import re
 import shutil
+import time
 
 from asyncio import get_event_loop
 from urllib.parse import urlparse
@@ -19,12 +20,15 @@ from karabo.influxdb.dlutils import (
 from karabo.native import encodeBinary, Schema, decodeXML
 
 
+PROCESSED_SCHEMAS_FILE_NAME = '.processed_schemas.txt'
+
+
 class DlSchema2Influx():
     def __init__(self, schema_path, topic,
                  read_user, read_pwd, read_url,
                  write_user, write_pwd, write_url,
                  device_id, output_dir,
-                 dry_run, prints_on):
+                 write_timeout, dry_run, prints_on):
         self.schema_path = schema_path
         self.db_name = topic
         self.output_dir = output_dir
@@ -45,12 +49,13 @@ class DlSchema2Influx():
         self.read_client = InfluxDbClient(
                              host=read_host, port=read_port,
                              protocol=read_protocol, user=read_user,
-                             password=read_pwd, db=self.db_name
+                             password=read_pwd, db=self.db_name,
                             )
         self.write_client = InfluxDbClient(
                              host=write_host, port=write_port,
                              protocol=write_protocol, user=write_user,
-                             password=write_pwd, db=self.db_name
+                             password=write_pwd, db=self.db_name,
+                             request_timeout=write_timeout
                             )
 
         if self.device_id is None:  # infers device_id from directory structure
@@ -64,15 +69,18 @@ class DlSchema2Influx():
                 self.output_dir,
                 'processed',
                 self.device_id,
-                op.basename(self.schema_path))
+                f'{op.basename(self.schema_path)}.ok')
             self.part_proc_out_path = op.join(
                 self.output_dir,
                 'part_processed',
                 self.device_id,
-                op.basename(self.schema_path))
+                f'{op.basename(self.schema_path)}.err')
+            self.proc_schemas_path = op.join(
+                self.output_dir, PROCESSED_SCHEMAS_FILE_NAME)
         else:
             self.proc_out_path = None
             self.part_proc_out_path = None
+            self.proc_schemas_path = None
 
     async def run(self):
         if self.prints_on:
@@ -85,6 +93,14 @@ class DlSchema2Influx():
         data = []
         schema_digests = set()
         part_proc = False  # indicates the file has been partially processed.
+        stats = {
+            'start_time': time.time(),
+            'end_time': None,
+            'elapsed_secs': 0.0,
+            'insert_rate': 0.0,
+            'lines_written': 0,
+            'write_retries': [],
+        }
         with open(self.schema_path, 'r') as fp:
 
             for i, l in enumerate(fp):
@@ -141,13 +157,19 @@ class DlSchema2Influx():
 
                     if not self.dry_run:
                         for line in data:
-                            r = await self.write_client.write(line)
-                            if r.code != 204:
+                            r = await self.write_client.write_with_retry(line)
+                            if r['code'] != 204:
                                 # Error saving the schema; raise.
                                 raise Exception(
-                                   "Error saving schema in Influx: {} - {}"
-                                   .format(r.code, r.reason))
+                                    "Error saving schema in Influx: "
+                                    "{} - {}\nWrite retries: {}\nContent:\n"
+                                    "{} ...\n\n".format(
+                                        r['code'], r['reason'], r['retried'],
+                                        line[:320]))
+                            if r['retried']:
+                                stats['write_retries'].append(r['retried'])
                     data = []
+                    stats['lines_written'] = i+1
 
                 except Exception as exc:
                     # Handles an error by logging it in a .err file in the
@@ -159,23 +181,22 @@ class DlSchema2Influx():
                     if self.part_proc_out_path and not self.dry_run:
                         if not op.exists(op.dirname(self.part_proc_out_path)):
                             os.makedirs(op.dirname(self.part_proc_out_path))
-                        err_path = self.part_proc_out_path + ".err"
-                        file_mode = 'a' if op.exists(err_path) else 'w'
-                        with open(err_path, file_mode) as err:
+                        with open(self.part_proc_out_path, 'a') as err:
                             err.write("Error at line {}: {}\n".format(i, exc))
                     elif not self.part_proc_out_path:
                         raise
 
-        # Copies the file either to the partially processed or processed dir, if
-        # the corresponding output paths are defined.
+        # Registers successful processing of schema file
+        stats['end_time'] = time.time()
+        stats['elapsed_secs'] = stats['end_time']-stats['start_time']
+        stats['insert_rate'] = stats['lines_written']/(stats['elapsed_secs'])
         if self.proc_out_path and not self.dry_run and not part_proc:
             if not op.exists(op.dirname(self.proc_out_path)):
                 os.makedirs(op.dirname(self.proc_out_path))
-            shutil.copy(self.schema_path, self.proc_out_path)
-        elif self.part_proc_out_path and not self.dry_run:
-            # No need to check for output directory existence in here; it has
-            # already been created to log the error.
-            shutil.copy(self.schema_path, self.part_proc_out_path)
+            with open(self.proc_out_path, 'w') as ok_file:
+                ok_file.write(json.dumps(stats))
+            with open(self.proc_schemas_path, 'a') as proc_schemas_file:
+                proc_schemas_file.write(f'{self.schema_path}\n')
 
         return not part_proc  # True if fully successfully processed.
 
