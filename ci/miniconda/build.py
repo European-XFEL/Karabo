@@ -209,7 +209,6 @@ class Builder:
     def adapt_platform(self, recipe):
         """Performs platform specific tasks per recipe"""
         if self.platform == 'osx-64':
-            os.environ['LC_ALL'] = 'en_US.UTF-8'
             os.environ['LANG'] = 'en_US.UTF-8'
             osx_sysroot = os.environ.get('OSX_SYSROOT')
             if osx_sysroot:

@@ -41,7 +41,7 @@ You can find your configuration file location typing ``conda info`` on your term
 From your terminal, add the needed channels executing the following commands::
 
     conda config --add channels http://exflserv05.desy.de/karabo/channel
-    conda config --add channels conda-forge
+    conda config --add channels http://exflserv05.desy.de/karabo/channel/mirror/conda-forge
 
 N.B. The channel ``http://exflserv05.desy.de/karabo/channel`` is not open to
 the public until Karabo will be released. For this reason if one is installing
@@ -53,7 +53,10 @@ Assuming, e.g. that one has created an ssh tunnel using an ssh command like
 the following channel definitions::
 
     conda config --add channels http://localhost:8081/karabo/channel
-    conda config --add channels conda-forge
+    conda config --add channels http://localhost:8081/karabo/channel/mirror/conda-forge
+
+N.B. the two channel definitions are mutually exclusive. Remove the channels that
+are not reachable.
 
 Installing KaraboGUI
 ====================
