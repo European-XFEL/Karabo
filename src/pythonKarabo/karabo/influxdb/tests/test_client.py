@@ -278,20 +278,37 @@ class Influx_TestCase(DeviceTest):
             db_name=_topic, input_dir=tst_data_root, output_dir=output_dir,
             write_url=f'http://{_host}:{_port}', write_user=_user,
             write_pwd=_password, read_url=f'http://{_host}:{_port}',
-            read_user=_user, read_pwd=_password, dry_run=False, prints_on=True)
+            read_user=_user, read_pwd=_password, lines_per_write=8000,
+            dry_run=False, prints_on=True, write_timeout=20)
 
         await migrator.run()
 
         # Checks the expected processed outputs - the 'archive_4.txt' and
         # 'archive_schema.txt' files are expected to be processed cleanly.
+        # The other files support multiple migration runs with skipping of
+        # files fully processed in previous runs.
         self.assertTrue(os.path.exists(os.path.join(output_dir,
                                                     'processed',
                                                     MIGRATION_TEST_DEVICE,
-                                                    'archive_4.txt')))
+                                                    'archive_4.txt.ok')))
+        self.assertFalse(os.path.exists(os.path.join(output_dir,
+                                                     'part_processed',
+                                                     MIGRATION_TEST_DEVICE,
+                                                     'archive_4.txt.err')))
         self.assertTrue(os.path.exists(os.path.join(output_dir,
                                                     'processed',
                                                     MIGRATION_TEST_DEVICE,
-                                                    'archive_schema.txt')))
+                                                    'archive_schema.txt.ok')))
+        self.assertFalse(os.path.exists(os.path.join(output_dir,
+                                                     'part_processed',
+                                                     MIGRATION_TEST_DEVICE,
+                                                     'archive_schema.txt.err')))
+        self.assertTrue(os.path.exists(os.path.join(output_dir,
+                                                    '.previous_run.txt')))
+        self.assertTrue(os.path.exists(os.path.join(output_dir,
+                                                    '.processed_props.txt')))
+        self.assertTrue(os.path.exists(os.path.join(output_dir,
+                                                    '.processed_schemas.txt')))
 
         # Cleans up the directories with the copies of the sample
         # data logging files and the results of the migration job
