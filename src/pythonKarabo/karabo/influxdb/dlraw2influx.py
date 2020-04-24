@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import argparse
 import base64
+import json
 import os
 import os.path as op
 import numpy as np
 import re
 import shutil
+import time
 
 from asyncio import get_event_loop
 from urllib.parse import urlparse
@@ -17,10 +19,13 @@ from karabo.influxdb.dlutils import (
 )
 from karabo.native import decodeXML, encodeBinary
 
+PROCESSED_RAWS_FILE_NAME = '.processed_props.txt'
+
 
 class DlRaw2Influx():
     def __init__(self, raw_path, topic, user, password, url,
-                 device_id, output_dir, dry_run, prints_on):
+                 device_id, output_dir, dry_run, prints_on,
+                 lines_per_write, write_timeout):
         self.raw_path = raw_path
         self.db_name = topic
         self.output_dir = output_dir
@@ -35,10 +40,10 @@ class DlRaw2Influx():
 
         self.db_client = InfluxDbClient(
             host=host, port=port, db=self.db_name, protocol=protocol,
-            user=user, password=password
+            user=user, password=password, request_timeout=write_timeout
             )
 
-        self.chunk_queries = 8000  # optimal values are between 5k and 10k
+        self.chunk_queries = lines_per_write
 
         if self.device_id is None:  # infers device_id from directory structure
             self.device_id = device_id_from_path(self.raw_path)
@@ -51,15 +56,19 @@ class DlRaw2Influx():
                 self.output_dir,
                 'processed',
                 self.device_id,
-                op.basename(self.raw_path))
+                op.basename(f'{self.raw_path}.ok'))
             self.part_proc_out_path = op.join(
                 self.output_dir,
                 'part_processed',
                 self.device_id,
-                op.basename(self.raw_path))
+                op.basename(f'{self.raw_path}.err'))
+            self.proc_props_path = op.join(
+                self.output_dir,
+                PROCESSED_RAWS_FILE_NAME)
         else:
             self.proc_out_path = None
             self.part_proc_out_path = None
+            self.proc_props_path = None
 
     async def run(self):
         if self.prints_on:
@@ -71,6 +80,14 @@ class DlRaw2Influx():
 
         data = []
         part_proc = False  # indicates the file has been partially processed.
+        stats = {
+            'start_time': time.time(),
+            'end_time': None,
+            'elapsed_secs': 0.0,
+            'insert_rate': 0.0,
+            'lines_written': 0,
+            'write_retries': [],
+        }
         with open(self.raw_path, 'r') as fp:
 
             for i, l in enumerate(fp):
@@ -107,13 +124,21 @@ class DlRaw2Influx():
                             lin_proto_data = format_line_protocol_body(data)
                             data = []
                             if not self.dry_run:
-                                r = await self.db_client.write(lin_proto_data)
-                                if r.code != 204:
+                                r = (
+                                      await self.db_client.write_with_retry(
+                                                                lin_proto_data)
+                                )
+                                if r['code'] != 204:
                                     raise Exception(
                                         "Error writing line protocol: "
-                                        "{} - {}\n{} ...\n\n".format(
-                                            r.code, r.reason,
-                                            lin_proto_data[:40]))
+                                        "{} - {}\nWrite retries: {}\nContent:\n"
+                                        "{} ...\n\n".format(
+                                            r['code'], r['reason'],
+                                            r['retried'],
+                                            lin_proto_data[:320]))
+                                if r['retried']:
+                                    stats['write_retries'].append(r['retried'])
+                    stats['lines_written'] = i+1
                 except Exception as exc:
                     # Handles an error by logging it in a .err file in the
                     # partially processed directory if there's an output_dir
@@ -124,9 +149,7 @@ class DlRaw2Influx():
                     if self.part_proc_out_path and not self.dry_run:
                         if not op.exists(op.dirname(self.part_proc_out_path)):
                             os.makedirs(op.dirname(self.part_proc_out_path))
-                        err_path = self.part_proc_out_path + ".err"
-                        file_mode = 'a' if op.exists(err_path) else 'w'
-                        with open(err_path, file_mode) as err:
+                        with open(self.part_proc_out_path, 'a') as err:
                             err.write("Error at line {}: {}\n".format(i, exc))
                     elif not self.part_proc_out_path:
                         raise
@@ -134,35 +157,39 @@ class DlRaw2Influx():
             if not self.dry_run and data:
                 try:
                     line_protocol_data = format_line_protocol_body(data)
-                    r = await self.db_client.write(line_protocol_data)
-                    if r.code != 204:
+                    r = (
+                          await self.db_client.write_with_retry(
+                                                            line_protocol_data)
+                    )
+                    if r['code'] != 204:
                         raise Exception(
-                            "Error response from Influx: {} - {}"
-                            .format(r.code, r.reason))
+                                "{} - {}\nWrite retries: {}\n".format(
+                                    r['code'], r['reason'], r['retried']))
+                    if r['retried']:
+                        stats['write_retries'].append(r['retried'])
                 except Exception as exc:
                     part_proc = True
                     if self.part_proc_out_path and not self.dry_run:
                         if not op.exists(op.dirname(self.part_proc_out_path)):
                             os.makedirs(op.dirname(self.part_proc_out_path))
-                        err_path = self.part_proc_out_path + ".err"
-                        file_mode = 'a' if op.exists(err_path) else 'w'
-                        with open(err_path, file_mode) as err:
+                        with open(self.part_proc_out_path, 'a') as err:
                             err.write("Error writing line protocol: {}\n{} ..."
                                       "\n\n".format(
-                                          exc, line_protocol_data[:40]))
+                                          exc, line_protocol_data[:320]))
                     elif not self.part_proc_out_path:
                         raise
 
-        # Copies the file either to the partially processed or processed dir, if
-        # the corresponding output paths are defined.
+        # Registers successful processing of properties file.
+        stats['end_time'] = time.time()
+        stats['elapsed_secs'] = stats['end_time']-stats['start_time']
+        stats['insert_rate'] = stats['lines_written']/(stats['elapsed_secs'])
         if self.proc_out_path and not self.dry_run and not part_proc:
             if not op.exists(op.dirname(self.proc_out_path)):
                 os.makedirs(op.dirname(self.proc_out_path))
-            shutil.copy(self.raw_path, self.proc_out_path)
-        elif self.part_proc_out_path and not self.dry_run:
-            # No need to check for output directory existence in here; it has
-            # already been created to log the error.
-            shutil.copy(self.raw_path, self.part_proc_out_path)
+            with open(self.proc_out_path, 'w') as ok_file:
+                ok_file.write(json.dumps(stats))
+            with open(self.proc_props_path, 'a') as proc_props_file:
+                proc_props_file.write(f'{self.raw_path}\n')
 
         return not part_proc  # True if fully successfully processed.
 

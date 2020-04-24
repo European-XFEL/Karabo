@@ -1,3 +1,4 @@
+import asyncio
 import base64
 from json import loads
 import numbers
@@ -162,13 +163,14 @@ class Results():
 
 class InfluxDbClient():
     def __init__(self, host, port, protocol="http", db="",
-                 user="", password=""):
+                 user="", password="", request_timeout=20):
         self.protocol = protocol
         self.host = host
         self.port = int(port)
         self.db = db
         self.user = user
         self.password = password
+        self.request_timeout = request_timeout
         if hasattr(AsyncIOMainLoop, "initialized"):
             if not AsyncIOMainLoop.initialized():
                 AsyncIOMainLoop().install()
@@ -181,7 +183,8 @@ class InfluxDbClient():
     async def connect(self):
         uri = self.get_url("ping")
         reply = await to_asyncio_future(
-            self.client.fetch(uri, method="GET"))
+            self.client.fetch(uri, method="GET",
+                              request_timeout=self.request_timeout))
         assert reply.code == 204, f"{reply.code}: {reply.body}"
 
     def disconnect(self):
@@ -224,13 +227,18 @@ class InfluxDbClient():
         uri = self._build_query_uri(args, method)
         if method == "GET":
             return to_asyncio_future(
-                self.client.fetch(uri, method=method))
+                self.client.fetch(uri,
+                                  method=method,
+                                  request_timeout=self.request_timeout))
         elif method == "POST":
             # For POST requests the user credentials must be URL parameters, not
             # body data.
             query = urlencode(args)
             return to_asyncio_future(
-                self.client.fetch(uri, body=query, method=method))
+                self.client.fetch(uri,
+                                  body=query,
+                                  method=method,
+                                  request_timeout=self.request_timeout))
         else:
             return
 
@@ -252,8 +260,45 @@ class InfluxDbClient():
         future = to_asyncio_future(
             self.client.fetch(f"{uri}?{query}&precision=u", body=data,
                               headers=self.basic_auth_header,
-                              method="POST"))
+                              method="POST",
+                              request_timeout=self.request_timeout))
         return future
+
+    async def write_with_retry(self, data,
+                               max_retries=20,
+                               retry_wait=250,
+                               retry_codes={503, 599}):
+        """Posts the data to the `write` entrypoint of InfluxDb. If the write
+        fails with a status code that is in a set of failures to retry, retries
+        the operation after a wait interval.
+
+        data: bytes or str matching a line protocol
+        max_retries: max number of attempts for the write operation
+        retry_wait: interval, in milliseconds, to wait before retrying
+        retry_codes: http status code that should trigger a retry
+        return: dictionary with the keys 'code' (last http code received),
+        'reason' (description of last http response received) and 'retried'
+        (list of retry codes that triggered retries during the write).
+        """
+        retries = 0
+        reply = {}
+        retried = []
+        while True:
+            try:
+                resp = await self.write(data)
+                reply['code'] = resp.code
+                reply['reason'] = resp.reason
+                break
+            except HTTPError as e:
+                reply['code'] = e.code
+                reply['reason'] = e.message
+                if e.code not in retry_codes or retries >= max_retries:
+                    break
+                retries += 1
+                retried.append(e.code)
+                await asyncio.sleep(retry_wait/1000.0)
+        reply['retried'] = retried
+        return reply
 
     async def get_dbs(self):
         """Returns a list of database names"""
