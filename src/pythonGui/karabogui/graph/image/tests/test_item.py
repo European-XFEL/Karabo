@@ -52,6 +52,7 @@ class TestKaraboImageItem(GuiTestCase):
 
     def _assert_render(self, image, downsampling):
         self.imageItem.setImage(image)
+        self.process_qt_events()
         np.testing.assert_array_equal(image, self.imageItem.image)
         self.assertIsNone(self.imageItem.qimage)
 
