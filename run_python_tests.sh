@@ -226,8 +226,10 @@ runPythonUnitTests() {
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.bound_devices"
     # Some middlelayer tests are flaky for the time being, so add proper flags:
     safeRunCommand "$NOSETESTS -v $FLAKY_FLAGS $COVER_FLAGS karabo.middlelayer_api"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.common"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.middlelayer_devices"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.common"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.macro_api"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.macro_devices"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.influxdb"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.native"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.project_db"
