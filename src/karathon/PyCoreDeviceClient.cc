@@ -97,8 +97,8 @@ void exportPyCoreDeviceClient() {
             .def("unregisterPropertyMonitor", (void (DeviceClient::*)(const string&, const string&))(&DeviceClient::unregisterPropertyMonitor), (bp::arg("instanceId"), bp::arg("key")))
             .def("unregisterDeviceMonitor", (void (DeviceClient::*)(const string&))(&DeviceClient::unregisterDeviceMonitor), bp::arg("instanceId"))
             .def("registerChannelMonitor", &DeviceClientWrap::registerChannelMonitorPy,
-                 (bp::arg("channelName"), bp::arg("dataHandler"), bp::arg("inputChannelCfg") = karabo::util::Hash(),
-                  bp::arg("eosHandler") = bp::object()),
+                 (bp::arg("channelName"), bp::arg("dataHandler") = bp::object(), bp::arg("inputChannelCfg") = karabo::util::Hash(),
+                  bp::arg("eosHandler") = bp::object(), bp::arg("inputHandler") = bp::object()),
                  "Register a handler to monitor defined output channel.\n\n"
                  "Internally, an InputChannel is created and configured.\n"
                  "@param channelName identifies the channel as a concatenation of the id of\n"

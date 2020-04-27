@@ -1330,15 +1330,17 @@ namespace karabo {
         bool DeviceClient::registerChannelMonitor(const std::string& instanceId, const std::string& channel,
                                                   const karabo::xms::SignalSlotable::DataHandler& dataHandler,
                                                   const karabo::util::Hash& inputChannelCfg,
-                                                  const karabo::xms::SignalSlotable::InputHandler& eosHandler) {
-            return registerChannelMonitor(instanceId + ":" + channel, dataHandler, inputChannelCfg, eosHandler);
+                                                  const karabo::xms::SignalSlotable::InputHandler& eosHandler,
+						  const karabo::xms::SignalSlotable::InputHandler& inputHandler) {
+            return registerChannelMonitor(instanceId + ":" + channel, dataHandler, inputChannelCfg, eosHandler, inputHandler);
         }
 
 
         bool DeviceClient::registerChannelMonitor(const std::string& channelName,
                                                   const karabo::xms::SignalSlotable::DataHandler& dataHandler,
                                                   const karabo::util::Hash& inputChannelCfg,
-                                                  const karabo::xms::SignalSlotable::InputHandler& eosHandler) {
+                                                  const karabo::xms::SignalSlotable::InputHandler& eosHandler,
+						  const karabo::xms::SignalSlotable::InputHandler& inputHandler) {
             auto sigSlotPtr = m_signalSlotable.lock();
             // No SignalSlotable or channel already there? ==> Fail!
             if (!sigSlotPtr || sigSlotPtr->getInputChannelNoThrow(channelName)) {
@@ -1359,7 +1361,7 @@ namespace karabo {
             }
             // Create InputChannel with handlers (this also enables auto-reconnect):
             InputChannel::Pointer input = sigSlotPtr->createInputChannel(channelName, masterCfg, dataHandler,
-                                                                         SignalSlotable::InputHandler(), eosHandler);
+                                                                         inputHandler, eosHandler);
             // Set an id for the input channel - since we do not allow to connect more than once to the same
             // output channel, our instance id is sufficient.
             const std::string myInstanceId(sigSlotPtr->getInstanceId());
