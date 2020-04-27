@@ -280,8 +280,10 @@ class SystemTree(HasStrictTraits):
         self.initialized = True
 
     def visit(self, visitor):
-        """Walk every node in the system tree and run a `visitor` function on
-        each item.
+        """Walk every node of the system tree until visitor returns true
+
+        Call the `visitor` function on each item, if the function returns
+        a true-ish value, the loop will be stopped.
         """
         def _iter_tree_node(node):
             yield node
@@ -289,7 +291,8 @@ class SystemTree(HasStrictTraits):
                 yield from _iter_tree_node(child)
 
         for t_node in _iter_tree_node(self.root):
-            visitor(t_node)
+            if visitor(t_node):
+                break
 
     # ------------------------------------------------------------------
 
