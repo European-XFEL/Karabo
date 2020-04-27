@@ -34,10 +34,8 @@ from . import openmq
 _MSG_TIME_TO_LIVE = 120000  # in ms - i.e. 2 minutes
 _MSG_PRIORITY_HIGH = 4  # never dropped (except if expired)
 _MSG_PRIORITY_LOW = 3  # can be dropped in case of congestion
-# Number of threads that can be scheduled in the thread pool executor. Since
-# Macro are compiled without an async flag, we need a sufficiently high thread
-# number.
-_NUM_THREADS = 1000
+# Number of threads that can be scheduled in the thread pool executor.
+_NUM_THREADS = 200
 
 
 class Broker:

@@ -64,6 +64,7 @@ else:
             'karabo=karabo.interactive.karabo:main',
             'karabo-pythonserver=karabo.bound_api.device_server:main',
             'karabo-middlelayerserver=karabo.middlelayer_api.device_server:DeviceServer.main',
+            'karabo-macroserver=karabo.macro_devices.macro_server:MacroServer.main',
             'karabo-cli=karabo.interactive.ideviceclient:main',
             'ikarabo=karabo.interactive.ikarabo:main',
             'convert-karabo-device=karabo.interactive.convert_device_project:main',
@@ -84,10 +85,12 @@ else:
             'PropertyTest=karabo.bound_devices.property_test:PropertyTest',
         ],
         'karabo.middlelayer_device': [
-            'IPythonKernel=karabo.middlelayer_api.ipython:IPythonKernel',
             'PropertyTestMDL=karabo.middlelayer_devices.property_test:PropertyTestMDL',
             'ProjectManager=karabo.middlelayer_devices.project_manager:ProjectManager',
-            'MetaMacro=karabo.middlelayer_api.metamacro:MetaMacro'
+        ],
+        'karabo.macro_device': [
+            'IPythonKernel=karabo.macro_devices.ipython:IPythonKernel',
+            'MetaMacro=karabo.macro_devices.metamacro:MetaMacro'
         ],
         'karabo.bound_device_test': [
             'TestDevice=karabo.middlelayer_api.tests.bounddevice:TestDevice'
