@@ -121,6 +121,8 @@ release build miniconda-osx64:
   <<: *release-build-conda
 
 release build miniconda-win64:
+  before_script:
+    - ci/miniconda/cleanup.cmd
   tags:
     - Win10
   <<: *release-build-conda
@@ -145,6 +147,8 @@ nightly build miniconda-osx64:
   <<: *nightly-build-conda
   
 nightly build miniconda-win64:
+  before_script:
+    - ci/miniconda/cleanup.cmd
   tags:
     - Win10
   <<: *nightly-build-conda
@@ -205,6 +209,8 @@ unit tests miniconda-osx64:
   <<: *unit-tests-conda
 
 unit tests miniconda-win64:
+  before_script:
+    - ci/miniconda/cleanup.cmd
   tags:
     - Win10
   <<: *unit-tests-conda
