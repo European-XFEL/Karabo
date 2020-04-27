@@ -157,6 +157,12 @@ class KaraboImageView(QWidget):
                     self._set_roi_configuration)
                 self.addAction(self._apply_action)
 
+            # Set the minimum size of the plot without rescaling problems
+            # from the ROI items (e.g., zooming out of infinity when it is
+            # collapsed), which is 300 x 300.
+            self.plotItem.setMinimumWidth(300)
+            self.plotItem.setMinimumHeight(300)
+
         elif not enable and self.roi is not None:
             # Remove ROI items and destroy controller
             self.roi.remove_all()
