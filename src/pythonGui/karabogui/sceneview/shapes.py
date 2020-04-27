@@ -242,6 +242,8 @@ class MarkerShape(BaseShape):
     ref_point = Property(Instance(QPointF),
                          depends_on=["_angle", "_offset", "_scale"])
 
+    use_stroke_width = Bool
+
     def _children_default(self):
         return [PathShape(model=model) for model in self.model.children]
 
@@ -273,8 +275,9 @@ class MarkerShape(BaseShape):
                 child.rotate(angle)
 
     def scale(self, scale):
-        # Check if markerUnits == '' == strokeWidth (it is by default)
-        if self.model.markerUnits != "userSpaceOnUse":
+        """SVG markers are scaled wrt strokeWidth or userSpaceOnUse.
+           Currently, we only support strokeWidth scaling."""
+        if self.use_stroke_width:
             self._scale = scale
 
             for child in self.children:
@@ -285,6 +288,10 @@ class MarkerShape(BaseShape):
     def _get_ref_point(self):
         return calc_rotated_point(x=self.model.refX, y=self.model.refY,
                                   angle=self._angle, scale=self._scale)
+
+    def _use_stroke_width_default(self):
+        # Check if markerUnits == '' == strokeWidth (it is by default)
+        return self.model.markerUnits != "userSpaceOnUse"
 
 
 class ArrowShape(LineShape):
