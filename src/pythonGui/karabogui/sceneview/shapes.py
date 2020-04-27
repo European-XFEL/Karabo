@@ -11,7 +11,7 @@ from PyQt5.QtGui import QBrush, QColor, QPainterPath, QPen, QTransform
 from PyQt5.QtWidgets import QDialog
 from traits.api import (
     ABCHasStrictTraits, cached_property, Bool, Constant, Float, Instance,
-    on_trait_change, Property, Tuple)
+    List, on_trait_change, Property, Tuple)
 
 from karabo.common.scenemodel.api import BaseShapeObjectData
 from karabogui.dialogs.dialogs import PenDialog
@@ -234,7 +234,7 @@ class MarkerShape(BaseShape):
     """This assumes that the child marker element is a path.
        Rects, circles, etc. are not yet supported."""
 
-    children = Property(depends_on="model.children")
+    children = List
     _offset = Instance(QPoint, args=())
     _scale = Float(1.0)
     _angle = Float(0.0)
@@ -242,8 +242,7 @@ class MarkerShape(BaseShape):
     ref_point = Property(Instance(QPointF),
                          depends_on=["_angle", "_offset", "_scale"])
 
-    @cached_property
-    def _get_children(self):
+    def _children_default(self):
         return [PathShape(model=model) for model in self.model.children]
 
     def draw(self, painter):
@@ -291,10 +290,9 @@ class MarkerShape(BaseShape):
 class ArrowShape(LineShape):
 
     line = Property(Instance(QLineF), depends_on="shape")
-    marker = Property(Instance(MarkerShape), depends_on="model.marker")
+    marker = Instance(MarkerShape)
 
-    @cached_property
-    def _get_marker(self):
+    def _marker_default(self):
         return MarkerShape(model=self.model.marker)
 
     @cached_property
