@@ -1,0 +1,13 @@
+**************************
+What's New in Karabo 2.9.0
+**************************
+
+The **most relevant improvements**, fixes and changes are:
+
+- GUI: Qwt Based Widgets are deprecated
+- GUI: Matplotlib Widgets are deprecated
+- MACRO: Multiple macro servers can now be used in a single topic.
+         The macro servers should now start with the command
+         `karabo-macroserver`.
+- C++: the data loggers with influxDB backend are production ready.
+
