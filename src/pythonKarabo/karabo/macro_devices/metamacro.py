@@ -1,11 +1,9 @@
 from asyncio import gather
 
+from karabo.common.macro_sanity_check import validate_macro
 from karabo.native.data.enums import AccessLevel, AccessMode
 from karabo.native.data.hash import String, Int32
-
-from .device import Device
-from .macro import Macro
-from ..common.macro_sanity_check import validate_macro
+from karabo.middlelayer import Device, Macro
 
 
 class MetaMacro(Device):
@@ -47,8 +45,6 @@ class MetaMacro(Device):
     def startInstance(self, server=None, broadcast=True):
         # this does not call super, as we don't want to run MetaMacro itself,
         # but only the macros in the supplied code
-
-        # 
         parameters = {
             '_serverId_': self.serverId.value,
             'hostName': self.hostName.value,
