@@ -1,4 +1,4 @@
 #!/bin/bash
 # This file is part of the initial configuration of Karabo
 cd $KARABO/var/data
-exec envdir $KARABO/var/environment karabo-middlelayerserver serverId=karabo/macroServer 'serverId=karabo/macroServer' 'visibility=4' 2>&1
+exec envdir $KARABO/var/environment karabo-macroserver serverId=karabo/macroServer 2>&1
