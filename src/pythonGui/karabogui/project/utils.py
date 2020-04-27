@@ -16,11 +16,11 @@ from karabo.common.scenemodel.api import (
     BaseWidgetObjectData, SceneLinkModel, SceneModel
 )
 from karabo.native import Hash, read_project_model
-from karabogui import globals as krb_globals, messagebox
+from karabogui import messagebox
 from karabogui.events import broadcast_event, KaraboEvent
-from karabogui.singletons.api import (get_config, get_db_conn,
-                                      get_project_model, get_network)
-from karabogui.topology.util import is_server_online
+from karabogui.singletons.api import (
+    get_db_conn, get_project_model, get_network)
+from karabogui.topology.util import get_macro_servers
 
 
 def add_device_to_server(server, class_id='', parent=None):
@@ -416,13 +416,10 @@ def run_macro(macro_model):
              "module", macro_model.simple_name,
              "uuid", macro_model.uuid)
 
-    serverId = get_config()['macro_server']
-
-    serverId = serverId or krb_globals.MACRO_SERVER
-    success = is_server_online(serverId)
-    if not success:
-        messagebox.show_error("Macro server {} not found in system topology. "
-                              "Macro cannot be started.".format(serverId))
+    macro_servers = get_macro_servers()
+    if not macro_servers:
+        messagebox.show_error("No Macro server found in system topology. "
+                              "Macro cannot be started.")
         return
 
     report = validate_macro(macro_model.code)
@@ -432,4 +429,4 @@ def run_macro(macro_model):
         messagebox.show_error(html, title="The Macro cannot be started")
         return
 
-    get_network().onInitDevice(serverId, "MetaMacro", instance_id, h)
+    get_network().onInitDevice(macro_servers[0], "MetaMacro", instance_id, h)
