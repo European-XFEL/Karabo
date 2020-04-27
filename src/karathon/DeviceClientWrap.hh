@@ -244,10 +244,11 @@ namespace karathon {
 
 
         bool registerChannelMonitorPy(const std::string& channelName, const bp::object& dataHandler,
-                                      const karabo::util::Hash& inputChannelCfg, const bp::object& eosHandler) {
+                                      const karabo::util::Hash& inputChannelCfg, const bp::object& eosHandler, const bp::object& inputHandler) {
             return this->DeviceClient::registerChannelMonitor
                     (channelName, boost::bind(&InputChannelWrap::proxyDataHandler, dataHandler, _1, _2),
-                     inputChannelCfg, boost::bind(&InputChannelWrap::proxyEndOfStreamEventHandler, eosHandler, _1));
+                     inputChannelCfg, boost::bind(&InputChannelWrap::proxyEndOfStreamEventHandler, eosHandler, _1),
+		     boost::bind(&InputChannelWrap::proxyInputHandler, inputHandler, _1));
         }
 
         bool unregisterChannelMonitorPy(const std::string& channelName) {
