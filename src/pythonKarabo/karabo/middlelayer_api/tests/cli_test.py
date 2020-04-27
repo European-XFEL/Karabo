@@ -3,19 +3,16 @@ from asyncio import (
 from contextlib import closing
 import gc
 from itertools import count
-import os
 import time
 from unittest import TestCase, main, skip
-import uuid
 import weakref
 
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
     getDevice, findDevices, shutdown, getClients, getDevices)
-from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import NoEventLoop
 from karabo.native.exceptions import KaraboError
-from karabo.native.data.hash import Hash, Int32 as Int, Slot
+from karabo.native.data.hash import Int32 as Int, Slot
 from karabo.middlelayer_api.ikarabo import (
     connectDevice, DeviceClient, start_device_client)
 from karabo.middlelayer_api.macro import Macro, EventThread, RemoteDevice
@@ -73,23 +70,6 @@ class Other(Device):
 
 
 class Tests(TestCase):
-
-    def setUp(self):
-        # Change the current directory to the directory containing this test.
-        # DeviceServer looks for a file named serverId.xml in the current
-        # directory, so we should use the one that comes with the unit tests
-        # to avoid creating a new one in a random part of the user's filesystem
-        self.__starting_dir = os.curdir
-        this_dir = os.path.dirname(os.path.abspath(__file__))
-        os.chdir(this_dir)
-
-    def tearDown(self):
-        try:
-            os.remove("serverId.xml")
-        except FileNotFoundError:
-            pass
-        os.chdir(self.__starting_dir)
-
     def test_delete(self):
         thread = EventThread()
         thread.start()
@@ -117,40 +97,6 @@ class Tests(TestCase):
 
     def test_main(self):
         Remote.main(["", "count", "counter=7"])
-
-    code = """if True:
-        from karabo.middlelayer import *
-
-        class TestMacro(Macro):
-            s = String()
-
-            @Slot()
-            def do(self):
-                self.s = "done"
-    """
-
-    @coroutine
-    def init_macroserver(self, server):
-        config = Hash("uuid", str(uuid.uuid4()), "module", "test",
-                      "code", self.code)
-        h = Hash("classId", "MetaMacro", "configuration", config,
-                 "deviceId", "bla")
-        yield from server.call("Karabo_MacroServer", "slotStartDevice", h)
-        proxy = yield from getDevice("bla-TestMacro")
-        with proxy:
-            yield from proxy.do()
-        return proxy
-
-    def test_macroserver(self):
-        loop = setEventLoop()
-        with closing(loop):
-            server = DeviceServer(dict(serverId="Karabo_MacroServer"))
-            loop.run_until_complete(server.startInstance())
-            task = loop.create_task(self.init_macroserver(server), server)
-            proxy = loop.run_until_complete(task)
-            self.assertEqual(proxy.s, "done")
-            loop.create_task(server.slotKillServer(), server)
-            loop.run_forever()
 
     @coroutine
     def init_other(self):
