@@ -74,11 +74,6 @@ class KaraboImagePlot(PlotItem):
         y_label = {UNITS: DEFAULT_UNITS_Y, LABEL: DEFAULT_LABEL_Y}
         self._labels = [x_label, y_label]
 
-        # Setup plot item. The minimum size of the plot without rescaling
-        # problems  (e.g., zooming out of infinity when it is collapsed)
-        # is 300 x 300.
-        self.setMinimumWidth(300)
-        self.setMinimumHeight(300)
         self._set_default_transform()
         self._flip()
 
