@@ -916,9 +916,10 @@ s             *
              * @return false if channel is already registered
              */
             bool registerChannelMonitor(const std::string& instanceId, const std::string& channel,
-                                        const karabo::xms::SignalSlotable::DataHandler& dataHandler,
+                                        const karabo::xms::SignalSlotable::DataHandler& dataHandler = karabo::xms::SignalSlotable::DataHandler(),
                                         const karabo::util::Hash& inputChannelCfg = karabo::util::Hash(),
-                                        const karabo::xms::SignalSlotable::InputHandler& eosHandler = karabo::xms::SignalSlotable::InputHandler());
+                                        const karabo::xms::SignalSlotable::InputHandler& eosHandler = karabo::xms::SignalSlotable::InputHandler(),
+					const karabo::xms::SignalSlotable::InputHandler& inputHandler = karabo::xms::SignalSlotable::InputHandler());
 
             /**
              * Register handlers to be called whenever the defined output channel receives data or end-of-stream (EOS).
@@ -935,9 +936,10 @@ s             *
              * @return false if channel is already registered
              */
             bool registerChannelMonitor(const std::string& channelName,
-                                        const karabo::xms::SignalSlotable::DataHandler& dataHandler,
+                                        const karabo::xms::SignalSlotable::DataHandler& dataHandler = karabo::xms::SignalSlotable::DataHandler(),
                                         const karabo::util::Hash& inputChannelCfg = karabo::util::Hash(),
-                                        const karabo::xms::SignalSlotable::InputHandler& eosHandler = karabo::xms::SignalSlotable::InputHandler());
+                                        const karabo::xms::SignalSlotable::InputHandler& eosHandler = karabo::xms::SignalSlotable::InputHandler(),
+					const karabo::xms::SignalSlotable::InputHandler& inputHandler = karabo::xms::SignalSlotable::InputHandler());
 
             /**
              * Unregister monitoring of output channel
