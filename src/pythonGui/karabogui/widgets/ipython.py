@@ -22,8 +22,8 @@ from karabo.native import Hash
 from karabogui import messagebox
 from karabogui.binding.api import get_binding_value, PropertyProxy
 from karabogui.request import send_property_changes
-from karabogui.singletons.api import get_config, get_network, get_topology
-from karabogui.topology.api import is_server_online
+from karabogui.singletons.api import get_network, get_topology
+from karabogui.topology.api import get_macro_servers
 
 
 class IPythonWidget(RichJupyterWidget):
@@ -66,18 +66,17 @@ class KernelManager(kernel_mixins.QtKernelManagerMixin):
     __client = None
 
     def start_kernel(self):
-        serverId = get_config()['macro_server']
-
-        success = is_server_online(serverId)
-        if not success:
+        macro_servers = get_macro_servers()
+        if not macro_servers:
             messagebox.show_error(
-                "Macro server {} not found in system topology. "
-                "Macro cannot be started.".format(serverId))
+                "No Macro server found in system topology. "
+                "Console cannot be started.")
             raise IOError
 
         hostname = socket.gethostname().replace(".", "_")
         network = get_network()
         self.name = "CLI-{}-{}".format(hostname, os.getpid())
+        serverId = macro_servers[0]
         network.onInitDevice(serverId, "IPythonKernel", self.name, Hash())
 
     def shutdown_kernel(self):
