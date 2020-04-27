@@ -341,8 +341,8 @@ def adddeviceserver():
     This creates a new device server in $KARABO/var/service.
 
     name is the name of the new device server
-    type is one of: cppserver, middlelayerserver, pythonserver, webserver
-    or webaggregatorserver.
+    type is one of: cppserver, middlelayerserver, macroserver,
+    pythonserver, webserver or webaggregatorserver.
     arguments are passed to said device server
 
     The serverId will be set to name.
@@ -350,8 +350,9 @@ def adddeviceserver():
     assert len(sys.argv) > 2
 
     _, server_id, server_type, *options = sys.argv
-    assert server_type in {"cppserver", "middlelayerserver", "pythonserver",
-                           "webaggregatorserver", "webserver"}
+    assert server_type in {
+        "cppserver", "macroserver", "middlelayerserver", "pythonserver",
+        "webaggregatorserver", "webserver"}
 
     target_dir = server_id.lower().replace("/", "_")
 
