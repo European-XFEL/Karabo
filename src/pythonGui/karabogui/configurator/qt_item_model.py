@@ -611,16 +611,18 @@ class ConfigurationTreeModel(QAbstractItemModel):
         flags = 0
         state = get_device_state_string(self.root)
         binding = proxy.binding
+        is_project = isinstance(self.root, ProjectDeviceProxy)
         is_class = isinstance(self.root, DeviceClassProxy)
         uneditable_node_types = (ChoiceOfNodesBinding, ListOfNodesBinding,
                                  NodeBinding)
+        configure_access = (AccessMode.INITONLY, AccessMode.RECONFIGURABLE)
         is_uneditable_node = isinstance(binding, uneditable_node_types)
-        is_editable_type = (not is_uneditable_node or (is_class and
+        is_editable_type = (not is_uneditable_node or (is_project and
                             isinstance(binding, ChoiceOfNodesBinding)))
-        is_class_editable = (is_class and binding.access_mode in
-                             (AccessMode.INITONLY, AccessMode.RECONFIGURABLE))
+        is_project_editable = (is_project and binding.access_mode in
+                               configure_access)
         is_inst_editable = (not is_class and binding.is_allowed(state) and
                             binding.access_mode is AccessMode.RECONFIGURABLE)
-        if is_editable_type and (is_class_editable or is_inst_editable):
+        if is_editable_type and (is_project_editable or is_inst_editable):
             flags |= Qt.ItemIsEditable
         return flags
