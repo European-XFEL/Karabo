@@ -12,9 +12,9 @@ from PyQt5.QtWidgets import (
 from karabo.native import AccessMode
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
-    ChoiceOfNodesBinding, DeviceProxy, ListOfNodesBinding, ProjectDeviceProxy,
-    attr_fast_deepcopy, apply_configuration, extract_configuration,
-    flat_iter_hash, has_changes)
+    ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy, ListOfNodesBinding,
+    ProjectDeviceProxy, attr_fast_deepcopy, apply_configuration,
+    extract_configuration, flat_iter_hash, has_changes)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.singletons.api import get_manager
@@ -378,7 +378,9 @@ class ConfigurationPanel(BasePanelWidget):
         """Adapt to the Configuration which is currently showing
         """
         # Update buttons
-        if proxy is None or len(proxy.binding.value) == 0:
+        if (proxy is None or not len(proxy.binding.value)
+                or (isinstance(proxy, DeviceClassProxy)
+                    and not isinstance(proxy, ProjectDeviceProxy))):
             self._hide_all_buttons()
         else:
             is_device = isinstance(proxy, DeviceProxy)
