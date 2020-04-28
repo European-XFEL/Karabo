@@ -19,10 +19,8 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.util import SignalBlocker
 
-# this widget will always have a fixed size in pixels
-# we do not want to tempt people to scale it and misuse it as a trendline
-WIDGET_HEIGHT = 50
-WIDGET_WIDTH = 200
+SPARK_MIN_HEIGHT = 50
+SPARK_MIN_WIDTH = 200
 # timebases available for the widget, values in seconds
 TIMEBASES = (('60s', 60), ('10m', 600), ('10h', 36000))
 NO_ALARMS = {k: None for k in (ALARM_LOW, WARN_LOW, WARN_HIGH, ALARM_HIGH)}
@@ -67,7 +65,7 @@ class SparkRenderer(QWidget):
         self.painter_path_max = None
 
         self.then = time.time()
-        self.alarms = None
+        self.alarms = NO_ALARMS
 
         self.tendency = 0
         self.tendency_indicators = {}
@@ -93,6 +91,44 @@ class SparkRenderer(QWidget):
         scaled = (height - scaled + self.offset).astype(np.int64)
         return scaled
 
+    def resizeEvent(self, event):
+        self._update_ranges(self.yvals[-1], self.alarms)
+        self._generate_curve()
+        event.accept()
+
+    def _generate_curve(self):
+        width = self.width() - self._min_max_indic_size
+        height = self._plot_frac * self.height()
+        step = width / self._p_max
+        nonzero = np.nonzero(self.ycnts)
+        x = (self.tvals[nonzero] * step).astype(np.int32)
+        y = self._scale_y(self.yvals[nonzero] / self.ycnts[nonzero], height)
+
+        if y is None:
+            return
+
+        ymin = self._scale_y(self.ymin[nonzero], height)
+        ymax = self._scale_y(self.ymax[nonzero], height)
+
+        # evaluate tendency for last 5 point intervals
+        iws = self._indicator_window_size
+        c_idx_nz = np.nonzero(self.ycnts[-iws:])
+        t_idx_nz = np.nonzero(self.ycnts[-2*iws:-iws])
+        if np.any(c_idx_nz) and np.any(t_idx_nz):
+            current_avg = np.mean(self.yvals[-iws:][c_idx_nz]
+                                  / self.ycnts[-iws:][c_idx_nz])
+            test_avg = np.mean(self.yvals[-2*iws:-iws][t_idx_nz]
+                               / self.ycnts[-2*iws:-iws][t_idx_nz])
+            delta = (current_avg-test_avg)/test_avg if test_avg else 0.
+            if abs(delta) <= self._tendency_eps or not np.isfinite(delta):
+                self.tendency = 0
+            else:
+                self.tendency = np.sign(delta)
+
+        self.painter_path = self._createPainterPath(x, y)
+        self.painter_path_min = self._createPainterPath(x, ymin)
+        self.painter_path_max = self._createPainterPath(x, ymax)
+
     def paintEvent(self, event):
         if self.painter_path is None:
             return
@@ -113,18 +149,17 @@ class SparkRenderer(QWidget):
             painter.drawPath(self.painter_path_max)
 
             # draw available alarm indicators
-            if self.alarms is not None:
-                for alarm_type, val in self.alarms.items():
-                    if val is None:
-                        continue
-                    if WARN_GLOBAL in alarm_type:
-                        pen = QPen(QColor(*WARN_COLOR), 1, Qt.DashLine)
-                    else:
-                        pen = QPen(QColor(*ALARM_COLOR), 1, Qt.SolidLine)
+            for alarm_type, val in self.alarms.items():
+                if val is None:
+                    continue
+                if WARN_GLOBAL in alarm_type:
+                    pen = QPen(QColor(*WARN_COLOR), 1, Qt.DashLine)
+                else:
+                    pen = QPen(QColor(*ALARM_COLOR), 1, Qt.SolidLine)
 
-                    painter.setPen(pen)
-                    val = self._scale_y(val, height)
-                    painter.drawLine(0, val, width, val)
+                painter.setPen(pen)
+                val = self._scale_y(val, height)
+                painter.drawLine(0, val, width, val)
 
             # add min and max value indicators
             pen = QPen(Qt.black, 1, Qt.SolidLine)
@@ -233,40 +268,8 @@ class SparkRenderer(QWidget):
         self.ymin[-1] = min(self.ymin[-1], value)
         self._update_ranges(value, alarms)
         self.alarms = alarms
-
-        width = self.width() - self._min_max_indic_size
-        height = self._plot_frac * self.height()
-
-        step = width / self._p_max
-
-        nonzero = np.nonzero(self.ycnts)
-        x = (self.tvals[nonzero] * step).astype(np.int32)
-        y = self._scale_y(self.yvals[nonzero] / self.ycnts[nonzero], height)
-
-        if y is None:
-            return
-
-        ymin = self._scale_y(self.ymin[nonzero], height)
-        ymax = self._scale_y(self.ymax[nonzero], height)
-
-        # evaluate tendency for last 5 point intervals
-        iws = self._indicator_window_size
-        c_idx_nz = np.nonzero(self.ycnts[-iws:])
-        t_idx_nz = np.nonzero(self.ycnts[-2*iws:-iws])
-        if np.any(c_idx_nz) and np.any(t_idx_nz):
-            current_avg = np.mean(self.yvals[-iws:][c_idx_nz]
-                                  / self.ycnts[-iws:][c_idx_nz])
-            test_avg = np.mean(self.yvals[-2*iws:-iws][t_idx_nz]
-                               / self.ycnts[-2*iws:-iws][t_idx_nz])
-            delta = (current_avg-test_avg)/test_avg if test_avg else 0.
-            if abs(delta) <= self._tendency_eps or not np.isfinite(delta):
-                self.tendency = 0
-            else:
-                self.tendency = np.sign(delta)
-
-        self.painter_path = self._createPainterPath(x, y)
-        self.painter_path_min = self._createPainterPath(x, ymin)
-        self.painter_path_max = self._createPainterPath(x, ymax)
+        # generate the curve with the painter path
+        self._generate_curve()
 
     def setSeries(self, x, y):
         """Set a series of data to the sparkline, e.g. historic data
@@ -354,12 +357,12 @@ class DisplaySparkline(BaseBindingController):
     def create_widget(self, parent):
         widget = QWidget(parent)
         layout = QHBoxLayout(widget)
-        widget.setFixedHeight(WIDGET_HEIGHT)
+        widget.setMinimumHeight(SPARK_MIN_HEIGHT)
 
         self.line_edit = QLineEdit(widget)
         self.line_edit.setReadOnly(True)
         self.render_area = SparkRenderer(widget)
-        self.render_area.setFixedWidth(WIDGET_WIDTH)
+        self.render_area.setMinimumWidth(SPARK_MIN_WIDTH)
         self.render_area.time_base = self.model.time_base
 
         layout.addWidget(self.line_edit)
