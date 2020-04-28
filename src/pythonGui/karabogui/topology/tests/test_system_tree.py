@@ -95,26 +95,26 @@ def test_tree_find():
 
     h = system_hash_server_and_plugins()
     tree.update(h)
-
     assert len(tree.find('BarClass')) == 1
     assert len(tree.find('barclass', case_sensitive=False)) == 1
     assert len(tree.find('Bar')) == 1
-    assert len(tree.find('FooClass', access_level=AccessLevel.ADMIN)) == 3
+    assert len(tree.find('FooClass', access_level=AccessLevel.ADMIN)) == 1
+    assert len(tree.find('FooClass', access_level=AccessLevel.OBSERVER)) == 1
     assert len(tree.find('BarClass', access_level=AccessLevel.OBSERVER)) == 1
-    assert len(tree.find('BlahClass', access_level=AccessLevel.ADMIN)) == 1
+    assert len(tree.find('BlahClass', access_level=AccessLevel.ADMIN)) == 0
     kwargs = {'access_level': AccessLevel.ADMIN, 'case_sensitive': True,
               'use_reg_ex': True}
-    assert len(tree.find('(.*)Class', **kwargs)) == 8
+    assert len(tree.find('(.*)Class', **kwargs)) == 2
     assert len(tree.find('(.*)class', **kwargs)) == 1
     kwargs['access_level'] = AccessLevel.ADMIN
     kwargs['case_sensitive'] = False
     kwargs['use_reg_ex'] = True
-    assert len(tree.find('(.*)fooclass', **kwargs)) == 3
-    assert len(tree.find('HooClass', **kwargs)) == 2
+    assert len(tree.find('(.*)fooclass', **kwargs)) == 1
+    assert len(tree.find('HooClass', **kwargs)) == 0
     kwargs['full_match'] = True
     assert len(tree.find('HooClass', **kwargs)) == 0
-    assert len(tree.find('HooClass_0', **kwargs)) == 1
-    assert len(tree.find('HooClass_1', **kwargs)) == 1
+    assert len(tree.find('HooClass_0', **kwargs)) == 0
+    assert len(tree.find('HooClass_1', **kwargs)) == 0
 
 
 def test_tree_clear_existing():
