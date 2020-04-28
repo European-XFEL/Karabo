@@ -912,6 +912,7 @@ s             *
              *        for the expert:  "connectedOutputChannels" will be overwritten,
              *                         "onSlowness" default is overwritten to "drop"
              * @param eosHandler boost::function<void (const InputChannel::Pointer&)> called for EOS if given
+             * @param inputHandler boost::function<void (const InputChannel::Pointer&)> to be called whenever data arrives
              *
              * @return false if channel is already registered
              */
@@ -932,6 +933,7 @@ s             *
              *        for the expert:  "connectedOutputChannels" will be overwritten,
              *                         "onSlowness" default is overwritten to "drop"
              * @param eosHandler boost::function<void (const InputChannel::Pointer&)> called for EOS if given
+             * @param inputHandler boost::function<void (const InputChannel::Pointer&)> to be called whenever data arrives
              *
              * @return false if channel is already registered
              */
