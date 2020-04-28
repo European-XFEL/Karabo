@@ -34,7 +34,16 @@ variables:
   script:
     - python ci/miniconda/build.py karabogui -c $MIRROR_HOSTNAME -D conda-recipes --clean --upload-to-mirror -P $CONDA_CHANNEL_PATH -C $CONDA_CHANNEL_PATH/mirror --index-mirror
   only:
-    - /^(\d+\.)(\d+\.)(\d+)((a|b|rc|\.)\d+)?$/
+    - /^(\d+\.)(\d+\.)(\d+)((rc|\.)\d+)?$/
+  except:
+    - branches
+    - schedules
+
+.prerelease_build_conda: &prerelease-build-conda
+  script:
+    - python ci/miniconda/build.py karabogui -c $MIRROR_HOSTNAME -D conda-recipes --clean --upload-to-mirror -P $CONDA_CHANNEL_PATH/nightly -C $CONDA_CHANNEL_PATH/mirror --index-mirror
+  only:
+    - /^(\d+\.)(\d+\.)(\d+)((a|b)\d+)?$/
   except:
     - branches
     - schedules
@@ -126,6 +135,24 @@ release build miniconda-win64:
   tags:
     - Win10
   <<: *release-build-conda
+
+# prerelease build for conda
+
+prerelease build miniconda:
+  image: europeanxfel/karabo-ci:miniconda-3
+  <<: *prerelease-build-conda
+
+prerelease build miniconda-osx64:
+  tags:
+    - macos
+  <<: *prerelease-build-conda
+
+prerelease build miniconda-win64:
+  before_script:
+    - ci/miniconda/cleanup.cmd
+  tags:
+    - Win10
+  <<: *prerelease-build-conda
 
 # nightly release build
 
