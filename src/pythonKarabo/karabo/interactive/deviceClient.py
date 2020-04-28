@@ -605,8 +605,9 @@ class DeviceClient(object):
     def unregisterDeviceMonitor(self, instanceId):
         self.__client.unregisterDeviceMonitor(instanceId)
 
-    def registerChannelMonitor(self, channelName, dataHandler,
-                               inputChannelCfg=None, eosHandler=None):
+    def registerChannelMonitor(self, channelName, dataHandler=None,
+                               inputChannelCfg=None, eosHandler=None,
+                               inputHandler=None):
         """Register an asynchronous call-back to monitor defined output channel
 
         Internally, an InputChannel is created and configured.
@@ -623,6 +624,7 @@ class DeviceClient(object):
                                       "onSlowness" default is overwritten
                                         to "drop"
         :param eosHandler called on end of stream, argument is the InputChannel
+        :param inputHandler called when data arrives, argument is the InputChannel
 
         :returns False if channel is already registered
 
@@ -637,7 +639,7 @@ class DeviceClient(object):
             inputChannelCfg = Hash()
         return self.__client.registerChannelMonitor(channelName, dataHandler,
                                                     inputChannelCfg,
-                                                    eosHandler)
+                                                    eosHandler, inputHandler)
 
     def unregisterChannelMonitor(self, channelName):
         """Unregister monitoring of output channel
