@@ -267,7 +267,6 @@ class SystemTree(HasStrictTraits):
             self._handle_server_data(system_hash)
             nodes = self._handle_device_data('device', system_hash)
             nodes.update(self._handle_device_data('macro', system_hash))
-
         return nodes
 
     def initialize(self, system_hash):
@@ -378,9 +377,6 @@ class SystemTree(HasStrictTraits):
                                              level=SERVER_LEVEL)
                 self._append_child_node(host_node, server_node)
             server_node.attributes = attrs
-            for class_id, vis in zip(attrs.get('deviceClasses', []),
-                                     attrs.get('visibilities', [])):
-                self._handle_class_data(server_node, class_id, vis, append)
 
     def _handle_device_data(self, device_type, system_hash, append=True):
         """Put the contents of Hash `system_hash` into the internal tree
@@ -429,19 +425,13 @@ class SystemTree(HasStrictTraits):
             # Class node
             class_node = server_node.child(class_id)
             if class_node is None:
-                if server_id == "__none__" or device_type == 'macro':
-                    path = "{}.{}".format(server_id, class_id)
-                    class_node = SystemTreeNode(node_id=class_id, path=path,
-                                                parent=server_node,
-                                                level=CLASS_LEVEL)
-                    handler(server_node, class_node)
-                else:
-                    # XXX: a fix to see running devices - the actual bug lies
-                    # in the DeviceClient of the GuiServerDevice which _forgot_
-                    # about the attributes "deviceClasses" and "visibilities"
-                    class_node = self._handle_class_data(server_node, class_id,
-                                                         visibility,
-                                                         append=append)
+                server_id = server_node.node_id
+                path = '{}.{}'.format(server_id, class_id)
+                class_node = SystemTreeNode(node_id=class_id,
+                                            path=path, parent=server_node,
+                                            visibility=visibility,
+                                            level=CLASS_LEVEL)
+                handler(server_node, class_node)
 
             # Device node
             device_node = class_node.child(device_id)
@@ -460,16 +450,3 @@ class SystemTree(HasStrictTraits):
             device_node.capabilities = capabilities
 
         return new_dev_nodes
-
-    def _handle_class_data(self, server_node, class_id, visibility, append):
-        handler = self._append_child_node if append else self._set_child_node
-        class_node = server_node.child(class_id)
-        if class_node is None:
-            server_id = server_node.node_id
-            path = '{}.{}'.format(server_id, class_id)
-            class_node = SystemTreeNode(node_id=class_id,
-                                        path=path, parent=server_node,
-                                        visibility=AccessLevel(visibility),
-                                        level=CLASS_LEVEL)
-            handler(server_node, class_node)
-        return class_node
