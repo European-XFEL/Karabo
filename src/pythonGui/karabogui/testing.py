@@ -230,8 +230,7 @@ def system_hash_server_and_plugins():
         'host': 'exflpxc_something',
         'visibility': AccessLevel.OBSERVER,
         'deviceClasses': ['FooClass', 'BarClass'],
-        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER,
-                         AccessLevel.OBSERVER]
+        'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER]
     }
     h['server.samedeviceclasses'] = None
     h['server.samedeviceclasses', ...] = {
@@ -249,6 +248,24 @@ def system_hash_server_and_plugins():
         'deviceClasses': ['FooClass', 'BarClass', 'HooClass_1'],
         'visibilities': [AccessLevel.OBSERVER, AccessLevel.EXPERT,
                          AccessLevel.OBSERVER]
+    }
+
+    h['device.orphan'] = None
+    h['device.orphan', ...] = {
+        'host': 'exflpxc_something',
+        'visibility': AccessLevel.OBSERVER,
+        'serverId': 'myserver',
+        'classId': 'FooClass',
+        'status': 'online'
+    }
+
+    h['device.eddie'] = None
+    h['device.eddie', ...] = {
+        'host': 'exflpxc_something',
+        'visibility': AccessLevel.OBSERVER,
+        'serverId': 'myserver',
+        'classId': 'BarClass',
+        'status': 'online'
     }
 
     return h
