@@ -22,16 +22,14 @@ dependencies:
   - setuptools_scm=3.3.3
   # GUI
   - qt=5.9.7
-  - pythonqwt=0.5.5
   - pyqt=5.9.2
-  - guiqwt=3.0.3
   - pyqtgraph=0.11.0
   - qtconsole=4.6.0
   - ipython=7.13
   - ipykernel=5.2.0
   # Plotting and utils
-  - matplotlib=2
   - numpy=1.15
+  - scipy=1.4
   # Other
   - cycler=0.10.0
   - traits=4.6.0
