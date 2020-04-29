@@ -27,14 +27,14 @@ class DlSchema2Influx():
     def __init__(self, schema_path, topic,
                  read_user, read_pwd, read_url,
                  write_user, write_pwd, write_url,
-                 device_id, output_dir,
-                 write_timeout, dry_run, prints_on):
+                 device_id, output_dir, workload_id,
+                 write_timeout, dry_run):
         self.schema_path = schema_path
         self.db_name = topic
         self.output_dir = output_dir
         self.device_id = device_id
         self.dry_run = dry_run
-        self.prints_on = prints_on
+        self.workload_id = workload_id
 
         url_read_parts = urlparse(read_url)  # throws for invalid urls
         read_protocol = url_read_parts.scheme
@@ -83,13 +83,6 @@ class DlSchema2Influx():
             self.proc_schemas_path = None
 
     async def run(self):
-        if self.prints_on:
-            print("Connecting to host: {}..."
-                  .format(self.write_client.host))
-
-        if self.prints_on:
-            print("Feeding to influxDB file {} ...".format(self.schema_path))
-
         data = []
         schema_digests = set()
         part_proc = False  # indicates the file has been partially processed.
@@ -101,6 +94,7 @@ class DlSchema2Influx():
             'lines_written': 0,
             'write_retries': [],
         }
+        schema_update_epoch = op.getmtime(self.schema_path)
         with open(self.schema_path, 'r') as fp:
 
             for i, l in enumerate(fp):
@@ -196,7 +190,9 @@ class DlSchema2Influx():
             with open(self.proc_out_path, 'w') as ok_file:
                 ok_file.write(json.dumps(stats))
             with open(self.proc_schemas_path, 'a') as proc_schemas_file:
-                proc_schemas_file.write(f'{self.schema_path}\n')
+                proc_schemas_file.write(
+                    f'{schema_update_epoch}|{self.workload_id}|'
+                    f'{self.schema_path}\n')
 
         return not part_proc  # True if fully successfully processed.
 
