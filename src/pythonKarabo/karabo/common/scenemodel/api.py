@@ -35,20 +35,16 @@ from .widgets.graph_plots import (
     VectorGraphModel, VectorHistGraphModel, VectorBarGraphModel,
     MultiCurveGraphModel, VectorScatterGraphModel, VectorXYGraphModel,
     VectorFillGraphModel, StateGraphModel, TrendGraphModel)
-from .widgets.image import (
-    DisplayAlignedImageModel, DisplayImageElementModel, DisplayImageModel,
-    ScientificImageModel, WebcamImageModel)
-from .widgets.plot import LinePlotModel, PlotCurveModel, SparklineModel
+from .widgets.plot import SparklineModel
 from .widgets.simple import (
     AnalogModel, BitfieldModel, CheckBoxModel, ChoiceElementModel,
     ComboBoxModel, DaemonManagerModel, DirectoryModel, DisplayLabelModel,
-    DisplayListModel, DisplayPlotModel, DisplayTextLogModel,
-    DisplayTimeModel, DoubleWheelBoxModel, EditableListElementModel,
-    EditableListModel, EditableSpinBoxModel, FileInModel, FileOutModel,
-    GlobalAlarmModel, HexadecimalModel, IntLineEditModel, KnobModel,
-    LabelModel, LampModel, LineEditModel, MultiCurvePlotModel, PopUpModel,
-    RunConfiguratorModel, SceneLinkModel, SliderModel, TickSliderModel,
-    WebLinkModel, WidgetNodeModel, XYPlotModel)
+    DisplayListModel, DisplayTextLogModel, DisplayTimeModel,
+    DoubleWheelBoxModel, EditableListElementModel, EditableListModel,
+    EditableSpinBoxModel, FileInModel, FileOutModel, GlobalAlarmModel,
+    HexadecimalModel, IntLineEditModel, KnobModel, LabelModel, LampModel,
+    LineEditModel, PopUpModel, RunConfiguratorModel, SceneLinkModel,
+    SliderModel, TickSliderModel, WebLinkModel, WidgetNodeModel)
 from .widgets.vacuum import VacuumWidgetModel
 from .widgets.statefulicon import StatefulIconWidgetModel
 
