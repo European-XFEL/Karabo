@@ -116,7 +116,7 @@ class Curve(HasStrictTraits):
     Once the basic storage in self.x and self.y flows over, it gets replaced
     by the averaged data in self.generations.
     """
-    curve = Instance(object)  # some Qwt bullshit
+    curve = Instance(PlotDataItem)
     proxy = Instance(PropertyProxy)
     generations = List(Instance(_Generation))
 
@@ -213,14 +213,7 @@ class Curve(HasStrictTraits):
 
     def update(self):
         """ Show the new data on screen """
-        if isinstance(self.curve, PlotDataItem):
-            # pyqtgraph instance
-            set_data = self.curve.setData
-        else:
-            # GuiQwt instance
-            set_data = self.curve.set_data
-
-        set_data(self.x[:self.fill], self.y[:self.fill])
+        self.curve.setData(self.x[:self.fill], self.y[:self.fill])
 
     @on_trait_change('proxy:visible')
     def _visibility_update(self, visible):
@@ -284,8 +277,6 @@ class Curve(HasStrictTraits):
         self.y = y
         self.fill_current()
         self.update()
-        if not isinstance(self.curve, PlotDataItem):
-            self.curve.plot().replot()
 
     def get_mean_y_value(self, count=10):
         """ Return mean value for last ``count`` of y values."""

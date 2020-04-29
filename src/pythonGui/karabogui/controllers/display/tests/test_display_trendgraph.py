@@ -3,7 +3,7 @@ from platform import system
 import unittest
 
 from karabo.native import Configurable, Bool
-from karabogui.controllers.display import trendline
+from karabogui.controllers.trendmodel import UPTIME
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 
@@ -34,7 +34,7 @@ class TestDisplayTrendGraph(GuiTestCase):
         self.process_qt_events()
 
     def test_initial_state(self):
-        self.assertEqual(self.controller._x_detail, trendline.UPTIME)
+        self.assertEqual(self.controller._x_detail, UPTIME)
 
     def test_historic_data(self):
         data = build_historic_data_float()
