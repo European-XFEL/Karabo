@@ -110,6 +110,7 @@ class AlarmGraphModel(BasePlotModel):
     y_grid = Bool(True)
 
 
+@register_scene_reader('XYPlot')  # deprecated matplotlib model
 @register_scene_reader('ScatterGraph')
 def _scatter_graph_reader(read_func, element):
     traits = read_base_widget_data(element)
@@ -158,6 +159,7 @@ def _vector_scatter_graph_writer(write_func, model, parent):
     return element
 
 
+@register_scene_reader('XYVector')  # deprecated Qwt model
 @register_scene_reader('VectorXYGraph')
 def _vector_xy_graph_reader(read_func, element):
     traits = read_base_widget_data(element)
@@ -282,6 +284,7 @@ def _vector_fill_graph_writer(write_func, model, parent):
     return element
 
 
+@register_scene_reader('DisplayPlot')  # deprecated Qwt model
 @register_scene_reader('VectorGraph')
 def _vector_graph_reader(read_func, element):
     traits = read_base_widget_data(element)
@@ -311,6 +314,7 @@ def _vector_graph_writer(write_func, model, parent):
     return element
 
 
+@register_scene_reader('DisplayTrendline')  # deprecated Qwt model
 @register_scene_reader('DisplayTrendGraph')
 def _trend_graph_reader(read_func, element):
     traits = read_base_widget_data(element)
@@ -374,6 +378,7 @@ def _alarm_graph_writer(write_func, model, parent):
     return element
 
 
+@register_scene_reader('MultiCurvePlot')  # deprecated matplotlib model
 @register_scene_reader('MultiCurveGraph')
 def _multi_graph_reader(read_func, element):
     traits = read_base_widget_data(element)

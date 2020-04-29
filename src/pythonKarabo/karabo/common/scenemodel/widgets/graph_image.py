@@ -64,6 +64,7 @@ class WebCamGraphModel(BaseWidgetObjectData):
     colormap = String("none")
 
 
+@register_scene_reader('DisplayImage')  # deprecated Qwt model
 @register_scene_reader('ImageGraph')
 def _image_graph_reader(read_func, element):
     traits = read_base_karabo_image_model(element)
@@ -80,6 +81,7 @@ def _image_graph_writer(write_func, model, parent):
     return element
 
 
+@register_scene_reader('DisplayAlignedImage')  # deprecated Qwt model
 @register_scene_reader('DetectorGraph')
 def _detector_graph_reader(read_func, element):
     traits = read_base_karabo_image_model(element)
@@ -124,6 +126,9 @@ def _vector_roll_graph_writer(write_func, model, parent):
     return element
 
 
+@register_scene_reader('DisplayImageElement')  # deprecated Qwt model
+@register_scene_reader('WebcamImage')  # deprecated Qwt model
+@register_scene_reader('ScientificImage')  # deprecated Qwt model
 @register_scene_reader('WebCamGraph')
 def _webcam_graph_reader(read_func, element):
     traits = read_base_widget_data(element)
