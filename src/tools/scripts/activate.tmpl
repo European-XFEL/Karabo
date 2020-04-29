@@ -70,16 +70,6 @@ KARABO="__VENV_DIR__"
 export KARABO
 export MPLBACKEND=TkAgg
 
-if [ ! -e "$KARABO/var/service" ]
-then
-  cp -r "$KARABO/service.in" "$KARABO/var/service"
-fi
-
-if [ ! -e "$KARABO/var/environment" ]
-then
-  cp -r "$KARABO/environment.in" "$KARABO/var/environment"
-fi
-
 pushd "$KARABO/var/environment" >/dev/null
 for var in $(ls)
 do
