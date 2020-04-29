@@ -65,7 +65,6 @@ In addition to the the `conda channel configuration`_, the proxy that ``conda`` 
 must be configured as well. This is by adding the following:
 
     conda config --set proxy_servers.http socks5://localhost:8888
-    conda config --set proxy_servers.https socks5://localhost:8888
 
 where the port number (e.g., `8888`) is the entered number from the PuTTy tunnel configuration.
 
