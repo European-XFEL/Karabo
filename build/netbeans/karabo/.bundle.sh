@@ -181,14 +181,14 @@ safeRunCommand "$PACKAGEDIR/bin/.fix-python-scripts.sh $PACKAGEDIR"
 safeRunCommand "$PACKAGEDIR/bin/.fix-python-path.sh $PACKAGEDIR"
 
 if [ "$BUNDLE_ACTION" = "package" ]; then
-    # ZIP it
+    # ZIP it - but exclude developer's stuff from var, devices, etc.
     cd $PACKAGEDIR/../
-    safeRunCommand "zip -qr ${PACKAGENAME}.zip $PACKAGENAME"
-    
+    safeRunCommand "zip -qr ${PACKAGENAME}.zip $PACKAGENAME --exclude $PACKAGENAME/var/\* $PACKAGENAME/devices/\* $PACKAGENAME/installed/\* $PACKAGENAME/plugins/\*"
     # Create installation script
     echo -e '#!/bin/bash\n'"VERSION=$VERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.zip > $INSTALLSCRIPT
     safeRunCommand "zip -A ${INSTALLSCRIPT}"
     chmod a+x $INSTALLSCRIPT
+    rm ${PACKAGENAME}.zip
 fi
 
 # Make sure the ~/.karabo directory exists
@@ -201,4 +201,7 @@ ln -sf $PACKAGEDIR karabo
 
 echo
 echo "Created karaboFramework bundle under: $PACKAGEDIR"
+if [ "$BUNDLE_ACTION" = "package" ]; then
+    echo "... and installation script: $PACKAGEDIR/../$INSTALLSCRIPT"
+fi
 echo
