@@ -22,6 +22,7 @@
 #include "karabo/util/StackTrace.hh"
 #include "karabo/util/OverwriteElement.hh"
 #include "karabo/util/RollingWindowStatistics.hh"
+#include "karabo/util/Version.hh"
 #include "karabo/net/utils.hh"
 #include "karabo/xms/SlotElement.hh"
 #include "karabo/xms.hpp"
@@ -266,9 +267,17 @@ namespace karabo {
                 STRING_ELEMENT(expected).key("classVersion")
                         .displayedName("Class version")
                         .description("The version of the class of this device defined in KARABO_CLASSINFO")
-                        .expertAccess()
+                        .adminAccess()
                         .readOnly()
                         .initialValue(Device::classInfo().getVersion())
+                        .commit();
+
+                STRING_ELEMENT(expected).key("karaboVersion")
+                        .displayedName("Karabo version")
+                        .description("The version of the Karabo framework running this device")
+                        .adminAccess()
+                        .readOnly()
+                        .initialValue(karabo::util::Version::getVersion())
                         .commit();
 
                 STRING_ELEMENT(expected).key("serverId")

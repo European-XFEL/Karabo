@@ -16,6 +16,8 @@ from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
 from karabo.middlelayer_api.utils import get_property
 from karabo.native.data.schema import Configurable, Node
 
+from karabo import __version__ as karaboVersion
+
 from .eventloop import async_tst, DeviceTest, sync_tst
 
 
@@ -108,6 +110,7 @@ class Tests(DeviceTest):
     def test_device_version(self):
         expected = "2.2"
         self.assertEqual(self.myDevice.classVersion, expected)
+        self.assertEqual(self.myDevice.karaboVersion, karaboVersion)
 
     @sync_tst
     def test_output_names(self):

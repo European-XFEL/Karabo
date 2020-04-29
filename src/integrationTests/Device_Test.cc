@@ -916,6 +916,7 @@ void Device_Test::testGetSet() {
     Hash hash;
     CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
     CPPUNIT_ASSERT_EQUAL(deviceId, hash.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), hash.get<std::string>("karaboVersion"));
     CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::util::Schema::OBSERVER), hash.get<int>("visibility"));
 
     // We can set visibility and check that we really did.
