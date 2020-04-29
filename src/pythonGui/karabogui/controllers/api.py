@@ -1,8 +1,8 @@
 # flake8: noqa
 from .base import BaseBindingController
 from .images import (
-    get_dimensions_and_encoding, get_image_data, KaraboImageDialog,
-    KaraboImageWidget, DIMENSIONS, REFERENCE_TYPENUM_TO_DTYPE)
+    get_dimensions_and_encoding, get_image_data, DIMENSIONS,
+    REFERENCE_TYPENUM_TO_DTYPE)
 from .registry import (
     get_class_const_trait, get_compatible_controllers, get_model_controller,
     get_scene_model_class, register_binding_controller)

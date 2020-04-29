@@ -140,24 +140,6 @@ def test_scene_model_registry():
         assert get_model_controller(model) is None
 
 
-def test_known_model_collision():
-    # DisplayTrendline and XYVector are known to share a scene model class
-    # in a way which is unique among all the binding controllers.
-    # Test that that is not a problem for the controller registry.
-
-    from karabo.common.scenemodel.api import LinePlotModel
-    from ..display.trendline import DisplayTrendline
-    from ..display.xyvectors import XYVector
-
-    model = LinePlotModel(klass='DisplayTrendline')
-    controller = get_model_controller(model)
-    assert controller is DisplayTrendline
-
-    model.klass = 'XYVector'
-    controller = get_model_controller(model)
-    assert controller is XYVector
-
-
 def test_display_edit_overlap():
     # IntLineEdit should be returned for both edit and non-edit widgets
     from karabo.common.scenemodel.api import IntLineEditModel
