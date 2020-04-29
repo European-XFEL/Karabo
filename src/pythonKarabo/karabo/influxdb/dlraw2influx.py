@@ -22,16 +22,20 @@ from karabo.native import decodeXML, encodeBinary
 PROCESSED_RAWS_FILE_NAME = '.processed_props.txt'
 
 
+class KnownRawIssueException(Exception):
+    """A known issue has been found on an input raw property file."""
+
+
 class DlRaw2Influx():
     def __init__(self, raw_path, topic, user, password, url,
-                 device_id, output_dir, dry_run, prints_on,
-                 lines_per_write, write_timeout):
+                 device_id, output_dir, dry_run,
+                 lines_per_write, write_timeout, workload_id):
         self.raw_path = raw_path
         self.db_name = topic
         self.output_dir = output_dir
         self.dry_run = dry_run
         self.device_id = device_id
-        self.prints_on = prints_on
+        self.workload_id = workload_id
 
         url_parts = urlparse(url)  # throws for invalid urls.
         protocol = url_parts.scheme
@@ -62,6 +66,11 @@ class DlRaw2Influx():
                 'part_processed',
                 self.device_id,
                 op.basename(f'{self.raw_path}.err'))
+            self.warn_out_path = op.join(
+                self.output_dir,
+                'part_processed',
+                self.device_id,
+                op.basename(f'{self.raw_path}.warn'))
             self.proc_props_path = op.join(
                 self.output_dir,
                 PROCESSED_RAWS_FILE_NAME)
@@ -71,13 +80,6 @@ class DlRaw2Influx():
             self.proc_props_path = None
 
     async def run(self):
-        if self.prints_on:
-            print("Connecting to host: {} ..."
-                  .format(self.db_client.host))
-
-        if self.prints_on:
-            print("Feeding to influxDB file {} ...".format(self.raw_path))
-
         data = []
         part_proc = False  # indicates the file has been partially processed.
         stats = {
@@ -85,11 +87,13 @@ class DlRaw2Influx():
             'end_time': None,
             'elapsed_secs': 0.0,
             'insert_rate': 0.0,
-            'lines_written': 0,
+            'lines_processed': 0,
             'write_retries': [],
         }
+        raw_update_epoch = op.getmtime(self.raw_path)
         with open(self.raw_path, 'r') as fp:
-
+            m_key = ()  # Uniquely identifies a record in the line protocol.
+            buf = {}  # Key-value buffer for line protocol record.
             for i, l in enumerate(fp):
                 try:
                     line_fields = self.parse_raw(l)
@@ -101,14 +105,34 @@ class DlRaw2Influx():
                                     )
                         safe_f = escape_tag_field_key(line_fields["name"])
                         safe_v = line_fields["value"]
+                        safe_tid = line_fields["train_id"]
+                        safe_time = line_fields["timestamp"]
+                        if safe_v:
+                            buf[safe_f] = safe_v
 
-                        if len(safe_v) > 0:
-                            data.append(
-                                '{m},user="{user}" "{f}"={v},_tid="{tid}" {t}'
-                                .format(m=safe_m, user=safe_user,
-                                        f=safe_f, v=safe_v,
-                                        tid=line_fields["train_id"],
-                                        t=line_fields["timestamp"]))
+                        if m_key and m_key != (safe_user, safe_tid, safe_time):
+                            # The record key is no longer valid (e.g. a new
+                            # timestamp). Flushes the line protocol entry and
+                            # updates the record key.
+                            if buf:
+                                kv_str = (
+                                    ','.join(
+                                        (f'"{i[0]}"={i[1]}'
+                                         for i in buf.items())
+                                    )
+                                )
+                                kv_str = f'{kv_str},_tid="{safe_tid}"'
+                                data.append(
+                                    '{m},user="{user}" {keys_values} {t}'
+                                    .format(m=safe_m, user=safe_user,
+                                            keys_values=kv_str, tid=safe_tid,
+                                            t=safe_time)
+                                )
+                                m_key = (safe_user, safe_tid, safe_time)
+                                buf = {}
+                        elif not m_key:
+                            # The unique identifier is empty. Initialize it.
+                            m_key = (safe_user, safe_tid, safe_time)
 
                         up_flag = line_fields["flag"].upper()
                         if up_flag in ("LOGIN", "LOGOUT"):
@@ -118,9 +142,8 @@ class DlRaw2Influx():
                             evt_type = '+LOG' if up_flag == 'LOGIN' else '-LOG'
                             data.append('{m}__EVENTS,type={e} user="{user}" {t}'
                                         .format(m=safe_m, e=evt_type,
-                                                user=safe_user,
-                                                t=line_fields["timestamp"]))
-                        if data and (i+1) % self.chunk_queries == 0:
+                                                user=safe_user, t=safe_time))
+                        if data and len(data) % self.chunk_queries == 0:
                             lin_proto_data = format_line_protocol_body(data)
                             data = []
                             if not self.dry_run:
@@ -138,7 +161,20 @@ class DlRaw2Influx():
                                             lin_proto_data[:320]))
                                 if r['retried']:
                                     stats['write_retries'].append(r['retried'])
-                    stats['lines_written'] = i+1
+                    stats['lines_processed'] = i+1
+                except KnownRawIssueException as exc:
+                    # Known issues in input files should generate .warn files
+                    # in the partially processed directory, but should be
+                    # ignored regarding the partially processed status of the
+                    # input file.
+                    if self.warn_out_path and not self.dry_run:
+                        if not op.exists(op.dirname(self.warn_out_path)):
+                            os.makedirs(op.dirname(self.warn_out_path))
+                        with open(self.warn_out_path, 'a') as warn:
+                            warn.write("Known issue at line {}: {}\n"
+                                       .format(i, exc))
+                    elif not self.warn_out_path:
+                        raise
                 except Exception as exc:
                     # Handles an error by logging it in a .err file in the
                     # partially processed directory if there's an output_dir
@@ -182,14 +218,15 @@ class DlRaw2Influx():
         # Registers successful processing of properties file.
         stats['end_time'] = time.time()
         stats['elapsed_secs'] = stats['end_time']-stats['start_time']
-        stats['insert_rate'] = stats['lines_written']/(stats['elapsed_secs'])
+        stats['insert_rate'] = stats['lines_processed']/(stats['elapsed_secs'])
         if self.proc_out_path and not self.dry_run and not part_proc:
             if not op.exists(op.dirname(self.proc_out_path)):
                 os.makedirs(op.dirname(self.proc_out_path))
             with open(self.proc_out_path, 'w') as ok_file:
                 ok_file.write(json.dumps(stats))
             with open(self.proc_props_path, 'a') as proc_props_file:
-                proc_props_file.write(f'{self.raw_path}\n')
+                proc_props_file.write(
+                    f'{raw_update_epoch}|{self.workload_id}|{self.raw_path}\n')
 
         return not part_proc  # True if fully successfully processed.
 
@@ -225,9 +262,14 @@ class DlRaw2Influx():
             user_name = matches.group(7)
             flag = matches.group(8)
         except Exception as exc:
-            raise Exception(
-                      "\n\tLine: '{}'\n\tMessage: '{}'"
-                      .format(line.strip(), exc))
+            if 0 < line.count('|') < 7:
+                # Incomplete line is a known issue - may happen due to a Data
+                # Logger being killed with -9, for instance.
+                raise KnownRawIssueException("Incomplete input line: {}"
+                                             .format(line))
+            else:
+                raise Exception("\n\tLine: '{}'\n\tMessage: '{}'"
+                                .format(line.strip(), exc))
 
         try:
             timestamp_ns = np.int(np.float(timestamp_s) * 1E9)
@@ -238,8 +280,8 @@ class DlRaw2Influx():
                       "train_id ({}).".format(timestamp_s, train_id))
 
         if value == 'nan' or value == "-nan" or value == "inf":
-            raise Exception(
-                      "{} unsupported in influxDB "
+            raise KnownRawIssueException(
+                      "'{}' value unsupported in influxDB "
                       "skipping line: '{}'".format(value, line.strip()))
 
         if ktype == "BOOL":
