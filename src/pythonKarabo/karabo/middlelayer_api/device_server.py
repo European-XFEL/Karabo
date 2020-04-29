@@ -26,8 +26,6 @@ from karabo.native.data.serializers import decodeBinary, encodeXML
 from .signalslot import SignalSlotable, slot, coslot
 from .synchronization import background, firstCompleted
 from karabo.native.time_mixin import TimeMixin
-from .utils import get_karabo_version
-
 
 INIT_DESCRIPTION = """A JSON object representing the devices to be initialized.
 It should be formatted like a dictionary of dictionaries.
@@ -133,7 +131,6 @@ class DeviceServerBase(SignalSlotable):
         info["type"] = "server"
         info["serverId"] = self.serverId
         info["version"] = self.__class__.__version__
-        info["karaboVersion"] = get_karabo_version()
         info["host"] = self.hostName
         info["visibility"] = self.visibility.value
         info["lang"] = "python"
