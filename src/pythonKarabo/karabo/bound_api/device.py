@@ -25,6 +25,9 @@ from karathon import (
 )
 from karabo.common.api import (AlarmCondition, Capabilities, Interfaces, State,
                                karabo_deprecated)
+
+from karabo import __version__ as karaboVersion
+
 # Use patched DeviceClient, not the one directly from karathon:
 from .device_client import DeviceClient
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
@@ -107,8 +110,17 @@ class PythonDevice(NoFsm):
             .displayedName("Class version")
             .description("The version of the class of this device defined in"
                          " KARABO_CLASSINFO")
-            .expertAccess()
+            .adminAccess()
             .readOnly().initialValue(PythonDevice.__version__)
+            .commit(),
+
+            STRING_ELEMENT(expected).key("karaboVersion")
+            .displayedName("Karabo version")
+            .description("The version of the Karabo framework running this "
+                         "device")
+            .adminAccess()
+            .readOnly()
+            .initialValue(karaboVersion)
             .commit(),
 
             STRING_ELEMENT(expected).key("serverId")
