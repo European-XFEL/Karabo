@@ -65,10 +65,6 @@ class DisplayListModel(BaseWidgetObjectData):
     """ A model for DisplayList"""
 
 
-class DisplayPlotModel(BaseWidgetObjectData):
-    """ A model for DisplayPlot"""
-
-
 class DisplayTextLogModel(BaseWidgetObjectData):
     """ A model for DisplayTextLog"""
 
@@ -141,11 +137,6 @@ class LineEditModel(BaseDisplayEditableWidget):
     klass = Enum('DisplayLineEdit', 'EditableLineEdit')
 
 
-class MultiCurvePlotModel(BaseWidgetObjectData):
-    """ A model for multi line plot objects
-    """
-
-
 class PopUpModel(BaseWidgetObjectData):
     """ A model for a pop up window """
 
@@ -210,10 +201,6 @@ class TickSliderModel(BaseEditWidget):
 class DisplayTimeModel(BaseWidgetObjectData):
     """ A model for the time widget"""
     time_format = String('%H:%M:%S')
-
-
-class XYPlotModel(BaseWidgetObjectData):
-    """ A model for XYPlot"""
 
 
 def _read_geometry_data(element):
@@ -399,7 +386,6 @@ def __scene_link_writer(write_func, model, parent):
 def _build_empty_widget_readers_and_writers():
     """ Build readers and writers for the empty widget classes
     """
-
     def _build_reader_func(klass):
         def reader(read_func, element):
             traits = read_base_widget_data(element)
@@ -416,13 +402,11 @@ def _build_empty_widget_readers_and_writers():
         return writer
 
     names = ('AnalogModel', 'BitfieldModel', 'DaemonManagerModel',
-             'DisplayLabelModel', 'DisplayListModel', 'DisplayPlotModel',
-             'DisplayTextLogModel', 'EditableListModel',
-             'EditableListElementModel', 'EditableSpinBoxModel',
-             'GlobalAlarmModel', 'HexadecimalModel',
-             'IntLineEditModel', 'KnobModel', 'LampModel',
-             'MultiCurvePlotModel', 'PopUpModel', 'RunConfiguratorModel',
-             'SliderModel', 'WidgetNodeModel', 'XYPlotModel')
+             'DisplayLabelModel', 'DisplayListModel', 'DisplayTextLogModel',
+             'EditableListModel', 'EditableListElementModel',
+             'EditableSpinBoxModel', 'GlobalAlarmModel', 'HexadecimalModel',
+             'IntLineEditModel', 'KnobModel', 'LampModel', 'PopUpModel',
+             'RunConfiguratorModel', 'SliderModel', 'WidgetNodeModel')
     for name in names:
         klass = globals()[name]
         file_name = name[:-len('Model')]
