@@ -279,18 +279,24 @@ class Influx_TestCase(DeviceTest):
             write_url=f'http://{_host}:{_port}', write_user=_user,
             write_pwd=_password, read_url=f'http://{_host}:{_port}',
             read_user=_user, read_pwd=_password, lines_per_write=8000,
-            dry_run=False, prints_on=True, write_timeout=20)
+            dry_run=False, write_timeout=20, concurrent_tasks=2)
 
         await migrator.run()
 
         # Checks the expected processed outputs - the 'archive_4.txt' and
-        # 'archive_schema.txt' files are expected to be processed cleanly.
+        # 'archive_schema.txt' files are expected to be processed.
+        # 'archive_4.txt' should produce warning files due to known issues
+        # in its contents.
         # The other files support multiple migration runs with skipping of
         # files fully processed in previous runs.
         self.assertTrue(os.path.exists(os.path.join(output_dir,
                                                     'processed',
                                                     MIGRATION_TEST_DEVICE,
                                                     'archive_4.txt.ok')))
+        self.assertTrue(os.path.exists(os.path.join(output_dir,
+                                                    'part_processed',
+                                                    MIGRATION_TEST_DEVICE,
+                                                    'archive_4.txt.warn')))
         self.assertFalse(os.path.exists(os.path.join(output_dir,
                                                      'part_processed',
                                                      MIGRATION_TEST_DEVICE,
