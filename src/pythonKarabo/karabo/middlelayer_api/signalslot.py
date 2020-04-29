@@ -19,6 +19,7 @@ from karabo.native.data.schema import Configurable
 from .synchronization import firstCompleted, FutureDict
 from .pipeline import NetworkOutput, OutputChannel
 from .proxy import DeviceClientProxyFactory
+from .utils import get_karabo_version
 
 
 class Signal(object):
@@ -273,7 +274,8 @@ class SignalSlotable(Configurable):
 
     def _initInfo(self):
         """return the info hash at initialization time"""
-        return Hash("heartbeatInterval", self.heartbeatInterval.value)
+        return Hash("heartbeatInterval", self.heartbeatInterval.value,
+                    "karaboVersion", get_karabo_version())
 
     def _register_slots(self):
         """Register all available slots on the broker
