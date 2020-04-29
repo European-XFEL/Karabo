@@ -26,11 +26,12 @@ class Tests(DeviceTest):
     def test_schema(self):
         self.process = yield from create_subprocess_exec(
             sys.executable, "-m", "karabo.bound_api.launcher",
-            "schema", "karabo.bound_device_test", "TestDevice",
+            "schemaVersionHack",  # fixed default karabo version
+            "karabo.bound_device_test", "TestDevice",
             stdout=PIPE)
         schema = yield from self.process.stdout.read()
         yield from self.process.wait()
-        self.assertEqual(adler32(schema), 2323807896,
+        self.assertEqual(adler32(schema), 1602344009,
                          "The generated schema changed. If this is "
                          "desired, change the checksum in the code.")
 

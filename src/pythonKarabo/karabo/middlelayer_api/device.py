@@ -13,6 +13,8 @@ from karabo.native.data.hash import (
 from karabo.native.data.schema import Node
 from karabo.native.time_mixin import get_timestamp
 
+from karabo import __version__ as karaboVersion
+
 from .alarm import AlarmMixin
 from .injectable import InjectMixin
 from .logger import Logger
@@ -61,8 +63,16 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
     classVersion = String(
         displayedName="Class version",
         description="The version of the class of this device",
-        requiredAccessLevel=AccessLevel.EXPERT,
+        requiredAccessLevel=AccessLevel.ADMIN,
         accessMode=AccessMode.READONLY,
+        daqPolicy=DaqPolicy.OMIT)
+
+    karaboVersion = String(
+        displayedName="Karabo version",
+        description="The version of the Karabo framework running this device",
+        requiredAccessLevel=AccessLevel.ADMIN,
+        accessMode=AccessMode.READONLY,
+        defaultValue=karaboVersion,
         daqPolicy=DaqPolicy.OMIT)
 
     serverId = String(
