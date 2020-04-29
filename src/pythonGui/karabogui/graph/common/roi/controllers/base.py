@@ -226,14 +226,14 @@ class BaseROIController(QObject):
         if roi_item is self._current_item[self._current_tool]:
             return
 
-        # Unselect current ROI
+        # Deselect current ROI
         current_item = self._current_item[self._current_tool]
         if current_item is not None:
-            current_item.unselect()
+            current_item.selected = False
 
         # Put new ROI as selected
         self._current_item[self._current_tool] = roi_item
         if roi_item is None:
             self._current_tool = ROITool.NoROI
         else:
-            roi_item.select()
+            roi_item.selected = True
