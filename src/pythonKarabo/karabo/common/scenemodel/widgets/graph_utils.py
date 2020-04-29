@@ -124,7 +124,8 @@ def read_transforms(element):
     traits = {}
     for name in TRANSFORM_SET:
         value = element.get(NS_KARABO + name)
-        traits[name] = float(value)
+        if value is not None:
+            traits[name] = float(value)
 
     return traits
 
