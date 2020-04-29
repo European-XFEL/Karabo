@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 import argparse
-from asyncio import get_event_loop
+from asyncio import get_event_loop, gather
+import json
 import os
 import re
+import time
 import shutil
 from urllib.parse import urlparse
 
@@ -15,11 +17,9 @@ from karabo.influxdb.dlutils import device_id_from_path
 
 
 class DlMigrator():
-    def __init__(self, db_name, input_dir, output_dir,
-                 write_url, write_user, write_pwd,
-                 read_url, read_user, read_pwd,
-                 lines_per_write, write_timeout,
-                 dry_run=True, prints_on=False):
+    def __init__(self, db_name, input_dir, output_dir, write_url, write_user,
+                 write_pwd, read_url, read_user, read_pwd, lines_per_write,
+                 write_timeout, concurrent_tasks, dry_run=True):
         self.db_name = db_name
         self.input_dir = input_dir
         self.output_dir = output_dir
@@ -30,12 +30,16 @@ class DlMigrator():
         self.read_user = read_user
         self.read_pwd = read_pwd
         self.dry_run = dry_run
-        self.prints_on = prints_on
         self.lines_per_write = lines_per_write
         self.write_timeout = write_timeout
+        self.concurrent_tasks = concurrent_tasks
         self.prev_run_file = os.path.join(output_dir, '.previous_run.txt')
-        self.processed_raws = set()
-        self.processed_schemas = set()
+        self.run_info_file = os.path.join(output_dir, '.run_info.json')
+        self.processed_raws = {}
+        self.processed_schemas = {}
+        self.n_processed = 0
+        self.n_part_processed = 0
+        self.n_skipped = 0
 
     def _get_prev_run_num(self):
         """Retrieves the number of the previous run."""
@@ -77,24 +81,47 @@ class DlMigrator():
             pr_file.write(str(prev_run_num + 1))
 
     def _load_processed_files(self):
+        """Loads the list of processed property and schema files.
+
+        Each line in the files that store those lists has three fields separated
+        by a '|' (pipe character). The first field is the last modification time
+        (in Unix epoch format) for the processed file when it was processed. The
+        second field is the id of the workload to which the processed file
+        belonged. The third fiekd is the absolute path of the processed file.
+
+        The loaded data is stored in dictionaries that have the processed file
+        path as a key and the last modification time as the value.
+        """
         proc_raws_path = os.path.join(self.output_dir, PROCESSED_RAWS_FILE_NAME)
         if os.path.exists(proc_raws_path):
             with open(proc_raws_path, 'r') as proc_raws_file:
-                for _, file_name in enumerate(proc_raws_file):
-                    self.processed_raws.add(file_name.strip())
+                for _, file_record in enumerate(proc_raws_file):
+                    fields = file_record.split('|')
+                    last_update = float(fields[0])
+                    file_name = fields[2].strip()
+                    self.processed_raws[file_name] = last_update
+
         proc_schemas_path = os.path.join(self.output_dir,
                                          PROCESSED_SCHEMAS_FILE_NAME)
         if os.path.exists(proc_schemas_path):
             with open(proc_schemas_path, 'r') as proc_schemas_file:
-                for _, file_name in enumerate(proc_schemas_file):
-                    self.processed_schemas.add(file_name.strip())
+                for _, file_record in enumerate(proc_schemas_file):
+                    fields = file_record.split('|')
+                    last_update = float(fields[0])
+                    file_name = fields[2].strip()
+                    self.processed_schemas[file_name] = last_update
 
-    async def run(self):
-        self._load_processed_files()
-        self._backup_previous_run()
-        self._inc_previous_run()
-        n_processed = 0
-        n_part_processed = 0
+    def _split_workload(self):
+        """Split the workload in a number of approximately equally sized parts.
+        The number of parts is the number of concurrent migration tasks.
+
+        return: list of workloads. Each workloud is a list of tuples with the
+        path of a file to be migrated and the deviceId associated to that file.
+        """
+        print('Splitting workload among {} concurrent tasks ...'
+              .format(self.concurrent_tasks))
+
+        full_workload = []
         for dir_, _, files in os.walk(self.input_dir):
             if not dir_.endswith("raw"):
                 continue
@@ -107,46 +134,110 @@ class DlMigrator():
             # The deviceId is assumed to be everything between the end
             # of the input_dir path and the '/raw' termination.
             device_id = dir_[len(common_prefix):-4]
-            for filename in files:
-                file_path = os.path.join(dir_, filename)
-                if filename == "archive_schema.txt":
-                    if file_path in self.processed_schemas:
-                        print("'{}' already migrated: skip.".format(file_path))
-                        continue
-                    print("Migrating schemas in '{}' ...".format(file_path),
-                          end='')
-                    success = await self.insert_schema(file_path,
-                                                       self.output_dir,
-                                                       device_id)
-                    if success:
-                        n_processed += 1
-                        print(" succeeded.")
-                    else:
-                        n_part_processed += 1
-                        print(" failed.")
-                if re.match(r"^archive_[0-9]+\.txt$", filename):
-                    file_path = os.path.join(dir_, filename)
-                    if file_path in self.processed_raws:
-                        print("'{}' already migrated: skip.".format(file_path))
-                        continue
-                    print(
-                        "Migrating configurations in '{}' ..."
-                        .format(file_path), end=''
-                    )
-                    success = await self.insert_archive(file_path,
-                                                        self.output_dir,
-                                                        device_id)
-                    if success:
-                        n_processed += 1
-                        print(" succeeded")
-                    else:
-                        n_part_processed += 1
-                        print(" failed")
-        print("Migration job finished:")
-        print("Files processed successfully: {}".format(n_processed))
-        print("Files with migration errors:  {}".format(n_part_processed))
+            for file_name in files:
+                if (not re.match(r"^archive_[0-9]+\.txt$", file_name) and
+                        file_name != "archive_schema.txt"):
+                    continue
+                file_path = os.path.join(dir_, file_name)
+                last_update = os.path.getmtime(file_path)
+                if (self.processed_schemas.get(file_path) == last_update or
+                        self.processed_raws.get(file_path) == last_update):
+                    print("'{}' already migrated: skip.".format(file_path))
+                    self.n_skipped += 1
+                    continue
+                full_workload.append((device_id, file_path))
 
-    async def insert_archive(self, path, output_dir, device_id):
+        workloads = [[] for i in range(self.concurrent_tasks)]
+        for i in range(0, len(full_workload)):
+            workloads[i % self.concurrent_tasks].append(full_workload[i])
+
+        print('... workload of {} files splitted.'.format(len(full_workload)))
+
+        return workloads
+
+    async def _migrate_workload(self, workload_id, workload):
+        """Migrates a given workload of text log files to InfluxDb.
+
+        workload_id: identifier of workload to be migrated - used as part of the
+        migration progress info.
+        workload: list of paths of files to be migrated.
+        """
+        for wrk_item in workload:
+            device_id = wrk_item[0]
+            file_path = wrk_item[1]
+            file_name = os.path.basename(file_path)
+            success = False
+            print("[wk-{}] - Migrating '{}' ...".format(workload_id, file_path))
+            if file_name == 'archive_schema.txt':
+                success = await self.insert_schema(file_path, self.output_dir,
+                                                   device_id, workload_id)
+            elif re.match(r"^archive_[0-9]+\.txt$", file_name):
+                success = await self.insert_archive(file_path, self.output_dir,
+                                                    device_id, workload_id)
+            else:  # this should not be reached
+                self.n_skipped += 1
+                print(" SKIPPED - WARNING: '{}' should not be in WORKLOAD!!"
+                      .format(file_path))
+                continue
+            if success:
+                self.n_processed += 1
+                print("[wk-{}] - ... SUCCESS for '{}'".format(workload_id,
+                                                              file_path))
+            else:
+                self.n_part_processed += 1
+                print("[wk-{}] - FAILED for ... '{}'".format(workload_id,
+                                                             file_path))
+
+    def _save_run_info(self, start_time, workloads_info, end_time=''):
+        """Saves information about current run in a file.
+
+        The information is saved in json format and has one property for each of
+        the parameters described below.
+
+        start_time: unix epoch of when the migration started.
+        workloads_info: list of tuples with the 'workload_id' in its first
+        position and the number of files in the workload in its second position.
+        end_time: unix epoch of when the migration started - should not be
+        provided if the migration is still on-going.
+        """
+        info = {
+            'start_time': start_time,
+            'end_time': end_time,
+            'workloads_info': workloads_info
+        }
+        with open(self.run_info_file, 'w') as inf_file:
+            inf_file.write(json.dumps(info))
+
+    async def run(self):
+        start_time = time.time()
+        self.n_processed = 0
+        self.n_part_processed = 0
+        self.n_skipped = 0
+
+        self._load_processed_files()
+        self._backup_previous_run()
+        self._inc_previous_run()
+
+        workloads = self._split_workload()
+        workloads_info = []
+        wk_id = 0
+        wk_futures = []
+        for workload in workloads:
+            if workload:
+                workloads_info.append((wk_id, len(workload)))
+                wk_futures.append(self._migrate_workload(wk_id, workload))
+                wk_id += 1
+        self._save_run_info(start_time, workloads_info)
+        wk_results = await gather(*wk_futures)
+        end_time = time.time()
+        self._save_run_info(start_time, workloads_info, end_time)
+
+        print("Migration job finished:")
+        print("Files skipped: {}".format(self.n_skipped))
+        print("Files processed successfully: {}".format(self.n_processed))
+        print("Files with migration errors:  {}".format(self.n_part_processed))
+
+    async def insert_archive(self, path, output_dir, device_id, workload_id):
         try:
             conf2db = DlRaw2Influx(
                 raw_path=path, output_dir=output_dir,
@@ -155,7 +246,7 @@ class DlMigrator():
                 dry_run=self.dry_run, device_id=device_id,
                 lines_per_write=self.lines_per_write,
                 write_timeout=self.write_timeout,
-                prints_on=self.prints_on)
+                workload_id=workload_id)
         except Exception as exc:
             print("Error creating property file converter:\n"
                   "File to be converted: {}\n"
@@ -163,7 +254,7 @@ class DlMigrator():
             return False
         return await conf2db.run()
 
-    async def insert_schema(self, path, output_dir, device_id):
+    async def insert_schema(self, path, output_dir, device_id, workload_id):
         try:
             schema2db = DlSchema2Influx(
                 schema_path=path, topic=self.db_name,
@@ -171,8 +262,8 @@ class DlMigrator():
                 read_url=self.read_url, write_user=self.write_user,
                 write_pwd=self.write_pwd, write_url=self.write_url,
                 device_id=device_id, output_dir=output_dir,
-                write_timeout=self.write_timeout,
-                dry_run=self.dry_run, prints_on=self.prints_on)
+                write_timeout=self.write_timeout, workload_id=workload_id,
+                dry_run=self.dry_run)
         except Exception as exc:
             print("Error creating schema file converter:\n"
                   "File to be converted: {}\n"
@@ -236,8 +327,10 @@ if __name__ == "__main__":
     # during tests in the environment with a Telegraf access point for writing
     # to three Influx instances on the back.
     parser.set_defaults(write_timeout=40)
+    parser.add_argument("--concurrent-tasks", dest="concurrent_tasks", type=int,
+                        help="Number of concurrent migration tasks")
+    parser.set_defaults(concurrent_tasks=4)
     parser.add_argument("--dry_run", dest="dry_run", action="store_true")
-    parser.add_argument("--quiet", dest="prints_on", action="store_false")
     parser.set_defaults(dry_run=False)
     args = parser.parse_args()
     o = DlMigrator(**vars(args))
