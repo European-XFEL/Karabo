@@ -34,6 +34,7 @@ using karabo::xms::SLOT_ELEMENT;
 #define FLUSH_REQUEST_TIMEOUT_MILLIS 20000
 
 #define PAUSE_BEFORE_RETRY_MILLIS 150
+#define NUM_RETRY 200
 
 class DataLogTestDevice : public karabo::core::Device<> {
 
@@ -690,7 +691,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
         // Gather full configuration (repeat until success, see above)
         Hash conf;
         Schema schema;
-        int nTries = 100;
+        int nTries = NUM_RETRY;
         int nChecks = 0;
 
         // Still, conf.empty() check needed here although any non-throwing slotGetConfigurationFromPast should
@@ -867,7 +868,7 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
     const unsigned int numGetPropHist = m_deviceClient->get<unsigned int>(dlreader0, "numGetPropertyHistory");
     std::vector<std::string> exceptionsMsgs;
 
-    int nTries = 100;
+    int nTries = NUM_RETRY;
     unsigned int numExceptions = 0;
     unsigned int numChecks = 0;
     while (nTries >= 0 && history.size() != max_set) {
@@ -924,7 +925,7 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
                             .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
 
     const unsigned int numGetCfgFromPast = m_deviceClient->get<unsigned int>(dlreader0, "numGetConfigurationFromPast");
-    nTries = 100;
+    nTries = NUM_RETRY;
     numExceptions = 0;
     numChecks = 0;
     // place holder schema, could be checked in future tests
@@ -972,7 +973,7 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
                                      conf.getAs<std::string>(leaf));
     }
 
-    nTries = 100;
+    nTries = NUM_RETRY;
     numExceptions = 0;
     numChecks = 0;
     conf.clear();
