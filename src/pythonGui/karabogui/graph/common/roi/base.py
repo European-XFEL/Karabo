@@ -19,6 +19,7 @@ class KaraboROI(ROI):
                                         pen=pen,
                                         removable=True)
         self.setZValue(100)
+        self._selected = False
         self._scaling = np.array([1, 1])
         self._translation = np.array([0, 0])
 
@@ -56,21 +57,10 @@ class KaraboROI(ROI):
     def set_visible(self, visible=True):
         self.setVisible(visible)
         if self.textItem:
-            self.textItem.setVisible(visible)
+            self.textItem.setVisible(self.selected and visible)
 
-    def select(self, update=True):
-        self.pen.setWidthF(2)
-        self.currentPen.setWidthF(2)
-        self._set_handle_visible(True)
-        if update:
-            self.update()
-
-    def unselect(self, update=True):
-        self.pen.setWidthF(1)
-        self.currentPen.setWidthF(1)
-        self._set_handle_visible(False)
-        if update:
-            self.update()
+    def redraw(self):
+        self.update()
 
     def _set_handle_visible(self, visible):
         for handle in self.handles:
@@ -92,6 +82,27 @@ class KaraboROI(ROI):
 
     # ---------------------------------------------------------------------
     # Properties
+
+    @property
+    def selected(self):
+        return self._selected
+
+    @selected.setter
+    def selected(self, selected):
+        self._selected = selected
+
+        # Set the visual changes to reflect the change
+        width = 2 if selected else 1
+        self.pen.setWidthF(width)
+        self.currentPen.setWidthF(width)
+        self._set_handle_visible(selected)
+
+        # Redraw ROI item
+        self.redraw()
+
+        # Then toggle the textItem to show only when ROI selected
+        if self.textItem:
+            self.textItem.setVisible(selected)
 
     @property
     def _absolute_position(self):
