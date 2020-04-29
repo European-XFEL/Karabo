@@ -7,7 +7,7 @@ import threading
 from pkg_resources import working_set
 
 from karabo.bound import (EventLoop, Hash, TextSerializerHash,
-                          BinarySerializerHash)
+                          BinarySerializerHash, OVERWRITE_ELEMENT)
 
 
 def main():
@@ -17,9 +17,16 @@ def main():
 
     entrypoint = next(working_set.iter_entry_points(namespace, name))
 
-    if command == "schema":
+    if command == "schema" or command == "schemaVersionHack":
         # print the schema of a device class to stdout
         schema = entrypoint.load().getSchema(entrypoint.name)
+        if command != "schema":  # i.e. schemaVersionHack
+            # manipulate: use fixed karabo version for unit test
+            (OVERWRITE_ELEMENT(schema)
+             .key("karaboVersion")
+             .setNewDefaultValue("UNKNOWN")
+             .commit(),
+             )
         h = Hash()
         h[name] = schema
         ser = BinarySerializerHash.create("Bin")
