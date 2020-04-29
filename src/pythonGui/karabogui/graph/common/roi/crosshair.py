@@ -25,8 +25,7 @@ class CrosshairROI(KaraboROI):
                                            pen=pen)
         self._shape = None
         self._path = None
-        self._selected = False
-        self.sigRegionChanged.connect(self.invalidate)
+        self.sigRegionChanged.connect(self.redraw)
         self.aspectLocked = True
 
     @pyqtSlot()
@@ -76,16 +75,10 @@ class CrosshairROI(KaraboROI):
 
         return image_region
 
-    def select(self, update=False):
-        """Reimplemented because we recalculate the shape and repaint then"""
-        super(CrosshairROI, self).select(update)
-        self._selected = True
-        self.invalidate()
-
-    def unselect(self, update=False):
-        """Reimplemented because we recalculate the shape and repaint then"""
-        super(CrosshairROI, self).unselect(update)
-        self._selected = False
+    def redraw(self):
+        """Conventional Qt items use self.update() to redraw/repaint.
+           CrosshairROI, on the other hand, needs to recalculate the paths
+           prior to repainting. This can be done using self.invalidate()"""
         self.invalidate()
 
     # ---------------------------------------------------------------------
@@ -136,7 +129,7 @@ class CrosshairROI(KaraboROI):
         rect = self.mapRectFromView(self._viewBox().viewRect())
 
         # Factor is the desired width/height wrt viewbox divided by 2
-        factor = 0.1 if self._selected else 0.05
+        factor = 0.1 if self.selected else 0.05
 
         half_width = rect.width() * factor
         half_height = rect.height() * factor
