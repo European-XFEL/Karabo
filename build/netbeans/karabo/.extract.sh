@@ -140,6 +140,14 @@ safeRunCommand "$KARABO/bin/.fix-python-scripts.sh" $KARABO
 # set the Python path in the config
 safeRunCommand "$KARABO/bin/.fix-python-path.sh" $KARABO
 
+# Create some directories
+# 1. var (needed below) and var/log (for supervisor)
+mkdir -p $KARABO/var/log
+# 2. var/data (as home directory of all server processes)
+mkdir -p $KARABO/var/data
+# 3. plugins (existence assumed e.g. by karabo script)
+mkdir -p $KARABO/plugins
+
 if [ ! -e "$KARABO/var/service" ]
 then
     mv $KARABO/service.in $KARABO/var/service
@@ -152,7 +160,7 @@ fi
 
 echo
 echo " Karabo framework was successfully installed to: $KARABO"
-echo 
+echo
 echo " NOTE: Using Karabo requires you to source the 'activate' file, like so:"
 echo
 echo "       source $KARABO/activate"
