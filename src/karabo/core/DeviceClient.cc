@@ -1351,14 +1351,6 @@ namespace karabo {
                 return false;
             }
 
-            KARABO_LOG_FRAMEWORK_INFO << "REGISTERCHANNEMONITOR" << channelName << "@@";
-            if (dataHandler) {
-                KARABO_LOG_FRAMEWORK_INFO << "@@ DATA HANDLER";
-            }
-            if (inputHandler) {
-                KARABO_LOG_FRAMEWORK_INFO << "@@ INPUT HANDLER";
-            }
-
             // Prepare input configuration Hash for createInputChannel
             Hash masterCfg;
             Hash& channelCfg = masterCfg.set(channelName, inputChannelCfg).getValue<Hash>();
