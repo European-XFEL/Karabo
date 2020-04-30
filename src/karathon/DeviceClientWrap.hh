@@ -261,12 +261,6 @@ namespace karathon {
             }
 
             return this->DeviceClient::registerChannelMonitor(channelName, _dataHandler, inputChannelCfg, _eosHandler, _inputHandler);
-            // return this->DeviceClient::registerChannelMonitor(
-            //     channelName,
-            //     boost::bind(&InputChannelWrap::proxyDataHandler, dataHandler, _1, _2),
-            //     inputChannelCfg,
-            //     boost::bind(&InputChannelWrap::proxyEndOfStreamEventHandler, eosHandler, _1),
-            //     boost::bind(&InputChannelWrap::proxyInputHandler, inputHandler, _1));
         }
 
         bool unregisterChannelMonitorPy(const std::string& channelName) {
