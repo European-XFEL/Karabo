@@ -21,6 +21,7 @@
 #include "Wrapper.hh"
 
 namespace bp = boost::python;
+using namespace karabo::xms;
 
 namespace karathon {
 
@@ -243,12 +244,29 @@ namespace karathon {
         }
 
 
-        bool registerChannelMonitorPy(const std::string& channelName, const bp::object& dataHandler,
-                                      const karabo::util::Hash& inputChannelCfg, const bp::object& eosHandler, const bp::object& inputHandler) {
-            return this->DeviceClient::registerChannelMonitor
-                    (channelName, boost::bind(&InputChannelWrap::proxyDataHandler, dataHandler, _1, _2),
-                     inputChannelCfg, boost::bind(&InputChannelWrap::proxyEndOfStreamEventHandler, eosHandler, _1),
-		     boost::bind(&InputChannelWrap::proxyInputHandler, inputHandler, _1));
+        bool registerChannelMonitorPy(const std::string& channelName,
+                                      const bp::object& dataHandler = bp::object(),
+                                      const karabo::util::Hash& inputChannelCfg = karabo::util::Hash(),
+                                      const bp::object& eosHandler = bp::object(),
+                                      const bp::object& inputHandler = bp::object()) {
+
+            SignalSlotable::DataHandler _dataHandler = SignalSlotable::DataHandler();
+            SignalSlotable::InputHandler _inputHandler = SignalSlotable::InputHandler();
+            SignalSlotable::InputHandler _eosHandler = boost::bind(&InputChannelWrap::proxyEndOfStreamEventHandler, eosHandler, _1);
+            if (dataHandler != bp::object()) {
+                _dataHandler = boost::bind(&InputChannelWrap::proxyDataHandler, dataHandler, _1, _2);
+            }
+            if (inputHandler != bp::object()) {
+                _inputHandler = boost::bind(&InputChannelWrap::proxyInputHandler, inputHandler, _1);
+            }
+
+            return this->DeviceClient::registerChannelMonitor(channelName, _dataHandler, inputChannelCfg, _eosHandler, _inputHandler);
+            // return this->DeviceClient::registerChannelMonitor(
+            //     channelName,
+            //     boost::bind(&InputChannelWrap::proxyDataHandler, dataHandler, _1, _2),
+            //     inputChannelCfg,
+            //     boost::bind(&InputChannelWrap::proxyEndOfStreamEventHandler, eosHandler, _1),
+            //     boost::bind(&InputChannelWrap::proxyInputHandler, inputHandler, _1));
         }
 
         bool unregisterChannelMonitorPy(const std::string& channelName) {
