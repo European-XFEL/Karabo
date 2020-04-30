@@ -304,17 +304,25 @@ void DeviceClient_Test::testMonitorChannel() {
     success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
                                           Hash("deviceId", "TestedDevice3"), KRB_TEST_MAX_TIMEOUT);
 
+    int dataCounter = 0;
     auto inputHandler = [&] (const InputChannel::Pointer& channel) {
         int size = channel->size();
         CPPUNIT_ASSERT_EQUAL(size, 1);
         const Hash::Pointer& data = channel->read(0);
-        CPPUNIT_ASSERT_EQUAL(data->get<int>("node.int32"), 1);
-
-        CPPUNIT_ASSERT(m_deviceClient->unregisterChannelMonitor("TestedDevice3", "output"));
+        data->get("node.int32", dataCounter);
     };
     CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor("TestedDevice3", "output", InputChannel::DataHandler(),
                                                           Hash(), InputChannel::InputHandler(), inputHandler));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "writeOutput", KRB_TEST_MAX_TIMEOUT));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "writeOutput", KRB_TEST_MAX_TIMEOUT));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "writeOutput", KRB_TEST_MAX_TIMEOUT));
+
+    counter = 0;
+    while (counter++ < 100) {
+        if (dataCounter == 3) break;
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+    }
+    CPPUNIT_ASSERT_EQUAL(3, dataCounter);
 
     // Final clean-up
     success = m_deviceClient->killDevice("TestedDevice2", KRB_TEST_MAX_TIMEOUT);
