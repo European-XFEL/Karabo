@@ -1331,7 +1331,7 @@ namespace karabo {
                                                   const karabo::xms::SignalSlotable::DataHandler& dataHandler,
                                                   const karabo::util::Hash& inputChannelCfg,
                                                   const karabo::xms::SignalSlotable::InputHandler& eosHandler,
-						  const karabo::xms::SignalSlotable::InputHandler& inputHandler) {
+					                        	  const karabo::xms::SignalSlotable::InputHandler& inputHandler) {
             return registerChannelMonitor(instanceId + ":" + channel, dataHandler, inputChannelCfg, eosHandler, inputHandler);
         }
 
@@ -1340,7 +1340,7 @@ namespace karabo {
                                                   const karabo::xms::SignalSlotable::DataHandler& dataHandler,
                                                   const karabo::util::Hash& inputChannelCfg,
                                                   const karabo::xms::SignalSlotable::InputHandler& eosHandler,
-						  const karabo::xms::SignalSlotable::InputHandler& inputHandler) {
+			                        			  const karabo::xms::SignalSlotable::InputHandler& inputHandler) {
             auto sigSlotPtr = m_signalSlotable.lock();
             // No SignalSlotable or channel already there? ==> Fail!
             if (!sigSlotPtr || sigSlotPtr->getInputChannelNoThrow(channelName)) {
@@ -1349,6 +1349,14 @@ namespace karabo {
                             << channelName << "' since such an input channel already exists.";
                 }
                 return false;
+            }
+
+            KARABO_LOG_FRAMEWORK_INFO << "REGISTERCHANNEMONITOR" << channelName << "@@";
+            if (dataHandler) {
+                KARABO_LOG_FRAMEWORK_INFO << "@@ DATA HANDLER";
+            }
+            if (inputHandler) {
+                KARABO_LOG_FRAMEWORK_INFO << "@@ INPUT HANDLER";
             }
 
             // Prepare input configuration Hash for createInputChannel
