@@ -111,6 +111,7 @@ void exportPyCoreDeviceClient() {
                  "                 for experts: \"connectedOutputChannels\" will be overwritten,\n"
                  "                              \"onSlowness\" default is overwritten to \"drop\"\n"
                  "@param eosHandler called on end of stream, argument is the InputChannel\n\n"
+                 "@param inputHandler called when data arrives, argument is the InputChannel\n\n"
                  "@return False if channel is already registered")
             .def("unregisterChannelMonitor", &DeviceClientWrap::unregisterChannelMonitorPy, bp::arg("channelName"),
                  "Unregister monitoring of output channel\n\n"
