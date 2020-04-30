@@ -281,6 +281,15 @@ namespace karabo {
             void onLogin(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
+             * Callback helper for ``onReconfigure``
+             *
+             * @param success whether call succeeded
+             * @param channel who requested the call
+             * @param input will be copied to the key ``input`` of the reply message
+             */
+            void forwardReconfigureReply(bool success, WeakChannelPointer channel, const karabo::util::Hash& input);
+
+            /**
              * Calls the Device::onReconfigure slot on the device specified in ``info``.
              *
              * The info should have the following entries:
@@ -299,14 +308,13 @@ namespace karabo {
             void onReconfigure(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
-             * Callback helper for e.g. ``onExecute`` and ``onReconfigure``
+             * Callback helper for ``onExecute``
              *
              * @param success whether call succeeded
-             * @param requestType: message callback to the client at channel will be of type 'requestType + "Reply"'
              * @param channel who requested the call
              * @param input will be copied to the key ``input`` of the reply message
              */
-            void forwardEmptyReply(bool success, const std::string& requestType, WeakChannelPointer channel, const karabo::util::Hash& input);
+            void forwardExecuteReply(bool success, WeakChannelPointer channel, const karabo::util::Hash & input);
 
             /**
              * Calls a ``command`` slot on a specified device.
