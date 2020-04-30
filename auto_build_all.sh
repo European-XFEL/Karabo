@@ -381,6 +381,10 @@ else
 fi
 
 if [ "$RUNTESTS" = "y" ]; then
+    # Temporarily add integration tests
+    runIntegrationTests
+    runPythonIntegrationTests
+
     runUnitTests
 fi
 
