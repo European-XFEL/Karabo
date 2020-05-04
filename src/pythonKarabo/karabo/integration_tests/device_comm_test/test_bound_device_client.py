@@ -1,10 +1,6 @@
-from functools import partial
-import os.path as op
-import os
 from time import sleep
 
 from karabo.bound import Hash, InputChannel
-from karabo.common.states import State
 from karabo.integration_tests.utils import BoundDeviceTestCase
 
 
@@ -46,7 +42,7 @@ class TestDeviceClientComm(BoundDeviceTestCase):
             self.msg_counter += 1
 
             assert isinstance(data, Hash)
-            assert isinstance(metadata, Hash)
+            assert metadata['source'] == f'{self.data_device}:output'
             assert data['node.int32'] == self.msg_counter
 
         # input handler
@@ -68,25 +64,36 @@ class TestDeviceClientComm(BoundDeviceTestCase):
         def on_eos(channel):
             assert isinstance(channel, InputChannel)
 
-        assert self.dc.registerChannelMonitor(channel, dataHandler=on_data, inputChannelCfg=config)
-        self.dc.execute(self.data_device, 'writeOutput')
-        sleep(.1)
-        assert on_data._calls == 1
+        assert self.dc.registerChannelMonitor(channel, dataHandler=on_data,
+                                              inputChannelCfg=config)
+        for i in range(3):
+            self.dc.execute(self.data_device, 'writeOutput')
+
+        for i in range(100):
+            sleep(0.01)
+            if on_data._calls >= 3:
+                break
+
+        assert on_data._calls == 3
         assert self.dc.unregisterChannelMonitor(channel)
 
         assert self.dc.registerChannelMonitor(
-            channel, inputChannelCfg=config, eosHandler=on_eos, inputHandler=on_input)
+            channel, inputChannelCfg=config, eosHandler=on_eos,
+            inputHandler=on_input)
         assert not self.dc.registerChannelMonitor(
             channel, inputChannelCfg=config, inputHandler=on_input
         )  # already monitoring this output channel
 
         for i in range(5):
             self.dc.execute(self.data_device, 'writeOutput')
-            sleep(.1)
-        assert on_input._calls == 5
-
         self.dc.execute(self.data_device, 'eosOutput')
-        sleep(.1)
+
+        for i in range(100):
+            sleep(0.01)
+            if on_eos._calls > 0:
+                break
+
+        assert on_input._calls == 5
         assert on_eos._calls == 1
         assert self.dc.unregisterChannelMonitor(channel)
         assert not self.dc.unregisterChannelMonitor(channel)
