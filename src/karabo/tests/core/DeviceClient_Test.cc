@@ -304,10 +304,10 @@ void DeviceClient_Test::testMonitorChannel() {
     success = m_deviceClient->instantiate("testServerDeviceClient", "PropertyTest",
                                           Hash("deviceId", "TestedDevice3"), KRB_TEST_MAX_TIMEOUT);
 
+    int sizeMsg = 0;
     int dataCounter = 0;
     auto inputHandler = [&] (const InputChannel::Pointer& channel) {
-        int size = channel->size();
-        CPPUNIT_ASSERT_EQUAL(size, 1);
+        sizeMsg = channel->size();
         const Hash::Pointer& data = channel->read(0);
         data->get("node.int32", dataCounter);
     };
@@ -323,6 +323,7 @@ void DeviceClient_Test::testMonitorChannel() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     }
     CPPUNIT_ASSERT_EQUAL(3, dataCounter);
+    CPPUNIT_ASSERT_EQUAL(1, sizeMsg);
 
     // Final clean-up
     success = m_deviceClient->killDevice("TestedDevice2", KRB_TEST_MAX_TIMEOUT);
