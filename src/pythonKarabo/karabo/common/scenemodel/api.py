@@ -52,3 +52,10 @@ from .widgets.statefulicon import StatefulIconWidgetModel
 from .widgets.graph_image import (
     WebCamGraphModel, DetectorGraphModel, ImageGraphModel,
     VectorRollGraphModel)
+
+# deprecated widgets
+from .widgets.graph_image import (
+    DisplayAlignedImage, DisplayImageElementModel, DisplayImageModel,
+    ScientificImageModel, WebcamImageModel)
+from .widgets.graph_plots import (
+    DisplayPlotModel, MultiCurvePlotModel, XYPlotModel, XYVectorModel)
