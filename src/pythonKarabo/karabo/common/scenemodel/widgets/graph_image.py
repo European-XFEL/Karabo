@@ -1,3 +1,4 @@
+import warnings
 from xml.etree.ElementTree import SubElement
 
 from traits.api import Bool, Float, Int, String
@@ -40,8 +41,24 @@ class ImageGraphModel(KaraboImageModel):
     """A model of the Image Graph"""
 
 
+class DisplayImageModel(ImageGraphModel):
+    """A legacy model"""
+    def __init__(self, **traits):
+        super().__init__(**traits)
+        msg = f"{type(self).__name__} is deprecated, use ImageGraphModel"
+        warnings.warn(msg, DeprecationWarning)
+
+
 class DetectorGraphModel(KaraboImageModel):
     """A model of the DetectorGraph"""
+
+
+class DisplayAlignedImage(DetectorGraphModel):
+    """A legacy model"""
+    def __init__(self, **traits):
+        super().__init__(**traits)
+        msg = f"{type(self).__name__} is deprecated, use DetectorGraphModel"
+        warnings.warn(msg, DeprecationWarning)
 
 
 class VectorRollGraphModel(BaseWidgetObjectData):
@@ -64,6 +81,30 @@ class WebCamGraphModel(BaseWidgetObjectData):
     colormap = String("none")
 
 
+class DisplayImageElementModel(WebCamGraphModel):
+    """A legacy model"""
+    def __init__(self, **traits):
+        super().__init__(**traits)
+        msg = f"{type(self).__name__} is deprecated, use WebCamGraphModel"
+        warnings.warn(msg, DeprecationWarning)
+
+
+class WebcamImageModel(WebCamGraphModel):
+    """A legacy model"""
+    def __init__(self, **traits):
+        super().__init__(**traits)
+        msg = f"{type(self).__name__} is deprecated, use WebCamGraphModel"
+        warnings.warn(msg, DeprecationWarning)
+
+
+class ScientificImageModel(WebCamGraphModel):
+    """A legacy model"""
+    def __init__(self, **traits):
+        super().__init__(**traits)
+        msg = f"{type(self).__name__} is deprecated, use WebCamGraphModel"
+        warnings.warn(msg, DeprecationWarning)
+
+
 @register_scene_reader('DisplayImage')  # deprecated Qwt model
 @register_scene_reader('ImageGraph')
 def _image_graph_reader(read_func, element):
@@ -72,6 +113,7 @@ def _image_graph_reader(read_func, element):
     return ImageGraphModel(**traits)
 
 
+@register_scene_writer(DisplayImageModel)
 @register_scene_writer(ImageGraphModel)
 def _image_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
@@ -137,6 +179,9 @@ def _webcam_graph_reader(read_func, element):
     return WebCamGraphModel(**traits)
 
 
+@register_scene_writer(DisplayImageElementModel)  # deprecated Qwt model
+@register_scene_writer(WebcamImageModel)  # deprecated Qwt model
+@register_scene_writer(ScientificImageModel)  # deprecated Qwt model
 @register_scene_writer(WebCamGraphModel)
 def _webcam_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
