@@ -190,8 +190,9 @@ void GuiVersion_Test::testExecute() {
         CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
-        CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("failureReason"),
-                               replyMessage.get<std::string>("failureReason").find("Timeout Exception") != std::string::npos);
+        CPPUNIT_ASSERT_EQUAL(std::string("Request to execute 'does.not.matter' on device 'not_there' timed out. "
+                                         "It may or may not succeed later."),
+                             replyMessage.get<std::string>("failureReason"));
     }
 
 
@@ -213,6 +214,10 @@ void GuiVersion_Test::testExecute() {
         CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
+        // First part of fail message is fixed, details contain 'Remote Exception':
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(replyMessage.get<std::string>("failureReason"), 0ul,
+                                     replyMessage.get<std::string>("failureReason")
+                                     .find("Request to execute 'not.existing' on device 'testGuiServerDevice' failed, details:\n"));
         CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("failureReason"),
                                replyMessage.get<std::string>("failureReason").find("Remote Exception") != std::string::npos);
     }
@@ -291,8 +296,8 @@ void GuiVersion_Test::testReconfigure() {
         CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
-        CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("failureReason"),
-                               replyMessage.get<std::string>("failureReason").find("Timeout Exception") != std::string::npos);
+        CPPUNIT_ASSERT_EQUAL(std::string("Failed to reconfigure 'whatever' of device 'not_there': Time out - it may or may not succeed later."),
+                             replyMessage.get<std::string>("failureReason"));
     }
 
     //
@@ -314,6 +319,10 @@ void GuiVersion_Test::testReconfigure() {
         CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
+        // Start of fail message is well defined, details contain 'Remote Exception':
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(replyMessage.get<std::string>("failureReason"), 0ul,
+                                     replyMessage.get<std::string>("failureReason")
+                                     .find("Failed to reconfigure 'whatever' of device 'testGuiServerDevice', details:\n"));
         CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("failureReason"),
                                replyMessage.get<std::string>("failureReason").find("Remote Exception") != std::string::npos);
     }
