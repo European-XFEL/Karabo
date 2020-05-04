@@ -607,10 +607,8 @@ namespace karabo {
                     if (hash.has("timeout")) {
                         requestor.timeout(hash.get<int>("timeout") * 1000); // convert to ms
                     }
-                    auto successHandler = bind_weak(&GuiServerDevice::forwardEmptyReply, this, true, "reconfigure",
-                                                    channel, hash);
-                    auto failureHandler = bind_weak(&GuiServerDevice::forwardEmptyReply, this, false, "reconfigure",
-                                                    channel, hash);
+                    auto successHandler = bind_weak(&GuiServerDevice::forwardReconfigureReply, this, true, channel, hash);
+                    auto failureHandler = bind_weak(&GuiServerDevice::forwardReconfigureReply, this, false, channel, hash);
                     requestor.receiveAsync(successHandler, failureHandler);
                 } else {
                     call(deviceId, "slotReconfigure", config);
@@ -620,6 +618,29 @@ namespace karabo {
             }
         }
 
+
+        void GuiServerDevice::forwardReconfigureReply(bool success, WeakChannelPointer channel, const Hash& input) {
+            Hash h("type", "reconfigureReply",
+                   "success", success,
+                   "input", input);
+            if (!success) {
+                // Failure, so can get access to exception causing it:
+                std::set<std::string> paths;
+                input.get<Hash>("configuration").getPaths(paths);
+                std::string& failTxt = h.set("failureReason", "Failed to reconfigure '" + toString(paths) += "' of "
+                                             "device '" + input.get<std::string>("deviceId") + "'")
+                        .getValue<std::string>();
+                try {
+                    throw;
+                } catch (const karabo::util::TimeoutException& te) {
+                    failTxt += ": Time out - it may or may not succeed later.";
+                    karabo::util::Exception::clearTrace();
+                } catch (const std::exception& e) {
+                    (failTxt += ", details:\n") += e.what();
+                }
+            }
+            safeClientWrite(channel, h);
+        }
 
         void GuiServerDevice::onExecute(WeakChannelPointer channel, const karabo::util::Hash& hash) {
             try {
@@ -633,10 +654,8 @@ namespace karabo {
                         requestor.timeout(hash.get<int>("timeout") * 1000); // convert to ms
                     }
                     // Any reply values are ignored (we do not know their types):
-                    auto successHandler = bind_weak(&GuiServerDevice::forwardEmptyReply, this, true, "execute",
-                                                    channel, hash);
-                    auto failureHandler = bind_weak(&GuiServerDevice::forwardEmptyReply, this, false, "execute",
-                                                    channel, hash);
+                    auto successHandler = bind_weak(&GuiServerDevice::forwardExecuteReply, this, true, channel, hash);
+                    auto failureHandler = bind_weak(&GuiServerDevice::forwardExecuteReply, this, false, channel, hash);
                     requestor.receiveAsync(successHandler, failureHandler);
                 } else {
                     call(deviceId, command);
@@ -647,16 +666,22 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::forwardEmptyReply(bool success, const std::string& requestType, WeakChannelPointer channel, const Hash& input) {
-            Hash h("type", requestType + "Reply",
+        void GuiServerDevice::forwardExecuteReply(bool success, WeakChannelPointer channel, const Hash& input) {
+            Hash h("type", "executeReply",
                    "success", success,
                    "input", input);
             if (!success) {
                 // Failure, so can get access to exception causing it:
+                std::string& failTxt = h.set("failureReason", "Request to execute '" + input.get<std::string>("command")
+                                             + "' on device '" + input.get<std::string>("deviceId") + "' ")
+                        .getValue<std::string>();
                 try {
                     throw;
+                } catch (const karabo::util::TimeoutException& te) {
+                    failTxt += "timed out. It may or may not succeed later.";
+                    karabo::util::Exception::clearTrace();
                 } catch (const std::exception& e) {
-                    h.set("failureReason", e.what());
+                    (failTxt += "failed, details:\n") += e.what();
                 }
             }
             safeClientWrite(channel, h);
