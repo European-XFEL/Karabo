@@ -1,4 +1,5 @@
 from traits.api import Bool, Float, Int, List, String
+import warnings
 from xml.etree.ElementTree import SubElement
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
@@ -40,8 +41,24 @@ class ScatterGraphModel(BasePlotModel):
     psize = Float(7.0)
 
 
+class XYPlotModel(ScatterGraphModel):
+    """ a legacy model """
+    def __init__(self, **traits):
+        super().__init__(**traits)
+        msg = f"{type(self).__name__} is deprecated, use ScatterGraphModel"
+        warnings.warn(msg, DeprecationWarning)
+
+
 class MultiCurveGraphModel(BasePlotModel):
     """ A model for the MultiCurve Graph"""
+
+
+class MultiCurvePlotModel(MultiCurveGraphModel):
+    """ a legacy model """
+    def __init__(self, **traits):
+        super().__init__(**traits)
+        msg = f"{type(self).__name__} is deprecated, use MultiCurveGraphModel"
+        warnings.warn(msg, DeprecationWarning)
 
 
 class VectorScatterGraphModel(BasePlotModel):
@@ -51,6 +68,14 @@ class VectorScatterGraphModel(BasePlotModel):
 
 class VectorXYGraphModel(BasePlotModel):
     """ A model for the VectorXYGraph"""
+
+
+class XYVectorModel(VectorXYGraphModel):
+    """ a legacy model """
+    def __init__(self, **traits):
+        super().__init__(**traits)
+        msg = f"{type(self)} is deprecate, use VectorXYGraphModel"
+        warnings.warn(msg, DeprecationWarning)
 
 
 class VectorBarGraphModel(BasePlotModel):
@@ -92,10 +117,26 @@ class VectorGraphModel(BasePlotModel):
     y_grid = Bool(True)
 
 
+class DisplayPlotModel(VectorGraphModel):
+    """ a legacy model """
+    def __init__(self, **traits):
+        super().__init__(**traits)
+        msg = f"{type(self).__name__} is deprecated, use VectorGraphModel"
+        warnings.warn(msg, DeprecationWarning)
+
+
 class TrendGraphModel(BasePlotModel):
     """Trendline graph model"""
     x_grid = Bool(True)
     y_grid = Bool(True)
+
+
+class DisplayTrendlineModel(TrendGraphModel):
+    """ a legacy model """
+    def __init__(self, **traits):
+        super().__init__(**traits)
+        msg = f"{type(self).__name__} is deprecated, use TrendGraphModel"
+        warnings.warn(msg, DeprecationWarning)
 
 
 class StateGraphModel(BasePlotModel):
@@ -123,6 +164,7 @@ def _scatter_graph_reader(read_func, element):
     return ScatterGraphModel(**traits)
 
 
+@register_scene_writer(XYPlotModel)
 @register_scene_writer(ScatterGraphModel)
 def _scatter_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
@@ -170,6 +212,7 @@ def _vector_xy_graph_reader(read_func, element):
     return VectorXYGraphModel(**traits)
 
 
+@register_scene_writer(XYVectorModel)
 @register_scene_writer(VectorXYGraphModel)
 def _vector_xy_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
@@ -299,6 +342,7 @@ def _vector_graph_reader(read_func, element):
     return VectorGraphModel(**traits)
 
 
+@register_scene_writer(DisplayPlotModel)
 @register_scene_writer(VectorGraphModel)
 def _vector_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
@@ -325,6 +369,7 @@ def _trend_graph_reader(read_func, element):
     return TrendGraphModel(**traits)
 
 
+@register_scene_writer(DisplayTrendlineModel)
 @register_scene_writer(TrendGraphModel)
 def _trend_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
@@ -389,6 +434,7 @@ def _multi_graph_reader(read_func, element):
     return MultiCurveGraphModel(**traits)
 
 
+@register_scene_writer(MultiCurvePlotModel)
 @register_scene_writer(MultiCurveGraphModel)
 def _multi_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
