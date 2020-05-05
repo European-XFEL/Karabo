@@ -86,14 +86,20 @@ class TestDeviceClientComm(BoundDeviceTestCase):
 
         for i in range(5):
             self.dc.execute(self.data_device, 'writeOutput')
+
+        for i in range(100):
+            sleep(0.01)
+            if on_input._calls >= 3:
+                break
+        assert on_input._calls == 5
+
         self.dc.execute(self.data_device, 'eosOutput')
 
         for i in range(100):
             sleep(0.01)
             if on_eos._calls > 0:
                 break
-
-        assert on_input._calls == 5
         assert on_eos._calls == 1
+
         assert self.dc.unregisterChannelMonitor(channel)
         assert not self.dc.unregisterChannelMonitor(channel)
