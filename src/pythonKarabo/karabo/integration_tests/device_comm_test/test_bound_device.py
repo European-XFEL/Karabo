@@ -1,3 +1,4 @@
+from functools import partial
 import os.path as op
 import os
 from time import sleep
@@ -14,16 +15,19 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
     def tearDown(self):
         super(TestDeviceDeviceComm, self).tearDown()
 
+    def instantiate_device(self, serverId, classId='PropertyTest',
+                           deviceId='propTestDevice', configuration=None,
+                           timeout=30):
+        config = Hash('classId', classId, 'deviceId', deviceId,
+                      'configuration', configuration or Hash())
+        return self.dc.instantiate(serverId, config, timeout)
+
     def test_readOnly_table(self):
-
-        SERVER_ID = "PropTestServer"
+        serverId = "PropTestServer"
         deviceId = "propTestDevice"
-        self.start_server("bound", SERVER_ID, ["PropertyTest"])
+        self.start_server("bound", serverId, ["PropertyTest"])
 
-        cfg = Hash("classId", "PropertyTest",
-                   "deviceId", deviceId,
-                   "configuration", Hash())
-        ok, msg = self.dc.instantiate(SERVER_ID, cfg, 30)
+        ok, msg = self.instantiate_device(serverId, deviceId=deviceId)
         self.assertTrue(ok, msg)
 
         tbl = self.dc.get(deviceId, "tableReadonly")
@@ -51,17 +55,14 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                                                       msg))
 
     def test_log_level(self):
-        SERVER_ID = "logLevelServer"
+        serverId = "logLevelServer"
         deviceId = "logLevelTestDevice"
         serverLogLevel = "FATAL"
-        self.start_server("bound", SERVER_ID, ["PropertyTest"],
+        self.start_server("bound", serverId, ["PropertyTest"],
                           logLevel=serverLogLevel)
 
         # Do not specify device log level: inherit from server
-        cfg = Hash("classId", "PropertyTest",
-                   "deviceId", deviceId,
-                   "configuration", Hash())
-        ok, msg = self.dc.instantiate(SERVER_ID, cfg, 30)
+        ok, msg = self.instantiate_device(serverId, deviceId=deviceId)
         self.assertTrue(ok, msg)
         res = self.dc.get(deviceId, "Logger.priority")
         self.assertEqual(res, serverLogLevel)
@@ -71,10 +72,10 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                                                       msg))
 
         # Specify device log level explicitely (non-default value)
-        cfg = Hash("classId", "PropertyTest",
-                   "deviceId", deviceId,
-                   "configuration", Hash("Logger.priority", "WARN"))
-        ok, msg = self.dc.instantiate(SERVER_ID, cfg, 30)
+        ok, msg = self.instantiate_device(
+            serverId, deviceId=deviceId,
+            configuration=Hash('Logger.priority', 'WARN')
+        )
         self.assertTrue(ok, msg)
         res = self.dc.get(deviceId, "Logger.priority")
         self.assertEqual(res, "WARN")
@@ -83,39 +84,33 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
                                                                       msg))
 
     def test_in_sequence(self):
-        SERVER_ID = "testServer"
+        serverId = "testServer"
         own_dir = op.dirname(op.abspath(__file__))
         class_ids = ['CommTestDevice','UnstoppedThreadDevice']
-        self.start_server("bound", SERVER_ID, class_ids, plugin_dir=own_dir)
+        self.start_server("bound", serverId, class_ids, plugin_dir=own_dir)
         # Complete setup - do not do it in setup to ensure that even in case of
         # exceptions 'tearDown' is called and stops Python processes.
 
         # we will use two devices communicating with each other.
-        config = Hash("remote", "testComm2")
-
-        classConfig = Hash("classId", "CommTestDevice",
-                           "deviceId", "testComm1",
-                           "configuration", config)
-
-        ok, msg = self.dc.instantiate(SERVER_ID, classConfig, 30)
+        ok, msg = self.instantiate_device(
+            serverId, classId='CommTestDevice', deviceId='testComm1',
+            configuration=Hash('remote', 'testComm2')
+        )
         self.assertTrue(ok, msg)
 
-        config2 = Hash("remote", "testComm1")
-
-        classConfig2 = Hash("classId", "CommTestDevice",
-                            "deviceId", "testComm2",
-                            "configuration", config2)
-
-        ok, msg = self.dc.instantiate(SERVER_ID, classConfig2, 30)
+        ok, msg = self.instantiate_device(
+            serverId, classId='CommTestDevice', deviceId='testComm2',
+            configuration=Hash('remote', 'testComm1')
+        )
         self.assertTrue(ok, msg)
 
-        config3 = Hash()
+        unstoppable_device = partial(
+            self.instantiate_device, serverId=serverId,
+            classId='UnstoppedThreadDevice',
+            deviceId='deviceNotGoingDownCleanly'
+        )
 
-        classConfig3 = Hash("classId", "UnstoppedThreadDevice",
-                            "deviceId", "deviceNotGoingDownCleanly",
-                            "configuration", config3)
-
-        ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+        ok, msg = unstoppable_device()
         self.assertTrue(ok, msg)
 
         # wait for device to init
@@ -297,11 +292,11 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertTrue(ok, msg)
 
             # Start again
-            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+            ok, msg = unstoppable_device()
             self.assertTrue(ok, msg)
 
             # Cannot instantiate another one:
-            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+            ok, msg = unstoppable_device()
             self.assertTrue(not ok, msg)
 
             # Now let the device fall into coma, i.e. it does not react anymore
@@ -318,7 +313,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             #    that is triggered by test class tearDown. If killing would not
             #    work, the server shutdown would time out and that would
             #    produce an error
-            ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
+            ok, msg = unstoppable_device()
             self.assertTrue(ok, msg)
 
 
