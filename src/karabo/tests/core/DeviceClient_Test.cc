@@ -306,7 +306,7 @@ void DeviceClient_Test::testMonitorChannel() {
 
     int sizeMsg = 0;
     int dataCounter = 0;
-    auto inputHandler = [&] (const InputChannel::Pointer& channel) {
+    auto inputHandler = [&dataCounter, &sizeMsg] (const InputChannel::Pointer& channel) {
         sizeMsg = channel->size();
         const Hash::Pointer& data = channel->read(0);
         data->get("node.int32", dataCounter);
