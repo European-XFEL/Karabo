@@ -89,7 +89,7 @@ class TestDeviceClientComm(BoundDeviceTestCase):
 
         for i in range(100):
             sleep(0.01)
-            if on_input._calls >= 3:
+            if on_input._calls >= 5:
                 break
         assert on_input._calls == 5
 
