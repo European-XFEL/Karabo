@@ -14,6 +14,7 @@
 #include "Version.hh"
 #include "Exception.hh"
 #include "StringTools.hh"
+#include "repositoryVersion"
 
 namespace karabo {
 
@@ -21,19 +22,7 @@ namespace karabo {
 
 
         Version::Version() : m_major(-1), m_minor(-1), m_patch(-1), m_postType(PostfixType::NONE), m_post(-1), m_dev(-1) {
-
-            boost::filesystem::path versionFile = getPathToVersionFile();
-            if (boost::filesystem::exists(versionFile)) {
-                std::stringstream buffer;
-                std::ifstream file(versionFile.string().c_str());
-                if (file) {
-                    buffer << file.rdbuf();
-                    file.close();
-                } else {
-                    throw KARABO_IO_EXCEPTION("Cannot open file: " + versionFile.string());
-                }
-                processString(buffer.str());
-            }
+            processString(KARABO_VERSION); // from repositoryVersion
         }
 
         Version::Version(const std::string &version) : m_major(-1), m_minor(-1), m_patch(-1), 
