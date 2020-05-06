@@ -88,7 +88,7 @@ class TestPopUp(GuiTestCase):
         network = Mock()
         with singletons(network=network):
             controller._on_finished(QMessageBox.Ok)
-            network.onExecute.assert_called_with('dev', 'ok')
+            network.onExecute.assert_called_with('dev', 'ok', False)
 
             network.reset_mock()
             controller._on_finished(QMessageBox.Cancel)
@@ -97,4 +97,4 @@ class TestPopUp(GuiTestCase):
             network.reset_mock()
             controller.visualize_additional_property(self.cancel_proxy)
             controller._on_finished(QMessageBox.Cancel)
-            network.onExecute.assert_called_with('dev', 'cancel')
+            network.onExecute.assert_called_with('dev', 'cancel', False)
