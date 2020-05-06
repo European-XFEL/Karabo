@@ -7,6 +7,7 @@
 
 #include "Version_Test.hh"
 #include <karabo/util/Version.hh>
+#include <karabo/util/repositoryVersion>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Version_Test);
 
@@ -23,6 +24,7 @@ void Version_Test::testVersion() {
     std::clog << "### KARABO VERSION: " << karabo::util::Version::getVersion() << " ###" << std::endl;
     const karabo::util::Version& v = karabo::util::Version::getKaraboVersion();
     CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), v.getString());
+    CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), std::string(KARABO_VERSION)); // from repositoryVersion
 }
 
 void Version_Test::testVersionFromString(){
