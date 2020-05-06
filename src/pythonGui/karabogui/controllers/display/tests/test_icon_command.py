@@ -64,7 +64,7 @@ class TestDisplayIconCommand(GuiTestCase):
         network = Mock()
         with singletons(network=network):
             controller._button.clicked.emit(True)
-            network.onExecute.assert_called_with('dev', 'callme')
+            network.onExecute.assert_called_with('dev', 'callme', False)
 
     def test_state_change(self):
         from ..icon_command import DisplayIconCommand
