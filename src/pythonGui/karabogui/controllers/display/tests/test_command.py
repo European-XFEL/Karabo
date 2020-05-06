@@ -8,6 +8,8 @@ from karabo.native import Configurable, Slot, String
 from karabogui.binding.api import (
     DeviceProxy, PropertyProxy, build_binding, apply_default_configuration)
 from karabogui.testing import GuiTestCase, set_proxy_value, singletons
+from karabogui.topology.system_tree import SystemTreeNode
+
 from ..command import DisplayCommand
 
 
@@ -61,7 +63,19 @@ class TestDisplayCommand(GuiTestCase):
         network = Mock()
         with singletons(network=network):
             controller._actions[0].action.trigger()
-            network.onExecute.assert_called_with('dev', 'callme')
+            network.onExecute.assert_called_with('dev', 'callme', False)
+
+    def test_macro_trigger(self):
+        slot_proxy = get_slot_proxy()
+        node = SystemTreeNode()
+        node.attributes = {'type': 'macro'}
+        slot_proxy.root_proxy.topology_node = node
+        controller = DisplayCommand(proxy=slot_proxy)
+        controller.create(None)
+        network = Mock()
+        with singletons(network=network):
+            controller._actions[0].action.trigger()
+            network.onExecute.assert_called_with('dev', 'callme', True)
 
     def test_additional_proxy(self):
         slot_p1, slot_p2 = get_slot_proxy(additional=True)
