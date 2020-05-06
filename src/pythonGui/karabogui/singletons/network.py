@@ -346,12 +346,13 @@ class Network(QObject):
             h["schemaUpdates"] = attrUpdates
         self._tcpWriteHash(h)
 
-    def onExecute(self, device_id, slot_name):
+    def onExecute(self, device_id, slot_name, ignore_timeouts):
         h = Hash("type", "execute")
         h["deviceId"] = device_id
         h["command"] = slot_name
         h["reply"] = True
-        h["timeout"] = REQUEST_REPLY_TIMEOUT
+        if not ignore_timeouts:
+            h["timeout"] = REQUEST_REPLY_TIMEOUT
         self._tcpWriteHash(h)
 
     def onExecuteGeneric(self, token, device_id, slot_name, params):
