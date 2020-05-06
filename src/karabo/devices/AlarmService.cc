@@ -9,13 +9,10 @@
 #include <fstream>
 
 #include <boost/foreach.hpp>
-#include <boost/interprocess/sync/file_lock.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
-#include <boost/interprocess/sync/sharable_lock.hpp>
 
 #include "karabo/util/State.hh"
 #include "karabo/util/MetaTools.hh"
-#include "karabo/io/TextSerializer.hh"
+#include "karabo/io/FileTools.hh"
 
 #include "AlarmService.hh"
 
@@ -95,10 +92,13 @@ namespace karabo {
 
 
         AlarmService::~AlarmService() {
+        }
+
+
+        void AlarmService::preDestruction() {
             m_flushRunning = false;
             m_flushWorker.join();
         }
-
 
         void AlarmService::initialize() {
 
@@ -415,27 +415,12 @@ namespace karabo {
 
 
         void AlarmService::flushRunner() const {
-            TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
-
-
             while (m_flushRunning) {
-                std::string archive;
-                std::ofstream fout;
-
-                fout.open(m_flushFilePath, ios::trunc);
                 {
-                    boost::interprocess::file_lock flock(m_flushFilePath.c_str());
-                    boost::interprocess::scoped_lock<boost::interprocess::file_lock> wflock(flock);
+                    boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
 
-                    {
-
-                        boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
-
-                        Hash h("alarms", m_alarms);
-                        serializer->save(h, archive);
-                    }
-                    fout << archive;
-                    fout.close();
+                    Hash h("alarms", m_alarms);
+                    karabo::io::saveToFile(h, m_flushFilePath);
                 }
                 boost::this_thread::sleep(boost::posix_time::seconds(this->get<unsigned int>("flushInterval")));
             }
@@ -446,24 +431,16 @@ namespace karabo {
             //nothing to do if file doesn't exist
             if (!boost::filesystem::exists(m_flushFilePath)) return;
 
-            boost::interprocess::file_lock flock(m_flushFilePath.c_str());
             try {
-                boost::interprocess::sharable_lock<boost::interprocess::file_lock> shlock(flock);
-                std::ifstream fin;
-                fin.open(m_flushFilePath);
-                std::ostringstream archive;
-                std::string input;
-                while (fin >> input) archive << input << std::endl;
-                fin.close();
-                TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
                 Hash previousState;
-                serializer->load(previousState, archive.str());
+                karabo::io::loadFromFile(previousState, m_flushFilePath);
 
                 boost::unique_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
                 m_alarms = previousState.get<Hash>("alarms");
-            } catch (...) {
+            } catch (const std::exception& e) {
                 //we go on without updating alarms
-                KARABO_LOG_WARN << "Could not load previous alarm state from file " << m_flushFilePath << " even though file exists!";
+                KARABO_LOG_WARN << "Could not load previous alarm state from file " << m_flushFilePath
+                        << " even though file exists: " << e.what();
             }
 
             //send this as init information to Clients

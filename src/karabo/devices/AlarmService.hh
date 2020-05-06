@@ -60,6 +60,8 @@ namespace karabo {
 
             void initialize();
 
+            void preDestruction() override;
+
             /**
              * Callback for the instanceNew monitor. Connects this device's slotUpdateAlarms function
              * to the new devices signalAlarmUpdate signal. If the device was previously known it will ask this
