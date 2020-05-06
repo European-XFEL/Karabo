@@ -350,7 +350,17 @@ class PropertyProxy(HasStrictTraits):
 
         state = self.root_proxy.state_binding.value
         if self.binding.is_allowed(state):
-            get_network().onExecute(self.root_proxy.device_id, self.path)
+            # Macro Slots are not guaranteed to reply immediately
+            # we do not expect a reply from them.
+            # XXX: this protection should be implemented on macro side
+            t_node = self.root_proxy.topology_node
+            ignore_timeouts = False
+            if t_node:
+                # ignore timeouts if the root_proxy is a macro.
+                ignore_timeouts = t_node.attributes.get('type') == 'macro'
+            get_network().onExecute(self.root_proxy.device_id,
+                                    self.path,
+                                    ignore_timeouts)
 
     def get_device_value(self):
         """Return the value stored in the device configuration, rather

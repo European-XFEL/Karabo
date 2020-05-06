@@ -78,7 +78,7 @@ def test_device_proxy_slots():
                             binding=binding)
         slot_proxy = PropertyProxy(path='callme', root_proxy=proxy)
         slot_proxy.execute()
-        network.onExecute.assert_called_with('dev', 'callme')
+        network.onExecute.assert_called_with('dev', 'callme', False)
 
 
 def test_device_proxy_status():
