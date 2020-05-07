@@ -81,28 +81,27 @@ class WebCamGraphModel(BaseWidgetObjectData):
     colormap = String("none")
 
 
-class DisplayImageElementModel(WebCamGraphModel):
-    """A legacy model"""
+class DeprecatedBaseWebCamModel(WebCamGraphModel):
+    show_axes = Bool  # legacy traits
+    show_color_bar = Bool
+    show_tool_bar = Bool
+
     def __init__(self, **traits):
         super().__init__(**traits)
         msg = f"{type(self).__name__} is deprecated, use WebCamGraphModel"
         warnings.warn(msg, DeprecationWarning)
 
 
-class WebcamImageModel(WebCamGraphModel):
+class DisplayImageElementModel(DeprecatedBaseWebCamModel):
     """A legacy model"""
-    def __init__(self, **traits):
-        super().__init__(**traits)
-        msg = f"{type(self).__name__} is deprecated, use WebCamGraphModel"
-        warnings.warn(msg, DeprecationWarning)
 
 
-class ScientificImageModel(WebCamGraphModel):
+class WebcamImageModel(DeprecatedBaseWebCamModel):
     """A legacy model"""
-    def __init__(self, **traits):
-        super().__init__(**traits)
-        msg = f"{type(self).__name__} is deprecated, use WebCamGraphModel"
-        warnings.warn(msg, DeprecationWarning)
+
+
+class ScientificImageModel(DeprecatedBaseWebCamModel):
+    """A legacy model"""
 
 
 @register_scene_reader('DisplayImage')  # deprecated Qwt model
