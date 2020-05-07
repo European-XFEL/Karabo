@@ -299,8 +299,10 @@ namespace karabo {
              *                      to channel by a message of type ``reconfigureReply`` that contains
              *                      * ``input``: the Hash given here as ``info``
              *                      * ``success``: bool whether reconfiguration succeeded
-             *                      * ``failureReason``: string with failure reason - only if success is false
-             * - optional int at ``timeout``: if a reply should be reported back, defines seconds of timeout
+             *                      * ``failureReason``: string with failure reason
+             * - optional int at ``timeout``: if a reply should be reported back, defines seconds of timeout.
+             *                                In case ``timeout`` is missing, timeout errors will report ``success``
+             *                                as true but provides a ``failureReason`` mentioning the timeout
              *
              * @param channel to potentially send "reconfigureReply"
              * @param info
@@ -326,8 +328,10 @@ namespace karabo {
              *                      to channel by a message of type ``executeReply`` that contains
              *                      * ``input``: the Hash given here as ``info``
              *                      * ``success``: bool whether execution succeeded
-             *                      * ``failureReason``: string with failure reason - only if success is false
-             * - optional int at ``timeout``: if a reply should be reported back, defines seconds of timeout
+             *                      * ``failureReason``: string with failure reason
+             * - optional int at ``timeout``: if a reply should be reported back, defines seconds of timeout.
+             *                                In case ``timeout`` is missing, timeout errors will report ``success``
+             *                                as true but provides a ``failureReason`` mentioning the timeout
              * @param channel
              * @param info
              */
