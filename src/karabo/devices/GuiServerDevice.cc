@@ -633,6 +633,10 @@ namespace karabo {
                 try {
                     throw;
                 } catch (const karabo::util::TimeoutException& te) {
+                    // if the input hash has no timeout key, ignore timeout errors, declare success
+                    if (!input.has("timeout")) {
+                        h.set("success", true);
+                    }
                     failTxt += ": Time out - it may or may not succeed later.";
                     karabo::util::Exception::clearTrace();
                 } catch (const std::exception& e) {
@@ -678,6 +682,10 @@ namespace karabo {
                 try {
                     throw;
                 } catch (const karabo::util::TimeoutException& te) {
+                    // if the input hash has no timeout key, ignore timeout errors
+                    if (!input.has("timeout")) {
+                        h.set("success", true);
+                    }
                     failTxt += "timed out. It may or may not succeed later.";
                     karabo::util::Exception::clearTrace();
                 } catch (const std::exception& e) {
