@@ -82,7 +82,7 @@ from karathon import (
     VectorHashPointer, VectorString, WATT, WEBER, WRITE, YEAR, YOCTO, YOTTA,
     YUV, ZEPTO, ZETTA, _DimsIntern,
     isStdVectorDefaultConversion, loadFromFile, saveToFile, setDims,
-    setStdVectorDefaultConversion, similar, EventLoop, DAQPolicy
+    setStdVectorDefaultConversion, similar, fullyEqual, EventLoop, DAQPolicy
 )
 
 from .common.alarm_conditions import AlarmCondition
