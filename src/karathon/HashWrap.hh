@@ -209,6 +209,9 @@ namespace karathon {
     bool
     similarWrap(const bp::object& left, const bp::object& right);
 
+    bool
+    fullyEqualWrap(const bp::object& left, const bp::object& right);
+
     // implementation details, users never invoke these directly
     namespace detail {
 
