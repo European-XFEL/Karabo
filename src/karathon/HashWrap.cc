@@ -772,6 +772,19 @@ namespace karathon {
     }
 
 
+    bool
+    fullyEqualWrap(const bp::object& left, const bp::object& right) {
+        bp::extract<karabo::util::Hash> leftExtracted(left);
+        if (!leftExtracted.check()) return false;
+
+        bp::extract<karabo::util::Hash> rightExtracted(right);
+        if (!rightExtracted.check()) return false;
+
+        const karabo::util::Hash& lhash = leftExtracted;
+        const karabo::util::Hash& rhash = rightExtracted;
+        return lhash.fullyEquals(rhash);
+    }
+
     void
     HashWrap::setDefault(const PyTypes::ReferenceType & type) {
         if (type == PyTypes::PYTHON_DEFAULT)
