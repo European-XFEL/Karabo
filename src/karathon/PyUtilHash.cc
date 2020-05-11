@@ -325,13 +325,17 @@ void exportPyUtilHash() {
           "This form of subtracting is preferable.\nExample:\n"
           "\th = Hash('a.b.c', 22, 'a.b.d', 33, 'a.c.d', 44)\n\th2 = Hash('a.b', Hash())\n\th -= h2");
 
-    // Global free function to compare Hash, vector<Hash>, Hash::Node
+    // Global free function to compare Hash, vector<Hash>, Hash::Node, Schema
     def("similar", &similarWrap, (bp::arg("left"), bp::arg("right")),
-        "Compares two hashes for equality.\nExample:\n"
+        "Compares two hashes for similar structure.\nExample:\n"
         "\th = Hash('a.b.c', 1, 'b.x', 2.22, 'b.y', 7.432, 'c', [1,2,3])\n\t"
         "flat = Hash()\n\th.flatten(flat) # 'flat' will contain 'flatten' hash\n\t"
         "tree = Hash()\n\tflat.unflatten(tree)\n\tresult = similar(h, tree)\n"
         "... result will be 'True'");
+
+    // Global free function to compare Hash, // TODO: could be extended for vector<Hash>, Hash::Node or Schema
+    def("fullyEqual", &fullyEqualWrap, (bp::arg("left"), bp::arg("right")),
+        "Compares two hashes for exact equality: keys, types, attributes, values");
 
     h.def("isType", &HashWrap().is, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."),
           "h.isType(path, type) -> True if reference type of value in Hash container for given 'path' is equal 'type'.\nExample:\n\t"
