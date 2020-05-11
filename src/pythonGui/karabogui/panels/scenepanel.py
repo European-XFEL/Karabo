@@ -22,7 +22,7 @@ from karabogui.sceneview.tools.api import (
     SceneCopyAction, SceneCutAction, SceneDeleteAction, SceneMoveAction,
     SceneLinkTool, ScenePasteAction, ScenePasteReplaceAction,
     SceneSelectAllAction, SceneSendToBackAction, SceneSelectionTool,
-    WebLinkTool)
+    StickerTool, WebLinkTool)
 from karabogui.widgets.toolbar import ToolBar
 from .base import BasePanelWidget
 
@@ -278,6 +278,11 @@ class ScenePanel(BasePanelWidget):
                                         icon=icons.weblink,
                                         text="Add web link",
                                         tooltip="Add web link to scene",
+                                        checkable=True))
+        actions.append(CreateToolAction(tool_factory=StickerTool,
+                                        icon=icons.sticker,
+                                        text="Add a sticker widget",
+                                        tooltip="Add sticker to scene",
                                         checkable=True))
         return actions
 
