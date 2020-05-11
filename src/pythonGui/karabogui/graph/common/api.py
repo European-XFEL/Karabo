@@ -25,7 +25,7 @@ from .legend import KaraboLegend, CoordsLegend
 from .toolbar.controller import ToolbarController
 from .toolbar.toolsets import (
     BaseToolsetController, ExportToolset, MouseMode, ROIToolset)
-from .toolbar.widgets import create_button
+from .toolbar.widgets import create_button, create_tool_button
 
 from .viewbox import KaraboViewBox
 

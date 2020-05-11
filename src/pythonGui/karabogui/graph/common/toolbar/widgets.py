@@ -213,6 +213,10 @@ def create_button(*, checkable, icon, tooltip, on_clicked=None):
     return button
 
 
+# XXX: Backward compatibility
+create_tool_button = create_button
+
+
 def create_dropdown_button(actions, checkable, icon, tooltip,
                            on_clicked=None):
     button = DropDownButton()
