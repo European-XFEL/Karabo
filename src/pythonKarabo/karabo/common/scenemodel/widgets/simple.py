@@ -5,7 +5,8 @@ from traits.api import Bool, Enum, Int, String
 from karabo.common.scenemodel.bases import (
     BaseDisplayEditableWidget, BaseEditWidget, BaseWidgetObjectData)
 from karabo.common.scenemodel.const import (
-    NS_KARABO, WIDGET_ELEMENT_TAG, SceneTargetWindow)
+    NS_KARABO, SCENE_FONT_SIZE, SCENE_FONT_SIZES, SCENE_FONT_WEIGHT,
+    SCENE_FONT_WEIGHTS, SceneTargetWindow, WIDGET_ELEMENT_TAG)
 from karabo.common.scenemodel.io_utils import (
     get_numbers, set_numbers, read_base_widget_data,
     read_empty_display_editable_widget, write_base_widget_data)
@@ -59,6 +60,15 @@ class DaemonManagerModel(BaseWidgetObjectData):
 
 class DisplayLabelModel(BaseWidgetObjectData):
     """ A model for DisplayLabel"""
+    font_size = Enum(*SCENE_FONT_SIZES)
+    font_weight = Enum(*SCENE_FONT_WEIGHTS)
+
+    def __init__(self, font_size=SCENE_FONT_SIZE,
+                 font_weight=SCENE_FONT_WEIGHT, **traits):
+        # We set the default values as Enum doesn't set this straightforwardly
+        super(DisplayLabelModel, self).__init__(font_size=font_size,
+                                                font_weight=font_weight,
+                                                **traits)
 
 
 class DisplayListModel(BaseWidgetObjectData):
@@ -311,6 +321,33 @@ def _time_label_writer(write_func, model, parent):
     return element
 
 
+@register_scene_reader('DisplayLabel')
+def _display_label_reader(read_func, element):
+    traits = read_base_widget_data(element)
+
+    # Add font formatting
+    font_size = int(element.get(NS_KARABO + 'font_size', SCENE_FONT_SIZE))
+    traits['font_size'] = font_size
+    font_weight = element.get(NS_KARABO + 'font_weight', SCENE_FONT_WEIGHT)
+    traits['font_weight'] = font_weight
+
+    return DisplayLabelModel(**traits)
+
+
+@register_scene_writer(DisplayLabelModel)
+def _display_label_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'DisplayLabel')
+
+    # Write only modified display label formatting
+    if model.font_size != SCENE_FONT_SIZE:
+        element.set(NS_KARABO + 'font_size', str(model.font_size))
+    if model.font_weight != SCENE_FONT_WEIGHT:
+        element.set(NS_KARABO + 'font_weight', model.font_weight)
+
+    return element
+
+
 @register_scene_reader('WebLink', version=1)
 def __web_link_reader(read_func, element):
     traits = _read_geometry_data(element)
@@ -402,7 +439,7 @@ def _build_empty_widget_readers_and_writers():
         return writer
 
     names = ('AnalogModel', 'BitfieldModel', 'DaemonManagerModel',
-             'DisplayLabelModel', 'DisplayListModel', 'DisplayTextLogModel',
+             'DisplayListModel', 'DisplayTextLogModel',
              'EditableListModel', 'EditableListElementModel',
              'EditableSpinBoxModel', 'GlobalAlarmModel', 'HexadecimalModel',
              'IntLineEditModel', 'KnobModel', 'LampModel', 'PopUpModel',
