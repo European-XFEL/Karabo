@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, QRectF
 from PyQt5.QtGui import QPainterPathStroker, QPainterPath
 from pyqtgraph import Point
 
@@ -85,7 +85,8 @@ class CrosshairROI(KaraboROI):
     # PyQt methods
 
     def boundingRect(self):
-        return self.shape().boundingRect()
+        shape = self.shape()
+        return shape.boundingRect() if shape is not None else QRectF()
 
     def paint(self, p, *args):
         p.setPen(self.currentPen)
@@ -118,26 +119,33 @@ class CrosshairROI(KaraboROI):
     # Private methods
 
     def _create_shape(self, path):
+        """Creates the stroke from the input path. When the viewbox is not
+           rendered yet, which happens during initialization,
+           `mapToDevice` returns None"""
         path = self.mapToDevice(path)
-        stroker = QPainterPathStroker()
-        stroker.setWidth(10)
-        outline = stroker.createStroke(path)
-        return self.mapFromDevice(outline)
+        if path is not None:
+            stroker = QPainterPathStroker()
+            stroker.setWidth(10)
+            outline = stroker.createStroke(path)
+            return self.mapFromDevice(outline)
+        return None
 
     def _create_path(self):
-        path = QPainterPath()
-        rect = self.mapRectFromView(self._viewBox().viewRect())
-
         # Factor is the desired width/height wrt viewbox divided by 2
         factor = 0.1 if self.selected else 0.05
 
-        half_width = rect.width() * factor
-        half_height = rect.height() * factor
+        # Calculate the crosshair dimensions. We it from the minimum of the
+        # viewbox's width and hight to make a symmetrical crosshair
+        rect = self.mapRectFromView(self._viewBox().viewRect())
+        rect_dim = min(rect.width(), rect.height())
+        half_dim = rect_dim * factor
 
-        path.moveTo(Point(0, -half_height))
-        path.lineTo(Point(0, half_height))
+        # Create the path from the half dimension
+        path = QPainterPath()
+        path.moveTo(Point(0, -half_dim))
+        path.lineTo(Point(0, half_dim))
 
-        path.moveTo(Point(-half_width, 0))
-        path.lineTo(Point(half_width, 0))
+        path.moveTo(Point(-half_dim, 0))
+        path.lineTo(Point(half_dim, 0))
 
         return path
