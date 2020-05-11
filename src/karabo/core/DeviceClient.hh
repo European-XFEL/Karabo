@@ -10,6 +10,7 @@
 #define	KARABO_CORE_DEVICE_CLIENT_HH
 
 #include <karabo/xms/SignalSlotable.hh>
+#include <karabo/util/DataLogUtils.hh>
 #include <karabo/util/Timestamp.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/core/Lock.hh>
@@ -155,6 +156,8 @@ namespace karabo {
 
             int m_accessLevel = karabo::util::Schema::ADMIN;
 
+            std::string m_dataLoggerManagerId;
+
         public:
 
             KARABO_CLASSINFO(DeviceClient, "DeviceClient", "1.2");
@@ -170,8 +173,11 @@ namespace karabo {
              *                     will implicitly try to trigger a call to initialize() via the event loop. Since this
              *                     can fail silently, it is strongly recommended to use implicitInit = false and
              *                     call the initialize() method right after the constructor.
+             * @param dataLoggerManagerId The name of the DataLoggerManager instance to be used for figuring out which
+             *                            reader to query for device history.
              */
-            explicit DeviceClient(const std::string& instanceId = std::string(), bool implicitInit = true);
+            explicit DeviceClient(const std::string& instanceId = std::string(), bool implicitInit = true,
+                                  const std::string &dataLoggerManagerId = karabo::util::DATALOGMANAGER_ID);
 
             /**
              * Constructor using instantiated signalSlotable class (shared communication)
@@ -180,9 +186,36 @@ namespace karabo {
              *                     will implicitly try to trigger a call to initialize() via the event loop. Since this
              *                     can fail silently, it is strongly recommended to use implicitInit = false and
              *                     call the initialize() method right after the constructor.
+             * @param dataLoggerManagerId The name of the DataLoggerManager instance to be used for figuring out which
+             *                            reader to query for device history.
              */
             explicit DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
-                                  bool implicitInit = true);
+                                  bool implicitInit = true,
+                                  const std::string &dataLoggerManagerId = karabo::util::DATALOGMANAGER_ID);
+
+            /**
+             * Constructor aimed at cases where a specific DataLoggerManagerId is required.
+             * Requires an explicit call to DeviceClient::initialize() after the construction takes place.
+             *
+             * @param instanceId The id with which the client should participate in the system.
+             *                   If not unique or invalid, constructor will throw an exception.
+             *                   If empty, an id will be generated from host name and process id.
+             * @param dataLoggerManagerId The name of the DataLoggerManager instance to be used for figuring out which
+             *                            reader to query for device history.
+             */
+            DeviceClient(const std::string &instanceId, const std::string &dataLoggerManagerId);
+
+            /**
+             * Constructor using instantiated signalSlotable class (shared communication) and aimed at
+             * cases where a specific DataLoggerManagerId is required.
+             * Requires an explicit call to DeviceClient::initialize() after the construction takes place.
+             *
+             * @param signalSlotable An instance of the SignalSlotable lass
+             * @param dataLoggerManagerId The name of the DataLoggerManager instance to be used for figuring out which
+             *                            reader to query for device history.
+             */
+            DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
+                         const std::string &dataLoggerManagerId);
 
             virtual ~DeviceClient();
 
