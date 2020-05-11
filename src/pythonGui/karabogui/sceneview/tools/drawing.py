@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QDialog
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
-    LineModel, RectangleModel, SceneLinkModel, WebLinkModel)
+    LineModel, RectangleModel, SceneLinkModel, StickerModel, WebLinkModel)
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
@@ -140,6 +140,24 @@ class SceneLinkTool(BaseSceneTool):
             model.target_window = dialog.selectedTargetWindow
             scene_view.add_models(model)
             scene_view.set_tool(None)
+
+
+class StickerTool(BaseSceneTool):
+    def mouse_down(self, scene_view, event):
+        pass
+
+    def mouse_move(self, scene_view, event):
+        pass
+
+    def mouse_up(self, scene_view, event):
+        """A callback which is fired whenever the user ends a mouse click
+        in the SceneView.
+        """
+        mouse_pos = event.pos()
+        model = StickerModel(x=mouse_pos.x(), y=mouse_pos.y(),
+                             width=100, height=100)
+        scene_view.add_models(model)
+        scene_view.set_tool(None)
 
 
 class WebLinkTool(BaseSceneTool):
