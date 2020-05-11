@@ -6,7 +6,7 @@ from PyQt5.QtGui import QColor, QPixmap, QIcon, QFont
 from PyQt5.QtWidgets import (
     QApplication, QColorDialog, QDialog, QFontDialog)
 
-from karabo.common.scenemodel.api import LabelModel
+from karabo.common.scenemodel.api import LabelModel, SCENE_FONT_SIZE
 
 
 class TextDialog(QDialog):
@@ -20,7 +20,7 @@ class TextDialog(QDialog):
             self.label_model = LabelModel()
             self.text_font = QApplication.font()
             self.text_font.setStyleName("Normal")
-            self.text_font.setPointSize(10)
+            self.text_font.setPointSize(SCENE_FONT_SIZE)
             self.label_model.font = self.text_font.toString()
         else:
             self.label_model = label_model.clone_traits()

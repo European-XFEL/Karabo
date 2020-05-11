@@ -285,3 +285,35 @@ def test_unknown_widget_extra_data():
 
     xml = api.write_single_model(widget)
     assert xml_is_equal(expected_svg, xml)
+
+
+def test_display_label_writer():
+    # Check if default values are NOT saved
+    default_model = api.DisplayLabelModel(font_size=api.SCENE_FONT_SIZE,
+                                          font_weight=api.SCENE_FONT_WEIGHT)
+    default_element = _get_xml_element_from_model(default_model)
+    assert default_element.get(api.NS_KARABO + 'font_size') is None
+    assert default_element.get(api.NS_KARABO + 'font_weight') is None
+
+    # Check if other values are NOT saved
+    input_size = 7
+    input_weight = "bold"
+    valid_model = api.DisplayLabelModel(font_size=input_size,
+                                        font_weight=input_weight)
+    valid_element = _get_xml_element_from_model(valid_model)
+    assert valid_element.get(api.NS_KARABO + 'font_size') == str(input_size)
+    assert valid_element.get(api.NS_KARABO + 'font_weight') == input_weight
+
+
+def _get_xml_element_from_model(model):
+    # Generate the xml of the model
+    xml = api.write_single_model(model)
+    # Get the Karabo klass name from the model type
+    # (by removing Model from the name)
+    name = type(model).__name__.replace("Model", '')
+
+    # Read the generated XML and extract the element
+    # corresponding to the Karabo name
+    tree = fromstring(xml)
+    return tree.find("*[@{ns}widget='{name}']".format(ns=api.NS_KARABO,
+                                                      name=name))
