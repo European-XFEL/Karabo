@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import (
     QApplication, QMessageBox, QSplashScreen, QStyleFactory)
 from pyqtgraph import setConfigOptions
 
+from karabo.common.scenemodel.api import SCENE_FONT_SIZE
+
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.singletons.api import (
     get_manager, get_network, get_panel_wrangler)
@@ -41,7 +43,7 @@ def create_gui_app(args):
 
     font = QFont()
     font.setFamily("Sans Serif")
-    font.setPointSize(10)
+    font.setPointSize(SCENE_FONT_SIZE)
     app.setFont(font)
 
     app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
