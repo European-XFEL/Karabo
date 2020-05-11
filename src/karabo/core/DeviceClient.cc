@@ -38,7 +38,8 @@ namespace karabo {
         // See also OutputChannel::initializeServerConnection(...)
         const int kMaxCompleteInitializationAttempts = 2500;
 
-        DeviceClient::DeviceClient(const std::string& instanceId, bool implicitInit)
+        DeviceClient::DeviceClient(const std::string& instanceId, bool implicitInit,
+                                   const std::string& dataLoggerManagerId)
             : m_internalSignalSlotable()
             , m_signalSlotable()
             , m_isShared(false)
@@ -50,7 +51,8 @@ namespace karabo {
             , m_runSignalsChangedTimer(false)
             , m_signalsChangedInterval(-1)
             , m_loggerMapCached(false)
-            , m_instanceChangeThrottler(nullptr) {
+            , m_instanceChangeThrottler(nullptr)
+            , m_dataLoggerManagerId(dataLoggerManagerId) {
 
             const std::string ownInstanceId(instanceId.empty() ? generateOwnInstanceId() : instanceId);
             Hash instanceInfo;
@@ -74,7 +76,8 @@ namespace karabo {
         }
 
 
-        DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable, bool implicitInit)
+        DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable, bool implicitInit,
+                                   const std::string &dataLoggerManagerId)
             : m_internalSignalSlotable()
             , m_signalSlotable(signalSlotable)
             , m_isShared(true)
@@ -86,12 +89,25 @@ namespace karabo {
             , m_runSignalsChangedTimer(false)
             , m_signalsChangedInterval(-1)
             , m_loggerMapCached(false)
-            , m_instanceChangeThrottler(nullptr) {
+            , m_instanceChangeThrottler(nullptr)
+            , m_dataLoggerManagerId(dataLoggerManagerId) {
 
             if (implicitInit) {
                 karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization,
                                                                         this, kMaxCompleteInitializationAttempts));
             }
+        }
+
+
+        DeviceClient::DeviceClient(const std::string &instanceId,
+                                   const std::string &dataLoggerManagerId)
+            : DeviceClient(instanceId, false, dataLoggerManagerId) {
+        }
+
+
+        DeviceClient::DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
+                                   const std::string &dataLoggerManagerId)
+            : DeviceClient(signalSlotable, false, dataLoggerManagerId) {
         }
 
 
@@ -237,13 +253,13 @@ namespace karabo {
                 m_instanceChangeThrottler->submitInstanceNew(instanceId, instanceInfo);
             }
 
-            if (m_loggerMapCached && instanceId == util::DATALOGMANAGER_ID) {
+            if (m_loggerMapCached && instanceId == m_dataLoggerManagerId) {
                 karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
                 if (p) {
                     // The corresponding 'connect' is done by SignalSlotable's automatic reconnect feature.
                     // Even this request might not be needed since the logger manager emits the corresponding signal.
                     // But we cannot be 100% sure that our 'connect' has been registered in time.
-                    p->requestNoWait(util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "_slotLoggerMap");
+                    p->requestNoWait(m_dataLoggerManagerId, "slotGetLoggerMap", "", "_slotLoggerMap");
                 }
             }
         }
@@ -1060,11 +1076,11 @@ namespace karabo {
                 return false;
             } else if (toggle) {
                 // connect and request a first time
-                if (p->connect(util::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap")) {
+                if (p->connect(m_dataLoggerManagerId, "signalLoggerMap", "", "_slotLoggerMap")) {
                     // If we cannot connect, request makes no sense
                     Hash loggerMap;
                     try {
-                        p->request(util::DATALOGMANAGER_ID, "slotGetLoggerMap").timeout(m_internalTimeout).receive(loggerMap);
+                        p->request(m_dataLoggerManagerId, "slotGetLoggerMap").timeout(m_internalTimeout).receive(loggerMap);
                         // Next 3 lines would better fit in an else block as in Python's try-except-else...
                         boost::mutex::scoped_lock lock(m_loggerMapMutex);
                         m_loggerMap = loggerMap;
@@ -1081,7 +1097,7 @@ namespace karabo {
             } else {
                 m_loggerMapCached = false;
                 // disconnect and clear (since otherwise possibly wrong info)
-                if (!p->disconnect(util::DATALOGMANAGER_ID, "signalLoggerMap", "", "_slotLoggerMap")) {
+                if (!p->disconnect(m_dataLoggerManagerId, "signalLoggerMap", "", "_slotLoggerMap")) {
                     KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect _slotLoggerMap";
                     return false;
                 }
@@ -1148,7 +1164,7 @@ namespace karabo {
                 if (p) {
                     Hash localLogMap; // to become map with key=loggerId, value=server
                     try {
-                        p->request(util::DATALOGMANAGER_ID, "slotGetLoggerMap").timeout(m_internalTimeout).receive(localLogMap);
+                        p->request(m_dataLoggerManagerId, "slotGetLoggerMap").timeout(m_internalTimeout).receive(localLogMap);
                     } catch (const TimeoutException&) {
                         // Will fail below due to empty map...
                         Exception::clearTrace();

@@ -185,6 +185,13 @@ namespace karabo {
                     .reconfigurable()
                     .adminAccess()
                     .commit();
+
+            STRING_ELEMENT(expected).key("dataLogManagerId")
+                    .displayedName("Data Log Manager Id")
+                    .description("The DataLoggerManager device to query for log readers.")
+                    .assignmentOptional().defaultValue(karabo::util::DATALOGMANAGER_ID)
+                    .adminAccess()
+                    .commit();
         }
 
 
@@ -243,7 +250,7 @@ namespace karabo {
 
                 // If someone manages to bind_weak(&karabo::devices::GuiServerDevice::requestNoWait<>, this, ...),
                 // we would not need loggerMapConnectedHandler...
-                asyncConnect(karabo::util::DATALOGMANAGER_ID, "signalLoggerMap", "", "slotLoggerMap",
+                asyncConnect(get<std::string>("dataLogManagerId"), "signalLoggerMap", "", "slotLoggerMap",
                              bind_weak(&karabo::devices::GuiServerDevice::loggerMapConnectedHandler, this));
 
                 // scan topology to treat alarm services, project managers, ...
@@ -289,7 +296,7 @@ namespace karabo {
 
 
         void GuiServerDevice::loggerMapConnectedHandler() {
-            requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
+            requestNoWait(get<std::string>("dataLogManagerId"), "slotGetLoggerMap", "", "slotLoggerMap");
         }
 
 
@@ -1293,11 +1300,11 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to device " << instanceId << " which is going to be visible in a GUI client";
                         remote().registerDeviceForMonitoring(instanceId);
                     }
-                    if (instanceId == karabo::util::DATALOGMANAGER_ID) {
+                    if (instanceId == get<std::string>("dataLogManagerId")) {
                         // The corresponding 'connect' is done by SignalSlotable's automatic reconnect feature.
                         // Even this request might not be needed since the logger manager emits the corresponding signal.
                         // But we cannot be 100% sure that our 'connect' has been registered in time.
-                        requestNoWait(karabo::util::DATALOGMANAGER_ID, "slotGetLoggerMap", "", "slotLoggerMap");
+                        requestNoWait(get<std::string>("dataLogManagerId"), "slotGetLoggerMap", "", "slotLoggerMap");
                     }
 
                     tryToUpdateNewInstanceAttributes(instanceId, INSTANCE_NEW_EVENT);
