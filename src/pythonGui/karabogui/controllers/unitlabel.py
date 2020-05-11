@@ -15,7 +15,7 @@ class UnitLabelWrapper(QFrame):
         self._internal_widget = widget
 
         # Add label
-        self._label = label = QLabel(self)
+        self.label = label = QLabel(self)
         label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
 
         # Add and populate layout
@@ -35,8 +35,13 @@ class UnitLabelWrapper(QFrame):
             return
 
         unit_label = proxy.binding.unit_label
-        if unit_label != self._label.text():
-            self._label.setText(unit_label)
+        if unit_label != self.label.text():
+            self.label.setText(unit_label)
+
+    def setFont(self, font):
+        super(UnitLabelWrapper, self).setFont(font)
+        self._internal_widget.setFont(font)
+        self.label.setFont(font)
 
 
 def add_unit_label(proxy, widget, parent=None):

@@ -6,8 +6,9 @@
 from numbers import Number
 
 from numpy import log10, number
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QFrame, QLabel
+from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtGui import QFontMetrics
+from PyQt5.QtWidgets import QAction, QDialog, QFrame, QLabel
 from traits.api import Instance, Str, Tuple
 
 from karabo.common.api import (
@@ -18,7 +19,8 @@ from karabogui.binding.api import (
     CharBinding, ComplexBinding, FloatBinding, get_binding_value, IntBinding,
     StringBinding
 )
-from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
+from karabogui.dialogs.format_label import FormatLabelDialog
 from karabogui.indicators import (
     ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
 from karabogui.controllers.api import (
@@ -27,6 +29,23 @@ from karabogui.util import generateObjectName
 
 BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
                  IntBinding)
+
+CONTENT_MARGIN = 10
+
+
+class Label(QLabel):
+    def __init__(self, parent):
+        super(Label, self).__init__(parent)
+        self.setMinimumWidth(WIDGET_MIN_WIDTH)
+        self.setMinimumHeight(WIDGET_MIN_HEIGHT)
+        self.setAlignment(Qt.AlignCenter)
+        self.setWordWrap(True)
+
+    def sizeHint(self):
+        fm = QFontMetrics(self.font())
+        width = fm.width(self.text()) + CONTENT_MARGIN
+
+        return QSize(width, 20)
 
 
 @register_binding_controller(ui_name='Value Field',
@@ -41,10 +60,7 @@ class DisplayLabel(BaseBindingController):
     _style_sheet = Str
 
     def create_widget(self, parent):
-        self._internal_widget = QLabel(parent)
-        self._internal_widget.setAlignment(Qt.AlignCenter)
-        self._internal_widget.setMinimumHeight(WIDGET_MIN_HEIGHT)
-        self._internal_widget.setWordWrap(True)
+        self._internal_widget = Label(parent)
         widget = add_unit_label(self.proxy, self._internal_widget,
                                 parent=parent)
         widget.setFrameStyle(QFrame.Box | QFrame.Plain)
@@ -55,6 +71,13 @@ class DisplayLabel(BaseBindingController):
         widget.setObjectName(objectName)
         sheet = self._style_sheet.format(ALL_OK_COLOR)
         widget.setStyleSheet(sheet)
+
+        # Add an action for formatting options
+        format_action = QAction("Format field..", widget)
+        format_action.triggered.connect(self._format_field)
+        widget.addAction(format_action)
+        self._apply_format(widget)
+
         return widget
 
     def clear_widget(self):
@@ -122,3 +145,27 @@ class DisplayLabel(BaseBindingController):
             self._bg_color = ALL_OK_COLOR
         sheet = self._style_sheet.format(self._bg_color)
         self.widget.setStyleSheet(sheet)
+
+    # -----------------------------------------------------------------------
+    # Formatting methods
+
+    def _format_field(self):
+        dialog = FormatLabelDialog(font_size=self.model.font_size,
+                                   font_weight=self.model.font_weight,
+                                   parent=self.widget)
+        if dialog.exec_() == QDialog.Accepted:
+            self.model.trait_set(font_size=dialog.font_size,
+                                 font_weight=dialog.font_weight)
+            self._apply_format()
+
+    def _apply_format(self, widget=None):
+        """The widget is passed as an argument in create_widget as it is not
+           yet bound to self.widget then"""
+        if widget is None:
+            widget = self.widget
+
+        # Apply font formatting
+        font = widget.font()
+        font.setPointSize(self.model.font_size)
+        font.setBold(self.model.font_weight == "bold")
+        widget.setFont(font)
