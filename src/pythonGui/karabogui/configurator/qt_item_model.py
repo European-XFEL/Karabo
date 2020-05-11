@@ -509,7 +509,9 @@ class ConfigurationTreeModel(QAbstractItemModel):
                     # Then revert edit_value to avoid the CHANGING background
                     proxy.revert_edit()
                     self.root.binding.config_update = True
-            elif online_device:
+            elif online_device or (allowed and not changes):
+                # The value was set to the original value. We remove the blue
+                # background here!
                 proxy.revert_edit()
 
             # XXX: Layout changed to be investigated
