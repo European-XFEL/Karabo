@@ -175,6 +175,18 @@ class SceneLinkModel(BaseWidgetObjectData):
     frame_width = Int(0)
 
 
+class StickerModel(BaseWidgetObjectData):
+    """ A model for a Sticker widget"""
+    # The text to be displayed
+    text = String
+    # A string describing the font
+    font = String
+    # A foreground color, CSS-style
+    foreground = String
+    # A background color, CSS-style
+    background = String('white')
+
+
 class WebLinkModel(BaseWidgetObjectData):
     """ A model for the weblink widget
     """
@@ -410,6 +422,33 @@ def __scene_link_writer(write_func, model, parent):
     element.set(NS_KARABO + 'target', model.target)
     element.set(NS_KARABO + 'target_window', model.target_window.value)
 
+    for name in ('text', 'font', 'foreground'):
+        element.set(NS_KARABO + name, getattr(model, name))
+
+    if model.background != '':
+        element.set(NS_KARABO + 'background', model.background)
+
+    return element
+
+
+@register_scene_reader('StickerWidget')
+def __sticker_widget_reader(read_func, element):
+    traits = _read_geometry_data(element)
+    traits['text'] = element.get(NS_KARABO + 'text', '')
+    traits['font'] = element.get(NS_KARABO + 'font', '')
+    traits['foreground'] = element.get(NS_KARABO + 'foreground', 'black')
+
+    bg = element.get(NS_KARABO + 'background')
+    if bg is not None:
+        traits['background'] = bg
+
+    return StickerModel(**traits)
+
+
+@register_scene_writer(StickerModel)
+def __sticker_widget_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    _write_class_and_geometry(model, element, 'StickerWidget')
     for name in ('text', 'font', 'foreground'):
         element.set(NS_KARABO + name, getattr(model, name))
 
