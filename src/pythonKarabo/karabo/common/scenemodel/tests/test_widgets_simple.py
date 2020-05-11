@@ -1,5 +1,7 @@
 from nose.tools import assert_raises
 
+from traits.api import TraitError
+
 from .. import api
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_round_trip)
@@ -138,3 +140,22 @@ def test_timelabel():
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
     assert read_model.time_format == '%H:%M:%S'
+
+
+def test_displaylabelmodel():
+    # Check default model
+    default_model = api.DisplayLabelModel()
+    assert default_model.font_size == api.SCENE_FONT_SIZE
+    assert default_model.font_weight == api.SCENE_FONT_WEIGHT
+
+    # Check valid input
+    input_size = 7
+    input_weight = 'bold'
+    valid_model = api.DisplayLabelModel(font_size=input_size,
+                                        font_weight=input_weight)
+    assert valid_model.font_size == input_size
+    assert valid_model.font_weight == input_weight
+
+    # Check invalid input
+    assert_raises(TraitError, api.DisplayLabelModel, font_size=1)
+    assert_raises(TraitError, api.DisplayLabelModel, font_weight='foo')
