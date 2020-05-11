@@ -472,16 +472,24 @@ namespace karabo {
 
             nl::json j = nl::json::parse(o.payload);
             auto values = j["results"][0]["series"][0]["values"];
-            assert(values.is_array());
-            // Should we create database?
-            for(nl::json::iterator it = values.begin(); it != values.end(); ++it) {
-                if ((*it)[0].get<std::string>() == m_dbName) {
-                    KARABO_LOG_FRAMEWORK_INFO << "Database \"" << m_dbName << "\" already exists";
-                    startConnection();
-                    return;
+            if (values.is_array()) {
+                // There's at least one database that is acessible to the user.
+                // See if the database to be used is available and then proceed with its use
+                for (nl::json::iterator it = values.begin(); it != values.end(); ++it) {
+                    if ((*it)[0].get<std::string>() == m_dbName) {
+                        KARABO_LOG_FRAMEWORK_INFO << "Database \"" << m_dbName << "\" already exists";
+                        startConnection();
+                        return;
+                    }
                 }
             }
 
+            // TODO: add a boolean parameter to the InfluxDataLogger, ensureDbExists, that when true
+            // will dictate that the logger should try to create the database if it does not exist. Only
+            // execute the createDatabe call if this flag is true. Otherwise logs a database not available
+            // error, writes this information to the status property and change the state property to ERROR.
+
+            // The database to be used is not available; tries to create it.
             createDatabase(bind_weak(&karabo::devices::InfluxDataLogger::onCreateDatabase, this, _1));
         }
 
