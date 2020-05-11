@@ -45,7 +45,7 @@ class VectorNode(Configurable):
         description="Vector char values",
         minSize=1,
         maxSize=VECTOR_MAX_SIZE,
-        defaultValue="ABCDEF")
+        defaultValue=b"ABCDEF")
 
     int32Property = VectorInt32(
         displayedName="Int32 Vector (No Limits)",
