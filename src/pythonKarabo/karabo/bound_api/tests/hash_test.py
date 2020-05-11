@@ -12,7 +12,8 @@ import numpy as np
 
 from karabo.bound import (
     Hash, HashAttributes, HashMergePolicy, Types, VectorHash,
-    isStdVectorDefaultConversion, setStdVectorDefaultConversion, similar
+    isStdVectorDefaultConversion, setStdVectorDefaultConversion, similar,
+    fullyEqual
 )
 from karabo.testing.utils import compare_ndarray_data_ptrs
 
@@ -1263,6 +1264,43 @@ class Hash_TestCase(unittest.TestCase):
             self.assertEqual(len(h1), 3)
         except Exception as e:
             self.fail("test_erase exception 3: " + str(e))
+
+    def test_fullEqual(self):
+
+        h = Hash('a', 1, 'b', 2.2, 'c.d', "text",
+                 'e.f.g', VectorHash())
+        h.setAttribute('a', "attr", 42)
+
+        # A copy fully equals:
+        h1 = copy.copy(h)
+        self.assertTrue(fullyEqual(h1, h), "h1: " + str(h1))
+
+        # A changed value leads to being different
+        h2 = copy.copy(h)
+        h2["c.d"] = "TEXT"
+        self.assertFalse(fullyEqual(h2, h), "h2: " + str(h2))
+
+        # An added value leads to being different
+        h3 = copy.copy(h)
+        h3["newKey"] = -11
+        self.assertFalse(fullyEqual(h3, h), "h3: " + str(h3))
+
+        # A changed attribute leads to being different
+        h4 = copy.copy(h)
+        h4.setAttribute("a", "attr", -42)
+        self.assertFalse(fullyEqual(h4, h), "h4: " + str(h4))
+
+        # An added attribute leads to being different
+        h5 = copy.copy(h)
+        h5.setAttribute("a", "newAttr", 0)
+        self.assertFalse(fullyEqual(h5, h), "h5: " + str(h5))
+
+        # A changed order of keys leads to being different
+        h6 = copy.copy(h)
+        bValue = h6["b"]
+        h6.erase("b")
+        h6["b"] = bValue
+        self.assertFalse(fullyEqual(h6, h), "h6: " + str(h6))
 
 
 if __name__ == '__main__':
