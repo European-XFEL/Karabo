@@ -43,7 +43,7 @@ class Influx_TestCase(DeviceTest):
         cls.loop.run_until_complete(cls.inject())
         cls.lead = cls.client
         yield
-        cls.loop.run_until_complete(cls.adm_client.drop_db(_topic))
+        cls.loop.run_until_complete(cls.adm_client.drop_measurement(_fake_device))
         cls.client.disconnect()
 
     @classmethod
