@@ -6,6 +6,7 @@
 from functools import partial
 from io import StringIO
 import os.path as op
+import re
 
 from PyQt5.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance
@@ -191,7 +192,7 @@ class SceneController(BaseProjectController):
         directory = path if path and op.isdir(path) else ""
         scene = self.model
         filename = scene.simple_name
-        filename = filename.translate(str.maketrans("/|: ", "----"))
+        filename = re.sub(r'[\W]', '-', filename)
         fn = getSaveFileName(caption='Save scene to file',
                              filter='SVG (*.svg)',
                              suffix='svg',
