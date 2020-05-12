@@ -739,10 +739,16 @@ namespace karabo {
              * @param timestamp optional timestamp to indicate when the set occurred.
              */
             void setNoValidate(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
-                using namespace karabo::util;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                this->setNoValidateNoLock(hash, timestamp);
+            }
 
-                // TODO Think about attaching timestamps only to top level nodes (must check all other depending code)
+        private:
+            /**
+             * Internal version of setNoValidate(hash, timestamp) that requires m_objectStateChangeMutex to be locked
+             */
+            void setNoValidateNoLock(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
+                using namespace karabo::util;
                 if (!hash.empty()) {
                     Hash tmp(hash);
                     std::vector<std::string> paths;
@@ -772,6 +778,8 @@ namespace karabo {
                     emit(signal, tmp, getInstanceId());
                 }
             }
+
+        public:
 
             /**
              * Retrieves the current value of any device parameter (that was defined in the expectedParameters function)
@@ -1284,11 +1292,10 @@ namespace karabo {
 
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true, Hash(), true);
                 if (result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")) {
-                    lock.unlock();
                     Hash h;
                     h.set("alarmCondition", result.second.asString()).setAttribute(KARABO_INDICATE_ALARM_SET, true);
                     //also set the fields attribute to this condition
-                    this->setNoValidate(h);
+                    this->setNoValidateNoLock(h, getActualTimestamp());
                     this->m_parameters.setAttribute("alarmCondition", KARABO_ALARM_ATTR, result.second.asString());
                 }
                 // emit signal to alarm service
