@@ -36,6 +36,8 @@ using karabo::xms::SLOT_ELEMENT;
 #define PAUSE_BEFORE_RETRY_MILLIS 150
 #define NUM_RETRY 200
 
+static Epochstamp threeDaysBack = Epochstamp() - TimeDuration(3,0,0,0,0);
+
 class DataLogTestDevice : public karabo::core::Device<> {
 
 
@@ -75,9 +77,8 @@ public:
 private:
 
     void initialize() {
-        // Set oldValue with time stamp from past - noon January 1st, 1999
-        const Epochstamp stamp("19990101T120000.000000Z");
-        set("oldValue", 99, Timestamp(stamp, 0ull));
+        // Set oldValue with time stamp from past - now - 3 days
+        set("oldValue", 99, Timestamp(threeDaysBack, 0ull));
 
         updateState(State::ON);
     }
@@ -207,7 +208,7 @@ void DataLogging_Test::setUp() {
     // There are indications for rare hanging between tests, see https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/101484
     // So debug print when this happens.
     const Epochstamp start;
-    std::clog << "Start setUp " << start.toIso8601Ext() << std::endl;
+    std::clog << "\nStart setUp " << start.toIso8601Ext() << std::endl;
 
     // Uncomment to run with a local broker:
     //setenv("KARABO_BROKER", "tcp://localhost:7777", true);
@@ -299,6 +300,7 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
     }
 
+    std::clog << "\n***** DataLoggerManager configuration *****\n" << manager_conf << std::endl;
     return m_deviceClient->instantiate(m_server,
                                        "DataLoggerManager", manager_conf, KRB_TEST_MAX_TIMEOUT);
 }
@@ -387,6 +389,30 @@ void DataLogging_Test::influxAllTestRunner() {
     testLastKnownConfiguration();
 
     testCfgFromPastRestart();
+}
+
+
+void DataLogging_Test::influxAllTestRunnerWithTelegraf() {
+    if (!::getenv("KARABO_TEST_TELEGRAF")) {
+        std::clog << "==== Skip sequence of Telegraf Logging tests ====" << std::endl;
+        return;
+    }
+
+    std::clog << "\n==== Repeat test with Telegraf setup ====" << std::endl;
+
+    // Run influxAllTestRunner with "telegraf" environment:
+    //   InfluxDB cluster with telegraf front-end and 2 InfluxDB cpus as a backend
+    ::setenv("KARABO_INFLUXDB_DBNAME",         ::getenv("KARABO_TEST_TELEGRAF_DBNAME"), 1);
+    ::setenv("KARABO_INFLUXDB_QUERY_USER",     ::getenv("KARABO_TEST_TELEGRAF_QUERY_USER"), 1);
+    ::setenv("KARABO_INFLUXDB_QUERY_PASSWORD", ::getenv("KARABO_TEST_TELEGRAF_QUERY_PASSWORD"), 1);
+    ::setenv("KARABO_INFLUXDB_QUERY_URL",      ::getenv("KARABO_TEST_TELEGRAF_QUERY_URL"), 1);
+    ::setenv("KARABO_INFLUXDB_WRITE_USER",     ::getenv("KARABO_TEST_TELEGRAF_WRITE_USER"), 1);
+    ::setenv("KARABO_INFLUXDB_WRITE_PASSWORD", ::getenv("KARABO_TEST_TELEGRAF_WRITE_PASSWORD"), 1);
+    ::setenv("KARABO_INFLUXDB_WRITE_URL",      ::getenv("KARABO_TEST_TELEGRAF_WRITE_URL"), 1);
+
+    influxAllTestRunner();
+
+    std::clog << "==== Telegraf Influx Logging test finished ====" << std::endl;
 }
 
 
@@ -647,7 +673,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
     const unsigned int numCycles = 5;
     std::vector<Epochstamp> stampsAfter; // stamps after increasing value
     std::vector<Epochstamp> valueStamps; // stamps of the updated values
-    const Epochstamp oldStamp("19990101T120000.000000Z");
+    const Epochstamp oldStamp = threeDaysBack;
     for (unsigned int i = 0; i < numCycles; ++i) {
 
         // Increase "variable" value and store after increasing it
@@ -752,7 +778,9 @@ void DataLogging_Test::testCfgFromPastRestart() {
         // Check received stamps: The one of "oldValue is always the same, for "value" be aware that we store with
         // microsec precision only: we might be 1 off since we cut off digits instead of rounding
         const Epochstamp stampOldFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("oldValue"));
-        CPPUNIT_ASSERT_MESSAGE("'oldValue' from past has wrong time stamp: " + stampOldFromPast.toIso8601(), stampOldFromPast == oldStamp);
+        std::string oldFromPastStr = stampOldFromPast.toIso8601();  // convert to microsecond precision
+        std::string oldStr = oldStamp.toIso8601();                  // convert to microsecond precision
+        CPPUNIT_ASSERT_MESSAGE("'oldValue' from past has wrong time stamp: " + oldFromPastStr, oldFromPastStr == oldStr);
         const Epochstamp stampValueFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("value"));
         CPPUNIT_ASSERT_MESSAGE(stampValueFromPast.toIso8601() + " vs " + valueStamps[i].toIso8601(),
                                (stampValueFromPast - valueStamps[i]).getFractions(TIME_UNITS::MICROSEC) <= 1ull);
