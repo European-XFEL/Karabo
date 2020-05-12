@@ -17,6 +17,7 @@ class DataLogging_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST(fileAllTestRunner);
     CPPUNIT_TEST(influxAllTestRunner);
+    CPPUNIT_TEST(influxAllTestRunnerWithTelegraf);
     CPPUNIT_TEST(testNoInfluxServerHandling);
 
     CPPUNIT_TEST_SUITE_END();
@@ -30,6 +31,7 @@ public:
 private:
     void fileAllTestRunner();
     void influxAllTestRunner();
+    void influxAllTestRunnerWithTelegraf();
     void testAllInstantiated(bool waitForLoggerReady = true);
 
     /**
