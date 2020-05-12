@@ -3,9 +3,10 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import os.path as op
 from functools import partial
 from io import StringIO
+import os.path as op
+import re
 
 from PyQt5.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, String, on_trait_change
@@ -232,10 +233,12 @@ class MacroController(BaseProjectGroupController):
         directory = path if path and op.isdir(path) else ""
 
         macro = self.model
+        filename = macro.simple_name
+        filename = re.sub(r'[\W]', '-', filename)
         fn = getSaveFileName(caption='Save macro to file',
                              filter='Python Macro (*.py)',
                              suffix='py',
-                             selectFile=macro.simple_name,
+                             selectFile=filename,
                              directory=directory,
                              parent=parent)
         if not fn:
