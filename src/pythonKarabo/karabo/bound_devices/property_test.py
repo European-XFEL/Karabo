@@ -36,7 +36,6 @@ class PropertyTest(PythonDevice):
         super(PropertyTest, self).__init__(configuration)
 
         # Define the slots
-        self.KARABO_SLOT(self.setReadonly)
         self.KARABO_SLOT(self.setAlarm)
         self.KARABO_SLOT(self.writeOutput)
         self.KARABO_SLOT(self.startWritingOutput)
@@ -65,12 +64,6 @@ class PropertyTest(PythonDevice):
             .setNewDefaultValue(ADMIN)
             .commit(),
 
-            SLOT_ELEMENT(expected).key("setReadonly")
-            .displayedName("Set read only values")
-            .description("Set all readonly properties to the corresponding "
-                         "reconfigurable ones")
-            .commit(),
-
             BOOL_ELEMENT(expected).key("boolProperty")
             .displayedName("Bool")
             .description("A bool property")
@@ -78,7 +71,7 @@ class PropertyTest(PythonDevice):
             .assignmentOptional().defaultValue(False)
             .commit(),
 
-            BOOL_ELEMENT(expected).key("boolPropertyReadonly")
+            BOOL_ELEMENT(expected).key("boolPropertyReadOnly")
             .displayedName("Readonly Bool")
             .description("A bool property for testing alarms")
             .readOnly().initialValue(True)
@@ -94,7 +87,7 @@ class PropertyTest(PythonDevice):
             .assignmentOptional().defaultValue(32000000)
             .commit(),
 
-            INT32_ELEMENT(expected).key("int32PropertyReadonly")
+            INT32_ELEMENT(expected).key("int32PropertyReadOnly")
             .displayedName("Readonly Int32")
             .description("An int32 property for testing alarms")
             .readOnly().initialValue(32000000)
@@ -109,7 +102,7 @@ class PropertyTest(PythonDevice):
             .assignmentOptional().defaultValue(32000000)
             .commit(),
 
-            UINT32_ELEMENT(expected).key("uint32PropertyReadonly")
+            UINT32_ELEMENT(expected).key("uint32PropertyReadOnly")
             .displayedName("Readonly UInt32")
             .description("A uint32 property for testing alarms")
             .readOnly().initialValue(32000000)
@@ -124,7 +117,7 @@ class PropertyTest(PythonDevice):
             .assignmentOptional().defaultValue(3200000000)
             .commit(),
 
-            INT64_ELEMENT(expected).key("int64PropertyReadonly")
+            INT64_ELEMENT(expected).key("int64PropertyReadOnly")
             .displayedName("Readonly Int64")
             .description("An int64 property for testing alarms")
             .readOnly().initialValue(3200000000)
@@ -139,7 +132,7 @@ class PropertyTest(PythonDevice):
             .assignmentOptional().defaultValue(3200000000)
             .commit(),
 
-            UINT64_ELEMENT(expected).key("uint64PropertyReadonly")
+            UINT64_ELEMENT(expected).key("uint64PropertyReadOnly")
             .displayedName("Readonly UInt64")
             .description("A uint64 property for testing alarms")
             .readOnly().initialValue(3200000000)
@@ -154,7 +147,7 @@ class PropertyTest(PythonDevice):
             .assignmentOptional().defaultValue(3.141596)
             .commit(),
 
-            FLOAT_ELEMENT(expected).key("floatPropertyReadonly")
+            FLOAT_ELEMENT(expected).key("floatPropertyReadOnly")
             .displayedName("Readonly Float")
             .description("A float property for testing alarms")
             .readOnly().initialValue(3.141596)
@@ -171,12 +164,12 @@ class PropertyTest(PythonDevice):
             .assignmentOptional().defaultValue(0.)
             .commit(),
 
-            DOUBLE_ELEMENT(expected).key("doublePropertyReadonly")
+            DOUBLE_ELEMENT(expected).key("doublePropertyReadOnly")
             .displayedName("Readonly Double")
             .description("A double property for testing alarms")
             .readOnly().initialValue(0.)
-            .alarmLow(-100.).info("Too high").needsAcknowledging(True)
-            .warnLow(-10.).info("Rather high").needsAcknowledging(False)
+            .alarmLow(-100.).info("Too low").needsAcknowledging(True)
+            .warnLow(-10.).info("Rather low").needsAcknowledging(False)
             .warnHigh(10.).info("Rather high").needsAcknowledging(False)
             .alarmHigh(100.).info("Too high").needsAcknowledging(True)
             .commit(),
@@ -190,7 +183,8 @@ class PropertyTest(PythonDevice):
 
             SLOT_ELEMENT(expected).key("setAlarm")
             .displayedName("Set Alarm")
-            .description("Set alarm to value of String - if convertable")
+            .description("Set alarm to value of String property - if "
+                         "convertable")
             .commit(),
 
             NODE_ELEMENT(expected).key("vectors")
@@ -347,7 +341,7 @@ class PropertyTest(PythonDevice):
 
         (
 
-            TABLE_ELEMENT(expected).key("tableReadonly")
+            TABLE_ELEMENT(expected).key("tableReadOnly")
             .displayedName("Read-only table property")
             .description("Read-only table with two values.")
             .setColumns(columns)
@@ -490,7 +484,7 @@ class PropertyTest(PythonDevice):
         self.updateState(State.NORMAL)
         self.KARABO_ON_DATA("input", self.onData)
 
-    def setReadonly(self):
+    def preReconfigure(self, incomingCfg):
         props = ["int32Property", "uint32Property",
                  "int64Property", "uint64Property",
                  "floatProperty", "doubleProperty",
@@ -498,9 +492,9 @@ class PropertyTest(PythonDevice):
 
         bulkSets = Hash()
         for prop in props:
-            readOnlyProp = prop + "Readonly"
-            if self[readOnlyProp] != self[prop]:
-                bulkSets[readOnlyProp] = self[prop]
+            if prop in incomingCfg:
+                readOnlyProp = prop + "ReadOnly"
+                bulkSets[readOnlyProp] = incomingCfg[prop]
         if bulkSets:
             self.set(bulkSets)
 

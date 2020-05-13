@@ -217,16 +217,30 @@ class PropertyTestMDL(Device):
         defaultValue=0.0,
         accessMode=AccessMode.READONLY)
 
-    doubleProperty = Double(
-        displayedName="Double",
-        description="A double property",
-        defaultValue=0.1)
+    @Double(displayedName="Double",
+            description="A double property",
+            defaultValue=0.1)
+    def doubleProperty(self, newValue):
+        self.doubleProperty = newValue
+        self.doublePropertyReadOnly = newValue
 
-    doublePropertyReadonly = Double(
+    doublePropertyReadOnly = Double(
         displayedName="Double (RO)",
-        description="A readonly double property",
+        description="A readonly double property for testing alarms",
         defaultValue=3.1415,
-        accessMode=AccessMode.READONLY)
+        accessMode=AccessMode.READONLY,
+        alarmLow=-100.0,
+        alarmInfo_alarmLow="Too low",
+        alarmNeedsAck_alarmLow=True,
+        warnLow=-10.0,
+        alarmInfo_warnLow="Rather low",
+        alarmNeedsAck_warnLow=False,
+        warnHigh=10.0,
+        alarmInfo_warnHigh="Rather high",
+        alarmNeedsAck_warnHigh=False,
+        alarmHigh=100.0,
+        alarmInfo_alarmHigh="Too high",
+        alarmNeedsAck_alarmHigh=True)
 
     stringProperty = String(
         displayedName="String",
