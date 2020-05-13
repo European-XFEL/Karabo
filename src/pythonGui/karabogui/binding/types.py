@@ -243,22 +243,22 @@ class UnsignedIntBinding(IntBinding):
 
 
 class Int8Binding(SignedIntBinding):
-    value = Range(low=-(1 << 7), high=(1 << 7), value=0,
+    value = Range(low=(-1 - (1 << 7)), high=(1 << 7), value=0,
                   exclude_low=True, exclude_high=True)
 
 
 class Int16Binding(SignedIntBinding):
-    value = Range(low=-(1 << 15), high=(1 << 15), value=0,
+    value = Range(low=(-1 - (1 << 15)), high=(1 << 15), value=0,
                   exclude_low=True, exclude_high=True)
 
 
 class Int32Binding(SignedIntBinding):
-    value = Range(low=-(1 << 31), high=(1 << 31), value=0,
+    value = Range(low=(-1 - (1 << 31)), high=(1 << 31), value=0,
                   exclude_low=True, exclude_high=True)
 
 
 class Int64Binding(SignedIntBinding):
-    value = Range(low=-(1 << 63), high=(1 << 63), value=0,
+    value = Range(low=(-1 - (1 << 63)), high=(1 << 63), value=0,
                   exclude_low=True, exclude_high=True)
 
 

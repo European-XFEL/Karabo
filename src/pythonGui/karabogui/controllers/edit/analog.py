@@ -5,7 +5,7 @@
 #############################################################################
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDial, QSlider
-from traits.api import Instance, Bool
+from traits.api import Instance
 
 from karabo.common.api import (
     KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
@@ -14,7 +14,6 @@ from karabo.common.scenemodel.api import KnobModel, SliderModel
 from karabogui.binding.api import (
     FloatBinding, IntBinding, get_editor_value, get_min_max,
 )
-from karabogui import messagebox
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.util import SignalBlocker
@@ -24,8 +23,6 @@ REASONABLE_RANGE = 1000
 
 
 class _AnalogEditorWidget(BaseBindingController):
-    _error_shown = Bool(False)
-
     def binding_update(self, proxy):
         attrs = proxy.binding.attributes
         min_inc = attrs.get(KARABO_SCHEMA_MIN_INC)
@@ -33,13 +30,18 @@ class _AnalogEditorWidget(BaseBindingController):
         max_inc = attrs.get(KARABO_SCHEMA_MAX_INC)
         max_exc = attrs.get(KARABO_SCHEMA_MAX_EXC)
         low, high = get_min_max(proxy.binding)
+        # convert to native int, subtracting limits can overflow
+        # on numpy subtractions
+        out_of_range = int(high) - int(low)
+        out_of_range = out_of_range > REASONABLE_RANGE
         if (min_inc is None and min_exc is None or
                 max_inc is None and max_exc is None or
-                high - low > REASONABLE_RANGE):
-            self._error_msg(proxy.path)
-            self.widget.setEnabled(False)
+                out_of_range):
+            with SignalBlocker(self.widget):
+                self._error(proxy.path)
         else:
             with SignalBlocker(self.widget):
+                self.widget.setToolTip(proxy.path)
                 self.widget.setRange(low, high)
 
     def value_update(self, proxy):
@@ -49,20 +51,19 @@ class _AnalogEditorWidget(BaseBindingController):
                 self.widget.setValue(value)
 
     def _edit_value(self, value):
-        if self.proxy.binding is None or self._error_shown:
+        if self.proxy.binding is None:
             return
         self.proxy.edit_value = value
 
-    def _error_msg(self, keyname):
-        # make sure you bother the user only once per widget
-        if self._error_shown:
-            return
-        self._error_shown = True
-        msg = ('Value limits for {} is not set or too large\n'
-               'for this type of widget, please check the\n'
-               ' property attributes'.format(keyname))
-        messagebox.show_warning(msg, title='No proper value limit',
-                                parent=self.widget)
+    def _error(self, keyname):
+        """Configure the widget as a disabled one
+
+        call this function inside a signal blocker context"""
+        msg = ('Value limits for {} are not set or are too large\n'
+               'for this type of widget (>{}), please check the\n'
+               ' property attributes'.format(keyname, REASONABLE_RANGE))
+        self.widget.setToolTip(msg)
+        self.widget.setEnabled(False)
 
 
 @register_binding_controller(ui_name='Knob', can_edit=True, klassname='Knob',
