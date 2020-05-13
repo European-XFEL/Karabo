@@ -6,7 +6,7 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QAction, QFrame, QHBoxLayout, QInputDialog, QLabel, QSlider, QWidget)
-from traits.api import Bool, Instance, on_trait_change
+from traits.api import Instance, on_trait_change
 
 from karabo.common.api import (
     KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
@@ -14,7 +14,6 @@ from karabo.common.api import (
 from karabo.common.scenemodel.api import TickSliderModel
 from karabogui.binding.api import (
     FloatBinding, IntBinding, get_editor_value, get_min_max)
-from karabogui import messagebox
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.util import SignalBlocker
@@ -32,7 +31,6 @@ WIDGET_WIDTH = 60
 class TickSlider(BaseBindingController):
     # The scene model class for this controller
     model = Instance(TickSliderModel, args=())
-    _error_shown = Bool(False)
 
     slider = Instance(QSlider)
     label = Instance(QLabel)
@@ -77,11 +75,15 @@ class TickSlider(BaseBindingController):
         max_inc = attrs.get(KARABO_SCHEMA_MAX_INC)
         max_exc = attrs.get(KARABO_SCHEMA_MAX_EXC)
         low, high = get_min_max(proxy.binding)
+        # convert to native int, subtracting limits can overflow
+        # on numpy subtractions
+        out_of_range = int(high) - int(low)
+        out_of_range = out_of_range > REASONABLE_RANGE
         if (min_inc is None and min_exc is None or
                 max_inc is None and max_exc is None or
-                high - low > REASONABLE_RANGE):
-            self._error_msg(proxy.path)
-            self.slider.setEnabled(False)
+                out_of_range):
+            with SignalBlocker(self.widget):
+                self._error(proxy.path)
             return
 
         with SignalBlocker(self.slider):
@@ -100,14 +102,15 @@ class TickSlider(BaseBindingController):
                     fmt = "{:.1f}"
                 self.label.setText(fmt.format(value))
 
-    def _error_msg(self, keyname):
-        if self._error_shown:
-            return
-        self._error_shown = True
-        msg = ('The value limits for {} are not set or too large,'
-               ' please check the property attributes'.format(keyname))
-        messagebox.show_warning(msg, title='No proper value limits',
-                                parent=self.widget)
+    def _error(self, keyname):
+        """Configure the widget as a disabled one
+
+        call this function inside a signal blocker context"""
+        msg = ('The value limits for {} are not set or too large (>{}),'
+               ' please check the property attributes'.format(
+                   keyname, REASONABLE_RANGE))
+        self.widget.setToolTip(msg)
+        self.widget.setEnabled(False)
 
     @on_trait_change('model:show_value')
     def _show_value_update(self, value):
@@ -118,7 +121,7 @@ class TickSlider(BaseBindingController):
 
     # @pyqtSlot(object)
     def _edit_value(self, value):
-        if self.proxy.binding is None or self._error_shown:
+        if self.proxy.binding is None:
             return
         self.proxy.edit_value = value
         if value is not None:

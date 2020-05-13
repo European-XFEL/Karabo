@@ -17,10 +17,10 @@ from karabogui.binding.api import (
 
 
 def test_simple_int_min_max():
-    assert get_min_max(Int8Binding()) == (-(1 << 7) + 1, (1 << 7) - 1)
-    assert get_min_max(Int16Binding()) == (-(1 << 15) + 1, (1 << 15) - 1)
-    assert get_min_max(Int32Binding()) == (-(1 << 31) + 1, (1 << 31) - 1)
-    assert get_min_max(Int64Binding()) == (-(1 << 63) + 1, (1 << 63) - 1)
+    assert get_min_max(Int8Binding()) == (-(1 << 7), (1 << 7) - 1)
+    assert get_min_max(Int16Binding()) == (-(1 << 15), (1 << 15) - 1)
+    assert get_min_max(Int32Binding()) == (-(1 << 31), (1 << 31) - 1)
+    assert get_min_max(Int64Binding()) == (-(1 << 63), (1 << 63) - 1)
 
     assert get_min_max(Uint8Binding()) == (0, (1 << 8) - 1)
     assert get_min_max(Uint16Binding()) == (0, (1 << 16) - 1)
