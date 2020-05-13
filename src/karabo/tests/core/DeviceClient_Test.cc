@@ -376,7 +376,7 @@ void DeviceClient_Test::testCurrentlyExecutableCommands() {
     //  Check if the parameter hierarchy can be correctly traversed or it throws a KeyError
     std::vector<std::string> commands;
     CPPUNIT_ASSERT_NO_THROW(commands = m_deviceClient->getCurrentlyExecutableCommands("TestedDevice3_5"));
-    CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (8), commands.size());
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (9), commands.size());
     CPPUNIT_ASSERT_EQUAL(std::string("slotClearLock"), commands[0]);
 
     // Final clean-up
