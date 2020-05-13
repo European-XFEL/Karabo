@@ -159,3 +159,18 @@ def test_displaylabelmodel():
     # Check invalid input
     assert_raises(TraitError, api.DisplayLabelModel, font_size=1)
     assert_raises(TraitError, api.DisplayLabelModel, font_weight='foo')
+
+
+def test_sticker_model():
+    traits = _geometry_traits()
+    traits['text'] = 'foo'
+    traits['font'] = UBUNTU_FONT_SPEC
+    traits['foreground'] = '#000000'
+    traits['background'] = '#ffffff'
+    model = api.StickerModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.text == 'foo'
+    assert read_model.font == UBUNTU_FONT_SPEC
+    assert read_model.foreground == '#000000'
+    assert read_model.background == '#ffffff'
