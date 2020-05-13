@@ -439,9 +439,10 @@ class SceneView(QWidget):
         return widget
 
     def items_in_rect(self, rect):
-        """Returns the topmost objects whose bounds are contained in `rect`."""
+        """Returns the objects whose bounds are contained in `rect`.
+           This respects the object order (back-to-front)"""
         items = []
-        for child in self.scene_model.children[::-1]:
+        for child in self.scene_model.children:
             obj = self._scene_obj_cache.get(child)
             if obj is not None and rect.contains(obj.geometry()):
                 items.append(obj)
