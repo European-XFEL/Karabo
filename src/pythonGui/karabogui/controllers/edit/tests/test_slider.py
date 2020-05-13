@@ -1,20 +1,12 @@
 from unittest.mock import patch
 
 from karabo.common.scenemodel.api import TickSliderModel
-from karabo.native import Configurable, Float, Int32
 from karabogui.binding.api import build_binding
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 
 from ..slider import TickSlider
-
-
-class Other(Configurable):
-    prop = Int32(minExc=0, maxExc=5)
-
-
-class Object(Configurable):
-    prop = Float(minInc=-2.0, maxInc=4.0)
+from .utils import InRangeInt, LargeRange, Object, Other
 
 
 class TestSlider(GuiTestCase):
@@ -80,3 +72,17 @@ class TestSlider(GuiTestCase):
         self.assertFalse(controller.model.show_value)
 
         controller.destroy()
+
+    def test_large_range(self):
+        proxy = get_class_property_proxy(LargeRange.getClassSchema(), 'prop')
+        controller = TickSlider(proxy=proxy)
+        controller.create(None)
+
+        assert not controller.widget.isEnabled()
+
+    def test_large_int(self):
+        proxy = get_class_property_proxy(InRangeInt.getClassSchema(), 'prop')
+        controller = TickSlider(proxy=proxy)
+        controller.create(None)
+
+        assert controller.widget.isEnabled()
