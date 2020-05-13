@@ -452,7 +452,6 @@ def __sticker_widget_writer(write_func, model, parent):
     for name in ('text', 'font', 'foreground'):
         element.set(NS_KARABO + name, getattr(model, name))
 
-    element.set(NS_KARABO + 'frameWidth', str(model.frame_width))
     if model.background != '':
         element.set(NS_KARABO + 'background', model.background)
 
