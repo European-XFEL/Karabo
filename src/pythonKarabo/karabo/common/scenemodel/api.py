@@ -60,4 +60,5 @@ from .widgets.graph_image import (
     DisplayAlignedImage, DisplayImageElementModel, DisplayImageModel,
     ScientificImageModel, WebcamImageModel)
 from .widgets.graph_plots import (
-    DisplayPlotModel, MultiCurvePlotModel, XYPlotModel, XYVectorModel)
+    DisplayPlotModel, LinePlotModel, MultiCurvePlotModel, XYPlotModel,
+    XYVectorModel)
