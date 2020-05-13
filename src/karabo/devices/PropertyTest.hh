@@ -58,6 +58,8 @@ namespace karabo {
 
             void preReconfigure(karabo::util::Hash& incomingReconfiguration);
 
+            void setAlarm();
+
             void writeOutput();
 
             void writeOutputHandler(const boost::system::error_code& e);
