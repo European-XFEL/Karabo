@@ -297,10 +297,10 @@ namespace karabo {
                     .maxInc(std::numeric_limits<double>::max()/2)
                     .readOnly()
                     .initialValue(3.1415967773331)
-                    .alarmLow(std::numeric_limits<double>::lowest()/2).info("alarmLow").needsAcknowledging(true)
-                    .warnLow(std::numeric_limits<double>::lowest() / 4).info("warnLow").needsAcknowledging(false)
-                    .warnHigh(std::numeric_limits<double>::max() / 4).info("warnHigh").needsAcknowledging(false)
-                    .alarmHigh(std::numeric_limits<double>::max()/2).info("alarmHigh").needsAcknowledging(true)
+                    .alarmLow(-100.).info("Too low").needsAcknowledging(false)
+                    .warnLow(-10.).info("Rather low").needsAcknowledging(true)
+                    .warnHigh(10).info("Rather high").needsAcknowledging(false)
+                    .alarmHigh(100.).info("Too high").needsAcknowledging(true)
                     .commit();
 
             STRING_ELEMENT(expected).key("stringProperty")
@@ -308,6 +308,11 @@ namespace karabo {
                     .description("A string property")
                     .reconfigurable()
                     .assignmentOptional().defaultValue("Some arbitrary text.")
+                    .commit();
+
+            SLOT_ELEMENT(expected).key("setAlarm")
+                    .displayedName("Set Alarm")
+                    .description("Set alarm to value of String property - if convertable")
                     .commit();
 
             NODE_ELEMENT(expected).key("vectors")
@@ -644,7 +649,7 @@ namespace karabo {
             m_writingOutput(false), m_writingOutputTimer(karabo::net::EventLoop::getIOService()) {
 
             KARABO_INITIAL_FUNCTION(initialize);
-
+            KARABO_SLOT(setAlarm);
             KARABO_SLOT(writeOutput);
             KARABO_SLOT(startWritingOutput);
             KARABO_SLOT(stopWritingOutput);
@@ -668,9 +673,10 @@ namespace karabo {
         }
 
         void PropertyTest::preReconfigure(Hash& incomingReconfiguration) {
-            const std::vector<std::string> keys = {"uint8Property", "int8Property" ,
-                "uint16Property", "int16Property", "uint32Property", "int32Property",
-                "uint64Property", "int64Property", "floatProperty", "doubleProperty"};
+            const std::vector<std::string> keys = {"uint8Property", "int8Property",
+                                                   "uint16Property", "int16Property", "uint32Property", "int32Property",
+                                                   "uint64Property", "int64Property", "floatProperty", "doubleProperty",
+                                                   "table"};
             Hash h;
 
             for (const std::string& key : keys) {
@@ -679,6 +685,12 @@ namespace karabo {
                 }
             }
             set(h);
+        }
+
+
+        void PropertyTest::setAlarm() {
+            const karabo::util::AlarmCondition alarm = karabo::util::AlarmCondition::fromString(get<std::string>("stringProperty"));
+            setAlarmCondition(alarm, "Converted from stringProperty");
         }
 
         void PropertyTest::writeOutput() {
