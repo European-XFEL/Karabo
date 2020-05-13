@@ -83,6 +83,36 @@ def test_missing_parent_component():
     assert_raises(api.SceneWriterException, single_model_round_trip, model)
 
 
+def test_displaylabel_model():
+    # Check default model
+    default_model = api.DisplayLabelModel()
+    assert default_model.font_size == api.SCENE_FONT_SIZE
+    assert default_model.font_weight == api.SCENE_FONT_WEIGHT
+
+    # Check valid input
+    input_size = 7
+    input_weight = 'bold'
+    valid_model = api.DisplayLabelModel(font_size=input_size,
+                                        font_weight=input_weight)
+    assert valid_model.font_size == input_size
+    assert valid_model.font_weight == input_weight
+
+    # Check invalid input
+    assert_raises(TraitError, api.DisplayLabelModel, font_size=1)
+    assert_raises(TraitError, api.DisplayLabelModel, font_weight='foo')
+
+
+def test_edit_doublewheel():
+    traits = _geometry_traits()
+    traits['integers'] = 2
+    traits['decimals'] = 4
+    model = api.DoubleWheelBoxModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.integers == 2
+    assert read_model.decimals == 4
+
+
 def test_label_model():
     traits = _geometry_traits()
     traits['text'] = 'foo'
@@ -100,17 +130,6 @@ def test_label_model():
     assert read_model.frame_width == 0
 
 
-def test_edit_doublewheel():
-    traits = _geometry_traits()
-    traits['integers'] = 2
-    traits['decimals'] = 4
-    model = api.DoubleWheelBoxModel(**traits)
-    read_model = single_model_round_trip(model)
-    _assert_geometry_traits(read_model)
-    assert read_model.integers == 2
-    assert read_model.decimals == 4
-
-
 def test_scene_link_model():
     traits = _geometry_traits()
     traits['target'] = 'other.svg'
@@ -120,6 +139,21 @@ def test_scene_link_model():
     _assert_geometry_traits(read_model)
     assert read_model.target == 'other.svg'
     assert read_model.target_window == api.SceneTargetWindow.Dialog
+
+
+def test_sticker_model():
+    traits = _geometry_traits()
+    traits['text'] = 'foo'
+    traits['font'] = UBUNTU_FONT_SPEC
+    traits['foreground'] = '#000000'
+    traits['background'] = '#ffffff'
+    model = api.StickerModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.text == 'foo'
+    assert read_model.font == UBUNTU_FONT_SPEC
+    assert read_model.foreground == '#000000'
+    assert read_model.background == '#ffffff'
 
 
 def test_tickslider():
@@ -142,35 +176,20 @@ def test_timelabel():
     assert read_model.time_format == '%H:%M:%S'
 
 
-def test_displaylabelmodel():
-    # Check default model
-    default_model = api.DisplayLabelModel()
-    assert default_model.font_size == api.SCENE_FONT_SIZE
-    assert default_model.font_weight == api.SCENE_FONT_WEIGHT
-
-    # Check valid input
-    input_size = 7
-    input_weight = 'bold'
-    valid_model = api.DisplayLabelModel(font_size=input_size,
-                                        font_weight=input_weight)
-    assert valid_model.font_size == input_size
-    assert valid_model.font_weight == input_weight
-
-    # Check invalid input
-    assert_raises(TraitError, api.DisplayLabelModel, font_size=1)
-    assert_raises(TraitError, api.DisplayLabelModel, font_weight='foo')
-
-
-def test_sticker_model():
+def test_web_link_model():
     traits = _geometry_traits()
-    traits['text'] = 'foo'
+    traits['target'] = 'www.xfel.eu'
+    traits['text'] = 'www.karabo.eu'
     traits['font'] = UBUNTU_FONT_SPEC
     traits['foreground'] = '#000000'
     traits['background'] = '#ffffff'
-    model = api.StickerModel(**traits)
+    traits['frame_width'] = 1
+    model = api.WebLinkModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
-    assert read_model.text == 'foo'
+    assert read_model.target == 'www.xfel.eu'
+    assert read_model.text == 'www.karabo.eu'
     assert read_model.font == UBUNTU_FONT_SPEC
     assert read_model.foreground == '#000000'
     assert read_model.background == '#ffffff'
+    assert read_model.frame_width == 1
