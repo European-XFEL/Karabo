@@ -139,6 +139,16 @@ class DisplayTrendlineModel(TrendGraphModel):
         warnings.warn(msg, DeprecationWarning)
 
 
+class LinePlotModel(DisplayTrendlineModel):
+    """ A legacy model for line plot objects
+    """
+    # Note: LinePlotModel is a class model but was never serialized
+    # under its own name. It was the ghost writer of DisplayTrendline.
+    # The original model had a trait `boxes`. and other functions.
+    # this are removed. It should not have been used in device code.
+    # if they were used, the code should fail.
+
+
 class StateGraphModel(BasePlotModel):
     """State graph model"""
     x_grid = Bool(True)
@@ -369,7 +379,8 @@ def _trend_graph_reader(read_func, element):
     return TrendGraphModel(**traits)
 
 
-@register_scene_writer(DisplayTrendlineModel)
+@register_scene_writer(LinePlotModel)  # deprecated Qwt model
+@register_scene_writer(DisplayTrendlineModel)  # deprecated Qwt model
 @register_scene_writer(TrendGraphModel)
 def _trend_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
