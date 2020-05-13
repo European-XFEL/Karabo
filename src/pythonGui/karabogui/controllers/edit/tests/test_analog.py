@@ -1,17 +1,9 @@
 from karabo.common.scenemodel.api import KnobModel, SliderModel
-from karabo.native import Configurable, Float, Int32
 from karabogui.binding.api import build_binding
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 from ..analog import Knob, Slider
-
-
-class Other(Configurable):
-    prop = Int32(minExc=0, maxExc=5)
-
-
-class Object(Configurable):
-    prop = Float(minInc=-2.0, maxInc=4.0)
+from .utils import InRangeInt, LargeRange, Object, Other
 
 
 class TestEditAnalog(GuiTestCase):
@@ -54,3 +46,17 @@ class TestEditAnalog(GuiTestCase):
 
         assert controller.widget.minimum() == -2.0
         assert controller.widget.maximum() == 4.0
+
+    def test_large_range(self):
+        proxy = get_class_property_proxy(LargeRange.getClassSchema(), 'prop')
+        controller = Slider(proxy=proxy)
+        controller.create(None)
+
+        assert not controller.widget.isEnabled()
+
+    def test_large_int(self):
+        proxy = get_class_property_proxy(InRangeInt.getClassSchema(), 'prop')
+        controller = Slider(proxy=proxy)
+        controller.create(None)
+
+        assert controller.widget.isEnabled()
