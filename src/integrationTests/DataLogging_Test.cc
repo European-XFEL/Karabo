@@ -189,10 +189,13 @@ CPPUNIT_TEST_SUITE_REGISTRATION(DataLogging_Test);
 
 const unsigned int DataLogging_Test::m_flushIntervalSec = 1u;
 
-
+static const std::string karaboPlatform = !getenv("KARABO_CI_TEST_PLATFORM") ? "" : getenv("KARABO_CI_TEST_PLATFORM");
+    
 DataLogging_Test::DataLogging_Test()
     : m_server("DataLoggingTestServer"),
-    m_deviceId("PropertyTestDevice"),
+    // Use platform-dependent name for the device: concurrent tests in CI operate
+    // on the same InfluxDB database ...
+    m_deviceId(karaboPlatform + "PropertyTestDevice"),
     m_fileLoggerDirectory("dataLoggingTest"),
     m_changedPath(false), m_oldPath() {
 
@@ -367,8 +370,11 @@ void DataLogging_Test::influxAllTestRunner() {
                                                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
+    std::clog << "Device \"" << m_deviceId << "\" instantiated" << std::endl;
+
     // Starts the same set of tests with InfluxDb logging instead of text-file based logging
-    std::clog << "\n==== Starting sequence of Influx Logging tests ====" << std::endl;
+    std::clog << "\n==== Starting sequence of Influx Logging tests on \""
+            << m_deviceId << "\" ====" << std::endl;
     success = startLoggers("InfluxDataLogger");
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
@@ -656,7 +662,9 @@ void DataLogging_Test::testCfgFromPastRestart() {
     std::clog << "Testing past configuration retrieval with stamp older than device..." << std::flush;
 
     // Start device and take care that the logger is ready for it
-    const std::string deviceId("deviceWithOldStamp");
+    // Use platform-dependent name for the device: concurrent tests in CI operate
+    // on the same InfluxDB database ...
+    const std::string deviceId(karaboPlatform + "deviceWithOldStamp");
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
     auto success = m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId),
                                                KRB_TEST_MAX_TIMEOUT);
