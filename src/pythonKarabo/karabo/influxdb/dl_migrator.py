@@ -273,7 +273,7 @@ class DlMigrator():
         return await schema2db.run()
 
 
-if __name__ == "__main__":
+def main(self):
     parser = argparse.ArgumentParser(
         description="Migrates data from datalogger raw files "
                     "to InfluxDb. Completely and partially "
@@ -336,3 +336,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     o = DlMigrator(**vars(args))
     get_event_loop().run_until_complete(o.run())
+
+
+if __name__ == "__main__":
+    main()
