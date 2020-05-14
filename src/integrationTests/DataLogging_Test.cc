@@ -11,7 +11,6 @@
 #include <karabo/util/Schema.hh>
 #include "karabo/util/DataLogUtils.hh"
 
-#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <cstdlib>
 #include <sstream>
@@ -248,8 +247,43 @@ void DataLogging_Test::setUp() {
 }
 
 
+void DataLogging_Test::switchToTelegrafEnv() {
+    m_influxDb_dbName = ::getenv("KARABO_INFLUXDB_DBNAME");
+    m_influxDb_query_user = ::getenv("KARABO_INFLUXDB_QUERY_USER");
+    m_influxDb_query_password = ::getenv("KARABO_INFLUXDB_QUERY_PASSWORD");
+    m_influxDb_query_url = ::getenv("KARABO_INFLUXDB_QUERY_URL");
+    m_influxDb_write_user = ::getenv("KARABO_INFLUXDB_WRITE_USER");
+    m_influxDb_write_password = ::getenv("KARABO_INFLUXDB_WRITE_PASSWORD");
+    m_influxDb_write_url = ::getenv("KARABO_INFLUXDB_WRITE_URL");
+
+    //   InfluxDB cluster with telegraf front-end and 2 InfluxDB cpus as a backend
+    ::setenv("KARABO_INFLUXDB_DBNAME", ::getenv("KARABO_TEST_TELEGRAF_DBNAME"), 1);
+    ::setenv("KARABO_INFLUXDB_QUERY_USER", ::getenv("KARABO_TEST_TELEGRAF_QUERY_USER"), 1);
+    ::setenv("KARABO_INFLUXDB_QUERY_PASSWORD", ::getenv("KARABO_TEST_TELEGRAF_QUERY_PASSWORD"), 1);
+    ::setenv("KARABO_INFLUXDB_QUERY_URL", ::getenv("KARABO_TEST_TELEGRAF_QUERY_URL"), 1);
+    ::setenv("KARABO_INFLUXDB_WRITE_USER", ::getenv("KARABO_TEST_TELEGRAF_WRITE_USER"), 1);
+    ::setenv("KARABO_INFLUXDB_WRITE_PASSWORD", ::getenv("KARABO_TEST_TELEGRAF_WRITE_PASSWORD"), 1);
+    ::setenv("KARABO_INFLUXDB_WRITE_URL", ::getenv("KARABO_TEST_TELEGRAF_WRITE_URL"), 1);
+
+    m_switchedToTelegrafEnv = true;
+}
+
+
+void DataLogging_Test::switchFromTelegrafEnv() {
+    ::setenv("KARABO_INFLUXDB_DBNAME", m_influxDb_dbName.c_str(), 1);
+    ::setenv("KARABO_INFLUXDB_QUERY_USER", m_influxDb_query_user.c_str(), 1);
+    ::setenv("KARABO_INFLUXDB_QUERY_PASSWORD", m_influxDb_query_password.c_str(), 1);
+    ::setenv("KARABO_INFLUXDB_QUERY_URL", m_influxDb_query_url.c_str(), 1);
+    ::setenv("KARABO_INFLUXDB_WRITE_USER", m_influxDb_write_user.c_str(), 1);
+    ::setenv("KARABO_INFLUXDB_WRITE_PASSWORD", m_influxDb_write_password.c_str(), 1);
+    ::setenv("KARABO_INFLUXDB_WRITE_URL", m_influxDb_write_url.c_str(), 1);
+
+    m_switchedToTelegrafEnv = false;
+}
+
 std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& loggerType,
-                                                            bool useInvalidInfluxUrl) {
+                                                            bool useInvalidInfluxUrl,
+                                                            bool useInvalidDbName) {
 
     Hash manager_conf;
     manager_conf.set("deviceId", "loggerManager");
@@ -275,8 +309,12 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
         } else {
             influxUrlRead = "tcp://localhost:8086";
         }
+
         const char* envDbName = getenv("KARABO_INFLUXDB_DBNAME");
-        const std::string dbName(envDbName ? envDbName : ""); // without environment variable, use empty string
+        std::string dbName(envDbName ? envDbName : ""); // without environment variable, use empty string
+        if (useInvalidDbName) {
+            dbName += "_invalid";
+        }
 
         if (useInvalidInfluxUrl) {
             if (getenv("KARABO_TEST_INFLUXDB_HOST")) {
@@ -291,13 +329,6 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
         manager_conf.set("logger.InfluxDataLogger.urlWrite", influxUrlWrite);
         manager_conf.set("logger.InfluxDataLogger.urlRead", influxUrlRead);
         manager_conf.set("logger.InfluxDataLogger.dbname", dbName);
-
-        // The testing environments never use the default gateway.
-        if (influxUrlWrite == influxUrlRead) {
-            manager_conf.set("logger.InfluxDataLogger.useGateway", false);
-        } else {
-            manager_conf.set("logger.InfluxDataLogger.useGateway", true);
-        }
 
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
@@ -334,6 +365,12 @@ void DataLogging_Test::tearDown() {
     // So debug print for in between tests, see setUp()
     const Epochstamp stop;
     std::clog << "End tearDown " << stop.toIso8601Ext() << std::endl;
+
+    // If the InfluxDb has been switched to use Telegraf, but hasn't been restored (e.g. the test that made the switch
+    // didn't run until its end), do so in here.
+    if (m_switchedToTelegrafEnv) {
+        switchFromTelegrafEnv();
+    }
 }
 
 
@@ -407,16 +444,12 @@ void DataLogging_Test::influxAllTestRunnerWithTelegraf() {
     std::clog << "\n==== Repeat test with Telegraf setup ====" << std::endl;
 
     // Run influxAllTestRunner with "telegraf" environment:
-    //   InfluxDB cluster with telegraf front-end and 2 InfluxDB cpus as a backend
-    ::setenv("KARABO_INFLUXDB_DBNAME",         ::getenv("KARABO_TEST_TELEGRAF_DBNAME"), 1);
-    ::setenv("KARABO_INFLUXDB_QUERY_USER",     ::getenv("KARABO_TEST_TELEGRAF_QUERY_USER"), 1);
-    ::setenv("KARABO_INFLUXDB_QUERY_PASSWORD", ::getenv("KARABO_TEST_TELEGRAF_QUERY_PASSWORD"), 1);
-    ::setenv("KARABO_INFLUXDB_QUERY_URL",      ::getenv("KARABO_TEST_TELEGRAF_QUERY_URL"), 1);
-    ::setenv("KARABO_INFLUXDB_WRITE_USER",     ::getenv("KARABO_TEST_TELEGRAF_WRITE_USER"), 1);
-    ::setenv("KARABO_INFLUXDB_WRITE_PASSWORD", ::getenv("KARABO_TEST_TELEGRAF_WRITE_PASSWORD"), 1);
-    ::setenv("KARABO_INFLUXDB_WRITE_URL",      ::getenv("KARABO_TEST_TELEGRAF_WRITE_URL"), 1);
+    switchToTelegrafEnv();
 
     influxAllTestRunner();
+
+    // Restores Influx environment for upcoming tests.
+    switchFromTelegrafEnv();
 
     std::clog << "==== Telegraf Influx Logging test finished ====" << std::endl;
 }
@@ -845,6 +878,56 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     // By simply starting the devices related to Influx logging, some logging writing activity takes place.
     // If this point of the test is reached with an invalid url configured for the Influx Server, it is safe
     // to conclude that the Influx Logger doesn't get stuck when no server is available.
+
+    std::clog << "OK" << std::endl;
+}
+
+
+void DataLogging_Test::testInfluxDbNotAvailableTelegraf() {
+    if (!::getenv("KARABO_TEST_TELEGRAF")) {
+        std::clog << "==== Test only executed for Telegraf environment. Skipping test..." << std::endl;
+        std::clog << "     (requires environment where db cannot be created on-the-fly)" << std::endl;
+        std::clog << "====" << std::endl;
+        return;
+    }
+
+    std::clog << "Testing handling of Influx Database not available scenarios ...." << std::endl;
+
+    switchToTelegrafEnv();
+
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(m_server, "PropertyTest",
+                                                                       Hash("deviceId", m_deviceId),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Starts the loggers with an invalid database name.
+    // Note: it is required for the InfluxDb writing user to not have admin privileges on the Influx server.
+    //       This requirement is fullfilled by both the CI and the Production environments. A local Influx server
+    //       test environment must be configured properly.
+    success = startLoggers("InfluxDataLogger", false, true);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    testAllInstantiated(false);
+
+    int timeout = KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds
+    karabo::util::State loggerState = karabo::util::State::UNKNOWN;
+    const std::string &dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    while (timeout > 0) {
+        loggerState = m_deviceClient->get<karabo::util::State>(dataLoggerId, "state");
+        if (loggerState == karabo::util::State::ERROR) {
+            break;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+        timeout -= 50;
+    }
+
+    CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach ERROR state.",
+                           loggerState == karabo::util::State::ERROR);
+
+    std::clog << "... logger in ERROR state as expected." << std::endl;
+
+    // Restores Influx environment for upcoming tests.
+    switchFromTelegrafEnv();
 
     std::clog << "OK" << std::endl;
 }
