@@ -3,7 +3,7 @@ from unittest.mock import patch
 from PyQt5.QtWidgets import QDialog
 
 from karabo.common.scenemodel.api import EditableListModel
-from karabo.native import Configurable, VectorInt32
+from karabo.native import Configurable, VectorInt32, VectorInt8
 from karabogui.binding.api import apply_default_configuration, get_min_max_size
 from karabogui.dialogs.listedit import ListEditDialog
 from karabogui.testing import (
@@ -17,6 +17,10 @@ class Object(Configurable):
 
 class SizeObject(Configurable):
     prop = VectorInt32(defaultValue=[1], minSize=1, maxSize=3)
+
+
+class ShortObject(Configurable):
+    prop = VectorInt8(defaultValue=[1])
 
 
 class ListEditMock(ListEditDialog):
@@ -43,6 +47,13 @@ class TestEditableList(GuiTestCase):
                                             model=EditableListModel())
         self.size_controller.create(None)
         apply_default_configuration(self.size_proxy.root_proxy.binding)
+
+        self.short_proxy = get_class_property_proxy(
+            ShortObject.getClassSchema(), 'prop')
+        self.short_controller = EditableList(proxy=self.short_proxy,
+                                             model=EditableListModel())
+        self.short_controller.create(None)
+        apply_default_configuration(self.short_proxy.root_proxy.binding)
 
     def tearDown(self):
         self.controller.destroy()
@@ -97,3 +108,13 @@ class TestEditableList(GuiTestCase):
         assert all(self.size_proxy.edit_value == [3, 4])
         self.size_controller._internal_widget.setText('000000,4')
         assert all(self.size_proxy.edit_value == [0, 4])
+
+    def test_shorts(self):
+        self.short_controller.set_read_only(False)
+        self.short_controller._internal_widget.setText('03,4')
+        assert self.short_proxy.edit_value is None
+        self.short_controller._internal_widget.setText('3,4')
+        assert all(self.short_proxy.edit_value == [3, 4])
+        # out of range
+        self.short_controller._internal_widget.setText('10300')
+        assert self.short_proxy.edit_value is None
