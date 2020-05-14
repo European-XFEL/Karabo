@@ -287,7 +287,6 @@ namespace karabo {
             std::string m_dbPasswordWrite;
             std::string m_dbUserQuery;
             std::string m_dbPasswordQuery;
-            bool m_dbUseGateway;
         };
 
     } // namespace net
