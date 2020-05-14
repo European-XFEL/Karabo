@@ -8,6 +8,9 @@ from xml.etree import ElementTree
 
 ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 
+# GUI PROPERTIES
+PANEL_ICON_SIZE = 26
+
 # WIDGET PROPERTIES
 WIDGET_MIN_WIDTH = 40
 WIDGET_MIN_HEIGHT = 18
