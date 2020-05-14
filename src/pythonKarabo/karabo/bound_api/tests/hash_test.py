@@ -1274,33 +1274,50 @@ class Hash_TestCase(unittest.TestCase):
         # A copy fully equals:
         h1 = copy.copy(h)
         self.assertTrue(fullyEqual(h1, h), "h1: " + str(h1))
+        self.assertTrue(fullyEqual(h1, h, False), "h1: " + str(h1))
 
         # A changed value leads to being different
         h2 = copy.copy(h)
         h2["c.d"] = "TEXT"
         self.assertFalse(fullyEqual(h2, h), "h2: " + str(h2))
+        self.assertFalse(fullyEqual(h2, h, False), "h2: " + str(h2))
 
         # An added value leads to being different
         h3 = copy.copy(h)
         h3["newKey"] = -11
         self.assertFalse(fullyEqual(h3, h), "h3: " + str(h3))
+        self.assertFalse(fullyEqual(h3, h, False), "h3: " + str(h3))
 
         # A changed attribute leads to being different
         h4 = copy.copy(h)
         h4.setAttribute("a", "attr", -42)
         self.assertFalse(fullyEqual(h4, h), "h4: " + str(h4))
+        self.assertFalse(fullyEqual(h4, h, False), "h4: " + str(h4))
 
         # An added attribute leads to being different
         h5 = copy.copy(h)
         h5.setAttribute("a", "newAttr", 0)
         self.assertFalse(fullyEqual(h5, h), "h5: " + str(h5))
+        self.assertFalse(fullyEqual(h5, h, False), "h5: " + str(h5))
 
-        # A changed order of keys leads to being different
+        # A changed order of keys leads to being different,
+        # except if flag to ignore order is given
         h6 = copy.copy(h)
         bValue = h6["b"]
         h6.erase("b")
         h6["b"] = bValue
         self.assertFalse(fullyEqual(h6, h), "h6: " + str(h6))
+        self.assertTrue(fullyEqual(h6, h, False), "h6: " + str(h6))
+
+        # A changed order of attribute keys leads to being different,
+        # except if flag to ignore order is given
+        h1.setAttribute("a", "attr2", 43)  # 2nd attribute
+        h7 = copy.copy(h1)
+        attr2Value = h7.getAttribute("a", "attr")
+        h7.getAttributes("a").erase("attr")  # erase 1st attribute
+        h7.setAttribute("a", "attr", attr2Value)  # re-add after previous 2nd
+        self.assertFalse(fullyEqual(h7, h1), "h7: " + str(h7))
+        self.assertTrue(fullyEqual(h7, h1, False), "h7: " + str(h7))
 
 
 if __name__ == '__main__':
