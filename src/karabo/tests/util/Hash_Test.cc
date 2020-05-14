@@ -2123,16 +2123,18 @@ void Hash_Test::testKeys() {
 }
 
 
-void Hash_Test::testSimilarIsNotFullyEqual() {
-    Hash h1("a", 1, "a.b", "value", "a.c", true);
-    Hash h2("a1", 1, "a1.b", "value", "a1.c", true);
+void testSimilarIsNotFullyEqualByOrder(bool orderMatters) {
+    std::clog << "testSimilarIsNotFullyEqualByOrder starts with orderMatters = " << orderMatters << std::endl;
+
+    Hash h1("a.b", "value", "a.c", true);
+    Hash h2("a1.b", "value", "a1.c", true);
 
     // Checks that hashes with elements with different keys of the same type and in the same order
     // are still similar.
     CPPUNIT_ASSERT_EQUAL(h1, h2); // 'Hash::operator==' actually checks for similarity.
     // But are not fullyEqual
     CPPUNIT_ASSERT_MESSAGE("h1 and h2 shouldn't be fullyEquals - they differ in key names.",
-                           !h1.fullyEquals(h2));
+                           !h1.fullyEquals(h2, orderMatters));
 
     Hash h3("a1", 1, "a1.b", "value", "a1.c", false);
     // Checks that hashes with elements with different values of the same type and in the same
@@ -2140,7 +2142,7 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
     CPPUNIT_ASSERT_EQUAL(h2, h3); // 'Hash::operator==' actually checks for similarity.
     // But are not fullyEqual
     CPPUNIT_ASSERT_MESSAGE("h2 and h3 shouldn't be fullyEquals - they differ in key values.",
-                           !h2.fullyEquals(h3));
+                           !h2.fullyEquals(h3, orderMatters));
 
     Hash h4("a1", 1, "a1.b", "value", "a1.c", true);
     h4.setAttribute("a1", "attr", true);
@@ -2150,7 +2152,7 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
     CPPUNIT_ASSERT_EQUAL(h2, h4); // 'Hash::operator==' actually checks for similarity.
     // But are not fullyEqual
     CPPUNIT_ASSERT_MESSAGE("h4 and h2 shouldn't be fullyEquals - they differ in element attributes.",
-                           !h2.fullyEquals(h4));
+                           !h2.fullyEquals(h4, orderMatters));
 
     Hash h5("a", 13.14159,
             "b[0]", Hash("hKey_0", "hValue_0"),
@@ -2165,19 +2167,19 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
     CPPUNIT_ASSERT_EQUAL(h5, h6); // 'Hash::operator==' actually checks for similarity.
     // But are not fullyEqual
     CPPUNIT_ASSERT_MESSAGE("h5 and h6 shouldn't be fullyEquals - they differ in element values.",
-                           !h5.fullyEquals(h6));
+                           !h5.fullyEquals(h6, orderMatters));
 
     vector<Hash> vhAttr{Hash("key_0", "val_0"), Hash("key_1", "val_1")};
     h5.setAttribute("a", "attr", vhAttr);
     h6.setAttribute("a", "attr", 2);
     h6.set<std::string>("c", "1, 1, 2, 3, 5, 8, 11, 19, 30");
     CPPUNIT_ASSERT_MESSAGE("h5 and h6 shouldn't be fullyEquals - they differ in vector of hash attribute",
-                           !h5.fullyEquals(h6));
+                           !h5.fullyEquals(h6, orderMatters));
 
     // A case where two hashes with complex attributes and nodes are fullyEquals.
     h6.setAttribute("a", "attr", vhAttr);
     CPPUNIT_ASSERT_MESSAGE("h5 and h6 should be fullyEquals!",
-                           h5.fullyEquals(h6));
+                           h5.fullyEquals(h6, orderMatters));
 
     Hash h7("a", 1, "b", 2, "c", 3);
     Hash h8("b", 1, "a", 2, "c", 3);
@@ -2185,7 +2187,7 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
     CPPUNIT_ASSERT_EQUAL(h7, h8);
     // But are not fullyEqual.
     CPPUNIT_ASSERT_MESSAGE("h7 and h8 shouldn't be fullyEquals - they differ in the order of their elements.",
-                           !h7.fullyEquals(h8));
+                           !h7.fullyEquals(h8, orderMatters));
 
     Hash h9("a", 1, "b", 2, "c", "3");
     // Checks that hashes with different value types for values that have the same string representation form are
@@ -2193,28 +2195,28 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
     CPPUNIT_ASSERT_MESSAGE("h7 and h9 should not be similar, as their 'c' elements differ in type.",
                            h7 != h9);
     CPPUNIT_ASSERT_MESSAGE("h7 and h9 should not be fullyEquals, as their 'c' elements differ in type.",
-                           !h7.fullyEquals(h9));
+                           !h7.fullyEquals(h9, orderMatters));
 
     // Check VECTOR_STRING treatment
     Hash h11("vecStr", std::vector<std::string>({"with,comma", "with space", "onlyChar"}));
     Hash h12("vecStr", std::vector<std::string>({"with,comma", "with space"}));
     CPPUNIT_ASSERT_MESSAGE("Differ in number of elements in vector",
-                           !h11.fullyEquals(h12));
+                           !h11.fullyEquals(h12, orderMatters));
     h12.get<std::vector < std::string >> ("vecStr").push_back("onlychar");
     CPPUNIT_ASSERT_MESSAGE("Differ in one character of last element in vector",
-                           !h11.fullyEquals(h12));
+                           !h11.fullyEquals(h12, orderMatters));
     h12.get<std::vector < std::string >> ("vecStr").back() = "onlyChar"; // now make fully equal
-    CPPUNIT_ASSERT(h11.fullyEquals(h12));
+    CPPUNIT_ASSERT(h11.fullyEquals(h12, orderMatters));
     // Now VECTOR_STRING as attribute
     h11.setAttribute("vecStr", "vecStrOpt", std::vector<std::string>({"With,comma", "With space", "OnlyChar"}));
     h12.setAttribute("vecStr", "vecStrOpt", std::vector<std::string>({"With,comma", "With space"}));
     CPPUNIT_ASSERT_MESSAGE("Differ in number of elements in vector attribute",
-                           !h11.fullyEquals(h12));
+                           !h11.fullyEquals(h12, orderMatters));
     h12.getAttribute<std::vector < std::string >> ("vecStr", "vecStrOpt").push_back("Onlychar");
     CPPUNIT_ASSERT_MESSAGE("Differ in one character of last element in vector attribute",
-                           !h11.fullyEquals(h12));
+                           !h11.fullyEquals(h12, orderMatters));
     h12.getAttribute<std::vector < std::string >> ("vecStr", "vecStrOpt").back() = "OnlyChar";
-    CPPUNIT_ASSERT(h11.fullyEquals(h12));
+    CPPUNIT_ASSERT(h11.fullyEquals(h12, orderMatters));
 
     Schema sch("hashSchema");
     INT32_ELEMENT(sch).key("a").tags("prop").assignmentOptional().defaultValue(10).commit();
@@ -2225,7 +2227,33 @@ void Hash_Test::testSimilarIsNotFullyEqual() {
     CPPUNIT_ASSERT_EQUAL(h8, h10);
     // But are not fullyEquals
     CPPUNIT_ASSERT_MESSAGE("h8 and h10 should not be fullyEquals, as they have different values for attributes of type Schema ",
-                           !h8.fullyEquals(h10));
+                           !h8.fullyEquals(h10, orderMatters));
+}
+
+
+void Hash_Test::testSimilarIsNotFullyEqual() {
+    testSimilarIsNotFullyEqualByOrder(true);
+    testSimilarIsNotFullyEqualByOrder(false);
+}
+
+
+void Hash_Test::testFullyEqualUnordered() {
+    // Just two keys are swapped: hashes differ if order matters, otherwise not
+    Hash h1("a.b", "value", "a.c", true, "1", 1);
+    Hash h2("a.c", true, "a.b", "value", "1", 1);
+
+    CPPUNIT_ASSERT(!h1.fullyEquals(h2, true));
+    CPPUNIT_ASSERT(h1.fullyEquals(h2, false));
+
+    // Just order of attributes is swapped: hashes differ if order matters, otherwise not
+    Hash h3(h1);
+    h3.setAttribute("1", "A", 1);
+    h3.setAttribute("1", "B", 2);
+    h1.setAttribute("1", "B", 2);
+    h1.setAttribute("1", "A", 1);
+
+    CPPUNIT_ASSERT_MESSAGE(toString(h1) + " vs " + toString(h3), !h1.fullyEquals(h3, true));
+    CPPUNIT_ASSERT_MESSAGE(toString(h1) + " vs " + toString(h3), h1.fullyEquals(h3, false));
 }
 
 

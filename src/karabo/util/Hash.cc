@@ -699,15 +699,15 @@ namespace karabo {
         }
 
 
-        bool Hash::fullyEquals(const Hash& other) const {
+        bool Hash::fullyEquals(const Hash& other, bool orderMatters) const {
 
             // Local lambda that verifies if two vectors of hashes are fully equal.
-            auto vectorsHashesEqual = [](const std::vector<Hash>& lvh, const std::vector<Hash>&rvh) -> bool {
+            auto vectorsHashesEqual = [](const std::vector<Hash>& lvh, const std::vector<Hash>&rvh, bool orderMatters) -> bool {
                 if (lvh.size() != rvh.size()) {
                     return false;
                 }
                 for (size_t i = 0; i < lvh.size(); i++) {
-                    if (!lvh[i].fullyEquals(rvh[i])) {
+                    if (!lvh[i].fullyEquals(rvh[i], orderMatters)) {
                         return false;
                     }
                 }
@@ -723,60 +723,78 @@ namespace karabo {
             for (Hash::const_iterator itl = this->begin(), itr = other.begin();
                  itl != this->end() && itr != other.end();
                  ++itl, ++itr) {
-                if ((*itl).getKey() != (*itr).getKey() ||
-                    (*itl).getType() != (*itr).getType()) {
+
+                // Figure out the 'other's (i.e. right hand) Hash::Node to compare with:
+                // If orderMatters, it must be *itr. Otherwise we find the matching key.
+                const Hash::Node* otherNodePtr = &(*itr);
+                if ((*itl).getKey() != (*itr).getKey()) {
+                    if (orderMatters) return false;
+                    boost::optional<const Hash::Node&> otherNode = other.find((*itl).getKey());
+                    if (!otherNode) return false;
+                    otherNodePtr = &(*otherNode);
+                }
+
+                if ((*itl).getType() != (*otherNodePtr).getType()) {
                     return false;
                 }
 
                 // Checks the hash node attributes.
                 const Attributes& leftNodeAttrs = (*itl).getAttributes();
-                const Attributes& rightNodeAttrs = (*itr).getAttributes();
+                const Attributes& rightNodeAttrs = (*otherNodePtr).getAttributes();
                 if (leftNodeAttrs.size() != rightNodeAttrs.size()) {
                     return false;
                 }
                 for (Hash::Attributes::const_iterator lAttrIt = leftNodeAttrs.begin(), rAttrIt = rightNodeAttrs.begin();
                      lAttrIt != leftNodeAttrs.end(); ++lAttrIt, ++rAttrIt) {
-                    if (lAttrIt->getKey() != rAttrIt->getKey() ||
-                        lAttrIt->getType() != rAttrIt->getType()) {
+                    const Element<std::string>* otherAttrNodePtr = &(*rAttrIt);
+                    if (lAttrIt->getKey() != rAttrIt->getKey()) {
+                        if (orderMatters) return false;
+                        auto otherAttrNodeIt = rightNodeAttrs.find(lAttrIt->getKey());
+                        if (otherAttrNodeIt == rightNodeAttrs.mend()) return false;
+                        otherAttrNodePtr = &(otherAttrNodeIt->second); // otherAttrNodeIt is a map_iterator, i.e. points to a pair
+                    }
+                    if (lAttrIt->getType() != otherAttrNodePtr->getType()) {
                         return false;
                     }
                     if (lAttrIt->getType() == Types::HASH) {
-                        if (!lAttrIt->getValue<Hash>().fullyEquals(rAttrIt->getValue<Hash>())) {
+                        if (!lAttrIt->getValue<Hash>().fullyEquals(otherAttrNodePtr->getValue<Hash>(), orderMatters)) {
                             return false;
                         }
                     } else if (lAttrIt->getType() == Types::VECTOR_HASH) {
                         if (!vectorsHashesEqual(lAttrIt->getValue<std::vector < Hash >> (),
-                                                rAttrIt->getValue<std::vector < Hash >> ())) {
+                                                otherAttrNodePtr->getValue<std::vector < Hash >> (),
+                                                orderMatters)) {
                             return false;
                         }
                     } else if (lAttrIt->getType() == Types::VECTOR_STRING) {
                         // For now treat VECTOR_STRING separately:
                         // The generic getValueAs<std::string>() below has trouble with commas in an element.
-                        if (lAttrIt->getValue<std::vector < std::string >> () != rAttrIt->getValue<std::vector < std::string >> ()) {
+                        if (lAttrIt->getValue<std::vector < std::string >> () != otherAttrNodePtr->getValue<std::vector < std::string >> ()) {
                             return false;
                         }
-                    } else if (lAttrIt->getValueAs<std::string>() != rAttrIt->getValueAs<std::string>()) {
+                    } else if (lAttrIt->getValueAs<std::string>() != otherAttrNodePtr->getValueAs<std::string>()) {
                         return false;
                     }
                 }
 
                 // Checks the hash node values.
                 if ((*itl).getType() == Types::HASH) {
-                    if (!(*itl).getValue<Hash>().fullyEquals((*itr).getValue<Hash>())) {
+                    if (!(*itl).getValue<Hash>().fullyEquals((*otherNodePtr).getValue<Hash>(), orderMatters)) {
                         return false;
                     }
                 } else if ((*itl).getType() == Types::VECTOR_HASH) {
                     if (!vectorsHashesEqual((*itl).getValue<std::vector < Hash >> (),
-                                            (*itr).getValue<std::vector < Hash >> ())) {
+                                            (*otherNodePtr).getValue<std::vector < Hash >> (),
+                                            orderMatters)) {
                         return false;
                     }
                 } else if ((*itl).getType() == Types::VECTOR_STRING) {
                     // For now treat VECTOR_STRING separately:
                     // The generic getValueAs<std::string>() below has trouble with commas in an element.
-                    if ((*itl).getValue<std::vector < std::string >> () != (*itr).getValue<std::vector < std::string >> ()) {
+                    if ((*itl).getValue<std::vector < std::string >> () != (*otherNodePtr).getValue<std::vector < std::string >> ()) {
                         return false;
                     }
-                } else if ((*itl).getValueAs<std::string>() != (*itr).getValueAs<std::string>()) {
+                } else if ((*itl).getValueAs<std::string>() != (*otherNodePtr).getValueAs<std::string>()) {
                     return false;
                 }
             }
