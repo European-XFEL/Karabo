@@ -210,6 +210,15 @@ class _BaseDialog(QDialog):
         self.items = list(items)
         self.valueList.addItems([self.text_for_item(item) for item in items])
         self.valueList.setCurrentRow(0)
+        self._update_buttons()
+
+    def _update_buttons(self):
+        """Only allow Open and Paste buttons if the rows contains something
+        """
+        enabled = len(self.items) > 0
+        self.open.setEnabled(enabled)
+        self.paste.setEnabled(enabled)
+        self.deleteValue.setEnabled(enabled)
 
     def _update_image(self, item):
         """Update the ``self.image`` with the given pixmap of the ``item``.
@@ -221,6 +230,7 @@ class _BaseDialog(QDialog):
 
     @pyqtSlot(int)
     def on_valueList_currentRowChanged(self, row):
+        self._update_buttons()
         self.image.setPixmap(self.items[row].pixmap)
 
     def on_image_newMime(self, mime):
@@ -272,6 +282,7 @@ class _BaseDialog(QDialog):
             del self.items[cr]
             if len(self.items) == 0:
                 self.image.setDefaultPixmap()
+        self._update_buttons()
 
     @pyqtSlot()
     def on_up_clicked(self):
