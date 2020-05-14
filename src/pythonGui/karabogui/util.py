@@ -24,6 +24,7 @@ from karabo.native import decodeXML, Hash, writeXML
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, extract_configuration)
+from karabogui.const import PANEL_ICON_SIZE
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_config, get_db_conn, get_topology
@@ -386,9 +387,9 @@ def set_treeview_header(header):
     header.setResizeMode(1, QHeaderView.Fixed)
     header.setResizeMode(2, QHeaderView.Fixed)
     header.setStretchLastSection(False)
-    header.setMaximumSectionSize(24)
-    header.resizeSection(1, 24)
-    header.resizeSection(2, 24)
+    header.setMaximumSectionSize(PANEL_ICON_SIZE)
+    header.resizeSection(1, PANEL_ICON_SIZE)
+    header.resizeSection(2, PANEL_ICON_SIZE)
 
     # Prevent drag reorder of the header
     header.setSectionsMovable(False)
