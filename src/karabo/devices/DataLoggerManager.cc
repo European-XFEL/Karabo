@@ -189,12 +189,6 @@ namespace karabo {
                     .init()
                     .commit();
 
-            BOOL_ELEMENT(expected).key("logger.InfluxDataLogger.useGateway")
-                    .displayedName("Use Influx Gateway")
-                    .description("For logging, use Influx gateway instead of connecting directly to a server instance.")
-                    .assignmentOptional().defaultValue(false)
-                    .commit();
-
             BOOL_ELEMENT(expected).key("useP2p")
                     .displayedName("Use p2p shortcut")
                     .description("Whether to instruct loggers to use point-to-point instead of broker")
@@ -948,7 +942,6 @@ namespace karabo {
                 config.set("urlQuery", get<std::string>("logger.InfluxDataLogger.urlRead"));
                 config.set("dbname", get<std::string>("logger.InfluxDataLogger.dbname"));
                 config.set("maxBatchPoints", get<std::uint32_t>("logger.InfluxDataLogger.maxBatchPoints"));
-                config.set("useGateway", get<bool>("logger.InfluxDataLogger.useGateway"));
             }
             config.set("flushInterval", get<int>("flushInterval"));
             config.set("performanceStatistics.enable", get<bool>("enablePerformanceStats"));
