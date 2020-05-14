@@ -145,7 +145,11 @@ class DlMigrator():
                     print("'{}' already migrated: skip.".format(file_path))
                     self.n_skipped += 1
                     continue
-                full_workload.append((device_id, file_path))
+                full_workload.append((device_id, file_path, last_update))
+
+                # sort list by descending access time
+                # (newer files are to be processed first)
+                full_workload.sort(key=lambda e: e[2], reverse=True)
 
         workloads = [[] for i in range(self.concurrent_tasks)]
         for i in range(0, len(full_workload)):
@@ -162,9 +166,7 @@ class DlMigrator():
         migration progress info.
         workload: list of paths of files to be migrated.
         """
-        for wrk_item in workload:
-            device_id = wrk_item[0]
-            file_path = wrk_item[1]
+        for device_id, file_path, _ in workload:
             file_name = os.path.basename(file_path)
             success = False
             print("[wk-{}] - Migrating '{}' ...".format(workload_id, file_path))
@@ -272,7 +274,7 @@ class DlMigrator():
         return await schema2db.run()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="Migrates data from datalogger raw files "
                     "to InfluxDb. Completely and partially "
@@ -335,3 +337,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     o = DlMigrator(**vars(args))
     get_event_loop().run_until_complete(o.run())
+
+
+if __name__ == "__main__":
+    main()
