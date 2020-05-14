@@ -773,7 +773,8 @@ namespace karathon {
 
 
     bool
-    fullyEqualWrap(const bp::object& left, const bp::object& right) {
+    fullyEqualWrap(const bp::object& left, const bp::object& right, const bp::object& orderMatters) {
+
         bp::extract<karabo::util::Hash> leftExtracted(left);
         if (!leftExtracted.check()) return false;
 
@@ -782,7 +783,7 @@ namespace karathon {
 
         const karabo::util::Hash& lhash = leftExtracted;
         const karabo::util::Hash& rhash = rightExtracted;
-        return lhash.fullyEquals(rhash);
+        return lhash.fullyEquals(rhash, bp::extract<bool>(orderMatters));
     }
 
     void
