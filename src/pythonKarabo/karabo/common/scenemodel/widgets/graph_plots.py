@@ -68,6 +68,8 @@ class VectorScatterGraphModel(BasePlotModel):
 
 class VectorXYGraphModel(BasePlotModel):
     """ A model for the VectorXYGraph"""
+    x_grid = Bool(True)
+    y_grid = Bool(True)
 
 
 class XYVectorModel(VectorXYGraphModel):
