@@ -145,7 +145,8 @@ class DlMigrator():
                     print("'{}' already migrated: skip.".format(file_path))
                     self.n_skipped += 1
                     continue
-                full_workload.append((device_id, file_path))
+                full_workload.append((device_id, file_path, last_update))
+                full_workload.sort(key=lambda e: e[2], reverse=True)
 
         workloads = [[] for i in range(self.concurrent_tasks)]
         for i in range(0, len(full_workload)):
