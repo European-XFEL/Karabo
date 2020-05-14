@@ -210,7 +210,7 @@ namespace karathon {
     similarWrap(const bp::object& left, const bp::object& right);
 
     bool
-    fullyEqualWrap(const bp::object& left, const bp::object& right);
+    fullyEqualWrap(const bp::object& left, const bp::object& right, const bp::object& orderMatters);
 
     // implementation details, users never invoke these directly
     namespace detail {

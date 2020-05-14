@@ -720,23 +720,26 @@ class PythonDevice(NoFsm):
         """
         toClear = Hash()
         toAdd = Hash()
-        knownAlarms = set()
+        knownAlarms = {}
 
         current = self.validatorIntern.getParametersInWarnOrAlarm()
         # Check if we need to clear/clean alarms
-        for p in previous:
+        for p in previous:  # p is a HashNode
             pKey = p.getKey()
             currentEntry = current.find(pKey)
             desc = p.getValue()
             exType = desc.get("type")
             if (currentEntry is not None and
                     exType == currentEntry.getValue().get("type")):
-                timeStampPrevious = Timestamp.fromHashAttributes(
-                    p.getAttributes())
-                timeStampCurrent = Timestamp.fromHashAttributes(
-                    currentEntry.getAttributes())
-                if not forceUpdate and timeStampPrevious == timeStampCurrent:
-                    knownAlarms.add(pKey)
+                if not forceUpdate:
+                    # on force update we don't care if timestamps match
+                    timeStampPrevious = Timestamp.fromHashAttributes(
+                        p.getAttributes())
+                    timeStampCurrent = Timestamp.fromHashAttributes(
+                        currentEntry.getAttributes())
+                    if timeStampPrevious == timeStampCurrent:
+                        types = knownAlarms.setdefault(pKey, set())
+                        types.add(exType)
 
                 # alarmCondition still exists nothing to clean
                 continue
@@ -756,39 +759,55 @@ class PythonDevice(NoFsm):
             desc = c.getValue()
             conditionString = desc.get("type")
             # avoid unnecessary chatter of already sent messages
-            if not forceUpdate and cKey in knownAlarms:
-                continue
+            if forceUpdate or (cKey in knownAlarms
+                               and conditionString in knownAlarms[cKey]):
 
-            condition = AlarmCondition(conditionString)
-            pSep = cKey.replace(Validator.kAlarmParamPathSeparator, ".")
+                condition = AlarmCondition(conditionString)
+                pSep = cKey.replace(Validator.kAlarmParamPathSeparator, ".")
 
-            alarmDesc = self._fullSchema.getInfoForAlarm(pSep, condition)
-            needAck = self._fullSchema.doesAlarmNeedAcknowledging(
-                pSep, condition)
+                alarmDesc = self._fullSchema.getInfoForAlarm(pSep, condition)
+                needAck = self._fullSchema.doesAlarmNeedAcknowledging(
+                    pSep, condition)
 
-            entry = Hash("type", conditionString,
-                         "description", alarmDesc,
-                         "needsAcknowledging", needAck)
+                entry = Hash("type", conditionString,
+                             "description", alarmDesc,
+                             "needsAcknowledging", needAck)
 
-            prop = Hash(conditionString, entry)
-            entryNode = prop.getNode(conditionString)
-            occuredAt = Timestamp.fromHashAttributes(c.getAttributes())
-            occuredAt.toHashAttributes(entryNode.getAttributes())
-            toAdd.set(cKey, prop)
+                prop = Hash(conditionString, entry)
+                entryNode = prop.getNode(conditionString)
+                occuredAt = Timestamp.fromHashAttributes(c.getAttributes())
+                occuredAt.toHashAttributes(entryNode.getAttributes())
+                toAdd.set(cKey, prop)
 
         return Hash("toClear", toClear, "toAdd", toAdd)
 
     def slotReSubmitAlarms(self, existingAlarms):
         """
         This slot is called by the alarm service when it gets  (re-)
-        instantiated. The alarm service will pass any for this instances that
+        instantiated. The alarm service will pass any alarm for this instance
+        that
         it recovered from its persisted data. These should be checked
         against whether they are still valid and if new ones appeared
         :param existingAlarms: A hash containing existing alarms pertinent to
                this device. May be empty
         """
+        # reformat input to match the needs of _evaluateAlarmUpdates
+        existingAlarmsRF = Hash()
+        for propNode in existingAlarms:
+            property = propNode.getKey()
+            entry = Hash()
+            for typeNode in propNode.getValue():  # getValue gives Hash
+                # If 'existingAlarms' have more than one alarm type per
+                # property, all but the last one are lost here.
+                # Could not yet identify a higher level problem, but note that
+                # a property could have WARN_LOW and ALARM_VARIANCE_HIGH at the
+                # same time!
+                # TODO: Check whether that is a problem!
+                entry["type"] = typeNode.getKey()
+            existingAlarmsRF[property] = entry
+
         with self._stateChangeLock:
-            alarmsToUpdate = self._evaluateAlarmUpdates(existingAlarms,
+            alarmsToUpdate = self._evaluateAlarmUpdates(existingAlarmsRF,
                                                         forceUpdate=True)
 
         self._ss.reply(self.getInstanceId(), alarmsToUpdate)

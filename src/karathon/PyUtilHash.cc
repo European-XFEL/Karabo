@@ -334,8 +334,9 @@ void exportPyUtilHash() {
         "... result will be 'True'");
 
     // Global free function to compare Hash, // TODO: could be extended for vector<Hash>, Hash::Node or Schema
-    def("fullyEqual", &fullyEqualWrap, (bp::arg("left"), bp::arg("right")),
-        "Compares two hashes for exact equality: keys, types, attributes, values");
+    def("fullyEqual", &fullyEqualWrap, (bp::arg("left"), bp::arg("right"), bp::arg("orderMatters") = true),
+        "Compares two hashes for exact equality: keys, types, attributes, values\n"
+        "If orderMatters is True (default) also the order of keys matters.");
 
     h.def("isType", &HashWrap().is, (bp::arg("path"), bp::arg("type"), bp::arg("sep") = "."),
           "h.isType(path, type) -> True if reference type of value in Hash container for given 'path' is equal 'type'.\nExample:\n\t"

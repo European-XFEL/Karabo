@@ -595,8 +595,12 @@ namespace karabo {
              * A Hash is considered fully equal to another if both
              * are similar and their corresponding elements have
              * the same keys, values and attributes.
+             * @param other Hash to compare with
+             * @param orderMatters if true (default) order of keys is relevant as well
+             * @return bool
              */
-            bool fullyEquals(const Hash& other) const;
+
+            bool fullyEquals(const Hash& other, bool orderMatters = true) const;
 
             bool operator!=(const Hash& other) const;
 
