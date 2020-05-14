@@ -57,7 +57,7 @@ from .widgets.graph_image import (
 
 # deprecated widgets
 from .widgets.graph_image import (
-    DisplayAlignedImage, DisplayImageElementModel, DisplayImageModel,
+    DisplayAlignedImageModel, DisplayImageElementModel, DisplayImageModel,
     ScientificImageModel, WebcamImageModel)
 from .widgets.graph_plots import (
     DisplayPlotModel, LinePlotModel, MultiCurvePlotModel, XYPlotModel,

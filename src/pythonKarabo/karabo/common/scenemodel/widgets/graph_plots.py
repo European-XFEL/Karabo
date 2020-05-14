@@ -1,4 +1,4 @@
-from traits.api import Bool, Float, Int, List, String
+from traits.api import Bool, Enum, Float, Int, List, String
 import warnings
 from xml.etree.ElementTree import SubElement
 
@@ -147,6 +147,8 @@ class LinePlotModel(DisplayTrendlineModel):
     # The original model had a trait `boxes`. and other functions.
     # this are removed. It should not have been used in device code.
     # if they were used, the code should fail.
+
+    klass = Enum("DisplayTrendline", "XYVector")
 
 
 class StateGraphModel(BasePlotModel):
@@ -379,7 +381,6 @@ def _trend_graph_reader(read_func, element):
     return TrendGraphModel(**traits)
 
 
-@register_scene_writer(LinePlotModel)  # deprecated Qwt model
 @register_scene_writer(DisplayTrendlineModel)  # deprecated Qwt model
 @register_scene_writer(TrendGraphModel)
 def _trend_graph_writer(write_func, model, parent):
@@ -390,6 +391,18 @@ def _trend_graph_writer(write_func, model, parent):
     write_range_set(model, element)
 
     return element
+
+
+@register_scene_writer(LinePlotModel)  # deprecated Qwt model
+def _line_plot_writer(write_func, model, parent):
+    # Delegate the co writer to the respective new models
+    WRITER_MAP = {
+        'DisplayTrendline': _trend_graph_writer,
+        'XYVector': _vector_xy_graph_writer}
+
+    # The model will always have a `klass` due to its Enum traits
+    writer = WRITER_MAP.get(model.klass)
+    return writer(write_func, model, parent)
 
 
 @register_scene_reader('DisplayStateGraph')
