@@ -156,7 +156,6 @@ namespace karabo {
             dbClientCfg.set<std::string>("dbPasswordQuery", dbPassword);
             dbClientCfg.set<std::string>("dbUserWrite", "");
             dbClientCfg.set<std::string>("dbPasswordWrite", "");
-            dbClientCfg.set<bool>("useGateway", false); // At least for now, the reader never uses the Influx Gateway.
             m_influxClient = Configurator<InfluxDbClient>::create("InfluxDbClient", dbClientCfg);
             m_durationUnit = toInfluxDurationUnit(TIME_UNITS::MICROSEC);
         }
