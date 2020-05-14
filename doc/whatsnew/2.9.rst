@@ -11,3 +11,132 @@ The **most relevant improvements**, fixes and changes are:
          `karabo-macroserver`.
 - C++: the data loggers with influxDB backend are production ready.
 
+
+Detailed Merge-Log
+==================
+
+Since karabo 2.8.0, a total of 93 MR have been implemented in this release.
+
+Bound/cpp core
+++++++++++++++
+
+- C++/bound: fullyEqual for hashes, but ignoring key insertion order  !4394
+- C++/bound/MDL: Device property for karabo versionFor all APIs, add a new device property: `"karaboVersion"`. !4353
+- C++/bound: Device client's channel monitor allows registering onInput handler !4354 !4370
+- C++: Log stop of logging in file logger !4320
+- C++ : Failing/longish startFsm (i.e. device initialisation) has no influence on slotStartDevice !4335
+- C++: Add test about device being killed during initialisation !4338
+- C++: Influx DB topic configurableDB name is now centrally configured in the data logger manager. !4341
+- C++ integration tests: Larger timeout for influxDB, more debug print !4360
+- C++: Karabo version from 'git describe' compiled into shared library. !4364
+- C++: Fix alarm service flush file reading + stricter tests. The handwaven XML file reading was changing strings !4375
+- C++: Ignore timeouts on execute if askedChanged the gui server protocol in a backward compatible way. !4376
+- C++: fix race condition in setGlobalAlarm !4389
+- Bound: add bindings for full equality check of HashesImplemented in bound as a free function like `similar`. !4381
+- Bound: improve fix of device's slotReSubmitAlarms !4393
+
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+
+- CONDA: rebuild indexes correctly !4297
+- CONDA: conda-recipe for karabo-cpp using cmake !4299
+- CI: Conda cannot clean itself on Windows !4352
+- CI: Add prerelease conda build for alpha and beta tags !4355
+- BUILD: refactor conda build scripts using Python !4331
+- BUILD: Enable nightly build !4337
+- BUILD: GUI CI on MacOs  4269
+- BUILD: Skip CMake build !4348
+- BUILD: Conda recipes get their own folder. !4305
+- BUILD: Check for errors after running pip to install Python code !4318
+- DEPS: add uvloop !4300 !4303 !4312
+
+
+Tests
++++++
+
+- TESTS: Add test_bin_roundtrip test case. !4313
+- TESTS: Extend unit test to check interoperability of xml serialization between MDL and Bound Python. !4304
+- TESTS: Python Tests do not drop database  !4385
+
+
+Middlelayer Core
+++++++++++++++++
+
+- MDL: Fix MDL bin decoding of Vectors of Hashes (conform to C++ bin decoding).  !4302
+- MDL: Increase number of threads in executor  !4311
+- MDL: Minor code quality fixes  !4345
+- MDL: Karabo version in instanceInfo of all SignalSlotable...and thus also for devices. This aligns MDL with C++ and bound Python.
+- MDL: separate macro devices namespace  !4347
+- MDL: PropertyTest Device starts via CLI !4382
+
+
+Core Devices
+++++++++++++
+
+- PROJECT DB: Add returing projects and active configuration in each for a given device !4336
+- Data Logger: Modifications to support multiple DataLoggerManagers per topic. !4372
+
+
+Influx DB
++++++++++
+
+- InfluxDB: Fix InfluxDB environment for CI and cluster  !4274
+- InfluxDB: Integrate InfluxDataLogging test into CI  !4379
+- InfluxDB: Merge temporary XML parsing overwrites in 'karabo.influxdb.dlUtils' into 'karabo.native.data.serializer.py'. !4315
+- InfluxDB: Fix InfluxDB data migrator for Pre-production environment. !4323
+- InfluxDB: Improve influx migrator workflow. !4340
+- InfluxDB: Support workload partitioning and concurrent processing for Influx Migrator. !4350
+- InfluxDB: Prepend platform name to measurements in InfluxDB  !4402
+- InfluxDB: Handle database creation failures at InfluxDataLogger startup. !4378
+
+
+Graphical User Interface
+++++++++++++++++++++++++
+
+- GUI: Fix image widget for pixels of same values !4296
+- GUI: Fix scene boxlayout !4292
+- GUI: Indicate non-resizable fixed layout !4295
+- GUI: Add close event and focus on ok button for error messagebox !4301
+- GUI: Extend unit-test for table element with options !4306
+- GUI: Change device tree: Domain - Type - Name !4267
+- GUI: Remove scene view expanding on undock !4294
+- GUI: Show the server language information in an icon !4252
+- GUI: Destroy scene view properly !4291
+- GUI: Fix scene line shape !4293
+- GUI: Catch the ValueError in the combobox delegate when options are violated !4307
+- GUI: Fix AccessLevel change on scene design mode !4309
+- GUI: Add test for boxlayout actions !4310
+- GUI: Destroy project controller properly !4298
+- GUI: Fix message box close on 'x' button click !4319
+- GUI: Increase connect dialog delay time !4322
+- GUI: Refactor the toolset to Traits !4321
+- GUI: Change the vector line edit in size hint !4325
+- GUI: Create a common place for colors !4326
+- GUI: Refactor aux plots to Traits !4327
+- GUI: Allow multiple macro server instances !4346
+- GUI: Adjust minimum size of image plot only when ROI is added !4342
+- GUI: Remove spark line size restriction !4328
+- GUI: Implement new class handling in topology !4179
+- GUI: Convert Qwt models to Graph models !4339
+- GUI: Soften deprecation of models !4366
+- GUI server: Better error message for execute/reconfigure timeouts !4363
+- GUI: do not expect replies from macro slots !4371
+- GUI: Convert unit label into a wrapper class !4374
+- GUI: remove deprecated traits !4367
+- GUI: Backward compatibility of tool button method !4384
+- GUI: Formatted value field !4368
+- GUI: Implement a sticker widget !4356
+- GUI: Fix the blue background if no changes in configurator !4383
+- GUI: Soften deprecation of LinePlotModel !4391
+- GUI: Remove not used trait in the sticker scene writer !4397
+- GUI: Respect the object arrangement when selected !4392
+- GUI: avoid overflow on slider range comparison !4390
+- GUI: Add Macro Icon for Topology !4398
+- GUI: Extend and clean simple model tests !4399
+- GUI: Validate Vector Ints on list edit !4405
+- GUI: Refactor image rescale to avoid overflows and copying !4403
+- GUI: Icons Dialog improvement !4401
+- GUI: Fix macro save to file with unsupported characters !4388
+- GUI: Fix crosshair ROI path calculation !4365
+- GUI: Display ROI text only when selected !4343
