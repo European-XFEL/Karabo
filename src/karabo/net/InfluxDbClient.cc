@@ -83,12 +83,6 @@ namespace karabo {
                     .assignmentOptional().defaultValue("")
                     .commit();
 
-            BOOL_ELEMENT(expected).key("useGateway")
-                    .displayedName("Use Influx Gateway")
-                    .description("Use Influx gateway instead of connecting directly to a server instance.")
-                    .assignmentOptional().defaultValue(false)
-                    .commit();
-
             STRING_ELEMENT(expected).key("durationUnit")
                     .displayedName("Duration unit")
                     .description("Time unit used: 'd' => day, 'h' => hour, 'm' => minute, 's' => second, "
@@ -132,8 +126,7 @@ namespace karabo {
             , m_dbUserWrite(input.get<std::string>("dbUserWrite"))
             , m_dbPasswordWrite(input.get<std::string>("dbPasswordWrite"))
             , m_dbUserQuery(input.get<std::string>("dbUserQuery"))
-            , m_dbPasswordQuery(input.get<std::string>("dbPasswordQuery"))
-            , m_dbUseGateway(input.get<bool>("useGateway")) {
+            , m_dbPasswordQuery(input.get<std::string>("dbPasswordQuery")) {
 
             if (!m_urlWrite.empty()) {
                 const boost::tuple<std::string, std::string,
@@ -156,8 +149,7 @@ namespace karabo {
                     << "\", host : \"" << m_hostnameWrite
                     << "\"\n\t\tURL (query) -> \"" << m_urlQuery
                     << ", user : \"" << m_dbUserQuery << "\", pass : \"" << m_dbPasswordQuery
-                    << "\", host : \"" << m_hostnameQuery << "\"\n"
-                    << "\t\tUse gateway -> " << m_dbUseGateway;
+                    << "\", host : \"" << m_hostnameQuery << "\"\n";
             KARABO_LOG_FRAMEWORK_DEBUG << oss.str();
         }
 
@@ -285,13 +277,13 @@ namespace karabo {
             }
             oss << " HTTP/1.1\r\n"
                 << "Host: " << m_hostnameQuery << "\r\n"
-                << "Request-Id: " << m_currentUuid << "\r\n";
-            if (m_dbUseGateway) {
-                const std::string rawAuth(getRawBasicAuthHeader());
-                if (!rawAuth.empty()) {
-                    oss << rawAuth << "\r\n";
-                }
+                    << "Request-Id: " << m_currentUuid << "\r\n";
+
+            const std::string rawAuth(getRawBasicAuthHeader());
+            if (!rawAuth.empty()) {
+                oss << rawAuth << "\r\n";
             }
+
             oss << "\r\n";
             sendToInfluxDb(m_dbChannelQuery, oss.str(), action);
         }
@@ -314,12 +306,12 @@ namespace karabo {
             oss << " HTTP/1.1\r\n"
                     << "Host: " << m_hostnameQuery << "\r\n"
                     << "Request-Id: " << m_currentUuid << "\r\n";
-            if (m_dbUseGateway) {
-                const std::string rawAuth(getRawBasicAuthHeader());
-                if (!rawAuth.empty()) {
-                    oss << rawAuth << "\r\n";
-                }
+
+            const std::string rawAuth(getRawBasicAuthHeader());
+            if (!rawAuth.empty()) {
+                oss << rawAuth << "\r\n";
             }
+
             oss << "\r\n";
             sendToInfluxDb(m_dbChannelQuery, oss.str(), action);
         }
@@ -534,7 +526,7 @@ namespace karabo {
                     }
                 }
             }
-            
+
             if (m_response.connection == "close") {
                 KARABO_LOG_FRAMEWORK_ERROR << "InfluxDB server (write) closed connection...\n" << line;
                 boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
@@ -730,12 +722,12 @@ namespace karabo {
             oss << " HTTP/1.1\r\n"
                     << "Host: " << m_hostnameWrite << "\r\n"
                     << "Request-Id: " << m_currentUuid << "\r\n";
-            if (m_dbUseGateway) {
-                const std::string rawAuth(getRawBasicAuthHeader());
-                if (!rawAuth.empty()) {
-                    oss << rawAuth << "\r\n";
-                }
+
+            const std::string rawAuth(getRawBasicAuthHeader());
+            if (!rawAuth.empty()) {
+                oss << rawAuth << "\r\n";
             }
+
             oss << "Content-Length: " << batch.size() << "\r\n\r\n" << batch;
             std::string req = oss.str().substr(0,1024);
             sendToInfluxDb(m_dbChannelWrite, oss.str(), action);
@@ -760,12 +752,12 @@ namespace karabo {
             oss << " HTTP/1.1\r\n"
                     << "Host: " << m_hostnameQuery << "\r\n"
                     << "Request-Id: " << m_currentUuid << "\r\n";
-            if (m_dbUseGateway) {
-                const std::string rawAuth(getRawBasicAuthHeader());
-                if (!rawAuth.empty()) {
-                    oss << rawAuth << "\r\n";
-                }
+
+            const std::string rawAuth(getRawBasicAuthHeader());
+            if (!rawAuth.empty()) {
+                oss << rawAuth << "\r\n";
             }
+
             oss << "\r\n";
 
             sendToInfluxDb(m_dbChannelQuery, oss.str(), action);
@@ -809,12 +801,12 @@ namespace karabo {
             oss << " HTTP/1.1\r\n"
                     << "Host: " << m_hostnameQuery << "\r\n"
                     << "Request-Id: " << m_currentUuid << "\r\n";
-            if (m_dbUseGateway) {
-                const std::string rawAuth(getRawBasicAuthHeader());
-                if (!rawAuth.empty()) {
-                    oss << rawAuth << "\r\n";
-                }
+
+            const std::string rawAuth(getRawBasicAuthHeader());
+            if (!rawAuth.empty()) {
+                oss << rawAuth << "\r\n";
             }
+
             oss << "\r\n";
 
             sendToInfluxDb(m_dbChannelQuery, oss.str(), action);
