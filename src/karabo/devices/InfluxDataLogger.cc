@@ -305,6 +305,11 @@ namespace karabo {
 
         void InfluxDataLogger::expectedParameters(karabo::util::Schema& expected) {
 
+            OVERWRITE_ELEMENT(expected).key("state")
+                    .setNewOptions(State::INIT, State::NORMAL, State::ERROR)
+                    .setNewDefaultValue(State::INIT)
+                    .commit();
+
             STRING_ELEMENT(expected).key("urlWrite")
                     .displayedName("Influxdb URL (write)")
                     .description("URL should be given in form: tcp://host:port. 'Write' interface")
@@ -323,12 +328,6 @@ namespace karabo {
                     .displayedName("Database name")
                     .description("Name of the database in which the data should be inserted")
                     .assignmentMandatory()
-                    .commit();
-
-            BOOL_ELEMENT(expected).key("useGateway")
-                    .displayedName("Use Influx Gateway")
-                    .description("For logging, use Influx gateway instead of connecting directly to a server instance.")
-                    .assignmentOptional().defaultValue(false)
                     .commit();
 
             UINT32_ELEMENT(expected).key("maxBatchPoints")
@@ -393,7 +392,6 @@ namespace karabo {
 
             config.set<std::string>("dbUserWrite", dbUserWrite);
             config.set<std::string>("dbPasswordWrite", dbPasswordWrite);
-            config.set<bool>("useGateway", input.get<bool>("useGateway"));
             config.set<std::string>("dbUserQuery", dbUserQuery);
             config.set<std::string>("dbPasswordQuery", dbPasswordQuery);
 
@@ -448,20 +446,22 @@ namespace karabo {
 
         void InfluxDataLogger::createDatabase(const InfluxResponseHandler& action) {
             const std::string statement = "CREATE DATABASE " + m_dbName;
-            if (m_urlWrite != m_urlQuery) {
-                // This is cluster scenario:  no permissions to create DB:  it should exist already!
-                throw KARABO_PARAMETER_EXCEPTION("Database \"" + m_dbName + "\" doesn't exist! No permission to create a database!");
-            }
-            // This is probably CI or local installation scenario and we have right to create DB
-            // CI case:  dbUser should have administrator rights
             m_client->postQueryDb(statement, action);
             KARABO_LOG_FRAMEWORK_INFO << statement << "\n";
         }
 
 
         void InfluxDataLogger::onCreateDatabase(const HttpResponse& o) {
-            KARABO_LOG_FRAMEWORK_INFO << "Database " << m_dbName << " created";
-            startConnection();
+            if (o.code != 200 && o.code != 204) {
+                // Database not available and could not be created.
+                KARABO_LOG_FRAMEWORK_ERROR << "Database '" << m_dbName << "' not available. "
+                        << "Tried to create it but got error with http status code '"
+                        << o.code << "' and message '" << o.message << "'. InfluxDataLogger going to ERROR state.";
+                updateState(State::ERROR, Hash("status", std::string("Database '") + m_dbName + "' not available"));
+            } else {
+                KARABO_LOG_FRAMEWORK_INFO << "Database " << m_dbName << " created";
+                startConnection();
+            }
         }
 
 
@@ -484,14 +484,9 @@ namespace karabo {
                 }
             }
 
-            // TODO: add a boolean parameter to the InfluxDataLogger, ensureDbExists, that when true
-            // will dictate that the logger should try to create the database if it does not exist. Only
-            // execute the createDatabe call if this flag is true. Otherwise logs a database not available
-            // error, writes this information to the status property and change the state property to ERROR.
-
-            // The database to be used is not available; tries to create it.
+            KARABO_LOG_FRAMEWORK_INFO << "Database '" << m_dbName << "' not available. Will try to create it.";
             createDatabase(bind_weak(&karabo::devices::InfluxDataLogger::onCreateDatabase, this, _1));
-        }
+         }
 
 
         void InfluxDataLogger::onPingDb(const HttpResponse& o) {
