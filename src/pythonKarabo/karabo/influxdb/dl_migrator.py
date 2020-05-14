@@ -274,7 +274,7 @@ class DlMigrator():
         return await schema2db.run()
 
 
-def main(self):
+def main():
     parser = argparse.ArgumentParser(
         description="Migrates data from datalogger raw files "
                     "to InfluxDb. Completely and partially "
