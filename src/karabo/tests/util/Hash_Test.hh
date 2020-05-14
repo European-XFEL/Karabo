@@ -34,6 +34,7 @@ class Hash_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testCounter);
     CPPUNIT_TEST(testKeys);
     CPPUNIT_TEST(testSimilarIsNotFullyEqual);
+    CPPUNIT_TEST(testFullyEqualUnordered);
     CPPUNIT_TEST(testNode);
     CPPUNIT_TEST_SUITE_END();
 
@@ -63,6 +64,7 @@ private:
     void testCounter();
     void testKeys();
     void testSimilarIsNotFullyEqual();
+    void testFullyEqualUnordered();
     void testNode();
 };
 #endif
