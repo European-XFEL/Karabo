@@ -53,7 +53,7 @@ class DetectorGraphModel(KaraboImageModel):
     """A model of the DetectorGraph"""
 
 
-class DisplayAlignedImage(DetectorGraphModel):
+class DisplayAlignedImageModel(DetectorGraphModel):
     """A legacy model"""
     def __init__(self, **traits):
         super().__init__(**traits)
@@ -130,6 +130,7 @@ def _detector_graph_reader(read_func, element):
     return DetectorGraphModel(**traits)
 
 
+@register_scene_writer(DisplayAlignedImageModel)  # deprecated Qwt model
 @register_scene_writer(DetectorGraphModel)
 def _detector_graph_writer(write_func, model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
