@@ -17,8 +17,9 @@ class DataLogging_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST(fileAllTestRunner);
     CPPUNIT_TEST(influxAllTestRunner);
-    CPPUNIT_TEST(influxAllTestRunnerWithTelegraf);
     CPPUNIT_TEST(testNoInfluxServerHandling);
+    CPPUNIT_TEST(influxAllTestRunnerWithTelegraf);
+    CPPUNIT_TEST(testInfluxDbNotAvailableTelegraf);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -52,6 +53,14 @@ private:
     void testCfgFromPastRestart();
 
     /**
+     * Checks that the InfluxDataLogger goes to ERROR state
+     * when an attempt to use a non-existing Influx database
+     * is made in an environment where the Influx user lacks
+     * admin privileges (like the Telegraf based environments).
+     */
+    void testInfluxDbNotAvailableTelegraf();
+
+    /**
      * Checks that the Influx logger and reader fail as soon as 
      * possible when there's no Influx server available. Uses an
      * invalid url configuration for simulating the scenario of
@@ -67,7 +76,9 @@ private:
 
     template <class T> void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
 
-    std::pair<bool, std::string> startLoggers(const std::string& loggerType, bool useInvalidInfluxUrl = false);
+    std::pair<bool, std::string> startLoggers(const std::string& loggerType,
+                                              bool useInvalidInfluxUrl = false,
+                                              bool useInvalidDbName = false);
 
     const std::string m_server;
     const std::string m_deviceId;
@@ -81,6 +92,28 @@ private:
     karabo::core::DeviceClient::Pointer m_deviceClient;
 
     static const unsigned int m_flushIntervalSec;
+
+    // Used to control switching to Telegraf environment
+    std::string m_influxDb_dbName;
+    std::string m_influxDb_query_user;
+    std::string m_influxDb_query_password;
+    std::string m_influxDb_query_url;
+    std::string m_influxDb_write_user;
+    std::string m_influxDb_write_password;
+    std::string m_influxDb_write_url;
+    bool m_switchedToTelegrafEnv = false;
+
+    /**
+     * Sets up an InfluxDB cluster with telegraf front-end and 2 InfluxDB cpus
+     * as a backend. Stores the current environment setup for a future restore.
+     */
+    void switchToTelegrafEnv();
+
+    /**
+     * Restores the environment set up to how it was before swithing to the
+     * Telegraf environment.
+     */
+    void switchFromTelegrafEnv();
 };
 
 #endif	/* DATALOGGING_TEST_HH */
