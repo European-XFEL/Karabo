@@ -186,7 +186,7 @@ class KaraboImageItem(ImageItem):
 
             # Calculate new color ranges with the ratio of the image extrema
             # and the preset levels.
-            low, high = rescale([image_min, image_max],
+            low, high = rescale(np.array([image_min, image_max]),
                                 min_value=level_min, max_value=level_max,
                                 low=low, high=high)
 
