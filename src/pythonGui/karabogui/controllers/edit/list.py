@@ -1,6 +1,7 @@
 import re
 from ast import literal_eval
 
+import numpy as np
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QFontMetrics, QPalette, QValidator
 from PyQt5.QtWidgets import (
@@ -178,6 +179,18 @@ UINT_REGEX = r"^[+]?\d+$"
 DOUBLE_REGEX = r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$"
 
 
+CAST_MAP = {
+    VectorInt8Binding: np.int8,
+    VectorInt16Binding: np.int16,
+    VectorInt32Binding: np.int32,
+    VectorInt64Binding: np.int64,
+    VectorUint8Binding: np.uint8,
+    VectorUint16Binding: np.uint16,
+    VectorUint32Binding: np.uint32,
+    VectorUint64Binding: np.uint64,
+}
+
+
 REGEX_MAP = {
     VectorBoolBinding: r"(0|1|[T]rue|[F]alse)",
     VectorComplexDoubleBinding: DOUBLE_REGEX,  # XXX
@@ -219,10 +232,14 @@ class ListValidator(QValidator):
 
     def __init__(self, binding=None, min_size=None, max_size=None):
         super(ListValidator, self).__init__()
-        self.pattern = re.compile(REGEX_MAP.get(type(binding), ''))
-        self.intermediate = MEDIATE_MAP.get(type(binding), ())
-        self.cast = (str if isinstance(binding, VectorStringBinding)
-                     else literal_eval)
+        bind_type = type(binding)
+        self.pattern = re.compile(REGEX_MAP.get(bind_type, ''))
+        self.intermediate = MEDIATE_MAP.get(bind_type, ())
+        self.literal = (str if bind_type == VectorStringBinding
+                        else literal_eval)
+        # vector of integers are downcasted, here we get a function
+        # to validate that the user input matches the casted value
+        self.cast = CAST_MAP.get(bind_type, self.literal)
         self.min_size = min_size
         self.max_size = max_size
 
@@ -256,9 +273,10 @@ class ListValidator(QValidator):
             # We have to check other behavior, e.g. leading zeros, and see
             # if we can cast it properly (SyntaxError)
             # Check for changes in between Vectors (ValueError)
+            # or if self.cast casts down integers (AssertionError)
             try:
-                self.cast(value)
-            except (ValueError, SyntaxError):
+                assert self.literal(value) == self.cast(value)
+            except (ValueError, SyntaxError, AssertionError):
                 return self.Intermediate, input, pos
 
         return self.Acceptable, input, pos
