@@ -43,6 +43,3 @@ Karabo GUI
   graphical user interface, if a property within a ``Node`` is changed
   in the ``Configurator`` (GUI), the ``Node`` will not reflect a CHANGING
   (blue) background.
-- Vector Edits: The karabo GUI currently does not validate the minimum and maximum value
-  input elements of the respective types (int8, uint8). Setting a non-conform value might result in an
-  overflow. Be careful when reconfiguring values!
