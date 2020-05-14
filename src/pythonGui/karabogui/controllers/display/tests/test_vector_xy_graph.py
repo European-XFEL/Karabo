@@ -37,6 +37,6 @@ class TestXYVectorGraph(GuiTestCase):
         set_proxy_value(self.index, 'index', index)
         set_proxy_value(self.value, 'value', value)
 
-        curve = self.controller._plot
+        curve = self.controller._curves[self.value]
         np.testing.assert_almost_equal(list(curve.xData), index)
         np.testing.assert_almost_equal(list(curve.yData), value)
