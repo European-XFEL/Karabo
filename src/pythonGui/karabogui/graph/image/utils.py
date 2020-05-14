@@ -139,12 +139,12 @@ def rescale(array, min_value, max_value, low=0.0, high=100.0):
     """Scale the image with a new range. This is particularly used when
        rescaling to (0, 255)."""
 
-    array = np.array(array, dtype=np.float32)
-    value_range = max_value - min_value
-    if value_range == 0:
+    if max_value == min_value:
         return array
 
-    rescaled = high - ((high - low) * ((max_value - array) / value_range))
+    ratio = ((high-low) / (max_value-min_value))
+    rescaled = ratio * array
+    rescaled += high - ratio * max_value
 
     return rescaled
 
