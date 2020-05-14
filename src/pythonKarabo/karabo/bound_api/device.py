@@ -759,8 +759,7 @@ class PythonDevice(NoFsm):
             desc = c.getValue()
             conditionString = desc.get("type")
             # avoid unnecessary chatter of already sent messages
-            if forceUpdate or (cKey in knownAlarms
-                               and conditionString in knownAlarms[cKey]):
+            if forceUpdate or conditionString in knownAlarms.get(cKey, set()):
 
                 condition = AlarmCondition(conditionString)
                 pSep = cKey.replace(Validator.kAlarmParamPathSeparator, ".")
