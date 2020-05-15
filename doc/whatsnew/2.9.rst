@@ -6,6 +6,8 @@ The **most relevant improvements**, fixes and changes are:
 
 - GUI: Qwt Based Widgets are deprecated
 - GUI: Matplotlib Widgets are deprecated
+- GUI: The system topology is less crowded now since only device classes from running devices are shown
+- GUI: The karabo GUI is now supported on **MacOSX**
 - MACRO: Multiple macro servers can now be used in a single topic.
          The macro servers should now start with the command
          `karabo-macroserver`.
@@ -15,7 +17,7 @@ The **most relevant improvements**, fixes and changes are:
 Detailed Merge-Log
 ==================
 
-Since karabo 2.8.0, a total of 93 MR have been implemented in this release.
+Since karabo 2.8.0, a total of ~97 MR have been implemented in this release.
 
 Bound/cpp core
 ++++++++++++++
@@ -89,7 +91,7 @@ Influx DB
 - InfluxDB: Support workload partitioning and concurrent processing for Influx Migrator. !4350
 - InfluxDB: Prepend platform name to measurements in InfluxDB  !4402
 - InfluxDB: Handle database creation failures at InfluxDataLogger startup. !4378
-
+- InfluxDB: Migrate to influx newer files first !4406
 
 Graphical User Interface
 ++++++++++++++++++++++++
@@ -140,3 +142,6 @@ Graphical User Interface
 - GUI: Fix macro save to file with unsupported characters !4388
 - GUI: Fix crosshair ROI path calculation !4365
 - GUI: Display ROI text only when selected !4343
+- GUI: GUI: Extend VectorXYGraph for multiple Y curves !4410
+- GUI: More header resize !4409
+- GUI: Return the Qwt tests !4407
