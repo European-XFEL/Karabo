@@ -22,7 +22,6 @@ def get_key_value(key, value):
     the line protocol expects for tags and fields a key-value pair
     https://docs.influxdata.com/influxdb/v1.7/write_protocols/line_protocol_reference/
     """
-    key = f'\"{key}\"'
     if isinstance(value, str):
         return b''.join(
             [f'{key}=\"'.encode('utf-8'),
@@ -106,7 +105,7 @@ def lines_fromhash(device_id, hash_, tags=""):
             else:
                 yield from _serialize(v, f"{prefix}{k}.")
     yield from _serialize(hash_, "")
-    yield f'\"_tid\"={tid}i'.encode('utf-8')
+    yield f'_tid={tid}i'.encode('utf-8')
     if timestamp > 0:
         yield f' {timestamp}'.encode('utf-8')
 
@@ -441,7 +440,7 @@ class InfluxDbClient():
         if timestamp:
             timestamp_filter = f"WHERE {timestamp:.0f}u <= time "
         query = f"""\
-            SELECT /"{field_key}"/ FROM \"{measurement}\"
+            SELECT /{field_key}/ FROM \"{measurement}\"
             ORDER BY time DESC {timestamp_filter}
             LIMIT 1"""
         reply = await self.db_query(query, epoch='u')
@@ -462,7 +461,7 @@ class InfluxDbClient():
             the influxQL condition for the SELECT query
         """
         query = f"""\
-            SELECT COUNT(/"{field_key}"/) FROM \"{measurement}\"
+            SELECT COUNT(/{field_key}/) FROM \"{measurement}\"
             WHERE {condition}
             ORDER BY time DESC
             LIMIT 1"""
