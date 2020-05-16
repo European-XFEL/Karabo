@@ -85,7 +85,7 @@ class DataLogReader(Device):
         ret = []
         try:
             count_dict = await self.client.get_field_count(
-                deviceId, f'^\"{key}-.*\"$', begin, end)
+                deviceId, f'^{key}-.*$', begin, end)
         except RuntimeError:
             # no data will raise a Runtime Error
             return deviceId, key, ret
@@ -95,7 +95,7 @@ class DataLogReader(Device):
         db_keys = set(count_dict.keys())
         if n <= length:
             rows, cols = await self.client.get_field_values(
-                deviceId, f'^\"{key}-.*\"$|_tid', begin, end)
+                deviceId, f'^{key}-.*$|_tid', begin, end)
             cols = [col.replace('"', '') for col in cols]
         elif ("VECTOR" in db_keys or
               "STRING" in db_keys or
@@ -105,7 +105,7 @@ class DataLogReader(Device):
             # we ask here for samples
             request_length = length * len(db_keys)
             results_gen, cols = await self.client.get_field_values_samples(
-                deviceId, f'^\"{key}-.*\"$|_tid', begin, end, request_length)
+                deviceId, f'^{key}-.*$|_tid', begin, end, request_length)
             # we ask the DB for samples of _tid and the values
             # the column names will be something like
             # 'value-Type', 'value-Type2', '_tid'
@@ -133,7 +133,7 @@ class DataLogReader(Device):
             set_tid = False
             interval = (end - begin) / (length)
             rows, cols = await self.client.get_fields_mean(
-                deviceId, f'^\"{key}-.*\"$', begin, end, interval)
+                deviceId, f'^{key}-.*$', begin, end, interval)
             cols = [col.replace('mean_', '').replace('"', '')
                     for col in cols]
 
@@ -213,7 +213,7 @@ class DataLogReader(Device):
                 else:
                     prop = f'{prefix}{k}-{a["valueType"]}'
                     query = f"""\
-                        SELECT LAST(/"{prop}"/) FROM "{measurement}"
+                        SELECT LAST(/{prop}/) FROM "{measurement}"
                         WHERE time <= {latest:.0f}u"""
                     try:
                         r, _ = await self.client.get_results(

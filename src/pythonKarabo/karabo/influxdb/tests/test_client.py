@@ -190,15 +190,15 @@ class Influx_TestCase(DeviceTest):
             else:
                 self.assertIsNone(vals[2])  # second half has f"{_fake_key}-DOUBLE"
         # because of the silly quotes, `time` is last
-        expected_keys = set(('time', f'"{_fake_key}-FLOAT"', f'"{_fake_key}-DOUBLE"'))
+        expected_keys = set(('time', f'{_fake_key}-FLOAT', f'{_fake_key}-DOUBLE'))
 
         self.assertEqual(set(cols), expected_keys)
         r = await self.client.get_field_count(
             _fake_device, f"{_fake_key}-DOUBLE", self.begin, self.end)
-        self.assertEqual(r[f'"{_fake_key}-DOUBLE"'], self.points)
+        self.assertEqual(r[f'{_fake_key}-DOUBLE'], self.points)
         r = await self.client.get_field_count(
             _fake_device, f"{_fake_key}-FLOAT", self.begin, self.end)
-        self.assertEqual(r[f'"{_fake_key}-FLOAT"'], self.points)
+        self.assertEqual(r[f'{_fake_key}-FLOAT'], self.points)
         r = await self.client.get_field_count(
             _fake_device, f'{_fake_key}-.*', self.begin, self.end)
         expected_keys.remove('time')
@@ -231,11 +231,11 @@ class Influx_TestCase(DeviceTest):
     async def test_has_tag(self):
         has = await self.client.field_has(
             _fake_device, f"{_fake_key}-DOUBLE",
-            '"\\"karabo_user\\"" = \'"."\'')
+            'karabo_user = \'"."\'')
         self.assertTrue(has)
         has = await self.client.field_has(
             _fake_device, f"{_fake_key}-DOUBLE",
-            '"\\"karabo_user\\"" = \'"Charlemagne"\'')
+            'karabo_user = \'"Charlemagne"\'')
         self.assertFalse(has)
 
     @async_tst
