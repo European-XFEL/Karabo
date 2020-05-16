@@ -117,13 +117,13 @@ class DlRaw2Influx():
                             if buf:
                                 kv_str = (
                                     ','.join(
-                                        (f'"{i[0]}"={i[1]}'
+                                        (f'{i[0]}={i[1]}'
                                          for i in buf.items())
                                     )
                                 )
                                 kv_str = f'{kv_str},_tid="{safe_tid}"'
                                 data.append(
-                                    '{m},user="{user}" {keys_values} {t}'
+                                    '{m},karabo_user="{user}" {keys_values} {t}'
                                     .format(m=safe_m, user=safe_user,
                                             keys_values=kv_str, tid=safe_tid,
                                             t=safe_time)
@@ -140,7 +140,7 @@ class DlRaw2Influx():
                             # saved to satisfy InfluxDB's requirement of having
                             # at least one key per line data point
                             evt_type = '+LOG' if up_flag == 'LOGIN' else '-LOG'
-                            data.append('{m}__EVENTS,type={e} user="{user}" {t}'
+                            data.append('{m}__EVENTS,type={e} karabo_user="{user}" {t}'
                                         .format(m=safe_m, e=evt_type,
                                                 user=safe_user, t=safe_time))
                         if data and len(data) % self.chunk_queries == 0:
