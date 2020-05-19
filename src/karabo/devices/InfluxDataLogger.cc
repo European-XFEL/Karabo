@@ -452,7 +452,7 @@ namespace karabo {
 
 
         void InfluxDataLogger::onCreateDatabase(const HttpResponse& o) {
-            if (o.code != 200 && o.code != 204) {
+            if (o.code >= 300) {
                 // Database not available and could not be created.
                 KARABO_LOG_FRAMEWORK_ERROR << "Database '" << m_dbName << "' not available. "
                         << "Tried to create it but got error with http status code '"
@@ -466,32 +466,45 @@ namespace karabo {
 
 
         void InfluxDataLogger::onShowDatabases(const HttpResponse& o) {
-            //TODO: Do error handling here...
-            // ...
-            KARABO_LOG_FRAMEWORK_DEBUG << "onShowDatabases ...\n" << o.toString();
+            if (o.code >= 300) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Failed to view list of databases available: " << o.toString();
+                updateState(State::ERROR, Hash("status", "Failed to list databases."));
+                return;
+            }
 
-            nl::json j = nl::json::parse(o.payload);
-            auto values = j["results"][0]["series"][0]["values"];
-            if (values.is_array()) {
-                // There's at least one database that is acessible to the user.
-                // See if the database to be used is available and then proceed with its use
-                for (nl::json::iterator it = values.begin(); it != values.end(); ++it) {
-                    if ((*it)[0].get<std::string>() == m_dbName) {
-                        KARABO_LOG_FRAMEWORK_INFO << "Database \"" << m_dbName << "\" already exists";
-                        startConnection();
-                        return;
+            try {
+                nl::json j = nl::json::parse(o.payload);
+                auto values = j["results"][0]["series"][0]["values"];
+                if (values.is_array()) {
+                    // There's at least one database that is acessible to the user.
+                    // See if the database to be used is available and then proceed with its use
+                    for (nl::json::iterator it = values.begin(); it != values.end(); ++it) {
+                        if ((*it)[0].get<std::string>() == m_dbName) {
+                            KARABO_LOG_FRAMEWORK_INFO << "Database \"" << m_dbName << "\" already exists";
+                            startConnection();
+                            return;
+                        }
                     }
                 }
+            } catch (const nl::json::parse_error& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Failed to parse list of databases from '" << o.payload << "' ("
+                        << e.what() << ").";
+                updateState(State::ERROR, Hash("status", "Failed unpack list of databases."));
+                return;
             }
 
             KARABO_LOG_FRAMEWORK_INFO << "Database '" << m_dbName << "' not available. Will try to create it.";
             createDatabase(bind_weak(&karabo::devices::InfluxDataLogger::onCreateDatabase, this, _1));
-         }
+        }
 
 
         void InfluxDataLogger::onPingDb(const HttpResponse& o) {
-                //TODO: Do error handling here...
-                // ...
+            if (o.code >= 300) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Failed to ping Inlfux DB: " << o.toString();
+                updateState(State::ERROR, Hash("status", "Failed to ping InfluxDB."));
+                return;
+            }
+
                 KARABO_LOG_FRAMEWORK_INFO << "X-Influxdb-Build: " << o.build << ", X-Influxdb-Version: " << o.version;
                 showDatabases(bind_weak(&karabo::devices::InfluxDataLogger::onShowDatabases, this, _1));
         }
