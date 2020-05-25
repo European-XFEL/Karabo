@@ -1422,7 +1422,7 @@ namespace karabo {
                     if (!configs.empty()) {
                         Hash h("type", "deviceConfigurations");
                         h.bindReference<Hash>("configurations") = std::move(configs);
-                        KARABO_LOG_FRAMEWORK_INFO << "\nSending configuration updates to GUI client:\n" << h;
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Sending configuration updates to GUI client:\n" << h;
                         it->first->writeAsync(h);
                     }
                 }
