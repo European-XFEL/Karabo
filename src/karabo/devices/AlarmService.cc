@@ -199,7 +199,9 @@ namespace karabo {
             boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
             const boost::optional<Hash::Node&> alarmNode = m_alarms.find(deviceId);
             request(deviceId, "slotReSubmitAlarms", alarmNode ? alarmNode->getValue<Hash>() : Hash())
-                    .receiveAsync<std::string, Hash>(boost::bind(&AlarmService::slotUpdateAlarms, this, _1, _2));
+                    // Using slot as reply handler is OK as long as mutexes are used inside
+                    // (since  "slot not called in parallel to itself" not guaranteed anymore)
+                    .receiveAsync<std::string, Hash>(util::bind_weak(&AlarmService::slotUpdateAlarms, this, _1, _2));
         }
 
 
@@ -312,8 +314,7 @@ namespace karabo {
                             Hash& existingAlarmTypeEntry = existingAlarmTypeEntryNode->getValue<Hash>();
                             existingTimeStamp = Timestamp::fromHashAttributes(existingAlarmTypeEntry.getAttributes("timeOfFirstOccurrence"));
                             id = m_alarmsMap_r.find(&(*existingAlarmTypeEntryNode))->second;
-                        }
-                        else {
+                        } else {
                             // get the next id if we perform insertion
                             id = m_alarmIdCounter++;
                         }
@@ -419,7 +420,8 @@ namespace karabo {
                 {
                     boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
 
-                    Hash h("alarms", m_alarms);
+                    Hash h("alarms", m_alarms,
+                           "nextAlarmId", static_cast<unsigned long long> (m_alarmIdCounter));
                     karabo::io::saveToFile(h, m_flushFilePath);
                 }
                 boost::this_thread::sleep(boost::posix_time::seconds(this->get<unsigned int>("flushInterval")));
@@ -437,6 +439,27 @@ namespace karabo {
 
                 boost::unique_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
                 m_alarms = previousState.get<Hash>("alarms");
+
+                if (previousState.has("nextAlarmId")) {
+                    m_alarmIdCounter = previousState.get<unsigned long long>("nextAlarmId");
+                } else {
+                    // File likely from older Karabo versions < 2.10.0.
+                    // Start one above biggest stored id.
+                    for (auto devIdIt = m_alarms.begin(); devIdIt != m_alarms.end(); ++devIdIt) {
+                        const Hash& devAlarms = devIdIt->getValue<Hash>();
+                        for (auto propIt = devAlarms.begin(); propIt != devAlarms.end(); ++propIt) {
+                            const Hash& propAlarms = propIt->getValue<Hash>();
+                            for (auto lvlIt = propAlarms.begin(); lvlIt != propAlarms.end(); ++lvlIt) {
+                                const Hash& level = lvlIt->getValue<Hash>();
+                                const unsigned long long id = level.get<unsigned long long>("id");
+                                if (id >= m_alarmIdCounter) m_alarmIdCounter = id + 1ull;
+                            }
+                        }
+                    }
+                    KARABO_LOG_WARN << "Stored alarms file lacks 'nextAlarmId' (likely from Karabo version < 2.10.0)."
+                            << " Start with " << m_alarmIdCounter << ".";
+                    KARABO_LOG_FRAMEWORK_INFO << "Initialised successfully from file '" << m_flushFilePath << "'.";
+                }
             } catch (const std::exception& e) {
                 //we go on without updating alarms
                 KARABO_LOG_WARN << "Could not load previous alarm state from file " << m_flushFilePath
@@ -502,8 +525,8 @@ namespace karabo {
 
             }
             // Immediately send out our changes after human interaction!
-            boost::mutex::scoped_lock lock(m_updateMutex);
             if (!rowUpdates.empty()) {
+                boost::mutex::scoped_lock lock(m_updateMutex);
                 m_updateHash.merge(rowUpdates);
                 emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), m_updateHash);
                 m_updateHash.clear();
