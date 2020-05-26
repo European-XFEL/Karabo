@@ -6,11 +6,6 @@ namespace karabo {
     namespace util {
 
 
-        AlarmCondition::AlarmCondition() : m_conditionString("UNDEFINED"), m_rank(0) {
-
-        };
-
-
         AlarmCondition::AlarmCondition(std::string cs, unsigned int r) : m_conditionString(cs), m_rank(r) {
 
         };
@@ -73,26 +68,11 @@ namespace karabo {
         }
 
 
-        const AlarmCondition & AlarmCondition::fromString(const std::string & condition){
-            
-            if (m_alarmFactory.empty()){
-                #define KRB_ALARM_INSERT(alarmType) m_alarmFactory.insert(std::pair<std::string, const AlarmCondition& >(AlarmCondition::alarmType.asString(), AlarmCondition::alarmType));
+        const AlarmCondition& AlarmCondition::fromString(const std::string& condition) {
 
-                KRB_ALARM_INSERT(NONE)
-                KRB_ALARM_INSERT(WARN)
-                KRB_ALARM_INSERT(WARN_HIGH)
-                KRB_ALARM_INSERT(WARN_LOW)
-                KRB_ALARM_INSERT(WARN_VARIANCE_HIGH)
-                KRB_ALARM_INSERT(WARN_VARIANCE_LOW)
-                KRB_ALARM_INSERT(ALARM)
-                KRB_ALARM_INSERT(ALARM_LOW)
-                KRB_ALARM_INSERT(ALARM_HIGH)
-                KRB_ALARM_INSERT(ALARM_VARIANCE_LOW)
-                KRB_ALARM_INSERT(ALARM_VARIANCE_HIGH)
-                KRB_ALARM_INSERT(INTERLOCK)
-            }
+            std::call_once(m_initFromStringFlag, &AlarmCondition::initFromString);
 
-            std::map<std::string, const AlarmCondition &>::const_iterator iter = m_alarmFactory.find(condition);
+            std::unordered_map<std::string, const AlarmCondition &>::const_iterator iter = m_alarmFactory.find(condition);
             if (iter == m_alarmFactory.end()) {
                 throw KARABO_LOGIC_EXCEPTION("Alarm condition  " + condition + " does not exist!");
             } else {
@@ -101,13 +81,32 @@ namespace karabo {
         }
 
 
+        void AlarmCondition::initFromString() {
+#define KRB_ALARM_INSERT(alarmType) m_alarmFactory.insert(std::pair<std::string, const AlarmCondition& >(AlarmCondition::alarmType.asString(), AlarmCondition::alarmType));
+
+            KRB_ALARM_INSERT(NONE)
+            KRB_ALARM_INSERT(WARN)
+            KRB_ALARM_INSERT(WARN_HIGH)
+            KRB_ALARM_INSERT(WARN_LOW)
+            KRB_ALARM_INSERT(WARN_VARIANCE_HIGH)
+            KRB_ALARM_INSERT(WARN_VARIANCE_LOW)
+            KRB_ALARM_INSERT(ALARM)
+            KRB_ALARM_INSERT(ALARM_LOW)
+            KRB_ALARM_INSERT(ALARM_HIGH)
+            KRB_ALARM_INSERT(ALARM_VARIANCE_LOW)
+            KRB_ALARM_INSERT(ALARM_VARIANCE_HIGH)
+            KRB_ALARM_INSERT(INTERLOCK)
+
+#undef KRB_ALARM_INSERT
+        }
+
         bool AlarmCondition::operator==(const AlarmCondition& other) const {
             // criticality check might be redundant, but it should be fast and might return false without
             // going through string comparison
             return isSameCriticality(other) && asString() == other.asString();
         }
 
- 
+
         const AlarmCondition AlarmCondition::NONE(KARABO_ALARM_NONE, 0);
         const AlarmCondition AlarmCondition::WARN(KARABO_WARN, 1);
         const AlarmCondition AlarmCondition::WARN_LOW(KARABO_WARN_LOW, WARN);
@@ -121,8 +120,9 @@ namespace karabo {
         const AlarmCondition AlarmCondition::ALARM_VARIANCE_HIGH(KARABO_ALARM_VARIANCE_HIGH, ALARM);
         const AlarmCondition AlarmCondition::INTERLOCK(KARABO_INTERLOCK, 3);
        //interlock is assumed to always be the highest conditions and knowledge of this is used in returnMostSignificant
- 
-        std::map<std::string, const AlarmCondition & > AlarmCondition::m_alarmFactory = std::map<std::string, const AlarmCondition &> ();
+
+        std::once_flag AlarmCondition::m_initFromStringFlag;
+        std::unordered_map<std::string, const AlarmCondition & > AlarmCondition::m_alarmFactory;
 
     }
 }
