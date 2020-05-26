@@ -9,7 +9,8 @@
 #define	KARABO_UTIL_ALARMCONDITIONS_HH
 
 #include <vector>
-#include <map>
+#include <unordered_map>
+#include <mutex>  // for once_flag
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
@@ -124,12 +125,16 @@ namespace karabo {
                 return !(*this == other);
             }
 
+            AlarmCondition(const AlarmCondition& b) = default;
+
+            AlarmCondition& operator=(const AlarmCondition& other) = default;
+
         private:
 
             //constructors are all private. Users should not need
             //to construct alarm conditions, but use the pre-constructed ones.
 
-            AlarmCondition();
+            AlarmCondition() = delete;
 
             AlarmCondition(std::string cs, unsigned int r);
 
@@ -137,12 +142,14 @@ namespace karabo {
 
             boost::shared_ptr<const AlarmCondition> getBase() const;
 
+            static void initFromString();
 
             std::string m_conditionString;
             unsigned int m_rank;
             boost::shared_ptr<const AlarmCondition> m_base;
-            static std::map<std::string, const AlarmCondition & > m_alarmFactory;
 
+            static std::once_flag m_initFromStringFlag;
+            static std::unordered_map<std::string, const AlarmCondition& > m_alarmFactory;
 
         };
 
