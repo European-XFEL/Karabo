@@ -242,12 +242,11 @@ unit tests miniconda-win64:
     - Win10
   <<: *unit-tests-conda
 
-# Temporary suspended
-#unit tests miniconda-cmake:
-#  image: europeanxfel/karabo-ci:miniconda-3
-#  <<: *unit-tests
+unit tests miniconda-cmake:
+  image: europeanxfel/karabo-ci:miniconda-3
+  <<: *unit-tests
 
-  # Post-merge integration test builds
+# Post-merge integration test builds
 
 integration tests centos7:
   image: europeanxfel/karabo-ci:centos-7
