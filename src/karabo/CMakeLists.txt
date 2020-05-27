@@ -19,6 +19,27 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+
+message(STATUS "Resolving GIT Version")
+ 
+set(KARABO_VERSION "unknown")
+ 
+find_package(Git)
+if(GIT_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} describe --tags --match "*.*.*" --dirty --always 
+    WORKING_DIRECTORY "${karabo_SOURCE_DIR}/../.."
+    OUTPUT_VARIABLE KARABO_VERSION
+    ERROR_QUIET
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  message( STATUS "GIT VERSION: ${KARABO_VERSION}")
+else()
+  message(STATUS "GIT not found")
+endif()
+ 
+configure_file(${karabo_SOURCE_DIR}/util/repositoryVersion.in ${karabo_SOURCE_DIR}/util/repositoryVersion @ONLY)
+
 # Karabo currently expect to find the hdf5 libraries in an `hdf5` folder
 # here we trick the system by creating a link.
 # TODO: fix this once the legacy dependencies are gone.
