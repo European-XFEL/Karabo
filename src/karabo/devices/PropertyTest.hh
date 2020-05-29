@@ -60,6 +60,8 @@ namespace karabo {
 
             void setAlarm();
 
+            void setAlarmNoNeedAck();
+
             void writeOutput();
 
             void writeOutputHandler(const boost::system::error_code& e);
