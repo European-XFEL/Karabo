@@ -181,8 +181,10 @@ class Tests(TestCase):
         a.amin = 7
         # We remove the alarmLow and add use previous as existing!
         _, als4 = a.slotReSubmitAlarms(als3['toAdd'])
+        self.assertTrue("amax.alarmHigh" in als4['toAdd'])
         self.assertEqual(len(als4['toAdd']), 1)
-        self.assertEqual(len(als4['toClear']), 2)
+        self.assertEqual(als4['toClear.amin'], ["alarmLow"])
+        self.assertEqual(len(als4['toClear']), 1)
 
         a.amax = 5
         # We remove the alarmHigh!
