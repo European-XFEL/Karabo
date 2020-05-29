@@ -370,7 +370,8 @@ class PythonDevice(NoFsm):
         self.validatorIntern.setValidationRules(rules)
         self.validatorExtern.setValidationRules(rules)
         self.globalAlarmCondition = (AlarmCondition.NONE, "", False,
-                                     Timestamp(Epochstamp(0,0), Trainstamp(0)))
+                                     Timestamp(Epochstamp(0, 0),
+                                               Trainstamp(0)))
         self.accumulatedGlobalAlarms = set()
 
         # For broker error handler
@@ -1714,7 +1715,7 @@ class PythonDevice(NoFsm):
             currentCondition = self._parameters.get("alarmCondition")
 
             if (resultingCondition is not None
-                and resultingCondition.asString() != currentCondition):
+                    and resultingCondition.asString() != currentCondition):
                 self._setNoStateLock("alarmCondition", resultingCondition,
                                      timestamp, validate=False)
 
@@ -1722,7 +1723,7 @@ class PythonDevice(NoFsm):
             conditionString = condition.asString()
 
             if (condition == AlarmCondition.NONE
-                and previousGlobal != AlarmCondition.NONE):
+                    and previousGlobal != AlarmCondition.NONE):
                 alarmsToClear = list(self.accumulatedGlobalAlarms)
                 self.accumulatedGlobalAlarms.clear()
                 emitHash.set("toClear.global", alarmsToClear)
