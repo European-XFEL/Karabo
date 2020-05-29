@@ -76,6 +76,15 @@ namespace karabo {
                     .assignmentOptional().defaultValue(false)
                     .commit();
 
+            BOOL_ELEMENT(expected).key("boolPropertyReadOnly")
+                    .displayedName("Bool property read-only")
+                    .description("A bool property read-only")
+                    .readOnly()
+                    .initialValue(false)
+                    .alarmHigh(false) // true will raise alarm (i.e. using '>', not '>=')
+                    .info("Too high").needsAcknowledging(true)
+                    .commit();
+
             CHAR_ELEMENT(expected).key("charProperty")
                     .displayedName("Char property")
                     .description("A char property")
@@ -85,7 +94,7 @@ namespace karabo {
 
             INT8_ELEMENT(expected).key("int8Property")
                     .displayedName("Int8 property")
-                    .description("A int8 property")
+                    .description("An int8 property")
                     .minInc(std::numeric_limits<signed char>::lowest())
                     .maxInc(std::numeric_limits<signed char>::max())
                     .reconfigurable()
@@ -93,8 +102,8 @@ namespace karabo {
                     .commit();
 
             INT8_ELEMENT(expected).key("int8PropertyReadOnly")
-                    .displayedName("Int8 property")
-                    .description("A int8 property")
+                    .displayedName("Int8 property read-only")
+                    .description("An int8 property read-only")
                     .minInc(std::numeric_limits<signed char>::lowest())
                     .maxInc(std::numeric_limits<signed char>::max())
                     .readOnly()
@@ -689,7 +698,7 @@ namespace karabo {
         }
 
         void PropertyTest::preReconfigure(Hash& incomingReconfiguration) {
-            const std::vector<std::string> keys = {"uint8Property", "int8Property",
+            const std::vector<std::string> keys = {"boolProperty", "uint8Property", "int8Property",
                                                    "uint16Property", "int16Property", "uint32Property", "int32Property",
                                                    "uint64Property", "int64Property", "floatProperty", "doubleProperty",
                                                    "table", "node.counter"};
