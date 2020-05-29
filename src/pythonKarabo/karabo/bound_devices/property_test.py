@@ -87,60 +87,61 @@ class PropertyTest(PythonDevice):
             .displayedName("Int32")
             .description("An int32 property")
             .reconfigurable()
-            .assignmentOptional().defaultValue(-32000000)
+            .assignmentOptional().defaultValue(-32_000_000)
             .commit(),
 
             INT32_ELEMENT(expected).key("int32PropertyReadOnly")
             .displayedName("Readonly Int32")
             .description("An int32 property for testing alarms")
-            .readOnly().initialValue(32000000)
+            .readOnly().initialValue(32_000_000)
             .warnLow(-10).info("Rather low").needsAcknowledging(False)
-            .alarmLow(-32000000).info("Too low").needsAcknowledging(True)
+            .alarmLow(-32_000_000).info("Too low").needsAcknowledging(True)
             .commit(),
 
             UINT32_ELEMENT(expected).key("uint32Property")
             .displayedName("UInt32")
             .description("A uint32 property")
             .reconfigurable()
-            .assignmentOptional().defaultValue(32000000)
+            .assignmentOptional().defaultValue(32_000_000)
             .commit(),
 
             UINT32_ELEMENT(expected).key("uint32PropertyReadOnly")
             .displayedName("Readonly UInt32")
             .description("A uint32 property for testing alarms")
-            .readOnly().initialValue(32000000)
-            .warnHigh(32000001).info("Rather high").needsAcknowledging(False)
-            .alarmHigh(64000000).info("Too high").needsAcknowledging(True)
+            .readOnly().initialValue(32_000_000)
+            .warnHigh(32_000_001).info("Rather high").needsAcknowledging(False)
+            .alarmHigh(64_000_000).info("Too high").needsAcknowledging(True)
             .commit(),
 
             INT64_ELEMENT(expected).key("int64Property")
             .displayedName("Int64")
             .description("An int64 property")
             .reconfigurable()
-            .assignmentOptional().defaultValue(3200000000)
+            .assignmentOptional().defaultValue(3_200_000_000)
             .commit(),
 
             INT64_ELEMENT(expected).key("int64PropertyReadOnly")
             .displayedName("Readonly Int64")
             .description("An int64 property for testing alarms")
-            .readOnly().initialValue(3200000000)
+            .readOnly().initialValue(3_200_000_000)
             .warnLow(-3200).info("Rather low").needsAcknowledging(False)
-            .alarmLow(-3200000000).info("Too low").needsAcknowledging(True)
+            .alarmLow(-3_200_000_000).info("Too low").needsAcknowledging(True)
             .commit(),
 
             UINT64_ELEMENT(expected).key("uint64Property")
             .displayedName("UInt64 property")
             .description("A uint64 property")
             .reconfigurable()
-            .assignmentOptional().defaultValue(3200000000)
+            .assignmentOptional().defaultValue(3_200_000_000)
             .commit(),
 
             UINT64_ELEMENT(expected).key("uint64PropertyReadOnly")
             .displayedName("Readonly UInt64")
             .description("A uint64 property for testing alarms")
-            .readOnly().initialValue(3200000000)
-            .warnHigh(3200000001).info("Rather high").needsAcknowledging(False)
-            .alarmHigh(6400000000).info("Too high").needsAcknowledging(True)
+            .readOnly().initialValue(3_200_000_000)
+            .warnHigh(3_200_000_001).info("Rather high")
+            .needsAcknowledging(False)
+            .alarmHigh(6_400_000_000).info("Too high").needsAcknowledging(True)
             .commit(),
 
             FLOAT_ELEMENT(expected).key("floatProperty")
@@ -507,9 +508,9 @@ class PropertyTest(PythonDevice):
             .displayedName("Counter read-only")
             .readOnly()
             .initialValue(0)
-            .warnHigh(1000000)  # 1.e6
+            .warnHigh(1_000_000)
             .info("Rather high").needsAcknowledging(True)
-            .alarmHigh(100000000)  # 1.e8
+            .alarmHigh(100_000_000)
             .info("Too high").needsAcknowledging(False)  # False for tests
             .commit(),
 
@@ -528,7 +529,7 @@ class PropertyTest(PythonDevice):
         self.KARABO_ON_DATA("input", self.onData)
 
     def preReconfigure(self, incomingCfg):
-        props = ["int32Property", "uint32Property",
+        props = ["boolProperty", "int32Property", "uint32Property",
                  "int64Property", "uint64Property",
                  "floatProperty", "doubleProperty",
                  "table", "node.counter"]
