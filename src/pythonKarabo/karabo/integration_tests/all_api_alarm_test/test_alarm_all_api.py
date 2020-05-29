@@ -1,18 +1,15 @@
-#from datetime import datetime
-#from time import sleep, time
-
 import sys
 from copy import copy
 
 from karabo.integration_tests.utils import BoundDeviceTestCase
-from karabo.bound import (AlarmCondition, Hash, SignalSlotable, State,
+from karabo.bound import (AlarmCondition, Hash, SignalSlotable,
                           Timestamp, Validator)
 from karathon import fullyEqual
+
 
 class TestDeviceAlarmApi(BoundDeviceTestCase):
     _max_timeout = 20    # in seconds
     _max_timeout_ms = _max_timeout * 1000
-
 
     def test_slotReSubmitAlarms_cpp(self):
         self._test_slotReSubmitAlarms("cpp")
@@ -31,7 +28,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         if api == "mdl":
             klass += "MDL"
         server_id = "server/" + api
-        self.start_server(api, server_id, [klass])  #, logLevel="INFO")
+        self.start_server(api, server_id, [klass])  # , logLevel="INFO")
 
         dev_id = "DEV/TO/TEST_ALARM_" + api
         self.start_device(server_id, klass, dev_id, cfg=Hash())
@@ -73,7 +70,8 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
                                         Hash("type", "warnHigh",
                                              "description", "Rather high",
                                              "needsAcknowledging", False)))
-        attrs = hDoubleAdd.getAttributes("toAdd.doublePropertyReadOnly.warnHigh")
+        attrs = hDoubleAdd.getAttributes("toAdd.doublePropertyReadOnly"
+                                         ".warnHigh")
         stampDouble.toHashAttributes(attrs)
         self.assertTrue(fullyEqual(res, hDoubleAdd, False),
                         str(hDoubleAdd) + '\nvs\n' + str(res))
@@ -100,7 +98,6 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         self.assertTrue(fullyEqual(res, hDoubleAddInt64Clear, False),
                         str(hDoubleAddInt64Clear) + '\nvs\n' + str(res))
 
-
         #########################################################
         # 2) Now set another property to a higher alarm level
         #########################################################
@@ -121,8 +118,8 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         hDoubleInt64Add = copy(hDoubleAdd)
         tmpKey = "toAdd.int64PropertyReadOnly.alarmLow"
         hDoubleInt64Add[tmpKey] = Hash("type", "alarmLow",
-                                  "description", "Too low",
-                                  "needsAcknowledging", True)
+                                       "description", "Too low",
+                                       "needsAcknowledging", True)
         attrsInt64 = hDoubleInt64Add.getAttributes(tmpKey)
         stampInt64.toHashAttributes(attrsInt64)
 
@@ -135,7 +132,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
 
             (an_id, res) = caller.request(dev_id,
                                           "slotReSubmitAlarms", hashArg
-                                         ).waitForReply(self._max_timeout_ms)
+                                          ).waitForReply(self._max_timeout_ms)
             self.assertEqual(an_id, dev_id, str(hashArg))
 
             msg = str(hashArg) + ":\n"
@@ -154,14 +151,13 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
             hashArg["int32PropertyReadOnly.warnLow"] = Hash()
             (an_id, res) = caller.request(dev_id,
                                           "slotReSubmitAlarms", hashArg
-                                         ).waitForReply(self._max_timeout_ms)
+                                          ).waitForReply(self._max_timeout_ms)
             self.assertEqual(an_id, dev_id, str(hashArg))
 
             msg = str(hashArg) + ":\n"
             msg += str(hDoubleInt64AddInt32Clear) + '\nvs\n' + str(res)
             self.assertTrue(fullyEqual(res, hDoubleInt64AddInt32Clear, False),
                             msg)
-
 
         #########################################################
         # 3) Now release the higher alarm
@@ -174,12 +170,12 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         # 3a) Check again for zero, one or two of the ever active alarms:
         #     double is always in toAdd, int64 is in toClear when in input
         expected = [hDoubleAdd, hDoubleAdd,  # for hashArgs[0&1]
-                   hDoubleAddInt64Clear, hDoubleAddInt64Clear]  # hashArgs[2&3]
+                    hDoubleAddInt64Clear, hDoubleAddInt64Clear]  # hashArg[2&3]
         for i, hashArg in enumerate(hashArgs):
             hExpected = expected[i]
             (an_id, res) = caller.request(dev_id,
                                           "slotReSubmitAlarms", hashArg
-                                         ).waitForReply(self._max_timeout_ms)
+                                          ).waitForReply(self._max_timeout_ms)
             self.assertEqual(an_id, dev_id, str(hashArg))
 
             msg = str(hashArg) + ":\n"
@@ -217,7 +213,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
                              "doublePropertyReadOnly.warnHigh", Hash())]:
             (an_id, res) = caller.request(dev_id,
                                           "slotReSubmitAlarms", hashArg
-                                         ).waitForReply(self._max_timeout_ms)
+                                          ).waitForReply(self._max_timeout_ms)
             self.assertEqual(an_id, dev_id, str(hashArg))
 
             msg = str(hashArg) + ":\n"
@@ -239,7 +235,6 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
                 attrs.erase("frac")
                 ok = fullyEqual(res, hDoubleGlobalAdd_copy, False)
             self.assertTrue(ok, msg)
-
 
         #########################################################
         # 5) Now set property under node to warn (needs acknowledging)
@@ -277,7 +272,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         for hashArg in hashArgs:
             (an_id, res) = caller.request(dev_id,
                                           "slotReSubmitAlarms", hashArg,
-                                         ).waitForReply(self._max_timeout_ms)
+                                          ).waitForReply(self._max_timeout_ms)
             self.assertEqual(an_id, dev_id)
             msg = str(hashArg) + ": "
             msg += str(hDoubleGlobalCounterAdd) + '\nvs\n' + str(res)
@@ -317,7 +312,6 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         tmpKey = "toClear.node" + sp + "counterReadOnly"
         hDoubleAddCounterAddClear[tmpKey] = ["warnHigh"]
 
-
         # 6a) Check again for zero, one or two of previously active
         #     alarms: If asking for node.counter.warnHigh, this is in 'toClear'
         hashArgs = [Hash(),
@@ -331,7 +325,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
             hExpected = expected[i]
             (an_id, res) = caller.request(dev_id,
                                           "slotReSubmitAlarms", hashArg
-                                         ).waitForReply(self._max_timeout_ms)
+                                          ).waitForReply(self._max_timeout_ms)
             self.assertEqual(an_id, dev_id, str(hashArg))
             msg = str(hashArg) + ":\n"
             msg += str(hExpected) + '\nvs\n' + str(res)
@@ -382,22 +376,3 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         self.assertTrue(ok,
                         "Could not start device '{}' on server '{}': '{}'."
                         .format(class_id, server_id, msg))
-
-    def waitUntilEqual(self, devId, propertyName, whatItShouldBe, timeout):
-        """
-        Wait until property 'propertyName' of device 'deviceId' equals
-        'whatItShouldBe'.
-        Try up to 'timeOut' seconds and wait 0.5 seconds between each try.
-        """
-        start = datetime.now()
-        while (datetime.now() - start).seconds < timeout:
-            res = None
-            try:
-                res = self.dc.get(devId, propertyName)
-            except RuntimeError as re:
-                print("Problem retrieving property value: {}".format(re))
-            if res == whatItShouldBe:
-                return True
-            else:
-                sleep(.5)
-        return False
