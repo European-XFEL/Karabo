@@ -19,6 +19,23 @@ __integration_tests() {
     bash ./auto_build_all.sh Debug --runIntegrationTests
 }
 
+__long_tests() {
+    if [[ "$SCHEDULED_JOB" != "long-tests" ]]; then
+        # another scheduled job was triggered
+        echo "Not a 'long-tests' job. Skipping."
+        exit 0
+    fi
+    bash ./auto_build_all.sh Debug --runLongTests
+}
+
+__coverage_tests() {
+    if [[ "$SCHEDULED_JOB" != "coverage-tests" ]]; then
+        # another scheduled job was triggered
+        echo "Not a 'coverage-tests' job. Skipping."
+        exit 0
+    fi
+    bash ./auto_build_all.sh CodeCoverage
+}
 
 echo "Start to testing job: {$1}"
 
@@ -59,6 +76,11 @@ else
         deps) __deps_build_tests ;;
         unit) __unit_tests ;;
         integration) __integration_tests ;;
-        *) echo "unknown job scope: $JOB_SCOPE" ;;
+        long) __long_tests ;;
+        coverage) __coverage_tests ;;
+        *)
+            echo "unknown job scope: $JOB_SCOPE"
+            exit 1
+            ;;
     esac
 fi
