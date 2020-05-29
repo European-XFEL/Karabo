@@ -3,7 +3,8 @@ from asyncio import CancelledError
 import numpy as np
 
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, background, Bool, Configurable, DaqDataType,
+    AccessLevel, AccessMode, AlarmCondition,
+    background, Bool, Configurable, DaqDataType,
     Device, Double, Float, Hash, InputChannel, Int32, Int64, NDArray, Node,
     OutputChannel, Overwrite, UInt32, UInt64, Unit, sleep, Slot, slot, State,
     String, VectorBool, VectorChar, VectorDouble, VectorFloat, VectorHash,
@@ -132,6 +133,38 @@ class TableRow(Configurable):
         defaultValue=14.0)
 
 
+class CounterNode(Configurable):
+
+    @Slot(displayedName="Increment",
+          description="Increment 'Counter read-only'")
+    def increment(self):
+        self.counterReadOnly = self.counterReadOnly + 1
+
+    @Slot(displayedName="Reset",
+          description="Reset 'Counter read-only'")
+    def reset(self):
+        self.counterReadOnly = 0
+
+    @UInt32(displayedName="Counter",
+            description="Values will be transferred to 'Counter read-only'",
+            defaultValue=0)
+    def counter(self, newValue):
+        self.counter = newValue
+        self.counterReadOnly = newValue
+
+    counterReadOnly = UInt32(
+        displayedName="Counter read-only",
+        accessMode=AccessMode.READONLY,
+        defaultValue=0,
+
+        warnHigh=1000000,  # 1.e6
+        alarmInfo_warnHigh="Rather high",
+        alarmNeedsAck_warnHigh=True,
+        alarmHigh=100000000,  # 1.e8,
+        alarmInfo_alarmHigh="Too high",
+        alarmNeedsAck_alarmHigh=False)  # False for tests
+
+
 class PropertyTestMDL(Device):
     __version__ = "2.3.0"
 
@@ -147,75 +180,113 @@ class PropertyTestMDL(Device):
         defaultValue=AccessLevel.ADMIN,
         options=[AccessLevel.ADMIN])
 
-    boolProperty = Bool(
-        displayedName="Bool",
-        description="a boolean value",
-        defaultValue=False)
+    @Bool(displayedName="Bool",
+          description="a boolean value",
+          defaultValue=False)
+    def boolProperty(self, newValue):
+        self.boolProperty = newValue
+        self.boolPropertyReadOnly = newValue
 
-    boolPropertyReadonly = Bool(
+    boolPropertyReadOnly = Bool(
         displayedName="Bool Readonly",
         description="A readonly boolean property",
         defaultValue=True,
         accessMode=AccessMode.READONLY)
 
-    int32Property = Int32(
-        displayedName="Int32",
-        description="An integer property (32 Bit)",
-        defaultValue=2,
-        minInc=-20,
-        maxInc=20)
+    @Int32(displayedName="Int32",
+           description="An integer property (32 Bit)",
+           defaultValue=2,
+           minInc=-20,
+           maxInc=20)
+    def int32Property(self, newValue):
+        self.int32Property = newValue
+        self.int32PropertyReadOnly = newValue
 
-    int32PropertyReadonly = Int32(
+    int32PropertyReadOnly = Int32(
         displayedName="Int32 (RO)",
-        description="A integer property",
+        description="An integer property",
         defaultValue=0,
-        accessMode=AccessMode.READONLY)
+        accessMode=AccessMode.READONLY,
+        alarmLow=-32000000,
+        alarmInfo_alarmLow="Too low",
+        alarmNeedsAck_alarmLow=True,
+        warnLow=-10,
+        alarmInfo_warnLow="Rather low",
+        alarmNeedsAck_warnLow=False)
 
-    uint32Property = UInt32(
-        displayedName="UInt32",
-        description="An unsigned integer property (32 Bit)",
-        defaultValue=2)
+    @UInt32(displayedName="UInt32",
+            description="An unsigned integer property (32 Bit)",
+            defaultValue=2)
+    def uint32Property(self, newValue):
+        self.uint32Property = newValue
+        self.uint32PropertyReadOnly = newValue
 
-    uint32PropertyReadonly = UInt32(
+    uint32PropertyReadOnly = UInt32(
         displayedName="UInt32 (RO)",
         description="A readonly integer property",
         defaultValue=30,
         accessMode=AccessMode.READONLY)
 
-    int64Property = Int64(
-        displayedName="Int64",
-        description="An integer 64 Bit property",
-        defaultValue=10)
+    @Int64(displayedName="Int64",
+           description="An integer 64 Bit property",
+           defaultValue=10)
+    def int64Property(self, newValue):
+        self.int64Property = newValue
+        self.int64PropertyReadOnly = newValue
 
-    int64PropertyReadonly = Int64(
+    int64PropertyReadOnly = Int64(
         displayedName="Int64 (RO)",
         description="A readonly integer property",
         defaultValue=0,
-        accessMode=AccessMode.READONLY)
+        accessMode=AccessMode.READONLY,
+        # FIXME: values outside int32 (!) range lead to failures!
+        alarmLow=-2**31, #-3200000000,
+        alarmInfo_alarmLow="Too low",
+        alarmNeedsAck_alarmLow=True,
+        warnLow=-3200,
+        alarmInfo_warnLow="Rather low",
+        alarmNeedsAck_warnLow=False)
 
-    uint64Property = UInt64(
-        displayedName="UInt64",
-        description="An unsigned integer property (64 Bit)",
-        defaultValue=30)
+    @UInt64(displayedName="UInt64",
+            description="An unsigned integer property (64 Bit)",
+            defaultValue=30)
+    def uint64Property(self, newValue):
+        self.uint64Property = newValue
+        self.uint64PropertyReadOnly = newValue
 
-    uint64PropertyReadonly = UInt64(
+    uint64PropertyReadOnly = UInt64(
         displayedName="UInt64 (RO)",
         description="A readonly integer property (64 Bit)",
         defaultValue=47,
         accessMode=AccessMode.READONLY)
 
-    floatProperty = Float(
-        displayedName="Float (Min / Max)",
-        description="A float property",
-        defaultValue=20.0,
-        minExc=-1000.0,
-        maxExc=1000.0)
+    @Float(displayedName="Float (Min / Max)",
+           description="A float property",
+           defaultValue=20.0,
+           minExc=-1000.0,
+           maxExc=1000.0)
+    def floatProperty(self, newValue):
+        self.floatProperty = newValue
+        self.floatPropertyReadOnly = newValue
 
-    floatPropertyReadonly = Float(
+    floatPropertyReadOnly = Float(
         displayedName="Float (RO)",
         description="A readonly float property",
         defaultValue=0.0,
-        accessMode=AccessMode.READONLY)
+        accessMode=AccessMode.READONLY,
+        alarmLow=-1000.0,
+        alarmInfo_alarmLow="Too low",
+        alarmNeedsAck_alarmLow=True,
+        warnLow=-100.0,
+        alarmInfo_warnLow="Rather low",
+        alarmNeedsAck_warnLow=False,
+        warnHigh=100.0,
+        alarmInfo_warnHigh="Rather high",
+        alarmNeedsAck_warnHigh=False,
+        alarmHigh=1000.0,
+        alarmInfo_alarmHigh="Too high",
+        alarmNeedsAck_alarmHigh=True
+    )
 
     @Double(displayedName="Double",
             description="A double property",
@@ -247,6 +318,19 @@ class PropertyTestMDL(Device):
         description="A string property",
         defaultValue="XFEL")
 
+    @Slot(displayedName="Set Alarm",
+          description="Set alarm to value of String property - if convertable")
+    def setAlarm(self):
+        level = AlarmCondition(self.stringProperty)
+        self.globalAlarmCondition = level
+
+    @Slot(displayedName="Set Alarm (no ackn.)",
+          description="Foreseen for settting an alarm that does not require "
+                      "acknowledgment - but not supported!")
+    def setAlarmNoNeedAck(self):
+        raise NotImplementedError("In middlelayer, global alarm always "
+                                  "require acknowledgment.")
+
     vectors = Node(
         VectorNode,
         displayedName="Vectors",
@@ -264,6 +348,9 @@ class PropertyTestMDL(Device):
             Hash('intProperty', 3, 'stringProperty', 'eggs', 'boolInit', False,
                  'bool', True, 'boolReadOnly', True, 'floatProperty', 1.3,
                  'doubleProperty', 22.5)])
+
+    #TODO: Add tableReadOnly = VectorHash(...)
+    #      and make table a function changing it
 
     @InputChannel(displayedName="Input", raw=False)
     async def input(self, data, meta):
@@ -366,6 +453,10 @@ class PropertyTestMDL(Device):
                 self.acquiring_task = None
                 self.counter = 0
                 return
+
+    node = Node(
+        CounterNode,
+        displayedName="Node")
 
     _available_macros = ['default', 'another', 'the_third']
 
