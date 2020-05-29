@@ -15,6 +15,8 @@ class Alarm(String):
 
 
 class AlarmMixin(Configurable):
+    separator = "KRB_ALARM_SEP_REPLACEMENT"  # for dots in nested properties
+
     alarmCondition = String(
         enum=AlarmCondition,
         displayedName="Alarm condition", displayType='AlarmCondition',
@@ -48,23 +50,38 @@ class AlarmMixin(Configurable):
         super(AlarmMixin, self).__init__(configuration)
 
     def setChildValue(self, key, value, desc):
+
+        # Alarm-internally mangle key as needed for external communication
+        key_sep = self.separator.join(key.split('.')) if '.' in key else key
+        if key_sep == "globalAlarmCondition":
+            key_sep = "global"
+
         old_alarm, _, _ = self._alarmConditions.get(
-            key, (AlarmCondition.NONE, None, None))
+            key_sep, (AlarmCondition.NONE, None, None))
         new_alarm = desc.alarmCondition(value)
         if old_alarm is not new_alarm:
-            self._alarmConditions[key] = new_alarm, desc, value.timestamp
+            self._alarmConditions[key_sep] = new_alarm, desc, value.timestamp
             if new_alarm > self.alarmCondition.enum:
                 self.alarmCondition = new_alarm.criticalityLevel()
+                # transfer timestamp to new overall alarm condition
+                self.alarmCondition.timestamp = value.timestamp
             elif (new_alarm.criticalityLevel() < old_alarm.criticalityLevel()
                   is self.alarmCondition.enum):
-                self.alarmCondition = max(
+                alarmCondition = max(
                     (v.criticalityLevel()
                      for v, _, _ in self._alarmConditions.values()),
                     default=AlarmCondition.NONE)
-            self._changed_alarms.add(key)
-            self._old_alarms[key] = old_alarm
-            if key == 'globalAlarmCondition':
+                if alarmCondition != self.alarmCondition:
+                    self.alarmCondition = alarmCondition
+                    # transfer timestamp to new overall alarm condition
+                    self.alarmCondition.timestamp = value.timestamp
+
+            # book-keeping for self.__gather_alarms()
+            self._changed_alarms.add(key_sep)
+            self._old_alarms[key_sep] = old_alarm
+            if key_sep == 'global':
                 self.accumulatedGlobalAlarms.add(new_alarm.value)
+        # Outside, of course use unmangled key
         super(AlarmMixin, self).setChildValue(key, value, desc)
 
     def update(self):
@@ -80,28 +97,26 @@ class AlarmMixin(Configurable):
         for prop in self._changed_alarms:
             cond, desc, timestamp = self._alarmConditions.get(
                 prop, (AlarmCondition.NONE, None, None))
-            # Needed for our validator in case of node elements
-            prop_sep = "KRB_ALARM_SEP_REPLACEMENT".join(prop.split('.'))
-            prop_sep = 'global' if prop == 'globalAlarmCondition' else prop_sep
+
             old = self._old_alarms.get(prop, AlarmCondition.NONE)
-            if old is not AlarmCondition.NONE:
-                if (cond is AlarmCondition.NONE and
-                        prop == 'globalAlarmCondition'):
-                    toClear.setdefault(prop_sep, []).extend(
+            # Note: 'old is cond' may be when called from slotReSubmitAlarms
+            if old is not AlarmCondition.NONE and old is not cond:
+                if (cond is AlarmCondition.NONE and prop == 'global'):
+                    toClear.setdefault(prop, []).extend(
                         self.accumulatedGlobalAlarms)
                     self.accumulatedGlobalAlarms.clear()
                 else:
-                    toClear.setdefault(prop_sep, []).append(old.value)
+                    toClear.setdefault(prop, []).append(old.value)
 
             if cond is not AlarmCondition.NONE:
-                toAdd[prop_sep] = Hash(cond.value, Hash(
+                toAdd[prop] = Hash(cond.value, Hash(
                     "type", cond.value,
                     "description",
                     getattr(desc, "alarmInfo_{}".format(cond.value), ""),
                     "needsAcknowledging",
                     bool(getattr(desc, "alarmNeedsAck_{}".format(cond.value),
                                  True))))
-                toAdd[prop_sep][cond.value, ...] = timestamp.toDict()
+                toAdd[prop][cond.value, ...] = timestamp.toDict()
         self._old_alarms = {}
         self._changed_alarms = set()
 
