@@ -37,11 +37,14 @@ class PropertyTest(PythonDevice):
 
         # Define the slots
         self.KARABO_SLOT(self.setAlarm)
+        self.KARABO_SLOT(self.setAlarmNoNeedAck)
         self.KARABO_SLOT(self.writeOutput)
         self.KARABO_SLOT(self.startWritingOutput)
         self.KARABO_SLOT(self.stopWritingOutput)
         self.KARABO_SLOT(self.resetChannelCounters)
         self.KARABO_SLOT(self.eosOutput)
+        self.KARABO_SLOT(self.node_increment)
+        self.KARABO_SLOT(self.node_reset)
 
         self._writingOutput = False
         self._writingMutex = threading.Lock()
@@ -84,14 +87,14 @@ class PropertyTest(PythonDevice):
             .displayedName("Int32")
             .description("An int32 property")
             .reconfigurable()
-            .assignmentOptional().defaultValue(32000000)
+            .assignmentOptional().defaultValue(-32000000)
             .commit(),
 
             INT32_ELEMENT(expected).key("int32PropertyReadOnly")
             .displayedName("Readonly Int32")
             .description("An int32 property for testing alarms")
             .readOnly().initialValue(32000000)
-            .warnLow(0).info("Rather low").needsAcknowledging(False)
+            .warnLow(-10).info("Rather low").needsAcknowledging(False)
             .alarmLow(-32000000).info("Too low").needsAcknowledging(True)
             .commit(),
 
@@ -121,8 +124,8 @@ class PropertyTest(PythonDevice):
             .displayedName("Readonly Int64")
             .description("An int64 property for testing alarms")
             .readOnly().initialValue(3200000000)
-            .warnLow(0).info("Rather high").needsAcknowledging(False)
-            .alarmLow(-3200000000).info("Too high").needsAcknowledging(True)
+            .warnLow(-3200).info("Rather low").needsAcknowledging(False)
+            .alarmLow(-3200000000).info("Too low").needsAcknowledging(True)
             .commit(),
 
             UINT64_ELEMENT(expected).key("uint64Property")
@@ -183,8 +186,14 @@ class PropertyTest(PythonDevice):
 
             SLOT_ELEMENT(expected).key("setAlarm")
             .displayedName("Set Alarm")
-            .description("Set alarm to value of String property - if "
-                         "convertable")
+            .description("Set an acknowledgment requiring alarm to value of "
+                         "String property - if convertable")
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("setAlarmNoNeedAck")
+            .displayedName("Set Alarm (no ackn.)")
+            .description("Set an alarm (that does not require acknowledgment) "
+                         "to value of String property - if convertable")
             .commit(),
 
             NODE_ELEMENT(expected).key("vectors")
@@ -478,6 +487,40 @@ class PropertyTest(PythonDevice):
                          "data flow")
             .allowedStates(State.NORMAL)
             .commit(),
+
+
+            NODE_ELEMENT(expected).key("node")
+            .displayedName("Node")
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("node.increment")
+            .displayedName("Increment")
+            .description("Increment 'Counter read-only'")
+            .commit(),
+
+            SLOT_ELEMENT(expected).key("node.reset")
+            .displayedName("Reset")
+            .description("Reset 'Counter read-only'")
+            .commit(),
+
+            UINT32_ELEMENT(expected).key("node.counterReadOnly")
+            .displayedName("Counter read-only")
+            .readOnly()
+            .initialValue(0)
+            .warnHigh(1000000)  # 1.e6
+            .info("Rather high").needsAcknowledging(True)
+            .alarmHigh(100000000)  # 1.e8
+            .info("Too high").needsAcknowledging(False)  # False for tests
+            .commit(),
+
+            UINT32_ELEMENT(expected).key("node.counter")
+            .displayedName("Counter")
+            .description("Values will be transferred to 'Counter read-only' "
+                         "under same node")
+            .reconfigurable()
+            .assignmentOptional()
+            .defaultValue(0)
+            .commit(),
         )
 
     def initialization(self):
@@ -488,7 +531,7 @@ class PropertyTest(PythonDevice):
         props = ["int32Property", "uint32Property",
                  "int64Property", "uint64Property",
                  "floatProperty", "doubleProperty",
-                 "table"]
+                 "table", "node.counter"]
 
         bulkSets = Hash()
         for prop in props:
@@ -499,14 +542,14 @@ class PropertyTest(PythonDevice):
             self.set(bulkSets)
 
     def setAlarm(self):
-        try:
-            alarm = AlarmCondition.fromString(self["stringProperty"])
-        except ValueError as e:
-            self.log.WARN("'{}' is not a valid alarm condition - please adjust"
-                          " 'stringProperty'".format(self["stringProperty"]))
-        else:
-            self.setAlarmCondition(alarm,
-                                   description="Converted from stringProperty")
+        alarm = AlarmCondition.fromString(self["stringProperty"])
+        self.setAlarmCondition(alarm, needsAcknowledging=True,
+                               description="Acknowledgment requiring alarm")
+
+    def setAlarmNoNeedAck(self):
+        alarm = AlarmCondition.fromString(self["stringProperty"])
+        self.setAlarmCondition(alarm, needsAcknowledging=False,
+                               description="No acknowledgment requiring alarm")
 
     def writeOutput(self):
         outputCounter = self["outputCounter"]
@@ -588,3 +631,10 @@ class PropertyTest(PythonDevice):
         # Writes data received to output channel to allow Property_Test to
         # build pipelines of chained devices.
         self.writeOutput()
+
+    def node_increment(self):
+        counter = self.get("node.counterReadOnly")
+        self.set("node.counterReadOnly", counter + 1)
+
+    def node_reset(self):
+        self.set("node.counterReadOnly", 0)
