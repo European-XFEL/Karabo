@@ -15,6 +15,7 @@ VECTOR_MAX_SIZE = 10
 
 NDARRAY_SHAPE = (100, 200)
 
+
 class DataNode(Configurable):
     int32 = Int32(accessMode=AccessMode.READONLY)
     string = String(accessMode=AccessMode.READONLY)
@@ -157,10 +158,10 @@ class CounterNode(Configurable):
         accessMode=AccessMode.READONLY,
         defaultValue=0,
 
-        warnHigh=1000000,  # 1.e6
+        warnHigh=1_000_000,
         alarmInfo_warnHigh="Rather high",
         alarmNeedsAck_warnHigh=True,
-        alarmHigh=100000000,  # 1.e8,
+        alarmHigh=100_000_000,
         alarmInfo_alarmHigh="Too high",
         alarmNeedsAck_alarmHigh=False)  # False for tests
 
@@ -207,7 +208,7 @@ class PropertyTestMDL(Device):
         description="An integer property",
         defaultValue=0,
         accessMode=AccessMode.READONLY,
-        alarmLow=-32000000,
+        alarmLow=-32_000_000,
         alarmInfo_alarmLow="Too low",
         alarmNeedsAck_alarmLow=True,
         warnLow=-10,
@@ -240,7 +241,7 @@ class PropertyTestMDL(Device):
         defaultValue=0,
         accessMode=AccessMode.READONLY,
         # FIXME: values outside int32 (!) range lead to failures!
-        alarmLow=-2**31, #-3200000000,
+        alarmLow=-2**31,  # -3_200_000_000,
         alarmInfo_alarmLow="Too low",
         alarmNeedsAck_alarmLow=True,
         warnLow=-3200,
@@ -349,8 +350,8 @@ class PropertyTestMDL(Device):
                  'bool', True, 'boolReadOnly', True, 'floatProperty', 1.3,
                  'doubleProperty', 22.5)])
 
-    #TODO: Add tableReadOnly = VectorHash(...)
-    #      and make table a function changing it
+    # TODO: Add tableReadOnly = VectorHash(...)
+    #       and make table a function changing it
 
     @InputChannel(displayedName="Input", raw=False)
     async def input(self, data, meta):
@@ -414,7 +415,7 @@ class PropertyTestMDL(Device):
     async def eosOutput(self):
         # XXX: here for interface matching. to be implemented
         return
-        
+
     @Slot(displayedName="Write to Output",
           description="Write once to output channel 'Output'")
     async def writeOutput(self):
@@ -436,7 +437,7 @@ class PropertyTestMDL(Device):
         output.string = f'{outputCounter}'
         output.vecInt64 = [outputCounter] * VECTOR_MAX_SIZE
         output.ndarray = np.full(NDARRAY_SHAPE,
-            outputCounter, dtype=np.float32)
+                                 outputCounter, dtype=np.float32)
         # XXX: implement image data
         await self.output.writeData()
         self.packet_number = outputCounter
@@ -488,8 +489,9 @@ class PropertyTestMDL(Device):
                     payload)
 
     @String(displayedName="Faulty String",
-        description="A string property that could not be set from the system",
-        defaultValue="Karabo")
+            description="A string property that could not be set from "
+            "the system",
+            defaultValue="Karabo")
     def faultyString(self, value):
         if value != "Karabo":
             raise RuntimeError(f"Only 'Karabo' is allowed here not '{value}'")
