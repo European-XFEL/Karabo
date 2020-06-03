@@ -60,7 +60,7 @@ namespace karabo {
 
             void setAlarm();
 
-            void setAlarmNoNeedAck();
+            void setNoAckAlarm();
 
             void writeOutput();
 
