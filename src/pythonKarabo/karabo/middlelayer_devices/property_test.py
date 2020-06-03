@@ -328,7 +328,7 @@ class PropertyTestMDL(Device):
     @Slot(displayedName="Set Alarm (no ackn.)",
           description="Foreseen for settting an alarm that does not require "
                       "acknowledgment - but not supported!")
-    def setAlarmNoNeedAck(self):
+    def setNoAckAlarm(self):
         raise NotImplementedError("In middlelayer, global alarm always "
                                   "require acknowledgment.")
 
