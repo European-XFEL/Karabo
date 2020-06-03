@@ -26,24 +26,22 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         ok, msg = self.dc.instantiate(SERVER_ID, cfg, 30)
         self.assertTrue(ok, msg)
 
-        tbl = self.dc.get(deviceId, "tableReadonly")
-        self.assertEquals(len(tbl), 2)  # tableReadonly has 2 rows.
+        tbl = self.dc.get(deviceId, "tableReadOnly")
+        self.assertEquals(len(tbl), 2)  # tableReadOnly has 2 rows.
 
         tblValue = [
             Hash("e1", "gfh", "e2", False,
                  "e3", 14, "e4", 0.0022, "e5", 3.14159)
         ]
         self.assertRaises(RuntimeError, self.dc.set,
-                          deviceId, "tableReadonly", tblValue)
+                          deviceId, "tableReadOnly", tblValue)
 
         # Checks that a read-only table can be updated internally.
-        # The check is made by first setting table and then calling
-        # the PropertyTest slot 'setReadonly' to set 'tableReadonly'
-        # to the same values a 'table'.
+        # Note that when "table" is updated, the value is transferred
+        # to tableReadOnly
         self.dc.set(deviceId, "table", tblValue)
-        self.dc.execute(deviceId, "setReadonly")
-        tbl = self.dc.get(deviceId, "tableReadonly")
-        self.assertEquals(len(tbl), 1)  # tableReadonly now has 1 row.
+        tbl = self.dc.get(deviceId, "tableReadOnly")
+        self.assertEquals(len(tbl), 1)  # tableReadOnly now has 1 row.
         self.assertEquals(tbl[0]["e3"], 14)
 
         ok, msg = self.dc.killDevice(deviceId, 30)
