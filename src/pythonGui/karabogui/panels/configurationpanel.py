@@ -76,8 +76,11 @@ class ConfigurationPanel(BasePanelWidget):
     def _event_config_past(self, data):
         deviceId = data['deviceId']
         configuration = data['configuration']
-        time = data['time']
-        self._apply_configuration_from_past(deviceId, configuration, time)
+        req_time = data['time']
+        config_time = data['config_time']
+        time_match = data['time_match']
+        self._apply_configuration_from_past(deviceId, configuration, req_time,
+                                            config_time, time_match)
 
     def _event_network(self, data):
         connected = data['status']
@@ -217,9 +220,9 @@ class ConfigurationPanel(BasePanelWidget):
     # -----------------------------------------------------------------------
     # private methods
 
-    def _apply_configuration_from_past(self, deviceId, configuration, time):
-        """Apply the retrieved configuration from getConfigurationFromPast
-        """
+    def _apply_configuration_from_past(self, deviceId, config, req_time,
+                                       config_time, match):
+        """Apply the retrieved configuration from getConfigurationFromPast"""
         proxy = self._showing_proxy
         if proxy is None:
             return
@@ -227,7 +230,7 @@ class ConfigurationPanel(BasePanelWidget):
         binding = proxy.binding
         # The check we can provide is to check the deviceId and classId
         # NOTE: Schema evolution should not be a problem!
-        classId = configuration.get('classId', None)
+        classId = config.get('classId', None)
         if classId is None:
             # XXX: We might still get an invalid configuration without classId
             messagebox.show_error("A configuration without classId arrived "
@@ -245,11 +248,17 @@ class ConfigurationPanel(BasePanelWidget):
                                    classId, binding.class_id), parent=self)
             return
 
-        self._set_proxy_configuration(proxy, configuration)
+        self._set_proxy_configuration(proxy, config)
 
-        messagebox.show_information("Configuration from '{}' has arrived "
-                                    "for '{}'!".format(time, deviceId),
-                                    parent=self)
+        matched_text = ("The configuration has been retrieved for the "
+                        "requested time point!")
+        no_match_text = ("Requested time was '{}', but the device was not "
+                         "logged then.").format(req_time)
+        time_text = matched_text if match else no_match_text
+        text = "Configuration from '{}' has arrived for '{}'.\n{}".format(
+            config_time, deviceId, time_text)
+
+        messagebox.show_information(text, parent=self)
 
     def _apply_loaded_configuration(self, proxy, configuration):
         """Apply a configuration loaded from a file to a proxy
