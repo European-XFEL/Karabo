@@ -245,21 +245,25 @@ class Manager(QObject):
         broadcast_event(KaraboEvent.LogMessages, {'messages': messages})
 
     def handle_configurationFromPast(self, **info):
-        success = info.get('success', False)
+        success = info['success']
         # NOTE: Show a reasonable time format!
         time = info['time']
         time = Timestamp(time).toLocal()
         deviceId = info['deviceId']
         if not success:
-            reason = info.get('reason')
+            reason = info['reason']
             msg = ("The configuration of `{}` requested at time point `{}` "
                    "was not retrieved!".format(deviceId, time))
             messagebox.show_error(msg, details=reason)
             return
-        config = info.get('config')
+        config = info['config']
+        config_time = info['configTimepoint']
+        config_time = Timestamp(config_time).toLocal()
+        time_match = info['configAtTimepoint']
         broadcast_event(KaraboEvent.ShowConfigurationFromPast,
                         {'deviceId': deviceId, 'configuration': config,
-                         'time': time})
+                         'time': time, 'config_time': config_time,
+                         'time_match': time_match})
 
     def handle_brokerInformation(self, **info):
         get_network()._handleBrokerInformation(
