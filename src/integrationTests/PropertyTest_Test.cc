@@ -60,8 +60,8 @@ void PropertyTest_Test::allTestRunner() {
     testSimpleProperties();
     testReadOnlyProperties();
     testVectorProperties();
-    testTableProperties();
     testReadOnlyTableProperties();
+    testTableProperties();
     testAttributeEditing();
     testNodedSlots();
 }
