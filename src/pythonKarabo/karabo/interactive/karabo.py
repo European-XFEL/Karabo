@@ -340,27 +340,45 @@ def clean_dir(path, args):
         sha1 = run_cmd('cd {}; git show -s --format=%H'.format(path)).\
             decode("utf-8").rstrip()
 
-        # Get SHA1 of new_tag from remote
-        # Note: "real" tags are marked with a trailing '^{}',
-        #       eg "refs/tags/3.1.1^{}"
-        new_sha1 = ""
-        remote_refs = run_cmd('cd {}; git ls-remote origin {tag} {tag}^{{}}'
-                              .format(path, tag=new_tag)).decode("utf-8")
-        for line in remote_refs.splitlines():
-            # A line for a "real" tag will look like:
-            # "91c91b5ed3ad86869f9c05e15692966579fcaa90\trefs/tags/3.1.1^{}"
-            if new_tag+'^{}' in line:
-                new_sha1 = line.split('\t')[0]
-                break  # Tag found -> break
-            elif new_tag in line:
-                new_sha1 = line.split('\t')[0]
+        def check_tag():
+            """ 
+            Get SHA1 of new_tag from remote
+
+            Note: "real" tags are marked with a trailing '^{}',
+                   eg "refs/tags/3.1.1^{}"
+            """
+            new_sha1 = ""
+            # protect against hand-crafted credentials,
+            # which might raise an interactive prompt at this point 
+            # if we do not have access to git under those credentials.
+            remote_uri = run_cmd('cd {}; git ls-remote --get-url '
+                                 'origin'.format(path)).decode("utf-8")
+            expected_url = f"{args.git}/karaboDevices/{args.device}.git"
+            if args.no_clobber and expected_url.strip() != remote_uri.strip():
+                print(f"Device at {path} has a different remote than "
+                        "the one expected: abort! ")
+                sys.exit(1)
+
+            cmd = 'cd {}; git ls-remote origin {tag} {tag}^{{}}'
+            remote_refs = run_cmd(cmd.format(path,
+                                  tag=new_tag)).decode("utf-8")
+
+            for line in remote_refs.splitlines():
+                # A line for a "real" tag will look like:
+                # "91c91b5ed3ad86869f9c05e15692966579fcaa90\trefs/tags/3.1.1^{}"  # noqa
+                if new_tag+'^{}' in line:
+                    new_sha1 = line.split('\t')[0]
+                    break  # Tag found -> break
+                elif new_tag in line:
+                    new_sha1 = line.split('\t')[0]
+            return new_sha1
 
         if args.no_clobber:  # abort if different version installed
             if tag == '':  # not a tag
                 print('{}-{} already installed: abort!'
                       ''.format(args.device, sha1))
                 sys.exit(1)
-            elif sha1 != new_sha1:
+            elif sha1 != check_tag():
                 print('{}-{} already installed: abort!'
                       ''.format(args.device, tag))
                 sys.exit(1)
@@ -370,7 +388,7 @@ def clean_dir(path, args):
                 return False
         elif args.force:  # always overwrite
             run_cmd('rm -rf {}'.format(path))
-        elif sha1 == new_sha1:  # tag already installed
+        elif sha1 == check_tag():  # tag already installed
             # TODO: add integrity check (git status should be ok)
             print('{}-{} already installed: skipping'
                   ''.format(args.device, tag))
