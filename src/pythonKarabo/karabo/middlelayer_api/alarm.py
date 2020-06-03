@@ -1,4 +1,5 @@
 from karabo.common.alarm_conditions import AlarmCondition
+from karabo.native.data.basetypes import EnumValue
 from karabo.native.data.enums import AccessLevel, AccessMode, DaqPolicy
 from karabo.native.data.hash import Hash, HashType, String
 from karabo.native.data.schema import Configurable
@@ -62,9 +63,8 @@ class AlarmMixin(Configurable):
         if old_alarm is not new_alarm:
             self._alarmConditions[key_sep] = new_alarm, desc, value.timestamp
             if new_alarm > self.alarmCondition.enum:
-                self.alarmCondition = new_alarm.criticalityLevel()
-                # transfer timestamp to new overall alarm condition
-                self.alarmCondition.timestamp = value.timestamp
+                lev, ts = new_alarm.criticalityLevel(), value.timestamp
+                self.alarmCondition = EnumValue(lev, timestamp=ts)
             elif (new_alarm.criticalityLevel() < old_alarm.criticalityLevel()
                   is self.alarmCondition.enum):
                 alarmCondition = max(
@@ -72,10 +72,8 @@ class AlarmMixin(Configurable):
                      for v, _, _ in self._alarmConditions.values()),
                     default=AlarmCondition.NONE)
                 if alarmCondition != self.alarmCondition:
-                    self.alarmCondition = alarmCondition
-                    # transfer timestamp to new overall alarm condition
-                    self.alarmCondition.timestamp = value.timestamp
-
+                    lev, ts = alarmCondition.criticalityLevel(), value.timestamp
+                    self.alarmCondition = EnumValue(lev, timestamp=ts)
             # book-keeping for self.__gather_alarms()
             self._changed_alarms.add(key_sep)
             self._old_alarms[key_sep] = old_alarm
