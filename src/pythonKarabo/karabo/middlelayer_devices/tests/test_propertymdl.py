@@ -54,7 +54,7 @@ class Tests(DeviceTest):
 
                 # slot that raises NotImplementedError
                 with self.assertRaises(KaraboError):
-                    await d.setAlarmNoNeedAck()
+                    await d.setNoAckAlarm()
 
         with self.subTest(msg="Test noded slots"):
             with (await getDevice("Test_PropertyTestMDL")) as d:
