@@ -342,7 +342,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         if api != "mdl":
             # MDL does not know global alarms that do NOT require acknowledging
             self.dc.set(dev_id, "stringProperty", "warn")
-            self.dc.execute(dev_id, "setAlarmNoNeedAck")
+            self.dc.execute(dev_id, "setNoAckAlarm")
             attrs = self.dc.get(dev_id).getAttributes(global_alarm_key)
             stamp = Timestamp.fromHashAttributes(attrs)
             tmpKey = 'toAdd.global.warn'
