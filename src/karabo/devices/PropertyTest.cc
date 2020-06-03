@@ -76,6 +76,15 @@ namespace karabo {
                     .assignmentOptional().defaultValue(false)
                     .commit();
 
+            BOOL_ELEMENT(expected).key("boolPropertyReadOnly")
+                    .displayedName("Bool property read-only")
+                    .description("A bool property read-only")
+                    .readOnly()
+                    .initialValue(false)
+                    .alarmHigh(false) // true will raise alarm (i.e. using '>', not '>=')
+                    .info("Too high").needsAcknowledging(true)
+                    .commit();
+
             CHAR_ELEMENT(expected).key("charProperty")
                     .displayedName("Char property")
                     .description("A char property")
@@ -85,7 +94,7 @@ namespace karabo {
 
             INT8_ELEMENT(expected).key("int8Property")
                     .displayedName("Int8 property")
-                    .description("A int8 property")
+                    .description("An int8 property")
                     .minInc(std::numeric_limits<signed char>::lowest())
                     .maxInc(std::numeric_limits<signed char>::max())
                     .reconfigurable()
@@ -93,8 +102,8 @@ namespace karabo {
                     .commit();
 
             INT8_ELEMENT(expected).key("int8PropertyReadOnly")
-                    .displayedName("Int8 property")
-                    .description("A int8 property")
+                    .displayedName("Int8 property read-only")
+                    .description("An int8 property read-only")
                     .minInc(std::numeric_limits<signed char>::lowest())
                     .maxInc(std::numeric_limits<signed char>::max())
                     .readOnly()
@@ -187,8 +196,8 @@ namespace karabo {
                     .maxInc(std::numeric_limits<int>::max())
                     .readOnly()
                     .initialValue(32000000)
-                    .alarmLow(std::numeric_limits<int>::lowest()).info("alarmLow").needsAcknowledging(true)
-                    .warnLow(std::numeric_limits<int>::lowest()).info("warnLow").needsAcknowledging(false)
+                    .alarmLow(-32000000).info("alarmLow").needsAcknowledging(true)
+                    .warnLow(-10).info("warnLow").needsAcknowledging(false)
                     .warnHigh(std::numeric_limits<int>::max()).info("warnHigh").needsAcknowledging(false)
                     .alarmHigh(std::numeric_limits<int>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
@@ -231,8 +240,8 @@ namespace karabo {
                     .maxInc(std::numeric_limits<long long>::max())
                     .readOnly()
                     .initialValue(3200000000LL)
-                    .alarmLow(std::numeric_limits<long long>::lowest()).info("alarmLow").needsAcknowledging(true)
-                    .warnLow(std::numeric_limits<long long>::lowest()).info("warnLow").needsAcknowledging(false)
+                    .alarmLow(-3200000000ll).info("Too low").needsAcknowledging(true)
+                    .warnLow(-3200).info("warnLow").needsAcknowledging(false)
                     .warnHigh(std::numeric_limits<long long>::max()).info("warnHigh").needsAcknowledging(false)
                     .alarmHigh(std::numeric_limits<long long>::max()).info("alarmHigh").needsAcknowledging(true)
                     .commit();
@@ -297,10 +306,10 @@ namespace karabo {
                     .maxInc(std::numeric_limits<double>::max()/2)
                     .readOnly()
                     .initialValue(3.1415967773331)
-                    .alarmLow(std::numeric_limits<double>::lowest()/2).info("alarmLow").needsAcknowledging(true)
-                    .warnLow(std::numeric_limits<double>::lowest() / 4).info("warnLow").needsAcknowledging(false)
-                    .warnHigh(std::numeric_limits<double>::max() / 4).info("warnHigh").needsAcknowledging(false)
-                    .alarmHigh(std::numeric_limits<double>::max()/2).info("alarmHigh").needsAcknowledging(true)
+                    .alarmLow(-100.).info("Too low").needsAcknowledging(false)
+                    .warnLow(-10.).info("Rather low").needsAcknowledging(true)
+                    .warnHigh(10).info("Rather high").needsAcknowledging(false)
+                    .alarmHigh(100.).info("Too high").needsAcknowledging(true)
                     .commit();
 
             STRING_ELEMENT(expected).key("stringProperty")
@@ -308,6 +317,16 @@ namespace karabo {
                     .description("A string property")
                     .reconfigurable()
                     .assignmentOptional().defaultValue("Some arbitrary text.")
+                    .commit();
+
+            SLOT_ELEMENT(expected).key("setAlarm")
+                    .displayedName("Set Alarm")
+                    .description("Set an acknowledgment requiring alarm to value of String property - if convertable")
+                    .commit();
+
+            SLOT_ELEMENT(expected).key("setNoAckAlarm")
+                    .displayedName("Set Alarm (no ackn.)")
+                    .description("Set an alarm (that does not require acknowledgment) to value of String property - if convertable")
                     .commit();
 
             NODE_ELEMENT(expected).key("vectors")
@@ -624,17 +643,27 @@ namespace karabo {
                     .commit();
 
             SLOT_ELEMENT(expected).key("node.increment")
-                    .displayedName("Increment Counter")
+                    .displayedName("Increment 'Counter read-only'")
                     .commit();
 
             SLOT_ELEMENT(expected).key("node.reset")
                     .displayedName("Reset Counter")
                     .commit();
 
-            UINT32_ELEMENT(expected).key("node.counter")
-                    .displayedName("Counter")
+            UINT32_ELEMENT(expected).key("node.counterReadOnly")
+                    .displayedName("Counter read-only")
                     .readOnly()
                     .initialValue(0)
+                    .warnHigh(1000000).info("Rather high").needsAcknowledging(true) // 1.e6
+                    .alarmHigh(100000000).info("Too high").needsAcknowledging(false) // 1.e8 - false for test purposes
+                    .commit();
+
+            UINT32_ELEMENT(expected).key("node.counter")
+                    .displayedName("Counter")
+                    .description("Values will be transferred to 'Counter read-only' under same node")
+                    .reconfigurable()
+                    .assignmentOptional()
+                    .defaultValue(0u)
                     .commit();
         }
 
@@ -644,7 +673,8 @@ namespace karabo {
             m_writingOutput(false), m_writingOutputTimer(karabo::net::EventLoop::getIOService()) {
 
             KARABO_INITIAL_FUNCTION(initialize);
-
+            KARABO_SLOT(setAlarm);
+            KARABO_SLOT(setNoAckAlarm);
             KARABO_SLOT(writeOutput);
             KARABO_SLOT(startWritingOutput);
             KARABO_SLOT(stopWritingOutput);
@@ -668,9 +698,10 @@ namespace karabo {
         }
 
         void PropertyTest::preReconfigure(Hash& incomingReconfiguration) {
-            const std::vector<std::string> keys = {"uint8Property", "int8Property" ,
-                "uint16Property", "int16Property", "uint32Property", "int32Property",
-                "uint64Property", "int64Property", "floatProperty", "doubleProperty"};
+            const std::vector<std::string> keys = {"boolProperty", "uint8Property", "int8Property",
+                                                   "uint16Property", "int16Property", "uint32Property", "int32Property",
+                                                   "uint64Property", "int64Property", "floatProperty", "doubleProperty",
+                                                   "table", "node.counter"};
             Hash h;
 
             for (const std::string& key : keys) {
@@ -680,6 +711,19 @@ namespace karabo {
             }
             set(h);
         }
+
+
+        void PropertyTest::setAlarm() {
+            const karabo::util::AlarmCondition alarm = karabo::util::AlarmCondition::fromString(get<std::string>("stringProperty"));
+            setAlarmCondition(alarm, true, "Acknowledgment requiring alarm");
+        }
+
+
+        void PropertyTest::setNoAckAlarm() {
+            const karabo::util::AlarmCondition alarm = karabo::util::AlarmCondition::fromString(get<std::string>("stringProperty"));
+            setAlarmCondition(alarm, false, "No acknowledgment requiring alarm");
+        }
+
 
         void PropertyTest::writeOutput() {
 
@@ -789,9 +833,10 @@ namespace karabo {
 
 
         void PropertyTest::node_increment() {
+            // Use an AsyncReply to test and demonstrate its purpose.
             AsyncReply areply(this);
             const unsigned int counter = get<unsigned int>("node.counter");
-            set<unsigned short>("node.counter", counter + 1);
+            set("node.counter", counter + 1);
             karabo::net::EventLoop::getIOService().post(
                     karabo::util::bind_weak(&PropertyTest::replier, this, areply));
         }
