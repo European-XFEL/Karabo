@@ -43,7 +43,6 @@ class Tests(DeviceTest):
             with (await getDevice("Test_PropertyTestMDL")) as d:
                 # invalid alarm condition in stringProperty
                 await setWait(d, "stringProperty", "")
-                help(self.assertRaises)
                 with self.assertRaises(KaraboError):
                     await d.setAlarm()
 

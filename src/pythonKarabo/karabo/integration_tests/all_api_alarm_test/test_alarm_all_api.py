@@ -218,23 +218,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
 
             msg = str(hashArg) + ":\n"
             msg += str(hDoubleGlobalAdd) + '\nvs\n' + str(res)
-            ok = fullyEqual(res, hDoubleGlobalAdd, False)
-            if not ok and api == "mdl":
-                # FIXME: For MDL, the Epochstamp of the 'global' alarm is not
-                #        occasionally wrong! For now, check at least the rest.
-                print("\nFix MDL problem of timestamp for global!\n",
-                      file=sys.stderr)  # stdout is swallowed in tests
-                # remove epochstamp from result...
-                attrs = res.getAttributes(tmpKey)
-                attrs.erase("sec")
-                attrs.erase("frac")
-                # ... and from object to be compared
-                hDoubleGlobalAdd_copy = copy(hDoubleGlobalAdd)
-                attrs = hDoubleGlobalAdd_copy.getAttributes(tmpKey)
-                attrs.erase("sec")
-                attrs.erase("frac")
-                ok = fullyEqual(res, hDoubleGlobalAdd_copy, False)
-            self.assertTrue(ok, msg)
+            self.assertTrue(fullyEqual(res, hDoubleGlobalAdd, False), msg)
 
         #########################################################
         # 5) Now set property under node to warn (needs acknowledging)
