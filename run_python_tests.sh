@@ -255,6 +255,7 @@ runPythonIntegrationTests() {
 
     # TODO: Needs to be uncommented when the bound_device_test integration test is added.
     #safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.bound_device_test"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.all_api_alarm_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_comm_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_provided_scenes_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.pipeline_processing_test"
