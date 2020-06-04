@@ -71,6 +71,9 @@ class DlMigrator():
         if os.path.exists(part_proc_path):
             shutil.move(part_proc_path,
                         os.path.join(backup_dir, 'part_processed'))
+        if os.path.isfile(self.run_info_file):
+            shutil.move(self.run_info_file,
+                        os.path.join(backup_dir, 'run_info.json'))
 
     def _inc_previous_run(self):
         """Increments (or initializes) the previous run number file."""
