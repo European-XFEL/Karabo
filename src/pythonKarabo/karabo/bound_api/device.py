@@ -369,7 +369,9 @@ class PythonDevice(NoFsm):
         rules.injectTimestamps = True
         self.validatorIntern.setValidationRules(rules)
         self.validatorExtern.setValidationRules(rules)
-        self.globalAlarmCondition = AlarmCondition.NONE
+        self.globalAlarmCondition = (AlarmCondition.NONE, "", False,
+                                     Timestamp(Epochstamp(0, 0),
+                                               Trainstamp(0)))
         self.accumulatedGlobalAlarms = set()
 
         # For broker error handler
@@ -559,24 +561,54 @@ class PythonDevice(NoFsm):
         kwargs: validate: specifies if validation of args should be performed
                 before notification.
         """
+        with self._stateChangeLock:
+            self._setNoStateLock(*args, **kwargs)
+
+    def _setNoStateLock(self, *args, **kwargs):
+        """"
+        Internal helper like set, but requires 'with self._stateChangeLock:'
+        """
+
         pars = tuple(args)
         validate = kwargs.get("validate", True)
 
-        with self._stateChangeLock:
-            if len(pars) == 0 or len(pars) > 3:
-                raise SyntaxError("Number of parameters is wrong: "
-                                  "from 1 to 3 arguments are allowed.")
+        if len(pars) == 0 or len(pars) > 3:
+            raise SyntaxError("Number of parameters is wrong: "
+                              "from 1 to 3 arguments are allowed.")
 
-            # key, value, timestamp args
-            if len(pars) == 3:
-                key, value, stamp = pars
+        # key, value, timestamp args
+        if len(pars) == 3:
+            key, value, stamp = pars
 
-                if not isinstance(stamp, Timestamp):
-                    raise TypeError("The 3rd argument should be Timestamp")
+            if not isinstance(stamp, Timestamp):
+                raise TypeError("The 3rd argument should be Timestamp")
+
+            h = Hash()
+            # assure we are allowed to set states and alarms to
+            # appropriate elements
+            if isinstance(value, State):
+                h.set(key, value.name)
+                h.setAttribute(key, "indicateState", True)
+            elif isinstance(value, AlarmCondition):
+                h.set(key, value.asString())
+                h.setAttribute(key, "indicateAlarm", True)
+            else:
+                h.set(key, value)
+            pars = tuple([h, stamp])
+
+        # hash args
+        if len(pars) == 1:
+            h = pars[0]
+            if not isinstance(h, Hash):
+                raise TypeError("The only argument should be a Hash")
+            pars = tuple([h, self.getActualTimestamp()])  # add timestamp
+
+        # key, value or hash, timestamp args
+        if len(pars) == 2:
+            if not isinstance(pars[0], Hash):
+                key, value = pars
 
                 h = Hash()
-                # assure we are allowed to set states and alarms to
-                # appropriate elements
                 if isinstance(value, State):
                     h.set(key, value.name)
                     h.setAttribute(key, "indicateState", True)
@@ -585,87 +617,64 @@ class PythonDevice(NoFsm):
                     h.setAttribute(key, "indicateAlarm", True)
                 else:
                     h.set(key, value)
-                pars = tuple([h, stamp])
+                pars = tuple([h, self.getActualTimestamp()])
 
-            # hash args
-            if len(pars) == 1:
-                h = pars[0]
-                if not isinstance(h, Hash):
-                    raise TypeError("The only argument should be a Hash")
-                pars = tuple([h, self.getActualTimestamp()])  # add timestamp
+            hash, stamp = pars
 
-            # key, value or hash, timestamp args
-            if len(pars) == 2:
-                if not isinstance(pars[0], Hash):
-                    key, value = pars
+            validated = None
 
-                    h = Hash()
-                    if isinstance(value, State):
-                        h.set(key, value.name)
-                        h.setAttribute(key, "indicateState", True)
-                    elif isinstance(value, AlarmCondition):
-                        h.set(key, value.asString())
-                        h.setAttribute(key, "indicateAlarm", True)
-                    else:
-                        h.set(key, value)
-                    pars = tuple([h, self.getActualTimestamp()])
+            prevAlarmParams = self.validatorIntern \
+                .getParametersInWarnOrAlarm()
 
-                hash, stamp = pars
+            if validate:
+                result, error, validated = self.validatorIntern.validate(
+                    self._fullSchema, hash, stamp)
+                if not result:
+                    raise RuntimeError("Bad parameter setting attempted, "
+                                       "ignore keys {}. Validation "
+                                       "reports: {}".format(hash.keys(),
+                                                            error))
 
-                validated = None
+                resultingCondition = self._evaluateAndUpdateAlarmCondition(
+                    forceUpdate=not prevAlarmParams.empty(),
+                    prevParamsInAlarm=prevAlarmParams, silent=False)
+                # set the overal alarm condition if needed
+                if (resultingCondition is not None
+                        and resultingCondition.asString()
+                        != self._parameters.get("alarmCondition")):
+                    validated.set("alarmCondition",
+                                  resultingCondition.asString())
+                    node = validated.getNode("alarmCondition")
+                    attributes = node.getAttributes()
+                    stamp.toHashAttributes(attributes)
+                changedAlarms = self._evaluateAlarmUpdates(prevAlarmParams)
 
-                prevAlarmParams = self.validatorIntern \
-                    .getParametersInWarnOrAlarm()
+                if not changedAlarms.get("toClear").empty() or not \
+                        changedAlarms.get("toAdd").empty():
+                    self._ss.emit("signalAlarmUpdate",
+                                  self.getInstanceId(),
+                                  changedAlarms)
 
-                if validate:
-                    result, error, validated = self.validatorIntern.validate(
-                        self._fullSchema, hash, stamp)
-                    if not result:
-                        raise RuntimeError("Bad parameter setting attempted, "
-                                           "ignore keys {}. Validation "
-                                           "reports: {}".format(hash.keys(),
-                                                                error))
+            else:
+                validated = hash
+                # Add timestamps
+                for path in validated.getPaths():
+                    node = validated.getNode(path)
+                    attributes = node.getAttributes()
+                    stamp.toHashAttributes(attributes)
 
-                    resultingCondition = self._evaluateAndUpdateAlarmCondition(
-                        forceUpdate=not prevAlarmParams.empty(),
-                        prevParamsInAlarm=prevAlarmParams, silent=False)
-                    # set the overal alarm condition if needed
-                    if (resultingCondition is not None
-                            and resultingCondition.asString()
-                            != self._parameters.get("alarmCondition")):
-                        validated.set("alarmCondition",
-                                      resultingCondition.asString())
-                        node = validated.getNode("alarmCondition")
-                        attributes = node.getAttributes()
-                        stamp.toHashAttributes(attributes)
-                    changedAlarms = self._evaluateAlarmUpdates(prevAlarmParams)
+            if not validated.empty():
+                self._parameters.merge(
+                    validated, HashMergePolicy.REPLACE_ATTRIBUTES)
 
-                    if not changedAlarms.get("toClear").empty() or not \
-                            changedAlarms.get("toAdd").empty():
-                        self._ss.emit("signalAlarmUpdate",
-                                      self.getInstanceId(),
-                                      changedAlarms)
+                # Hash containing 'state' or at least one reconfigurable
+                # key should be signalled by 'signalStateChanged'
+                signal = "signalChanged"
+                shrt = self.validatorIntern.hasReconfigurableParameter()
+                if 'state' in validated or (validate and shrt):
+                    signal = "signalStateChanged"
 
-                else:
-                    validated = hash
-                    # Add timestamps
-                    for path in validated.getPaths():
-                        node = validated.getNode(path)
-                        attributes = node.getAttributes()
-                        stamp.toHashAttributes(attributes)
-
-                if not validated.empty():
-                    self._parameters.merge(
-                        validated, HashMergePolicy.REPLACE_ATTRIBUTES)
-
-                    # Hash containing 'state' or at least one reconfigurable
-                    # key should be signalled by 'signalStateChanged'
-                    signal = "signalChanged"
-                    shrt = self.validatorIntern.hasReconfigurableParameter()
-                    if 'state' in validated or (validate and shrt):
-                        signal = "signalStateChanged"
-
-                    self._ss.emit(signal, validated, self.deviceid)
+                self._ss.emit(signal, validated, self.deviceid)
 
     def _evaluateAndUpdateAlarmCondition(self, forceUpdate, prevParamsInAlarm,
                                          silent):
@@ -686,7 +695,7 @@ class PythonDevice(NoFsm):
 
         if self.validatorIntern.hasParametersInWarnOrAlarm():
             warnings = self.validatorIntern.getParametersInWarnOrAlarm()
-            conditions = [self.globalAlarmCondition]
+            conditions = [self.globalAlarmCondition[0]]
 
             for node in warnings:
                 desc = warnings[node]
@@ -702,7 +711,7 @@ class PythonDevice(NoFsm):
             topCondition = AlarmCondition.returnMostSignificant(conditions)
             return topCondition
         elif forceUpdate:
-            return self.globalAlarmCondition
+            return self.globalAlarmCondition[0]
         else:
             return None
 
@@ -790,10 +799,15 @@ class PythonDevice(NoFsm):
         :param existingAlarms: A hash containing existing alarms pertinent to
                this device. May be empty
         """
+        globalAlarmsToCheck = existingAlarms.get("global",
+                                                 default=Hash()).keys()
+
         # reformat input to match the needs of _evaluateAlarmUpdates
         existingAlarmsRF = Hash()
         for propNode in existingAlarms:
             property = propNode.getKey()
+            if property == "global":
+                continue  # treated via globalAlarmsToCheck
             entry = Hash()
             for typeNode in propNode.getValue():  # getValue gives Hash
                 # If 'existingAlarms' have more than one alarm type per
@@ -808,6 +822,25 @@ class PythonDevice(NoFsm):
         with self._stateChangeLock:
             alarmsToUpdate = self._evaluateAlarmUpdates(existingAlarmsRF,
                                                         forceUpdate=True)
+            # Add current global alarm condition
+            globalAlarmCondition = self.globalAlarmCondition[0]
+            if globalAlarmCondition != AlarmCondition.NONE:
+                tmpKey = "toAdd.global." + globalAlarmCondition.value
+                alarmsToUpdate.set(tmpKey, Hash())
+                globalNode = alarmsToUpdate.getNode(tmpKey)
+                globalEntry = globalNode.getValue()
+                globalEntry.set("type", globalAlarmCondition.value)
+                globalEntry.set("description", self.globalAlarmCondition[1])
+                globalEntry.set("needsAcknowledging",
+                                self.globalAlarmCondition[2])
+                stamp = self.globalAlarmCondition[3]
+                stamp.toHashAttributes(globalNode.getAttributes())
+
+            # Check which global alarms to clear - not the current one...
+            globalAlarmsToCheck = [a for a in globalAlarmsToCheck
+                                   if a != globalAlarmCondition.value]
+            if globalAlarmsToCheck:
+                alarmsToUpdate.set("toClear.global", globalAlarmsToCheck)
 
         self._ss.reply(self.getInstanceId(), alarmsToUpdate)
 
@@ -1668,39 +1701,42 @@ class PythonDevice(NoFsm):
                             " not '{}'".format(str(type(condition))))
         resultingCondition = None
         currentCondition = None
-        previousGlobal = self.globalAlarmCondition
-        self.accumulatedGlobalAlarms.add(previousGlobal.asString())
 
+        timestamp = self.getActualTimestamp()
         with self._stateChangeLock:
-            self.globalAlarmCondition = condition
+            previousGlobal = self.globalAlarmCondition[0]
+            self.accumulatedGlobalAlarms.add(previousGlobal.asString())
+
+            self.globalAlarmCondition = (condition, description,
+                                         needsAcknowledging, timestamp)
             resultingCondition = \
                 self._evaluateAndUpdateAlarmCondition(
                     forceUpdate=True, prevParamsInAlarm=Hash(), silent=True)
             currentCondition = self._parameters.get("alarmCondition")
 
-        if (resultingCondition is not None
-                and resultingCondition.asString() != currentCondition):
-            self.set("alarmCondition", resultingCondition,
-                     validate=False)
+            if (resultingCondition is not None
+                    and resultingCondition.asString() != currentCondition):
+                self._setNoStateLock("alarmCondition", resultingCondition,
+                                     timestamp, validate=False)
 
-        emitHash = Hash("toClear", Hash(), "toAdd", Hash())
-        conditionString = condition.asString()
+            emitHash = Hash("toClear", Hash(), "toAdd", Hash())
+            conditionString = condition.asString()
 
-        if (condition == AlarmCondition.NONE
-                and previousGlobal != AlarmCondition.NONE):
-            alarmsToClear = list(self.accumulatedGlobalAlarms)
-            self.accumulatedGlobalAlarms.clear()
-            emitHash.set("toClear.global", alarmsToClear)
-        else:
-            entry = Hash("type", condition.asString(),
-                         "description", description,
-                         "needsAcknowledging", needsAcknowledging)
+            if (condition == AlarmCondition.NONE
+                    and previousGlobal != AlarmCondition.NONE):
+                alarmsToClear = list(self.accumulatedGlobalAlarms)
+                self.accumulatedGlobalAlarms.clear()
+                emitHash.set("toClear.global", alarmsToClear)
+            else:
+                entry = Hash("type", condition.asString(),
+                             "description", description,
+                             "needsAcknowledging", needsAcknowledging)
 
-            prop = Hash(conditionString, entry)
-            entryNode = prop.getNode(conditionString)
-            # attach current timestamp
-            Timestamp().toHashAttributes(entryNode.getAttributes())
-            emitHash.set("toAdd.global", prop)
+                prop = Hash(conditionString, entry)
+                entryNode = prop.getNode(conditionString)
+                # attach current timestamp
+                timestamp.toHashAttributes(entryNode.getAttributes())
+                emitHash.set("toAdd.global", prop)
 
         if (not emitHash.get("toClear").empty() or
                 not emitHash.get("toAdd").empty()):

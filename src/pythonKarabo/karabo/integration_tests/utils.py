@@ -86,7 +86,9 @@ class BoundDeviceTestCase(TestCase):
             serverProcess = start_cpp_server(server_id, server_args,
                                              plugin_dir=plugin_dir)
         elif api == "mdl":
-            # How to specify logLevel?
+            # How to specify logLevel? Next line gives
+            # AttributeError: 'Node' object has no attribute 'level'
+            # server_args.append('log.level={}'.format(logLevel))
             serverProcess = start_mdl_server(server_id, server_args,
                                              plugin_dir=plugin_dir)
         else:
