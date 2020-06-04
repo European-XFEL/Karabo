@@ -646,9 +646,9 @@ class PythonDevice(NoFsm):
                                   resultingCondition.asString())
                     node = validated.getNode("alarmCondition")
                     attributes = node.getAttributes()
+                    attributes.set("indicateAlarm", True)
                     stamp.toHashAttributes(attributes)
                 changedAlarms = self._evaluateAlarmUpdates(prevAlarmParams)
-
                 if not changedAlarms.get("toClear").empty() or not \
                         changedAlarms.get("toAdd").empty():
                     self._ss.emit("signalAlarmUpdate",
@@ -746,7 +746,12 @@ class PythonDevice(NoFsm):
                         p.getAttributes())
                     timeStampCurrent = Timestamp.fromHashAttributes(
                         currentEntry.getAttributes())
-                    if timeStampPrevious == timeStampCurrent:
+                    # TODO: Once equality comparison for Timestamp works, use
+                    #       'timeStampPrevious == timeStampCurrent' here:
+                    if (timeStampPrevious.getFractionalSeconds()
+                            == timeStampCurrent.getFractionalSeconds()
+                        and timeStampPrevious.getSeconds()
+                            == timeStampCurrent.getSeconds()):
                         types = knownAlarms.setdefault(pKey, set())
                         types.add(exType)
 
@@ -755,9 +760,9 @@ class PythonDevice(NoFsm):
 
             # alarm is gone: we should clean
             existingEntries = []
-            existingEntyNode = toClear.find(pKey)
-            if existingEntyNode is not None:
-                existingEntries = existingEntyNode.getValue()
+            existingEntryNode = toClear.find(pKey)
+            if existingEntryNode is not None:
+                existingEntries = existingEntryNode.getValue()
 
             existingEntries.append(exType)
             toClear.set(pKey, existingEntries)
@@ -768,7 +773,8 @@ class PythonDevice(NoFsm):
             desc = c.getValue()
             conditionString = desc.get("type")
             # avoid unnecessary chatter of already sent messages
-            if forceUpdate or conditionString in knownAlarms.get(cKey, set()):
+            if (forceUpdate
+                    or conditionString not in knownAlarms.get(cKey, set())):
 
                 condition = AlarmCondition(conditionString)
                 pSep = cKey.replace(Validator.kAlarmParamPathSeparator, ".")
@@ -1705,7 +1711,8 @@ class PythonDevice(NoFsm):
         timestamp = self.getActualTimestamp()
         with self._stateChangeLock:
             previousGlobal = self.globalAlarmCondition[0]
-            self.accumulatedGlobalAlarms.add(previousGlobal.asString())
+            if previousGlobal != AlarmCondition.NONE:
+                self.accumulatedGlobalAlarms.add(previousGlobal.asString())
 
             self.globalAlarmCondition = (condition, description,
                                          needsAcknowledging, timestamp)
