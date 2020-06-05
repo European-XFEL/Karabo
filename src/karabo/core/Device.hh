@@ -1296,7 +1296,9 @@ namespace karabo {
                 m_globalAlarmCondition.description = description;
                 m_globalAlarmCondition.needsAcknowledging = needsAcknowledging;
                 m_globalAlarmCondition.timestamp = timestamp;
-                m_accumulatedGlobalAlarms.insert(previousGlobal);
+                if (previousGlobal != "none") {
+                    m_accumulatedGlobalAlarms.insert(previousGlobal);
+                }
 
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true, Hash(), true);
                 if (result.first && result.second.asString() != m_parameters.get<std::string>("alarmCondition")) {

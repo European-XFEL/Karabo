@@ -72,12 +72,12 @@ class AlarmMixin(Configurable):
                      for v, _, _ in self._alarmConditions.values()),
                     default=AlarmCondition.NONE)
                 if alarmCondition != self.alarmCondition:
-                    lev, ts = alarmCondition.criticalityLevel(), value.timestamp
-                    self.alarmCondition = EnumValue(lev, timestamp=ts)
+                    lv, ts = alarmCondition.criticalityLevel(), value.timestamp
+                    self.alarmCondition = EnumValue(lv, timestamp=ts)
             # book-keeping for self.__gather_alarms()
             self._changed_alarms.add(key_sep)
             self._old_alarms[key_sep] = old_alarm
-            if key_sep == 'global':
+            if key_sep == 'global' and new_alarm != AlarmCondition.NONE:
                 self.accumulatedGlobalAlarms.add(new_alarm.value)
         # Outside, of course use unmangled key
         super(AlarmMixin, self).setChildValue(key, value, desc)
