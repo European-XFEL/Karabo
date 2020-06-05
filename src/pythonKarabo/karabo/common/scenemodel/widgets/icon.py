@@ -54,7 +54,7 @@ class TextIconsModel(BaseIconsModel):
 
 
 @register_scene_reader('DisplayIconset', version=2)
-def _display_iconset_reader(read_func, element):
+def _display_iconset_reader(element):
     traits = read_base_widget_data(element)
     traits['data'] = base64.b64decode(element.get('data', b''))
     return DisplayIconsetModel(**traits)
@@ -108,7 +108,7 @@ def _build_icon_widget_readers_and_writers():
     """ Build readers and writers for the BaseIconsModel classes
     """
     def _build_reader_func(klass, tag):
-        def reader(read_func, element):
+        def reader(element):
             traits = read_base_widget_data(element)
             traits['values'] = _read_icon_elements(element, NS_KARABO + tag)
             return klass(**traits)
@@ -142,7 +142,7 @@ _build_icon_widget_readers_and_writers()
 # should only be modified in the most exceptional of situations!
 
 @register_scene_reader('DisplayIconset', version=1)
-def _display_iconset_version_1_reader(read_func, element):
+def _display_iconset_version_1_reader(element):
     """ DisplayIconset reader for legacy scene files
     """
     traits = read_base_widget_data(element)
@@ -160,7 +160,7 @@ def _build_version_1_icon_widget_readers():
     """ Build BaseIconsModel readers for legacy scene files.
     """
     def _build_reader_func(klass, tag):
-        def reader(read_func, element):
+        def reader(element):
             traits = read_base_widget_data(element)
             icons = _read_icon_elements_version_1(element, NS_KARABO + tag)
             traits['values'] = icons
