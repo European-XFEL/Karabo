@@ -13,7 +13,8 @@ from karabogui.binding.api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
     Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
     VectorBoolBinding, VectorInt32Binding, VectorFloatBinding,
-    attr_fast_deepcopy, get_min_max, get_min_max_size, has_changes, is_equal)
+    attr_fast_deepcopy, get_min_max, get_min_max_size, has_changes,
+    has_min_max_attributes, is_equal)
 
 
 def test_simple_int_min_max():
@@ -120,3 +121,35 @@ def test_vector_min_max():
 
     binding = VectorFloatBinding(attributes={KARABO_SCHEMA_MAX_SIZE: 17})
     assert get_min_max_size(binding) == (None, 17)
+
+
+def test_has_min_max():
+    binding = FloatBinding(attributes={KARABO_SCHEMA_MIN_INC: 1,
+                                       KARABO_SCHEMA_MAX_EXC: 3})
+    assert has_min_max_attributes(binding) is True
+
+    binding = FloatBinding(attributes={KARABO_SCHEMA_MIN_EXC: 1,
+                                       KARABO_SCHEMA_MAX_EXC: 3})
+    assert has_min_max_attributes(binding) is True
+
+    binding = FloatBinding(attributes={KARABO_SCHEMA_MIN_INC: 1,
+                                       KARABO_SCHEMA_MAX_INC: 3})
+    assert has_min_max_attributes(binding) is True
+
+    binding = FloatBinding(attributes={KARABO_SCHEMA_MIN_EXC: 1,
+                                       KARABO_SCHEMA_MAX_INC: 3})
+    assert has_min_max_attributes(binding) is True
+
+    binding = FloatBinding(attributes={KARABO_SCHEMA_MAX_INC: 3})
+    assert has_min_max_attributes(binding) is False
+
+    binding = FloatBinding(attributes={KARABO_SCHEMA_MIN_EXC: 1})
+    assert has_min_max_attributes(binding) is False
+
+    binding = FloatBinding(attributes={KARABO_SCHEMA_MIN_EXC: 1,
+                                       KARABO_SCHEMA_MIN_INC: 5})
+    assert has_min_max_attributes(binding) is False
+
+    binding = FloatBinding(attributes={KARABO_SCHEMA_MAX_EXC: 1,
+                                       KARABO_SCHEMA_MAX_INC: 5})
+    assert has_min_max_attributes(binding) is False
