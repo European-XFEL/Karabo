@@ -115,7 +115,7 @@ class TableElementModel(BaseDisplayEditableWidget):
 
 
 @register_scene_reader('DisplayCommand', version=2)
-def __display_command_reader(read_func, element):
+def __display_command_reader(element):
     confirmation = element.get(NS_KARABO + 'requires_confirmation', '')
     confirmation = confirmation.lower() == 'true'
     traits = read_base_widget_data(element)
@@ -133,7 +133,7 @@ def __display_command_writer(write_func, model, parent):
 
 
 @register_scene_reader('DisplayIconCommand')
-def __display_icon_command_reader(read_func, element):
+def __display_icon_command_reader(element):
     traits = read_base_widget_data(element)
     traits['icon_name'] = element.get(NS_KARABO + 'icon_name', '')
 
@@ -149,7 +149,7 @@ def __display_icon_command_writer(write_func, model, parent):
 
 
 @register_scene_reader('DeviceSceneLink', version=2)
-def _device_scene_link_reader(read_func, element):
+def _device_scene_link_reader(element):
     traits = read_base_widget_data(element)
     # If unspecified, the default is 'scene'
     traits['target'] = element.get(NS_KARABO + 'target', '')
@@ -184,7 +184,7 @@ def _device_scene_link_writer(write_func, model, parent):
 
 
 @register_scene_reader('DisplayColorBool', version=2)
-def _color_bool_reader(read_func, element):
+def _color_bool_reader(element):
     traits = read_base_widget_data(element)
     value = element.get(NS_KARABO + 'invert')
     traits['invert'] = (value.lower() == 'true')
@@ -200,7 +200,7 @@ def _color_bool_writer(write_func, model, parent):
 
 
 @register_scene_reader('DisplayErrorBool')
-def _error_bool_reader(read_func, element):
+def _error_bool_reader(element):
     traits = read_base_widget_data(element)
     value = element.get(NS_KARABO + 'invert')
     traits['invert'] = (value.lower() == 'true')
@@ -216,7 +216,7 @@ def _error_bool_writer(write_func, model, parent):
 
 
 @register_scene_reader('DoubleLineEdit', version=1)
-def _double_line_edit_reader(read_func, element):
+def _double_line_edit_reader(element):
     traits = read_base_widget_data(element)
     decimals = element.get(NS_KARABO + 'decimals', '')
     if decimals:
@@ -233,7 +233,7 @@ def _double_line_edit_writer(write_func, model, parent):
 
 
 @register_scene_reader('DisplayProgressBar', version=2)
-def _display_progress_bar_reader(read_func, element):
+def _display_progress_bar_reader(element):
     traits = read_base_widget_data(element)
     value = element.get(NS_KARABO + 'is_vertical', '')
     traits['is_vertical'] = (value.lower() == 'true')
@@ -249,7 +249,7 @@ def _display_progress_bar_writer(write_func, model, parent):
 
 
 @register_scene_reader('DisplayStateColor', version=1)
-def _display_state_color_reader(read_func, element):
+def _display_state_color_reader(element):
     traits = read_base_widget_data(element)
     value = element.get(NS_KARABO + 'show_string', '')
     traits['show_string'] = (value.lower() == 'true')
@@ -265,7 +265,7 @@ def _display_state_color_writer(write_func, model, parent):
 
 
 @register_scene_reader('Evaluator', version=1)
-def _evaluator_reader(read_func, element):
+def _evaluator_reader(element):
     traits = read_base_widget_data(element)
     traits['expression'] = element.get('expression')
     return EvaluatorModel(**traits)
@@ -280,7 +280,7 @@ def _evaluator_writer(write_func, model, parent):
 
 
 @register_scene_reader('FloatSpinBox', version=1)
-def _float_spin_box_reader(read_func, element):
+def _float_spin_box_reader(element):
     traits = read_base_widget_data(element)
     traits['step'] = float(element.get(NS_KARABO + 'step', 1.0))
     decimals = element.get(NS_KARABO + 'decimals', '')
@@ -299,7 +299,7 @@ def _float_spin_box_writer(write_func, model, parent):
 
 
 @register_scene_reader('Monitor', version=1)
-def _monitor_reader(read_func, element):
+def _monitor_reader(element):
     traits = read_base_widget_data(element)
     traits['filename'] = element.get('filename', '')
     traits['interval'] = float(element.get('interval'))
@@ -317,7 +317,7 @@ def _monitor_writer(write_func, model, parent):
 
 
 @register_scene_reader('SingleBit', version=1)
-def _single_bit_reader(read_func, element):
+def _single_bit_reader(element):
     traits = read_base_widget_data(element)
     invert = element.get(NS_KARABO + 'invert', '')
     traits['invert'] = (invert.lower() == 'true')
@@ -336,7 +336,7 @@ def _single_bit_writer(write_func, model, parent):
 
 @register_scene_reader('DisplayTableElement', version=1)
 @register_scene_reader('EditableTableElement', version=1)
-def _table_element_reader(read_func, element):
+def _table_element_reader(element):
     traits = read_empty_display_editable_widget(element)
     return TableElementModel(**traits)
 
