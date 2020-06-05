@@ -106,7 +106,7 @@ class ScientificImageModel(DeprecatedBaseWebCamModel):
 
 @register_scene_reader('DisplayImage')  # deprecated Qwt model
 @register_scene_reader('ImageGraph')
-def _image_graph_reader(read_func, element):
+def _image_graph_reader(element):
     traits = read_base_karabo_image_model(element)
 
     return ImageGraphModel(**traits)
@@ -124,7 +124,7 @@ def _image_graph_writer(write_func, model, parent):
 
 @register_scene_reader('DisplayAlignedImage')  # deprecated Qwt model
 @register_scene_reader('DetectorGraph')
-def _detector_graph_reader(read_func, element):
+def _detector_graph_reader(element):
     traits = read_base_karabo_image_model(element)
 
     return DetectorGraphModel(**traits)
@@ -141,7 +141,7 @@ def _detector_graph_writer(write_func, model, parent):
 
 
 @register_scene_reader('VectorRollGraph')
-def _vector_roll_graph_reader(read_func, element):
+def _vector_roll_graph_reader(element):
     traits = read_base_widget_data(element)
     traits['aux_plots'] = int(element.get(NS_KARABO + 'aux_plots', '0'))
     traits['colormap'] = element.get(NS_KARABO + 'colormap', "viridis")
@@ -172,7 +172,7 @@ def _vector_roll_graph_writer(write_func, model, parent):
 @register_scene_reader('WebcamImage')  # deprecated Qwt model
 @register_scene_reader('ScientificImage')  # deprecated Qwt model
 @register_scene_reader('WebCamGraph')
-def _webcam_graph_reader(read_func, element):
+def _webcam_graph_reader(element):
     traits = read_base_widget_data(element)
     traits['colormap'] = element.get(NS_KARABO + 'colormap', "viridis")
 
