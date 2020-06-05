@@ -1,5 +1,7 @@
+from unittest import mock
+
 from PyQt5.QtWidgets import QLabel
-from traits.api import Dict, Instance, Int, Str
+from traits.api import Dict, Instance, Int, Str, Undefined
 
 from karabo.common.api import ProxyStatus, State, KARABO_SCHEMA_DISPLAYED_NAME
 from karabo.common.scenemodel.api import BaseWidgetObjectData
@@ -7,7 +9,7 @@ from karabo.native import (
     Bool, Configurable, Hash, Node, String, AccessMode)
 from karabogui.binding.api import (
     DeviceClassProxy, NodeBinding, PropertyProxy, StringBinding,
-    apply_configuration, build_binding)
+    apply_configuration, build_binding, get_binding_value)
 from karabogui.testing import GuiTestCase, flushed_registry, set_proxy_value
 from ..base import BaseBindingController
 from ..registry import register_binding_controller
@@ -73,8 +75,26 @@ def _define_binding_classes():
                 name = ''
             self.display_names[proxy] = name
 
-    @register_binding_controller(klassname='Multi', binding_type=StringBinding)
+    @register_binding_controller(klassname='Multi', binding_type=StringBinding,
+                                 can_show_nothing=True)
     class MultiBindingController(BaseBindingController):
+        model = Instance(UniqueWidgetModel, args=())
+
+        def add_proxy(self, proxy):
+            return True
+
+        def create_widget(self, parent):
+            return QLabel(parent)
+
+        def value_update(self, proxy):
+            value = get_binding_value(proxy)
+            if value is not None:
+                self.widget.setText(value)
+
+    @register_binding_controller(klassname="Don't show nothing",
+                                 binding_type=StringBinding,
+                                 can_show_nothing=False)
+    class DontShowNothingBindingController(BaseBindingController):
         model = Instance(UniqueWidgetModel, args=())
 
         def add_proxy(self, proxy):
@@ -113,7 +133,9 @@ def _define_binding_classes():
             self.deferred += 1
 
         def value_update(self, proxy):
-            self.widget.setText(self.disp_name + proxy.value)
+            value = get_binding_value(proxy)
+            if value is not None:
+                self.widget.setText(self.disp_name + proxy.value)
 
     @register_binding_controller(klassname='State', binding_type=StringBinding,
                                  is_compatible=with_display_type('State'))
@@ -129,6 +151,7 @@ def _define_binding_classes():
     return {
         'DeviceController': DeviceController,
         'MultiBindingController': MultiBindingController,
+        'DontShowNothingBindingController': DontShowNothingBindingController,
         'NodeBindingController': NodeBindingController,
         'SingleBindingController': SingleBindingController,
         'StateTrackingController': StateTrackingController,
@@ -149,6 +172,8 @@ class TestBaseBindingController(GuiTestCase):
         self.NodeBindingController = klasses['NodeBindingController']
         self.SingleBindingController = klasses['SingleBindingController']
         self.StateTrackingController = klasses['StateTrackingController']
+        self.DontShowNothingBindingController = \
+            klasses['DontShowNothingBindingController']
 
         schema = SampleObject.getClassSchema()
         binding = build_binding(schema)
@@ -161,9 +186,21 @@ class TestBaseBindingController(GuiTestCase):
         # Create the controllers and initialize their widgets
         self.single = self.SingleBindingController(proxy=self.first)
         self.single.create(None)
+        self.single.finish_initialization()
+
+        # The order of initializing a controller with multiple properties are
+        # as follows:
+        # 1. instantiate controller class
+        # 2. controller.create(parent) with parent of QWidget type or None
+        # 3. controller.visualize_additional_property(proxy) for addtl proxies
+        # 4. controller.finish_initialization()
         self.multi = self.MultiBindingController(proxy=self.first)
-        assert self.multi.visualize_additional_property(self.second)
         self.multi.create(None)
+        assert self.multi.visualize_additional_property(self.second)
+        self.multi.finish_initialization()
+
+        # Create a mock  slot
+        self.received_values = []
 
     def tearDown(self):
         self.single.destroy()
@@ -210,6 +247,116 @@ class TestBaseBindingController(GuiTestCase):
         config = Hash('node', Hash('first', 'foo', 'second', 'bar'))
         apply_configuration(config, binding)
         assert controller.widget.text() == 'bar'
+
+    def test_mocked_single_value_update(self):
+        with mock.patch.object(self.SingleBindingController, "value_update",
+                               side_effect=self._mocked_value_update) \
+                as mocked_method:
+            self._assert_value_update(proxy=self.first,
+                                      value="Foo",
+                                      value_update=mocked_method)
+
+    def test_mocked_multi_value_update(self):
+        with mock.patch.object(self.MultiBindingController, "value_update",
+                               side_effect=self._mocked_value_update) \
+                as mocked_method:
+            self._assert_value_update(proxy=self.first,
+                                      value="Bar",
+                                      value_update=mocked_method)
+
+            self._assert_value_update(proxy=self.second,
+                                      value="Qux",
+                                      value_update=mocked_method)
+
+    def test_mocked_node_value_update(self):
+        # Create a mocked value_update
+        first_value, second_value = None, None
+
+        def mocked_value_update(proxy):
+            nonlocal first_value, second_value
+            first_value = proxy.value.first.value
+            second_value = proxy.value.second.value
+
+        # Instantiate the node proxy and controller
+        binding = build_binding(NodedObject.getClassSchema())
+        device = DeviceClassProxy(binding=binding, server_id='Test',
+                                  status=ProxyStatus.OFFLINE)
+        proxy = PropertyProxy(root_proxy=device, path='node')
+        controller = self.NodeBindingController(proxy=proxy)
+        controller.create(None)
+
+        # Trigger the value update
+        with mock.patch.object(self.NodeBindingController, "value_update",
+                               side_effect=mocked_value_update) \
+                as value_update:
+            config = Hash('node', Hash('first', 'foo', 'second', 'bar'))
+            apply_configuration(config, binding)
+            value_update.assert_called_once_with(proxy)
+            self.assertEqual(first_value, 'foo')
+            self.assertEqual(second_value, 'bar')
+
+    def _mocked_value_update(self, proxy):
+        self.received_values.append(proxy.value)
+
+    def _assert_value_update(self, proxy, value, value_update):
+        # Prepare the test properties
+        value_update.reset_mock()
+        self.received_values.clear()
+
+        # Trigger value_update
+        set_proxy_value(proxy, proxy.path, value)
+        value_update.assert_called_once_with(proxy)
+        self.assertEqual(self.received_values, [value])
+
+    def test_init(self):
+        # Check controller that can_show_nothing and without values
+        self._assert_init_value_update(self.MultiBindingController,
+                                       values=[Undefined, Undefined])
+
+        # Check controller with can_show_nothing is False and without values
+        self._assert_init_value_update(self.DontShowNothingBindingController,
+                                       called=False)
+
+        # Check controller with can_show_nothing is False and with proxies
+        # having previous values
+        first_value, second_value = 'Foo', 'Bar'
+        set_proxy_value(self.first, self.first.path, first_value)
+        set_proxy_value(self.second, self.second.path, second_value)
+        self._assert_init_value_update(self.DontShowNothingBindingController,
+                                       values=[second_value, first_value])
+
+    def _assert_init_value_update(self, klass, called=True, values=None):
+        """The initialization of the controller in the scene are done
+        as follows:
+
+        1. controller_klass(proxy, model) with the first proxy and model
+        2. controller.create(parent) with parent as the container widget
+        3. controller.visualize_additional_property(proxy) for every
+           additional proxies
+        4. controller.finish_initialization()
+        """
+        # Prepare the test properties
+        self.received_values = []
+
+        # Initialize the controller
+        with mock.patch.object(klass, "value_update",
+                               side_effect=self._mocked_value_update) \
+                as value_update:
+            controller = klass(proxy=self.first)
+            controller.create(None)
+            controller.visualize_additional_property(proxy=self.second)
+            controller.finish_initialization()
+
+        if called is False:
+            value_update.assert_not_called()
+        else:
+            # We expect that the value_update is triggered by
+            # additional proxies first, then the main proxy
+            proxies = [self.second, self.first]
+            calls = [mock.call(proxy) for proxy in proxies]
+            value_update.assert_has_calls(calls)
+            values = [proxy.value for proxy in proxies]
+            self.assertEqual(self.received_values, values)
 
     def test_deferred_update(self):
         deferred_before = self.single.deferred
