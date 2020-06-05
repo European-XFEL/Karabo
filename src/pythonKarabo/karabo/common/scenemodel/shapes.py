@@ -112,7 +112,7 @@ def _write_base_shape_data(model, element):
 
 
 @register_scene_reader('Line', xmltag=NS_SVG + 'line', version=1)
-def __line_reader(read_func, element):
+def __line_reader(element):
     """ A reader for Line objects in Version 1 scenes
     """
     traits = _read_base_shape_data(element)
@@ -131,7 +131,7 @@ def __line_writer(write_func, model, parent):
 
 
 @register_scene_reader('Path', xmltag=NS_SVG + 'path', version=1)
-def __path_reader(read_func, element):
+def __path_reader(element):
     """ A reader for Path objects in Version 1 scenes
     """
     traits = _read_base_shape_data(element)
@@ -150,7 +150,7 @@ def __path_writer(write_func, model, parent):
 
 
 @register_scene_reader('Rectangle', xmltag=NS_SVG + 'rect', version=1)
-def __rectangle_reader(read_func, element):
+def __rectangle_reader(element):
     """ A reader for Rectangle objects in Version 1 scenes
     """
     traits = _read_base_shape_data(element)
