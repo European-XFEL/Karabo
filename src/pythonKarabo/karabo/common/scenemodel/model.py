@@ -11,7 +11,8 @@ from .const import (
     UNKNOWN_WIDGET_CLASS, WIDGET_ELEMENT_TAG)
 from .io_utils import (read_unknown_display_editable_widget, set_numbers,
                        write_base_widget_data)
-from .registry import register_scene_reader, register_scene_writer
+from .registry import (
+    read_element, register_scene_reader, register_scene_writer)
 
 
 class SceneModel(BaseProjectObjectModel):
@@ -76,7 +77,7 @@ def _read_extra_attributes(element):
 
 @register_scene_reader('Scene', xmltag='svg', version=1)
 @register_scene_reader('Scene', xmltag=NS_SVG + 'svg', version=1)
-def __scene_reader(read_func, element):
+def __scene_reader(element):
     traits = {
         'file_format_version': int(element.get(NS_KARABO + 'version', 1)),
         'uuid': element.get(NS_KARABO + 'uuid'),
@@ -90,7 +91,7 @@ def __scene_reader(read_func, element):
 
     scene = SceneModel(**traits)
     for child in element:
-        scene.children.append(read_func(child))
+        scene.children.append(read_element(child))
 
     def visitor(model):
         if isinstance(model, BaseSavableModel):
@@ -116,12 +117,12 @@ def __scene_writer(write_func, scene, root):
 
 
 @register_scene_reader('Unknown', xmltag='*')
-def __unknown_xml_data_reader(read_func, element):
+def __unknown_xml_data_reader(element):
     return UnknownXMLDataModel(
         tag=element.tag,
         attributes=element.attrib,
         data=element.text or '',
-        children=[read_func(el) for el in element]
+        children=[read_element(el) for el in element]
     )
 
 
@@ -139,7 +140,7 @@ def __unknown_xml_data_writer(write_func, model, parent):
 
 
 @register_scene_reader(UNKNOWN_WIDGET_CLASS)
-def __unknown_widget_data_reader(read_func, element):
+def __unknown_widget_data_reader(element):
     traits = read_unknown_display_editable_widget(element)
     attributes = {k: element.get(k) for k in element.attrib if k not in traits}
     return UnknownWidgetDataModel(
