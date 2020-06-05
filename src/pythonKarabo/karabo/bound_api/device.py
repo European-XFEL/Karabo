@@ -737,7 +737,10 @@ class PythonDevice(NoFsm):
                         p.getAttributes())
                     timeStampCurrent = Timestamp.fromHashAttributes(
                         currentEntry.getAttributes())
-                    if timeStampPrevious == timeStampCurrent:
+                    if (timeStampPrevious.getFractionalSeconds()
+                            == timeStampCurrent.getFractionalSeconds()
+                        and timeStampPrevious.getSeconds()
+                            == timeStampCurrent.getSeconds()):
                         types = knownAlarms.setdefault(pKey, set())
                         types.add(exType)
 
@@ -759,8 +762,8 @@ class PythonDevice(NoFsm):
             desc = c.getValue()
             conditionString = desc.get("type")
             # avoid unnecessary chatter of already sent messages
-            if forceUpdate or conditionString in knownAlarms.get(cKey, set()):
-
+            if (forceUpdate
+                    or conditionString not in knownAlarms.get(cKey, set())):
                 condition = AlarmCondition(conditionString)
                 pSep = cKey.replace(Validator.kAlarmParamPathSeparator, ".")
 
