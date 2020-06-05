@@ -24,7 +24,7 @@ class SparklineModel(BaseWidgetObjectData):
 
 
 @register_scene_reader('DisplaySparkline', version=2)
-def _display_sparkline_reader(read_func, element):
+def _display_sparkline_reader(element):
     traits = read_base_widget_data(element)
     traits['time_base'] = int(element.get(NS_KARABO + 'time_base', 600))
     traits['show_format'] = element.get(NS_KARABO + 'show_format', '0.2f')

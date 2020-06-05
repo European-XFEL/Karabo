@@ -30,7 +30,7 @@ def _statefulwidget_widget_writer(write_func, model, parent):
 
 
 @register_scene_reader('StatefulIconWidget', version=2)
-def _statefulwidget_widget_reader(read_func, element):
+def _statefulwidget_widget_reader(element):
     traits = read_base_widget_data(element)
     traits['icon_name'] = element.get(NS_KARABO + 'icon_name', '')
     return StatefulIconWidgetModel(**traits)
