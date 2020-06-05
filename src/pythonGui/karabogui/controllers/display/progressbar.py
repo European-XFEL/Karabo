@@ -5,14 +5,14 @@
 #############################################################################
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAction, QProgressBar
-from traits.api import Bool, Float, Instance, Tuple
+from traits.api import Float, Instance, Tuple
 
 from karabo.common.api import (
     KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
     KARABO_SCHEMA_MIN_INC)
 from karabo.common.scenemodel.api import DisplayProgressBarModel
-from karabogui import messagebox
-from karabogui.binding.api import FloatBinding, IntBinding
+from karabogui.binding.api import (
+    has_min_max_attributes, FloatBinding, IntBinding)
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
@@ -33,12 +33,12 @@ def _scale(val, min_val, max_val):
 @register_binding_controller(ui_name='Progress Bar',
                              klassname='DisplayProgressBar',
                              binding_type=(FloatBinding, IntBinding),
+                             is_compatible=has_min_max_attributes,
                              can_show_nothing=False)
 class DisplayProgressBar(BaseBindingController):
     # The specific scene model class used by this widget
     model = Instance(DisplayProgressBarModel, args=())
     # Value scaling params
-    _error_shown = Bool(False)
     _value_factors = Tuple(Float(-1), Float(-1))
 
     def create_widget(self, parent):
@@ -60,19 +60,9 @@ class DisplayProgressBar(BaseBindingController):
         binding = proxy.binding
         self._eval_limits(binding)
         if self._value_factors == NULL_RANGE:
-            self.error_box(proxy.key)
-        else:
-            self._error_shown = False
-
-    def error_box(self, keyname):
-        if not self._error_shown:
-            # make sure you bother the user only once per widget
-            msg = ('No proper configuration detected.\n'
-                   'Please define min and max thresholds for '
-                   '{}.'.format(keyname))
-            messagebox.show_warning(msg, title='Wrong property configuration',
-                                    parent=self.widget)
-            self._error_shown = True
+            msg = ('No proper configuration detected.\n Please define min and '
+                   'max thresholds for {}'.format(proxy.key))
+            self.widget.setToolTip(msg)
 
     def value_update(self, proxy):
         if self._value_factors == NULL_RANGE:
