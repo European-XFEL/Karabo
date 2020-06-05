@@ -13,7 +13,7 @@ from karabo.common.api import (
 from karabo.common.scenemodel.api import KnobModel, SliderModel
 from karabogui.binding.api import (
     FloatBinding, IntBinding, get_editor_value, get_min_max,
-)
+    has_min_max_attributes)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.util import SignalBlocker
@@ -67,6 +67,7 @@ class _AnalogEditorWidget(BaseBindingController):
 
 
 @register_binding_controller(ui_name='Knob', can_edit=True, klassname='Knob',
+                             is_compatible=has_min_max_attributes,
                              binding_type=(FloatBinding, IntBinding))
 class Knob(_AnalogEditorWidget):
     # The scene model class for this controller
@@ -82,6 +83,7 @@ class Knob(_AnalogEditorWidget):
 
 @register_binding_controller(ui_name='Slider', can_edit=True,
                              klassname='Slider',
+                             is_compatible=has_min_max_attributes,
                              binding_type=(FloatBinding, IntBinding))
 class Slider(_AnalogEditorWidget):
     # The scene model class for this controller

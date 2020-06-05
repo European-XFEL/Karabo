@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from PyQt5.QtCore import Qt
 
 from karabo.common.scenemodel.api import DisplayProgressBarModel
@@ -56,18 +54,9 @@ class TestDisplayProgressBar(GuiTestCase):
         assert self.controller.widget.value() == PROGRESS_MAX * 0.5
 
     def test_no_limits_messagebox(self):
-        sym = 'karabogui.controllers.display.progressbar.messagebox'
-        try:
-            schema = ObjectWithoutLimits.getClassSchema()
-            with patch(sym) as messagebox:
-                build_binding(schema, existing=self.proxy.root_proxy.binding)
-                assert messagebox.show_warning.call_count == 1
+        schema = ObjectWithoutLimits.getClassSchema()
+        build_binding(schema, existing=self.proxy.root_proxy.binding)
 
-            assert self.controller.widget.minimum() == 0
-            assert self.controller.widget.maximum() == 0
-            assert self.controller._value_factors == NULL_RANGE
-
-        finally:
-            # Put things back as they were!
-            schema = Object.getClassSchema()
-            build_binding(schema, existing=self.proxy.root_proxy.binding)
+        assert self.controller.widget.minimum() == 0
+        assert self.controller.widget.maximum() == 0
+        assert self.controller._value_factors == NULL_RANGE
