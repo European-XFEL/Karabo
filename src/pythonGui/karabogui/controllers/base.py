@@ -117,12 +117,7 @@ class BaseBindingController(HasStrictTraits):
         # be able to deal with Undefined, i.e. their value_update() and
         # state_update() function should use get_binding_value() and
         # specify a proper default value if the proxy.value is Undefined
-        proxy = self.proxy
-        has_data = (proxy.binding.timestamp is not None)
-        if has_data or get_class_const_trait(type(self), '_can_show_nothing'):
-            self.value_update(proxy)
-            if get_binding_value(proxy.root_proxy.state_binding):
-                self.state_update(proxy)
+        self._proxy_update(self.proxy)
 
     def hide(self):
         """Hide the proxies. Stops monitoring the parent device of each proxy
@@ -189,10 +184,25 @@ class BaseBindingController(HasStrictTraits):
                 self.model.keys.append(proxy.key)
             if self._showing:
                 proxy.start_monitoring()
+            self._proxy_update(proxy)
             return True  # The only successful exit from this method!
         except NotImplementedError:
             # Forget about it!
             return False
+
+    def _proxy_update(self, proxy):
+        if proxy.binding is None:
+            return
+
+        has_data = (proxy.binding.timestamp is not None)
+        if has_data or get_class_const_trait(type(self), '_can_show_nothing'):
+            self.value_update(proxy)
+
+        state_binding = proxy.root_proxy.state_binding
+        has_state = (state_binding is not None
+                     and get_binding_value(state_binding))
+        if has_state:
+            self.state_update(proxy)
 
     def on_decline(self):
         """Implemented by subclasses to receive notifications that the value
