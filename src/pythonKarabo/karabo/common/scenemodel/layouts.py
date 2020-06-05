@@ -6,7 +6,8 @@ from traits.api import Enum, Float, Instance, Int
 from .bases import BaseLayoutData, BaseLayoutModel, BaseSceneObjectData
 from .const import NS_KARABO, NS_SVG
 from .io_utils import set_numbers
-from .registry import register_scene_reader, register_scene_writer
+from .registry import (
+    read_element, register_scene_reader, register_scene_writer)
 
 FIXED_LAYOUT_TAG = NS_SVG + 'g'
 FIXED_DATA_NAMES = ('x', 'y', 'height', 'width')
@@ -108,7 +109,7 @@ def _write_grid_layout_data(element, layout_data):
 
 
 @register_scene_reader('BoxLayout', version=1)
-def __box_layout_reader(read_func, element):
+def __box_layout_reader(element):
     """ Read a BoxLayoutModel from a Version 1 format scene file.
     """
     traits = _read_standard_layout_attributes(element)
@@ -116,7 +117,7 @@ def __box_layout_reader(read_func, element):
     layout = BoxLayoutModel(**traits)
 
     for child_elem in element:
-        layout.children.append(read_func(child_elem))
+        layout.children.append(read_element(child_elem))
 
     return layout
 
@@ -136,14 +137,14 @@ def __box_layout_writer(write_func, layout, root):
 
 
 @register_scene_reader('FixedLayout', xmltag=FIXED_LAYOUT_TAG, version=1)
-def __fixed_layout_reader(read_func, element):
+def __fixed_layout_reader(element):
     """ Read a FixedLayout from a Version 1 format scene file.
     """
     traits = _read_standard_layout_attributes(element)
     layout = FixedLayoutModel(**traits)
 
     for child_elem in element:
-        child = read_func(child_elem)
+        child = read_element(child_elem)
         # XXX: Do to version 1 design quirks, some layout data is stored on
         # child elements.
         child.layout_data = _read_fixed_layout_data(child_elem)
@@ -172,14 +173,14 @@ def __fixed_layout_writer(write_func, layout, root):
 
 
 @register_scene_reader('GridLayout', version=1)
-def __grid_layout_reader(read_func, element):
+def __grid_layout_reader(element):
     """ Read a Layout from a Version 1 format scene file.
     """
     traits = _read_standard_layout_attributes(element)
     layout = GridLayoutModel(**traits)
 
     for child_elem in element:
-        child = read_func(child_elem)
+        child = read_element(child_elem)
         # XXX: Do to version 1 design quirks, some layout data is stored on
         # child elements.
         child.layout_data = _read_grid_layout_data(child_elem)

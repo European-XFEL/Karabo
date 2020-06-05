@@ -2,7 +2,7 @@ from xml.etree.ElementTree import Element, parse, tostring
 
 from .const import NS_KARABO, NS_SVG, SCENE_FILE_VERSION
 from .model import SceneModel
-from .registry import get_reader, get_writer
+from .registry import (get_writer, read_element, set_reader_registry_version)
 
 
 def read_scene(filename_or_fileobj):
@@ -19,9 +19,8 @@ def read_scene(filename_or_fileobj):
 
     # Old files have no version, so '1' is the default.
     # The version number decides which readers are used for the file
-    version = int(root.get(NS_KARABO + 'version', '1'))
-    reader = get_reader(version)
-    return reader(root)
+    set_reader_registry_version(int(root.get(NS_KARABO + 'version', '1')))
+    return read_element(root)
 
 
 def write_scene(scene):
