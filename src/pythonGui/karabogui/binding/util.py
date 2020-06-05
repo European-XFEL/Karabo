@@ -5,6 +5,9 @@ import numpy as np
 from traits.api import Undefined
 
 from karabo.common import const
+from karabo.common.api import (
+    KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
+    KARABO_SCHEMA_MIN_INC)
 from karabo.native import Hash, Schema
 from . import types
 
@@ -219,3 +222,16 @@ def _int_min_max(binding):
         high = attrs.get(const.KARABO_SCHEMA_MAX_INC, value_range[1])
 
     return low, high
+
+
+def has_min_max_attributes(binding):
+    """Check if there is a limit pair (inclusive, exclusive) in the attributes
+    """
+    attrs = binding.attributes
+    min_inc = attrs.get(KARABO_SCHEMA_MIN_INC)
+    min_exc = attrs.get(KARABO_SCHEMA_MIN_EXC)
+    max_inc = attrs.get(KARABO_SCHEMA_MAX_INC)
+    max_exc = attrs.get(KARABO_SCHEMA_MAX_EXC)
+
+    return ((min_inc is not None or min_exc is not None) and
+            (max_inc is not None or max_exc is not None))

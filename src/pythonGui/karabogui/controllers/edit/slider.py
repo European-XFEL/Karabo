@@ -13,7 +13,8 @@ from karabo.common.api import (
     KARABO_SCHEMA_MIN_INC)
 from karabo.common.scenemodel.api import TickSliderModel
 from karabogui.binding.api import (
-    FloatBinding, IntBinding, get_editor_value, get_min_max)
+    FloatBinding, IntBinding, get_editor_value, get_min_max,
+    has_min_max_attributes)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.util import SignalBlocker
@@ -27,6 +28,7 @@ WIDGET_WIDTH = 60
 
 @register_binding_controller(ui_name='Tick Slider', can_edit=True,
                              klassname='TickSlider',
+                             is_compatible=has_min_max_attributes,
                              binding_type=(FloatBinding, IntBinding))
 class TickSlider(BaseBindingController):
     # The scene model class for this controller
