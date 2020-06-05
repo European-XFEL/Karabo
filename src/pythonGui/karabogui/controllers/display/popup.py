@@ -59,6 +59,10 @@ class PopUp(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
+        # We only update if the proxy is the StringBinding (first proxy)
+        if proxy is not self.proxy:
+            return
+
         value = get_binding_value(proxy, '')
         timestamp = proxy.binding.timestamp
         if timestamp != self._timestamp:
