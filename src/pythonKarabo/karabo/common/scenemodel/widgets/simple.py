@@ -239,7 +239,7 @@ def _write_class_and_geometry(model, element, widget_class_name):
 
 
 @register_scene_reader('Label', version=1)
-def __label_reader(read_func, element):
+def __label_reader(element):
     """ A reader for Label objects in Version 1 scenes
     """
     traits = _read_geometry_data(element)
@@ -275,7 +275,7 @@ def __label_writer(write_func, model, parent):
 
 
 @register_scene_reader('DoubleWheelBox')
-def _doublewheel_box_reader(read_func, element):
+def _doublewheel_box_reader(element):
     traits = read_base_widget_data(element)
     decimals = element.get(NS_KARABO + 'decimals', 3)
     integers = element.get(NS_KARABO + 'integers', 6)
@@ -296,7 +296,7 @@ def _doublewheel_box_writer(write_func, model, parent):
 
 
 @register_scene_reader('TickSlider')
-def _tick_slider_reader(read_func, element):
+def _tick_slider_reader(element):
     traits = read_base_widget_data(element)
     traits['ticks'] = int(element.get(NS_KARABO + 'ticks', 1))
     show_value = element.get(NS_KARABO + 'show_value', 'true')
@@ -316,7 +316,7 @@ def _tick_slider_writer(write_func, model, parent):
 
 
 @register_scene_reader('TimeLabel')
-def _time_label_reader(read_func, element):
+def _time_label_reader(element):
     traits = read_base_widget_data(element)
     time_format = element.get(NS_KARABO + 'time_format', '%H:%M:%S')
     traits['time_format'] = time_format
@@ -334,7 +334,7 @@ def _time_label_writer(write_func, model, parent):
 
 
 @register_scene_reader('DisplayLabel')
-def _display_label_reader(read_func, element):
+def _display_label_reader(element):
     traits = read_base_widget_data(element)
 
     # Add font formatting
@@ -361,7 +361,7 @@ def _display_label_writer(write_func, model, parent):
 
 
 @register_scene_reader('WebLink', version=1)
-def __web_link_reader(read_func, element):
+def __web_link_reader(element):
     traits = _read_geometry_data(element)
     traits['target'] = element.get(NS_KARABO + 'target')
     traits['text'] = element.get(NS_KARABO + 'text', '')
@@ -395,7 +395,7 @@ def __web_link_writer(write_func, model, parent):
 
 
 @register_scene_reader('SceneLink', version=1)
-def __scene_link_reader(read_func, element):
+def __scene_link_reader(element):
     traits = _read_geometry_data(element)
     traits['target'] = element.get(NS_KARABO + 'target')
     # If unspecified, the default is 'mainwin'
@@ -432,7 +432,7 @@ def __scene_link_writer(write_func, model, parent):
 
 
 @register_scene_reader('StickerWidget')
-def __sticker_widget_reader(read_func, element):
+def __sticker_widget_reader(element):
     traits = _read_geometry_data(element)
     traits['text'] = element.get(NS_KARABO + 'text', '')
     traits['font'] = element.get(NS_KARABO + 'font', '')
@@ -462,7 +462,7 @@ def _build_empty_widget_readers_and_writers():
     """ Build readers and writers for the empty widget classes
     """
     def _build_reader_func(klass):
-        def reader(read_func, element):
+        def reader(element):
             traits = read_base_widget_data(element)
             return klass(**traits)
 
@@ -495,7 +495,7 @@ def _build_empty_display_editable_readers_and_writers():
     """
 
     def _build_reader_func(klass):
-        def reader(read_func, element):
+        def reader(element):
             traits = read_empty_display_editable_widget(element)
             return klass(**traits)
 

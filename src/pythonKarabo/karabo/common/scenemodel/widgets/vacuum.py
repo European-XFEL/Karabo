@@ -42,7 +42,7 @@ def _vacuum_widget_writer(write_func, model, parent):
 def _build_vacuum_widget_readers():
     """ Build readers for all the possible vacuum widgets.
     """
-    def _reader(read_func, element):
+    def _reader(element):
         traits = read_empty_display_editable_widget(element)
         return VacuumWidgetModel(**traits)
 
