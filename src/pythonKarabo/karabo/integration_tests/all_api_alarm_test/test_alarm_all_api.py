@@ -1,15 +1,37 @@
 from copy import copy
-from time import sleep  # TODO: remove oce not needed anymore!
 
 from karabo.integration_tests.utils import BoundDeviceTestCase
 from karabo.bound import (AlarmCondition, Hash, SignalSlotable,
                           Timestamp, Validator)
 from karathon import fullyEqual
 
+max_timeout = 20    # in seconds
+max_timeout_ms = max_timeout * 1000
+global_alarm_key = "alarmCondition"
+
+
+def getPropsAndAlarm(caller, dev_id):
+    """
+    Provide configuration and current global alarm condition
+    of 'dev_id' by calling slotGetConfiguration via 'caller'
+    """
+    requestor = caller.request(dev_id, "slotGetConfiguration")
+    dev_props, _ = requestor.waitForReply(max_timeout_ms)
+
+    # The property Hash contains the alarm condition as string, so convert
+    alarm_cond = AlarmCondition(dev_props.get(global_alarm_key))
+
+    return dev_props, alarm_cond
+
+
+def reconfigure(caller, dev_id, cfg):
+    """
+    Reconfigure 'dev_id' by calling slotReconfigure with 'cfg' via 'caller'
+    """
+    caller.request(dev_id, "slotReconfigure", cfg).waitForReply(max_timeout_ms)
+
 
 class TestDeviceAlarmApi(BoundDeviceTestCase):
-    _max_timeout = 20    # in seconds
-    _max_timeout_ms = _max_timeout * 1000
 
     def test_alarms_cpp(self):
         self._test_alarms("cpp")
@@ -24,8 +46,11 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
 
         dev_id = self._initialize_device(api)
 
-        # Helper to call slots with arguments
-        # (needed until DeviceClient can call these slots)
+        # Helper to
+        # - call slots with arguments
+        # - add a slot and connect it to a remote signal
+        # - and have it ensured that a signal triggered by a slot call
+        #   is received before the slot reply
         caller = SignalSlotable("helperAlarmTests")
         caller.start()
         signal_id = signal_payload = None
@@ -39,9 +64,8 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         self.assertTrue(caller.connect(dev_id, "signalAlarmUpdate",
                                        "", "slotAlarmUpdates"))
 
-        global_alarm_key = "alarmCondition"
         # Initially all is fine
-        alarmCond = self.dc.get(dev_id, global_alarm_key)
+        _, alarmCond = getPropsAndAlarm(caller, dev_id)
         self.assertEqual(alarmCond, AlarmCondition.NONE)
 
         #########################################################
@@ -50,12 +74,16 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         #  values to their readOnly counterparts)
         #########################################################
 
-        self.dc.set(dev_id, "doubleProperty", 50.)
+        reconfigure(caller, dev_id, Hash("doubleProperty", 50.))
+
+        # Check that the signalAlarmUpdate arrived as expected
+        # Its signal_id is known, the signal_payload needs to be "assembled".
+        self.assertEqual(signal_id, dev_id)
         # Global alarm should be raised...
-        alarmCond = self.dc.get(dev_id, global_alarm_key)
+        devProps, alarmCond = getPropsAndAlarm(caller, dev_id)
         self.assertEqual(alarmCond, AlarmCondition.WARN)
         # ...and property in configuration carries alarmCondition as well
-        attrs = self.dc.get(dev_id).getAttributes("doublePropertyReadOnly")
+        attrs = devProps.getAttributes("doublePropertyReadOnly")
         if api != "mdl":
             # FIXME: MDL does not send alarm condition as attribute
             self.assertEqual(attrs.get("alarmCondition"), "warnHigh")
@@ -69,12 +97,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
                                          ".warnHigh")
         stampDouble.toHashAttributes(attrs)
 
-        # Check that the signalAlarmUpdate arrived as expected
-        # FIXME: We have no order guarantee! Setting was done by self.dc,
-        #        but slot registered to signal is on 'caller'!
-        #        ==> Replace usage of self.dc by directly calling slots... :-(
-        sleep(1)  # FIXME remove this (and the following) sleep when fixed
-        self.assertEqual(signal_id, dev_id)
+        # Now we can check the signal_payload
         self.assertTrue(fullyEqual(signal_payload, hDoubleAdd, False),
                         str(hDoubleAdd) + '\nvs\n' + str(signal_payload))
 
@@ -83,7 +106,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         hashArg = Hash()
         (an_id, res) = caller.request(dev_id,
                                       "slotReSubmitAlarms", hashArg
-                                      ).waitForReply(self._max_timeout_ms)
+                                      ).waitForReply(max_timeout_ms)
         self.assertEqual(an_id, dev_id)
         self.assertTrue(fullyEqual(res, hDoubleAdd, False),
                         str(hDoubleAdd) + '\nvs\n' + str(res))
@@ -92,7 +115,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         hashArg = Hash("doublePropertyReadOnly.warnHigh", Hash())
         (an_id, res) = caller.request(dev_id,
                                       "slotReSubmitAlarms", hashArg,
-                                      ).waitForReply(self._max_timeout_ms)
+                                      ).waitForReply(max_timeout_ms)
         self.assertEqual(an_id, dev_id)
         self.assertTrue(fullyEqual(res, hDoubleAdd, False),
                         str(hDoubleAdd) + '\nvs\n' + str(res))
@@ -103,7 +126,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         hashArg = Hash("int64PropertyReadOnly.alarmLow", Hash())
         (an_id, res) = caller.request(dev_id,
                                       "slotReSubmitAlarms", hashArg,
-                                      ).waitForReply(self._max_timeout_ms)
+                                      ).waitForReply(max_timeout_ms)
         self.assertEqual(an_id, dev_id)
         hDoubleAddInt64Clear = copy(hDoubleAdd)
         hInt64Clear = Hash("toClear.int64PropertyReadOnly", ["alarmLow"],
@@ -116,12 +139,15 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         # 2) Now set another property to a higher alarm level
         #########################################################
         signal_id = signal_payload = None
-        self.dc.set(dev_id, "int64Property", -3200000001)
+        reconfigure(caller, dev_id, Hash("int64Property", -3_200_000_001))
+        # Check that the signalAlarmUpdate arrived as expected
+        self.assertEqual(signal_id, dev_id)
+
         # Global alarm should be raised...
-        alarmCond = self.dc.get(dev_id, global_alarm_key)
+        devProps, alarmCond = getPropsAndAlarm(caller, dev_id)
         self.assertEqual(alarmCond, AlarmCondition.ALARM)
         # ...and property in configuration carries alarmCondition as well
-        attrs = self.dc.get(dev_id).getAttributes("int64PropertyReadOnly")
+        attrs = devProps.getAttributes("int64PropertyReadOnly")
         if api != "mdl":
             # FIXME: MDL does not send alarm condition as attribute
             self.assertEqual(attrs.get("alarmCondition"), "alarmLow")
@@ -134,9 +160,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         attrsInt64 = hInt64Add.getAttributes(tmpKey)
         stampInt64.toHashAttributes(attrsInt64)
 
-        # Check that the signalAlarmUpdate arrived for int64PropertyReadOnly
-        sleep(1)  # FIXME
-        self.assertEqual(signal_id, dev_id)
+        # Now we can check the signal_payload for int64PropertyReadOnly
         self.assertTrue(fullyEqual(signal_payload, hInt64Add, False),
                         str(hInt64Add) + '\nvs\n' + str(signal_payload))
 
@@ -155,7 +179,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
 
             (an_id, res) = caller.request(dev_id,
                                           "slotReSubmitAlarms", hashArg
-                                          ).waitForReply(self._max_timeout_ms)
+                                          ).waitForReply(max_timeout_ms)
             self.assertEqual(an_id, dev_id, str(hashArg))
 
             msg = str(hashArg) + ":\n"
@@ -174,7 +198,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
             hashArg["int32PropertyReadOnly.warnLow"] = Hash()
             (an_id, res) = caller.request(dev_id,
                                           "slotReSubmitAlarms", hashArg
-                                          ).waitForReply(self._max_timeout_ms)
+                                          ).waitForReply(max_timeout_ms)
             self.assertEqual(an_id, dev_id, str(hashArg))
 
             msg = str(hashArg) + ":\n"
@@ -186,14 +210,15 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         # 3) Now release the higher alarm
         #########################################################
         signal_id = signal_payload = None
-        self.dc.set(dev_id, "int64Property", 0)
+        reconfigure(caller, dev_id, Hash("int64Property", 0))
+        # Check that the signalAlarmUpdate arrived as expected
+        self.assertEqual(signal_id, dev_id)
+
         # Global alarm should be lowered
-        alarmCond = self.dc.get(dev_id, global_alarm_key)
+        _, alarmCond = getPropsAndAlarm(caller, dev_id)
         self.assertEqual(alarmCond, AlarmCondition.WARN)
 
-        # Check that the signalAlarmUpdate arrived, clearing int64Property
-        sleep(1)  # FIXME
-        self.assertEqual(signal_id, dev_id)
+        # Check that the signalAlarmUpdate cleared int64Property
         self.assertTrue(fullyEqual(signal_payload, hInt64Clear, False),
                         str(hInt64Clear) + '\nvs\n' + str(signal_payload))
 
@@ -205,7 +230,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
             hExpected = expected[i]
             (an_id, res) = caller.request(dev_id,
                                           "slotReSubmitAlarms", hashArg
-                                          ).waitForReply(self._max_timeout_ms)
+                                          ).waitForReply(max_timeout_ms)
             self.assertEqual(an_id, dev_id, str(hashArg))
 
             msg = str(hashArg) + ":\n"
@@ -216,13 +241,16 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         # 4) Now set global alarm to alarm level
         #########################################################
         signal_id = signal_payload = None
-        self.dc.set(dev_id, "stringProperty", "alarm")
-        self.dc.execute(dev_id, "setAlarm")
+        reconfigure(caller, dev_id, Hash("stringProperty", "alarm"))
+        caller.request(dev_id, "setAlarm").waitForReply(max_timeout_ms)
+
+        # Check that the signalAlarmUpdate arrived
+        self.assertEqual(signal_id, dev_id)
 
         # Global alarm should have risen again
-        alarmCond = self.dc.get(dev_id, global_alarm_key)
+        devProps, alarmCond = getPropsAndAlarm(caller, dev_id)
         self.assertEqual(alarmCond, AlarmCondition.ALARM)
-        attrs = self.dc.get(dev_id).getAttributes(global_alarm_key)
+        attrs = devProps.getAttributes(global_alarm_key)
         stampGlobal = Timestamp.fromHashAttributes(attrs)
 
         # MDL global alarms have no description
@@ -235,9 +263,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         attrs = hGlobalAdd.getAttributes(tmpKey)
         stampGlobal.toHashAttributes(attrs)
 
-        # Check that the signalAlarmUpdate arrived, adding global
-        sleep(1)  # FIXME
-        self.assertEqual(signal_id, dev_id)
+        # Check that the signalAlarmUpdate indeed added global
         self.assertTrue(fullyEqual(signal_payload, hGlobalAdd, False),
                         str(hGlobalAdd) + '\nvs\n' + str(signal_payload))
 
@@ -253,7 +279,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
                              "doublePropertyReadOnly.warnHigh", Hash())]:
             (an_id, res) = caller.request(dev_id,
                                           "slotReSubmitAlarms", hashArg
-                                          ).waitForReply(self._max_timeout_ms)
+                                          ).waitForReply(max_timeout_ms)
             self.assertEqual(an_id, dev_id, str(hashArg))
 
             msg = str(hashArg) + ":\n"
@@ -264,9 +290,13 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         # 5) Now set property under node to warn (needs acknowledging)
         #########################################################
         signal_id = signal_payload = None
-        self.dc.set(dev_id, "node.counter", 2000000)  # 2.e6: ==> warnHigh
+        reconfigure(caller, dev_id,
+                    Hash("node.counter", 2_000_000))  # ==> warnHigh
+        # Check that the signalAlarmUpdate arrived
+        self.assertEqual(signal_id, dev_id)
 
-        attrs = self.dc.get(dev_id).getAttributes("node.counterReadOnly")
+        devProps, _ = getPropsAndAlarm(caller, dev_id)
+        attrs = devProps.getAttributes("node.counterReadOnly")
         if api != "mdl":
             # FIXME: MDL does not send alarm condition as attribute
             self.assertEqual(attrs.get("alarmCondition"), "warnHigh")
@@ -280,9 +310,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         attrs = hCounterAdd.getAttributes(tmpKey)
         stampCounter.toHashAttributes(attrs)
 
-        # Check that the signalAlarmUpdate arrived, adding counterReadOnly
-        sleep(1)  # FIXME
-        self.assertEqual(signal_id, dev_id)
+        # Check that the signalAlarmUpdate indeed added counterReadOnly
         self.assertTrue(fullyEqual(signal_payload, hCounterAdd, False),
                         str(hCounterAdd) + '\nvs\n' + str(signal_payload))
 
@@ -306,7 +334,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         for hashArg in hashArgs:
             (an_id, res) = caller.request(dev_id,
                                           "slotReSubmitAlarms", hashArg,
-                                          ).waitForReply(self._max_timeout_ms)
+                                          ).waitForReply(max_timeout_ms)
             self.assertEqual(an_id, dev_id)
             msg = str(hashArg) + ": "
             msg += str(hDoubleGlobalCounterAdd) + '\nvs\n' + str(res)
@@ -318,8 +346,14 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         #    Also remove global alarm (to avoid the mdl timestamp problem).
         #########################################################
         signal_id = signal_payload = None
-        self.dc.set(dev_id, "node.counter", 200000000)  # 2.e8: ==> alarmHigh
-        attrs = self.dc.get(dev_id).getAttributes("node.counterReadOnly")
+        reconfigure(caller, dev_id,
+                    Hash("node.counter", 200_000_000))  # ==> alarmHigh
+
+        # Check that the signalAlarmUpdate arrived
+        self.assertEqual(signal_id, dev_id)
+
+        devProps, _ = getPropsAndAlarm(caller, dev_id)
+        attrs = devProps.getAttributes("node.counterReadOnly")
         if api != "mdl":
             # FIXME: MDL does not send alarm condition as attribute
             self.assertEqual(attrs.get("alarmCondition"), "alarmHigh")
@@ -334,22 +368,22 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         attrs = hCounterAddClear.getAttributes(tmpKey)
         stampCounter.toHashAttributes(attrs)
 
-        # Check that the signalAlarmUpdate arrived for switch of level
+        # Check that the signalAlarmUpdate indeed switched level
         # of counterReadOnly
-        sleep(1)  # FIXME
-        self.assertEqual(signal_id, dev_id)
         self.assertTrue(fullyEqual(signal_payload, hCounterAddClear, False),
                         str(hCounterAddClear) + '\nvs\n' + str(signal_payload))
 
         # set global to none
-        self.dc.set(dev_id, "stringProperty", "none")
+        reconfigure(caller, dev_id, Hash("stringProperty", "none"))
         signal_id = signal_payload = None
-        self.dc.execute(dev_id, "setAlarm")
+        caller.request(dev_id, "setAlarm").waitForReply(max_timeout_ms)
+        # Check that the signalAlarmUpdate arrived
+        self.assertEqual(signal_id, dev_id)
 
         hGlobalClear = Hash("toAdd", Hash(),
                             "toClear.global", ["alarm"])
-        # Check that the signalAlarmUpdate arrived for cleared global
-        sleep(1)  # FIXME
+
+        # Check that the signalAlarmUpdate indeed cleared global
         self.assertEqual(signal_id, dev_id)
         self.assertTrue(fullyEqual(signal_payload, hGlobalClear, False),
                         str(hGlobalClear) + '\nvs\n' + str(signal_payload))
@@ -387,7 +421,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
             hExpected = expected[i]
             (an_id, res) = caller.request(dev_id,
                                           "slotReSubmitAlarms", hashArg
-                                          ).waitForReply(self._max_timeout_ms)
+                                          ).waitForReply(max_timeout_ms)
             self.assertEqual(an_id, dev_id, str(hashArg))
             msg = str(hashArg) + ":\n"
             msg += str(hExpected) + '\nvs\n' + str(res)
@@ -398,28 +432,32 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         #    NOT require ackowledgement
         #########################################################
         signal_id = signal_payload = None
-        self.dc.set(dev_id, Hash("node.counter", 2,
-                                 "doubleProperty", -2.))
-        alarmCond = self.dc.get(dev_id, global_alarm_key)
+        reconfigure(caller, dev_id, Hash("node.counter", 2,
+                                         "doubleProperty", -2.))
+
+        # Check that signalAlarmUpdate arrived
+        self.assertEqual(signal_id, dev_id)
+
+        _, alarmCond = getPropsAndAlarm(caller, dev_id)
         self.assertEqual(alarmCond, AlarmCondition.NONE)
 
-        # check signal that everything is released
+        # Check signal that indeed everything is released
         hDoubleCounterClear = Hash("toAdd", Hash(),
                                    "toClear.doublePropertyReadOnly",
                                    ["warnHigh"],
                                    "toClear.node" + sp + "counterReadOnly",
                                    ["alarmHigh"])
-        sleep(1)  # FIXME
-        self.assertEqual(signal_id, dev_id)
         text = str(hDoubleCounterClear) + '\nvs\n' + str(signal_payload)
         self.assertTrue(fullyEqual(signal_payload, hDoubleCounterClear, False),
                         text)
 
         if api != "mdl":
             # MDL does not know global alarms that do NOT require acknowledging
-            self.dc.set(dev_id, "stringProperty", "warn")
-            self.dc.execute(dev_id, "setNoAckAlarm")
-            attrs = self.dc.get(dev_id).getAttributes(global_alarm_key)
+            reconfigure(caller, dev_id, Hash("stringProperty", "warn"))
+            caller.request(dev_id,
+                           "setNoAckAlarm").waitForReply(max_timeout_ms)
+            devProps, _ = getPropsAndAlarm(caller, dev_id)
+            attrs = devProps.getAttributes(global_alarm_key)
             stamp = Timestamp.fromHashAttributes(attrs)
             tmpKey = 'toAdd.global.warn'
             txt = "No acknowledgment requiring alarm"
@@ -432,7 +470,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
             hashArg = Hash("global.alarm", Hash())
             (an_id, res) = caller.request(dev_id,
                                           "slotReSubmitAlarms", hashArg
-                                          ).waitForReply(self._max_timeout_ms)
+                                          ).waitForReply(max_timeout_ms)
             self.assertEqual(an_id, dev_id)
             msg = str(hExpected) + '\nvs\n' + str(res)
             self.assertTrue(fullyEqual(res, hExpected, False), msg)
@@ -457,8 +495,7 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         """
         cfg.set("deviceId", dev_id)
 
-        ok, msg = self.dc.instantiate(server_id, class_id, cfg,
-                                      self._max_timeout)
+        ok, msg = self.dc.instantiate(server_id, class_id, cfg, max_timeout)
         self.assertTrue(ok,
                         "Could not start device '{}' on server '{}': '{}'."
                         .format(class_id, server_id, msg))
