@@ -11,6 +11,7 @@ from traits.api import Bool, Dict, Instance, Int, Set, String
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, AlarmGraphModel, StateGraphModel,
     TrendGraphModel)
+from karabogui import icons
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, IntBinding, StringBinding)
 from karabogui.const import MAX_NUMBER_LIMIT
@@ -18,7 +19,7 @@ from karabogui.controllers.api import (
     BaseBindingController, Curve, get_start_end_date_time, ONE_DAY, ONE_HOUR,
     ONE_WEEK, register_binding_controller, TEN_MINUTES, UPTIME,
     with_display_type)
-from karabogui.graph.common.api import AxisType, get_pen_cycler
+from karabogui.graph.common.api import AxisType, create_button, get_pen_cycler
 from karabogui.graph.common.const import ALARM_INTEGER_MAP, STATE_INTEGER_MAP
 from karabogui.graph.plots.base import KaraboPlotView
 
@@ -77,9 +78,16 @@ class BaseSeriesGraph(BaseBindingController):
         self._plot.stateChanged.connect(self._change_model)
         self._plot.add_legend(visible=False)
         self._plot.add_cross_target()
-        self._plot.add_toolbar()
+        toolbar = self._plot.add_toolbar()
         self._plot.enable_export()
         self._plot.enable_data_toggle(activate=True)
+
+        _btn_reset = create_button(
+            checkable=False,
+            icon=icons.reset,
+            tooltip="Reload the view and request historic data",
+            on_clicked=self._purge_curves)
+        toolbar.add_button(_btn_reset)
 
         # Restore previous configuration!
         self._plot.restore(build_graph_config(self.model))
@@ -133,6 +141,13 @@ class BaseSeriesGraph(BaseBindingController):
 
     # ----------------------------------------------------------------
     # PyQt Slots
+
+    def _purge_curves(self):
+        """Purge all curves and request historic again"""
+        for v in self._curves.values():
+            v.purge()
+        x_axis = self._plot.plotItem.getAxis("bottom")
+        self.set_time_interval(*x_axis.range, force=True)
 
     def _range_change_manually(self):
         """When the range changes manually, we stop automatically
