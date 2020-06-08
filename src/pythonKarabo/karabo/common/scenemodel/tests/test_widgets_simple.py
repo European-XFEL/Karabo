@@ -70,7 +70,7 @@ def test_editable_simple_model():
     model_classes = (
         api.BitfieldModel, api.EditableListModel, api.EditableListElementModel,
         api.EditableSpinBoxModel, api.HexadecimalModel, api.IntLineEditModel,
-        api.KnobModel, api.RunConfiguratorModel, api.SliderModel
+        api.RunConfiguratorModel, api.SliderModel
     )
     for klass in model_classes:
         yield _check_editable_empty_widget, klass

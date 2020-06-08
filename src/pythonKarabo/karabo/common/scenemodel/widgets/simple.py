@@ -117,10 +117,6 @@ class IntLineEditModel(BaseEditWidget):
     """ A model for IntLineEdit"""
 
 
-class KnobModel(BaseEditWidget):
-    """ A model for Knob"""
-
-
 class LabelModel(BaseWidgetObjectData):
     """ A fragment of text which is shown in a scene.
     """
@@ -296,6 +292,7 @@ def _doublewheel_box_writer(write_func, model, parent):
 
 
 @register_scene_reader('TickSlider')
+@register_scene_reader('Slider')  # Deprecated Slider
 def _tick_slider_reader(element):
     traits = read_base_widget_data(element)
     traits['ticks'] = int(element.get(NS_KARABO + 'ticks', 1))
@@ -303,6 +300,16 @@ def _tick_slider_reader(element):
     traits['show_value'] = show_value.lower() == 'true'
 
     return TickSliderModel(**traits)
+
+
+@register_scene_writer(SliderModel)
+def _slider_writer(write_func, model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'TickSlider')
+    element.set(NS_KARABO + 'ticks', '1')
+    element.set(NS_KARABO + 'show_value', 'true')
+
+    return element
 
 
 @register_scene_writer(TickSliderModel)
@@ -480,8 +487,8 @@ def _build_empty_widget_readers_and_writers():
              'DisplayListModel', 'DisplayTextLogModel',
              'EditableListModel', 'EditableListElementModel',
              'EditableSpinBoxModel', 'GlobalAlarmModel', 'HexadecimalModel',
-             'IntLineEditModel', 'KnobModel', 'LampModel', 'PopUpModel',
-             'RunConfiguratorModel', 'SliderModel', 'WidgetNodeModel')
+             'IntLineEditModel', 'LampModel', 'PopUpModel',
+             'RunConfiguratorModel', 'WidgetNodeModel')
     for name in names:
         klass = globals()[name]
         file_name = name[:-len('Model')]
