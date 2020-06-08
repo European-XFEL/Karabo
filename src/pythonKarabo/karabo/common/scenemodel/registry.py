@@ -1,4 +1,5 @@
 from collections import namedtuple
+from inspect import signature
 
 from traits.api import (
     cached_property, Callable, Dict, HasStrictTraits, Instance, Int, Property,
@@ -53,6 +54,13 @@ class ReaderRegistry(HasStrictTraits):
         klass = self._fetch_klass(element)
         reader = self._fetch_reader(name=klass, version=self.version)
         assert reader is not None, 'Reader not found for {}!'.format(element)
+
+        sig = signature(reader)
+        # XXX: Backward compatibility with GUI extensions. Old readers have
+        # two (2) arguments, new ones have a single argument
+        if len(sig.parameters) == 2:
+            return reader(None, element)
+
         return reader(element)
 
     def _fetch_klass(self, element):
