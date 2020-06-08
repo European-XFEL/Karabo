@@ -151,6 +151,15 @@ class Curve(HasStrictTraits):
         arraysize = self.spare + sum([g.size for g in self.generations], 0)
         return numpy.empty(arraysize, dtype=numpy.float)
 
+    def purge(self):
+        """Purge the curve by resetting all values to their default"""
+        self.generations = self._generations_default()
+        self.x = self._x_default()
+        self.y = self._y_default()
+        self.histsize = 0
+        self.fill = 0
+        self.update()
+
     def add_point(self, value, timestamp):
         # Fill the generations data, possibly propagating averaged values
         point = (timestamp, value)
