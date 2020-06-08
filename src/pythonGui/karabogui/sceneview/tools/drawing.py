@@ -4,8 +4,8 @@ from PyQt5.QtWidgets import QDialog
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
-    ArrowModel, LineModel, RectangleModel, SceneLinkModel, StickerModel, WebLinkModel,
-    XMLDefsModel)
+    ArrowModel, LineModel, RectangleModel, SceneLinkModel, StickerModel,
+    WebLinkModel, XMLDefsModel)
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
