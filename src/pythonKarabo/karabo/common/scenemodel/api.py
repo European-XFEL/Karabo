@@ -43,10 +43,9 @@ from .widgets.simple import (
     DisplayListModel, DisplayTextLogModel, DisplayTimeModel,
     DoubleWheelBoxModel, EditableListElementModel, EditableListModel,
     EditableSpinBoxModel, FileInModel, FileOutModel, GlobalAlarmModel,
-    HexadecimalModel, IntLineEditModel, KnobModel, LabelModel, LampModel,
+    HexadecimalModel, IntLineEditModel, LabelModel, LampModel,
     LineEditModel, PopUpModel, RunConfiguratorModel, SceneLinkModel,
-    SliderModel, StickerModel,
-    TickSliderModel, WebLinkModel, WidgetNodeModel)
+    SliderModel, StickerModel, TickSliderModel, WebLinkModel, WidgetNodeModel)
 from .widgets.vacuum import VacuumWidgetModel
 from .widgets.statefulicon import StatefulIconWidgetModel
 
