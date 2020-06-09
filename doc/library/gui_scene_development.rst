@@ -87,6 +87,11 @@ data which is already there, you should take note of the following:
     ``register_scene_writer`` decorator.
   * **Add unit tests which cover all the new code that you added**. Try to cover
     edge cases that you can think of.
+  * Starting Karabo 2.10, the scene reader and writer functions would only
+    expect one parameter, which is the XML element (``element``). The reader and
+    writer entrypoint function (``read_func``/``write_func``) is not passed
+    anymore. The functions ``read_element`` and ``write_element`` can be used
+    if there is a need to handle children elements.
 
 * If *lightly* modifying an existing model class, you can make small changes to
   the reader function
