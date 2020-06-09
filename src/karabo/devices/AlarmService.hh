@@ -8,8 +8,9 @@
 #ifndef KARABO_ALARMSERVICE_HH
 #define	KARABO_ALARMSERVICE_HH
 
+#include <atomic>
+
 #include <boost/thread.hpp>
-#include <boost/atomic.hpp>
 
 #include "karabo/core/Device.hh"
 
@@ -220,7 +221,7 @@ namespace karabo {
             boost::mutex m_updateMutex;
             boost::asio::deadline_timer m_updateTimer; // our update timer for bulksets
 
-            unsigned long long m_alarmIdCounter;
+            std::atomic<unsigned long long> m_alarmIdCounter;
 
         };
     }
