@@ -513,6 +513,13 @@ void AlarmService_Test::testFlushing() {
 
     Hash h;
     karabo::io::loadFromFile(h, std::string(KARABO_TESTPATH) + "/" + m_alarmServiceId + ".xml");
+    const unsigned long long nextIdInFile = h.get<unsigned long long>("nextAlarmId");
+    // We could check the exact number of the idInFile by counting the number of alarms we had in this test.
+    // But I am too lazy: Just ensure that there have some and that the number is at least as high as the highest
+    // alarm that is still active and thus in file
+    const unsigned long long alarmId = boost::lexical_cast<unsigned long long>(m_rowForDevice1);
+    CPPUNIT_ASSERT_GREATER(0ull, nextIdInFile);
+    CPPUNIT_ASSERT_GREATEREQUAL(alarmId, nextIdInFile);
 
     Hash propHash;
     propHash.set("type", "warnHigh");
@@ -521,9 +528,10 @@ void AlarmService_Test::testFlushing() {
     propHash.set("acknowledgeable", false);
     propHash.set("deviceId", "alarmTester");
     propHash.set("property", "nodeA.floatPropNeedsAck2");
-    propHash.set<unsigned long long>("id", boost::lexical_cast<unsigned long long>(m_rowForDevice1));
+    propHash.set<unsigned long long>("id", alarmId);
     Hash alarmHash("alarmTester", Hash("nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2", Hash("warnHigh", propHash)));
     Hash hTest("alarms", alarmHash);
+    hTest.set("nextAlarmId", nextIdInFile); // here we fake the assert below, setting as 'expected' what is the 'actual' value
 
     // Erase the occurrence times, as they will not match - but assert that they do exist!
     CPPUNIT_ASSERT(h.erase("alarms.alarmTester.nodeA" + Validator::kAlarmParamPathSeparator + "floatPropNeedsAck2.warnHigh.timeOfFirstOccurrence"));
