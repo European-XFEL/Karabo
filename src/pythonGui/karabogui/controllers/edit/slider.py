@@ -22,6 +22,7 @@ from karabogui.util import SignalBlocker
 # Define a maximum range which can be represented by ticks
 REASONABLE_RANGE = 100000
 TICK_RANGE = 1000
+MIN_TICK = 1
 WIDGET_HEIGHT = 20
 WIDGET_WIDTH = 60
 
@@ -121,7 +122,6 @@ class TickSlider(BaseBindingController):
     # ----------------------------------------------------------------------
     # Qt Slots
 
-    # @pyqtSlot(object)
     def _edit_value(self, value):
         if self.proxy.binding is None:
             return
@@ -133,16 +133,14 @@ class TickSlider(BaseBindingController):
                 fmt = "{:.1f}"
             self.label.setText(fmt.format(value))
 
-    # @pyqtSlot(bool)
     def toggle_show_value(self, value):
         self.model.show_value = value
 
-    # @pyqtSlot()
-    def configure_tick_interval(self, checked):
+    def configure_tick_interval(self):
         """Configure the tick interval for this widget"""
         ticks, ok = QInputDialog.getInt(self.widget, 'Tick Interval',
-                                        'Tick Interval:', self.model.ticks, 1,
-                                        TICK_RANGE)
+                                        'Tick Interval:', self.model.ticks,
+                                        MIN_TICK, TICK_RANGE)
         if ok:
             self.model.ticks = ticks
             self.slider.setTickInterval(ticks)
