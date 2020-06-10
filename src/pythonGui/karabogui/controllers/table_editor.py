@@ -254,8 +254,8 @@ class ComboBoxDelegate(QItemDelegate):
             # XXX: Due to schema injection, a property value might not be in
             # allowed options and thus not available. This is very rare
             # and unlikely and we just continue!
-            raise RuntimeError("The value {} is not in the the following "
-                               "options: {}").format(selection, self._options)
+            raise RuntimeError("The value {} is not in the following "
+                               "options: {}".format(selection, self._options))
 
     def setModelData(self, editor, model, index):
         """Reimplemented function of QItemDelegate"""
