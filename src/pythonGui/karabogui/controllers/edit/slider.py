@@ -6,7 +6,7 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QAction, QFrame, QHBoxLayout, QInputDialog, QLabel, QSlider, QWidget)
-from traits.api import Instance, on_trait_change
+from traits.api import Bool, Instance, on_trait_change
 
 from karabo.common.api import (
     KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
@@ -16,7 +16,7 @@ from karabogui.binding.api import (
     FloatBinding, IntBinding, get_editor_value, get_min_max,
     has_min_max_attributes)
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller)
+    BaseBindingController, is_proxy_allowed, register_binding_controller)
 from karabogui.util import SignalBlocker
 
 # Define a maximum range which can be represented by ticks
@@ -37,6 +37,7 @@ class TickSlider(BaseBindingController):
 
     slider = Instance(QSlider)
     label = Instance(QLabel)
+    _has_error = Bool(False)
 
     def create_widget(self, parent):
         widget = QWidget(parent)
@@ -80,7 +81,9 @@ class TickSlider(BaseBindingController):
         low, high = get_min_max(proxy.binding)
         # convert to native int, subtracting limits can overflow
         # on numpy subtractions
-        out_of_range = int(high) - int(low)
+        low = int(low)
+        high = int(high)
+        out_of_range = high - low
         out_of_range = out_of_range > REASONABLE_RANGE
         if (min_inc is None and min_exc is None or
                 max_inc is None and max_exc is None or
@@ -112,8 +115,17 @@ class TickSlider(BaseBindingController):
         msg = ('The value limits for {} are not set or too large (>{}),'
                ' please check the property attributes'.format(
                    keyname, REASONABLE_RANGE))
+        self._has_error = True
         self.widget.setToolTip(msg)
         self.widget.setEnabled(False)
+
+    def state_update(self, proxy):
+        if self._has_error:
+            # In case we are disabled, we do not consider state updates!
+            return
+
+        enable = is_proxy_allowed(proxy)
+        self.widget.setEnabled(enable)
 
     @on_trait_change('model:show_value')
     def _show_value_update(self, value):
