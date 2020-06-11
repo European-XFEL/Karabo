@@ -72,8 +72,6 @@ class DisplayVectorXYGraph(BaseBindingController):
         self._curves[proxy] = curve
         if len(self._curves) > 1:
             self.widget.set_legend(True)
-        # Plot initial value!
-        self.value_update(proxy)
 
     def value_update(self, proxy):
         value = get_binding_value(proxy.binding, [])
