@@ -319,5 +319,13 @@ class DlRaw2Influx():
         line_fields["value"] = value
         line_fields["user_name"] = user_name
         line_fields["flag"] = flag
-
+        # bail out if value is empty and not an escaped string,
+        # or if an integer was created for an empty value
+        if not value.strip():
+            raise Exception(f"Empty value for {name}@{train_id}")
+        if value.strip() == "i":
+            raise Exception(f"Empty integer for {name}@{train_id}")
+        # bail out for empty names
+        if not name.strip():
+            raise Exception(f"Empty name for {value}@{train_id}")
         return line_fields
