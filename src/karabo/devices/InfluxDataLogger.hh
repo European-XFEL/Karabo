@@ -31,10 +31,10 @@ namespace karabo {
 
             void handleChanged(const karabo::util::Hash& config, const std::string& user) override;
 
-            void logValue(const std::string& deviceId, const std::string& path,
+            void logValue(std::stringstream &query, const std::string& deviceId, const std::string& path,
                           const std::string& value, const karabo::util::Types::ReferenceType& type);
 
-            void terminateQuery(const karabo::util::Timestamp& stamp);
+            void terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp);
 
             void checkSchemaInDb(const karabo::util::Timestamp& stamp, const karabo::net::HttpResponse& o);
 
@@ -43,8 +43,6 @@ namespace karabo {
             void stopLogging() override;
 
             karabo::net::InfluxDbClient::Pointer m_dbClient;
-
-            std::stringstream m_query;
 
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
 
