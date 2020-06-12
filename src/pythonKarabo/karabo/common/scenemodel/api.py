@@ -3,7 +3,7 @@ from .bases import (
     BaseDisplayEditableWidget, BaseLayoutData, BaseLayoutModel,
     BaseSceneObjectData, BaseShapeObjectData, BaseWidgetObjectData)
 from .const import (
-    DISPLAY_COMPONENT, EDITABLE_COMPONENT, NS_KARABO, NS_SVG,
+    ARROW_HEAD_PATH, DISPLAY_COMPONENT, EDITABLE_COMPONENT, NS_KARABO, NS_SVG,
     SCENE_FILE_VERSION, SCENE_FONT_SIZE, SCENE_FONT_WEIGHT, SCENE_MIN_HEIGHT,
     SCENE_MIN_WIDTH, SceneTargetWindow)
 from .exceptions import SceneReaderException, SceneWriterException
