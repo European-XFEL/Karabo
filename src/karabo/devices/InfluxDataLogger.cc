@@ -30,7 +30,6 @@ namespace karabo {
         InfluxDeviceData::InfluxDeviceData(const karabo::util::Hash& input)
             : DeviceData(input)
             , m_dbClient(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientPointer"))
-            , m_query()
             , m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin"))
             , m_digest("")
             , m_archive() {
@@ -80,7 +79,8 @@ namespace karabo {
             // and thus before any data can arrive here in handleChanged.
             std::vector<std::string> paths;
             getPathsForConfiguration(configuration, m_currentSchema, paths);
-
+            std::stringstream query;
+            Timestamp lineTimestamp(Epochstamp(0ull, 0ull), Trainstamp(0ull));
             for (size_t i = 0; i < paths.size(); ++i) {
                 const std::string& path = paths[i];
 
@@ -101,19 +101,17 @@ namespace karabo {
                 }
 
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
-                bool terminateLine = false;
                 {
-                    // Update time stamp for updates of property "lastUpdatesUtc" and terminateQuery().
+                    // Update time stamp for updates of property "lastUpdatesUtc"
                     // Since the former is accessing it when not posted on m_strand, need mutex protection:
                     boost::mutex::scoped_lock lock(m_lastTimestampMutex);
                     if (t.getEpochstamp() != m_lastDataTimestamp.getEpochstamp()) {
-                        // If mixed timestamps in single message (or arrival in wrong order), always take most recent one.
+                        // If mixed timestamps in single message (or arrival in wrong order), always take last received.
                         m_updatedLastTimestamp = true;
                         m_lastDataTimestamp = t;
-                        terminateLine = true;
                     }
                 }
-
+                
                 if (noArchive) continue; // Bail out after updating time stamp!
                 std::string value; // "value" should be a string, so convert depending on type ...
                 if (leafNode.getType() == Types::VECTOR_HASH) {
@@ -129,6 +127,20 @@ namespace karabo {
                         // Line breaks in content confuse indexing and reading back - so better mangle strings... :-(.
                         boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
                     }
+                } else if (leafNode.getType() == Types::DOUBLE) {
+                    // bail out if Nan or Infinite
+                    const double v = leafNode.getValue<double>();
+                    if (!std::isfinite(v)) {
+                        continue;
+                    }
+                    value = toString(v);
+                } else if (leafNode.getType() == Types::FLOAT) {
+                    // bail out if Nan or Infinite
+                    const float v = leafNode.getValue<float>();
+                    if (!std::isfinite(v)) {
+                        continue;
+                    }
+                    value = toString(v);
                 } else {
                     value = leafNode.getValueAs<std::string>();
                     if (leafNode.getType() == Types::STRING) {
@@ -137,6 +149,14 @@ namespace karabo {
                     }
                 }
 
+                if (lineTimestamp.getEpochstamp().getSeconds() == 0ull) {
+                    // first non-skipped value 
+                    lineTimestamp = t;
+                } else if (t.getEpochstamp() != lineTimestamp.getEpochstamp()) {
+                    // new timestamp! flush the previous query
+                    terminateQuery(query, lineTimestamp);
+                    lineTimestamp = t;
+                }
                 if (m_pendingLogin) {
                     // TRICK: 'configuration' is the one requested at the beginning. For devices which have
                     // properties with older timestamps than the time of their instantiation (as e.g. read from
@@ -151,23 +171,26 @@ namespace karabo {
                     m_dbClient->enqueueQuery(ss.str());
                 }
 
-                logValue(deviceId, path, value, leafNode.getType());
-
-                if (terminateLine) {
-                    // Do we really need the member and thus a mutex lock here - or can't we use a local variable?
-                    boost::mutex::scoped_lock lock(m_lastTimestampMutex);
-                    terminateQuery(m_lastDataTimestamp);
-                }
+                logValue(query, deviceId, path, value, leafNode.getType());
+            }
+            if (!query.str().empty()) {
+                // flush the query if something is in it.
+                terminateQuery(query, lineTimestamp);
             }
         }
 
 
-        void InfluxDeviceData::logValue(const std::string& deviceId, const std::string& path,
+        void InfluxDeviceData::logValue(std::stringstream& query, const std::string& deviceId, const std::string& path,
                                         const std::string& value, const karabo::util::Types::ReferenceType& type) {
             std::string field_value;
             switch (type) {
                 case Types::BOOL:
                 {
+                    if (value.empty()) {
+                        // Should never happen! We try to save the line protocol by skipping
+                        KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '" << deviceId << "'";
+                        return;
+                    }
                     field_value = path + "-BOOL=" + ((value == "1") ? "t":"f");
                     break;
                 }
@@ -179,12 +202,22 @@ namespace karabo {
                 case Types::UINT32:
                 case Types::INT64:
                 {
+                    if (value.empty()) {
+                        // Should never happen! We try to save the line protocol by skipping
+                        KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '" << deviceId << "'";
+                        return;
+                    }
                     field_value = path + "-" + Types::to<ToLiteral>(type) + "=" + value + "i";
                     break;
                 }
                 case Types::FLOAT:
                 case Types::DOUBLE:
                 {
+                    if (value.empty()) {
+                        // Should never happen! We try to save the line protocol by skipping
+                        KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '" << deviceId << "'";
+                        return;
+                    }
                     field_value = path + "-" + Types::to<ToLiteral>(type) + "=" + value;
                     break;
                 }
@@ -205,6 +238,8 @@ namespace karabo {
                 case Types::VECTOR_COMPLEX_FLOAT:
                 case Types::VECTOR_COMPLEX_DOUBLE:
                 {
+                    // empty strings shall be saved. They do not spoil the line protocol since they are between quotes
+                    // TODO: handle the `base64` encoded types differently
                     field_value = path + "-" + Types::to<ToLiteral>(type) + "=\"" + value + "\"";
                     break;
                 }
@@ -220,26 +255,29 @@ namespace karabo {
                     return;
             }
 
-            if (m_query.str().empty()) {
-                m_query << deviceId << ",karabo_user=\"" << m_user << "\" " << field_value;
+            if (query.str().empty()) {
+                query << deviceId << ",karabo_user=\"" << m_user << "\" " << field_value;
             } else {
-                m_query << "," << field_value;
+                query << "," << field_value;
             }
         }
 
 
-        void InfluxDeviceData::terminateQuery(const karabo::util::Timestamp& stamp) {
+        void InfluxDeviceData::terminateQuery(std::stringstream& query,
+                                              const karabo::util::Timestamp& stamp) {
             const unsigned long long tid = stamp.getTrainId();
-            if (tid > 0) {
-                m_query << ",tid-UINT64=" << tid << "i";
+            // influxDB integers are signed 64 bits. here we check that the we are within such limits
+            // Assuming a trainId rate of 10 Hz this limit will be surpassed in about 29 billion years
+            if (0 < tid && tid <= static_cast<unsigned long long>(std::numeric_limits<long long>::max())) {
+                query << ",_tid=" << tid << "i";
             }
             const unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
             if (ts > 0) {
-                m_query << " " << ts;
+                query << " " << ts;
             }
-            m_query << "\n";
-            m_dbClient->enqueueQuery(m_query.str());
-            m_query.str(""); // Clear content of stringstream
+            query << "\n";
+            m_dbClient->enqueueQuery(query.str());
+            query.str("");
         }
 
 
