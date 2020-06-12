@@ -4,7 +4,7 @@ from xml.etree.ElementTree import SubElement
 from traits.api import Any, Float, Instance, List, String
 
 from .bases import BaseSceneObjectData, BaseShapeObjectData
-from .const import NS_SVG
+from .const import ARROW_HEAD_PATH, NS_SVG
 from .io_utils import (
     convert_number_or_string, get_defs_id, get_numbers, is_empty, set_numbers)
 from .registry import (
@@ -50,7 +50,7 @@ class ArrowModel(LineModel):
     marker = Instance(MarkerModel)
 
     def _marker_default(self):
-        arrow_path = PathModel(svg_data="M0,0 L0,6 L9,3 z",
+        arrow_path = PathModel(svg_data=ARROW_HEAD_PATH,
                                fill=self.stroke)
         return MarkerModel(
             id=f"arrow{randint(0, 10000)}",
