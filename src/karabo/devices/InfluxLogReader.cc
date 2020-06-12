@@ -715,16 +715,14 @@ namespace karabo {
                 Hash hash;
                 for (size_t col = 1; col < influxResult.first.size(); col++) {
                     if (static_cast<int> (col) == tidCol) continue; // Skips the trainId column
-                    if (!valuesRow[col].empty()) {
-                        try {
-                            addNodeToHash(hash, "v", colTypes[col], tid, epoch, valuesRow[col]);
-                        } catch (const std::exception &e) {
-                            KARABO_LOG_FRAMEWORK_ERROR << "Error adding node to hash:"
-                                    << "\nValue type: " << colTypeNames[col]
-                                    << "\nValue (as string): " << valuesRow[col]
-                                    << "\nTimestamp: " << epoch.toIso8601()
-                                    << "\nError: " << e.what();
-                        }
+                    try {
+                        addNodeToHash(hash, "v", colTypes[col], tid, epoch, valuesRow[col]);
+                    } catch (const std::exception &e) {
+                        KARABO_LOG_FRAMEWORK_ERROR << "Error adding node to hash:"
+                                << "\nValue type: " << colTypeNames[col]
+                                << "\nValue (as string): " << valuesRow[col]
+                                << "\nTimestamp: " << epoch.toIso8601()
+                                << "\nError: " << e.what();
                     }
                 }
                 if (hash.has("v")) {
@@ -759,7 +757,11 @@ namespace karabo {
                     // and then escaped by the Influx Logger.
                     node = &hash.set(path, std::vector<std::string>());
                     std::vector<std::string> &value = node->getValue<std::vector < std::string >> ();
-                    boost::split(value, valueAsString, boost::is_any_of(","));
+                    // here we assume that an empty string is a vector of 0 length.
+                    // FIXME: find a solution for a vector containing only one empty string.
+                    if (!valueAsString.empty()) {
+                        boost::split(value, valueAsString, boost::is_any_of(","));
+                    }
                     for (size_t i = 0; i < value.size(); i++) {
                         std::string unescaped = unescapeLoggedString(value[i]);
                         value[i] = unescaped;
