@@ -4,8 +4,8 @@ from PyQt5.QtWidgets import QDialog
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
-    ArrowModel, LineModel, RectangleModel, SceneLinkModel, StickerModel,
-    WebLinkModel, XMLDefsModel)
+    ARROW_HEAD_PATH, ArrowModel, LineModel, RectangleModel, SceneLinkModel,
+    StickerModel, WebLinkModel, XMLDefsModel)
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
@@ -122,9 +122,8 @@ class ArrowSceneTool(LineSceneTool):
             scene_view.select_model(arrow_model)
 
     def _marker_path_default(self):
-        # TODO: Get this from the ArrowModel
-        ARROW_PATH = "M0,0 L0,6 L9,3 z"
-        return Parser(ARROW_PATH).parse()
+        """Uses the arrow head path string to generate the painter path"""
+        return Parser(ARROW_HEAD_PATH).parse()
 
 
 class RectangleSceneTool(BaseSceneTool):
