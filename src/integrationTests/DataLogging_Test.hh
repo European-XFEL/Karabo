@@ -53,6 +53,11 @@ private:
     void testCfgFromPastRestart();
 
     /**
+     * Checks that the DataLoggers handle NaN floats and doubles.
+     */
+    void testNans(bool shouldReturnNans);
+
+    /**
      * Checks that the InfluxDataLogger goes to ERROR state
      * when an attempt to use a non-existing Influx database
      * is made in an environment where the Influx user lacks
@@ -114,6 +119,13 @@ private:
      * Telegraf environment.
      */
     void switchFromTelegrafEnv();
+
+    /**
+     * Sets PropertyTestDevice Schema
+     *
+     * circumvent min/max limits and vector size specification
+     */
+    void setPropertyTestSchema();
 };
 
 #endif	/* DATALOGGING_TEST_HH */
