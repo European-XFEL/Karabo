@@ -42,6 +42,7 @@ class ReaderRegistry(HasStrictTraits):
 
     entries = Dict(String, Instance(ReaderEntry))  # `{name: entry}`
     version = Int
+    defs = Dict
 
     def register(self, name=None, func=None, version=None):
         entry = self.entries.get(name)
@@ -62,6 +63,15 @@ class ReaderRegistry(HasStrictTraits):
             return reader(None, element)
 
         return reader(element)
+
+    def add_defs(self, models):
+        self.defs.clear()
+        for d in models:
+            for child in d.children:
+                self.defs[child.id] = child
+
+    def find(self, id_):
+        return self.defs.get(id_)
 
     def _fetch_klass(self, element):
         for kind in ('widget', 'class'):
@@ -98,7 +108,23 @@ def set_reader_registry_version(version=SCENE_FILE_VERSION):
 def read_element(element):
     """Read an XML element with the entries from the global scene reader
     registry. """
+    global _reader_registry
     return _reader_registry.read(element)
+
+
+def add_temporary_defs(defs):
+    """For every scene opening, the SVG defs are temporarily added in the
+       registry. These can be then used by the readers with `find_def`.
+
+       This is very useful for SVG elements with defs such as a
+       line with a marker def (arrow)"""
+    global _reader_registry
+    _reader_registry.add_defs(defs)
+
+
+def find_def(id_):
+    global _reader_registry
+    return _reader_registry.find(id_)
 
 
 def get_writer():
@@ -121,6 +147,7 @@ class register_scene_reader(object):
         self.version = version
 
     def __call__(self, func):
+        global _reader_registry
         _reader_registry.register(name=self.objname, func=func,
                                   version=self.version)
         if self.xmltag:
