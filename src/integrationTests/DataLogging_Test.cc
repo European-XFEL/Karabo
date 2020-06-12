@@ -173,9 +173,9 @@ namespace CppUnit{
         }
         static std::string toString(const std::vector<std::string> &p){
             std::ostringstream o;
-            o << "(" << std::endl;
+            o << "(";
             for (const std::string& e : p){
-                o << e << "," << std::endl;
+                o << "'" << e << "',";
             }
             o << ")";
             return o.str();
@@ -281,6 +281,21 @@ void DataLogging_Test::switchFromTelegrafEnv() {
     m_switchedToTelegrafEnv = false;
 }
 
+void DataLogging_Test::setPropertyTestSchema() {
+    std::vector<Hash> updates;
+    updates.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MIN_INC, "value", -1.f * std::numeric_limits<float>::infinity()));
+    updates.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value", std::numeric_limits<float>::infinity()));
+    updates.push_back(Hash("path", "doubleProperty", "attribute", KARABO_SCHEMA_MIN_INC, "value", -1. * std::numeric_limits<double>::infinity()));
+    updates.push_back(Hash("path", "doubleProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value", std::numeric_limits<double>::infinity()));
+    updates.push_back(Hash("path", "vectors.stringProperty", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
+
+    Hash response;
+    m_sigSlot->request(m_deviceId, "slotUpdateSchemaAttributes", updates)
+            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(response);
+    CPPUNIT_ASSERT_MESSAGE("Could not update schema", response.get<bool>("success"));
+    
+}
+
 std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& loggerType,
                                                             bool useInvalidInfluxUrl,
                                                             bool useInvalidDbName) {
@@ -380,11 +395,15 @@ void DataLogging_Test::fileAllTestRunner() {
                                                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
+    setPropertyTestSchema();
+
     std::clog << "\n==== Starting sequence of File Logging tests ====" << std::endl;
     success = startLoggers("FileDataLogger");
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
+    // file data logger stores Nans
+    testNans(true);
     testInt();
     testFloat();
     testString();
@@ -407,7 +426,7 @@ void DataLogging_Test::influxAllTestRunner() {
                                                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    std::clog << "Device \"" << m_deviceId << "\" instantiated" << std::endl;
+    setPropertyTestSchema();
 
     // Starts the same set of tests with InfluxDb logging instead of text-file based logging
     std::clog << "\n==== Starting sequence of Influx Logging tests on \""
@@ -416,6 +435,8 @@ void DataLogging_Test::influxAllTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
+    // influx data logger does not store Nans YET
+    testNans(false);
     testInt(true);
     testFloat(false);
     testString(false);
@@ -716,7 +737,6 @@ void DataLogging_Test::testCfgFromPastRestart() {
     std::vector<Epochstamp> valueStamps; // stamps of the updated values
     const Epochstamp oldStamp = threeDaysBack;
     for (unsigned int i = 0; i < numCycles; ++i) {
-
         // Increase "variable" value and store after increasing it
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotIncreaseValue", KRB_TEST_MAX_TIMEOUT));
         stampsAfter.push_back(Epochstamp());
@@ -821,7 +841,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
         const Epochstamp stampOldFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("oldValue"));
         std::string oldFromPastStr = stampOldFromPast.toIso8601();  // convert to microsecond precision
         std::string oldStr = oldStamp.toIso8601();                  // convert to microsecond precision
-        CPPUNIT_ASSERT_MESSAGE("'oldValue' from past has wrong time stamp: " + oldFromPastStr, oldFromPastStr == oldStr);
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("'oldValue' from past has wrong time stamp", oldStr, oldFromPastStr);
         const Epochstamp stampValueFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("value"));
         CPPUNIT_ASSERT_MESSAGE(stampValueFromPast.toIso8601() + " vs " + valueStamps[i].toIso8601(),
                                (stampValueFromPast - valueStamps[i]).getFractions(TIME_UNITS::MICROSEC) <= 1ull);
@@ -1036,7 +1056,9 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
     }
 
     CPPUNIT_ASSERT_EQUAL_MESSAGE("History size different than expected after " + toString(numChecks) +
-                                 " checks:\n\tdeviceId: " + m_deviceId + "\n\tparam.from: " + beforeWrites +
+                                 " checks:\n\tdeviceId: " + m_deviceId +
+                                 "\n\tkey: " + key +
+                                 "\n\tparam.from: " + beforeWrites +
                                  "\n\tparam.to: " + afterWrites + "\n\tparam.maxNumData: " + toString(max_set * 2) +
                                  "\n\thistory.size(): " + toString(history.size()) +
                                  "\n\tNumber of Exceptions: " + toString(numExceptions) +
@@ -1180,7 +1202,7 @@ void DataLogging_Test::testFloat(bool testPastConf) {
 
 void DataLogging_Test::testString(bool testPastConf) {
     auto lambda = [] (int i) -> string {
-        return "ab|c" + karabo::util::toString(i);
+        return ( (i % 2)? string() : "ab|c" + karabo::util::toString(i));
     };
     testHistory<string>("stringProperty", lambda, testPastConf);
 
@@ -1189,10 +1211,20 @@ void DataLogging_Test::testString(bool testPastConf) {
         return "with\nnewline" + karabo::util::toString(i);
     };
     testHistory<string>("stringProperty", lambda2, testPastConf);
+
 }
 
 
 void DataLogging_Test::testVectorString(bool testPastConf) {
+    auto lambdaMixed = [] (int i) -> vector<string> {
+        vector<string> v = {"abc" + toString(i), "xy|z" + toString(i), string(), "A\nB" + toString(i)};
+        // rotate the vector to check all positions for the empty string
+        std::rotate(v.begin(),v.begin() + (i % v.size()), v.end());
+        return (i % 5 == 0)? vector<string>() : v;
+    };
+    // FIXME: The file Based data logger fails this test
+    // testHistory<vector < string >> ("vectors.stringProperty", lambdaMixed, false);
+
     auto lambda = [] (int i) -> vector<string> {
         // Also test pipe '|' (the separator in our text files) and new line '\n'
         vector<string> v = {"abc" + toString(i), "xy|z" + toString(i), "A\nB" + toString(i)};
@@ -1214,6 +1246,117 @@ void DataLogging_Test::testTable(bool testPastConf) {
     };
     testHistory<vector<Hash> >("table", lambda, testPastConf);
 }
+
+
+void DataLogging_Test::testNans(bool shouldReturnNans){
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const size_t max_set = 100ul;
+    const size_t full_return_size = max_set + 1ul;
+    const size_t expected_size = (shouldReturnNans ? full_return_size : 1ul);
+    std::clog << "Testing NaN and infinity are " << (shouldReturnNans ? "treated" : "ignored") << " by Loggers " << std::flush;
+
+    // define some bad floating points to test against
+    const vector<float> bad_floats = {
+        std::numeric_limits<float>::quiet_NaN(),
+        std::numeric_limits<float>::signaling_NaN(),
+        std::numeric_limits<float>::infinity(),
+        -1.f * std::numeric_limits<float>::infinity()
+    };
+    const vector<double> bad_doubles = {
+        std::numeric_limits<double>::quiet_NaN(),
+        std::numeric_limits<double>::signaling_NaN(),
+        std::numeric_limits<double>::infinity(),
+        -1. * std::numeric_limits<double>::infinity()
+    };
+
+    // save this instant as a iso string
+    Epochstamp es_beforeWrites;
+    std::string beforeWrites = es_beforeWrites.toIso8601();
+
+    // write a bunch of times
+    for (size_t i = 0; i < max_set; i++) {
+        Hash new_conf;
+        new_conf.set("int32Property", static_cast<int>(i));
+        new_conf.set("floatProperty", bad_floats[i % bad_floats.size()]);
+        new_conf.set("doubleProperty", bad_doubles[i % bad_doubles.size()]);
+
+        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(m_deviceId, new_conf));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+    }
+
+    // set one last time a valid value.
+    Hash end_conf;
+    end_conf.set("int32Property", static_cast<int>(max_set));
+    end_conf.set("floatProperty", (1.f * max_set));
+    end_conf.set("doubleProperty", (1. * max_set));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(m_deviceId, end_conf));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+
+    // save this instant as a iso string
+    Epochstamp es_afterWrites;
+    std::string afterWrites = es_afterWrites.toIso8601();
+
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                            .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+
+    vector<Hash> history;
+    Hash params;
+    params.set<string>("from", beforeWrites);
+    params.set<string>("to", afterWrites);
+    params.set<int>("maxNumData", max_set * 2);
+    std::vector<std::string> exceptionsMsgs;
+
+    // Check the length of the history for the properties injected.
+    std::map<std::string, size_t> properties = {
+        std::make_pair(std::string("int32Property"), full_return_size),
+        std::make_pair(std::string("floatProperty"), expected_size),
+        std::make_pair(std::string("doubleProperty"), expected_size)
+    };
+    
+    for (const auto& property_pair : properties) {
+        int nTries = NUM_RETRY;
+        unsigned int numExceptions = 0;
+        unsigned int numChecks = 0;
+        while (nTries >= 0 && history.size() != property_pair.second) {
+            std::string device, property;
+            try {
+                numChecks++;
+                // TODO: use the deviceClient to retrieve the property history
+                //history = m_deviceClient->getPropertyHistory(m_deviceId, key, before, after, max_set * 2);
+                m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, property_pair.first, params)
+                        .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(device, property, history);
+            } catch (const karabo::util::TimeoutException& e) {
+                karabo::util::Exception::clearTrace();
+                exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
+                ++numExceptions;
+            } catch (const karabo::util::RemoteException& e) {
+                karabo::util::Exception::clearTrace();
+                exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
+                ++numExceptions;
+            }
+            boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
+            nTries--;
+        }
+
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("History size different than expected after " + toString(numChecks) +
+                                     " checks:\n\tdeviceId: " + m_deviceId +
+                                     "\n\tproperty : " + property_pair.first +
+                                     "\n\tparam.from: " + beforeWrites +
+                                     "\n\tparam.to: " + afterWrites + "\n\tparam.maxNumData: " + toString(max_set * 2) +
+                                     "\n\thistory.size(): " + toString(history.size()) +
+                                     "\n\tNumber of Exceptions: " + toString(numExceptions) +
+                                     "\n\tExceptions:\n" + boost::algorithm::join(exceptionsMsgs, "\n"),
+                                     static_cast<size_t> (property_pair.second), history.size());
+
+    }
+    std::clog << "Ok" << std::endl;
+
+}
+
+// TODO: implement testVectorFloat() (include vectors of different length and empty vector);
+// TODO: implement test and FIX for a vector of strings with an empty string as its only element
+// TODO: implement test and FIX bug on schema evolution. InfluxLogReader is most likely broken because
+//       it cannot skip empty strings coming from the sparse results tables from the DB.
 
 // TODO: ideally, all properties of the PropertyTest device should be implemented,
 //       to add them one should add a method per property and add the proper cppunit helpers at the beginning of this
