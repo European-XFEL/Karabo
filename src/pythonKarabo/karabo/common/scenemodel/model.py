@@ -12,7 +12,8 @@ from .const import (
 from .io_utils import (read_unknown_display_editable_widget, set_numbers,
                        write_base_widget_data)
 from .registry import (
-    read_element, register_scene_reader, register_scene_writer)
+    read_element, add_temporary_defs, register_scene_reader,
+    register_scene_writer)
 
 
 class SceneModel(BaseProjectObjectModel):
@@ -28,6 +29,12 @@ class SceneModel(BaseProjectObjectModel):
     height = Float(SCENE_MIN_HEIGHT)
     # All the objects in the scene
     children = List(Instance(BaseSceneObjectData))
+
+
+class XMLDefsModel(BaseSceneObjectData):
+    """<defs>"""
+
+    children = List(BaseSceneObjectData)
 
 
 class UnknownWidgetDataModel(BaseWidgetObjectData):
@@ -90,6 +97,18 @@ def __scene_reader(element):
         del traits['uuid']
 
     scene = SceneModel(**traits)
+
+    # We get the first level defs first
+    defs = []
+    for d in element.findall("./{}defs".format(NS_SVG)):
+        defs.append(read_element(d))
+        element.remove(d)
+
+    # Add it on scene model
+    scene.children.extend(defs)
+    add_temporary_defs(defs)
+
+    # Now we iterate over the children elements
     for child in element:
         scene.children.append(read_element(child))
 
@@ -124,6 +143,22 @@ def __unknown_xml_data_reader(element):
         data=element.text or '',
         children=[read_element(el) for el in element]
     )
+
+
+@register_scene_reader('XML Defs', xmltag=NS_SVG + 'defs')
+def __xml_defs_reader(element):
+    return XMLDefsModel(
+        children=[read_element(el) for el in element]
+    )
+
+
+@register_scene_writer(XMLDefsModel)
+def __xml_defs_writer(write_func, model, parent):
+    element = SubElement(parent, NS_SVG + 'defs')
+    for child in model.children:
+        write_func(child, element)
+
+    return element
 
 
 @register_scene_writer(UnknownXMLDataModel)

@@ -1,11 +1,14 @@
+from random import randint
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Float, String
+from traits.api import Any, Float, Instance, List, String
 
-from .bases import BaseShapeObjectData
+from .bases import BaseSceneObjectData, BaseShapeObjectData
 from .const import NS_SVG
-from .io_utils import get_numbers, set_numbers
-from .registry import register_scene_reader, register_scene_writer
+from .io_utils import (
+    convert_number_or_string, get_defs_id, get_numbers, is_empty, set_numbers)
+from .registry import (
+    find_def, read_element, register_scene_reader, register_scene_writer)
 
 
 class LineModel(BaseShapeObjectData):
@@ -26,6 +29,37 @@ class PathModel(BaseShapeObjectData):
     """
     # A blob of SVG data...
     svg_data = String
+
+
+class MarkerModel(BaseShapeObjectData):
+    id = String(f"marker{randint(0, 10000)}")
+    markerHeight = Float
+    markerWidth = Float
+    markerUnits = String("strokeWidth")
+    preserveAspectRatio = String
+    orient = Any("auto")  # can be string or number
+    refX = Any  # can be string or number
+    refY = Any  # can be string or number
+
+    children = List(BaseSceneObjectData)
+
+
+class ArrowModel(LineModel):
+
+    marker = Instance(MarkerModel)
+
+    def _marker_default(self):
+        arrow_path = PathModel(svg_data="M0,0 L0,6 L9,3 z",
+                               fill=self.stroke)
+        return MarkerModel(
+            id=f"arrow{randint(0, 10000)}",
+            markerHeight=10, markerWidth=10,
+            refX=0, refY=3,
+            children=[arrow_path])
+
+    def _stroke_changed(self, stroke):
+        arrow_path = self.marker.children[0]
+        arrow_path.fill = stroke
 
 
 class RectangleModel(BaseShapeObjectData):
@@ -115,6 +149,10 @@ def _write_base_shape_data(model, element):
 def __line_reader(element):
     """ A reader for Line objects in Version 1 scenes
     """
+    # # Check if it is an arrow:
+    if "marker-end" in element.attrib:
+        return __arrow_reader(element)
+
     traits = _read_base_shape_data(element)
     traits.update(get_numbers(('x1', 'y1', 'x2', 'y2'), element))
     return LineModel(**traits)
@@ -127,6 +165,79 @@ def __line_writer(write_func, model, parent):
     element = SubElement(parent, NS_SVG + 'line')
     _write_base_shape_data(model, element)
     set_numbers(('x1', 'y1', 'x2', 'y2'), model, element)
+    return element
+
+
+# Don't register because this is called from the line reader
+def __arrow_reader(element):
+    """ A reader for Line objects in Version 1 scenes
+    """
+    traits = _read_base_shape_data(element)
+    traits.update(get_numbers(('x1', 'y1', 'x2', 'y2'), element))
+
+    # Retrieve marker model from the registry
+    id_ = get_defs_id(element.get("marker-end"))
+    traits["marker"] = find_def(id_)
+
+    return ArrowModel(**traits)
+
+
+@register_scene_writer(ArrowModel)
+def __arrow_writer(write_func, model, parent):
+    """ A writer for LineModel objects
+    """
+    element = SubElement(parent, NS_SVG + 'line')
+    _write_base_shape_data(model, element)
+    set_numbers(('x1', 'y1', 'x2', 'y2'), model, element)
+
+    # Write marker-end attribute
+    element.set("marker-end", "url(#{})".format(model.marker.id))
+
+    return element
+
+
+@register_scene_reader('Marker', xmltag=NS_SVG + 'marker', version=1)
+def __marker_reader(element):
+    """ A reader for Markers"""
+
+    d = element.attrib.copy()
+
+    # Read all the trait values
+    converters = {
+        'id': str,
+        'markerHeight': float,
+        'markerUnits': str,
+        'markerWidth': float,
+        'preserveAspectRatio': str,
+        'orient': convert_number_or_string,
+        'refX': convert_number_or_string,
+        'refY': convert_number_or_string}
+
+    traits = {name: converters[name](d[name])
+              for name in converters if name in d}
+
+    # Add children definitions
+    traits['children'] = [read_element(el) for el in element]
+
+    return MarkerModel(**traits)
+
+
+@register_scene_writer(MarkerModel)
+def __marker_writer(write_func, model, parent):
+    """ A writer for PathModel objects
+    """
+    element = SubElement(parent, NS_SVG + 'marker')
+    attribs = ('id', 'markerHeight', 'markerUnits', 'markerWidth',
+               'preserveAspectRatio', 'orient', 'refX', 'refY')
+
+    # Write attributes
+    for attr, value in model.trait_get(attribs).items():
+        if not is_empty(value):
+            element.set(attr, str(value))
+
+    # Write children elements
+    for child in model.children:
+        write_func(child, element)
     return element
 
 
