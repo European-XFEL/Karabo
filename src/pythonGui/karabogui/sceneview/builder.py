@@ -28,6 +28,7 @@ _SCENE_OBJ_FACTORIES = {
     models.WebLinkModel: WebLinkWidget,
     models.UnknownWidgetDataModel: UnknownWidget,
     models.UnknownXMLDataModel: lambda m, p: UnknownSvgWidget.create(m, parent=p),  # noqa
+    models.XMLDefsModel: lambda m, p: None,  # No need to create a widget
 }
 
 
