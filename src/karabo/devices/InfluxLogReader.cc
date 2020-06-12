@@ -13,6 +13,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/optional.hpp>
 #include <boost/smart_ptr/enable_shared_from_this.hpp>
 
 #include <nlohmann/json.hpp>
@@ -79,7 +80,7 @@ namespace karabo {
          * @param value
          * @return
          */
-        std::string jsonValueAsString(nl::json value) {
+        boost::optional<std::string> jsonValueAsString(nl::json value) {
             if (value.is_number_unsigned()) {
                 return toString(value.get<unsigned long long>());
             } else if (value.is_number_integer()) {
@@ -90,12 +91,14 @@ namespace karabo {
                 return value.get<std::string>();
             } else if (value.is_boolean()) {
                 return toString(value.get<bool>());
+            } else if (value.is_null()) {
+                return boost::none;
             } else {
                 // The remaining types recognized by the JSON Parser won't be
                 // handled in here. They are: 'is_primitive', 'is_structured',
-                // 'is_null', 'is_number' (already handled by the three
-                // 'is_number_*' above), 'is_object', 'is_array' and
-                // 'is_discarded' (can only be true during JSON parsing).
+                // 'is_number' (already handled by the three 'is_number_*' above),
+                // 'is_object', 'is_array' and 'is_discarded' (can only be true
+                // during JSON parsing).
                 return std::string("");
             }
         }
@@ -618,14 +621,16 @@ namespace karabo {
                 if (timeEpoch > ctxt->configTimePoint) {
                     ctxt->configTimePoint = timeEpoch;
                 }
-                const std::string valueAsString = jsonValueAsString(value);
+                const boost::optional<std::string> valueAsString = jsonValueAsString(value);
                 try {
-                    addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, valueAsString);
+                    if (valueAsString) {
+                        addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, *valueAsString);
+                    }
                 } catch (const std::exception &e) {
                     // Do not bail out, but just go on with other properties (Is that the correct approach?)
                     KARABO_LOG_FRAMEWORK_ERROR << "Error adding node to hash:"
                             << "\nValue type: " << propType
-                            << "\nValue (as string): " << valueAsString
+                            << "\nValue (as string): " << *valueAsString
                             << "\nTimestamp: " << timeEpoch.toIso8601()
                             << "\nError: " << e.what();
                 }
@@ -664,7 +669,7 @@ namespace karabo {
 
             const auto &rows = respObj["results"][0]["series"][0]["values"];
             for (const auto &row : rows) {
-                std::vector<std::string> rowValues;
+                std::vector<boost::optional<std::string>> rowValues;
                 rowValues.reserve(row.size());
                 for (const auto &value : row) {
                     rowValues.push_back(jsonValueAsString(value));
@@ -705,22 +710,32 @@ namespace karabo {
 
             vectHash.reserve(influxResult.second.size());
             // Converts each row of values into a Hash.
-            for (const auto& valuesRow : influxResult.second) {
+            for (const std::vector<boost::optional < std::string>> &valuesRow : influxResult.second) {
+                unsigned long long time = std::stoull(*(valuesRow[0])); // This is safe as Influx always returns time.
+                Epochstamp epoch(time / kSecConversionFactor, (time % kSecConversionFactor) * kFracConversionFactor);
                 unsigned long long tid = 0;
                 if (tidCol >= 0) {
-                    tid = std::stoull(valuesRow[tidCol]);
+                    if (valuesRow[tidCol]) {
+                        tid = std::stoull(*(valuesRow[tidCol]));
+                    } else {
+                        KARABO_LOG_FRAMEWORK_WARN << "Missing train_id (_tid) for property at timestamp '"
+                                << time << "'. '0' will be used for the train_id value.";
+                    }
                 }
-                unsigned long long time = std::stoull(valuesRow[0]);
-                Epochstamp epoch(time / kSecConversionFactor, (time % kSecConversionFactor) * kFracConversionFactor);
                 Hash hash;
                 for (size_t col = 1; col < influxResult.first.size(); col++) {
                     if (static_cast<int> (col) == tidCol) continue; // Skips the trainId column
                     try {
-                        addNodeToHash(hash, "v", colTypes[col], tid, epoch, valuesRow[col]);
+                        if (!valuesRow[col]) {
+                            // Skips any null value in the result set - any row returned by Influx will have at least
+                            // one non null value (may be an empty string).
+                            continue;
+                        }
+                        addNodeToHash(hash, "v", colTypes[col], tid, epoch, *(valuesRow[col]));
                     } catch (const std::exception &e) {
                         KARABO_LOG_FRAMEWORK_ERROR << "Error adding node to hash:"
                                 << "\nValue type: " << colTypeNames[col]
-                                << "\nValue (as string): " << valuesRow[col]
+                                << "\nValue (as string): " << *(valuesRow[col])
                                 << "\nTimestamp: " << epoch.toIso8601()
                                 << "\nError: " << e.what();
                     }
@@ -757,11 +772,8 @@ namespace karabo {
                     // and then escaped by the Influx Logger.
                     node = &hash.set(path, std::vector<std::string>());
                     std::vector<std::string> &value = node->getValue<std::vector < std::string >> ();
-                    // here we assume that an empty string is a vector of 0 length.
-                    // FIXME: find a solution for a vector containing only one empty string.
-                    if (!valueAsString.empty()) {
-                        boost::split(value, valueAsString, boost::is_any_of(","));
-                    }
+                    // Here we assume that an empty string is a vector of 0 length.
+                    boost::split(value, valueAsString, boost::is_any_of(","));
                     for (size_t i = 0; i < value.size(); i++) {
                         std::string unescaped = unescapeLoggedString(value[i]);
                         value[i] = unescaped;
