@@ -1,6 +1,8 @@
 from karabo.testing.utils import temp_xml_file
 from ..io import read_scene
-from ..shapes import LineModel, PathModel, RectangleModel
+from ..model import XMLDefsModel
+from ..shapes import (
+    ArrowModel, LineModel, MarkerModel, PathModel, RectangleModel)
 from .utils import single_model_round_trip
 
 
@@ -99,3 +101,51 @@ def test_alternate_style_def():
     assert line_model.stroke_width == 1.0
     assert line_model.stroke_dashoffset == 0.1
     assert line_model.stroke_miterlimit == 2.0
+
+
+def test_arrow_svg():
+    SCENE_SVG = (
+        """<svg xmlns:svg="http://www.w3.org/2000/svg" width="600" height="100">"""  # noqa
+        """<svg:line x1="295" y1="50" x2="95" y2="75" stroke="#000" stroke-width="5" marker-end="url(#arrow)"/>"""  # noqa
+        """<svg:defs>"""
+            """<svg:marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">"""  # noqa
+                """<svg:path d="M0,0 L0,6 L9,3 z" fill="#f00"/>"""
+            """</svg:marker>"""
+        """</svg:defs>"""
+        """</svg>"""
+    )
+    with temp_xml_file(SCENE_SVG) as fn:
+        scene_model = read_scene(fn)
+
+        # Check if the scene model contains a defs model and an arrow model
+        assert len(scene_model.children) == 2
+        for child in scene_model.children:
+            assert isinstance(child, (XMLDefsModel, ArrowModel))
+
+        # Check arrow model
+        arrow_model = _get_child_model(scene_model, ArrowModel)
+        assert arrow_model.x1 == 295
+        assert arrow_model.y1 == 50
+        assert arrow_model.x2 == 95
+        assert arrow_model.y2 == 75
+
+        assert arrow_model.stroke == "#000"
+        assert arrow_model.stroke_width == 5
+
+        # Check marker model
+        defs = _get_child_model(scene_model, XMLDefsModel)
+        marker_model = _get_child_model(defs, MarkerModel)
+        assert arrow_model.marker == marker_model
+        assert marker_model.id == "arrow"
+        assert marker_model.markerWidth == 10
+        assert marker_model.markerHeight == 10
+        assert marker_model.refX == 0
+        assert marker_model.refY == 3
+        assert marker_model.orient == "auto"
+        assert marker_model.markerUnits == "strokeWidth"
+
+
+def _get_child_model(model, klass):
+    for child in model.children:
+        if isinstance(child, klass):
+            return child
