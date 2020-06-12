@@ -1,7 +1,11 @@
 from collections.abc import Sequence
+import re
 
 from .const import NS_KARABO
 from .exceptions import SceneWriterException
+
+
+SVG_DEF_REGEX = re.compile(r'url\(\#(.*?)\)')
 
 
 def get_numbers(names, element):
@@ -73,3 +77,20 @@ def write_base_widget_data(model, element, widget_class_name):
     element.set(NS_KARABO + 'widget', widget_class_name)
     element.set(NS_KARABO + 'keys', ",".join(model.keys))
     set_numbers(('x', 'y', 'width', 'height'), model, element)
+
+
+def get_defs_id(value):
+    match = SVG_DEF_REGEX.match(value)
+    return match.group(1) if match else None
+
+
+def is_empty(value):
+    return value is None or value == ""
+
+
+def convert_number_or_string(value):
+    try:
+        return float(value)
+    except ValueError:
+        # Value is not a number, we consider the string as-is instead.
+        return value

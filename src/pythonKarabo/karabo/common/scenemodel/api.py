@@ -14,9 +14,11 @@ from .io import read_scene, write_scene, write_single_model
 from .layouts import (
     BoxLayoutModel, FixedLayoutChildData, FixedLayoutModel,
     GridLayoutChildData, GridLayoutModel)
-from .model import SceneModel, UnknownWidgetDataModel, UnknownXMLDataModel
+from .model import (
+    SceneModel, UnknownWidgetDataModel, UnknownXMLDataModel, XMLDefsModel)
 from .registry import register_scene_reader, register_scene_writer
-from .shapes import LineModel, PathModel, RectangleModel
+from .shapes import (
+    ArrowModel, LineModel, MarkerModel, PathModel, RectangleModel)
 from .widgets.complex import (
     ColorBoolModel, DeviceSceneLinkModel, DisplayCommandModel,
     DisplayIconCommandModel, DisplayProgressBarModel, DisplayStateColorModel,
