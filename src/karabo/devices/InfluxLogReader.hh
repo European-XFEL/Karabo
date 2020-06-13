@@ -15,6 +15,7 @@
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/optional.hpp>
 
 #include "karabo/core/Device.hh"
 #include "karabo/core/NoFsm.hh"
@@ -34,9 +35,14 @@ namespace karabo {
 
     namespace devices {
 
-        // InfluxResultSet is a pair with a vector of column names in its first position
-        // a vector of rows of values represented as strings.
-        using InfluxResultSet = std::pair<std::vector<std::string>, std::vector<std::vector<std::string>>>;
+        // InfluxResultSet is a pair with a vector of column names in its first position and
+        // a vector of rows of values represented as optional strings in its second position.
+        // The optional strings have no value when they correspond to nulls returned by Influx.
+        using InfluxResultSet =
+                std::pair<
+                /* first  */ std::vector<std::string>,
+                /* second */ std::vector<std::vector<boost::optional<std::string>>>
+                >;
 
         // Context of an ongoing slotGetPropertyHistory process.
         struct PropertyHistoryContext {
