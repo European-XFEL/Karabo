@@ -159,7 +159,7 @@ def __line_reader(element):
 
 
 @register_scene_writer(LineModel)
-def __line_writer(write_func, model, parent):
+def __line_writer(model, parent):
     """ A writer for LineModel objects
     """
     element = SubElement(parent, NS_SVG + 'line')
@@ -251,7 +251,7 @@ def __path_reader(element):
 
 
 @register_scene_writer(PathModel)
-def __path_writer(write_func, model, parent):
+def __path_writer(model, parent):
     """ A writer for PathModel objects
     """
     element = SubElement(parent, NS_SVG + 'path')
@@ -270,7 +270,7 @@ def __rectangle_reader(element):
 
 
 @register_scene_writer(RectangleModel)
-def __rectangle_writer(write_func, model, parent):
+def __rectangle_writer(model, parent):
     """ A writer for RectangleModel objects
     """
     element = SubElement(parent, NS_SVG + 'rect')

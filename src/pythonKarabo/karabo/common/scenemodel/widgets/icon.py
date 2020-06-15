@@ -61,7 +61,7 @@ def _display_iconset_reader(element):
 
 
 @register_scene_writer(DisplayIconsetModel)
-def _display_iconset_writer(write_func, model, parent):
+def _display_iconset_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayIconset')
     if model.data is None or len(model.data) == 0:
@@ -115,7 +115,7 @@ def _build_icon_widget_readers_and_writers():
         return reader
 
     def _build_writer_func(name, tag):
-        def writer(write_func, model, parent):
+        def writer(model, parent):
             element = SubElement(parent, WIDGET_ELEMENT_TAG)
             write_base_widget_data(model, element, name)
             _write_icon_elements(model.values, element, NS_KARABO + tag)
