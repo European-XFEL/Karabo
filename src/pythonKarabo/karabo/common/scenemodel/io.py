@@ -2,7 +2,8 @@ from xml.etree.ElementTree import Element, parse, tostring
 
 from .const import NS_KARABO, NS_SVG, SCENE_FILE_VERSION
 from .model import SceneModel
-from .registry import (get_writer, read_element, set_reader_registry_version)
+from .registry import (
+    read_element, set_reader_registry_version, write_element)
 
 
 def read_scene(filename_or_fileobj):
@@ -40,6 +41,5 @@ def write_single_model(model):
 
 
 def _writer_core(model, root):
-    writer = get_writer()
-    writer(model, root)
+    write_element(model, parent=root)
     return tostring(root, encoding='unicode')
