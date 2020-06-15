@@ -253,7 +253,7 @@ def __label_reader(element):
 
 
 @register_scene_writer(LabelModel)
-def __label_writer(write_func, model, parent):
+def __label_writer(model, parent):
     """ A writer for LabelModel objects
     """
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
@@ -282,7 +282,7 @@ def _doublewheel_box_reader(element):
 
 
 @register_scene_writer(DoubleWheelBoxModel)
-def _doublewheel_box_writer(write_func, model, parent):
+def _doublewheel_box_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DoubleWheelBox')
     element.set(NS_KARABO + 'decimals', str(model.decimals))
@@ -303,7 +303,7 @@ def _tick_slider_reader(element):
 
 
 @register_scene_writer(SliderModel)
-def _slider_writer(write_func, model, parent):
+def _slider_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'TickSlider')
     element.set(NS_KARABO + 'ticks', '1')
@@ -313,7 +313,7 @@ def _slider_writer(write_func, model, parent):
 
 
 @register_scene_writer(TickSliderModel)
-def _tick_slider_writer(write_func, model, parent):
+def _tick_slider_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'TickSlider')
     element.set(NS_KARABO + 'ticks', str(model.ticks))
@@ -332,7 +332,7 @@ def _time_label_reader(element):
 
 
 @register_scene_writer(DisplayTimeModel)
-def _time_label_writer(write_func, model, parent):
+def _time_label_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'TimeLabel')
     element.set(NS_KARABO + 'time_format', str(model.time_format))
@@ -354,7 +354,7 @@ def _display_label_reader(element):
 
 
 @register_scene_writer(DisplayLabelModel)
-def _display_label_writer(write_func, model, parent):
+def _display_label_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayLabel')
 
@@ -386,7 +386,7 @@ def __web_link_reader(element):
 
 
 @register_scene_writer(WebLinkModel)
-def __web_link_writer(write_func, model, parent):
+def __web_link_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     _write_class_and_geometry(model, element, 'WebLink')
     element.set(NS_KARABO + 'target', model.target)
@@ -423,7 +423,7 @@ def __scene_link_reader(element):
 
 
 @register_scene_writer(SceneLinkModel)
-def __scene_link_writer(write_func, model, parent):
+def __scene_link_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     _write_class_and_geometry(model, element, 'SceneLink')
     element.set(NS_KARABO + 'target', model.target)
@@ -453,7 +453,7 @@ def __sticker_widget_reader(element):
 
 
 @register_scene_writer(StickerModel)
-def __sticker_widget_writer(write_func, model, parent):
+def __sticker_widget_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     _write_class_and_geometry(model, element, 'StickerWidget')
     for name in ('text', 'font', 'foreground'):
@@ -476,7 +476,7 @@ def _build_empty_widget_readers_and_writers():
         return reader
 
     def _build_writer_func(name):
-        def writer(write_func, model, parent):
+        def writer(model, parent):
             element = SubElement(parent, WIDGET_ELEMENT_TAG)
             write_base_widget_data(model, element, name)
             return element
@@ -508,7 +508,7 @@ def _build_empty_display_editable_readers_and_writers():
 
         return reader
 
-    def _writer_func(write_func, model, parent):
+    def _writer_func(model, parent):
         element = SubElement(parent, WIDGET_ELEMENT_TAG)
         write_base_widget_data(model, element, model.klass)
         return element

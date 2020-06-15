@@ -180,7 +180,7 @@ def _scatter_graph_reader(element):
 
 @register_scene_writer(XYPlotModel)
 @register_scene_writer(ScatterGraphModel)
-def _scatter_graph_writer(write_func, model, parent):
+def _scatter_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'ScatterGraph')
     write_basic_label(model, element)
@@ -204,7 +204,7 @@ def _vector_scatter_graph_reader(element):
 
 
 @register_scene_writer(VectorScatterGraphModel)
-def _vector_scatter_graph_writer(write_func, model, parent):
+def _vector_scatter_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'VectorScatterGraph')
     write_basic_label(model, element)
@@ -228,7 +228,7 @@ def _vector_xy_graph_reader(element):
 
 @register_scene_writer(XYVectorModel)
 @register_scene_writer(VectorXYGraphModel)
-def _vector_xy_graph_writer(write_func, model, parent):
+def _vector_xy_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'VectorXYGraph')
     write_basic_label(model, element)
@@ -250,7 +250,7 @@ def _vector_bar_graph_reader(element):
 
 
 @register_scene_writer(VectorBarGraphModel)
-def _vector_bar_graph_writer(write_func, model, parent):
+def _vector_bar_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'VectorBarGraph')
     write_basic_label(model, element)
@@ -277,7 +277,7 @@ def _vector_hist_graph_reader(element):
 
 
 @register_scene_writer(VectorHistGraphModel)
-def _vector_hist_graph_writer(write_func, model, parent):
+def _vector_hist_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'VectorHistGraph')
     write_basic_label(model, element)
@@ -306,7 +306,7 @@ def _ndarray_graph_reader(element):
 
 
 @register_scene_writer(NDArrayGraphModel)
-def _ndarray_graph_writer(write_func, model, parent):
+def _ndarray_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'NDArrayGraph')
     write_basic_label(model, element)
@@ -331,7 +331,7 @@ def _vector_fill_graph_reader(element):
 
 
 @register_scene_writer(VectorFillGraphModel)
-def _vector_fill_graph_writer(write_func, model, parent):
+def _vector_fill_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'VectorFillGraph')
     write_basic_label(model, element)
@@ -358,7 +358,7 @@ def _vector_graph_reader(element):
 
 @register_scene_writer(DisplayPlotModel)
 @register_scene_writer(VectorGraphModel)
-def _vector_graph_writer(write_func, model, parent):
+def _vector_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'VectorGraph')
     write_basic_label(model, element)
@@ -385,7 +385,7 @@ def _trend_graph_reader(element):
 
 @register_scene_writer(DisplayTrendlineModel)  # deprecated Qwt model
 @register_scene_writer(TrendGraphModel)
-def _trend_graph_writer(write_func, model, parent):
+def _trend_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayTrendGraph')
     write_basic_label(model, element)
@@ -396,7 +396,7 @@ def _trend_graph_writer(write_func, model, parent):
 
 
 @register_scene_writer(LinePlotModel)  # deprecated Qwt model
-def _line_plot_writer(write_func, model, parent):
+def _line_plot_writer(model, parent):
     # Delegate the co writer to the respective new models
     WRITER_MAP = {
         'DisplayTrendline': _trend_graph_writer,
@@ -404,7 +404,7 @@ def _line_plot_writer(write_func, model, parent):
 
     # The model will always have a `klass` due to its Enum traits
     writer = WRITER_MAP.get(model.klass)
-    return writer(write_func, model, parent)
+    return writer(model, parent)
 
 
 @register_scene_reader('DisplayStateGraph')
@@ -418,7 +418,7 @@ def _state_graph_reader(element):
 
 
 @register_scene_writer(StateGraphModel)
-def _state_graph_writer(write_func, model, parent):
+def _state_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayStateGraph')
     write_basic_label(model, element)
@@ -439,7 +439,7 @@ def _alarm_graph_reader(element):
 
 
 @register_scene_writer(AlarmGraphModel)
-def _alarm_graph_writer(write_func, model, parent):
+def _alarm_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayAlarmGraph')
     write_basic_label(model, element)
@@ -462,7 +462,7 @@ def _multi_graph_reader(element):
 
 @register_scene_writer(MultiCurvePlotModel)
 @register_scene_writer(MultiCurveGraphModel)
-def _multi_graph_writer(write_func, model, parent):
+def _multi_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'MultiCurveGraph')
     write_basic_label(model, element)

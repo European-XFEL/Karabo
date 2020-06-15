@@ -114,7 +114,7 @@ def _image_graph_reader(element):
 
 @register_scene_writer(DisplayImageModel)
 @register_scene_writer(ImageGraphModel)
-def _image_graph_writer(write_func, model, parent):
+def _image_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'ImageGraph')
     write_base_karabo_image_model(model, element)
@@ -132,7 +132,7 @@ def _detector_graph_reader(element):
 
 @register_scene_writer(DisplayAlignedImageModel)  # deprecated Qwt model
 @register_scene_writer(DetectorGraphModel)
-def _detector_graph_writer(write_func, model, parent):
+def _detector_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DetectorGraph')
     write_base_karabo_image_model(model, element)
@@ -154,7 +154,7 @@ def _vector_roll_graph_reader(element):
 
 
 @register_scene_writer(VectorRollGraphModel)
-def _vector_roll_graph_writer(write_func, model, parent):
+def _vector_roll_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'VectorRollGraph')
     element.set(NS_KARABO + 'colormap', model.colormap)
@@ -183,7 +183,7 @@ def _webcam_graph_reader(element):
 @register_scene_writer(WebcamImageModel)  # deprecated Qwt model
 @register_scene_writer(ScientificImageModel)  # deprecated Qwt model
 @register_scene_writer(WebCamGraphModel)
-def _webcam_graph_writer(write_func, model, parent):
+def _webcam_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'WebCamGraph')
     element.set(NS_KARABO + 'colormap', model.colormap)
