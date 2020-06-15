@@ -36,7 +36,7 @@ def _display_sparkline_reader(element):
 
 
 @register_scene_writer(SparklineModel)
-def _display_sparkline_writer(write_func, model, parent):
+def _display_sparkline_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplaySparkline')
     element.set(NS_KARABO + 'time_base', str(model.time_base))

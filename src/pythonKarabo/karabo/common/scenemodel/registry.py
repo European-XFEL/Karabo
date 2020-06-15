@@ -2,8 +2,8 @@ from collections import namedtuple
 from inspect import signature
 
 from traits.api import (
-    cached_property, Callable, Dict, HasStrictTraits, Instance, Int, Property,
-    String)
+    Any, cached_property, Callable, Dict, HasStrictTraits, Instance, Int,
+    Property, String)
 
 from .const import NS_KARABO, SCENE_FILE_VERSION, UNKNOWN_WIDGET_CLASS
 
@@ -91,17 +91,40 @@ class ReaderRegistry(HasStrictTraits):
         return self.entries[name].get_function(version)
 
 
+class WriterRegistry(HasStrictTraits):
+
+    entries = Dict(Any, Callable)
+
+    def register(self, klass=None, func=None):
+        self.entries[klass] = func
+
+    def write(self, model, parent):
+        klass = model.__class__
+        writer = self.entries.get(klass)
+        assert writer is not None, 'Writer not found for {}!'.format(klass)
+
+        sig = signature(writer)
+        # XXX: Backward compatibility with GUI extensions. Old writers have
+        # three (3) arguments, new ones have two arguments
+        if len(sig.parameters) == 3:
+            return writer(None, model, parent)
+
+        return writer(model, parent)
+
+
 # The reader registry contains the functions registered as readers.
 # This shouldn't be used outside of this module.
 # Please use the following convenience functions
 #    1. set_reader_registry_function
 #    2. read_element
 _reader_registry = ReaderRegistry()
+_writer_registry = WriterRegistry()
 
 
 def set_reader_registry_version(version=SCENE_FILE_VERSION):
     """Set the version to the global scene reader registry. This is usually
     done on the start of scene reading."""
+    global _reader_registry
     _reader_registry.version = version
 
 
@@ -110,6 +133,11 @@ def read_element(element):
     registry. """
     global _reader_registry
     return _reader_registry.read(element)
+
+
+def write_element(model, parent):
+    global _writer_registry
+    return _writer_registry.write(model, parent)
 
 
 def add_temporary_defs(defs):
@@ -125,17 +153,6 @@ def add_temporary_defs(defs):
 def find_def(id_):
     global _reader_registry
     return _reader_registry.find(id_)
-
-
-def get_writer():
-    """ Return a writer function for all registered classes.
-    """
-    global _scene_writers
-
-    def _writer_entrypoint(obj, element):
-        entry = _scene_writers.get(obj.__class__)
-        return entry.function(_writer_entrypoint, obj, element)
-    return _writer_entrypoint
 
 
 class register_scene_reader(object):
@@ -164,6 +181,6 @@ class register_scene_writer(object):
         self.objclass = objclass
 
     def __call__(self, func):
-        global _scene_writers
-        _scene_writers[self.objclass] = RegistryEntry(func, 0)
+        global _writer_registry
+        _writer_registry.register(klass=self.objclass, func=func)
         return func

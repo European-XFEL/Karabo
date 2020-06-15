@@ -33,7 +33,7 @@ class VacuumWidgetModel(BaseWidgetObjectData):
 
 
 @register_scene_writer(VacuumWidgetModel)
-def _vacuum_widget_writer(write_func, model, parent):
+def _vacuum_widget_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, model.klass)
     return element
