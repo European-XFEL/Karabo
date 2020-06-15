@@ -46,6 +46,9 @@ class DisplayVectorGraph(BaseBindingController):
 
         widget.addAction(trans_action)
 
+        # Add first curve for the main proxy
+        self._add_curve(self.proxy, widget=widget)
+
         return widget
 
     def __pens_default(self):
@@ -55,18 +58,20 @@ class DisplayVectorGraph(BaseBindingController):
 
     def add_proxy(self, proxy):
         if proxy.binding is not None:
-            self.binding_update(proxy)
+            self._add_curve(proxy)
+            if len(self._curves) > 1:
+                self.widget.set_legend(True)
         return True
 
-    def binding_update(self, proxy):
-        if proxy in self._curves:
-            return
+    def _add_curve(self, proxy, widget=None):
+        """The widget is passed as an argument in create_widget as it is not
+           yet bound to self.widget then"""
+        if widget is None:
+            widget = self.widget
 
         name = proxy.key
-        curve = self.widget.add_curve_item(name=name, pen=next(self._pens))
+        curve = widget.add_curve_item(name=name, pen=next(self._pens))
         self._curves[proxy] = curve
-        if len(self._curves) > 1:
-            self.widget.set_legend(True)
 
     def value_update(self, proxy):
         if not self._curves:
