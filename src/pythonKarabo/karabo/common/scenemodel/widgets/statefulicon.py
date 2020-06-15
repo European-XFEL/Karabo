@@ -22,7 +22,7 @@ class StatefulIconWidgetModel(BaseWidgetObjectData):
 
 
 @register_scene_writer(StatefulIconWidgetModel)
-def _statefulwidget_widget_writer(write_func, model, parent):
+def _statefulwidget_widget_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'StatefulIconWidget')
     element.set(NS_KARABO + 'icon_name', model.icon_name)

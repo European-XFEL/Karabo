@@ -124,7 +124,7 @@ def __display_command_reader(element):
 
 
 @register_scene_writer(DisplayCommandModel)
-def __display_command_writer(write_func, model, parent):
+def __display_command_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayCommand')
     element.set(NS_KARABO + 'requires_confirmation',
@@ -141,7 +141,7 @@ def __display_icon_command_reader(element):
 
 
 @register_scene_writer(DisplayIconCommandModel)
-def __display_icon_command_writer(write_func, model, parent):
+def __display_icon_command_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayIconCommand')
     element.set(NS_KARABO + 'icon_name', model.icon_name)
@@ -169,7 +169,7 @@ def _device_scene_link_reader(element):
 
 
 @register_scene_writer(DeviceSceneLinkModel)
-def _device_scene_link_writer(write_func, model, parent):
+def _device_scene_link_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DeviceSceneLink')
     for name in ('text', 'font', 'foreground'):
@@ -192,7 +192,7 @@ def _color_bool_reader(element):
 
 
 @register_scene_writer(ColorBoolModel)
-def _color_bool_writer(write_func, model, parent):
+def _color_bool_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayColorBool')
     element.set(NS_KARABO + 'invert', str(model.invert).lower())
@@ -208,7 +208,7 @@ def _error_bool_reader(element):
 
 
 @register_scene_writer(ErrorBoolModel)
-def _error_bool_writer(write_func, model, parent):
+def _error_bool_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayErrorBool')
     element.set(NS_KARABO + 'invert', str(model.invert).lower())
@@ -225,7 +225,7 @@ def _double_line_edit_reader(element):
 
 
 @register_scene_writer(DoubleLineEditModel)
-def _double_line_edit_writer(write_func, model, parent):
+def _double_line_edit_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DoubleLineEdit')
     element.set(NS_KARABO + 'decimals', str(model.decimals))
@@ -241,7 +241,7 @@ def _display_progress_bar_reader(element):
 
 
 @register_scene_writer(DisplayProgressBarModel)
-def _display_progress_bar_writer(write_func, model, parent):
+def _display_progress_bar_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayProgressBar')
     element.set(NS_KARABO + 'is_vertical', str(model.is_vertical).lower())
@@ -257,7 +257,7 @@ def _display_state_color_reader(element):
 
 
 @register_scene_writer(DisplayStateColorModel)
-def _display_state_color_writer(write_func, model, parent):
+def _display_state_color_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayStateColor')
     element.set(NS_KARABO + 'show_string', str(model.show_string).lower())
@@ -272,7 +272,7 @@ def _evaluator_reader(element):
 
 
 @register_scene_writer(EvaluatorModel)
-def _evaluator_writer(write_func, model, parent):
+def _evaluator_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'Evaluator')
     element.set('expression', model.expression)
@@ -290,7 +290,7 @@ def _float_spin_box_reader(element):
 
 
 @register_scene_writer(FloatSpinBoxModel)
-def _float_spin_box_writer(write_func, model, parent):
+def _float_spin_box_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'FloatSpinBox')
     element.set(NS_KARABO + 'step', str(model.step))
@@ -307,7 +307,7 @@ def _monitor_reader(element):
 
 
 @register_scene_writer(MonitorModel)
-def _monitor_writer(write_func, model, parent):
+def _monitor_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'Monitor')
     element.set('interval', str(model.interval))
@@ -326,7 +326,7 @@ def _single_bit_reader(element):
 
 
 @register_scene_writer(SingleBitModel)
-def _single_bit_writer(write_func, model, parent):
+def _single_bit_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'SingleBit')
     element.set(NS_KARABO + 'bit', str(model.bit))
@@ -342,7 +342,7 @@ def _table_element_reader(element):
 
 
 @register_scene_writer(TableElementModel)
-def _table_element_writer(write_func, model, parent):
+def _table_element_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, model.klass)
     return element

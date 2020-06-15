@@ -7,7 +7,7 @@ from .bases import BaseLayoutData, BaseLayoutModel, BaseSceneObjectData
 from .const import NS_KARABO, NS_SVG
 from .io_utils import set_numbers
 from .registry import (
-    read_element, register_scene_reader, register_scene_writer)
+    read_element, register_scene_reader, register_scene_writer, write_element)
 
 FIXED_LAYOUT_TAG = NS_SVG + 'g'
 FIXED_DATA_NAMES = ('x', 'y', 'height', 'width')
@@ -123,7 +123,7 @@ def __box_layout_reader(element):
 
 
 @register_scene_writer(BoxLayoutModel)
-def __box_layout_writer(write_func, layout, root):
+def __box_layout_writer(layout, root):
     """ Write a BoxLayout to a scene file.
     """
     element = SubElement(root, FIXED_LAYOUT_TAG)
@@ -131,7 +131,7 @@ def __box_layout_writer(write_func, layout, root):
     _write_standard_layout_attributes(element, layout, 'BoxLayout')
 
     for child in layout.children:
-        write_func(child, element)
+        write_element(model=child, parent=element)
 
     return element
 
@@ -157,14 +157,14 @@ def __fixed_layout_reader(element):
 
 
 @register_scene_writer(FixedLayoutModel)
-def __fixed_layout_writer(write_func, layout, root):
+def __fixed_layout_writer(layout, root):
     """ Write a FixedLayout to a scene file.
     """
     element = SubElement(root, FIXED_LAYOUT_TAG)
     _write_standard_layout_attributes(element, layout, 'FixedLayout')
 
     for child in layout.children:
-        child_elem = write_func(child, element)
+        child_elem = write_element(model=child, parent=element)
         # XXX: Handle the goofy 'entire' attribute
         if layout.entire is child:
             child_elem.set('entire', 'True')
@@ -190,14 +190,14 @@ def __grid_layout_reader(element):
 
 
 @register_scene_writer(GridLayoutModel)
-def __grid_layout_writer(write_func, layout, root):
+def __grid_layout_writer(layout, root):
     """ Write a GridLayout to a scene file.
     """
     element = SubElement(root, FIXED_LAYOUT_TAG)
     _write_standard_layout_attributes(element, layout, 'GridLayout')
 
     for child in layout.children:
-        child_elem = write_func(child, element)
+        child_elem = write_element(model=child, parent=element)
         # XXX: Handle the misplaced layout data
         _write_grid_layout_data(child_elem, child.layout_data)
 

@@ -13,7 +13,7 @@ from .io_utils import (read_unknown_display_editable_widget, set_numbers,
                        write_base_widget_data)
 from .registry import (
     read_element, add_temporary_defs, register_scene_reader,
-    register_scene_writer)
+    register_scene_writer, write_element)
 
 
 class SceneModel(BaseProjectObjectModel):
@@ -123,9 +123,9 @@ def __scene_reader(element):
 
 
 @register_scene_writer(SceneModel)
-def __scene_writer(write_func, scene, root):
+def __scene_writer(scene, root):
     for child in scene.children:
-        write_func(child, root)
+        write_element(model=child, parent=root)
 
     root.set(NS_KARABO + 'uuid', scene.uuid)
     set_numbers(('height', 'width'), scene, root)
@@ -153,23 +153,23 @@ def __xml_defs_reader(element):
 
 
 @register_scene_writer(XMLDefsModel)
-def __xml_defs_writer(write_func, model, parent):
+def __xml_defs_writer(model, parent):
     element = SubElement(parent, NS_SVG + 'defs')
     for child in model.children:
-        write_func(child, element)
+        write_element(model=child, parent=element)
 
     return element
 
 
 @register_scene_writer(UnknownXMLDataModel)
-def __unknown_xml_data_writer(write_func, model, parent):
+def __unknown_xml_data_writer(model, parent):
     element = SubElement(parent, model.tag)
     if model.data:
         element.text = model.data
     for name, value in model.attributes.items():
         element.set(name, value)
     for child in model.children:
-        write_func(child, element)
+        write_element(model=child, parent=element)
 
     return element
 
@@ -186,7 +186,7 @@ def __unknown_widget_data_reader(element):
 
 
 @register_scene_writer(UnknownWidgetDataModel)
-def __unknown_widget_data_writer(write_func, model, parent):
+def __unknown_widget_data_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, model.klass)
     if model.data:
