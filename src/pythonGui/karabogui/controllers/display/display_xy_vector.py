@@ -57,21 +57,12 @@ class DisplayVectorXYGraph(BaseBindingController):
 
     def add_proxy(self, proxy):
         if proxy.binding is not None:
-            self.binding_update(proxy)
+            name = proxy.key
+            curve = self.widget.add_curve_item(name=name, pen=next(self._pens))
+            self._curves[proxy] = curve
+            if len(self._curves) > 1:
+                self.widget.set_legend(True)
         return True
-
-    def binding_update(self, proxy):
-        if proxy in self._curves or proxy is self.proxy:
-            # We do not want to add another curve for an already existing
-            # y - proxy. Also we do not want to have the proxy denoting
-            # the x - axis to be plotted against itself.
-            return
-
-        name = proxy.key
-        curve = self.widget.add_curve_item(name=name, pen=next(self._pens))
-        self._curves[proxy] = curve
-        if len(self._curves) > 1:
-            self.widget.set_legend(True)
 
     def value_update(self, proxy):
         value = get_binding_value(proxy.binding, [])
