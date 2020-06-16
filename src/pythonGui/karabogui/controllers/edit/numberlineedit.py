@@ -3,8 +3,8 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QFontMetrics, QPalette, QValidator
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPalette, QValidator
 from PyQt5.QtWidgets import QAction, QInputDialog, QLineEdit
 from traits.api import Instance, Int, on_trait_change, Str
 
@@ -12,28 +12,13 @@ from karabo.common.scenemodel.api import (
     DoubleLineEditModel, HexadecimalModel, IntLineEditModel)
 from karabogui.binding.api import (
     get_editor_value, get_min_max, FloatBinding, IntBinding)
-from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, HexValidator, IntValidator,
     is_proxy_allowed, NumberValidator, register_binding_controller)
 from karabogui.util import SignalBlocker
+from karabogui.widgets.hints import LineEdit
 
 MAX_FLOATING_PRECISION = 12
-
-
-class LineEdit(QLineEdit):
-    def __init__(self, parent):
-        super(LineEdit, self).__init__(parent)
-        self.setMinimumWidth(WIDGET_MIN_WIDTH)
-        self.setMinimumHeight(WIDGET_MIN_HEIGHT)
-        self.setAlignment(Qt.AlignLeft | Qt.AlignAbsolute)
-
-    def sizeHint(self):
-        fm = QFontMetrics(self.font())
-        CONTENT_MARGIN = 10
-        width = fm.width(self.text()) + CONTENT_MARGIN
-
-        return QSize(width, 20)
 
 
 class NumberLineEdit(BaseBindingController):
