@@ -1306,24 +1306,24 @@ void DataLogging_Test::testNans() {
     std::clog << "Testing NaN and infinity are treated by Loggers " << std::flush;
 
     // define some bad floating points to test against
-    const vector<float> bad_floats = {
-        std::numeric_limits<float>::quiet_NaN(),
-        std::numeric_limits<float>::signaling_NaN(),
+    const vector<float> bad_floats = {std::numeric_limits<float>::quiet_NaN(),
+                                      std::numeric_limits<float>::signaling_NaN(),
                                       std::numeric_limits<float>::infinity(),
-        -1.f * std::numeric_limits<float>::infinity()
-    };
-    const vector<double> bad_doubles = {
-                                        std::numeric_limits<double>::quiet_NaN(),
-        std::numeric_limits<double>::signaling_NaN(),
+                                      -1.f * std::numeric_limits<float>::infinity()};
+    const vector<double> bad_doubles = {std::numeric_limits<double>::quiet_NaN(),
+                                        std::numeric_limits<double>::signaling_NaN(),
                                         std::numeric_limits<double>::infinity(),
-        -1. * std::numeric_limits<double>::infinity()
-    };
+                                        -1. * std::numeric_limits<double>::infinity()};
 
     // save this instant as a iso string
     Epochstamp es_beforeWrites;
     std::string beforeWrites = es_beforeWrites.toIso8601();
 
+    // Collect stamps for when each bad floating point has been set (once) - to later test slotGetConfigurationFromPast.
+    // Use std::min with max_set as protection (max_set _should_ always be larger...)
     std::vector<Epochstamp> vec_es_afterWrites(std::min(max_set, bad_floats.size()), Epochstamp(0ull, 0ull));
+    // Also collect stamps of most recent update stamp at the above points in time
+    std::vector<Epochstamp> vec_es_updateStamps(vec_es_afterWrites);
     // write a bunch of times and record the timestamps of the updated properties
     std::vector<Epochstamp> updateStamps;
     for (size_t i = 0; i < max_set; i++) {
@@ -1336,7 +1336,11 @@ void DataLogging_Test::testNans() {
         const Hash cfg = m_deviceClient->get(m_deviceId);
         updateStamps.push_back(Epochstamp::fromHashAttributes(cfg.getAttributes("doubleProperty")));
         boost::this_thread::sleep(boost::posix_time::milliseconds(10));
-        if (i < vec_es_afterWrites.size()) vec_es_afterWrites[i].now();
+        if (i < vec_es_afterWrites.size()) {
+            vec_es_afterWrites[i].now();
+            // Looks like doublePropertyReadOnly is updated later than doubleProperty:
+            vec_es_updateStamps[i] = Epochstamp::fromHashAttributes(cfg.getAttributes("doublePropertyReadOnly"));
+        }
     }
 
     // set one last time a valid value.
@@ -1362,11 +1366,9 @@ void DataLogging_Test::testNans() {
     std::vector<std::string> exceptionsMsgs;
 
     // Check the length of the history for the properties injected.
-    std::map<std::string, size_t> properties = {
-        std::make_pair(std::string("int32Property"), full_return_size),
-                                                std::make_pair(std::string("floatProperty"), full_return_size),
-                                                std::make_pair(std::string("doubleProperty"), full_return_size)
-    };
+    const std::map<std::string, size_t> properties = {std::make_pair(std::string("int32Property"), full_return_size),
+                                                      std::make_pair(std::string("floatProperty"), full_return_size),
+                                                      std::make_pair(std::string("doubleProperty"), full_return_size)};
 
     for (const auto& property_pair : properties) {
         int nTries = NUM_RETRY;
@@ -1448,13 +1450,16 @@ void DataLogging_Test::testNans() {
                                 .receive(conf, schema, configAtTimepoint, configTimepoint));
 
         CPPUNIT_ASSERT(configAtTimepoint);
-        //CPPUNIT_ASSERT_EQUAL(es_afterFirstWrite.toIso8601(), configTimepoint);
+        // This equality check relies on the fact that the string representation implicitly rounds to micro second
+        // precision, i.e. the precision in the data base. So if the test fails here, do like above with the TimeDuration.
+        CPPUNIT_ASSERT_EQUAL(vec_es_updateStamps[i].toIso8601Ext(),
+                             configTimepoint += "Z"); // Looks like we get time back without time zone indication...
         const double theD = conf.get<double>("doubleProperty");
         const float theF = conf.get<float>("floatProperty");
         if (std::isnan(bad_floats[i])) {
             // assuming same order of nan/inf for both bad_floats and bad_doubles
-            CPPUNIT_ASSERT_MESSAGE(toString(i), std::isnan(theF));
-            CPPUNIT_ASSERT_MESSAGE(toString(i), std::isnan(theD));
+            CPPUNIT_ASSERT_MESSAGE(toString(i) + ": theF = " + toString(theF), std::isnan(theF));
+            CPPUNIT_ASSERT_MESSAGE(toString(i) + ": theD = " + toString(theD), std::isnan(theD));
         } else {
             CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(i), bad_floats[i], theF);
             CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(i), bad_doubles[i], theD);
