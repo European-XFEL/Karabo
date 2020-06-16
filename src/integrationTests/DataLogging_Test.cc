@@ -1103,7 +1103,8 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
                                  "\n\tparam.to: " + afterWrites + "\n\tparam.maxNumData: " + toString(max_set * 2) +
                                  "\n\thistory.size(): " + toString(history.size()) +
                                  "\n\tNumber of Exceptions: " + toString(numExceptions) +
-                                 "\n\tExceptions:\n" + boost::algorithm::join(exceptionsMsgs, "\n"),
+                                 "\n\tExceptions:\n" + boost::algorithm::join(exceptionsMsgs, "\n") +
+                                 "\nhistory\t" + toString(history),
                                  static_cast<size_t> (max_set), history.size());
 
     CPPUNIT_ASSERT_EQUAL(numGetPropHist + numChecks, m_deviceClient->get<unsigned int>(dlreader0, "numGetPropertyHistory"));
@@ -1306,15 +1307,15 @@ void DataLogging_Test::testNans() {
 
     // define some bad floating points to test against
     const vector<float> bad_floats = {
-                                      std::numeric_limits<float>::infinity(),
         std::numeric_limits<float>::quiet_NaN(),
         std::numeric_limits<float>::signaling_NaN(),
+                                      std::numeric_limits<float>::infinity(),
         -1.f * std::numeric_limits<float>::infinity()
     };
     const vector<double> bad_doubles = {
-                                        std::numeric_limits<double>::infinity(),
                                         std::numeric_limits<double>::quiet_NaN(),
         std::numeric_limits<double>::signaling_NaN(),
+                                        std::numeric_limits<double>::infinity(),
         -1. * std::numeric_limits<double>::infinity()
     };
 
@@ -1322,8 +1323,9 @@ void DataLogging_Test::testNans() {
     Epochstamp es_beforeWrites;
     std::string beforeWrites = es_beforeWrites.toIso8601();
 
-    Epochstamp es_afterFirstWrite(0ull, 0ull);
-    // write a bunch of times
+    std::vector<Epochstamp> vec_es_afterWrites(std::min(max_set, bad_floats.size()), Epochstamp(0ull, 0ull));
+    // write a bunch of times and record the timestamps of the updated properties
+    std::vector<Epochstamp> updateStamps;
     for (size_t i = 0; i < max_set; i++) {
         Hash new_conf;
         new_conf.set("int32Property", static_cast<int>(i));
@@ -1331,8 +1333,10 @@ void DataLogging_Test::testNans() {
         new_conf.set("doubleProperty", bad_doubles[i % bad_doubles.size()]);
 
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(m_deviceId, new_conf));
+        const Hash cfg = m_deviceClient->get(m_deviceId);
+        updateStamps.push_back(Epochstamp::fromHashAttributes(cfg.getAttributes("doubleProperty")));
         boost::this_thread::sleep(boost::posix_time::milliseconds(10));
-        if (i == 0) es_afterFirstWrite.now();
+        if (i < vec_es_afterWrites.size()) vec_es_afterWrites[i].now();
     }
 
     // set one last time a valid value.
@@ -1341,6 +1345,7 @@ void DataLogging_Test::testNans() {
     end_conf.set("floatProperty", (1.f * max_set));
     end_conf.set("doubleProperty", (1. * max_set));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(m_deviceId, end_conf));
+    updateStamps.push_back(Epochstamp::fromHashAttributes(m_deviceClient->get(m_deviceId).getAttributes("doubleProperty")));
     boost::this_thread::sleep(boost::posix_time::milliseconds(10));
 
     // save this instant as a iso string
@@ -1350,7 +1355,6 @@ void DataLogging_Test::testNans() {
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
                             .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
 
-    vector<Hash> history;
     Hash params;
     params.set<string>("from", beforeWrites);
     params.set<string>("to", afterWrites);
@@ -1368,6 +1372,7 @@ void DataLogging_Test::testNans() {
         int nTries = NUM_RETRY;
         unsigned int numExceptions = 0;
         unsigned int numChecks = 0;
+        vector<Hash> history;
         while (nTries >= 0 && history.size() != property_pair.second) {
             std::string device, property;
             try {
@@ -1398,27 +1403,63 @@ void DataLogging_Test::testNans() {
                                      "\n\tNumber of Exceptions: " + toString(numExceptions) +
                                      "\n\tExceptions:\n" + boost::algorithm::join(exceptionsMsgs, "\n"),
                                      static_cast<size_t> (property_pair.second), history.size());
+        // Test that the return values match, incl. timestamps
+        for (size_t i = 0; i <= max_set; ++i) {
+            // First check timestamp - to microsecond precision
+            const Epochstamp historyStamp = Epochstamp::fromHashAttributes(history[i].getAttributes("v"));
+            const TimeDuration diff = historyStamp.elapsed(updateStamps[i]);
+            CPPUNIT_ASSERT_MESSAGE(toString(diff), diff < TimeDuration(0ull, 1000000000000ull)); // 1e12 attosec, i.e. 1 microsec
 
+            if (property_pair.first == "floatProperty") {
+                const float floatInput = (i == max_set ? max_set : bad_floats[i % bad_floats.size()]);
+                const float historyFloat = history[i].get<float>("v");
+                if (std::isnan(floatInput)) {
+                    // comparison with nan is always false
+                    CPPUNIT_ASSERT_MESSAGE(toString(i), std::isnan(historyFloat));
+                } else {
+                    // comparison with +/-inf works
+                    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(i), floatInput, historyFloat);
+                }
+            } else if (property_pair.first == "doubleProperty") {
+                const double doubleInput = (i == max_set ? max_set : bad_doubles[i % bad_doubles.size()]);
+                const double historyDouble = history[i].get<double>("v");
+                if (std::isnan(doubleInput)) {
+                    // comparison with nan is always false
+                    CPPUNIT_ASSERT_MESSAGE(toString(i), std::isnan(historyDouble));
+                } else {
+                    // comparison with +/-inf works
+                    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(i), doubleInput, historyDouble);
+                }
+            } else if (property_pair.first == "int32Property") {
+                CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(i), static_cast<int> (i), history[i].get<int>("v"));
+            }
+        }
     }
 
-    // Now test slotGetConfigurationFromPast with infinity values
-    // (the nan's are not straight forward to test - and we do not differentiate the different types...
-    return; // Does not work yet
-    Hash conf;
-    Schema schema;
-    bool configAtTimepoint = false;
-    std::string configTimepoint;
-    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
-                                               m_deviceId, es_afterFirstWrite.toIso8601())
-                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
-                            .receive(conf, schema, configAtTimepoint, configTimepoint));
+    // Now test slotGetConfigurationFromPast with infinite values
+    for (size_t i = 0; i < vec_es_afterWrites.size(); ++i) {
+        Hash conf;
+        Schema schema;
+        bool configAtTimepoint = false;
+        std::string configTimepoint;
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
+                                                   m_deviceId, vec_es_afterWrites[i].toIso8601())
+                                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                                .receive(conf, schema, configAtTimepoint, configTimepoint));
 
-    CPPUNIT_ASSERT(configAtTimepoint);
-    //CPPUNIT_ASSERT_EQUAL(es_afterFirstWrite.toIso8601(), configTimepoint);
-    std::clog << conf << std::endl;
-    CPPUNIT_ASSERT_EQUAL(std::numeric_limits<double>::infinity(), conf.get<double>("doubleProperty"));
-    CPPUNIT_ASSERT_EQUAL(std::numeric_limits<float>::infinity(), conf.get<float>("floatProperty"));
-
+        CPPUNIT_ASSERT(configAtTimepoint);
+        //CPPUNIT_ASSERT_EQUAL(es_afterFirstWrite.toIso8601(), configTimepoint);
+        const double theD = conf.get<double>("doubleProperty");
+        const float theF = conf.get<float>("floatProperty");
+        if (std::isnan(bad_floats[i])) {
+            // assuming same order of nan/inf for both bad_floats and bad_doubles
+            CPPUNIT_ASSERT_MESSAGE(toString(i), std::isnan(theF));
+            CPPUNIT_ASSERT_MESSAGE(toString(i), std::isnan(theD));
+        } else {
+            CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(i), bad_floats[i], theF);
+            CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(i), bad_doubles[i], theD);
+        }
+    }
     std::clog << "Ok" << std::endl;
 
 }
