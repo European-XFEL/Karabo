@@ -5,8 +5,6 @@
 #############################################################################
 import os.path as op
 
-from PyQt5.QtCore import QSize
-from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtWidgets import QAction
 from traits.api import Instance, on_trait_change
 
@@ -19,18 +17,7 @@ from karabogui.controllers.api import (
 from karabogui.icons.statefulicons.color_change_icon import (
     ColorChangeIcon, get_color_change_icon)
 from karabogui.indicators import STATE_COLORS
-
-MAXIMUM_SIZE = 24
-SIZE_HINT = 20
-
-
-class SvgWidget(QSvgWidget):
-    def __init__(self, parent=None):
-        super(SvgWidget, self).__init__(parent)
-        self.setMaximumSize(MAXIMUM_SIZE, MAXIMUM_SIZE)
-
-    def sizeHint(self):
-        return QSize(SIZE_HINT, SIZE_HINT)
+from karabogui.widgets.hints import SvgWidget
 
 
 @register_binding_controller(ui_name='Switch Bool',
