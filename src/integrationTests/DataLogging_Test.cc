@@ -427,8 +427,7 @@ void DataLogging_Test::fileAllTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
-    // file data logger stores Nans
-    testNans(true);
+    testNans();
     testInt();
     testFloat();
     testString();
@@ -468,8 +467,7 @@ void DataLogging_Test::influxAllTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
-    // influx data logger does not store Nans YET
-    testNans(false);
+    testNans();
     testInt(true);
     testFloat(false);
     testString(false);
@@ -1300,24 +1298,23 @@ void DataLogging_Test::testTable(bool testPastConf) {
 }
 
 
-void DataLogging_Test::testNans(bool shouldReturnNans){
+void DataLogging_Test::testNans() {
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
     const size_t max_set = 100ul;
     const size_t full_return_size = max_set + 1ul;
-    const size_t expected_size = (shouldReturnNans ? full_return_size : 1ul);
-    std::clog << "Testing NaN and infinity are " << (shouldReturnNans ? "treated" : "ignored") << " by Loggers " << std::flush;
+    std::clog << "Testing NaN and infinity are treated by Loggers " << std::flush;
 
     // define some bad floating points to test against
     const vector<float> bad_floats = {
+                                      std::numeric_limits<float>::infinity(),
         std::numeric_limits<float>::quiet_NaN(),
         std::numeric_limits<float>::signaling_NaN(),
-        std::numeric_limits<float>::infinity(),
         -1.f * std::numeric_limits<float>::infinity()
     };
     const vector<double> bad_doubles = {
-        std::numeric_limits<double>::quiet_NaN(),
+                                        std::numeric_limits<double>::infinity(),
+                                        std::numeric_limits<double>::quiet_NaN(),
         std::numeric_limits<double>::signaling_NaN(),
-        std::numeric_limits<double>::infinity(),
         -1. * std::numeric_limits<double>::infinity()
     };
 
@@ -1325,6 +1322,7 @@ void DataLogging_Test::testNans(bool shouldReturnNans){
     Epochstamp es_beforeWrites;
     std::string beforeWrites = es_beforeWrites.toIso8601();
 
+    Epochstamp es_afterFirstWrite(0ull, 0ull);
     // write a bunch of times
     for (size_t i = 0; i < max_set; i++) {
         Hash new_conf;
@@ -1334,6 +1332,7 @@ void DataLogging_Test::testNans(bool shouldReturnNans){
 
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(m_deviceId, new_conf));
         boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+        if (i == 0) es_afterFirstWrite.now();
     }
 
     // set one last time a valid value.
@@ -1361,8 +1360,8 @@ void DataLogging_Test::testNans(bool shouldReturnNans){
     // Check the length of the history for the properties injected.
     std::map<std::string, size_t> properties = {
         std::make_pair(std::string("int32Property"), full_return_size),
-        std::make_pair(std::string("floatProperty"), expected_size),
-        std::make_pair(std::string("doubleProperty"), expected_size)
+                                                std::make_pair(std::string("floatProperty"), full_return_size),
+                                                std::make_pair(std::string("doubleProperty"), full_return_size)
     };
 
     for (const auto& property_pair : properties) {
@@ -1401,6 +1400,25 @@ void DataLogging_Test::testNans(bool shouldReturnNans){
                                      static_cast<size_t> (property_pair.second), history.size());
 
     }
+
+    // Now test slotGetConfigurationFromPast with infinity values
+    // (the nan's are not straight forward to test - and we do not differentiate the different types...
+    return; // Does not work yet
+    Hash conf;
+    Schema schema;
+    bool configAtTimepoint = false;
+    std::string configTimepoint;
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
+                                               m_deviceId, es_afterFirstWrite.toIso8601())
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                            .receive(conf, schema, configAtTimepoint, configTimepoint));
+
+    CPPUNIT_ASSERT(configAtTimepoint);
+    //CPPUNIT_ASSERT_EQUAL(es_afterFirstWrite.toIso8601(), configTimepoint);
+    std::clog << conf << std::endl;
+    CPPUNIT_ASSERT_EQUAL(std::numeric_limits<double>::infinity(), conf.get<double>("doubleProperty"));
+    CPPUNIT_ASSERT_EQUAL(std::numeric_limits<float>::infinity(), conf.get<float>("floatProperty"));
+
     std::clog << "Ok" << std::endl;
 
 }
