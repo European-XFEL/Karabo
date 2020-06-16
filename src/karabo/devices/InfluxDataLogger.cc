@@ -172,7 +172,7 @@ namespace karabo {
                 }
 
                 // isFinite matters only for FLOAT/DOUBLE
-                logValue(query, deviceId, path, value, leafNode.getType(), !isFinite);
+                logValue(query, deviceId, path, value, leafNode.getType(), isFinite);
             }
             if (!query.str().empty()) {
                 // flush the query if something is in it.
@@ -183,7 +183,7 @@ namespace karabo {
 
         void InfluxDeviceData::logValue(std::stringstream& query, const std::string& deviceId, const std::string& path,
                                         const std::string& value, karabo::util::Types::ReferenceType type,
-                                        bool nonFinite) {
+                                        bool isFinite) {
             std::string field_value;
             switch (type) {
                 case Types::BOOL:
@@ -221,9 +221,9 @@ namespace karabo {
                         return;
                     }
                     field_value = path + "-" + Types::to<ToLiteral>(type);
-                    if (nonFinite) {
-                        // InfluxDB does not support nan and inf - so we store them as strings as another measurement
-                        // whose field name is extended by "_INF":
+                    if (!isFinite) {
+                        // InfluxDB does not support nan and inf - so we store them as strings as another field
+                        // whose name is extended by "_INF":
                         ((field_value += "_INF=\"") += value) += "\"";
                     } else {
                         (field_value += "=") += value;
