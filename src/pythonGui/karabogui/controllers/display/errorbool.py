@@ -5,7 +5,6 @@
 #############################################################################
 import os.path as op
 
-from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtWidgets import QAction
 from traits.api import Instance, on_trait_change
 
@@ -14,6 +13,7 @@ from karabogui import icons
 from karabogui.binding.api import BoolBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
+from karabogui.widgets.hints import SvgWidget
 
 ICONS = op.dirname(icons.__file__)
 OK_BOOL = op.join(ICONS, "ok-bool.svg")
@@ -28,7 +28,7 @@ class DisplayErrorBool(BaseBindingController):
     model = Instance(ErrorBoolModel, args=())
 
     def create_widget(self, parent):
-        widget = QSvgWidget(parent)
+        widget = SvgWidget(parent)
         widget.setMinimumSize(24, 24)
 
         logicAction = QAction("Invert color logic", widget)
