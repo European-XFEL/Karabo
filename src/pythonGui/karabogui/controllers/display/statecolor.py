@@ -1,5 +1,4 @@
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtWidgets import QAction, QFrame, QLabel
+from PyQt5.QtWidgets import QAction
 from traits.api import Instance, Str, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayStateColorModel
@@ -8,24 +7,7 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.indicators import get_state_color
 from karabogui.util import generateObjectName
-
-MINIMUM_SIZE = 10
-SIZE_HINT_WIDTH = 30
-SIZE_HINT_HEIGHT = 20
-
-
-class FrameWidget(QLabel):
-    def __init__(self, parent=None):
-        super(FrameWidget, self).__init__(parent)
-        self.setAutoFillBackground(True)
-        self.setAlignment(Qt.AlignCenter)
-        self.setMinimumWidth(MINIMUM_SIZE)
-        self.setMinimumHeight(MINIMUM_SIZE)
-        self.setWordWrap(True)
-        self.setFrameStyle(QFrame.Box | QFrame.Plain)
-
-    def sizeHint(self):
-        return QSize(SIZE_HINT_WIDTH, SIZE_HINT_HEIGHT)
+from karabogui.widgets.hints import FrameWidget
 
 
 @register_binding_controller(ui_name='State Color Field',
