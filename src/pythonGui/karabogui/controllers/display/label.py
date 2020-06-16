@@ -6,8 +6,6 @@
 from numbers import Number
 
 from numpy import log10, number
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QFontMetrics
 from PyQt5.QtWidgets import QAction, QDialog, QFrame, QLabel
 from traits.api import Instance, Str, Tuple
 
@@ -19,33 +17,16 @@ from karabogui.binding.api import (
     CharBinding, ComplexBinding, FloatBinding, get_binding_value, IntBinding,
     StringBinding
 )
-from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.dialogs.format_label import FormatLabelDialog
 from karabogui.indicators import (
     ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.util import generateObjectName
+from karabogui.widgets.hints import Label
 
 BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,
                  IntBinding)
-
-CONTENT_MARGIN = 10
-
-
-class Label(QLabel):
-    def __init__(self, parent):
-        super(Label, self).__init__(parent)
-        self.setMinimumWidth(WIDGET_MIN_WIDTH)
-        self.setMinimumHeight(WIDGET_MIN_HEIGHT)
-        self.setAlignment(Qt.AlignCenter)
-        self.setWordWrap(True)
-
-    def sizeHint(self):
-        fm = QFontMetrics(self.font())
-        width = fm.width(self.text()) + CONTENT_MARGIN
-
-        return QSize(width, 20)
 
 
 @register_binding_controller(ui_name='Value Field',
