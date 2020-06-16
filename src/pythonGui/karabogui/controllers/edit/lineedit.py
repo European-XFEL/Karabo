@@ -3,9 +3,7 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QFontMetrics
-from PyQt5.QtWidgets import QLineEdit
+
 from traits.api import Instance, Int
 
 from karabo.common.scenemodel.api import LineEditModel
@@ -13,25 +11,10 @@ from karabogui.binding.api import (
     CharBinding, StringBinding, VectorCharBinding, get_editor_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.util import SignalBlocker
+from karabogui.widgets.hints import LineEdit
 
 BINDING_TYPES = (CharBinding, StringBinding, VectorCharBinding)
-
-
-class LineEdit(QLineEdit):
-    def __init__(self, parent):
-        super(LineEdit, self).__init__(parent)
-        self.setMinimumWidth(WIDGET_MIN_WIDTH)
-        self.setMinimumHeight(WIDGET_MIN_HEIGHT)
-        self.setAlignment(Qt.AlignLeft | Qt.AlignAbsolute)
-
-    def sizeHint(self):
-        fm = QFontMetrics(self.font())
-        CONTENT_MARGIN = 10
-        width = fm.width(self.text()) + CONTENT_MARGIN
-
-        return QSize(width, 20)
 
 
 @register_binding_controller(ui_name='Text Field', can_edit=True,
