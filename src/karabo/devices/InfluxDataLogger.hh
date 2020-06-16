@@ -33,7 +33,7 @@ namespace karabo {
 
             void logValue(std::stringstream &query, const std::string& deviceId, const std::string& path,
                           const std::string& value, karabo::util::Types::ReferenceType type,
-                          bool nonFinite);
+                          bool isFinite);
 
             void terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp);
 
