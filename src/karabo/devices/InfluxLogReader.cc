@@ -578,6 +578,11 @@ namespace karabo {
         void InfluxLogReader::asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
             const auto nameAndType = ctxt->propNamesAndTypes.front();
             ctxt->propNamesAndTypes.pop_front();
+            // Here add potential _INF treatment for double/float
+
+            //                        iqlQuery << "SELECT COUNT(/^" << ctxt->property << "-.*|_tid/) FROM \""
+            //                    << ctxt->deviceId << "\" WHERE time >= " << epochAsMicrosecString(ctxt->from) << m_durationUnit
+            //                    << " AND time <= " << epochAsMicrosecString(ctxt->to) << m_durationUnit;
 
             const std::string fieldKey = nameAndType.first + "-" + Types::to<ToLiteral>(nameAndType.second);
             std::ostringstream iqlQuery;
@@ -697,14 +702,12 @@ namespace karabo {
             }
 
             // Gets the data types and data type names of each column.
-            std::vector<Types::ReferenceType>colTypes(influxResult.first.size(), Types::ReferenceType::NONE);
             std::vector<std::string>colTypeNames(influxResult.first.size());
             for (size_t col = 0; col < influxResult.first.size(); col++) {
                 const std::string::size_type typeSeparatorPos = influxResult.first[col].rfind("-");
                 if (typeSeparatorPos != std::string::npos) {
                     const std::string typeName = influxResult.first[col].substr(typeSeparatorPos + 1);
                     colTypeNames[col] = typeName;
-                    colTypes[col] = Types::from<FromLiteral>(typeName);
                 }
             }
 
@@ -731,7 +734,16 @@ namespace karabo {
                             // one non null value (may be an empty string).
                             continue;
                         }
-                        addNodeToHash(hash, "v", colTypes[col], tid, epoch, *(valuesRow[col]));
+                        // Figure out the real Karabo type:
+                        // For nan/inf floating points we added "_INF" when writing to influxDB (and stored as strings).
+                        const std::string& typeNameInflux = colTypeNames[col];
+                        const size_t posInf = typeNameInflux.rfind("_INF");
+                        const std::string& typeName = (posInf != std::string::npos && posInf == typeNameInflux.size() - 4ul
+                                                       ? typeNameInflux.substr(0, posInf)
+                                                       : typeNameInflux);
+
+                        const karabo::util::Types::ReferenceType type = Types::from<FromLiteral>(typeName);
+                        addNodeToHash(hash, "v", type, tid, epoch, *(valuesRow[col]));
                     } catch (const std::exception &e) {
                         KARABO_LOG_FRAMEWORK_ERROR << "Error adding node to hash:"
                                 << "\nValue type: " << colTypeNames[col]
