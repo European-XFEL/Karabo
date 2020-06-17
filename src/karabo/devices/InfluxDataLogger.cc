@@ -120,6 +120,10 @@ namespace karabo {
                     m_serializer->save(leafNode.getValue<std::vector < Hash >> (), archive);
                     const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (archive.data());
                     value = base64Encode(uarchive, archive.size());
+                } else if (leafNode.getType() == Types::VECTOR_CHAR) {
+                    const std::vector<char> & v = leafNode.getValue<std::vector<char>>();
+                    const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (v.data());
+                    value = base64Encode(uarchive, v.size());
                 } else if (Types::isVector(leafNode.getType())) {
                     // ... and any other vector as a comma separated text string of vector elements
                     value = toString(leafNode.getValueAs<std::string, std::vector>());
@@ -224,7 +228,6 @@ namespace karabo {
                 case Types::COMPLEX_FLOAT:
                 case Types::COMPLEX_DOUBLE:
                 case Types::UINT64:
-                case Types::VECTOR_HASH:
                 case Types::VECTOR_INT8:
                 case Types::VECTOR_UINT8:
                 case Types::VECTOR_INT16:
@@ -239,7 +242,17 @@ namespace karabo {
                 case Types::VECTOR_COMPLEX_DOUBLE:
                 {
                     // empty strings shall be saved. They do not spoil the line protocol since they are between quotes
-                    // TODO: handle the `base64` encoded types differently
+                    field_value = path + "-" + Types::to<ToLiteral>(type) + "=\"" + value + "\"";
+                    break;
+                }
+                case Types::VECTOR_CHAR:
+                case Types::VECTOR_HASH:
+                {
+                    if (value.empty()) {
+                        // Should never happen! These types are base64 encoded
+                        KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '" << deviceId << "'";
+                        return;
+                    }
                     field_value = path + "-" + Types::to<ToLiteral>(type) + "=\"" + value + "\"";
                     break;
                 }
