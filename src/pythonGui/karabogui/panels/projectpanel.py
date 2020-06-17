@@ -40,7 +40,8 @@ class ProjectPanel(BasePanelWidget):
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.DatabaseIsBusy: self._event_db_busy,
             KaraboEvent.ProjectFilterUpdated: self._event_filter_updated,
-            KaraboEvent.AccessLevelChanged: self._event_access_level
+            KaraboEvent.AccessLevelChanged: self._event_access_level,
+            KaraboEvent.LoginUserChanged: self._event_access_level,
         }
         register_for_broadcasts(event_map)
 
@@ -149,7 +150,6 @@ class ProjectPanel(BasePanelWidget):
         self._set_toolbar_visible(status)
         if not status:
             self.sbar.reset(status)
-        self._access_toolbar()
 
     # -----------------------------------------------------------------------
 
