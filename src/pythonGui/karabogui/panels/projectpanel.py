@@ -125,16 +125,13 @@ class ProjectPanel(BasePanelWidget):
     # Karabo Events
 
     def _event_access_level(self, data):
-        enable = access_role_allowed(AccessRole.PROJECT_EDIT)
-        for qaction in self._toolbar_actions:
-            if qaction.objectName() in ("new", "save", "declare"):
-                qaction.setEnabled(enable)
+        self._access_toolbar()
 
     def _event_db_busy(self, data):
         loading_failed = data.get('loading_failed', False)
         is_processing = data['is_processing']
         if loading_failed:
-            self._enable_partial_toolbar()
+            self._visible_partial_toolbar()
         else:
             self._set_toolbar_visible(not is_processing)
             self.sbar.reset(not is_processing)
@@ -152,6 +149,7 @@ class ProjectPanel(BasePanelWidget):
         self._set_toolbar_visible(status)
         if not status:
             self.sbar.reset(status)
+        self._access_toolbar()
 
     # -----------------------------------------------------------------------
 
@@ -159,12 +157,18 @@ class ProjectPanel(BasePanelWidget):
         for qaction in self._toolbar_actions:
             qaction.setVisible(enable)
 
-    def _enable_partial_toolbar(self):
+    def _visible_partial_toolbar(self):
         """ Project loading failed, restrict options
         """
         for qaction in self._toolbar_actions:
             if qaction.objectName() in ("new", "load"):
                 qaction.setVisible(True)
+
+    def _access_toolbar(self):
+        enable = access_role_allowed(AccessRole.PROJECT_EDIT)
+        for qaction in self._toolbar_actions:
+            if qaction.objectName() in ("new", "save", "declare"):
+                qaction.setEnabled(enable)
 
 # ------------------------------------------------------------------------
 # Helper functions
