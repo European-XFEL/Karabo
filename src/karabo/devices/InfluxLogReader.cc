@@ -780,6 +780,13 @@ namespace karabo {
                     }
                     break;
                 }
+                case Types::VECTOR_CHAR:
+                {
+                    node = &hash.set(path, std::vector<char>());
+                    std::vector<char> &value = node->getValue<std::vector<char>> ();
+                    base64Decode(valueAsString, *reinterpret_cast<std::vector<unsigned char>*>(&value));
+                    break;
+                }
 #define HANDLE_VECTOR_TYPE(VectorType, ElementType) \
                 case Types::VectorType: \
                 { \
@@ -789,7 +796,6 @@ namespace karabo {
                     break; \
                 }
 
-                HANDLE_VECTOR_TYPE(VECTOR_CHAR, char);
                 HANDLE_VECTOR_TYPE(VECTOR_INT8, signed char);
                 HANDLE_VECTOR_TYPE(VECTOR_UINT8, unsigned char);
                 HANDLE_VECTOR_TYPE(VECTOR_INT16, short);
