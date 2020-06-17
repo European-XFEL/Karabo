@@ -62,10 +62,14 @@ public:
 
         SLOT_ELEMENT(expected).key("slotIncreaseValue")
                 .commit();
+
+        SLOT_ELEMENT(expected).key("slotUpdateSchema")
+                .commit();
     }
 
     DataLogTestDevice(const karabo::util::Hash& input) : karabo::core::Device<>(input) {
         KARABO_SLOT(slotIncreaseValue);
+        KARABO_SLOT(slotUpdateSchema, const karabo::util::Schema);
         KARABO_INITIAL_FUNCTION(initialize);
     }
 
@@ -82,9 +86,13 @@ private:
         updateState(State::ON);
     }
 
-
     void slotIncreaseValue() {
         set("value", get<int>("value") + 1);
+    }
+
+
+    void slotUpdateSchema(const Schema sch) {
+        updateSchema(sch);
     }
 };
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogTestDevice)
@@ -188,13 +196,14 @@ CPPUNIT_TEST_SUITE_REGISTRATION(DataLogging_Test);
 
 const unsigned int DataLogging_Test::m_flushIntervalSec = 1u;
 
-static const std::string karaboPlatform = !getenv("KARABO_CI_TEST_PLATFORM") ? "" : getenv("KARABO_CI_TEST_PLATFORM");
-    
+// Avoid test collision on CI by specifying a unique prefix.
+static const std::string deviceIdPrefix = !getenv("KARABO_CI_TEST_PLATFORM") ? "" : getenv("KARABO_BROKER_TOPIC");
+
 DataLogging_Test::DataLogging_Test()
     : m_server("DataLoggingTestServer"),
     // Use platform-dependent name for the device: concurrent tests in CI operate
     // on the same InfluxDB database ...
-    m_deviceId(karaboPlatform + "PropertyTestDevice"),
+    m_deviceId(deviceIdPrefix + "PropertyTestDevice"),
     m_fileLoggerDirectory("dataLoggingTest"),
     m_changedPath(false), m_oldPath() {
 
@@ -293,7 +302,7 @@ void DataLogging_Test::setPropertyTestSchema() {
     m_sigSlot->request(m_deviceId, "slotUpdateSchemaAttributes", updates)
             .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(response);
     CPPUNIT_ASSERT_MESSAGE("Could not update schema", response.get<bool>("success"));
-    
+
 }
 
 std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& loggerType,
@@ -410,13 +419,20 @@ void DataLogging_Test::fileAllTestRunner() {
     testVectorString();
     testTable();
     testHistoryAfterChanges();
-    // This must be the last test case before killing the DataLoggerManager - it stops the
-    // device being logged to make sure that the last known configuration can be successfully
-    // retrieved after the device is gone.
+    // This must be the last test case that relies on the device in m_deviceId (the logged
+    // PropertyTest instance) being available at the start of the test case.
+    // 'testLastKnownConfiguration' stops the device being logged to make sure that the
+    // last known configuration can be successfully retrieved after the device is gone.
     testLastKnownConfiguration();
 
-    // This deals with its own device, so comment above about being last is not applicable
+    // These deal with their own devices, so comment above about using the PropertyTest instance
+    // in m_deviceId is not applicable.
     testCfgFromPastRestart();
+
+    // TODO: Uncomment test below as soon as FileLogReader::slotGetPropertyHistoryImpl is fixed.
+    //       Currently it is failing to retrieve all the logged entries (see comment on discussions of
+    //       https://git.xfel.eu/gitlab/Karabo/Framework/merge_requests/4455).
+    //testSchemaEvolution();
 }
 
 
@@ -451,8 +467,8 @@ void DataLogging_Test::influxAllTestRunner() {
     // migrated to InfluxDb based logging.
 
     testLastKnownConfiguration();
-
     testCfgFromPastRestart();
+    testSchemaEvolution();
 }
 
 
@@ -718,7 +734,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
     // Start device and take care that the logger is ready for it
     // Use platform-dependent name for the device: concurrent tests in CI operate
     // on the same InfluxDB database ...
-    const std::string deviceId(karaboPlatform + "deviceWithOldStamp");
+    const std::string deviceId(deviceIdPrefix + "deviceWithOldStamp");
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
     auto success = m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId),
                                                KRB_TEST_MAX_TIMEOUT);
@@ -1312,7 +1328,7 @@ void DataLogging_Test::testNans(bool shouldReturnNans){
         std::make_pair(std::string("floatProperty"), expected_size),
         std::make_pair(std::string("doubleProperty"), expected_size)
     };
-    
+
     for (const auto& property_pair : properties) {
         int nTries = NUM_RETRY;
         unsigned int numExceptions = 0;
@@ -1353,10 +1369,183 @@ void DataLogging_Test::testNans(bool shouldReturnNans){
 
 }
 
+
+void DataLogging_Test::testSchemaEvolution() {
+
+    std::clog << "Testing property history retrieval when schema evolution happens ..." << std::endl;
+
+    // Instantiates a DataLogTestDevice to use for the schema evolution test.
+    // "deviceIdPrefix" allows concurrent Influx tests on the different platform CI runners.
+    const std::string deviceId(deviceIdPrefix + "SchemaEvolutionDevice");
+    const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    auto success = m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId),
+                                               KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Checks that the instantiated device is being logged.
+    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged")),
+                           waitForCondition([this, &loggerId, &deviceId]() {
+                               auto loggedIds =
+                                       m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged");
+                                            return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
+                           },
+                                            KRB_TEST_MAX_TIMEOUT * 1000)
+                           );
+
+    // Captures the timepoint before any property modification.
+    Epochstamp fromTimePoint;
+
+    // "reconfigurableValue" as string
+    Schema schemaStr;
+    STRING_ELEMENT(schemaStr).key("reconfigurableValue")
+            .assignmentOptional().defaultValue("")
+            .reconfigurable()
+            .commit();
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateSchema", schemaStr)
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                            .receive());
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotReconfigure", Hash("reconfigurableValue", "Non empty str"))
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                            .receive());
+
+    // "reconfigurableValue" as vector of strings
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateSchema", Schema())
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                            .receive());
+    Schema schemaVecStr;
+    VECTOR_STRING_ELEMENT(schemaVecStr).key("reconfigurableValue")
+            .assignmentOptional().defaultValue(std::vector<std::string>({"a"}))
+            .reconfigurable()
+            .commit();
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateSchema", schemaVecStr)
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                            .receive());
+    Hash strVecValueCfg;
+    std::vector<std::string> &strVector = strVecValueCfg.bindReference<std::vector < std::string >> ("reconfigurableValue");
+    strVector = std::vector<std::string>{"a", "", "b", "c"};
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotReconfigure", strVecValueCfg)
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                            .receive());
+
+
+    // "reconfigurableValue" as int32
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateSchema", Schema())
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                            .receive());
+    Schema schemaInt32;
+    INT32_ELEMENT(schemaInt32).key("reconfigurableValue")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit();
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotUpdateSchema", schemaInt32)
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                            .receive());
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(deviceId, "slotReconfigure", Hash("reconfigurableValue", 10))
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                            .receive());
+
+
+    // Makes sure all the writes are done before retrieval.
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                            .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+
+    // Checks that all the property values set with the expected types can be retrieved.
+    Epochstamp toTimePoint;
+
+    Hash params;
+    params.set<string>("from", fromTimePoint.toIso8601());
+    params.set<string>("to", toTimePoint.toIso8601());
+    const int maxNumData = 10;
+    params.set<int>("maxNumData", maxNumData);
+
+    vector<Hash> history;
+    std::string replyDevice;
+    std::string replyProperty;
+
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+
+    // the history retrieval might take more than one try, it could have to index the files (or wait
+    // for the records to be available for reading in the Influx case).
+    std::vector<std::string> exceptionsMsgs;
+
+    int nTries = NUM_RETRY;
+    unsigned int numExceptions = 0;
+    unsigned int numChecks = 0;
+    while (nTries >= 0 && history.size() != 6) {
+        try {
+            numChecks++;
+            m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "reconfigurableValue", params)
+                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(replyDevice, replyProperty, history);
+        } catch (const karabo::util::TimeoutException& e) {
+            karabo::util::Exception::clearTrace();
+            exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
+            ++numExceptions;
+        } catch (const karabo::util::RemoteException& e) {
+            karabo::util::Exception::clearTrace();
+            exceptionsMsgs.push_back("At check #" + toString(numChecks) + ": " + e.what());
+            ++numExceptions;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
+        nTries--;
+    }
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("History size different than expected after " + toString(numChecks) +
+                                 " checks:\n\tdeviceId: " + deviceId +
+                                 "\n\tproperty: \"value\"" +
+                                 "\n\tparam.from: " + fromTimePoint.toIso8601() +
+                                 "\n\tparam.to: " + toTimePoint.toIso8601() +
+                                 "\n\tparam.maxNumData: 10" + toString(maxNumData) +
+                                 "\n\thistory.size(): " + toString(history.size()) +
+                                 "\n\tNumber of Exceptions: " + toString(numExceptions) +
+                                 "\n\tExceptions:\n" + boost::algorithm::join(exceptionsMsgs, "\n"),
+                                 6,
+                                 static_cast<int> (history.size()));
+
+    // Checks the first two expected values - of string type.
+    // The first is the empty string that is the default value.
+    // The second is an explicitily set non empty string value.
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("First string value different from expected for history entry",
+                                 std::string(""),
+                                 history[0].get<std::string>("v"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Second string value different from expected for history entry",
+                                 std::string("Non empty str"),
+                                 history[1].get<std::string>("v"));
+    // Checks the next two expected values - of vector of strings type.
+    // The first is the empty vector that is the default value.
+    // The second is an explicitily set non empty vector.
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("First vector of strings in history is not of the expected size",
+                                 1ul,
+                                 history[2].get<std::vector < std::string >> ("v").size());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Value of sole element of first vector of strings in history different from exepected",
+                                 std::string("a"),
+                                 history[2].get<std::vector < std::string >> ("v")[0]);
+
+    const auto &strVectorValue = history[3].get<std::vector < std::string >> ("v");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Size of second vector of strings in history different from expected",
+                                 strVector.size(),
+                                 strVectorValue.size());
+    for (size_t i = 0; i < strVectorValue.size(); i++) {
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Value at index " + toString(i) + " of second vector of strings in history different from expected",
+                                     strVector[i],
+                                     strVectorValue[i]);
+    }
+    // Checks the last expected values - of int type.
+    // The first is the default value of 0.
+    // The second is an explicitily set int value.
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("First int value different from expected for history entry",
+                                 0,
+                                 history[4].get<int>("v"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Second int value different from expected for history entry",
+                                 10,
+                                 history[5].get<int>("v"));
+
+
+    std::clog << "Ok" << std::endl;
+}
+
 // TODO: implement testVectorFloat() (include vectors of different length and empty vector);
 // TODO: implement test and FIX for a vector of strings with an empty string as its only element
-// TODO: implement test and FIX bug on schema evolution. InfluxLogReader is most likely broken because
-//       it cannot skip empty strings coming from the sparse results tables from the DB.
 
 // TODO: ideally, all properties of the PropertyTest device should be implemented,
 //       to add them one should add a method per property and add the proper cppunit helpers at the beginning of this
