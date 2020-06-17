@@ -33,10 +33,6 @@ class Network(QObject):
 
     def __init__(self, parent=None):
         super(Network, self).__init__(parent=parent)
-
-        self.brokerHost = ""
-        self.brokerPort = ""
-        self.brokerTopic = ""
         self.sessionToken = ""
 
         self.tcpSocket = None
@@ -511,15 +507,15 @@ class Network(QObject):
         loginInfo["version"] = krb_globals.GUI_VERSION
         self._tcpWriteHash(loginInfo)
 
-    def _handleBrokerInformation(self, host=None, port=None, topic=None,
-                                 **kwargs):
-        """We get the reply from the GUI Server and get more information"""
-        self.brokerHost = host
-        self.brokerPort = port
-        self.brokerTopic = topic
+    def set_server_information(self, read_only=False, **kwargs):
+        """We get the reply from the GUI Server and set the information"""
+        if read_only:
+            default = AccessLevel.OBSERVER
+            self.username = "observer"
+        else:
+            default = AccessLevel(ACCESS_LEVEL_MAP.get(
+                self.username, AccessLevel.ADMIN))
 
-        default = AccessLevel(ACCESS_LEVEL_MAP.get(
-            self.username, AccessLevel.ADMIN))
         krb_globals.GLOBAL_ACCESS_LEVEL = default
         # Inform the GUI to change correspondingly the allowed
         # level-downgrade
