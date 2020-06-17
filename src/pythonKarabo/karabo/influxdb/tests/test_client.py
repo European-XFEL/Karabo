@@ -1,6 +1,7 @@
 from asyncio import sleep
 import base64
 from contextlib import contextmanager
+import json
 import os
 import string
 from random import choice
@@ -62,6 +63,8 @@ class Influx_TestCase(DeviceTest):
             await cls.adm_client.create_db(_topic)
             await cls.adm_client.grant_all_to_user(_topic, _user)
         cls.client.db = _topic
+        cls.adm_client.db = _topic
+        await cls.adm_client.drop_measurement(_fake_device)
         cls.step = 1e5
         timestamp = float(time.time()) * 1e6
         last_tid = 10 * cls.points
@@ -360,6 +363,31 @@ class Influx_TestCase(DeviceTest):
         self.assertEqual(len(table), 2)
         self.assertEqual(table[0]['e3'], 1188)
         self.assertEqual(table[1]['e3'], 4158)
+
+        # check that nans are inserted as expected
+        r, cols = await self.client.get_last_value(MIGRATION_TEST_DEVICE, "^floatProperty-FLOAT$")
+        ts, value = next(r)
+        self.assertEqual(value, 0)
+
+        r, cols = await self.client.get_last_value(MIGRATION_TEST_DEVICE, "^floatProperty-FLOAT_INF$")
+        ts, value = next(r)
+        self.assertEqual(value, "nan")
+
+        r, cols = await self.client.get_last_value(MIGRATION_TEST_DEVICE, "^vectors.stringProperty-.*|_tid")
+        ts, *values = next(r)
+        for col_idx, col_name in enumerate(cols[1:]):
+            if col_name == "_tid":
+                self.assertEqual(42000, values[col_idx])
+            if col_name == "vectors.stringProperty-VECTOR_STRING":
+                value = base64.b64decode(values[col_idx])
+                self.assertEqual(["bla", "bli"], json.loads(value.decode('utf-8')))
+                
+
+        r, cols = await self.client.get_last_value(MIGRATION_TEST_DEVICE, "vectors.charProperty-VECTOR_CHAR")
+        ts, value = next(r)
+        self.assertEqual(b"ABCDE", base64.b64decode(value))
+
+        await self.adm_client.drop_measurement(MIGRATION_TEST_DEVICE)
 
 
 if __name__ == '__main__':
