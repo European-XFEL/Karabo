@@ -266,8 +266,8 @@ class Manager(QObject):
                          'time_match': time_match})
 
     def handle_brokerInformation(self, **info):
-        get_network()._handleBrokerInformation(
-            info.get('host'), info.get('port'), info.get('topic'))
+        read_only = info.get('readOnly', False)
+        get_network().set_server_information(read_only=read_only)
         broadcast_event(KaraboEvent.BrokerInformationUpdate, info)
 
     @show_wait_cursor
