@@ -190,6 +190,22 @@ namespace CppUnit{
         }
     };
 
+    template <>
+    struct assertion_traits<std::vector<char>>{
+        static bool equal(const std::vector<char> &a, const std::vector<char> &b){
+            return a == b;
+        }
+        static std::string toString(const std::vector<char> &p){
+            std::ostringstream o;
+            o << "'";
+            for (const char& e : p){
+                o << e;
+            }
+            o << "'";
+            return o.str();
+        }
+    };
+
 }
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DataLogging_Test);
@@ -197,7 +213,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(DataLogging_Test);
 const unsigned int DataLogging_Test::m_flushIntervalSec = 1u;
 
 // Avoid test collision on CI by specifying a unique prefix.
-static const std::string deviceIdPrefix = !getenv("KARABO_CI_TEST_PLATFORM") ? "" : getenv("KARABO_BROKER_TOPIC");
+static const std::string deviceIdPrefix = !getenv("KARABO_BROKER_TOPIC") ? "" : getenv("KARABO_BROKER_TOPIC");
 
 DataLogging_Test::DataLogging_Test()
     : m_server("DataLoggingTestServer"),
@@ -417,6 +433,7 @@ void DataLogging_Test::fileAllTestRunner() {
     testFloat();
     testString();
     testVectorString();
+    testVectorChar();
     testTable();
     testHistoryAfterChanges();
     // This must be the last test case that relies on the device in m_deviceId (the logged
@@ -457,6 +474,7 @@ void DataLogging_Test::influxAllTestRunner() {
     testFloat(false);
     testString(false);
     testVectorString(false);
+    testVectorChar(false);
     testTable(false);
 
     // NOTE:
@@ -979,6 +997,15 @@ void isEqualMessage(const std::string& message, const T& expected, const T& actu
     CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, expected, actual);
 }
 
+template <>
+void isEqualMessage(const std::string& message, const std::vector<char>& expected, const std::vector<char>& actual,
+                    const std::vector<karabo::util::Hash>& fullHistory) {
+    std::string msg(message);
+    if (expected != actual) {
+        (msg += ": ") += toString(fullHistory);
+    }
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, expected, actual);
+}
 
 template <>
 void isEqualMessage(const std::string& message, const float& expected, const float& actual,
@@ -1247,6 +1274,15 @@ void DataLogging_Test::testVectorString(bool testPastConf) {
         return v;
     };
     testHistory<vector < string >> ("vectors.stringProperty", lambda, testPastConf);
+}
+
+
+void DataLogging_Test::testVectorChar(bool testPastConf) {
+    auto lambda = [] (int i) -> vector<char> {
+
+        return {i & 0xFF, i & 0xFF, i & 0xFF, i & 0xFF, i & 0xFF, 0};
+    };
+    testHistory<vector<char> >("vectors.charProperty", lambda, testPastConf);
 }
 
 
