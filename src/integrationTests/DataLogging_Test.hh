@@ -79,6 +79,13 @@ private:
      */
     void testNoInfluxServerHandling();
 
+    /**
+     * Checks that slotGetPropertyHistory logging works when a
+     * Schema evolution changes the device schema at some timepoint
+     * within the requested history interval.
+     */
+    void testSchemaEvolution();
+
     template <class T> void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
 
     std::pair<bool, std::string> startLoggers(const std::string& loggerType,
