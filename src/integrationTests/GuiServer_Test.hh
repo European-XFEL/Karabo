@@ -36,6 +36,7 @@ private:
     void testNotification();
     void testExecute();
     void testReconfigure();
+    void testReadOnly();
 
     /**
      * Checks that messages of type 'deviceConfigurations' sent by
