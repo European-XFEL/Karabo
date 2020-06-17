@@ -121,12 +121,13 @@ class DlRaw2Influx():
                                          for i in buf.items())
                                     )
                                 )
-                                kv_str = f'{kv_str},_tid="{safe_tid}"'
+                                kv_str = f'{kv_str}'
+                                if safe_tid > 0:
+                                    kv_str += f',_tid={safe_tid}'
                                 data.append(
                                     '{m},karabo_user="{user}" {keys_values} {t}'
                                     .format(m=safe_m, user=safe_user,
-                                            keys_values=kv_str, tid=safe_tid,
-                                            t=safe_time)
+                                            keys_values=kv_str, t=safe_time)
                                 )
                                 m_key = (safe_user, safe_tid, safe_time)
                                 buf = {}
@@ -279,11 +280,6 @@ class DlRaw2Influx():
                       "Unable to parse timestamp ({}) and/or "
                       "train_id ({}).".format(timestamp_s, train_id))
 
-        if value == 'nan' or value == "-nan" or value == "inf":
-            raise KnownRawIssueException(
-                      "'{}' value unsupported in influxDB "
-                      "skipping line: '{}'".format(value, line.strip()))
-
         if ktype == "BOOL":
             # name += 'b'
             if value == '1':
@@ -294,16 +290,31 @@ class DlRaw2Influx():
                 raise Exception(
                           "Bool parameter with undefined value, '{}'. "
                           "skipping line: '{}'".format(value, line.strip()))
+        elif ktype in ("FLOAT", "DOUBLE"):
+            # if the value is not finite, convert it into a string and mangle
+            # the type adding an `_INF`
+            if value in ("nan", "-inf", "inf", "-nan"):
+                ktype = f"{ktype}_INF"
+                value = '"{}"'.format(value)
         elif ktype in ("INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32",
                        "INT64"):
             value = str(value) + "i"
-        elif ktype in ("STRING", "VECTOR_STRING", "BYTE_ARRAY", "UINT64"):
+        elif ktype in ("STRING", "UINT64"):
             value = '"' + value.replace('\\', '\\\\').replace('"', r'\"') + '"'
         elif ktype == "VECTOR_HASH":
             # `value` is a string representing the XML serialization of
             # we need to decode it and
             content = decodeXML(value)
             binary = encodeBinary(content)
+            value = '"' + base64.b64encode(binary).decode('utf-8') + '"'
+        elif ktype == "VECTOR_STRING":
+            # `value` is a string that will be reinterpreted as a vector of comma separated strings
+            # this will be serialized into a JSON string and encoded using the base64 algorithm in a string
+            json_seq = json.dumps(value.split(","), ensure_ascii=False).encode('utf-8')
+            value = '"' + base64.b64encode(json_seq).decode('utf-8') + '"'
+        elif ktype in ("VECTOR_CHAR", "BYTE_ARRAY"):
+            # `value` is a string that will be reinterpreted as a vector of chars and base64 encoded.
+            binary = value.encode('utf-8')
             value = '"' + base64.b64encode(binary).decode('utf-8') + '"'
         elif ktype.startswith("VECTOR_"):
             value = '"{}"'.format(value)
