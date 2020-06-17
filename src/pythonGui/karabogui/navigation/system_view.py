@@ -12,6 +12,8 @@ from PyQt5.QtWidgets import (
 
 from karabo.common.api import Capabilities
 from karabogui import icons
+from karabogui.enums import AccessRole
+from karabogui.globals import access_role_allowed
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.enums import NavigationItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
@@ -215,7 +217,10 @@ class SystemTreeView(QTreeView):
 
         info = self.indexInfo()
         node_type = info.get('type', NavigationItemTypes.UNDEFINED)
+        # Killing services is access level dependent!
+        enable_shutdown = access_role_allowed(AccessRole.SERVICE_EDIT)
         if node_type is NavigationItemTypes.SERVER:
+            self.acKillServer.setEnabled(enable_shutdown)
             self.acAbout.setVisible(True)
             self.mServerItem.exec_(QCursor.pos())
         elif node_type is NavigationItemTypes.CLASS:
@@ -224,6 +229,7 @@ class SystemTreeView(QTreeView):
             self.mDeviceItem.exec_(QCursor.pos())
         elif node_type is NavigationItemTypes.DEVICE:
             self.acKillDevice.setVisible(True)
+            self.acKillDevice.setEnabled(enable_shutdown)
             self.acAbout.setVisible(True)
             self.acDocu.setVisible(True)
             has_scenes = _test_mask(info.get('capabilities', 0),
