@@ -30,6 +30,12 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, GuiServerDevice)
 
+        // requestFromSlot is a fine grained writeable command and will be handled differently!
+        const std::unordered_set <std::string> GuiServerDevice::m_writeCommands ({
+            "projectSaveItems", "initDevice", "killDevice", "execute", "requestFromSlot",
+            "killServer", "acknowledgeAlarm", "projectUpdateAttribute", "reconfigure", "updateAttributes"}
+            );
+
         void GuiServerDevice::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("state")
@@ -186,6 +192,15 @@ namespace karabo {
                     .adminAccess()
                     .commit();
 
+            BOOL_ELEMENT(expected).key("isReadOnly")
+                    .displayedName("isReadOnly")
+                    .description("Define if this GUI Server is in readOnly "
+                                 "mode for clients")
+                    .assignmentOptional().defaultValue(false)
+                    .init()
+                    .adminAccess()
+                    .commit();
+
             STRING_ELEMENT(expected).key("dataLogManagerId")
                     .displayedName("Data Log Manager Id")
                     .description("The DataLoggerManager device to query for log readers.")
@@ -216,6 +231,7 @@ namespace karabo {
             m_dataConnection = Connection::create("Tcp", h);
             m_serializer = BinarySerializer<Hash>::create("Bin"); // for reading
 
+            m_isReadOnly = config.get<bool>("isReadOnly");
             m_loggerInput = config;
             m_loggerMinForwardingPriority = krb_log4cpp::Priority::getPriorityValue(config.get<std::string>("logForwardingLevel"));
         }
@@ -429,16 +445,12 @@ namespace karabo {
                 channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, WeakChannelPointer(channel), _2));
 
                 Hash brokerInfo("type", "brokerInformation");
-                // TODO Add to gui code
-                //brokerInfo.set("url", getConnection()->getBrokerUrl());
-                brokerInfo.set("host", "exfl-broker.desy.de"); // TODO Kill once it's clear the GUI does not need that
-                brokerInfo.set("port", 7777); // TODO Kill once it's clear the GUI does not need that
-
                 // Required information on InitInfo
                 brokerInfo.set("topic", m_topic);
                 brokerInfo.set("hostname", get<std::string>("hostName"));
                 brokerInfo.set("hostport", get<unsigned int>("port"));
                 brokerInfo.set("deviceId", getInstanceId());
+                brokerInfo.set("readOnly", m_isReadOnly);
 
                 channel->writeAsync(brokerInfo);
 
@@ -471,7 +483,11 @@ namespace karabo {
                 // GUI communication scenarios
                 if (info.has("type")) {
                     const string& type = info.get<string > ("type");
-                    if (type == "requestFromSlot") {
+                    if (m_isReadOnly && (m_writeCommands.find(type) != m_writeCommands.end())) {
+                        const std::string message("Action '" + type + "' is not allowed on GUI servers in readOnly mode!");
+                        const Hash h("type", "notification", "message", message);
+                        safeClientWrite(channel, h);
+                    } else if (type == "requestFromSlot") {
                         onRequestFromSlot(channel, info);
                     } else if (type == "login") {
                         onLogin(channel, info);

@@ -114,6 +114,9 @@ namespace karabo {
             std::set<std::string> m_projectManagers;
             mutable boost::shared_mutex m_projectManagerMutex;
 
+            bool m_isReadOnly;
+            static const std::unordered_set <std::string> m_writeCommands;
+
         public:
 
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "2.0")
@@ -244,14 +247,10 @@ namespace karabo {
              *      subscribeNetwork            onSubscribeNetwork
              *      requestNetwork              onRequestNetwork
              *      error                       onGuiError
-             *      getAvailableProjects        onGetAvailableProjects
-             *      newProject                  onNewProject
-             *      loadProject                 onLoadProject
-             *      saveProject                 onSaveProject
-             *      closeProject                onCloseProject
              *      acknowledgeAlarm            onAcknowledgeAlarm
              *      requestAlarms               onRequestAlarms
              *      updateAttributes            onUpdateAttributes
+             *      projectUpdateAttribute      onProjectUpdateAttribute
              *      projectBeginUserSession     onProjectBeginUserSession
              *      projectEndUserSession       onProjectEndUserSession
              *      projectSaveItems            onProjectSaveItems
@@ -270,6 +269,7 @@ namespace karabo {
              * @param channel
              * @param info
              */
+
             void onRead(const karabo::net::ErrorCode& e, WeakChannelPointer channel, karabo::util::Hash& info);
 
             /**
