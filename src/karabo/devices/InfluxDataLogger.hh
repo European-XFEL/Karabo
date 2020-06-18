@@ -32,7 +32,8 @@ namespace karabo {
             void handleChanged(const karabo::util::Hash& config, const std::string& user) override;
 
             void logValue(std::stringstream &query, const std::string& deviceId, const std::string& path,
-                          const std::string& value, const karabo::util::Types::ReferenceType& type);
+                          const std::string& value, karabo::util::Types::ReferenceType type,
+                          bool isFinite);
 
             void terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp);
 
