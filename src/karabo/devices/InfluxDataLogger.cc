@@ -114,6 +114,7 @@ namespace karabo {
                 
                 if (noArchive) continue; // Bail out after updating time stamp!
                 std::string value; // "value" should be a string, so convert depending on type ...
+                bool isFinite = true; // false for nan and inf DOUBLE/FLOAT
                 if (leafNode.getType() == Types::VECTOR_HASH) {
                     // Represent any vector<Hash> as Base64 string
                     std::vector<char> archive;
@@ -132,18 +133,13 @@ namespace karabo {
                         boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
                     }
                 } else if (leafNode.getType() == Types::DOUBLE) {
-                    // bail out if Nan or Infinite
                     const double v = leafNode.getValue<double>();
-                    if (!std::isfinite(v)) {
-                        continue;
-                    }
+                    isFinite = std::isfinite(v);
                     value = toString(v);
                 } else if (leafNode.getType() == Types::FLOAT) {
                     // bail out if Nan or Infinite
                     const float v = leafNode.getValue<float>();
-                    if (!std::isfinite(v)) {
-                        continue;
-                    }
+                    isFinite = std::isfinite(v);
                     value = toString(v);
                 } else {
                     value = leafNode.getValueAs<std::string>();
@@ -175,7 +171,8 @@ namespace karabo {
                     m_dbClient->enqueueQuery(ss.str());
                 }
 
-                logValue(query, deviceId, path, value, leafNode.getType());
+                // isFinite matters only for FLOAT/DOUBLE
+                logValue(query, deviceId, path, value, leafNode.getType(), isFinite);
             }
             if (!query.str().empty()) {
                 // flush the query if something is in it.
@@ -185,7 +182,8 @@ namespace karabo {
 
 
         void InfluxDeviceData::logValue(std::stringstream& query, const std::string& deviceId, const std::string& path,
-                                        const std::string& value, const karabo::util::Types::ReferenceType& type) {
+                                        const std::string& value, karabo::util::Types::ReferenceType type,
+                                        bool isFinite) {
             std::string field_value;
             switch (type) {
                 case Types::BOOL:
@@ -222,7 +220,14 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '" << deviceId << "'";
                         return;
                     }
-                    field_value = path + "-" + Types::to<ToLiteral>(type) + "=" + value;
+                    field_value = path + "-" + Types::to<ToLiteral>(type);
+                    if (!isFinite) {
+                        // InfluxDB does not support nan and inf - so we store them as strings as another field
+                        // whose name is extended by "_INF":
+                        ((field_value += "_INF=\"") += value) += "\"";
+                    } else {
+                        (field_value += "=") += value;
+                    }
                     break;
                 }
                 case Types::COMPLEX_FLOAT:

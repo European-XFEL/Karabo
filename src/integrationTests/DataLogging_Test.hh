@@ -56,7 +56,7 @@ private:
     /**
      * Checks that the DataLoggers handle NaN floats and doubles.
      */
-    void testNans(bool shouldReturnNans);
+    void testNans();
 
     /**
      * Checks that the InfluxDataLogger goes to ERROR state
