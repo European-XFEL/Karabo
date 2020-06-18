@@ -559,7 +559,7 @@ namespace karabo {
                     // onAsyncPropValueBeforeTime - they will both consume the propNamesAndTypes
                     // vector, sending a response back to the slotGetConfigurationFromPast caller
                     // when the last property value is retrieved.
-                    asyncPropValueBeforeTime(ctxt);
+                    asyncPropValueBeforeTime(ctxt, false);
 
                 } catch (const std::exception &e) {
                     std::ostringstream oss;
@@ -575,11 +575,20 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt, bool infinite) {
             const auto nameAndType = ctxt->propNamesAndTypes.front();
-            ctxt->propNamesAndTypes.pop_front();
-
-            const std::string fieldKey = nameAndType.first + "-" + Types::to<ToLiteral>(nameAndType.second);
+            // A 'SELECT LAST(/^dProp-DOUBLE|dProp-DOUBLE_INF/) ...' query returns the last values of both fields,
+            // but with a zero timestamp! So we have to request individually both. We start with the 'normal' field.
+            std::string fieldKey = nameAndType.first + "-" + Types::to<ToLiteral>(nameAndType.second);
+            if (infinite) {
+                // query the special field for nan and inf (only for DOUBLE or FLOAT)
+                fieldKey += "_INF";
+            }
+            if (infinite || (nameAndType.second != Types::FLOAT && nameAndType.second != Types::DOUBLE)) {
+                // 'infinite' marks the 2nd query for a floating point variable, for normal types there is only one query:
+                // Drop - i.e. pop - from list of properties still to query!
+                ctxt->propNamesAndTypes.pop_front();
+            }
             std::ostringstream iqlQuery;
             iqlQuery << "SELECT LAST(\"" << fieldKey << "\") FROM \""
                     << ctxt->deviceId << "\" WHERE time <= " << epochAsMicrosecString(ctxt->atTime) << m_durationUnit;
@@ -624,7 +633,22 @@ namespace karabo {
                 const boost::optional<std::string> valueAsString = jsonValueAsString(value);
                 try {
                     if (valueAsString) {
-                        addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, *valueAsString);
+                        if (!ctxt->configHash.has(propName)) {
+                            // The normal case - the result is not yet there
+                            addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, *valueAsString);
+                            if (propType == Types::DOUBLE || propType == Types::FLOAT) {
+                                // Query again query for the special field for nan and inf
+                                asyncPropValueBeforeTime(ctxt, true);
+                                return;
+                            }
+                        } else {
+                            // Second query for field for nan and inf of FLOAT and DOUBLE
+                            const Epochstamp stampQuery1(Epochstamp::fromHashAttributes(ctxt->configHash.getAttributes(propName)));
+                            if (stampQuery1 < timeEpoch) {
+                                // This (i.e. the 2nd query) has more recent result
+                                addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, *valueAsString);
+                            }
+                        }
                     }
                 } catch (const std::exception &e) {
                     // Do not bail out, but just go on with other properties (Is that the correct approach?)
@@ -638,7 +662,7 @@ namespace karabo {
 
             if (ctxt->propNamesAndTypes.size() > 0) {
                 // There is at least one more property whose value should be retrieved.
-                asyncPropValueBeforeTime(ctxt);
+                asyncPropValueBeforeTime(ctxt, false);
             } else {
                 // All properties have been retrieved. Reply to the slot caller.
                 bool configAtTimePoint = ctxt->lastLogoutBeforeTime < ctxt->lastLoginBeforeTime;
@@ -696,15 +720,13 @@ namespace karabo {
                 tidCol = std::distance(influxResult.first.begin(), iter);
             }
 
-            // Gets the data types and data type names of each column.
-            std::vector<Types::ReferenceType>colTypes(influxResult.first.size(), Types::ReferenceType::NONE);
+            // Gets the data type names of each column.
             std::vector<std::string>colTypeNames(influxResult.first.size());
             for (size_t col = 0; col < influxResult.first.size(); col++) {
                 const std::string::size_type typeSeparatorPos = influxResult.first[col].rfind("-");
                 if (typeSeparatorPos != std::string::npos) {
                     const std::string typeName = influxResult.first[col].substr(typeSeparatorPos + 1);
                     colTypeNames[col] = typeName;
-                    colTypes[col] = Types::from<FromLiteral>(typeName);
                 }
             }
 
@@ -731,7 +753,16 @@ namespace karabo {
                             // one non null value (may be an empty string).
                             continue;
                         }
-                        addNodeToHash(hash, "v", colTypes[col], tid, epoch, *(valuesRow[col]));
+                        // Figure out the real Karabo type:
+                        // For nan/inf floating points we added "_INF" when writing to influxDB (and stored as strings).
+                        const std::string& typeNameInflux = colTypeNames[col];
+                        const size_t posInf = typeNameInflux.rfind("_INF");
+                        const std::string& typeName = (posInf != std::string::npos && posInf == typeNameInflux.size() - 4ul
+                                                       ? typeNameInflux.substr(0, posInf)
+                                                       : typeNameInflux);
+
+                        const karabo::util::Types::ReferenceType type = Types::from<FromLiteral>(typeName);
+                        addNodeToHash(hash, "v", type, tid, epoch, *(valuesRow[col]));
                     } catch (const std::exception &e) {
                         KARABO_LOG_FRAMEWORK_ERROR << "Error adding node to hash:"
                                 << "\nValue type: " << colTypeNames[col]
