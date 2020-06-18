@@ -37,6 +37,7 @@ if __name__ == '__main__':
         entry_points={
             'console_scripts': [
                 'karabo-gui=karabogui.programs.gui_runner:main',
+                'karabo-alarms=karabogui.programs.alarm_runner:main',
                 'panel-runner=karabogui.programs.panel_runner:main',
                 'karabo-cinema=karabogui.programs.cinema:main',
                 'karabo-theatre=karabogui.programs.theatre:main',
