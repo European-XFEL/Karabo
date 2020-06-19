@@ -818,6 +818,14 @@ namespace karabo {
                     base64Decode(valueAsString, *reinterpret_cast<std::vector<unsigned char>*>(&value));
                     break;
                 }
+                case Types::VECTOR_UINT8:
+                {
+                    // The fromString specialisation for vector<unsigned char> as used in the HANDLE_VECTOR_TYPE below
+                    // erroneously does base64 decoding. We do not dare to fix that now, but workaround it here:
+                    node = &hash.set(path, std::vector<unsigned char>());
+                    node->getValue<std::vector<unsigned char>>() = fromStringForSchemaOptions<unsigned char>(valueAsString, ",");
+                    break;
+                }
 #define HANDLE_VECTOR_TYPE(VectorType, ElementType) \
                 case Types::VectorType: \
                 { \
@@ -828,7 +836,6 @@ namespace karabo {
                 }
 
                 HANDLE_VECTOR_TYPE(VECTOR_INT8, signed char);
-                HANDLE_VECTOR_TYPE(VECTOR_UINT8, unsigned char);
                 HANDLE_VECTOR_TYPE(VECTOR_INT16, short);
                 HANDLE_VECTOR_TYPE(VECTOR_UINT16, unsigned short);
                 HANDLE_VECTOR_TYPE(VECTOR_INT32, int);
