@@ -206,6 +206,27 @@ namespace CppUnit{
         }
     };
 
+    template <>
+    struct assertion_traits<std::vector<unsigned char>>
+    {
+
+
+        static bool equal(const std::vector<unsigned char> &a, const std::vector<unsigned char> &b) {
+            return a == b;
+        }
+
+
+        static std::string toString(const std::vector<unsigned char> &p) {
+            // Cannot use 'return karabo::util::toString(p)' since that uses base64 encoding
+            std::ostringstream o;
+            o << "'";
+            for (const unsigned char& e : p) {
+                o << static_cast<unsigned int> (e) << ',';
+            }
+            o << "'";
+            return o.str();
+        }
+    };
 }
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DataLogging_Test);
@@ -312,6 +333,7 @@ void DataLogging_Test::setPropertyTestSchema() {
     updates.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value", std::numeric_limits<float>::infinity()));
     updates.push_back(Hash("path", "doubleProperty", "attribute", KARABO_SCHEMA_MIN_INC, "value", -1. * std::numeric_limits<double>::infinity()));
     updates.push_back(Hash("path", "doubleProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value", std::numeric_limits<double>::infinity()));
+    updates.push_back(Hash("path", "vectors.uint8Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
     updates.push_back(Hash("path", "vectors.stringProperty", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
 
     Hash response;
@@ -433,6 +455,7 @@ void DataLogging_Test::fileAllTestRunner() {
     testString();
     testVectorString();
     testVectorChar();
+    testVectorUnsignedChar();
     testTable();
     testHistoryAfterChanges();
     // This must be the last test case that relies on the device in m_deviceId (the logged
@@ -473,6 +496,7 @@ void DataLogging_Test::influxAllTestRunner() {
     testString(false);
     testVectorString(false);
     testVectorChar(false);
+    testVectorUnsignedChar(false);
     testTable(false);
 
     // NOTE:
@@ -1284,6 +1308,19 @@ void DataLogging_Test::testVectorChar(bool testPastConf) {
     testHistory<vector<char> >("vectors.charProperty", lambda, testPastConf);
 }
 
+
+void DataLogging_Test::testVectorUnsignedChar(bool testPastConf) {
+    auto lambda = [] (int i) -> vector<unsigned char> {
+        std::vector<unsigned char> result;
+        if ((i % 3) != 0) { // every third is empty
+            result = {2, 4, 8, 16, 32};
+            if ((i % 2) == 0) result.push_back(0);
+            if ((i % 5) == 0) result.push_back(255);
+        }
+        return result;
+    };
+    testHistory<vector<unsigned char> >("vectors.uint8Property", lambda, testPastConf);
+}
 
 void DataLogging_Test::testTable(bool testPastConf) {
     auto lambda = [] (int i) -> vector<Hash> {
