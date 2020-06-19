@@ -126,11 +126,27 @@ namespace karabo {
                     const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (v.data());
                     value = base64Encode(uarchive, v.size());
                 } else if (Types::isVector(leafNode.getType())) {
-                    // ... and any other vector as a comma separated text string of vector elements
-                    value = toString(leafNode.getValueAs<std::string, std::vector>());
-                    if (leafNode.getType() == Types::VECTOR_STRING) {
-                        // Line breaks in content confuse indexing and reading back - so better mangle strings... :-(.
-                        boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
+                    if (leafNode.getType() == Types::VECTOR_UINT8) {
+                        // The generic vector code below uses toString(vector<unsigned char>) which
+                        // erroneously uses base64 encoding.
+                        // We do not dare to fix that now, but workaround it here to have a human readable string
+                        // in the DB to ease the use of the data outside Karabo:
+                        const std::vector<unsigned char>& vec = leafNode.getValue<std::vector<unsigned char>>();
+                        if (!vec.empty()) {
+                            std::ostringstream s;
+                            s << static_cast<unsigned int> (vec[0]);
+                            for (size_t i = 1ul; i < vec.size(); ++i) {
+                                s << "," << static_cast<unsigned int> (vec[i]);
+                            }
+                            value = s.str();
+                        }
+                    } else {
+                        // ... and any other vector as a comma separated text string of vector elements
+                        value = toString(leafNode.getValueAs<std::string, std::vector>());
+                        if (leafNode.getType() == Types::VECTOR_STRING) {
+                            // Line breaks in content confuse indexing and reading back - so better mangle strings... :-(.
+                            boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
+                        }
                     }
                 } else if (leafNode.getType() == Types::DOUBLE) {
                     const double v = leafNode.getValue<double>();
