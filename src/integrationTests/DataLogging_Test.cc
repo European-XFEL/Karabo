@@ -217,6 +217,7 @@ namespace CppUnit{
 
 
         static std::string toString(const std::vector<unsigned char> &p) {
+            // Cannot use 'return karabo::util::toString(p)' since that uses base64 encoding
             std::ostringstream o;
             o << "'";
             for (const unsigned char& e : p) {
@@ -448,7 +449,7 @@ void DataLogging_Test::fileAllTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
-    // testNans();
+    testNans();
     testInt();
     testFloat();
     testString();
