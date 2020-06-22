@@ -10,6 +10,8 @@ from PyQt5.QtWidgets import QAction, QVBoxLayout, QWidget
 
 from karabogui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEvent)
+from karabogui.enums import AccessRole
+from karabogui.globals import access_role_allowed
 from karabogui.widgets.ipython import IPythonWidget
 from karabogui.widgets.toolbar import ToolBar
 from .base import BasePanelWidget
@@ -26,9 +28,13 @@ class ScriptingPanel(BasePanelWidget):
         super(ScriptingPanel, self).__init__("Console", allow_closing=True)
 
         self.event_map = {
-            KaraboEvent.NetworkConnectStatus: self._event_network
+            KaraboEvent.NetworkConnectStatus: self._event_network,
+            KaraboEvent.LoginUserChanged: self._event_access_level,
+            KaraboEvent.AccessLevelChanged: self._event_access_level,
         }
         register_for_broadcasts(self.event_map)
+        # When we are opened, we check our access!
+        self._access_console()
 
     def closeEvent(self, event):
         super(ScriptingPanel, self).closeEvent(event)
@@ -37,11 +43,23 @@ class ScriptingPanel(BasePanelWidget):
             self._stop_ipython()
             self.signalPanelClosed.emit(self.windowTitle())
 
+    # Karabo Events
+    # -----------------------------------------------------------------------
+
     def _event_network(self, data):
         connected = data.get('status', False)
         if not connected and self.console:
             self.console.stop()
             self._stop_ipython()
+
+    def _event_access_level(self, data):
+        self._access_console()
+
+    # -----------------------------------------------------------------------
+
+    def _access_console(self):
+        allowed = access_role_allowed(AccessRole.CONSOLE_EDIT)
+        self.acStartIPython.setVisible(allowed)
 
     def get_content_widget(self):
         """Returns a QWidget containing the main content of the panel.
