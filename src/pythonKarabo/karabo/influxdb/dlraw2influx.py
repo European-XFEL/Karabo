@@ -1,15 +1,13 @@
 #!/usr/bin/env python
-import argparse
 import base64
 import json
 import os
 import os.path as op
 import numpy as np
 import re
-import shutil
+import struct
 import time
 
-from asyncio import get_event_loop
 from urllib.parse import urlparse
 
 from karabo.influxdb.client import InfluxDbClient
@@ -20,6 +18,29 @@ from karabo.influxdb.dlutils import (
 from karabo.native import decodeXML, encodeBinary
 
 PROCESSED_RAWS_FILE_NAME = '.processed_props.txt'
+
+
+class LineBuffer():
+    def __init__(self, user=None, tid=0, ts=None):
+        self.line_key = (user, int(tid), ts)
+        self.value_dict = {}
+
+    def __bool__(self):
+        return self.line_key != (None, 0, None) or bool(self.value_dict)
+
+    def __setitem__(self, key, value):
+        self.value_dict[key] = value
+
+    def to_line_protocol(self, measurement):
+        if self.line_key[2] is None:
+            return ""
+        kv = ','.join((f'{k}={v}' for k, v in self.value_dict.items()))
+        user, tid, ts = self.line_key
+        tid_field = "" if tid <= 0 else f',_tid={tid}i'
+        return f'{measurement},karabo_user="{user}" {kv}{tid_field} {ts}'
+
+    def __repr__(self):
+        return f"line_key {self.line_key} {self.value_dict}"
 
 
 class KnownRawIssueException(Exception):
@@ -51,6 +72,7 @@ class DlRaw2Influx():
 
         if self.device_id is None:  # infers device_id from directory structure
             self.device_id = device_id_from_path(self.raw_path)
+        self.stats = {}
 
         # Derives the proc_out_path and part_proc_out_path using output_dir
         # as the base path and the device_id as the final directory in the
@@ -79,10 +101,12 @@ class DlRaw2Influx():
             self.part_proc_out_path = None
             self.proc_props_path = None
 
+        self.buf = None
+        self.data = []
+
     async def run(self):
-        data = []
         part_proc = False  # indicates the file has been partially processed.
-        stats = {
+        self.stats = {
             'start_time': time.time(),
             'end_time': None,
             'elapsed_secs': 0.0,
@@ -90,146 +114,133 @@ class DlRaw2Influx():
             'lines_processed': 0,
             'write_retries': [],
         }
-        raw_update_epoch = op.getmtime(self.raw_path)
         with open(self.raw_path, 'r') as fp:
-            m_key = ()  # Uniquely identifies a record in the line protocol.
-            buf = {}  # Key-value buffer for line protocol record.
             for i, l in enumerate(fp):
                 try:
-                    line_fields = self.parse_raw(l)
-                    if line_fields:
-                        # line has been parsed successfully
-                        safe_m = escape_measurement(self.device_id)
-                        safe_user = escape_tag_field_key(
-                                        line_fields["user_name"]
-                                    )
-                        safe_f = escape_tag_field_key(line_fields["name"])
-                        safe_v = line_fields["value"]
-                        safe_tid = line_fields["train_id"]
-                        safe_time = line_fields["timestamp"]
-                        if safe_v:
-                            buf[safe_f] = safe_v
-
-                        if m_key and m_key != (safe_user, safe_tid, safe_time):
-                            # The record key is no longer valid (e.g. a new
-                            # timestamp). Flushes the line protocol entry and
-                            # updates the record key.
-                            if buf:
-                                kv_str = (
-                                    ','.join(
-                                        (f'{i[0]}={i[1]}'
-                                         for i in buf.items())
-                                    )
-                                )
-                                kv_str = f'{kv_str}'
-                                if safe_tid > 0:
-                                    kv_str += f',_tid={safe_tid}'
-                                data.append(
-                                    '{m},karabo_user="{user}" {keys_values} {t}'
-                                    .format(m=safe_m, user=safe_user,
-                                            keys_values=kv_str, t=safe_time)
-                                )
-                                m_key = (safe_user, safe_tid, safe_time)
-                                buf = {}
-                        elif not m_key:
-                            # The unique identifier is empty. Initialize it.
-                            m_key = (safe_user, safe_tid, safe_time)
-
-                        up_flag = line_fields["flag"].upper()
-                        if up_flag in ("LOGIN", "LOGOUT"):
-                            # A device event to be saved- user is always
-                            # saved to satisfy InfluxDB's requirement of having
-                            # at least one key per line data point
-                            evt_type = '+LOG' if up_flag == 'LOGIN' else '-LOG'
-                            data.append('{m}__EVENTS,type={e} karabo_user="{user}" {t}'
-                                        .format(m=safe_m, e=evt_type,
-                                                user=safe_user, t=safe_time))
-                        if data and len(data) % self.chunk_queries == 0:
-                            lin_proto_data = format_line_protocol_body(data)
-                            data = []
-                            if not self.dry_run:
-                                r = (
-                                      await self.db_client.write_with_retry(
-                                                                lin_proto_data)
-                                )
-                                if r['code'] != 204:
-                                    raise Exception(
-                                        "Error writing line protocol: "
-                                        "{} - {}\nWrite retries: {}\nContent:\n"
-                                        "{} ...\n\n".format(
-                                            r['code'], r['reason'],
-                                            r['retried'],
-                                            lin_proto_data[:320]))
-                                if r['retried']:
-                                    stats['write_retries'].append(r['retried'])
-                    stats['lines_processed'] = i+1
+                    self._process_line(l)
+                    await self._send_data()
                 except KnownRawIssueException as exc:
-                    # Known issues in input files should generate .warn files
-                    # in the partially processed directory, but should be
-                    # ignored regarding the partially processed status of the
-                    # input file.
-                    if self.warn_out_path and not self.dry_run:
-                        if not op.exists(op.dirname(self.warn_out_path)):
-                            os.makedirs(op.dirname(self.warn_out_path))
-                        with open(self.warn_out_path, 'a') as warn:
-                            warn.write("Known issue at line {}: {}\n"
-                                       .format(i, exc))
-                    elif not self.warn_out_path:
-                        raise
-                except Exception as exc:
-                    # Handles an error by logging it in a .err file in the
-                    # partially processed directory if there's an output_dir
-                    # defined. Otherwise just re-raises the exception and
-                    # keep the previously existing behavior of stopping on
-                    # first error.
-                    part_proc = True
-                    if self.part_proc_out_path and not self.dry_run:
-                        if not op.exists(op.dirname(self.part_proc_out_path)):
-                            os.makedirs(op.dirname(self.part_proc_out_path))
-                        with open(self.part_proc_out_path, 'a') as err:
-                            err.write("Error at line {}: {}\n".format(i, exc))
-                    elif not self.part_proc_out_path:
-                        raise
-
-            if not self.dry_run and data:
-                try:
-                    line_protocol_data = format_line_protocol_body(data)
-                    r = (
-                          await self.db_client.write_with_retry(
-                                                            line_protocol_data)
-                    )
-                    if r['code'] != 204:
-                        raise Exception(
-                                "{} - {}\nWrite retries: {}\n".format(
-                                    r['code'], r['reason'], r['retried']))
-                    if r['retried']:
-                        stats['write_retries'].append(r['retried'])
+                    self._handle_knownRawIssue(exc, i)
                 except Exception as exc:
                     part_proc = True
-                    if self.part_proc_out_path and not self.dry_run:
-                        if not op.exists(op.dirname(self.part_proc_out_path)):
-                            os.makedirs(op.dirname(self.part_proc_out_path))
-                        with open(self.part_proc_out_path, 'a') as err:
-                            err.write("Error writing line protocol: {}\n{} ..."
-                                      "\n\n".format(
-                                          exc, line_protocol_data[:320]))
-                    elif not self.part_proc_out_path:
-                        raise
+                    self._handle_genericException(exc, i)
+            # end of file, flush
+            self._flush_buffer()
+            try:
+                await self._send_data(force_send=True)
+            except Exception as exc:
+                part_proc = True
+                self._handle_genericException(exc, i)
+            self._write_end_stats(part_proc)
 
-        # Registers successful processing of properties file.
-        stats['end_time'] = time.time()
-        stats['elapsed_secs'] = stats['end_time']-stats['start_time']
-        stats['insert_rate'] = stats['lines_processed']/(stats['elapsed_secs'])
+    def _process_line(self, file_line):
+        line_fields = self.parse_raw(file_line)
+        if not line_fields:
+            return
+        # line has been parsed successfully
+        safe_m = escape_measurement(self.device_id)
+        safe_user = escape_tag_field_key(line_fields["user_name"])
+        safe_f = escape_tag_field_key(line_fields["name"])
+        safe_v = line_fields["value"]
+        safe_tid = line_fields["train_id"]
+        safe_time = line_fields["timestamp"]
+        if not self.buf:
+            # The unique identifier is empty. Initialize it.
+            self.buf = LineBuffer(safe_user, safe_tid, safe_time)
+        elif self.buf.line_key != (safe_user, safe_tid, safe_time):
+            # The record key of this `file_line` does not match the current
+            # buffer (e.g. a new timestamp).
+            # We append the buffer content to data
+            # and updates the record key.
+            self._flush_buffer()
+            self.buf = LineBuffer(safe_user, safe_tid, safe_time)
+        if safe_v:
+            self.buf[safe_f] = safe_v
+        up_flag = line_fields["flag"].upper()
+        if up_flag in ("LOGIN", "LOGOUT"):
+            # A device event to be saved- user is always
+            # saved to satisfy InfluxDB's requirement of having
+            # at least one key per line data point
+            evt_type = '+LOG' if up_flag == 'LOGIN' else '-LOG'
+            self.data.append(
+                f'{safe_m}__EVENTS,type={evt_type} '
+                f'karabo_user="{safe_user}" {safe_time}'
+            )
+        self.stats['lines_processed'] = self.stats['lines_processed'] + 1
+
+    def _flush_buffer(self):
+        """ append a line from buffer to the data queue
+
+        """
+        if not self.buf:
+            return
+        device_id = escape_tag_field_key(self.device_id)
+        line = self.buf.to_line_protocol(device_id)
+        self.data.append(line)
+
+    async def _send_data(self, force_send=False):
+        if self.dry_run:
+            return
+        if force_send or len(self.data) >= self.chunk_queries:
+            line_data = format_line_protocol_body(self.data)
+            self.data = []
+            r = await self.db_client.write_with_retry(line_data)
+            if r['code'] != 204:
+                msg = f"""Error writing line protocol: {r['code']} - {r['reason']}
+                    Write retries: {r['retried']}
+                    Content:
+                    {line_data[:320]} ...
+                """
+                raise Exception(msg)
+            if r['retried']:
+                self.stats['write_retries'].append(r['retried'])
+
+    def _handle_knownRawIssue(self, exc, line_number):
+        """Handles KnownRawIssueExceptions saving as much data as posible
+
+        Known issues in input files should generate .warn files
+        in the partially processed directory, but should be
+        ignored regarding the partially processed status of the
+        input file.
+        """
+        if self.warn_out_path and not self.dry_run:
+            if not op.exists(op.dirname(self.warn_out_path)):
+                os.makedirs(op.dirname(self.warn_out_path))
+                with open(self.warn_out_path, 'a') as warn:
+                    warn.write(f"Known issue. Line {line_number}: {exc}\n")
+
+    def _handle_genericException(self, exc, line_number):
+        """Handles a GenericException in file parsing
+
+        log exceptions to an .err file in the
+        partially processed directory if the path is defined.
+        Otherwise just re-raises the exception and
+        keep the previously existing behavior of stopping on
+        first error.
+        """
+        if self.part_proc_out_path and not self.dry_run:
+            if not op.exists(op.dirname(self.part_proc_out_path)):
+                os.makedirs(op.dirname(self.part_proc_out_path))
+            with open(self.part_proc_out_path, 'a') as err:
+                err.write(f"Error at line {line_number}: {exc}\n")
+        elif not self.part_proc_out_path:
+            raise
+
+    def _write_end_stats(self, part_proc):
+        """Write Stats To File"""
+        raw_update_epoch = op.getmtime(self.raw_path)
+        self.stats['end_time'] = time.time()
+        elapsed = self.stats['end_time'] - self.stats['start_time']
+        self.stats['elapsed_secs'] = elapsed
+        self.stats['insert_rate'] = self.stats['lines_processed'] / elapsed
         if self.proc_out_path and not self.dry_run and not part_proc:
             if not op.exists(op.dirname(self.proc_out_path)):
                 os.makedirs(op.dirname(self.proc_out_path))
             with open(self.proc_out_path, 'w') as ok_file:
-                ok_file.write(json.dumps(stats))
+                ok_file.write(json.dumps(self.stats))
             with open(self.proc_props_path, 'a') as proc_props_file:
                 proc_props_file.write(
                     f'{raw_update_epoch}|{self.workload_id}|{self.raw_path}\n')
-
-        return not part_proc  # True if fully successfully processed.
 
     def parse_raw(self, line):
         """
@@ -251,26 +262,17 @@ class DlRaw2Influx():
             r"^([TZ0-9\.]+)\|([0-9\.]+)\|([0-9]+)\|(.+)\|([0-9A-Z_]*)\|(.*)\|"
             r"([a-z0-9_]*)\|([A-Z]+)$"
         )
-
         line_fields = {}
-        try:
-            matches = re.search(line_regex, line)
-            timestamp_s = matches.group(2)
-            train_id = matches.group(3)
-            name = matches.group(4)
-            ktype = matches.group(5)
-            value = matches.group(6)
-            user_name = matches.group(7)
-            flag = matches.group(8)
-        except Exception as exc:
-            if 0 < line.count('|') < 7:
-                # Incomplete line is a known issue - may happen due to a Data
-                # Logger being killed with -9, for instance.
-                raise KnownRawIssueException("Incomplete input line: {}"
-                                             .format(line))
-            else:
-                raise Exception("\n\tLine: '{}'\n\tMessage: '{}'"
-                                .format(line.strip(), exc))
+        matches = re.search(line_regex, line)
+        if matches is None:
+            raise KnownRawIssueException(f"Incomplete input line: {line}")
+        timestamp_s = matches.group(2)
+        train_id = matches.group(3)
+        name = matches.group(4)
+        ktype = matches.group(5)
+        value = matches.group(6)
+        user_name = matches.group(7)
+        flag = matches.group(8)
 
         try:
             timestamp_ns = np.int(np.float(timestamp_s) * 1E9)
@@ -299,8 +301,9 @@ class DlRaw2Influx():
         elif ktype in ("INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32",
                        "INT64"):
             value = str(value) + "i"
-        elif ktype in ("STRING", "UINT64"):
-            value = '"' + value.replace('\\', '\\\\').replace('"', r'\"') + '"'
+        elif ktype == "STRING":
+            escaped = value.replace('\\', '\\\\').replace('"', r'\"')
+            value = f'"{escaped}"'
         elif ktype == "VECTOR_HASH":
             # `value` is a string representing the XML serialization of
             # we need to decode it and
@@ -308,15 +311,25 @@ class DlRaw2Influx():
             binary = encodeBinary(content)
             value = '"' + base64.b64encode(binary).decode('utf-8') + '"'
         elif ktype == "VECTOR_STRING":
-            # `value` is a string that will be reinterpreted as a vector of comma separated strings
-            # this will be serialized into a JSON string and encoded using the base64 algorithm in a string
-            json_seq = json.dumps(value.split(","), ensure_ascii=False).encode('utf-8')
-            value = '"' + base64.b64encode(json_seq).decode('utf-8') + '"'
-        elif ktype in ("VECTOR_CHAR", "BYTE_ARRAY"):
-            # `value` is a string that will be reinterpreted as a vector of chars and base64 encoded.
-            binary = value.encode('utf-8')
-            value = '"' + base64.b64encode(binary).decode('utf-8') + '"'
-        elif ktype.startswith("VECTOR_"):
+            # `value` is a string that will be reinterpreted as a vector
+            # of comma separated strings this will be serialized into a JSON
+            # string and encoded using the base64 algorithm in a string
+            json_seq = json.dumps(value.split(","), ensure_ascii=False)
+            binary = base64.b64encode(json_seq.encode('utf-8'))
+            value = f'"{binary.decode("utf-8")}"'
+        elif ktype == "VECTOR_STRING_BASE64":
+            # VECTOR_STRING_BASE64 is already formatted with the format
+            # expected by the influxLogReader for VECTOR_STRING
+            # here we put it into quotes to tell influx to treat it as a
+            # string and change the ktype to VECTOR_STRING
+            ktype = "VECTOR_STRING"
+            value = '"{}"'.format(value)
+        elif ktype == "VECTOR_UINT8":
+            binary = base64.b64decode(value)
+            vec = [str(v) for v in struct.unpack('B'*len(binary), binary)]
+            value = '"{}"'.format(",".join(vec))
+        elif (ktype in ("BYTE_ARRAY", "CHAR", "UINT64") or
+              ktype.startswith("VECTOR_")):
             value = '"{}"'.format(value)
         if len(ktype) > 0:
             name = "{}-{}".format(name, ktype)
@@ -332,7 +345,9 @@ class DlRaw2Influx():
         line_fields["flag"] = flag
         # bail out if value is empty and not an escaped string,
         # or if an integer was created for an empty value
-        if not value.strip():
+        # Note: the LOGOUT event has a non valid key `.`
+        # and an empty value. In this case, no exception is raised
+        if not value.strip() and name != '.':
             raise Exception(f"Empty value for {name}@{train_id}")
         if value.strip() == "i":
             raise Exception(f"Empty integer for {name}@{train_id}")
