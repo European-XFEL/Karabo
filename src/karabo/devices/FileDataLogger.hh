@@ -23,7 +23,7 @@ namespace karabo {
 
             void logValue(const std::string& deviceId, const std::string& path,
                           const karabo::util::Timestamp& ts, const std::string& value,
-                          const karabo::util::Types::ReferenceType& type, size_t filePosition);
+                          const std::string& type, size_t filePosition);
 
             void flushOne();
 
