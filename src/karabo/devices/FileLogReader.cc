@@ -15,6 +15,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <nlohmann/json.hpp>
 
 #include "karabo/core/Device.hh"
 #include "karabo/io/Input.hh"
@@ -38,6 +39,7 @@ namespace karabo {
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
+        using json = nlohmann::json;
 
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice,
                                           karabo::core::Device<karabo::core::OkErrorFsm>,
@@ -377,7 +379,7 @@ namespace karabo {
 
                                     result.push_back(Hash());
                                     // tokens[5] and [6] are type and value, respectively
-                                    readToHash(result.back(), "v", tst, Types::from<FromLiteral>(tokens[5]), tokens[6]);
+                                    readToHash(result.back(), "v", tst, tokens[5], tokens[6]);
                                 } else {
                                     KARABO_LOG_FRAMEWORK_DEBUG
                                             << "slotGetPropertyHistory: skip corrupted record or old format '"
@@ -506,7 +508,7 @@ namespace karabo {
                                 // tokens[3] is trainId
                                 const Timestamp timestamp(current, fromString<unsigned long long>(tokens[3]));
                                 // tokens[5] and [6] are type and value, respectively
-                                readToHash(hash, path, timestamp, Types::from<FromLiteral>(tokens[5]), tokens[6]);
+                                readToHash(hash, path, timestamp, tokens[5], tokens[6]);
                             } else {
                                 KARABO_LOG_FRAMEWORK_DEBUG
                                         << "slotGetPropertyHistory: skip corrupted record or old format: " << line;
@@ -530,34 +532,103 @@ namespace karabo {
 
 
         void FileLogReader::readToHash(Hash& hashOut, const std::string& path, const Timestamp& timestamp,
-                                       Types::ReferenceType type, const string& value) const {
+                                       const std::string& typeString, const string& value) const {
             using karabo::util::DATALOG_NEWLINE_MANGLE;
-            if (type == Types::VECTOR_HASH) {
-                Hash::Node& node = hashOut.set<vector < Hash >> (path, vector<Hash>());
-                // Re-mangle new line characters of any string value inside any of the Hashes,
-                // see DataLogger. But only when needed to avoid copies in "normal" cases.
-                const bool mangle = (value.find(DATALOG_NEWLINE_MANGLE) != std::string::npos);
-                m_serializer->load(node.getValue<vector < Hash >> (),
-                                   (mangle
-                                    ? boost::algorithm::replace_all_copy(value, DATALOG_NEWLINE_MANGLE, "\n")
-                                    : value));
-                Hash::Attributes& attrs = node.getAttributes();
-                timestamp.toHashAttributes(attrs);
-            } else {
-                Hash::Node& node = hashOut.set<string>(path, value);
-                if (type == Types::STRING) {
-                    // Re-mangle new line characters, see DataLogger :-|
-                    boost::algorithm::replace_all(node.getValue<string>(), DATALOG_NEWLINE_MANGLE, "\n");
-                } else if (type == Types::VECTOR_STRING) {
-                    // Re-mangle new line characters, see DataLogger :-|
-                    boost::algorithm::replace_all(node.getValue<string>(), DATALOG_NEWLINE_MANGLE, "\n");
-                    node.setType(type);
-                } else {
-                    node.setType(type);
-                }
-                Hash::Attributes& attrs = node.getAttributes();
-                timestamp.toHashAttributes(attrs);
+            Types::ReferenceType type = Types::UNKNOWN;
+            std::string unknownError = "";
+            try {
+                type = Types::from<FromLiteral>(typeString);
+            } catch(const ParameterException& e) {
+                unknownError.assign(e.what());
             }
+
+            Hash::Node *node = nullptr;
+
+            switch (type) {
+                case Types::VECTOR_HASH:
+                {
+                    node = &hashOut.set<vector < Hash >> (path, vector<Hash>());
+                    // Re-mangle new line characters of any string value inside any of the Hashes,
+                    // see DataLogger. But only when needed to avoid copies in "normal" cases.
+                    const bool mangle = (value.find(DATALOG_NEWLINE_MANGLE) != std::string::npos);
+                    m_serializer->load(node->getValue<vector < Hash >> (),
+                                       (mangle
+                                        ? boost::algorithm::replace_all_copy(value, DATALOG_NEWLINE_MANGLE, "\n")
+                                        : value));
+                    break;
+                }
+                case Types::UNKNOWN:
+                {
+                    if (typeString == "VECTOR_STRING_BASE64") {
+                        // New format for VECTOR_STRING data.
+                        // Convert value (base64) from base64 -> JSON -> vector<string> ...
+                        node = &hashOut.set(path, std::vector<std::string>());
+                        std::vector<unsigned char> decoded;
+                        base64Decode(value, decoded);
+                        json j = json::parse(decoded.begin(), decoded.end());
+                        for (json::iterator ii = j.begin(); ii != j.end(); ++ii) {
+                            node->getValue<std::vector<std::string> >().push_back(*ii);
+                        }
+                        node->setType(Types::VECTOR_STRING);
+                    } else {
+                        throw KARABO_PARAMETER_EXCEPTION(unknownError);
+                    }
+                    break;
+                }
+                case Types::VECTOR_STRING:
+                {
+                    // Old format for VECTOR_STRING data (for backward compatibility)
+                    // Keep this to support migration tools from "file" to "influx"
+                    // Re-mangle new line characters, see DataLogger :-|
+                    std::string unmangled = boost::algorithm::replace_all_copy(value, DATALOG_NEWLINE_MANGLE, "\n");
+                    node = &hashOut.set(path, std::vector<std::string>());
+                    std::vector<std::string>& valref = node->getValue<std::vector<std::string> >();
+                    // split by ","
+                    boost::split(valref, unmangled, boost::is_any_of(","));
+                    node->setType(type);
+                    break;
+                }
+#define HANDLE_VECTOR_TYPE(VectorType, ElementType) \
+                case Types::VectorType: \
+                { \
+                    node = &hashOut.set(path, std::vector<ElementType>()); \
+                    std::vector<ElementType> &valref = node->getValue<std::vector<ElementType>>(); \
+                    if (!value.empty()) { \
+                        valref = std::move(fromString<ElementType, std::vector>(value, ",")); \
+                    } \
+                    break; \
+                }
+
+                HANDLE_VECTOR_TYPE(VECTOR_BOOL, bool);
+                HANDLE_VECTOR_TYPE(VECTOR_CHAR, char);
+                HANDLE_VECTOR_TYPE(VECTOR_INT8, signed char);
+                HANDLE_VECTOR_TYPE(VECTOR_UINT8, unsigned char);
+                HANDLE_VECTOR_TYPE(VECTOR_INT16, short);
+                HANDLE_VECTOR_TYPE(VECTOR_UINT16, unsigned short);
+                HANDLE_VECTOR_TYPE(VECTOR_INT32, int);
+                HANDLE_VECTOR_TYPE(VECTOR_UINT32, unsigned int);
+                HANDLE_VECTOR_TYPE(VECTOR_INT64, long long);
+                HANDLE_VECTOR_TYPE(VECTOR_UINT64, unsigned long long);
+                HANDLE_VECTOR_TYPE(VECTOR_FLOAT, float);
+                HANDLE_VECTOR_TYPE(VECTOR_DOUBLE, double);
+                HANDLE_VECTOR_TYPE(VECTOR_COMPLEX_FLOAT, std::complex<float>);
+                HANDLE_VECTOR_TYPE(VECTOR_COMPLEX_DOUBLE, std::complex<double>);
+#undef HANDLE_VECTOR_TYPE
+                case Types::STRING:
+                {
+                    node = &hashOut.set(path, value);
+                    // Re-mangle new line characters, see DataLogger :-|
+                    boost::algorithm::replace_all(node->getValue<string>(), DATALOG_NEWLINE_MANGLE, "\n");
+                    break;
+                }
+                default:
+                {
+                    node = &hashOut.set<string>(path, value);
+                    node->setType(type);
+                }
+            }
+            Hash::Attributes& attrs = node->getAttributes();
+            timestamp.toHashAttributes(attrs);
         }
 
 

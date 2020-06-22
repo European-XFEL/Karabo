@@ -115,7 +115,8 @@ namespace karabo {
                 if (noArchive) continue; // Bail out after updating time stamp!
                 std::string value; // "value" should be a string, so convert depending on type ...
                 bool isFinite = true; // false for nan and inf DOUBLE/FLOAT
-                if (leafNode.getType() == Types::VECTOR_HASH) {
+                Types::ReferenceType type = leafNode.getType();
+                if (type == Types::VECTOR_HASH) {
                     // Represent any vector<Hash> as Base64 string
                     std::vector<char> archive;
                     m_serializer->save(leafNode.getValue<std::vector < Hash >> (), archive);
@@ -128,44 +129,46 @@ namespace karabo {
                     const std::vector<char> & v = leafNode.getValue<std::vector<char>>();
                     const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (v.data());
                     value = base64Encode(uarchive, v.size());
-                } else if (Types::isVector(leafNode.getType())) {
-                    if (leafNode.getType() == Types::VECTOR_UINT8) {
-                        // The generic vector code below uses toString(vector<unsigned char>) which
-                        // erroneously uses base64 encoding.
-                        // We do not dare to fix that now, but workaround it here to have a human readable string
-                        // in the DB to ease the use of the data outside Karabo:
-                        const std::vector<unsigned char>& vec = leafNode.getValue<std::vector<unsigned char>>();
-                        if (!vec.empty()) {
-                            std::ostringstream s;
-                            s << static_cast<unsigned int> (vec[0]);
-                            for (size_t i = 1ul; i < vec.size(); ++i) {
-                                s << "," << static_cast<unsigned int> (vec[i]);
-                            }
-                            value = s.str();
+                } else if (type == Types::VECTOR_UINT8) {
+                    // The generic vector code below uses toString(vector<unsigned char>) which
+                    // erroneously uses base64 encoding.
+                    // We do not dare to fix that now, but workaround it here to have a human readable string
+                    // in the DB to ease the use of the data outside Karabo:
+                    const std::vector<unsigned char>& vec = leafNode.getValue<std::vector<unsigned char>>();
+                    if (!vec.empty()) {
+                        std::ostringstream s;
+                        s << static_cast<unsigned int> (vec[0]);
+                        for (size_t i = 1ul; i < vec.size(); ++i) {
+                            s << "," << static_cast<unsigned int> (vec[i]);
                         }
-                    } else {
-                        // ... and any other vector as a comma separated text string of vector elements
-                        value = toString(leafNode.getValueAs<std::string, std::vector>());
-                        if (leafNode.getType() == Types::VECTOR_STRING) {
-                            // Line breaks in content confuse indexing and reading back - so better mangle strings... :-(.
-                            boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
-                        }
+                        value = s.str();
                     }
-                } else if (leafNode.getType() == Types::DOUBLE) {
+                } else if (type == Types::VECTOR_STRING) {
+                    // Special case: convert to JSON and then base64 ...
+                    const std::vector<std::string>& vecstr = leafNode.getValue<std::vector<std::string> >();
+                    nl::json j(vecstr);                     // convert to JSON
+                    const std::string str = j.dump();       // JSON as a string
+                    const unsigned char* encoded = reinterpret_cast<const unsigned char*>(str.c_str());
+                    const size_t length = str.length();
+                    value = base64Encode(encoded, length);  // encode to base64
+                } else if (Types::isVector(type)) {
+                    // ... and treat  any other vectors as a comma separated text string of vector elements
+                    value = toString(leafNode.getValueAs<std::string, std::vector>());
+                } else if (type == Types::DOUBLE) {
                     const double v = leafNode.getValue<double>();
                     isFinite = std::isfinite(v);
                     value = toString(v);
-                } else if (leafNode.getType() == Types::FLOAT) {
+                } else if (type == Types::FLOAT) {
                     // bail out if Nan or Infinite
                     const float v = leafNode.getValue<float>();
                     isFinite = std::isfinite(v);
                     value = toString(v);
+                } else if (type == Types::STRING) {
+                    value = leafNode.getValueAs<std::string>();
+                    // Line breaks violate the line protocol, so we mangle newlines... :-(.
+                    boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
                 } else {
                     value = leafNode.getValueAs<std::string>();
-                    if (leafNode.getType() == Types::STRING) {
-                        // Line breaks in content confuse indexing and reading back - so better mangle strings... :-(.
-                        boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
-                    }
                 }
 
                 if (lineTimestamp.getEpochstamp().getSeconds() == 0ull) {

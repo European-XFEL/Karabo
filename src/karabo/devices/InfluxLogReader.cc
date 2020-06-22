@@ -761,7 +761,7 @@ namespace karabo {
                                                        ? typeNameInflux.substr(0, posInf)
                                                        : typeNameInflux);
 
-                        const karabo::util::Types::ReferenceType type = Types::from<FromLiteral>(typeName);
+                        const Types::ReferenceType type = Types::from<FromLiteral>(typeName);
                         addNodeToHash(hash, "v", type, tid, epoch, *(valuesRow[col]));
                     } catch (const std::exception &e) {
                         KARABO_LOG_FRAMEWORK_ERROR << "Error adding node to hash:"
@@ -799,15 +799,14 @@ namespace karabo {
                 }
                 case Types::VECTOR_STRING:
                 {
-                    // Vectors of Strings are merged into a single string with values separated by comma
-                    // and then escaped by the Influx Logger.
+                    // Convert value from base64 -> JSON -> vector<string> ...
                     node = &hash.set(path, std::vector<std::string>());
-                    std::vector<std::string> &value = node->getValue<std::vector < std::string >> ();
-                    // Here we assume that an empty string is a vector of 0 length.
-                    boost::split(value, valueAsString, boost::is_any_of(","));
-                    for (size_t i = 0; i < value.size(); i++) {
-                        std::string unescaped = unescapeLoggedString(value[i]);
-                        value[i] = unescaped;
+                    std::vector<std::string>& value = node->getValue<std::vector<std::string> >();
+                    std::vector<unsigned char> decoded;
+                    base64Decode(valueAsString, decoded);
+                    nl::json j = nl::json::parse(decoded.begin(), decoded.end());
+                    for (nl::json::iterator ii = j.begin(); ii != j.end(); ++ii) {
+                        value.push_back(*ii);
                     }
                     break;
                 }
