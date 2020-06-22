@@ -1,6 +1,6 @@
-****************************
- Conda GUI client on Windows
-****************************
+*************************************
+Connecting with Karabo GUI on Windows
+*************************************
 Installation and running KaraboGUI via ``conda`` on Windows requires additional tools and configuration. This is especially
 when working on a non-DESY network.
 
