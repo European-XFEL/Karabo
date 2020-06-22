@@ -381,14 +381,16 @@ class Influx_TestCase(DeviceTest):
             if col_name == "vectors.stringProperty-VECTOR_STRING":
                 value = base64.b64decode(values[col_idx])
                 self.assertEqual(["bla", "bli"], json.loads(value.decode('utf-8')))
-                
+
+        r, cols = await self.client.get_last_value(MIGRATION_TEST_DEVICE, "charProperty-CHAR")
+        ts, value = next(r)
+        self.assertEqual(b"A", base64.b64decode(value))
 
         r, cols = await self.client.get_last_value(MIGRATION_TEST_DEVICE, "vectors.charProperty-VECTOR_CHAR")
         ts, value = next(r)
         self.assertEqual(b"ABCDEF", base64.b64decode(value))
         properties_to_test = {
             'boolProperty': False,
-            'charProperty': "A",
             'int8Property': 33,
             'uint8Property': 177,
             'int16Property': 3_200,

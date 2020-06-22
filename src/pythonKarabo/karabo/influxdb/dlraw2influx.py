@@ -328,9 +328,18 @@ class DlRaw2Influx():
             binary = base64.b64decode(value)
             vec = [str(v) for v in struct.unpack('B'*len(binary), binary)]
             value = '"{}"'.format(",".join(vec))
-        elif (ktype in ("BYTE_ARRAY", "CHAR", "UINT64") or
-              ktype.startswith("VECTOR_")):
+        elif ktype in ("BYTE_ARRAY", "UINT64") or ktype.startswith("VECTOR_"):
             value = '"{}"'.format(value)
+        elif ktype == "CHAR":
+            size = len(value)
+            if size > 1:
+                raise Exception(
+                    f'Char property {name} abnormally long: {value}')
+            elif size == 0:
+                binary = base64.b64encode(b'\0')
+            elif size == 1:
+                binary = base64.b64encode(value[0].encode('utf-8'))
+            value = f'"{binary.decode("utf-8")}"'
         if len(ktype) > 0:
             name = "{}-{}".format(name, ktype)
 
