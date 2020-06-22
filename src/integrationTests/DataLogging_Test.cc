@@ -454,6 +454,8 @@ void DataLogging_Test::fileAllTestRunner() {
     testInt();
     testFloat();
     testString();
+    // TODO: port base64 encoding to the FileDataLogger/FileLogReader
+    // testChar(false);
     testVectorString();
     testVectorChar();
     testVectorUnsignedChar();
@@ -496,6 +498,7 @@ void DataLogging_Test::influxAllTestRunner() {
     testInt(true);
     testFloat(false);
     testString(false);
+    testChar(false);
     testVectorString(false);
     testVectorChar(false);
     testVectorUnsignedChar(false);
@@ -1232,16 +1235,10 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
         }
     }
 
-    // TODO: Uncomment the following assert as soon as all the missing keys cases are fixed.
-    /*
+    // Check that all keys are logged.
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Missing keys in configuration from past (before writes):\n" + missingKeysFromPast,
                                  0ul,
                                  missingKeysFromPast.size());
-     */
-    // TODO: Remove the following conditional logging once the assert above is activated.
-    if (!missingKeysFromPast.empty()) {
-        std::clog << "Missing keys in configuration from past (before writes):\n" << missingKeysFromPast << std::endl;
-    }
 
     nTries = NUM_RETRY;
     numExceptions = 0;
@@ -1409,6 +1406,14 @@ void DataLogging_Test::testTable(bool testPastConf) {
         return t;
     };
     testHistory<vector<Hash> >("table", lambda, testPastConf);
+}
+
+
+void DataLogging_Test::testChar(bool testPastConf) {
+    auto lambda = [] (int i) -> char {
+        return static_cast<char>(i & 0xff);
+    };
+    testHistory<char>("charProperty", lambda, testPastConf);
 }
 
 
