@@ -13,6 +13,7 @@ class AccessRole(Enum):
     MACRO_EDIT = 'macro_edit'
     PROJECT_EDIT = 'project_edit'
     SERVICE_EDIT = 'service_edit'
+    CONSOLE_EDIT = 'console_edit'
 
 
 class NavigationItemTypes(object):
