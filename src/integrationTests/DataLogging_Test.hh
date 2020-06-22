@@ -51,6 +51,7 @@ private:
     void testVectorUnsignedChar(bool testPastConf = false);
     void testVectorBool(bool testPastConf = false);
     void testTable(bool testPastConf = false);
+    void testChar(bool testPastConf = true);
 
     void testLastKnownConfiguration();
     void testCfgFromPastRestart();
