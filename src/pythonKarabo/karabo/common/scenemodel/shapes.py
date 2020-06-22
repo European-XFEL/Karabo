@@ -8,7 +8,8 @@ from .const import NS_SVG
 from .io_utils import (
     convert_number_or_string, get_defs_id, get_numbers, is_empty, set_numbers)
 from .registry import (
-    find_def, read_element, register_scene_reader, register_scene_writer)
+    find_def, read_element, register_scene_reader, register_scene_writer,
+    write_element)
 
 
 class LineModel(BaseShapeObjectData):
@@ -183,7 +184,7 @@ def __arrow_reader(element):
 
 
 @register_scene_writer(ArrowModel)
-def __arrow_writer(write_func, model, parent):
+def __arrow_writer(model, parent):
     """ A writer for LineModel objects
     """
     element = SubElement(parent, NS_SVG + 'line')
@@ -223,7 +224,7 @@ def __marker_reader(element):
 
 
 @register_scene_writer(MarkerModel)
-def __marker_writer(write_func, model, parent):
+def __marker_writer(model, parent):
     """ A writer for PathModel objects
     """
     element = SubElement(parent, NS_SVG + 'marker')
@@ -237,7 +238,7 @@ def __marker_writer(write_func, model, parent):
 
     # Write children elements
     for child in model.children:
-        write_func(child, element)
+        write_element(child, element)
     return element
 
 
