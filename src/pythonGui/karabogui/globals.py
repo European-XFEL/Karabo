@@ -34,7 +34,8 @@ ACCESS_LEVEL_ROLES = {
     AccessRole.SCENE_EDIT: AccessLevel.EXPERT,
     AccessRole.MACRO_EDIT: AccessLevel.OPERATOR,
     AccessRole.PROJECT_EDIT: AccessLevel.OPERATOR,
-    AccessRole.SERVICE_EDIT: AccessLevel.OPERATOR}
+    AccessRole.SERVICE_EDIT: AccessLevel.OPERATOR,
+    AccessRole.CONSOLE_EDIT: AccessLevel.EXPERT}
 
 
 def access_role_allowed(role):
