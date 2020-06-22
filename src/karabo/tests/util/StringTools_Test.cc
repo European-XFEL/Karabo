@@ -67,11 +67,121 @@ void StringTools_Test::testFromString() {
     CPPUNIT_ASSERT(std::complex<float>(1.234, 5.678) == fromString<std::complex<float> >("(1.234,5.678)"));
     CPPUNIT_ASSERT(std::complex<double>(1.234, 5.678) == fromString<std::complex<double> >("(1.234,5.678)"));
 
-    // Vector
-    std::vector<unsigned int> uint32Vector = fromString<unsigned int, std::vector >("12345,23456,34567,45678", ",");
-    CPPUNIT_ASSERT(4 == uint32Vector.size());
-    CPPUNIT_ASSERT(12345 == uint32Vector[0]);
-    CPPUNIT_ASSERT(45678 == uint32Vector[3]);
+    // Test from vector
+    // Vector bool is always special
+    {
+        std::vector<bool> aVector = fromString<bool, std::vector > ("true", ",");
+        CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
+        CPPUNIT_ASSERT(true == aVector[0]);
+
+        aVector = fromString<bool, std::vector > ("", ",");
+        CPPUNIT_ASSERT_EQUAL(0ul, aVector.size());
+
+        aVector = fromString<bool, std::vector > ("y,0,false,1", ",");
+        CPPUNIT_ASSERT_EQUAL(4ul, aVector.size());
+        CPPUNIT_ASSERT(true == aVector[0]);
+        CPPUNIT_ASSERT(false == aVector[1]);
+        CPPUNIT_ASSERT(false == aVector[2]);
+        CPPUNIT_ASSERT(true == aVector[3]);
+    }
+    // Vector short is using the templated version
+    {
+        std::vector<short> aVector = fromString<short, std::vector > ("77", ",");
+        CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
+        CPPUNIT_ASSERT_EQUAL(static_cast<short> (77), aVector[0]);
+
+        aVector = fromString<short, std::vector > ("", ",");
+        CPPUNIT_ASSERT_EQUAL(0ul, aVector.size());
+
+        aVector = fromString<short, std::vector > ("-32768, -77, 32767", ",");
+        CPPUNIT_ASSERT_EQUAL(3ul, aVector.size());
+        CPPUNIT_ASSERT_EQUAL(static_cast<short> (-32768), aVector[0]);
+        CPPUNIT_ASSERT_EQUAL(static_cast<short> (-77), aVector[1]);
+        CPPUNIT_ASSERT_EQUAL(static_cast<short> (32767), aVector[2]);
+    }
+
+    // Vector int has a template specialisation
+    {
+        std::vector<int> aVector = fromString<int, std::vector > ("77", ",");
+        CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
+        CPPUNIT_ASSERT_EQUAL(77, aVector[0]);
+
+        aVector = fromString<int, std::vector > ("", ",");
+        CPPUNIT_ASSERT_EQUAL(0ul, aVector.size());
+
+        aVector = fromString<int, std::vector > ("-32768, -77, 32767", ",");
+        CPPUNIT_ASSERT_EQUAL(3ul, aVector.size());
+        CPPUNIT_ASSERT_EQUAL(-32768, aVector[0]);
+        CPPUNIT_ASSERT_EQUAL(-77, aVector[1]);
+        CPPUNIT_ASSERT_EQUAL(32767, aVector[2]);
+    }
+
+    // Vector unsigned int has another template specialisation
+    {
+        std::vector<unsigned int> aVector = fromString<unsigned int, std::vector > ("77", ",");
+        CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
+        CPPUNIT_ASSERT_EQUAL(77u, aVector[0]);
+
+        aVector = fromString<unsigned int, std::vector > ("", ",");
+        CPPUNIT_ASSERT_EQUAL(0ul, aVector.size());
+
+        aVector = fromString<unsigned int, std::vector > (" [0, 77, 65535] ", ",");
+        CPPUNIT_ASSERT_EQUAL(3ul, aVector.size());
+        CPPUNIT_ASSERT_EQUAL(0u, aVector[0]);
+        CPPUNIT_ASSERT_EQUAL(77u, aVector[1]);
+        CPPUNIT_ASSERT_EQUAL(65535u, aVector[2]);
+    }
+
+    // Vector long long has yet another template specialisation
+    {
+        std::vector<long long> aVector = fromString<long long, std::vector > (" 77 ", ",");
+        CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
+        CPPUNIT_ASSERT_EQUAL(77ll, aVector[0]);
+
+        aVector = fromString<long long, std::vector > ("", ",");
+        CPPUNIT_ASSERT_EQUAL(0ul, aVector.size());
+
+        aVector = fromString<long long, std::vector > (" -2147483648, -77 , 2147483647", ",");
+        CPPUNIT_ASSERT_EQUAL(3ul, aVector.size());
+        CPPUNIT_ASSERT_EQUAL(-2147483648ll, aVector[0]);
+        CPPUNIT_ASSERT_EQUAL(-77ll, aVector[1]);
+        CPPUNIT_ASSERT_EQUAL(2147483647ll, aVector[2]);
+    }
+
+    // Vector unsigned long long has yet another template specialisation
+    {
+        std::vector<unsigned long long> aVector = fromString<unsigned long long, std::vector > ("77", ",");
+        CPPUNIT_ASSERT_EQUAL(1ul, aVector.size());
+        CPPUNIT_ASSERT_EQUAL(77ull, aVector[0]);
+
+        aVector = fromString<unsigned long long, std::vector > ("", ",");
+        CPPUNIT_ASSERT_EQUAL(0ul, aVector.size());
+
+        aVector = fromString<unsigned long long, std::vector > (" 0, 77, 4294967295      ", ",");
+        CPPUNIT_ASSERT_EQUAL(3ul, aVector.size());
+        CPPUNIT_ASSERT_EQUAL(0ull, aVector[0]);
+        CPPUNIT_ASSERT_EQUAL(77ull, aVector[1]);
+        CPPUNIT_ASSERT_EQUAL(4294967295ull, aVector[2]);
+    }
+
+    // tests for set
+    {
+        auto aSet = fromString<int, std::set> ("77", ",");
+        CPPUNIT_ASSERT_EQUAL(1ul, aSet.size());
+        CPPUNIT_ASSERT_EQUAL(77, *(aSet.begin()));
+
+        aSet = fromString<int, std::set> ("", ",");
+        CPPUNIT_ASSERT_EQUAL(0ul, aSet.size());
+
+        aSet = fromString<int, std::set> ("-32768, -77, 32767, -77 7", ",");
+        CPPUNIT_ASSERT_EQUAL(3ul, aSet.size());
+        auto it = aSet.begin();
+        CPPUNIT_ASSERT_EQUAL(-32768, *it);
+        ++it;
+        CPPUNIT_ASSERT_EQUAL(-77, *it);
+        ++it;
+        CPPUNIT_ASSERT_EQUAL(32767, *it);
+    }
 
 }
 
