@@ -16,7 +16,9 @@ from karabogui.binding.api import (
     ProjectDeviceProxy, attr_fast_deepcopy, apply_configuration,
     extract_configuration, flat_iter_hash, has_changes)
 from karabogui.configurator.api import ConfigurationTreeView
+from karabogui.enums import AccessRole
 from karabogui.events import KaraboEvent, register_for_broadcasts
+from karabogui.globals import access_role_allowed
 from karabogui.singletons.api import get_manager
 from karabogui.util import (
     get_spin_widget, load_configuration_from_file, save_configuration_to_file
@@ -45,12 +47,16 @@ class ConfigurationPanel(BasePanelWidget):
             KaraboEvent.ClearConfigurator: self._event_clear_configurator,
             KaraboEvent.LoadConfiguration: self._event_load_configuration,
             KaraboEvent.ShowConfigurationFromPast: self._event_config_past,
-            KaraboEvent.NetworkConnectStatus: self._event_network
+            KaraboEvent.NetworkConnectStatus: self._event_network,
+            KaraboEvent.AccessLevelChanged: self._event_access_level,
         }
         register_for_broadcasts(event_map)
 
     # -----------------------------------------------------------------------
     # Karabo Events
+
+    def _event_access_level(self, data):
+        self._update_buttons(self._showing_proxy)
 
     def _event_show_configuration(self, data):
         proxy = data['proxy']
@@ -310,6 +316,31 @@ class ConfigurationPanel(BasePanelWidget):
             # Notify again. XXX: Schema update too?
             proxy.binding.config_update = True
 
+    def _update_buttons(self, proxy):
+        """Main method to update the button visibility of the configurator"""
+        access = access_role_allowed(AccessRole.SERVICE_EDIT)
+        if (proxy is None or not len(proxy.binding.value)
+                or (isinstance(proxy, DeviceClassProxy)
+                    and not isinstance(proxy, ProjectDeviceProxy)) or
+                not access):
+            self._hide_all_buttons()
+        else:
+            is_device = isinstance(proxy, DeviceProxy)
+            self._show_button_visibility(not (proxy is None or is_device))
+
+    def _show_button_visibility(self, visible):
+        """Show the configurator buttons depending of the `visible` parameter
+        """
+        self.pbInitDevice.setVisible(visible)
+
+        self.pbKillInstance.setVisible(not visible)
+        self.pbApplyAll.setVisible(not visible)
+        self.pbResetAll.setVisible(not visible)
+
+        self.acKillInstance.setVisible(not visible)
+        self.acApplyAll.setVisible(not visible)
+        self.acResetAll.setVisible(not visible)
+
     def _hide_all_buttons(self):
         """Hide buttons and actions"""
         self.pbInitDevice.setVisible(False)
@@ -378,13 +409,7 @@ class ConfigurationPanel(BasePanelWidget):
         """Adapt to the Configuration which is currently showing
         """
         # Update buttons
-        if (proxy is None or not len(proxy.binding.value)
-                or (isinstance(proxy, DeviceClassProxy)
-                    and not isinstance(proxy, ProjectDeviceProxy))):
-            self._hide_all_buttons()
-        else:
-            is_device = isinstance(proxy, DeviceProxy)
-            self.update_buttons_visibility = not (proxy is None or is_device)
+        self._update_buttons(proxy)
 
         # Toggle device updates
         if (self._showing_proxy not in (None, proxy) and
@@ -460,22 +485,6 @@ class ConfigurationPanel(BasePanelWidget):
             # Iff current showing device proxy matches the updated one,
             # refresh the view.
             self._show_configuration(proxy)
-
-    # ----------------------------------------------------------------------
-    # property attributes
-
-    def _update_buttons_visibility(self, visible):
-        self.pbInitDevice.setVisible(visible)
-
-        self.pbKillInstance.setVisible(not visible)
-        self.pbApplyAll.setVisible(not visible)
-        self.pbResetAll.setVisible(not visible)
-
-        self.acKillInstance.setVisible(not visible)
-        self.acApplyAll.setVisible(not visible)
-        self.acResetAll.setVisible(not visible)
-
-    update_buttons_visibility = property(fset=_update_buttons_visibility)
 
     # -----------------------------------------------------------------------
     # slots
