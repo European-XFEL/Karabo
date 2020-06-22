@@ -10,7 +10,8 @@ from PyQt5.QtWidgets import (
     QAbstractItemView, QAction, QDialog, QHeaderView, QMenu, QTreeView)
 
 from karabogui import icons
-from karabogui.enums import NavigationItemTypes
+from karabogui.enums import AccessRole, NavigationItemTypes
+from karabogui.globals import access_role_allowed
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.singletons.api import (
@@ -176,6 +177,9 @@ class DeviceTreeView(QTreeView):
         info = self.indexInfo()
         node_type = info.get('type', NavigationItemTypes.UNDEFINED)
         if node_type is NavigationItemTypes.DEVICE:
+            # Killing services is access level dependent!
+            enable = access_role_allowed(AccessRole.SERVICE_EDIT)
+            self.ac_kill_device.setEnabled(enable)
             self.menu.exec_(QCursor.pos())
 
     @pyqtSlot()
