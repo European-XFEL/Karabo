@@ -1,5 +1,6 @@
 #include <iostream>
 #include <boost/pointer_cast.hpp>
+#include <nlohmann/json.hpp>
 #include "FileDataLogger.hh"
 
 
@@ -11,6 +12,7 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::io;
         using namespace karabo::xms;
+        using json = nlohmann::json;
 
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogger, FileDataLogger)
         KARABO_REGISTER_IN_FACTORY_1(DeviceData, FileDeviceData, karabo::util::Hash)
@@ -237,6 +239,8 @@ namespace karabo {
 
                 if (noArchive) continue; // Bail out after updating time stamp!
                 string value; // "value" should be a string, so convert depending on type ...
+                string typeString = Types::to<ToLiteral>(leafNode.getType());
+
                 if (leafNode.getType() == Types::VECTOR_HASH) {
                     // Represent any vector<Hash> as XML string ...
                     m_serializer->save(leafNode.getValue<vector < Hash >> (), value);
@@ -245,8 +249,14 @@ namespace karabo {
                     // ... and any other vector as a comma separated text string of vector elements
                     value = toString(leafNode.getValueAs<string, vector>());
                     if (leafNode.getType() == Types::VECTOR_STRING) {
-                        // Line breaks in content confuse indexing and reading back - so better mangle strings... :-(.
-                        boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
+                        // New format: convert to JSON and then base64 ...
+                        typeString = "VECTOR_STRING_BASE64";    // set artificial marker
+                        const std::vector<std::string>& vecstr = leafNode.getValue<std::vector<std::string> >();
+                        json j(vecstr);                         // convert to JSON
+                        const std::string str = j.dump();       // JSON as a string
+                        const unsigned char* encoded = reinterpret_cast<const unsigned char*>(str.c_str());
+                        const size_t length = str.length();
+                        value = base64Encode(encoded, length);  // encode to base64
                     }
                 } else {
                     value = leafNode.getValueAs<string>();
@@ -258,7 +268,7 @@ namespace karabo {
 
                 const std::pair<bool, size_t> newFilePlusPosition = ensureFileOpen();
                 if (newFilePlusPosition.second == -1ul) continue; // problem with file permissions, skip and go on
-                logValue(deviceId, path, t, value, leafNode.getType(), newFilePlusPosition.second);
+                logValue(deviceId, path, t, value, typeString, newFilePlusPosition.second);
 
                 // Possibly add new line to index file:
                 if (m_pendingLogin || newFilePlusPosition.first) {
@@ -317,9 +327,8 @@ namespace karabo {
 
         void FileDeviceData::logValue(const std::string& deviceId, const std::string& path,
                                       const karabo::util::Timestamp& ts, const std::string& value,
-                                      const karabo::util::Types::ReferenceType& reftype, size_t filePosition) {
+                                      const std::string& type, size_t filePosition) {
 
-            const string type = Types::to<ToLiteral>(reftype);
             m_configStream << ts.toIso8601Ext() << "|" << fixed << ts.toTimestamp() << "|"
                     << ts.getTrainId() << "|" << path << "|" << type << "|" << scientific
                     << value << "|" << m_user;
