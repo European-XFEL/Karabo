@@ -173,7 +173,7 @@ void StringTools_Test::testFromString() {
         aSet = fromString<int, std::set> ("", ",");
         CPPUNIT_ASSERT_EQUAL(0ul, aSet.size());
 
-        aSet = fromString<int, std::set> ("-32768, -77, 32767, -77 7", ",");
+        aSet = fromString<int, std::set> ("-32768, -77, 32767, -77", ",");
         CPPUNIT_ASSERT_EQUAL(3ul, aSet.size());
         auto it = aSet.begin();
         CPPUNIT_ASSERT_EQUAL(-32768, *it);
