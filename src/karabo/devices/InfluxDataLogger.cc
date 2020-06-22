@@ -111,7 +111,7 @@ namespace karabo {
                         m_lastDataTimestamp = t;
                     }
                 }
-                
+
                 if (noArchive) continue; // Bail out after updating time stamp!
                 std::string value; // "value" should be a string, so convert depending on type ...
                 bool isFinite = true; // false for nan and inf DOUBLE/FLOAT
@@ -166,7 +166,7 @@ namespace karabo {
                 }
 
                 if (lineTimestamp.getEpochstamp().getSeconds() == 0ull) {
-                    // first non-skipped value 
+                    // first non-skipped value
                     lineTimestamp = t;
                 } else if (t.getEpochstamp() != lineTimestamp.getEpochstamp()) {
                     // new timestamp! flush the previous query
@@ -249,6 +249,7 @@ namespace karabo {
                 case Types::COMPLEX_FLOAT:
                 case Types::COMPLEX_DOUBLE:
                 case Types::UINT64:
+                case Types::VECTOR_BOOL:
                 case Types::VECTOR_INT8:
                 case Types::VECTOR_UINT8:
                 case Types::VECTOR_INT16:
