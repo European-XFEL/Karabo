@@ -281,7 +281,7 @@ class Influx_TestCase(DeviceTest):
             db_name=_topic, input_dir=tst_data_root, output_dir=output_dir,
             write_url=f'http://{_host}:{_port}', write_user=_user,
             write_pwd=_password, read_url=f'http://{_host}:{_port}',
-            read_user=_user, read_pwd=_password, lines_per_write=8000,
+            read_user=_user, read_pwd=_password, lines_per_write=800,
             dry_run=False, write_timeout=20, concurrent_tasks=2)
 
         await migrator.run()
@@ -385,8 +385,35 @@ class Influx_TestCase(DeviceTest):
 
         r, cols = await self.client.get_last_value(MIGRATION_TEST_DEVICE, "vectors.charProperty-VECTOR_CHAR")
         ts, value = next(r)
-        self.assertEqual(b"ABCDE", base64.b64decode(value))
-
+        self.assertEqual(b"ABCDEF", base64.b64decode(value))
+        properties_to_test = {
+            'boolProperty': False,
+            'charProperty': "A",
+            'int8Property': 33,
+            'uint8Property': 177,
+            'int16Property': 3_200,
+            'uint16Property': 32_000,
+            'int32Property' : 99,
+            'uint32Property' : 32_000_000,
+            'int64Property' : 3_200_000_000,
+            'uint64Property' : '3200000000', # uint64 are saved as strings
+            'stringProperty' : "Some arbitrary text.",
+            'vectors.boolProperty': "1,0,1,0,1,0",
+            'vectors.uint8Property': "41,42,43,44,45,46", # this is decoded from base64
+            'vectors.int8Property': "41,42,43,44,45,46",
+            'vectors.int16Property': ",".join([str(20_041 +i) for i in range(6)]),
+            'vectors.uint16Property': ",".join([str(10_041 +i) for i in range(6)]),
+            'vectors.int32Property': ",".join([str(20_000_041 +i) for i in range(6)]),
+            'vectors.uint32Property': ",".join([str(90_000_041 +i) for i in range(6)]),
+            'vectors.int64Property': ",".join([str(20_000_000_041 +i) for i in range(6)]),
+            'vectors.uint64Property': ",".join([str(90_000_000_041 +i) for i in range(6)]),
+        }
+        for key, expected in properties_to_test.items():
+            r, cols = await self.client.get_last_value(
+                MIGRATION_TEST_DEVICE,
+                f"^{key}-.*")
+            ts, value = next(r)
+            self.assertEqual(expected, value, key)
         await self.adm_client.drop_measurement(MIGRATION_TEST_DEVICE)
 
 
