@@ -818,6 +818,16 @@ namespace karabo {
                     base64Decode(valueAsString, *reinterpret_cast<std::vector<unsigned char>*>(&value));
                     break;
                 }
+                case Types::CHAR:
+                {
+                    std::vector<unsigned char> decoded;
+                    base64Decode(valueAsString, decoded);
+                    if (decoded.size() != 1ul) {
+                       throw KARABO_PARAMETER_EXCEPTION("Base64 Encoded char of wrong size: " + decoded.size());
+                    }
+                    node = &hash.set(path, static_cast<char>(decoded[0]));
+                    break;
+                }
                 case Types::VECTOR_UINT8:
                 {
                     // The fromString specialisation for vector<unsigned char> as used in the HANDLE_VECTOR_TYPE below
