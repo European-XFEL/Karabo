@@ -1,10 +1,12 @@
 *******************
  Conda GUI client
 *******************
-From version 2.6, the KaraboGui installation for windows and the karabo-gui
-executable shipped with the precompiled binaries, is deprecated. Conda is a package
-manager and dependency resolution tool which offers a very straightforward way
-to install packages and its dependencies.
+From version 2.6, the KaraboGUI installation for Windows and the karabo-gui
+executable shipped with the precompiled binaries for Ubuntu, is deprecated.
+
+KaraboGUI can now be installed in Windows, MacOS, and Ubuntu via ``conda``.
+Conda is a cross-platform package manager and dependency resolution tool which offers a very
+straightforward way to install packages and its dependencies.
 
 In order to use Conda, three basic steps are needed:
     1. Install Conda (through an Anaconda or Miniconda distribution);
@@ -17,14 +19,14 @@ Installing Conda
 The following steps are needed in order to obtain Conda.
 
 * Download and install miniconda (Python version >= 3) from `here <https://docs.conda.io/en/latest/miniconda.html>`_
-* Open your terminal (Anaconda Prompt on Windows or a bash on linux)
+* Open your terminal (Anaconda Prompt on Windows or Bash on Linux or MacOS)
 * If conda is in your path, you should be able to run **conda --version**
     * If it isn't, you need to activate conda first
-        * **Linux**: ``source <miniconda_path>/etc/profile.d/conda.sh``
+        * **Linux/MacOS**: ``source <miniconda_path>/etc/profile.d/conda.sh``
         * **Win**: ``CALL <miniconda_path>/condabin/activate.bat``
 
 If you find errors such as "Your shell has not been properly configured to use 'conda activate'", run the following
-command::
+command:
 
     . <your miniconda3 path>/etc/profile.d/conda.sh
 
