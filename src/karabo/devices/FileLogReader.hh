@@ -151,7 +151,7 @@ namespace karabo {
              * Place 'value' interpreted as 'type' (and with given 'timestamp') into 'hashOut' at 'path'.
              */
             void readToHash(karabo::util::Hash& hashOut, const std::string& path, const karabo::util::Timestamp& timestamp,
-                            karabo::util::Types::ReferenceType type, const std::string& value) const;
+                            const std::string& type, const std::string& value) const;
 
             /**
              * Retrieves, from the logger index, the event of type "device became online" that is closest, but not after
