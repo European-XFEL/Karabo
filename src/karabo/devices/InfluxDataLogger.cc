@@ -246,6 +246,7 @@ namespace karabo {
                     }
                     break;
                 }
+                case Types::BYTE_ARRAY:
                 case Types::COMPLEX_FLOAT:
                 case Types::COMPLEX_DOUBLE:
                 case Types::UINT64:
