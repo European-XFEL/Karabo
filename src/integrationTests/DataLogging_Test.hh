@@ -49,6 +49,7 @@ private:
     void testVectorString(bool testPastConf = false);
     void testVectorChar(bool testPastConf = false);
     void testVectorUnsignedChar(bool testPastConf = false);
+    void testVectorBool(bool testPastConf = false);
     void testTable(bool testPastConf = false);
 
     void testLastKnownConfiguration();
