@@ -190,7 +190,7 @@ namespace karabo {
 
             void addNodeToHash(karabo::util::Hash &hash,
                                const std::string &path,
-                               const karabo::util::Types::ReferenceType &type,
+                               const karabo::util::Types::ReferenceType& type,
                                unsigned long long trainId,
                                const karabo::util::Epochstamp &epoch,
                                const std::string &valueAsString);
