@@ -121,6 +121,9 @@ namespace karabo {
                     m_serializer->save(leafNode.getValue<std::vector < Hash >> (), archive);
                     const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (archive.data());
                     value = base64Encode(uarchive, archive.size());
+                } else if (leafNode.getType() == Types::CHAR) {
+                    const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (&leafNode.getValue<char>());
+                    value = base64Encode(uarchive, 1ul);
                 } else if (leafNode.getType() == Types::VECTOR_CHAR) {
                     const std::vector<char> & v = leafNode.getValue<std::vector<char>>();
                     const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (v.data());
@@ -270,6 +273,7 @@ namespace karabo {
                 }
                 case Types::VECTOR_CHAR:
                 case Types::VECTOR_HASH:
+                case Types::CHAR:
                 {
                     if (value.empty()) {
                         // Should never happen! These types are base64 encoded
