@@ -831,10 +831,13 @@ namespace karabo {
                 { \
                     node = &hash.set(path, std::vector<ElementType>()); \
                     std::vector<ElementType> &value = node->getValue<std::vector<ElementType>>(); \
-                    value = std::move(fromString<ElementType, std::vector>(valueAsString, ",")); \
+                    if (!valueAsString.empty()) { \
+                        value = std::move(fromString<ElementType, std::vector>(valueAsString, ",")); \
+                    } \
                     break; \
                 }
 
+                HANDLE_VECTOR_TYPE(VECTOR_BOOL, bool);
                 HANDLE_VECTOR_TYPE(VECTOR_INT8, signed char);
                 HANDLE_VECTOR_TYPE(VECTOR_INT16, short);
                 HANDLE_VECTOR_TYPE(VECTOR_UINT16, unsigned short);
