@@ -60,7 +60,7 @@ class ReaderRegistry(HasStrictTraits):
         # XXX: Backward compatibility with GUI extensions. Old readers have
         # two (2) arguments, new ones have a single argument
         if len(sig.parameters) == 2:
-            return reader(None, element)
+            return reader(read_element, element)
 
         return reader(element)
 
@@ -107,7 +107,7 @@ class WriterRegistry(HasStrictTraits):
         # XXX: Backward compatibility with GUI extensions. Old writers have
         # three (3) arguments, new ones have two arguments
         if len(sig.parameters) == 3:
-            return writer(None, model, parent)
+            return writer(write_element, model, parent)
 
         return writer(model, parent)
 
