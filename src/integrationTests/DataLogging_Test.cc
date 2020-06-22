@@ -347,7 +347,6 @@ void DataLogging_Test::setPropertyTestSchema() {
 std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& loggerType,
                                                             bool useInvalidInfluxUrl,
                                                             bool useInvalidDbName) {
-
     Hash manager_conf;
     manager_conf.set("deviceId", "loggerManager");
     manager_conf.set("flushInterval", m_flushIntervalSec);
@@ -450,7 +449,9 @@ void DataLogging_Test::fileAllTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
-    //testNans();
+    // The "testNans" test gives repeatedly some timeout that results in
+    // assertion and for the following test.  The reason is still unclear.
+    // testNans();
     testInt();
     testFloat();
     testString();
@@ -1266,6 +1267,7 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
         boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
         nTries--;
     }
+    
     CPPUNIT_ASSERT_MESSAGE("Configuration still not retrieved after  " + toString(numChecks) +
                            " checks.\n\tdeviceId: " + m_deviceId + "\n\tparam.before: " + beforeWrites +
                            "\n\tconf.size(): " + toString(conf.size()) +
@@ -1347,8 +1349,7 @@ void DataLogging_Test::testVectorString(bool testPastConf) {
         std::rotate(v.begin(),v.begin() + (i % v.size()), v.end());
         return (i % 5 == 0)? vector<string>() : v;
     };
-    // FIXME: The file Based data logger fails this test
-    // testHistory<vector < string >> ("vectors.stringProperty", lambdaMixed, false);
+    testHistory<vector < string >> ("vectors.stringProperty", lambdaMixed, false);
 
     auto lambda = [] (int i) -> vector<string> {
         // Also test pipe '|' (the separator in our text files) and new line '\n'
