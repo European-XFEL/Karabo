@@ -100,9 +100,9 @@ private:
 
     template <class T> void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
 
-    std::pair<bool, std::string> startLoggers(const std::string& loggerType,
-                                              bool useInvalidInfluxUrl = false,
-                                              bool useInvalidDbName = false);
+    std::pair<bool, std::string> startDataLoggerManager(const std::string& loggerType,
+                                                        bool useInvalidInfluxUrl = false,
+                                                        bool useInvalidDbName = false);
 
     const std::string m_server;
     const std::string m_deviceId;

@@ -338,9 +338,10 @@ void DataLogging_Test::setPropertyTestSchema() {
 
 }
 
-std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& loggerType,
-                                                            bool useInvalidInfluxUrl,
-                                                            bool useInvalidDbName) {
+
+std::pair<bool, std::string> DataLogging_Test::startDataLoggerManager(const std::string& loggerType,
+                                                                      bool useInvalidInfluxUrl,
+                                                                      bool useInvalidDbName) {
     Hash manager_conf;
     manager_conf.set("deviceId", "loggerManager");
     manager_conf.set("flushInterval", m_flushIntervalSec);
@@ -439,7 +440,7 @@ void DataLogging_Test::fileAllTestRunner() {
     setPropertyTestSchema();
 
     std::clog << "\n==== Starting sequence of File Logging tests ====" << std::endl;
-    success = startLoggers("FileDataLogger");
+    success = startDataLoggerManager("FileDataLogger");
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
@@ -492,7 +493,7 @@ void DataLogging_Test::influxAllTestRunner() {
     // Starts the same set of tests with InfluxDb logging instead of text-file based logging
     std::clog << "\n==== Starting sequence of Influx Logging tests on \""
             << m_deviceId << "\" ====" << std::endl;
-    success = startLoggers("InfluxDataLogger");
+    success = startDataLoggerManager("InfluxDataLogger");
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
@@ -548,7 +549,7 @@ void DataLogging_Test::influxAllTestRunnerWithTelegraf() {
 
 
 void DataLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
-    std::clog << "Testing deviceInstantiation... " << std::flush;
+    std::clog << "Testing logger and readers instantiations ... " << std::flush;
     int timeout = KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds
     vector<string> devices;
     devices.push_back(karabo::util::DATALOGGER_PREFIX + m_server);
@@ -566,7 +567,7 @@ void DataLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
         boost::this_thread::sleep(boost::posix_time::milliseconds(50));
         timeout -= 50;
     }
-    CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for datalogging to be instantiated", timeout > 0);
+    CPPUNIT_ASSERT_MESSAGE("Timeout while looking for data logger and readers instances.", timeout > 0);
 
     if (waitForLoggerReady) {
         // Makes sure that the DataLogger has reached NORMAL state before proceeding.
@@ -932,8 +933,8 @@ void DataLogging_Test::testNoInfluxServerHandling() {
                                                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
-    // Starts the loggers with an invalid InfluxDB Server url.
-    success = startLoggers("InfluxDataLogger", true);
+    // Starts the logger and readers with invalid InfluxDB (or Telegraf) URLs.
+    success = startDataLoggerManager("InfluxDataLogger", true);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated(false);
@@ -956,7 +957,7 @@ void DataLogging_Test::testNoInfluxServerHandling() {
                            m_deviceId, withNoServer.toIso8601())
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(conf, schema, cfgAtTime, cfgTime);
     } catch (const karabo::util::RemoteException &exc) {
-        bool condition = (exc.detailedMsg().find("No connection to InfluxDb (query) server available") != std::string::npos)
+        bool condition = (exc.detailedMsg().find("Could not connect to InfluxDb (query) at") != std::string::npos)
             || (exc.detailedMsg().find("Reading from InfluxDB (query)  failed") != std::string::npos);
         CPPUNIT_ASSERT(condition);
         remoteExceptionCaught = true;
@@ -967,8 +968,9 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     std::clog << "... request failed with RemoteException as expected." << std::endl;
 
     // By simply starting the devices related to Influx logging, some logging writing activity takes place.
-    // If this point of the test is reached with an invalid url configured for the Influx Server, it is safe
-    // to conclude that the Influx Logger doesn't get stuck when no server is available.
+    // If this point of the test is reached with invalid urls configured for both reading and writing to the
+    // Influx (or Telegraf) server, it is safe to conclude that the Influx Logger doesn't get compromissed by a
+    // server not available condition - the host of the Influx logger is the same process that runs this test.
 
     std::clog << "OK" << std::endl;
 }
@@ -995,7 +997,7 @@ void DataLogging_Test::testInfluxDbNotAvailableTelegraf() {
     // Note: it is required for the InfluxDb writing user to not have admin privileges on the Influx server.
     //       This requirement is fullfilled by both the CI and the Production environments. A local Influx server
     //       test environment must be configured properly.
-    success = startLoggers("InfluxDataLogger", false, true);
+    success = startDataLoggerManager("InfluxDataLogger", false, true);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated(false);
@@ -1265,7 +1267,7 @@ void DataLogging_Test::testHistory(const std::string& key, const std::function<T
         boost::this_thread::sleep(boost::posix_time::milliseconds(PAUSE_BEFORE_RETRY_MILLIS));
         nTries--;
     }
-    
+
     CPPUNIT_ASSERT_MESSAGE("Configuration still not retrieved after  " + toString(numChecks) +
                            " checks.\n\tdeviceId: " + m_deviceId + "\n\tparam.before: " + beforeWrites +
                            "\n\tconf.size(): " + toString(conf.size()) +
