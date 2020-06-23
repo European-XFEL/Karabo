@@ -47,7 +47,19 @@ private:
     void testFloat(bool testPastConf = false);
     void testString(bool testPastConf = false);
     void testVectorString(bool testPastConf = false);
+    void testVectorChar(bool testPastConf = false);
+    void testVectorSignedChar(bool testPastConf = false);
+    void testVectorUnsignedChar(bool testPastConf = false);
+    void testVectorShort(bool testPastConf = false);
+    void testVectorUnsignedShort(bool testPastConf = false);
+    void testVectorInt(bool testPastConf = false);
+    void testVectorUnsignedInt(bool testPastConf = false);
+    void testVectorLongLong(bool testPastConf = false);
+    void testVectorUnsignedLongLong(bool testPastConf = false);
+
+    void testVectorBool(bool testPastConf = false);
     void testTable(bool testPastConf = false);
+    void testChar(bool testPastConf = true);
 
     void testLastKnownConfiguration();
     void testCfgFromPastRestart();
@@ -55,7 +67,7 @@ private:
     /**
      * Checks that the DataLoggers handle NaN floats and doubles.
      */
-    void testNans(bool shouldReturnNans);
+    void testNans();
 
     /**
      * Checks that the InfluxDataLogger goes to ERROR state

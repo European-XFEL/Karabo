@@ -111,46 +111,68 @@ namespace karabo {
                         m_lastDataTimestamp = t;
                     }
                 }
-                
+
                 if (noArchive) continue; // Bail out after updating time stamp!
                 std::string value; // "value" should be a string, so convert depending on type ...
-                if (leafNode.getType() == Types::VECTOR_HASH) {
+                bool isFinite = true; // false for nan and inf DOUBLE/FLOAT
+                Types::ReferenceType type = leafNode.getType();
+                if (type == Types::VECTOR_HASH) {
                     // Represent any vector<Hash> as Base64 string
                     std::vector<char> archive;
                     m_serializer->save(leafNode.getValue<std::vector < Hash >> (), archive);
                     const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (archive.data());
                     value = base64Encode(uarchive, archive.size());
-                } else if (Types::isVector(leafNode.getType())) {
-                    // ... and any other vector as a comma separated text string of vector elements
+                } else if (leafNode.getType() == Types::CHAR) {
+                    const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (&leafNode.getValue<char>());
+                    value = base64Encode(uarchive, 1ul);
+                } else if (leafNode.getType() == Types::VECTOR_CHAR) {
+                    const std::vector<char> & v = leafNode.getValue<std::vector<char>>();
+                    const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (v.data());
+                    value = base64Encode(uarchive, v.size());
+                } else if (type == Types::VECTOR_UINT8) {
+                    // The generic vector code below uses toString(vector<unsigned char>) which
+                    // erroneously uses base64 encoding.
+                    // We do not dare to fix that now, but workaround it here to have a human readable string
+                    // in the DB to ease the use of the data outside Karabo:
+                    const std::vector<unsigned char>& vec = leafNode.getValue<std::vector<unsigned char>>();
+                    if (!vec.empty()) {
+                        std::ostringstream s;
+                        s << static_cast<unsigned int> (vec[0]);
+                        for (size_t i = 1ul; i < vec.size(); ++i) {
+                            s << "," << static_cast<unsigned int> (vec[i]);
+                        }
+                        value = s.str();
+                    }
+                } else if (type == Types::VECTOR_STRING) {
+                    // Special case: convert to JSON and then base64 ...
+                    const std::vector<std::string>& vecstr = leafNode.getValue<std::vector<std::string> >();
+                    nl::json j(vecstr);                     // convert to JSON
+                    const std::string str = j.dump();       // JSON as a string
+                    const unsigned char* encoded = reinterpret_cast<const unsigned char*>(str.c_str());
+                    const size_t length = str.length();
+                    value = base64Encode(encoded, length);  // encode to base64
+                } else if (Types::isVector(type)) {
+                    // ... and treat  any other vectors as a comma separated text string of vector elements
                     value = toString(leafNode.getValueAs<std::string, std::vector>());
-                    if (leafNode.getType() == Types::VECTOR_STRING) {
-                        // Line breaks in content confuse indexing and reading back - so better mangle strings... :-(.
-                        boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
-                    }
-                } else if (leafNode.getType() == Types::DOUBLE) {
-                    // bail out if Nan or Infinite
+                } else if (type == Types::DOUBLE) {
                     const double v = leafNode.getValue<double>();
-                    if (!std::isfinite(v)) {
-                        continue;
-                    }
+                    isFinite = std::isfinite(v);
                     value = toString(v);
-                } else if (leafNode.getType() == Types::FLOAT) {
+                } else if (type == Types::FLOAT) {
                     // bail out if Nan or Infinite
                     const float v = leafNode.getValue<float>();
-                    if (!std::isfinite(v)) {
-                        continue;
-                    }
+                    isFinite = std::isfinite(v);
                     value = toString(v);
+                } else if (type == Types::STRING) {
+                    value = leafNode.getValueAs<std::string>();
+                    // Line breaks violate the line protocol, so we mangle newlines... :-(.
+                    boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
                 } else {
                     value = leafNode.getValueAs<std::string>();
-                    if (leafNode.getType() == Types::STRING) {
-                        // Line breaks in content confuse indexing and reading back - so better mangle strings... :-(.
-                        boost::algorithm::replace_all(value, "\n", karabo::util::DATALOG_NEWLINE_MANGLE);
-                    }
                 }
 
                 if (lineTimestamp.getEpochstamp().getSeconds() == 0ull) {
-                    // first non-skipped value 
+                    // first non-skipped value
                     lineTimestamp = t;
                 } else if (t.getEpochstamp() != lineTimestamp.getEpochstamp()) {
                     // new timestamp! flush the previous query
@@ -171,7 +193,8 @@ namespace karabo {
                     m_dbClient->enqueueQuery(ss.str());
                 }
 
-                logValue(query, deviceId, path, value, leafNode.getType());
+                // isFinite matters only for FLOAT/DOUBLE
+                logValue(query, deviceId, path, value, leafNode.getType(), isFinite);
             }
             if (!query.str().empty()) {
                 // flush the query if something is in it.
@@ -181,7 +204,8 @@ namespace karabo {
 
 
         void InfluxDeviceData::logValue(std::stringstream& query, const std::string& deviceId, const std::string& path,
-                                        const std::string& value, const karabo::util::Types::ReferenceType& type) {
+                                        const std::string& value, karabo::util::Types::ReferenceType type,
+                                        bool isFinite) {
             std::string field_value;
             switch (type) {
                 case Types::BOOL:
@@ -218,13 +242,21 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '" << deviceId << "'";
                         return;
                     }
-                    field_value = path + "-" + Types::to<ToLiteral>(type) + "=" + value;
+                    field_value = path + "-" + Types::to<ToLiteral>(type);
+                    if (!isFinite) {
+                        // InfluxDB does not support nan and inf - so we store them as strings as another field
+                        // whose name is extended by "_INF":
+                        ((field_value += "_INF=\"") += value) += "\"";
+                    } else {
+                        (field_value += "=") += value;
+                    }
                     break;
                 }
+                case Types::BYTE_ARRAY:
                 case Types::COMPLEX_FLOAT:
                 case Types::COMPLEX_DOUBLE:
                 case Types::UINT64:
-                case Types::VECTOR_HASH:
+                case Types::VECTOR_BOOL:
                 case Types::VECTOR_INT8:
                 case Types::VECTOR_UINT8:
                 case Types::VECTOR_INT16:
@@ -239,7 +271,18 @@ namespace karabo {
                 case Types::VECTOR_COMPLEX_DOUBLE:
                 {
                     // empty strings shall be saved. They do not spoil the line protocol since they are between quotes
-                    // TODO: handle the `base64` encoded types differently
+                    field_value = path + "-" + Types::to<ToLiteral>(type) + "=\"" + value + "\"";
+                    break;
+                }
+                case Types::VECTOR_CHAR:
+                case Types::VECTOR_HASH:
+                case Types::CHAR:
+                {
+                    if (value.empty()) {
+                        // Should never happen! These types are base64 encoded
+                        KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '" << deviceId << "'";
+                        return;
+                    }
                     field_value = path + "-" + Types::to<ToLiteral>(type) + "=\"" + value + "\"";
                     break;
                 }
