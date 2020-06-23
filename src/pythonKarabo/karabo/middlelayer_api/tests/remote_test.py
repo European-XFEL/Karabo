@@ -1121,7 +1121,7 @@ class Tests(DeviceTest):
             'nodeType': 1,
             'accessMode': 4})
         self.assertEqual(h["doit", ...], {
-            'requiredAccessLevel': 0,
+            'requiredAccessLevel': 1,
             'assignment': 0,
             'displayType': 'Slot',
             'classId': 'Slot',
