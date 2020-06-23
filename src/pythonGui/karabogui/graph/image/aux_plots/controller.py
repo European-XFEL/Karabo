@@ -47,6 +47,7 @@ class AuxPlotsController(HasStrictTraits):
 
         # Set up widgets
         self.labelItem = LabelItem()
+        self.labelItem.setVisible(False)
         self.image_layout.addItem(self.labelItem, 0, 0)
 
     # -----------------------------------------------------------------------
