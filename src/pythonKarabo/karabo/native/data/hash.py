@@ -533,6 +533,7 @@ class Slot(Descriptor):
                 # add some important code here
     '''
     method = None
+    requiredAccessLevel = Attribute(AccessLevel.USER)
 
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super(Slot, self).toSchemaAndAttrs(device, state)
