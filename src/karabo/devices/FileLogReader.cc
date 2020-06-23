@@ -270,7 +270,7 @@ namespace karabo {
 
                 karabo::util::MetaSearchResult msr =
                         navigateMetaRange(deviceId, idxFrom.m_fileindex, idxTo.m_fileindex,
-                                          property, idxFrom.m_epoch, to);
+                                          property, from, to);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "MetaSearchResult: from : filenum=" << msr.fromFileNumber
                         << " record=" << msr.fromRecord << ", to : filenum=" << msr.toFileNumber
