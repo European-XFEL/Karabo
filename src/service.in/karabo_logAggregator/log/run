@@ -1,3 +1,0 @@
-#!/bin/bash
-# This file is part of the initial configuration of Karabo
-exec multilog $KARABO/var/log/karabo_logAggregator
