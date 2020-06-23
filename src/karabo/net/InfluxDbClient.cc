@@ -361,7 +361,8 @@ namespace karabo {
                 // Post accumulated batch ...
                 postWriteDb(m_buffer.str(), [respHandler](const HttpResponse & response) {
                     if (response.code != 204) {
-                        KARABO_LOG_FRAMEWORK_ERROR << "Flushing failed: " << response.code << " " << response.message;
+                        KARABO_LOG_FRAMEWORK_ERROR << "Flushing failed (" << response.code
+                                << "): " << response.payload;
                     }
                     if (respHandler) {
                         respHandler(response);
@@ -696,8 +697,7 @@ namespace karabo {
         void InfluxDbClient::postWriteDbTask(const std::string& batch, const InfluxResponseHandler& action) {
             if (!this->connectWaitWrite(k_connTimeoutMs)) {
                 std::ostringstream oss;
-                oss << "No connection to InfluxDb (write) server available. "
-                        << "Timed out after waiting for " << k_connTimeoutMs << " ms.";
+                oss << "Could not connect to InfluxDb (write) at \"" << m_urlWrite << "\".";
                 const std::string errMsg = oss.str();
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                 // Synthesizes a 503 (Service Unavailable) response and sends it back to the client.
@@ -774,8 +774,7 @@ namespace karabo {
         void InfluxDbClient::queryDbTask(const std::string& sel, const InfluxResponseHandler& action) {
             if (!this->connectWaitQuery(k_connTimeoutMs)) {
                 std::ostringstream oss;
-                oss << "No connection to InfluxDb (query) server available. "
-                        << "Timed out after waiting for " << k_connTimeoutMs << " ms.";
+                oss << "Could not connect to InfluxDb (query) at \"" << m_urlQuery << "\".";
                 const std::string errMsg = oss.str();
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                 // Synthesizes a 503 (Service Unavailable) response and sends it back to the client.
