@@ -559,7 +559,7 @@ namespace karabo {
                     // onAsyncPropValueBeforeTime - they will both consume the propNamesAndTypes
                     // vector, sending a response back to the slotGetConfigurationFromPast caller
                     // when the last property value is retrieved.
-                    asyncPropValueBeforeTime(ctxt);
+                    asyncPropValueBeforeTime(ctxt, false);
 
                 } catch (const std::exception &e) {
                     std::ostringstream oss;
@@ -575,11 +575,20 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt, bool infinite) {
             const auto nameAndType = ctxt->propNamesAndTypes.front();
-            ctxt->propNamesAndTypes.pop_front();
-
-            const std::string fieldKey = nameAndType.first + "-" + Types::to<ToLiteral>(nameAndType.second);
+            // A 'SELECT LAST(/^dProp-DOUBLE|dProp-DOUBLE_INF/) ...' query returns the last values of both fields,
+            // but with a zero timestamp! So we have to request individually both. We start with the 'normal' field.
+            std::string fieldKey = nameAndType.first + "-" + Types::to<ToLiteral>(nameAndType.second);
+            if (infinite) {
+                // query the special field for nan and inf (only for DOUBLE or FLOAT)
+                fieldKey += "_INF";
+            }
+            if (infinite || (nameAndType.second != Types::FLOAT && nameAndType.second != Types::DOUBLE)) {
+                // 'infinite' marks the 2nd query for a floating point variable, for normal types there is only one query:
+                // Drop - i.e. pop - from list of properties still to query!
+                ctxt->propNamesAndTypes.pop_front();
+            }
             std::ostringstream iqlQuery;
             iqlQuery << "SELECT LAST(\"" << fieldKey << "\") FROM \""
                     << ctxt->deviceId << "\" WHERE time <= " << epochAsMicrosecString(ctxt->atTime) << m_durationUnit;
@@ -624,7 +633,22 @@ namespace karabo {
                 const boost::optional<std::string> valueAsString = jsonValueAsString(value);
                 try {
                     if (valueAsString) {
-                        addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, *valueAsString);
+                        if (!ctxt->configHash.has(propName)) {
+                            // The normal case - the result is not yet there
+                            addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, *valueAsString);
+                            if (propType == Types::DOUBLE || propType == Types::FLOAT) {
+                                // Query again query for the special field for nan and inf
+                                asyncPropValueBeforeTime(ctxt, true);
+                                return;
+                            }
+                        } else {
+                            // Second query for field for nan and inf of FLOAT and DOUBLE
+                            const Epochstamp stampQuery1(Epochstamp::fromHashAttributes(ctxt->configHash.getAttributes(propName)));
+                            if (stampQuery1 < timeEpoch) {
+                                // This (i.e. the 2nd query) has more recent result
+                                addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, *valueAsString);
+                            }
+                        }
                     }
                 } catch (const std::exception &e) {
                     // Do not bail out, but just go on with other properties (Is that the correct approach?)
@@ -638,7 +662,7 @@ namespace karabo {
 
             if (ctxt->propNamesAndTypes.size() > 0) {
                 // There is at least one more property whose value should be retrieved.
-                asyncPropValueBeforeTime(ctxt);
+                asyncPropValueBeforeTime(ctxt, false);
             } else {
                 // All properties have been retrieved. Reply to the slot caller.
                 bool configAtTimePoint = ctxt->lastLogoutBeforeTime < ctxt->lastLoginBeforeTime;
@@ -696,15 +720,13 @@ namespace karabo {
                 tidCol = std::distance(influxResult.first.begin(), iter);
             }
 
-            // Gets the data types and data type names of each column.
-            std::vector<Types::ReferenceType>colTypes(influxResult.first.size(), Types::ReferenceType::NONE);
+            // Gets the data type names of each column.
             std::vector<std::string>colTypeNames(influxResult.first.size());
             for (size_t col = 0; col < influxResult.first.size(); col++) {
                 const std::string::size_type typeSeparatorPos = influxResult.first[col].rfind("-");
                 if (typeSeparatorPos != std::string::npos) {
                     const std::string typeName = influxResult.first[col].substr(typeSeparatorPos + 1);
                     colTypeNames[col] = typeName;
-                    colTypes[col] = Types::from<FromLiteral>(typeName);
                 }
             }
 
@@ -731,7 +753,16 @@ namespace karabo {
                             // one non null value (may be an empty string).
                             continue;
                         }
-                        addNodeToHash(hash, "v", colTypes[col], tid, epoch, *(valuesRow[col]));
+                        // Figure out the real Karabo type:
+                        // For nan/inf floating points we added "_INF" when writing to influxDB (and stored as strings).
+                        const std::string& typeNameInflux = colTypeNames[col];
+                        const size_t posInf = typeNameInflux.rfind("_INF");
+                        const std::string& typeName = (posInf != std::string::npos && posInf == typeNameInflux.size() - 4ul
+                                                       ? typeNameInflux.substr(0, posInf)
+                                                       : typeNameInflux);
+
+                        const Types::ReferenceType type = Types::from<FromLiteral>(typeName);
+                        addNodeToHash(hash, "v", type, tid, epoch, *(valuesRow[col]));
                     } catch (const std::exception &e) {
                         KARABO_LOG_FRAMEWORK_ERROR << "Error adding node to hash:"
                                 << "\nValue type: " << colTypeNames[col]
@@ -768,16 +799,40 @@ namespace karabo {
                 }
                 case Types::VECTOR_STRING:
                 {
-                    // Vectors of Strings are merged into a single string with values separated by comma
-                    // and then escaped by the Influx Logger.
+                    // Convert value from base64 -> JSON -> vector<string> ...
                     node = &hash.set(path, std::vector<std::string>());
-                    std::vector<std::string> &value = node->getValue<std::vector < std::string >> ();
-                    // Here we assume that an empty string is a vector of 0 length.
-                    boost::split(value, valueAsString, boost::is_any_of(","));
-                    for (size_t i = 0; i < value.size(); i++) {
-                        std::string unescaped = unescapeLoggedString(value[i]);
-                        value[i] = unescaped;
+                    std::vector<std::string>& value = node->getValue<std::vector<std::string> >();
+                    std::vector<unsigned char> decoded;
+                    base64Decode(valueAsString, decoded);
+                    nl::json j = nl::json::parse(decoded.begin(), decoded.end());
+                    for (nl::json::iterator ii = j.begin(); ii != j.end(); ++ii) {
+                        value.push_back(*ii);
                     }
+                    break;
+                }
+                case Types::VECTOR_CHAR:
+                {
+                    node = &hash.set(path, std::vector<char>());
+                    std::vector<char> &value = node->getValue<std::vector<char>> ();
+                    base64Decode(valueAsString, *reinterpret_cast<std::vector<unsigned char>*>(&value));
+                    break;
+                }
+                case Types::CHAR:
+                {
+                    std::vector<unsigned char> decoded;
+                    base64Decode(valueAsString, decoded);
+                    if (decoded.size() != 1ul) {
+                       throw KARABO_PARAMETER_EXCEPTION("Base64 Encoded char of wrong size: " + decoded.size());
+                    }
+                    node = &hash.set(path, static_cast<char>(decoded[0]));
+                    break;
+                }
+                case Types::VECTOR_UINT8:
+                {
+                    // The fromString specialisation for vector<unsigned char> as used in the HANDLE_VECTOR_TYPE below
+                    // erroneously does base64 decoding. We do not dare to fix that now, but workaround it here:
+                    node = &hash.set(path, std::vector<unsigned char>());
+                    node->getValue<std::vector<unsigned char>>() = fromStringForSchemaOptions<unsigned char>(valueAsString, ",");
                     break;
                 }
 #define HANDLE_VECTOR_TYPE(VectorType, ElementType) \
@@ -785,13 +840,14 @@ namespace karabo {
                 { \
                     node = &hash.set(path, std::vector<ElementType>()); \
                     std::vector<ElementType> &value = node->getValue<std::vector<ElementType>>(); \
-                    value = std::move(fromString<ElementType, std::vector>(valueAsString, ",")); \
+                    if (!valueAsString.empty()) { \
+                        value = std::move(fromString<ElementType, std::vector>(valueAsString, ",")); \
+                    } \
                     break; \
                 }
 
-                HANDLE_VECTOR_TYPE(VECTOR_CHAR, char);
+                HANDLE_VECTOR_TYPE(VECTOR_BOOL, bool);
                 HANDLE_VECTOR_TYPE(VECTOR_INT8, signed char);
-                HANDLE_VECTOR_TYPE(VECTOR_UINT8, unsigned char);
                 HANDLE_VECTOR_TYPE(VECTOR_INT16, short);
                 HANDLE_VECTOR_TYPE(VECTOR_UINT16, unsigned short);
                 HANDLE_VECTOR_TYPE(VECTOR_INT32, int);
