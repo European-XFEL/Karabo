@@ -429,9 +429,10 @@ namespace karabo {
          * @return 
          */
         template<typename T,
-        template <typename ELEM, typename = std::allocator<ELEM> > class CONT>
+        template <typename ELEM, typename = std::allocator<ELEM> > class CONT> // e.g. for vector container
         inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {
             try {
+                if (value.empty()) return CONT<T>();
                 CONT<std::string> elements;
                 std::string tmp(value);
                 boost::trim(tmp);
@@ -443,7 +444,7 @@ namespace karabo {
                 size_t size = elements.size();
                 CONT<T> resultArray(size);
                 for (size_t i = 0; i < size; ++i) {
-                    std::string element(elements[i]);
+                    std::string & element(elements[i]);
                     boost::trim(element);
                     resultArray[i] = util::fromString<T > (element);
                 }
@@ -504,7 +505,7 @@ namespace karabo {
         }
 
         template<typename T,
-        template <typename ELEM, typename = std::less<ELEM>, typename = std::allocator<ELEM> > class CONT>
+        template <typename ELEM, typename = std::less<ELEM>, typename = std::allocator<ELEM> > class CONT> // e.g. for set
         inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {
             try {
                 if (value.empty()) return CONT<T>();
@@ -517,7 +518,7 @@ namespace karabo {
                 }
                 boost::split(elements, tmp, boost::is_any_of(separator), boost::token_compress_on);
                 CONT<T> resultArray;
-                for (typename CONT<T>::iterator it = elements.begin(); it != elements.end(); ++it) {
+                for (auto it = elements.begin(); it != elements.end(); ++it) {
                     std::string element(*it);
                     boost::trim(element);
                     resultArray.insert(util::fromString<T > (element));
@@ -542,8 +543,9 @@ namespace karabo {
                 }
                 boost::split(elements, tmp, boost::is_any_of(separator), boost::token_compress_on);
                 std::vector<int> resultArray;
+                resultArray.reserve(elements.size());
                 for (std::vector<std::string>::iterator it = elements.begin(); it != elements.end(); ++it) {
-                    std::string element(*it);
+                    std::string & element(*it);
                     boost::trim(element);
                     int val = strtol(element.c_str(), NULL, 0);
                     resultArray.push_back(val);
@@ -568,8 +570,9 @@ namespace karabo {
                 }
                 boost::split(elements, tmp, boost::is_any_of(separator), boost::token_compress_on);
                 std::vector<unsigned int> resultArray;
+                resultArray.reserve(elements.size());
                 for (std::vector<std::string>::iterator it = elements.begin(); it != elements.end(); ++it) {
-                    std::string element(*it);
+                    std::string& element(*it);
                     boost::trim(element);
                     unsigned int val = strtoul(element.c_str(), NULL, 0);
                     resultArray.push_back(val);
@@ -594,8 +597,9 @@ namespace karabo {
                 }
                 boost::split(elements, tmp, boost::is_any_of(separator), boost::token_compress_on);
                 std::vector<long long> resultArray;
+                resultArray.reserve(elements.size());
                 for (std::vector<std::string>::iterator it = elements.begin(); it != elements.end(); ++it) {
-                    std::string element(*it);
+                    std::string & element(*it);
                     boost::trim(element);
                     long long val = strtoll(element.c_str(), NULL, 0);
                     resultArray.push_back(val);
@@ -620,8 +624,9 @@ namespace karabo {
                 }
                 boost::split(elements, tmp, boost::is_any_of(separator), boost::token_compress_on);
                 std::vector<unsigned long long> resultArray;
+                resultArray.reserve(elements.size());
                 for (std::vector<std::string>::iterator it = elements.begin(); it != elements.end(); ++it) {
-                    std::string element(*it);
+                    std::string & element(*it);
                     boost::trim(element);
                     unsigned long long val = strtoull(element.c_str(), NULL, 0);
                     resultArray.push_back(val);
