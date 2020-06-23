@@ -14,6 +14,7 @@
 #include <boost/filesystem.hpp>
 #include <cstdlib>
 #include <sstream>
+#include <karabo/util/StringTools.hh>
 
 USING_KARABO_NAMESPACES;
 using std::vector;
@@ -174,37 +175,6 @@ namespace CppUnit{
         }
     };
 
-    template <>
-    struct assertion_traits<std::vector<std::string>>{
-        static bool equal(const std::vector<std::string> &a, const std::vector<std::string> &b){
-            return a == b;
-        }
-        static std::string toString(const std::vector<std::string> &p){
-            std::ostringstream o;
-            o << "(";
-            for (const std::string& e : p){
-                o << "'" << e << "',";
-            }
-            o << ")";
-            return o.str();
-        }
-    };
-
-    template <>
-    struct assertion_traits<std::vector<char>>{
-        static bool equal(const std::vector<char> &a, const std::vector<char> &b){
-            return a == b;
-        }
-        static std::string toString(const std::vector<char> &p){
-            std::ostringstream o;
-            o << "'";
-            for (const char& e : p){
-                o << e;
-            }
-            o << "'";
-            return o.str();
-        }
-    };
 
     template <>
     struct assertion_traits<std::vector<unsigned char>>
@@ -227,7 +197,24 @@ namespace CppUnit{
             return o.str();
         }
     };
+
+    template<>
+    template < typename T>
+    struct assertion_traits<std::vector<T>>
+    {
+
+
+        static bool equal(const std::vector<T>& a, const std::vector<T>& b) {
+            return a == b;
+        }
+
+
+        static std::string toString(const std::vector<T>& p) {
+            return karabo::util::toString(p);
+        }
+    };
 }
+
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DataLogging_Test);
 
@@ -333,9 +320,16 @@ void DataLogging_Test::setPropertyTestSchema() {
     updates.push_back(Hash("path", "floatProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value", std::numeric_limits<float>::infinity()));
     updates.push_back(Hash("path", "doubleProperty", "attribute", KARABO_SCHEMA_MIN_INC, "value", -1. * std::numeric_limits<double>::infinity()));
     updates.push_back(Hash("path", "doubleProperty", "attribute", KARABO_SCHEMA_MAX_INC, "value", std::numeric_limits<double>::infinity()));
+    updates.push_back(Hash("path", "vectors.int8Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
     updates.push_back(Hash("path", "vectors.uint8Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
     updates.push_back(Hash("path", "vectors.stringProperty", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
     updates.push_back(Hash("path", "vectors.boolProperty", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
+    updates.push_back(Hash("path", "vectors.int16Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
+    updates.push_back(Hash("path", "vectors.uint16Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
+    updates.push_back(Hash("path", "vectors.int32Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
+    updates.push_back(Hash("path", "vectors.uint32Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
+    updates.push_back(Hash("path", "vectors.int64Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
+    updates.push_back(Hash("path", "vectors.uint64Property", "attribute", KARABO_SCHEMA_MIN_SIZE, "value", 0));
 
     Hash response;
     m_sigSlot->request(m_deviceId, "slotUpdateSchemaAttributes", updates)
@@ -459,8 +453,15 @@ void DataLogging_Test::fileAllTestRunner() {
     // testChar(false);
     testVectorString();
     testVectorChar();
+    testVectorSignedChar();
     testVectorUnsignedChar();
     testVectorBool();
+    testVectorShort();
+    testVectorUnsignedShort();
+    testVectorInt();
+    testVectorUnsignedInt();
+    testVectorLongLong();
+    testVectorUnsignedLongLong();
     testTable();
     testHistoryAfterChanges();
     // This must be the last test case that relies on the device in m_deviceId (the logged
@@ -502,8 +503,15 @@ void DataLogging_Test::influxAllTestRunner() {
     testChar(false);
     testVectorString(false);
     testVectorChar(false);
+    testVectorSignedChar(false);
     testVectorUnsignedChar(false);
     testVectorBool(false);
+    testVectorShort(false);
+    testVectorUnsignedShort(false);
+    testVectorInt(false);
+    testVectorUnsignedInt(false);
+    testVectorLongLong(false);
+    testVectorUnsignedLongLong(false);
     testTable(false);
 
     // NOTE:
@@ -1026,16 +1034,6 @@ void isEqualMessage(const std::string& message, const T& expected, const T& actu
     CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, expected, actual);
 }
 
-template <>
-void isEqualMessage(const std::string& message, const std::vector<char>& expected, const std::vector<char>& actual,
-                    const std::vector<karabo::util::Hash>& fullHistory) {
-    std::string msg(message);
-    if (expected != actual) {
-        (msg += ": ") += toString(fullHistory);
-    }
-    CPPUNIT_ASSERT_EQUAL_MESSAGE(msg, expected, actual);
-}
-
 
 template <>
 void isEqualMessage(const std::string& message, const std::vector<bool>& expected, const std::vector<bool>& actual,
@@ -1369,6 +1367,20 @@ void DataLogging_Test::testVectorChar(bool testPastConf) {
 }
 
 
+void DataLogging_Test::testVectorSignedChar(bool testPastConf) {
+    auto lambda = [] (int i) -> vector<signed char> {
+        std::vector<signed char> result;
+        if ((i % 3) != 0) { // every third is empty
+            result = {2, -4, 8, -16, 32};
+            if ((i % 2) == 0) result.push_back(std::numeric_limits<signed char>::lowest());
+            if ((i % 5) == 0) result.push_back(std::numeric_limits<signed char>::max());
+        }
+        return result;
+    };
+    testHistory < vector<signed char> >("vectors.int8Property", lambda, testPastConf);
+}
+
+
 void DataLogging_Test::testVectorUnsignedChar(bool testPastConf) {
     auto lambda = [] (int i) -> vector<unsigned char> {
         std::vector<unsigned char> result;
@@ -1382,6 +1394,7 @@ void DataLogging_Test::testVectorUnsignedChar(bool testPastConf) {
     testHistory<vector<unsigned char> >("vectors.uint8Property", lambda, testPastConf);
 }
 
+
 void DataLogging_Test::testVectorBool(bool testPastConf) {
     auto lambda = [](int i) -> vector<bool> {
         if (i % 13 == 0) {
@@ -1393,6 +1406,90 @@ void DataLogging_Test::testVectorBool(bool testPastConf) {
         }
     };
     testHistory < vector<bool>>("vectors.boolProperty", lambda, testPastConf);
+}
+
+
+void DataLogging_Test::testVectorShort(bool testPastConf) {
+    auto lambda = [] (int i) -> vector<short> {
+        std::vector<short> result;
+        if ((i % 3) != 0) { // every third is empty
+            result = {-2, 4, 0, 16, -5000};
+            if ((i % 2) == 0) result.push_back(std::numeric_limits<short>::lowest());
+            if ((i % 5) == 0) result.push_back(std::numeric_limits<short>::max());
+        }
+        return result;
+    };
+    testHistory<vector<short> >("vectors.int16Property", lambda, testPastConf);
+}
+
+
+void DataLogging_Test::testVectorUnsignedShort(bool testPastConf) {
+    auto lambda = [] (int i) -> vector<unsigned short> {
+        std::vector<unsigned short> result;
+        if ((i % 3) != 0) { // every third is empty
+            result = {4, 2 * i, 8, 16, 5000};
+            if ((i % 2) == 0) result.push_back(std::numeric_limits<unsigned short>::lowest());
+            if ((i % 5) == 0) result.push_back(std::numeric_limits<unsigned short>::max());
+        }
+        return result;
+    };
+    testHistory<vector<unsigned short> >("vectors.uint16Property", lambda, testPastConf);
+}
+
+
+void DataLogging_Test::testVectorInt(bool testPastConf) {
+    auto lambda = [] (int i) -> vector<int> {
+        std::vector<int> result;
+        if ((i % 3) != 0) { // every third is empty
+            result = {2, -4 * i, 8 * i, 16, -5000};
+            if ((i % 2) == 0) result.push_back(std::numeric_limits<int>::lowest());
+            if ((i % 5) == 0) result.push_back(std::numeric_limits<int>::max());
+        }
+        return result;
+    };
+    testHistory<vector<int> >("vectors.int32Property", lambda, testPastConf);
+}
+
+
+void DataLogging_Test::testVectorUnsignedInt(bool testPastConf) {
+    auto lambda = [] (int i) -> vector<unsigned int> {
+        std::vector<unsigned int> result;
+        if ((i % 3) != 0) { // every third is empty
+            result = {2, 4 * i, 8, 16, 5000};
+            if ((i % 2) == 0) result.push_back(std::numeric_limits<unsigned int>::lowest());
+            if ((i % 5) == 0) result.push_back(std::numeric_limits<unsigned int>::max());
+        }
+        return result;
+    };
+    testHistory<vector<unsigned int> >("vectors.uint32Property", lambda, testPastConf);
+}
+
+
+void DataLogging_Test::testVectorLongLong(bool testPastConf) {
+    auto lambda = [] (int i) -> vector<long long> {
+        std::vector<long long> result;
+        if ((i % 3) != 0) { // every third is empty
+            result = {2ll, -4ll * i, 8ll, 16ll * i, -500055ll};
+            if ((i % 2) == 0) result.push_back(std::numeric_limits<long long>::lowest());
+            if ((i % 5) == 0) result.push_back(std::numeric_limits<long long>::max());
+        }
+        return result;
+    };
+    testHistory<vector<long long> >("vectors.int64Property", lambda, testPastConf);
+}
+
+
+void DataLogging_Test::testVectorUnsignedLongLong(bool testPastConf) {
+    auto lambda = [] (int i) -> vector<unsigned long long> {
+        std::vector<unsigned long long> result;
+        if ((i % 3) != 0) { // every third is empty
+            result = {2ull, 4ull, 8ull, 16ull, 500055ull * i};
+            if ((i % 2) == 0) result.push_back(std::numeric_limits<unsigned long long>::lowest());
+            if ((i % 5) == 0) result.push_back(std::numeric_limits<unsigned long long>::max());
+        }
+        return result;
+    };
+    testHistory<vector<unsigned long long> >("vectors.uint64Property", lambda, testPastConf);
 }
 
 
