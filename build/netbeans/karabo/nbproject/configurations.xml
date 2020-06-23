@@ -34,8 +34,6 @@
     <logicalFolder name="f10" displayName="devices" projectFiles="true">
       <itemPath>../../../src/karabo/devices/AlarmService.cc</itemPath>
       <itemPath>../../../src/karabo/devices/AlarmService.hh</itemPath>
-      <itemPath>../../../src/karabo/devices/CentralLogging.cc</itemPath>
-      <itemPath>../../../src/karabo/devices/CentralLogging.hh</itemPath>
       <itemPath>../../../src/karabo/devices/DataLogReader.cc</itemPath>
       <itemPath>../../../src/karabo/devices/DataLogReader.hh</itemPath>
       <itemPath>../../../src/karabo/devices/DataLogger.cc</itemPath>
@@ -627,16 +625,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/AlarmService.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/devices/CentralLogging.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/devices/CentralLogging.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2581,16 +2569,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/devices/CentralLogging.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/devices/CentralLogging.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/devices/DataLogReader.cc"
             ex="false"
             tool="1"
@@ -4511,16 +4489,6 @@
             flavor2="8">
       </item>
       <item path="../../../src/karabo/devices/AlarmService.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/devices/CentralLogging.cc"
-            ex="false"
-            tool="1"
-            flavor2="8">
-      </item>
-      <item path="../../../src/karabo/devices/CentralLogging.hh"
             ex="false"
             tool="3"
             flavor2="0">

@@ -42,7 +42,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163556830/Lock.o \
 	${OBJECTDIR}/_ext/163556830/Runner.o \
 	${OBJECTDIR}/_ext/1423485062/AlarmService.o \
-	${OBJECTDIR}/_ext/1423485062/CentralLogging.o \
 	${OBJECTDIR}/_ext/1423485062/DataLogReader.o \
 	${OBJECTDIR}/_ext/1423485062/DataLogger.o \
 	${OBJECTDIR}/_ext/1423485062/DataLoggerManager.o \
@@ -226,11 +225,6 @@ ${OBJECTDIR}/_ext/1423485062/AlarmService.o: ../../../src/karabo/devices/AlarmSe
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/AlarmService.o ../../../src/karabo/devices/AlarmService.cc
-
-${OBJECTDIR}/_ext/1423485062/CentralLogging.o: ../../../src/karabo/devices/CentralLogging.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/CentralLogging.o ../../../src/karabo/devices/CentralLogging.cc
 
 ${OBJECTDIR}/_ext/1423485062/DataLogReader.o: ../../../src/karabo/devices/DataLogReader.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
@@ -1223,19 +1217,6 @@ ${OBJECTDIR}/_ext/1423485062/AlarmService_nomain.o: ${OBJECTDIR}/_ext/1423485062
 	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/AlarmService_nomain.o ../../../src/karabo/devices/AlarmService.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1423485062/AlarmService.o ${OBJECTDIR}/_ext/1423485062/AlarmService_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1423485062/CentralLogging_nomain.o: ${OBJECTDIR}/_ext/1423485062/CentralLogging.o ../../../src/karabo/devices/CentralLogging.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1423485062/CentralLogging.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/CentralLogging_nomain.o ../../../src/karabo/devices/CentralLogging.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1423485062/CentralLogging.o ${OBJECTDIR}/_ext/1423485062/CentralLogging_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1423485062/DataLogReader_nomain.o: ${OBJECTDIR}/_ext/1423485062/DataLogReader.o ../../../src/karabo/devices/DataLogReader.cc 
