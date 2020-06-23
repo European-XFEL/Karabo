@@ -1,4 +1,0 @@
-#!/bin/bash
-# This file is part of the initial configuration of Karabo
-cd $KARABO/var/data
-exec envdir $KARABO/var/environment karabo-cppserver serverId=karabo/logAggregator 'deviceClasses=CentralLogging' 'autoStart[0]={CentralLogging}' 'visibility=4' 'Logger.priority=INFO' 2>&1
