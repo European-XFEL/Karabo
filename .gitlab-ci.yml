@@ -71,6 +71,7 @@ variables:
   <<: *test
   only:
     - master
+    - /^(\d+\.)(\d+\.)(X-hotfix)$/
   except:
     - schedules
 
