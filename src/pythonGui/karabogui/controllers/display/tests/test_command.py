@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QToolButton, QMessageBox
 from unittest.mock import MagicMock
 
 from karabo.common.states import State
-from karabo.native import Configurable, Slot, String
+from karabo.native import AccessLevel, Configurable, Slot, String
 from karabogui.binding.api import (
     DeviceProxy, PropertyProxy, build_binding, apply_default_configuration)
 from karabogui.testing import GuiTestCase, set_proxy_value, singletons
@@ -21,11 +21,12 @@ class SlottedDevice(Configurable):
     state = String(defaultValue=State.INIT)
 
     @Slot(allowedStates=[State.INIT],
-          displayedName='Call ME')
+          displayedName='Call ME', requiredAccessLevel=AccessLevel.OBSERVER)
     def callme(self):
         pass
 
-    @Slot(allowedStates=[State.ACTIVE])
+    @Slot(allowedStates=[State.ACTIVE],
+          requiredAccessLevel=AccessLevel.OBSERVER)
     def yep(self):
         pass
 
