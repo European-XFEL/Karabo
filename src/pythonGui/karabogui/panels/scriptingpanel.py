@@ -107,9 +107,14 @@ class ScriptingPanel(BasePanelWidget):
     @pyqtSlot()
     def _stop_ipython(self):
         if self.console:
-            self.mainLayout.removeWidget(self.console)
+            # Stop any operations
             self.console.stop()
+            # Remove references from the parent
+            self.console.exit_requested.disconnect()
+            self.mainLayout.removeWidget(self.console)
             self.console.setParent(None)
+            # Finally destroy the widget
+            self.console.destroy()
             self.console = None
 
     @pyqtSlot()
