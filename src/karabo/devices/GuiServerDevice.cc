@@ -32,8 +32,8 @@ namespace karabo {
 
         // requestFromSlot is a fine grained writeable command and will be handled differently!
         const std::unordered_set <std::string> GuiServerDevice::m_writeCommands ({
-            "projectSaveItems", "initDevice", "killDevice", "execute", "requestFromSlot",
-            "killServer", "acknowledgeAlarm", "projectUpdateAttribute", "reconfigure", "updateAttributes"}
+            "projectSaveItems", "initDevice", "killDevice", "execute", "killServer",
+            "acknowledgeAlarm", "projectUpdateAttribute", "reconfigure", "updateAttributes"}
             );
 
         void GuiServerDevice::expectedParameters(Schema& expected) {
@@ -483,7 +483,8 @@ namespace karabo {
                 // GUI communication scenarios
                 if (info.has("type")) {
                     const string& type = info.get<string > ("type");
-                    if (m_isReadOnly && (m_writeCommands.find(type) != m_writeCommands.end())) {
+                    if (m_isReadOnly && violateReadOnly(type, info)) {
+                        // not allowed, bail out and inform client
                         const std::string message("Action '" + type + "' is not allowed on GUI servers in readOnly mode!");
                         const Hash h("type", "notification", "message", message);
                         safeClientWrite(channel, h);
@@ -557,6 +558,19 @@ namespace karabo {
             karabo::net::Channel::Pointer chan = channel.lock();
             if (chan) {
                 chan->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, channel, _2));
+            }
+        }
+
+
+        bool GuiServerDevice::violateReadOnly(const std::string& type, const karabo::util::Hash& info) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "violateReadOnly " << info;
+            if (m_writeCommands.find(type) != m_writeCommands.end()) {
+                return true;
+            } else if (type == "requestFromSlot" && info.has("slot") && info.get<string>("slot") != "requestScene" && info.get<string>("slot") != "slotGetScene") {
+                // requestFromSlot must have a 'slot' argument. If not, it should fail somewhere else.
+                return true;
+            } else {
+                return false;
             }
         }
 
