@@ -47,6 +47,13 @@ class IPythonWidget(RichJupyterWidget):
         self.kernel_client.stop_channels()
         self.kernel_manager.shutdown_kernel()
 
+    def destroy(self):
+        # Cleanup first
+        self.kernel_client.started_channels.disconnect()
+        self.kernel_client.stopped_channels.disconnect()
+        self.deleteLater()
+        super(IPythonWidget, self).destroy()
+
 
 class Channel(inprocess.QtInProcessChannel):
     def __init__(self, *args):
