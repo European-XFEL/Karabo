@@ -35,14 +35,6 @@ private:
     void influxAllTestRunnerWithTelegraf();
     void testAllInstantiated(bool waitForLoggerReady = true);
 
-    /**
-     * Checks that a call to slotGetPropertyHistory within a time
-     * interval that doesn't contain any record of change to the
-     * property returns the last known value of the property before
-     * the interval.
-     */
-    void testHistoryAfterChanges();
-
     void testInt(bool testPastConf = true);
     void testFloat(bool testPastConf = false);
     void testString(bool testPastConf = false);
