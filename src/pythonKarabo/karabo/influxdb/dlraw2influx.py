@@ -144,6 +144,20 @@ class DlRaw2Influx():
         safe_v = line_fields["value"]
         safe_tid = line_fields["train_id"]
         safe_time = line_fields["timestamp"]
+
+        up_flag = line_fields["flag"].upper()
+        if up_flag in ("LOGIN", "LOGOUT"):
+            # A device event to be saved- user is always
+            # saved to satisfy InfluxDB's requirement of having
+            # at least one key per line data point
+            evt_type = '+LOG' if up_flag == 'LOGIN' else '-LOG'
+            self.data.append(
+                f'{safe_m}__EVENTS,type={evt_type} '
+                f'karabo_user="{safe_user}" {safe_time}'
+            )
+            self.stats['lines_processed'] = self.stats['lines_processed'] + 1
+            return
+
         if not self.buf:
             # The unique identifier is empty. Initialize it.
             self.buf = LineBuffer(safe_user, safe_tid, safe_time)
@@ -156,16 +170,6 @@ class DlRaw2Influx():
             self.buf = LineBuffer(safe_user, safe_tid, safe_time)
         if safe_v:
             self.buf[safe_f] = safe_v
-        up_flag = line_fields["flag"].upper()
-        if up_flag in ("LOGIN", "LOGOUT"):
-            # A device event to be saved- user is always
-            # saved to satisfy InfluxDB's requirement of having
-            # at least one key per line data point
-            evt_type = '+LOG' if up_flag == 'LOGIN' else '-LOG'
-            self.data.append(
-                f'{safe_m}__EVENTS,type={evt_type} '
-                f'karabo_user="{safe_user}" {safe_time}'
-            )
         self.stats['lines_processed'] = self.stats['lines_processed'] + 1
 
     def _flush_buffer(self):
