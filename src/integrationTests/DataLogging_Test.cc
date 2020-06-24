@@ -446,7 +446,7 @@ void DataLogging_Test::fileAllTestRunner() {
     testAllInstantiated();
     // The "testNans" test gives repeatedly some timeout that results in
     // assertion and for the following test.  The reason is still unclear.
-    // testNans();
+    testNans();
     testInt();
     testFloat();
     testString();
@@ -464,7 +464,6 @@ void DataLogging_Test::fileAllTestRunner() {
     testVectorLongLong();
     testVectorUnsignedLongLong();
     testTable();
-    testHistoryAfterChanges();
     // This must be the last test case that relies on the device in m_deviceId (the logged
     // PropertyTest instance) being available at the start of the test case.
     // 'testLastKnownConfiguration' stops the device being logged to make sure that the
@@ -515,14 +514,14 @@ void DataLogging_Test::influxAllTestRunner() {
     testVectorUnsignedLongLong(false);
     testTable(false);
 
-    // NOTE:
-    // "testHistoryAfterChanges" is not being called for the Influx based logging: it tests a behavior
-    // of including the last known value of a property if no change had occurred to that property within
-    // the time range passed to slotGetPropertyHistory. As the GUI is not depending on that change and
-    // it would require an extra query to InfluxDb, this behavior of slotGetPropertyHistory hadn't been
-    // migrated to InfluxDb based logging.
-
+    // This must be the last test case that relies on the device in m_deviceId (the logged
+    // PropertyTest instance) being available at the start of the test case.
+    // 'testLastKnownConfiguration' stops the device being logged to make sure that the
+    // last known configuration can be successfully retrieved after the device is gone.
     testLastKnownConfiguration();
+
+    // These deal with their own devices, so comment above about using the PropertyTest instance
+    // in m_deviceId is not applicable.
     testCfgFromPastRestart();
     testSchemaEvolution();
 }
@@ -590,68 +589,6 @@ void DataLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
         CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach NORMAL state.",
                                loggerState == karabo::util::State::NORMAL);
     }
-
-    std::clog << "Ok" << std::endl;
-}
-
-
-void DataLogging_Test::testHistoryAfterChanges() {
-
-    const std::string propertyName("int32Property");
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
-    const int max_set = 100;
-
-    std::clog << "Testing Property History retrieval after changes for '" << propertyName << "'... " << std::flush;
-
-    // write a bunch of times
-    for (int i = 0; i < max_set; i++) {
-        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set<int>(m_deviceId, propertyName, i));
-        boost::this_thread::sleep(boost::posix_time::milliseconds(10));
-    }
-
-    Epochstamp es_after;
-    std::string after = es_after.toIso8601();
-    Epochstamp es_wayAfter(es_after.getSeconds() + 60, es_after.getFractionalSeconds());
-    std::string wayAfter = es_wayAfter.toIso8601();
-
-    // wait more than the flush time
-    boost::this_thread::sleep(boost::posix_time::milliseconds(m_flushIntervalSec * 1000 + 250));
-
-    // placeholders, could be skipped but they are here for future expansions of the tests
-    std::string device;
-    std::string property;
-    vector<Hash> history;
-    Hash params;
-    params.set<std::string>("from", after);
-    params.set<std::string>("to", wayAfter);
-    params.set<int>("maxNumData", max_set * 2);
-
-    // FIXME: refactor this once indexing is properly handled.
-    // the history retrieval might take more than one try, it could have to index the files.
-    int nTries = 100;
-    while (nTries >= 0 && history.size() < 1) {
-        try {
-            m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, propertyName, params)
-                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(device, property, history);
-        } catch (const karabo::util::TimeoutException &e) {
-            karabo::util::Exception::clearTrace();
-        } catch (const karabo::util::RemoteException &e) {
-            karabo::util::Exception::clearTrace();
-        }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(SLOT_REQUEST_TIMEOUT_MILLIS));
-        nTries--;
-    }
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("History size should be 1, got " + karabo::util::toString(history.size()) + ".",
-                                 1ul, history.size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Device name on reply, '" + device + "', differs from expected, '" + m_deviceId + "'.",
-                                 m_deviceId, device);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Property name on reply, '" + property + "', differs from expected, '" + propertyName + "'.",
-                                 propertyName, property);
-
-    // checking values and timestamps
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong value in history", 99, history[0].get<int>("v"));
-    Epochstamp current = Epochstamp::fromHashAttributes(history[0].getAttributes("v"));
-    CPPUNIT_ASSERT_MESSAGE("Timestamp later than the requested window", current <= es_wayAfter);
 
     std::clog << "Ok" << std::endl;
 }
