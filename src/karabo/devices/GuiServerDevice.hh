@@ -196,6 +196,14 @@ namespace karabo {
             void onError(const karabo::net::ErrorCode& e, WeakChannelPointer channel);
 
             /**
+             * validate the incoming type and info hash if a readOnly command is requested to be executed
+             * @param type
+             * @param info
+             * @return bool whether the request violates read-only restrictions
+             */
+            bool violateReadOnly(const std::string& type, const karabo::util::Hash& info);
+
+            /**
              * an error further specified by hash occurred on a connection to a GUI
              * client. The GUI-server will attempt to forward the error to the debug
              * channel of the GUI client.
