@@ -820,6 +820,11 @@ namespace karabo {
 
         void DataLoggerManager::newLogger(const std::string& loggerId) {
             const std::string serverId(loggerIdToServerId(loggerId));
+            if (serverId.empty()) {
+                // E.g. a logger started by hand by someone
+                KARABO_LOG_FRAMEWORK_WARN << "Discovered logger with unexpected id '" << loggerId << "', cannot treat.";
+                return;
+            }
             // Get data for this server to access backlog and state
             Hash& data = m_loggerData.get<Hash>(serverId);
             data.set("state", LoggerState::RUNNING);
@@ -1028,7 +1033,13 @@ namespace karabo {
 
         void DataLoggerManager::goneLogger(const std::string& loggerId) {
 
-            const std::string serverId(loggerId.substr(strlen(DATALOGGER_PREFIX)));
+            const std::string serverId(loggerIdToServerId(loggerId));
+            if (serverId.empty()) {
+                // E.g. a logger started by hand by someone
+                KARABO_LOG_FRAMEWORK_WARN << "Discovered shutdown of logger with unexpected id '" << loggerId
+                        << "', will not treat.";
+                return;
+            }
 
             Hash& data = m_loggerData.get<Hash>(serverId);
             std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string> >("backlog");
