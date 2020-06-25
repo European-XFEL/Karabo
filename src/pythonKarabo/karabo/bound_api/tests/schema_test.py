@@ -5,8 +5,9 @@ from karabo.bound import (
     METER, MICRO, MANDATORY, NODE_ELEMENT, READ, WRITE, INIT,
     AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
     Hash, Logger, MetricPrefix, NodeType, Schema, Types, Unit, Validator,
-    AlarmCondition, DaqDataType, State, IMAGEDATA_ELEMENT, INT32_ELEMENT,
-    NDARRAY_ELEMENT, OVERWRITE_ELEMENT
+    AlarmCondition, DaqDataType, DAQPolicy, State,
+    IMAGEDATA_ELEMENT, INT32_ELEMENT,
+    NDARRAY_ELEMENT, OVERWRITE_ELEMENT, STATE_ELEMENT
 )
 from .configuration_example_classes import (
     Base, GraphicsRenderer, GraphicsRenderer1, GraphicsRenderer2, SomeClass,
@@ -408,20 +409,6 @@ class Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_getAllowedStates exception: " + str(e))
 
-    def test_getDisplatType(self):
-        try:
-            schema = TestStruct1.getSchema("TestStruct1")
-            self.assertEqual(schema.getDisplayType("exampleBitsKey1"), "bin")
-            self.assertEqual(schema.getDisplayType("exampleBitsKey2"),
-                             "bin|10:In Error, 21:Busy, 35:HV On, 55:Crate On")
-            self.assertEqual(schema.getDisplayType("exampleBitsKey3"), "oct")
-            self.assertEqual(schema.getDisplayType("exampleBitsKey4"), "hex")
-            self.assertEqual(schema.getDisplayType("exampleKey8"), "Curve")
-            self.assertEqual(schema.getDisplayType("exampleKey9"),
-                             "TestDisplayType")
-        except Exception as e:
-            self.fail("test_getDisplatType exception: " + str(e))
-
     def test_getUnit(self):
         try:
             schema = TestStruct1.getSchema("TestStruct1")
@@ -714,17 +701,25 @@ class Schema_TestCase(unittest.TestCase):
         self.assertEqual(schema.isAccessReconfigurable("chars"), True)
 
     def test_getDisplayType(self):
-        try:
-            schema = Configurator(TestStruct1).getSchema("TestStruct1")
-            self.assertEqual(schema.getDisplayType("testPath"), "fileOut")
-            self.assertEqual(schema.getDisplayType("testPath2"), "fileIn")
-            self.assertEqual(schema.getDisplayType("testPath3"), "directory")
+
+        schema = Configurator(TestStruct1).getSchema("TestStruct1")
+        self.assertEqual(schema.getDisplayType("testPath"), "fileOut")
+        self.assertEqual(schema.getDisplayType("testPath2"), "fileIn")
+        self.assertEqual(schema.getDisplayType("testPath3"), "directory")
         #  self.assertEqual(schema.getDisplayType("exampleBitsKey1"), "Bitset")
         #  self.assertEqual(schema.getDisplayType("exampleBitsKey2"), "Bitset")
         #  self.assertEqual(schema.getDisplayType("exampleBitsKey3"), "Bitset")
         #  self.assertEqual(schema.getDisplayType("exampleBitsKey4"), "Bitset")
-        except Exception as e:
-            self.fail("test_getDisplayType exception: " + str(e))
+
+        schema = TestStruct1.getSchema("TestStruct1")
+        self.assertEqual(schema.getDisplayType("exampleBitsKey1"), "bin")
+        self.assertEqual(schema.getDisplayType("exampleBitsKey2"),
+                         "bin|10:In Error, 21:Busy, 35:HV On, 55:Crate On")
+        self.assertEqual(schema.getDisplayType("exampleBitsKey3"), "oct")
+        self.assertEqual(schema.getDisplayType("exampleBitsKey4"), "hex")
+        self.assertEqual(schema.getDisplayType("exampleKey8"), "Curve")
+        self.assertEqual(schema.getDisplayType("exampleKey9"),
+                         "TestDisplayType")
 
     def test_setDisplayType(self):
         try:
@@ -972,6 +967,28 @@ class Schema_TestCase(unittest.TestCase):
         schema.setDaqDataType("trainData", DaqDataType.TRAIN)
         self.assertEqual(schema.hasDaqDataType("trainData"), True)
         self.assertEqual(schema.getDaqDataType("trainData"), DaqDataType.TRAIN)
+
+    def test_state_element(self):
+        schema = Schema()
+        (
+            STATE_ELEMENT(schema)
+            .key("state1")
+            .commit(),
+
+            STATE_ELEMENT(schema)
+            .key("state2")
+            .daqPolicy(DAQPolicy.SAVE)
+            .commit(),
+
+            STATE_ELEMENT(schema)
+            .key("state3")
+            .daqPolicy(DAQPolicy.OMIT)
+            .commit()
+        )
+
+        self.assertEqual(schema.getDAQPolicy("state1"), DAQPolicy.UNSPECIFIED)
+        self.assertEqual(schema.getDAQPolicy("state2"), DAQPolicy.SAVE)
+        self.assertEqual(schema.getDAQPolicy("state3"), DAQPolicy.OMIT)
 
     def test_overwrite_restrictions_for_options(self):
         schema = Schema()
