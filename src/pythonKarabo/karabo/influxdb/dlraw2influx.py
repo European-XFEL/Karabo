@@ -132,6 +132,7 @@ class DlRaw2Influx():
                 part_proc = True
                 self._handle_genericException(exc, i)
             self._write_end_stats(part_proc)
+        return not part_proc
 
     def _process_line(self, file_line):
         line_fields = self.parse_raw(file_line)
