@@ -184,8 +184,15 @@ namespace karabo {
              * Get id of server that should run logger with id 'loggerId'
              */
             inline std::string loggerIdToServerId(const std::string& loggerId) const {
-                // Just remove the prefix
-                return loggerId.substr(strlen(karabo::util::DATALOGGER_PREFIX));
+                // Just remove the prefix - but be prepared for loggers not started by this manager
+                // and thus not following the naming convention.
+                const size_t posPrefix = loggerId.find(karabo::util::DATALOGGER_PREFIX);
+                if (posPrefix == 0ul) {
+                    return loggerId.substr(strlen(karabo::util::DATALOGGER_PREFIX));
+                } else {
+                    // wrong or even no prefix
+                    return std::string();
+                }
             }
 
             void instantiateReaders(const std::string& serverId);
