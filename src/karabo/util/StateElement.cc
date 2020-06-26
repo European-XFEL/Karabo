@@ -14,6 +14,8 @@ namespace karabo {
         StateElement::StateElement(Schema& expected) : GenericElement<StateElement>(expected) {
             //if no initial value is set the state will be unknown
             m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, State::UNKNOWN.name());
+            // set the default DAQ policy
+            m_node->setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, expected.getDefaultDAQPolicy());
         }
 
 
@@ -72,6 +74,12 @@ namespace karabo {
 
         StateElement& StateElement::initialValue(const karabo::util::State& s) {
             m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, s.name());
+            return *this;
+        }
+
+
+        StateElement& StateElement::daqPolicy(const DAQPolicy& policy) {
+            m_node->setAttribute<int>(KARABO_SCHEMA_DAQ_POLICY, policy);
             return *this;
         }
 
