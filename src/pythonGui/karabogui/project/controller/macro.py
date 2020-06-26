@@ -14,10 +14,11 @@ from traits.api import Instance, String, on_trait_change
 from karabo.common.api import ProxyStatus, walk_traits_object
 from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabogui import icons, messagebox
-from karabogui.enums import ProjectItemTypes
+from karabogui.enums import AccessRole, ProjectItemTypes
 from karabogui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
     KaraboEvent)
+from karabogui.globals import access_role_allowed
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
@@ -36,10 +37,13 @@ class MacroInstanceController(BaseProjectController):
     instance_id = String
 
     def context_menu(self, project_controller, parent=None):
+
+        service_allowed = access_role_allowed(AccessRole.SERVICE_EDIT)
         menu = QMenu(parent)
         shutdown_action = QAction(icons.kill, 'Shutdown', menu)
         shutdown_action.triggered.connect(partial(self.shutdown,
                                                   parent=parent))
+        shutdown_action.setEnabled(service_allowed)
         menu.addAction(shutdown_action)
         return menu
 
@@ -63,7 +67,6 @@ class MacroInstanceController(BaseProjectController):
     # ----------------------------------------------------------------------
     # action handlers
 
-    # @pyqtSlot()
     def shutdown(self, parent=None):
         get_manager().shutdownDevice(self.instance_id, showConfirm=True,
                                      parent=parent)
@@ -78,22 +81,33 @@ class MacroController(BaseProjectGroupController):
     topo_listener = Instance(SystemTopologyListener)
 
     def context_menu(self, project_controller, parent=None):
+        project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
+        service_allowed = access_role_allowed(AccessRole.SERVICE_EDIT)
+
         menu = QMenu(parent)
         edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_macro, parent=parent))
+        edit_action.setEnabled(project_allowed)
+
         dupe_action = QAction(icons.editCopy, 'Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_macro,
                                               project_controller,
                                               parent=parent))
+        dupe_action.setEnabled(project_allowed)
+
         delete_action = QAction(icons.kill, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_macro,
                                                 project_controller,
                                                 parent=parent))
+        delete_action.setEnabled(project_allowed)
+
         save_as_action = QAction(icons.saveAs, 'Save to file', menu)
         save_as_action.triggered.connect(partial(self._save_macro_to_file,
                                                  parent=parent))
         run_action = QAction(icons.run, 'Run', menu)
         run_action.triggered.connect(partial(self.run_macro, parent=parent))
+        run_action.setEnabled(service_allowed)
+
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)

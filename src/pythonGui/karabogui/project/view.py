@@ -12,7 +12,9 @@ from PyQt5.QtWidgets import (
 
 from karabo.common.project.api import find_parent_object
 from karabogui import messagebox
+from karabogui.enums import AccessRole
 from karabogui.events import KaraboEvent, broadcast_event
+from karabogui.globals import access_role_allowed
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
     maybe_save_modified_project, save_object)
@@ -138,6 +140,9 @@ class ProjectView(QTreeView):
 
         selected_controller = self._get_selected_controller()
         if selected_controller is not None:
+            project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
+            service_allowed = access_role_allowed(AccessRole.SERVICE_EDIT)
+
             project_controller = self._project_controller(selected_controller)
             menu = selected_controller.context_menu(project_controller,
                                                     parent=self)
@@ -146,23 +151,31 @@ class ProjectView(QTreeView):
                 rename_action = QAction(icons.edit, 'Rename', menu)
                 rename_action.triggered.connect(partial(self._rename_project,
                                                         selected_project))
+                rename_action.setEnabled(project_allowed)
+
                 save_action = QAction(icons.save, 'Save', menu)
                 save_action.triggered.connect(partial(save_object,
                                                       selected_project,
                                                       domain=None))
+                save_action.setEnabled(project_allowed)
+
                 close_action = QAction(icons.kill, 'Close project', menu)
                 close_action.triggered.connect(partial(self._close_project,
                                                        selected_project,
                                                        project_controller,
                                                        show_dialog=True))
+
                 instantiate_all_devices = QAction(
                     icons.run, 'Instantiate all devices', menu)
                 instantiate_all_devices.triggered.connect(
                     partial(self._instantiate_devices, selected_controller))
+                instantiate_all_devices.setEnabled(service_allowed)
+
                 instantiate_all_macros = QAction(
                     icons.run, 'Instantiate all macros', menu)
                 instantiate_all_macros.triggered.connect(
                     partial(self._instantiate_macros, selected_controller))
+                instantiate_all_macros.setEnabled(service_allowed)
 
                 is_trashed = selected_project.is_trashed
                 if is_trashed:
@@ -173,6 +186,7 @@ class ProjectView(QTreeView):
                 trash_action.triggered.connect(partial(self.update_is_trashed,
                                                        selected_project,
                                                        project_controller))
+                trash_action.setEnabled(project_allowed)
                 menu.addAction(rename_action)
                 menu.addAction(instantiate_all_macros)
                 menu.addAction(instantiate_all_devices)

@@ -14,6 +14,8 @@ from karabo.common.project.api import (
     DeviceInstanceModel, ProjectModel, device_instance_exists)
 import karabogui.icons as icons
 from karabogui import messagebox
+from karabogui.enums import AccessRole
+from karabogui.globals import access_role_allowed
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.loading_watcher import ProjectLoadingWatcher
 from karabogui.project.utils import load_project
@@ -28,12 +30,17 @@ class SubprojectController(ProjectSubgroupController):
     _watchers = List(Instance(ProjectLoadingWatcher))
 
     def context_menu(self, project_controller, parent=None):
+        project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
+
         menu = QMenu(parent)
         add_action = QAction(icons.add, 'Add new project...', menu)
         add_action.triggered.connect(partial(self._add_project, parent=parent))
         load_action = QAction(icons.load, 'Load project...', menu)
         load_action.triggered.connect(partial(self._load_project,
                                               parent=parent))
+        add_action.setEnabled(project_allowed)
+        load_action.setEnabled(project_allowed)
+
         menu.addAction(add_action)
         menu.addAction(load_action)
         return menu
@@ -41,7 +48,6 @@ class SubprojectController(ProjectSubgroupController):
     # ----------------------------------------------------------------------
     # action handlers
 
-    # @pyqtSlot()
     def _add_project(self, parent=None):
         """ Add a new subproject to the associated project
         """
@@ -53,7 +59,6 @@ class SubprojectController(ProjectSubgroupController):
             project.initialized = project.modified = True
             self.model.subprojects.append(project)
 
-    # @pyqtSlot()
     def _load_project(self, parent=None):
         """ Add an existing project as a subproject.
         """
