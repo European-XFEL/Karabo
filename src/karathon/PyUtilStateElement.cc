@@ -84,6 +84,8 @@ void exportPyUtilStateElement() {
                      , (bp::arg("tags"))
                      , bp::return_internal_reference<> ())
                 .def("options", bp::raw_function(&StateElementWrap::optionsPy,2))
+                .def("daqPolicy", &StateElement::daqPolicy
+                     , bp::return_internal_reference<> ())
                 .def("initialValue", &StateElementWrap::initialValuePy
                      , (bp::arg("value"))
                      , bp::return_internal_reference<> ());
