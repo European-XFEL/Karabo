@@ -369,10 +369,10 @@ class PythonDevice(NoFsm):
         rules.injectTimestamps = True
         self.validatorIntern.setValidationRules(rules)
         self.validatorExtern.setValidationRules(rules)
-        self.globalAlarmCondition = (AlarmCondition.NONE, "", False,
-                                     Timestamp(Epochstamp(0, 0),
-                                               Trainstamp(0)))
-        self.accumulatedGlobalAlarms = set()
+        # actual global alarm condition and all accumulated ones
+        self.globalAlarmCondition = AlarmCondition.NONE
+        # key, value will be AlarmCondition, info tuple
+        self.accumulatedGlobalAlarms = dict()
 
         # For broker error handler
         self.lastBrokerErrorStamp = 0
@@ -695,7 +695,7 @@ class PythonDevice(NoFsm):
 
         if self.validatorIntern.hasParametersInWarnOrAlarm():
             warnings = self.validatorIntern.getParametersInWarnOrAlarm()
-            conditions = [self.globalAlarmCondition[0]]
+            conditions = [self.globalAlarmCondition]
 
             for node in warnings:
                 desc = warnings[node]
@@ -711,7 +711,7 @@ class PythonDevice(NoFsm):
             topCondition = AlarmCondition.returnMostSignificant(conditions)
             return topCondition
         elif forceUpdate:
-            return self.globalAlarmCondition[0]
+            return self.globalAlarmCondition
         else:
             return None
 
@@ -828,25 +828,27 @@ class PythonDevice(NoFsm):
         with self._stateChangeLock:
             alarmsToUpdate = self._evaluateAlarmUpdates(existingAlarmsRF,
                                                         forceUpdate=True)
-            # Add current global alarm condition
-            globalAlarmCondition = self.globalAlarmCondition[0]
-            if globalAlarmCondition != AlarmCondition.NONE:
+            # Add all global alarm condition since last setting to NONE
+            for globalCondTup in self.accumulatedGlobalAlarms.values():
+                globalAlarmCondition = globalCondTup[0]
                 tmpKey = "toAdd.global." + globalAlarmCondition.value
                 alarmsToUpdate.set(tmpKey, Hash())
                 globalNode = alarmsToUpdate.getNode(tmpKey)
                 globalEntry = globalNode.getValue()
                 globalEntry.set("type", globalAlarmCondition.value)
-                globalEntry.set("description", self.globalAlarmCondition[1])
-                globalEntry.set("needsAcknowledging",
-                                self.globalAlarmCondition[2])
-                stamp = self.globalAlarmCondition[3]
+                globalEntry.set("description", globalCondTup[1])
+                globalEntry.set("needsAcknowledging", globalCondTup[2])
+                stamp = globalCondTup[3]
                 stamp.toHashAttributes(globalNode.getAttributes())
 
-            # Check which global alarms to clear - not the current one...
-            globalAlarmsToCheck = [a for a in globalAlarmsToCheck
-                                   if a != globalAlarmCondition.value]
-            if globalAlarmsToCheck:
-                alarmsToUpdate.set("toClear.global", globalAlarmsToCheck)
+            # Check which global alarms to clear - not the accumulated ones.
+            # Note: Exception for bad input, i.e. invalid alarm condition
+            #       string in globalAlarmsToCheck.
+            globalAlarmsToClear = [a for a in globalAlarmsToCheck
+                                   if AlarmCondition(a)
+                                   not in self.accumulatedGlobalAlarms]
+            if globalAlarmsToClear:
+                alarmsToUpdate.set("toClear.global", globalAlarmsToClear)
 
         self._ss.reply(self.getInstanceId(), alarmsToUpdate)
 
@@ -1710,12 +1712,12 @@ class PythonDevice(NoFsm):
 
         timestamp = self.getActualTimestamp()
         with self._stateChangeLock:
-            previousGlobal = self.globalAlarmCondition[0]
-            if previousGlobal != AlarmCondition.NONE:
-                self.accumulatedGlobalAlarms.add(previousGlobal.asString())
 
-            self.globalAlarmCondition = (condition, description,
-                                         needsAcknowledging, timestamp)
+            self.globalAlarmCondition = condition
+            if condition != AlarmCondition.NONE:
+                info = (condition, description, needsAcknowledging, timestamp)
+                # May overwrite a previously existing alarm
+                self.accumulatedGlobalAlarms[condition] = info
             resultingCondition = \
                 self._evaluateAndUpdateAlarmCondition(
                     forceUpdate=True, prevParamsInAlarm=Hash(), silent=True)
@@ -1727,20 +1729,25 @@ class PythonDevice(NoFsm):
                                      timestamp, validate=False)
 
             emitHash = Hash("toClear", Hash(), "toAdd", Hash())
-            conditionString = condition.asString()
 
-            if (condition == AlarmCondition.NONE
-                    and previousGlobal != AlarmCondition.NONE):
-                alarmsToClear = list(self.accumulatedGlobalAlarms)
-                self.accumulatedGlobalAlarms.clear()
-                emitHash.set("toClear.global", alarmsToClear)
-            else:
-                entry = Hash("type", condition.asString(),
+            # Clear all previous alarms that are more critical than the new one
+            alarmsToClear = [k for k in self.accumulatedGlobalAlarms.keys()
+                             if k.criticalityLevel()
+                             > condition.criticalityLevel()]
+            if alarmsToClear:
+                for level in alarmsToClear:
+                    del self.accumulatedGlobalAlarms[level]
+                emitHash.set("toClear.global",
+                             [a.value for a in alarmsToClear])
+
+            # Add the new alarm if not NONE
+            if condition != AlarmCondition.NONE:
+                entry = Hash("type", condition.value,
                              "description", description,
                              "needsAcknowledging", needsAcknowledging)
 
-                prop = Hash(conditionString, entry)
-                entryNode = prop.getNode(conditionString)
+                prop = Hash(condition.value, entry)
+                entryNode = prop.getNode(condition.value)
                 # attach current timestamp
                 timestamp.toHashAttributes(entryNode.getAttributes())
                 emitHash.set("toAdd.global", prop)
