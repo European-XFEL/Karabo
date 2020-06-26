@@ -20,10 +20,11 @@ from karabo.native import (
 import karabogui.icons as icons
 from karabogui import messagebox
 from karabogui.binding.api import extract_configuration
-from karabogui.enums import ProjectItemTypes
-from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
+from karabogui.enums import AccessRole, ProjectItemTypes
+from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.globals import access_role_allowed
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.project.dialog.device_handle import DeviceHandleDialog
 from karabogui.project.dialog.object_handle import ObjectDuplicateDialog
@@ -64,32 +65,43 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         capabilities = proj_topo_node.capabilities if proj_topo_node else 0
 
+        project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
+        service_allowed = access_role_allowed(AccessRole.SERVICE_EDIT)
+
         edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_device,
                                               project_controller,
                                               parent=parent))
-        config_menu = self._create_sub_menu(menu, project_controller)
+        edit_action.setEnabled(project_allowed)
+
+        config_menu = self._create_sub_menu(menu, project_controller,
+                                            project_allowed)
         dupe_action = QAction(icons.editCopy, 'Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_device,
                                               project_controller,
                                               parent=parent))
+        dupe_action.setEnabled(project_allowed)
+
         delete_action = QAction(icons.delete, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_device,
                                                 project_controller,
                                                 parent=parent))
+        delete_action.setEnabled(project_allowed)
 
         macro_action = QAction(icons.download, 'Open device macro', menu)
         has_macro = _test_mask(capabilities, Capabilities.PROVIDES_MACROS)
-        macro_action.setEnabled(has_macro)
+        macro_action.setEnabled(has_macro and project_allowed)
         macro_action.triggered.connect(partial(self._load_macro_from_device,
                                                project_controller,
                                                parent=parent))
+
         scene_action = QAction(icons.download, 'Open device scene', menu)
         has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
-        scene_action.setEnabled(has_scene)
+        scene_action.setEnabled(has_scene and project_allowed)
         scene_action.triggered.connect(partial(self._load_scene_from_device,
                                                project_controller,
                                                parent=parent))
+
         conf_action = QAction('Get Configuration', menu)
         can_get_conf = (server_online and
                         proj_device_status not in NO_CONFIG_STATUSES)
@@ -106,11 +118,15 @@ class DeviceInstanceController(BaseProjectGroupController):
         instantiate_action.setEnabled(can_instantiate)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
                                                      project_controller))
+        instantiate_action.setEnabled(service_allowed)
+
         shutdown_action = QAction(icons.kill, 'Shutdown', menu)
         shutdown_action.setEnabled(proj_device_online)
         shutdown_action.triggered.connect(partial(self.shutdown_device,
                                                   show_confirm=True,
                                                   parent=parent))
+        shutdown_action.setEnabled(service_allowed)
+
         menu.addSeparator()
         about_action = QAction(icons.about, 'About', menu)
         about_action.triggered.connect(partial(self._about_device,
@@ -356,7 +372,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
                         {'proxy': self.project_device.proxy})
 
-    def _create_sub_menu(self, parent_menu, project_controller):
+    def _create_sub_menu(self, parent_menu, project_controller, allowed):
         """ Create sub menu for parent menu and return it
         """
         config_menu = QMenu('Configuration', parent_menu)
@@ -364,6 +380,8 @@ class DeviceInstanceController(BaseProjectGroupController):
         add_action.triggered.connect(partial(self._add_configuration,
                                              project_controller,
                                              parent=parent_menu.parent()))
+        add_action.setEnabled(allowed)
+
         config_menu.addAction(add_action)
         for dev_conf in self.model.configs:
             conf_action = QAction(dev_conf.simple_name, config_menu)
