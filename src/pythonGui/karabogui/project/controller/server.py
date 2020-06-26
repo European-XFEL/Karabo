@@ -11,9 +11,10 @@ from traits.api import Bool, Instance, Property, on_trait_change
 from karabo.common.api import ProxyStatus, walk_traits_object
 from karabo.common.project.api import DeviceServerModel
 import karabogui.icons as icons
-from karabogui.enums import ProjectItemTypes
+from karabogui.enums import AccessRole, ProjectItemTypes
 from karabogui.events import (KaraboEvent, register_for_broadcasts,
                               unregister_from_broadcasts)
+from karabogui.globals import access_role_allowed
 from karabogui.indicators import get_project_server_status_icon
 from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.topo_listener import SystemTopologyListener
@@ -36,32 +37,47 @@ class DeviceServerController(BaseProjectGroupController):
         # Enable/Disable based on online status
         online = self.online
 
+        project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
+        service_allowed = access_role_allowed(AccessRole.SERVICE_EDIT)
+
         menu = QMenu(parent)
         edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_server,
                                               parent=parent))
+        edit_action.setEnabled(project_allowed)
+
         delete_action = QAction(icons.delete, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_server,
                                                 project_controller,
                                                 parent=parent))
+        delete_action.setEnabled(project_allowed)
+
         shutdown_action = QAction(icons.kill, 'Shutdown', menu)
         shutdown_action.setEnabled(online)
         shutdown_action.triggered.connect(partial(self._shutdown_server,
                                                   parent=parent))
+        shutdown_action.setEnabled(service_allowed)
+
         add_action = QAction(icons.add, 'Add device', menu)
-        add_action.setEnabled(online)
+        add_action.setEnabled(online and project_allowed)
         add_action.triggered.connect(partial(self._add_device, parent=parent))
+
         instantiate_all_action = QAction(
             icons.run, 'Instantiate all devices', menu)
-        instantiate_all_action.setEnabled(online)
+        instantiate_all_action.setEnabled(online and service_allowed)
         instantiate_all_action.triggered.connect(self.instantiate_devices)
+
         shutdown_all_action = QAction(
             icons.kill, 'Shutdown all devices', menu)
         shutdown_all_action.triggered.connect(partial(self._shutdown_devices,
                                                       parent=parent))
+        shutdown_all_action.setEnabled(service_allowed)
+
         remove_all_action = QAction(icons.delete, 'Delete all devices', menu)
         remove_all_action.triggered.connect(partial(self._delete_all_devices,
                                                     parent=parent))
+        remove_all_action.setEnabled(project_allowed)
+
         menu.addAction(edit_action)
         menu.addAction(delete_action)
         menu.addAction(shutdown_action)
