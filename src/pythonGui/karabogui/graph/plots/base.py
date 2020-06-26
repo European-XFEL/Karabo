@@ -1,5 +1,6 @@
 from functools import partial
 
+import numpy as np
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QSize, Qt
 from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import QAction, QGridLayout, QSizePolicy, QWidget
@@ -229,44 +230,38 @@ class KaraboPlotView(QWidget):
 
     @pyqtSlot()
     def configure_range_x(self):
-        view_range = self.plotItem.vb.state['viewRange']
-        actual = {
-            'x_min': view_range[0][0],
-            'x_max': view_range[0][1]}
-
+        x_min, x_max = self.get_view_range_x()
+        actual = {'x_min': x_min, 'x_max': x_max}
         config, ok = RangeDialog.get(self.configuration, actual, axis=0,
                                      parent=self)
         if ok:
             self.configuration.update(**config)
             x_autorange = config['x_autorange']
             if not x_autorange:
-                self.set_range_x(config['x_min'], config['x_max'])
+                self.set_range_x(*self.get_config_range_x())
             else:
                 self.set_autorange_x(x_autorange)
             self.stateChanged.emit(config)
 
     @pyqtSlot()
     def configure_range_y(self):
-        view_range = self.plotItem.vb.state['viewRange']
-        actual = {
-            'y_min': view_range[1][0],
-            'y_max': view_range[1][1]}
-
+        y_min, y_max = self.get_view_range_y()
+        actual = {'y_min': y_min, 'y_max': y_max}
         config, ok = RangeDialog.get(self.configuration, actual, axis=1,
                                      parent=self)
         if ok:
             self.configuration.update(**config)
             autorange = config['y_autorange']
             if not autorange:
-                self.set_range_y(config['y_min'], config['y_max'])
+                self.set_range_y(*self.get_config_range_y())
             else:
                 self.set_autorange_y(autorange)
             self.stateChanged.emit(config)
 
     @pyqtSlot()
     def reset_range(self):
-        self.reset_range_x(config=self.configuration)
-        self.reset_range_y(config=self.configuration)
+        self.reset_range_x()
+        self.reset_range_y()
 
     @pyqtSlot(bool)
     def toggle_data_symbols(self, show):
@@ -288,17 +283,19 @@ class KaraboPlotView(QWidget):
     # ----------------------------------------------------------------
     # Base Functions
 
-    def reset_range_x(self, config):
+    def reset_range_x(self):
+        config = self.configuration
         x_autorange = config['x_autorange']
         if not x_autorange:
-            self.set_range_x(config['x_min'], config['x_max'])
+            self.set_range_x(*self.get_config_range_x())
         else:
             self.set_autorange_x(x_autorange)
 
-    def reset_range_y(self, config):
+    def reset_range_y(self):
+        config = self.configuration
         y_autorange = config['y_autorange']
         if not y_autorange:
-            self.set_range_y(config['y_min'], config['y_max'])
+            self.set_range_y(*self.get_config_range_y())
         else:
             self.set_autorange_y(y_autorange)
 
@@ -361,8 +358,7 @@ class KaraboPlotView(QWidget):
                     toolset = self._toolbar.toolsets[ROITool]
                     toolset.buttons[roi_tool].setChecked(True)
 
-        self.reset_range_x(config=config)
-        self.reset_range_y(config=config)
+        self.reset_range()
 
     # ----------------------------------------------------------------
     # Toolbar functions Events
@@ -619,6 +615,44 @@ class KaraboPlotView(QWidget):
     def set_range_y(self, min_value, max_value):
         """Set the Y Range of the view box with min and max value"""
         self.plotItem.vb.setRange(yRange=[min_value, max_value])
+
+    def get_view_range_x(self):
+        view_range = self.plotItem.vb.viewRange()
+        x_min, x_max = view_range[0]
+
+        # Revert viewbox values (log scale) to linear scale
+        if self.configuration['x_log']:
+            x_min, x_max = 10**x_min, 10**x_max
+        return x_min, x_max
+
+    def get_view_range_y(self):
+        view_range = self.plotItem.vb.viewRange()
+        y_min, y_max = view_range[1]
+
+        # Revert viewbox values (log scale) to linear scale
+        if self.configuration['y_log']:
+            y_min, y_max = 10 ** y_min, 10 ** y_max
+        return y_min, y_max
+
+    def get_config_range_x(self):
+        """Returns the x-range from the configuration in viewbox coordinates
+           (linear or log scale)"""
+        config = self.configuration
+        x_min, x_max = config['x_min'], config['x_max']
+        # Revert input values (linear scale) to log scale if enabled
+        if config['x_log']:
+            x_min, x_max = np.log10(x_min), np.log10(x_max)
+        return x_min, x_max
+
+    def get_config_range_y(self):
+        """Returns the y-range from the configuration in viewbox coordinates
+           (linear or log scale)"""
+        config = self.configuration
+        y_min, y_max = config['y_min'], config['y_max']
+        # Revert input values (linear scale) to log scale if enabled
+        if config['y_log']:
+            y_min, y_max = np.log10(y_min), np.log10(y_max)
+        return y_min, y_max
 
     # -----------------------------------------------------------------------
     # ROI methods
