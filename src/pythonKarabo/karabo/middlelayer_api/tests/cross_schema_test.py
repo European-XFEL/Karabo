@@ -31,7 +31,7 @@ class Tests(DeviceTest):
             stdout=PIPE)
         schema = yield from self.process.stdout.read()
         yield from self.process.wait()
-        self.assertEqual(adler32(schema), 1602344009,
+        self.assertEqual(adler32(schema), 2718948371,
                          "The generated schema changed. If this is "
                          "desired, change the checksum in the code.")
 

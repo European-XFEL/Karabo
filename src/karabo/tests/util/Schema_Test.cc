@@ -1166,9 +1166,23 @@ void Schema_Test::testDaqPolicy() {
                 .readOnly()
                 .commit();
 
+        STATE_ELEMENT(schema).key("state1")
+                .commit();
+
+        STATE_ELEMENT(schema).key("state2")
+                .daqPolicy(DAQPolicy::SAVE)
+                .commit();
+
+        STATE_ELEMENT(schema).key("state3")
+                .daqPolicy(DAQPolicy::OMIT)
+                .commit();
+
         CPPUNIT_ASSERT(schema.getDAQPolicy("string1") == DAQPolicy::SAVE);
         CPPUNIT_ASSERT(schema.getDAQPolicy("string2") == DAQPolicy::OMIT);
         CPPUNIT_ASSERT(schema.getDAQPolicy("string3") == DAQPolicy::UNSPECIFIED);
+        CPPUNIT_ASSERT(schema.getDAQPolicy("state1") == DAQPolicy::UNSPECIFIED);
+        CPPUNIT_ASSERT(schema.getDAQPolicy("state2") == DAQPolicy::SAVE);
+        CPPUNIT_ASSERT(schema.getDAQPolicy("state3") == DAQPolicy::OMIT);
     }
 
     // according to specified default policy
