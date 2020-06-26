@@ -14,7 +14,8 @@ from karabo.common.project.api import (
     DeviceServerModel, MacroModel, ProjectModel, read_macro)
 from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabogui import icons, messagebox
-from karabogui.enums import ProjectItemTypes
+from karabogui.enums import AccessRole, ProjectItemTypes
+from karabogui.globals import access_role_allowed
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
@@ -83,32 +84,48 @@ class ProjectSubgroupController(BaseProjectGroupController):
 
 
 def _fill_macros_menu(menu, project_controller):
+    project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
+
     add_action = QAction(icons.add, 'Add macro', menu)
     add_action.triggered.connect(partial(_add_macro, project_controller,
                                          parent=menu.parent()))
+    add_action.setEnabled(project_allowed)
+
     load_action = QAction(icons.load, 'Load macro...', menu)
     load_action.triggered.connect(partial(_load_macro, project_controller,
                                           parent=menu.parent()))
+    load_action.setEnabled(project_allowed)
+
     load_from_device = QAction(icons.download, 'Load from device...', menu)
     load_from_device.triggered.connect(partial(_load_macro_from_device,
                                                project_controller,
                                                parent=menu.parent()))
+    load_from_device.setEnabled(project_allowed)
+
     menu.addAction(add_action)
     menu.addAction(load_action)
     menu.addAction(load_from_device)
 
 
 def _fill_scenes_menu(menu, project_controller):
+    project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
+
     add_action = QAction(icons.add, 'Add scene', menu)
     add_action.triggered.connect(partial(_add_scene, project_controller,
                                          parent=menu.parent()))
+    add_action.setEnabled(project_allowed)
+
     load_action = QAction(icons.load, 'Load scene...', menu)
     load_action.triggered.connect(partial(_load_scene, project_controller,
                                           parent=menu.parent()))
+    load_action.setEnabled(project_allowed)
+
     load_from_device = QAction(icons.download, 'Load from device...', menu)
     load_from_device.triggered.connect(partial(_load_scene_from_device,
                                                project_controller,
                                                parent=menu.parent()))
+    load_from_device.setEnabled(project_allowed)
+
     about_action = QAction(icons.about, 'About', menu)
     about_action.triggered.connect(partial(_about_scene,
                                            project_controller,
@@ -121,10 +138,14 @@ def _fill_scenes_menu(menu, project_controller):
 
 
 def _fill_servers_menu(menu, project_controller):
+    project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
+
     add_action = QAction(icons.add, 'Add server', menu)
     add_action.triggered.connect(partial(_add_server,
                                          project_controller,
                                          parent=menu.parent()))
+    add_action.setEnabled(project_allowed)
+
     menu.addAction(add_action)
 
 

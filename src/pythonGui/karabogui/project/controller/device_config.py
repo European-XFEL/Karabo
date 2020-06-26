@@ -13,8 +13,9 @@ from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, find_parent_object)
 import karabogui.icons as icons
 from karabogui import messagebox
-from karabogui.enums import ProjectItemTypes
+from karabogui.enums import AccessRole, ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.globals import access_role_allowed
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.utils import check_device_config_exists
 from karabo.native import create_html_hash, Hash
@@ -72,19 +73,21 @@ class DeviceConfigurationController(BaseProjectController):
         # Check if the device we belong to is online!
         proxy = device_controller.project_device.proxy
 
+        project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
+        conf_allowed = project_allowed and config.simple_name != DEFAULT
         menu = QMenu(parent)
 
         edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_config,
                                               project_controller,
                                               parent=parent))
-        edit_action.setEnabled(config.simple_name != DEFAULT)
+        edit_action.setEnabled(conf_allowed)
 
         delete_action = QAction(icons.delete, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_config,
                                                 project_controller,
                                                 parent=parent))
-        delete_action.setEnabled(config.simple_name != DEFAULT)
+        delete_action.setEnabled(conf_allowed)
 
         conf_action = QAction(icons.load, 'Load in Configurator', menu)
         conf_action.triggered.connect(partial(self._load_config,
