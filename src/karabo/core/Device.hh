@@ -198,14 +198,17 @@ namespace karabo {
             karabo::util::Schema m_fullSchema;
             std::map<std::string, karabo::util::Schema> m_stateDependentSchema;
 
-            struct {
+            karabo::util::AlarmCondition m_globalAlarmCondition; /// actual global alarm condition
+
+            struct GlobalAlarmInfo {
 
                 karabo::util::AlarmCondition condition = karabo::util::AlarmCondition::NONE;
                 std::string description;
                 bool needsAcknowledging = false;
                 karabo::util::Timestamp timestamp = karabo::util::Timestamp(karabo::util::Epochstamp(0ull, 0ull), 0ull);
-            } m_globalAlarmCondition;
-            std::set<std::string> m_accumulatedGlobalAlarms;
+            };
+            // not unordered_map since we erase while iterating over it (in C++14 should be OK)
+            std::map<std::string, GlobalAlarmInfo> m_accumulatedGlobalAlarms; /// all accumulated ones (incl. actual)
 
             karabo::util::Epochstamp m_lastBrokerErrorStamp;
 
@@ -463,6 +466,7 @@ namespace karabo {
              */
             Device(const karabo::util::Hash& configuration)
                 : m_errorRegex(".*error.*", boost::regex::icase)
+                , m_globalAlarmCondition(karabo::util::AlarmCondition::NONE)
                 , m_lastBrokerErrorStamp(0ull, 0ull) {
 
                 m_connection = karabo::util::Configurator<karabo::net::JmsConnection>::createNode("_connection_", configuration);
@@ -1290,14 +1294,14 @@ namespace karabo {
 
                 const Timestamp timestamp(getActualTimestamp());
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                // copy on purpose for previousGlobal
-                const std::string previousGlobal = m_globalAlarmCondition.condition.asString();
-                m_globalAlarmCondition.condition = condition;
-                m_globalAlarmCondition.description = description;
-                m_globalAlarmCondition.needsAcknowledging = needsAcknowledging;
-                m_globalAlarmCondition.timestamp = timestamp;
-                if (previousGlobal != "none") {
-                    m_accumulatedGlobalAlarms.insert(previousGlobal);
+                m_globalAlarmCondition = condition;
+                if (condition != AlarmCondition::NONE) {
+                    // May overwrite a previously existing alarm
+                    GlobalAlarmInfo& info = m_accumulatedGlobalAlarms[condition.asString()];
+                    info.condition = condition;
+                    info.description = description;
+                    info.needsAcknowledging = needsAcknowledging;
+                    info.timestamp = timestamp;
                 }
 
                 std::pair<bool, const AlarmCondition> result = this->evaluateAndUpdateAlarmCondition(true, Hash(), true);
@@ -1312,23 +1316,33 @@ namespace karabo {
                 Hash emitHash;
                 Hash& toClear = emitHash.bindReference<Hash>("toClear");
                 Hash& toAdd = emitHash.bindReference<Hash>("toAdd");
-                const std::string& conditionString = condition.asString();
-                if (condition.asString() == AlarmCondition::NONE.asString() && previousGlobal != AlarmCondition::NONE.asString()) {
-                    const std::vector<std::string> alarmsToClear(m_accumulatedGlobalAlarms.begin(), m_accumulatedGlobalAlarms.end());
-                    m_accumulatedGlobalAlarms.clear();
-                    toClear.set("global", alarmsToClear);
-                } else {
-                    Hash::Node& propertyNode = toAdd.set("global", Hash());
-                    Hash::Node& entryNode = propertyNode.getValue<Hash>().set(conditionString, Hash());
-                    Hash& entry = entryNode.getValue<Hash>();
 
-                    entry.set("type", conditionString);
+                // Clear all previous alarms that are more critical than the new one
+                std::vector<std::string> alarmsToClear;
+                for (auto it = m_accumulatedGlobalAlarms.begin(); it != m_accumulatedGlobalAlarms.end();) {
+                    const AlarmCondition& cond = it->second.condition;
+
+                    if (cond.isMoreCriticalThan(m_globalAlarmCondition)) {
+                        alarmsToClear.push_back(cond.asString());
+                        it = m_accumulatedGlobalAlarms.erase(it);
+                    } else {
+                        ++it;
+                    }
+                }
+                if (!alarmsToClear.empty()) {
+                    toClear.set("global", alarmsToClear);
+                }
+                // Add the new alarm if not NONE
+                if (condition != AlarmCondition::NONE) {
+                    Hash::Node& entryNode = toAdd.set("global." + condition.asString(), Hash());
+                    Hash& entry = entryNode.getValue<Hash>();
+                    entry.set("type", condition.asString());
                     entry.set("description", description);
                     entry.set("needsAcknowledging", needsAcknowledging);
                     timestamp.toHashAttributes(entryNode.getAttributes()); // attach current time stamp
                 }
                 lock.unlock(); // release lock before sending data
-                if (!emitHash.get<Hash>("toClear").empty() || !emitHash.get<Hash>("toAdd").empty()) {
+                if (!toClear.empty() || !toAdd.empty()) {
                     emit("signalAlarmUpdate", getInstanceId(), emitHash);
                 }
             }
@@ -1947,7 +1961,7 @@ namespace karabo {
                     const Hash& h = m_validatorIntern.getParametersInWarnOrAlarm();
                     std::vector<AlarmCondition> v;
 
-                    v.push_back(m_globalAlarmCondition.condition);
+                    v.push_back(m_globalAlarmCondition);
 
                     for (Hash::const_iterator it = h.begin(); it != h.end(); ++it) {
                         using std::string;
@@ -1965,7 +1979,7 @@ namespace karabo {
                     }
                     return std::pair<bool, const AlarmCondition > (true, AlarmCondition::returnMostSignificant(v));
                 } else if (forceUpdate) {
-                    return std::pair<bool, const AlarmCondition > (true, m_globalAlarmCondition.condition);
+                    return std::pair<bool, const AlarmCondition > (true, m_globalAlarmCondition);
                 }
                 return std::pair<bool, const AlarmCondition > (false, AlarmCondition::NONE);
             }
@@ -2083,25 +2097,32 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     evaluateAlarmUpdates(existingAlarmsRF, alarmsToUpdate, true);
 
-                    const AlarmCondition& globalAlarmCondition = m_globalAlarmCondition.condition;
-                    // Add current global alarm condition
-                    if (globalAlarmCondition != AlarmCondition::NONE) {
+                    // Add all global alarm condition since last setting to NONE
+                    for (auto it = m_accumulatedGlobalAlarms.begin(); it != m_accumulatedGlobalAlarms.end(); ++it) {
+                        const GlobalAlarmInfo& globalCondInfo = it->second;
+
+                        const AlarmCondition& globalAlarmCondition = globalCondInfo.condition; // or it->first;
                         Hash::Node& globalNode = alarmsToUpdate.set("toAdd.global." + globalAlarmCondition.asString(), Hash());
                         Hash& globalEntry = globalNode.getValue<Hash>();
                         globalEntry.set("type", globalAlarmCondition.asString());
-                        globalEntry.set("description", m_globalAlarmCondition.description);
-                        globalEntry.set("needsAcknowledging", m_globalAlarmCondition.needsAcknowledging);
-                        const Timestamp& stamp = m_globalAlarmCondition.timestamp;
+                        globalEntry.set("description", globalCondInfo.description);
+                        globalEntry.set("needsAcknowledging", globalCondInfo.needsAcknowledging);
+                        const Timestamp& stamp = globalCondInfo.timestamp;
                         stamp.toHashAttributes(globalNode.getAttributes());
                     }
-                    // Check which global alarms to clear
-                    globalAlarmsToCheck.erase(globalAlarmCondition.asString()); // do not clear the current one
-                    if (!globalAlarmsToCheck.empty()) {
-                        alarmsToUpdate.set("toClear.global", std::vector<std::string>(globalAlarmsToCheck.begin(), globalAlarmsToCheck.end()));
+
+                    // Check which global alarms to clear - not the accumulated ones.
+                    std::vector<std::string> globalAlarmsToClear;
+                    for (const std::string& alarm : globalAlarmsToCheck) {
+                        if (m_accumulatedGlobalAlarms.find(alarm) == m_accumulatedGlobalAlarms.end()) {
+                            globalAlarmsToClear.push_back(alarm);
+                        }
+                    }
+                    if (!globalAlarmsToClear.empty()) {
+                        alarmsToUpdate.set("toClear.global", globalAlarmsToClear);
                     }
                 }
                 reply(getInstanceId(), alarmsToUpdate);
-
             }
 
             /**
