@@ -3,7 +3,8 @@
 # Created on July 23, 2013
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from os import environ, path
+from os import environ, getpid, path
+import socket
 from sys import platform
 
 from karabogui.enums import AccessRole
@@ -50,6 +51,8 @@ else:
     HIDDEN_KARABO_FOLDER = path.join(environ['HOME'], '.karabo')
 # Project folder
 KARABO_PROJECT_FOLDER = path.join(HIDDEN_KARABO_FOLDER, 'projects')
+KARABO_CLIENT_ID = f"{socket.gethostname()}-{getpid()}"
+
 
 MAX_UINT8 = (2 ** 8) - 1
 MIN_UINT8 = (2 ** 8)
