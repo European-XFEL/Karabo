@@ -1,10 +1,9 @@
 from functools import partial
-import socket
 from struct import calcsize, pack, unpack
 
 from PyQt5.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt5.QtCore import (
-    pyqtSignal, pyqtSlot, QByteArray, QCoreApplication, QObject)
+    pyqtSignal, pyqtSlot, QByteArray, QObject)
 from PyQt5.QtWidgets import QDialog, QMessageBox, qApp
 
 from karabo.native import (
@@ -24,60 +23,63 @@ ACCESS_LEVEL_MAP = {
     "admin": 4,
     "god": 5}
 
+MAX_GUI_SERVER_HISTORY = 5
+
 
 class Network(QObject):
-    # our qt signals
+    """The `Network` class is the singleton holding the tcp socket for
+    the gui server connection.
+    """
     signalServerConnectionChanged = pyqtSignal(bool)
     signalReceivedData = pyqtSignal(object)
     signalNetworkPerformance = pyqtSignal(float, bool)
 
     def __init__(self, parent=None):
         super(Network, self).__init__(parent=parent)
-        self.sessionToken = ""
 
-        self.tcpSocket = None
-        self.requestQueue = []
+        self._tcp_socket = None
+        self._data_reader = None
+        self._request_queue = []
 
-        self._waitingMessages = {}
+        self._waiting_messages = {}
         self._show_proc_delay = False
 
+        self.username = "operator"
+        self.gui_servers = []
         self.hostname = "localhost"
         self.port = "44444"
         self.password = "karabo"
-        self.provider = "LOCAL"
-        self.max_servers = 5
-        self.load_login_settings()
+
+        # Check default settings stored in QSettings!
+        self._load_login_settings()
 
         # Listen for the quit notification
         qApp.aboutToQuit.connect(self.onQuitApplication)
 
     def connectToServer(self, parent=None):
-        """Connection to server via LoginDialog
-        """
-        isConnected = False
+        """Connection to server via LoginDialog"""
+        connected = False
 
         dialog = LoginDialog(username=self.username,
                              password=self.password,
-                             provider=self.provider,
                              hostname=self.hostname,
                              port=self.port,
-                             guiservers=self.guiservers,
+                             gui_servers=self.gui_servers,
                              parent=parent)
 
         if dialog.exec_() == QDialog.Accepted:
             self.username = dialog.username
             self.password = dialog.password
-            self.provider = dialog.provider
             self.hostname = dialog.hostname
             self.port = dialog.port
-            self.guiservers = dialog.guiservers
+            self.gui_servers = dialog.gui_servers
             self.startServerConnection()
-            isConnected = True
+            connected = True
 
         # Update MainWindow toolbar
-        self.signalServerConnectionChanged.emit(isConnected)
+        self.signalServerConnectionChanged.emit(connected)
         # Allow external runner to see the status of the connection!
-        return isConnected
+        return connected
 
     def connectToServerDirectly(self, username, hostname, port):
         """Connection to server directly via username, host and port
@@ -94,63 +96,47 @@ class Network(QObject):
         # Allow external runner to see the status of the connection!
         return True
 
-    def load_login_settings(self):
-        # Maximum number of GUI servers to be stored, 5 by default
-
-        # Load from configuration singleton
-        config = get_config()
-        self.username = config['username']
-        self.guiservers = config['gui_servers']
-
-        if self.guiservers:
-            self.hostname, self.port = self.guiservers[0].split(':')
-
-        self.port = int(self.port)
-
     def disconnectFromServer(self):
-        """Disconnect from server
-        """
-        # All panels need to be reseted and all projects closed
+        """Disconnect from server"""
+        # All panels need to be reset and all projects closed
         self.signalServerConnectionChanged.emit(False)
         self.endServerConnection()
 
     def startServerConnection(self):
-        """Create the tcp socket and connect to hostname and port
-        """
-        self.tcpSocket = QTcpSocket(self)
-        self.tcpSocket.connected.connect(self.onConnected)
-        self.tcpSocket.readyRead.connect(self.onReadServerData)
-        self.tcpSocket.disconnected.connect(self.onDisconnected)
-        self.tcpSocket.error.connect(self.onSocketError)
-        self.tcpSocket.connectToHost(self.hostname, self.port)
+        """Create the tcp socket and connect to hostname and port"""
+        self._tcp_socket = QTcpSocket(self)
+        self._tcp_socket.connected.connect(self.onConnected)
+        self._tcp_socket.readyRead.connect(self.onReadServerData)
+        self._tcp_socket.disconnected.connect(self.onDisconnected)
+        self._tcp_socket.error.connect(self.onSocketError)
+        self._tcp_socket.connectToHost(self.hostname, self.port)
 
     def endServerConnection(self):
-        """End connection to server and database
-        """
-        self.requestQueue = []
+        """End connection to server and database"""
+        self._request_queue = []
 
-        if self.tcpSocket is None:
+        if self._tcp_socket is None:
             return
 
-        self.tcpSocket.disconnectFromHost()
-        if (self.tcpSocket.state() == QAbstractSocket.UnconnectedState or
-                self.tcpSocket.waitForDisconnected(5000)):
+        self._tcp_socket.disconnectFromHost()
+        if (self._tcp_socket.state() == QAbstractSocket.UnconnectedState or
+                self._tcp_socket.waitForDisconnected(5000)):
             return
 
-        print("Disconnect failed:", self.tcpSocket.errorString())
+        print("Disconnect failed:", self._tcp_socket.errorString())
 
     def togglePerformanceMonitor(self):
+        """External method to toggle the performance monitor"""
         self._show_proc_delay = not self._show_proc_delay
 
     @pyqtSlot()
     def onReadServerData(self):
-        """Run the network reader generator until it yields.
-        """
-        # self.dataReader is a generator object from self._networkReadGenerator
+        """Run the network reader generator until it yields"""
+        # self._data_reader is a generator object from self._network_generator.
         # Stepping it with next() causes network data to be read.
-        next(self.dataReader)
+        next(self._data_reader)
 
-    def _networkReadGenerator(self):
+    def _network_generator(self):
         """A generator which continuously reads GUI server messages
 
         The generator yields when there isn't enough buffered data to be read.
@@ -160,33 +146,29 @@ class Network(QObject):
 
         while True:
             # Read the size of the Hash
-            while self.tcpSocket.bytesAvailable() < bytesNeededSize:
+            while self._tcp_socket.bytesAvailable() < bytesNeededSize:
                 yield
-            rawBytesNeeded = self.tcpSocket.read(bytesNeededSize)
+            rawBytesNeeded = self._tcp_socket.read(bytesNeededSize)
             bytesNeeded = unpack(sizeFormat, rawBytesNeeded)[0]
 
             # Read the Hash
-            while self.tcpSocket.bytesAvailable() < bytesNeeded:
+            while self._tcp_socket.bytesAvailable() < bytesNeeded:
                 yield
-            dataBytes = self.tcpSocket.read(bytesNeeded)
+            dataBytes = self._tcp_socket.read(bytesNeeded)
 
             # Do something with the Hash at some point in the future.
-            self._waitingMessages[id(dataBytes)] = Timestamp().toTimestamp()
+            self._waiting_messages[id(dataBytes)] = Timestamp().toTimestamp()
             background.executeLater(partial(self.parseInput, dataBytes),
                                     background.Priority.NETWORK)
 
     def parseInput(self, data):
         """parse the data and emit the signalReceivedData"""
-        self._performanceMonitor(self._waitingMessages.pop(id(data)))
+        self._performance_monitor(self._waiting_messages.pop(id(data)))
         self.signalReceivedData.emit(decodeBinary(data))
-
-    def _performanceMonitor(self, recv_timestamp):
-        diff = Timestamp().toTimestamp() - recv_timestamp
-        self.signalNetworkPerformance.emit(diff, self._show_proc_delay)
 
     @pyqtSlot(QAbstractSocket.SocketError)
     def onSocketError(self, socketError):
-        print("onSocketError", self.tcpSocket.errorString(), socketError)
+        print("onSocketError", self._tcp_socket.errorString(), socketError)
 
         self.disconnectFromServer()
 
@@ -238,7 +220,7 @@ class Network(QObject):
         else:
             msg = ('An unknown socket operation error occured. '
                    'Type: {} - Description: {}').format(
-                socketError, self.tcpSocket.errorString())
+                socketError, self._tcp_socket.errorString())
             reply = QMessageBox.question(
                 None, 'Network error', msg,
                 QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
@@ -249,6 +231,8 @@ class Network(QObject):
 
     def onServerConnection(self, connect, parent=None):
         """Connect or disconnect depending on the input parameter
+
+        This function is called from the main window directly!
 
         :param connect: Either True or False
         :type connect: bool
@@ -285,23 +269,23 @@ class Network(QObject):
         # cache the server address
         server = '{}:{}'.format(self.hostname, self.port)
 
-        self.guiservers = _least_recently_used(server, self.guiservers,
-                                               int(self.max_servers))
+        self.gui_servers = _least_recently_used(server, self.gui_servers,
+                                                int(MAX_GUI_SERVER_HISTORY))
 
         # Save to singleton!
         get_config()['username'] = self.username
-        get_config()['gui_servers'] = self.guiservers
+        get_config()['gui_servers'] = self.gui_servers
 
         # If some requests got piled up, because of no server connection,
         # now these get handled
-        for r in self.requestQueue:
-            self._tcpWriteHash(r)
-        self.requestQueue = []
-        self.dataReader = self._networkReadGenerator()
+        for r in self._request_queue:
+            self._write_hash(r)
+        self._request_queue = []
+        self._data_reader = self._network_generator()
 
     @pyqtSlot()
     def onDisconnected(self):
-        pass
+        """The tcp socket was disconnected"""
 
     # ---------------------------------------------------------------------
     # Protocol methods
@@ -309,17 +293,17 @@ class Network(QObject):
     def onKillDevice(self, device_id):
         h = Hash("type", "killDevice")
         h["deviceId"] = device_id
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onKillServer(self, server_id):
         h = Hash("type", "killServer")
         h["serverId"] = server_id
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onGetDeviceConfiguration(self, device_id):
         h = Hash("type", "getDeviceConfiguration")
         h["deviceId"] = device_id
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onReconfigure(self, device_id, configuration):
         """Set values in a device
@@ -329,7 +313,7 @@ class Network(QObject):
         h["configuration"] = configuration
         h["reply"] = True
         h["timeout"] = REQUEST_REPLY_TIMEOUT
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onInitDevice(self, server_id, class_id, device_id, config,
                      attrUpdates=None):
@@ -340,7 +324,7 @@ class Network(QObject):
         h["configuration"] = config
         if attrUpdates is not None:
             h["schemaUpdates"] = attrUpdates
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onExecute(self, device_id, slot_name, ignore_timeouts):
         h = Hash("type", "execute")
@@ -349,7 +333,7 @@ class Network(QObject):
         h["reply"] = True
         if not ignore_timeouts:
             h["timeout"] = REQUEST_REPLY_TIMEOUT
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onExecuteGeneric(self, token, device_id, slot_name, params):
         h = Hash("type", "requestFromSlot")
@@ -357,28 +341,28 @@ class Network(QObject):
         h["slot"] = slot_name
         h["args"] = params
         h["token"] = token
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onStartMonitoringDevice(self, device_id):
         h = Hash("type", "startMonitoringDevice")
         h["deviceId"] = device_id
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onStopMonitoringDevice(self, device_id):
         h = Hash("type", "stopMonitoringDevice")
         h["deviceId"] = device_id
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onGetClassSchema(self, server_id, class_id):
         h = Hash("type", "getClassSchema")
         h["serverId"] = server_id
         h["classId"] = class_id
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onGetDeviceSchema(self, device_id):
         h = Hash("type", "getDeviceSchema")
         h["deviceId"] = device_id
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onGetPropertyHistory(self, device_id, path, t0, t1, maxNumData):
         h = Hash("type", "getPropertyHistory")
@@ -387,13 +371,13 @@ class Network(QObject):
         h["t0"] = t0
         h["t1"] = t1
         h["maxNumData"] = maxNumData
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onGetConfigurationFromPast(self, device_id, time):
         h = Hash("type", "getConfigurationFromPast")
         h["deviceId"] = device_id
         h["time"] = time
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     # ---------------------------------------------------------------------
     # Current Project Interface
@@ -402,24 +386,24 @@ class Network(QObject):
         h = Hash("type", "projectBeginUserSession")
         h["projectManager"] = project_manager
         h["token"] = get_config()["db_token"]
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onProjectEndSession(self, project_manager):
         h = Hash("type", "projectEndUserSession")
         h["projectManager"] = project_manager
         h["token"] = get_config()["db_token"]
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onListProjectDomains(self, project_manager):
         h = Hash("type", "projectListDomains")
         h["projectManager"] = project_manager
         h["token"] = get_config()["db_token"]
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onListProjectManagers(self):
         h = Hash("type", "projectListProjectManagers")
         h["token"] = get_config()["db_token"]
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onProjectListItems(self, project_manager, domain, item_type):
         h = Hash("type", "projectListItems")
@@ -427,28 +411,28 @@ class Network(QObject):
         h["token"] = get_config()["db_token"]
         h["domain"] = domain
         h["item_types"] = [item_type]
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onProjectLoadItems(self, project_manager, items):
         h = Hash("type", "projectLoadItems")
         h["projectManager"] = project_manager
         h["token"] = get_config()["db_token"]
         h["items"] = items
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onProjectSaveItems(self, project_manager, items):
         h = Hash("type", "projectSaveItems")
         h["projectManager"] = project_manager
         h["token"] = get_config()["db_token"]
         h["items"] = items
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onProjectUpdateAttribute(self, project_manager, items):
         h = Hash("type", "projectUpdateAttribute")
         h["projectManager"] = project_manager
         h["token"] = get_config()["db_token"]
         h["items"] = items
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     # ---------------------------------------------------------------------
 
@@ -456,56 +440,28 @@ class Network(QObject):
         h = Hash("type", "acknowledgeAlarm")
         h["alarmInstanceId"] = instanceId
         h["acknowledgedRows"] = Hash(rowId, True)
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onRequestAlarms(self, instanceId):
         h = Hash("type", "requestAlarms")
         h["alarmInstanceId"] = instanceId
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onSubscribeToOutput(self, device_id, path, subscribe):
         h = Hash("type", "subscribeNetwork")
         h["channelName"] = device_id + ":" + path
         h["subscribe"] = subscribe
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onRequestNetwork(self, name):
         h = Hash("type", "requestNetwork", "channelName", name)
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     def onError(self, error):
         h = Hash("type", "error", "traceback", error)
-        self._tcpWriteHash(h)
+        self._write_hash(h)
 
     # --------------------------------------------------------------------------
-    # private functions
-
-    def _tcpWriteHash(self, h):
-        # There might be a connect to server in progress, but without success
-        if (self.tcpSocket is None or
-                self.tcpSocket.state() == QAbstractSocket.HostLookupState or
-                self.tcpSocket.state() == QAbstractSocket.ConnectingState):
-            # Save request for connection established
-            self.requestQueue.append(h)
-            return
-
-        stream = QByteArray()
-        dataBytes = encodeBinary(h)
-        stream.push_back(QByteArray(pack('I', len(dataBytes))))
-        stream.push_back(dataBytes)
-        self.tcpSocket.write(stream)
-
-    def _sendLoginInformation(self, username, password, provider,
-                              sessionToken):
-        loginInfo = Hash("type", "login")
-        loginInfo["username"] = username
-        loginInfo["password"] = password
-        loginInfo["provider"] = provider
-        loginInfo["sessionToken"] = sessionToken
-        loginInfo["host"] = socket.gethostname()
-        loginInfo["pid"] = QCoreApplication.applicationPid()
-        loginInfo["version"] = krb_globals.GUI_VERSION
-        self._tcpWriteHash(loginInfo)
 
     def set_server_information(self, read_only=False, **kwargs):
         """We get the reply from the GUI Server and set the information"""
@@ -520,5 +476,46 @@ class Network(QObject):
         # Inform the GUI to change correspondingly the allowed
         # level-downgrade
         broadcast_event(KaraboEvent.LoginUserChanged, {})
-        self._sendLoginInformation(self.username, self.password,
-                                   self.provider, self.sessionToken)
+        self._send_login_information()
+
+    # --------------------------------------------------------------------------
+    # private functions
+
+    def _load_login_settings(self):
+        """Load the login settings from the configuration singleton
+
+        This method sets the default `host`, `port` and `gui_servers`
+        """
+        config = get_config()
+        self.username = config['username']
+        self.gui_servers = config['gui_servers']
+
+        if self.gui_servers:
+            self.hostname, self.port = self.gui_servers[0].split(':')
+
+        self.port = int(self.port)
+
+    def _write_hash(self, h):
+        # There might be a connect to server in progress, but without success
+        if (self._tcp_socket is None or
+                self._tcp_socket.state() == QAbstractSocket.HostLookupState or
+                self._tcp_socket.state() == QAbstractSocket.ConnectingState):
+            # Save request for connection established
+            self._request_queue.append(h)
+            return
+
+        stream = QByteArray()
+        dataBytes = encodeBinary(h)
+        stream.push_back(QByteArray(pack('I', len(dataBytes))))
+        stream.push_back(dataBytes)
+        self._tcp_socket.write(stream)
+
+    def _performance_monitor(self, received_timestamp):
+        diff = Timestamp().toTimestamp() - received_timestamp
+        self.signalNetworkPerformance.emit(diff, self._show_proc_delay)
+
+    def _send_login_information(self):
+        login_info = Hash("type", "login")
+        login_info["username"] = krb_globals.KARABO_CLIENT_ID
+        login_info["version"] = krb_globals.GUI_VERSION
+        self._write_hash(login_info)
