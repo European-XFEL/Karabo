@@ -9,6 +9,4 @@ class TestNetwork(GuiTestCase):
         self.assertEqual(network.hostname, 'localhost')
         self.assertEqual(network.username, 'operator')
         self.assertEqual(network.password, 'karabo')
-        self.assertEqual(network.provider, 'LOCAL')
         self.assertEqual(network.port, 44444)
-        self.assertEqual(network.max_servers, 5)
