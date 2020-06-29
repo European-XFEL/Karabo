@@ -523,10 +523,6 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         attrs = hGlobalAlarmAdd.getAttributes(tmpKey)
         stamp.toHashAttributes(attrs)
 
-        # FIXME: mdl starts failing here: 'warn' is in 'toClear.global'
-        #        but should not be cleared until global alarm goes to 'none'
-        if api == "mdl":
-            return
         self.assertTrue(fullyEqual(signal_payload, hGlobalAlarmAdd, False),
                         str(hGlobalAlarmAdd) + '\nvs\n' + str(signal_payload))
 
@@ -588,16 +584,22 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
                                    False),
                         str(hGlobalWarnAddTwoClear) + '\nvs\n'
                         + str(signal_payload))
-        # If we request current alarms, only warn is there
-        # (and since we ask for 'interlock' we'll see it is gone)!
-        hashArg = Hash("global.interlock", Hash())
+        # If we request current alarms, only warn is there, interlock and alarm
+        # are gone).  (We test here that at least for global alarms the slot
+        # understands two alarm levels as input for same key.)
+        hashArg = Hash("global.interlock", Hash(), "global.alarm", Hash())
         (an_id, res) = caller.request(dev_id,
                                       "slotReSubmitAlarms", hashArg
                                       ).waitForReply(max_timeout_ms)
         self.assertEqual(an_id, dev_id)
         hGlobalWarnAddInterlClear = copy(hGlobalWarnAdd)
-        hGlobalWarnAddInterlClear["toClear.global"] = ["interlock"]
-        self.assertTrue(fullyEqual(res, hGlobalWarnAddInterlClear, False),
+        hGlobalWarnAddInterlClear["toClear.global"] = ["interlock", "alarm"]
+        isOK = fullyEqual(res, hGlobalWarnAddInterlClear, False)
+        if not isOK:  # order is irrelevant - try the other one
+            hGlobalWarnAddInterlClear["toClear.global"] = ["alarm",
+                                                           "interlock"]
+            isOK = fullyEqual(res, hGlobalWarnAddInterlClear, False)
+        self.assertTrue(isOK,
                         str(hGlobalWarnAddInterlClear) + '\nvs\n' + str(res))
 
         # 8e) increase to interlock again (i.e. skip alarm), then go to alarm

@@ -47,7 +47,7 @@ class AlarmMixin(Configurable):
         self._alarmConditions = {}
         self._changed_alarms = set()
         self._old_alarms = {}
-        self.accumulatedGlobalAlarms = set()
+        self.accumulatedGlobalAlarms = dict()
         super(AlarmMixin, self).__init__(configuration)
 
     def setChildValue(self, key, value, desc):
@@ -78,7 +78,9 @@ class AlarmMixin(Configurable):
             self._changed_alarms.add(key_sep)
             self._old_alarms[key_sep] = old_alarm
             if key_sep == 'global' and new_alarm != AlarmCondition.NONE:
-                self.accumulatedGlobalAlarms.add(new_alarm.value)
+                # May override previous setting
+                self.accumulatedGlobalAlarms[new_alarm.value] = value.timestamp
+
         # Outside, of course use unmangled key
         super(AlarmMixin, self).setChildValue(key, value, desc)
 
@@ -97,15 +99,8 @@ class AlarmMixin(Configurable):
                 prop, (AlarmCondition.NONE, None, None))
 
             old = self._old_alarms.get(prop, AlarmCondition.NONE)
-            # Note: 'old is cond' may be when called from slotReSubmitAlarms
-            if old is not AlarmCondition.NONE and old is not cond:
-                if (cond is AlarmCondition.NONE and prop == 'global'):
-                    toClear.setdefault(prop, []).extend(
-                        self.accumulatedGlobalAlarms)
-                    self.accumulatedGlobalAlarms.clear()
-                else:
-                    toClear.setdefault(prop, []).append(old.value)
 
+            # First check what is to add:
             if cond is not AlarmCondition.NONE:
                 toAdd[prop] = Hash(cond.value, Hash(
                     "type", cond.value,
@@ -115,6 +110,21 @@ class AlarmMixin(Configurable):
                     bool(getattr(desc, "alarmNeedsAck_{}".format(cond.value),
                                  True))))
                 toAdd[prop][cond.value, ...] = timestamp.toDict()
+
+            # Now see what is to clear:
+            # Note: 'old is cond' may be when called from slotReSubmitAlarms
+            if old is not AlarmCondition.NONE and old is not cond:
+                if prop == 'global':
+                    # global alarms accumulate:
+                    # clear only those more critical than the new one
+                    for accum_str in list(self.accumulatedGlobalAlarms.keys()):
+                        accum = AlarmCondition(accum_str)
+                        if accum.criticalityLevel() > cond.criticalityLevel():
+                            toClear.setdefault(prop, []).append(accum_str)
+                            del self.accumulatedGlobalAlarms[accum_str]
+                else:
+                    toClear.setdefault(prop, []).append(old.value)
+
         self._old_alarms = {}
         self._changed_alarms = set()
 
@@ -123,13 +133,30 @@ class AlarmMixin(Configurable):
 
     @slot
     def slotReSubmitAlarms(self, existing):
+        ret = Hash("toAdd", Hash(), "toClear", Hash())
+
+        # Treat all but global alarm condition
         self._changed_alarms = set(self._alarmConditions.keys())
         self._changed_alarms.update(existing.keys())
+        self._changed_alarms.discard("global")
         self._old_alarms = {k: AlarmCondition(next(iter(v)))
-                            for k, v in existing.items()}
+                            for k, v in existing.items()
+                            if k != "global"}
+        property_changes = self.__gather_alarms()
+        if property_changes is not None:
+            ret.merge(property_changes)
 
-        changes = self.__gather_alarms()
-        if changes is not None:
-            return self.deviceId, changes
-        else:
-            return self.deviceId, Hash("toAdd", Hash(), "toClear", Hash())
+        # Now add what is needed for global alarm condition
+        for alarm_str, timestamp in self.accumulatedGlobalAlarms.items():
+            # global alarms: no description, but always require acknowledgment
+            ret["toAdd.global." + alarm_str] = Hash("type", alarm_str,
+                                                    "description", "",
+                                                    "needsAcknowledging", True)
+            ret["toAdd.global." + alarm_str, ...] = timestamp.toDict()
+
+        globalAlarmsToClear = [a for a in existing.get("global", Hash()).keys()
+                               if a not in self.accumulatedGlobalAlarms]
+        if globalAlarmsToClear:
+            ret["toClear.global"] = globalAlarmsToClear
+
+        return self.deviceId, ret
