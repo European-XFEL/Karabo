@@ -90,42 +90,41 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         macro_action = QAction(icons.download, 'Open device macro', menu)
         has_macro = _test_mask(capabilities, Capabilities.PROVIDES_MACROS)
-        macro_action.setEnabled(has_macro and project_allowed)
         macro_action.triggered.connect(partial(self._load_macro_from_device,
                                                project_controller,
                                                parent=parent))
+        macro_action.setEnabled(has_macro and project_allowed)
 
         scene_action = QAction(icons.download, 'Open device scene', menu)
         has_scene = _test_mask(capabilities, Capabilities.PROVIDES_SCENES)
-        scene_action.setEnabled(has_scene and project_allowed)
         scene_action.triggered.connect(partial(self._load_scene_from_device,
                                                project_controller,
                                                parent=parent))
+        scene_action.setEnabled(has_scene and project_allowed)
 
         conf_action = QAction('Get Configuration', menu)
         can_get_conf = (server_online and
                         proj_device_status not in NO_CONFIG_STATUSES)
-        conf_action.setEnabled(can_get_conf)
         conf_action.triggered.connect(partial(
             self._get_configuration_from_past, parent=parent))
+        conf_action.setEnabled(can_get_conf)
+
         show_action = QAction(icons.deviceInstance, 'Select in topology', menu)
-        show_action.setVisible(proj_device_online)
         show_action.triggered.connect(self._show_device)
+        show_action.setVisible(proj_device_online)
 
         instantiate_action = QAction(icons.run, 'Instantiate', menu)
         can_instantiate = (server_online and not proj_device_online and
                            proj_device_status not in NO_CONFIG_STATUSES)
-        instantiate_action.setEnabled(can_instantiate)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
                                                      project_controller))
-        instantiate_action.setEnabled(service_allowed)
+        instantiate_action.setEnabled(can_instantiate and service_allowed)
 
         shutdown_action = QAction(icons.kill, 'Shutdown', menu)
-        shutdown_action.setEnabled(proj_device_online)
         shutdown_action.triggered.connect(partial(self.shutdown_device,
                                                   show_confirm=True,
                                                   parent=parent))
-        shutdown_action.setEnabled(service_allowed)
+        shutdown_action.setEnabled(proj_device_online and service_allowed)
 
         menu.addSeparator()
         about_action = QAction(icons.about, 'About', menu)
