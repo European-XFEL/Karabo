@@ -64,7 +64,7 @@ class DeviceConfigurationController(BaseProjectController):
     """
     # Redefine model with the correct type
     model = Instance(DeviceConfigurationModel)
-    initial_check_state = Int(Qt.Unchecked)
+    initial_check_state = Int(Qt.Checked)
 
     def context_menu(self, project_controller, parent=None):
         config = self.model
