@@ -180,3 +180,31 @@ class TestCurveItem(_BasePlotTest):
         self._set_data(x=X_ARRAY, y=LOG_ARRAY)
         self._assert_data(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
         self._assert_range(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
+
+
+class TestBarItem(_BasePlotTest):
+
+    def setUp(self):
+        super(TestBarItem, self).setUp()
+        self._plot = self.widget.add_bar_item()
+        self._plot.set_width(0.1)
+
+    def test_basics(self):
+        self._set_data(x=X_ARRAY, y=LOG_ARRAY)
+        self._assert_bar(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
+        self._assert_data(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
+        self._assert_range(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
+
+    def test_log_scale(self):
+        self._set_data(x=X_ARRAY, y=LOG_ARRAY)
+        self._set_log_scale(y=True)
+        self._assert_bar(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
+        self._assert_data(x_expected=X_ARRAY, y_expected=LOG_ARRAY, log_y=True)
+        # Check if the range doesn't change with log y scale
+        self._assert_range(x_expected=X_ARRAY, y_expected=LOG_ARRAY,
+                           log_y=True)
+
+    def _assert_bar(self, x_expected, y_expected):
+        # Check bar attributes
+        assert_array_equal(self._plot.opts.get('x'), x_expected)
+        assert_array_equal(self._plot.opts.get('height'), y_expected)
