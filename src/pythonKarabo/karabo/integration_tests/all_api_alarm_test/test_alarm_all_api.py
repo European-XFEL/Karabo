@@ -538,10 +538,6 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         hGlobalBothAdd = copy(hGlobalWarnAdd)
         hGlobalBothAdd.merge(hGlobalAlarmAdd)
 
-        # FIXME: C++ fails here - only 'alarm' is in 'toAdd', but all global
-        #        so far should stay in until global alarm goes to 'none'!
-        if api == "cpp":
-            return
         self.assertTrue(fullyEqual(res, hGlobalBothAdd, False),
                         str(hGlobalBothAdd) + '\nvs\n' + str(res))
 
@@ -592,7 +588,8 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
                                    False),
                         str(hGlobalWarnAddTwoClear) + '\nvs\n'
                         + str(signal_payload))
-        # If we request current alarms, only warn is there (interlock gone)!
+        # If we request current alarms, only warn is there
+        # (and since we ask for 'interlock' we'll see it is gone)!
         hashArg = Hash("global.interlock", Hash())
         (an_id, res) = caller.request(dev_id,
                                       "slotReSubmitAlarms", hashArg
