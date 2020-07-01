@@ -1,9 +1,10 @@
-from asyncio import wait_for
+from asyncio import sleep, wait_for
 import os
 from contextlib import contextmanager
 from uuid import uuid4
 
-from karabo.middlelayer import call, Hash
+from karabo.middlelayer import (
+    call, connectDevice, coslot, Device, Hash, slot, String, updateDevice)
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 from karabo.project_db.project_database import ProjectDatabase
 from karabo.middlelayer_devices.project_manager import ProjectManager
@@ -12,6 +13,26 @@ from karabo.project_db.tests.util import create_hierarchy, stop_local_database
 
 
 UUIDS = [str(uuid4()) for i in range(5)]
+
+
+class ConsumerDevice(Device):
+    client = String(
+        defaultValue="")
+
+    projectManagerUpdate = String(
+        defaultValue="")
+
+    @slot
+    def connectProject(self, instance):
+        self._ss.connect(instance, "signalProjectUpdate", self.slotProject)
+        return True
+
+    @coslot
+    async def slotProject(self, info_hash, deviceId):
+        client = info_hash.get("client", "")
+        self.client = client
+        self.projectManagerUpdate = deviceId
+        await sleep(0)
 
 
 class TestProjectManager(DeviceTest):
@@ -96,7 +117,8 @@ class TestProjectManager(DeviceTest):
                                     "host": host,
                                     "port": port,
                                     "testMode": True})
-        with cls.deviceManager(cls.local, lead=cls.local):
+        cls.consume = ConsumerDevice({"_deviceId_": "consumeTest"})
+        with cls.deviceManager(cls.local, cls.consume, lead=cls.local):
             yield
 
     @async_tst
@@ -113,20 +135,30 @@ class TestProjectManager(DeviceTest):
             self.assertTrue(ret["success"])
 
         with self.subTest(msg="Test saving data"):
+            ret = await wait_for(call("consumeTest", "connectProject",
+                                      "projManTest"), timeout=5)
+            self.assertTrue(ret)
+            proxy = await connectDevice("consumeTest")
             uuid = str(uuid4())
             xml = '<test uuid="{0}">foobar</test>'.format(uuid)
             item = Hash()
             item["xml"] = xml
             item["uuid"] = uuid
             item["overwrite"] = False
+            # Save a project item!
+            item["item_type"] = "project"
             item["domain"] = "LOCAL"
             items = [item, ]
             ret = await wait_for(call("projManTest", "slotSaveItems",
-                                      'admin', items), timeout=5)
+                                      'admin', items, "client-587"), timeout=5)
             items = ret.get("items")
             item = items[0]
             self.assertEqual(item.get('entry.uuid'), uuid)
             self.assertTrue(item.get("success"))
+
+            await updateDevice(proxy)
+            self.assertEqual(proxy.projectManagerUpdate, "projManTest")
+            self.assertEqual(proxy.client, "client-587")
 
         with self.subTest(msg="Test list items"):
             ret = await wait_for(call("projManTest",
