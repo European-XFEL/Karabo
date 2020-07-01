@@ -23,6 +23,7 @@ from karabogui.util import request_daemon_action
 
 SERVER_COLUMN = 0
 STATUS_COLUMN = 1
+DURATION_COLUMN = 3
 HOST_COLUMN = 4
 START_COLUMN = 5
 STOP_COLUMN = 6
@@ -52,12 +53,17 @@ ENTRY_LABELS = [text.lower() for column, text
 serviceEntry = namedtuple('serviceEntry', ENTRY_LABELS)
 
 
-def get_brush(service_status):
+def get_status_brush(service_status):
     status = service_status.split(',')[0]
     if status == "up":
         return QBrush(QColor(120, 255, 0))
     elif status == "down":
         return QBrush(QColor(255, 0, 0))
+
+
+def get_duration_brush(service_duration):
+    time = int(service_duration)
+    return None if time > 1 else QBrush(QColor(255, 0, 0))
 
 
 class ButtonDelegate(QStyledItemDelegate):
@@ -204,8 +210,12 @@ class DaemonTableModel(QAbstractTableModel):
         if role in (Qt.DisplayRole, Qt.ToolTipRole):
             if index.column() < len(ENTRY_LABELS):
                 return str(entry[index.column()])
-        elif role == Qt.BackgroundRole and index.column() == STATUS_COLUMN:
-            return get_brush(entry.status)
+        elif role == Qt.BackgroundRole:
+            column = index.column()
+            if column == STATUS_COLUMN:
+                return get_status_brush(entry.status)
+            elif column == DURATION_COLUMN:
+                return get_duration_brush(entry.duration)
 
         return None
 
