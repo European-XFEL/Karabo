@@ -425,6 +425,7 @@ class Network(QObject):
         h["projectManager"] = project_manager
         h["token"] = get_config()["db_token"]
         h["items"] = items
+        h["client"] = krb_globals.KARABO_CLIENT_ID
         self._write_hash(h)
 
     def onProjectUpdateAttribute(self, project_manager, items):

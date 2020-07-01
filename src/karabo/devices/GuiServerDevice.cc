@@ -1963,8 +1963,10 @@ namespace karabo {
                 if (!checkProjectManagerId(channel, projectManager, "projectSaveItems", "Project manager does not exist: Project items cannot be saved.")) return;
                 const std::string& token = info.get<std::string>("token");
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
-                request(projectManager, "slotSaveItems", token, items)
+                const std::string& client = (info.has("client") ? info.get<std::string>("client") : std::string());
+                request(projectManager, "slotSaveItems", token, items, client)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectSaveItems", _1));
+
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectSaveItems(): " << e.userFriendlyMsg();
             }
