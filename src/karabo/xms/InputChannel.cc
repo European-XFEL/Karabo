@@ -726,6 +726,12 @@ namespace karabo {
                 // call handler
                 m_endOfStreamHandler(shared_from_this());
             }
+            // Keep things going even after receiving EOS (end-of-stream)...
+            // NOTE: This is experimental change!!!
+            // Should work because if the intention is to close pipeline the disconnect() should be called from
+            // the "m_endOfStreamHandler" handler called just before...
+            // This change is required for the MDL API only to continue sending data.
+            notifyOutputChannelsForPossibleRead();
         }
 
 
