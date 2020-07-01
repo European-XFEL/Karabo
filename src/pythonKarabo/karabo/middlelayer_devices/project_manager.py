@@ -180,29 +180,8 @@ class ProjectManager(Device):
         if token not in self.user_db_sessions:
             raise RuntimeError("You need to init a database session first")
 
-    @slot
-    def slotSaveItems(self, token, items):
-        """
-        Save items in project database
-        :param token: database user token
-        :param items: items to be save. Should be a list(Hash) object were each
-                      entry is of the form:
-
-                      - xml: xml of item
-                      - uuid: uuid of item
-                      - overwrite: behavior in case of conflict
-                      - domain: to write to
-
-        :raises: `ProjectDBError` in case of database (connection) problems
-                 `TypeError` in case an no type information or an unknown type
-                 is found in the root element.
-                 `RuntimeError` if no database if connected.
-        """
-
-        self.logger.debug("Saving items: {}".format([i.get("uuid") for i in
-                                                     items]))
-        self._checkDbInitialized(token)
-
+    def _save_items(self, token, items):
+        """Internally used method to store items in the project database"""
         savedItems = []
         projectUuids = []
         with self.user_db_sessions[token] as db_session:
@@ -231,11 +210,38 @@ class ProjectManager(Device):
                 item.set("entry", meta)
                 savedItems.append(item)
 
-        if projectUuids:
-            self.signalProjectUpdate(Hash("projects", projectUuids),
+        return savedItems, projectUuids
+
+    @slot
+    def slotSaveItems(self, token, items, client=None):
+        """Save items in project database
+
+        :param token: database user token
+        :param items: items to be save. Should be a list(Hash) object were each
+                      entry is of the form:
+
+                      - xml: xml of item
+                      - uuid: uuid of item
+                      - overwrite: behavior in case of conflict
+                      - domain: to write to
+        :param client: the client information (string) if provided
+
+        :raises: `ProjectDBError` in case of database (connection) problems
+                 `TypeError` in case an no type information or an unknown type
+                 is found in the root element.
+                 `RuntimeError` if no database if connected.
+        """
+
+        self.logger.debug("Saving items: {}".format([i.get("uuid") for i in
+                                                     items]))
+        self._checkDbInitialized(token)
+        saved, uuids = self._save_items(token, items)
+        if client and uuids:
+            self.signalProjectUpdate(Hash("projects", uuids,
+                                          "client", client),
                                      self.deviceId)
 
-        return Hash('items', savedItems)
+        return Hash('items', saved)
 
     @slot
     def slotLoadItems(self, token, items):
