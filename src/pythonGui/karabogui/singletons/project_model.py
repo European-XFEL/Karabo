@@ -13,7 +13,7 @@ from PyQt5.QtCore import (
     QModelIndex, Qt)
 
 from karabo.common.api import walk_traits_object
-from karabo.common.project.api import MacroModel
+from karabo.common.project.api import MacroModel, ProjectModel
 from karabo.common.scenemodel.api import SceneModel
 from karabogui.alarms.api import get_alarm_icon
 from karabogui.events import broadcast_event, KaraboEvent
@@ -219,6 +219,22 @@ class ProjectViewItemModel(QAbstractItemModel):
             # Select nothing
             index = None
         self.selectIndex(index)
+
+    def project_models(self):
+        """Return all `ProjectModels` currently existing in the model
+        """
+        models = []
+
+        if self._traits_model is None:
+            return models
+
+        def visitor(obj):
+            if isinstance(obj, ProjectModel):
+                models.append(obj)
+
+        walk_traits_object(self._traits_model, visitor)
+
+        return models
 
     # ----------------------------
     # private methods
