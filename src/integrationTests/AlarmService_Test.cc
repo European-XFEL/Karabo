@@ -387,35 +387,39 @@ void AlarmService_Test::testTriggerGlobalAck() {
     messageQ->pop(lastMessage);
 
     CPPUNIT_ASSERT_EQUAL(std::string("triggerGlobalWarnAck"), m_deviceClient->get<std::string>("alarmTester", "result"));
-    // global alarm back to "warn"
+    // global alarm back to "warn" ==> global.warn updates, global.alarm gets acknowledgeable
     alarm = m_deviceClient->get<AlarmCondition>("alarmTester", "alarmCondition");
     CPPUNIT_ASSERT_EQUAL(std::string("warn"), alarm.asString());
 
     //get row for first device
     CPPUNIT_ASSERT(lastMessage.has("rows"));
     auto rowIter = lastMessage.get<Hash>("rows").begin();
-    rowId = rowIter->getKey();
+    std::string rowIdUpdate = rowIter->getKey();
+    std::string rowIdAcknowledgeable = (++rowIter)->getKey();
+    if (!lastMessage.has("rows." + rowId + ".update")) {
+        // order of rows of updates is not defined, so try the other one
+        std::swap(rowIdUpdate, rowIdAcknowledgeable);
+    }
+    // Nothing else is in message:
+    CPPUNIT_ASSERT(++rowIter == lastMessage.get<Hash>("rows").end());
 
-    CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".update"));
-    h = lastMessage.get<Hash>("rows." + rowId + ".update");
+    CPPUNIT_ASSERT(lastMessage.has("rows." + rowIdUpdate + ".update"));
+    h = lastMessage.get<Hash>("rows." + rowIdUpdate + ".update");
     CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
     CPPUNIT_ASSERT_EQUAL(std::string("global"), h.get<std::string>("property"));
     CPPUNIT_ASSERT_EQUAL(std::string("warn"), h.get<std::string>("type"));
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == false);
 
-    //get next row (is the order between update row and acknowledgeable row guaranteed?)
-    rowId = (++rowIter)->getKey();
-    
-    CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".acknowledgeable"));
-    h = lastMessage.get<Hash>("rows." + rowId + ".acknowledgeable");
+    CPPUNIT_ASSERT(lastMessage.has("rows." + rowIdAcknowledgeable + ".acknowledgeable"));
+    h = lastMessage.get<Hash>("rows." + rowIdAcknowledgeable + ".acknowledgeable");
     CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
     CPPUNIT_ASSERT_EQUAL(std::string("global"), h.get<std::string>("property"));
     CPPUNIT_ASSERT_EQUAL(std::string("alarm"), h.get<std::string>("type"));
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
-    
-    //go out of the alarm state
+
+    //go out of the alarm state ==> now also global.warn gets acknowledgeable
     messageQ = m_tcpAdapter->getNextMessages("alarmUpdate", 1, [&] {
         m_deviceClient->execute("alarmTester", "triggerGlobalNormal", KRB_TEST_MAX_TIMEOUT);
     });
@@ -426,24 +430,16 @@ void AlarmService_Test::testTriggerGlobalAck() {
     CPPUNIT_ASSERT_EQUAL(std::string("warn"), alarm.asString());
 
     rowIter = lastMessage.get<Hash>("rows").begin();
-    rowId = rowIter->getKey();
-    CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".acknowledgeable"));
-    h = lastMessage.get<Hash>("rows." + rowId + ".acknowledgeable");
-    CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
-    CPPUNIT_ASSERT_EQUAL(std::string("global"), h.get<std::string>("property"));
-    CPPUNIT_ASSERT_EQUAL(std::string("alarm"), h.get<std::string>("type"));
-    CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
-    CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
-
-    // (is the row order inside acknowledgeable between alarm and warn defined?)
-    rowId = (++rowIter)->getKey();
-    CPPUNIT_ASSERT(lastMessage.has("rows." + rowId + ".acknowledgeable"));
-    h = lastMessage.get<Hash>("rows." + rowId + ".acknowledgeable");
+    const std::string rowIdWarn = rowIter->getKey();
+    CPPUNIT_ASSERT(lastMessage.has("rows." + rowIdWarn + ".acknowledgeable"));
+    h = lastMessage.get<Hash>("rows." + rowIdWarn + ".acknowledgeable");
     CPPUNIT_ASSERT_EQUAL(std::string("alarmTester"), h.get<std::string>("deviceId"));
     CPPUNIT_ASSERT_EQUAL(std::string("global"), h.get<std::string>("property"));
     CPPUNIT_ASSERT_EQUAL(std::string("warn"), h.get<std::string>("type"));
     CPPUNIT_ASSERT(h.get<bool>("needsAcknowledging") == true);
     CPPUNIT_ASSERT(h.get<bool>("acknowledgeable") == true);
+    // Nothing else is in message:
+    CPPUNIT_ASSERT(++rowIter == lastMessage.get<Hash>("rows").end());
     
     std::clog << "Tested global acknowledgeable triggering.. Ok" << std::endl;
 }
