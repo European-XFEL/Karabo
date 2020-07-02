@@ -36,6 +36,7 @@ class KaraboEvent(Enum):
     ProjectItemsLoaded = "Project items loaded"
     ProjectItemsSaved = "Project items saved"
     ProjectManagersList = "Project managers list"
+    ProjectUpdated = "Project Updated"
     ShowDaemonService = "Show daemon service"
     ShowConfiguration = "Show configuration"
     ShowConfigurationFromPast = "Show Configuration From Past"
