@@ -16,6 +16,7 @@ from PyQt5.QtWidgets import (
 from karabo.native import AccessLevel
 from karabogui import globals as krb_globals
 from karabogui import icons
+from karabogui import messagebox
 from karabogui.dialogs.configuration import ConfigurationDialog
 from karabogui.dialogs.dialogs import AboutDialog
 from karabogui.dialogs.update_dialog import UpdateDialog
@@ -162,7 +163,8 @@ class MainWindow(QMainWindow):
             KaraboEvent.MaximizePanel: self._event_container_maximized,
             KaraboEvent.MinimizePanel: self._event_container_minimized,
             KaraboEvent.LoginUserChanged: self._event_access_level,
-            KaraboEvent.NetworkConnectStatus: self._event_network
+            KaraboEvent.NetworkConnectStatus: self._event_network,
+            KaraboEvent.ProjectUpdated: self._event_project_updated
         }
         register_for_broadcasts(event_map)
 
@@ -230,6 +232,25 @@ class MainWindow(QMainWindow):
 
     def _event_access_level(self, data):
         self.onUpdateAccessLevel()
+
+    def _event_project_updated(self, data):
+        """Projects were externally updated and we check if we are affected"""
+        projects = get_project_model().project_models()
+        externals = data['uuids']
+        uuids = {item.uuid: item.simple_name
+                 for item in projects
+                 if item.uuid in externals}
+        if uuids:
+            table = ("<table>" +
+                     "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
+                             format(value, key)
+                             for key, value in uuids.items())
+                     + "</table>")
+            msg = ("Projects have been externally modified! <br>{}<br><br>"
+                   "In order to display the changes, please <b>reload</b> your"
+                   " <b>project(s)</b>.").format(table)
+
+            messagebox.show_information(msg, parent=self)
 
     # -----------------------------------------------------------------------
 
