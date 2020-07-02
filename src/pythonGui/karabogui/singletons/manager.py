@@ -17,6 +17,7 @@ from karabogui.background import executeLater, Priority
 from karabogui.binding.api import (
     apply_fast_data, extract_attribute_modifications, extract_configuration)
 from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.globals import KARABO_CLIENT_ID
 from karabogui import messagebox
 from karabogui.singletons.api import get_alarm_model, get_network, get_topology
 from karabogui.util import show_wait_cursor
@@ -497,6 +498,17 @@ class Manager(QObject):
         The information is forwarded by the gui server to notify clients about
         updated project items.
         """
+        projects = info['info']
+        # Get is only required when we connect to an old ecosystem, which will
+        # always provide this update msg without client information!
+        client_id = projects.get('client', KARABO_CLIENT_ID)
+        if client_id == KARABO_CLIENT_ID:
+            # If we have been the client saving the project, we are not
+            # interested any further!
+            return
+        uuids = projects['projects']
+        broadcast_event(KaraboEvent.ProjectUpdated, {'uuids': uuids})
+
     # ---------------------------------------------------------------------
 
     def handle_notification(self, **info):
