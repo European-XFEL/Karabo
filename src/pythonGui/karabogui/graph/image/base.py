@@ -339,11 +339,11 @@ class KaraboImageView(QWidget):
         if self.toolbar is not None:
             toolset = self.toolbar.toolsets.get(AuxPlots)
             if toolset is not None and aux_plots_class != AuxPlots.NoPlot:
-                toolset.buttons[AuxPlots(aux_plots_class)].setChecked(True)
+                toolset.check(aux_plots_class)
 
             toolset = self.toolbar.toolsets.get(ROITool)
             if toolset is not None and current_roi_tool != ROITool.NoROI:
-                toolset.buttons[current_roi_tool].setChecked(True)
+                toolset.check(current_roi_tool)
 
         # Restore auxiliar plots
         if self._aux_plots is not None:
