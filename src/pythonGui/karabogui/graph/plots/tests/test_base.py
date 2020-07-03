@@ -4,6 +4,7 @@ from unittest.mock import patch
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_equal
 
+from karabogui.graph.common.api import CrosshairROI, ROITool
 from karabogui.testing import GuiTestCase
 
 from ..base import KaraboPlotView
@@ -101,6 +102,58 @@ class TestPlotViewExport(GuiTestCase):
     def _delete_file(self, filename):
         if os.path.isfile(filename):
             os.remove(filename)
+
+
+DEFAULT_CONFIG = {"x_grid": False, "y_grid": False,
+                  "x_log": False,  "y_log": False,
+                  "x_invert": False, "y_invert": False,
+                  "x_label": '', "y_label": '',
+                  "x_units": '', "y_units": '',
+                  "x_autorange": True, "y_autorange": True,
+                  "roi_items": [], "roi_tool": 0}
+
+
+class TestPlotViewRestore(GuiTestCase):
+
+    def setUp(self):
+        super(TestPlotViewRestore, self).setUp()
+        self.widget = KaraboPlotView()
+
+    def tearDown(self):
+        super(TestPlotViewRestore, self).tearDown()
+        self.widget.destroy()
+
+    def test_restore_roi(self):
+        controller = self.widget.add_roi()
+        toolbar = self.widget.add_toolbar()
+
+        # Restore ROI items
+        roi_tool = int(ROITool.Crosshair)
+        roi_items = [{"roi_type": roi_tool, "x": 15, "y": 15}]
+        self.restore(roi_items=roi_items, roi_tool=roi_tool)
+
+        # Check if only one ROI type is present and current
+        self.assertEqual(controller.current_tool, roi_tool)
+        self.assertEqual(len(controller.roi_items), 1)
+
+        # Check if only one ROI item is present
+        crosshairs = controller.roi_items[roi_tool]
+        self.assertEqual(len(crosshairs), 1)
+
+        # Check ROI item and coords
+        crosshair = crosshairs[0]
+        self.assertIsInstance(crosshair, CrosshairROI)
+        x, y = crosshair.coords
+        self.assertEqual(x, 15)
+        self.assertEqual(y, 15)
+
+        # Check if tool button is checked
+        self.assertTrue(toolbar.buttons[roi_tool].isChecked())
+
+    def restore(self, **kwargs):
+        config = DEFAULT_CONFIG.copy()
+        config.update(kwargs)
+        self.widget.restore(config)
 
 
 orders = np.arange(-5, 5, dtype=np.float)
