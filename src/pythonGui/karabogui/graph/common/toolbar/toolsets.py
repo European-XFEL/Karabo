@@ -32,6 +32,7 @@ class BaseToolsetController(HasStrictTraits):
         return buttons
 
     def select(self, tool):
+        """Selecting a tool triggers the connected events."""
         self.current_tool = tool
 
     def add(self, tool):
@@ -41,8 +42,11 @@ class BaseToolsetController(HasStrictTraits):
         return button
 
     def check(self, tool):
+        """Checking the tool only changes the check state of the button.
+           We then update the current_tool quietly to not trigger any events"""
         if tool in self.buttons:
             self.buttons[tool].setChecked(True)
+        self.trait_setq(current_tool=tool)
 
     def uncheck_all(self):
         for button in self.buttons.values():
@@ -67,7 +71,7 @@ class MouseModeToolset(BaseToolsetController):
         self.buttons[self.current_tool].setChecked(False)
 
         # If current tool is unchecked, select default tool
-        if self.current_tool is tool and self.default_tool in self.buttons:
+        if self.current_tool == tool and self.default_tool in self.buttons:
             tool = self.default_tool
             self.buttons[tool].setChecked(True)
 
@@ -105,10 +109,15 @@ class ROIToolset(BaseToolsetController):
         super(ROIToolset, self).select(tool)
 
     def check(self, tool):
-        """Reimplementing since we want to change the default action"""
+        """Checking the tool only changes the check state of the button.
+           We then update the current_tool quietly to not trigger any events.
+
+           Reimplementing since we want to change the default action"""
+
+        self.trait_setq(current_tool=tool)
 
         # Uncheck all if no ROI is selected
-        if tool is ROITool.NoROI:
+        if tool == ROITool.NoROI:
             self.uncheck_all()
 
         if tool in [ROITool.Rect, ROITool.DrawRect]:
@@ -121,9 +130,9 @@ class ROIToolset(BaseToolsetController):
 
         button.setChecked(True)
         for action in button.menu().actions():
-            if action.data() is tool:
+            if action.data() == tool:
                 button.setDefaultAction(action)
-            action.setChecked(action.data() is tool)
+            action.setChecked(action.data() == tool)
 
 
 class ExportToolset(BaseToolsetController):
