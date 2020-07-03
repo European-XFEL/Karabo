@@ -11,7 +11,7 @@ def aux_plots_factory(tool):
         button = create_button(icon=icons.beamProfile,
                                checkable=True,
                                tooltip="Beam Profile")
-    elif tool is AuxPlots.Histogram:
+    elif tool == AuxPlots.Histogram:
         button = create_button(icon=icons.histogram,
                                checkable=True,
                                tooltip="Histogram")
@@ -35,9 +35,9 @@ class AuxPlotsToolset(BaseToolsetController):
         # Uncheck the other button
         if not prof_button.isChecked() and not hist_button.isChecked():
             tool = AuxPlots.NoPlot
-        elif tool is AuxPlots.ProfilePlot and prof_button.isChecked():
+        elif tool == AuxPlots.ProfilePlot and prof_button.isChecked():
             hist_button.setChecked(False)
-        elif tool is AuxPlots.Histogram and hist_button.isChecked():
+        elif tool == AuxPlots.Histogram and hist_button.isChecked():
             prof_button.setChecked(False)
 
         super(AuxPlotsToolset, self).select(tool)
