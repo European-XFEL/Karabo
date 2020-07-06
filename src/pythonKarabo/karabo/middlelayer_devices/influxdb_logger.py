@@ -166,7 +166,7 @@ class InfluxDBLogger(Device):
         # save the schema incoming event irregardless
         line = (deviceId.encode('utf-8'),
                 b'__EVENTS',
-                b',type="SCHEMA" digest="',
+                b',type="SCHEMA" schema_digest="',
                 digest.encode('utf-8').replace(
                     b'\\', b'\\\\').replace(b'"', br'\"'),
                 b'" ', str(timestamp).encode('utf-8'))
