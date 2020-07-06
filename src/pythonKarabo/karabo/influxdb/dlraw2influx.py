@@ -194,7 +194,7 @@ class DlRaw2Influx():
                 msg = f"""Error writing line protocol: {r['code']} - {r['reason']}
                     Write retries: {r['retried']}
                     Content:
-                    {line_data[:320]} ...
+                    {line_data} ...
                 """
                 raise Exception(msg)
             if r['retried']:
