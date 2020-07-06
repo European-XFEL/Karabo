@@ -111,7 +111,7 @@ class DlSchema2Influx():
                         digest = hashlib.sha1(b_schema).hexdigest()
                         safe_m = escape_measurement(self.device_id)
                         data.append(
-                            '{m}__EVENTS,type=SCHEMA digest="{d}" {t}'
+                            '{m}__EVENTS,type=SCHEMA schema_digest="{d}" {t}'
                             .format(
                                 m=safe_m,
                                 d=digest,
