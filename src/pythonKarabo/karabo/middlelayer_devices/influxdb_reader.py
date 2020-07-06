@@ -188,7 +188,7 @@ class DataLogReader(Device):
             lastlogout = 0
         configAtTimestamp = lastlogout < lastlogin
         query = f"""\
-            SELECT LAST(digest) FROM "{measurement}"
+            SELECT LAST(schema_digest) FROM "{measurement}__EVENTS"
             WHERE "type" = '"SCHEMA"' AND
             time <= {latest:.0f}u"""
         r, _ = await self.client.get_results(query, measurement, epoch='u')
