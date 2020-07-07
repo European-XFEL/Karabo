@@ -156,3 +156,18 @@ def recursive_save_object(root, storage, domain):
     for leaf in _tree_iter(root):
         if leaf.modified:
             storage.store(domain, leaf.uuid, leaf)
+
+
+def get_project_models(root):
+    """Return all project model objects from a `root_model` in a list"""
+    if root is None:
+        return []
+
+    def _iter_project_model(model):
+        yield model
+        for sub_project in model.subprojects:
+            yield from _iter_project_model(sub_project)
+
+    models = [model for model in _iter_project_model(root)]
+
+    return models
