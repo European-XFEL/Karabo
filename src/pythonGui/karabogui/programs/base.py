@@ -2,7 +2,7 @@ import os.path as op
 from traceback import print_exception, format_exception
 import warnings
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QLocale, Qt
 from PyQt5.QtGui import QFont, QIcon, QPixmap
 from PyQt5.QtWidgets import (
     QApplication, QMessageBox, QSplashScreen, QStyleFactory)
@@ -65,6 +65,8 @@ def create_gui_app(args):
     app.setOrganizationName('XFEL')
     app.setOrganizationDomain('xfel.eu')
     app.setApplicationName('KaraboGUI')
+
+    QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
 
     return app
 
