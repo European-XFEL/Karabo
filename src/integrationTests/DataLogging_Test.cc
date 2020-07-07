@@ -444,8 +444,6 @@ void DataLogging_Test::fileAllTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
-    // The "testNans" test gives repeatedly some timeout that results in
-    // assertion and for the following test.  The reason is still unclear.
     testNans();
     testInt();
     testFloat();
@@ -670,7 +668,7 @@ void DataLogging_Test::testLastKnownConfiguration() {
             }
         }
     }
-    CPPUNIT_ASSERT_EQUAL(latestTimestamp.toIso8601(), configTimepoint);
+    CPPUNIT_ASSERT_EQUAL(latestTimestamp.toIso8601Ext(), configTimepoint);
     std::clog << "\n... "
             << "Ok (retrieved configuration with last known value for 'int32Property' while the device was being logged)."
             << std::endl;
@@ -1608,7 +1606,7 @@ void DataLogging_Test::testNans() {
         // This equality check relies on the fact that the string representation implicitly rounds to micro second
         // precision, i.e. the precision in the data base. So if the test fails here, do like above with the TimeDuration.
         CPPUNIT_ASSERT_EQUAL(vec_es_updateStamps[i].toIso8601Ext(),
-                             configTimepoint += "Z"); // Looks like we get time back without time zone indication...
+                             configTimepoint);
         const double theD = conf.get<double>("doubleProperty");
         const float theF = conf.get<float>("floatProperty");
         if (std::isnan(bad_floats[i])) {
