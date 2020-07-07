@@ -241,7 +241,7 @@ def loadFromFile(filename):
             hash_ = decodeXML(fin.read())
             return hash_
         except SAXException:
-            raise "{} malformatted".format(filename)
+            raise RuntimeError("{} is malformatted.".format(filename))
 
 
 # legacy API
