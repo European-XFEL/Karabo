@@ -2,8 +2,8 @@ from asyncio import gather
 
 from karabo.common.macro_sanity_check import validate_macro
 from karabo.native.data.enums import AccessLevel, AccessMode
-from karabo.native.data.hash import String, Int32
-from karabo.middlelayer import Device, Macro
+from karabo.native.data.hash import String
+from karabo.middlelayer import Device, Macro, Overwrite
 
 
 class MetaMacro(Device):
@@ -23,7 +23,9 @@ class MetaMacro(Device):
         displayedName="Project DB UUID",
         description="The UUID for this macro",
         accessMode=AccessMode.INITONLY)
-    visibility = Int32(enum=AccessLevel, defaultValue=AccessLevel.ADMIN)
+    visibility = Overwrite(
+        options=[l for l in AccessLevel],
+        defaultValue=AccessLevel.ADMIN)
 
     def __init__(self, config):
         super().__init__(config)
@@ -50,6 +52,7 @@ class MetaMacro(Device):
             'hostName': self.hostName.value,
             'uuid': self.uuid.value,
             'module': self.module.value,
+            'visibility': self.visibility.value,
         }
         objs = []
         for klass in self.classes:
