@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (
     QAction, QActionGroup, QFrame, QLabel, QMainWindow, QMenu, QMessageBox,
     QSizePolicy, QSplitter, QToolButton, QWidget, qApp)
 
+from karabo.common.project.api import get_project_models
 from karabo.native import AccessLevel
 from karabogui import globals as krb_globals
 from karabogui import icons
@@ -235,11 +236,15 @@ class MainWindow(QMainWindow):
 
     def _event_project_updated(self, data):
         """Projects were externally updated and we check if we are affected"""
-        projects = get_project_model().project_models()
-        externals = data['uuids']
+        project = get_project_model().root_model
+        if project is None:
+            return
+
+        projects = get_project_models(project)
+        external_uuids = data['uuids']
         uuids = {item.uuid: item.simple_name
                  for item in projects
-                 if item.uuid in externals}
+                 if item.uuid in external_uuids}
         if uuids:
             table = ("<table>" +
                      "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
