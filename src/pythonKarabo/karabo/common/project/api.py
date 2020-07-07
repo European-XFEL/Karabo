@@ -17,5 +17,5 @@ from .server import (
 )
 from .utils import (
     device_config_exists, device_instance_exists, device_server_exists,
-    find_parent_object, macro_exists, recursive_save_object
+    find_parent_object, get_project_models, macro_exists, recursive_save_object
 )
