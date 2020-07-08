@@ -1,6 +1,5 @@
 from functools import partial
 
-import numpy as np
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QSize, Qt
 from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import QAction, QGridLayout, QSizePolicy, QWidget
@@ -13,7 +12,7 @@ from karabogui.graph.common.api import (
     AxesLabelsDialog, AxisType, BaseROIController, create_axis_items,
     ExportTool, get_default_brush, get_default_pen, make_pen,
     ImageExporter, MouseMode, KaraboLegend, KaraboViewBox, PlotDataExporter,
-    PointCanvas, ROITool, ToolbarController)
+    PointCanvas, ROITool, safe_log10, ToolbarController)
 from karabogui.graph.common.const import (
     AXIS_ITEMS, ACTION_ITEMS, CHECK_ACTIONS, DEFAULT_BAR_WIDTH,
     EMPTY_SYMBOL_OPTIONS, DEFAULT_SYMBOL, SYMBOL_SIZE, WIDGET_MIN_HEIGHT,
@@ -608,12 +607,28 @@ class KaraboPlotView(QWidget):
         self.plotItem.vb.enableAutoRange(axis=1, enable=enable)
 
     def set_range_x(self, min_value, max_value):
-        """Set the X Range of the view box with min and max value"""
-        self.plotItem.vb.setRange(xRange=[min_value, max_value])
+        """Set the X Range of the view box with min and max value
+
+        The pyqtgraph viewbox has a wrong order when disabling the autorange
+        with manual values. This is currently fixed on pyqtgraph 0.11 but
+        as of this moment, the GUI uses a previous release. We explicitly
+        turn off the autorange first and avoid recalculation to circumvent
+        the bug."""
+        self.plotItem.vb.enableAutoRange(x=False)
+        self.plotItem.vb.setRange(xRange=[min_value, max_value],
+                                  disableAutoRange=False)
 
     def set_range_y(self, min_value, max_value):
-        """Set the Y Range of the view box with min and max value"""
-        self.plotItem.vb.setRange(yRange=[min_value, max_value])
+        """Set the Y Range of the view box with min and max value
+
+        The pyqtgraph viewbox has a wrong order when disabling the autorange
+        with manual values. This is currently fixed on pyqtgraph 0.11 but
+        as of this moment, the GUI uses a previous release. We explicitly
+        turn off the autorange first and avoid recalculation to circumvent
+        the bug."""
+        self.plotItem.vb.enableAutoRange(y=False)
+        self.plotItem.vb.setRange(yRange=[min_value, max_value],
+                                  disableAutoRange=False)
 
     def get_view_range_x(self):
         view_range = self.plotItem.vb.viewRange()
@@ -640,7 +655,7 @@ class KaraboPlotView(QWidget):
         x_min, x_max = config['x_min'], config['x_max']
         # Revert input values (linear scale) to log scale if enabled
         if config['x_log']:
-            x_min, x_max = np.log10(x_min), np.log10(x_max)
+            x_min, x_max = safe_log10(x_min), safe_log10(x_max)
         return x_min, x_max
 
     def get_config_range_y(self):
@@ -650,7 +665,7 @@ class KaraboPlotView(QWidget):
         y_min, y_max = config['y_min'], config['y_max']
         # Revert input values (linear scale) to log scale if enabled
         if config['y_log']:
-            y_min, y_max = np.log10(y_min), np.log10(y_max)
+            y_min, y_max = safe_log10(y_min), safe_log10(y_max)
         return y_min, y_max
 
     # -----------------------------------------------------------------------
