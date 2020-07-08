@@ -57,6 +57,7 @@ from .display_types import (
 from .enums import (Capabilities, ProxyStatus, Interfaces, ONLINE_STATUSES,
                     NO_CONFIG_STATUSES, SCHEMA_STATUSES)
 from .module import create_module
-from .savable import BaseSavableModel, set_modified_flag
+from .savable import (
+    BaseSavableModel, set_initialized_flag, set_modified_flag)
 from .states import State, StateSignifier
 from .traits import walk_traits_object
