@@ -11,6 +11,7 @@ from PyQt5.QtCore import (
 from PyQt5.QtGui import QBrush, QColor, QPalette, QPainter, QPen
 from PyQt5.QtWidgets import QSizePolicy, QStackedLayout, QWidget
 
+from karabo.common.api import set_initialized_flag
 from karabo.common.scenemodel.api import (
     FixedLayoutModel, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT, SceneTargetWindow)
 from karabogui import globals as krb_globals
@@ -485,8 +486,12 @@ class SceneView(QWidget):
 
         self.update()
 
-    def add_models(self, *models):
+    def add_models(self, *models, initialize=False):
         """Adds new child models to the scene model."""
+        if initialize:
+            for model in models:
+                set_initialized_flag(model, value=True)
+
         self.scene_model.children.extend(models)
 
     def remove_model(self, model):
