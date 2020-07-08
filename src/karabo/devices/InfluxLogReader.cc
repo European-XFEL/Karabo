@@ -327,7 +327,7 @@ namespace karabo {
                 std::ostringstream oss;
                 oss << "Error retrieving values of property '"
                         << ctxt->property << "' of device '" << ctxt->deviceId << "' between '"
-                        << ctxt->from.toIso8601() << "' and '" << ctxt->to.toIso8601() << "':\n"
+                        << ctxt->from.toIso8601Ext() << "' and '" << ctxt->to.toIso8601Ext() << "':\n"
                         << e.what();
                 const std::string &errMsg = oss.str();
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
@@ -564,7 +564,7 @@ namespace karabo {
                 } catch (const std::exception &e) {
                     std::ostringstream oss;
                     oss << "Error retrieving schema for digest while getting configuration of device '"
-                            << ctxt->deviceId << "' at '" << ctxt->atTime.toIso8601()
+                            << ctxt->deviceId << "' at '" << ctxt->atTime.toIso8601Ext()
                             << "':\n" << e.what()
                             << "Encoded schema had '" << value.get<std::string>().size() << "' bytes.";
                     const std::string &errMsg = oss.str();
@@ -655,7 +655,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_ERROR << "Error adding node to hash:"
                             << "\nValue type: " << propType
                             << "\nValue (as string): " << *valueAsString
-                            << "\nTimestamp: " << timeEpoch.toIso8601()
+                            << "\nTimestamp: " << timeEpoch.toIso8601Ext()
                             << "\nError: " << e.what();
                 }
             }
@@ -666,7 +666,7 @@ namespace karabo {
             } else {
                 // All properties have been retrieved. Reply to the slot caller.
                 bool configAtTimePoint = ctxt->lastLogoutBeforeTime < ctxt->lastLoginBeforeTime;
-                ctxt->aReply(ctxt->configHash, ctxt->configSchema, configAtTimePoint, ctxt->configTimePoint.toIso8601());
+                ctxt->aReply(ctxt->configHash, ctxt->configSchema, configAtTimePoint, ctxt->configTimePoint.toIso8601Ext());
             }
         }
 
@@ -767,7 +767,7 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_ERROR << "Error adding node to hash:"
                                 << "\nValue type: " << colTypeNames[col]
                                 << "\nValue (as string): " << *(valuesRow[col])
-                                << "\nTimestamp: " << epoch.toIso8601()
+                                << "\nTimestamp: " << epoch.toIso8601Ext()
                                 << "\nError: " << e.what();
                     }
                 }
