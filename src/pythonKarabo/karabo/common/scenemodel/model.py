@@ -33,7 +33,11 @@ class SceneModel(BaseProjectObjectModel):
 
 class XMLDefsModel(BaseSceneObjectData):
     """<defs>"""
-
+    # The id attribute
+    id = String
+    # The element attributes aside from 'id'
+    attributes = Dict
+    # The element's children
     children = List(BaseSceneObjectData)
 
 
@@ -56,7 +60,9 @@ class UnknownXMLDataModel(BaseSceneObjectData):
     """
     # The xml tag
     tag = String
-    # The element attributes
+    # The id attribute
+    id = String
+    # The element attributes aside from 'id'
     attributes = Dict
     # The element data
     data = String
@@ -139,7 +145,8 @@ def __scene_writer(scene, root):
 def __unknown_xml_data_reader(element):
     return UnknownXMLDataModel(
         tag=element.tag,
-        attributes=element.attrib,
+        id=element.get('id', ''),
+        attributes={k: v for k, v in element.attrib.items() if k != 'id'},
         data=element.text or '',
         children=[read_element(el) for el in element]
     )
@@ -148,6 +155,8 @@ def __unknown_xml_data_reader(element):
 @register_scene_reader('XML Defs', xmltag=NS_SVG + 'defs')
 def __xml_defs_reader(element):
     return XMLDefsModel(
+        id=element.get('id', ''),
+        attributes={k: v for k, v in element.attrib.items() if k != 'id'},
         children=[read_element(el) for el in element]
     )
 
@@ -155,6 +164,10 @@ def __xml_defs_reader(element):
 @register_scene_writer(XMLDefsModel)
 def __xml_defs_writer(model, parent):
     element = SubElement(parent, NS_SVG + 'defs')
+    if model.id:
+        element.set('id', model.id)
+    for name, value in model.attributes.items():
+        element.set(name, value)
     for child in model.children:
         write_element(model=child, parent=element)
 
@@ -166,6 +179,8 @@ def __unknown_xml_data_writer(model, parent):
     element = SubElement(parent, model.tag)
     if model.data:
         element.text = model.data
+    if model.id:
+        element.set('id', model.id)
     for name, value in model.attributes.items():
         element.set(name, value)
     for child in model.children:
