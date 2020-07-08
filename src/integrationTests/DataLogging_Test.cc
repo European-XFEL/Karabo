@@ -31,10 +31,10 @@ using karabo::xms::SLOT_ELEMENT;
 
 /* Timeout, in milliseconds, for a slot request. */
 #define SLOT_REQUEST_TIMEOUT_MILLIS 5000
-#define FLUSH_REQUEST_TIMEOUT_MILLIS 20000
+#define FLUSH_REQUEST_TIMEOUT_MILLIS 60000
 
 #define PAUSE_BEFORE_RETRY_MILLIS 150
-#define NUM_RETRY 200
+#define NUM_RETRY 1000
 
 static Epochstamp threeDaysBack = Epochstamp() - TimeDuration(3,0,0,0,0);
 
@@ -794,7 +794,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
                             .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
 
-    boost::this_thread::sleep(boost::posix_time::milliseconds(15250));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(250));
 
     // Now check that for all stored stamps, the stamps gathered for the reader are correct
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
@@ -814,7 +814,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
         // - for file logger, data might not have reached the streams when flush was called
         // - for influx logger there is a period between the DB has confirmed arrival of data and that the data is
         //   ready for reading.
-        while (nTries > 0 && conf.empty()) {
+        while (nTries > 0 && (conf.empty() || static_cast<int> (i + 1) != conf.get<int>("value"))) {
             try {
                 nChecks++;
                 m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
@@ -840,7 +840,7 @@ void DataLogging_Test::testCfgFromPastRestart() {
         }
         CPPUNIT_ASSERT_MESSAGE("Failed to retrieve a non-empty configuration for device '" + m_deviceId +
                                "' after " + toString(nChecks) + " attempts - " + toString(nRemoteExceptions) +
-                               " remote exceptions among them",
+                               " remote exceptions among them - conf: " + toString(conf),
                                conf.size() > 0);
         CPPUNIT_ASSERT_EQUAL(99, conf.get<int>("oldValue"));
         CPPUNIT_ASSERT_EQUAL(static_cast<int> (i + 1), conf.get<int>("value")); // +1: stamp is after update
