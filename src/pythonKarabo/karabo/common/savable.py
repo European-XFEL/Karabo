@@ -11,6 +11,24 @@ _CONTAINER_EVENT_TYPES = (TraitDictEvent, TraitListEvent)
 _CONTAINER_TYPES = (Dict, List)
 
 
+def set_trait_value(model, **traits):
+    if isinstance(model, BaseSavableModel):
+        model.trait_set(**traits)
+
+        for name in model.copyable_trait_names():
+            attribute = getattr(model, name, None)
+            if isinstance(attribute, BaseSavableModel):
+                attribute.trait_set(**traits)
+            elif isinstance(attribute, list):
+                for child in attribute:
+                    if isinstance(child, BaseSavableModel):
+                        set_trait_value(child, **traits)
+            elif isinstance(attribute, dict):
+                for child in attribute.values():
+                    if isinstance(child, BaseSavableModel):
+                        set_trait_value(child, **traits)
+
+
 def set_modified_flag(model, value=False):
     """Set the ``modified`` trait to the given key word argument ``value`` in
     an object tree.
@@ -22,21 +40,21 @@ def set_modified_flag(model, value=False):
     :param value: States whether the flag should be set to ``False`` or
                   ``True``
     """
-    if isinstance(model, BaseSavableModel):
-        model.modified = value
+    set_trait_value(model, modified=value)
 
-        for name in model.copyable_trait_names():
-            attribute = getattr(model, name, None)
-            if isinstance(attribute, BaseSavableModel):
-                attribute.modified = value
-            elif isinstance(attribute, list):
-                for child in attribute:
-                    if isinstance(child, BaseSavableModel):
-                        set_modified_flag(child, value=value)
-            elif isinstance(attribute, dict):
-                for child in attribute.values():
-                    if isinstance(child, BaseSavableModel):
-                        set_modified_flag(child, value=value)
+
+def set_initialized_flag(model, value=False):
+    """Set the ``initialized`` trait to the given key word argument ``value``
+    in an object tree.
+
+    This recurses into all child models and sets the initialized flag to
+    ``value`` whenever it is found.
+
+    :param model: A BaseSavableModel (or subclass) instance
+    :param value: States whether the flag should be set to ``False`` or
+                  ``True``
+    """
+    set_trait_value(model, initialized=value)
 
 
 class BaseSavableModel(HasStrictTraits):
