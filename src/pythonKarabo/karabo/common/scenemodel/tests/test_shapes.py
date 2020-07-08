@@ -1,6 +1,6 @@
 from karabo.testing.utils import temp_xml_file
 from ..io import read_scene
-from ..model import XMLDefsModel
+from ..model import UnknownXMLDataModel, XMLDefsModel
 from ..shapes import (
     ArrowModel, LineModel, MarkerModel, PathModel, RectangleModel)
 from .utils import single_model_round_trip
@@ -103,7 +103,7 @@ def test_alternate_style_def():
     assert line_model.stroke_miterlimit == 2.0
 
 
-def test_arrow_svg():
+def test_svg_arrow():
     SCENE_SVG = (
         """<svg xmlns:svg="http://www.w3.org/2000/svg" width="600" height="100">"""  # noqa
         """<svg:line x1="295" y1="50" x2="95" y2="75" stroke="#000" stroke-width="5" marker-end="url(#arrow)"/>"""  # noqa
@@ -143,6 +143,59 @@ def test_arrow_svg():
         assert marker_model.refY == 3
         assert marker_model.orient == "auto"
         assert marker_model.markerUnits == "strokeWidth"
+
+
+def test_svg_defs():
+    SCENE_SVG = (
+        """<svg xmlns:svg="http://www.w3.org/2000/svg" width="600" height="100">"""  # noqa
+        """<svg:defs id="arrow" style="foo">"""
+            """<svg:marker markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">"""  # noqa
+                """<svg:path d="M0,0 L0,6 L9,3 z" fill="#f00"/>"""
+            """</svg:marker>"""
+        """</svg:defs>"""
+        """</svg>"""
+    )
+
+    with temp_xml_file(SCENE_SVG) as fn:
+        scene_model = read_scene(fn)
+
+    assert len(scene_model.children) == 1
+    defs_model = scene_model.children[0]
+    assert isinstance(defs_model, XMLDefsModel)
+    assert defs_model.id == "arrow"
+    assert defs_model.attributes == {"style": "foo"}
+    assert len(defs_model.children) == 1
+    child_model = defs_model.children[0]
+    assert isinstance(child_model, MarkerModel)
+
+    read_model = single_model_round_trip(defs_model)
+    assert read_model.id == defs_model.id
+    assert read_model.attributes == defs_model.attributes
+    assert len(defs_model.children) == 1
+    child_model = defs_model.children[0]
+    assert isinstance(child_model, MarkerModel)
+
+
+def test_svg_unknowns():
+    SCENE_SVG = (
+        """<svg xmlns:svg="http://www.w3.org/2000/svg" width="600" height="100">"""  # noqa
+        """<svg:linearGradient gradientTransform="translate(88.4376,-184.98619)" id="linearGradient"/>"""  # noqa
+        """</svg>"""
+    )
+
+    with temp_xml_file(SCENE_SVG) as fn:
+        scene_model = read_scene(fn)
+
+    assert len(scene_model.children) == 1
+    unknown_model = scene_model.children[0]
+    assert isinstance(unknown_model, UnknownXMLDataModel)
+    assert unknown_model.id == "linearGradient"
+    attrib = {"gradientTransform": "translate(88.4376,-184.98619)"}
+    assert unknown_model.attributes == attrib
+
+    read_model = single_model_round_trip(unknown_model)
+    assert read_model.id == unknown_model.id
+    assert read_model.attributes == unknown_model.attributes
 
 
 def _get_child_model(model, klass):
