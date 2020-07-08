@@ -66,9 +66,17 @@ class ReaderRegistry(HasStrictTraits):
 
     def add_defs(self, models):
         self.defs.clear()
-        for d in models:
-            for child in d.children:
+        for model in models:
+            # Record child model if it has an id trait.
+            for child in model.children:
+                if not child.id:
+                    continue
                 self.defs[child.id] = child
+
+            # Store the whole defs if it has an id attribute.
+            if not model.id:
+                continue
+            self.defs[model.id] = model
 
     def find(self, id_):
         return self.defs.get(id_)
