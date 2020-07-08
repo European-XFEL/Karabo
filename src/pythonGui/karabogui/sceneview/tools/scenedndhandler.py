@@ -69,7 +69,7 @@ class ConfigurationDropHandler(SceneDnDHandler):
             model = self._create_model_from_parameter_item(item, proxy, pos)
             models.append(model)
             pos += QPoint(0, _STACKED_WIDGET_OFFSET)
-        scene_view.add_models(*models)
+        scene_view.add_models(*models, initialize=True)
 
     def _create_model_from_parameter_item(self, item, proxy, pos):
         """Create the scene models for a single item
@@ -127,7 +127,7 @@ class ProjectDropHandler(SceneDnDHandler):
             model = SceneLinkModel(target=target,
                                    target_window=SceneTargetWindow.Dialog,
                                    x=position.x(), y=position.y())
-            scene_view.add_models(model)
+            scene_view.add_models(model, initialize=True)
 
     def _extract_items(self, mime_data):
         known_types = (ProjectItemTypes.DEVICE, ProjectItemTypes.SCENE)
