@@ -4,7 +4,7 @@ from unittest.mock import patch
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_equal
 
-from karabogui.graph.common.api import CrosshairROI, ROITool
+from karabogui.graph.common.api import CrosshairROI, ROITool, safe_log10
 from karabogui.testing import GuiTestCase
 
 from ..base import KaraboPlotView
@@ -112,16 +112,160 @@ DEFAULT_CONFIG = {"x_grid": False, "y_grid": False,
                   "x_autorange": True, "y_autorange": True,
                   "roi_items": [], "roi_tool": 0}
 
+orders = np.arange(-5, 5, dtype=np.float)
+LOG_ARRAY = 10 ** orders
+RANGE_TOLERANCE = 0.12  # or 12% percent
 
-class TestPlotViewRestore(GuiTestCase):
+
+class _BasePlotTest(GuiTestCase):
 
     def setUp(self):
-        super(TestPlotViewRestore, self).setUp()
+        super(_BasePlotTest, self).setUp()
         self.widget = KaraboPlotView()
+        self.widget.configuration.update(DEFAULT_CONFIG)
+        self.widget.show()
+        self.viewbox = self.widget.plotItem.vb
+        self._plot = None
 
     def tearDown(self):
-        super(TestPlotViewRestore, self).tearDown()
+        super(_BasePlotTest, self).tearDown()
+        self.widget.close()
         self.widget.destroy()
+        self.widget = None
+
+    def restore(self, **kwargs):
+        config = DEFAULT_CONFIG.copy()
+        config.update(kwargs)
+        self.widget.restore(config)
+
+    def set_data(self, x, y):
+        self._plot.setData(x, y)
+        # Trigger auto range
+        self.viewbox.updateAutoRange()
+
+    def set_log_scale(self, x=None, y=None):
+        if x is not None:
+            self.widget.set_log_x(x)
+            self.widget.configuration['x_log'] = x
+        if y is not None:
+            self.widget.set_log_y(y)
+            self.widget.configuration['y_log'] = y
+        self.viewbox.updateAutoRange()
+
+    def set_range_x(self, low, high):
+        expected = {"x_min": low, "x_max": high, "x_autorange": False}
+        with patch("karabogui.graph.plots.base.RangeDialog.get",
+                   return_value=(expected, True)):
+            self.widget.configure_range_x()
+
+    def set_range_y(self, low, high):
+        expected = {"y_min": low, "y_max": high, "y_autorange": False}
+        with patch("karabogui.graph.plots.base.RangeDialog.get",
+                   return_value=(expected, True)):
+            self.widget.configure_range_y()
+
+    def assert_data(self, x_expected, y_expected, log_x=False, log_y=False):
+        # Check getData values
+        x_data, y_data = self._plot.getData()
+        if log_x:
+            x_expected = np.log10(x_expected)
+        if log_y:
+            y_expected = np.log10(y_expected)
+        assert_array_equal(x_data, x_expected)
+        assert_array_equal(y_data, y_expected)
+
+    def assert_range(self, x_expected, y_expected, log_x=False, log_y=False):
+        self.assert_range_x(x_expected, log_x)
+        self.assert_range_y(y_expected, log_y)
+
+    def assert_range_x(self, x_expected, log_x):
+        assert_x_range = (self.assert_log_range if log_x
+                          else self.assert_linear_range)
+        assert_x_range(actual=self.widget.get_view_range_x(),
+                       expected=x_expected)
+
+    def assert_range_y(self, y_expected, log_y):
+        assert_y_range = (self.assert_log_range if log_y
+                          else self.assert_linear_range)
+        assert_y_range(actual=self.widget.get_view_range_y(),
+                       expected=y_expected)
+
+    def assert_log_range(self, actual, expected):
+        """The tolerance is by its order with the deviation of
+           12% the of range """
+        actual = np.ceil(np.log10(actual))
+        expected = [safe_log10(expected[0]), safe_log10(expected[-1])]
+        tol = int((expected[-1] - expected[0]) * 0.12)
+        assert_allclose(actual, expected, atol=tol)
+
+    def assert_linear_range(self, actual, expected):
+        tol = (expected[-1] - expected[0]) * RANGE_TOLERANCE
+        assert_allclose(actual, [expected[0], expected[-1]], atol=tol)
+
+
+class TestCurveItem(_BasePlotTest):
+
+    def setUp(self):
+        super(TestCurveItem, self).setUp()
+        self._plot = self.widget.add_curve_item()
+
+    def test_basics(self):
+        self.set_data(x=X_ARRAY, y=LOG_ARRAY)
+        self.assert_data(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
+        self.assert_range(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
+
+    def test_log_scale(self):
+        self.set_data(x=X_ARRAY, y=LOG_ARRAY)
+        self.set_log_scale(y=True)
+        self.assert_data(x_expected=X_ARRAY, y_expected=LOG_ARRAY, log_y=True)
+        # Check if the range doesn't change with log y scale
+        self.assert_range(x_expected=X_ARRAY, y_expected=LOG_ARRAY,
+                          log_y=True)
+
+    def test_ranges(self):
+        self.set_data(x=X_ARRAY, y=LOG_ARRAY)
+        self.set_log_scale(y=True)
+
+        # Set range
+        low, high = 1e-9, 1e9
+        self.set_range_y(low, high)
+        self.assert_range_y(y_expected=(low, high), log_y=True)
+
+        # Set problematic range (with zeros)
+        low, high = 0, 1e4
+        self.set_range_y(low, high)
+        self.assert_range_y(y_expected=(low, high), log_y=True)
+
+
+class TestBarItem(_BasePlotTest):
+
+    def setUp(self):
+        super(TestBarItem, self).setUp()
+        self._plot = self.widget.add_bar_item()
+        self._plot.set_width(0.1)
+
+    def test_basics(self):
+        self.set_data(x=X_ARRAY, y=LOG_ARRAY)
+        self._assert_bar(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
+        self.assert_data(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
+        self.assert_range(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
+
+    def test_log_scale(self):
+        self.set_data(x=X_ARRAY, y=LOG_ARRAY)
+        self.set_log_scale(y=True)
+        self._assert_bar(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
+        self.assert_data(x_expected=X_ARRAY, y_expected=LOG_ARRAY, log_y=True)
+        # Check if the range doesn't change with log y scale
+        self.assert_range(x_expected=X_ARRAY, y_expected=LOG_ARRAY,
+                          log_y=True)
+
+    def _assert_bar(self, x_expected, y_expected):
+        # Check bar attributes
+        assert_array_equal(self._plot.opts.get('x'), x_expected)
+        assert_array_equal(self._plot.opts.get('height'), y_expected)
+
+
+class TestPlotViewRestore(_BasePlotTest):
 
     def test_restore_roi(self):
         controller = self.widget.add_roi()
@@ -150,114 +294,13 @@ class TestPlotViewRestore(GuiTestCase):
         # Check if tool button is checked
         self.assertTrue(toolbar.buttons[roi_tool].isChecked())
 
-    def restore(self, **kwargs):
-        config = DEFAULT_CONFIG.copy()
-        config.update(kwargs)
-        self.widget.restore(config)
+    def test_restore_manual_ranges(self):
+        # Set range with with log
+        low, high = 1e-9, 1e9
+        self.restore(y_min=low, y_max=high, y_autorange=False, y_log=True)
+        self.assert_range_y(y_expected=(low, high), log_y=True)
 
-
-orders = np.arange(-5, 5, dtype=np.float)
-LOG_ARRAY = 10 ** orders
-RANGE_TOLERANCE = 0.12  # or 12% percent
-
-
-class _BasePlotTest(GuiTestCase):
-
-    def setUp(self):
-        super(_BasePlotTest, self).setUp()
-        self.widget = KaraboPlotView()
-        self.widget.configuration.update({'x_log': False, 'y_log': False})
-        self.widget.show()
-        self.viewbox = self.widget.plotItem.vb
-        self._plot = None
-
-    def tearDown(self):
-        super(_BasePlotTest, self).tearDown()
-        self.widget.close()
-        self.widget.destroy()
-        self.widget = None
-
-    def _set_data(self, x, y):
-        self._plot.setData(x, y)
-        # Trigger auto range
-        self.viewbox.updateAutoRange()
-
-    def _set_log_scale(self, x=None, y=None):
-        if x is not None:
-            self.widget.set_log_x(x)
-            self.widget.configuration['x_log'] = x
-        if y is not None:
-            self.widget.set_log_y(y)
-            self.widget.configuration['y_log'] = y
-        self.viewbox.updateAutoRange()
-
-    def _assert_data(self, x_expected, y_expected, log_x=False, log_y=False):
-        # Check getData values
-        x_data, y_data = self._plot.getData()
-        if log_x:
-            x_expected = np.log10(x_expected)
-        if log_y:
-            y_expected = np.log10(y_expected)
-        assert_array_equal(x_data, x_expected)
-        assert_array_equal(y_data, y_expected)
-
-    def _assert_range(self, x_expected, y_expected, log_x=False, log_y=False):
-        assert_x_range = (self._assert_log_range if log_x
-                          else self._assert_linear_range)
-        assert_y_range = (self._assert_log_range if log_y
-                          else self._assert_linear_range)
-
-        assert_x_range(actual=self.widget.get_view_range_x(),
-                       expected=x_expected)
-        assert_y_range(actual=self.widget.get_view_range_y(),
-                       expected=y_expected)
-
-    def _assert_log_range(self, actual, expected):
-        """The tolerance is by its order with the deviation of +/-1 """
-        actual = np.ceil(np.log10(actual))
-        expected = np.log10([expected[0], expected[-1]])
-        assert_allclose(actual, expected, atol=1)
-
-    def _assert_linear_range(self, actual, expected):
-        tol = (expected[-1] - expected[0]) * RANGE_TOLERANCE
-        assert_allclose(actual, [expected[0], expected[-1]], atol=tol)
-
-
-class TestCurveItem(_BasePlotTest):
-
-    def setUp(self):
-        super(TestCurveItem, self).setUp()
+        # Set some data and check if range will not change
         self._plot = self.widget.add_curve_item()
-
-    def test_basics(self):
-        self._set_data(x=X_ARRAY, y=LOG_ARRAY)
-        self._assert_data(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
-        self._assert_range(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
-
-
-class TestBarItem(_BasePlotTest):
-
-    def setUp(self):
-        super(TestBarItem, self).setUp()
-        self._plot = self.widget.add_bar_item()
-        self._plot.set_width(0.1)
-
-    def test_basics(self):
-        self._set_data(x=X_ARRAY, y=LOG_ARRAY)
-        self._assert_bar(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
-        self._assert_data(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
-        self._assert_range(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
-
-    def test_log_scale(self):
-        self._set_data(x=X_ARRAY, y=LOG_ARRAY)
-        self._set_log_scale(y=True)
-        self._assert_bar(x_expected=X_ARRAY, y_expected=LOG_ARRAY)
-        self._assert_data(x_expected=X_ARRAY, y_expected=LOG_ARRAY, log_y=True)
-        # Check if the range doesn't change with log y scale
-        self._assert_range(x_expected=X_ARRAY, y_expected=LOG_ARRAY,
-                           log_y=True)
-
-    def _assert_bar(self, x_expected, y_expected):
-        # Check bar attributes
-        assert_array_equal(self._plot.opts.get('x'), x_expected)
-        assert_array_equal(self._plot.opts.get('height'), y_expected)
+        self.set_data(x=X_ARRAY, y=LOG_ARRAY)
+        self.assert_range_y(y_expected=(low, high), log_y=True)
