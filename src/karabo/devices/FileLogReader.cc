@@ -519,7 +519,7 @@ namespace karabo {
                     }
                 }
 
-                string configTimepointStr(configTimepoint.toIso8601());
+                string configTimepointStr(configTimepoint.toIso8601Ext());
                 aReply(hash, schema, configAtTimepoint, configTimepointStr);
                 KARABO_LOG_FRAMEWORK_INFO << "sent result";
 
