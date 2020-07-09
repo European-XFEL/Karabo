@@ -14,8 +14,8 @@ from pint import DimensionalityError
 from karabo.middlelayer import (
     AlarmCondition, background, Bool, Configurable, connectDevice,
     decodeBinary, Device, DeviceNode, execute, filterByTags, Float, getDevice,
-    Hash, isAlive, isSet, Int32, KaraboError, lock, MetricPrefix, Node,
-    Overwrite, OutputChannel, Queue, setNoWait, setWait, Slot, slot, State,
+    isAlive, isSet, Int32, KaraboError, lock, MetricPrefix, Node,
+    Overwrite, Queue, setNoWait, setWait, Slot, slot, State,
     Timestamp, String, unit, Unit, VectorChar, VectorInt16,
     VectorString, VectorFloat, waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
@@ -58,10 +58,6 @@ class ChannelNode(Configurable):
 
 
 class Remote(Injectable, Device):
-    # The state is explicitly overwritten, State.UNKNOWN is always possible by
-    # default!
-    # We test that a proxy can reach State.UNKNOWN even if it is removed
-    # from the allowed options
 
     state = Overwrite(options=[State.ON])
 
@@ -87,16 +83,6 @@ class Remote(Injectable, Device):
         alarmInfo_warnLow="When they go low, we go high",
         alarmNeedsAck_warnLow=True,
         alarmHigh=20)
-
-    # Output channel to send hashes
-    output = OutputChannel(ChannelNode)
-
-    @Slot()
-    @coroutine
-    def sendData(self):
-        self.output.schema.data = self.output.schema.data.value + 1
-        timestamp = FIXED_TIMESTAMP if self.useTimestamp else Timestamp()
-        yield from self.output.writeData(timestamp=timestamp)
 
     @Int32()
     def other(self, value):
@@ -228,12 +214,6 @@ class Tests(DeviceTest):
         cls.remote = Remote({"_deviceId_": "remote"})
         with cls.deviceManager(cls.remote, lead=cls.local):
             yield
-
-    @async_tst
-    def test_configurationAsHash(self):
-        """Test the empty Hash of the output schema"""
-        conf = self.remote.configurationAsHash()
-        self.assertEqual(conf['output.schema'], Hash())
 
     @async_tst
     def test_execute(self):
@@ -547,98 +527,6 @@ class Tests(DeviceTest):
         background(moriturus.slotKillDevice())
         yield from waitUntil(lambda: not isAlive(proxy))
         self.assertFalse(isAlive(proxy))
-
-    @async_tst
-    def test_output_reconnect(self):
-        NUM_DATA = 5
-        outputdevice = Remote({"_deviceId_": "outputdevice"})
-        yield from outputdevice.startInstance()
-
-        with (yield from getDevice("outputdevice")) as proxy:
-            self.assertTrue(isAlive(proxy))
-            received = False
-
-            def handler(data, meta):
-                """Output handler to see if we received data
-                """
-                nonlocal received
-                received = True
-
-            self.assertEqual(received, False)
-            # Patch the handler to see if our boolean triggers
-            proxy.output.setDataHandler(handler)
-            proxy.output.connect()
-            # Send more often as our proxy has a drop setting and we are busy
-            # in tests.
-            for data in range(NUM_DATA):
-                yield from proxy.sendData()
-            self.assertEqual(received, True)
-            # We received data and now kill the device
-            yield from outputdevice.slotKillDevice()
-            yield from waitUntil(lambda: not isAlive(proxy))
-            self.assertFalse(isAlive(proxy))
-            # The device is gone, now we instantiate the device with same
-            # deviceId to see if the output automatically reconnects
-            outputdevice = Remote({"_deviceId_": "outputdevice"})
-            yield from outputdevice.startInstance()
-            yield from waitUntil(lambda: isAlive(proxy))
-            self.assertEqual(received, True)
-            received = False
-            self.assertEqual(received, False)
-            for data in range(NUM_DATA):
-                yield from proxy.sendData()
-            # Our reconnect was successful, we are receiving data via the
-            # output channel
-            self.assertEqual(received, True)
-            received = False
-
-        self.assertEqual(received, False)
-        # Delete our proxy and see if we still receive data!
-        del proxy
-        yield from outputdevice.slotKillDevice()
-        yield from sleep(1)
-
-        # Bring up our device with same deviceId, we should not have a
-        # channel active with the handler
-        outputdevice = Remote({"_deviceId_": "outputdevice"})
-        yield from outputdevice.startInstance()
-        with (yield from getDevice("outputdevice")) as proxy:
-            self.assertTrue(isAlive(proxy))
-            self.assertEqual(received, False)
-            for data in range(NUM_DATA):
-                yield from proxy.sendData()
-            self.assertEqual(received, False)
-
-        yield from outputdevice.slotKillDevice()
-
-    @async_tst
-    def test_output_timestamp(self):
-        NUM_DATA = 5
-        outputdevice = Remote({"_deviceId_": "outputdevice"})
-        yield from outputdevice.startInstance()
-
-        with (yield from getDevice("outputdevice")) as proxy:
-            self.assertTrue(isAlive(proxy))
-            proxy.output.connect()
-            # Send more often as our proxy has a drop setting and we are busy
-            # in tests.
-            for data in range(NUM_DATA):
-                yield from proxy.sendData()
-            self.assertNotEqual(proxy.output.schema.data.timestamp,
-                                FIXED_TIMESTAMP)
-            yield from setWait(proxy, 'useTimestamp', True)
-            for data in range(NUM_DATA):
-                yield from proxy.sendData()
-            self.assertEqual(proxy.output.schema.data.timestamp,
-                             FIXED_TIMESTAMP)
-
-            proxy.output.meta = False
-            for data in range(NUM_DATA):
-                yield from proxy.sendData()
-            self.assertNotEqual(proxy.output.schema.data.timestamp,
-                                FIXED_TIMESTAMP)
-        del proxy
-        yield from outputdevice.slotKillDevice()
 
     @async_tst
     def test_isAlive_state(self):
