@@ -3,8 +3,9 @@ from contextlib import contextmanager
 from unittest import main
 
 from karabo.middlelayer import (
-    Bool, Configurable, Device, getDevice, Hash, isAlive, Int32, Overwrite,
-    OutputChannel, setWait, Slot, State, Timestamp, waitUntil)
+    Bool, call, Configurable, Device, getDevice, Hash, isAlive, InputChannel,
+    Int32, Overwrite, OutputChannel, setWait, coslot, Slot, State, Timestamp,
+    UInt32, waitUntil)
 from .eventloop import DeviceTest, async_tst
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
@@ -37,6 +38,27 @@ class Alice(Device):
 
 class Bob(Device):
 
+    received = UInt32(
+        defaultValue=0,
+        displayedName="Received Packets")
+
+    closed = Bool(
+        defaultValue=False)
+
+    @coslot
+    async def connectInputChannel(self):
+        await self.input.connectChannel("alice:output")
+        return True
+
+    # close the input channel `name`
+    @InputChannel(raw=True)
+    async def input(self, data, meta):
+        self.received = self.received.value + 1
+
+    @input.close
+    async def input(self, name):
+        self.closed = True
+
     async def onInitialization(self):
         self.state = State.ON
 
@@ -46,9 +68,9 @@ class RemotePipelineTest(DeviceTest):
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
-        cls.bob = Bob({"_deviceId_": "bob"})
         cls.alice = Alice({"_deviceId_": "alice"})
-        with cls.deviceManager(cls.alice, lead=cls.bob):
+        cls.bob = Bob({"_deviceId_": "bob"})
+        with cls.deviceManager(cls.bob, lead=cls.alice):
             yield
 
     @async_tst
@@ -56,6 +78,20 @@ class RemotePipelineTest(DeviceTest):
         """Test the empty Hash of the output schema"""
         conf = self.alice.configurationAsHash()
         self.assertEqual(conf['output.schema'], Hash())
+
+    @async_tst
+    async def test_input_output(self):
+        """Test the input and output channel connection"""
+        ret = await call("bob", "connectInputChannel")
+        self.assertTrue(ret)
+        await sleep(1)
+        channels = self.bob.input.connectedOutputChannels.value
+        self.assertIn("alice:output", channels)
+        proxy = await getDevice("alice")
+        with proxy:
+            await proxy.sendData()
+            await sleep(0.1)
+            self.assertGreater(self.bob.received, 0)
 
     @async_tst
     async def test_output_reconnect(self):
