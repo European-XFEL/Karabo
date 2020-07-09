@@ -258,7 +258,9 @@ class MarkerShape(BaseShape):
         return rect
 
     def set_geometry(self, rect):
-        pass
+        """Marker geometry depend on the union of the children geometries.
+           We do not support setting the geometry from here, hence the
+           blank reimplementation"""
 
     def translate(self, offset):
         self._offset = offset
@@ -290,7 +292,11 @@ class MarkerShape(BaseShape):
                                   angle=self._angle, scale=self._scale)
 
     def _use_stroke_width_default(self):
-        # Check if markerUnits == '' == strokeWidth (it is by default)
+        # This is used for scaling the the arrow and the marker by either the
+        # stroke width or by user space. The current implementation is build by
+        # around stroke width scaling, but we still have to check against
+        # `useSpaceOnUse`. If markerUnits is not specified, we default to
+        # using stroke width.
         return self.model.markerUnits != "userSpaceOnUse"
 
 
@@ -328,6 +334,7 @@ class ArrowShape(LineShape):
 
     @on_trait_change("line")
     def _transform_marker(self):
+        """Rotate the marker with the angle made by the line"""
         self.marker.translate(self.shape.p2())
         if self.line.length() != 0:
             self.marker.rotate(self.line.angle())
