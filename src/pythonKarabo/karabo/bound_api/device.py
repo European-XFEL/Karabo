@@ -1605,6 +1605,7 @@ class PythonDevice(NoFsm):
 
     def slotLoggerPriority(self, newprio):
         oldprio = Logger.getPriority()
+        self.set("Logger.priority", newprio)
         Logger.setPriority(newprio)
         self.log.INFO(
             "Logger Priority changed : {} ==> {}".format(oldprio, newprio))
