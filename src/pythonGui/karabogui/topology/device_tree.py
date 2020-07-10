@@ -61,7 +61,8 @@ class DeviceTreeNode(HasStrictTraits):
             return {'type': NavigationItemTypes.DEVICE,
                     'deviceId': self.node_id,
                     'serverId': self.server_id,
-                    'capabilities': self.capabilities}
+                    'capabilities': self.capabilities,
+                    'attributes': self.attributes}
 
     def row(self):
         if self.parent is None:

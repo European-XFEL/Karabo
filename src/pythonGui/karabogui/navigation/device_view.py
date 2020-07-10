@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (
     QAbstractItemView, QAction, QDialog, QHeaderView, QMenu, QTreeView)
 
 from karabogui import icons
+from karabogui import messagebox
 from karabogui.enums import AccessRole, NavigationItemTypes
 from karabogui.globals import access_role_allowed
 from karabogui.events import broadcast_event, KaraboEvent
@@ -162,6 +163,16 @@ class DeviceTreeView(QTreeView):
     @pyqtSlot()
     def onGetConfigurationFromPast(self):
         info = self.indexInfo()
+        archive = info['attributes'].get('archive', False)
+        if not archive:
+            # Display a hint for the operator that currently the device is not
+            # archived/logged if so. Do not see a parent here to block!
+            messagebox.show_warning(
+                f"The device {info.get('deviceId')} is currently NOT "
+                f"archived! If it was not archived at the requested point in "
+                f"time but before that, you will receive an outdated "
+                f"configuration.")
+
         dialog = ConfigurationFromPastDialog(parent=self)
         dialog.move(QCursor.pos())
         if dialog.exec_() == QDialog.Accepted:
