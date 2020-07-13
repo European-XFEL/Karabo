@@ -50,12 +50,3 @@ for prefix, ns in XML_NAMESPACES.items():
 # Every widget has the same tag and is differentiated with attributes
 WIDGET_ELEMENT_TAG = NS_SVG + 'rect'
 UNKNOWN_WIDGET_CLASS = 'UnknownWidget'
-
-# SVG default values
-ARROW_HEAD = {
-    "width": 10,
-    "height": 10,
-    "path": "M0,0 L0,6 L9,3 z",
-    "ref_x": 0,
-    "ref_y": 3,
-}
