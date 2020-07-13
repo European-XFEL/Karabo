@@ -313,12 +313,13 @@ class ArrowShape(LineShape):
         return QLineF(self.shape)
 
     def draw(self, painter):
-        """The line gets drawn.
-        """
-        super(ArrowShape, self).draw(painter)
-        self.marker.draw(painter)
+        """Draw the line and the marker shapes"""
+        super(ArrowShape, self).draw(painter)  # line
+        self.marker.draw(painter)  # marker
 
     def geometry(self):
+        """The geometry of the arrow shape depends on the union of the line
+           shape and marker shape geometries."""
         line_geom = super(ArrowShape, self).geometry()
         return line_geom.united(self.marker.geometry())
 
