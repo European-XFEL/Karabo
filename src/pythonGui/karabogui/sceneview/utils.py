@@ -73,3 +73,16 @@ def calc_snap_pos(pos):
     """Calculate the snap position by rounding down the x-y points to the
        nearest grid"""
     return QPoint(round_down_to_grid(pos.x()), round_down_to_grid(pos.y()))
+
+
+def calc_rotated_point(x, y, angle=0, scale=1):
+    """Rotate a point with the angle and the scale.
+       Angle should be in degrees."""
+
+    radians = math.radians(angle)
+    cos, sin = math.cos(radians), math.sin(radians)
+
+    rotated_x = x * cos + y * sin
+    rotated_y = - x * sin + y * cos
+
+    return QPoint(rotated_x * scale, rotated_y * scale)
