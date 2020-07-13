@@ -658,6 +658,13 @@ namespace karabo {
                             << "\nTimestamp: " << timeEpoch.toIso8601Ext()
                             << "\nError: " << e.what();
                 }
+            } else {
+                // No value means the query returns "empty" result ...
+                // FLOAT and DOUBLE should be handled specifically to avoid looping forever!
+                if (propType == Types::DOUBLE || propType == Types::FLOAT) {
+                    asyncPropValueBeforeTime(ctxt, true);
+                    return;
+                }
             }
 
             if (ctxt->propNamesAndTypes.size() > 0) {
