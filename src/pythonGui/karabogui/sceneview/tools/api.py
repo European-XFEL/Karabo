@@ -7,8 +7,8 @@ from .actions import (BoxVSceneAction, BoxHSceneAction, CreateToolAction,
 from .clipboard import (SceneCopyAction, SceneCutAction, SceneDeleteAction,
                         ScenePasteAction, ScenePasteReplaceAction, SceneMoveAction,
                         SceneSelectAllAction)
-from .drawing import (LineSceneTool, RectangleSceneTool, SceneLinkTool,
-                      StickerTool, TextSceneTool, WebLinkTool)
+from .drawing import (ArrowSceneTool, LineSceneTool, RectangleSceneTool,
+                      SceneLinkTool, StickerTool, TextSceneTool, WebLinkTool)
 from .scenedndhandler import (
     ConfigurationDropHandler, ProjectDropHandler)
 from .selection import is_resizable, ProxySelectionTool, SceneSelectionTool
