@@ -10,7 +10,8 @@ from karabogui import icons
 from karabogui.graph.common.api import (
     AxesLabelsDialog, AuxPlots, COLORMAPS, ExportTool, ImageROIController,
     MouseMode, PointCanvas, RectCanvas, ROITool, ToolbarController)
-from karabogui.graph.common.const import SCALING, X_AXIS_HEIGHT, UNITS
+from karabogui.graph.common.const import (
+    LABEL_HEIGHT, SCALING, X_AXIS_HEIGHT, UNITS)
 
 from .aux_plots.controller import AuxPlotsController
 from .colorbar import ColorBarWidget
@@ -420,6 +421,13 @@ class KaraboImageView(QWidget):
     def set_label(self, axis, text='', units=''):
         """Public interface similar with to KaraboPlotView"""
         self.plotItem.set_label(axis, text, units)
+
+        # Modify colorbar top margin whether labels are present/absent
+        if axis == 0 and self._colorbar is not None:
+            margin = X_AXIS_HEIGHT
+            if text == '' and units == '':
+                margin -= LABEL_HEIGHT
+            self._colorbar.set_margins(top=margin)
 
     @pyqtSlot()
     def _show_transforms_dialog(self):
