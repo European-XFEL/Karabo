@@ -597,7 +597,7 @@ namespace karabo {
             try {
                 m_influxClient->queryDb(queryStr,
                                     bind_weak(&InfluxLogReader::onPropValueBeforeTime,
-                                              this, nameAndType.first, nameAndType.second, _1, ctxt));
+                                              this, nameAndType.first, nameAndType.second, infinite, _1, ctxt));
             } catch (const std::exception &e) {
                 const std::string &errMsg = std::string("Error querying property value before time: ") + e.what();
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
@@ -608,6 +608,7 @@ namespace karabo {
 
         void InfluxLogReader::onPropValueBeforeTime(const std::string &propName,
                                                     const karabo::util::Types::ReferenceType &propType,
+                                                    bool infinite,
                                                     const karabo::net::HttpResponse &propValueResp,
                                                     const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
 
@@ -660,8 +661,9 @@ namespace karabo {
                 }
             } else {
                 // No value means the query returns "empty" result ...
-                // FLOAT and DOUBLE should be handled specifically to avoid looping forever!
-                if (propType == Types::DOUBLE || propType == Types::FLOAT) {
+                // FLOAT and DOUBLE should be tested for nan and +-inf if not tested yet...
+                // ... if tested already (infinite==true) then just skip and go for the next parameter
+                if (!infinite && (propType == Types::DOUBLE || propType == Types::FLOAT)) {
                     asyncPropValueBeforeTime(ctxt, true);
                     return;
                 }
