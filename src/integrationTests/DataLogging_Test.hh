@@ -20,7 +20,6 @@ class DataLogging_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testNoInfluxServerHandling);
     CPPUNIT_TEST(influxAllTestRunnerWithTelegraf);
     CPPUNIT_TEST(testInfluxDbNotAvailableTelegraf);
-
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -34,6 +33,7 @@ private:
     void influxAllTestRunner();
     void influxAllTestRunnerWithTelegraf();
     void testAllInstantiated(bool waitForLoggerReady = true);
+    void testMigrateFileLoggerData();
 
     void testInt(bool testPastConf = true);
     void testFloat(bool testPastConf = false);
@@ -118,6 +118,9 @@ private:
     std::string m_influxDb_write_password;
     std::string m_influxDb_write_url;
     bool m_switchedToTelegrafEnv = false;
+    bool m_keepLoggerDirectory = true;
+    bool m_dataWasMigrated = false;
+    karabo::util::Epochstamp m_fileMigratedDataEndsBefore;
 
     /**
      * Sets up an InfluxDB cluster with telegraf front-end and 2 InfluxDB cpus
