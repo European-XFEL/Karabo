@@ -163,6 +163,12 @@ namespace karabo {
                     const float v = leafNode.getValue<float>();
                     isFinite = std::isfinite(v);
                     value = toString(v);
+                } else if (type == Types::UINT64) {
+                    const unsigned long long uv = leafNode.getValue<unsigned long long>();
+                    // behavior on simple casting is implementation defined. We memcpy instead to be sure of the results
+                    long long sv;
+                    memcpy(&sv, &uv, sizeof(long long));
+                    value = toString(sv);
                 } else if (type == Types::STRING) {
                     value = leafNode.getValueAs<std::string>();
                     // Line breaks violate the line protocol, so we mangle newlines... :-(.
@@ -225,6 +231,7 @@ namespace karabo {
                 case Types::INT32:
                 case Types::UINT32:
                 case Types::INT64:
+                case Types::UINT64:
                 {
                     if (value.empty()) {
                         // Should never happen! We try to save the line protocol by skipping
@@ -255,7 +262,6 @@ namespace karabo {
                 case Types::BYTE_ARRAY:
                 case Types::COMPLEX_FLOAT:
                 case Types::COMPLEX_DOUBLE:
-                case Types::UINT64:
                 case Types::VECTOR_BOOL:
                 case Types::VECTOR_INT8:
                 case Types::VECTOR_UINT8:
