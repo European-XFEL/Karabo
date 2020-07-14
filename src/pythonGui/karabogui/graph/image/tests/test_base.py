@@ -87,3 +87,45 @@ class TestKaraboImageView(GuiTestCase):
             data_item = controller.plot._data_item
             assert_method(len(data_item.xData) != 0)
             assert_method(len(data_item.yData) != 0)
+
+    def test_axes_labels(self):
+        # Restore config
+        self._assert_axes_labels(x_label='', x_units='',
+                                 y_label='', y_units='')
+        self._assert_axes_labels(x_label='Foo', x_units='',
+                                 y_label='', y_units='')
+        self._assert_axes_labels(x_label='', x_units='',
+                                 y_label='Bar', y_units='')
+
+    def _assert_axes_labels(self, **config):
+        # Get axis items
+        top = self.widget.plotItem.getAxis("top")
+        bottom = self.widget.plotItem.getAxis("bottom")
+        left = self.widget.plotItem.getAxis("left")
+        right = self.widget.plotItem.getAxis("right")
+
+        # Setup expected text and visibility
+        x_label = f'{config["x_label"]}'
+        if config["x_units"]:
+            x_label += f' ({config["x_units"]})'
+        x_visible = bool(config["x_label"] or config["x_units"])
+
+        y_label = f'{config["y_label"]}'
+        if config["y_units"]:
+            y_label += f' ({config["y_units"]})'
+        y_visible = bool(config["y_label"] or config["y_units"])
+
+        # Apply config
+        self.widget.restore(config)
+
+        # Check blank axes
+        self.assertEqual(top.labelText, x_label)
+        self.assertEqual(bottom.labelText, '')
+        self.assertEqual(left.labelText, y_label)
+        self.assertEqual(right.labelText, '')
+
+        # Check visibility
+        self.assertEqual(top.label.isVisible(), x_visible)
+        self.assertEqual(bottom.label.isVisible(), False)  # always false
+        self.assertEqual(left.label.isVisible(), y_visible)
+        self.assertEqual(right.label.isVisible(), False)  # always false
