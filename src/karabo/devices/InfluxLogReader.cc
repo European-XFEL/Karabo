@@ -874,6 +874,15 @@ namespace karabo {
                     node = &hash.set<std::string>(path, unescaped);
                     break;
                 }
+                case Types::UINT64:
+                {
+                    // behavior on simple casting is implementation defined. We memcpy instead to be sure of the results
+                    unsigned long long uv;
+                    long long sv = std::move(fromString<long long>(valueAsString));
+                    memcpy(&uv, &sv, sizeof(unsigned long long));
+                    node = &hash.set<unsigned long long>(path, uv);
+                    node->setType(type);
+                }
                 default:
                 {
                     node = &hash.set<std::string>(path, valueAsString);
