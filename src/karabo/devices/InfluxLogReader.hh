@@ -175,6 +175,7 @@ namespace karabo {
             void asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt, bool infinite);
             void onPropValueBeforeTime(const std::string &propName,
                                        const karabo::util::Types::ReferenceType &propType,
+                                       bool infinite,
                                        const karabo::net::HttpResponse &propValueResp,
                                        const boost::shared_ptr<ConfigFromPastContext> &ctxt);
 
