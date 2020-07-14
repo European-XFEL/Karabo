@@ -32,6 +32,10 @@ class Alice(Device):
         timestamp = FIXED_TIMESTAMP if self.useTimestamp else Timestamp()
         await self.output.writeData(timestamp=timestamp)
 
+    @Slot()
+    async def sendEndOfStream(self):
+        await self.output.writeEndOfStream()
+
     def __init__(self, configuration):
         super().__init__(configuration)
 
@@ -43,6 +47,9 @@ class Bob(Device):
         displayedName="Received Packets")
 
     closed = Bool(
+        defaultValue=False)
+
+    eosReceived = Bool(
         defaultValue=False)
 
     @coslot
@@ -58,6 +65,10 @@ class Bob(Device):
     @input.close
     async def input(self, name):
         self.closed = True
+
+    @input.endOfStream
+    async def input(self, name):
+        self.eosReceived = True
 
     async def onInitialization(self):
         self.state = State.ON
@@ -89,9 +100,16 @@ class RemotePipelineTest(DeviceTest):
         self.assertIn("alice:output", channels)
         proxy = await getDevice("alice")
         with proxy:
+            self.assertEqual(self.bob.received, 0)
             await proxy.sendData()
-            await sleep(0.1)
-            self.assertGreater(self.bob.received, 0)
+            await waitUntil(lambda: self.bob.received == 1)
+            self.assertEqual(self.bob.received, 1)
+            await proxy.sendEndOfStream()
+            await waitUntil(lambda: self.bob.eosReceived.value  == True)
+            self.assertEqual(self.bob.eosReceived.value, True)
+            await proxy.sendData()
+            await waitUntil(lambda: self.bob.received == 2)
+            self.assertEqual(self.bob.received, 2)
 
     @async_tst
     async def test_output_reconnect(self):
