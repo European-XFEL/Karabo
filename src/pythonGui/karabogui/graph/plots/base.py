@@ -564,7 +564,7 @@ class KaraboPlotView(QWidget):
     # ----------------------------------------------------------------
     # Axis and Title methods
 
-    def set_label(self, axis, text=None, units=None):
+    def set_label(self, axis, text="", units=""):
         """Set the label of an axis of the built-in plotItem
 
         :param axis: The axis, e.g. ``0`` for x-axis, ``1`` for y-axis
@@ -572,6 +572,10 @@ class KaraboPlotView(QWidget):
         :param units: The declared unit string for the axis label (None)
         """
         self.plotItem.setLabel(TICK_AXES[axis], text, units)
+        show = True if (text != "" or units != "") else False
+        # XXX: We circumvent a PyQtGraph bug here and set the visibility
+        # ourselves! Setting a label and removing it, gives PyQtGraph problems.
+        self.plotItem.showLabel(TICK_AXES[axis], show=show)
 
     def set_title(self, title=None, **kwargs):
         """Set the title of the built-in plotItem"""
