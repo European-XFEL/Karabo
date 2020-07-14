@@ -65,6 +65,12 @@ class AxisItem(PgAxisItem):
         super(AxisItem, self).setLabel(text=text, units=units,
                                        unitPrefix=unitPrefix, **args)
 
+    def showLabel(self, show=True):
+        # Always do not show label if it is not a tick axis
+        if not self.has_ticks:
+            show = False
+        super(AxisItem, self).showLabel(show)
+
     def drawPicture(self, p, axisSpec, tickSpecs, textSpecs):
         """Reimplemented because we don't want tick strings for minor axes"""
         p.setRenderHint(p.Antialiasing, False)
