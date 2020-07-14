@@ -36,6 +36,7 @@ private:
     void testMigrateFileLoggerData();
 
     void testInt(bool testPastConf = true);
+    void testUInt64(bool testPastConf = false);
     void testFloat(bool testPastConf = false);
     void testString(bool testPastConf = false);
     void testVectorString(bool testPastConf = false);
