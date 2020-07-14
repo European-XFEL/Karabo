@@ -17,7 +17,9 @@ from karabo.influxdb.client import InfluxDbClient
 from karabo.influxdb.dlutils import (
     device_id_from_path, escape_measurement, format_line_protocol_body
 )
-from karabo.native import encodeBinary, Schema, decodeXML
+# we use karathon here to ensure serialization compatiblity between
+# the loggers running in C++ and the migration script
+from karathon import BinarySerializerSchema, TextSerializerSchema  
 
 
 PROCESSED_SCHEMAS_FILE_NAME = '.processed_schemas.txt'
@@ -95,6 +97,8 @@ class DlSchema2Influx():
             'write_retries': [],
         }
         schema_update_epoch = op.getmtime(self.schema_path)
+        karathon_text_ser = TextSerializerSchema.create("Xml")
+        karathon_bin_ser = BinarySerializerSchema.create("Bin")
         with open(self.schema_path, 'r') as fp:
 
             for i, l in enumerate(fp):
@@ -104,14 +108,15 @@ class DlSchema2Influx():
                     if line_fields:
                         # line has been parsed successfully
                         # save the event entry for the schema update
-                        class_id, xml = line_fields['schema'].split(':', 1)
-                        content = Schema(class_id)
-                        content.hash = decodeXML(xml)
-                        b_schema = encodeBinary(content)
+                        # use karathon to ensure the same code base as for
+                        # live logging when serializing.
+                        xml = line_fields['schema']
+                        karathon_schema = karathon_text_ser.load(xml)
+                        b_schema = karathon_bin_ser.save(karathon_schema)
                         digest = hashlib.sha1(b_schema).hexdigest()
                         safe_m = escape_measurement(self.device_id)
                         data.append(
-                            '{m}__EVENTS,type=SCHEMA schema_digest="{d}" {t}'
+                            '{m}__EVENTS,type="SCHEMA" schema_digest="{d}" {t}'
                             .format(
                                 m=safe_m,
                                 d=digest,
@@ -124,7 +129,7 @@ class DlSchema2Influx():
                             # database.
                             qry = (
                                 "select count(*) from \"{m}__SCHEMAS\" "
-                                "where digest='{d}'".format(m=safe_m, d=digest)
+                                "where digest='\"{d}\"'".format(m=safe_m, d=digest)
                             )
                             qry_args = {"db": self.db_name, "q": qry}
                             rs = await self.read_client.query(qry_args)
