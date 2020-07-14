@@ -448,6 +448,7 @@ void DataLogging_Test::fileAllTestRunner() {
     testAllInstantiated();
     testNans();
     testInt();
+    testUInt64();
     testFloat();
     testString();
     // TODO: port base64 encoding to the FileDataLogger/FileLogReader
@@ -568,6 +569,7 @@ void DataLogging_Test::influxAllTestRunner() {
     
     testNans();
     testInt(true);
+    testUInt64(false);
     testFloat(false);
     testString(false);
     testChar(false);
@@ -1352,6 +1354,14 @@ void DataLogging_Test::testInt(bool testPastConf) {
         return i;
     };
     testHistory<int>("int32Property", lambda, testPastConf);
+}
+
+
+void DataLogging_Test::testUInt64(bool testPastConf) {
+    auto lambda = [] (int i) -> unsigned long long {
+        return (unsigned long long) i - 1;
+    };
+    testHistory<unsigned long long>("uint64Property", lambda, testPastConf);
 }
 
 
