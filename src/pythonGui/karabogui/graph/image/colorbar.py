@@ -89,9 +89,14 @@ class ColorBarWidget(GraphicsWidget):
                .getLookupTable(alpha=False, mode="RGB"))
         self.barItem.setLookupTable(lut)
 
-    def set_margins(self, top=0, bottom=0):
+    def set_margins(self, top=None, bottom=None):
         """Sets top and bottom margins of the colorbar. This depend on the
         axis size of the main plot."""
+        if top is None:
+            _, top, _, _ = self.grid_layout.getContentsMargins()
+        if bottom is None:
+            _, _, _, bottom = self.grid_layout.getContentsMargins()
+
         self.grid_layout.setContentsMargins(0, top, 0, bottom)
 
     # ---------------------------------------------------------------------

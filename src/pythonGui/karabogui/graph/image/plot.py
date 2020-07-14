@@ -230,9 +230,15 @@ class KaraboImagePlot(PlotItem):
     def set_label(self, axis=0, text='', units=''):
         formatted_units = " ({})".format(units) if units else units
 
-        # set AxisItem labels
+        show = True if (text != "" or units != "") else False
+
         for ax in self._axes[axis]:
+            # set AxisItem labels
             self.getAxis(ax).setLabel(text + formatted_units)
+            # XXX: We circumvent a PyQtGraph bug here and set the visibility
+            # ourselves! Setting a label and removing it, gives PyQtGraph
+            # problems.
+            self.showLabel(ax, show=show)
 
         labels = self._labels[axis]
         labels[LABEL] = text
