@@ -153,7 +153,7 @@ class DlRaw2Influx():
             # at least one key per line data point
             evt_type = '+LOG' if up_flag == 'LOGIN' else '-LOG'
             self.data.append(
-                f'{safe_m}__EVENTS,type={evt_type} '
+                f'{safe_m}__EVENTS,type="{evt_type}" '
                 f'karabo_user="{safe_user}" {safe_time}'
             )
             self.stats['lines_processed'] = self.stats['lines_processed'] + 1
