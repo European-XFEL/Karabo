@@ -304,3 +304,27 @@ class TestPlotViewRestore(_BasePlotTest):
         self._plot = self.widget.add_curve_item()
         self.set_data(x=X_ARRAY, y=LOG_ARRAY)
         self.assert_range_y(y_expected=(low, high), log_y=True)
+
+    def test_axis_visibility(self):
+        bottom_axes = self.widget.plotItem.getAxis("bottom")
+        left_axes = self.widget.plotItem.getAxis("left")
+        x_label = bottom_axes.label
+        y_label = left_axes.label
+        self.assertEqual(x_label.isVisible(), False)
+        self.assertEqual(y_label.isVisible(), False)
+
+        self.restore(x_label="Axis", y_label="Axis")
+        self.assertEqual(x_label.isVisible(), True)
+        self.assertEqual(y_label.isVisible(), True)
+
+        self.restore(x_label="", y_label="")
+        self.assertEqual(x_label.isVisible(), False)
+        self.assertEqual(y_label.isVisible(), False)
+
+        self.restore(x_units="mm", y_units="mm")
+        self.assertEqual(x_label.isVisible(), True)
+        self.assertEqual(y_label.isVisible(), True)
+
+        self.restore(x_units="", y_units="")
+        self.assertEqual(x_label.isVisible(), False)
+        self.assertEqual(y_label.isVisible(), False)
