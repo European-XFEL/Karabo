@@ -84,6 +84,15 @@ class Channel(object):
         # WHY IS THE READER NOT CLOSEABLE??
         self.writer.close()
 
+    def sendEndOfStream(self):
+        h = Hash("endOfStream", True,
+                 "byteSizes", numpy.array([], dtype=numpy.uint32))
+        # As the messages transporting data, the eos message has a header
+        # (i.e. h) and a body. Now this body is empty, but we still have to
+        # send its size in bytes, i.e. zero.
+        self.writeHash(h)
+        self.writeSize(numpy.uint32(0))
+
     @coroutine
     def nextChunk(self, chunk_future):
         """write a chunk once availabe and wait for next request
@@ -107,19 +116,33 @@ class Channel(object):
             chunk = done["chunk"]
             encoded = []
             info = []
+            n_chunks = 0
             for data, timestamp in chunk:
+                if "endOfStream" in data:
+                    # XXX: This is safe as an endOfStream is coming
+                    # via an extra method! No chunks are available then!
+                    self.sendEndOfStream()
+                    continue
+
+                n_chunks += 1
                 encoded.append(encodeBinary(data))
                 # Create the timestamp information for this packet!
                 hsh = Hash("source", self.channelName, "timestamp", True)
                 hsh["timestamp", ...] = timestamp.toDict()
                 info.append(hsh)
 
-            nData = numpy.uint32(len(chunk))
-            sizes = numpy.array([len(d) for d in encoded], dtype=numpy.uint32)
-            h = Hash("nData", nData, "byteSizes", sizes, "sourceInfo", info)
-            self.writeHash(h)
-            self.writeSize(sizes.sum())
-            self.writer.writelines(encoded)
+            if n_chunks:
+                nData = numpy.uint32(n_chunks)
+                sizes = numpy.array([len(d) for d in encoded],
+                                    dtype=numpy.uint32)
+                h = Hash("nData", nData,
+                         "byteSizes", sizes,
+                         "sourceInfo", info)
+                # For future: Replace bytesizes with `bufferSetLayout` and
+                # special content to enable copyless deserialization
+                self.writeHash(h)
+                self.writeSize(sizes.sum())
+                self.writer.writelines(encoded)
 
         if "read" in pending:
             # NOTE: We accept the fact that also ``read`` can be in ``done``!
@@ -715,6 +738,12 @@ class NetworkOutput(Configurable):
                 tasks.append(queue.put(chunk))
         finally:
             yield from gather(*tasks, return_exceptions=True)
+
+    @coroutine
+    def writeEndOfStream(self):
+        """Send an endOfStream to the clients"""
+        timestamp = get_timestamp()
+        yield from self.writeChunk([(Hash("endOfStream", True), timestamp)])
 
     @coroutine
     def writeData(self, timestamp=None):

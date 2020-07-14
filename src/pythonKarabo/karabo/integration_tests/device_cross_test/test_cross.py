@@ -88,6 +88,11 @@ class MiddlelayerDevice(DeviceClientBase):
         self.foundInterfaces = interfaces
         self.update()
 
+    @Slot()
+    @coroutine
+    def sendOutputEOS(self):
+        yield from self.output.writeEndOfStream()
+
 
 class Tests(DeviceTest):
     __loggerMap = "loggermap.xml"
@@ -166,8 +171,9 @@ class Tests(DeviceTest):
 
         # Basic Interfaces Check AFTER bound device is up
         # -----------------------------------------------
+        mdl_proxy = yield from getDevice("middlelayerDevice")
 
-        with (yield from getDevice("middlelayerDevice")) as mdl_proxy:
+        with mdl_proxy:
             yield from setWait(mdl_proxy, boundDevice="boundDevice")
             self.assertEqual(mdl_proxy.boundDevice, "boundDevice")
             yield from mdl_proxy.retrieveInterfaces()

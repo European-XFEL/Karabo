@@ -5,10 +5,11 @@ API cross test
 import numpy
 
 from karabo.bound import (
-    AMPERE, AlarmCondition, Hash, DOUBLE_ELEMENT, Epochstamp, INPUT_CHANNEL,
-    INT32_ELEMENT, VECTOR_STRING_ELEMENT, KARABO_CLASSINFO, KILO, METER,
-    MILLI, NDARRAY_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL, PythonDevice, Schema,
-    SLOT_ELEMENT, State, STRING_ELEMENT, TABLE_ELEMENT, Timestamp, Trainstamp)
+    AMPERE, AlarmCondition, Hash, BOOL_ELEMENT, DOUBLE_ELEMENT, Epochstamp,
+    INPUT_CHANNEL, INT32_ELEMENT, VECTOR_STRING_ELEMENT, KARABO_CLASSINFO,
+    KILO, METER, MILLI, NDARRAY_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL,
+    PythonDevice, Schema, SLOT_ELEMENT, State, STRING_ELEMENT, TABLE_ELEMENT,
+    Timestamp, Trainstamp)
 
 
 @KARABO_CLASSINFO("TestDevice", "1.5")
@@ -44,6 +45,13 @@ class TestDevice(PythonDevice):
             .defaultValue(22.5)
             .reconfigurable()
             .commit(),
+
+            BOOL_ELEMENT(expected).key("eosReceived")
+                .displayedName("EOS Received")
+                .assignmentOptional()
+                .defaultValue(False)
+                .reconfigurable()
+                .commit(),
 
             INT32_ELEMENT(expected).key("readonly")
             .displayedName("Readonly")
@@ -215,8 +223,8 @@ class TestDevice(PythonDevice):
     def onData(self, data, metaData):
         self.set("a", data.get("number"))
 
-    def onEndOfStream(self):
-        self.set("a", 0)
+    def onEndOfStream(self, channel):
+        self.set("eosReceived", True)
 
     def compareSchema(self):
         """This function tries to get the maxSize of a middlelayer device
