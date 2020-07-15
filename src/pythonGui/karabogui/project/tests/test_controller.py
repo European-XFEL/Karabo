@@ -137,7 +137,11 @@ class ControllerTestCase(GuiTestCase):
                 assert len(child.children) == 1
                 server_items = child.children
                 assert server_items[0].model is devServ0
-                assert len(server_items[0].children) == 2
+                device_instances = server_items[0].children
+                assert len(device_instances) == 2
+                # Add a small patch for the project_devices
+                for device_instance in device_instances:
+                    device_instance.__dict__["project_device"] = None
                 devServ0.devices.pop()
                 assert len(server_items[0].children) == 1
                 dev2 = DeviceInstanceModel(instance_id='dev2')
