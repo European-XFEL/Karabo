@@ -1,4 +1,21 @@
 **************************
+What's New in Karabo 2.9.3
+**************************
+
+A release dedicated to enhance the karabo GUI. It will provide better logarithmic
+display of the axis and fixes the graph toolbar toggling.
+**This hotfix is highly recommended!**
+
+Detailed Merge-Log
+==================
+
+- InfluxDB: Display success when influx migration succeeds !4503
+- GUI: Fix plot log range !4521
+- GUI: Fix vector bar graph !4522
+- GUI: Fix graph toolbar toggling !4524
+
+
+**************************
 What's New in Karabo 2.9.2
 **************************
 
