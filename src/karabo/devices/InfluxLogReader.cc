@@ -597,7 +597,7 @@ namespace karabo {
             try {
                 m_influxClient->queryDb(queryStr,
                                     bind_weak(&InfluxLogReader::onPropValueBeforeTime,
-                                              this, nameAndType.first, nameAndType.second, _1, ctxt));
+                                              this, nameAndType.first, nameAndType.second, infinite, _1, ctxt));
             } catch (const std::exception &e) {
                 const std::string &errMsg = std::string("Error querying property value before time: ") + e.what();
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
@@ -608,6 +608,7 @@ namespace karabo {
 
         void InfluxLogReader::onPropValueBeforeTime(const std::string &propName,
                                                     const karabo::util::Types::ReferenceType &propType,
+                                                    bool infinite,
                                                     const karabo::net::HttpResponse &propValueResp,
                                                     const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
 
@@ -657,6 +658,14 @@ namespace karabo {
                             << "\nValue (as string): " << *valueAsString
                             << "\nTimestamp: " << timeEpoch.toIso8601Ext()
                             << "\nError: " << e.what();
+                }
+            } else {
+                // No value means the query returns "empty" result ...
+                // FLOAT and DOUBLE should be tested for nan and +-inf if not tested yet...
+                // ... if tested already (infinite==true) then just skip and go for the next parameter
+                if (!infinite && (propType == Types::DOUBLE || propType == Types::FLOAT)) {
+                    asyncPropValueBeforeTime(ctxt, true);
+                    return;
                 }
             }
 
@@ -864,6 +873,15 @@ namespace karabo {
                     std::string unescaped = unescapeLoggedString(valueAsString);
                     node = &hash.set<std::string>(path, unescaped);
                     break;
+                }
+                case Types::UINT64:
+                {
+                    // behavior on simple casting is implementation defined. We memcpy instead to be sure of the results
+                    unsigned long long uv;
+                    long long sv = std::move(fromString<long long>(valueAsString));
+                    memcpy(&uv, &sv, sizeof(unsigned long long));
+                    node = &hash.set<unsigned long long>(path, uv);
+                    node->setType(type);
                 }
                 default:
                 {
