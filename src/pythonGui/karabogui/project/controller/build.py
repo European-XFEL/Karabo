@@ -95,7 +95,10 @@ def destroy_device_instance_controller(controller):
     model.on_trait_change(controller.items_assigned, 'configs', remove=True)
     model.on_trait_change(controller.items_mutated, 'configs_items',
                           remove=True)
+
+    # Remove project device references
     get_topology().delete_project_device(model.instance_id)
+    controller.project_device = None
 
 
 def create_macro_controller(model=None, parent=None, _qt_model=None):
