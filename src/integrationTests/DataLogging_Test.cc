@@ -228,7 +228,7 @@ DataLogging_Test::DataLogging_Test()
     // Use platform-dependent name for the device: concurrent tests in CI operate
     // on the same InfluxDB database ...
     m_deviceId(deviceIdPrefix + "PropertyTestDevice"),
-    m_fileLoggerDirectory("dataLoggingTest"),
+    m_fileLoggerDirectory(deviceIdPrefix + "dataLoggingTest"),
     m_changedPath(false), m_oldPath() {
 
 }
