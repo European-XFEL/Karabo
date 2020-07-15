@@ -398,7 +398,7 @@ class Influx_TestCase(DeviceTest):
             'int32Property' : 99,
             'uint32Property' : 32_000_000,
             'int64Property' : 3_200_000_000,
-            'uint64Property' : '3200000000', # uint64 are saved as strings
+            'uint64Property' : 3200000000,
             'stringProperty' : "Some arbitrary text.",
             'vectors.boolProperty': "1,0,1,0,1,0",
             'vectors.uint8Property': "41,42,43,44,45,46", # this is decoded from base64
