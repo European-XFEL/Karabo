@@ -153,7 +153,7 @@ class DlRaw2Influx():
             # at least one key per line data point
             evt_type = '+LOG' if up_flag == 'LOGIN' else '-LOG'
             self.data.append(
-                f'{safe_m}__EVENTS,type={evt_type} '
+                f'{safe_m}__EVENTS,type="{evt_type}" '
                 f'karabo_user="{safe_user}" {safe_time}'
             )
             self.stats['lines_processed'] = self.stats['lines_processed'] + 1
@@ -306,6 +306,9 @@ class DlRaw2Influx():
         elif ktype in ("INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32",
                        "INT64"):
             value = str(value) + "i"
+        elif ktype == "UINT64":
+            sv = struct.unpack('l',struct.pack('P', int(f"{int(value):b}", 2)))[0]
+            value = str(sv) + "i"
         elif ktype == "STRING":
             escaped = value.replace('\\', '\\\\').replace('"', r'\"')
             value = f'"{escaped}"'
@@ -333,7 +336,7 @@ class DlRaw2Influx():
             binary = base64.b64decode(value)
             vec = [str(v) for v in struct.unpack('B'*len(binary), binary)]
             value = '"{}"'.format(",".join(vec))
-        elif ktype in ("BYTE_ARRAY", "UINT64") or ktype.startswith("VECTOR_"):
+        elif ktype == "BYTE_ARRAY" or ktype.startswith("VECTOR_"):
             value = '"{}"'.format(value)
         elif ktype == "CHAR":
             size = len(value)

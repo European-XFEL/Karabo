@@ -272,7 +272,7 @@ void DataLogging_Test::setUp() {
     m_deviceClient = boost::make_shared<DeviceClient>();
     m_sigSlot = boost::make_shared<SignalSlotable>("sigSlot");
     m_sigSlot->start();
-
+    
     // There are indications for rare hanging between tests, see https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/101484
     // So debug print when this happens.
     const Epochstamp stop;
@@ -385,7 +385,7 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
         manager_conf.set("logger.InfluxDataLogger.urlWrite", influxUrlWrite);
         manager_conf.set("logger.InfluxDataLogger.urlRead", influxUrlRead);
         manager_conf.set("logger.InfluxDataLogger.dbname", dbName);
-
+        
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
     }
@@ -409,7 +409,9 @@ void DataLogging_Test::tearDown() {
 
     // Clean up directory - you may want to comment out these lines for debugging
     boost::filesystem::remove("loggermap.xml");
-    boost::filesystem::remove_all(m_fileLoggerDirectory);
+    if (!m_keepLoggerDirectory) {
+        boost::filesystem::remove_all(m_fileLoggerDirectory);
+    }
 
     if (m_changedPath) {
         if (m_oldPath.empty()) {
@@ -421,7 +423,7 @@ void DataLogging_Test::tearDown() {
     // So debug print for in between tests, see setUp()
     const Epochstamp stop;
     std::clog << "End tearDown " << stop.toIso8601Ext() << std::endl;
-
+    
     // If the InfluxDb has been switched to use Telegraf, but hasn't been restored (e.g. the test that made the switch
     // didn't run until its end), do so in here.
     if (m_switchedToTelegrafEnv) {
@@ -447,6 +449,7 @@ void DataLogging_Test::fileAllTestRunner() {
     // assertion and for the following test.  The reason is still unclear.
     // testNans();
     testInt();
+    testUInt64();
     testFloat();
     testString();
     // TODO: port base64 encoding to the FileDataLogger/FileLogReader
@@ -480,8 +483,74 @@ void DataLogging_Test::fileAllTestRunner() {
     //testSchemaEvolution();
 }
 
+void DataLogging_Test::testMigrateFileLoggerData() {
+    
+    // launch the migration script onto the logged path
+
+    const std::string influxUrlWrite = (getenv("KARABO_INFLUXDB_WRITE_URL") ? getenv("KARABO_INFLUXDB_WRITE_URL") : "http://localhost:8086");
+    const std::string influxUrlRead = (getenv("KARABO_INFLUXDB_QUERY_URL") ? getenv("KARABO_INFLUXDB_QUERY_URL") : "http://localhost:8086");
+    const std::string influxDbName = (getenv("KARABO_INFLUXDB_DBNAME") ? getenv("KARABO_INFLUXDB_DBNAME") : (getenv("KARABO_BROKER_TOPIC") ? getenv("KARABO_BROKER_TOPIC") : getenv("USER")));
+    const std::string influxUserWrite = (getenv("KARABO_INFLUXDB_WRITE_USER") ? getenv("KARABO_INFLUXDB_WRITE_USER") : std::string("infadm"));
+    const std::string influxPwdWrite = (getenv("KARABO_INFLUXDB_WRITE_PASSWORD") ? getenv("KARABO_INFLUXDB_WRITE_PASSWORD") : std::string("admpwd"));
+    const std::string influxUserRead = (getenv("KARABO_INFLUXDB_QUERY_USER") ? getenv("KARABO_INFLUXDB_QUERY_USER") : influxUserWrite);
+    const std::string influxPwdRead = (getenv("KARABO_INFLUXDB_QUERY_PASSWORD") ? getenv("KARABO_INFLUXDB_QUERY_PASSWORD") : influxPwdWrite);
+    const std::string absLoggerPath =  boost::filesystem::absolute("./"  + m_fileLoggerDirectory).string();
+    const std::string migrationResultsPath = absLoggerPath + std::string("/migrationresults");
+    std::ostringstream cmd;
+    cmd << "cd ../../../src/pythonKarabo; ../../karabo/extern/bin/python3 ";
+    cmd << "karabo/influxdb/dl_migrator.py ";
+            
+    cmd << influxDbName << " " << absLoggerPath << "/karaboHistory/" << " " << migrationResultsPath << " ";
+    cmd << "--write-url " << boost::algorithm::replace_first_copy(influxUrlWrite, "tcp://", "http://") << " ";
+    cmd << "--write-user " << influxUserWrite << " ";
+    cmd << "--write-pwd " << influxPwdWrite << " ";
+    cmd << "--read-url " << boost::algorithm::replace_first_copy(influxUrlRead, "tcp://", "http://") << " ";
+    cmd << "--read-user " << influxUserRead << " ";
+    cmd << "--read-pwd " << influxPwdRead << " ";
+    cmd << "--lines-per-write 200 --write-timeout 50 --concurrent-tasks 2";
+    
+    const int ret = system(cmd.str().c_str());
+    CPPUNIT_ASSERT_EQUAL(0, ret);
+    
+    boost::filesystem::path p(migrationResultsPath + "/processed/"+m_deviceId+"/");
+    if(boost::filesystem::is_directory(p)) {
+        for(auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(p), {})) {
+            std::ostringstream msg;
+            msg << "Check if " << entry << " was migrated OK: "<<boost::filesystem::extension(entry);
+            std::clog<<msg.str()<<std::endl;
+            CPPUNIT_ASSERT_MESSAGE(msg.str(), boost::filesystem::extension(entry) == ".ok");
+           
+        }
+    }
+    
+    unsigned int errorCount = 0;
+    boost::filesystem::path perr(migrationResultsPath + "/part_processed/"+m_deviceId+"/");
+    if(boost::filesystem::is_directory(perr)) {
+        for(auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(perr), {})) {
+            // print out the error
+            std::ostringstream cmd;
+            cmd << "cat "<<entry;
+            system(cmd.str().c_str());
+            errorCount++;
+        
+        }
+    }
+
+    CPPUNIT_ASSERT_MESSAGE("Check that no errors occurred in migration. See logs above if they did!", errorCount == 0);
+
+    m_dataWasMigrated = true;
+    // remove migration results
+    boost::filesystem::remove_all(migrationResultsPath);
+    
+}
+
 
 void DataLogging_Test::influxAllTestRunner() {
+  
+    // and epoch stamp certainly before the next round of influx logging
+    m_fileMigratedDataEndsBefore = Epochstamp();
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+
     std::pair<bool, std::string> success = m_deviceClient->instantiate(m_server, "PropertyTest",
                                                                        Hash("deviceId", m_deviceId),
                                                                        KRB_TEST_MAX_TIMEOUT);
@@ -496,8 +565,13 @@ void DataLogging_Test::influxAllTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
+    
+    // migrate the logger data produced so far into InfluxDB - do at this point so that a DB is for sure created
+    testMigrateFileLoggerData();
+    
     testNans();
     testInt(true);
+    testUInt64(false);
     testFloat(false);
     testString(false);
     testChar(false);
@@ -528,6 +602,10 @@ void DataLogging_Test::influxAllTestRunner() {
 
 
 void DataLogging_Test::influxAllTestRunnerWithTelegraf() {
+      
+    // delete logger directory after this test
+    m_keepLoggerDirectory = false;
+  
     if (!::getenv("KARABO_TEST_TELEGRAF")) {
         std::clog << "==== Skip sequence of Telegraf Logging tests ====" << std::endl;
         return;
@@ -773,13 +851,38 @@ void DataLogging_Test::testLastKnownConfiguration() {
     CPPUNIT_ASSERT_EQUAL(kLastValueSet, conf.get<int>("int32Property"));
     CPPUNIT_ASSERT_EQUAL(false, configAtTimepoint);
     karabo::util::Epochstamp configStamp(configTimepoint);
-    CPPUNIT_ASSERT(configStamp > beforeAnything);
+    // if data migration happened the data is younger than the file based logging data
+    CPPUNIT_ASSERT(configStamp > (m_dataWasMigrated ? m_fileMigratedDataEndsBefore : beforeAnything));
     CPPUNIT_ASSERT(configStamp < afterDeviceGone);
     std::clog << "\n... "
             << "Timestamp of retrieved configuration: " << configTimepoint << "\n "
             << "Ok (retrieved configuration with last known value for 'int32Property' while the device was not being logged)."
             << std::endl;
+    
+    
+    if (m_dataWasMigrated) {
+        // check for the migrated data
+        std::clog << "\n... from migrated data (requested config at " << m_fileMigratedDataEndsBefore.toIso8601() << ") ...";
+        // At the afterDeviceGone timepoint, a last known configuration should be obtained with the last value set in the
+        // previous test cases for the 'int32Property' - even after the device being logged is gone.
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
+                                                   m_deviceId, m_fileMigratedDataEndsBefore.toIso8601())
+                                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(conf, schema, configAtTimepoint, configTimepoint));
 
+        CPPUNIT_ASSERT_EQUAL(kLastValueSet, conf.get<int>("int32Property"));
+        CPPUNIT_ASSERT_EQUAL(false, configAtTimepoint);
+        karabo::util::Epochstamp configStamp(configTimepoint);
+        CPPUNIT_ASSERT(configStamp > beforeAnything);
+        // if migration failed or was incompatible we would not get a timestamp matching this condition
+        // there wouldn't be any data in the DB before this.
+        CPPUNIT_ASSERT(configStamp < m_fileMigratedDataEndsBefore);
+        std::clog << "\n... "
+                << "Timestamp of retrieved configuration: " << configTimepoint << "\n "
+                << "Ok (retrieved configuration with last known value for 'int32Property' from file logger migrated data)."
+                << std::endl;
+    }
+    
+    
 }
 
 
@@ -1314,6 +1417,14 @@ void DataLogging_Test::testInt(bool testPastConf) {
         return i;
     };
     testHistory<int>("int32Property", lambda, testPastConf);
+}
+
+
+void DataLogging_Test::testUInt64(bool testPastConf) {
+    auto lambda = [] (int i) -> unsigned long long {
+        return (unsigned long long) i - 1;
+    };
+    testHistory<unsigned long long>("uint64Property", lambda, testPastConf);
 }
 
 
