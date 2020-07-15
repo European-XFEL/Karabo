@@ -1,4 +1,22 @@
 **************************
+What's New in Karabo 2.9.1
+**************************
+
+A release dedicated to the ``InfluxDB`` rollout. A few fixes have been ported
+into this hotfix.
+In addition, the bound api gets an alarm update fix.
+
+Detailed Merge-Log
+==================
+
+- InfluxDB: Migrator does not add quotes to field keys !4424
+- InfluxDB: better failure detection !4423
+- InfluxDB: Don't wait forever on credentials that are never entered !4430
+- C++: Silence gui server log file !4422
+- Bound: Backport fix of signalAlarmUpdate !4433
+
+
+**************************
 What's New in Karabo 2.9.0
 **************************
 
