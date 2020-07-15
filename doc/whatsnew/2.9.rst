@@ -1,4 +1,23 @@
 **************************
+What's New in Karabo 2.9.2
+**************************
+
+A release dedicated to the ``InfluxDB`` rollout.
+
+Detailed Merge-Log
+==================
+
+- InfluxDB: Handle Nans, Infinities and empty stringsOriginally !4452
+- InfluxDB: Fix influx reader when schema injection happens and empty strings and vectors are involved.!4454
+- InfluxDB: adapt migration to new format !4464
+- InfluxDB: Cherry pick influx fixes 2.9.2 !4485
+- InfluxDB: Do not try to parse LOGOUT lines !4499
+- GUI: Hide the labelItem in the aux plots by default !4488
+- Tests/CI: run integration tests on hotfix branch !4490
+- Tests/CI: Integration test for data logging when schema evolution happens !4463
+
+
+**************************
 What's New in Karabo 2.9.1
 **************************
 
