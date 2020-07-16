@@ -18,6 +18,16 @@ USING_KARABO_NAMESPACES
 
 CPPUNIT_TEST_SUITE_REGISTRATION(GuiVersion_Test);
 
+bool waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis) {
+    const unsigned int sleepIntervalMillis = 5;
+    unsigned int numOfWaits = 0;
+    const unsigned int maxNumOfWaits = static_cast<unsigned int> (std::ceil(timeoutMillis / sleepIntervalMillis));
+    while (numOfWaits < maxNumOfWaits && !checker()) {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepIntervalMillis));
+        numOfWaits++;
+    }
+    return (numOfWaits < maxNumOfWaits);
+}
 
 GuiVersion_Test::GuiVersion_Test() {
 }
@@ -57,8 +67,12 @@ void GuiVersion_Test::appTestRunner() {
                                                                             "port", 44450,
                                                                             "minClientVersion", "2.2.3"),
                                                                        KRB_TEST_MAX_TIMEOUT);
-    CPPUNIT_ASSERT(success.first);
-    boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    waitForCondition([this](){
+        auto state = m_deviceClient->get<State>("testGuiServerDevice", "state");
+        return state == State::ON;
+    }, KRB_TEST_MAX_TIMEOUT * 1000);
 
     testVersionControl();
     testNotification();
@@ -70,7 +84,28 @@ void GuiVersion_Test::appTestRunner() {
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
     }
+    // Shutdown GUI Server device to reconfigure for readOnly
+    success = m_deviceClient->killDevice("testGuiServerDevice", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
+    // bring up a GUI server and a tcp adapter to it
+    std::pair<bool, std::string> success_n = m_deviceClient->instantiate("testGuiVersionServer", "GuiServerDevice",
+                                                                         Hash("deviceId", "testGuiServerDevice",
+                                                                              "port", 44450,
+                                                                              "minClientVersion", "2.2.3",
+                                                                              "isReadOnly", true),
+                                                                         KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success_n.second, success_n.first);
+    waitForCondition([this](){
+        auto state = m_deviceClient->get<State>("testGuiServerDevice", "state");
+        return state == State::ON;
+    }, KRB_TEST_MAX_TIMEOUT * 1000);
+    
+    testReadOnly();
+
+    if (m_tcpAdapter->connected()) {
+        m_tcpAdapter->disconnect();
+    }
 }
 
 
@@ -164,6 +199,29 @@ void GuiVersion_Test::testNotification() {
     // the GUI server will log us out
     CPPUNIT_ASSERT(!m_tcpAdapter->connected());
     std::clog << "testNotification: OK" << std::endl;
+}
+
+
+void GuiVersion_Test::testReadOnly() {
+    resetClientConnection();
+    // check if we are connected
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+
+    //
+    // Request execution of slot although the server is in readOnly mode!
+    //
+    std::vector<std::string> commands = {"execute", "killDevice", "projectSaveItems", "initDevice", "requestFromSlot", "killServer", "acknowledgeAlarm", "projectUpdateAttribute", "updateAttributes", "reconfigure"};
+    for (const std::string &type : commands) {
+        const Hash h("type", type);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        });
+        Hash replyMessage;
+        messageQ->pop(replyMessage);
+        const std::string message = replyMessage.get<std::string>("message");
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Command: " + toString(h), std::string("Action '" + type + "' is not allowed on GUI servers in readOnly mode!"), message);
+        std::clog << "testReadOnly: OK for " + type  << std::endl;
+    }
 }
 
 
