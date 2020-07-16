@@ -210,9 +210,20 @@ void GuiVersion_Test::testReadOnly() {
     //
     // Request execution of slot although the server is in readOnly mode!
     //
-    std::vector<std::string> commands = {"execute", "killDevice", "projectSaveItems", "initDevice", "requestFromSlot", "killServer", "acknowledgeAlarm", "projectUpdateAttribute", "updateAttributes", "reconfigure"};
-    for (const std::string &type : commands) {
-        const Hash h("type", type);
+    std::vector<Hash> commands = {
+        Hash("type", "execute"),
+        Hash("type", "killDevice"),
+        Hash("type", "projectSaveItems"),
+        Hash("type", "initDevice"),
+        Hash("type", "requestFromSlot", "slot", "thisSlotShouldBeRejected"),
+        Hash("type", "killServer"),
+        Hash("type", "acknowledgeAlarm"),
+        Hash("type", "projectUpdateAttribute"),
+        Hash("type", "updateAttributes"),
+        Hash("type", "reconfigure"),
+        };
+    for (const Hash &h : commands) {
+        const std::string& type = h.get<std::string>("type");
         karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
             m_tcpAdapter->sendMessage(h);
         });
@@ -222,6 +233,24 @@ void GuiVersion_Test::testReadOnly() {
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Command: " + toString(h), std::string("Action '" + type + "' is not allowed on GUI servers in readOnly mode!"), message);
         std::clog << "testReadOnly: OK for " + type  << std::endl;
     }
+    const unsigned int messageTimeout = 500u;
+    Hash reqScene("type", "requestFromSlot",
+                  "deviceId", "doesNotMatter",
+                  "slot", "requestScene");
+    CPPUNIT_ASSERT_THROW(
+                         m_tcpAdapter->getNextMessages("notification", 1, [&] {
+                             m_tcpAdapter->sendMessage(reqScene);
+                         }, messageTimeout), karabo::util::TimeoutException);
+    std::clog << "testReadOnly: OK for requestFromSlot with requestScene" << std::endl;
+
+    Hash reqSlotScene("type", "requestFromSlot",
+                      "deviceId", "doesNotMatter",
+                      "slot", "slotGetScene");
+    CPPUNIT_ASSERT_THROW(
+                         m_tcpAdapter->getNextMessages("notification", 1, [&] {
+                             m_tcpAdapter->sendMessage(reqSlotScene);
+                         }, messageTimeout), karabo::util::TimeoutException);
+    std::clog << "testReadOnly: OK for requestFromSlot with slotGetScene" << std::endl;
 }
 
 
