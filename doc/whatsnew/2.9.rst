@@ -1,4 +1,25 @@
 **************************
+What's New in Karabo 2.9.4
+**************************
+
+A release dedicated for GUI fixes (ranges) and the InfluxDB rollout.
+
+Detailed Merge-Log
+==================
+
+- InfluxDB: Log the whole answer in case of failing request !4529
+- InfluxDB: Migrate schema event !4532
+- InfluxDB: Cast UINT64 to INT64 not STRING !4555
+- InfluxDB: Fix Schema Migration !4546
+- C++: Log readers reply time string with timezone !4541
+- GUI: Set a global Locale !4542
+- GUI: More plot range fixes !4543
+- GUI: Hide the axis labels when there is no text or unit !4558
+- GUI: Show/hide labels in image plots whether there are text/units !4561
+- GUI: Set dragged widgets as initialized !4538
+
+
+**************************
 What's New in Karabo 2.9.3
 **************************
 
