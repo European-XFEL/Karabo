@@ -107,4 +107,5 @@ class DisplayVectorGraph(BaseBindingController):
                                           parent=self.widget)
         if ok:
             self.model.trait_set(**content)
-            self.widget.clearData()
+            for proxy in self.proxies:
+                self.value_update(proxy)
