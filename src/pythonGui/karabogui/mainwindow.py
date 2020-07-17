@@ -29,6 +29,7 @@ from karabogui.panels.api import (
     ProjectPanel, ScriptingPanel, TopologyPanel)
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
+from karabogui.wizard.wizard import Wizard
 
 ACCESS_LEVELS = OrderedDict()
 ACCESS_LEVELS['Admin'] = AccessLevel.ADMIN
@@ -370,6 +371,9 @@ class MainWindow(QMainWindow):
         self.acConfig = QAction("Configuration", self)
         self.acConfig.triggered.connect(self.onConfiguration)
 
+        self.acWizard = QAction("Tips'N'Tricks", self)
+        self.acWizard.triggered.connect(self.onWizard)
+
         self.acHelpAboutQt = QAction("About Qt", self)
         self.acHelpAboutQt.triggered.connect(qApp.aboutQt)
 
@@ -397,6 +401,7 @@ class MainWindow(QMainWindow):
         mHelpMenu.addAction(self.acHelpAbout)
         mHelpMenu.addAction(self.acHelpAboutQt)
         mHelpMenu.addAction(self.acConfig)
+        mHelpMenu.addAction(self.acWizard)
         mHelpMenu.addAction(self.acCheckUpdates)
 
     def _setupToolBar(self):
@@ -576,6 +581,10 @@ class MainWindow(QMainWindow):
     def onCheckUpdates(self):
         dialog = UpdateDialog(parent=self)
         dialog.open()
+
+    @pyqtSlot()
+    def onWizard(self):
+        Wizard(parent=self).open()
 
     @pyqtSlot(QAction)
     def onChangeAccessLevel(self, action):
