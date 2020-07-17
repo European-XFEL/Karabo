@@ -1,6 +1,6 @@
 from karabogui.testing import GuiTestCase
 from ..configuration import (
-    BACKBONE, Configuration, DIRECTORIES, NETWORK, PANEL, PROJECT)
+    BACKBONE, Configuration, DIRECTORIES, NETWORK, PANEL, PROJECT, USER)
 
 
 class TestConfiguration(GuiTestCase):
@@ -10,7 +10,7 @@ class TestConfiguration(GuiTestCase):
         config['domain'] = 'CAS_INTERNAL'
         config['db_token'] = 'admin'
 
-        self.assertEqual(len(config), 15)
+        self.assertEqual(len(config), 16)
         self.assertEqual(config['db_token'], 'admin')
         self.assertEqual(config['domain'], 'CAS_INTERNAL')
 
@@ -19,7 +19,7 @@ class TestConfiguration(GuiTestCase):
                           'config_dir', 'console_panel', 'daemon_manager',
                           'db_token', 'documentation', 'domain', 'gui_servers',
                           'log_panel', 'macro_dir', 'project_manager',
-                          'scene_dir', 'username'])
+                          'scene_dir', 'username', 'wizard'])
 
     def test_set_wrong_key(self):
         config = Configuration()
@@ -32,7 +32,9 @@ class TestConfiguration(GuiTestCase):
     def test_configuration_groups(self):
         config = Configuration()
         groups = config.groups()
-        self.assertEqual(len(groups), 5)
+        self.assertEqual(len(groups), 6)
+        user_group = [item.name for item in groups[USER]]
+        self.assertEqual(len(user_group), 1)
         network_group = [item.name for item in groups[NETWORK]]
         self.assertEqual(len(network_group), 2)
         self.assertIn('username', network_group)
