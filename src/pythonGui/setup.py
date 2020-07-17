@@ -30,6 +30,7 @@ if __name__ == '__main__':
             "karabogui.icons": ["*.*", "statefulicons/iconset/*.svg"],
             "karabogui.panels": ["*.ui"],
             "karabogui.project.dialog": ["*.ui"],
+            "karabogui.wizard": ["*.html"],
         }
     }
 

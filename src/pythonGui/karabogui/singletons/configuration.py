@@ -8,6 +8,16 @@ from collections import defaultdict
 from PyQt5.QtCore import QObject, QSettings
 
 
+def _safe_bool(value):
+    """Safely return a boolean value from a QSettings file in the correct
+    format"""
+    str_value = str(value).lower()
+    if str_value in ['true', 'false']:
+        return str_value == 'true'
+
+    return value
+
+
 class Item:
     __slots__ = ["name", "default", "q_set", "group", "path", "editable"]
 
@@ -21,7 +31,7 @@ class Item:
         if instance is None:
             return self
         else:
-            return instance.__dict__.get(self.name, self.default)
+            return _safe_bool(instance.__dict__.get(self.name, self.default))
 
     def __set__(self, instance, value):
         instance.__dict__[self.name] = value
@@ -50,6 +60,7 @@ BACKBONE = "backbone"
 DIRECTORIES = "dir"
 PANEL = "panel"
 DOCU = "https://in.xfel.eu/readthedocs/docs/deployed-controls-{topic}/en/latest/{deviceId}.html"  # noqa
+USER = "user"
 
 
 class Configuration(QObject):
@@ -104,6 +115,11 @@ class Configuration(QObject):
     console_panel = Item(default=panel_default(), q_set=True, group=PANEL)
     alarm_panel = Item(default=panel_default(), q_set=True, group=PANEL)
     log_panel = Item(default=panel_default(), q_set=True, group=PANEL)
+
+    # ----------------------------------------------
+    # Wizard
+
+    wizard = Item(default=True, q_set=True, group=USER)
 
     # ----------------------------------------------
     # Project db interface
