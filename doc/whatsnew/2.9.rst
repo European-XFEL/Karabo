@@ -1,4 +1,17 @@
 **************************
+What's New in Karabo 2.9.5
+**************************
+
+A release dedicated to provide a readOnly gui server.
+
+Detailed Merge-Log
+==================
+
+- C++: Provide a readOnly version for the GUI Server !4568
+- GUI Server: Enable device provided scenes in read only mode !4571
+
+
+**************************
 What's New in Karabo 2.9.4
 **************************
 
