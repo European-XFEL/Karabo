@@ -1,9 +1,10 @@
-sphinx==1.4.5
+sphinx==1.8.5
 pint
 git+https://git.xfel.eu/gitlab/xfel-rtd/rtd-conf.git
 slumber
-breathe
+breathe==4.7.3
 numpy
 matplotlib
-git+https://github.com/enthought/traits.git
-lxml
+typing
+traits==4.6.0
+lxml==3.6.4
