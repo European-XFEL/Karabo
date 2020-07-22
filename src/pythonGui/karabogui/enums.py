@@ -11,6 +11,9 @@ class AccessRole(Enum):
     karabo GUI"""
     SCENE_EDIT = 'scene_edit'
     MACRO_EDIT = 'macro_edit'
+    PROJECT_EDIT = 'project_edit'
+    SERVICE_EDIT = 'service_edit'
+    CONSOLE_EDIT = 'console_edit'
 
 
 class NavigationItemTypes(object):

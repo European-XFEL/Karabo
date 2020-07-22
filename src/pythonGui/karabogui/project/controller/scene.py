@@ -16,8 +16,9 @@ from karabo.common.project.api import get_user_cache
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.native import read_project_model
 from karabogui import icons, messagebox
-from karabogui.enums import ProjectItemTypes
+from karabogui.enums import AccessRole, ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.globals import access_role_allowed
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
 from karabogui.singletons.api import get_db_conn, get_panel_wrangler
@@ -33,17 +34,25 @@ class SceneController(BaseProjectController):
     model = Instance(SceneModel)
 
     def context_menu(self, project_controller, parent=None):
+        project_allowed = access_role_allowed(AccessRole.PROJECT_EDIT)
+
         menu = QMenu(parent)
         edit_action = QAction(icons.edit, 'Edit', menu)
         edit_action.triggered.connect(partial(self._edit_scene, parent=parent))
+        edit_action.setEnabled(project_allowed)
+
         dupe_action = QAction(icons.editCopy, 'Duplicate', menu)
         dupe_action.triggered.connect(partial(self._duplicate_scene,
                                               project_controller,
                                               parent=parent))
+        dupe_action.setEnabled(project_allowed)
+
         delete_action = QAction(icons.delete, 'Delete', menu)
         delete_action.triggered.connect(partial(self._delete_scene,
                                                 project_controller,
                                                 parent=parent))
+        delete_action.setEnabled(project_allowed)
+
         save_as_action = QAction(icons.saveAs, 'Save to file', menu)
         save_as_action.triggered.connect(partial(self._save_scene_to_file,
                                                  parent=parent))
@@ -52,11 +61,13 @@ class SceneController(BaseProjectController):
         replace_action.triggered.connect(partial(self._replace_scene,
                                                  project_controller,
                                                  parent=parent))
+        replace_action.setEnabled(project_allowed)
+
         revert_action = QAction(icons.revert, 'Revert changes', menu)
         revert_action.triggered.connect(partial(self._revert_changes,
                                                 parent=parent))
         can_revert = not self._is_showing() and self.model.modified
-        revert_action.setEnabled(can_revert)
+        revert_action.setEnabled(can_revert and project_allowed)
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)

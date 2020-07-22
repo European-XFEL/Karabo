@@ -10,6 +10,8 @@ from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget
 
 from karabo.common.project.api import ProjectModel
 from karabogui import icons
+from karabogui.enums import AccessRole
+from karabogui.globals import access_role_allowed
 from karabogui.actions import build_qaction, KaraboAction
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.project.dialog.project_handle import NewProjectDialog
@@ -37,7 +39,9 @@ class ProjectPanel(BasePanelWidget):
         event_map = {
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.DatabaseIsBusy: self._event_db_busy,
-            KaraboEvent.ProjectFilterUpdated: self._event_filter_updated
+            KaraboEvent.ProjectFilterUpdated: self._event_filter_updated,
+            KaraboEvent.AccessLevelChanged: self._event_access_level,
+            KaraboEvent.LoginUserChanged: self._event_access_level,
         }
         register_for_broadcasts(event_map)
 
@@ -97,7 +101,8 @@ class ProjectPanel(BasePanelWidget):
 
         for k_action in (new, load, save, reload, trash):
             q_ac = build_qaction(k_action, self)
-            q_ac.setEnabled(False)
+            q_ac.setEnabled(True)
+            q_ac.setVisible(False)
             tree_view = self.tree_view
             q_ac.triggered.connect(partial(k_action.triggered,
                                            tree_view))
@@ -120,13 +125,16 @@ class ProjectPanel(BasePanelWidget):
     # -----------------------------------------------------------------------
     # Karabo Events
 
+    def _event_access_level(self, data):
+        self._access_toolbar()
+
     def _event_db_busy(self, data):
         loading_failed = data.get('loading_failed', False)
         is_processing = data['is_processing']
         if loading_failed:
-            self._enable_partial_toolbar()
+            self._visible_partial_toolbar()
         else:
-            self._enable_toolbar(not is_processing)
+            self._set_toolbar_visible(not is_processing)
             self.sbar.reset(not is_processing)
         self.spin_action.setVisible(is_processing)
 
@@ -139,22 +147,28 @@ class ProjectPanel(BasePanelWidget):
             # Don't show projects when there's no server connection
             self.tree_view.destroy()
 
-        self._enable_toolbar(status)
+        self._set_toolbar_visible(status)
         if not status:
             self.sbar.reset(status)
 
     # -----------------------------------------------------------------------
 
-    def _enable_toolbar(self, enable):
+    def _set_toolbar_visible(self, enable):
         for qaction in self._toolbar_actions:
-            qaction.setEnabled(enable)
+            qaction.setVisible(enable)
 
-    def _enable_partial_toolbar(self):
+    def _visible_partial_toolbar(self):
         """ Project loading failed, restrict options
         """
         for qaction in self._toolbar_actions:
             if qaction.objectName() in ("new", "load"):
-                qaction.setEnabled(True)
+                qaction.setVisible(True)
+
+    def _access_toolbar(self):
+        enable = access_role_allowed(AccessRole.PROJECT_EDIT)
+        for qaction in self._toolbar_actions:
+            if qaction.objectName() in ("new", "save", "declare"):
+                qaction.setEnabled(enable)
 
 # ------------------------------------------------------------------------
 # Helper functions
