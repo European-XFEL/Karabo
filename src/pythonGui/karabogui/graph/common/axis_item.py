@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import numpy as np
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
 from pyqtgraph import AxisItem as PgAxisItem
@@ -14,6 +15,10 @@ HOUR_IN_SECONDS = 60 * 60
 DAY_IN_SECONDS = HOUR_IN_SECONDS * 24
 MONTH_IN_SECONDS = DAY_IN_SECONDS * 30
 YEAR_IN_SECONDS = MONTH_IN_SECONDS * 12
+
+
+STEPS_BY_5 = np.array([1., 2., 10., 20., 100.])
+STEPS_BY_4 = np.array([2.5, 5., 10., 25., 50., 100.])
 
 
 class AxisItem(PgAxisItem):
@@ -106,6 +111,55 @@ class AxisItem(PgAxisItem):
         We ignore this event instead as it's not really used.
         """
         event.ignore()
+
+    def tickSpacing(self, minVal, maxVal, size):
+        """Reimplemented function of PyQtGraph
+
+        The axis ticks calculation of pyqtgraph has a fixed frequency.
+        As `generateDrawSpecs` has a lot of coupled functions, we resort to the
+        easier fix of decreasing the frequency (from every 5 to every 4)
+        depending on the size.
+        """
+        # First check for override tick spacing
+        if self._tickSpacing is not None:
+            return self._tickSpacing
+
+        dif = abs(maxVal - minVal)
+        if dif == 0:
+            return []
+
+        # decide optimal minor tick spacing in pixels (this is just aesthetics)
+        optimalTickCount = max(2., np.log(size))
+
+        # optimal minor tick spacing
+        optimalSpacing = dif / optimalTickCount
+
+        # the largest power-of-10 spacing which is smaller than optimal
+        p10unit = 10 ** np.floor(np.log10(optimalSpacing))
+
+        # Determine major/minor tick spacings which flank the optimal spacing.
+        # !----- Start modification -----!
+        steps = STEPS_BY_5 if size > 300 else STEPS_BY_4
+        intervals = steps * p10unit
+        # !----- End modification -----!
+        minorIndex = 0
+        while intervals[minorIndex + 1] <= optimalSpacing:
+            minorIndex += 1
+
+        levels = [
+            (intervals[minorIndex + 2], 0),
+            (intervals[minorIndex + 1], 0),
+            # (intervals[minorIndex], 0)    ## Pretty, but eats up CPU
+        ]
+
+        if self.style['maxTickLevel'] >= 2:
+            # decide whether to include the last level of ticks
+            minSpacing = min(size / 20., 30.)
+            maxTickCount = size / minSpacing
+            if dif / intervals[minorIndex] <= maxTickCount:
+                levels.append((intervals[minorIndex], 0))
+
+        return levels
 
 
 class TimeAxisItem(AxisItem):
