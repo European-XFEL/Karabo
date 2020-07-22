@@ -1,4 +1,5 @@
-from unittest import mock
+from platform import system
+from unittest import mock, skipIf
 import numpy as np
 
 from karabo.common.scenemodel.api import VectorGraphModel
@@ -34,6 +35,8 @@ class TestVectorGraph(GuiTestCase):
         self.controller.destroy()
         self.assertIsNone(self.controller.widget)
 
+    @skipIf(system() == "Windows",
+            reason="Crosshair does not toggle off with emit==False")
     def test_crosshair(self):
         cross_target = self.controller.widget._cross_target
 
