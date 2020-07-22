@@ -44,11 +44,12 @@ using karabo::xms::SignalSlotable;
 using karabo::xms::OUTPUT_CHANNEL;
 using karabo::xms::SLOT_ELEMENT;
 
+const std::string fakeClassVersion("FakePackage-1.2.3");
 class TestDevice : public karabo::core::Device<> {
 
 public:
 
-    KARABO_CLASSINFO(TestDevice, "TestDevice", "2.1")
+    KARABO_CLASSINFO(TestDevice, "TestDevice", fakeClassVersion)
 
     static const int ALARM_HIGH = 1000.0;
 
@@ -912,12 +913,16 @@ void Device_Test::testGetSet() {
     const int timeoutInMs = 10000;
     const std::string deviceId("TestDevice");
 
-    // Check default visibility value
+    // Check default visibility value and other device properties
     Hash hash;
     CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
     CPPUNIT_ASSERT_EQUAL(deviceId, hash.get<std::string>("deviceId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("TestDevice"), hash.get<std::string>("classId"));
+    CPPUNIT_ASSERT_EQUAL(fakeClassVersion, hash.get<std::string>("classVersion"));
     CPPUNIT_ASSERT_EQUAL(karabo::util::Version::getVersion(), hash.get<std::string>("karaboVersion"));
     CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::util::Schema::OBSERVER), hash.get<int>("visibility"));
+    CPPUNIT_ASSERT_EQUAL(std::string("testServerDevice"), hash.get<std::string>("serverId"));
+    CPPUNIT_ASSERT_EQUAL(::getpid(), hash.get<int>("pid"));
 
     // We can set visibility and check that we really did.
     hash.clear();
