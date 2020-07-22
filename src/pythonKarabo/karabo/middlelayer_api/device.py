@@ -28,7 +28,8 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
     you can define expected parameters for it.
     """
 
-    __version__ = "2.2"
+    # Version e.g. for classVersion - to be overwritten by external classes
+    __version__ = karaboVersion
 
     _serverId_ = String(
         displayedName="_ServerID_",
@@ -65,6 +66,8 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         description="The version of the class of this device",
         requiredAccessLevel=AccessLevel.ADMIN,
         accessMode=AccessMode.READONLY,
+        # No version dependent default value: It would make the static
+        # schema version dependent, i.e. introduce fake changes.
         daqPolicy=DaqPolicy.OMIT)
 
     karaboVersion = String(
@@ -72,7 +75,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         description="The version of the Karabo framework running this device",
         requiredAccessLevel=AccessLevel.ADMIN,
         accessMode=AccessMode.READONLY,
-        defaultValue=karaboVersion,
+        # No version dependent default value, see above at "classVersion".
         daqPolicy=DaqPolicy.OMIT)
 
     serverId = String(
@@ -161,7 +164,11 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
             self.hostName = socket.gethostname().partition('.')[0]
 
         self.classId = type(self).__name__
-        self.classVersion = type(self).__version__
+        # class version is the package name plus version
+        # the latter should be overwritten in inheriting classes
+        classPackage = self.__module_orig__.split('.', 1)[0]
+        self.classVersion = f"{classPackage}-{type(self).__version__}"
+        self.karaboVersion = karaboVersion
         self.pid = os.getpid()
         self._statusInfo = "ok"
 
@@ -171,7 +178,6 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         info["classId"] = self.classId.value
         info["serverId"] = self.serverId.value
         info["visibility"] = self.visibility.value
-        info["compatibility"] = self.__class__.__version__
         info["host"] = self.hostName
         info["status"] = self._statusInfo
         info["archive"] = self.archive.value
