@@ -13,6 +13,7 @@
 #include <boost/thread.hpp>
 
 #include "karabo/core/Device.hh"
+#include "karabo/util/Version.hh"
 
 
 /**
@@ -49,7 +50,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(AlarmService, "AlarmService", "2.0")
+            KARABO_CLASSINFO(AlarmService, "AlarmService", "karabo-" + karabo::util::Version::getVersion())
 
             static void expectedParameters(karabo::util::Schema& expected);
 

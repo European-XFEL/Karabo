@@ -27,6 +27,7 @@
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/Types.hh"
+#include "karabo/util/Version.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
 #include "DataLogReader.hh"
@@ -87,7 +88,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(InfluxLogReader, "InfluxLogReader", "1.0")
+            KARABO_CLASSINFO(InfluxLogReader, "InfluxLogReader", "karabo-" + karabo::util::Version::getVersion())
 
             static void expectedParameters(karabo::util::Schema &expected);
 
