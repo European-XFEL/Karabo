@@ -13,6 +13,7 @@
 #include "karabo/core/Device.hh"
 #include "karabo/core/OkErrorFsm.hh"
 #include "karabo/util/DataLogUtils.hh"
+#include "karabo/util/Version.hh"
 #include "karabo/net/Strand.hh"
 
 /**
@@ -40,7 +41,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(DataLogReader, "DataLogReader", "1.0")
+            KARABO_CLASSINFO(DataLogReader, "DataLogReader", "karabo-" + karabo::util::Version::getVersion())
 
             static void expectedParameters(karabo::util::Schema& schema);
 

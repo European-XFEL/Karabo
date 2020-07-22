@@ -5,6 +5,8 @@
 #ifndef KARABO_DEVICES_FILEDATALOGGER_HH
 #define	KARABO_DEVICES_FILEDATALOGGER_HH
 
+#include "karabo/util/Version.hh"
+
 #include "DataLogger.hh"
 
 namespace karabo {
@@ -69,7 +71,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(FileDataLogger, "FileDataLogger", "2.6")
+            KARABO_CLASSINFO(FileDataLogger, "FileDataLogger", "karabo-" + karabo::util::Version::getVersion())
 
             static void expectedParameters(karabo::util::Schema& expected);
                     
