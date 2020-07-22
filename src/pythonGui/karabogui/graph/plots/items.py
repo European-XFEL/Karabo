@@ -8,7 +8,7 @@ from pyqtgraph import (
     arrayToQPath, BarGraphItem, functions as fn, getConfigOption,
     ScatterPlotItem)
 
-from karabogui.graph.common.api import make_brush
+from karabogui.graph.common.api import make_brush, safe_log10
 
 
 class VectorFillGraphPlot(QGraphicsPathItem):
@@ -62,15 +62,15 @@ class VectorBarGraphPlot(BarGraphItem):
     def getData(self):
         """Returns the corrected x and y data from the bar attributes."""
         # Calculate x-data from x
-        x_data = self.opts['x']
+        x_data = np.array(self.opts['x'])
         if self.opts['logMode'][0]:
-            x_data = np.log10(x_data)
+            x_data = safe_log10(x_data)
 
         # Calculate y-data from y0 and height
         height, y0 = self.opts['height'], self.opts['y0']
         y_data = np.array(height) - y0
         if self.opts['logMode'][1]:
-            y_data = np.log10(y_data)
+            y_data = safe_log10(y_data)
 
         return x_data, y_data
 
@@ -140,11 +140,14 @@ class VectorBarGraphPlot(BarGraphItem):
         # MOD: Use the corrected y-data instead of height
         height = asarray(y_data)
 
-        # MOD: Use a relative starting point and values if log-y is enabled
+        # MOD: Use a relative starting point and values if log-y is enabled.
+        # We consider values < 0 as nans
         if self.opts['logMode'][1] and height.size:
-            order = np.floor(min(height))
+            order = np.floor(np.nanmin(height))
             y0 = order - 1
             height -= y0
+            # Set height of invalid values as 0
+            height[~np.isfinite(height)] = 0
 
         # !----- End modification -----!
 
