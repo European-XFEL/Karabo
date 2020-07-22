@@ -168,9 +168,9 @@ class _BasePlotTest(GuiTestCase):
         # Check getData values
         x_data, y_data = self._plot.getData()
         if log_x:
-            x_expected = np.log10(x_expected)
+            x_expected = safe_log10(x_expected)
         if log_y:
-            y_expected = np.log10(y_expected)
+            y_expected = safe_log10(y_expected)
         assert_array_equal(x_data, x_expected)
         assert_array_equal(y_data, y_expected)
 
@@ -194,8 +194,11 @@ class _BasePlotTest(GuiTestCase):
         """The tolerance is by its order with the deviation of
            12% the of range """
         actual = np.ceil(np.log10(actual))
-        expected = [safe_log10(expected[0]), safe_log10(expected[-1])]
-        tol = int((expected[-1] - expected[0]) * 0.12)
+        # Calculate expected range
+        log_expected = safe_log10(expected)
+        expected = np.nanmin(log_expected), np.nanmax(log_expected)
+        # Calculate tolerance, expect a range of at least 1 order.
+        tol = int((expected[-1] - expected[0]) * 0.12) or 1
         assert_allclose(actual, expected, atol=tol)
 
     def assert_linear_range(self, actual, expected):
@@ -234,7 +237,8 @@ class TestCurveItem(_BasePlotTest):
         # Set problematic range (with zeros)
         low, high = 0, 1e4
         self.set_range_y(low, high)
-        self.assert_range_y(y_expected=(low, high), log_y=True)
+        corrected_low = 10 ** safe_log10(low)  # 1e-25
+        self.assert_range_y(y_expected=(corrected_low, high), log_y=True)
 
 
 class TestBarItem(_BasePlotTest):
@@ -257,6 +261,17 @@ class TestBarItem(_BasePlotTest):
         self.assert_data(x_expected=X_ARRAY, y_expected=LOG_ARRAY, log_y=True)
         # Check if the range doesn't change with log y scale
         self.assert_range(x_expected=X_ARRAY, y_expected=LOG_ARRAY,
+                          log_y=True)
+
+    def test_problematic_log_scale(self):
+        y_array = np.array([0, 0.001, 0, -0.001])
+        x_array = np.arange(y_array.size)
+        self.set_data(x=x_array, y=y_array)
+        self.set_log_scale(y=True)
+        self._assert_bar(x_expected=x_array, y_expected=y_array)
+        self.assert_data(x_expected=x_array, y_expected=y_array, log_y=True)
+        # Check if the range doesn't change with log y scale
+        self.assert_range(x_expected=x_array, y_expected=y_array,
                           log_y=True)
 
     def _assert_bar(self, x_expected, y_expected):
