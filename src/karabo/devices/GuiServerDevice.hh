@@ -17,6 +17,7 @@
 #include "karabo/net/JmsProducer.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/xms/InputChannel.hh"
+#include "karabo/util/Version.hh"
 
 #include "karabo/core/Device.hh"
 #include "karabo/core/OkErrorFsm.hh"
@@ -119,7 +120,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "2.0")
+            KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "karabo-" + karabo::util::Version::getVersion())
 
             static void expectedParameters(karabo::util::Schema& expected);
 
