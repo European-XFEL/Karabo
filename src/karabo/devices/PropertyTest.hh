@@ -11,6 +11,7 @@
 #include <boost/asio/deadline_timer.hpp>
 
 #include "karabo/core/Device.hh"
+#include "karabo/util/Version.hh"
 #include "karabo/xms/InputChannel.hh"
 
 namespace karabo {
@@ -43,8 +44,8 @@ namespace karabo {
          */
         class PropertyTest : public karabo::core::Device<> {
         public:
-            
-            KARABO_CLASSINFO(PropertyTest, "PropertyTest", "1.5")
+
+            KARABO_CLASSINFO(PropertyTest, "PropertyTest", "karabo-" + karabo::util::Version::getVersion())
             
             static void expectedParameters(karabo::util::Schema& expected);
             

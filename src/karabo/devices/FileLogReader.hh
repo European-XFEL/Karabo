@@ -18,6 +18,7 @@
 #include "karabo/util/ClassInfo.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
+#include "karabo/util/Version.hh"
 
 #include "DataLogReader.hh"
 
@@ -124,7 +125,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(FileLogReader, "FileLogReader", "1.0")
+            KARABO_CLASSINFO(FileLogReader, "FileLogReader", "karabo-" + karabo::util::Version::getVersion())
 
             static void expectedParameters(karabo::util::Schema &expected);
 
