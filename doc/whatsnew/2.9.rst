@@ -1,4 +1,29 @@
 **************************
+What's New in Karabo 2.9.6
+**************************
+
+A release dedicated to GUI adjustments for the readOnly server and a couple
+of plot widget fixes
+
+Detailed Merge-Log
+==================
+
+- GUI: Enable readOnly utility in client !4457
+- GUI: Implement access level configuration for project toolbar !4461
+- GUI: AccessLevel service kill in topology !4462
+- GUI: Better access logic for project bar !4465
+- GUI: Scripting console access role !4467
+- GUI: AccessRole implementation for configurator toolbar !4470
+- GUI: Implement access role for device topology !4471
+- GUI: Implement access roles in the project view !4497
+- GUI: Run macro from macro panel has access role !4505
+
+- GUI: Improve visualization of vectors with invalid numbers for VectorBarGraph in log mode !4570
+- GUI: Update x-transform after trigger !4572
+- GUI: Increase the frequency of axis ticks on small widgets !4574
+
+
+**************************
 What's New in Karabo 2.9.5
 **************************
 
