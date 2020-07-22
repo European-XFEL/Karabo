@@ -47,7 +47,7 @@ class ChannelNode(Configurable):
 
 
 class MyDevice(Device):
-    __version__ = "2.2"
+    __version__ = "1.2.3"
 
     integer = Int32(
         defaultValue=0,
@@ -108,9 +108,15 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_device_version(self):
-        expected = "2.2"
+        expected = "karabo-1.2.3"
         self.assertEqual(self.myDevice.classVersion, expected)
         self.assertEqual(self.myDevice.karaboVersion, karaboVersion)
+        # Testing the internals of the Device.__init__ / InjectMixin.__new__
+        # interplay. But otherwise we would not test that __module_orig__ is
+        # really the original module, also for non-framework classes (because
+        # we use only the first part and that is 'karabo' for devices from
+        # anywhere in the frameowrk, including test classes.
+        self.assertEqual(self.myDevice.__module_orig__, self.__module__)
 
     @sync_tst
     def test_output_names(self):
