@@ -9,6 +9,8 @@ import numpy as np
 import threading
 import time
 
+from karabo import __version__ as karaboVersion
+
 from karabo.bound import (
     Encoding,
     KARABO_CLASSINFO, PythonDevice, DaqDataType, Hash, ImageData,
@@ -26,7 +28,7 @@ from karabo.bound import (
 )
 
 
-@KARABO_CLASSINFO("PropertyTest", "2.1")
+@KARABO_CLASSINFO("PropertyTest", karaboVersion)
 class PropertyTest(PythonDevice):
 
     defVectorMaxSize = 10  # maximum size of pipeline vector
