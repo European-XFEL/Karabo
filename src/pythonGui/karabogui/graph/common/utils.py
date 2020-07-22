@@ -11,7 +11,14 @@ def safe_log10(value):
     """Return the max precision if we receive zero when evaluating a value
        with log10. This is to protect the GUI from -inf."""
 
-    if value == 0:
-        return MAX_PRECISION
+    if np.isscalar(value):
+        return np.log10(value) if value > 0 else MAX_PRECISION
 
-    return np.log10(value)
+    if not isinstance(value, np.ndarray):
+        value = np.array(value)
+
+    # Calculate log10 for valid values, replace with nans otherwise
+    index = value > 0
+    result = np.log10(value, where=index)
+    result[~index] = np.nan
+    return result
