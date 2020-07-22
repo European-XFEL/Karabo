@@ -167,7 +167,8 @@ class CounterNode(Configurable):
 
 
 class PropertyTestMDL(Device):
-    __version__ = "2.3.0"
+
+    # As long as part of Karabo framework, just inherit __version__ from Device
 
     allowedStates = [
         State.INIT, State.STARTED, State.NORMAL, State.STARTING,
