@@ -36,7 +36,7 @@ from .no_fsm import NoFsm
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO("PythonDevice", "1.0")
+@KARABO_CLASSINFO("PythonDevice", karaboVersion)
 class PythonDevice(NoFsm):
     """The PythonDevice class is the basis for all karabo.bound devices
 
@@ -109,9 +109,11 @@ class PythonDevice(NoFsm):
             STRING_ELEMENT(expected).key("classVersion")
             .displayedName("Class version")
             .description("The version of the class of this device defined in"
-                         " KARABO_CLASSINFO")
+                         " KARABO_CLASSINFO, prepended by package name")
             .adminAccess()
-            .readOnly().initialValue(PythonDevice.__version__)
+            # No version dependent initial value: It would make the static
+            # schema version dependent, i.e. introduce fake changes.
+            .readOnly()
             .commit(),
 
             STRING_ELEMENT(expected).key("karaboVersion")
@@ -120,7 +122,7 @@ class PythonDevice(NoFsm):
                          "device")
             .adminAccess()
             .readOnly()
-            .initialValue(karaboVersion)
+            # No version dependent initial value, see above at "classVersion".
             .commit(),
 
             STRING_ELEMENT(expected).key("serverId")
@@ -385,6 +387,12 @@ class PythonDevice(NoFsm):
 
         with self._stateChangeLock:
             self._parameters.set("classId", self.classid)
+            # class version is the (base) module name plus __version__ where
+            # the latter comes from KARABO_CLASSINFO decorator and should be
+            # the repository version
+            clsVers = f"{self.__module__.split('.', 1)[0]}-{self.__version__}"
+            self._parameters.set("classVersion", clsVers)
+            self._parameters.set("karaboVersion", karaboVersion)
             self._parameters.set("deviceId", self.deviceid)
             self._parameters.set("serverId", self.serverid)
             self._parameters.set("pid", os.getpid())
@@ -405,7 +413,6 @@ class PythonDevice(NoFsm):
         info["classId"] = self.classid
         info["serverId"] = self.serverid
         info["visibility"] = self["visibility"]
-        info["compatibility"] = self.__class__.__version__
         info["host"] = self.hostname
         info["status"] = "ok"
         info["archive"] = self.get("archive")
