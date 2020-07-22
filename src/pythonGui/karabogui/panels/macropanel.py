@@ -18,6 +18,8 @@ from karabogui.events import (
     unregister_from_broadcasts)
 from karabogui import icons, messagebox
 from karabogui.binding.api import PropertyProxy
+from karabogui.enums import AccessRole
+import karabogui.globals as krb_globals
 from karabogui.project.utils import run_macro
 from karabogui.singletons.api import get_topology
 from karabogui.widgets.codeeditor import CodeEditor
@@ -181,6 +183,15 @@ class MacroPanel(BasePanelWidget):
 
     @pyqtSlot()
     def on_run(self):
+        allowed = krb_globals.access_role_allowed(AccessRole.SERVICE_EDIT)
+        if not allowed:
+            msg = (f"The current access level "
+                   f"'{krb_globals.GLOBAL_ACCESS_LEVEL}' "
+                   f"is not sufficient to run the macro! Please contact a "
+                   f"controls expert.")
+            messagebox.show_information(msg)
+            return
+
         self.ui_console.clear()
         try:
             compile(self.model.code, self.model.simple_name, "exec")
