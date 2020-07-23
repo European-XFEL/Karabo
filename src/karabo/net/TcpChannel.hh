@@ -107,6 +107,18 @@ namespace karabo {
             /**************************************************************/
 
             /**
+             * Synchronously reads size bytes and return them as a string.
+             * The reading will block until the bytes are read.
+             * @param size This number of bytes will be copied into data
+             *
+             * @note reads up nBytes expecting no header. This method should
+             * ONLY be used in association with readAsyncStringUntil - they
+             * consume from the same boost::asio::streamBuffer and should
+             * not be used in the same context of the other read* methods.
+             */
+            std::string consumeBytesAfterReadUntil(const size_t nBytes) override;
+
+            /**
              * Synchronously reads size bytes from TCP socket into data.
              * @param data Pre-allocated contiguous block of memory
              * @param size This number of bytes will be copied into data
@@ -194,6 +206,10 @@ namespace karabo {
              * @param handler handler with signature ReadStringHandler, 
              *        i.e. void (const boost::system::error_code&, std::string&) is called.
              *        second handler parameter is the read string including the terminator
+             *
+             * @note This method should ONLY be used in association with
+             * consumeBytesAfterReadUntil - they consume from the same boost::asio::streambuf
+             * and should not be used in the same context of the other read* methods.
              */
             void readAsyncStringUntil(const std::string& terminator, const ReadStringHandler& handler);
 
