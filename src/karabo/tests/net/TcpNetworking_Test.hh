@@ -20,6 +20,7 @@ class TcpNetworking_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testClientServer);
     CPPUNIT_TEST(testWriteAsync);
     CPPUNIT_TEST(testBufferSet);
+    CPPUNIT_TEST(testConsumeBytesAfterReadUntil);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -44,6 +45,8 @@ private:
     void testWriteAsync();
 
     void testBufferSet();
+
+    void testConsumeBytesAfterReadUntil();
 };
 
 #endif	/* TCPNETWORKING_TEST_HH */
