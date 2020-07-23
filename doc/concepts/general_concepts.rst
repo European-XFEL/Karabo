@@ -26,11 +26,14 @@ The main purpose of devices is to hide the implementation details of the underly
 service from the user and provide a standardized interface to the outside world.
 
 In order to unambiguously address a device running somewhere in the network, each device
-is identified by a unique name. A Karabo distributed system will not allow a second device
+is identified by a unique name, its device id. A Karabo distributed system will not allow a second device
 to be started with an instance name that already exists somewhere in its managed topology.
 
-Device instance names follow a prescribed schema encoding
-usage *domain*, device *type* and *member* instance into a "/" separated path:
+Device instance ids are strings that must not be empty.
+Allowed characters are upper or lower case letters of the English alphabet,
+digits, or the special characters '_', '/' and '-'.
+Preferrably, ids have three parts *domain*, device *type* and *member*
+separated by '/':
 
 .. code-block:: XML
 
@@ -52,8 +55,12 @@ Device Slots
 class which are additionally exposed to all other devices in the control
 system. Slots may be called with up to four arguments of the types described in
 Section :ref:`data_types` (although many more are possible using a Hash as a container).
-They may have no return value or reply a value of a Karabo-known type as part of
-a possibly asynchronous reply.
+They may have zero to four return values of the a Karabo-known types.
+
+Slots that are part of the device self-description and are thus exposed to the
+graphical user interface, do not take arguments.
+As *commands* they should return the *state* that the device is in after slot
+execution.
 
 
 
@@ -63,36 +70,40 @@ The Call & Request/Reply Patterns
 At its core Karabo uses a combination of signals and slots to provide for (inter-)device
 communication. This *low-level* interface can be directly used if a large degree of message
 passing patterns and the (a)synchronicity of events is needed. In the C++ API and Bound API it is
-exposed as part of the Device interface. If an exception occurs on the remote device
-being interacted with an exception will be thrown in case of synchronous operations on
-the callee, or an error code different from 0 will be passed to the function handling
-the async. reply.
+exposed as part of the Device interface.
+If an exception occurs during execution of a slot on the remote device,
+an exception will be thrown in case of synchronous operations. In the
+asynchronous case, one can specify a failure handler in addition to the normal
+handler (not yet implemented in the bound Python API).
 
-In the simplest case a device method is called (possibly from another device) and no
-return value is expected. This is the *call* pattern.
+In the simplest case a device method is called (possibly from another device) and any
+return value is not expected. This is the *call* pattern.
 
 .. code-block:: python
 
 		class RemoteDevice(PythonDevice):
 			...
-			def initialization(self):
+			def __init__(self, configuration):
+			        super(RemoteDevice, self).__init__(configuration)
 				self.KARABO_SLOT(self.foo)
 
 			def foo(self, a):
 				self.log.INFO(a)
 
 		# code on caller
-		self.call("/a/remote/device", "foo", 1)
+		self.call("a/remote/device", "foo", 1)
 
 .. note::
 
 	A special case of the call pattern is the global call. The idea is to call a specific
 	slot function irrespective of the device that carries it. This is expressed by using
-	a “*” instead of a specific device name. Global calls should not usually be used in device
+	a “*” instead of a specific device name. Global calls should not be used in device
 	code but are mentioned here for completeness.
 
 The call follows a fire-and-forget mentality and any potential reply statement on the
-remote function will be ignored and not sent back to the callee. Calling a remote slot will
+remote function will be ignored and not sent back to the callee.
+Neither are any failures reported like non-existence of the called device or
+slot. Calling a remote slot will
 never block the caller.
 
 If return values are expected the *request and reply pattern* is used. A request to a
@@ -113,11 +124,9 @@ method may be called in two different ways:
 				c = b + 1
 				#this is a slot which should send out a reply
 				self.reply(c)
-				#assure direct calls will return the value as well
-				return c
 
 		# code on caller
-		result = self.request("/a/remote/device", "bar", 1).timeout(1000)
+		result = self.request("/a/remote/device", "bar", 1).waitForReply(1000)
 
 
 - **asynchronously, with callback:** the call to the method directly returns to the
@@ -131,23 +140,33 @@ method may be called in two different ways:
 			#as before
 
 		#code on caller
-		def onBar(self, errorCode, response):
+		def onBar(self, response):
 			self.log.INFO(response)
 
-		self.ss.requestNoWait("/a/remote/device", "bar", "onBar", 2)
+		self.request("a/remote/device", "bar, 2).receiveAsync(self.onBar)
 
 
 In C++ the syntax is slightly different and the callbacks are bound in runtime,
-using ``karabo::util::weak_bind``:
+using ``karabo::util::bind_weak``:
 
 .. code-block:: C++
 
     string txt(“The answer is: ”);
     request(“some/device/1”, “slotFoo”, 21)
-        .receiveAsync<int>(karabo::weak_bind(&onReply, this, txt, _1, _2);
+	.receiveAsynce<int>(bind_weak(&onReply, this, txt, _1),
+                            bind_weak(&onError, this));
 
-    void onReply(const boost::system::error_code& ec, const std::string& arg1, const int arg2) {
+    void onReply(const std::string& arg1, int arg2) {
         std::cout << arg1 << arg2 << std::endl; // Prints: "The answer is: 42"
+    }
+
+    void onError() {
+        try {
+		throw;
+	} catch (const std::exception& e) {
+		std::cout << An error occurred when calling 'slotFoo': "
+		<< e.what() << std::endl;
+	}
     }
 
     // Replying instance ("some/device/1"):
@@ -163,7 +182,7 @@ using ``karabo::util::weak_bind``:
    time a bound but not executed callback will not prevent destruction of
    ``this``.
 
-For both calls and requests, **signals** can directly be used to initiate action: the method is
+A **signal** can directly be used to initiate action: the method is
 attached to a signal and is executed when this signal is emitted. This is especially
 useful if the update of a parameter should trigger different actions on multiple devices
 with multiple methods.
@@ -173,9 +192,7 @@ with multiple methods.
     class RemoteDevice(PythonDevice)
         ...
         def initialization(self):
-            self.registerSignal("foo")
-            self.connect("/some/receiver/device1", "foo", "onFoo")
-            self.connect("/some/receiver/device2", "foo", "onBar")
+            self.registerSignal("foo", int)
 
         def bar(self):
             self.emit("foo", 1)
@@ -184,26 +201,20 @@ with multiple methods.
         ...
         def initialization(self):
             self.KARABO_SLOT(self.onFoo)
+            self.connect("remote/device/1", "foo", "", "onFoo")
 
         def onFoo(self, a):
             self.log.INFO(a)
 
-    class Receiver1(Python):
+    class Receiver2(Python):
         ...
         def initialization(self):
             self.KARABO_SLOT(self.onBar)
+            self.connect("remote/device/1", "foo", "", "onBar")
 
         def onBar(self, b):
             self.log.INFO(b+1)
 
-
-
-.. note::
-
-	Note that the first two calling methods are actually convenience wrappers for
-	functionality which can be explicitly implemented using the third method. You should
-	thus not try to re-implement request/response or call patterns via signal emission if
-    the supplied methods are sufficient.
 
 Technical Implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -313,6 +324,10 @@ programmer defines node types which can be used in this list::
 
 Device Version vs. Karabo Version
 +++++++++++++++++++++++++++++++++
+
+.. note::
+   This section needs to be updated.
+
 
 Any device code must match the Karabo version it is deployed upon in terms of API calls
 and inter-device communication. For this reason programmers need to assign the Karabo
@@ -554,7 +569,7 @@ Karabo Data Types
 =================
 
 Karabo properties can have a number of common data types, ranging from simple and complex
-scalars, vectors of these, as well as composite types such as arrays or arbitrary rank
+scalars, vectors of these, as well as composite types such as arrays of arbitrary rank
 and tables, i.e. 2-d arrays with a fixed column schema.
 
 Additionally, Karabo implements a key-value container which preserves insertion order
@@ -692,12 +707,13 @@ Scalar Types
 
 Karabo support the most common scalar data types:
 
-=======================  ==============================
-Boolean type:             BOOL
-Signed integer types:     INT8, INT16, INT32, INT64
-Unsigned integer types:   UINT8, UINT16, UINT32, UINT64
-Floating point types:     FLOAT, DOUBLE
-=======================  ==============================
+===========================  ==============================
+Boolean type:                 BOOL
+Character type (raw byte):    CHAR
+Signed integer types:         INT8, INT16, INT32, INT64
+Unsigned integer types:       UINT8, UINT16, UINT32, UINT64
+Floating point types:         FLOAT, DOUBLE
+===========================  ==============================
 
 .. note::
 
@@ -717,7 +733,6 @@ scalar and vector types described in the previous section by prepending
 
 =======================  ===========================================
 Complex scalar types:    COMPLEX_FLOAT, COMPLEX_DOUBLE
-Complex vector types:    VECTOR_COMPLEX_FLOAT, VECTOR_COMPLEX_DOUBLE
 =======================  ===========================================
 
 In C++ the underlying type is ``std::complex<>``, in Python the ``complex``
@@ -749,6 +764,7 @@ Boolean type:             VECTOR_BOOL
 Signed integer types:     VECTOR_INT8, VECTOR_INT16, VECTOR_INT32, VECTOR_INT64
 Unsigned integer types:   VECTOR_UINT8, VECTOR_UINT16, VECTOR_UINT32, VECTOR_UINT64
 Floating point types:     VECTOR_FLOAT, VECTOR_DOUBLE
+Complex vector types:     VECTOR_COMPLEX_FLOAT, VECTOR_COMPLEX_DOUBLE
 Hash type:                VECTOR_HASH
 =======================  ==========================================================
 

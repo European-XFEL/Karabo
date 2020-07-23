@@ -14,7 +14,7 @@ Contents:
 
    introduction
    general_concepts
-   broker
+   communication
    alarm_system
    run_configuration
 
