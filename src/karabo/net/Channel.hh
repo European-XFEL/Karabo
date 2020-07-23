@@ -91,6 +91,19 @@ namespace karabo {
             /**************************************************************/
 
             /**
+             * Synchronously reads size bytes and return them as a string.
+             * The reading will block until the bytes are read.
+             * @param size This number of bytes will be copied into data
+             *
+             * @note reads up nBytes expecting no header. To be used ONLY 
+             * after a readAsyncStringUntil operation in case some bytes must
+             * be read after readAsyncStringUntil has been used.
+             */
+            virtual std::string consumeBytesAfterReadUntil(const size_t nBytes) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Not supported for this transport layer");
+            }
+
+            /**
              * Synchronously reads size bytes into data.
              * The reading will block until the data record is read.
              * @param data Pre-allocated contiguous block of memory
