@@ -14,6 +14,8 @@
 #include "karabo/net/Queues.hh"
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/io/BufferSet.hh"
+#include "karabo/util/Exception.hh"
+#include "karabo/net/TcpChannel.hh"
 
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
@@ -696,7 +698,7 @@ struct WriteAsyncCli {
         : m_port(port)
         , m_testReportFn(testReportFn)
         , m_testOutcomeFn(testOutcomeFn)
-        , m_connection(karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", host))) { 
+        , m_connection(karabo::net::Connection::create(karabo::util::Hash("Tcp.port", m_port, "Tcp.hostname", host))) {
         m_connection->startAsync(boost::bind(&WriteAsyncCli::connectHandler, this, _1, _2));
     }
 
@@ -718,7 +720,7 @@ private:
         decltype(boost::chrono::high_resolution_clock::now()) startTime;
         decltype(boost::chrono::high_resolution_clock::now()) stopTime;
         decltype(startTime - stopTime) startStopInterval;
-        
+
         std::clog << "[Cli] Write async client connected. Sending data ..." << std::endl;
         try {
             channel->writeAsync(m_params.dataHash, m_params.writePriority, false);
@@ -775,7 +777,7 @@ private:
 
             channel->writeAsync(m_params.vectorChar, m_params.writePriority);
             std::clog << "[Cli]\t14. sent a vector of char for body." << std::endl;
-            
+
             std::clog << "[Cli] ... all test data sent by the client" << std::endl;
         } catch (karabo::util::Exception& ke) {
             std::clog << "Error during write sequence by the client: " << ke.what() << std::endl;
@@ -839,7 +841,7 @@ void TcpNetworking_Test::testClientServer() {
 
     TcpServer server;
     TcpClient client("localhost", server.port());
-    
+
     nThreads = karabo::net::EventLoop::getNumberOfThreads();
     CPPUNIT_ASSERT(nThreads == 0);
 
@@ -953,6 +955,117 @@ void TcpNetworking_Test::testBufferSet() {
 
         EventLoop::stop();
         thr.join();
+}
+
+
+void TcpNetworking_Test::testConsumeBytesAfterReadUntil() {
+    using namespace karabo::util;
+    using namespace karabo::net;
+
+    auto thr = boost::thread(&EventLoop::work);
+
+    // Create server with handler for connections
+    auto serverCon = Connection::create("Tcp", Hash("type", "server",
+                                                    "sizeofLength", 0));
+
+    Channel::Pointer serverChannel;
+    std::string failureReasonServ;
+    auto serverConnectHandler =
+            [&serverChannel, &failureReasonServ] (const ErrorCode& ec, const Channel::Pointer & channel) {
+                if (ec) {
+                    failureReasonServ = "Server connect failed: " + toString(ec.value()) += " -- " + ec.message();
+                } else {
+                    serverChannel = channel;
+                }
+            };
+    const unsigned int serverPort = serverCon->startAsync(serverConnectHandler);
+    CPPUNIT_ASSERT(serverPort != 0);
+
+    // Create client, connect to server and validate connection
+    Connection::Pointer clientConn = Connection::create("Tcp", Hash("sizeofLength", 0,
+                                                                    "type", "client",
+                                                                    "port", serverPort));
+    Channel::Pointer clientChannel;
+    std::string failureReasonCli;
+    auto clientConnectHandler =
+            [&clientChannel, &failureReasonCli](const ErrorCode& ec, const Channel::Pointer & channel) {
+                if (ec) {
+                    std::stringstream os;
+                    os << "\nClient connection failed: " << ec.value() << " -- " << ec.message();
+                    failureReasonCli = os.str();
+                } else {
+                    clientChannel = channel;
+                }
+            };
+    clientConn->startAsync(clientConnectHandler);
+
+    int timeout = 10000;
+    while (timeout >= 0) {
+        if (clientChannel && serverChannel) break;
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+        timeout -= 10;
+    }
+    CPPUNIT_ASSERT_MESSAGE(failureReasonServ + ", timeout: " + toString(timeout), serverChannel);
+    CPPUNIT_ASSERT_MESSAGE(failureReasonCli + ", timeout: " + toString(timeout), clientChannel);
+
+    // Upon successful connection, server sends 'Ready' string to client.
+    // Client reads the message with consumeBytesAfterReadUntil. Both operations are done synchronously.
+    // Even though consumeBytesAfterReadUntil has been created to be used in conjuction with readAsyncStringntil,
+    // it can be used in standalone mode and in this unit test that capability is used.
+    const std::string readyMsg("Ready");
+    serverChannel->write(readyMsg);
+    std::string readyMsgRead;
+    CPPUNIT_ASSERT_NO_THROW(readyMsgRead = clientChannel->consumeBytesAfterReadUntil(readyMsg.size()));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Ready message differs from expected.", readyMsgRead, readyMsg);
+
+    // Checks the interplay between readAsyncStringUntil and consumeBytesAfterReadUntil.
+    const std::string untilSep("HTTP 1.1 403 Forbidden\n\n");
+    const std::string afterSep("No access granted for user.");
+    const std::string httpMsg(untilSep + afterSep);
+
+    serverChannel->write(httpMsg);
+    std::atomic<bool> readSeqCompleted(false);
+    auto readUntilHandler =
+            [&clientChannel, &httpMsg, &readSeqCompleted, &failureReasonCli,
+            &untilSep, &afterSep](const ErrorCode& ec, std::string msgRead) {
+                if (ec) {
+                    std::stringstream os;
+                    os << "\nreadAsyncStringUntil failed: " + ec.message();
+                    failureReasonCli = os.str();
+                } else {
+                    if (msgRead != untilSep) {
+                        failureReasonCli =
+                                "\nreadAsyncStringUntil result, '" + msgRead + "', differs from expected, '"
+                                + untilSep + "'.";
+                    } else {
+
+                        const std::string afterSepStr = clientChannel->consumeBytesAfterReadUntil(afterSep.size());
+                        if (afterSepStr != afterSep) {
+                            failureReasonCli =
+                                    "\nconsumeBytesAfterReadUntil result, '" + afterSepStr + "', differs from expected."
+                                    + afterSep + "'.";
+                        } else {
+                            readSeqCompleted = true;
+                        }
+                    }
+                }
+            };
+    clientChannel->readAsyncStringUntil("\n\n", readUntilHandler);
+
+    // Waits for the read sequence test to succeed or timeout.
+    timeout = 12000;
+    while (timeout >= 0) {
+        if (readSeqCompleted) break;
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+        timeout -= 10;
+    }
+
+    // The order of the asserts is important: had the timeout assert come first, failureReasonCli would never be shown.
+    CPPUNIT_ASSERT_MESSAGE("Read sequence test failed" + failureReasonCli, failureReasonCli.empty());
+    CPPUNIT_ASSERT_MESSAGE("ReadAsyncStringUntil - consumeBytesAfterReadUntil sequence timed out!", timeout >= 0);
+
+    EventLoop::stop();
+    thr.join();
 }
 
 
