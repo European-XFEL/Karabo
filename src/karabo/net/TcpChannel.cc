@@ -121,6 +121,34 @@ namespace karabo {
         }
 
 
+        std::string TcpChannel::consumeBytesAfterReadUntil(const size_t nBytes) {
+
+            // boost::asio::async_read_until can put bytes that go beyond its specified terminator
+            // sequence argument, so we must consume from the same streamBuffer instance used by
+            // TcpChannel::readAsyncStringUntil and deal with the possibility of part of the bytes
+            // to read being already in the streamBuffer. Further details on this can be found at
+            // https://github.com/chriskohlhoff/asio/issues/113seem and at
+            // http://boost.2283326.n4.nabble.com/Cannot-get-boost-asio-read-until-to-properly-read-a-line-new-to-boost-asio-td4681406.html
+            const size_t availOnStream = m_streamBufferInbound.in_avail();
+            if (nBytes > availOnStream) {
+                // There are some bytes to be read into the StreamBuffer
+                boost::mutex::scoped_lock lock(m_socketMutex);
+                const size_t toRead = nBytes - availOnStream;
+                ErrorCode error;
+                m_readBytes += boost::asio::read(m_socket, m_streamBufferInbound, transfer_exactly(toRead), error);
+                if (error) {
+                    throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
+                }
+            }
+            std::ostringstream ss;
+            ss << &m_streamBufferInbound;
+            std::string str = ss.str();
+            // The redirection to the ostringstream already takes care of consuming the bytes in m_streamBufferInbound.
+
+            return str;
+        }
+
+
         void TcpChannel::read(char* data, const size_t& size) {
             ErrorCode error;
             m_readBytes += boost::asio::read(m_socket, buffer(data, size), transfer_all(), error);
@@ -276,7 +304,7 @@ namespace karabo {
             //no header is expected so I directly register payload handler, i.e. stringAvailableHandler
             boost::asio::async_read_until(m_socket, m_streamBufferInbound,
                                           terminator,
-                                          util::bind_weak(&karabo::net::TcpChannel::stringAvailableHandler, 
+                                          util::bind_weak(&karabo::net::TcpChannel::stringAvailableHandler,
                                           this, _1, _2));
         }
 
@@ -490,18 +518,18 @@ namespace karabo {
             // 'false' ensures that we leave the context and go via the event loop:
             this->readAsyncSizeInBytesImpl(util::bind_weak(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1), false);
         }
-        
+
         void TcpChannel::stringAvailableHandler(const boost::system::error_code& e, const size_t bytes_to_read) {
             HandlerType type = m_activeHandler;
             m_activeHandler = TcpChannel::NONE;
             auto readHandler = std::move(m_readHandler);
-            
+
             if (type != TcpChannel::STRING_UNTIL) {
                 throw KARABO_LOGIC_EXCEPTION("stringAvailableHandler called but handler type is " + str(boost::format("%1%") % type));
                 return;
             }
 
-            //allocate tmp string and copy m_streamBufferInbound content to it 
+            //allocate tmp string and copy m_streamBufferInbound content to it
             string tmp(boost::asio::buffers_begin(m_streamBufferInbound.data()),
                        boost::asio::buffers_begin(m_streamBufferInbound.data()) + bytes_to_read);
 
@@ -538,7 +566,7 @@ namespace karabo {
                             }
                             this->readAsyncVectorBufferSetPointerImpl(buffers, util::bind_weak(&TcpChannel::onHashVectorBufferSetPointerRead, this, _1, _2));
                         } else if (m_inHashHeader->has("byteSizes")) {
-                            // This is protocol for middle-layer devices and, in general, for karabo pre-2.2.4 
+                            // This is protocol for middle-layer devices and, in general, for karabo pre-2.2.4
                             const auto& sizes = m_inHashHeader->get<std::vector<unsigned int>>("byteSizes");
                             std::vector<karabo::io::BufferSet::Pointer> buffers;
 
