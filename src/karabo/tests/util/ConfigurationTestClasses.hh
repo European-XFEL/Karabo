@@ -572,7 +572,7 @@ namespace configurationTest {
 
             NDARRAY_ELEMENT(expected)
                     .key("arrUndefined")
-                    .dtype(karabo::util::Types::DOUBLE)
+                    // leave type undefined
                     .shape("0,3,0")
                     .commit();
 
