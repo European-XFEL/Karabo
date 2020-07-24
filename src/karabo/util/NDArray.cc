@@ -7,6 +7,7 @@
 
 #include "NDArray.hh"
 #include "ToSize.hh"
+#include "Types.hh"
 #include "ByteArrayElement.hh"
 #include "SimpleElement.hh"
 #include "VectorElement.hh"
@@ -29,7 +30,7 @@ namespace karabo {
             INT32_ELEMENT(s).key("type")
                     .displayedName("Data Type")
                     .description("The type of the contained array data")
-                    .readOnly()
+                    .readOnly().initialValue(util::Types::UNKNOWN)
                     .commit();
             BOOL_ELEMENT(s).key("isBigEndian")
                     .displayedName("Is big-endian")
