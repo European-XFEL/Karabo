@@ -85,7 +85,10 @@ class InjectMixin(Configurable):
     def __new__(cls, configuration={}, **kwargs):
         """each object gets its own personal class, that it may modify"""
         newtype = MetaInjectable(cls.__name__, (cls,), {})
-        return super(Configurable, cls).__new__(newtype)
+        ret = super(Configurable, cls).__new__(newtype)
+        # Make the original module available
+        ret.__module_orig__ = cls.__module__
+        return ret
 
     @coroutine
     def _run(self, **kwargs):
