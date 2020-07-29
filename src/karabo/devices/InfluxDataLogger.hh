@@ -9,6 +9,7 @@
 #include "DataLogger.hh"
 #include <karabo/net/HttpResponse.hh>
 #include <karabo/net/InfluxDbClient.hh>
+#include "karabo/util/Version.hh"
 
 namespace karabo {
     
@@ -60,7 +61,7 @@ namespace karabo {
 
             friend class InfluxDeviceData;
 
-            KARABO_CLASSINFO(InfluxDataLogger, "InfluxDataLogger", "2.6")
+            KARABO_CLASSINFO(InfluxDataLogger, "InfluxDataLogger", "karabo-" + karabo::util::Version::getVersion())
 
             static void expectedParameters(karabo::util::Schema& expected);
 

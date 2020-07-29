@@ -2,7 +2,8 @@ import os.path as op
 import os
 from time import sleep
 
-from karabo.bound import Hash, SignalSlotable
+from karabo import __version__ as karaboVersion
+from karabo.bound import AccessLevel, Hash, SignalSlotable
 from karabo.common.states import State
 from karabo.integration_tests.utils import BoundDeviceTestCase
 
@@ -14,7 +15,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
     def tearDown(self):
         super(TestDeviceDeviceComm, self).tearDown()
 
-    def test_readOnly_table(self):
+    def test_properties(self):
 
         SERVER_ID = "PropTestServer"
         deviceId = "propTestDevice"
@@ -26,23 +27,37 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         ok, msg = self.dc.instantiate(SERVER_ID, cfg, 30)
         self.assertTrue(ok, msg)
 
-        tbl = self.dc.get(deviceId, "tableReadOnly")
-        self.assertEquals(len(tbl), 2)  # tableReadOnly has 2 rows.
+        with self.subTest(msg="Test base device properties"):
+            props = self.dc.get(deviceId)
+            self.assertEquals(props.get("deviceId"), deviceId)
+            self.assertEquals(props.get("classId"), "PropertyTest")
+            self.assertEquals(props.get("classVersion"),
+                              "karabo-" + karaboVersion)
+            self.assertEquals(props.get("karaboVersion"), karaboVersion)
+            self.assertEquals(props.get("visibility"), AccessLevel.ADMIN)
+            self.assertEquals(props.get("serverId"), SERVER_ID)
+            # Cannot know the pid - but it is non-zero and different from ours
+            self.assertNotEquals(props.get("pid"), 0)
+            self.assertNotEquals(props.get("pid"), os.getpid())
 
-        tblValue = [
-            Hash("e1", "gfh", "e2", False,
-                 "e3", 14, "e4", 0.0022, "e5", 3.14159)
-        ]
-        self.assertRaises(RuntimeError, self.dc.set,
-                          deviceId, "tableReadOnly", tblValue)
+        with self.subTest(msg="Test readOnly table"):
+            tbl = self.dc.get(deviceId, "tableReadOnly")
+            self.assertEquals(len(tbl), 2)  # tableReadOnly has 2 rows.
 
-        # Checks that a read-only table can be updated internally.
-        # Note that when "table" is updated, the value is transferred
-        # to tableReadOnly
-        self.dc.set(deviceId, "table", tblValue)
-        tbl = self.dc.get(deviceId, "tableReadOnly")
-        self.assertEquals(len(tbl), 1)  # tableReadOnly now has 1 row.
-        self.assertEquals(tbl[0]["e3"], 14)
+            tblValue = [
+                Hash("e1", "gfh", "e2", False,
+                     "e3", 14, "e4", 0.0022, "e5", 3.14159)
+            ]
+            self.assertRaises(RuntimeError, self.dc.set,
+                              deviceId, "tableReadOnly", tblValue)
+
+            # Checks that a read-only table can be updated internally.
+            # Note that when "table" is updated, the value is transferred
+            # to tableReadOnly
+            self.dc.set(deviceId, "table", tblValue)
+            tbl = self.dc.get(deviceId, "tableReadOnly")
+            self.assertEquals(len(tbl), 1)  # tableReadOnly now has 1 row.
+            self.assertEquals(tbl[0]["e3"], 14)
 
         ok, msg = self.dc.killDevice(deviceId, 30)
         self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
