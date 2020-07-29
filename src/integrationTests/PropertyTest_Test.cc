@@ -69,7 +69,7 @@ void PropertyTest_Test::allTestRunner() {
 
 void PropertyTest_Test::testSimpleProperties() {
     { // bool
-        bool value = false;
+        bool value = true;
         m_deviceClient->get("testPropertyTest_0", "boolProperty", value);
         CPPUNIT_ASSERT(value == false);
 

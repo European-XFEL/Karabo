@@ -18,6 +18,7 @@
 
 #include "karabo/core/Device.hh"
 #include "karabo/util/DataLogUtils.hh"
+#include "karabo/util/Version.hh"
 #include "karabo/xms/SlotElement.hh"
 
 /**
@@ -62,7 +63,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(DataLoggerManager, "DataLoggerManager", "1.0")
+            KARABO_CLASSINFO(DataLoggerManager, "DataLoggerManager", "karabo-" + karabo::util::Version::getVersion())
 
             static void expectedParameters(karabo::util::Schema& expected);
 

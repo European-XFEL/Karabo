@@ -215,7 +215,8 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(Device, "Device", "1.0")
+            // Derived classes shall use "<packageName>-<repositoryVersion>" as their version
+            KARABO_CLASSINFO(Device, "Device", karabo::util::Version::getVersion())
 
             /**
              * The expected parameter section of the Device class, known at
@@ -279,7 +280,8 @@ namespace karabo {
                         .description("The version of the class of this device defined in KARABO_CLASSINFO")
                         .adminAccess()
                         .readOnly()
-                        .initialValue(Device::classInfo().getVersion())
+                        // No version dependent initial value:
+                        // It would make the static schema version dependent, i.e. introduce fake changes.
                         .commit();
 
                 STRING_ELEMENT(expected).key("karaboVersion")
@@ -287,7 +289,7 @@ namespace karabo {
                         .description("The version of the Karabo framework running this device")
                         .adminAccess()
                         .readOnly()
-                        .initialValue(karabo::util::Version::getVersion())
+                        // No version dependent initial value, see above for "classVersion"
                         .commit();
 
                 STRING_ELEMENT(expected).key("serverId")
@@ -1530,6 +1532,8 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     // ClassId
                     m_parameters.set("classId", m_classId);
+                    m_parameters.set("classVersion", getClassInfo().getVersion());
+                    m_parameters.set("karaboVersion", karabo::util::Version::getVersion());
                     // DeviceId
                     m_parameters.set("deviceId", m_deviceId);
                     // ServerId
@@ -1560,7 +1564,6 @@ namespace karabo {
                 instanceInfo.set("classId", getClassInfo().getClassId());
                 instanceInfo.set("serverId", m_serverId);
                 instanceInfo.set("visibility", this->get<int >("visibility"));
-                instanceInfo.set("compatibility", classInfo().getVersion());
                 instanceInfo.set("host", this->get<std::string>("hostName"));
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
