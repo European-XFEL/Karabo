@@ -5,7 +5,6 @@ from karabo.bound import (
     DOUBLE_ELEMENT, INT32_ELEMENT, PythonDevice, VectorHash
 )
 
-from karabo import __version__ as karaboVersion
 from .device_with_alarm import DeviceWithAlarm
 from .device_with_table_parameter import DeviceWithTableElementParam
 
@@ -381,15 +380,3 @@ class Schema_Injection_TestCase(unittest.TestCase):
         self.assertTrue(schema.has("aNewKeyNotExisting"))
         # So schema was changed, but device's schema not:
         self.assertFalse(device.getFullSchema().has("aNewKeyNotExisting"))
-
-
-    def test_deviceBasics(self):
-        """
-        Hijack schema test to verify basic device properties
-        """
-        device = Configurator(PythonDevice).create(
-                        "DeviceWithAlarm", self.deviceCfg)
-        device.startFsm()
-
-        self.assertEqual(device.get("classId"), "DeviceWithAlarm")
-        self.assertEqual(device.get("karaboVersion"), karaboVersion)
