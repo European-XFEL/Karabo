@@ -9,6 +9,7 @@
 #include <fstream>
 
 #include "karabo/util/DataLogUtils.hh"
+#include "karabo/util/Version.hh"
 #include "karabo/core/Device.hh"
 
 
@@ -24,10 +25,10 @@ namespace karabo {
 
         struct DeviceData : public boost::enable_shared_from_this<DeviceData> {
 
-
-            KARABO_CLASSINFO(DeviceData, "DataLoggerDeviceData", "2.6")
+            KARABO_CLASSINFO(DeviceData, "DataLoggerDeviceData", "karabo-" + karabo::util::Version::getVersion())
 
             enum class InitLevel {
+
 
                 NONE = 0, /// DeviceData is created
                 STARTED, /// connecting to device's signals has started

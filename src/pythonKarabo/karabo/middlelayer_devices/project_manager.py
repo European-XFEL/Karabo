@@ -28,6 +28,9 @@ def dictToHash(d):
 
 
 class ProjectManager(Device):
+
+    # As long as part of Karabo framework, just inherit __version__ from Device
+
     state = Overwrite(
         defaultValue=State.INIT,
         options=[State.ERROR, State.ON, State.INIT])
