@@ -102,6 +102,7 @@ class DisplayDetectorGraph(BaseBindingController):
         widget.add_roi()
         widget.add_colorbar()
         widget.add_aux(AuxPlots.ProfilePlot, smooth=True)
+        widget.add_aux(AuxPlots.Histogram)
         # Finalize
         widget.add_toolbar()
 
