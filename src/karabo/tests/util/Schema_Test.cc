@@ -645,6 +645,12 @@ void Schema_Test::testArrayElements() {
     undefShapeVec.push_back(0);
     CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<unsigned long long > >("arrUndefined.shape") == undefShapeVec);
 
+    CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::util::Types::BOOL), sch.getDefaultValue<int>("arrBool.type"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::util::Types::INT8), sch.getDefaultValue<int>("arrInt8.type"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::util::Types::UINT16), sch.getDefaultValue<int>("arrUInt16.type"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::util::Types::FLOAT), sch.getDefaultValue<int>("arrFloat.type"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::util::Types::UNKNOWN), sch.getDefaultValue<int>("arrUndefined.type"));
+
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrBool") == true);
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrInt8") == true);
     CPPUNIT_ASSERT(sch.isAccessReadOnly("arrUInt16") == true);

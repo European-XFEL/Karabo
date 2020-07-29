@@ -242,4 +242,8 @@ void ImageData_Test::testImageDataElementMaxSize() {
         CPPUNIT_ASSERT_EQUAL(static_cast<int> (Types::INT16), sch.getDefaultValueAs<int>("ide.pixels.type"));
 
     }
+
+    // Test default data type
+    IMAGEDATA_ELEMENT(sch).key("ide2").commit();
+    CPPUNIT_ASSERT_EQUAL(static_cast<int> (Types::UNKNOWN), sch.getDefaultValue<int>("ide2.pixels.type"));
 }
