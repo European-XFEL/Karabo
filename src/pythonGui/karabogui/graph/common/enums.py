@@ -1,7 +1,7 @@
 from enum import Enum, IntEnum
 
 
-class Axes(Enum):
+class Axes(IntEnum):
     Y = 1
     X = 0
     Z = 2
