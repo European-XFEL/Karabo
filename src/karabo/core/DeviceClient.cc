@@ -57,9 +57,8 @@ namespace karabo {
             const std::string ownInstanceId(instanceId.empty() ? generateOwnInstanceId() : instanceId);
             Hash instanceInfo;
             instanceInfo.set("type", "client");
-            instanceInfo.set("lang", "c++");
+            instanceInfo.set("lang", "cpp");
             instanceInfo.set("visibility", 4);
-            instanceInfo.set("compatibility", DeviceClient::classInfo().getVersion());
             instanceInfo.set("host", net::bareHostName());
             instanceInfo.set("status", "ok");
             m_internalSignalSlotable = karabo::xms::SignalSlotable::Pointer(new SignalSlotable(ownInstanceId,
