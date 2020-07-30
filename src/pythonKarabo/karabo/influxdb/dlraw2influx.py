@@ -263,10 +263,8 @@ class DlRaw2Influx():
             # Nothing to parse
             return None
 
-        line_regex = (
-            r"^([TZ0-9\.]+)\|([0-9\.]+)\|([0-9]+)\|(.+)\|([0-9A-Z_]*)\|(.*)\|"
-            r"([a-z0-9_]*)\|([A-Z]+)$"
-        )
+        line_regex = r"^([TZ0-9\.]+)\|([0-9\.]+)\|([0-9]+)\|(.+)\|((?:)|(?:[A-Z][0-9A-Z_]+))\|(.*)\|([a-z0-9_]*)\|([A-Z]+)$"  # noqa
+
         line_fields = {}
         matches = re.search(line_regex, line)
         if matches is None:
