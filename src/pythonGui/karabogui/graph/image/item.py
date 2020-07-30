@@ -140,24 +140,63 @@ class KaraboImageItem(ImageItem):
         Since pyqtgraph defaults the levels to (0, 255) for such, we
         calculate the levels for our own sanity."""
 
-        if image is not None and self.auto_levels:
+        # Check if the image is valid
+        if image is None:
+            return
+
+        # Convert single-channel image to 2D array
+        if image.ndim == 3 and image.shape[-1] == 1:
+            image = image[..., 0]
+
+        if image.ndim == 2 and self.auto_levels:
+            # Calculate levels only on pseudocolor images
+            # (single channel or 2D images)
             image_min, image_max = image.min(), image.max()
             if image_min == image_max:
                 image_min = correct_image_min(image_min)
             levels = [image_min, image_max]
             super(KaraboImageItem, self).setImage(image=image, levels=levels)
         else:
+            # No levels calculation needed for pseudocolor images with preset
+            # levels and for RGB images
             super(KaraboImageItem, self).setImage(image=image,
                                                   autoLevels=False)
 
     def render(self):
         """Reimplementing for performance improvements patches"""
 
-        # 0. Check if image is valid
+        # Check if image is valid
         image = self.image
         if is_image_invalid(image):
             return
 
+        if image.ndim == 2:
+            self.qimage = self._create_indexed_qimage(image)
+        else:
+            self.qimage = self._create_rgb_qimage(image)
+
+    def _create_rgb_qimage(self, image):
+        """Rearrange RGB image to be usable with QImage"""
+
+        # Determine the image format based on the dimensions
+        if image.shape[-1] == 3:
+            # Add an opaque alpha channel to be QImage compatible
+            img_format = QImage.Format_RGB888
+        elif image.shape[-1] == 4:
+            img_format = QImage.Format_ARGB32
+        else:
+            raise NotImplementedError(f"Formatting for image with shape "
+                                      f"{image.shape} is not supported")
+
+        # Convert data type to uint8 if otherwise
+        if image.dtype != np.uint8:
+            image = image.astype(np.uint8)
+
+        self._slice_rect = QRectF(0, 0, *image.shape[:2])
+        # Swap the RGB values to BGR. Seems like Qt uses BGR color space
+        return self._create_qimage(image, img_format)
+
+    def _create_indexed_qimage(self, image):
         # 1. Get image according to view geometry
         image = self._slice(image)
         if is_image_invalid(image):
@@ -195,19 +234,29 @@ class KaraboImageItem(ImageItem):
         image = rescale(image, min_value=image_min, max_value=image_max,
                         low=low, high=high).astype(np.uint8)
 
-        # 5. Transpose image array to match axis orientation. There is a need
-        # to copy since QImage need the array copy (pointers), not the view.
-        if self.axisOrder == 'col-major':
-            image = image.transpose((1, 0, 2)[:image.ndim]).copy()
-
         # 6. Create QImage
-        ny, nx = image.shape[:2]
-        stride = image.strides[0]
-        self.qimage = QImage(image, nx, ny, stride, QImage.Format_Indexed8)
+        qimage = self._create_qimage(image, img_format=QImage.Format_Indexed8)
 
         # 7. Set color table
         if self._qlut is not None:
-            self.qimage.setColorTable(self._qlut)
+            qimage.setColorTable(self._qlut)
+
+        return qimage
+
+    def _create_qimage(self, image, img_format):
+        # Transpose image array to match axis orientation.
+        if self.axisOrder == 'col-major':
+            image = image.transpose((1, 0, 2)[:image.ndim]).copy()
+
+        ny, nx = image.shape[:2]
+        if img_format in (QImage.Format_Indexed8, QImage.Format_RGB888):
+            stride = image.strides[0]
+            return QImage(image, nx, ny, stride, img_format)
+
+        qimage = QImage(image, nx, ny, img_format)
+        if img_format == QImage.Format_ARGB32:
+            qimage = qimage.rgbSwapped()
+        return qimage
 
     def paint(self, p, *args):
         """Reimplementing for performance improvements patches"""
