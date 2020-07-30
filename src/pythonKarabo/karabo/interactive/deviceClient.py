@@ -6,6 +6,7 @@
 from karathon import Hash
 from karathon import TextSerializerHash
 
+from karabo._version import version as karaboVersion
 from karabo.bound import DeviceClient as BoundDeviceClient
 from karabo.middlelayer_api.deviceclientproject import DeviceClientProject
 
@@ -27,32 +28,8 @@ ip = IPython.get_ipython()
 cpp_client = None
 
 
-def _getVersion():
-    if "win" in platform:
-        # TODO: use current working path pythonGui/VERSION
-        filePath = os.path.join(os.environ['USERPROFILE'], "karabo",
-                                "karaboFramework")
-    else:
-        filePath = os.path.join(os.environ['HOME'], ".karabo",
-                                "karaboFramework")
-
-    try:
-        with open(filePath, 'r') as file:
-            karaboVersionPath = os.path.join(file.readline().rstrip(),
-                                             "VERSION")
-    except IOError as e:
-        print(e)
-        return ""
-
-    try:
-        with open(karaboVersionPath, 'r') as file:
-            return file.readline().rstrip('\n\r')
-    except IOError:
-        return ""
-
-
 # Welcome
-print("\n#### Karabo Device-Client (version:", _getVersion(), ") ####")
+print("\n#### Karabo Device-Client (version:", karaboVersion, ") ####")
 print("To start you need a DeviceClient object, e.g. type:\n")
 print("  d = DeviceClient()\n")
 print("Using this object you can remote control Karabo devices.")
