@@ -118,8 +118,64 @@
         <itemPath>../../../src/integrationTests/integrationRunner_8.cc</itemPath>
       </logicalFolder>
     </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+      <logicalFolder name="f1"
+                     displayName="AlarmService_Test"
+                     projectFiles="true"
+                     kind="TEST">
+      </logicalFolder>
+      <logicalFolder name="f10"
+                     displayName="DataLogging_Test"
+                     projectFiles="true"
+                     kind="TEST">
+      </logicalFolder>
+      <logicalFolder name="f9"
+                     displayName="Device_Test"
+                     projectFiles="true"
+                     kind="TEST">
+      </logicalFolder>
+      <logicalFolder name="f5"
+                     displayName="DeviceLocking_Test"
+                     projectFiles="true"
+                     kind="TEST">
+      </logicalFolder>
+      <logicalFolder name="f6"
+                     displayName="GuiServer_Test"
+                     projectFiles="true"
+                     kind="TEST">
+      </logicalFolder>
+      <logicalFolder name="f2"
+                     displayName="PipelinedProcessing_Test"
+                     projectFiles="true"
+                     kind="TEST">
+      </logicalFolder>
+      <logicalFolder name="f3"
+                     displayName="Property_Test"
+                     projectFiles="true"
+                     kind="TEST">
+      </logicalFolder>
+      <logicalFolder name="f4"
+                     displayName="RuntimeSchemaAttributes_Test"
+                     projectFiles="true"
+                     kind="TEST">
+      </logicalFolder>
+      <logicalFolder name="f7"
+                     displayName="SceneProvider_Test"
+                     projectFiles="true"
+                     kind="TEST">
+      </logicalFolder>
+      <logicalFolder name="f8"
+                     displayName="Timing_Test"
+                     projectFiles="true"
+                     kind="TEST">
+      </logicalFolder>
+    </logicalFolder>
   </logicalFolder>
   <sourceRootList>
+    <Elem>../../../src/integrationTests</Elem>
     <Elem>../../../src/integrationTests</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
@@ -132,12 +188,11 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <standard>8</standard>
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
-          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs</commandLine>
+          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs -std=c++14</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
@@ -621,12 +676,11 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
-          <standard>8</standard>
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
-          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs</commandLine>
+          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs -std=c++14</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
@@ -1115,12 +1169,11 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <standard>8</standard>
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
-          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs -fprofile-arcs -ftest-coverage</commandLine>
+          <commandLine>-std=c++14 -Wfatal-errors -Wno-unused-local-typedefs -fprofile-arcs -ftest-coverage</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
