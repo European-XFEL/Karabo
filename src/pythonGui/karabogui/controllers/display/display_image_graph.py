@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import QAction
-from traits.api import Instance, Int
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, ImageGraphModel)
-from karabo.native import Timestamp
+from karabo.native import EncodingType, Timestamp
 from karabogui.graph.common.api import AuxPlots
 from karabogui.graph.image.api import (
     KaraboImagePlot, KaraboImageNode, KaraboImageView)
@@ -24,7 +24,6 @@ class DisplayImageGraph(BaseBindingController):
     _plot = Instance(KaraboImagePlot)
     _image_node = Instance(KaraboImageNode, args=())
 
-    _axis = Int(2)
     _colormap_action = Instance(QAction)
 
     def create_widget(self, parent):
@@ -78,11 +77,12 @@ class DisplayImageGraph(BaseBindingController):
             return
 
         if "stackAxis" in image_data:
-            self._axis = image_data.stackAxis.value
-        else:
+            axis = image_data.stackAxis.value
+            array = self._image_node.get_slice(axis, cell=0)
+        elif self._image_node.encoding == EncodingType.GRAY:
             # NOTE: this might happen for RGB image
-            self._axis = DIMENSIONS['Z']
-
-        array = self._image_node.get_slice(self._axis, 0)
+            array = self._image_node.get_slice(DIMENSIONS['Z'], cell=0)
+        else:
+            array = self._image_node.get_data()
 
         self._plot.setData(array)
