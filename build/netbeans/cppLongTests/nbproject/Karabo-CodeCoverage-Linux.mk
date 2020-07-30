@@ -47,8 +47,8 @@ TESTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-Wno-unused-local-typdefs -fprofile-arcs -ftest-coverage
-CXXFLAGS=-Wno-unused-local-typdefs -fprofile-arcs -ftest-coverage
+CCFLAGS=-Wno-unused-local-typedefs -std=c++14 -fprofile-arcs -ftest-coverage
+CXXFLAGS=-Wno-unused-local-typedefs -std=c++14 -fprofile-arcs -ftest-coverage
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -80,19 +80,19 @@ ${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/783893685/InputOutputChannel_LongTest.o
 ${TESTDIR}/_ext/783893685/InputOutputChannel_LongTest.o: ../../../src/cppLongTests/xms/InputOutputChannel_LongTest.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/783893685
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/783893685/InputOutputChannel_LongTest.o ../../../src/cppLongTests/xms/InputOutputChannel_LongTest.cc
+	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/783893685/InputOutputChannel_LongTest.o ../../../src/cppLongTests/xms/InputOutputChannel_LongTest.cc
 
 
 ${TESTDIR}/_ext/783893685/SignalSlotable_LongTest.o: ../../../src/cppLongTests/xms/SignalSlotable_LongTest.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/783893685
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/783893685/SignalSlotable_LongTest.o ../../../src/cppLongTests/xms/SignalSlotable_LongTest.cc
+	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/783893685/SignalSlotable_LongTest.o ../../../src/cppLongTests/xms/SignalSlotable_LongTest.cc
 
 
 ${TESTDIR}/_ext/783893685/xmsLongTestRunner.o: ../../../src/cppLongTests/xms/xmsLongTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/783893685
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/783893685/xmsLongTestRunner.o ../../../src/cppLongTests/xms/xmsLongTestRunner.cc
+	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/783893685/xmsLongTestRunner.o ../../../src/cppLongTests/xms/xmsLongTestRunner.cc
 
 
 # Run Test Targets
