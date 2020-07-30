@@ -529,8 +529,7 @@ void DataLogging_Test::testMigrateFileLoggerData() {
             std::ostringstream cmd;
             cmd << "cat "<<entry;
             system(cmd.str().c_str());
-            errorCount++;
-        
+            errorCount++;        
         }
     }
 
@@ -1375,7 +1374,7 @@ void DataLogging_Test::testFloat(bool testPastConf) {
 
 void DataLogging_Test::testString(bool testPastConf) {
     auto lambda = [] (int i) -> string {
-        return ( (i % 2)? string() : "ab|c" + karabo::util::toString(i));
+        return ( (i % 2)? string() : "(1|2|" + karabo::util::toString(i)) +")";
     };
     testHistory<string>("stringProperty", lambda, testPastConf);
 
