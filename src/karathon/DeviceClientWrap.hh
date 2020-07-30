@@ -36,6 +36,7 @@ namespace karathon {
             if (!p) {
                 throw KARABO_PARAMETER_EXCEPTION("Broker connection is not valid.");
             }
+            p->updateInstanceInfo(karabo::util::Hash("lang", "bound"));
             m_signalSlotableWrap = boost::static_pointer_cast<SignalSlotableWrap > (p);
         }
 
