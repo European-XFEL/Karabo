@@ -98,6 +98,8 @@ namespace karabo {
 
         const boost::regex FileLogReader::m_lineRegex(karabo::util::DATALOG_LINE_REGEX, boost::regex::extended);
 
+        const boost::regex FileLogReader::m_lineLogRegex(karabo::util::DATALOG_LOGOUT_REGEX, boost::regex::extended);
+        
         const boost::regex FileLogReader::m_indexLineRegex(karabo::util::DATALOG_INDEX_LINE_REGEX, boost::regex::extended);
 
         const boost::regex FileLogReader::m_indexTailRegex(karabo::util::DATALOG_INDEX_TAIL_REGEX, boost::regex::extended);
@@ -346,6 +348,10 @@ namespace karabo {
                                 if (line.empty()) continue;
                                 boost::smatch tokens;
                                 bool search_res = boost::regex_search(line, tokens, m_lineRegex);
+                                if (!search_res) {
+                                    // attempt to parse login/logout line instead
+                                    search_res = boost::regex_search(line, tokens, m_lineLogRegex);
+                                } 
                                 if (search_res) {
                                     const string& flag = tokens[8];
                                     if ((flag == "LOGIN" || flag == "LOGOUT") && result.size() > 0) {
@@ -491,6 +497,10 @@ namespace karabo {
                         while (getline(file, line)) {
                             boost::smatch tokens;
                             bool search_res = boost::regex_search(line, tokens, m_lineRegex);
+                            if (!search_res) {
+                                // attempt to parse login/logout line instead
+                                search_res = boost::regex_search(line, tokens, m_lineLogRegex);
+                            } 
                             if (search_res) {
                                 const string& flag = tokens[8];
                                 if (flag == "LOGOUT")
