@@ -3,6 +3,7 @@ __lang_setting() {
         CentOS)
             localedef -c -i en_US -f UTF-8 en_US.utf8
             export LANG=en_US.UTF-8
+            source /opt/rh/devtoolset-7/enable
             ;;
         Ubuntu)
             locale-gen en_US.UTF-8

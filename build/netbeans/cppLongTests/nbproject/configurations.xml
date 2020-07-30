@@ -33,12 +33,11 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <standard>8</standard>
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
-          <commandLine>-Wno-unused-local-typdefs</commandLine>
+          <commandLine>-Wno-unused-local-typedefs -std=c++14</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
@@ -113,12 +112,11 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
-          <standard>8</standard>
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
-          <commandLine>-Wno-unused-local-typedefs</commandLine>
+          <commandLine>-Wno-unused-local-typedefs -std=c++14</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
@@ -196,12 +194,11 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <standard>8</standard>
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
-          <commandLine>-Wno-unused-local-typdefs -fprofile-arcs -ftest-coverage</commandLine>
+          <commandLine>-Wno-unused-local-typedefs -std=c++14 -fprofile-arcs -ftest-coverage</commandLine>
           <preprocessorList>
             <Elem>__SO__</Elem>
           </preprocessorList>
