@@ -171,8 +171,8 @@ TESTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-Wfatal-errors -Wno-unused-local-typedefs -fprofile-arcs -ftest-coverage
-CXXFLAGS=-Wfatal-errors -Wno-unused-local-typedefs -fprofile-arcs -ftest-coverage
+CCFLAGS=-Wfatal-errors -Wno-unused-local-typedefs -std=c++14 -fprofile-arcs -ftest-coverage
+CXXFLAGS=-Wfatal-errors -Wno-unused-local-typedefs -std=c++14 -fprofile-arcs -ftest-coverage
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -209,7 +209,7 @@ ${OBJECTDIR}/_ext/163556830/FsmBaseState.o: ../../../src/karabo/core/FsmBaseStat
 ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler.o: ../../../src/karabo/core/InstanceChangeThrottler.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler.o ../../../src/karabo/core/InstanceChangeThrottler.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler.o ../../../src/karabo/core/InstanceChangeThrottler.cc
 
 ${OBJECTDIR}/_ext/163556830/Lock.o: ../../../src/karabo/core/Lock.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -244,12 +244,12 @@ ${OBJECTDIR}/_ext/1423485062/DataLoggerManager.o: ../../../src/karabo/devices/Da
 ${OBJECTDIR}/_ext/1423485062/FileDataLogger.o: ../../../src/karabo/devices/FileDataLogger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/FileDataLogger.o ../../../src/karabo/devices/FileDataLogger.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/FileDataLogger.o ../../../src/karabo/devices/FileDataLogger.cc
 
 ${OBJECTDIR}/_ext/1423485062/FileLogReader.o: ../../../src/karabo/devices/FileLogReader.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/FileLogReader.o ../../../src/karabo/devices/FileLogReader.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/FileLogReader.o ../../../src/karabo/devices/FileLogReader.cc
 
 ${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o: ../../../src/karabo/devices/GuiServerDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
@@ -259,12 +259,12 @@ ${OBJECTDIR}/_ext/1423485062/GuiServerDevice.o: ../../../src/karabo/devices/GuiS
 ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o: ../../../src/karabo/devices/InfluxDataLogger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o ../../../src/karabo/devices/InfluxDataLogger.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o ../../../src/karabo/devices/InfluxDataLogger.cc
 
 ${OBJECTDIR}/_ext/1423485062/InfluxLogReader.o: ../../../src/karabo/devices/InfluxLogReader.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxLogReader.o ../../../src/karabo/devices/InfluxLogReader.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxLogReader.o ../../../src/karabo/devices/InfluxLogReader.cc
 
 ${OBJECTDIR}/_ext/1423485062/PropertyTest.o: ../../../src/karabo/devices/PropertyTest.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1423485062
@@ -539,12 +539,12 @@ ${OBJECTDIR}/_ext/1103112890/EventLoop.o: ../../../src/karabo/net/EventLoop.cc
 ${OBJECTDIR}/_ext/1103112890/HttpResponse.o: ../../../src/karabo/net/HttpResponse.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/HttpResponse.o ../../../src/karabo/net/HttpResponse.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/HttpResponse.o ../../../src/karabo/net/HttpResponse.cc
 
 ${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o: ../../../src/karabo/net/InfluxDbClient.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o ../../../src/karabo/net/InfluxDbClient.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o ../../../src/karabo/net/InfluxDbClient.cc
 
 ${OBJECTDIR}/_ext/1103112890/JmsConnection.o: ../../../src/karabo/net/JmsConnection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
@@ -819,313 +819,313 @@ ${TESTDIR}/TestFiles/f5: ${TESTDIR}/_ext/936508045/ImageData_Test.o ${TESTDIR}/_
 ${TESTDIR}/_ext/1033645296/DeviceClient_Test.o: ../../../src/karabo/tests/core/DeviceClient_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033645296
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033645296/DeviceClient_Test.o ../../../src/karabo/tests/core/DeviceClient_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033645296/DeviceClient_Test.o ../../../src/karabo/tests/core/DeviceClient_Test.cc
 
 
 ${TESTDIR}/_ext/1033645296/InstanceChangeThrottler_Test.o: ../../../src/karabo/tests/core/InstanceChangeThrottler_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033645296
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033645296/InstanceChangeThrottler_Test.o ../../../src/karabo/tests/core/InstanceChangeThrottler_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033645296/InstanceChangeThrottler_Test.o ../../../src/karabo/tests/core/InstanceChangeThrottler_Test.cc
 
 
 ${TESTDIR}/_ext/1033645296/Runner_Test.o: ../../../src/karabo/tests/core/Runner_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033645296
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033645296/Runner_Test.o ../../../src/karabo/tests/core/Runner_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033645296/Runner_Test.o ../../../src/karabo/tests/core/Runner_Test.cc
 
 
 ${TESTDIR}/_ext/1033645296/coreTestRunner.o: ../../../src/karabo/tests/core/coreTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033645296
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033645296/coreTestRunner.o ../../../src/karabo/tests/core/coreTestRunner.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 -I. -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033645296/coreTestRunner.o ../../../src/karabo/tests/core/coreTestRunner.cc
 
 
 ${TESTDIR}/_ext/861493463/BufferSet_Test.o: ../../../src/karabo/tests/io/BufferSet_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/BufferSet_Test.o ../../../src/karabo/tests/io/BufferSet_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/BufferSet_Test.o ../../../src/karabo/tests/io/BufferSet_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o: ../../../src/karabo/tests/io/FileInputOutput_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ../../../src/karabo/tests/io/FileInputOutput_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/FileInputOutput_Test.o ../../../src/karabo/tests/io/FileInputOutput_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/H5File_Test.o: ../../../src/karabo/tests/io/H5File_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/H5File_Test.o ../../../src/karabo/tests/io/H5File_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/H5File_Test.o ../../../src/karabo/tests/io/H5File_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/H5Format_Test.o: ../../../src/karabo/tests/io/H5Format_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/H5Format_Test.o ../../../src/karabo/tests/io/H5Format_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/H5Format_Test.o ../../../src/karabo/tests/io/H5Format_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o: ../../../src/karabo/tests/io/HashBinarySerializer_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ../../../src/karabo/tests/io/HashBinarySerializer_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/HashBinarySerializer_Test.o ../../../src/karabo/tests/io/HashBinarySerializer_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o: ../../../src/karabo/tests/io/HashXmlSerializer_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ../../../src/karabo/tests/io/HashXmlSerializer_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/HashXmlSerializer_Test.o ../../../src/karabo/tests/io/HashXmlSerializer_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/Hdf5_Test.o: ../../../src/karabo/tests/io/Hdf5_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ../../../src/karabo/tests/io/Hdf5_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/Hdf5_Test.o ../../../src/karabo/tests/io/Hdf5_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/SchemaSerializer_Test.o: ../../../src/karabo/tests/io/SchemaSerializer_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/SchemaSerializer_Test.o ../../../src/karabo/tests/io/SchemaSerializer_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/SchemaSerializer_Test.o ../../../src/karabo/tests/io/SchemaSerializer_Test.cc
 
 
 ${TESTDIR}/_ext/861493463/ioTestRunner.o: ../../../src/karabo/tests/io/ioTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/861493463
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/ioTestRunner.o ../../../src/karabo/tests/io/ioTestRunner.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -DKARABO_NO_ENABLE_TRACE_LOG -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/861493463/ioTestRunner.o ../../../src/karabo/tests/io/ioTestRunner.cc
 
 
 ${TESTDIR}/_ext/936496563/Logger_Test.o: ../../../src/karabo/tests/log/Logger_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936496563
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936496563/Logger_Test.o ../../../src/karabo/tests/log/Logger_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936496563/Logger_Test.o ../../../src/karabo/tests/log/Logger_Test.cc
 
 
 ${TESTDIR}/_ext/936496563/logTestRunner.o: ../../../src/karabo/tests/log/logTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936496563
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936496563/logTestRunner.o ../../../src/karabo/tests/log/logTestRunner.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936496563/logTestRunner.o ../../../src/karabo/tests/log/logTestRunner.cc
 
 
 ${TESTDIR}/_ext/936498188/EventLoop_Test.o: ../../../src/karabo/tests/net/EventLoop_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936498188
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/EventLoop_Test.o ../../../src/karabo/tests/net/EventLoop_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/EventLoop_Test.o ../../../src/karabo/tests/net/EventLoop_Test.cc
 
 
 ${TESTDIR}/_ext/936498188/JmsConnection_Test.o: ../../../src/karabo/tests/net/JmsConnection_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936498188
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/JmsConnection_Test.o ../../../src/karabo/tests/net/JmsConnection_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/JmsConnection_Test.o ../../../src/karabo/tests/net/JmsConnection_Test.cc
 
 
 ${TESTDIR}/_ext/936498188/MQTcpNetworking.o: ../../../src/karabo/tests/net/MQTcpNetworking.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936498188
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/MQTcpNetworking.o ../../../src/karabo/tests/net/MQTcpNetworking.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/MQTcpNetworking.o ../../../src/karabo/tests/net/MQTcpNetworking.cc
 
 
 ${TESTDIR}/_ext/936498188/ReadAsyncStringUntil_Test.o: ../../../src/karabo/tests/net/ReadAsyncStringUntil_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936498188
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/ReadAsyncStringUntil_Test.o ../../../src/karabo/tests/net/ReadAsyncStringUntil_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/ReadAsyncStringUntil_Test.o ../../../src/karabo/tests/net/ReadAsyncStringUntil_Test.cc
 
 
 ${TESTDIR}/_ext/936498188/Strand_Test.o: ../../../src/karabo/tests/net/Strand_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936498188
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/Strand_Test.o ../../../src/karabo/tests/net/Strand_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/Strand_Test.o ../../../src/karabo/tests/net/Strand_Test.cc
 
 
 ${TESTDIR}/_ext/936498188/TcpNetworking_Test.o: ../../../src/karabo/tests/net/TcpNetworking_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936498188
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/TcpNetworking_Test.o ../../../src/karabo/tests/net/TcpNetworking_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/TcpNetworking_Test.o ../../../src/karabo/tests/net/TcpNetworking_Test.cc
 
 
 ${TESTDIR}/_ext/936498188/netTestRunner.o: ../../../src/karabo/tests/net/netTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936498188
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/netTestRunner.o ../../../src/karabo/tests/net/netTestRunner.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/netTestRunner.o ../../../src/karabo/tests/net/netTestRunner.cc
 
 
 ${TESTDIR}/_ext/1033104525/AlarmCondition_Test.o: ../../../src/karabo/tests/util/AlarmCondition_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/AlarmCondition_Test.o ../../../src/karabo/tests/util/AlarmCondition_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/AlarmCondition_Test.o ../../../src/karabo/tests/util/AlarmCondition_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Base64_Test.o: ../../../src/karabo/tests/util/Base64_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Base64_Test.o ../../../src/karabo/tests/util/Base64_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Base64_Test.o ../../../src/karabo/tests/util/Base64_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/ByteSwap_Test.o: ../../../src/karabo/tests/util/ByteSwap_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/ByteSwap_Test.o ../../../src/karabo/tests/util/ByteSwap_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/ByteSwap_Test.o ../../../src/karabo/tests/util/ByteSwap_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o: ../../../src/karabo/tests/util/ConfigurationTestClasses.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ../../../src/karabo/tests/util/ConfigurationTestClasses.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/ConfigurationTestClasses.o ../../../src/karabo/tests/util/ConfigurationTestClasses.cc
 
 
 ${TESTDIR}/_ext/1033104525/Configurator_Test.o: ../../../src/karabo/tests/util/Configurator_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Configurator_Test.o ../../../src/karabo/tests/util/Configurator_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Configurator_Test.o ../../../src/karabo/tests/util/Configurator_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/DataLogUtils_Test.o: ../../../src/karabo/tests/util/DataLogUtils_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/DataLogUtils_Test.o ../../../src/karabo/tests/util/DataLogUtils_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/DataLogUtils_Test.o ../../../src/karabo/tests/util/DataLogUtils_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/DateTimeString_Test.o: ../../../src/karabo/tests/util/DateTimeString_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/DateTimeString_Test.o ../../../src/karabo/tests/util/DateTimeString_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/DateTimeString_Test.o ../../../src/karabo/tests/util/DateTimeString_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Dims_Test.o: ../../../src/karabo/tests/util/Dims_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Dims_Test.o ../../../src/karabo/tests/util/Dims_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Dims_Test.o ../../../src/karabo/tests/util/Dims_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Epochstamp_Test.o: ../../../src/karabo/tests/util/Epochstamp_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Epochstamp_Test.o ../../../src/karabo/tests/util/Epochstamp_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Epochstamp_Test.o ../../../src/karabo/tests/util/Epochstamp_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Exception_Test.o: ../../../src/karabo/tests/util/Exception_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Exception_Test.o ../../../src/karabo/tests/util/Exception_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Exception_Test.o ../../../src/karabo/tests/util/Exception_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Factory_Test.o: ../../../src/karabo/tests/util/Factory_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Factory_Test.o ../../../src/karabo/tests/util/Factory_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Factory_Test.o ../../../src/karabo/tests/util/Factory_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/HashFilter_Test.o: ../../../src/karabo/tests/util/HashFilter_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ../../../src/karabo/tests/util/HashFilter_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/HashFilter_Test.o ../../../src/karabo/tests/util/HashFilter_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Hash_Test.o: ../../../src/karabo/tests/util/Hash_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Hash_Test.o ../../../src/karabo/tests/util/Hash_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Hash_Test.o ../../../src/karabo/tests/util/Hash_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/MetaTools_Test.o: ../../../src/karabo/tests/util/MetaTools_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/MetaTools_Test.o ../../../src/karabo/tests/util/MetaTools_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/MetaTools_Test.o ../../../src/karabo/tests/util/MetaTools_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/NDArray_Test.o: ../../../src/karabo/tests/util/NDArray_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/NDArray_Test.o ../../../src/karabo/tests/util/NDArray_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/NDArray_Test.o ../../../src/karabo/tests/util/NDArray_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Schema_Test.o: ../../../src/karabo/tests/util/Schema_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Schema_Test.o ../../../src/karabo/tests/util/Schema_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Schema_Test.o ../../../src/karabo/tests/util/Schema_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Serializable_Test.o: ../../../src/karabo/tests/util/Serializable_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Serializable_Test.o ../../../src/karabo/tests/util/Serializable_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Serializable_Test.o ../../../src/karabo/tests/util/Serializable_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/States_Test.o: ../../../src/karabo/tests/util/States_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/States_Test.o ../../../src/karabo/tests/util/States_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/States_Test.o ../../../src/karabo/tests/util/States_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/StatisticalEvaluator_Test.o: ../../../src/karabo/tests/util/StatisticalEvaluator_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/StatisticalEvaluator_Test.o ../../../src/karabo/tests/util/StatisticalEvaluator_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/StatisticalEvaluator_Test.o ../../../src/karabo/tests/util/StatisticalEvaluator_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/StringTools_Test.o: ../../../src/karabo/tests/util/StringTools_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/StringTools_Test.o ../../../src/karabo/tests/util/StringTools_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/StringTools_Test.o ../../../src/karabo/tests/util/StringTools_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/TimeClasses_Test.o: ../../../src/karabo/tests/util/TimeClasses_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/TimeClasses_Test.o ../../../src/karabo/tests/util/TimeClasses_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/TimeClasses_Test.o ../../../src/karabo/tests/util/TimeClasses_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Types_Test.o: ../../../src/karabo/tests/util/Types_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Types_Test.o ../../../src/karabo/tests/util/Types_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Types_Test.o ../../../src/karabo/tests/util/Types_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Validator_Test.o: ../../../src/karabo/tests/util/Validator_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Validator_Test.o ../../../src/karabo/tests/util/Validator_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Validator_Test.o ../../../src/karabo/tests/util/Validator_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/Version_Test.o: ../../../src/karabo/tests/util/Version_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Version_Test.o ../../../src/karabo/tests/util/Version_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/Version_Test.o ../../../src/karabo/tests/util/Version_Test.cc
 
 
 ${TESTDIR}/_ext/1033104525/utilTestRunner.o: ../../../src/karabo/tests/util/utilTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/1033104525
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ../../../src/karabo/tests/util/utilTestRunner.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/1033104525/utilTestRunner.o ../../../src/karabo/tests/util/utilTestRunner.cc
 
 
 ${TESTDIR}/_ext/936508045/ImageData_Test.o: ../../../src/karabo/tests/xms/ImageData_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936508045
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/ImageData_Test.o ../../../src/karabo/tests/xms/ImageData_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/ImageData_Test.o ../../../src/karabo/tests/xms/ImageData_Test.cc
 
 
 ${TESTDIR}/_ext/936508045/InputOutputChannel_Test.o: ../../../src/karabo/tests/xms/InputOutputChannel_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936508045
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/InputOutputChannel_Test.o ../../../src/karabo/tests/xms/InputOutputChannel_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/InputOutputChannel_Test.o ../../../src/karabo/tests/xms/InputOutputChannel_Test.cc
 
 
 ${TESTDIR}/_ext/936508045/Memory_Test.o: ../../../src/karabo/tests/xms/Memory_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936508045
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/Memory_Test.o ../../../src/karabo/tests/xms/Memory_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/Memory_Test.o ../../../src/karabo/tests/xms/Memory_Test.cc
 
 
 ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o: ../../../src/karabo/tests/xms/SignalSlotable_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936508045
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o ../../../src/karabo/tests/xms/SignalSlotable_Test.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/SignalSlotable_Test.o ../../../src/karabo/tests/xms/SignalSlotable_Test.cc
 
 
 ${TESTDIR}/_ext/936508045/xmsTestRunner.o: ../../../src/karabo/tests/xms/xmsTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/936508045
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11 `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ../../../src/karabo/tests/xms/xmsTestRunner.cc
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ../../../src/karabo/tests/xms/xmsTestRunner.cc
 
 
 ${OBJECTDIR}/_ext/163556830/DeviceClient_nomain.o: ${OBJECTDIR}/_ext/163556830/DeviceClient.o ../../../src/karabo/core/DeviceClient.cc 
@@ -1175,7 +1175,7 @@ ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler_nomain.o: ${OBJECTDIR}/_ext/
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler_nomain.o ../../../src/karabo/core/InstanceChangeThrottler.cc;\
+	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler_nomain.o ../../../src/karabo/core/InstanceChangeThrottler.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler.o ${OBJECTDIR}/_ext/163556830/InstanceChangeThrottler_nomain.o;\
 	fi
@@ -1266,7 +1266,7 @@ ${OBJECTDIR}/_ext/1423485062/FileDataLogger_nomain.o: ${OBJECTDIR}/_ext/14234850
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/FileDataLogger_nomain.o ../../../src/karabo/devices/FileDataLogger.cc;\
+	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/FileDataLogger_nomain.o ../../../src/karabo/devices/FileDataLogger.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1423485062/FileDataLogger.o ${OBJECTDIR}/_ext/1423485062/FileDataLogger_nomain.o;\
 	fi
@@ -1279,7 +1279,7 @@ ${OBJECTDIR}/_ext/1423485062/FileLogReader_nomain.o: ${OBJECTDIR}/_ext/142348506
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/FileLogReader_nomain.o ../../../src/karabo/devices/FileLogReader.cc;\
+	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/FileLogReader_nomain.o ../../../src/karabo/devices/FileLogReader.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1423485062/FileLogReader.o ${OBJECTDIR}/_ext/1423485062/FileLogReader_nomain.o;\
 	fi
@@ -1305,7 +1305,7 @@ ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger_nomain.o: ${OBJECTDIR}/_ext/142348
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger_nomain.o ../../../src/karabo/devices/InfluxDataLogger.cc;\
+	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger_nomain.o ../../../src/karabo/devices/InfluxDataLogger.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger.o ${OBJECTDIR}/_ext/1423485062/InfluxDataLogger_nomain.o;\
 	fi
@@ -1318,7 +1318,7 @@ ${OBJECTDIR}/_ext/1423485062/InfluxLogReader_nomain.o: ${OBJECTDIR}/_ext/1423485
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxLogReader_nomain.o ../../../src/karabo/devices/InfluxLogReader.cc;\
+	    $(COMPILE.cc) -g -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1423485062/InfluxLogReader_nomain.o ../../../src/karabo/devices/InfluxLogReader.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1423485062/InfluxLogReader.o ${OBJECTDIR}/_ext/1423485062/InfluxLogReader_nomain.o;\
 	fi
@@ -2033,7 +2033,7 @@ ${OBJECTDIR}/_ext/1103112890/HttpResponse_nomain.o: ${OBJECTDIR}/_ext/1103112890
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/HttpResponse_nomain.o ../../../src/karabo/net/HttpResponse.cc;\
+	    $(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/HttpResponse_nomain.o ../../../src/karabo/net/HttpResponse.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/HttpResponse.o ${OBJECTDIR}/_ext/1103112890/HttpResponse_nomain.o;\
 	fi
@@ -2046,7 +2046,7 @@ ${OBJECTDIR}/_ext/1103112890/InfluxDbClient_nomain.o: ${OBJECTDIR}/_ext/11031128
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}` -std=c++11  -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/InfluxDbClient_nomain.o ../../../src/karabo/net/InfluxDbClient.cc;\
+	    $(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/InfluxDbClient_nomain.o ../../../src/karabo/net/InfluxDbClient.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o ${OBJECTDIR}/_ext/1103112890/InfluxDbClient_nomain.o;\
 	fi
