@@ -33,14 +33,13 @@
           </incDir>
         </cTool>
         <ccTool>
-          <standard>8</standard>
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
             <pElem>${KARABO}/include</pElem>
             <pElem>.</pElem>
           </incDir>
-          <commandLine>-Wfatal-errors</commandLine>
+          <commandLine>-Wfatal-errors -std=c++14</commandLine>
           <useLinkerLibraries>false</useLinkerLibraries>
         </ccTool>
         <linkerTool>
@@ -111,13 +110,13 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
-          <standard>8</standard>
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
             <pElem>${KARABO}/include</pElem>
             <pElem>.</pElem>
           </incDir>
+          <commandLine>-Wfatal-errors -std=c++14</commandLine>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -173,14 +172,13 @@
           </incDir>
         </cTool>
         <ccTool>
-          <standard>8</standard>
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
             <pElem>${KARABO}/include</pElem>
             <pElem>.</pElem>
           </incDir>
-          <commandLine>-Wfatal-errors</commandLine>
+          <commandLine>-Wfatal-errors -std=c++14</commandLine>
           <useLinkerLibraries>false</useLinkerLibraries>
         </ccTool>
         <linkerTool>
