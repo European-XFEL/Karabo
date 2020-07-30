@@ -42,8 +42,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-Wfatal-errors
-CXXFLAGS=-Wfatal-errors
+CCFLAGS=-Wfatal-errors -std=c++14
+CXXFLAGS=-Wfatal-errors -std=c++14
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -67,7 +67,7 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-cppserver: ${OBJECTFILES}
 ${OBJECTDIR}/_ext/147234221/deviceServer.o: ../../../src/deviceServer/deviceServer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/147234221
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/include -I. -std=c++11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/147234221/deviceServer.o ../../../src/deviceServer/deviceServer.cc
+	$(COMPILE.cc) -g -I../../../src -I${KARABO}/extern/include -I${KARABO}/include -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/147234221/deviceServer.o ../../../src/deviceServer/deviceServer.cc
 
 # Subprojects
 .build-subprojects:
