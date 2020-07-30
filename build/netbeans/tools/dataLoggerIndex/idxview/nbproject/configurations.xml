@@ -36,13 +36,12 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <standard>8</standard>
           <incDir>
             <pElem>../../../../../src/tools/dataLoggerIndex</pElem>
             <pElem>${KARABO}/include</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
-          <commandLine>-Wfatal-errors</commandLine>
+          <commandLine>-Wfatal-errors -std=c++14</commandLine>
         </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-idxview</output>
@@ -79,12 +78,12 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
-          <standard>8</standard>
           <incDir>
             <pElem>../../../../../src/tools/dataLoggerIndex</pElem>
             <pElem>${KARABO}/include</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
+          <commandLine>-Wfatal-errors -std=c++14</commandLine>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -123,13 +122,12 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <standard>8</standard>
           <incDir>
             <pElem>../../../../../src/tools/dataLoggerIndex</pElem>
             <pElem>${KARABO}/include</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
-          <commandLine>-Wfatal-errors</commandLine>
+          <commandLine>-Wfatal-errors -std=c++14</commandLine>
         </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-idxview</output>
