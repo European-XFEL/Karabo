@@ -20,6 +20,7 @@ class DataLogging_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testNoInfluxServerHandling);
     CPPUNIT_TEST(influxAllTestRunnerWithTelegraf);
     CPPUNIT_TEST(testInfluxDbNotAvailableTelegraf);
+    
     CPPUNIT_TEST_SUITE_END();
 
 public:

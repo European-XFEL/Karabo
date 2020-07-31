@@ -302,6 +302,7 @@ namespace karabo {
             m_readHandler = handler;
             m_asyncCounter++;
             //no header is expected so I directly register payload handler, i.e. stringAvailableHandler
+            boost::mutex::scoped_lock lock(m_socketMutex);
             boost::asio::async_read_until(m_socket, m_streamBufferInbound,
                                           terminator,
                                           util::bind_weak(&karabo::net::TcpChannel::stringAvailableHandler,

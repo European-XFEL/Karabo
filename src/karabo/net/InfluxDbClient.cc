@@ -118,7 +118,6 @@ namespace karabo {
             , m_registeredInfluxResponseHandlers()
             , m_dbname(input.get<std::string>("dbname"))
             , m_durationUnit(input.get<std::string>("durationUnit"))
-            , m_currentUuid("")
             , m_maxPointsInBuffer(input.get<std::uint32_t>("maxPointsInBuffer"))
             , m_bufferMutex()
             , m_buffer()
@@ -236,26 +235,29 @@ namespace karabo {
             if (m_requestQueue.empty()) {
                 m_active = false;
             } else {
+                const auto nextRequest = m_requestQueue.front();
+                m_requestQueue.pop();
+                lock.unlock();
                 try {
-                    m_requestQueue.front()();
+                    nextRequest();
                 } catch (const std::exception& e2) {
                     KARABO_LOG_FRAMEWORK_ERROR << "onResponse: next request resulting in exception: " << e2.what();
                 }
-                m_requestQueue.pop();
             }
         }
 
 
         void InfluxDbClient::sendToInfluxDb(const karabo::net::Channel::Pointer& channel,
                                             const std::string& message,
-                                            const InfluxResponseHandler& action) {
+                                            const InfluxResponseHandler& action,
+                                            const std::string& requestId) {
             auto handler = bind_weak(&InfluxDbClient::onResponse, this, _1, action);
             {
-                boost::mutex::scoped_lock(m_responseHandlersMutex);
-                m_registeredInfluxResponseHandlers.emplace(std::make_pair(m_currentUuid,
+                boost::mutex::scoped_lock lock(m_responseHandlersMutex);
+                m_registeredInfluxResponseHandlers.emplace(std::make_pair(requestId,
                                                                           std::make_pair(message, handler)));
             }
-            writeDb(channel, message);
+            writeDb(channel, message, requestId);
         }
 
 
@@ -268,7 +270,7 @@ namespace karabo {
 
         void InfluxDbClient::postQueryDbTask(const std::string& statement,
                                              const InfluxResponseHandler& action) {
-            m_currentUuid.assign(generateUUID());
+            const std::string requestId(generateUUID());
             std::ostringstream oss;
 
             oss << "POST /query?chunked=true&db=&epoch=" << m_durationUnit << "&q=" << urlencode(statement);
@@ -277,7 +279,7 @@ namespace karabo {
             }
             oss << " HTTP/1.1\r\n"
                 << "Host: " << m_hostnameQuery << "\r\n"
-                    << "Request-Id: " << m_currentUuid << "\r\n";
+                    << "Request-Id: " << requestId << "\r\n";
 
             const std::string rawAuth(getRawBasicAuthHeader());
             if (!rawAuth.empty()) {
@@ -285,7 +287,7 @@ namespace karabo {
             }
 
             oss << "\r\n";
-            sendToInfluxDb(m_dbChannelQuery, oss.str(), action);
+            sendToInfluxDb(m_dbChannelQuery, oss.str(), action, requestId);
         }
 
 
@@ -297,7 +299,7 @@ namespace karabo {
 
 
         void InfluxDbClient::getPingDbTask(const InfluxResponseHandler& action) {
-            m_currentUuid.assign(generateUUID());
+            const std::string requestId(generateUUID());
             std::ostringstream oss;
             oss << "GET /ping";
             if (!m_dbUserQuery.empty() && !m_dbPasswordQuery.empty()) {
@@ -305,7 +307,7 @@ namespace karabo {
             }
             oss << " HTTP/1.1\r\n"
                     << "Host: " << m_hostnameQuery << "\r\n"
-                    << "Request-Id: " << m_currentUuid << "\r\n";
+                    << "Request-Id: " << requestId << "\r\n";
 
             const std::string rawAuth(getRawBasicAuthHeader());
             if (!rawAuth.empty()) {
@@ -313,17 +315,21 @@ namespace karabo {
             }
 
             oss << "\r\n";
-            sendToInfluxDb(m_dbChannelQuery, oss.str(), action);
+            sendToInfluxDb(m_dbChannelQuery, oss.str(), action, requestId);
         }
 
 
-        void InfluxDbClient::writeDb(const karabo::net::Channel::Pointer& channel, const std::string& message) {
+        void InfluxDbClient::writeDb(const karabo::net::Channel::Pointer& channel,
+                                     const std::string& message,
+                                     const std::string& requestId) {
             if (channel) {
                 auto datap = boost::make_shared<std::vector<char> >(std::vector<char>(message.begin(), message.end()));
                 if (channel == m_dbChannelWrite) {
+                    m_flyingWriteId = requestId;
                     channel->writeAsyncVectorPointer(datap, bind_weak(&InfluxDbClient::onDbWriteWrite, this, _1, datap));
                     KARABO_LOG_FRAMEWORK_DEBUG << "writeDb (write) : \n" << message;
                 } else {
+                    m_flyingQueryId = requestId;
                     channel->writeAsyncVectorPointer(datap, bind_weak(&InfluxDbClient::onDbWriteQuery, this, _1, datap));
                     KARABO_LOG_FRAMEWORK_DEBUG << "writeDb (query) : \n" << message;
                 }
@@ -392,8 +398,7 @@ namespace karabo {
                     m_connectionRequestedQuery = false;
                 }
                 {
-                    boost::mutex::scoped_lock(m_responseHandlersMutex);
-                    m_currentUuid = "";
+                    boost::mutex::scoped_lock lock(m_responseHandlersMutex);
                     m_registeredInfluxResponseHandlers.clear();
                 }
                 return;
@@ -426,8 +431,7 @@ namespace karabo {
                     m_connectionRequestedWrite = false;
                 }
                 {
-                    boost::mutex::scoped_lock(m_responseHandlersMutex);
-                    m_currentUuid = "";
+                    boost::mutex::scoped_lock lock(m_responseHandlersMutex);
                     m_registeredInfluxResponseHandlers.clear();
                 }
                 return;
@@ -448,6 +452,12 @@ namespace karabo {
 
 
         void InfluxDbClient::onDbReadWrite(const karabo::net::ErrorCode& ec, const std::string& line) {
+            std::string flyingWriteId;
+            {
+                boost::mutex::scoped_lock lock(m_requestQueueMutex);
+                flyingWriteId = m_flyingWriteId;
+            }
+
             if (ec) {
                 std::ostringstream oss;
                 oss << "Reading from InfluxDB (write)  failed: code #" << ec.value() << " -- " << ec.message();
@@ -460,16 +470,16 @@ namespace karabo {
                 InfluxResponseHandler handler;
                 HttpResponse o;
                 {
-                    boost::mutex::scoped_lock(m_responseHandlersMutex);
+                    boost::mutex::scoped_lock lock(m_responseHandlersMutex);
                     assert(m_registeredInfluxResponseHandlers.size() == 1);
-                    auto it = m_registeredInfluxResponseHandlers.find(m_currentUuid);
+                    auto it = m_registeredInfluxResponseHandlers.find(flyingWriteId);
                     if (it != m_registeredInfluxResponseHandlers.end()) {
                         handler = it->second.second;
                         m_registeredInfluxResponseHandlers.erase(it);
                     }
                     o.code = 700;
                     o.message = oss.str();
-                    o.requestId = m_currentUuid;
+                    o.requestId = flyingWriteId;
                     o.connection = "close";
                 }
                 if (handler) handler(o);
@@ -479,56 +489,76 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "DBREAD (write)  Ack:\n" << line;
 
             {
-                boost::mutex::scoped_lock(m_responseHandlersMutex);
-
                 if (line.substr(0, 9) == "HTTP/1.1 ") {
-                    m_response.clear(); // Clear for new header
-                    m_response.parseHttpHeader(line); // Fill out m_response object
-                    if (m_response.requestId.empty()) {
-                        m_response.requestId = m_currentUuid;
-                        m_response.contentType = "application/json";
+                    m_responseWrite.clear(); // Clear for new header
+                    m_responseWrite.parseHttpHeader(line); // Fill out m_responseWrite object
+                    if (m_responseWrite.requestId.empty()) {
+                        m_responseWrite.requestId = flyingWriteId;
+                        m_responseWrite.contentType = "application/json";
                     }
-                    m_response.payloadArrived = true;
-                    if (m_response.transferEncoding == "chunked" || m_response.contentLength > 0) {
-                        m_response.payloadArrived = false;
+                    m_responseWrite.payloadArrived = true;
+                    if (m_responseWrite.transferEncoding == "chunked") {
+                        m_responseWrite.payloadArrived = false;
+                    } else if (m_responseWrite.transferEncoding.empty() && m_responseWrite.contentLength > 0) {
+                        // According to the HTTP message specification
+                        // (https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html), messages with 'Content-Length'
+                        // specified but without any transfer-encoding should carry 'Content-Length' bytes of message
+                        // body. For Influx the client only cares about 'chunked' message bodies but it must consume
+                        // non chunked bodies so it doesn't lose data alignment.
+                        m_responseWrite.payload = (*m_dbChannelQuery).consumeBytesAfterReadUntil(m_responseWrite.contentLength);
                     }
-                } else if (m_response.transferEncoding == "chunked") {
-                    m_response.parseHttpChunks(line);
-                    if (m_response.contentType != "application/json") {
+                } else if (m_responseWrite.transferEncoding == "chunked") {
+                    m_responseWrite.parseHttpChunks(line);
+                    if (m_responseWrite.contentType != "application/json") {
                         std::ostringstream oss;
                         oss << "Currently only 'application/json' Content-Type is supported";
                         throw KARABO_NOT_SUPPORTED_EXCEPTION(oss.str());
                     }
                     // Now payload should contain json string
-                    m_response.payloadArrived = true; // If payload arrived we can call action
-                } else if (m_response.contentLength > 0 && !m_response.payloadArrived) {
-                    m_response.payloadArrived = true;
-                    m_response.payload = line;
+                    m_responseWrite.payloadArrived = true; // If payload arrived we can call action
+                } else if (m_responseWrite.contentLength > 0 && !m_responseWrite.payloadArrived) {
+                    m_responseWrite.payloadArrived = true;
+                    m_responseWrite.payload = line;
                 }
 
-                if (m_response.payloadArrived) {
+                if (m_responseWrite.payloadArrived) {
                     // 20x  -- no errors
                     // 40x  -- client request errors
                     // 50x  -- server problems
                     // Report if the problem arises ...
                     // Call callback
-                    if (!m_response.requestId.empty()) {
-                        if (m_response.code >= 300) {
-                            KARABO_LOG_FRAMEWORK_ERROR << "InfluxDB (write)  ERROR RESPONSE:\n" << m_response;
+                    if (!m_responseWrite.requestId.empty()) {
+                        if (m_responseWrite.code >= 300) {
+                            KARABO_LOG_FRAMEWORK_ERROR << "InfluxDB (write)  ERROR RESPONSE:\n" << m_responseWrite;
                         }
-                        auto it = m_registeredInfluxResponseHandlers.find(m_response.requestId);
+                        boost::mutex::scoped_lock lock(m_responseHandlersMutex);
+                        auto it = m_registeredInfluxResponseHandlers.find(m_responseWrite.requestId);
                         if (it != m_registeredInfluxResponseHandlers.end()) {
-                            if (m_response.code >= 300) {
+                            if (m_responseWrite.code >= 300) {
                                 KARABO_LOG_FRAMEWORK_ERROR << "... on request: " << it->second.first.substr(0,1024) << "...";
                             }
-                            it->second.second(m_response);
+                            InfluxResponseHandler handler; // NOTE: This will store the handler so it can be called after
+                            // releasing m_responseHandlersMutex. This is required because
+                            // the handler (always InfluxDbClient::OnResponse) will call
+                            // InfluxDbClient::sendToInfluxDb which will try to lock
+                            // m_responseHandlersMutex. If the lock is not released before
+                            // the call, the thread will block trying to acquire the same
+                            // lock it acquired previously.
+                            handler = std::move(it->second.second);
                             m_registeredInfluxResponseHandlers.erase(it);
+                            lock.unlock();
+                            handler(m_responseWrite);
+                        } else {
+                            // A handler hasn't been found for the request - this should not happen!
+                            KARABO_LOG_FRAMEWORK_ERROR << "No handler found for request '"
+                                    << m_responseWrite.requestId << "'. Response being ignored:\n"
+                                    << m_responseWrite;
                         }
                     }
                 }
             }
 
-            if (m_response.connection == "close") {
+            if (m_responseWrite.connection == "close") {
                 KARABO_LOG_FRAMEWORK_ERROR << "InfluxDB server (write) closed connection...\n" << line;
                 boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
                 m_dbChannelWrite.reset();
@@ -536,7 +566,7 @@ namespace karabo {
             }
 
             if (isConnectedWrite()) {
-                if (m_response.contentLength > 0 && !m_response.payloadArrived) {
+                if (m_responseWrite.contentLength > 0 && !m_responseWrite.payloadArrived) {
                     m_dbChannelWrite->readAsyncStringUntil("}", bind_weak(&InfluxDbClient::onDbReadWrite, this, _1, _2));
                 } else {
                     m_dbChannelWrite->readAsyncStringUntil("\r\n\r\n", bind_weak(&InfluxDbClient::onDbReadWrite, this, _1, _2));
@@ -555,10 +585,15 @@ namespace karabo {
                     m_dbChannelQuery.reset();
                     m_connectionRequestedQuery = false;
                 }
+                std::string flyingQueryId;
+                {
+                    boost::mutex::scoped_lock lock(m_requestQueueMutex);
+                    flyingQueryId = m_flyingQueryId;
+                }
                 InfluxResponseHandler handler;
                 {
-                    boost::mutex::scoped_lock(m_responseHandlersMutex);
-                    auto it = m_registeredInfluxResponseHandlers.find(m_currentUuid);
+                    boost::mutex::scoped_lock lock(m_responseHandlersMutex);
+                    auto it = m_registeredInfluxResponseHandlers.find(flyingQueryId);
                     if (it == m_registeredInfluxResponseHandlers.end()) return;
                     handler = it->second.second;
                     m_registeredInfluxResponseHandlers.erase(it);
@@ -566,56 +601,77 @@ namespace karabo {
                 HttpResponse o;
                 o.code = 700;
                 o.message = oss.str();
-                o.requestId = m_currentUuid;
+                o.requestId = flyingQueryId;
                 o.connection = "close";
                 handler(o);
                 return;
             }
 
-            KARABO_LOG_FRAMEWORK_DEBUG << "DBREAD (query) Ack:\n" << line.substr(0,500) << " ...";
+            KARABO_LOG_FRAMEWORK_DEBUG << "DBREAD (query) Ack:\n" << line.substr(0, 500) << " ...";
 
             {
-                boost::mutex::scoped_lock(m_responseHandlersMutex);
                 if (line.substr(0, 9) == "HTTP/1.1 ") {
-                    m_response.clear(); // Clear for new header
-                    m_response.parseHttpHeader(line); // Fill out m_response object
-                    m_response.payloadArrived = true;
-                    if (m_response.transferEncoding == "chunked") {
-                        m_response.payloadArrived = false;
+                    m_responseRead.clear(); // Clear for new header
+                    m_responseRead.parseHttpHeader(line); // Fill out m_responseRead object
+                    m_responseRead.payloadArrived = true;
+                    if (m_responseRead.transferEncoding == "chunked") {
+                        m_responseRead.payloadArrived = false;
+                    } else if (m_responseRead.transferEncoding.empty() && m_responseRead.contentLength > 0) {
+                        // According to the HTTP message specification
+                        // (https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html), messages with 'Content-Length'
+                        // specified but without any transfer-encoding should carry 'Content-Length' bytes of message
+                        // body. For Influx the client only cares about 'chunked' message bodies but it must consume
+                        // non chunked bodies so it doesn't lose data alignment.
+                        m_responseRead.payload = (*m_dbChannelQuery).consumeBytesAfterReadUntil(m_responseRead.contentLength);
                     }
-                } else if (m_response.transferEncoding == "chunked") {
-                    m_response.parseHttpChunks(line);
-                    if (m_response.contentType != "application/json") {
+                } else if (m_responseRead.transferEncoding == "chunked") {
+                    m_responseRead.parseHttpChunks(line);
+                    if (m_responseRead.contentType != "application/json") {
                         std::ostringstream oss;
                         oss << "Currently only 'application/json' Content-Type is supported";
                         throw KARABO_NOT_SUPPORTED_EXCEPTION(oss.str());
                     }
                     // Now payload should contain json string
-                    m_response.payloadArrived = true; // If payload arrived we can call action
+                    m_responseRead.payloadArrived = true; // If payload arrived we can call action
                 }
 
-                if (m_response.payloadArrived) {
+                if (m_responseRead.payloadArrived) {
                     // 20x  -- no errors
                     // 40x  -- client request errors
                     // 50x  -- server problems
                     // Report if the problem arises ...
                     // Call callback
-                    if (!m_response.requestId.empty()) {
-                        if (m_response.code >= 300) {
-                            KARABO_LOG_FRAMEWORK_ERROR << "InfluxDB (query)  ERROR RESPONSE:\n" << m_response;
+                    if (!m_responseRead.requestId.empty()) {
+                        if (m_responseRead.code >= 300) {
+                            KARABO_LOG_FRAMEWORK_ERROR << "InfluxDB (query)  ERROR RESPONSE:\n" << m_responseRead;
                         }
-                        auto it = m_registeredInfluxResponseHandlers.find(m_response.requestId);
+                        boost::mutex::scoped_lock lock(m_responseHandlersMutex);
+                        auto it = m_registeredInfluxResponseHandlers.find(m_responseRead.requestId);
                         if (it != m_registeredInfluxResponseHandlers.end()) {
-                            if (m_response.code >= 300) {
+                            if (m_responseRead.code >= 300) {
                                 KARABO_LOG_FRAMEWORK_ERROR << "... on request: " << it->second.first.substr(0,1024) << "...";
                             }
-                            it->second.second(m_response);
+                            InfluxResponseHandler handler; // NOTE: This will store the handler so it can be called after
+                            // releasing m_responseHandlersMutex. This is required because
+                            // the handler (always InfluxDbClient::OnResponse) will call
+                            // InfluxDbClient::sendToInfluxDb which will try to lock
+                            // m_responseHandlersMutex. If the lock is not released before
+                            // the call, the thread will block trying to acquire the same
+                            // lock it acquired previously.
+                            handler = std::move(it->second.second);
                             m_registeredInfluxResponseHandlers.erase(it);
+                            lock.unlock();
+                            handler(m_responseRead);
+                        } else {
+                            // A handler hasn't been found for the request - this should not happen!
+                            KARABO_LOG_FRAMEWORK_ERROR << "No handler found for request '"
+                                    << m_responseRead.requestId << "'. Response being ignored:\n"
+                                    << m_responseRead;
                         }
                     }
                 }
             }
-            if (m_response.connection == "close") {
+            if (m_responseRead.connection == "close") {
                 KARABO_LOG_FRAMEWORK_ERROR << "InfluxDB server (query)  closed connection...\n" << line;
                 boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
                 m_dbChannelQuery.reset();
@@ -638,10 +694,15 @@ namespace karabo {
                     m_dbChannelWrite.reset();
                     m_connectionRequestedWrite = false;
                 }
+                std::string flyingWriteId;
+                {
+                    boost::mutex::scoped_lock lock(m_requestQueueMutex);
+                    flyingWriteId = m_flyingWriteId;
+                }
                 InfluxResponseHandler handler;
                 {
-                    boost::mutex::scoped_lock(m_responseHandlersMutex);
-                    auto it = m_registeredInfluxResponseHandlers.find(m_currentUuid);
+                    boost::mutex::scoped_lock lock(m_responseHandlersMutex);
+                    auto it = m_registeredInfluxResponseHandlers.find(flyingWriteId);
                     if (it == m_registeredInfluxResponseHandlers.end()) return;
                     handler = it->second.second;
                     m_registeredInfluxResponseHandlers.erase(it);
@@ -649,11 +710,14 @@ namespace karabo {
                 HttpResponse o;
                 o.code = 700;
                 o.message = oss.str();
-                o.requestId = m_currentUuid;
+                o.requestId = flyingWriteId;
                 o.connection = "close";
                 if (handler) handler(o);
                 return;
             }
+            // For the ec == 0 condition - no error at tcp level -
+            // Relies on readAsyncStringUntil call made at onDbConnectWrite to consume
+            // the http response.
         }
 
 
@@ -668,22 +732,36 @@ namespace karabo {
                     m_dbChannelQuery.reset();
                     m_connectionRequestedQuery = false;
                 }
-                InfluxResponseHandler handler;
+                std::string flyingQueryId;
                 {
-                    boost::mutex::scoped_lock(m_responseHandlersMutex);
-                    auto it = m_registeredInfluxResponseHandlers.find(m_currentUuid);
-                    if (it == m_registeredInfluxResponseHandlers.end()) return;
+                    boost::mutex::scoped_lock lock(m_requestQueueMutex);
+                    flyingQueryId = m_flyingQueryId;
+                }
+                // An error happened at the TCP level - generates an HTTP response with status code
+                // 700 to signal that error to the registered handler (if any).
+                InfluxResponseHandler handler;
+                HttpResponse resp;
+                {
+                    boost::mutex::scoped_lock lock(m_responseHandlersMutex);
+                    auto it = m_registeredInfluxResponseHandlers.find(flyingQueryId);
+                    if (it == m_registeredInfluxResponseHandlers.end()) {
+                        // No handler for http response has been registered; just bail out
+                        return;
+                    }
                     handler = it->second.second;
                     m_registeredInfluxResponseHandlers.erase(it);
+                    resp.code = 700;
+                    resp.message = oss.str();
+                    resp.requestId = flyingQueryId;
+                    resp.connection = "close";
                 }
-                HttpResponse o;
-                o.code = 700;
-                o.message = oss.str();
-                o.requestId = m_currentUuid;
-                o.connection = "close";
-                if (handler) handler(o);
-                return;
+                if (handler) {
+                    handler(resp);
+                }
             }
+            // For the ec == 0 condition - no error at tcp level -
+            // Relies on readAsyncStringUntil call made at onDbConnectQuery to consume
+            // the http response.
         }
 
 
@@ -713,7 +791,7 @@ namespace karabo {
                 m_active = false;
                 return;
             }
-            m_currentUuid.assign(generateUUID());
+            const std::string requestId(generateUUID());
             std::ostringstream oss;
             oss << "POST /write?db=" << m_dbname << "&precision=" << m_durationUnit;
             if (!m_dbUserWrite.empty() && !m_dbPasswordWrite.empty()) {
@@ -721,7 +799,7 @@ namespace karabo {
             }
             oss << " HTTP/1.1\r\n"
                     << "Host: " << m_hostnameWrite << "\r\n"
-                    << "Request-Id: " << m_currentUuid << "\r\n";
+                    << "Request-Id: " << requestId << "\r\n";
 
             const std::string rawAuth(getRawBasicAuthHeader());
             if (!rawAuth.empty()) {
@@ -730,7 +808,7 @@ namespace karabo {
 
             oss << "Content-Length: " << batch.size() << "\r\n\r\n" << batch;
             std::string req = oss.str().substr(0,1024);
-            sendToInfluxDb(m_dbChannelWrite, oss.str(), action);
+            sendToInfluxDb(m_dbChannelWrite, oss.str(), action, requestId);
         }
 
 
@@ -742,7 +820,7 @@ namespace karabo {
 
 
         void InfluxDbClient::getQueryDbTask(const std::string& sel, const InfluxResponseHandler& action) {
-            m_currentUuid.assign(generateUUID());
+            const std::string requestId(generateUUID());
             std::ostringstream oss;
             oss << "GET /query?chunked=true&db=" << m_dbname << "&epoch=" << m_durationUnit
                     << "&q=" << urlencode(sel);
@@ -751,7 +829,7 @@ namespace karabo {
             }
             oss << " HTTP/1.1\r\n"
                     << "Host: " << m_hostnameQuery << "\r\n"
-                    << "Request-Id: " << m_currentUuid << "\r\n";
+                    << "Request-Id: " << requestId << "\r\n";
 
             const std::string rawAuth(getRawBasicAuthHeader());
             if (!rawAuth.empty()) {
@@ -760,7 +838,7 @@ namespace karabo {
 
             oss << "\r\n";
 
-            sendToInfluxDb(m_dbChannelQuery, oss.str(), action);
+            sendToInfluxDb(m_dbChannelQuery, oss.str(), action, requestId);
         }
 
 
@@ -790,7 +868,7 @@ namespace karabo {
                 m_active = false;
                 return;
             }
-            m_currentUuid.assign(generateUUID());
+            const std::string requestId(generateUUID());
             std::ostringstream oss;
             oss << "GET /query?chunked=true&db=" << m_dbname << "&epoch=" << m_durationUnit
                     << "&q=" << urlencode(sel);
@@ -799,16 +877,15 @@ namespace karabo {
             }
             oss << " HTTP/1.1\r\n"
                     << "Host: " << m_hostnameQuery << "\r\n"
-                    << "Request-Id: " << m_currentUuid << "\r\n";
+                    << "Request-Id: " << requestId << "\r\n";
 
             const std::string rawAuth(getRawBasicAuthHeader());
             if (!rawAuth.empty()) {
                 oss << rawAuth << "\r\n";
             }
-
             oss << "\r\n";
 
-            sendToInfluxDb(m_dbChannelQuery, oss.str(), action);
+            sendToInfluxDb(m_dbChannelQuery, oss.str(), action, requestId);
         }
 
 
@@ -845,4 +922,3 @@ namespace karabo {
     } // namespace net
 
 } // namespace karabo
-
