@@ -11,7 +11,6 @@
             <make-dep-projects/>
             <sourceRootList>
                 <sourceRootElem>../../../src/integrationTests</sourceRootElem>
-                <sourceRootElem>../../../src/integrationTests</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>
