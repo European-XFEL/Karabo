@@ -89,7 +89,7 @@ namespace karabo {
             /**************************************************************/
             /*              Synchronous Read - No Header                  */
             /**************************************************************/
-
+            
             /**
              * Synchronously reads size bytes and return them as a string.
              * The reading will block until the bytes are read.

@@ -162,8 +162,11 @@ namespace karabo {
              * Writing HTTP request
              * @param message formed in compliance of HTTP protocol
              *        Malformed requests resulting in response code 4xx
+             * @param requestId unique id of the HTTP request to be sent to Influx.
              */
-            void writeDb(const karabo::net::Channel::Pointer& channel, const std::string& message);
+            void writeDb(const karabo::net::Channel::Pointer& channel,
+                         const std::string& message,
+                         const std::string& requestId);
 
             /**
              * Low-level callback called when connection to InfluxDB is established
@@ -241,7 +244,10 @@ namespace karabo {
             /**
              * Send HTTP request to InfluxDb.  Helper function.
              */
-            void sendToInfluxDb(const karabo::net::Channel::Pointer& channel, const std::string& msg, const InfluxResponseHandler& action);
+            void sendToInfluxDb(const karabo::net::Channel::Pointer& channel,
+                                const std::string& msg,
+                                const InfluxResponseHandler& action,
+                                const std::string& requestId);
 
             void flushBatchImpl(const InfluxResponseHandler &respHandler = InfluxResponseHandler());
 
@@ -270,7 +276,17 @@ namespace karabo {
             // maps Request-Id to pair of HTTP request string and action callback
             boost::mutex m_responseHandlersMutex;
             std::unordered_map<std::string, std::pair<std::string, InfluxResponseHandler> > m_registeredInfluxResponseHandlers;
-            HttpResponse m_response;
+
+            // Unique ids of the individual HTTP requests that can be "flying" between the DbClient and Influx at
+            // a given moment for the read (query) and write channels (one request per channel). If the TCP
+            // connection between the DbClient and Influx gets compromissed before the HTTP response is received, 
+            // these temporarily stored Ids are used to clean up the map that stores the association between 
+            // requests and response handlers.
+            std::string m_flyingQueryId;
+            std::string m_flyingWriteId;
+
+            HttpResponse m_responseRead;
+            HttpResponse m_responseWrite;
             std::string m_hostnameWrite;
             std::string m_hostnameQuery;
             std::string m_dbname;
@@ -278,7 +294,6 @@ namespace karabo {
             static boost::mutex m_uuidGeneratorMutex;
             static boost::uuids::random_generator m_uuidGenerator;
             static const unsigned int k_connTimeoutMs;
-            std::string m_currentUuid;
             const std::uint32_t m_maxPointsInBuffer;
             boost::mutex m_bufferMutex;
             std::stringstream m_buffer;

@@ -48,7 +48,7 @@ namespace karabo {
 
             posBegin = posEnd + 2;
             posEnd = line.find("\r\n", posBegin);
- 
+
             while (posEnd > posBegin) {
                 size_t posSeparator = line.find(": ", posBegin);
                 const std::string& key = line.substr(posBegin, posSeparator - posBegin);
@@ -104,14 +104,26 @@ namespace karabo {
                 << "Request-Id: " << requestId << '\n'
                 << "X-Influxdb-Build: " << build << '\n'
                 << "X-Influxdb-Version: " << version << '\n'
-                << "X-Request-Id: " << xRequestId << '\n'
-                << "X-Influxdb-Error" << xError << '\n'
-                << "Date: " << date << '\n'
-                << "Connection: " << connection << '\n'
+                << "X-Request-Id: " << xRequestId << '\n';
+
+            if (!xError.empty()) {
+                oss << "X-Influxdb-Error" << xError << '\n';
+            }
+
+            if (!connection.empty()) {
+                oss << "Connection: " << connection << '\n';
+            }
+
+            oss << "Date: " << date << '\n'
                 << "Transfer-Encoding: " << transferEncoding << '\n'
-                << "Content-Length: " << contentLength << '\n'
                 << "Payload arrived: " << payloadArrived << '\n'
-                << "Payload: " << payload;
+                << "Payload: " << payload << '\n';
+
+            if (contentLength >= 0) {
+                // The response contained a 'content-length' header - this is an optional header.
+                oss << "Content-Length: " << contentLength << '\n';
+            }
+
             return oss.str();
         }
 
