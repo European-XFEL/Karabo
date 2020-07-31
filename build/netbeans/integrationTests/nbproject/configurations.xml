@@ -118,61 +118,6 @@
         <itemPath>../../../src/integrationTests/integrationRunner_8.cc</itemPath>
       </logicalFolder>
     </logicalFolder>
-    <logicalFolder name="TestFiles"
-                   displayName="Test Files"
-                   projectFiles="false"
-                   kind="TEST_LOGICAL_FOLDER">
-      <logicalFolder name="f1"
-                     displayName="AlarmService_Test"
-                     projectFiles="true"
-                     kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f10"
-                     displayName="DataLogging_Test"
-                     projectFiles="true"
-                     kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f9"
-                     displayName="Device_Test"
-                     projectFiles="true"
-                     kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f5"
-                     displayName="DeviceLocking_Test"
-                     projectFiles="true"
-                     kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f6"
-                     displayName="GuiServer_Test"
-                     projectFiles="true"
-                     kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f2"
-                     displayName="PipelinedProcessing_Test"
-                     projectFiles="true"
-                     kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f3"
-                     displayName="Property_Test"
-                     projectFiles="true"
-                     kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f4"
-                     displayName="RuntimeSchemaAttributes_Test"
-                     projectFiles="true"
-                     kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f7"
-                     displayName="SceneProvider_Test"
-                     projectFiles="true"
-                     kind="TEST">
-      </logicalFolder>
-      <logicalFolder name="f8"
-                     displayName="Timing_Test"
-                     projectFiles="true"
-                     kind="TEST">
-      </logicalFolder>
-    </logicalFolder>
   </logicalFolder>
   <sourceRootList>
     <Elem>../../../src/integrationTests</Elem>
