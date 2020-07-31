@@ -38,7 +38,9 @@ namespace karabo {
 
             void terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp);
 
-            void checkSchemaInDb(const karabo::util::Timestamp& stamp, const karabo::net::HttpResponse& o);
+            void checkSchemaInDb(const karabo::util::Timestamp& stamp,
+                                 const std::string& schDigest,
+                                 const karabo::net::HttpResponse& o);
 
             void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp) override;
 
@@ -47,8 +49,6 @@ namespace karabo {
             karabo::net::InfluxDbClient::Pointer m_dbClient;
 
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
-
-            std::string m_digest;
 
             std::vector<char> m_archive;
 
