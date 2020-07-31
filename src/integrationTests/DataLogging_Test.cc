@@ -33,8 +33,15 @@ using karabo::xms::SLOT_ELEMENT;
 #define SLOT_REQUEST_TIMEOUT_MILLIS 5000
 #define FLUSH_REQUEST_TIMEOUT_MILLIS 60000
 
-#define PAUSE_BEFORE_RETRY_MILLIS 150
-#define NUM_RETRY 1000
+/* As the Telegraf environment has a higher request/response roundtrip time, use
+   larger interval between retries. */
+#define PAUSE_BEFORE_RETRY_INFLUX 150
+#define PAUSE_BEFORE_RETRY_TELEGRAF 300
+#define PAUSE_BEFORE_RETRY_MILLIS (m_switchedToTelegrafEnv ? PAUSE_BEFORE_RETRY_TELEGRAF : PAUSE_BEFORE_RETRY_INFLUX)
+
+#define NUM_RETRY_INFLUX 2000
+#define NUM_RETRY_TELEGRAF 4000
+#define NUM_RETRY (m_switchedToTelegrafEnv ? NUM_RETRY_TELEGRAF : NUM_RETRY_INFLUX)
 
 static Epochstamp threeDaysBack = Epochstamp() - TimeDuration(3,0,0,0,0);
 
@@ -272,7 +279,7 @@ void DataLogging_Test::setUp() {
     m_deviceClient = boost::make_shared<DeviceClient>();
     m_sigSlot = boost::make_shared<SignalSlotable>("sigSlot");
     m_sigSlot->start();
-    
+
     // There are indications for rare hanging between tests, see https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/101484
     // So debug print when this happens.
     const Epochstamp stop;
@@ -386,7 +393,7 @@ std::pair<bool, std::string> DataLogging_Test::startDataLoggerManager(const std:
         manager_conf.set("logger.InfluxDataLogger.urlWrite", influxUrlWrite);
         manager_conf.set("logger.InfluxDataLogger.urlRead", influxUrlRead);
         manager_conf.set("logger.InfluxDataLogger.dbname", dbName);
-        
+
     } else {
         CPPUNIT_FAIL("Unknown logger type '" + loggerType + "'");
     }
@@ -424,7 +431,7 @@ void DataLogging_Test::tearDown() {
     // So debug print for in between tests, see setUp()
     const Epochstamp stop;
     std::clog << "End tearDown " << stop.toIso8601Ext() << std::endl;
-    
+
     // If the InfluxDb has been switched to use Telegraf, but hasn't been restored (e.g. the test that made the switch
     // didn't run until its end), do so in here.
     if (m_switchedToTelegrafEnv) {
@@ -482,7 +489,7 @@ void DataLogging_Test::fileAllTestRunner() {
 }
 
 void DataLogging_Test::testMigrateFileLoggerData() {
-    
+
     // launch the migration script onto the logged path
 
     const std::string influxUrlWrite = (getenv("KARABO_INFLUXDB_WRITE_URL") ? getenv("KARABO_INFLUXDB_WRITE_URL") : "http://localhost:8086");
@@ -497,7 +504,7 @@ void DataLogging_Test::testMigrateFileLoggerData() {
     std::ostringstream cmd;
     cmd << "cd ../../../src/pythonKarabo; ../../karabo/extern/bin/python3 ";
     cmd << "karabo/influxdb/dl_migrator.py ";
-            
+
     cmd << influxDbName << " " << absLoggerPath << "/karaboHistory/" << " " << migrationResultsPath << " ";
     cmd << "--write-url " << boost::algorithm::replace_first_copy(influxUrlWrite, "tcp://", "http://") << " ";
     cmd << "--write-user " << influxUserWrite << " ";
@@ -506,10 +513,10 @@ void DataLogging_Test::testMigrateFileLoggerData() {
     cmd << "--read-user " << influxUserRead << " ";
     cmd << "--read-pwd " << influxPwdRead << " ";
     cmd << "--lines-per-write 200 --write-timeout 50 --concurrent-tasks 2";
-    
+
     const int ret = system(cmd.str().c_str());
     CPPUNIT_ASSERT_EQUAL(0, ret);
-    
+
     boost::filesystem::path p(migrationResultsPath + "/processed/"+m_deviceId+"/");
     if(boost::filesystem::is_directory(p)) {
         for(auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(p), {})) {
@@ -517,10 +524,10 @@ void DataLogging_Test::testMigrateFileLoggerData() {
             msg << "Check if " << entry << " was migrated OK: "<<boost::filesystem::extension(entry);
             std::clog<<msg.str()<<std::endl;
             CPPUNIT_ASSERT_MESSAGE(msg.str(), boost::filesystem::extension(entry) == ".ok");
-           
+
         }
     }
-    
+
     unsigned int errorCount = 0;
     boost::filesystem::path perr(migrationResultsPath + "/part_processed/"+m_deviceId+"/");
     if(boost::filesystem::is_directory(perr)) {
@@ -529,7 +536,8 @@ void DataLogging_Test::testMigrateFileLoggerData() {
             std::ostringstream cmd;
             cmd << "cat "<<entry;
             system(cmd.str().c_str());
-            errorCount++;        
+            errorCount++;
+
         }
     }
 
@@ -538,12 +546,11 @@ void DataLogging_Test::testMigrateFileLoggerData() {
     m_dataWasMigrated = true;
     // remove migration results
     boost::filesystem::remove_all(migrationResultsPath);
-    
+
 }
 
 
 void DataLogging_Test::influxAllTestRunner() {
-  
     // and epoch stamp certainly before the next round of influx logging
     m_fileMigratedDataEndsBefore = Epochstamp();
     boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
@@ -562,10 +569,13 @@ void DataLogging_Test::influxAllTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
-    
-    // migrate the logger data produced so far into InfluxDB - do at this point so that a DB is for sure created
-    testMigrateFileLoggerData();
-    
+
+    if (!m_switchedToTelegrafEnv) {
+        // migration tests are skipped on Telegraf
+        // migrate the logger data produced so far into InfluxDB - do at this point so that a DB is for sure created
+        testMigrateFileLoggerData();
+    }
+
     testNans();
     testInt(true);
     testUInt64(false);
@@ -599,10 +609,10 @@ void DataLogging_Test::influxAllTestRunner() {
 
 
 void DataLogging_Test::influxAllTestRunnerWithTelegraf() {
-      
+
     // delete logger directory after this test
     m_keepLoggerDirectory = false;
-  
+
     if (!::getenv("KARABO_TEST_TELEGRAF")) {
         std::clog << "==== Skip sequence of Telegraf Logging tests ====" << std::endl;
         return;
@@ -793,8 +803,8 @@ void DataLogging_Test::testLastKnownConfiguration() {
             << "Timestamp of retrieved configuration: " << configTimepoint << "\n "
             << "Ok (retrieved configuration with last known value for 'int32Property' while the device was not being logged)."
             << std::endl;
-    
-    
+
+
     if (m_dataWasMigrated) {
         // check for the migrated data
         std::clog << "\n... from migrated data (requested config at " << m_fileMigratedDataEndsBefore.toIso8601() << ") ...";
@@ -816,8 +826,8 @@ void DataLogging_Test::testLastKnownConfiguration() {
                 << "Ok (retrieved configuration with last known value for 'int32Property' from file logger migrated data)."
                 << std::endl;
     }
-    
-    
+
+
 }
 
 
@@ -1613,7 +1623,11 @@ void DataLogging_Test::testNans() {
     end_conf.set("doubleProperty", (1. * max_set));
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(m_deviceId, end_conf));
     updateStamps.push_back(Epochstamp::fromHashAttributes(m_deviceClient->get(m_deviceId).getAttributes("doubleProperty")));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+    // The sleep interval below had to be increased because of the Telegraf environment - the time required to save is
+    // higher. If es_afterWrites captured after the sleep instruction refers to a time point that comes before the time
+    // Telegraf + Influx are done writing the data, the property history will not be of the expected size and the test
+    // will fail.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(7000));
 
     // save this instant as a iso string
     Epochstamp es_afterWrites;
@@ -1811,6 +1825,12 @@ void DataLogging_Test::testSchemaEvolution() {
     // Makes sure all the writes are done before retrieval.
     CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
                             .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+
+    // The sleep interval below had to be added because of the Telegraf environment - the time required to save is
+    // higher. If toTimePoint captured after the sleep instruction refers to a time point that comes before the time
+    // Telegraf + Influx are done writing the data, the property history will not be of the expected size and the test
+    // will fail.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(7000));
 
     // Checks that all the property values set with the expected types can be retrieved.
     Epochstamp toTimePoint;

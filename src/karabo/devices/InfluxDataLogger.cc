@@ -31,7 +31,6 @@ namespace karabo {
             : DeviceData(input)
             , m_dbClient(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientPointer"))
             , m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin"))
-            , m_digest("")
             , m_archive() {
         }
 
@@ -348,27 +347,29 @@ namespace karabo {
             const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (m_archive.data());
 
             // Calculate 'digest' on serialized schema
-            {
-                const std::size_t DIGEST_LENGTH = 20;
-                unsigned char obuf[DIGEST_LENGTH];
-                SHA1(uarchive, m_archive.size(), obuf);
-                std::ostringstream oss;
-                for (size_t i = 0; i < DIGEST_LENGTH; ++i) oss << std::hex << int(obuf[i]);
-                m_digest.assign(oss.str());
-            }
+            const std::size_t DIGEST_LENGTH = 20;
+            unsigned char obuf[DIGEST_LENGTH];
+            SHA1(uarchive, m_archive.size(), obuf);
+            std::ostringstream dss;
+            for (size_t i = 0; i < DIGEST_LENGTH; ++i) dss << std::hex << int(obuf[i]);
+            std::string schDigest(dss.str());
 
             std::ostringstream oss;
-            oss << "SELECT COUNT(*) FROM \"" << m_deviceToBeLogged << "__SCHEMAS\" WHERE digest='\"" << m_digest << "\"'";
-            m_dbClient->getQueryDb(oss.str(), bind_weak(&InfluxDeviceData::checkSchemaInDb, this, stamp, _1));
+            oss << "SELECT COUNT(*) FROM \"" << m_deviceToBeLogged
+                    << "__SCHEMAS\" WHERE digest='\"" << schDigest << "\"'";
+            m_dbClient->getQueryDb(oss.str(), bind_weak(&InfluxDeviceData::checkSchemaInDb, this,
+                                                        stamp, schDigest, _1));
         }
 
 
-        void InfluxDeviceData::checkSchemaInDb(const karabo::util::Timestamp& stamp, const HttpResponse& o) {
+        void InfluxDeviceData::checkSchemaInDb(const karabo::util::Timestamp& stamp,
+                                               const std::string& schDigest,
+                                               const HttpResponse& o) {
             //TODO: Do error handling ...
             //...
             const unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
             std::stringstream ss;
-            ss << m_deviceToBeLogged << "__EVENTS,type=\"SCHEMA\" schema_digest=\"" << m_digest << "\" " << ts << "\n";
+            ss << m_deviceToBeLogged << "__EVENTS,type=\"SCHEMA\" schema_digest=\"" << schDigest << "\" " << ts << "\n";
 
             nl::json j = nl::json::parse(o.payload);
             auto count = j["results"][0]["series"][0]["values"][0][1];
@@ -379,7 +380,7 @@ namespace karabo {
                 std::string base64Schema = base64Encode(uarchive, m_archive.size());
                 // and write to SCHEMAS table ...
                 ss << m_deviceToBeLogged << "__SCHEMAS," << "digest=\""
-                        << m_digest << "\" schema=\"" << base64Schema << "\"\n";
+                        << schDigest << "\" schema=\"" << base64Schema << "\"\n";
                 // Flush what was accumulated before ...
                 m_dbClient->flushBatch();
             }
@@ -544,7 +545,10 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_ERROR << "Database '" << m_dbName << "' not available. "
                         << "Tried to create it but got error with http status code '"
                         << o.code << "' and message '" << o.message << "'. InfluxDataLogger going to ERROR state.";
-                updateState(State::ERROR, Hash("status", std::string("Database '") + m_dbName + "' not available"));
+                updateState(State::ERROR,
+                            Hash("status",
+                                 std::string("Database '") + m_dbName + "' not available. Influx response to create database request:" +
+                                 o.toString()));
             } else {
                 KARABO_LOG_FRAMEWORK_INFO << "Database " << m_dbName << " created";
                 startConnection();
@@ -555,7 +559,8 @@ namespace karabo {
         void InfluxDataLogger::onShowDatabases(const HttpResponse& o) {
             if (o.code >= 300) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Failed to view list of databases available: " << o.toString();
-                updateState(State::ERROR, Hash("status", "Failed to list databases."));
+                updateState(State::ERROR,
+                            Hash("status", "Failed to list databases. Response from Influx: " + o.toString()));
                 return;
             }
 
