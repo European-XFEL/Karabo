@@ -194,6 +194,7 @@ namespace karabo {
             static std::map<std::string, PropFileInfo::Pointer > m_mapPropFileInfo;
             IndexBuilderService::Pointer m_ibs;
             static const boost::regex m_lineRegex;
+            static const boost::regex m_lineLogRegex;
             static const boost::regex m_indexLineRegex;
             static const boost::regex m_indexTailRegex;
             std::string m_ltype;
