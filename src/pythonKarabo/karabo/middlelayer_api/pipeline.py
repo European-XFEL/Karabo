@@ -211,7 +211,7 @@ class NetworkInput(Configurable):
         displayedName="On Slowness",
         description="Policy for what to do if this input is too slow for the "
                     "fed data rate (only used in copy mode)",
-        options=["queue", "drop", "wait", "throw"],
+        options=["queue", "queueDrop", "drop", "wait", "throw"],
         assignment=Assignment.OPTIONAL, defaultValue="wait",
         accessMode=AccessMode.RECONFIGURABLE)
 
@@ -597,7 +597,7 @@ class NetworkOutput(Configurable):
         displayedName="No Input (Shared)",
         description="What to do if currently no share-input channel is "
                     "available for writing to",
-        options=["queue", "drop", "wait", "throw"],
+        options=["queue", "drop", "wait", "throw"],  # add later "queueDrop"
         assignment=Assignment.OPTIONAL, defaultValue="drop",
         accessMode=AccessMode.INITONLY)
 
@@ -665,6 +665,10 @@ class NetworkOutput(Configurable):
             channel_name = message["instanceId"]
             distribution = message["dataDistribution"]
             slowness = message["onSlowness"]
+            if slowness == "queueDrop":
+                # XXX Until we find a way to limit the queue (memory?) size,
+                #     treat both queue options identical.
+                slowness = "queue"
 
             local_host, local_port = writer.get_extra_info("sockname")
             remote_host, remote_port = writer.get_extra_info("peername")
