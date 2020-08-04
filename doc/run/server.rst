@@ -33,7 +33,7 @@ karabo-check
 
   At typical output looks like this::
 
-    karabo_logAggregator: down 63 seconds
+    karabo_projectDBServer: down 63 seconds
     karabo_guiServer: up 61 seconds
     karabo_dataLoggerManager: up 61 seconds, want down
 
