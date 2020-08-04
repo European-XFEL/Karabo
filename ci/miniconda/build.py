@@ -283,6 +283,7 @@ class Builder:
         if self.args.test:
             modules_to_test = ['karabogui', 'karabo.native', 'karabo.common']
             self.test_environment(recipe, modules_to_test)
+            return
 
         if self.args.skip_build:
             return
