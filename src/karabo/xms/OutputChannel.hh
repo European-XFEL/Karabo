@@ -145,6 +145,8 @@ namespace karabo {
 
             unsigned int m_channelId;
             unsigned int m_chunkId;
+            // Mark m_chunkId as invalid with this number
+            static const unsigned int m_invalidChunkId = std::numeric_limits<unsigned int>::max();
 
             mutable boost::mutex m_showConnectionsHandlerMutex;
             ShowConnectionsHandler m_showConnectionsHandler;
@@ -302,6 +304,17 @@ namespace karabo {
 
             // TODO Check if needed
             bool canCompute() const;
+
+            /**
+             *  helper to set new m_chunkId
+             * @return true if new m_chunkId is valid (i.e. not equal m_invalidChunkId)
+             */
+            bool updateChunkId();
+
+            /**
+             * helper for update() to ensure that at the end m_chunkId is valid - may block a while
+             */
+            void ensureValidChunkId();
 
             void registerWritersOnChunk(unsigned int chunkId);
 

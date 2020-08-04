@@ -12,6 +12,7 @@
 #include <karabo/log/Logger.hh>
 
 #include <boost/format.hpp>
+#include <karabo/xms/Memory.hh>
 
 USING_KARABO_NAMESPACES;
 
@@ -67,6 +68,8 @@ void PipelinedProcessing_Test::appTestRunner() {
     testPipeDrop();
 
     testPipeQueue();
+
+    testPipeQueueDrop();
 
     testPipeMinData();
 
@@ -533,6 +536,104 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
             << ", dataItemSize = " << dataItemSize
             << ", nTotalData = " << nDataExpected - nTotalData0
             << ", nTotalDataOnEos = " << nDataExpected - nTotalDataOnEos0 << std::endl;
+}
+
+
+void PipelinedProcessing_Test::testPipeQueueDrop() {
+
+    // Receiver processing time much higher than sender delay between data sending:
+    // With "queueDrop" option data will be queued until queue is full and then drop some data
+    testPipeQueueDrop(2, 0, "queueDrop", true, true); // true, true ==> expectDataLoss, slowReceiver
+
+    // With the "queue" option, all data is received since the sender waits if queue is full
+    testPipeQueueDrop(2, 0, "queue", false, true);
+
+    // If sender delay time much higher than the receiver processing time, no data loss despite the queueDrop option
+    testPipeQueueDrop(0, 2, "queueDrop", false, false);
+
+}
+
+
+void PipelinedProcessing_Test::testPipeQueueDrop(unsigned int processingTime, unsigned int delayTime,
+                                                 const std::string& queueOption, bool expectDataLoss, bool slowReceiver) {
+    std::clog << "---\ntestPipeQueueDrop (onSlowness = '" << queueOption << "', dataDistribution = 'copy') "
+            << "- processingTime = " << processingTime << " ms, delayTime = " << delayTime << " ms\n";
+
+    karabo::util::Hash config(m_receiverBaseConfig);
+    config.merge(Hash("deviceId", m_receiver, "input.onSlowness", queueOption, "input.dataDistribution", "copy"));
+    instantiateDeviceWithAssert("PipeReceiverDevice", config);
+    CPPUNIT_ASSERT_EQUAL(queueOption, m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
+    CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
+
+    testSenderOutputChannelConnections(1UL,{m_receiver + ":input"}, "copy", queueOption, "local",{
+                                       m_receiver + ":input2"
+    }, "copy", "wait", "local");
+
+
+    m_deviceClient->set(m_receiver, "processingTime", processingTime);
+    const int prev_delay = m_deviceClient->get<unsigned int>(m_sender, "delay");
+    const int prev_nData = m_deviceClient->get<unsigned int>(m_sender, "nData");
+    const int prev_dataSize = m_deviceClient->get<unsigned int>(m_sender, "dataSize");
+    // We need a lot of data to fill up the queue so that data is indeed dropped
+    const unsigned int nData = karabo::xms::Memory::MAX_N_CHUNKS + 1000u;
+    const unsigned int dataSize = 1000u; // else memory trouble with big queues on small memory machines
+    m_deviceClient->set(m_sender, Hash("delay", delayTime,
+                                       "nData", nData,
+                                       "dataSize", dataSize));
+
+    const unsigned int nTotalData0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    const unsigned int nTotalDataOnEos0 = m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos");
+    const unsigned int nDataExpected = nTotalData0 + nData; // expected if nothing dropped
+
+    const auto testStartTime = chrono::high_resolution_clock::now();
+    m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
+
+    // Makes sure the sender has finished sending the data in this run.
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL, true,
+                                                           m_maxTestTimeOut * 4)); // Longer time out due to many data items
+
+    const unsigned int receivedWhenWriteDone = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    const unsigned int missing = nDataExpected - receivedWhenWriteDone;
+    if (slowReceiver) {
+        // Not everything is missing, i.e. data has been processed
+        CPPUNIT_ASSERT_LESS(nDataExpected, missing);
+    } else {
+        // No bottleneck on the receiver, i.e. all is received, except what maybe sits in the pots of the buffer
+        CPPUNIT_ASSERT_LESSEQUAL(m_nPots, missing);
+    }
+    // When EOS have arrived (and thus all data), "nTotalDataOnEos" is set to a new value.
+    // So we wait here until that happens - and then top timer
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nTotalDataOnEos0, false));
+    auto durMs = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count();
+
+    const unsigned int nTotalDataEnd = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
+    const unsigned int nTotalDataOnEos = m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos");
+    // These are the same - but maybe not nDataExpected
+    CPPUNIT_ASSERT_EQUAL(nTotalDataEnd, nTotalDataOnEos);
+
+    if (expectDataLoss) {
+        // If the receiver is very slow, data is dropped Note: dropped only if queue was full, > 2000 items!
+        CPPUNIT_ASSERT_LESS(nDataExpected, nTotalDataEnd);
+        // But at least the queue length arrived
+        CPPUNIT_ASSERT_GREATER(static_cast<unsigned int> (karabo::xms::Memory::MAX_N_CHUNKS), nTotalDataEnd);
+    } else {
+        // Sender is bottleneck? Or queue and wait if queue full? All data arrived!
+        CPPUNIT_ASSERT_EQUAL(nDataExpected, nTotalDataEnd);
+    }
+
+    // Check that receiver did not post any problem on status:
+    CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver, "status"));
+
+    killDeviceWithAssert(m_receiver);
+    testSenderOutputChannelConnections();
+    // Restore the sender's parameters back to their defaults.
+    m_deviceClient->set(m_sender, Hash("delay", prev_delay,
+                                       "nData", prev_nData,
+                                       "dataSize", prev_dataSize));
+    std::clog << "Success - test duration (ms): " << durMs << ", "
+            << "n(data_sent) = " << nData
+            << ", n(data_arrived) = " << nTotalDataEnd - nTotalData0
+            << std::endl;
 }
 
 
