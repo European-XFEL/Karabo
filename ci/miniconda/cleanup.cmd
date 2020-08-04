@@ -10,14 +10,15 @@ REM wiping everything clean.
 
 REM clean the conda-bld directory
 PUSHD conda-bld
-DEL /q /f /s *
+DEL /q /f /s * > nul
 POPD
 RMDIR /q /s conda-bld
 MKDIR conda-bld
 
 REM remove all environments
 PUSHD envs
-DEL /q /f /s *
+DEL /q /f /s * > nul
 POPD
 RMDIR /q /s envs
 MKDIR envs
+POPD
