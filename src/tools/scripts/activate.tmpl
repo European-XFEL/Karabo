@@ -70,6 +70,14 @@ KARABO="__VENV_DIR__"
 export KARABO
 export MPLBACKEND=TkAgg
 
+# If no environment exists, copy default one
+if [ ! -e "$KARABO/var/environment" ]
+then
+  # E.g. first call to 'activate'. in a fresh development area
+  cp -r "$KARABO/environment.in" "$KARABO/var/environment"
+  echo Default environment copied to "\$KARABO/var/environment"
+fi
+
 pushd "$KARABO/var/environment" >/dev/null
 for var in $(ls)
 do
