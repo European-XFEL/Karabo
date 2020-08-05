@@ -2,6 +2,7 @@
 
 import argparse
 from asyncio import get_event_loop, gather
+import datetime
 import json
 import os
 import re
@@ -19,7 +20,8 @@ from karabo.influxdb.dlutils import device_id_from_path
 class DlMigrator():
     def __init__(self, db_name, input_dir, output_dir, write_url, write_user,
                  write_pwd, read_url, read_user, read_pwd, lines_per_write,
-                 write_timeout, concurrent_tasks, dry_run=True):
+                 write_timeout, concurrent_tasks, start=None, end=None,
+                 dry_run=True):
         self.db_name = db_name
         self.input_dir = input_dir
         self.output_dir = output_dir
@@ -40,6 +42,8 @@ class DlMigrator():
         self.n_processed = 0
         self.n_part_processed = 0
         self.n_skipped = 0
+        self.start_date = start
+        self.end_date = end
 
     def _get_prev_run_num(self):
         """Retrieves the number of the previous run."""
@@ -118,7 +122,7 @@ class DlMigrator():
         """Split the workload in a number of approximately equally sized parts.
         The number of parts is the number of concurrent migration tasks.
 
-        return: list of workloads. Each workloud is a list of tuples with the
+        return: list of workloads. Each workload is a list of tuples with the
         path of a file to be migrated and the deviceId associated to that file.
         """
         print('Splitting workload among {} concurrent tasks ...'
@@ -148,6 +152,12 @@ class DlMigrator():
                     print("'{}' already migrated: skip.".format(file_path))
                     self.n_skipped += 1
                     continue
+                if ((self.start_date and last_update < self.start_date) or
+                        (self.end_date and last_update > self.end_date)):
+                    print("'{}' outside date range.".format(file_path))
+                    self.n_skipped += 1
+                    continue
+
                 full_workload.append((device_id, file_path, last_update))
 
                 # sort list by descending access time
@@ -335,9 +345,32 @@ def main():
     parser.add_argument("--concurrent-tasks", dest="concurrent_tasks", type=int,
                         help="Number of concurrent migration tasks")
     parser.set_defaults(concurrent_tasks=4)
+
+    def parse_date(s):
+        if s:
+            return datetime.datetime.strptime(s, '%Y-%m-%d').timestamp()
+        return s
+
+    parser.add_argument('--start', type=parse_date,
+                        help="Start date of data to be migrated (%Y-%m-%d)")
+    parser.set_defaults(start=None)
+
+    parser.add_argument('--end', type=parse_date,
+                        help="End date of data to be migrated (%Y-%m-%d)")
+    parser.set_defaults(end=None)
+
     parser.add_argument("--dry_run", dest="dry_run", action="store_true")
     parser.set_defaults(dry_run=False)
+
     args = parser.parse_args()
+    # check dates are sane
+    if args.start:
+        args.start = args.start
+    if args.end:
+        args.end = args.end
+    if args.start and args.end and args.start > args.end:
+        raise AttributeError("Start date must be in the past of end date!")
+
     o = DlMigrator(**vars(args))
     get_event_loop().run_until_complete(o.run())
 
