@@ -44,6 +44,7 @@ private:
     void testPipeWait();
     void testPipeDrop();
     void testPipeQueue();
+    void testPipeQueueDrop();
     void testPipeMinData();
     void testPipeTwoSharedReceiversWait();
     void testPipeTwoSharedReceiversDrop();
@@ -102,6 +103,9 @@ private:
      * This test asserts for those queuing behaviors.
      */
     void testPipeQueue(unsigned int processingTime, unsigned int delayTime);
+
+    void testPipeQueueDrop(unsigned int processingTime, unsigned int delayTime,
+                           const std::string& queueOption, bool expectDataLoss, bool slowReceiver);
 
     // roundRobin = true means that sender is supposed to be configured round-robin - extra tests of fair share are done
     void testPipeTwoSharedReceivers(unsigned int processingTime1,
