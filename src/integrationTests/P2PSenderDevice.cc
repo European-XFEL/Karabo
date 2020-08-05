@@ -107,7 +107,13 @@ namespace karabo {
                 .assignmentOptional().defaultValue("test")
                 .reconfigurable()
                 .commit();
-        
+
+        UINT32_ELEMENT(expected).key("dataSize")
+                .description("Size of the INT64 'data' vector sent in 'test' scenario")
+                .assignmentOptional().defaultValue(1000000u)
+                .reconfigurable()
+                .commit();
+
         BOOL_ELEMENT(expected).key("copyAllData")
                 .assignmentOptional().defaultValue(true)
                 .reconfigurable()
@@ -140,7 +146,8 @@ namespace karabo {
 
         // start extra thread since write is a slot and must not block
         if (get<std::string>("scenario") == "test") {
-            m_writingThread = boost::thread(boost::bind(&Self::writing, this));
+            const unsigned int dataSize = get<unsigned int>("dataSize");
+            m_writingThread = boost::thread(boost::bind(&Self::writing, this, dataSize));
         } else {
             m_writingThread = boost::thread(boost::bind(&Self::writingProfile, this));
         }
@@ -152,8 +159,6 @@ namespace karabo {
         m_stopWriting = true;
     }
 
-#define TEST_VECTOR_SIZE 1000000
-
     // For machine "Intel(R) Xeon(R) CPU E5-1650 v4 @ 3.60GHz" 12 cpus (7183.79 bogomips/cpu)
     // MemTotal:       32804800 kB
     //
@@ -161,7 +166,7 @@ namespace karabo {
     // af64553 Speed up large array serialization and pipelines processing (between 2.2.3 and 2.)
     // Numbers have uncertainties since they contain some polling/message travel overhead...
     //
-    // Vector size      |   Speed  MBytes/sec
+    // Data size        |   Speed  MBytes/sec
     //------------------+---------------------
     //  100000          |   220.87
     //  1000000         |   1198.32
@@ -170,14 +175,15 @@ namespace karabo {
     //  100000000       |   973.16
     //------------------+---------------------
 
-    void P2PSenderDevice::writing() {
+
+    void P2PSenderDevice::writing(unsigned int dataSize) {
         m_stopWriting = false;
 
         try {
             const int nData = get<unsigned int>("nData");
             const unsigned int delayInMs = get<unsigned int>("delay");
             const int noData[] = {}; // Also test an empty NDArray:
-            Hash data("data", std::vector<long long> (TEST_VECTOR_SIZE),
+            Hash data("data", std::vector<long long> (dataSize),
                       "emptyArray", NDArray(noData, sizeof (noData) / sizeof (noData[0])));
             auto& vec = data.get<std::vector<long long> >("data");
 

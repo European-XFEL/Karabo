@@ -36,7 +36,7 @@ namespace karabo {
         void stop();
 
         /// method for writing thread
-        void writing();
+        void writing(unsigned int dataSize);
         void writingProfile();
 
         boost::thread m_writingThread;
