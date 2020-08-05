@@ -53,6 +53,11 @@ For example, a camera device sending acquired data via an output channel should
 notify end-of-stream if it stops the acquisition. A connected image processing
 device could then mark itself as not processing anymore.
 
+Note that in C++ and bound Python, the device methods *writeChannel* and
+*signalEndOfStream* (and the underlying output channel methods *write*,
+*update*, *signalEndOfStream*) are not thread safe in the sense that they must
+not be called concurrently with each other for the same output channel.
+
 Many input channels can be connected to the same output channel (scatter
 scenario) and many output channels can send data to the same input channel
 (gather scenario).
@@ -86,8 +91,11 @@ Input Channel Configuration Properties
    * *drop*: The output channel drops data items.
    * *wait*: The output channel writing action blocks until the input channel is ready for new data.
    * *throw*: An exception is thrown in the writing action of the output channel - until at least 2.9.X not recommended for C++ and bound Python output channels since the exception leaves the output channel in a bad state that may not be recoverable.
-   * *queue*: The data will be queued in the output channel and sent as soon as the input channel is ready - until at least 2.9.X not recommended for C++ and bound Python output channels since in case the local queue (size < 128) is full, an exception is thrown that leaves the output channel in a bad state that may be not recoverable.
-   * The default in 2.9.X is *wait*, but is likely to change to *drop* in future releases.
+   * *queue*: The data will be queued in the output channel and sent as soon as the input channel is ready. If the queue is full (size about 2000):
+      * since 2.10.0: output channel writing blocks until queue has space again
+      * older releases: option not recommended for C++ and bound Python output channels since an exception is thrown that leaves the output channel in a bad state that may be not recoverable.
+   * *queueDrop*: Like *queue*, but if thet queue is full, its oldest data is dropped (available since 2.10.0)
+   * The default in 2.9.X is *wait*, but is likely to change to *drop* or *queueDrop* in future releases.
 * **minData** (UINT32): Minimum data items available in one go if an input handler is used instead of a data handler (default = 1, 0: all, 0xFFFFFFFF: none/any).
 * **respondToEndOfStream** (BOOL): Whether an end-of-stream handler that a device registered is called or not (default: true).
 * **delayOnInput** (INT32): Delay in milliseconds before informing output channel about readiness for next data (default: 0). Useful e.g. with onSlowness=*drop* if only a limited data rate is of interest.

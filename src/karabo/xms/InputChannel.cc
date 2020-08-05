@@ -49,7 +49,7 @@ namespace karabo {
             STRING_ELEMENT(expected).key("onSlowness")
                     .displayedName("On Slowness")
                     .description("Policy for what to do if this input is too slow for the fed data rate (only used in copy mode)")
-                    .options("drop,throw,wait,queue")
+                    .options("drop,throw,wait,queue,queueDrop")
                     .assignmentOptional().defaultValue("wait")
                     .init()
                     .commit();
