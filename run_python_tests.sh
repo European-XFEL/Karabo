@@ -34,7 +34,7 @@ Needs an activated Karabo environment.
 Available flags:
   --help, -h - Display help.
   --rootDir <path> - Path to the root directory of the Karabo project.
-  --runUnitTests - Run Python unit tests.
+  --runUnitTests - Run all Python unit tests.
   --runIntegrationTests - Run Python integration tests.
   --runLongTests - Run Python long tests
   --runCondaUnitTests - Run the conda python unit tests (gui only)
@@ -193,21 +193,9 @@ runCondaUnitTests() {
     # Setup the environment
     safeRunCommand source ./build_conda_env.sh clean install
 
-    PLATFORM=$(python -m platform)
-    if [[ $PLATFORM == Darwin* ]]; then
-        # TODO: figure out why the GUI tests fail on MacOs
-        ACCEPT_SIGSEGV=true
-        safeRunCommand "nosetests -v $COVER_FLAGS -e 'test_basics|test_set_value|test_decline_color|test_property_proxy_edit_values_from_text_input|test_get_alarm_pixmap' karabogui"
-        unset ACCEPT_SIGSEGV
-        # TODO: figure out why these tests fail on MacOs
-        safeRunCommand "nosetests -v $COVER_FLAGS -e 'test_actual_timestamp|test_floor_divide|test_fmod|test_mod|test_remainder' karabo.native"
-        safeRunCommand "nosetests -v $COVER_FLAGS karabo.common"
-        conda deactivate
-        return 0
-    fi
     # Allow gui tests to crash sometimes - for the time being:
     ACCEPT_SIGSEGV=true
-    safeRunCommand "nosetests -v $COVER_FLAGS -e test_get_alarm_pixmap karabogui"
+    safeRunCommand "nosetests -v $COVER_FLAGS karabogui"
     unset ACCEPT_SIGSEGV
     safeRunCommand "nosetests -v $COVER_FLAGS karabo.native"
     safeRunCommand "nosetests -v $COVER_FLAGS karabo.common"
@@ -215,13 +203,11 @@ runCondaUnitTests() {
     conda deactivate
 }
 
-runPythonUnitTests() {
+runPythonKaraboTests() {
     echo
     echo Running Karabo Python unit tests ...
     echo
 
-    # Pass the bound_api/launcher.py file. If the file is imported, a
-    # part of its code is executed. That results in an error.
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.bound_api"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.bound_devices"
     # Some middlelayer tests are flaky for the time being, so add proper flags:
@@ -235,12 +221,6 @@ runPythonUnitTests() {
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.project_db"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.tests"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.interactive"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.macro_api"
-    # Allow gui tests to crash sometimes - for the time being:
-    # MR-3871: disable while karabogui doesn't support Qt5 on the old deps
-    #ACCEPT_SIGSEGV=true
-    #safeRunCommand "$NOSETESTS -v $COVER_FLAGS -e test_extensions_dialog karabogui"
-    #unset ACCEPT_SIGSEGV
 
     echo
     echo Karabo Python unit tests complete
@@ -460,7 +440,7 @@ if $RUN_CONDA_UNIT_TEST; then
 fi
 
 if $RUN_UNIT_TEST; then
-    runPythonUnitTests
+    runPythonKaraboTests
 fi
 
 if $RUN_INTEGRATION_TEST; then
