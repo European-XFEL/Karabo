@@ -5,6 +5,7 @@ import json
 import os
 import os.path as op
 from platform import system as sys_name
+import re
 import shutil
 import subprocess
 from tempfile import gettempdir
@@ -13,6 +14,8 @@ from conda.cli.python_api import Commands, run_command
 from conda.exceptions import PackagesNotFoundError
 from paramiko import AutoAddPolicy, SSHClient
 import yaml
+
+from git_diff import GUI, check_diff
 
 CHANNEL_MAP = {'pkgs/main': 'https://repo.anaconda.com/pkgs/main/'}
 PLATFORMS = {
@@ -327,9 +330,18 @@ class Builder:
         env = get_env_name(recipe)
         self.create_mirror(env)
 
+    def check_git_diff(self):
+        # only the GUI tests are run here for the moment.
+        if GUI in check_diff():
+            self.recipes.add("karabogui")
+
     def run(self):
-        for recipe in self.args.recipes.split(','):
-            self.recipes.add(recipe)
+        if self.args.recipes == "ON_FEATURE_BRANCH":
+            self.check_git_diff()
+        else:
+            for recipe in self.args.recipes.split(','):
+                self.recipes.add(recipe)
+
         if len(self.recipes) == 0:
             print("Nothing to do!")
             return
