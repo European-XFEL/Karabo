@@ -5,13 +5,23 @@ from .hash import Hash, HashList, Type
 
 
 def dtype_from_number(number):
-    """Return the corresponding dtype matching the Karabo Types to
-    numpy dtypes
+    """Return the dtype object matching the Karabo Types number
 
+    in case of missing numpy definition in `Types`, returns an object_.
     >> dtype_from_number(16)
     >> dtype('int64')
     """
-    return np.dtype(Type.types[number].numpy)
+    return np.dtype(numpyclass_from_number(number))
+
+
+def numpyclass_from_number(number):
+    """Return the dtype class matching the Karabo Types number
+
+    in case of missing numpy definition in `Types`, returns an object_.
+    >> dtype_from_number(16)
+    >> dtype('int64')
+    """
+    return getattr(Type.types[number], "numpy", np.object_)
 
 
 def get_image_data(data):
