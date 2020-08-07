@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-__git_diff() {
-    python ci/miniconda/git_diff.py $1
-    return $?
-}
-
 __deps_build_tests() {
     export FORCED_DEPS_TAG=$CI_COMMIT_REF_SLUG
     bash ./auto_build_all.sh Debug --runTests --runIntegrationTests
@@ -17,28 +12,7 @@ __cmake_tests() {
 }
 
 __unit_tests() {
-    if [[ "$TARGET_OS" = "miniconda-cmake" ]] ; then
-        __git_diff karabo && __cmake_tests
-    else
-        # compile the build options depending on the git diff
-        OPT=""
-        # the --runTests option executes unit tests for the src/pythonKarabo and src/karabo directories
-        ( __git_diff karabo || __git_diff pythonKarabo ) && OPT="${OPT} --runTests"
-        __git_diff cppLongTests && OPT="${OPT} --runLongTests"
-        __git_diff integrationTests && OPT="${OPT} --runIntegrationTests"
-        # NOTE: pythonGui tests are not executed by this file, but by ci/miniconda/build.py
-        # NOTE2: to trigger test execution manually, set the OPT variable in a temporary commit.
-        #        for example:
-        # OPT="--runIntegrationTests"
-        # OPT="--runTests --runIntegrationTests"
-        # OPT="--runLongTests"
-        if [[ -n "$OPT" ]] ; then
-            echo "running build script with options:${OPT}"
-            bash ./auto_build_all.sh Debug ${OPT}
-        else
-            echo "nothinig to do: skipping tests"
-        fi
-    fi
+    bash ./auto_build_all.sh Debug --runTests
 }
 
 __integration_tests() {
@@ -95,14 +69,18 @@ export KARABO_TEST_INFLUXDB_PASSWORD=$INFLUXDB_USER_PASSWORD
 export KARABO_TEST_INFLUXDB_ADMUSER=$INFLUXDB_ADMIN_USER
 export KARABO_TEST_INFLUXDB_ADMUSER_PASSWORD=$INFLUXDB_ADMIN_PASSWORD
 
-case "$JOB_SCOPE" in
-    deps) __deps_build_tests ;;
-    unit) __unit_tests ;;
-    integration) __integration_tests ;;
-    long) __long_tests ;;
-    coverage) __coverage_tests ;;
-    *)
-        echo "unknown job scope: $JOB_SCOPE"
-        exit 1
-        ;;
-esac
+if [ "$TARGET_OS" = "miniconda-cmake" ]; then
+    __cmake_tests
+else
+    case "$JOB_SCOPE" in
+        deps) __deps_build_tests ;;
+        unit) __unit_tests ;;
+        integration) __integration_tests ;;
+        long) __long_tests ;;
+        coverage) __coverage_tests ;;
+        *)
+            echo "unknown job scope: $JOB_SCOPE"
+            exit 1
+            ;;
+    esac
+fi
