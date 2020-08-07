@@ -109,7 +109,6 @@ runCppLongTests() {
 
 runUnitTests() {
     activateKarabo
-
     local testNames=$(ls $scriptDir/src/karabo/tests)
     local testDir=$scriptDir/build/netbeans/karabo
 
@@ -219,7 +218,16 @@ produceCodeCoverageReport() {
     echo
 }
 
-print_usage() {
+# Make sure the script runs in the correct directory
+scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+cd ${scriptDir}
+if [ $? -ne 0 ]; then
+    echo " Could not change directory to ${scriptDir}"
+    exit 1;
+fi
+
+# Parse command line
+if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]]; then
     cat <<End-of-help
 Usage: $0 Debug|Release|CodeCoverage|Dependencies|Clean|Clean-All [flags]
 
@@ -245,59 +253,43 @@ Note: "Dependencies" builds only the external dependencies
       Please note that tests will activate the Karabo installation currently
       built.
 End-of-help
-}
 
-# Make sure the script runs in the correct directory
-scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
-cd ${scriptDir}
-if [ $? -ne 0 ]; then
-    echo " Could not change directory to ${scriptDir}"
-    exit 1;
-fi
-
-
-# Parse command line
-if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]]; then
-    print_usage
     exit 0
 fi
 
 EXTERN_ONLY="n"
 
 # Fetch configuration type (Release or Debug)
-case "$1" in
-    Release|Debug|CodeCoverage)
-        CONF=$1
-        ;;
-    Dependencies)
-        echo "Building external dependencies"
-        EXTERN_ONLY="y"
-        ;;
-    Clean*)
-        safeRunCommand "cd $scriptDir/build/netbeans/karabo"
-        safeRunCommand "make bundle-clean CONF=Debug"
-        safeRunCommand "make bundle-clean CONF=Release"
-        safeRunCommand "make bundle-clean CONF=CodeCoverage"
-        safeRunCommand "cd $scriptDir/build/netbeans/karabo"
-        if [[ $1 = "Clean-All" ]]; then
-            safeRunCommand "make clean-extern"
-        fi
-        rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
-        safeRunCommand "cd $scriptDir/build/netbeans/karathon"
-        rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
-        safeRunCommand "cd $scriptDir/build/netbeans/deviceServer"
-        rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
-        safeRunCommand "cd $scriptDir/build/netbeans/brokerMessageLogger"
-        rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
-        exit 0
-        ;;
-    *)
-        # Make a little noise
-        echo "Unrecognized Configuration flag $1"
-        print_usage
-        exit 1
-        ;;
-esac
+if [[ $1 = "Release" || $1 = "Debug" || $1 = "CodeCoverage" ]]; then
+    CONF=$1
+elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
+    safeRunCommand "cd $scriptDir/build/netbeans/karabo"
+    safeRunCommand "make bundle-clean CONF=Debug"
+    safeRunCommand "make bundle-clean CONF=Release"
+    safeRunCommand "make bundle-clean CONF=CodeCoverage"
+    if [[ $1 = "Clean-All" ]]; then
+        safeRunCommand "make clean-extern"
+    fi
+    safeRunCommand "cd $scriptDir/build/netbeans/karabo"
+    rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
+    safeRunCommand "cd $scriptDir/build/netbeans/karathon"
+    rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
+    safeRunCommand "cd $scriptDir/build/netbeans/deviceServer"
+    rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
+    safeRunCommand "cd $scriptDir/build/netbeans/brokerMessageLogger"
+    rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
+    exit 0
+elif [[ $1 = "Dependencies" ]]; then
+    echo "Building external dependencies"
+    EXTERN_ONLY="y"
+else
+    echo
+    echo "Invalid option supplied. Allowed options: Release|Debug|CodeCoverage|Dependencies|Clean|Clean-All"
+    echo
+    exit 1
+fi
+
+# Get rid of the first argument
 shift
 
 # Parse the commandline flags
@@ -377,7 +369,7 @@ sleep 2
 
 safeRunCommand "cd $scriptDir/build/netbeans/karabo"
 
-if [ "$EXTERN_ONLY" = "y" ]; then
+if [ $EXTERN_ONLY = "y" ]; then
     safeRunCommand "make -j$NUM_JOBS extern"
     if [ "$BUNDLE" = "y" ]; then
         safeRunCommand "make -j$NUM_JOBS package-extern"
