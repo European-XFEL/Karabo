@@ -49,13 +49,13 @@ class NDArray(Type):
     (see numpy docs for reference).
     `shape` should be a tuple of positive integers.
     For example:
-    
+
     class DataNode(Configurable):
         ndarray = NDArray(
             accessMode=AccessMode.READONLY,
             dtype=Float,
             shape=(100, 200))
-    
+
     The Configurable `DataNode` can be used as an argument for an
     `OutputChannel`.
     """
