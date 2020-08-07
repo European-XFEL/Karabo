@@ -78,7 +78,7 @@ variables:
 .unit_tests: &unit-tests
   <<: *test
   only:
-    - merge_requests
+    - branches
   except:
     - master
     - schedules
@@ -86,9 +86,9 @@ variables:
 
 .unit_tests_conda: &unit-tests-conda
   script:
-    - python ci/miniconda/build.py ON_FEATURE_BRANCH -D conda-recipes --clean --test
+    - python ci/miniconda/build.py karabogui -D conda-recipes --clean --test
   only:
-    - merge_requests
+    - branches
   except:
     - master
     - schedules
