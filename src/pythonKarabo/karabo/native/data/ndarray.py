@@ -6,6 +6,7 @@ from karabo.native.data.hash import (
     AccessMode, Bool, ByteArray, Hash, HashElement, Int32, Simple, Type,
     VectorUInt64)
 from karabo.native.data.schema import Configurable
+from karabo.native.data.utils import dtype_from_number, numpyclass_from_number
 
 
 class ArraySchema(Configurable):
@@ -37,12 +38,39 @@ class NDArray(Type):
 
     The NDArray class is intended to store any multidimensional data occurring
     in Karabo. Internally it holds the data in a ByteArray.
+
+    An NDArray can either be instantiate within `Configurable`,
+    or as a node factory for `connectDevice` and `getDevice`.
+    In case one needs to declare a NDArray attribute in their
+    device one must declare the `dtype` and `shape` arguments.
+
+    `dtype` should either be a numpy dtype, a Karabo Simple Type
+    (e.g. a scalar, Int32) or any object parsable by `numpy.dtype`
+    (see numpy docs for reference).
+    `shape` should be a tuple of positive integers.
+    For example:
+    
+    class DataNode(Configurable):
+        ndarray = NDArray(
+            accessMode=AccessMode.READONLY,
+            dtype=Float,
+            shape=(100, 200))
+    
+    The Configurable `DataNode` can be used as an argument for an
+    `OutputChannel`.
     """
     _hashname = "NDARRAY"
 
     def __init__(self, *, node=None, dtype=None, shape=(), **kwargs):
+        """Instantiates a NDArray instance
+
+        the `node` parameter is provided when the class `NDArray` is used
+        as a `ProxyNodeFactory` when creating a Proxy instance with
+        `getDevice` and `connectDevice`. In this case, `dtype` and `shape`
+        will be ignored
+        """
         if node is not None:
-            dtype = Type.types[node["type", "defaultValue"]].numpy
+            dtype = numpyclass_from_number(node["type", "defaultValue"])
             shape = node["shape", "defaultValue"]
             kwargs['unitSymbol'] = node["data", "unitSymbol"]
             kwargs['metricPrefixSymbol'] = node["data", "metricPrefixSymbol"]
@@ -71,7 +99,7 @@ class NDArray(Type):
         if isinstance(data, Hash) and not strict:
             if data.empty() or len(data["data"]) == 0:
                 return NoneValue(descriptor=self)
-            dtype = numpy.dtype(Type.types[data["type"]].numpy)
+            dtype = dtype_from_number(data["type"])
             dtype = dtype.newbyteorder(
                 ">" if data["isBigEndian"] else "<")
             ar = numpy.frombuffer(data["data"], count=data["shape"].prod(),
