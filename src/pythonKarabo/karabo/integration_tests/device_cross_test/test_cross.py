@@ -322,10 +322,19 @@ class Tests(DeviceTest):
         self.assertEqual(self.device.channelmeta.source, "boundDevice:output1")
         self.assertTrue(self.device.channelmeta.timestamp)
         self.assertEqual(self.device.rawchannelcount, 1)
-        self.assertEqual(self.device.rawchanneldata["e"], 5)
-        self.assertEqual(self.device.rawchanneldata["s"], "hallo")
+
         self.assertEqual(self.device.rawchannelmeta.source,
                          "boundDevice:output2")
+        self.assertEqual(self.device.rawchanneldata["e"], 5)
+        self.assertEqual(self.device.rawchanneldata["s"], "hallo")
+        ndarray_hsh = self.device.rawchanneldata["ndarray"]
+        self.assertTrue(ndarray_hsh is not None)
+        # the incoming ndarray is of shape (10) and type np.float32
+        self.assertEqual(len(ndarray_hsh['data']), 10 * 4)
+        image_hsh = self.device.rawchanneldata["image"]
+        self.assertTrue(image_hsh is not None)
+        # the incoming image is of shape (50, 50) and type np.uint16
+        self.assertEqual(len(image_hsh['pixels.data']), 50 * 50 * 2)
         self.assertTrue(self.device.rawchannelmeta.timestamp)
 
         yield from proxy.send()
