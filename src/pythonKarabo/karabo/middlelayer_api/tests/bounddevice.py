@@ -5,11 +5,12 @@ API cross test
 import numpy
 
 from karabo.bound import (
-    AMPERE, AlarmCondition, Hash, BOOL_ELEMENT, DOUBLE_ELEMENT, Epochstamp,
-    INPUT_CHANNEL, INT32_ELEMENT, VECTOR_STRING_ELEMENT, KARABO_CLASSINFO,
-    KILO, METER, MILLI, NDARRAY_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL,
-    PythonDevice, Schema, SLOT_ELEMENT, State, STRING_ELEMENT, TABLE_ELEMENT,
-    Timestamp, Trainstamp)
+    AMPERE, AlarmCondition, Hash, BOOL_ELEMENT, DOUBLE_ELEMENT, Encoding,
+    Epochstamp, ImageData, IMAGEDATA_ELEMENT, INPUT_CHANNEL, INT32_ELEMENT,
+    VECTOR_STRING_ELEMENT, KARABO_CLASSINFO, KILO, METER, MILLI,
+    NDARRAY_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL, PythonDevice,
+    Schema, SLOT_ELEMENT, State, STRING_ELEMENT, TABLE_ELEMENT,
+    Timestamp, Trainstamp, Types)
 
 
 @KARABO_CLASSINFO("TestDevice", "1.5")
@@ -26,6 +27,37 @@ class TestDevice(PythonDevice):
             .commit(),
 
             STRING_ELEMENT(tableSchema).key("s")
+            .assignmentOptional()
+            .noDefaultValue()
+            .commit()
+        )
+        pipeSchema = Schema()
+        (
+            # the default type of a NDARRAY elements and of IMAGEDATA
+            # are now UNKNOWN. Here are left unspecified to test that
+            # the integration tests do not require this definition.
+            NDARRAY_ELEMENT(pipeSchema).key("ndarray")
+            .dtype(Types.FLOAT)
+            .shape("10")
+            .commit(),
+
+            IMAGEDATA_ELEMENT(pipeSchema).key("image")
+            .setDimensions("50,50")
+            .setEncoding(Encoding.GRAY)
+            .commit(),
+
+            # note, this will never be set by `send`
+            # it is to prove that a raw channel input can manage
+            # data mismatching the schema and an normal channel
+            # does not fail in case of mismatching schema.
+            DOUBLE_ELEMENT(pipeSchema).key("d")
+            .unit(METER)
+            .metricPrefix(KILO)
+            .assignmentOptional()
+            .noDefaultValue()
+            .commit(),
+
+            STRING_ELEMENT(pipeSchema).key("s")
             .assignmentOptional()
             .noDefaultValue()
             .commit()
@@ -119,7 +151,7 @@ class TestDevice(PythonDevice):
             .commit(),
 
             OUTPUT_CHANNEL(expected).key("output2")
-            .dataSchema(tableSchema)
+            .dataSchema(pipeSchema)
             .commit(),
 
             INPUT_CHANNEL(expected).key("input")
@@ -214,7 +246,12 @@ class TestDevice(PythonDevice):
 
     def send(self):
         self.writeChannel("output1", Hash("e", 5, "s", "hallo"))
-        self.writeChannel("output2", Hash("e", 5, "s", "hallo"))
+        node = Hash("e", 5, "s", "hallo")
+        arr = numpy.full((10), 42., dtype=numpy.float32)
+        node.set("ndarray", arr)
+        imArr = numpy.full((50, 50), 42, dtype=numpy.uint16)
+        node.set("image", ImageData(imArr, encoding=Encoding.GRAY))
+        self.writeChannel("output2", node)
 
     def end(self):
         self.signalEndOfStream("output1")
