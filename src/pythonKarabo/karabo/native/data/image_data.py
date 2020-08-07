@@ -7,6 +7,7 @@ from karabo.native.data.hash import (
     VectorInt32, VectorUInt64)
 from karabo.native.data.schema import Configurable
 from karabo.native.data.ndarray import NDArray
+from karabo.native.data.utils import dtype_from_number
 
 
 def convert_dtype(dtype):
@@ -177,7 +178,7 @@ class Image(Type):
                 return NoneValue(descriptor=self)
 
             pixels = data["pixels"]
-            dtype = numpy.dtype(Type.types[pixels["type"]].numpy)
+            dtype = dtype_from_number(data["type"])
             dtype = dtype.newbyteorder(">" if pixels["isBigEndian"] else "<")
             ar = numpy.frombuffer(pixels["data"], count=pixels["shape"].prod(),
                                   dtype=dtype)
