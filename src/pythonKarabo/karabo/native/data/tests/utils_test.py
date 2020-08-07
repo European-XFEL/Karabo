@@ -18,6 +18,10 @@ class Tests(TestCase):
         dtype = dtype_from_number(16)
         self.assertEqual(dtype, np.int64)
 
+    def test_numpy_unknwon(self):
+        dtype = dtype_from_number(39)
+        self.assertEqual(dtype, np.object_)
+
     def test_get_image_data(self):
         h = Hash()
         h['data.image.pixels'] = Hash()
