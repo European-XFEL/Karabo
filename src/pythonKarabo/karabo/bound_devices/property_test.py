@@ -416,6 +416,7 @@ class PropertyTest(PythonDevice):
             SLOT_ELEMENT(expected).key("writeOutput")
             .displayedName("Write to Output")
             .description("Write once to output channel 'Output'")
+            .allowedStates(State.NORMAL)
             .commit(),
 
             FLOAT_ELEMENT(expected).key("outputFrequency")
@@ -586,9 +587,9 @@ class PropertyTest(PythonDevice):
         self._writingWorker.start()
 
     def stopWritingOutput(self):
+        self.updateState(State.STOPPING)
         with self._writingMutex:
             self._writingOutput = False
-        self.updateState(State.STOPPING)
         self._writingWorker.join()
         self._writingWorker = None
 
@@ -601,6 +602,7 @@ class PropertyTest(PythonDevice):
         # Always run at least once: write should start immediately
         shouldWrite = True
         while shouldWrite:
+            before = time.clock()
             self.writeOutput()
 
             with self._writingMutex:
@@ -609,8 +611,9 @@ class PropertyTest(PythonDevice):
             if shouldWrite:
                 # Waits for an interval as close as possible to the interval
                 # defined by the nominal outputFrequency.
-                delayTime = 1.0 / self.get("outputFrequency")
-                time.sleep(delayTime)
+                delay = 1.0 / self.get("outputFrequency")
+                delay = max(0., delay - (time.clock() - before))
+                time.sleep(delay)
 
                 # "Refreshes" the shouldWrite flag before entering a new loop
                 # interaction During the sleep an stop command might have been
