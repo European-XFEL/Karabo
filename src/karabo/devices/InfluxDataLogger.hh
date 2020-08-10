@@ -46,7 +46,8 @@ namespace karabo {
 
             void stopLogging() override;
 
-            karabo::net::InfluxDbClient::Pointer m_dbClient;
+            karabo::net::InfluxDbClient::Pointer m_dbClientRead;
+            karabo::net::InfluxDbClient::Pointer m_dbClientWrite;
 
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
 
@@ -95,7 +96,8 @@ namespace karabo {
 
         private:
 
-            karabo::net::InfluxDbClient::Pointer m_client;
+            karabo::net::InfluxDbClient::Pointer m_clientRead;
+            karabo::net::InfluxDbClient::Pointer m_clientWrite;
             const std::string m_dbName;
             std::string m_urlWrite;
             std::string m_urlQuery;
