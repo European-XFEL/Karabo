@@ -36,14 +36,6 @@ private:
     void testAllInstantiated(bool waitForLoggerReady = true);
     void testMigrateFileLoggerData();
 
-    /**
-     * Checks that a call to slotGetPropertyHistory within a time
-     * interval that doesn't contain any record of change to the
-     * property returns the last known value of the property before
-     * the interval.
-     */
-    void testHistoryAfterChanges();
-
     void testInt(bool testPastConf = true);
     void testUInt64(bool testPastConf = false);
     void testFloat(bool testPastConf = false);
@@ -106,6 +98,12 @@ private:
                                               bool useInvalidInfluxUrl = false,
                                               bool useInvalidDbName = false);
 
+    /**
+     * Returns whether the environment composed by the Telegraf writing node and
+     * the InfluxDb reading node is available and responsive.
+     */
+    bool isTelegrafEnvResponsive();
+
     const std::string m_server;
     const std::string m_deviceId;
     const std::string m_fileLoggerDirectory;
@@ -116,8 +114,6 @@ private:
     boost::thread m_eventLoopThread;
     karabo::xms::SignalSlotable::Pointer m_sigSlot;
     karabo::core::DeviceClient::Pointer m_deviceClient;
-
-    static const unsigned int m_flushIntervalSec;
 
     // Used to control switching to Telegraf environment
     std::string m_influxDb_dbName;

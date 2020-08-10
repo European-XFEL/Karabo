@@ -27,7 +27,7 @@ using karabo::util::OVERWRITE_ELEMENT;
 using karabo::util::State;
 using karabo::xms::SLOT_ELEMENT;
 
-#define KRB_TEST_MAX_TIMEOUT 10
+#define KRB_TEST_MAX_TIMEOUT 10 // seconds
 
 /* Timeout, in milliseconds, for a slot request. */
 #define SLOT_REQUEST_TIMEOUT_MILLIS 5000
@@ -35,13 +35,24 @@ using karabo::xms::SLOT_ELEMENT;
 
 /* As the Telegraf environment has a higher request/response roundtrip time, use
    larger interval between retries. */
-#define PAUSE_BEFORE_RETRY_INFLUX 150
-#define PAUSE_BEFORE_RETRY_TELEGRAF 300
+#define PAUSE_BEFORE_RETRY_INFLUX 300
+#define PAUSE_BEFORE_RETRY_TELEGRAF 1000
 #define PAUSE_BEFORE_RETRY_MILLIS (m_switchedToTelegrafEnv ? PAUSE_BEFORE_RETRY_TELEGRAF : PAUSE_BEFORE_RETRY_INFLUX)
 
-#define NUM_RETRY_INFLUX 2000
-#define NUM_RETRY_TELEGRAF 4000
+#define NUM_RETRY_INFLUX 400
+#define NUM_RETRY_TELEGRAF 1200  // TODO: Reduce this to 600 (10 minutes) once load on exflserv10 gets normal.
 #define NUM_RETRY (m_switchedToTelegrafEnv ? NUM_RETRY_TELEGRAF : NUM_RETRY_INFLUX)
+
+#define FLUSH_INTERVAL_SEC_INFLUX 1u
+#define FLUSH_INTERVAL_SEC_TELEGRAF 20u
+#define FLUSH_INTERVAL_SEC (m_switchedToTelegrafEnv ? FLUSH_INTERVAL_SEC_TELEGRAF : FLUSH_INTERVAL_SEC_INFLUX)
+
+/* Interval, in milliseconds, to wait for a sequence of writes to complete before
+   starting checking the write results - this is required to get an appropriate
+   timestamp for the upper limit for the reading range. */
+#define WAIT_WRITES_INFLUX 4000
+#define WAIT_WRITES_TELEGRAF 8000
+#define WAIT_WRITES (m_switchedToTelegrafEnv ? WAIT_WRITES_TELEGRAF : WAIT_WRITES_INFLUX)
 
 static Epochstamp threeDaysBack = Epochstamp() - TimeDuration(3,0,0,0,0);
 
@@ -225,8 +236,6 @@ namespace CppUnit{
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DataLogging_Test);
 
-const unsigned int DataLogging_Test::m_flushIntervalSec = 1u;
-
 // Avoid test collision on CI by specifying a unique prefix.
 static const std::string deviceIdPrefix = !getenv("KARABO_BROKER_TOPIC") ? "" : getenv("KARABO_BROKER_TOPIC");
 
@@ -350,7 +359,7 @@ std::pair<bool, std::string> DataLogging_Test::startLoggers(const std::string& l
                                                             bool useInvalidDbName) {
     Hash manager_conf;
     manager_conf.set("deviceId", "loggerManager");
-    manager_conf.set("flushInterval", m_flushIntervalSec);
+    manager_conf.set("flushInterval", FLUSH_INTERVAL_SEC);
     manager_conf.set<vector < string >> ("serverList",{m_server});
     manager_conf.set("logger", loggerType);
 
@@ -473,7 +482,6 @@ void DataLogging_Test::fileAllTestRunner() {
     testVectorLongLong();
     testVectorUnsignedLongLong();
     testTable();
-    testHistoryAfterChanges();
     // This must be the last test case that relies on the device in m_deviceId (the logged
     // PropertyTest instance) being available at the start of the test case.
     // 'testLastKnownConfiguration' stops the device being logged to make sure that the
@@ -572,6 +580,13 @@ void DataLogging_Test::influxAllTestRunner() {
 
     testAllInstantiated();
 
+    // When the Telegraf environment is not responsive, skips the Telegraf tests.
+    if (m_switchedToTelegrafEnv) {
+        if (!isTelegrafEnvResponsive()) {
+            return;
+        }
+    }
+
     if (!m_switchedToTelegrafEnv) {
         // migration tests are skipped on Telegraf
         // migrate the logger data produced so far into InfluxDB - do at this point so that a DB is for sure created
@@ -597,16 +612,119 @@ void DataLogging_Test::influxAllTestRunner() {
     testVectorUnsignedLongLong(false);
     testTable(false);
 
-    // NOTE:
-    // "testHistoryAfterChanges" is not being called for the Influx based logging: it tests a behavior
-    // of including the last known value of a property if no change had occurred to that property within
-    // the time range passed to slotGetPropertyHistory. As the GUI is not depending on that change and
-    // it would require an extra query to InfluxDb, this behavior of slotGetPropertyHistory hadn't been
-    // migrated to InfluxDb based logging.
-
+    // This must be the last test case that relies on the device in m_deviceId (the logged
+    // PropertyTest instance) being available at the start of the test case.
+    // 'testLastKnownConfiguration' stops the device being logged to make sure that the
+    // last known configuration can be successfully retrieved after the device is gone.
     testLastKnownConfiguration();
+
+    // These deal with their own devices, so comment above about using the PropertyTest instance
+    // in m_deviceId is not applicable.
     testCfgFromPastRestart();
     testSchemaEvolution();
+}
+
+
+bool DataLogging_Test::isTelegrafEnvResponsive() {
+    const int timeoutSecs = 90;
+
+    std::clog
+            << "Check if Telegraf environment is responsive (updates retrieved within "
+            << karabo::util::toString(timeoutSecs) << " secs.) ... "
+            << std::endl;
+
+    bool envResponsive = false;
+
+    // Instantiates a DataLogTestDevice for performing the check: a single property update
+    // followed by a property history retrieval will be used as the "probing" operation.
+    const std::string deviceId(deviceIdPrefix + "TelegrafEnvProbe");
+    const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    auto success = m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId),
+                                               KRB_TEST_MAX_TIMEOUT);
+
+    if (!success.first) {
+        return false;
+    }
+
+    // Checks that the probing device is being logged.
+    bool isLogged = waitForCondition(
+        [this, &loggerId, &deviceId]() {
+            auto loggedIds =
+                 m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged");
+            return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
+        },
+        KRB_TEST_MAX_TIMEOUT * 1000
+    );
+
+    if (!isLogged) {
+        return false;
+    }
+
+    // Probing sequence
+    Epochstamp beforePropUpdate;
+
+    // Updates a property
+    try {
+        m_deviceClient->execute(deviceId, "slotIncreaseValue", KRB_TEST_MAX_TIMEOUT);
+    } catch (std::exception& e) {
+        std::clog << "... (not responsive).\nError during property update: "
+                << e.what() << std::endl;
+        return false;
+    }
+
+
+    // Captures the timepoint after updating the property
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    Epochstamp afterPropUpdate;
+
+    // Makes sure all the writes are done before retrieval.
+    try {
+        m_sigSlot->request(loggerId, "flush")
+                   .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
+                   .receive();
+    } catch(std::exception &e) {
+        std::clog << "... (not responsive).\nError during flush "
+                  << e.what() << std::endl;
+        return false;
+    }
+
+    // Tries to obtain the property update from the Influx node.
+    Hash params;
+    params.set<string>("from", beforePropUpdate.toIso8601());
+    params.set<string>("to", afterPropUpdate.toIso8601());
+    const int maxNumData = 10;
+    params.set<int>("maxNumData", maxNumData);
+
+    vector<Hash> history;
+    std::string replyDevice;
+    std::string replyProperty;
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+
+    // History retrieval may take more than one try; if the retrieval happens
+    // within the timeout limit, the environment is considered responsive.
+    int nTries = timeoutSecs; // number of attempts spaced by 1 sec.
+    while (nTries >= 0 && history.size() != 1) {
+        try {
+            m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "value", params)
+                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(replyDevice, replyProperty, history);
+        } catch (const karabo::util::TimeoutException& e) {
+            // Just consume the exception as it is expected while data is not
+            // ready.
+        } catch (const karabo::util::RemoteException& e) {
+            // Just consume the exception as it is expected while data is not
+            // ready.
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+        nTries--;
+    }
+
+    if (history.size() == 1) {
+        envResponsive = true;
+    }
+
+    std::clog << "... (" << (envResponsive ? "" : "not") << " responsive)." << std::endl;
+
+    return envResponsive;
 }
 
 
@@ -676,68 +794,6 @@ void DataLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
         CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach NORMAL state.",
                                loggerState == karabo::util::State::NORMAL);
     }
-
-    std::clog << "Ok" << std::endl;
-}
-
-
-void DataLogging_Test::testHistoryAfterChanges() {
-
-    const std::string propertyName("int32Property");
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
-    const int max_set = 100;
-
-    std::clog << "Testing Property History retrieval after changes for '" << propertyName << "'... " << std::flush;
-
-    // write a bunch of times
-    for (int i = 0; i < max_set; i++) {
-        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set<int>(m_deviceId, propertyName, i));
-        boost::this_thread::sleep(boost::posix_time::milliseconds(10));
-    }
-
-    Epochstamp es_after;
-    std::string after = es_after.toIso8601();
-    Epochstamp es_wayAfter(es_after.getSeconds() + 60, es_after.getFractionalSeconds());
-    std::string wayAfter = es_wayAfter.toIso8601();
-
-    // wait more than the flush time
-    boost::this_thread::sleep(boost::posix_time::milliseconds(m_flushIntervalSec * 1000 + 250));
-
-    // placeholders, could be skipped but they are here for future expansions of the tests
-    std::string device;
-    std::string property;
-    vector<Hash> history;
-    Hash params;
-    params.set<std::string>("from", after);
-    params.set<std::string>("to", wayAfter);
-    params.set<int>("maxNumData", max_set * 2);
-
-    // FIXME: refactor this once indexing is properly handled.
-    // the history retrieval might take more than one try, it could have to index the files.
-    int nTries = 100;
-    while (nTries >= 0 && history.size() < 1) {
-        try {
-            m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, propertyName, params)
-                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(device, property, history);
-        } catch (const karabo::util::TimeoutException &e) {
-            karabo::util::Exception::clearTrace();
-        } catch (const karabo::util::RemoteException &e) {
-            karabo::util::Exception::clearTrace();
-        }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(SLOT_REQUEST_TIMEOUT_MILLIS));
-        nTries--;
-    }
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("History size should be 1, got " + karabo::util::toString(history.size()) + ".",
-                                 1ul, history.size());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Device name on reply, '" + device + "', differs from expected, '" + m_deviceId + "'.",
-                                 m_deviceId, device);
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Property name on reply, '" + property + "', differs from expected, '" + propertyName + "'.",
-                                 propertyName, property);
-
-    // checking values and timestamps
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong value in history", 99, history[0].get<int>("v"));
-    Epochstamp current = Epochstamp::fromHashAttributes(history[0].getAttributes("v"));
-    CPPUNIT_ASSERT_MESSAGE("Timestamp later than the requested window", current <= es_wayAfter);
 
     std::clog << "Ok" << std::endl;
 }
@@ -1068,8 +1124,8 @@ void DataLogging_Test::testNoInfluxServerHandling() {
                            m_deviceId, withNoServer.toIso8601())
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(conf, schema, cfgAtTime, cfgTime);
     } catch (const karabo::util::RemoteException &exc) {
-        bool condition = (exc.detailedMsg().find("No connection to InfluxDb (query) server available") != std::string::npos)
-            || (exc.detailedMsg().find("Reading from InfluxDB (query)  failed") != std::string::npos);
+        bool condition = (exc.detailedMsg().find("Could not connect to InfluxDb at") != std::string::npos)
+            || (exc.detailedMsg().find("Reading from InfluxDB failed") != std::string::npos);
         CPPUNIT_ASSERT(condition);
         remoteExceptionCaught = true;
     }
@@ -1690,7 +1746,7 @@ void DataLogging_Test::testNans() {
     // higher. If es_afterWrites captured after the sleep instruction refers to a time point that comes before the time
     // Telegraf + Influx are done writing the data, the property history will not be of the expected size and the test
     // will fail.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(7000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(WAIT_WRITES));
 
     // save this instant as a iso string
     Epochstamp es_afterWrites;
@@ -1712,9 +1768,12 @@ void DataLogging_Test::testNans() {
 
     for (const auto& property_pair : properties) {
         int nTries = NUM_RETRY;
-        unsigned int numExceptions = 0;
         unsigned int numChecks = 0;
+        unsigned int numExceptions = 0;
         vector<Hash> history;
+        // TODO: Remove beforeFistsCheck, afterLastCheck and the printout of the statistics for obtaining history a.s.a.
+        //       load on exflserv10 gets normal.
+        Epochstamp beforeFirstCheck;
         while (nTries >= 0 && history.size() != property_pair.second) {
             std::string device, property;
             try {
@@ -1736,6 +1795,14 @@ void DataLogging_Test::testNans() {
             nTries--;
         }
 
+        Epochstamp afterLastCheck;
+        if (static_cast<size_t> (property_pair.second), history.size()) {
+            std::clog << "\ntestNans: History size check for property '"
+                    << property_pair.first << "' succeeded after " << numChecks << " attempt(s) ranging from "
+                    << beforeFirstCheck.toIso8601() << " to " << afterLastCheck.toIso8601()
+                    << " (" << afterLastCheck.elapsed(beforeFirstCheck).getTotalSeconds() << " secs)." << std::endl;
+        }
+
         CPPUNIT_ASSERT_EQUAL_MESSAGE("History size different than expected after " + toString(numChecks) +
                                      " checks:\n\tdeviceId: " + m_deviceId +
                                      "\n\tproperty : " + property_pair.first +
@@ -1745,6 +1812,7 @@ void DataLogging_Test::testNans() {
                                      "\n\tNumber of Exceptions: " + toString(numExceptions) +
                                      "\n\tExceptions:\n" + boost::algorithm::join(exceptionsMsgs, "\n"),
                                      static_cast<size_t> (property_pair.second), history.size());
+
         // Test that the return values match, incl. timestamps
         for (size_t i = 0; i <= max_set; ++i) {
             // First check timestamp - to microsecond precision
@@ -1893,7 +1961,7 @@ void DataLogging_Test::testSchemaEvolution() {
     // higher. If toTimePoint captured after the sleep instruction refers to a time point that comes before the time
     // Telegraf + Influx are done writing the data, the property history will not be of the expected size and the test
     // will fail.
-    boost::this_thread::sleep(boost::posix_time::milliseconds(7000));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(WAIT_WRITES));
 
     // Checks that all the property values set with the expected types can be retrieved.
     Epochstamp toTimePoint;
