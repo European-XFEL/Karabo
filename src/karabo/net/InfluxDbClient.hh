@@ -9,6 +9,7 @@
 #ifndef KARABO_NET_INFLUXDBCLIENT_HH
 #define	KARABO_NET_INFLUXDBCLIENT_HH
 
+#include <atomic>
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -72,34 +73,15 @@ namespace karabo {
              * Check if connection is lost and try to re-establish connection to InfluxDB server
              * @param  hook function that will be called when connection is established
              */
-            void connectDbIfDisconnectedWrite(const AsyncHandler& hook = AsyncHandler());
-
-            void connectDbIfDisconnectedQuery(const AsyncHandler& hook = AsyncHandler());
+            void connectDbIfDisconnected(const AsyncHandler& hook = AsyncHandler());
 
             /**
              * Returns true if connection is established to InfluxDB server
              */
-            bool isConnectedWrite() {
+            bool isConnected() {
                 boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
-                return m_dbChannelWrite && m_dbChannelWrite->isOpen();
+                return m_dbChannel && m_dbChannel->isOpen();
             }
-
-            /**
-             * Returns true if connection is established to InfluxDB server
-             */
-            bool isConnectedQuery() {
-                boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
-                return m_dbChannelQuery && m_dbChannelQuery->isOpen();
-            }
-
-            /**
-             * HTTP request "GET /query ..." to InfluxDB server is registered in internal queue.
-             * Non-blocking.  Expect connection to InfluxDB.
-             * @param digest is SELECT expression
-             * @param action callback: void(const HttpResponse&) is called when response comes
-             *               from InfluxDB server
-             */ 
-            void getQueryDb(const std::string& digest, const InfluxResponseHandler& action);
 
             /**
              * HTTP request "GET /query ..." to InfluxDB server is registered in internal queue.
@@ -148,13 +130,9 @@ namespace karabo {
              * @param millis time in milliseconds to wait for connection to be established
              * @return true if connection establshed, or false in case of timeout
              */
-            bool connectWaitWrite(std::size_t millis);
+            bool connectWait(std::size_t millis);
 
-            bool connectWaitQuery(std::size_t millis);
-
-            void disconnectWrite();
-
-            void disconnectQuery();
+            void disconnect();
 
         private:
 
@@ -164,36 +142,23 @@ namespace karabo {
              *        Malformed requests resulting in response code 4xx
              * @param requestId unique id of the HTTP request to be sent to Influx.
              */
-            void writeDb(const karabo::net::Channel::Pointer& channel,
-                         const std::string& message,
+            void writeDb(const std::string& message,
                          const std::string& requestId);
 
             /**
              * Low-level callback called when connection to InfluxDB is established
              */
-            void onDbConnectWrite(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const AsyncHandler& hook);
-
-            void onDbConnectQuery(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const AsyncHandler& hook);
+            void onDbConnect(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const AsyncHandler& hook);
 
             /**
              * Low-level callback called when reading is done
              */
-            void onDbReadWrite(const karabo::net::ErrorCode& ec, const std::string& data);
-
-            void onDbReadQuery(const karabo::net::ErrorCode& ec, const std::string& data);
+            void onDbRead(const karabo::net::ErrorCode& ec, const std::string& data);
 
             /**
              * Low-level callback called when writing into networks interface is done
              */
-            void onDbWriteWrite(const karabo::net::ErrorCode& ec, boost::shared_ptr<std::vector<char> > p);
-
-            void onDbWriteQuery(const karabo::net::ErrorCode& ec, boost::shared_ptr<std::vector<char> > p);
-
-            /**
-             * Actual "GET /query ..." is accomplished. Non-blocking call. The connection to InfluxDB
-             * has to be established before this call
-             */
-            void getQueryDbTask(const std::string& digest, const InfluxResponseHandler& action);
+            void onDbWrite(const karabo::net::ErrorCode& ec, boost::shared_ptr<std::vector<char> > p);
 
             /**
              * HTTP request "POST /write ..." to InfluxDB server is registered in internal queue.
@@ -244,8 +209,7 @@ namespace karabo {
             /**
              * Send HTTP request to InfluxDb.  Helper function.
              */
-            void sendToInfluxDb(const karabo::net::Channel::Pointer& channel,
-                                const std::string& msg,
+            void sendToInfluxDb(const std::string& msg,
                                 const InfluxResponseHandler& action,
                                 const std::string& requestId);
 
@@ -261,34 +225,26 @@ namespace karabo {
 
        private:
 
-            std::string m_urlWrite;
-            std::string m_urlQuery;
-            karabo::net::Connection::Pointer m_dbConnectionWrite;
-            karabo::net::Channel::Pointer m_dbChannelWrite;
-            karabo::net::Connection::Pointer m_dbConnectionQuery;
-            karabo::net::Channel::Pointer m_dbChannelQuery;
+            std::string m_url;
+            karabo::net::Connection::Pointer m_dbConnection;
+            karabo::net::Channel::Pointer m_dbChannel;
             std::queue<boost::function<void()> > m_requestQueue;
             boost::mutex m_requestQueueMutex;
-            bool m_active;
+            std::atomic<bool> m_active;
             boost::mutex m_connectionRequestedMutex;
-            bool m_connectionRequestedWrite;
-            bool m_connectionRequestedQuery;
+            std::atomic<bool> m_connectionRequested;
             // maps Request-Id to pair of HTTP request string and action callback
             boost::mutex m_responseHandlersMutex;
             std::unordered_map<std::string, std::pair<std::string, InfluxResponseHandler> > m_registeredInfluxResponseHandlers;
 
-            // Unique ids of the individual HTTP requests that can be "flying" between the DbClient and Influx at
-            // a given moment for the read (query) and write channels (one request per channel). If the TCP
-            // connection between the DbClient and Influx gets compromissed before the HTTP response is received, 
-            // these temporarily stored Ids are used to clean up the map that stores the association between 
-            // requests and response handlers.
-            std::string m_flyingQueryId;
-            std::string m_flyingWriteId;
+            // Unique id of the individual HTTP request that can be "flying" between the DbClient and Influx at
+            // a given moment for the TCP channel. If the TCP connection between the DbClient and Influx gets
+            // compromissed before the HTTP response is received, this temporarily stored Id is used to clean
+            // up the map that stores the association between requests and response handlers.
+            std::string m_flyingId;
 
-            HttpResponse m_responseRead;
-            HttpResponse m_responseWrite;
-            std::string m_hostnameWrite;
-            std::string m_hostnameQuery;
+            HttpResponse m_response;
+            std::string m_hostname;
             std::string m_dbname;
             std::string m_durationUnit;
             static boost::mutex m_uuidGeneratorMutex;
@@ -298,10 +254,8 @@ namespace karabo {
             boost::mutex m_bufferMutex;
             std::stringstream m_buffer;
             std::uint32_t m_nPoints;
-            std::string m_dbUserWrite;
-            std::string m_dbPasswordWrite;
-            std::string m_dbUserQuery;
-            std::string m_dbPasswordQuery;
+            std::string m_dbUser;
+            std::string m_dbPassword;
         };
 
     } // namespace net
