@@ -193,8 +193,10 @@ namespace karabo {
             // Initiate connection to logged devices - will leave INIT state when all are connected (or failed)
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             auto counter = boost::make_shared<std::atomic<unsigned int>>(m_perDeviceData.size());
-            if (0 == *counter) {
-                // No devices to log, so declare readiness immediately
+            if (0 == *counter && this->get<karabo::util::State>("state") == State::INIT) {
+                // No devices to log, so declare readiness immediately. The requirement
+                // of being INIT state avoids overwriting any ERROR (or other) state
+                // that might have been set by an instance of a DataLogger subclass.
                 updateState(State::NORMAL);
             } else {
                 for (DeviceDataMap::value_type& pair : m_perDeviceData) {
@@ -310,8 +312,11 @@ namespace karabo {
 
 
         void DataLogger::checkReady(std::atomic<unsigned int>& counter) {
-            // Update State once all configured device are connected
-            if (--counter == 0) {
+            // Update State once all configured device are connected.
+            // The requirement of being INIT state avoids overwriting any ERROR
+            // (or other) state that might have been set by an instance of a
+            // DataLogger subclass.
+            if (--counter == 0 && this->get<karabo::util::State>("state") == State::INIT) {
                 updateState(State::NORMAL);
             }
         }
