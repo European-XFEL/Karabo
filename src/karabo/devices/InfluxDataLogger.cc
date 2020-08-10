@@ -29,7 +29,8 @@ namespace karabo {
 
         InfluxDeviceData::InfluxDeviceData(const karabo::util::Hash& input)
             : DeviceData(input)
-            , m_dbClient(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientPointer"))
+            , m_dbClientRead(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientReadPointer"))
+            , m_dbClientWrite(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientWritePointer"))
             , m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin"))
             , m_archive() {
         }
@@ -56,8 +57,8 @@ namespace karabo {
                 const unsigned long long ts = m_lastDataTimestamp.toTimestamp() * PRECISION_FACTOR;
                 ss << deviceId << "__EVENTS,type=\"-LOG\" karabo_user=\"" << m_user << "\" " << ts << "\n";
             }
-            m_dbClient->enqueueQuery(ss.str());
-            m_dbClient->flushBatch();
+            m_dbClientWrite->enqueueQuery(ss.str());
+            m_dbClientWrite->flushBatch();
 
             KARABO_LOG_FRAMEWORK_INFO << "Proxy for \"" << deviceId << "\" is destroyed ...";
         }
@@ -65,7 +66,7 @@ namespace karabo {
 
         void InfluxDeviceData::handleChanged(const karabo::util::Hash& configuration, const std::string& user) {
 
-            m_dbClient->connectDbIfDisconnectedWrite();
+            m_dbClientWrite->connectDbIfDisconnected();
 
             if (user.empty()) {
                 m_user = ".";
@@ -195,7 +196,7 @@ namespace karabo {
                     ss << deviceId << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\" " << ts << "\n";
 
                     m_pendingLogin = false;
-                    m_dbClient->enqueueQuery(ss.str());
+                    m_dbClientWrite->enqueueQuery(ss.str());
                 }
 
                 // isFinite matters only for FLOAT/DOUBLE
@@ -324,7 +325,7 @@ namespace karabo {
                 query << " " << ts;
             }
             query << "\n";
-            m_dbClient->enqueueQuery(query.str());
+            m_dbClientWrite->enqueueQuery(query.str());
             query.str("");
         }
 
@@ -334,8 +335,8 @@ namespace karabo {
             // Before checking client status: enables buffering of property updates in handleChanged:
             m_currentSchema = schema;
 
-            if (!m_dbClient->isConnectedQuery()) {
-                m_dbClient->connectDbIfDisconnectedQuery();
+            if (!m_dbClientRead->isConnected()) {
+                m_dbClientRead->connectDbIfDisconnected();
                 KARABO_LOG_FRAMEWORK_WARN << "Skip schema updated: DB connection is requested...";
                 return;
             }
@@ -357,8 +358,8 @@ namespace karabo {
             std::ostringstream oss;
             oss << "SELECT COUNT(*) FROM \"" << m_deviceToBeLogged
                     << "__SCHEMAS\" WHERE digest='\"" << schDigest << "\"'";
-            m_dbClient->getQueryDb(oss.str(), bind_weak(&InfluxDeviceData::checkSchemaInDb, this,
-                                                        stamp, schDigest, _1));
+            m_dbClientRead->queryDb(oss.str(), bind_weak(&InfluxDeviceData::checkSchemaInDb, this,
+                                                         stamp, schDigest, _1));
         }
 
 
@@ -382,12 +383,12 @@ namespace karabo {
                 ss << m_deviceToBeLogged << "__SCHEMAS," << "digest=\""
                         << schDigest << "\" schema=\"" << base64Schema << "\"\n";
                 // Flush what was accumulated before ...
-                m_dbClient->flushBatch();
+                m_dbClientWrite->flushBatch();
             }
             // digest already exists!
             KARABO_LOG_FRAMEWORK_DEBUG << "checkSchemaInDb ...\n" << o.payload;
-            m_dbClient->enqueueQuery(ss.str());
-            m_dbClient->flushBatch();
+            m_dbClientWrite->enqueueQuery(ss.str());
+            m_dbClientWrite->flushBatch();
         }
 
 
@@ -444,12 +445,6 @@ namespace karabo {
             m_urlWrite = input.get<std::string>("urlWrite");
             m_urlQuery = input.get<std::string>("urlQuery");
 
-            Hash config("dbname", m_dbName,
-                        "urlWrite", m_urlWrite,
-                        "urlQuery", m_urlQuery,
-                        "durationUnit", DUR,
-                        "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
-
             std::string dbUserWrite;
             if (getenv("KARABO_INFLUXDB_WRITE_USER")) {
                 dbUserWrite = getenv("KARABO_INFLUXDB_WRITE_USER");
@@ -478,12 +473,25 @@ namespace karabo {
                 dbPasswordQuery = dbPasswordWrite;
             }
 
-            config.set<std::string>("dbUserWrite", dbUserWrite);
-            config.set<std::string>("dbPasswordWrite", dbPasswordWrite);
-            config.set<std::string>("dbUserQuery", dbUserQuery);
-            config.set<std::string>("dbPasswordQuery", dbPasswordQuery);
+            Hash configWrite("dbname", m_dbName,
+                             "url", m_urlWrite,
+                             "durationUnit", DUR,
+                             "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
 
-            m_client = Configurator<InfluxDbClient>::create("InfluxDbClient", config);
+            configWrite.set<std::string>("dbUser", dbUserWrite);
+            configWrite.set<std::string>("dbPassword", dbPasswordWrite);
+
+            m_clientWrite = Configurator<InfluxDbClient>::create("InfluxDbClient", configWrite);
+
+            Hash configRead("dbname", m_dbName,
+                            "url", m_urlQuery,
+                            "durationUnit", DUR,
+                            "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
+
+            configRead.set<std::string>("dbUser", dbUserQuery);
+            configRead.set<std::string>("dbPassword", dbPasswordQuery);
+
+            m_clientRead = Configurator<InfluxDbClient>::create("InfluxDbClient", configRead);
         }
 
 
@@ -497,7 +505,7 @@ namespace karabo {
 
             auto prom = boost::make_shared<std::promise<void>>();
             std::future<void> fut = prom->get_future();
-            m_client->flushBatch([prom](const HttpResponse & resp) {
+            m_clientWrite->flushBatch([prom](const HttpResponse & resp) {
                 prom->set_value();
             });
 
@@ -513,7 +521,8 @@ namespace karabo {
 
         DeviceData::Pointer InfluxDataLogger::createDeviceData(const karabo::util::Hash& cfg) {
             Hash config = cfg;
-            config.set("dbClientPointer", m_client);
+            config.set("dbClientReadPointer", m_clientRead);
+            config.set("dbClientWritePointer", m_clientWrite);
             DeviceData::Pointer deviceData =
                     Factory<DeviceData>::create<karabo::util::Hash>("InfluxDataLoggerDeviceData", config);
             return deviceData;
@@ -521,27 +530,31 @@ namespace karabo {
 
 
         void InfluxDataLogger::initializeLoggerSpecific() {
-            m_client->connectDbIfDisconnectedQuery(bind_weak(&InfluxDataLogger::checkDb, this));
+            m_clientWrite->connectDbIfDisconnected(bind_weak(&InfluxDataLogger::checkDb, this));
         }
 
 
         void InfluxDataLogger::showDatabases(const InfluxResponseHandler& action) {
             std::string statement = "SHOW DATABASES";
-            m_client->postQueryDb(statement, action);
+            m_clientRead->postQueryDb(statement, action);
             KARABO_LOG_FRAMEWORK_INFO << statement << "\n";
         }
 
 
         void InfluxDataLogger::createDatabase(const InfluxResponseHandler& action) {
             const std::string statement = "CREATE DATABASE " + m_dbName;
-            m_client->postQueryDb(statement, action);
+            m_clientWrite->postQueryDb(statement, action);
             KARABO_LOG_FRAMEWORK_INFO << statement << "\n";
         }
 
 
         void InfluxDataLogger::onCreateDatabase(const HttpResponse& o) {
-            if (o.code >= 300) {
-                // Database not available and could not be created.
+            if (o.code >= 300 ||
+                (o.code == 200 && o.payload.find("statement-id") == std::string::npos)) {
+                // Database not available and could not be created. A response for an unsuccessful database creation
+                // can also have a 200 status code but will have the fixed payload '{"result":[]}'. A successful
+                // database creation will have a 200 status code, will have 'chunked' as transfer encoding and will
+                // have the payload '{"results:[{"stattement-id":0}]}'.
                 KARABO_LOG_FRAMEWORK_ERROR << "Database '" << m_dbName << "' not available. "
                         << "Tried to create it but got error with http status code '"
                         << o.code << "' and message '" << o.message << "'. InfluxDataLogger going to ERROR state.";
@@ -597,14 +610,14 @@ namespace karabo {
                 return;
             }
 
-                KARABO_LOG_FRAMEWORK_INFO << "X-Influxdb-Build: " << o.build << ", X-Influxdb-Version: " << o.version;
-                showDatabases(bind_weak(&karabo::devices::InfluxDataLogger::onShowDatabases, this, _1));
+            KARABO_LOG_FRAMEWORK_INFO << "X-Influxdb-Build: " << o.build << ", X-Influxdb-Version: " << o.version;
+            showDatabases(bind_weak(&karabo::devices::InfluxDataLogger::onShowDatabases, this, _1));
         }
 
 
         void InfluxDataLogger::checkDb() {
             KARABO_LOG_FRAMEWORK_INFO << "PING InfluxDB server ...";
-            m_client->getPingDb(bind_weak(&karabo::devices::InfluxDataLogger::onPingDb, this, _1));
+            m_clientWrite->getPingDb(bind_weak(&karabo::devices::InfluxDataLogger::onPingDb, this, _1));
         }
 
 
@@ -622,7 +635,7 @@ namespace karabo {
                     }
                 };
             }
-            m_client->flushBatch(handler);
+            m_clientWrite->flushBatch(handler);
         }
     }
 }
