@@ -110,6 +110,7 @@ namespace karabo {
 
         const unsigned long InfluxLogReader::kSecConversionFactor = 1000000;
         const unsigned long InfluxLogReader::kFracConversionFactor = 1000000000000;
+        const int InfluxLogReader::kMaxHistorySize = 10000;
 
         void InfluxLogReader::expectedParameters(karabo::util::Schema &expected) {
 
@@ -123,6 +124,12 @@ namespace karabo {
                     .displayedName("Database name")
                     .description("Name of the database in which the data resides")
                     .assignmentMandatory()
+                    .commit();
+
+            INT32_ELEMENT(expected).key("maxHistorySize")
+                    .displayedName("Max. Property History Size")
+                    .description("Maximum value allowed for the 'maxNumData' parameter in a call to slot 'getPropertyHistory'.")
+                    .readOnly().initialValue(kMaxHistorySize)
                     .commit();
         }
 
@@ -175,9 +182,20 @@ namespace karabo {
             Epochstamp to;
             if (params.has("to"))
                 to = Epochstamp(params.get<std::string>("to"));
-            int maxNumData = 0;
+            int maxNumData = kMaxHistorySize;
             if (params.has("maxNumData"))
                 maxNumData = params.get<int>("maxNumData");
+            if (maxNumData == 0) {
+                // 0 is interpreted as unlimited, but for the Influx case a limit is
+                // always enforced.
+                maxNumData = kMaxHistorySize;
+            }
+
+            if (maxNumData < 0 || maxNumData > kMaxHistorySize) {
+                throw KARABO_PARAMETER_EXCEPTION("'maxNumData' parameter is intentionally limited to a maximum of '"
+                                                 + karabo::util::toString(kMaxHistorySize) + "'. "
+                                                 + "Property History polling is not designed for Scientific Data Analysis.");
+            }
 
             // This prevents the slot from sending an automatic empty response at the end of
             // the slot method execution. Either a success reply or an error reply must be
@@ -199,7 +217,11 @@ namespace karabo {
 
             std::ostringstream iqlQuery;
 
-            iqlQuery << "SELECT COUNT(/^" << ctxt->property << "-.*|_tid/) FROM \""
+            /* The query for data count, differently from the query for the property values (or samples) that will
+               be executed later,  doesn't select the '_tid' field. The goal of this query is to count how many
+               entries will exist in the property history and '_tid' field entries only make into the resulting
+               property history as attributes of entries. */
+            iqlQuery << "SELECT COUNT(/^" << ctxt->property << "-.*/) FROM \""
                     << ctxt->deviceId << "\" WHERE time >= " << epochAsMicrosecString(ctxt->from) << m_durationUnit
                     << " AND time <= " << epochAsMicrosecString(ctxt->to) << m_durationUnit;
 
@@ -282,7 +304,7 @@ namespace karabo {
 
             std::ostringstream iqlQuery;
 
-            iqlQuery << "SELECT SAMPLE(/^" << ctxt->property << "-.*|_tid/, " << ctxt->maxDataPoints << ") FROM \""
+            iqlQuery << "SELECT SAMPLE(/^" << ctxt->property << "-.*/, " << ctxt->maxDataPoints << ") FROM \""
                     << ctxt->deviceId << "\" WHERE time >= " << epochAsMicrosecString(ctxt->from) << m_durationUnit
                     << " AND time <= " << epochAsMicrosecString(ctxt->to) << m_durationUnit;
 

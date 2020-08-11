@@ -581,14 +581,16 @@ namespace karabo {
         }
 
 
-        void InfluxDbClient::queryDb(const std::string& sel, const InfluxResponseHandler& action) {
+        void InfluxDbClient::queryDb(const std::string& sel,
+                                     const InfluxResponseHandler& action) {
             boost::mutex::scoped_lock lock(m_requestQueueMutex);
             m_requestQueue.push(bind_weak(&InfluxDbClient::queryDbTask, this, sel, action));
             tryNextRequest();
         }
 
 
-        void InfluxDbClient::queryDbTask(const std::string& sel, const InfluxResponseHandler& action) {
+        void InfluxDbClient::queryDbTask(const std::string& sel,
+                                         const InfluxResponseHandler& action) {
             if (!this->connectWait(k_connTimeoutMs)) {
                 std::ostringstream oss;
                 oss << "Could not connect to InfluxDb at \"" << m_url << "\".";
@@ -609,7 +611,7 @@ namespace karabo {
             }
             const std::string requestId(generateUUID());
             std::ostringstream oss;
-            oss << "GET /query?chunked=true&db=" << m_dbname << "&epoch=" << m_durationUnit
+            oss << "GET /query?db=" << m_dbname << "&epoch=" << m_durationUnit
                     << "&q=" << urlencode(sel);
             if (!m_dbUser.empty() && !m_dbPassword.empty()) {
                 oss << "&u=" << urlencode(m_dbUser) << "&p=" << urlencode(m_dbPassword);
