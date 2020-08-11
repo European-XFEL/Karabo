@@ -91,7 +91,8 @@ namespace karabo {
              * @param action callback: void(const HttpResponse&) is called when response comes
              *               from InfluxDB server
              */
-            void queryDb(const std::string& statement, const InfluxResponseHandler& action);
+            void queryDb(const std::string& statement,
+                         const InfluxResponseHandler& action);
 
             /**
              * HTTP request "POST /query ..." to InfluxDB server is registered in internal queue.
@@ -193,7 +194,8 @@ namespace karabo {
              * Actual "GET /query ..." is accomplished. If no connection to DB, this call is blocked
              * until the connection is established.  Otherwise the call is non-blocking.
              */
-            void queryDbTask(const std::string& statement, const InfluxResponseHandler& action);
+            void queryDbTask(const std::string& statement,
+                             const InfluxResponseHandler& action);
 
             /**
              * Generic wrap callback is called and call in turn the user "action".
