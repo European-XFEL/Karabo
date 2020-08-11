@@ -231,6 +231,7 @@ namespace karabo {
 
             static const unsigned long kSecConversionFactor;
             static const unsigned long kFracConversionFactor;
+            static const int kMaxHistorySize;
         };
 
 

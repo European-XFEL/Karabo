@@ -92,6 +92,23 @@ private:
      */
     void testSchemaEvolution();
 
+    /**
+     * Checks that the InfluxLogReader doesn't accept out of range
+     * values for the 'maxNumData' parameter in calls to
+     * 'slotGetPropertyHistory'.
+     */
+    void testMaxNumDataRange();
+
+    /**
+     * Checks that the InfluxLogReader is properly enforcing the
+     * 'maxNumData' parameter in calls to 'slotGetPropertyHistory'.
+     * Histories with up to 'maxNumData' entries should return
+     * 'maxNumData' property values as they were written. Histories
+     * with more than 'maxNumData' entries should return 'maxNumData'
+     * property values samples.
+     */
+    void testMaxNumDataHistory();
+
     template <class T> void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
 
     std::pair<bool, std::string> startDataLoggerManager(const std::string& loggerType,
