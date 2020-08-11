@@ -559,6 +559,198 @@ void DataLogging_Test::testMigrateFileLoggerData() {
 }
 
 
+void DataLogging_Test::testMaxNumDataRange() {
+
+    std::clog << "Check if InfluxLogReader is validating range for 'maxNumData' for slot 'getPropertyHistory' ... ";
+
+    const std::string dlReader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    const std::string outOfRangeErrMsg("'maxNumData' parameter is intentionally limited to a maximum of");
+
+    const int readerMaxHistSize = m_deviceClient->get<int>(dlReader0, "maxHistorySize");
+
+    Epochstamp refEpoch;
+
+    Hash params;
+    params.set<string>("from", (refEpoch - TimeDuration(30, 0)).toIso8601());
+    params.set<string>("to", refEpoch.toIso8601());
+    params.set<int>("maxNumData", readerMaxHistSize + 1);
+
+    vector<Hash> history;
+    std::string replyDevice, replyProperty;
+
+    // Values past InfluxLogReader::maxHistorySize must be rejected.
+    try {
+        m_sigSlot->request(dlReader0, "slotGetPropertyHistory", dlReader0, "url", params)
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(replyDevice, replyProperty, history);
+
+    } catch (karabo::util::RemoteException& e) {
+        const std::string& errMsg = e.userFriendlyMsg();
+        CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg) != std::string::npos);
+    }
+
+    // Negative values must be rejected.
+    params.set<int>("maxNumData", -1);
+    try {
+        m_sigSlot->request(dlReader0, "slotGetPropertyHistory", dlReader0, "url", params)
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(replyDevice, replyProperty, history);
+
+    } catch (karabo::util::RemoteException& e) {
+        const std::string& errMsg = e.userFriendlyMsg();
+        CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg) != std::string::npos);
+    }
+
+    // 0 must be accepted - it as if InfluxLogReader::maxHistorySize has been used.
+    params.set<int>("maxNumData", 0);
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlReader0, "slotGetPropertyHistory", dlReader0, "url", params)
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(replyDevice, replyProperty, history));
+
+    // InfluxLogReader::maxHistorySize must be accepted.
+    params.set<int>("maxNumData", readerMaxHistSize);
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlReader0, "slotGetPropertyHistory", dlReader0, "url", params)
+                            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(replyDevice, replyProperty, history));
+
+    std::clog << "OK" << std::endl;
+}
+
+
+void DataLogging_Test::testMaxNumDataHistory() {
+
+    std::clog
+            << "Check if InfluxLogReader is properly enforcing the 'maxNumData' parameter for slot 'getPropertyHistory' ..."
+            << std::endl;
+
+    bool envResponsive = false;
+
+    // Instantiates a DataLogTestDevice for performing the check.
+    const std::string deviceId(deviceIdPrefix + "MaxNumDataHistory");
+    const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    const auto res = m_deviceClient->instantiate(m_server, "PropertyTest",
+                                                 Hash("deviceId", deviceId),
+                                                 KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE("Failed to instantiate testing device '" + deviceId
+                           + "':" + res.second,
+                           res.first);
+
+    // Checks that the testing device is being logged.
+    bool isLogged = waitForCondition(
+        [this, &loggerId, &deviceId]() {
+            auto loggedIds =
+                 m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged");
+            return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
+        },
+        KRB_TEST_MAX_TIMEOUT * 1000
+    );
+
+    CPPUNIT_ASSERT_MESSAGE("Failed to start logging of testing device '" + deviceId + ".",
+                           isLogged);
+
+    // Writing sequence - write a sequence of increasing values.
+    Epochstamp beforeWrites;
+    const int numOfWrites = 40;
+    for (int i = 0; i < numOfWrites; i++) {
+        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set<int>(deviceId, "int32Property", i));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+    }
+    // Captures the timepoint after the writes.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    Epochstamp afterWrites;
+
+    // Makes sure all the writes are done before retrieval.
+    CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "flush")
+                                       .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS)
+                                       .receive());
+
+    // Full history retrieval - must retrieve all values exactly as they were
+    // written.
+    Hash params;
+    params.set<string>("from", beforeWrites.toIso8601());
+    params.set<string>("to", afterWrites.toIso8601());
+    const int maxNumDataFull = numOfWrites;
+    params.set<int>("maxNumData", maxNumDataFull);
+
+    vector<Hash> history;
+    std::string replyDevice;
+    std::string replyProperty;
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+
+    // History retrieval may take more than one attempt.
+    const int timeoutSecs = 90;
+    int nTries = timeoutSecs; // number of attempts spaced by 1 sec.
+    while (nTries >= 0 && history.size() != maxNumDataFull) {
+        try {
+            m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "int32Property", params)
+                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(replyDevice, replyProperty, history);
+        } catch (const karabo::util::TimeoutException& e) {
+            // Just consume the exception as it is expected while data is not
+            // ready.
+        } catch (const karabo::util::RemoteException& e) {
+            // Just consume the exception as it is expected while data is not
+            // ready.
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+        nTries--;
+    }
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Size for full history different from expected.",
+                                 static_cast<size_t>(maxNumDataFull),
+                                 history.size());
+    for (int i = 0; i < maxNumDataFull; i++) {
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Value at history entry #"
+                                     + karabo::util::toString(i)
+                                     + " different from expected.",
+                                     i,
+                                     history[i].get<int>("v"));
+    }
+
+    // Sampled history retrieval - must retrieve all values sampled.
+    // The specified 'maxNumData' is half the size of the full history size.
+    const int maxNumDataSampled = numOfWrites/2;
+    params.set<int>("maxNumData", maxNumDataSampled);
+
+    history.clear();
+
+    // History retrieval may take more than one attempt.
+    nTries = timeoutSecs; // number of attempts spaced by 1 sec.
+    while (nTries >= 0 && history.size() != maxNumDataSampled) {
+        try {
+            m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "int32Property", params)
+                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(replyDevice, replyProperty, history);
+        } catch (const karabo::util::TimeoutException& e) {
+            // Just consume the exception as it is expected while data is not
+            // ready.
+        } catch (const karabo::util::RemoteException& e) {
+            // Just consume the exception as it is expected while data is not
+            // ready.
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+        nTries--;
+    }
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Size for sampled history different from expected.",
+                                 static_cast<size_t>(maxNumDataSampled),
+                                 history.size());
+    // Makes sure that the maxNumDataSampled values retrieved are distributed across the
+    // whole set of maxNumDataFull values. A deviation margin is tolerated to accomodate
+    // different timings involved in the writing sequence phase.
+    const int deviationMargin = 8;
+    CPPUNIT_ASSERT_MESSAGE("Value at history entry #0 is outside the expected range: should be between 0 and "
+                           + karabo::util::toString(deviationMargin)
+                           + ", got "
+                           + karabo::util::toString(history[0].get<int>("v")) + ".",
+                           history[0].get<int>("v") >= 0 && history[0].get<int>("v") <= deviationMargin);
+    CPPUNIT_ASSERT_MESSAGE("Value at history entry #"
+                           + karabo::util::toString(history[maxNumDataSampled-1])
+                           + " is outside the expected range: should be between "
+                           + karabo::util::toString(40 - deviationMargin)
+                           + " and 40, got "
+                           + karabo::util::toString(history[maxNumDataSampled-1].get<int>("v")) + ".",
+                           history[maxNumDataSampled - 1].get<int>("v") >= 40 - deviationMargin
+                           && history[maxNumDataSampled - 1].get<int>("v") <= 40);
+
+    std::clog << "... OK" << std::endl;
+}
+
+
 void DataLogging_Test::influxAllTestRunner() {
     // and epoch stamp certainly before the next round of influx logging
     m_fileMigratedDataEndsBefore = Epochstamp();
@@ -579,6 +771,8 @@ void DataLogging_Test::influxAllTestRunner() {
 
     testAllInstantiated();
 
+    testMaxNumDataRange();
+
     // When the Telegraf environment is not responsive, skips the Telegraf tests.
     if (m_switchedToTelegrafEnv) {
         if (!isTelegrafEnvResponsive()) {
@@ -592,6 +786,7 @@ void DataLogging_Test::influxAllTestRunner() {
         testMigrateFileLoggerData();
     }
 
+    testMaxNumDataHistory();
     testNans();
     testInt(true);
     testUInt64(false);
