@@ -274,12 +274,17 @@ namespace karabo {
                     .reconfigurable()
                     .minInc(1).maxInc(600)
                     .commit();
+            
+            STRING_ELEMENT(expected).key("loggermap")
+                    .displayedName("Logger map file")
+                    .assignmentOptional().defaultValue("loggermap.xml")
+                    .commit();
         }
 
         DataLoggerManager::DataLoggerManager(const Hash& input)
             : karabo::core::Device<>(input)
             , m_serverList(input.get<vector<string> >("serverList"))
-            , m_serverIndex(0), m_loggerMapFile("loggermap.xml")
+            , m_serverIndex(0), m_loggerMapFile(input.get<string>("loggermap"))
             , m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService()))
             , m_topologyCheckTimer(karabo::net::EventLoop::getIOService())
             , m_logger("Unsupported") {
