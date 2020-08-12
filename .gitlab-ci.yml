@@ -126,6 +126,8 @@ release build miniconda:
   <<: *release-build-conda
   
 release build miniconda-osx64:
+  before_script:
+    - ci/miniconda/cleanup.sh
   tags:
     - macos
   <<: *release-build-conda
@@ -144,6 +146,8 @@ prerelease build miniconda:
   <<: *prerelease-build-conda
 
 prerelease build miniconda-osx64:
+  before_script:
+    - ci/miniconda/cleanup.sh
   tags:
     - macos
   <<: *prerelease-build-conda
@@ -170,6 +174,8 @@ nightly build ubuntu16:
   <<: *nightly-build
 
 nightly build miniconda-osx64:
+  before_script:
+    - ci/miniconda/cleanup.sh
   tags:
     - macos
   <<: *nightly-build-conda
@@ -232,6 +238,8 @@ unit tests miniconda:
   <<: *unit-tests-conda
 
 unit tests miniconda-osx64:
+  before_script:
+    - ci/miniconda/cleanup.sh
   tags:
     - macos
   <<: *unit-tests-conda
