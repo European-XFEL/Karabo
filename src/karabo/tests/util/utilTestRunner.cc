@@ -14,7 +14,7 @@
 #include <cppunit/TestRunner.h>
 
 
-int main() {
+int main(int argc, char* argv[]) {
     // Create the event manager and test controller
     CPPUNIT_NS::TestResult controller;
 
@@ -28,7 +28,18 @@ int main() {
 
     // Add the top suite to the test runner
     CPPUNIT_NS::TestRunner runner;
-    runner.addTest(CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest());
+    CPPUNIT_NS::Test* test = CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest();
+    if (argc>1) {
+        // one can run a single test by passing the class name as an argumnent. e.g. States_Test
+        try {
+            test = test->findTest(argv[1]);
+        } catch (std::invalid_argument) {
+            // bad argument
+            std::cerr << "Test '" << argv[1] << "' not found!" << std::endl;
+            return 1;
+        }
+    }
+    runner.addTest(test);
     runner.run(controller);
 
     // Print test in a compiler compatible format.
