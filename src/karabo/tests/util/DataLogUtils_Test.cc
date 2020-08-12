@@ -4,12 +4,13 @@
  *
  * Created on February 4, 2019, 9:58 AM
  */
-
 #include "DataLogUtils_Test.hh"
 #include <karabo/util/DataLogUtils.hh>
+#include "karabo/util/Exception.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DataLogUtils_Test);
 
+namespace nl = nlohmann;
 
 DataLogUtils_Test::DataLogUtils_Test() :
     m_indexRegex(karabo::util::DATALOG_INDEX_LINE_REGEX, boost::regex::extended),
@@ -118,3 +119,116 @@ void DataLogUtils_Test::testInvalidIndexLines() {
     }
 }
 
+
+void DataLogUtils_Test::testValueFromJSON(){
+    boost::optional<std::string> value;
+    nl::json j = nl::json::parse(std::string("null"));
+    value = karabo::util::jsonValueAsString(j);
+    CPPUNIT_ASSERT_MESSAGE("optional value set on null input", !value);
+    j = nl::json::parse(std::string("\"anything\""));
+    value = karabo::util::jsonValueAsString(j);
+    CPPUNIT_ASSERT_MESSAGE("optional value not set on string input", value);
+    j = nl::json::parse(std::string("true"));
+    value = karabo::util::jsonValueAsString(j);
+    CPPUNIT_ASSERT_MESSAGE("optional value not set on bool input", value);
+    j = nl::json::parse(std::string("0.1"));
+    value = karabo::util::jsonValueAsString(j);
+    CPPUNIT_ASSERT_MESSAGE("optional value not set on float input", value);
+    j = nl::json::parse(std::string("42"));
+    value = karabo::util::jsonValueAsString(j);
+    CPPUNIT_ASSERT_MESSAGE("optional value not set on integer input", value);
+}
+
+
+void DataLogUtils_Test::testMultipleJSONObjects(){
+    std::string simple = ""
+    "{\"results\":"
+        "[{"
+        "\"statement_id\":0,"
+        "\"series\":[{"
+            "\"name\":\"prop_name\","
+            "\"columns\":[\"time\",\"value\"],"
+            "\"values\":["
+                "[1597043525897755,40],"
+                "[1597043525897855,null]"
+            "]}]"
+        "}]"
+    "}";
+
+    karabo::util::InfluxResultSet simpleInfluxResult;
+    karabo::util::jsonResultsToInfluxResultSet(simple, simpleInfluxResult, "");
+
+    CPPUNIT_ASSERT_EQUAL(2ul, simpleInfluxResult.first.size()); // check the number of columns
+    CPPUNIT_ASSERT_EQUAL(std::string("time"), simpleInfluxResult.first[0]); // check the column title
+    CPPUNIT_ASSERT_EQUAL(std::string("value"), simpleInfluxResult.first[1]); // check the column title
+    CPPUNIT_ASSERT_EQUAL(2ul, simpleInfluxResult.second.size()); // check the number of rows
+    CPPUNIT_ASSERT(simpleInfluxResult.second[0][0]);                                         // 1st row, 1st column is not null
+    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897755"), *simpleInfluxResult.second[0][0]); // 1st row, 1st column: check value
+    CPPUNIT_ASSERT(simpleInfluxResult.second[0][1]);                                         // 1st row, 2nd column is not null
+    CPPUNIT_ASSERT_EQUAL(std::string("40"), *simpleInfluxResult.second[0][1]);               // 1st row, 2nd column: check value
+    CPPUNIT_ASSERT(simpleInfluxResult.second[1][0]);                                         // 2nd row, 1st column is not null
+    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897855"), *simpleInfluxResult.second[1][0]); // 2nd row, 1st column: check value
+    CPPUNIT_ASSERT(!simpleInfluxResult.second[1][1]);                                        // 2nd row, 2nd column **is** null
+    std::string complex = ""
+        "{\"results\":"
+        "[{"
+        "\"statement_id\":0,"
+        "\"series\":[{"
+            "\"name\":\"prop_name\","
+            "\"columns\":[\"time\",\"value\"],"
+            "\"values\":[[1597043525897755,40],[1597043525897855,42]],"
+            "\"partial\":true"
+            "}],"
+        "\"partial\":true"
+        "}]"
+        "}\n{\"results\":"
+        "[{"
+        "\"statement_id\":0,"
+        "\"series\":[{"
+            "\"name\":\"prop_name\","
+            "\"columns\":[\"time\",\"value\"],"
+            "\"values\":[[1597043525897955,44],[1597043525898055,46]]"
+            "}]"
+        "}]}";
+
+    karabo::util::InfluxResultSet complexInfluxResult;
+
+    karabo::util::jsonResultsToInfluxResultSet(complex, complexInfluxResult, "");
+    CPPUNIT_ASSERT_EQUAL(2ul, complexInfluxResult.first.size()); // check the number of columns
+    CPPUNIT_ASSERT_EQUAL(std::string("time"), complexInfluxResult.first[0]); // check the column title
+    CPPUNIT_ASSERT_EQUAL(std::string("value"), complexInfluxResult.first[1]); // check the column title
+    CPPUNIT_ASSERT_EQUAL(4ul, complexInfluxResult.second.size()); // check the number of rows
+    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897755"), *complexInfluxResult.second[0][0]);
+    CPPUNIT_ASSERT_EQUAL(std::string("40"), *complexInfluxResult.second[0][1]);
+    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897855"), *complexInfluxResult.second[1][0]);
+    CPPUNIT_ASSERT_EQUAL(std::string("42"), *complexInfluxResult.second[1][1]);
+    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897955"), *complexInfluxResult.second[2][0]);
+    CPPUNIT_ASSERT_EQUAL(std::string("44"), *complexInfluxResult.second[2][1]);
+    CPPUNIT_ASSERT_EQUAL(std::string("1597043525898055"), *complexInfluxResult.second[3][0]);
+    CPPUNIT_ASSERT_EQUAL(std::string("46"), *complexInfluxResult.second[3][1]);
+
+
+    std::string mixed = ""
+        "{\"results\":"
+        "[{"
+        "\"statement_id\":0,"
+        "\"series\":[{"
+            "\"name\":\"prop_name\","
+            "\"columns\":[\"time\",\"value\"],"
+            "\"values\":[[1597043525897755,40],[1597043525897855,42]],"
+            "\"partial\":true"
+            "}],"
+        "\"partial\":true"
+        "}]"
+        "}\n{\"results\":"
+        "[{"
+        "\"statement_id\":0,"
+        "\"series\":[{"
+            "\"name\":\"prop_name\","
+            "\"columns\":[\"time\",\"ANOTHER_ONE!\"],"
+            "\"values\":[[1597043525897955,44],[1597043525898055,46]]"
+            "}]"
+        "}]}";
+
+    CPPUNIT_ASSERT_THROW(karabo::util::jsonResultsToInfluxResultSet(mixed, complexInfluxResult, ""), karabo::util::NotSupportedException);
+}

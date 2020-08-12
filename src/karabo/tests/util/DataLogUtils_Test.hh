@@ -18,6 +18,8 @@ class DataLogUtils_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST(testValidIndexLines);
     CPPUNIT_TEST(testInvalidIndexLines);
+    CPPUNIT_TEST(testValueFromJSON);
+    CPPUNIT_TEST(testMultipleJSONObjects);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -45,6 +47,8 @@ private:
      */
     void testInvalidIndexLines();
 
+    void testValueFromJSON();
+    void testMultipleJSONObjects();
 
     boost::regex m_indexRegex;
     boost::regex m_indexTailRegex;
