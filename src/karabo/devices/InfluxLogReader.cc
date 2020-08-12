@@ -70,39 +70,6 @@ namespace karabo {
         };
 
 
-        /**
-         * Utility function to convert a json object.
-         *
-         * Declared and defined as an ordinary function in the implementation
-         * file to avoid exposing the JSON parser used internally by the log
-         * reader to its clients.
-         *
-         * @param value
-         * @return
-         */
-        boost::optional<std::string> jsonValueAsString(nl::json value) {
-            if (value.is_number_unsigned()) {
-                return toString(value.get<unsigned long long>());
-            } else if (value.is_number_integer()) {
-                return toString(value.get<long long>());
-            } else if (value.is_number_float()) {
-                return toString(value.get<double>());
-            } else if (value.is_string()) {
-                return value.get<std::string>();
-            } else if (value.is_boolean()) {
-                return toString(value.get<bool>());
-            } else if (value.is_null()) {
-                return boost::none;
-            } else {
-                // The remaining types recognized by the JSON Parser won't be
-                // handled in here. They are: 'is_primitive', 'is_structured',
-                // 'is_number' (already handled by the three 'is_number_*' above),
-                // 'is_object', 'is_array' and 'is_discarded' (can only be true
-                // during JSON parsing).
-                return std::string("");
-            }
-        }
-
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice,
                                           karabo::core::Device<karabo::core::OkErrorFsm>,
                                           DataLogReader,
@@ -695,38 +662,6 @@ namespace karabo {
                 // All properties have been retrieved. Reply to the slot caller.
                 bool configAtTimePoint = ctxt->lastLogoutBeforeTime < ctxt->lastLoginBeforeTime;
                 ctxt->aReply(ctxt->configHash, ctxt->configSchema, configAtTimePoint, ctxt->configTimePoint.toIso8601Ext());
-            }
-        }
-
-
-        void InfluxLogReader::jsonResultsToInfluxResultSet(const std::string &jsonResult,
-                                                           InfluxResultSet &influxResult,
-                                                           const std::string &columnPrefixToRemove) {
-            nl::json respObj = nl::json::parse(jsonResult);
-
-            const auto &columns = respObj["results"][0]["series"][0]["columns"];
-            for (const auto &column : columns) {
-                const std::string columnStr = column.get<std::string>();
-                if (columnPrefixToRemove.empty()) {
-                    influxResult.first.push_back(columnStr);
-                } else {
-                    auto prefixPos = columnStr.find(columnPrefixToRemove);
-                    if (prefixPos == 0) {
-                        influxResult.first.push_back(columnStr.substr(columnPrefixToRemove.size()));
-                    } else {
-                        influxResult.first.push_back(columnStr);
-                    }
-                }
-            }
-
-            const auto &rows = respObj["results"][0]["series"][0]["values"];
-            for (const auto &row : rows) {
-                std::vector<boost::optional<std::string>> rowValues;
-                rowValues.reserve(row.size());
-                for (const auto &value : row) {
-                    rowValues.push_back(jsonValueAsString(value));
-                }
-                influxResult.second.push_back(std::move(rowValues));
             }
         }
 
