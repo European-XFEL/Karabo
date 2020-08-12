@@ -9,9 +9,13 @@
 #define	DATALOGGERSTRUCTS_HH
 
 #include <vector>
+#include <nlohmann/json.hpp>
+#include <boost/optional.hpp>
+
 #include "Epochstamp.hh"
 #include "Hash.hh"
 #include "Schema.hh"
+
 
 namespace karabo {
     namespace util {
@@ -112,6 +116,43 @@ namespace karabo {
 
         void getLeaves_r(const karabo::util::Hash& hash, const karabo::util::Schema& schema, std::vector<std::string>& result,
                          std::string prefix, const char separator, const bool fullPaths);
+
+        /**
+         * Utility function to convert a json object.
+         *
+         * @param value
+         * @return a boost::optional<std::string> a null boost::optional<std::string> matches a null JSON value
+         */
+        boost::optional<std::string> jsonValueAsString(nlohmann::json value);
+
+        // InfluxResultSet is a pair with a vector of column names in its first position and
+        // a vector of rows of values represented as optional strings in its second position.
+        // The optional strings have no value when they correspond to nulls returned by Influx.
+        using InfluxResultSet =
+                std::pair<
+                /* first  */ std::vector<std::string>,
+                /* second */ std::vector<std::vector<boost::optional<std::string>>>
+                >;
+
+        /**
+         * Utility function to convert a string into an InfluxResultSet
+         *
+         * One or multiple concatenated JSON objects containing the results of an InfluxDB query
+         * are decoded and filled into a InfluxResultSet object.
+         *
+         * @param jsonResult : the string containing the JSON object(s)
+         * @param influxResult : the result
+         * @param columnPrefixToRemove : remove this prefix from the column names.
+         *                               InfluxQL selector functions (e.g. SAMPLE) are
+         *                               prepended to the column name. Use this argument to
+         *                               remove said prefixes.
+         * @throw  karabo::util::NotSupportedException in case the column mismatch
+         *         nlohmann::json exceptions in case of malformatted JSON objects.
+         */
+        void jsonResultsToInfluxResultSet(const std::string &jsonResult,
+                                          InfluxResultSet &influxResult,
+                                          const std::string &columnPrefixToRemove);
+
     }
 }
 
