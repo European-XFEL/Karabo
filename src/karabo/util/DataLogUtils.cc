@@ -6,12 +6,14 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include <boost/iostreams/stream.hpp>
 #include "StringTools.hh"
 
 #include "DataLogUtils.hh"
 
 namespace karabo {
     namespace util {
+        namespace nl = nlohmann;
 
 
         util::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble) {
@@ -85,6 +87,91 @@ namespace karabo {
                 }
             }
         }
+
+
+        // helper function for `jsonResultsToInfluxResultSet`
+        void parseSingleJsonResult(const nl::json &respObj,
+                                           InfluxResultSet &influxResult,
+                                           const std::string &columnPrefixToRemove) {
+            const auto &columns = respObj["results"][0]["series"][0]["columns"];
+            std::vector<std::string> columnTitles;
+            for (const auto &column : columns) {
+                const std::string columnStr = column.get<std::string>();
+                const size_t prefixPos = columnStr.find(columnPrefixToRemove);
+                if (columnPrefixToRemove.empty() || prefixPos != 0u) {
+                    columnTitles.push_back(columnStr);
+                } else {
+                    columnTitles.push_back(columnStr.substr(columnPrefixToRemove.size()));
+                }
+            }
+            
+            if (influxResult.first.empty()) {
+                influxResult.first = std::move(columnTitles);
+            } else {
+                if (!std::equal(influxResult.first.begin(), influxResult.first.end(), columnTitles.begin())) {
+                    throw KARABO_NOT_SUPPORTED_EXCEPTION("Mixed column parsing not supported");
+                }
+            }
+
+            const auto &rows = respObj["results"][0]["series"][0]["values"];
+            for (const auto &row : rows) {
+                std::vector<boost::optional<std::string>> rowValues;
+                rowValues.reserve(row.size());
+                for (const auto &value : row) {
+                    rowValues.push_back(jsonValueAsString(value));
+                }
+                influxResult.second.push_back(std::move(rowValues));
+            }
+        }
+
+        void jsonResultsToInfluxResultSet(const std::string &jsonResult,
+                                                           InfluxResultSet &influxResult,
+                                                           const std::string &columnPrefixToRemove) {
+
+            nl::json respObj;
+            // use boost::iostreams::stream for copy-less stream access of the jsonResult string
+            boost::iostreams::stream<boost::iostreams::array_source> inputStream(jsonResult.c_str(), jsonResult.size());
+            while (true) {
+                inputStream >> respObj;
+                parseSingleJsonResult(respObj, influxResult, columnPrefixToRemove);
+                // InfluxDB might return multiple JSON concatenated (sic) objects when the
+                // number of points exceeds a given limit
+                // https://docs.influxdata.com/influxdb/v1.8/tools/api#query-string-parameters
+                const auto &result0 = respObj["results"][0];
+                auto it = result0.find("partial");
+                if (it != result0.end()) {
+                    const auto& partial = *it;
+                    // continue only if partial == true, break otherwise
+                    if (partial.is_boolean() && partial == true) continue;  
+                }
+                break;
+            }
+        }
+
+
+        boost::optional<std::string> jsonValueAsString(nl::json value) {
+            if (value.is_number_unsigned()) {
+                return toString(value.get<unsigned long long>());
+            } else if (value.is_number_integer()) {
+                return toString(value.get<long long>());
+            } else if (value.is_number_float()) {
+                return toString(value.get<double>());
+            } else if (value.is_string()) {
+                return value.get<std::string>();
+            } else if (value.is_boolean()) {
+                return toString(value.get<bool>());
+            } else if (value.is_null()) {
+                return boost::none;
+            } else {
+                // The remaining types recognized by the JSON Parser won't be
+                // handled in here. They are: 'is_primitive', 'is_structured',
+                // 'is_number' (already handled by the three 'is_number_*' above),
+                // 'is_object', 'is_array' and 'is_discarded' (can only be true
+                // during JSON parsing).
+                return std::string("");
+            }
+        }
+
 
     } // end of karabo::util
 }
