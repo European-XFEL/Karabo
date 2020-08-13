@@ -26,6 +26,8 @@ build:
     - karabo-cinema=karabogui.programs.cinema:main
     - karabo-theatre=karabogui.programs.theatre:main
     - karabo-update-extensions=karabogui.dialogs.update_dialog:main
+  # This is needed to avoid removing egg files during packaging with setuptools
+  preserve_egg_dir: True
 
 requirements:
   build:
