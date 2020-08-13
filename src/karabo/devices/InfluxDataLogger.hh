@@ -37,17 +37,18 @@ namespace karabo {
 
             void terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp);
 
-            void checkSchemaInDb(const karabo::util::Timestamp& stamp, const karabo::net::HttpResponse& o);
+            void checkSchemaInDb(const karabo::util::Timestamp& stamp,
+                                 const std::string& schDigest,
+                                 const karabo::net::HttpResponse& o);
 
             void handleSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp) override;
 
             void stopLogging() override;
 
-            karabo::net::InfluxDbClient::Pointer m_dbClient;
+            karabo::net::InfluxDbClient::Pointer m_dbClientRead;
+            karabo::net::InfluxDbClient::Pointer m_dbClientWrite;
 
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
-
-            std::string m_digest;
 
             std::vector<char> m_archive;
 
@@ -94,7 +95,8 @@ namespace karabo {
 
         private:
 
-            karabo::net::InfluxDbClient::Pointer m_client;
+            karabo::net::InfluxDbClient::Pointer m_clientRead;
+            karabo::net::InfluxDbClient::Pointer m_clientWrite;
             const std::string m_dbName;
             std::string m_urlWrite;
             std::string m_urlQuery;

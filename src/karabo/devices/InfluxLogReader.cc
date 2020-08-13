@@ -70,39 +70,6 @@ namespace karabo {
         };
 
 
-        /**
-         * Utility function to convert a json object.
-         *
-         * Declared and defined as an ordinary function in the implementation
-         * file to avoid exposing the JSON parser used internally by the log
-         * reader to its clients.
-         *
-         * @param value
-         * @return
-         */
-        boost::optional<std::string> jsonValueAsString(nl::json value) {
-            if (value.is_number_unsigned()) {
-                return toString(value.get<unsigned long long>());
-            } else if (value.is_number_integer()) {
-                return toString(value.get<long long>());
-            } else if (value.is_number_float()) {
-                return toString(value.get<double>());
-            } else if (value.is_string()) {
-                return value.get<std::string>();
-            } else if (value.is_boolean()) {
-                return toString(value.get<bool>());
-            } else if (value.is_null()) {
-                return boost::none;
-            } else {
-                // The remaining types recognized by the JSON Parser won't be
-                // handled in here. They are: 'is_primitive', 'is_structured',
-                // 'is_number' (already handled by the three 'is_number_*' above),
-                // 'is_object', 'is_array' and 'is_discarded' (can only be true
-                // during JSON parsing).
-                return std::string("");
-            }
-        }
-
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice,
                                           karabo::core::Device<karabo::core::OkErrorFsm>,
                                           DataLogReader,
@@ -110,6 +77,7 @@ namespace karabo {
 
         const unsigned long InfluxLogReader::kSecConversionFactor = 1000000;
         const unsigned long InfluxLogReader::kFracConversionFactor = 1000000000000;
+        const int InfluxLogReader::kMaxHistorySize = 10000;
 
         void InfluxLogReader::expectedParameters(karabo::util::Schema &expected) {
 
@@ -123,6 +91,12 @@ namespace karabo {
                     .displayedName("Database name")
                     .description("Name of the database in which the data resides")
                     .assignmentMandatory()
+                    .commit();
+
+            INT32_ELEMENT(expected).key("maxHistorySize")
+                    .displayedName("Max. Property History Size")
+                    .description("Maximum value allowed for the 'maxNumData' parameter in a call to slot 'getPropertyHistory'.")
+                    .readOnly().initialValue(kMaxHistorySize)
                     .commit();
         }
 
@@ -152,13 +126,10 @@ namespace karabo {
 
             Hash dbClientCfg;
             dbClientCfg.set<std::string>("dbname", dbName);
-            dbClientCfg.set<std::string>("urlQuery", url);
-            dbClientCfg.set<std::string>("urlWrite", "");
+            dbClientCfg.set<std::string>("url", url);
             dbClientCfg.set<std::string>("durationUnit", "u");
-            dbClientCfg.set<std::string>("dbUserQuery", dbUser);
-            dbClientCfg.set<std::string>("dbPasswordQuery", dbPassword);
-            dbClientCfg.set<std::string>("dbUserWrite", "");
-            dbClientCfg.set<std::string>("dbPasswordWrite", "");
+            dbClientCfg.set<std::string>("dbUser", dbUser);
+            dbClientCfg.set<std::string>("dbPassword", dbPassword);
             m_influxClient = Configurator<InfluxDbClient>::create("InfluxDbClient", dbClientCfg);
             m_durationUnit = toInfluxDurationUnit(TIME_UNITS::MICROSEC);
         }
@@ -178,9 +149,20 @@ namespace karabo {
             Epochstamp to;
             if (params.has("to"))
                 to = Epochstamp(params.get<std::string>("to"));
-            int maxNumData = 0;
+            int maxNumData = kMaxHistorySize;
             if (params.has("maxNumData"))
                 maxNumData = params.get<int>("maxNumData");
+            if (maxNumData == 0) {
+                // 0 is interpreted as unlimited, but for the Influx case a limit is
+                // always enforced.
+                maxNumData = kMaxHistorySize;
+            }
+
+            if (maxNumData < 0 || maxNumData > kMaxHistorySize) {
+                throw KARABO_PARAMETER_EXCEPTION("'maxNumData' parameter is intentionally limited to a maximum of '"
+                                                 + karabo::util::toString(kMaxHistorySize) + "'. "
+                                                 + "Property History polling is not designed for Scientific Data Analysis.");
+            }
 
             // This prevents the slot from sending an automatic empty response at the end of
             // the slot method execution. Either a success reply or an error reply must be
@@ -202,7 +184,11 @@ namespace karabo {
 
             std::ostringstream iqlQuery;
 
-            iqlQuery << "SELECT COUNT(/^" << ctxt->property << "-.*|_tid/) FROM \""
+            /* The query for data count, differently from the query for the property values (or samples) that will
+               be executed later,  doesn't select the '_tid' field. The goal of this query is to count how many
+               entries will exist in the property history and '_tid' field entries only make into the resulting
+               property history as attributes of entries. */
+            iqlQuery << "SELECT COUNT(/^" << ctxt->property << "-.*/) FROM \""
                     << ctxt->deviceId << "\" WHERE time >= " << epochAsMicrosecString(ctxt->from) << m_durationUnit
                     << " AND time <= " << epochAsMicrosecString(ctxt->to) << m_durationUnit;
 
@@ -285,7 +271,7 @@ namespace karabo {
 
             std::ostringstream iqlQuery;
 
-            iqlQuery << "SELECT SAMPLE(/^" << ctxt->property << "-.*|_tid/, " << ctxt->maxDataPoints << ") FROM \""
+            iqlQuery << "SELECT SAMPLE(/^" << ctxt->property << "-.*/, " << ctxt->maxDataPoints << ") FROM \""
                     << ctxt->deviceId << "\" WHERE time >= " << epochAsMicrosecString(ctxt->from) << m_durationUnit
                     << " AND time <= " << epochAsMicrosecString(ctxt->to) << m_durationUnit;
 
@@ -676,38 +662,6 @@ namespace karabo {
                 // All properties have been retrieved. Reply to the slot caller.
                 bool configAtTimePoint = ctxt->lastLogoutBeforeTime < ctxt->lastLoginBeforeTime;
                 ctxt->aReply(ctxt->configHash, ctxt->configSchema, configAtTimePoint, ctxt->configTimePoint.toIso8601Ext());
-            }
-        }
-
-
-        void InfluxLogReader::jsonResultsToInfluxResultSet(const std::string &jsonResult,
-                                                           InfluxResultSet &influxResult,
-                                                           const std::string &columnPrefixToRemove) {
-            nl::json respObj = nl::json::parse(jsonResult);
-
-            const auto &columns = respObj["results"][0]["series"][0]["columns"];
-            for (const auto &column : columns) {
-                const std::string columnStr = column.get<std::string>();
-                if (columnPrefixToRemove.empty()) {
-                    influxResult.first.push_back(columnStr);
-                } else {
-                    auto prefixPos = columnStr.find(columnPrefixToRemove);
-                    if (prefixPos == 0) {
-                        influxResult.first.push_back(columnStr.substr(columnPrefixToRemove.size()));
-                    } else {
-                        influxResult.first.push_back(columnStr);
-                    }
-                }
-            }
-
-            const auto &rows = respObj["results"][0]["series"][0]["values"];
-            for (const auto &row : rows) {
-                std::vector<boost::optional<std::string>> rowValues;
-                rowValues.reserve(row.size());
-                for (const auto &value : row) {
-                    rowValues.push_back(jsonValueAsString(value));
-                }
-                influxResult.second.push_back(std::move(rowValues));
             }
         }
 

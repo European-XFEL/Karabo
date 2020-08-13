@@ -20,6 +20,7 @@ class DataLogging_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testNoInfluxServerHandling);
     CPPUNIT_TEST(influxAllTestRunnerWithTelegraf);
     CPPUNIT_TEST(testInfluxDbNotAvailableTelegraf);
+    
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -34,14 +35,6 @@ private:
     void influxAllTestRunnerWithTelegraf();
     void testAllInstantiated(bool waitForLoggerReady = true);
     void testMigrateFileLoggerData();
-
-    /**
-     * Checks that a call to slotGetPropertyHistory within a time
-     * interval that doesn't contain any record of change to the
-     * property returns the last known value of the property before
-     * the interval.
-     */
-    void testHistoryAfterChanges();
 
     void testInt(bool testPastConf = true);
     void testUInt64(bool testPastConf = false);
@@ -99,11 +92,34 @@ private:
      */
     void testSchemaEvolution();
 
+    /**
+     * Checks that the InfluxLogReader doesn't accept out of range
+     * values for the 'maxNumData' parameter in calls to
+     * 'slotGetPropertyHistory'.
+     */
+    void testMaxNumDataRange();
+
+    /**
+     * Checks that the InfluxLogReader is properly enforcing the
+     * 'maxNumData' parameter in calls to 'slotGetPropertyHistory'.
+     * Histories with up to 'maxNumData' entries should return
+     * 'maxNumData' property values as they were written. Histories
+     * with more than 'maxNumData' entries should return 'maxNumData'
+     * property values samples.
+     */
+    void testMaxNumDataHistory();
+
     template <class T> void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
 
     std::pair<bool, std::string> startLoggers(const std::string& loggerType,
                                               bool useInvalidInfluxUrl = false,
                                               bool useInvalidDbName = false);
+
+    /**
+     * Returns whether the environment composed by the Telegraf writing node and
+     * the InfluxDb reading node is available and responsive.
+     */
+    bool isTelegrafEnvResponsive();
 
     const std::string m_server;
     const std::string m_deviceId;
@@ -115,8 +131,6 @@ private:
     boost::thread m_eventLoopThread;
     karabo::xms::SignalSlotable::Pointer m_sigSlot;
     karabo::core::DeviceClient::Pointer m_deviceClient;
-
-    static const unsigned int m_flushIntervalSec;
 
     // Used to control switching to Telegraf environment
     std::string m_influxDb_dbName;
