@@ -15,7 +15,6 @@
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/optional.hpp>
 
 #include "karabo/core/Device.hh"
 #include "karabo/core/NoFsm.hh"
@@ -23,6 +22,7 @@
 #include "karabo/net/HttpResponse.hh"
 #include "karabo/net/InfluxDbClient.hh"
 #include "karabo/util/ClassInfo.hh"
+#include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/Epochstamp.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
@@ -34,15 +34,6 @@
 namespace karabo {
 
     namespace devices {
-
-        // InfluxResultSet is a pair with a vector of column names in its first position and
-        // a vector of rows of values represented as optional strings in its second position.
-        // The optional strings have no value when they correspond to nulls returned by Influx.
-        using InfluxResultSet =
-                std::pair<
-                /* first  */ std::vector<std::string>,
-                /* second */ std::vector<std::vector<boost::optional<std::string>>>
-                >;
 
         // Context of an ongoing slotGetPropertyHistory process.
         struct PropertyHistoryContext {
@@ -183,10 +174,7 @@ namespace karabo {
 
             std::string epochAsMicrosecString(const karabo::util::Epochstamp &ep) const;
 
-            void jsonResultsToInfluxResultSet(const std::string &jsonResult, InfluxResultSet &influxResult,
-                                              const std::string &columnPrefixToRemove = "");
-
-            void influxResultSetToVectorHash(const InfluxResultSet &influxResult,
+            void influxResultSetToVectorHash(const karabo::util::InfluxResultSet &influxResult,
                                              std::vector<karabo::util::Hash> &vectHash);
 
             void addNodeToHash(karabo::util::Hash &hash,
@@ -230,6 +218,7 @@ namespace karabo {
 
             static const unsigned long kSecConversionFactor;
             static const unsigned long kFracConversionFactor;
+            static const int kMaxHistorySize;
         };
 
 
