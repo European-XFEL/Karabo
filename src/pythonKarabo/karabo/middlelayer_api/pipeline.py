@@ -671,10 +671,6 @@ class NetworkOutput(Configurable):
             channel_name = message["instanceId"]
             distribution = message["dataDistribution"]
             slowness = message["onSlowness"]
-            if slowness == "queueDrop":
-                # XXX Until we find a way to limit the queue (memory?) size,
-                #     treat both queue options identical.
-                slowness = "queue"
 
             local_host, local_port = writer.get_extra_info("sockname")
             remote_host, remote_port = writer.get_extra_info("peername")
@@ -682,6 +678,12 @@ class NetworkOutput(Configurable):
             entry = (channel_name, distribution, slowness, "remote",
                      remote_host, remote_port, local_host, local_port)
             self.connections.extend(entry)
+
+            if slowness == "queueDrop":
+                # XXX Until we find a way to limit the queue (memory?) size,
+                #     treat both queue options identically (after update of
+                #     connections to reflect there the given config).
+                slowness = "queue"
 
             if distribution == "shared":
                 self.has_shared = True
