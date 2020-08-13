@@ -782,8 +782,8 @@ namespace karabo {
 
         void PropertyTest::stopWritingOutput() {
 
-            m_writingOutput = false;
             this->updateState(State::STOPPING);
+            m_writingOutput = false;
             m_writingOutputTimer.cancel();
         }
 
