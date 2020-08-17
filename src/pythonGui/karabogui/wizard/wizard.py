@@ -7,6 +7,7 @@ from PyQt5.QtCore import pyqtSlot, QSize
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (
     QCheckBox, QLabel, QPushButton, QVBoxLayout, QWizard, QWizardPage)
+
 from karabogui import icons
 from karabogui.singletons.api import get_config
 
@@ -32,6 +33,10 @@ def _get_notes():
         get_lines(fn)
 
     return ret
+
+
+LOGO_PATH = str(Path(icons.__file__).parent / Path('splash.png'))
+LOGO_WIDTH = 100
 
 
 class Wizard(QWizard):
@@ -65,9 +70,8 @@ class Wizard(QWizard):
 
     def _build_information_pages(self):
         """Build basic information pages for the wizard"""
-        logo_path = Path(icons.__file__).parent / Path('splash.png')
-        pixmap = QPixmap(str(logo_path))
-        pixmap = pixmap.scaledToWidth(100)
+        pixmap = QPixmap(LOGO_PATH)
+        pixmap = pixmap.scaledToWidth(LOGO_WIDTH)
         for title, text in _get_notes().items():
             page = QWizardPage(parent=self)
             page.setTitle(title)
