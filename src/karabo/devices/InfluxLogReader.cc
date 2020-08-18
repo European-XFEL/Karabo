@@ -96,16 +96,17 @@ namespace karabo {
             INT32_ELEMENT(expected).key("maxHistorySize")
                     .displayedName("Max. Property History Size")
                     .description("Maximum value allowed for the 'maxNumData' parameter in a call to slot 'getPropertyHistory'.")
-                    .readOnly().initialValue(kMaxHistorySize)
+                    .assignmentOptional().defaultValue(kMaxHistorySize)
+                    .init()
                     .commit();
         }
 
 
         InfluxLogReader::InfluxLogReader(const karabo::util::Hash & cfg) :
-            karabo::devices::DataLogReader(cfg) {
-            m_hashSerializer = BinarySerializer<Hash>::create("Bin");
-            m_schemaSerializer = BinarySerializer<Schema>::create("Bin");
-
+                karabo::devices::DataLogReader(cfg),
+                m_hashSerializer(BinarySerializer<Hash>::create("Bin")),
+                m_schemaSerializer(BinarySerializer<Schema>::create("Bin")),
+                m_maxHistorySize(cfg.get<int>("maxHistorySize")) {
             // TODO: Use more appropriate names for the env var names - the names below are the ones currently used by
             //       the CI environment.
             std::string dbUser;
@@ -149,18 +150,18 @@ namespace karabo {
             Epochstamp to;
             if (params.has("to"))
                 to = Epochstamp(params.get<std::string>("to"));
-            int maxNumData = kMaxHistorySize;
+            int maxNumData = m_maxHistorySize;
             if (params.has("maxNumData"))
                 maxNumData = params.get<int>("maxNumData");
             if (maxNumData == 0) {
                 // 0 is interpreted as unlimited, but for the Influx case a limit is
                 // always enforced.
-                maxNumData = kMaxHistorySize;
+                maxNumData = m_maxHistorySize;
             }
 
-            if (maxNumData < 0 || maxNumData > kMaxHistorySize) {
+            if (maxNumData < 0 || maxNumData > m_maxHistorySize) {
                 throw KARABO_PARAMETER_EXCEPTION("'maxNumData' parameter is intentionally limited to a maximum of '"
-                                                 + karabo::util::toString(kMaxHistorySize) + "'. "
+                                                 + karabo::util::toString(m_maxHistorySize) + "'. "
                                                  + "Property History polling is not designed for Scientific Data Analysis.");
             }
 
