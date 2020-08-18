@@ -214,8 +214,9 @@ namespace karabo {
 
             karabo::net::InfluxDbClient::Pointer m_influxClient;
             std::string m_durationUnit;
-            karabo::io::BinarySerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_hashSerializer;
+            karabo::io::BinarySerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
+            int m_maxHistorySize;
 
             static const unsigned long kSecConversionFactor;
             static const unsigned long kFracConversionFactor;
