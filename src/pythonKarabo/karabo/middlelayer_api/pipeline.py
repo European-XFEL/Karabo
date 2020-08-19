@@ -242,8 +242,14 @@ class NetworkInput(Configurable):
     @coroutine
     def call_handler(self, data, meta):
         with (yield from self.handler_lock):
-            yield from get_event_loop().run_coroutine_or_thread(
-                self.handler, data, meta)
+            try:
+                yield from get_event_loop().run_coroutine_or_thread(
+                    self.handler, data, meta)
+            except CancelledError:
+                # Cancelled Error is handled in the `start_channel` method
+                pass
+            except Exception:
+                self.parent.logger.exception("error in stream")
 
     @coroutine
     def start_channel(self, output, tracking=True):
