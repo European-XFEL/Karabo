@@ -44,7 +44,7 @@ private:
     void testPipeWait();
     void testPipeDrop();
     void testPipeQueue();
-    void testPipeQueueDrop();
+    void testPipeQueueAtLimit();
     void testPipeMinData();
     void testPipeTwoSharedReceiversWait();
     void testPipeTwoSharedReceiversDrop();
@@ -65,6 +65,13 @@ private:
      * for both the 'round-robin' and 'load-balanced' values for the sender's 'output.distributionMode'.
      */
     void testPipeTwoSharedReceiversQueue();
+
+    /**
+     * Tests queue/queueDrop behaviour when running into queue limit for pipelines with two receivers with 'shared'
+     * value for their 'input.dataDistribution' setting. Tests are performed for both the 'round-robin' and
+     * 'load-balanced' values for the sender's 'output.distributionMode'.
+     */
+    void testPipeTwoSharedReceiversQueueAtLimit();
 
     void testPipeTwoPots();
     void testProfileTransferTimes();
@@ -104,8 +111,8 @@ private:
      */
     void testPipeQueue(unsigned int processingTime, unsigned int delayTime);
 
-    void testPipeQueueDrop(unsigned int processingTime, unsigned int delayTime,
-                           const std::string& queueOption, bool expectDataLoss, bool slowReceiver);
+    void testPipeQueueAtLimit(unsigned int processingTime, unsigned int delayTime,
+                              const std::string& queueOption, bool expectDataLoss, bool slowReceiver);
 
     // roundRobin = true means that sender is supposed to be configured round-robin - extra tests of fair share are done
     void testPipeTwoSharedReceivers(unsigned int processingTime1,
@@ -124,6 +131,22 @@ private:
      * being 'round-robin' or 'load-balanced'.
      */
     void testTwoSharedReceiversQueuing(unsigned int processingTime, unsigned int delayTime);
+
+    /**
+     * Test queuing behaviour for pipes with two 'shared' receivers when the queue runs full.
+     *
+     * @param queueOpt 'noInputShared' value for sender's output channel: either "queue" or "queueDrop"
+     * @param distributionMode value for sender's output channel: "load-balanced" or "round-robin"
+     *                         in the latter case test also for a fair share of data between receivers
+     * @param processingTime1 processing time (ms) of first receiver
+     * @param processingTime2 processing time (ms) of second receiver
+     * @param senderDelay delay of the sender (ms) between subsequent data sending
+     * @param expectDataLoss whether to test that data is lost or not
+     * @param slowReceivers whether to test that (almost) all data already received when sending done
+     */
+    void testPipeTwoSharedQueueAtLimit(const std::string& queueOpt, const std::string& distributionMode,
+                                       unsigned int processingTime1, unsigned int processingTime2,
+                                       unsigned int senderDelay, bool expectDataLoss, bool slowReceivers);
 
     /**
      * "Driving" method that takes care of calling testQueueClearOnDisconnectCopyQueue and
