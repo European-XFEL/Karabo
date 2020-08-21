@@ -267,6 +267,9 @@ namespace karabo {
              *      projectListProjectManagers  onProjectListProjectManagers
              *      projectListItems            onProjectListItems
              *      projectListDomains          onProjectListDomains
+             *      listConfigurationFromName   onListConfigurationFromName
+             *      getConfigurationFromName    onGetConfigurationFromName
+             *      saveConfigurationFromName   onSaveConfigurationFromName
              *      =======================     =========================
              *
              * \endverbatim
@@ -749,6 +752,48 @@ namespace karabo {
              * @return
              */
             std::vector<std::string> getKnownProjectManagers() const;
+
+            /**
+             * Request a list of the configurations for a given device with `deviceId`. Optionally, a
+             * `filter` can be provided for filtering options. If no `filter` is provided, all
+             * configuration names will be provided.
+             * @param channel from which the request originates
+             * @param info is a Hash that should contain:
+             *          - deviceId: deviceId of the device
+             *          - filter: part or full name of a configuration
+             */
+            void onListConfigurationFromName(WeakChannelPointer channel, const karabo::util::Hash& info);
+
+            /**
+             * Request a configuration by name from a device with `deviceId`.
+             * @param channel from which the request originates
+             * @param info is a Hash that should contain:
+             *          - deviceId: deviceId of the device
+             *          - name: full name of a configuration
+             */
+            void onGetConfigurationFromName(WeakChannelPointer channel, const karabo::util::Hash& info);
+
+            /**
+             * Save configuration(s) by name from device(s) with `deviceId`(s).
+             * @param channel from which the request originates
+             * @param info is a Hash that should contain:
+             *      - client: client information
+             *      - name: the non-empty (and unique for the device) name to be associated
+             *              with the configuration(s);
+             *
+             *      - priority: priority of the configuration(s) as integer ranging from 1-3 with 3
+             *                  being the highest priority;
+             *
+             *      - description: an optional description for the named configuration(s)
+             *
+             *      - user: the user name of the currently logged in user in the client
+             *              session (to be used once Karabo authentication/authorization is in place; for
+             *              now stores '.' as the user in the same way the rest of the logging backends
+             *
+             *      - deviceIds: a vector of strings with deviceIds
+             *
+             */
+            void onSaveConfigurationFromName(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
              * Initialize a configuration database session for a user.
