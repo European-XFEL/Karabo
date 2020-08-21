@@ -38,7 +38,7 @@ namespace karabo {
         // Static initializations
         boost::mutex SignalSlotable::m_uuidGeneratorMutex;
         boost::uuids::random_generator SignalSlotable::m_uuidGenerator;
-        std::unordered_map<std::string, SignalSlotable*> SignalSlotable::m_instanceMap;
+        std::unordered_map<std::string, SignalSlotable::WeakPointer> SignalSlotable::m_instanceMap;
         boost::shared_mutex SignalSlotable::m_instanceMapMutex;
         std::map<std::string, std::string> SignalSlotable::m_connectionStrings;
         boost::mutex SignalSlotable::m_connectionStringsMutex;
@@ -55,12 +55,14 @@ namespace karabo {
                 boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
                 auto it = m_instanceMap.find(instanceId);
                 if (it != m_instanceMap.end()) {
-                    it->second->processEvent(header, body);
-                    return true;
-                } else {
-                    return false;
+                    SignalSlotable::Pointer ptr(it->second.lock());
+                    if (ptr) { // else likely being destructed
+                        ptr->processEvent(header, body);
+                        return true;
+                    }
                 }
             }
+            return false;
         }
 
 
@@ -278,18 +280,25 @@ namespace karabo {
         void SignalSlotable::deregisterFromShortcutMessaging() {
             {
                 boost::unique_lock<boost::shared_mutex> lock(m_instanceMapMutex);
-                auto it = m_instanceMap.find(m_instanceId);
-                // Let's be sure that we remove ourself:
-                if (it != m_instanceMap.end() && it->second == this) {
-                    m_instanceMap.erase(it);
+                // Just erase the weak pointer - cannot promote to shared pointer and check whether it is really 'this'
+                // since this method is called from destructor, so shared pointer to this is already gone.
+                if (m_instanceMap.erase(m_instanceId) == 0) {
+                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId << " failed to deregisterFromShortcutMessaging: not registered";
                 }
+
                 // Transfer the connection resources discovering duty to another SignalSlotable if any
                 if (m_discoverConnectionResourcesMode) {
-                    it = m_instanceMap.begin();
-                    if (it == m_instanceMap.end()) {
+                    bool foundNewOne = false;
+                    for (auto it = m_instanceMap.begin(); it != m_instanceMap.end(); ++it) {
+                        SignalSlotable::Pointer ptr(it->second.lock());
+                        if (ptr) {
+                            ptr->m_discoverConnectionResourcesMode = true;
+                            foundNewOne = true;
+                            break;
+                        }
+                    }
+                    if (!foundNewOne) {
                         m_pointToPoint.reset();
-                    } else {
-                        it->second->m_discoverConnectionResourcesMode = true;
                     }
                     m_discoverConnectionResourcesMode = false;
                 }
@@ -302,13 +311,12 @@ namespace karabo {
         void SignalSlotable::registerForShortcutMessaging() {
             {
                 boost::unique_lock<boost::shared_mutex> lock(m_instanceMapMutex);
-                SignalSlotable*& instance = m_instanceMap[m_instanceId];
-                if (!instance) {
-                    instance = this;
-                } else if (instance != this) {
-                    // Do not dare to call methods on instance - could already be destructed...?
-                    KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Cannot register "
-                            << "for short-cut messaging since there is already another instance.";
+                auto itAndSuccess = m_instanceMap.insert(std::make_pair(m_instanceId, weak_from_this()));
+                if (!itAndSuccess.second) {
+                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Failed to register for short-cut "
+                            << "messaging since there is already another instance, pointer "
+                            << m_instanceMap[m_instanceId].lock().get(); // just to see whether it is non zero..
+
                 }
                 if (!m_pointToPoint) {
                     m_pointToPoint = boost::make_shared<PointToPoint>();
