@@ -544,6 +544,12 @@ namespace karabo {
                         onProjectListDomains(channel, info);
                     } else if (type == "projectUpdateAttribute") {
                         onProjectUpdateAttribute(channel, info);
+                    } else if (type == "listConfigurationFromName") {
+                        onListConfigurationFromName(channel, info);
+                    } else if (type == "getConfigurationFromName") {
+                        onGetConfigurationFromName(channel, info);
+                    } else if (type == "saveConfigurationFromName") {
+                        onSaveConfigurationFromName(channel, info);
                     } else {
                         KARABO_LOG_FRAMEWORK_WARN << "Ignoring request of unknown type '" << type << "'";
                     }
@@ -1925,6 +1931,36 @@ namespace karabo {
         std::vector<std::string> GuiServerDevice::getKnownProjectManagers() const {
             boost::shared_lock<boost::shared_mutex> lk(m_projectManagerMutex);
             return std::vector<std::string>(m_projectManagers.begin(), m_projectManagers.end());
+        }
+
+
+        void GuiServerDevice::onListConfigurationFromName(WeakChannelPointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onListConfigurationFromName : info ...\n" << info;
+
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onListConfigurationFromName(): " << e.what();
+            }
+        }
+
+
+        void GuiServerDevice::onGetConfigurationFromName(WeakChannelPointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onGetConfigurationFromName : info ...\n" << info;
+
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetConfigurationFromName(): " << e.what();
+            }
+        }
+
+
+        void GuiServerDevice::onSaveConfigurationFromName(WeakChannelPointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onSaveConfigurationFromName : info ...\n" << info;
+
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onSaveConfigurationFromName(): " << e.what();
+            }
         }
 
 
