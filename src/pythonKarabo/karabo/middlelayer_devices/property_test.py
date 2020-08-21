@@ -1,11 +1,13 @@
-from asyncio import CancelledError
+from asyncio import CancelledError, shield
 
 import numpy as np
+import time
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, AlarmCondition,
     background, Bool, Configurable, DaqDataType,
-    Device, Double, Float, Hash, InputChannel, Int32, Int64, NDArray, Node,
+    Device, Double, Float, Hash, InputChannel, Int32, Int64, MetricPrefix,
+    NDArray, Node,
     OutputChannel, Overwrite, UInt32, UInt64, Unit, sleep, Slot, slot, State,
     String, VectorBool, VectorChar, VectorDouble, VectorFloat, VectorHash,
     VectorInt32, VectorInt64, VectorUInt32, VectorUInt64, VectorString)
@@ -17,6 +19,8 @@ NDARRAY_SHAPE = (100, 200)
 
 
 class DataNode(Configurable):
+    daqDataType = DaqDataType.TRAIN
+
     int32 = Int32(accessMode=AccessMode.READONLY)
     string = String(accessMode=AccessMode.READONLY)
     vecInt64 = VectorInt64(
@@ -30,7 +34,6 @@ class DataNode(Configurable):
 
 
 class ChannelNode(Configurable):
-    daqDataType = DaqDataType.TRAIN
     node = Node(DataNode)
 
 
@@ -356,40 +359,62 @@ class PropertyTestMDL(Device):
 
     @InputChannel(displayedName="Input", raw=False)
     async def input(self, data, meta):
-        print(data, "Data received")
-        print(meta, "Meta Received")
-        self.packetReceived = self.packetReceived.value + 1
+        procTimeSecs = self.processingTime.value/1000.
+        await sleep(procTimeSecs)
+
+        self.inputCounter = self.inputCounter.value + 1
+        self.currentInputId = data.node.int32
+
+        await self._send_data_action()
 
     @input.endOfStream
     async def input(self, channel):
-        print("End of Stream handler called by", channel)
+        self.logger.info(f"End of Stream handler called by {channel}")
 
     @input.close
     async def input(self, channel):
-        print("Close handler called by", channel)
+        self.logger.info(f"Close handler called by {channel}")
 
+    processingTime = UInt32(
+        displayedName="Processing Time",
+        description="Processing time of input channel data handler",
+        defaultValue=0,
+        unitSymbol=Unit.SECOND,
+        metricPrefixSymbol=MetricPrefix.MILLI,
+        accessMode=AccessMode.RECONFIGURABLE,
+        )
     output = OutputChannel(
         ChannelNode,
         displayedName="Output")
 
-    frequency = Int32(
-        displayedName="Frequency",
+    outputFrequency = Float(
+        displayedName="Output frequency",
+        description="The target frequency for continously writing to 'Output'",
         unitSymbol=Unit.HERTZ,
-        defaultValue=2)
+        accessMode=AccessMode.RECONFIGURABLE,
+        maxInc=1000.,
+        minExc=0.0,
+        defaultValue=1.)
 
-    packetSend = Int32(
-        displayedName="Packets Send",
+    outputCounter = Int32(
+        displayedName="Output counter",
+        description="Last value sent as 'int32' via output channel 'Output'",
         defaultValue=0,
         accessMode=AccessMode.READONLY)
 
-    packetReceived = Int32(
-        displayedName="Packets Received",
+    currentInputId = Int32(
+        displayedName="Current Input Id",
+        description="Last value received as 'int32' on input channel",
+        defaultValue=0,
+        accessMode=AccessMode.READONLY)
+
+    inputCounter = Int32(
+        displayedName="Input counter",
         defaultValue=0,
         accessMode=AccessMode.READONLY)
 
     async def onInitialization(self):
         self.state = State.NORMAL
-        self.packet_number = 0
         self.acquiring_task = None
 
     @Slot(displayedName="Start Writing",
@@ -418,7 +443,8 @@ class PropertyTestMDL(Device):
         return
 
     @Slot(displayedName="Write to Output",
-          description="Write once to output channel 'Output'")
+          description="Write once to output channel 'Output'",
+          allowedStates=[State.NORMAL])
     async def writeOutput(self):
         await self._send_data_action()
 
@@ -427,12 +453,12 @@ class PropertyTestMDL(Device):
                       "data flow",
           allowedStates=[State.NORMAL])
     async def resetChannelCounters(self):
-        self.packet_number = 0
-        self.packetSend = 0
-        self.packetReceived = 0
+        self.inputCounter = 0
+        self.outputCounter = 0
+        self.currentInputId = 0
 
     async def _send_data_action(self):
-        outputCounter = self.packet_number + 1
+        outputCounter = self.outputCounter.value + 1
         output = self.output.schema.node
         output.int32 = outputCounter
         output.string = f'{outputCounter}'
@@ -440,20 +466,28 @@ class PropertyTestMDL(Device):
         output.ndarray = np.full(NDARRAY_SHAPE,
                                  outputCounter, dtype=np.float32)
         # XXX: implement image data
-        await self.output.writeData()
-        self.packet_number = outputCounter
-        self.packetSend = self.packetSend.value + 1
+
+        async def write_and_count():
+            await self.output.writeData()
+            self.outputCounter = outputCounter
+
+        # Prohibit task cancelation in between writing to output and
+        # counter increase to keep them in sync.
+        await shield(write_and_count())
 
     async def _send_data_task(self):
         self.state = State.STARTED
         while True:
             try:
+                before = time.clock()
                 await self._send_data_action()
-                await sleep(1 / self.frequency.value)
+                delay = 1 / self.outputFrequency.value
+                # Adjust the delay by what it took to send data
+                delay = max(0., delay - (time.clock() - before))
+                await sleep(delay)
             except CancelledError:
                 self.state = State.NORMAL
                 self.acquiring_task = None
-                self.counter = 0
                 return
 
     node = Node(
