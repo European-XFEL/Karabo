@@ -302,9 +302,6 @@ namespace karabo {
 
             void eraseCopyInput(const std::string& instanceId);
 
-            // TODO Check if needed
-            bool canCompute() const;
-
             /**
              *  helper to set new m_chunkId
              * @return true if new m_chunkId is valid (i.e. not equal m_invalidChunkId)
@@ -360,15 +357,18 @@ namespace karabo {
              */
             void undoGetNextRoundRobinChannel();
 
-            void distributeLocal(unsigned int chunkId, const InputChannelInfo & channelInfo);
-
-            void distributeRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
-
             void copy(unsigned int chunkId);
 
-            void copyLocal(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
+            /**
+             * Helper to send chunkId to input channel identified by channelInfo
+             *
+             * Either uses sendLocal or sendRemote
+             */
+            void sendOne(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
 
-            void copyRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
+            void sendLocal(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
+
+            void sendRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
 
             /// Provide a string identifying this output channel (useful in DEBUG logging)
             std::string debugId() const;
