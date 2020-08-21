@@ -373,10 +373,31 @@ class Network(QObject):
         h["maxNumData"] = maxNumData
         self._write_hash(h)
 
+    # ---------------------------------------------------------------------
+    # Current Configuration Interface
+
     def onGetConfigurationFromPast(self, device_id, time):
         h = Hash("type", "getConfigurationFromPast")
         h["deviceId"] = device_id
         h["time"] = time
+        self._write_hash(h)
+
+    def onGetConfigurationFromName(self, device_id, name):
+        h = Hash("type", "getConfigurationFromName")
+        h["deviceId"] = device_id
+        h["name"] = name
+        self._write_hash(h)
+
+    def onListConfigurationFromName(self, device_id, conf_filter=""):
+        h = Hash("type", "listConfigurationFromName")
+        h["deviceId"] = device_id
+        h["filter"] = conf_filter
+        self._write_hash(h)
+
+    def onSaveConfigurationFromName(self, deviceIds):
+        h = Hash("type", "saveConfigurationFromName")
+        h["deviceIds"] = deviceIds
+        h["client"] = krb_globals.KARABO_CLIENT_ID
         self._write_hash(h)
 
     # ---------------------------------------------------------------------
