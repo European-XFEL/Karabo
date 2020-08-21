@@ -2,119 +2,138 @@ from datetime import datetime
 from time import sleep, time
 
 from karabo.integration_tests.utils import BoundDeviceTestCase
-from karabo.bound import Hash, State
+from karabo.bound import Hash, SignalSlotable, State
 
 
 class TestCrossPipelining(BoundDeviceTestCase):
-    _max_timeout = 150    # in seconds
-    _sender_freq = 10.0  # in Hz
+    _max_timeout = 60  # in seconds
+    _sender_freq = 20.0  # in Hz
     _fast_proc_time = 0  # fast receiver processing time (ms.)
-    _slow_proc_time = 500   # slow receiver processing time (ms.)
-    _test_duration = 5  # in seconds
+    _slow_proc_time = 100  # slow receiver processing time (ms.)
+    # if 1./sender_freq [in ms] - proc_time > _drop_noDrop_margin,
+    # expect that even in drop scenarios nothing is dropped
+    _drop_noDrop_margin = 20
+    _test_duration = 2.5  # in seconds
+    # Note: number of messages written to pipeline per test:
+    #       _test_duration * _sender_freq
 
-    def test_1to1_wait_fastReceiver(self):
+    def test_1to1(self):
         # Start all servers you need in the end:
         self.start_server_num("cpp", 1)
         self.start_server_num("bound", 1)
-        # self.start_server_num("mdl", 1)
+        self.start_server_num("mdl", 1)
+
+        self._main_test_1to1_wait_fastReceiver()
+        self._main_test_1to1_wait_slowReceiver()
+
+        self._main_test_1to1_queue_fastReceiver()
+        self._main_test_1to1_queue_slowReceiver()
+
+        self._main_test_1to1_queueDrop_fastReceiver()
+        self._main_test_1to1_queueDrop_slowReceiver()
+
+        self._main_test_1to1_drop_fastReceiver()
+        self._main_test_1to1_drop_slowReceiver()
+
+    def _main_test_1to1_wait_fastReceiver(self):
 
         self._test_1to1_wait_fastReceiver("cpp", "cpp")
         self._test_1to1_wait_fastReceiver("cpp", "bound")
-        # self._test_1to1_wait_fastReceiver("cpp", "mdl")
+        self._test_1to1_wait_fastReceiver("cpp", "mdl")
         self._test_1to1_wait_fastReceiver("bound", "bound")
         self._test_1to1_wait_fastReceiver("bound", "cpp")
-        # self._test_1to1_wait_fastReceiver("bound", "mdl")
-        # self._test_1to1_wait_fastReceiver("mdl", "cpp")
-        # self._test_1to1_wait_fastReceiver("mdl", "bound")
+        self._test_1to1_wait_fastReceiver("bound", "mdl")
+        self._test_1to1_wait_fastReceiver("mdl", "cpp")
+        self._test_1to1_wait_fastReceiver("mdl", "bound")
+        self._test_1to1_wait_fastReceiver("mdl", "mdl")
 
-    def test_1to1_wait_slowReceiver(self):
-        # Start all servers you need in the end:
-        self.start_server_num("cpp", 1)
-        self.start_server_num("bound", 1)
-        # self.start_server_num("mdl", 1)
+    def _main_test_1to1_wait_slowReceiver(self):
 
         self._test_1to1_wait_slowReceiver("cpp", "cpp")
         self._test_1to1_wait_slowReceiver("cpp", "bound")
-        # self._test_1to1_wait_slowReceiver("cpp", "mdl")
+        self._test_1to1_wait_slowReceiver("cpp", "mdl")
         self._test_1to1_wait_slowReceiver("bound", "bound")
         self._test_1to1_wait_slowReceiver("bound", "cpp")
-        # self._test_1to1_wait_slowReceiver("bound", "mdl")
-        # self._test_1to1_wait_slowReceiver("mdl", "cpp")
-        # self._test_1to1_wait_slowReceiver("mdl", "bound")
+        self._test_1to1_wait_slowReceiver("bound", "mdl")
+        self._test_1to1_wait_slowReceiver("mdl", "cpp")
+        self._test_1to1_wait_slowReceiver("mdl", "bound")
+        self._test_1to1_wait_slowReceiver("mdl", "mdl")
 
-    def test_1to1_queue_fastReceiver(self):
-        # Start all servers you need in the end:
-        self.start_server_num("cpp", 1)
-        self.start_server_num("bound", 1)
-        # self.start_server_num("mdl", 1)
+    def _main_test_1to1_queue_fastReceiver(self):
+        self._test_1to1_queueType_fastReceiver("queue")
 
-        self._test_1to1_queue_fastReceiver("cpp", "cpp")
-        self._test_1to1_queue_fastReceiver("cpp", "bound")
-        # self._test_1to1_queue_fastReceiver("cpp", "mdl")
-        self._test_1to1_queue_fastReceiver("bound", "bound")
-        self._test_1to1_queue_fastReceiver("bound", "cpp")
-        # self._test_1to1_queue_fastReceiver("bound", "mdl")
-        # self._test_1to1_queue_fastReceiver("mdl", "cpp")
-        # self._test_1to1_queue_fastReceiver("mdl", "bound")
+    def _main_test_1to1_queueDrop_fastReceiver(self):
+        self._test_1to1_queueType_fastReceiver("queueDrop")
 
-    def test_1to1_queue_slowReceiver(self):
-        # Start all servers you need in the end:
-        self.start_server_num("cpp", 1)
-        self.start_server_num("bound", 1)
-        # self.start_server_num("mdl", 1)
+    def _test_1to1_queueType_fastReceiver(self, queueOpt):
 
-        self._test_1to1_queue_slowReceiver("cpp", "cpp")
-        self._test_1to1_queue_slowReceiver("cpp", "bound")
-        # self._test_1to1_queue_slowReceiver("cpp", "mdl")
-        self._test_1to1_queue_slowReceiver("bound", "bound")
-        self._test_1to1_queue_slowReceiver("bound", "cpp")
-        # self._test_1to1_queue_slowReceiver("bound", "mdl")
-        # self._test_1to1_queue_slowReceiver("mdl", "cpp")
-        # self._test_1to1_queue_slowReceiver("mdl", "bound")
+        self._test_1to1_queue_fastReceiver(queueOpt, "cpp", "cpp")
+        self._test_1to1_queue_fastReceiver(queueOpt, "cpp", "bound")
+        self._test_1to1_queue_fastReceiver(queueOpt, "cpp", "mdl")
+        self._test_1to1_queue_fastReceiver(queueOpt, "bound", "bound")
+        self._test_1to1_queue_fastReceiver(queueOpt, "bound", "cpp")
+        self._test_1to1_queue_fastReceiver(queueOpt, "bound", "mdl")
+        self._test_1to1_queue_fastReceiver(queueOpt, "mdl", "cpp")
+        self._test_1to1_queue_fastReceiver(queueOpt, "mdl", "bound")
+        self._test_1to1_queue_fastReceiver(queueOpt, "mdl", "mdl")
 
-    def test_1to1_drop_fastReceiver(self):
-        # Start all servers you need in the end:
-        self.start_server_num("cpp", 1)
-        self.start_server_num("bound", 1)
-        # self.start_server_num("mdl", 1)
+    def _main_test_1to1_queue_slowReceiver(self):
+        self._test_1to1_queueType_slowReceiver("queue")
+
+    def _main_test_1to1_queueDrop_slowReceiver(self):
+        self._test_1to1_queueType_slowReceiver("queueDrop")
+
+    def _test_1to1_queueType_slowReceiver(self, queueOpt):
+
+        self._test_1to1_queue_slowReceiver(queueOpt, "cpp", "cpp")
+        self._test_1to1_queue_slowReceiver(queueOpt, "cpp", "bound")
+        self._test_1to1_queue_slowReceiver(queueOpt, "cpp", "mdl")
+        self._test_1to1_queue_slowReceiver(queueOpt, "bound", "bound")
+        self._test_1to1_queue_slowReceiver(queueOpt, "bound", "cpp")
+        self._test_1to1_queue_slowReceiver(queueOpt, "bound", "mdl")
+        self._test_1to1_queue_slowReceiver(queueOpt, "mdl", "cpp")
+        self._test_1to1_queue_slowReceiver(queueOpt, "mdl", "bound")
+        self._test_1to1_queue_slowReceiver(queueOpt, "mdl", "mdl")
+
+    def _main_test_1to1_drop_fastReceiver(self):
 
         self._test_1to1_drop_fastReceiver("cpp", "cpp")
         self._test_1to1_drop_fastReceiver("cpp", "bound")
-        # self._test_1to1_drop_fastReceiver("cpp", "mdl")
+        self._test_1to1_drop_fastReceiver("cpp", "mdl")
         self._test_1to1_drop_fastReceiver("bound", "bound")
         self._test_1to1_drop_fastReceiver("bound", "cpp")
-        # self._test_1to1_drop_fastReceiver("bound", "mdl")
-        # self._test_1to1_drop_fastReceiver("mdl", "cpp")
-        # self._test_1to1_drop_fastReceiver("mdl", "bound")
+        self._test_1to1_drop_fastReceiver("bound", "mdl")
+        self._test_1to1_drop_fastReceiver("mdl", "cpp")
+        self._test_1to1_drop_fastReceiver("mdl", "bound")
+        self._test_1to1_drop_fastReceiver("mdl", "mdl")
 
-    def test_1to1_drop_slowReceiver(self):
-        # Start all servers you need in the end:
-        self.start_server_num("cpp", 1)
-        self.start_server_num("bound", 1)
-        # self.start_server_num("mdl", 1)
+    def _main_test_1to1_drop_slowReceiver(self):
 
         self._test_1to1_drop_slowReceiver("cpp", "cpp")
         self._test_1to1_drop_slowReceiver("cpp", "bound")
-        # self._test_1to1_drop_slowReceiver("cpp", "mdl")
+        self._test_1to1_drop_slowReceiver("cpp", "mdl")
         self._test_1to1_drop_slowReceiver("bound", "bound")
         self._test_1to1_drop_slowReceiver("bound", "cpp")
-        # self._test_1to1_drop_slowReceiver("bound", "mdl")
-        # self._test_1to1_drop_slowReceiver("mdl", "cpp")
-        # self._test_1to1_drop_slowReceiver("mdl", "bound")
+        self._test_1to1_drop_slowReceiver("bound", "mdl")
+        self._test_1to1_drop_slowReceiver("mdl", "cpp")
+        self._test_1to1_drop_slowReceiver("mdl", "bound")
+        self._test_1to1_drop_slowReceiver("mdl", "mdl")
 
     def test_chain_receivers(self):
         """Checks for pipelines composed of more than 2 devices."""
-        # Prepare a list of apis such that we have cpp to cpp,
-        # cpp to bound, bound to cpp and bound to bound...
+        # Prepare a list of apis such that we have each API sending to each API
         # NOTE: Total number of cpp must not exceed 64 which is maximum number
         # of PropertyTest devices in one C++ process due to the size of the
         # static buffer on the Memory class
-        apis = ["cpp", "cpp", "bound", "bound"] * 32
+        apis = ["cpp", "cpp", "bound", "bound", "mdl", "mdl",
+                "cpp", "mdl", "bound"] * 14
         logLevel='FATAL'
         if "bound" in apis:
             self.start_server_num("bound", 1, logLevel=logLevel)
         if "cpp" in apis:
             self.start_server_num("cpp", 1, logLevel=logLevel)
+        if "mdl" in apis:
+            self.start_server_num("mdl", 1, logLevel=logLevel)
 
         num_of_forwarders = len(apis) - 2  # first/last are sender/receiver
         self.assertTrue(num_of_forwarders > 0)
@@ -124,14 +143,14 @@ class TestCrossPipelining(BoundDeviceTestCase):
         # Assemble ids and configurations for all elements in the chain
         start_info = [("sender", Hash()),
                       ("fwd1", Hash("input.connectedOutputChannels",
-                                    "sender:output"))]
+                                    ["sender:output"]))]
 
         for i in range(2, num_of_forwarders+1):
-            cfg = Hash("input.connectedOutputChannels", f"fwd{i-1}:output")
+            cfg = Hash("input.connectedOutputChannels", [f"fwd{i-1}:output"])
             start_info.append((f"fwd{i}", cfg))
 
         receiver_cfg = Hash("input.connectedOutputChannels",
-                            f"fwd{num_of_forwarders}:output")
+                            [f"fwd{num_of_forwarders}:output"])
         start_info.append(("receiver", receiver_cfg))
 
         # Instantiates all the devices that will be in the pipeline.
@@ -242,19 +261,21 @@ class TestCrossPipelining(BoundDeviceTestCase):
         """
         self._test_1to1_wait(sender_api, self._sender_freq, receiver_api, self._slow_proc_time)
 
-    def _test_1to1_queue_fastReceiver(self, sender_api, receiver_api):
+    def _test_1to1_queue_fastReceiver(self, queueOpt, sender_api, receiver_api):
         """
         Test single sender with single receiver where sender is slower
         than receiver and receiver is configured to make sender queue.
         """
-        self._test_1to1_queue(sender_api, self._sender_freq, receiver_api, self._fast_proc_time)
+        self._test_1to1_queue(queueOpt, sender_api, self._sender_freq,
+                              receiver_api, self._fast_proc_time)
 
-    def _test_1to1_queue_slowReceiver(self, sender_api, receiver_api):
+    def _test_1to1_queue_slowReceiver(self, queueOpt, sender_api, receiver_api):
         """
         Test single sender with single receiver where sender is faster
         than receiver and receiver is configured to make sender queue.
         """
-        self._test_1to1_queue(sender_api, self._sender_freq, receiver_api, self._slow_proc_time)
+        self._test_1to1_queue(queueOpt, sender_api, self._sender_freq,
+                              receiver_api, self._slow_proc_time)
 
     def _test_1to1_drop_fastReceiver(self, sender_api, receiver_api):
         """
@@ -280,7 +301,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         sender_cfg = Hash("outputFrequency", sender_freq)
         self.start_device(sender_api, 1, "sender", sender_cfg)
 
-        receiver_cfg = Hash("input.connectedOutputChannels", "sender:output",
+        receiver_cfg = Hash("input.connectedOutputChannels", ["sender:output"],
                             "input.onSlowness", "wait",
                             "processingTime", processing_time)
         self.start_device(receiver_api, 1, "receiver", receiver_cfg)
@@ -297,14 +318,16 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
         elapsed_time = stop_time - start_time
 
-        self.assertTrue(self.waitUntilEqual("receiver", "state",
+        self.assertTrue(self.waitUntilEqual("sender", "state",
                                             State.NORMAL, self._max_timeout),
-                                            "'{}' Receiver didn't reach NORMAL state within {} secs. after sender stop."
-                                            .format(receiver_api, self._max_timeout))
+                        "'{}' Sender didn't reach NORMAL state within {} secs. after stop."
+                        .format(sender_api, self._max_timeout))
+        # Note: Since state has higher priority, its update might have overtaken the last
+        #       'outputCounter' update, so out_count may rarely appear too small by one?
         out_count = self.dc.get("sender", "outputCounter")
 
         # Test that duration and frequency match by +/-25%:
-        cycle_time = max(1.0/self._sender_freq, processing_time/1000.0)  # for wait, processing_time "holds" the sender.
+        cycle_time = max(1.0/sender_freq, processing_time/1000.0)  # for wait, processing_time "holds" the sender.
         expected_out_count = elapsed_time / cycle_time
         min_expected = 0.75 * expected_out_count
         max_expected = 1.25 * expected_out_count
@@ -313,11 +336,11 @@ class TestCrossPipelining(BoundDeviceTestCase):
                         .format(out_count, min_expected, max_expected))
 
         # Could still take a while until all data is received
-        self.assertTrue(self.waitUntilEqual("receiver", "inputCounter",
-                                            out_count, self._max_timeout),
-                                            "'{}' Input ({}) and '{}' Output ({}) counters didn't converge within {} secs."
-                                            .format(receiver_api, self.dc.get("receiver", "inputCounter"),
-                                                    sender_api, out_count, self._max_timeout))
+        self.assertTrue(self.waitUntilEqual2("receiver", "inputCounter",
+                                             "sender", "outputCounter", self._max_timeout),
+                        "'{}' Input ({}) and '{}' Output ({}) counters didn't converge within {} secs."
+                        .format(receiver_api, self.dc.get("receiver", "inputCounter"),
+                                sender_api, self.dc.get("sender", "outputCounter"), self._max_timeout))
 
         ok, msg = self.dc.killDevice("sender", self._max_timeout)
         self.assertTrue(ok, "Problem killing sender device: '{}'.".format(msg))
@@ -325,18 +348,19 @@ class TestCrossPipelining(BoundDeviceTestCase):
         ok, msg = self.dc.killDevice("receiver", self._max_timeout)
         self.assertTrue(ok, "Problem killing receiver device: '{}'.".format(msg))
 
-    def _test_1to1_queue(self, sender_api, sender_freq,
+    def _test_1to1_queue(self, queueOpt, sender_api, sender_freq,
                          receiver_api, processing_time):
         """
         Test single sender with given frequency (Hz) and single receiver with
         given processing time (ms) where receiver is configured to make sender
-        queue.
+        queue, queueOpt defines which queue option is used (queue or queueDrop)
+        which makes no difference here since the queue is longer than all we send.
         """
         sender_cfg = Hash("outputFrequency", sender_freq)
         self.start_device(sender_api, 1, "sender", sender_cfg)
 
-        receiver_cfg = Hash("input.connectedOutputChannels", "sender:output",
-                            "input.onSlowness", "queue",
+        receiver_cfg = Hash("input.connectedOutputChannels", ["sender:output"],
+                            "input.onSlowness", queueOpt,
                             "processingTime", processing_time)
         self.start_device(receiver_api, 1, "receiver", receiver_cfg)
 
@@ -352,10 +376,12 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
         elapsed_time = stop_time - start_time
 
-        self.assertTrue(self.waitUntilEqual("receiver", "state",
+        self.assertTrue(self.waitUntilEqual("sender", "state",
                                             State.NORMAL, self._max_timeout),
-                                            "'{}' Receiver didn't reach NORMAL state within {} secs. after sender stop."
-                                            .format(receiver_api, self._max_timeout))
+                        "'{}' Sender didn't reach NORMAL state within {} secs. after stop."
+                        .format(sender_api, self._max_timeout))
+        # Note: Since state has higher priority, its update might have overtaken the last
+        #       'outputCounter' update, so out_count may rarely appear too small by one?
         out_count = self.dc.get("sender", "outputCounter")
 
         # Test that duration and frequency match by +/-25%:
@@ -366,11 +392,11 @@ class TestCrossPipelining(BoundDeviceTestCase):
                         .format(out_count, min_expected, max_expected))
 
         # Could still take a while until all data is received
-        self.assertTrue(self.waitUntilEqual("receiver", "inputCounter",
-                                            out_count, self._max_timeout),
-                                            "'{}' Input ({}) and '{}' Output ({}) counters didn't converge within {} secs."
-                                            .format(receiver_api, self.dc.get("receiver", "inputCounter"),
-                                                    sender_api, out_count, self._max_timeout))
+        self.assertTrue(self.waitUntilEqual2("receiver", "inputCounter",
+                                             "sender", "outputCounter", self._max_timeout),
+                        "'{}' Input ({}) and '{}' Output ({}) counters didn't converge within {} secs."
+                        .format(receiver_api, self.dc.get("receiver", "inputCounter"),
+                                sender_api, self.dc.get("sender", "outputCounter"), self._max_timeout))
 
         ok, msg = self.dc.killDevice("sender", self._max_timeout)
         self.assertTrue(ok, "Problem killing sender device: '{}'.".format(msg))
@@ -388,7 +414,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         sender_cfg = Hash("outputFrequency", sender_freq)
         self.start_device(sender_api, 1, "sender", sender_cfg)
 
-        receiver_cfg = Hash("input.connectedOutputChannels", "sender:output",
+        receiver_cfg = Hash("input.connectedOutputChannels", ["sender:output"],
                             "input.onSlowness", "drop",
                             "processingTime", processing_time)
         self.start_device(receiver_api, 1, "receiver", receiver_cfg)
@@ -405,10 +431,12 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
         elapsed_time = stop_time - start_time
 
-        self.assertTrue(self.waitUntilEqual("receiver", "state",
+        self.assertTrue(self.waitUntilEqual("sender", "state",
                                             State.NORMAL, self._max_timeout),
-                                            "'{}' Receiver didn't reach NORMAL state within {} secs. after sender stop."
-                                            .format(receiver_api, self._max_timeout))
+                        "'{}' Sender didn't reach NORMAL state within {} secs. after stop."
+                        .format(sender_api, self._max_timeout))
+        # Note: Since state has higher priority, its update might have overtaken the last
+        #       'outputCounter' update, so out_count may rarely appear too small by one?
         out_count = self.dc.get("sender", "outputCounter")
 
         # Test that duration and frequency match by +/-25%:
@@ -418,19 +446,29 @@ class TestCrossPipelining(BoundDeviceTestCase):
                         "# of output data items, {}, is not in the expected interval ({:.2f}, {:.2f})."
                         .format(out_count, min_expected, max_expected))
 
+        # Note: We cannot be sure whether pipeline is still active
         inputCounter = self.dc.get("receiver", "inputCounter")
 
         sender_delay_ms = 1.0/sender_freq * 1000
-        if (sender_delay_ms - processing_time > 50):
-            # Receiver is faster than sender by a large margin (50 ms.). Almost no drop is expected.
-            min_received_expected = 0.90 * out_count
-            self.assertTrue(min_received_expected < inputCounter <= out_count,
+        if (sender_delay_ms - processing_time > self._drop_noDrop_margin):
+            # Receiver is faster than sender by a margin. Almost no drop is expected.
+            is_in_range = 0.90 * out_count < inputCounter <= out_count
+            # Safety loop to work around the two problems noted above
+            counter = 0
+            while not is_in_range and counter < 50:
+                sleep(0.1)
+                inputCounter = self.dc.get("receiver", "inputCounter")
+                out_count = self.dc.get("sender", "outputCounter")
+                is_in_range = 0.90 * out_count < inputCounter <= out_count
+                counter += 1
+            
+            self.assertTrue(is_in_range,
                             "# of input data items, {}, is not in the expected interval ({:.2f}, {:.2f}]."
-                            .format(inputCounter, min_received_expected, out_count))
+                            .format(inputCounter, 0.90 * out_count, out_count))
         else:
             # Receiver is not much faster (or is slower) than the sender. Some drop is expected.
             # Assert that at least some data has arrived.
-            self.assertTrue(inputCounter > 0, "At least one data item should have been received.")
+            self.assertGreater(inputCounter, 0, "At least one data item should have been received.")
 
         ok, msg = self.dc.killDevice("sender", self._max_timeout)
         self.assertTrue(ok, "Problem killing sender device: '{}'.".format(msg))
@@ -482,7 +520,7 @@ class TestCrossPipelining(BoundDeviceTestCase):
         """
         Wait until property 'propertyName' of device 'deviceId' equals
         'whatItShouldBe'.
-        Try up to 'timeOut' seconds and wait 0.5 seconds between each try.
+        Try up to 'timeOut' seconds and wait 0.25 seconds between each try.
         """
         start = datetime.now()
         while (datetime.now() - start).seconds < timeout:
@@ -494,5 +532,68 @@ class TestCrossPipelining(BoundDeviceTestCase):
             if res == whatItShouldBe:
                 return True
             else:
-                sleep(.5)
-        return False
+                sleep(.25)
+
+        # Maybe we failed due to DeviceClient caching bug? Try direct call!
+        # TODO: Remove once the DeviceClient bug is solved.
+        caller = SignalSlotable("helperWaitUntilEqual")
+        caller.start()
+
+        requestor = caller.request(devId, "slotGetConfiguration")
+        dev_props, _ = requestor.waitForReply(1000)  # in ms
+        if (dev_props.get(propertyName) == whatItShouldBe
+            or (isinstance(whatItShouldBe, State)
+                and dev_props.get(propertyName) == whatItShouldBe.name)):
+            print("waitUntilEqual: Suffered from DeviceClient caching bug for",
+                  f"{devId}.{propertyName}")
+            return True
+        else:
+            print("waitUntilEqual: DeviceClient not responsible for",
+                  f"{devId}.{propertyName} being wrong:",
+                  f"{dev_props.get(propertyName)} != {whatItShouldBe}"
+            )
+            return False
+
+
+    def waitUntilEqual2(self, devId, propertyName, devId2, propertyName2,
+                        timeout):
+        """
+        Wait until property 'propertyName' of device 'deviceId' equals
+        property 'propertyName2' of device 'deviceId2'.
+        Try up to 'timeOut' seconds and wait 0.25 seconds between each try.
+        """
+        start = datetime.now()
+        while (datetime.now() - start).seconds < timeout:
+            res = None
+            try:
+                res = self.dc.get(devId, propertyName)
+                res2 = self.dc.get(devId2, propertyName2)
+            except RuntimeError as re:
+                print("Problem retrieving property value: {}".format(re))
+            if res == res2:
+                return True
+            else:
+                sleep(.25)
+
+        # Maybe we failed due to DeviceClient caching bug? Try direct calls!
+        # TODO: Remove once the DeviceClient bug is solved.
+        caller = SignalSlotable("helperWaitUntilEqual2")
+        caller.start()
+
+        requestor = caller.request(devId, "slotGetConfiguration")
+        dev_props, _ = requestor.waitForReply(1000)  # in ms
+        res = dev_props.get(propertyName)
+
+        requestor = caller.request(devId2, "slotGetConfiguration")
+        dev_props2, _ = requestor.waitForReply(1000)  # in ms
+        res2 = dev_props2.get(propertyName2)
+
+        if res == res2:
+            print("waitUntilEqual2: Suffered from DeviceClient caching bug for",
+                  f"{devId}.{propertyName} and {devId2}.{propertyName2}")
+            return True
+        else:
+            print("waitUntilEqual2: DeviceClient not responsible for",
+                  f"{devId}.{propertyName} != {devId2}.{propertyName2}:",
+                  f"{res} vs {res2}")
+            return False
