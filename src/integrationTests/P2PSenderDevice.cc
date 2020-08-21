@@ -212,8 +212,9 @@ namespace karabo {
         } catch (...) {
             KARABO_LOG_ERROR << "Stop writing since unknown exception";
         }
+        KARABO_LOG_INFO << "Finished loop sending " << get<unsigned int>("nData") << " items";
 
-        // Done, signal EOS token
+        // Done, signal EOS token (blocks until all so far queued data is sent!)
         signalEndOfStream("output1");
 
         updateState(State::NORMAL);

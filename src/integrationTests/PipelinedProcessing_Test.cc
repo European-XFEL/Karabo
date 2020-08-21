@@ -69,7 +69,7 @@ void PipelinedProcessing_Test::appTestRunner() {
 
     testPipeQueue();
 
-    testPipeQueueDrop();
+    testPipeQueueAtLimit();
 
     testPipeMinData();
 
@@ -83,7 +83,11 @@ void PipelinedProcessing_Test::appTestRunner() {
     // but after test it will be back to load-balanced and have "output1.noInputShared == drop".
     testPipeTwoSharedReceiversDrop();
 
+    // test restarts m_sender
     testPipeTwoSharedReceiversQueue();
+
+    // test restarts m_sender
+    testPipeTwoSharedReceiversQueueAtLimit();
 
     testQueueClearOnDisconnect();
 
@@ -539,24 +543,25 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
 }
 
 
-void PipelinedProcessing_Test::testPipeQueueDrop() {
+void PipelinedProcessing_Test::testPipeQueueAtLimit() {
 
     // Receiver processing time much higher than sender delay between data sending:
     // With "queueDrop" option data will be queued until queue is full and then drop some data
-    testPipeQueueDrop(2, 0, "queueDrop", true, true); // true, true ==> expectDataLoss, slowReceiver
+    testPipeQueueAtLimit(2, 0, "queueDrop", true, true); // true, true ==> expectDataLoss, slowReceiver
 
     // With the "queue" option, all data is received since the sender waits if queue is full
-    testPipeQueueDrop(2, 0, "queue", false, true);
+    testPipeQueueAtLimit(2, 0, "queue", false, true);
 
     // If sender delay time much higher than the receiver processing time, no data loss despite the queueDrop option
-    testPipeQueueDrop(0, 2, "queueDrop", false, false);
+    // (the 'slowReceiver == false' test fails sometimes with delay = 2, so choose 4)
+    testPipeQueueAtLimit(0, 4, "queueDrop", false, false);
 
 }
 
 
-void PipelinedProcessing_Test::testPipeQueueDrop(unsigned int processingTime, unsigned int delayTime,
-                                                 const std::string& queueOption, bool expectDataLoss, bool slowReceiver) {
-    std::clog << "---\ntestPipeQueueDrop (onSlowness = '" << queueOption << "', dataDistribution = 'copy') "
+void PipelinedProcessing_Test::testPipeQueueAtLimit(unsigned int processingTime, unsigned int delayTime,
+                                                    const std::string& queueOption, bool expectDataLoss, bool slowReceiver) {
+    std::clog << "---\ntestPipeQueueAtLimit (onSlowness = '" << queueOption << "', dataDistribution = 'copy') "
             << "- processingTime = " << processingTime << " ms, delayTime = " << delayTime << " ms\n";
 
     karabo::util::Hash config(m_receiverBaseConfig);
@@ -588,9 +593,10 @@ void PipelinedProcessing_Test::testPipeQueueDrop(unsigned int processingTime, un
     const auto testStartTime = chrono::high_resolution_clock::now();
     m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
 
-    // Makes sure the sender has finished sending the data in this run.
-    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL, true,
-                                                           m_maxTestTimeOut * 4)); // Longer time out due to many data items
+    // Makes sure the sender has finished sending the data in this run
+    // (do not wait for state NORMAL, see testPipeTwoSharedReceiversQueueDrop).
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_sender, "currentDataId", nData - 1u, true,
+                                                    m_maxTestTimeOut * 4)); // Longer time out due to many data items
 
     const unsigned int receivedWhenWriteDone = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
     const unsigned int missing = nDataExpected - receivedWhenWriteDone;
@@ -602,7 +608,7 @@ void PipelinedProcessing_Test::testPipeQueueDrop(unsigned int processingTime, un
         CPPUNIT_ASSERT_LESSEQUAL(m_nPots, missing);
     }
     // When EOS have arrived (and thus all data), "nTotalDataOnEos" is set to a new value.
-    // So we wait here until that happens - and then top timer
+    // So we wait here until that happens - and then stop timer
     CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nTotalDataOnEos0, false));
     auto durMs = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count();
 
@@ -630,9 +636,10 @@ void PipelinedProcessing_Test::testPipeQueueDrop(unsigned int processingTime, un
     m_deviceClient->set(m_sender, Hash("delay", prev_delay,
                                        "nData", prev_nData,
                                        "dataSize", prev_dataSize));
-    std::clog << "Success - test duration (ms): " << durMs << ", "
+    std::clog << "   Success - test duration " << durMs << " ms: "
             << "n(data_sent) = " << nData
-            << ", n(data_arrived) = " << nTotalDataEnd - nTotalData0
+            << ", n(data_arrived_when_all_sent) " << receivedWhenWriteDone - nTotalData0
+            << ", n(data_arrived_end) = " << nTotalDataEnd - nTotalData0
             << std::endl;
 }
 
@@ -1126,6 +1133,175 @@ void PipelinedProcessing_Test::testTwoSharedReceiversQueuing(unsigned int proces
             << std::endl;
 }
 
+
+void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueueAtLimit() {
+
+    // Here we test how the output to shared receivers behaves when running into the queue limit
+
+    // Use common receiver devices - processing times can be reconfigured
+    karabo::util::Hash config1(m_receiverBaseConfig);
+    config1 += Hash("deviceId", m_receiver1, "input.dataDistribution", "shared");
+
+    karabo::util::Hash config2(config1);
+    config2.set<std::string>("deviceId", m_receiver2);
+
+    instantiateDeviceWithAssert("PipeReceiverDevice", config1);
+    instantiateDeviceWithAssert("PipeReceiverDevice", config2);
+
+    // Subtests below restart m_sender (to configure its output channel). Cache here things that are set to non-default
+    const int prev_delay = m_deviceClient->get<unsigned int>(m_sender, "delay");
+    const int prev_nData = m_deviceClient->get<unsigned int>(m_sender, "nData");
+    const int prev_dataSize = m_deviceClient->get<unsigned int>(m_sender, "dataSize");
+
+    // 1) load-balanced
+    // 1a) test slow receivers with sender queueDrop: drop data if queue gets full
+    testPipeTwoSharedQueueAtLimit("queueDrop", "load-balanced", 4, 2, 0, true, true); // dataLoss, slowReceivers
+    // 1b) test slow receivers with sender queue: do not drop data, but wait if queue gets full
+    testPipeTwoSharedQueueAtLimit("queue", "load-balanced", 4, 2, 0, false, true); // dataLoss, slowReceivers
+    // 1c) test fast receivers with sender queueDrop: do not drop data, since queue never full
+    testPipeTwoSharedQueueAtLimit("queueDrop", "load-balanced", 0, 1, 2, false, false); // dataLoss, slowReceivers
+
+    // 2) round-robin
+    // 2a) test slow receivers with sender queueDrop: drop data if queue gets full
+    testPipeTwoSharedQueueAtLimit("queueDrop", "round-robin", 3, 1, 0, true, true); // dataLoss, slowReceivers
+    // 2b) test slow receivers with sender queue: do not drop data, but wait if queue gets full
+    testPipeTwoSharedQueueAtLimit("queue", "round-robin", 3, 1, 0, false, true); // dataLoss, slowReceivers
+    // 2c) test fast receivers with sender queueDrop: do not drop data, since queue never full
+    testPipeTwoSharedQueueAtLimit("queueDrop", "round-robin", 0, 1, 2, false, false); // dataLoss, slowReceivers
+
+    killDeviceWithAssert(m_receiver1);
+    killDeviceWithAssert(m_receiver2);
+
+    testSenderOutputChannelConnections();
+
+    m_deviceClient->set(m_sender, Hash("delay", prev_delay,
+                                       "nData", prev_nData,
+                                       "dataSize", prev_dataSize));
+
+    std::clog << "Passed!\n\n";
+}
+
+
+void PipelinedProcessing_Test::testPipeTwoSharedQueueAtLimit(const std::string& queueOpt, const std::string& distributionMode,
+                                                             unsigned int processingTime1, unsigned int processingTime2,
+                                                             unsigned int senderDelay, bool expectDataLoss, bool slowReceivers) {
+
+    std::clog << "---\ntestPipeTwoSharedQueueAtLimit: noInputShared = '" << queueOpt << "', distributeQueue = '"
+            << distributionMode << "', processing times " << processingTime1 << "/" << processingTime2
+            << " ms, sender delay " << senderDelay << " ms\n";
+
+    const bool roundRobin = (distributionMode == "round-robin"); // else load-balanced
+
+    killDeviceWithAssert(m_sender);
+
+    // We need a lot of data to fill up the queue so that data is indeed dropped
+    const unsigned int nData = karabo::xms::Memory::MAX_N_CHUNKS + 1000u;
+    const unsigned int dataSize = 1000u; // else memory trouble with big queues on small memory machines
+
+    instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender,
+                                                        "delay", senderDelay,
+                                                        "nData", nData,
+                                                        "dataSize", dataSize,
+                                                        "output1.noInputShared", queueOpt,
+                                                        "output1.distributionMode", distributionMode));
+
+    m_deviceClient->set(m_receiver1, "processingTime", processingTime1);
+    m_deviceClient->set(m_receiver2, "processingTime", processingTime2);
+
+    testSenderOutputChannelConnections(2UL,{m_receiver1 + ":input", m_receiver2 + ":input"}, "shared", "wait", "local",
+    {
+        m_receiver1 + ":input2", m_receiver2 + ":input2"
+    }, "copy", "wait", "local");
+
+    const unsigned int nTotalDataStart1 = m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData");
+    const unsigned int nTotalDataStart2 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
+
+    CPPUNIT_ASSERT_EQUAL(nTotalDataStart1, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalDataOnEos"));
+    CPPUNIT_ASSERT_EQUAL(nTotalDataStart2, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
+
+    const auto testStartTime = chrono::high_resolution_clock::now();
+    m_deviceClient->execute(m_sender, "write", m_maxTestTimeOut);
+
+    // Makes sure the sender has finished sending the data in this run
+    // (do not use waiting for sender state NORMAL - that is blocked by the call to EOS currently).
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_sender, "currentDataId", nData - 1u, true,
+                                                    m_maxTestTimeOut * 4)); // Longer time out due to many data items
+
+    const unsigned int receivedWhenWriteDone1 = m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData") - nTotalDataStart1;
+    const unsigned int receivedWhenWriteDone2 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData") - nTotalDataStart2;
+
+    const unsigned int missing = nData - (receivedWhenWriteDone1 + receivedWhenWriteDone2);
+    if (slowReceivers) {
+        // for sure not all arrived - missing more than what could still be in the pots of the 2 receiver buffers
+        CPPUNIT_ASSERT_GREATER(2u * m_nPots, missing);
+    } else {
+        // No bottleneck on the receiver side: all is received, except what maybe sits in the 2 pots
+        CPPUNIT_ASSERT_LESSEQUAL(2u * m_nPots, missing);
+    }
+
+    // poll until 'nTotalDataOnEos' of both receivers change (increase) because then all data is received
+    // In case of load-balanced shared InputChannels, it is an implementation detail that both
+    // receivers always get data - it is not logically required. If that detail changes,
+    // one of the "nTotalDataOnEos" values could stay at its old value even if updated in an
+    // EOS call and break this test here.
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver1, "nTotalDataOnEos", nTotalDataStart1, false));
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver2, "nTotalDataOnEos", nTotalDataStart2, false));
+
+    const unsigned int nTotalEnd1 = m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData");
+    const unsigned int nTotalEnd2 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
+    // test nTotalDataOnEos == nTotalData
+    CPPUNIT_ASSERT_EQUAL(nTotalEnd1, m_deviceClient->get<unsigned int>(m_receiver1, "nTotalDataOnEos"));
+    CPPUNIT_ASSERT_EQUAL(nTotalEnd2, m_deviceClient->get<unsigned int>(m_receiver2, "nTotalDataOnEos"));
+
+    const unsigned int finallyReceived1 = nTotalEnd1 - nTotalDataStart1;
+    const unsigned int finallyReceived2 = nTotalEnd2 - nTotalDataStart2;
+
+    // A receiver should receive at least m_nPots data no matter how long the processingTime is.
+    // (Note the comment above about the implementation detail for load-balanced...)
+    CPPUNIT_ASSERT_GREATEREQUAL(m_nPots, finallyReceived1);
+    CPPUNIT_ASSERT_GREATEREQUAL(m_nPots, finallyReceived2);
+
+    if (slowReceivers) {
+        // Since data was queued, now there has more arrived
+        CPPUNIT_ASSERT_GREATEREQUAL(receivedWhenWriteDone1, finallyReceived1);
+        CPPUNIT_ASSERT_GREATEREQUAL(receivedWhenWriteDone2, finallyReceived2);
+    }
+
+    if (roundRobin) {
+        const unsigned int diff = (finallyReceived1 >= finallyReceived2 // unsigned, so cannot...
+                                   ? finallyReceived1 - finallyReceived2 // ...just calc the diff and take abs
+                                   : finallyReceived2 - finallyReceived1);
+        if (expectDataLoss) {
+            // If data loss, chunks might be skipped more often for the one receiver than for the other
+            CPPUNIT_ASSERT_LESS(nData / 100u, diff); // arbitrarily tolerate 1% deviation of total number of items sent
+        } else {
+            // Additional test that data share was fair, i.e. difference is zero (one) for even (odd) total number
+            if ((finallyReceived1 + finallyReceived2) % 2 == 0) { // even
+                CPPUNIT_ASSERT_EQUAL(0u, diff);
+            } else {
+                CPPUNIT_ASSERT_EQUAL_MESSAGE((boost::format("total1: %d, total2: %d") % finallyReceived1 % finallyReceived2).str(),
+                                             1u, diff);
+            }
+        }
+    }
+
+    if (expectDataLoss) {
+        // There is no CPPUNIT_ASSERT_LESS_MESSAGE...
+        CPPUNIT_ASSERT_MESSAGE((boost::format("receiver 1: %d, receiver 2: %d, data sent %d")
+                                % finallyReceived1 % finallyReceived2 % nData).str(),
+                               finallyReceived1 + finallyReceived2 < nData);
+    } else {
+        CPPUNIT_ASSERT_EQUAL_MESSAGE((boost::format("receiver 1: %d, receiver 2: %d")
+                                      % finallyReceived1 % finallyReceived2).str(),
+                                     nData, finallyReceived1 + finallyReceived2);
+    }
+    std::clog << "   Success - test duration "
+            << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - testStartTime).count()
+            << " ms: total data sent: " << nData
+            << ", received when sent: " << receivedWhenWriteDone1 << "/" << receivedWhenWriteDone2
+            << ", received at the end: " << finallyReceived1 << "/" << finallyReceived2
+            << std::endl;
+}
 
 void PipelinedProcessing_Test::testQueueClearOnDisconnect() {
 
