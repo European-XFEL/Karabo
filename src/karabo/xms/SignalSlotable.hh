@@ -797,7 +797,7 @@ namespace karabo {
             boost::mutex m_brokerErrorHandlerMutex;
             BrokerErrorHandler m_brokerErrorHandler;
 
-            static std::unordered_map<std::string, SignalSlotable*> m_instanceMap;
+            static std::unordered_map<std::string, SignalSlotable::WeakPointer> m_instanceMap;
             static boost::shared_mutex m_instanceMapMutex;
 
             bool m_discoverConnectionResourcesMode;
