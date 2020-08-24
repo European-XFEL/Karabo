@@ -1720,15 +1720,20 @@ namespace karabo {
                                 if (!channel) {
                                     KARABO_LOG_FRAMEWORK_ERROR << "*** \"createOutputChannel\" for channel name \"" << key << "\" failed to create output channel";
                                 } else {
-                                    channel->registerShowConnectionsHandler([this, key](const std::vector<karabo::util::Hash>& connections) {
-                                        this->set(key + ".connections", connections);
+                                    Device::WeakPointer weakThis(boost::dynamic_pointer_cast<Device>(shared_from_this()));
+                                    channel->registerShowConnectionsHandler([weakThis, key](const std::vector<karabo::util::Hash>& connections) {
+                                        Device::Pointer self(weakThis.lock());
+                                        if (self) self->set(key + ".connections", connections);
                                     });
                                     channel->registerShowStatisticsHandler(
-                                        [this, key](const std::vector<unsigned long long>& rb, const std::vector<unsigned long long>& wb) {
-                                            karabo::util::Hash h;
-                                            h.set(key + ".bytesRead", rb);
-                                            h.set(key + ".bytesWritten", wb);
-                                            this->set(h);
+                                        [weakThis, key](const std::vector<unsigned long long>& rb, const std::vector<unsigned long long>& wb) {
+                                            Device::Pointer self(weakThis.lock());
+                                            if (self) {
+                                                karabo::util::Hash h;
+                                                h.set(key + ".bytesRead", rb);
+                                                h.set(key + ".bytesWritten", wb);
+                                                self->set(h);
+                                            }
                                         }
                                     );
                                 }
