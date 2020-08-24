@@ -30,7 +30,7 @@ using karabo::xms::SLOT_ELEMENT;
 #define KRB_TEST_MAX_TIMEOUT 10 // seconds
 
 /* Timeout, in milliseconds, for a slot request. */
-#define SLOT_REQUEST_TIMEOUT_MILLIS 5000
+#define SLOT_REQUEST_TIMEOUT_MILLIS 10000
 #define FLUSH_REQUEST_TIMEOUT_MILLIS 60000
 
 /* As the Telegraf environment has a higher request/response roundtrip time, use
@@ -40,7 +40,7 @@ using karabo::xms::SLOT_ELEMENT;
 #define PAUSE_BEFORE_RETRY_MILLIS (m_switchedToTelegrafEnv ? PAUSE_BEFORE_RETRY_TELEGRAF : PAUSE_BEFORE_RETRY_INFLUX)
 
 #define NUM_RETRY_INFLUX 400
-#define NUM_RETRY_TELEGRAF 1200  // TODO: Reduce this to 600 (10 minutes) once load on exflserv10 gets normal.
+#define NUM_RETRY_TELEGRAF 1600  // TODO: Reduce this to 600 (10 minutes) once load on exflserv10 gets normal.
 #define NUM_RETRY (m_switchedToTelegrafEnv ? NUM_RETRY_TELEGRAF : NUM_RETRY_INFLUX)
 
 #define FLUSH_INTERVAL_SEC_INFLUX 1u
