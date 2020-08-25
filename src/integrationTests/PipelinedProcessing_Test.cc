@@ -1155,17 +1155,17 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueueAtLimit() {
 
     // 1) load-balanced
     // 1a) test slow receivers with sender queueDrop: drop data if queue gets full
-    testPipeTwoSharedQueueAtLimit("queueDrop", "load-balanced", 4, 2, 0, true, true); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueAtLimit("queueDrop", "load-balanced", 4, 3, 0, true, true); // dataLoss, slowReceivers
     // 1b) test slow receivers with sender queue: do not drop data, but wait if queue gets full
-    testPipeTwoSharedQueueAtLimit("queue", "load-balanced", 4, 2, 0, false, true); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueAtLimit("queue", "load-balanced", 4, 3, 0, false, true); // dataLoss, slowReceivers
     // 1c) test fast receivers with sender queueDrop: do not drop data, since queue never full
     testPipeTwoSharedQueueAtLimit("queueDrop", "load-balanced", 0, 1, 2, false, false); // dataLoss, slowReceivers
 
     // 2) round-robin
     // 2a) test slow receivers with sender queueDrop: drop data if queue gets full
-    testPipeTwoSharedQueueAtLimit("queueDrop", "round-robin", 3, 1, 0, true, true); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueAtLimit("queueDrop", "round-robin", 4, 2, 0, true, true); // dataLoss, slowReceivers
     // 2b) test slow receivers with sender queue: do not drop data, but wait if queue gets full
-    testPipeTwoSharedQueueAtLimit("queue", "round-robin", 3, 1, 0, false, true); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueAtLimit("queue", "round-robin", 4, 2, 0, false, true); // dataLoss, slowReceivers
     // 2c) test fast receivers with sender queueDrop: do not drop data, since queue never full
     testPipeTwoSharedQueueAtLimit("queueDrop", "round-robin", 0, 1, 2, false, false); // dataLoss, slowReceivers
 
