@@ -947,7 +947,7 @@ namespace karabo {
                     }
                 }
                 if (!doWait) break;
-                boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+                boost::this_thread::sleep(boost::posix_time::milliseconds(5));
             }
 
             {
