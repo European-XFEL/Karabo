@@ -46,7 +46,7 @@ namespace karabo {
             STRING_ELEMENT(expected).key("noInputShared")
                     .displayedName("No Input (Shared)")
                     .description("What to do if currently none of the share-input channels is available for writing to")
-                    .options("drop,queue,queueDrop,throw,wait")
+                    .options("drop,queue,queueDrop,wait")
                     .assignmentOptional().defaultValue("wait")
                     .init()
                     .commit();
@@ -91,7 +91,8 @@ namespace karabo {
 
             STRING_ELEMENT(columns).key("onSlowness")
                     .displayedName("On slowness")
-                    .description("Data handling policy in case of slowness if data Distribution is copy: drop, wait, queue, throw")
+                    .description("Data handling policy in case of slowness if data Distribution is copy: "
+                                 "drop, wait, queue, queueDrop")
                     .readOnly()
                     .commit();
 
@@ -362,7 +363,7 @@ namespace karabo {
                  *     instanceId (std::string)
                  *     memoryLocation (std::string) [local/remote]
                  *     dataDistribution (std::string) [shared/copy]
-                 *     onSlowness (std::string) [queue/drop/wait/throw]
+                 *     onSlowness (std::string) [queue/drop/queueDrop/wait]
                  */
 
                 const std::string& instanceId = message.get<std::string > ("instanceId");
@@ -374,7 +375,13 @@ namespace karabo {
                 info.set("instanceId", instanceId);
                 info.set("memoryLocation", memoryLocation);
                 info.set("tcpChannel", weakChannel);
-                info.set("onSlowness", onSlowness);
+                if (onSlowness == "throw") { // old version is connecting...
+                    KARABO_LOG_FRAMEWORK_WARN << "For input channel " << instanceId << " overwrite outdated "
+                            << "'onSlowness' value \"throw\" by \"drop\"";
+                    info.set("onSlowness", "drop");
+                } else {
+                    info.set("onSlowness", onSlowness);
+                }
                 info.set("queuedChunks", std::deque<int>());
                 info.set("bytesRead", 0ull);
                 info.set("bytesWritten", 0ull);
@@ -810,7 +817,7 @@ namespace karabo {
 
         void OutputChannel::ensureValidChunkId() {
             // If still invalid, drop from queueDrop channels until resources freed and valid chunkId available.
-            // If nothing to drop left, check whether anything is waiting due to "queueWait", block as requested
+            // If nothing to drop left, check whether anything is waiting due to "queue", block as requested
             // until valid chunkId available.
             // If nothing is queuing anymore at all, but still no valid chunkId available, throw a logic exception
             // (should never happen!).
@@ -1076,9 +1083,6 @@ namespace karabo {
                     unregisterWriterFromChunk(chunkId);
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Dropping (shared) data package with chunkId: " << chunkId;
 
-                } else if (m_onNoSharedInputChannelAvailable == "throw") {
-                    unregisterWriterFromChunk(chunkId);
-                    throw KARABO_IO_EXCEPTION("Can not write data because no (shared) input is available");
                 } else if (boost::algorithm::starts_with(m_onNoSharedInputChannelAvailable, "queue")) { // i.e. queue(-Wait) or queueDrop
                     if (m_chunkId != m_invalidChunkId) { // i.e. all fine with queue length
                         // Since distributing round-robin, it is really this instance's turn.
@@ -1176,9 +1180,6 @@ namespace karabo {
                     unregisterWriterFromChunk(chunkId);
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId()
                             << " Dropping (shared) data package with chunkId: " << chunkId;
-                } else if (m_onNoSharedInputChannelAvailable == "throw") {
-                    unregisterWriterFromChunk(chunkId);
-                    throw KARABO_IO_EXCEPTION("Can not write data because no (shared) input is available");
                 } else if (boost::algorithm::starts_with(m_onNoSharedInputChannelAvailable, "queue")) { // i.e. queue(-Wait) or queueDrop
                     if (m_chunkId != m_invalidChunkId) { // i.e. all fine with queue length
                         // For load-balanced mode the chunks should be put on a single queue.
@@ -1303,9 +1304,6 @@ namespace karabo {
                     } else if (onSlowness == "drop") {
                         unregisterWriterFromChunk(chunkId);
                         KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Dropping (copied) data package for " << instanceId;
-                    } else if (onSlowness == "throw") {
-                        unregisterWriterFromChunk(chunkId);
-                        throw KARABO_IO_EXCEPTION("Can not write (copied) data because input channel of " + instanceId + " was too late");
                     } else if (boost::algorithm::starts_with(onSlowness, "queue")) { // i.e. queue(-Wait) or queueDrop
                         if (m_chunkId != m_invalidChunkId) { // i.e. all fine with queue length
                             KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (copied) data package for "

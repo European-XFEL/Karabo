@@ -90,8 +90,8 @@ Input Channel Configuration Properties
 * **onSlowness** (STRING): Policy for what the output channel should do if this input is too slow for the fed data rate - only used in *copy* mode (whereas in *shared* mode the output channel configuration defines the behaviour, see below).
    * *drop*: The output channel drops data items.
    * *wait*: The output channel writing action blocks until the input channel is ready for new data.
-   * *throw*: An exception is thrown in the writing action of the output channel - until at least 2.9.X not recommended for C++ and bound Python output channels since the exception leaves the output channel in a bad state that may not be recoverable.
-   * *queue*: The data will be queued in the output channel and sent as soon as the input channel is ready. If the queue is full (size about 2000):
+   * *throw*: Removed in 2.10.0 and deprecated before since an exception is thrown in the writing action of C++ and bound Python output channels that leaves them in a bad state that may not be recoverable.
+   * *queue*: The data will be queued in the output channel and sent as soon as the input channel is ready. If the queue is full (size about 2000 in C++ and bound Python):
       * since 2.10.0: output channel writing blocks until queue has space again
       * older releases: option not recommended for C++ and bound Python output channels since an exception is thrown that leaves the output channel in a bad state that may be not recoverable.
    * *queueDrop*: Like *queue*, but if thet queue is full, its oldest data is dropped (available since 2.10.0)
@@ -107,7 +107,7 @@ Output Channel Configuration Properties
    * *load-balanced* (default): Data is sent to any of those input channels that are ready to receive more data.
    * *round-robin*: Data is sent to the input channels one after another.
 * **noInputShared** (STRING): If input channels are connected in *shared* data distribution mode, defines what to do if none of them is ready to receive, but data shall be sent.
-   * options are *drop*, *queue*, *throw*, *wait* (default) and since 2.10.0 *queueDrop* as described for the **onSlowness** property of input channels.
+   * options are *drop*, *queue*, *wait* (default) and since 2.10.0 *queueDrop*.  Option *throw* exists until 2.9.X but is not recommended. See description  of the **onSlowness** property of input channels.
 * **hostname** (STRING): Hostname or IP address to which input channels shall connect. Default is "default" which means the hostname of the device. Otherwise one can specify the address of a second network card connected to e.g. a special high band width network.
 * **compression** (INT32): Intended to configure whether data shall be compressed before sending - but ignored as of Karabo 2.9.X.
 * **port** (UINT32): Port number which input channels shall address when establishing their TCP connections to the output channel. Default is 0 which means that the system will provide a port number. If another value is chosen, the port must be free and accessible.
