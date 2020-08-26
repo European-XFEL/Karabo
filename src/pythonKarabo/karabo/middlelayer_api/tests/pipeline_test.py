@@ -8,7 +8,7 @@ from zlib import adler32
 
 from karabo.middlelayer import (
     background, encodeBinary, Hash, Int32, NetworkInput, NetworkOutput, Proxy)
-from karabo.middlelayer_api.pipeline import Channel
+from karabo.middlelayer_api.pipeline import Channel, RingQueue
 
 from .eventloop import DeviceTest, async_tst
 
@@ -54,6 +54,28 @@ class TestChannel(DeviceTest):
 
     def feedRequest(self):
         self.feedHash(Hash("reason", "update"))
+
+    @async_tst
+    async def test_ring_queue(self):
+        size = 5
+        ring = RingQueue(size)
+        # Drop 0
+        for i in range(size + 1):
+            ring.put_nowait(i)
+
+        self.assertEqual(ring.qsize(), size)
+        items = [ring.get_nowait() for _ in range(size)]
+        self.assertEqual(items, [1, 2, 3, 4, 5])
+
+        ring = RingQueue(size)
+        for i in range(size + 1):
+            ring.put_nowait(i)
+
+        items = []
+        for _ in range(size):
+            item = await ring.get()
+            items.append(item)
+        self.assertEqual(items, [1, 2, 3, 4, 5])
 
     @coroutine
     def sleep(self):
