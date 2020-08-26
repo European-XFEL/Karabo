@@ -2,6 +2,7 @@ from asyncio import (
     CancelledError, coroutine, Future, gather, get_event_loop,
     IncompleteReadError, Lock, open_connection, Queue, QueueFull, shield,
     start_server)
+from collections import deque
 from contextlib import closing
 import os
 from struct import pack, unpack, calcsize
@@ -30,13 +31,34 @@ class CancelQueue(Queue):
     the Python guys to add this method to the standard library. Worst case
     we have to copy asyncio's Queue.
     """
-
     def cancel(self):
         """Cancel all getters and putters currently waiting"""
         for fut in self._putters:
             fut.cancel()
         for fut in self._getters:
             fut.cancel()
+
+
+class RingQueue(CancelQueue):
+    def _init(self, maxsize=0):
+        """Reimplemented function of `Queue`
+
+        The maxsize is forward from the initializer!
+        """
+        maxlen = maxsize if maxsize >= 0 else None
+        self._queue = deque(maxlen=maxlen)
+
+    def _put(self, item):
+        """Reimplemented function of `Queue`"""
+        if self.qsize() >= self._maxsize:
+            # Declare old task as done!
+            self.task_done()
+        self._queue.append(item)
+
+    def full(self):
+        """Reimplemented function of `Queue`"""
+        # XXX: Since we cycle, we should not throw and be full!
+        return False
 
 
 class PipelineMetaData(ProxyBase):
