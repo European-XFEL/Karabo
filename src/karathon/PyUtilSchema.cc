@@ -445,13 +445,18 @@ struct OverwriteElementWrap {
         return self.setNewAlias(any);
     }
 
-
-    static OverwriteElement & setNewTag(OverwriteElement& self, const bp::object& tag) {
-        boost::any any;
-        karathon::Wrapper::toAny(tag, any);
-        return self.setNewTag(any);
+    static OverwriteElement & setNewTags(OverwriteElement& self, const bp::object& tags) {
+        if (PyUnicode_Check(tags.ptr())) {
+            std::string tag = bp::extract<std::string>(tags);
+            return self.setNewTags({tag});
+        }
+        try {
+            return self.setNewTags(karathon::Wrapper::fromPyIterableToCppContainer<std::string>(tags));
+        } catch (...) {
+            throw KARABO_CAST_EXCEPTION("setNewTags expects new tags in a single str or a iterable of str");
+            return self; // please compiler
+        }
     }
-
 
     static OverwriteElement & setNewDefaultValue(OverwriteElement& self, const bp::object& value) {
         const std::string className = bp::extract<std::string>(value.attr("__class__").attr("__name__"));
@@ -2592,10 +2597,11 @@ void exportPyUtilSchema() {
                      , &OverwriteElementWrap().setNewAlias
                      , (bp::arg("alias"))
                      , bp::return_internal_reference<> ())
-                .def("setNewTag"
-                     , &OverwriteElementWrap().setNewTag
-                     , (bp::arg("tag"))
-                     , bp::return_internal_reference<> ())
+                .def("setNewTags"
+                     , &OverwriteElementWrap().setNewTags
+                     , (bp::arg("tags"))
+                     , bp::return_internal_reference<> ()
+                     , "Overwrite tags, 'tags' can be a str or an iterable of str.")
                 .def("setNewAssignmentMandatory"
                      , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNewAssignmentMandatory)
                      , bp::return_internal_reference<> ())
