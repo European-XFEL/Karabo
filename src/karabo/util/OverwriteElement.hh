@@ -141,10 +141,10 @@ namespace karabo {
 
                 Restrictions()
                 : m_rest(new Hash)
-                , alias("alias", m_rest, false)
+                , alias(KARABO_SCHEMA_ALIAS, m_rest, false)
                 , displayedName("displayedName", m_rest, false)
                 , description("description", m_rest, false)
-                , tag("tag", m_rest, false)
+                , tag(KARABO_SCHEMA_TAGS, m_rest, false)
                 , assignmentMandatory("assignmentMandatory", m_rest, false)
                 , assignmentOptional("assignmentOptional", m_rest, false)
                 , assignmentInternal("assignmentInternal", m_rest, false)
@@ -231,14 +231,13 @@ namespace karabo {
             }
 
             /**
-             * Set a new tag
-             * @param tag
+             * Set new tags
+             * @param tags
              * @return 
              */
-            template <class TagType>
-            OverwriteElement& setNewTag(const TagType& tag) {
+            OverwriteElement& setNewTags(const std::vector<std::string>& tags) {
                 checkIfRestrictionApplies(m_restrictions.tag);
-                if (m_node) m_node->setAttribute<TagType > ("tag", tag);
+                if (m_node) m_node->setAttribute(KARABO_SCHEMA_TAGS, tags);
                 return *this;
             }
 

@@ -82,13 +82,23 @@ namespace karabo {
             }
 
             /**
-             * The <b>tag</b> method allows to tag some expected parameters for later grouping/sorting
-             * @param tag of any type
+             * The <b>tags</b> method allows to tag some expected parameters for later grouping/sorting
+             * @param tags a vector of strings
+             * @return reference to the Element (to allow method's chaining)
+             */
+            Derived& tags(const std::vector<std::string>& tags) {
+                m_node->setAttribute(KARABO_SCHEMA_TAGS, tags);
+                return *(static_cast<Derived*> (this));
+            }
+
+            /**
+             * The <b>tags/b> method allows to tag some expected parameters for later grouping/sorting
+             * @param tags as a string separated by any of the characters in 'sep'
+             * @param sep a string interpreted as a list of separator characters 
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& tags(const std::string& tags, const std::string& sep = " ,;") {
-                m_node->setAttribute(KARABO_SCHEMA_TAGS, karabo::util::fromString<std::string, std::vector>(tags, sep));
-                return *(static_cast<Derived*> (this));
+                return this->tags(fromString<std::string, std::vector>(tags, sep));
             }
 
             /**
