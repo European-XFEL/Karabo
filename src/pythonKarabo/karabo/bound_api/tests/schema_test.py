@@ -1015,6 +1015,53 @@ class Schema_TestCase(unittest.TestCase):
         self.assertEqual(vec[1], 1)
         self.assertEqual(vec[2], 2)
 
+    def test_overwrite_tags(self):
+        schema = Schema()
+        (
+            INT32_ELEMENT(schema).key("taggedProp")
+            .tags("bip, bop")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit()
+        )
+        vec = schema.getTags("taggedProp")
+        self.assertEqual(len(vec), 2)
+        self.assertEqual(vec[0], "bip")
+        self.assertEqual(vec[1], "bop")
+        (
+            OVERWRITE_ELEMENT(schema).key("taggedProp")
+            .setNewTags("doff")
+            .commit()
+        )
+        vec = schema.getTags("taggedProp")
+        self.assertEqual(len(vec), 1)
+        self.assertEqual(vec[0], "doff")
+        (
+            OVERWRITE_ELEMENT(schema).key("taggedProp")
+            .setNewTags(["doff", "deff"])
+            .commit()
+        )
+        vec = schema.getTags("taggedProp")
+        self.assertEqual(len(vec), 2)
+        self.assertEqual(vec[0], "doff")
+        self.assertEqual(vec[1], "deff")
+        (
+            OVERWRITE_ELEMENT(schema).key("taggedProp")
+            .setNewTags(("chip", "chop"))
+            .commit()
+        )
+        vec = schema.getTags("taggedProp")
+        self.assertEqual(len(vec), 2)
+        self.assertEqual(vec[0], "chip")
+        self.assertEqual(vec[1], "chop")
+        # Only iterable of str are allowed
+        with self.assertRaises(RuntimeError):
+            (
+                OVERWRITE_ELEMENT(schema).key("taggedProp")
+                .setNewTags((1, 2))
+                .commit()
+            )
+
     def test_allowed_actions(self):
         s = Schema()
         (
