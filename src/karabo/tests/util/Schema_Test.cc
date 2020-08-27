@@ -935,6 +935,48 @@ void Schema_Test::testOverwriteRestrictions() {
 }
 
 
+void Schema_Test::testOverwriteTags() {
+    Schema schema;
+    INT32_ELEMENT(schema).key("taggedProp")
+            .tags("greet tip")
+            .readOnly()
+            .commit();
+
+    CPPUNIT_ASSERT_NO_THROW(
+        OVERWRITE_ELEMENT(schema).key("taggedProp")
+            .setNewTags({"doff"})
+            .commit());
+
+    std::vector<std::string> tags = schema.getTags("taggedProp");
+    CPPUNIT_ASSERT_EQUAL(1ul, tags.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("doff"), tags[0]);
+
+    CPPUNIT_ASSERT_NO_THROW(
+        OVERWRITE_ELEMENT(schema).key("taggedProp")
+            .setNewTags({"left", "right"})
+            .commit());
+
+    tags = schema.getTags("taggedProp");
+    CPPUNIT_ASSERT_EQUAL(2ul, tags.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("left"), tags[0]);
+    CPPUNIT_ASSERT_EQUAL(std::string("right"), tags[1]);
+}
+
+
+void Schema_Test::testTagsFromVector() {
+    Schema schema;
+    INT32_ELEMENT(schema).key("taggedProp")
+            .tags(std::vector<std::string>({"greet", "doff"}))
+            .readOnly()
+            .commit();
+
+    const std::vector<std::string>& tags = schema.getTags("taggedProp");
+    CPPUNIT_ASSERT_EQUAL(2ul, tags.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("greet"), tags[0]);
+    CPPUNIT_ASSERT_EQUAL(std::string("doff"), tags[1]);
+}
+
+
 void Schema_Test::testOverwriteRestrictionsForOptions() {
     {
         Schema schema;
