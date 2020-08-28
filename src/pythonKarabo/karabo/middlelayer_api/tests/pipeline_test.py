@@ -335,6 +335,32 @@ class TestChannel(DeviceTest):
         self.assertTrue(self.writer.transport.closed)
 
     @async_tst
+    def test_copy_queue_drop(self):
+        output = NetworkOutput({"noInputShared": "drop"})
+        self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
+                           "onSlowness", "queueDrop", "instanceId", "Test"))
+        task = yield from self.write_something(output)
+        yield from self.sleep()
+        self.assertChecksum(3020956469)
+        # Write like crazy, we do not have a request and roll!
+        output.writeChunkNoWait(self.sample_data)
+        output.writeChunkNoWait(self.sample_data)
+        output.writeChunkNoWait(self.sample_data)
+        self.assertChecksum(3020956469)
+        self.feedRequest()
+        yield from self.sleep()
+        for _ in range(100):
+            self.assertChecksum(452019817)
+            yield from self.sleep()
+        output.writeChunkNoWait(self.sample_data)
+        self.feedRequest()
+        yield from self.sleep()
+        self.assertChecksum(881158557)
+        self.reader.feed_eof()
+        yield from task
+        self.assertTrue(self.writer.transport.closed)
+
+    @async_tst
     def test_copy_throw(self):
         output = NetworkOutput({"noInputShared": "drop"})
         output.channelName = "channelname"
