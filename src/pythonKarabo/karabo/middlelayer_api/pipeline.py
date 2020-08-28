@@ -701,12 +701,6 @@ class NetworkOutput(Configurable):
                      remote_host, remote_port, local_host, local_port)
             self.connections.extend(entry)
 
-            if slowness == "queueDrop":
-                # XXX Until we find a way to limit the queue (memory?) size,
-                #     treat both queue options identically (after update of
-                #     connections to reflect there the given config).
-                slowness = "queue"
-
             if distribution == "shared":
                 self.has_shared = True
                 while True:
@@ -719,6 +713,9 @@ class NetworkOutput(Configurable):
             else:
                 if slowness == "queue":
                     queue = CancelQueue()
+                elif slowness == "queueDrop":
+                    # XXX: 100 until its reconfigurable!
+                    queue = RingQueue(100)
                 else:
                     queue = CancelQueue(1)
                 if slowness == "wait":
