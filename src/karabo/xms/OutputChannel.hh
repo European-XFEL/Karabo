@@ -213,6 +213,9 @@ namespace karabo {
              * 
              * Note: when using copyAllData==false, data must stay untouched and in scope until update() has been
              * called for the channel.
+             *
+             * Thread safety:
+             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
              */
             void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool copyAllData=true);
             
@@ -225,6 +228,9 @@ namespace karabo {
              * 
              * Note: when using copyAllData==false, data must stay untouched and in scope until update() has been
              * called for the channel.
+             *
+             * Thread safety:
+             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
              */
             void write(const karabo::util::Hash& data, bool copyAllData=true);
 
@@ -232,6 +238,9 @@ namespace karabo {
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * @param data shared pointer to input Hash object
              * @param metaData a MetaData object containing meta data for this data token.
+             *
+             * Thread safety:
+             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
              */
             KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data, const Memory::MetaData& metaData);
             
@@ -240,15 +249,28 @@ namespace karabo {
              * Metadata is initialized to default values. Namely the sending devices device id and the output channel's
              * name are used as data source.
              * @param data shared pointer to input Hash object
+             *
+             * Thread safety:
+             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
              */
             KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data);
 
             /**
              * Update the output channel, i.e. send all data over the wire that was previously written
              * by calling write(...).
+             *
+             * Thread safety:
+             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
              */
             void update();
 
+            /**
+             * Send end-of-stream (EOS) notification to all connected input channels to indicate a logical break
+             * in the data stream.
+             *
+             * Thread safety:
+             * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
+             */
             void signalEndOfStream();
 
             void registerShowConnectionsHandler(const ShowConnectionsHandler& handler);
