@@ -607,6 +607,8 @@ namespace karabo {
 
             public:
 
+                static const int m_defaultAsyncTimeout =  2 * KARABO_SYS_TTL;
+
                 typedef SignalSlotable::AsyncErrorHandler AsyncErrorHandler;
 
                 explicit Requestor(SignalSlotable* signalSlotable);
