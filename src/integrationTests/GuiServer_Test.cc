@@ -61,7 +61,7 @@ void GuiVersion_Test::tearDown() {
 
 void GuiVersion_Test::appTestRunner() {
 
-    // bring up a GUI server and a tcp adapter to it
+    // bring up a GUI server
     std::pair<bool, std::string> success = m_deviceClient->instantiate("testGuiVersionServer", "GuiServerDevice",
                                                                        Hash("deviceId", "testGuiServerDevice",
                                                                             "port", 44450,
@@ -77,6 +77,7 @@ void GuiVersion_Test::appTestRunner() {
     testVersionControl();
     testNotification();
     testExecute();
+    testSlowSlots();
     testReconfigure();
     testDeviceConfigUpdates();
     testDisconnect();
@@ -188,7 +189,7 @@ void GuiVersion_Test::testNotification() {
 
     Hash lastMessage;
     messageQ->pop(lastMessage);
-    const std::string message = lastMessage.get<std::string>("message");
+    const std::string& message = lastMessage.get<std::string>("message");
     CPPUNIT_ASSERT(std::string("Your GUI client has version '2.4.0', but the minimum required is: 2.4.1") == message);
 
     int timeout = 1500;
@@ -229,7 +230,7 @@ void GuiVersion_Test::testReadOnly() {
         });
         Hash replyMessage;
         messageQ->pop(replyMessage);
-        const std::string message = replyMessage.get<std::string>("message");
+        const std::string& message = replyMessage.get<std::string>("message");
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Command: " + toString(h), std::string("Action '" + type + "' is not allowed on GUI servers in readOnly mode!"), message);
         std::clog << "testReadOnly: OK for " + type  << std::endl;
     }
@@ -277,8 +278,8 @@ void GuiVersion_Test::testExecute() {
         CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
-        CPPUNIT_ASSERT_EQUAL(std::string("Request to execute 'does.not.matter' on device 'not_there' timed out. "
-                                         "It may or may not succeed later."),
+        CPPUNIT_ASSERT_EQUAL(std::string("Failure on request to execute 'does.not.matter' on device 'not_there'. Request "\
+                                         "not answered within 1 seconds."),
                              replyMessage.get<std::string>("failureReason"));
     }
 
@@ -304,7 +305,7 @@ void GuiVersion_Test::testExecute() {
         // First part of fail message is fixed, details contain 'Remote Exception':
         CPPUNIT_ASSERT_EQUAL_MESSAGE(replyMessage.get<std::string>("failureReason"), 0ul,
                                      replyMessage.get<std::string>("failureReason")
-                                     .find("Request to execute 'not.existing' on device 'testGuiServerDevice' failed, details:\n"));
+                                     .find("Failure on request to execute 'not.existing' on device 'testGuiServerDevice', details:\n"));
         CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("failureReason"),
                                replyMessage.get<std::string>("failureReason").find("Remote Exception") != std::string::npos);
     }
@@ -359,6 +360,91 @@ void GuiVersion_Test::testExecute() {
 }
 
 
+void GuiVersion_Test::testSlowSlots() {
+    resetClientConnection();
+    // bring up a PropertyTestDevice
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testGuiVersionServer",
+                                                                       "PropertyTest",
+                                                                       Hash("deviceId", "testGuiServerDevicePropertyTest"),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    //
+    // Request execution of existing slot of the PropertyTest device `testGuiServerDevicePropertyTest`
+    // The slot `slowSlot` does not appear in the schema, but the slowSlot has the same signature
+    // as a karabo command, i.e. no arguments. The slot takes 2 seconds therefore it should timeout.
+    //
+    {
+        const Hash h("type", "execute",
+                     "deviceId", "testGuiServerDevicePropertyTest",
+                     "command", "slowSlot",
+                     "reply", true,
+                     "timeout", 1);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        });
+        Hash replyMessage;
+        messageQ->pop(replyMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
+        CPPUNIT_ASSERT(replyMessage.has("failureReason"));
+        const std::string& failureMsg = replyMessage.get<std::string>("failureReason");
+        CPPUNIT_ASSERT_MESSAGE(failureMsg, failureMsg.find("Request not answered within 1 seconds") != std::string::npos);
+    }
+    //
+    // Request execution of existing slot of the PropertyTest device `testGuiServerDevicePropertyTest`
+    // After setting the `ignoreTimeoutClasses` the call will succeed.
+    //
+    m_deviceClient->set("testGuiServerDevice", "ignoreTimeoutClasses", std::vector<std::string>({"PropertyTest"}));
+    {
+        const Hash h("type", "execute",
+                     "deviceId", "testGuiServerDevicePropertyTest",
+                     "command", "slowSlot",
+                     "reply", true,
+                     "timeout", 1);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        });
+        Hash replyMessage;
+        messageQ->pop(replyMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
+        std::string message = (replyMessage.has("failureReason"))? replyMessage.get<std::string>("failureReason") : "NO REASON";
+        CPPUNIT_ASSERT_MESSAGE(message, replyMessage.get<bool>("success"));
+        CPPUNIT_ASSERT(!replyMessage.has("failureReason"));
+    }
+    //
+    // Test that the server will handle timeout after removing "PropertyTest" from the list of bad guys
+    // before shutting down the test device.
+    //
+    m_deviceClient->set("testGuiServerDevice", "ignoreTimeoutClasses", std::vector<std::string>());
+    {
+        const Hash h("type", "execute",
+                     "deviceId", "testGuiServerDevicePropertyTest",
+                     "command", "slowSlot",
+                     "reply", true,
+                     "timeout", 1);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        });
+        Hash replyMessage;
+        messageQ->pop(replyMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
+        CPPUNIT_ASSERT(replyMessage.has("failureReason"));
+        const std::string& failureMsg = replyMessage.get<std::string>("failureReason");
+        CPPUNIT_ASSERT_MESSAGE(failureMsg, failureMsg.find("Request not answered within 1 seconds") != std::string::npos);
+    }
+
+    // Clean up. Shutdown the PropertyTest device.
+
+    success = m_deviceClient->killDevice("testGuiServerDevicePropertyTest", KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+
+    std::clog << "testSlowSlots: OK" << std::endl;
+}
+
+
 void GuiVersion_Test::testReconfigure() {
     resetClientConnection();
     // check if we are connected
@@ -383,7 +469,7 @@ void GuiVersion_Test::testReconfigure() {
         CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
-        CPPUNIT_ASSERT_EQUAL(std::string("Failed to reconfigure 'whatever' of device 'not_there': Time out - it may or may not succeed later."),
+        CPPUNIT_ASSERT_EQUAL(std::string("Failure on request to reconfigure 'whatever' of device 'not_there'. Request not answered within 1 seconds."),
                              replyMessage.get<std::string>("failureReason"));
     }
 
@@ -409,7 +495,7 @@ void GuiVersion_Test::testReconfigure() {
         // Start of fail message is well defined, details contain 'Remote Exception':
         CPPUNIT_ASSERT_EQUAL_MESSAGE(replyMessage.get<std::string>("failureReason"), 0ul,
                                      replyMessage.get<std::string>("failureReason")
-                                     .find("Failed to reconfigure 'whatever' of device 'testGuiServerDevice', details:\n"));
+                                     .find("Failure on request to reconfigure 'whatever' of device 'testGuiServerDevice', details:\n"));
         CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("failureReason"),
                                replyMessage.get<std::string>("failureReason").find("Remote Exception") != std::string::npos);
     }
