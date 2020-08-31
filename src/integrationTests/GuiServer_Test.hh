@@ -35,6 +35,7 @@ private:
     void resetClientConnection();
     void testNotification();
     void testExecute();
+    void testSlowSlots();
     void testReconfigure();
     void testReadOnly();
 
