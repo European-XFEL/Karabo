@@ -205,6 +205,16 @@ namespace karabo {
                     .displayedName("Data Log Manager Id")
                     .description("The DataLoggerManager device to query for log readers.")
                     .assignmentOptional().defaultValue(karabo::util::DATALOGMANAGER_ID)
+                    .reconfigurable()
+                    .adminAccess()
+                    .commit();
+
+            VECTOR_STRING_ELEMENT(expected).key("ignoreTimeoutClasses")
+                    .displayedName("Ignore Timeout ClassIds")
+                    .description("ClassIds that are treated like macros: The GUI server will ignore "\
+                                 "timeouts of slots of devices of these classes.")
+                    .assignmentOptional().defaultValue(std::vector<std::string>())
+                    .reconfigurable()
                     .adminAccess()
                     .commit();
         }
@@ -297,6 +307,9 @@ namespace karabo {
                 startDeviceInstantiation();
                 startNetworkMonitor();
                 startForwardingLogs();
+                // TODO: remove this once "fast slot reply policy" is enforced
+                const std::vector<std::string>& timingOutClasses = get<std::vector<std::string>>("ignoreTimeoutClasses");
+                recalculateTimingOutDevices(remote().getSystemTopology(), timingOutClasses, false);
 
                 updateState(State::ON);
 
@@ -307,6 +320,34 @@ namespace karabo {
                 updateState(State::ERROR);
 
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in initialize(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::preReconfigure(karabo::util::Hash& incomingReconfiguration) {
+            if (incomingReconfiguration.has("ignoreTimeoutClasses")) {
+                const std::vector<std::string>& timingOutClasses = incomingReconfiguration.get<std::vector<std::string>>("ignoreTimeoutClasses");
+                recalculateTimingOutDevices(remote().getSystemTopology(), timingOutClasses, true);
+            }
+        }
+
+
+        bool GuiServerDevice::skipExecutionTimeout(const std::string& deviceId) {
+            boost::mutex::scoped_lock lock(m_timingOutDevicesMutex);
+            return m_timingOutDevices.find(deviceId) != m_timingOutDevices.end();
+        }
+
+
+        void GuiServerDevice::recalculateTimingOutDevices(const karabo::util::Hash& topologyEntry, const std::vector <std::string>& timingOutClasses, bool clearSet) {
+            boost::mutex::scoped_lock lock(m_timingOutDevicesMutex);
+            if (clearSet) m_timingOutDevices.clear();
+            if (topologyEntry.has("device")) {
+                const karabo::util::Hash& devices = topologyEntry.get<Hash>("device");
+                for (karabo::util::Hash::const_iterator it = devices.begin(); it != devices.end(); ++it) {
+                    if (std::find(timingOutClasses.begin(), timingOutClasses.end(), it->getAttribute<std::string>("classId")) != timingOutClasses.end()) {
+                        m_timingOutDevices.insert(it->getKey());
+                    }
+                }
             }
         }
 
@@ -647,7 +688,8 @@ namespace karabo {
                 // TODO Supply user specific context
                 if (hash.has("reply") && hash.get<bool>("reply")) {
                     auto requestor = request(deviceId, "slotReconfigure", config);
-                    if (hash.has("timeout")) {
+                    // TODO: remove `skipExecutionTimeout` once "fast slot reply policy" is enforced
+                    if (hash.has("timeout") && !skipExecutionTimeout(deviceId)) {
                         requestor.timeout(hash.get<int>("timeout") * 1000); // convert to ms
                     }
                     auto successHandler = bind_weak(&GuiServerDevice::forwardReconfigureReply, this, true, channel, hash);
@@ -670,17 +712,25 @@ namespace karabo {
                 // Failure, so can get access to exception causing it:
                 std::set<std::string> paths;
                 input.get<Hash>("configuration").getPaths(paths);
-                std::string& failTxt = h.set("failureReason", "Failed to reconfigure '" + toString(paths) += "' of "
+                std::string& failTxt = h.set("failureReason", "Failure on request to reconfigure '" + toString(paths) += "' of "
                                              "device '" + input.get<std::string>("deviceId") + "'")
                         .getValue<std::string>();
                 try {
                     throw;
                 } catch (const karabo::util::TimeoutException& te) {
-                    // if the input hash has no timeout key, ignore timeout errors, declare success
-                    if (!input.has("timeout")) {
+                    // TODO: currently ignoring also naughty classes. Remove this once this is enforced.
+                    const bool ignoreTimeout = !input.has("timeout") || skipExecutionTimeout(input.get<std::string>("deviceId"));
+                    // if the input hash has no timeout key or comes from a "naughty" class, declare success
+                    if (ignoreTimeout) {
                         h.set("success", true);
                     }
-                    failTxt += ": Time out - it may or may not succeed later.";
+                    failTxt += ". Request not answered within ";
+                    if (ignoreTimeout) {
+                        // default timeout is in ms. Convert to minutes
+                        (failTxt += toString(karabo::xms::SignalSlotable::Requestor::m_defaultAsyncTimeout/60000.f)) += " minutes.";
+                    } else {
+                        (failTxt += toString(input.get<int>("timeout"))) += " seconds.";
+                    }
                     karabo::util::Exception::clearTrace();
                 } catch (const std::exception& e) {
                     (failTxt += ", details:\n") += e.what();
@@ -697,7 +747,8 @@ namespace karabo {
                 // TODO Supply user specific context
                 if (hash.has("reply") && hash.get<bool>("reply")) {
                     auto requestor = request(deviceId, command);
-                    if (hash.has("timeout")) {
+                    // TODO: remove `skipExecutionTimeout` once "fast slot reply policy" is enforced
+                    if (hash.has("timeout") && !skipExecutionTimeout(deviceId)) {
                         requestor.timeout(hash.get<int>("timeout") * 1000); // convert to ms
                     }
                     // Any reply values are ignored (we do not know their types):
@@ -719,20 +770,28 @@ namespace karabo {
                    "input", input);
             if (!success) {
                 // Failure, so can get access to exception causing it:
-                std::string& failTxt = h.set("failureReason", "Request to execute '" + input.get<std::string>("command")
-                                             + "' on device '" + input.get<std::string>("deviceId") + "' ")
+                std::string& failTxt = h.set("failureReason", "Failure on request to execute '" + input.get<std::string>("command")
+                                             + "' on device '" + input.get<std::string>("deviceId") + "'")
                         .getValue<std::string>();
                 try {
                     throw;
                 } catch (const karabo::util::TimeoutException& te) {
-                    // if the input hash has no timeout key, ignore timeout errors
-                    if (!input.has("timeout")) {
+                    // TODO: currently ignoring also naughty classes. Remove this once this is enforced.
+                    const bool ignoreTimeout = !input.has("timeout") || skipExecutionTimeout(input.get<std::string>("deviceId"));
+                    // if the input hash has no timeout key or comes from a "naughty" class, declare success
+                    if (ignoreTimeout) {
                         h.set("success", true);
                     }
-                    failTxt += "timed out. It may or may not succeed later.";
+                    failTxt += ". Request not answered within ";
+                    if (ignoreTimeout) {
+                        // default timeout is in ms. Convert to minutes
+                        (failTxt += toString(karabo::xms::SignalSlotable::Requestor::m_defaultAsyncTimeout/60000.f)) += " minutes.";
+                    } else {
+                        (failTxt += toString(input.get<int>("timeout"))) += " seconds.";
+                    }
                     karabo::util::Exception::clearTrace();
                 } catch (const std::exception& e) {
-                    (failTxt += "failed, details:\n") += e.what();
+                    (failTxt += ", details:\n") += e.what();
                 }
             }
             safeClientWrite(channel, h);
@@ -1324,6 +1383,8 @@ namespace karabo {
             try {
                 const std::string& type = topologyEntry.begin()->getKey();
                 if (type == "device") {
+                    const std::vector<std::string>& timingOutClasses = get<std::vector<std::string>>("ignoreTimeoutClasses");
+                    recalculateTimingOutDevices(topologyEntry, timingOutClasses, false);
                     const Hash& deviceHash = topologyEntry.get<Hash>(type);
                     const std::string& instanceId = deviceHash.begin()->getKey();
                     // Check whether someone already noted interest in it
@@ -1426,7 +1487,14 @@ namespace karabo {
                         m_projectManagers.erase(manager);
                     }
                 }
-
+                {
+                    // clean up the device from the list of slow devices
+                    boost::mutex::scoped_lock lock(m_timingOutDevicesMutex);
+                    auto it = m_timingOutDevices.find(instanceId);
+                    if (it != m_timingOutDevices.end()) {
+                        m_timingOutDevices.erase(it);
+                    }
+                }
                 tryToUpdateNewInstanceAttributes(instanceId, INSTANCE_GONE_EVENT);
 
             } catch (const std::exception& e) {
