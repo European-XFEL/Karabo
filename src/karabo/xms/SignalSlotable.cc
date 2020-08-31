@@ -79,7 +79,7 @@ namespace karabo {
             // to the broker as default. Do not allow negative values either.
             // Otherwise we have a little memory leak if the slotInstanceId is never responding, e.g.
             // since no such instance exists...
-            const int timeout = (m_timeout > 0 ? m_timeout : 2 * KARABO_SYS_TTL);
+            const int timeout = (m_timeout > 0 ? m_timeout : m_defaultAsyncTimeout);
 
             // Register a deadline timer and error handler into map
             auto timer = boost::make_shared<boost::asio::deadline_timer>(EventLoop::getIOService());
