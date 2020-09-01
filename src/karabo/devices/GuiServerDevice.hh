@@ -88,6 +88,8 @@ namespace karabo {
             mutable boost::mutex m_forwardLogsMutex;
             mutable boost::mutex m_pendingAttributesMutex;
             mutable boost::mutex m_pendingInstantiationsMutex;
+            // TODO: remove this once "fast slot reply policy" is enforced
+            mutable boost::mutex m_timingOutDevicesMutex;
 
             boost::asio::deadline_timer m_deviceInitTimer;
             boost::asio::deadline_timer m_networkStatsTimer;
@@ -117,6 +119,10 @@ namespace karabo {
             bool m_isReadOnly;
             static const std::unordered_set <std::string> m_writeCommands;
 
+            // TODO: remove this once "fast slot reply policy" is enforced
+            // list of devices that do not respect fast slot reply policy
+            std::unordered_set <std::string> m_timingOutDevices;
+
         public:
 
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "2.0")
@@ -129,6 +135,7 @@ namespace karabo {
 
             void initialize();
 
+            virtual void preReconfigure(karabo::util::Hash& incomingReconfiguration);
 
         private: // Functions
             /** Wrapping requestNoWait */
@@ -905,6 +912,20 @@ namespace karabo {
              * Response handler for updating schema attributes on device
              */
             void onUpdateNewInstanceAttributesHandler(const std::string& deviceId, const karabo::util::Hash& response);
+
+            /**
+             * Helper Function to identify whether a device belongs to the timeout violation list
+             * TODO: remove this once "fast slot reply policy" is enforced
+             *
+             * returns true if a `.timeout()` should be skipped on execution requestor
+             */
+            bool skipExecutionTimeout(const std::string& deviceId);
+
+            /**
+             * Helper Function to recalculate the list of timeout violating devices from the list of offending classes
+             * TODO: remove this once "fast slot reply policy" is enforced
+             */
+            void recalculateTimingOutDevices(const karabo::util::Hash& topologyEntry, const std::vector <std::string>& timingOutClasses, bool clearSet);
 
         };
     }

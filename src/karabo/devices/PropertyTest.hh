@@ -80,6 +80,8 @@ namespace karabo {
 
             void replier(const karabo::xms::SignalSlotable::AsyncReply & areply);
 
+            void slowSlot();
+
             bool m_writingOutput;
             boost::asio::deadline_timer m_writingOutputTimer;
         };
