@@ -1,4 +1,37 @@
 **************************
+What's New in Karabo 2.9.8
+**************************
+
+A release for the GUI Server. We temporarily allow devices coded not following
+the ``fast reply on slot`` policy to be installed and not bother the user with
+spurious timeouts. These devices should be adapted before the release of 2.10.0.
+
+Detailed Merge-Log
+==================
+
+- CPP: GuiServerDevice can ignore timeouts on configuration !4649
+- File Logger: Fix reading of empty vector of strings logged with 2.8.X and earlier. !4654
+
+**************************
+What's New in Karabo 2.9.7
+**************************
+
+A release dedicated to Influx Dataloggers to handle large data polled/
+Minor GUI and CI bugfixes have been backported as well.
+
+Detailed Merge-Log
+==================
+
+- BUILD: Preserve egg dir when building the package !4618
+- INFLUX: getHistory fixed for history poll larger than 5000 points !4616
+- INFLUX: handle `partial` key from DB !4617
+- INFLUX: fix logger crash on bad configurations !4506 and !4603
+- INFLUX: string contain pipes are read correctly in for (1|2|3) scenario !4592
+- CI: windows CI is less verbose, unit tests skip build !4618
+- GUI: Add the histogram aux to Detector Graph !4586
+- WEBSERVER: Webserver doesn't handles device servers with a minus sign !4600
+
+**************************
 What's New in Karabo 2.9.6
 **************************
 
