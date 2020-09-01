@@ -653,6 +653,8 @@ namespace karabo {
             KARABO_SLOT(slotUpdateSchema);
             KARABO_SLOT(node_increment);
             KARABO_SLOT(node_reset);
+            // do not add this slot to the Schema.
+            KARABO_SLOT(slowSlot);
         }
 
 
@@ -809,5 +811,13 @@ namespace karabo {
                     karabo::util::bind_weak(&PropertyTest::replier, this, areply));
         }
 
+        void PropertyTest::slowSlot() {
+            // A slot NOT respecting the Karabo policy for commands that slots should reply quickly,
+            // i.e. not execute longer lasting tasks, but just triggering their start.
+            // Even if this is not a command, but a low level slot, instead of sleeping a long time,
+            // it would be better to use a deadline timer and an AsyncReply instead of blocking within
+            // a slot.
+            boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+        }
     }
 }
