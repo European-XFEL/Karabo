@@ -588,13 +588,17 @@ namespace karabo {
                 case Types::VECTOR_STRING:
                 {
                     // Old format for VECTOR_STRING data (for backward compatibility)
-                    // Keep this to support migration tools from "file" to "influx"
-                    // Re-mangle new line characters, see DataLogger :-|
-                    std::string unmangled = boost::algorithm::replace_all_copy(value, DATALOG_NEWLINE_MANGLE, "\n");
                     node = &hashOut.set(path, std::vector<std::string>());
-                    std::vector<std::string>& valref = node->getValue<std::vector<std::string> >();
-                    // split by ","
-                    boost::split(valref, unmangled, boost::is_any_of(","));
+                    // Empty value could come from an empty vector of strings or from a vector with a single empty
+                    // string. We choose here to interprete as empty vector: It appears more often, e.g. as a default,
+                    // and was the interpretation in the past.
+                    // This ambiguity and other mangling issues led to the new format.
+                    if (!value.empty()) {
+                        std::vector<std::string>& valref = node->getValue<std::vector<std::string> >();
+                        // Re-mangle new line characters, see DataLogger :-|
+                        const std::string unmangled = boost::algorithm::replace_all_copy(value, DATALOG_NEWLINE_MANGLE, "\n");
+                        boost::split(valref, unmangled, boost::is_any_of(","));
+                    }
                     node->setType(type);
                     break;
                 }
