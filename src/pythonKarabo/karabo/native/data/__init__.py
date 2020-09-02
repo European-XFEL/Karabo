@@ -24,4 +24,5 @@ from karabo.native.data.schema import (
 from karabo.native.data.serializers import (
     decodeBinary, decodeXML, encodeBinary, encodeXML, loadFromFile, saveToFile,
     writeBinary, writeXML, XMLParser, XMLWriter)
-from karabo.native.data.utils import dtype_from_number, get_image_data
+from karabo.native.data.utils import (
+    dtype_from_number, numpy_from_number, get_image_data)
