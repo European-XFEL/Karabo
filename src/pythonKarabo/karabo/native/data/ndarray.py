@@ -6,7 +6,7 @@ from karabo.native.data.hash import (
     AccessMode, Bool, ByteArray, Hash, HashElement, Int32, Simple, Type,
     VectorUInt64)
 from karabo.native.data.schema import Configurable
-from karabo.native.data.utils import dtype_from_number, numpyclass_from_number
+from karabo.native.data.utils import dtype_from_number, numpy_from_number
 
 
 class ArraySchema(Configurable):
@@ -67,10 +67,11 @@ class NDArray(Type):
         the `node` parameter is provided when the class `NDArray` is used
         as a `ProxyNodeFactory` when creating a Proxy instance with
         `getDevice` and `connectDevice`. In this case, `dtype` and `shape`
-        will be ignored
+        will be ignored.
         """
         if node is not None:
-            dtype = numpyclass_from_number(node["type", "defaultValue"])
+            dtype = numpy_from_number(node["type", "defaultValue"],
+                                      default=numpy.float)
             shape = node["shape", "defaultValue"]
             kwargs['unitSymbol'] = node["data", "unitSymbol"]
             kwargs['metricPrefixSymbol'] = node["data", "metricPrefixSymbol"]
