@@ -11,17 +11,17 @@ def dtype_from_number(number):
     >> dtype_from_number(16)
     >> dtype('int64')
     """
-    return np.dtype(numpyclass_from_number(number))
+    return np.dtype(numpy_from_number(number))
 
 
-def numpyclass_from_number(number):
-    """Return the dtype class matching the Karabo Types number
+def numpy_from_number(number, default=np.object_):
+    """Return the numpy dtype class matching the Karabo Types number
 
-    in case of missing numpy definition in `Types`, returns an object_.
-    >> dtype_from_number(16)
-    >> dtype('int64')
+    In case of missing numpy definition in `Types`, returns an the `default`.
+    >> numpy_from_number(16)
+    >> numpy.int64
     """
-    return getattr(Type.types[number], "numpy", np.object_)
+    return getattr(Type.types[number], "numpy", default)
 
 
 def get_image_data(data):
