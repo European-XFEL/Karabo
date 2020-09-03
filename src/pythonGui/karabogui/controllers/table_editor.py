@@ -200,6 +200,14 @@ class TableModel(QAbstractTableModel):
 
         return True
 
+    def clear_model(self):
+        """Clear the model and remove all dat"""
+        self.beginResetModel()
+        try:
+            self._data = []
+        finally:
+            self.endResetModel()
+
     def move_row_up(self, row):
         """In a simple two step process move a row element up"""
         if row > 0:
