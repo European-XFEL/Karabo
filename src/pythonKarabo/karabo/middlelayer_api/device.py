@@ -40,19 +40,13 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         defaultValue="__none__",
         daqPolicy=DaqPolicy.OMIT)
 
-    @Int32(
+    visibility = Int32(
         enum=AccessLevel, displayedName="Visibility",
         description="Configures who is allowed to see this device at all",
         assignment=Assignment.OPTIONAL, defaultValue=AccessLevel.OBSERVER,
         requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.RECONFIGURABLE,
+        accessMode=AccessMode.INITONLY,
         daqPolicy=DaqPolicy.OMIT)
-    def visibility(self, newValue):
-        # This setter is already called during initialisation and then there is
-        # no need to publish yet:
-        if newValue != self.visibility and self._ss is not None:
-            self.updateInstanceInfo(Hash("visibility", newValue))
-        self.visibility = newValue
 
     classId = String(
         displayedName="ClassID",
