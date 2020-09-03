@@ -51,17 +51,20 @@ namespace karabo {
 
             // Global signals must go via the broker
             if (instanceId == "*") return false;
+
+            SignalSlotable::Pointer ptr;
             {
                 boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
                 auto it = m_instanceMap.find(instanceId);
                 if (it != m_instanceMap.end()) {
-                    SignalSlotable::Pointer ptr(it->second.lock());
-                    if (ptr) { // else likely being destructed
-                        ptr->processEvent(header, body);
-                        return true;
-                    }
+                    ptr = it->second.lock(); // if locking fails, should be being destructed
                 }
             }
+            if (ptr) {
+                ptr->processEvent(header, body);
+                return true;
+            }
+
             return false;
         }
 
@@ -1307,7 +1310,7 @@ namespace karabo {
                     emit("signalInstanceNew", instanceId, instanceInfo);
                     //if (m_instanceAvailableAgainHandler) m_instanceAvailableAgainHandler(instanceId, instanceInfo);
                 }
-                // This overwrites the old entry and resets the countdown 
+                // This overwrites the old entry and resets the countdown
                 addTrackedInstance(instanceId, instanceInfo);
             }
         }
@@ -1494,11 +1497,11 @@ namespace karabo {
         bool SignalSlotable::instanceHasSlot(const std::string& slotInstanceId, const std::string& unmangledSlotFunction) {
 
             if (slotInstanceId == "*") return true; // GLOBAL slots may or may not exist
-            
+
             //convert noded slots to follow underscore representation
-            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction 
+            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction
                                                       : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
-            
+
             bool slotExists = false;
 
             if (slotInstanceId == m_instanceId) { // Local slot requested
@@ -1529,9 +1532,9 @@ namespace karabo {
 
         void SignalSlotable::slotHasSlot(const std::string& unmangledSlotFunction) {
             //handle noded slots
-            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction 
+            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction
                                                       : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
-            
+
             bool result = false;
             {
                 boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
@@ -1938,9 +1941,9 @@ namespace karabo {
 
         bool SignalSlotable::hasSlot(const std::string& unmangledSlotFunction) const {
             //handle noded slots
-            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction 
+            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction
                                                       : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
-            
+
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             return m_slotInstances.find(mangledSlotFunction) != m_slotInstances.end();
         }
@@ -1948,9 +1951,9 @@ namespace karabo {
 
         SignalSlotable::SlotInstancePointer SignalSlotable::getSlot(const std::string& unmangledSlotFunction) const {
             //handle noded slots
-            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction 
+            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction
                                                       : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
-            
+
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             SlotInstances::const_iterator it = m_slotInstances.find(mangledSlotFunction);
             if (it != m_slotInstances.end()) return it->second;
@@ -1960,9 +1963,9 @@ namespace karabo {
 
         void SignalSlotable::removeSlot(const std::string& unmangledSlotFunction) {
             //handle noded slots
-            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction 
+            const  std::string& mangledSlotFunction = (unmangledSlotFunction.find('.') == std::string::npos ? unmangledSlotFunction
                                                       : boost::algorithm::replace_all_copy(unmangledSlotFunction, ".", "_"));
-            
+
             boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
             m_slotInstances.erase(mangledSlotFunction);
             // Will clean any associated timers to this slot
@@ -2617,12 +2620,12 @@ namespace karabo {
                 return std::make_pair(false, karabo::util::Hash());
             }
         }
-        
+
         void SignalSlotable::slotGetOutputChannelInformation(const std::string& channelId, const int& processId) {
             const std::pair<bool, karabo::util::Hash>& result = slotGetOutputChannelInformationImpl(channelId, processId);
             reply(std::get<0>(result), std::get<1>(result));
         }
-        
+
         void SignalSlotable::slotGetOutputChannelInformationFromHash(const karabo::util::Hash& hash) {
             const std::pair<bool, karabo::util::Hash>& result = slotGetOutputChannelInformationImpl(hash.get<std::string>("channelId"), hash.get<int>("processId"));
             reply(karabo::util::Hash("success", std::get<0>(result), "info", std::get<1>(result)));
