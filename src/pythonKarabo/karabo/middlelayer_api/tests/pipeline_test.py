@@ -208,10 +208,10 @@ class TestChannel(DeviceTest):
         self.assertFalse((yield from network.readChunk(self.channel, None)))
 
     @coroutine
-    def write_something(self, output):
+    def write_something(self, output, number=10):
         output.channelName = "channelname"
         task = background(output.serve(self.reader, self.writer))
-        for i in range(10):
+        for i in range(number):
             output.writeChunkNoWait(self.sample_data)
             yield from self.sleep()
         return task
@@ -253,25 +253,35 @@ class TestChannel(DeviceTest):
         self.assertTrue(self.writer.transport.closed)
 
     @async_tst
-    def test_shared_throw(self):
-        output = NetworkOutput({"noInputShared": "throw"})
-        output.channelName = "channelname"
-        task = background(output.serve(self.reader, self.writer))
+    def test_shared_queue_drop(self):
+        output = NetworkOutput({"noInputShared": "queueDrop"})
         self.feedHash(Hash("reason", "hello", "dataDistribution", "shared",
-                           "onSlowness", "throw", "instanceId", "Test"))
+                           "onSlowness", "queueDrop", "instanceId", "Test"))
+        task = yield from self.write_something(output, 200)
         yield from self.sleep()
-        output.writeChunkNoWait(self.sample_data)
+        self.assertChecksum(3020956469)
+        self.feedRequest()
         yield from self.sleep()
         self.feedRequest()
         yield from self.sleep()
+        for _ in range(100):
+            self.assertChecksum(881158557)
+            yield from self.sleep()
         output.writeChunkNoWait(self.sample_data)
-        with self.assertRaises(QueueFull):
+        yield from self.sleep()
+        self.assertChecksum(881158557)
+        for i in range(200):
             output.writeChunkNoWait(self.sample_data)
-            output.writeChunkNoWait(self.sample_data)
-        self.assertChecksum(3020956469)
+        yield from self.sleep()
+        self.assertChecksum(881158557)
         self.reader.feed_eof()
         yield from task
         self.assertTrue(self.writer.transport.closed)
+
+    @async_tst
+    def test_shared_throw(self):
+        with self.assertRaises(ValueError):
+            output = NetworkOutput({"noInputShared": "throw"})
 
     @async_tst
     def test_shared_wait(self):
@@ -339,7 +349,7 @@ class TestChannel(DeviceTest):
         output = NetworkOutput({"noInputShared": "drop"})
         self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
                            "onSlowness", "queueDrop", "instanceId", "Test"))
-        task = yield from self.write_something(output)
+        task = yield from self.write_something(output, 200)
         yield from self.sleep()
         self.assertChecksum(3020956469)
         # Write like crazy, we do not have a request and roll!
@@ -364,18 +374,20 @@ class TestChannel(DeviceTest):
     def test_copy_throw(self):
         output = NetworkOutput({"noInputShared": "drop"})
         output.channelName = "channelname"
-        task = background(output.serve(self.reader, self.writer))
         self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
                            "onSlowness", "throw", "instanceId", "Test"))
-        output.writeChunkNoWait(self.sample_data)
+        task = yield from self.write_something(output)
         yield from self.sleep()
-        output.writeChunkNoWait(self.sample_data)
-        yield from self.sleep()
-        output.writeChunkNoWait(self.sample_data)
-        yield from self.sleep()
-        with self.assertRaises(QueueFull):
-            output.writeChunkNoWait(self.sample_data)
         self.assertChecksum(3020956469)
+        self.feedRequest()
+        yield from self.sleep()
+        for _ in range(100):
+            self.assertChecksum(3020956469)
+            yield from self.sleep()
+        output.writeChunkNoWait(self.sample_data)
+        self.feedRequest()
+        yield from self.sleep()
+        self.assertChecksum(452019817)
         self.reader.feed_eof()
         yield from task
         self.assertTrue(self.writer.transport.closed)
