@@ -142,9 +142,6 @@ namespace karabo {
             /** Wrapping requestNoWait */
             void loggerMapConnectedHandler();
 
-            /** Check whether deviceId should be connected via p2p and trigger that connection if so. */
-            void checkForConnectingP2p(const std::string& deviceId);
-
             /** Called if configuration changed from outside. */
             virtual void postReconfigure();
 
