@@ -1,0 +1,40 @@
+****************************
+What's New in Karabo 2.10.0
+****************************
+
+The **most relevant improvements**, fixes and changes are:
+
+- C++/bound: The legacy point-to-point shortcut for broker type communication
+  has been removed, including the configuration parameters
+  GuiServerDevice.p2pDevices and DataLoggerManager.useP2p and DataLogger.useP2p
+  that were used to switch the feature (partially) on.
+
+
+Detailed Merge-Log
+==================
+
+To be filled.
+
+Bound/cpp core
+++++++++++++++
+
+
+Middlelayer Core
+++++++++++++++++
+
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+
+
+Tests
++++++
+
+
+Core Devices
+++++++++++++
+
+
+Graphical User Interface
+++++++++++++++++++++++++
+
