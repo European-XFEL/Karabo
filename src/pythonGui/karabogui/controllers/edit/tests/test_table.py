@@ -125,5 +125,14 @@ class TestEditableTableElement(GuiTestCase):
         self.assertModelRow(1, 'True', 'hello', 1)
         self.assertModelRow(2, 'False', 'test', 3)
 
+    def test_empty_value(self):
+        apply_configuration(TABLE_HASH, self.proxy.root_proxy.binding)
+        self.assertModelRow(0, 'True', 'hello', 1)
+        self.assertModelRow(1, 'False', 'test', 3)
+        model = self.controller._item_model
+        self.assertNotEqual(model._data, [])
+        model.clear_model()
+        self.assertEqual(model._data, [])
+
     def test_edit_value(self):
         self.controller.set_read_only(False)
