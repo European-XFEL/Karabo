@@ -122,15 +122,22 @@ class BoxLayout(BaseLayout, QBoxLayout):
     def sizeHint(self):
         """Calculate the sizeHint of the layout from the sizeHints of the
            children. This varies with direction."""
-        sizes = [self.itemAt(i).sizeHint() for i in range(self.count())]
-        widths = [size.width() for size in sizes]
-        heights = [size.height() for size in sizes]
 
-        get_width, get_height = sum, max
-        if self.direction() in VERTICAL_LAYOUTS:
-            get_width, get_height = get_height, get_width
+        # We compute the sizeHint only if the model is invalid.
+        # We use the child bounding rects if otherwise.
+        model = self.model
+        if QRect(model.x, model.y, model.width, model.height).isEmpty():
+            sizes = [self.itemAt(i).sizeHint() for i in range(self.count())]
+            widths = [size.width() for size in sizes]
+            heights = [size.height() for size in sizes]
 
-        return QSize(get_width(widths), get_height(heights))
+            get_width, get_height = sum, max
+            if self.direction() in VERTICAL_LAYOUTS:
+                get_width, get_height = get_height, get_width
+
+            return QSize(get_width(widths), get_height(heights))
+
+        return super(BoxLayout, self).sizeHint()
 
 
 class GridLayout(BaseLayout, QGridLayout):
