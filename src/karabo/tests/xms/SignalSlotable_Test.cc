@@ -11,6 +11,7 @@
 
 #include "karabo/xms/SignalSlotable.hh"
 #include "karabo/util/Hash.hh"
+#include "karabo/net/EventLoop.hh"
 
 #include "boost/thread/mutex.hpp"
 #include "boost/shared_ptr.hpp"
@@ -792,7 +793,7 @@ void SignalSlotable_Test::testConnectAsyncMulti() {
 void SignalSlotable_Test::testDisconnectAsync() {
 
     auto signaler = boost::make_shared<SignalSlotable>("signalInstance");
-    signaler->registerSignal<int>("signal");
+    signaler->registerSignal("signal");
     signaler->start();
 
     auto slotter = boost::make_shared<SignalSlotable>("slotInstance");
