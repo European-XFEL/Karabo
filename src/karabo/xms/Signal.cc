@@ -72,7 +72,7 @@ namespace karabo {
 
                 Hash::Pointer header = prepareHeader(m_registeredSlots);
 
-                // Three ways to emit: 1) In-process 2) P2P 3) Broker
+                // Two ways to emit: 1) In-process 2) Broker
                 // TODO Improve the code here, to be a bit more disentangled and speedy
 
                 // Not connected to any slot
@@ -97,17 +97,6 @@ namespace karabo {
                     } else {
                         ++it;
                     }
-                }
-
-                // Check the leftovers for p2p shortcutting
-                if (registeredSlots.size() > 0) {
-
-                    // Update the header
-                    header = prepareHeader(registeredSlots);
-
-                    // publish if P2P connected slots and filter them out. After call, registeredSlots and header are updated
-                    SignalSlotable::m_pointToPoint->publishIfConnected(registeredSlots, header, message, m_priority);
-
                 }
 
                 // publish leftovers via broker
