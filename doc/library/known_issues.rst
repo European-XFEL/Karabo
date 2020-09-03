@@ -10,12 +10,25 @@ known issues are expected!
 C++ API
 =======
 
-- To be filled.
+- The ``FileDataLogReader`` will start indexing a property on property history
+  request. The first request will receive a remote exception. Any subsequent
+  request until the indexing is complete will result in an empty set.
+
+- Data logged into InfluxDB may take a while to be available for reading. The
+  availability interval depends on the writing load on the InfluxDB
+  infra-structure. This is not a Karabo issue, and maybe observed from other
+  InfluxDB clients as well (e.g. Grafana). During the phase of migration of
+  data from the legacy system to the one based on InfluxDB at European XFEL,
+  writing loads way beyond normal usage ones were handled by the InfluxDB
+  infra-structure. In such a scenario, intervals in the order of minutes could
+  be observed for the data to be ready for reading.
+
 
 Bound Python API
 ================
 
-- To be filled.
+- Failure on instantiation generates an exception in all 3 APIs.
+  In the Bounnd Pyhon API, this exception is not reported to the caller.
 
 Middlelayer API
 ===============
