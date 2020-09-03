@@ -189,13 +189,6 @@ namespace karabo {
                     .init()
                     .commit();
 
-            BOOL_ELEMENT(expected).key("useP2p")
-                    .displayedName("Use p2p shortcut")
-                    .description("Whether to instruct loggers to use point-to-point instead of broker")
-                    .reconfigurable()
-                    .assignmentOptional().defaultValue(false)
-                    .commit();
-
             VECTOR_STRING_ELEMENT(expected).key("serverList")
                     .displayedName("Server list")
                     .description("List of device server IDs where the DataLogger instance run. "
@@ -955,7 +948,6 @@ namespace karabo {
             }
             config.set("flushInterval", get<int>("flushInterval"));
             config.set("performanceStatistics.enable", get<bool>("enablePerformanceStats"));
-            config.set("useP2p", get<bool>("useP2p"));
 
             const std::string loggerId(serverIdToLoggerId(serverId));
             const Hash hash("classId", m_logger,
