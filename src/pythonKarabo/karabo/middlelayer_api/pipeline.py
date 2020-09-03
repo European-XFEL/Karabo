@@ -31,6 +31,7 @@ class CancelQueue(Queue):
     the Python guys to add this method to the standard library. Worst case
     we have to copy asyncio's Queue.
     """
+
     def cancel(self):
         """Cancel all getters and putters currently waiting"""
         for fut in self._putters:
@@ -625,7 +626,7 @@ class NetworkOutput(Configurable):
         displayedName="No Input (Shared)",
         description="What to do if currently no share-input channel is "
                     "available for writing to",
-        options=["queue", "drop", "wait", "throw"],  # add later "queueDrop"
+        options=["queue", "drop", "wait", "queueDrop"],
         assignment=Assignment.OPTIONAL, defaultValue="drop",
         accessMode=AccessMode.INITONLY)
 
@@ -669,7 +670,12 @@ class NetworkOutput(Configurable):
         self.wait_queues = []
         self.copy_futures = []
         self.has_shared = False
-        self.shared_queue = Queue(0 if self.noInputShared == "queue" else 1)
+        if self.noInputShared == "queue":
+            self.shared_queue = Queue(0)
+        elif self.noInputShared == "queueDrop":
+            self.shared_queue = RingQueue(100)
+        else:
+            self.shared_queue = Queue(1)
 
     @coroutine
     def getInformation(self, channelName):
@@ -693,7 +699,9 @@ class NetworkOutput(Configurable):
             channel_name = message["instanceId"]
             distribution = message["dataDistribution"]
             slowness = message["onSlowness"]
-
+            if slowness == "throw":
+                print(f"Throw configuration detected for {channel_name}!")
+                slowness = "drop"
             local_host, local_port = writer.get_extra_info("sockname")
             remote_host, remote_port = writer.get_extra_info("peername")
             # Set the connection table entry
@@ -725,8 +733,6 @@ class NetworkOutput(Configurable):
                 queues.append(queue)
                 try:
                     while True:
-                        if queue.full() and slowness == "throw":
-                            return
                         yield from channel.nextChunk(queue.get())
                 finally:
                     queues.remove(queue)
@@ -749,8 +755,6 @@ class NetworkOutput(Configurable):
         if (self.has_shared and self.noInputShared != "wait"
                 and not self.shared_queue.full()):
             self.shared_queue.put_nowait(chunk)
-        elif self.noInputShared == "throw":
-            raise QueueFull()
         for future in self.copy_futures:
             if not future.done():
                 future.set_result(chunk)
