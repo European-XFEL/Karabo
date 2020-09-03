@@ -206,7 +206,6 @@ namespace karabo {
         DeviceServer::~DeviceServer() {
             stopDeviceServer();
             KARABO_LOG_FRAMEWORK_TRACE << "DeviceServer::~DeviceServer() dtor : m_logger.use_count()=" << m_logger.use_count();
-            m_timeTickerTimer.cancel();
             m_logger.reset();
         }
 
@@ -497,6 +496,7 @@ namespace karabo {
 
         void DeviceServer::stopDeviceServer() {
             // First stop background work
+            m_timeTickerTimer.cancel();
             m_scanPluginsTimer.cancel();
 
             // Then stop devices
