@@ -75,6 +75,10 @@ class _BaseTableElement(BaseBindingController):
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, [])
+        if not value:
+            self._item_model.clear_model()
+            return
+
         row_count = self._item_model.rowCount()
 
         # Remove rows if necessesary
@@ -132,8 +136,8 @@ class _BaseTableElement(BaseBindingController):
                     delegate = ComboBoxDelegate(options, parent=self.widget)
                     self.widget.setItemDelegateForColumn(column, delegate)
 
-# ---------------------------------------------------------------------
-# Actions
+    # ---------------------------------------------------------------------
+    # Actions
 
     def _row_to_end_action(self):
         start, count = self._item_model.rowCount(), 1
@@ -176,7 +180,7 @@ class _BaseTableElement(BaseBindingController):
             key = self._column_hash.getKeys()[column]
             if (self._role == Qt.EditRole
                     and self._column_hash.hasAttribute(
-                    key, KARABO_SCHEMA_DEFAULT_VALUE)):
+                        key, KARABO_SCHEMA_DEFAULT_VALUE)):
                 set_default_action = menu.addAction('Set Cell Default')
                 set_default_action.triggered.connect(
                     partial(self._set_index_default, index=index, key=key))
