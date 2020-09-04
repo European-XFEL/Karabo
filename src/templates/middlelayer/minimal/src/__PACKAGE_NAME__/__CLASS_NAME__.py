@@ -6,8 +6,12 @@
 
 from karabo.middlelayer import Device, Slot, String
 
+from ._version import version as deviceVersion
+
 
 class __CLASS_NAME__(Device):
+    __version__ = deviceVersion
+
     greeting = String()
 
     @Slot()
