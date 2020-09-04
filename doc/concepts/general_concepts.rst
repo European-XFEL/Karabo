@@ -322,25 +322,15 @@ programmer defines node types which can be used in this list::
             .commit()
         )
 
-Device Version vs. Karabo Version
-+++++++++++++++++++++++++++++++++
+Device version
+++++++++++++++
 
-.. note::
-   This section needs to be updated.
+Each device declares in its configuration the Karabo Framework version
+as well as its package version. The automation of this feature allows to
+seamlessly store the software configuration in the logging system.
 
-
-Any device code must match the Karabo version it is deployed upon in terms of API calls
-and inter-device communication. For this reason programmers need to assign the Karabo
-version the current device code is pertinent to in the device code.
-
-.. code-block:: python
-
-	@KARABO_CLASSINFO("DataGenerator", "2.0")
-	class DataGenerator(PythonDevice):
-		....
-
-See the respective  API sections on examples of how this is done for the C++ and
-middle-layer APIs.
+See the respective API sections on examples of how this is done for the C++ and
+python APIs.
 
 
 Device Hooks
