@@ -196,8 +196,6 @@
           <itemPath>../../../src/karabo/net/TcpConnection.cc</itemPath>
           <itemPath>../../../src/karabo/net/TcpConnection.hh</itemPath>
         </logicalFolder>
-        <itemPath>../../../src/karabo/net/PointToPoint.cc</itemPath>
-        <itemPath>../../../src/karabo/net/PointToPoint.hh</itemPath>
       </logicalFolder>
       <itemPath>../../../src/karabo/net/EventLoop.cc</itemPath>
       <itemPath>../../../src/karabo/net/EventLoop.hh</itemPath>
@@ -1276,16 +1274,6 @@
         </ccTool>
       </item>
       <item path="../../../src/karabo/net/JmsProducer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/PointToPoint.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/PointToPoint.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3216,16 +3204,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/net/PointToPoint.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/PointToPoint.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Strand.cc" ex="false" tool="1" flavor2="0">
@@ -5138,16 +5116,6 @@
         </ccTool>
       </item>
       <item path="../../../src/karabo/net/JmsProducer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/net/PointToPoint.cc"
-            ex="false"
-            tool="1"
-            flavor2="8">
-      </item>
-      <item path="../../../src/karabo/net/PointToPoint.hh"
             ex="false"
             tool="3"
             flavor2="0">
