@@ -53,12 +53,6 @@ namespace karabo {
                     .initialValue(std::vector<std::string>())
                     .commit();
 
-            BOOL_ELEMENT(expected).key("useP2p")
-                    .displayedName("Use p2p shortcut")
-                    .description("Whether to try to use point-to-point instead of broker")
-                    .assignmentOptional().defaultValue(false)
-                    .commit();
-
             Schema lastUpdateSchema;
             STRING_ELEMENT(lastUpdateSchema).key("deviceId")
                     .displayedName("Device")
@@ -117,7 +111,6 @@ namespace karabo {
 
         DataLogger::DataLogger(const Hash& input)
             : karabo::core::Device<>(input)
-            , m_useP2p(false)
             , m_flushDeadline(karabo::net::EventLoop::getIOService()) {
 
             // start "flush" actor ...
@@ -158,7 +151,6 @@ namespace karabo {
 
 
         void DataLogger::initialize() {
-            m_useP2p = get<bool>("useP2p");
 
             // Validate that devicesToBeLogged does not contain duplicates
             const auto devsToLog(get<std::vector < std::string >> ("devicesToBeLogged"));
@@ -215,25 +207,8 @@ namespace karabo {
                                         const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
 
             const std::string& deviceId = data->m_deviceToBeLogged;
-            // First try to establish p2p before connecting signals - i.e. don't to spam the broker with signalChanged.
-            if (m_useP2p) {
-                // copy to avoid capture of bare 'this'
-                auto successHandler = [deviceId] () {
-                    KARABO_LOG_FRAMEWORK_INFO << "Going to establish p2p to '" << deviceId << "'";
-                };
-                auto failureHandler = [deviceId] () {
-                    try {
-                        throw;
-                    } catch (const std::exception& e) {
-                        // As of now (2019-06-24), this is expected for middlelayer...
-                        KARABO_LOG_FRAMEWORK_WARN << "Cannot establish p2p to '" << deviceId << "' since:\n"
-                                << e.what();
-                    }
-                };
-                asyncConnectP2p(deviceId, successHandler, failureHandler);
-            }
 
-            // Then connect to schema updates and afterwards request Schema (in other order we might miss an update).
+            // Connect to schema updates and afterwards request Schema (in other order we might miss an update).
             data->m_initLevel = DeviceData::InitLevel::STARTED;
             KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Connecting to " << deviceId << ".slotSchemaUpdated";
             asyncConnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated",
@@ -361,9 +336,7 @@ namespace karabo {
             if (it == m_perDeviceData.end()) return false;
             it->second->stopLogging();
             m_perDeviceData.erase(it);
-            if (m_useP2p) {
-                disconnectP2P(deviceId);
-            }
+
             return true;
         }
 
