@@ -5,4 +5,4 @@ package/
 dist/
 build/
 .dep.inc
-
+src/version.hh
