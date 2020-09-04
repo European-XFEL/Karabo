@@ -6,8 +6,10 @@
 
 from karabo.bound import PythonDevice, KARABO_CLASSINFO
 
+from ._version import version as deviceVersion
 
-@KARABO_CLASSINFO("__CLASS_NAME__", "2.0")
+
+@KARABO_CLASSINFO("__CLASS_NAME__", deviceVersion)
 class __CLASS_NAME__(PythonDevice):
 
     @staticmethod

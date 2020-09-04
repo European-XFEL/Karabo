@@ -1,19 +1,19 @@
 #!/usr/bin/env python
-from os.path import dirname
+from os.path import dirname, join, realpath
 from setuptools import setup, find_packages
 
+from karabo.packaging.versioning import device_scm_version
 
-def _get_version_string():
-    try:
-        from karabo.packaging.versioning import get_package_version
-    except ImportError:
-        print("WARNING: Karabo framework not found! Version will be blank!")
-        return ''
 
-    return get_package_version(dirname(__file__))
+ROOT_FOLDER = dirname(realpath(__file__))
+scm_version = device_scm_version(
+    ROOT_FOLDER,
+    join(ROOT_FOLDER, 'src', '__PACKAGE_NAME__', '_version.py')
+)
+
 
 setup(name='__CLASS_NAME__',
-      version=_get_version_string(),
+      use_scm_version=scm_version,
       author='__EMAIL__',
       author_email='__EMAIL__',
       description='',
