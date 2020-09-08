@@ -5,12 +5,15 @@ What's New in Karabo 2.9.8
 A release for the GUI Server. We temporarily allow devices coded not following
 the ``fast reply on slot`` policy to be installed and not bother the user with
 spurious timeouts. These devices should be adapted before the release of 2.10.0.
+This also includes a fix for scenes with nested layouts that modifies the scene
+upon loading.
 
 Detailed Merge-Log
 ==================
 
 - CPP: GuiServerDevice can ignore timeouts on configuration !4649
 - File Logger: Fix reading of empty vector of strings logged with 2.8.X and earlier. !4654
+- GUI: Calculate scene layout sizehint from children sizehints only when it is invalid. !4668
 
 **************************
 What's New in Karabo 2.9.7
