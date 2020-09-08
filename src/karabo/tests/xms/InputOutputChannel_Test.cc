@@ -13,13 +13,18 @@
 #include "karabo/xms/OutputChannel.hh"
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/Hash.hh"
+#include "karabo/util/Schema.hh"
+#include "karabo/util/SimpleElement.hh"
 #include "karabo/net/EventLoop.hh"
 
 using namespace karabo;
 using xms::InputChannel;
 using xms::OutputChannel;
+using xms::OUTPUT_CHANNEL_ELEMENT;
 using util::Configurator;
 using util::Hash;
+using util::Schema;
+using util::INT32_ELEMENT;
 
 /// A class that adds threads following the RAII principle
 /// to safely (exceptions!) remove them when going out of scope.
@@ -55,6 +60,25 @@ void InputOutputChannel_Test::setUp() {
 
 
 void InputOutputChannel_Test::tearDown() {
+}
+
+
+void InputOutputChannel_Test::testOutputChannelElement() {
+
+    Schema pipeSchema;
+    INT32_ELEMENT(pipeSchema).key("int32").readOnly().commit();
+
+    Schema s;
+    CPPUNIT_ASSERT_NO_THROW(OUTPUT_CHANNEL_ELEMENT(s)
+                            .key("validkey")
+                            .displayedName("Valid output")
+                            .dataSchema(pipeSchema)
+                            .commit());
+    CPPUNIT_ASSERT(s.has("validkey.schema.int32"));
+
+    // The deviceId/channel delimiters ':' and (for backward compatibility) '@' are not allowed in keys.
+    CPPUNIT_ASSERT_THROW(OUTPUT_CHANNEL_ELEMENT(s).key("invalid:key"), karabo::util::ParameterException);
+    CPPUNIT_ASSERT_THROW(OUTPUT_CHANNEL_ELEMENT(s).key("invalid@key2"), karabo::util::ParameterException);
 }
 
 
