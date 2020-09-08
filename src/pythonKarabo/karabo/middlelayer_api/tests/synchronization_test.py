@@ -206,8 +206,8 @@ class Tests(DeviceTest):
         t = time.time()
         sleep(1 * unit.ms)
         self.assertLess(time.time() - t, 0.8)
-
-        with self.assertRaises(DimensionalityError):
+        # UVLoop switch gives value error
+        with self.assertRaises((DimensionalityError, ValueError)):
             sleep(1 * unit.meter)
     test_sleep.slow = 1
 
@@ -343,7 +343,8 @@ class Tests(DeviceTest):
             sleep(100), slow=sleep(1000), fast=sleep(0.001, "result"),
             err=raisor(), timeout=0.01)
 
-        self.assertFalse(done)
+        # UVLOOP provides a done of the fast.
+        self.assertEqual(done, {})
         self.assertEqual(error, {"err": exception})
         self.assertEqual(set(pending.keys()), {0, "slow", "fast"})
 
