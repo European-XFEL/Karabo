@@ -1,6 +1,6 @@
 from asyncio import (coroutine, create_subprocess_exec, ensure_future, gather,
-                     get_event_loop, set_event_loop, sleep, TimeoutError, wait,
-                     wait_for)
+                     get_event_loop, set_event_loop, set_event_loop_policy,
+                     sleep, TimeoutError, wait, wait_for)
 import copy
 from enum import Enum
 import os
@@ -18,7 +18,7 @@ from karabo.native.exceptions import KaraboError
 from karabo.native.data.hash import Bool, Hash, Int32, String, VectorString
 from karabo.native.data.schema import Descriptor, Node
 
-from .eventloop import EventLoop
+from .eventloop import EventLoopPolicy
 from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
@@ -312,8 +312,9 @@ class DeviceServerBase(SignalSlotable):
         if "--help" in argv or "-h" in argv:
             cls.print_usage(argv)
             return
-        loop = EventLoop()
-        set_event_loop(loop)
+
+        set_event_loop_policy(EventLoopPolicy())
+        loop = get_event_loop()
 
         # This function parses a dict with potentially nested values
         # ('.' seperated) and adds them flat as attributes to the class
