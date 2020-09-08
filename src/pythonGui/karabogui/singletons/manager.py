@@ -21,6 +21,8 @@ from karabogui import messagebox
 from karabogui.singletons.api import get_alarm_model, get_network, get_topology
 from karabogui.util import show_wait_cursor
 
+from .util import get_error_message
+
 
 def project_db_handler(fall_through=False):
     """Decorator for project DB handlers to cut down on boilerplate"""
@@ -422,8 +424,13 @@ class Manager(QObject):
             input_info = info['input']
             deviceId = input_info['deviceId']
             command = input_info['command']
-            text = ('Execute slot <b>{}</b> of device <b>{}</b> has '
-                    'encountered an error!'.format(command, deviceId))
+            text = (f'Execute slot <b>{command}</b> of device '
+                    f'<b>{deviceId}</b> has encountered an error!'
+                    f'<br><br>'
+                    f'The reason is probably: <br>'
+                    f'<i>{get_error_message(reason)}</i>'
+                    f'<br><br>'
+                    f'Click "Show Details..." for more information.')
             messagebox.show_error(text, details=reason)
 
     def handle_propertyHistory(self, deviceId, property, data, success=True,
