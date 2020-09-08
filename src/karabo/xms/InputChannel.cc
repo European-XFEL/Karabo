@@ -56,7 +56,8 @@ namespace karabo {
 
             UINT32_ELEMENT(expected).key("minData")
                     .displayedName("Minimum number input packets")
-                    .description("The number of elements to be read before any computation is started (0 = all, 0xFFFFFFFF = none/any)")
+                    .description("The number of elements to be read before any computation is started - not respected "
+                                 "for last data before endOfStream is received (0 = all until endOfStream)")
                     .assignmentOptional().defaultValue(1)
                     .init()
                     .commit();
@@ -82,7 +83,6 @@ namespace karabo {
         InputChannel::InputChannel(const karabo::util::Hash& config)
             : m_strand(boost::make_shared<Strand>(karabo::net::EventLoop::getIOService()))
             , m_deadline(karabo::net::EventLoop::getIOService())
-            , m_isEndOfStream(false)
             , m_respondToEndOfStream(true) {
             reconfigure(config, false);
 
@@ -431,8 +431,9 @@ namespace karabo {
 
         void InputChannel::onTcpChannelError(const karabo::net::ErrorCode& error, const karabo::net::Channel::Pointer& channel) {
 
+            bool runEndOfStream = false;
             {
-                boost::mutex::scoped_lock(m_isEndOfStreamMutex);
+                boost::mutex::scoped_lock(m_outputChannelsMutex);
                 for (auto it = m_eosChannels.begin(); it != m_eosChannels.end(); ++it) {
                     net::Channel::Pointer ptr = it->lock();
                     if (!ptr // should not happen, but if it does clean up nevertheless
@@ -440,6 +441,15 @@ namespace karabo {
                         m_eosChannels.erase(it);
                     }
                 }
+                // If the only output (of several) that did not yet provide endOfStream disconnects, trigger eos handling
+                runEndOfStream = (!m_openConnections.empty() && m_eosChannels.size() == m_openConnections.size());
+            }
+
+            if (runEndOfStream) {
+                boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
+                // FIXME: When fixing the handling of multiple output channels, check that eos is really called
+                //        (might not be the case when no more data arrives - as expected after EOS...)
+                Memory::setEndOfStream(m_channelId, m_inactiveChunk, true);
             }
 
             if (!channel) {
@@ -484,35 +494,16 @@ namespace karabo {
             const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": onTcpChannelRead) ");
 
             try {
-
+                bool treatEndOfStream = false;
                 if (header.has("endOfStream")) {
-
-                    boost::mutex::scoped_lock(m_isEndOfStreamMutex);
-
-                    m_isEndOfStream = false;
-
-                    // Track the channels that sent eos
+                    boost::mutex::scoped_lock(m_outputChannelsMutex);
                     m_eosChannels.insert(channel);
-
-                    KARABO_LOG_FRAMEWORK_DEBUG << debugId << "Received EOS #" << m_eosChannels.size();
-                    if (m_respondToEndOfStream) m_isEndOfStream = true;
-                    if (this->getMinimumNumberOfData() == 0) {
-                        KARABO_LOG_FRAMEWORK_TRACE << traceId << "Triggering another compute";
-                        boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
-                        std::swap(m_activeChunk, m_inactiveChunk);
-                        m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
+                    if (m_eosChannels.size() < m_openConnections.size()) {
+                        KARABO_LOG_FRAMEWORK_DEBUG << debugId << "Received EOS #" << m_eosChannels.size() << ", await "
+                                << m_openConnections.size() << " more.";
+                    } else {
+                        treatEndOfStream = true;
                     }
-                    if (m_eosChannels.size() == m_openConnections.size()) {
-                        if (m_respondToEndOfStream) {
-                            KARABO_LOG_FRAMEWORK_TRACE << traceId << "Triggering EOS function after reception of " << m_eosChannels.size() << " EOS tokens";
-                            m_strand->post(util::bind_weak(&InputChannel::triggerEndOfStreamEvent, this));
-                        }
-                        // Reset eos tracker
-                        m_eosChannels.clear();
-                    }
-                    channelPtr->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this,
-                                                                                    _1, channel, _2, _3));
-                    return;
                 }
 
                 boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
@@ -526,22 +517,30 @@ namespace karabo {
                     Memory::decrementChunkUsage(channelId, chunkId);
                 } else { // TCP data
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Reading from remote memory (over tcp)";
-                    Memory::writeAsContiguousBlock(data, header, m_channelId, m_inactiveChunk);
+                    if (!header.has("endOfStream")) {
+                        // FIXME: Erases previously stored data in same chunk - buggy for minData! (OK for local memory: writeChunk appends!)
+                        //        Serious bug also if connected to several input channels?
+                        //        If fixed, can also be done if eos in header (since then is a no-op)
+                        Memory::writeAsContiguousBlock(data, header, m_channelId, m_inactiveChunk);
+                    }
                 }
+                // Due to minData needs, we may have a chunk marked as endOfStream that also contains data!
+                Memory::setEndOfStream(m_channelId, m_inactiveChunk, treatEndOfStream);
 
-                if (this->getMinimumNumberOfData() == 0) { // should keep reading until EOS (minData == 0 means that)
+                if (this->getMinimumNumberOfData() == 0 && !treatEndOfStream) { // should keep reading until EOS (minData == 0 means that)
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Can read more data since 'all' requested";
+                    twoPotsLock.unlock();
                     notifyOutputChannelForPossibleRead(channel);
                 } else {
                     size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
-                    if (nInactiveData < this->getMinimumNumberOfData()) {
+                    if (nInactiveData < this->getMinimumNumberOfData() && !treatEndOfStream) {
                         // requests more data
                         twoPotsLock.unlock();
                         notifyOutputChannelForPossibleRead(channel);
                     } else {
                         // Data complete,...
                         size_t nActiveData = Memory::size(m_channelId, m_activeChunk);
-                        if (nActiveData == 0) { // ...second pot still empty,...
+                        if (nActiveData == 0 && !Memory::isEndOfStream(m_channelId, m_activeChunk)) { // ...second pot still empty,...
                             KARABO_LOG_FRAMEWORK_TRACE << traceId << "At nActiveData == 0; will swap buffers for active and inactive data.";
                             std::swap(m_activeChunk, m_inactiveChunk);
                             twoPotsLock.unlock(); // before synchronous tcp write in notifyOutputChannelForPossibleRead
@@ -554,7 +553,7 @@ namespace karabo {
                             // triggerIOEvent will be called by the update of the triggerIOEvent
                             // that is processing the active pot now
                             KARABO_LOG_FRAMEWORK_DEBUG << "Do not trigger IOEvent with pot sizes " << nActiveData << "/"
-                                    << Memory::size(m_channelId, m_inactiveChunk);
+                                    << nInactiveData;
                         }
                     }
                 }
@@ -627,11 +626,14 @@ namespace karabo {
 
 
         void InputChannel::triggerIOEvent() {
-            std::string exceptMsg;
-            boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
+
+            bool treatEndOfStream = false;
             {
+                boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
                 const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": triggerIOEvent) ");
-                
+
+                // Cache need for endOfStream handling since cleared in clearChunkData
+                treatEndOfStream = Memory::isEndOfStream(m_channelId, m_activeChunk);
                 try {
                     // There is either m_inputHandler or m_dataHandler
                     // (or neither), see registerInputHandler and registerDataHandler.
@@ -656,24 +658,16 @@ namespace karabo {
                             // That is safe as long as this loop does nothing with 'data' after calling the data handler.
                             m_dataHandler(data, m_metaDataList[i]);
                         }
-                    } else if (m_inputHandler) {
+                    } else if (m_inputHandler && size() > 0) { // size could be zero if only endOfStream
                         KARABO_LOG_FRAMEWORK_TRACE << traceId << "Calling inputHandler";
                         m_inputHandler(shared_from_this());
                     }
-                } catch (const Exception& e) {
-                    (exceptMsg += "exception:\n") += e.detailedMsg();
-                } catch (const std::exception& se) {
-                    (exceptMsg += "standard exception: ") += se.what();
-                } catch (...) {
-                    exceptMsg += "unknown exception";
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Exception in 'triggerIOEvent' for instance '"
+                            << m_instanceId << "': " << e.what();
                 }
 
-                if (!exceptMsg.empty()) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "'triggerIOEvent' for instance '"
-                            << m_instanceId << "' caught " << exceptMsg;
-                }
-
-                // Whatever handler (even none or one that throws): we are done with the data.
+                // Whatever handlers (even none or one that throws): we are done with the data.
                 try {
                     // Clear active chunk
                     Memory::clearChunkData(m_channelId, m_activeChunk);
@@ -681,57 +675,33 @@ namespace karabo {
                     // Swap buffers
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will call swapBuffers after processing input";
                     size_t nInactiveData = Memory::size(m_channelId, m_inactiveChunk);
-                    if (nInactiveData < this->getMinimumNumberOfData()) {
+                    if (nInactiveData < this->getMinimumNumberOfData()
+                        && !Memory::isEndOfStream(m_channelId, m_inactiveChunk)) {
                         // Too early to process inactive Pot: has to reach minData
                         KARABO_LOG_FRAMEWORK_TRACE << traceId << "Too early to process inactive Pot: has to reach minData.";
-                        return;
+                    } else {
+                            std::swap(m_activeChunk, m_inactiveChunk);
+
+                            // After swapping the pots, the new active one is ready...
+                            m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
+                            // ...and the other one can be filled
+                            twoPotsLock.unlock(); // before synchronous write to Tcp
+                            notifyOutputChannelsForPossibleRead();
                     }
-                    std::swap(m_activeChunk, m_inactiveChunk);
-
-                    // After swapping the pots, the new active one is ready...
-                    m_strand->post(util::bind_weak(&InputChannel::triggerIOEvent, this));
-                    // ...and the other one can be filled
-                    twoPotsLock.unlock(); // before synchronous write to Tcp
-                    notifyOutputChannelsForPossibleRead();
-
                 } catch (const std::exception& ex) {
                     KARABO_LOG_FRAMEWORK_ERROR << "InputChannel::update exception -- " << ex.what();
                 }
             }
 
-        }
-
-
-        void InputChannel::triggerEndOfStreamEvent() {
-            // No exception handling needed:
-            // Since this method is posted, EventLoop::runProtected() handles that.
-            if (m_endOfStreamHandler) {
-                {
-                    // Safety check if we still have some data in current pot that are not processed yet (we were called too early!)
-                    boost::mutex::scoped_lock lock(m_twoPotsMutex);
-                    // Fetch number of data pieces ... should be 0!
-                    // TODO: this is likely not required behavior, and should be refactored such that EOS events a placed into the
-                    // same queues/buckets as data is
-                    if (Memory::size(m_channelId, m_activeChunk) >= this->getMinimumNumberOfData()) {
-                        KARABO_LOG_FRAMEWORK_WARN << "triggerEndOfStream comes too early ... nActiveData = "
-                                << Memory::size(m_channelId, m_activeChunk)
-                                << " and minimum number of data = " << this->getMinimumNumberOfData();
-                        // first register 'triggerIOEvent' and then 'triggerEndOfStreamEvent' to keep an order.
-
-                        m_strand->post(util::bind_weak(&InputChannel::triggerEndOfStreamEvent, this));
-
-                        return;
-                    }
+            // endOfStream handling if required - but after requesting more data and releasing m_twoPotsMutex
+            if (treatEndOfStream && m_endOfStreamHandler && m_respondToEndOfStream) {
+                try {
+                    m_endOfStreamHandler(shared_from_this());
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Exception from endOfStream handler for instance '"
+                            << m_instanceId << "': " << e.what();
                 }
-                // call handler
-                m_endOfStreamHandler(shared_from_this());
             }
-            // Keep things going even after receiving EOS (end-of-stream)...
-            // NOTE: This is experimental change!!!
-            // Should work because if the intention is to close pipeline the disconnect() should be called from
-            // the "m_endOfStreamHandler" handler called just before...
-            // This change is required for the MDL API only to continue sending data.
-            notifyOutputChannelsForPossibleRead();
         }
 
 
