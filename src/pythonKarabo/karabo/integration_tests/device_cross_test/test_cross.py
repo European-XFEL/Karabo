@@ -31,6 +31,9 @@ class MiddlelayerDevice(DeviceClientBase):
 
     value = Int32()
 
+    channelclose = String(
+        defaultValue="")
+
     boundDevice = String(
         defaultValue="")
 
@@ -146,7 +149,7 @@ class Tests(DeviceTest):
         self.process = yield from create_subprocess_exec(
             sys.executable, "-m", "karabo.bound_api.launcher",
             "run", "karabo.bound_device_test", "TestDevice",
-            stdin=PIPE)
+            stdin=PIPE, stderr=PIPE, stdout=PIPE)
         # Logging set to FATAL to swallow the misleading ERROR that comes
         # if we try (and fail as expected) to set a readOly property on
         # For debugging you may switch to INFO or DEBUG.
@@ -384,6 +387,8 @@ class Tests(DeviceTest):
         yield from shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
         yield from self.process.wait()
+        # Wait a few seconds for the broker message
+        yield from sleep(2)
         self.assertEqual(self.device.channelclose, "boundDevice:output1")
 
     @async_tst(timeout=90)
@@ -424,7 +429,8 @@ class Tests(DeviceTest):
         karabo = os.environ["KARABO"]
         self.process = yield from create_subprocess_exec(
             os.path.join(karabo, "bin", "karabo-cppserver"),
-            xml_path, stderr=PIPE, stdout=PIPE)
+            xml_path,
+            stdin=PIPE, stderr=PIPE, stdout=PIPE)
 
         @coroutine
         def print_stdout():

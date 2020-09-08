@@ -23,3 +23,7 @@ class KaraboStream:
             get_event_loop().instance().update()
         except AttributeError:
             self.base.flush()
+
+    @property
+    def fileno(self):
+        return self.base.fileno
