@@ -411,6 +411,10 @@ namespace karabo {
             }
 
             OutputChannelElement& key(const std::string& key) {
+                if (key.find_first_of(":@") != std::string::npos) {
+                    // Input channel connections are configured with "<deviceId>:<outputChannelKey>" (or '@' instead of ':')
+                    throw KARABO_PARAMETER_EXCEPTION("Bad output channel key with device/channel id delimiter (':' '@') : " + key);
+                }
                 m_outputChannel.key(key);
                 m_dataSchema.key(key + ".schema");
                 return *this;
