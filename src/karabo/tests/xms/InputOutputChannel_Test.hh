@@ -14,6 +14,7 @@
 class InputOutputChannel_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(InputOutputChannel_Test);
+    CPPUNIT_TEST(testOutputChannelElement);
     CPPUNIT_TEST(testConnectDisconnect);
     CPPUNIT_TEST(testConcurrentConnect);
     CPPUNIT_TEST_SUITE_END();
@@ -25,6 +26,7 @@ public:
 
 private:
 
+    void testOutputChannelElement();
     void testConnectDisconnect();
     void testConcurrentConnect();
 };
