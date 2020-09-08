@@ -124,6 +124,13 @@ class Tests(DeviceTest):
         expected = ['dataOutput', 'nodeOutput.output', 'output']
         self.assertEqual(names, expected)
 
+    @async_tst
+    async def test_zero_sockets_output_close(self):
+        """Test the close of a server, order matters! This test is last!"""
+        self.assertIsNotNone(self.myDevice.output.server.sockets)
+        await self.myDevice.output.close()
+        self.assertEqual(self.myDevice.output.server.sockets, [])
+
     @sync_tst
     def test_displayType_state(self):
         self.assertEqual(self.myDevice.state.descriptor.displayType, 'State')
@@ -280,18 +287,6 @@ class Tests(DeviceTest):
         info = Hash('NoChannelId', 'NotImportant')
         with self.assertRaises(KeyError):
             yield from device.slotGetOutputChannelInformationFromHash(info)
-
-    @async_tst
-    async def test_output_server_close(self):
-        """Test the closing of the server
-
-        This has to be done after tests are done with the channel, as closing
-        will conflict with them. Hence, this test is one of the lasts in the
-        stack!
-        """
-        self.assertIsNotNone(self.myDevice.output.server.sockets)
-        await self.myDevice.output.close()
-        self.assertIsNone(self.myDevice.output.server.sockets)
 
     @async_tst
     async def test_applyRunTimeUpdates(self):

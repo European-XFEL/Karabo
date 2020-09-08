@@ -68,14 +68,14 @@ class Tests(DeviceTest):
         self.assertFalse(called)
         barrier.free()
         fut.wait()
-        sleep(0.002)
+        sleep(0.05)
         self.assertTrue(called)
 
         called = False
         fut = barrier.block(wait=False, timeout=0.01)
         fut.add_done_callback(callback)
         self.assertFalse(called)
-        sleep(0.02)
+        sleep(0.05)
         self.assertTrue(called)
 
     @sync_tst
