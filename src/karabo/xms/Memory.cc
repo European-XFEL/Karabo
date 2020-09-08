@@ -19,6 +19,7 @@ namespace karabo {
         //std::vector< std::vector< std::vector<boost::shared_ptr<std::vector<char> > > > Memory::m_cache = std::vector< std::vector< std::vector< boost::shared_ptr<std::vector<char> > > > >(MAX_N_CHANNELS, std::vector< std::vector< boost::shared_ptr<std::vector<char> > > >(MAX_N_CHUNKS));
         Memory::Channels Memory::m_cache = Memory::Channels(MAX_N_CHANNELS, Memory::Chunks(MAX_N_CHUNKS));
         Memory::ChannelMetaDataEntries Memory::m_metaData = Memory::ChannelMetaDataEntries(MAX_N_CHANNELS, Memory::ChunkMetaDataEntries(MAX_N_CHUNKS));
+        std::vector<std::vector<bool>> Memory::m_isEndOfStream(MAX_N_CHANNELS, std::vector<bool>(MAX_N_CHUNKS, false));
 
         //std::vector<std::vector<bool> > Memory::m_chunkStatus = std::vector<std::vector<bool> >(MAX_N_CHANNELS, std::vector<bool>(MAX_N_CHUNKS));
         Memory::ChunkStatus Memory::m_chunkStatus = Memory::ChunkStatus(MAX_N_CHANNELS, std::vector<int> (MAX_N_CHUNKS, 0));
@@ -72,6 +73,17 @@ namespace karabo {
             srcInfo.insert(srcInfo.end(), metaData.begin(), metaData.end());
         }
 
+
+        void Memory::setEndOfStream(const size_t channelIdx, const size_t chunkIdx, bool isEos) {
+            m_isEndOfStream[channelIdx][chunkIdx] = isEos;
+        }
+
+
+        bool Memory::isEndOfStream(const size_t channelIdx, const size_t chunkIdx) {
+            return m_isEndOfStream[channelIdx][chunkIdx];
+        }
+
+
         size_t Memory::getChannelIdxFromName(const std::string& name) {
             boost::mutex::scoped_lock lock(m_accessMutex);
             std::map<std::string, size_t>::const_iterator it = m_name2Idx.find(name);
@@ -118,6 +130,7 @@ namespace karabo {
                     m_cache[channelIdx][i] = Data();
                     m_metaData[channelIdx][i] = MetaDataEntries();
                     m_chunkStatus[channelIdx][i] = 1;
+                    m_isEndOfStream[channelIdx][i] = false;
                     return i;
                 }
             }
@@ -145,6 +158,7 @@ namespace karabo {
         void Memory::clearChunkData(const size_t & channelIdx, const size_t & chunkIdx) {
             m_cache[channelIdx][chunkIdx].clear();
             m_metaData[channelIdx][chunkIdx].clear();
+            m_isEndOfStream[channelIdx][chunkIdx] = false;
         }
 
         int Memory::getChannelStatus(const size_t channelIdx) {
