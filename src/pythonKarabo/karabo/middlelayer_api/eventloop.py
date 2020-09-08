@@ -1,12 +1,12 @@
 from __future__ import absolute_import, unicode_literals
 
 from asyncio import (
-    AbstractEventLoop, CancelledError, coroutine, ensure_future, Future,
+    CancelledError, coroutine, ensure_future, Future,
     gather, get_event_loop, iscoroutinefunction, Queue, set_event_loop,
-    SelectorEventLoop, shield, sleep, Task, TimeoutError, wait_for)
+    shield, sleep, Task, TimeoutError, wait_for)
+from asyncio.events import BaseDefaultEventLoopPolicy
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing, ExitStack
-import faulthandler
 from functools import wraps
 import getpass
 import inspect
@@ -14,14 +14,13 @@ from itertools import count
 import logging
 import os
 import queue
-import selectors
-import signal
 import socket
-import sys
 import time
 import threading
 import traceback
 import weakref
+
+from uvloop import Loop
 
 from karabo.native.data.basetypes import KaraboValue, unit_registry as unit
 from karabo.native.exceptions import KaraboError
@@ -443,7 +442,7 @@ for f in ["cancel", "cancelled", "done", "result", "exception"]:
     setattr(KaraboFuture, f, synchronize(method))
 
 
-class NoEventLoop(AbstractEventLoop):
+class NoEventLoop(Loop):
     """A fake event loop for a thread
 
     There is only one Karabo event loop running ever. All other threads
@@ -453,6 +452,8 @@ class NoEventLoop(AbstractEventLoop):
     """
     Queue = queue.Queue
     sync_set = True
+    _ready = []
+    _scheduled = []
 
     def __init__(self, instance):
         self._instance = instance
@@ -517,26 +518,28 @@ class NoEventLoop(AbstractEventLoop):
         return self._instance
 
 
-class AlarmSelector(selectors.DefaultSelector):
-    """A selector that assures no SIGALRM is sent during selecting"""
-    def select(self, timeout=None):
-        lastalarm = signal.alarm(0)
-        try:
-            return super().select(timeout)
-        finally:
-            signal.alarm(lastalarm)
+class EventLoopPolicy(BaseDefaultEventLoopPolicy):
+
+    def new_loop(self):
+        return EventLoop()
+
+    def _loop_factory(self):
+        return self.new_loop()
 
 
-class EventLoop(SelectorEventLoop):
+class EventLoop(Loop):
     Queue = Queue
     sync_set = False
     global_loop = None
 
+    _ready = []
+    _scheduled = []
+
     def __init__(self, topic=None):
-        super().__init__(selector=AlarmSelector())
+        super().__init__()
         self.connection = None
         if EventLoop.global_loop is not None:
-            raise RuntimeError("there can only be one Karabo event loop")
+            raise RuntimeError("There can be only one Karabo Eventloop")
         EventLoop.global_loop = self
 
         if topic is not None:
@@ -552,8 +555,6 @@ class EventLoop(SelectorEventLoop):
         self.changedFutures = set()  # call if some property changes
         self.set_default_executor(ThreadPoolExecutor(_NUM_THREADS))
         self.set_exception_handler(EventLoop.exceptionHandler)
-        # we overwrite sys.stderr for macros, so sys.__stderr__ it is
-        faulthandler.register(signal.SIGALRM, file=sys.__stderr__)
 
     def exceptionHandler(self, context):
         try:
@@ -650,23 +651,6 @@ class EventLoop(SelectorEventLoop):
                         raise
                     else:
                         loop.cancel()
-
-    def _run_once(self):
-        """Run all the currently scheduled events
-
-        We overwrite this method so that we can detect stuck device servers.
-        The events are typically all handled within less than 100 ms. If we
-        are still not done after 30 s, a SIGALRM will be sent, and we
-        installed a signal handler that will dump a stack trace so we can
-        find out where we got stuck.
-        """
-        # NOTE: Temporarily set the timeout to 30 secs due to broker
-        # performance when starting ikarabo
-        signal.alarm(30)
-        try:
-            super()._run_once()
-        finally:
-            signal.alarm(0)
 
     def start_device(self, device):
         lock = threading.Lock()
