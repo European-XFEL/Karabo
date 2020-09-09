@@ -18,12 +18,12 @@ def tearDown():
 def test_tree_node_basics():
     empty = SystemTreeNode(
         node_id='node_id', path='path',
-        visibility=AccessLevel.OPERATOR,
+        visibility=AccessLevel.EXPERT,
         status=ProxyStatus.OFFLINE,
         children=[]
     )
 
-    # default global accesslevel is OBSERVER
+    # default global accesslevel is OPERATOR in test
     empty2 = SystemTreeNode(
         visibility=AccessLevel.OBSERVER
     )

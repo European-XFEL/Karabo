@@ -31,6 +31,8 @@ class GuiTestCase(unittest.TestCase):
         self.app = app
 
         # AFTER the QApplication is created!
+        from karabogui import globals
+        globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OPERATOR
         from karabogui import icons
         icons.init()
         populate_controller_registry()
