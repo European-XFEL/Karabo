@@ -17,7 +17,7 @@ def tearDown():
 def test_tree_node_basics():
     empty = DeviceTreeNode(
         node_id='node_id',
-        visibility=AccessLevel.OPERATOR,
+        visibility=AccessLevel.EXPERT,
         status=ProxyStatus.OFFLINE,
         children=[]
     )
