@@ -332,8 +332,8 @@ class Descriptor(object):
     defaultValue = Attribute()
     accessMode = Attribute(AccessMode.RECONFIGURABLE)
     assignment = Attribute(Assignment.OPTIONAL)
-    requiredAccessLevel = Attribute(AccessLevel.OBSERVER)
     displayType = Attribute()
+    requiredAccessLevel = Attribute()
     allowedStates = None
     tags = None
     archivePolicy = None
@@ -341,7 +341,7 @@ class Descriptor(object):
 
     def __init__(self, strict=True, key="(unknown key)",
                  allowedStates=None, archivePolicy=None, tags=None,
-                 classId=None, **kwargs):
+                 requiredAccessLevel=None, classId=None, **kwargs):
         """Create a new descriptor with appropriate attributes
 
         The attributes are given as keyword arguments. If we define
@@ -386,6 +386,18 @@ class Descriptor(object):
             self.archivePolicy = ArchivePolicy(archivePolicy)
         if classId is not None:
             self.classId = classId
+        if requiredAccessLevel is None:
+            if self.accessMode in (AccessMode.RECONFIGURABLE,
+                                   AccessMode.INITONLY):
+                self.requiredAccessLevel = AccessLevel.USER
+            else:
+                self.requiredAccessLevel = AccessLevel.OBSERVER
+        else:
+            if strict and not isinstance(requiredAccessLevel, AccessLevel):
+                raise TypeError(
+                        'requiredAccessLevel must be of type AccessLevel,'
+                        ' got {} instead'.format(requiredAccessLevel))
+            self.requiredAccessLevel = AccessLevel(requiredAccessLevel)
 
         self.__doc__ = self.description
 

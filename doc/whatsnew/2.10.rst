@@ -9,6 +9,9 @@ The **most relevant improvements**, fixes and changes are:
   GuiServerDevice.p2pDevices and DataLoggerManager.useP2p and DataLogger.useP2p
   that were used to switch the feature (partially) on.
 
+- MDL: Every `requiredAccessLevel` which will be at least `AccessLevel.USER` for **reconfigurable** parameters
+       if not explicitly specified!
+
 
 Detailed Merge-Log
 ==================
@@ -37,4 +40,3 @@ Core Devices
 
 Graphical User Interface
 ++++++++++++++++++++++++
-

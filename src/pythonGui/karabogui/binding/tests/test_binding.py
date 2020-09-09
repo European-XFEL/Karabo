@@ -265,7 +265,7 @@ def test_property_attributes():
 
     assert binding.value.a.access_mode is AccessMode.RECONFIGURABLE
     assert binding.value.a.assignment is Assignment.OPTIONAL
-    assert binding.value.a.required_access_level is AccessLevel.OBSERVER
+    assert binding.value.a.required_access_level is AccessLevel.USER
 
     assert binding.value.m.options == ['foo', 'bar', 'baz', 'qux']
 
