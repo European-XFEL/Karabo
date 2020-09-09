@@ -982,8 +982,9 @@ class Tests(DeviceTest):
         self.assertEqual(device, "remote")
         self.assertEqual(schema.name, "Remote")
         h = schema.hash
+        print(h["value", "requiredAccessLevel"], "!!!!")
         self.assertEqual(h["value", ...], {
-            'requiredAccessLevel': 0,
+            'requiredAccessLevel': 1,
             'daqPolicy': -1,
             'metricPrefixSymbol': '',
             'accessMode': 4,
@@ -1004,7 +1005,7 @@ class Tests(DeviceTest):
             'alarmNeedsAck_warnLow': False,
         })
         self.assertEqual(h["nested", ...], {
-            'requiredAccessLevel': 0,
+            'requiredAccessLevel': 1,
             'assignment': 0,
             'nodeType': 1,
             'accessMode': 4})

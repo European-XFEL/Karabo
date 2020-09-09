@@ -2,8 +2,7 @@ from PyQt5.QtCore import Qt
 
 from karabo.common.api import ProxyStatus, State
 from karabo.native import (
-    AccessLevel, Bool, Configurable, Float, Int32, Slot, String, VectorFloat,
-    VectorHash
+    Bool, Configurable, Float, Int32, Slot, String, VectorFloat, VectorHash
 )
 from karabogui.binding.api import ProjectDeviceProxy, build_binding
 from karabogui.testing import GuiTestCase
@@ -26,8 +25,7 @@ class Object(Configurable):
                          minSize=1, maxSize=2)
     table = VectorHash(rows=RowSchema)
 
-    @Slot(allowedStates=[State.INTERLOCKED, State.ACTIVE],
-          requiredAccessLevel=AccessLevel.OBSERVER)
+    @Slot(allowedStates=[State.INTERLOCKED, State.ACTIVE])
     def slot(self):
         pass
 
