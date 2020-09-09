@@ -644,7 +644,8 @@ class Tests(TestCase):
         self.assertIsNone(d.defaultValue)
         self.assertIs(d.accessMode, AccessMode.RECONFIGURABLE)
         self.assertIs(d.assignment, Assignment.OPTIONAL)
-        self.assertIs(d.requiredAccessLevel, AccessLevel.OBSERVER)
+        # A reconfigurable parameter has at least `USER` access level
+        self.assertIs(d.requiredAccessLevel, AccessLevel.USER)
         self.assertIsNone(d.displayType)
         self.assertIs(d.unitSymbol, Unit.NUMBER)
         self.assertIs(d.metricPrefixSymbol, MetricPrefix.NONE)
