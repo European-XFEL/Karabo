@@ -17,6 +17,7 @@ class KaraboEvent(Enum):
     DatabaseIsBusy = "Database is busy"
     DeviceInitReply = "Device instantiate reply"
     DeviceStateChanged = "Device state changed"
+    ListConfigurationUpdated = "Configuration List Updated"
     LoadConfiguration = "Load device configuration"
     LoginUserChanged = "User changed"
     LogMessages = "Log messages"
