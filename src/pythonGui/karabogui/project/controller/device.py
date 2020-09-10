@@ -21,6 +21,7 @@ import karabogui.icons as icons
 from karabogui import messagebox
 from karabogui.binding.api import extract_configuration
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
+from karabogui.dialogs.configuration_from_name import ListConfigurationDialog
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.enums import AccessRole, ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
@@ -102,12 +103,19 @@ class DeviceInstanceController(BaseProjectGroupController):
                                                parent=parent))
         scene_action.setEnabled(has_scene and project_allowed)
 
-        conf_action = QAction('Get Configuration', menu)
+        conf_action = QAction('Get Configuration (Time)', menu)
         can_get_conf = (server_online and
                         proj_device_status not in NO_CONFIG_STATUSES)
         conf_action.triggered.connect(partial(
             self._get_configuration_from_past, parent=parent))
         conf_action.setEnabled(can_get_conf)
+
+        conf_action_name = QAction('Get Configuration (Name)', menu)
+        can_get_conf_name = (server_online and
+                             proj_device_status not in NO_CONFIG_STATUSES)
+        conf_action_name.triggered.connect(partial(
+            self._get_configuration_from_name, parent=parent))
+        conf_action_name.setEnabled(can_get_conf_name)
 
         show_action = QAction(icons.deviceInstance, 'Select in topology', menu)
         show_action.triggered.connect(self._show_device)
@@ -143,6 +151,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         menu.addAction(macro_action)
         menu.addAction(scene_action)
         menu.addAction(conf_action)
+        menu.addAction(conf_action_name)
         menu.addAction(show_action)
         menu.addSeparator()
         menu.addAction(instantiate_action)
@@ -601,6 +610,13 @@ class DeviceInstanceController(BaseProjectGroupController):
             # Explicitly specifiy ISODate!
             time = str(time_point.toString(Qt.ISODate))
             get_network().onGetConfigurationFromPast(device_id, time=time)
+
+    def _get_configuration_from_name(self, parent=None):
+        """Request a configuration from name from configuration manager"""
+        device_id = self.model.instance_id
+        dialog = ListConfigurationDialog(instance_id=device_id, parent=parent)
+        get_network().onListConfigurationFromName(device_id=device_id)
+        dialog.show()
 
     def instantiate(self, server):
         """ Instantiate this device instance on the given `server`
