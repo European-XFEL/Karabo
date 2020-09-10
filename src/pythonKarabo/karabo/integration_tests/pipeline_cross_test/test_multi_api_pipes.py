@@ -217,17 +217,46 @@ class TestCrossPipelining(BoundDeviceTestCase):
 
         out_count = self.dc.get("sender", "outputCounter")
 
-        # Checks that all the forwarders received and passed data along.
-        for i in range(num_of_forwarders):
-            self.assertTrue(self.waitUntilEqual(f"fwd{i+1}", "outputCounter",
-                                                out_count, self._max_timeout),
-                            f"fwd{i+1} failed at forwarding data.")
+        def checkForwardersProp(propName, propValue, message):
+            for i in range(num_of_forwarders):
+                self.assertTrue(self.waitUntilEqual(f"fwd{i+1}", propName,
+                                                    propValue, self._max_timeout),
+                                f"fwd{i+1}.{propName} did not become "
+                                f"{propValue}: {message}.")
 
+        def checkReceiverProp(propName, propValue, message):
+            self.assertTrue(self.waitUntilEqual("receiver", propName,
+                                                propValue, self._max_timeout),
+                            f"receiver.{propName} did not become {propValue}"
+                            f": {message}")
+
+        # Checks that all the forwarders received and passed data along.
+        checkForwardersProp("outputCounter", out_count,
+                            "i.e. device failed forwarding")
         # Checks that the data reached the final receiver.
-        self.assertTrue(self.waitUntilEqual("receiver", "inputCounter",
-                                            out_count, self._max_timeout),
-                        "Final receiver Input ({}) didn't match sender Output ({})."
-                        .format(self.dc.get("receiver", "inputCounter"), out_count))
+        checkReceiverProp("inputCounter", out_count,
+                          f"i.e. does not match sender output.")
+
+        # Check that no endOfStream received so far
+        checkForwardersProp("inputCounterAtEos", 0, "non-zero!")
+        checkReceiverProp("inputCounterAtEos",  0, "non-zero!")
+
+        # Now send endOfStream followed by a normal write to see that both
+        # (still) propagate
+        at_eos_count = out_count
+        self.dc.execute("sender", "eosOutput")
+        self.dc.execute("sender", "writeOutput")
+        out_count = self.dc.get("sender", "outputCounter")
+
+        checkForwardersProp("outputCounter", out_count,
+                            "i.e. device failed forwarding")
+        checkReceiverProp("inputCounter", out_count,
+                          "i.e. does not match sender output.")
+        checkForwardersProp("inputCounterAtEos", at_eos_count,
+                            "i.e. device did not receive 'endOfStream'")
+        checkReceiverProp("inputCounterAtEos", at_eos_count,
+                          "i.e. device did not receive 'endOfStream'")
+
 
         # Cleanup the devices used in the test.
         for devid in devices_present:
