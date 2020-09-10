@@ -5,41 +5,9 @@
 #############################################################################
 from textwrap import dedent
 
-from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMessageBox
 
-MESSAGE_POPUP = 60  # Seconds
-
-
-class KaraboMessageBox(QMessageBox):
-    """A pop up message box which will automatically close after
-    `MESSAGE_POPUP` seconds!
-    """
-    def __init__(self, parent=None):
-        super(KaraboMessageBox, self).__init__(parent)
-        self.setModal(False)
-
-        # Manually add a button to give it focus
-        button = self.addButton(QMessageBox.Ok)
-        button.clicked.connect(self.close)
-        button.setFocus()
-
-        # Set up a ticker to eventually close the pop if not already closed!
-        self._ticker = QTimer(self)
-        self._ticker.setInterval(MESSAGE_POPUP * 1000)
-        self._ticker.setSingleShot(True)
-        self._ticker.timeout.connect(self.close)
-        # We already start ticking here!
-        self._ticker.start()
-
-    def closeEvent(self, event):
-        """Close the ticker before closing the dialog"""
-        if self._ticker.isActive():
-            self._ticker.stop()
-
-        # Calling the super method will not close the dialog for messageboxes
-        # with details. We just accept the event here.
-        event.accept()
+from karabogui.dialogs.messagebox import KaraboMessageBox
 
 
 def show_alarm(text, title="Alarm", details=None, parent=None):
