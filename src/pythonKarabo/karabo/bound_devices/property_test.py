@@ -455,6 +455,7 @@ class PropertyTest(PythonDevice):
             SLOT_ELEMENT(expected).key("eosOutput")
             .displayedName("EOS to Output")
             .description("Write end-of-stream to output channel 'Output'")
+            .allowedStates(State.NORMAL)
             .commit(),
 
             INPUT_CHANNEL(expected).key("input")
@@ -482,6 +483,13 @@ class PropertyTest(PythonDevice):
             UINT32_ELEMENT(expected).key("inputCounter")
             .displayedName("Input Counter")
             .description("Number of data items received on input channel")
+            .readOnly().initialValue(0)
+            .commit(),
+
+            UINT32_ELEMENT(expected).key("inputCounterAtEos")
+            .displayedName("Input Counter @ EOS")
+            .description("Value of 'Input Counter' when endOfStream was "
+                         "received")
             .readOnly().initialValue(0)
             .commit(),
 
@@ -530,6 +538,7 @@ class PropertyTest(PythonDevice):
     def initialization(self):
         self.updateState(State.NORMAL)
         self.KARABO_ON_DATA("input", self.onData)
+        self.KARABO_ON_EOS("input", self.onEndOfStream)
 
     def preReconfigure(self, incomingCfg):
         props = ["boolProperty", "int32Property", "uint32Property",
@@ -595,6 +604,7 @@ class PropertyTest(PythonDevice):
 
     def resetChannelCounters(self):
         self.set(Hash("inputCounter", 0,
+                      "inputCounterAtEos", 0,
                       "outputCounter", 0,
                       "currentInputId", 0))
 
@@ -637,6 +647,12 @@ class PropertyTest(PythonDevice):
         # Writes data received to output channel to allow Property_Test to
         # build pipelines of chained devices.
         self.writeOutput()
+
+    def onEndOfStream(self, inputChannel):
+        inputCounter = self["inputCounter"]
+        self.set("inputCounterAtEos", inputCounter)
+        # Forward endOfStream as well
+        self.signalEndOfStream("output")
 
     def node_increment(self):
         counter = self.get("node.counterReadOnly")
