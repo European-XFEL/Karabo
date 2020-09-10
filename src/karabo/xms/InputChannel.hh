@@ -107,12 +107,9 @@ namespace karabo {
             /// Map all currently attempted connections to their 'outputChannelString'
             std::unordered_map<std::string, ConnectionQueue> m_connectionsBeingSetup;
 
-            // Prevents simultaneous access to the m_isEndOfStream flag upon data package arrival on the TcpChannel.
-            boost::mutex m_isEndOfStreamMutex;
-            bool m_isEndOfStream;
             bool m_respondToEndOfStream;
 
-            // Tracks channels that send EOS
+            // Tracks channels that sent EOS - to be protected by m_outputChannelsMutex
             std::set<karabo::net::Channel::WeakPointer> m_eosChannels;
 
             int m_delayOnInput;
@@ -161,7 +158,6 @@ namespace karabo {
         private:
             void triggerIOEvent();
 
-            void triggerEndOfStreamEvent();
         public:
             /**
              * Returns the number of bytes read since the last call of this method

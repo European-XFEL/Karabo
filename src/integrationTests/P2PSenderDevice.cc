@@ -214,7 +214,7 @@ namespace karabo {
         }
         KARABO_LOG_INFO << "Finished loop sending " << get<unsigned int>("nData") << " items";
 
-        // Done, signal EOS token (blocks until all so far queued data is sent!)
+        // Done, signal EOS token
         signalEndOfStream("output1");
 
         updateState(State::NORMAL);

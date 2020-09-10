@@ -304,9 +304,7 @@ namespace karabo {
 
             void onInputGone(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& error);
 
-            void distributeQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds);
-
-            void copyQueue(karabo::util::Hash& channelInfo);
+            void sendFromQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds);
 
             void pushShareNext(const std::string& instanceId);
 
@@ -340,6 +338,13 @@ namespace karabo {
             void unregisterWriterFromChunk(int chunkId);
 
             void distribute(unsigned int chunkId);
+
+            /**
+             * Distribute endOfStream notification to all shared inputs
+             *
+             * Requires that m_registeredSharedInputsMutex is locked.
+             */
+            void distributeEndOfStream(unsigned int chunkId);
 
             /**
              * Distribute in round round-robin mode, i.e. one shared input after another
@@ -388,15 +393,12 @@ namespace karabo {
              */
             void sendOne(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
 
-            void sendLocal(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
+            void sendLocal(const unsigned int& chunkId, const InputChannelInfo & channelInfo, bool eos);
 
-            void sendRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
+            void sendRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo, bool eos);
 
             /// Provide a string identifying this output channel (useful in DEBUG logging)
             std::string debugId() const;
-
-
-
         };
 
         class OutputChannelElement {
