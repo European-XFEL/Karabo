@@ -39,6 +39,7 @@ def project_db_handler(fall_through=False):
                 return handler(self, reply)
 
         return wrapped
+
     return inner
 
 
@@ -454,6 +455,30 @@ class Manager(QObject):
         pass
 
     # ---------------------------------------------------------------------
+    # Current Configuration Interface
+
+    def handle_listConfigurationFromName(self, **info):
+        """Handle the reply of the ListConfigurationsFromName call"""
+        success = info['success']
+        input_info = info['input']
+        deviceId = input_info['deviceId']
+        if not success:
+            reason = info['reason']
+            messagebox.show_error(f"Requesting a list of configurations for "
+                                  f"{deviceId} failed!", details=reason)
+            return
+
+        broadcast_event(KaraboEvent.ListConfigurationUpdated,
+                        {'items': info['items'],
+                         'deviceId': deviceId})
+
+    def handle_getConfigurationFromName(self, **info):
+        pass
+
+    def handle_saveConfigurationFromName(self, **info):
+        pass
+
+    # ---------------------------------------------------------------------
     # Current Project Interface
 
     def handle_projectBeginUserSession(self, reply):
@@ -539,7 +564,7 @@ class Manager(QObject):
             binding = device_proxy.get_property_binding(prop_path)
             if meta_hash is not None:
                 timestamp = Timestamp.fromHashAttributes(
-                        meta_hash['timestamp', ...])
+                    meta_hash['timestamp', ...])
             else:
                 # gui server is older with version < 2.4.0 and does not
                 # the meta hash
@@ -601,6 +626,7 @@ class Manager(QObject):
                 broadcast_event(event_type, {'instanceId': instance_id})
                 return True
         return False
+
 
 # ------------------------------------------------------------------
 

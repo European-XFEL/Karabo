@@ -386,18 +386,21 @@ class Network(QObject):
         h = Hash("type", "getConfigurationFromName")
         h["deviceId"] = device_id
         h["name"] = name
+        h["timeout"] = REQUEST_REPLY_TIMEOUT
         self._write_hash(h)
 
     def onListConfigurationFromName(self, device_id, conf_filter=""):
         h = Hash("type", "listConfigurationFromName")
         h["deviceId"] = device_id
-        h["filter"] = conf_filter
+        h["name"] = conf_filter
+        h["timeout"] = REQUEST_REPLY_TIMEOUT
         self._write_hash(h)
 
     def onSaveConfigurationFromName(self, deviceIds):
         h = Hash("type", "saveConfigurationFromName")
         h["deviceIds"] = deviceIds
         h["client"] = krb_globals.KARABO_CLIENT_ID
+        h["timeout"] = REQUEST_REPLY_TIMEOUT
         self._write_hash(h)
 
     # ---------------------------------------------------------------------
