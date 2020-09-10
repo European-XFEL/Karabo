@@ -1,6 +1,19 @@
+from unittest.mock import patch
+
 from karabogui.testing import GuiTestCase
 from ..configuration import (
     BACKBONE, Configuration, DIRECTORIES, NETWORK, PANEL, PROJECT, USER)
+
+
+class MockSettings(object):
+
+    @classmethod
+    def value(cls, path):
+        return getattr(cls, path, None)
+
+    @classmethod
+    def setValue(cls, name, value):
+        setattr(cls, name, value)
 
 
 class TestConfiguration(GuiTestCase):
@@ -28,6 +41,16 @@ class TestConfiguration(GuiTestCase):
 
         with self.assertRaises(KeyError):
             config.noitem = "Boom"
+
+    def test_set_bool_value(self):
+        target = 'karabogui.singletons.configuration.QSettings'
+        with patch(target, new=MockSettings):
+            config = Configuration()
+            self.assertEqual(config["wizard"], True)
+            config["wizard"] = False
+            config['db_token'] = "observer"
+            self.assertEqual(config["wizard"], False)
+            self.assertEqual(config["db_token"], "observer")
 
     def test_configuration_groups(self):
         config = Configuration()
