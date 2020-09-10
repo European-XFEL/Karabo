@@ -8,12 +8,15 @@ from collections import defaultdict
 from PyQt5.QtCore import QObject, QSettings
 
 
-def _safe_bool(value):
+def _safe_bool(value, make_bool=True):
     """Safely return a boolean value from a QSettings file in the correct
     format"""
     str_value = str(value).lower()
     if str_value in ['true', 'false']:
-        return str_value == 'true'
+        if make_bool:
+            return str_value == 'true'
+        else:
+            return str_value
 
     return value
 
@@ -36,7 +39,7 @@ class Item:
     def __set__(self, instance, value):
         instance.__dict__[self.name] = value
         if self.q_set:
-            QSettings().setValue(self.path, value)
+            QSettings().setValue(self.path, _safe_bool(value, make_bool=False))
 
     def __set_name__(self, owner, name):
         self.name = name
