@@ -241,7 +241,8 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
 
         // EOS comes a bit later, so we have to poll client again to be sure...
         // Note: only one EOS arrives after receiving a train of data!
-        CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected));
+        pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected);
+        CPPUNIT_ASSERT_EQUAL(nDataExpected, m_deviceClient->get<unsigned int>(m_receiver, "nTotalDataOnEos"));
 
         // Test if data source was correctly passed
         auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
@@ -570,9 +571,8 @@ void PipelinedProcessing_Test::testPipeQueueAtLimit(unsigned int processingTime,
     CPPUNIT_ASSERT_EQUAL(queueOption, m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
 
-    testSenderOutputChannelConnections(1UL,{m_receiver + ":input"}, "copy", queueOption, "local",{
-                                       m_receiver + ":input2"
-    }, "copy", "wait", "local");
+    testSenderOutputChannelConnections(1UL, {m_receiver + ":input"}, "copy", queueOption, "local",
+                                       {m_receiver + ":input2"}, "copy", "wait", "local");
 
 
     m_deviceClient->set(m_receiver, "processingTime", processingTime);
@@ -653,8 +653,9 @@ void PipelinedProcessing_Test::testPipeMinData() {
 
     m_deviceClient->set(m_sender, "delay", 0u);
 
-    // input.minData = 1 by default
-    unsigned int minData = 5;
+    // input.minData = 1 by default -- for this test must be divisor of m_nDataPerRun
+    const unsigned int minData = 4;
+    CPPUNIT_ASSERT_EQUAL(0u, m_nDataPerRun % minData); // see below
 
     // start a receiver with "input.onData = false", i.e. call PipeReceiverDevice::onInput while reading data,
     // and "minData > 1"
@@ -677,18 +678,41 @@ void PipelinedProcessing_Test::testPipeMinData() {
 
     // test if data source was correctly passed
     auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSourcesFromIndex");
-    // test that "input.onData = false" and "input.miniData" are respected
+    // test that "input.onData = false" and "input.minData" are respected
+    // here we test only the last call of onInput - if minData is not a divisor of m_nDataPerRun, the check fails
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(minData), sources.size());
     for (auto& src : sources) {
         CPPUNIT_ASSERT_EQUAL(m_senderOutput1, src);
     }
 
-    // in this case, only 10 data out of 12 are expected to be received
-    unsigned int nDataExpected = m_nDataPerRun - m_nDataPerRun % minData;
-    CPPUNIT_ASSERT_EQUAL(nDataExpected, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
+    CPPUNIT_ASSERT_EQUAL(m_nDataPerRun, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
 
-    // Restore the sender delay to the value it had before running this test case.
-    m_deviceClient->set(m_sender, "delay", originalSenderDelay);
+    killDeviceWithAssert(m_receiver);
+
+    // Now check minData = 0, i.e. call onInput only when endOfStream is received
+    config.set("input.minData", 0u);
+    instantiateDeviceWithAssert("PipeReceiverDevice", config);
+
+    testSenderOutputChannelConnections(1UL,{m_receiver + ":input"}, "copy", "wait", "local",
+                                       {m_receiver + ":input2"}, "copy", "wait", "local");
+
+    // make sure the sender has stopped sending data
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::NORMAL));
+
+    // write data asynchronously
+    m_deviceClient->execute(m_sender, "write");
+    // make sure the sender has started sending data
+    CPPUNIT_ASSERT(pollDeviceProperty<karabo::util::State>(m_sender, "state", karabo::util::State::ACTIVE));
+
+    // poll until nTotalDataOnEos changes
+    CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", 0, false, m_maxTestTimeOut));
+
+    // onInput was called exactly once with all data
+    sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSourcesFromIndex");
+    CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (m_nDataPerRun), sources.size());
+    for (auto& src : sources) {
+        CPPUNIT_ASSERT_EQUAL(m_senderOutput1, src);
+    }
 
     killDeviceWithAssert(m_receiver);
 
@@ -1155,17 +1179,17 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceiversQueueAtLimit() {
 
     // 1) load-balanced
     // 1a) test slow receivers with sender queueDrop: drop data if queue gets full
-    testPipeTwoSharedQueueAtLimit("queueDrop", "load-balanced", 4, 3, 0, true, true); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueAtLimit("queueDrop", "load-balanced", 6, 4, 0, true, true); // dataLoss, slowReceivers
     // 1b) test slow receivers with sender queue: do not drop data, but wait if queue gets full
-    testPipeTwoSharedQueueAtLimit("queue", "load-balanced", 4, 3, 0, false, true); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueAtLimit("queue", "load-balanced", 6, 4, 0, false, true); // dataLoss, slowReceivers
     // 1c) test fast receivers with sender queueDrop: do not drop data, since queue never full
     testPipeTwoSharedQueueAtLimit("queueDrop", "load-balanced", 0, 1, 2, false, false); // dataLoss, slowReceivers
 
     // 2) round-robin
     // 2a) test slow receivers with sender queueDrop: drop data if queue gets full
-    testPipeTwoSharedQueueAtLimit("queueDrop", "round-robin", 4, 2, 0, true, true); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueAtLimit("queueDrop", "round-robin", 4, 3, 0, true, true); // dataLoss, slowReceivers
     // 2b) test slow receivers with sender queue: do not drop data, but wait if queue gets full
-    testPipeTwoSharedQueueAtLimit("queue", "round-robin", 4, 2, 0, false, true); // dataLoss, slowReceivers
+    testPipeTwoSharedQueueAtLimit("queue", "round-robin", 4, 3, 0, false, true); // dataLoss, slowReceivers
     // 2c) test fast receivers with sender queueDrop: do not drop data, since queue never full
     testPipeTwoSharedQueueAtLimit("queueDrop", "round-robin", 0, 1, 2, false, false); // dataLoss, slowReceivers
 
@@ -1209,9 +1233,7 @@ void PipelinedProcessing_Test::testPipeTwoSharedQueueAtLimit(const std::string& 
     m_deviceClient->set(m_receiver2, "processingTime", processingTime2);
 
     testSenderOutputChannelConnections(2UL,{m_receiver1 + ":input", m_receiver2 + ":input"}, "shared", "wait", "local",
-    {
-        m_receiver1 + ":input2", m_receiver2 + ":input2"
-    }, "copy", "wait", "local");
+                                       {m_receiver1 + ":input2", m_receiver2 + ":input2"}, "copy", "wait", "local");
 
     const unsigned int nTotalDataStart1 = m_deviceClient->get<unsigned int>(m_receiver1, "nTotalData");
     const unsigned int nTotalDataStart2 = m_deviceClient->get<unsigned int>(m_receiver2, "nTotalData");
