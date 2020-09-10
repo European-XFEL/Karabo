@@ -369,7 +369,8 @@ class PropertyTestMDL(Device):
 
     @input.endOfStream
     async def input(self, channel):
-        self.logger.info(f"End of Stream handler called by {channel}")
+        self.inputCounterAtEos = self.inputCounter.value
+        await self.output.writeEndOfStream()
 
     @input.close
     async def input(self, channel):
@@ -410,6 +411,12 @@ class PropertyTestMDL(Device):
 
     inputCounter = Int32(
         displayedName="Input counter",
+        description="Value of 'Input Counter' when endOfStream was received",
+        defaultValue=0,
+        accessMode=AccessMode.READONLY)
+
+    inputCounterAtEos = Int32(
+        displayedName="Input counter @ EOS",
         defaultValue=0,
         accessMode=AccessMode.READONLY)
 
@@ -437,10 +444,10 @@ class PropertyTestMDL(Device):
             self.state = State.NORMAL
 
     @Slot(displayedName="EOS to Output",
-          description="Write end-of-stream to output channel 'Output'")
+          description="Write end-of-stream to output channel 'Output'",
+          allowedStates=[State.NORMAL])
     async def eosOutput(self):
-        # XXX: here for interface matching. to be implemented
-        return
+        await self.output.writeEndOfStream()
 
     @Slot(displayedName="Write to Output",
           description="Write once to output channel 'Output'",
@@ -454,6 +461,7 @@ class PropertyTestMDL(Device):
           allowedStates=[State.NORMAL])
     async def resetChannelCounters(self):
         self.inputCounter = 0
+        self.inputCounterAtEos = 0
         self.outputCounter = 0
         self.currentInputId = 0
 
