@@ -1,6 +1,6 @@
 from asyncio import (coroutine, create_subprocess_exec, ensure_future, gather,
-                     get_event_loop, set_event_loop, set_event_loop_policy,
-                     sleep, TimeoutError, wait, wait_for)
+                     get_event_loop, set_event_loop_policy, sleep,
+                     TimeoutError, wait, wait_for)
 import copy
 from enum import Enum
 import os
@@ -321,7 +321,11 @@ class DeviceServerBase(SignalSlotable):
         def get(para):
             d = cls
             for p in para.split('.'):
-                d = getattr(d, p)
+                try:
+                    d = getattr(d, p, None) or getattr(d.cls, p)
+                except AttributeError:
+                    raise KaraboError(f"Device server does not have "
+                                      f"property `{para}`!")
             return d
 
         # Split the params for basic properties
@@ -335,7 +339,8 @@ class DeviceServerBase(SignalSlotable):
         server = cls(params)
         if server:
             server._device_initializer = _device_initializer
-            loop.add_signal_handler(SIGTERM, ensure_future, server.slotKillServer())
+            loop.add_signal_handler(SIGTERM, ensure_future,
+                                    server.slotKillServer())
             # NOTE: The server listens to broadcasts and we set a flag in the
             # signal slotable
             server.is_server = True
