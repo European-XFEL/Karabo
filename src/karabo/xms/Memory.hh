@@ -118,6 +118,7 @@ namespace karabo {
             static Channels m_cache;
             static SerializedChannels m_serializedCache;
             static ChannelMetaDataEntries m_metaData;
+            static std::vector<std::vector<bool>> m_isEndOfStream;
 
             static boost::mutex m_accessMutex;
 
@@ -163,6 +164,9 @@ namespace karabo {
              */
             static void write(const karabo::util::Hash& data, const size_t channelIdx, const size_t chunkIdx, const MetaData& metaData, bool copyAllData=true);
             static void writeChunk(const Data& chunk, const size_t channelIdx, const size_t chunkIdx, const std::vector<MetaData>& metaData);
+
+            static void setEndOfStream(const size_t channelIdx, const size_t chunkIdx, bool eos = true);
+            static bool isEndOfStream(const size_t channelIdx, const size_t chunkIdx);
 
             static size_t getChannelIdxFromName(const std::string& name);
 
