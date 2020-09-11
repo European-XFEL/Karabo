@@ -21,6 +21,9 @@
 namespace karabo {
     namespace xms {
 
+        /**
+         * The Memory class is an internal utility for InputChannel and OutputChannel to provide static shared memory.
+         */
         class Memory {
 
         public:
@@ -94,29 +97,15 @@ namespace karabo {
             typedef std::vector<MetaDataEntries> ChunkMetaDataEntries;
             typedef std::vector<ChunkMetaDataEntries> ChannelMetaDataEntries;
 
-            typedef std::pair<std::vector<karabo::io::BufferSet::Pointer>, karabo::util::Hash> SerializedChunk;
-            typedef boost::shared_ptr<SerializedChunk> SerializedChunkPointer;
-            typedef std::vector< SerializedChunkPointer > SerializedChunks;
-            typedef std::vector< SerializedChunks > SerializedChannels;
-
             typedef std::vector<std::vector<int> > ChunkStatus;
             typedef std::vector<int> ChannelStatus;
 
-            typedef std::vector<size_t> ChunkUsers;
-            typedef std::vector<ChunkUsers> ChannelUsers;
-
             typedef karabo::io::BinarySerializer<karabo::util::Hash> SerializerType;
-
-
-            static ChannelUsers m_cacheUsers;
-
-            static std::map<std::string, size_t> m_name2Idx;
 
             static ChunkStatus m_chunkStatus;
             static ChannelStatus m_channelStatus;
 
             static Channels m_cache;
-            static SerializedChannels m_serializedCache;
             static ChannelMetaDataEntries m_metaData;
             static std::vector<std::vector<bool>> m_isEndOfStream;
 
@@ -168,9 +157,7 @@ namespace karabo {
             static void setEndOfStream(const size_t channelIdx, const size_t chunkIdx, bool eos = true);
             static bool isEndOfStream(const size_t channelIdx, const size_t chunkIdx);
 
-            static size_t getChannelIdxFromName(const std::string& name);
-
-            static size_t registerChannel(const std::string& name = "");
+            static size_t registerChannel();
             static void unregisterChannel(const size_t channelIdx);
 
             static void incrementChannelUsage(const size_t& channelIdx);
@@ -189,8 +176,6 @@ namespace karabo {
             static int getChunkStatus(const size_t channelIdx, const size_t chunkIdx);
 
             static void assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx);
-            static void cacheAsContiguousBlock(const size_t channelIdx, const size_t chunkIdx);
-            static const SerializedChunk& readContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx);
 
             static void readAsContiguousBlock(std::vector<karabo::io::BufferSet::Pointer>& buffers,
                                               karabo::util::Hash& header,
