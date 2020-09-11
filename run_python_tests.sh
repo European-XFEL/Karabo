@@ -233,6 +233,7 @@ runPythonUnitTests() {
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.influxdb"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.native"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.project_db"
+    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.config_db"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.tests"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.interactive"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.macro_api"
@@ -299,6 +300,7 @@ generateCodeCoverageReport() {
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/middlelayer_api/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_middlelayer_api"
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/common/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_common"
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/project_db/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_project_db"
+    safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/config_db/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_config_db"
     safeRunCommand $COVERAGE html -i --include "*/site-packages/karabo/interactive/*" --omit $OMIT -d "$CODE_COVERAGE_DIR_PATH/htmlcov_interactive"
     # MR-3871: disable while karabogui doesn't support Qt5 on the old deps
     #safeRunCommand $COVERAGE html -i --include "*/karabogui/*" --omit $OMIT -d htmlcov_karabogui

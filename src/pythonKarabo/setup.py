@@ -87,6 +87,7 @@ else:
         'karabo.middlelayer_device': [
             'PropertyTestMDL=karabo.middlelayer_devices.property_test:PropertyTestMDL',
             'ProjectManager=karabo.middlelayer_devices.project_manager:ProjectManager',
+            'ConfigurationManager=karabo.middlelayer_devices.configuration_manager:ConfigurationManager',
         ],
         'karabo.macro_device': [
             'IPythonKernel=karabo.macro_devices.ipython:IPythonKernel',
