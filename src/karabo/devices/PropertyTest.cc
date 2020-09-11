@@ -602,6 +602,12 @@ namespace karabo {
                     .readOnly().initialValue(0)
                     .commit();
 
+            UINT32_ELEMENT(expected).key("inputCounterAtEos")
+                    .displayedName("Input Counter @ EOS")
+                    .description("Value of 'Input Counter' when endOfStream was received")
+                    .readOnly().initialValue(0)
+                    .commit();
+
             SLOT_ELEMENT(expected).key("resetChannelCounters")
                     .displayedName("Reset Channels")
                     .description("Reset counters involved in input/output channel data flow")
@@ -695,6 +701,7 @@ namespace karabo {
         void PropertyTest::initialize() {
             // some initialization
             KARABO_ON_DATA("input", onData); // not yet possible in constructor, since uses bind_weak
+            KARABO_ON_EOS("input", onEndOfStream);
 
             updateState(State::NORMAL);
         }
@@ -807,8 +814,17 @@ namespace karabo {
         }
 
 
+        void PropertyTest::onEndOfStream(const xms::InputChannel::Pointer& /*unusedInput*/) {
+            const unsigned int inputCounter = get<unsigned int>("inputCounter");
+            set("inputCounterAtEos", inputCounter);
+            // Forward endOfStream as well
+            signalEndOfStream("output");
+        }
+
+
         void PropertyTest::resetChannelCounters() {
             set(Hash("inputCounter", 0u,
+                     "inputCounterAtEos", 0u,
                      "currentInputId", 0,
                      "outputCounter", 0));
 
