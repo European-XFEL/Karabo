@@ -50,8 +50,9 @@ class NetworkHandler(Handler):
     def emit(self, record):
         hash = Hash(
             "timestamp", datetime.fromtimestamp(record.created).isoformat(),
-            "type", ("DEBUG", "INFO", "WARN", "ERROR"
-                     )[bisect([20, 30, 40], record.levelno)],
+            # record.levelno is 10, 20, 30,... for "DEBUG", "INFO", "WARN",...
+            "type", ("DEBUG", "INFO", "WARN", "ERROR", "FATAL"
+                     )[bisect([20, 30, 40, 50], record.levelno)],
             "category", self.parent.broker.deviceId,
             "message", record.getMessage(),
             "msg", record.msg,
@@ -72,8 +73,9 @@ class NetworkHandler(Handler):
 class PrintHandler(Handler):
     def emit(self, record):
         print("---------- Logger start -----------")
-        level = ("DEBUG", "INFO", "WARN", "ERROR"
-                 )[bisect([20, 30, 40], record.levelno)]
+        # record.levelno is 10, 20, 30,... for "DEBUG", "INFO", "WARN",...
+        level = ("DEBUG", "INFO", "WARN", "ERROR", "FATAL"
+                 )[bisect([20, 30, 40, 50], record.levelno)]
         print(datetime.fromtimestamp(record.created), level,
               self.parent.broker.deviceId)
         print(self.handler.format(record))
@@ -97,7 +99,7 @@ class Logger(Configurable):
 
     @String(
         displayedName="Logging Level",
-        options=("DEBUG", "INFO", "WARN", "ERROR"),
+        options=("DEBUG", "INFO", "WARN", "ERROR", "FATAL"),
         defaultValue="INFO")
     def level(self, value):
         """The minimum level for this logger to log"""
