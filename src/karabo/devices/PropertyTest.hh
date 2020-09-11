@@ -73,6 +73,8 @@ namespace karabo {
 
             void onData(const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta);
 
+            void onEndOfStream(const xms::InputChannel::Pointer& /*unusedInput*/);
+
             void resetChannelCounters();
 
             void eosOutput();
