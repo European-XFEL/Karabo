@@ -283,10 +283,6 @@ namespace karabo {
 
             void onTcpConnect(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
-            // TODO Implement this !!!!
-
-            //void onTcpConnectionError(const karabo::net::Connection::Pointer& conn, const karabo::net::ErrorCode& error);
-
             void onTcpChannelError(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::WeakPointer& channel, const karabo::util::Hash& message);
