@@ -8,6 +8,7 @@ from karabo.common.states import State
 from karabo.middlelayer import (
     AccessMode, background, getDevice, KaraboError, setWait, waitUntil,
     waitWhile)
+from karabo.middlelayer_api.compat import HAVE_UVLOOP
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import call, getSchema
 from karabo.native.data.hash import Float, Hash, Int32, Slot, VectorHash
@@ -129,7 +130,10 @@ class Tests(DeviceTest):
         """Test the close of a server, order matters! This test is last!"""
         self.assertIsNotNone(self.myDevice.output.server.sockets)
         await self.myDevice.output.close()
-        self.assertEqual(self.myDevice.output.server.sockets, [])
+        if HAVE_UVLOOP:
+            self.assertEqual(self.myDevice.output.server.sockets, [])
+        else:
+            self.assertEqual(self.myDevice.output.server.sockets, None)
 
     @sync_tst
     def test_displayType_state(self):
