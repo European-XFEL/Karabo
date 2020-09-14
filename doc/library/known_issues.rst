@@ -33,10 +33,17 @@ Bound Python API
 Middlelayer API
 ===============
 
-- The MDL API cannot allow the setting of ``Attributes`` on runtime in elements which are in ``Nodes``.
+- The MDL API cannot set ``Attributes`` on runtime in elements which are in ``Nodes``.
 - The alarms for the ``globalAlarmCondition`` are not latching!
   Hence, acknowledging of these alarms is not possible.
 
+Tools
+=====
+
+The packaging management handled with the ``karabo`` script is rudimentary and has the following shortcomings:
+
+- The package names are case insensitive on the default package repository (XFEL-internal gitlab).
+  This is not a limitation of the tool per se but a limitation of the repository server.
 
 Karabo GUI
 ==========
