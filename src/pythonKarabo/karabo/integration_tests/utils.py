@@ -23,6 +23,7 @@ def start_bound_server(server_id, args, plugin_dir=''):
     cmd = [sys.executable, "-c", entrypoint, "serverId=" + server_id] + args
     return subprocess.Popen(cmd, env=env)
 
+
 def start_cpp_server(server_id, args, plugin_dir=''):
     """
     Start a C++ device server with given args in its own process.
@@ -31,6 +32,7 @@ def start_cpp_server(server_id, args, plugin_dir=''):
     env = os.environ.copy()  # needed?
     cmd = ["karabo-cppserver", "serverId=" + server_id] + args
     return subprocess.Popen(cmd, env=env)
+
 
 def start_mdl_server(server_id, args, plugin_dir=''):
     """Start a Middlelayer API device server in its own process
@@ -46,6 +48,7 @@ def start_mdl_server(server_id, args, plugin_dir=''):
     # Do we need to something like for bound to get the defined plugins_dir?
     cmd = ["karabo-middlelayerserver", "serverId=" + server_id] + args
     return subprocess.Popen(cmd, env=env)
+
 
 class BoundDeviceTestCase(TestCase):
     _timeout = 60  # seconds
@@ -86,9 +89,7 @@ class BoundDeviceTestCase(TestCase):
             serverProcess = start_cpp_server(server_id, server_args,
                                              plugin_dir=plugin_dir)
         elif api == "mdl":
-            # How to specify logLevel? Next line gives
-            # AttributeError: 'Node' object has no attribute 'level'
-            # server_args.append('log.level={}'.format(logLevel))
+            server_args.append(f'log.level={logLevel}')
             serverProcess = start_mdl_server(server_id, server_args,
                                              plugin_dir=plugin_dir)
         else:
@@ -126,4 +127,3 @@ class BoundDeviceTestCase(TestCase):
         self._eventLoopThread.join()
 
         self.dc = None
-
