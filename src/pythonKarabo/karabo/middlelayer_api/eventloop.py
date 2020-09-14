@@ -20,13 +20,12 @@ import threading
 import traceback
 import weakref
 
-from uvloop import Loop
-
 from karabo.native.data.basetypes import KaraboValue, unit_registry as unit
 from karabo.native.exceptions import KaraboError
 from karabo.native.data.hash import Hash
 from karabo.native.data.serializers import decodeBinary, encodeBinary
 
+from .compat import HAVE_ASYNCIO, AbstractEventLoop, SelectorEventLoop
 from . import openmq
 
 # See C++ karabo/xms/Signal.hh for reasoning about the two minutes...
@@ -442,7 +441,7 @@ for f in ["cancel", "cancelled", "done", "result", "exception"]:
     setattr(KaraboFuture, f, synchronize(method))
 
 
-class NoEventLoop(Loop):
+class NoEventLoop(AbstractEventLoop):
     """A fake event loop for a thread
 
     There is only one Karabo event loop running ever. All other threads
@@ -452,8 +451,6 @@ class NoEventLoop(Loop):
     """
     Queue = queue.Queue
     sync_set = True
-    _ready = []
-    _scheduled = []
 
     def __init__(self, instance):
         self._instance = instance
@@ -527,13 +524,10 @@ class EventLoopPolicy(BaseDefaultEventLoopPolicy):
         return self.new_loop()
 
 
-class EventLoop(Loop):
+class EventLoop(SelectorEventLoop):
     Queue = Queue
     sync_set = False
     global_loop = None
-
-    _ready = []
-    _scheduled = []
 
     def __init__(self, topic=None):
         super().__init__()
@@ -696,10 +690,11 @@ class EventLoop(Loop):
     def close(self):
         for t in Task.all_tasks(self):
             t.cancel()
-        self._ready.extend(self._scheduled)
-        self._scheduled.clear()
-        while self._ready:
-            self._run_once()
+        if HAVE_ASYNCIO:
+            self._ready.extend(self._scheduled)
+            self._scheduled.clear()
+            while self._ready:
+                self._run_once()
         if self.connection is not None:
             self.connection.close()
         super().close()
