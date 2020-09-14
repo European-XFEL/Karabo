@@ -85,3 +85,19 @@ def create_html_hash(hsh):
             yield "</table>"
 
     return "".join(_html_hash_generator(hsh))
+
+
+def dictToHash(d):
+    """Convert a nested dictionary into a `Hash`"""
+    h = Hash()
+    for k, v in d.items():
+        if isinstance(v, dict):
+            h[k] = dictToHash(v)
+        elif isinstance(v, (list, tuple)):
+            if len(v) > 0 and isinstance(v[0], dict):
+                h[k] = [dictToHash(vv) for vv in v]
+            else:
+                h[k] = v
+        else:
+            h[k] = v
+    return h
