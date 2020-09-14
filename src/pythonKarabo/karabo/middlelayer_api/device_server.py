@@ -442,6 +442,8 @@ class MiddleLayerDeviceServer(DeviceServerBase):
         if cls is None:
             return (yield from super(MiddleLayerDeviceServer, self)
                     .startDevice(classId, deviceId, config))
+        if "log.level" not in config:
+            config["log.level"] = self.log.level
         obj = cls(config)
         task = obj.startInstance(self, broadcast=False)
         yield from task
@@ -596,6 +598,8 @@ class BoundDeviceServer(DeviceServerBase):
         if classId not in self.bounds:
             return (yield from super(BoundDeviceServer, self)
                     .startDevice(classId, deviceId, config))
+        if "Logger.priority" not in config:
+            config["Logger.priority"] = self.log.level
         env = dict(os.environ)
         env["PYTHONPATH"] = self.pluginDirectory
         future = self._new_device_futures[deviceId]
