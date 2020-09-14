@@ -262,7 +262,10 @@ runPythonIntegrationTests() {
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.pipeline_processing_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_cross_test"
     safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_schema_injection_test"
-
+    # Rerun the middlelayer here for UVLOOP business
+    export KARABO_UVLOOP=1
+    safeRunCommand "$NOSETESTS -v $FLAKY_FLAGS $COVER_FLAGS karabo.middlelayer_api"
+    unset KARABO_UVLOOP
     echo
     echo Karabo Python integration tests complete
     echo
