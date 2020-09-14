@@ -91,7 +91,9 @@ def parse_commandline():
 
     parser_ins.add_argument('device',
                             type=str,
-                            help='The name of the device package')
+                            help='The name of the device package. '
+                                 'Note: this name is not case sensitive'
+                                 ' on the repository side.')
 
     parser_ins.add_argument('tag',
                             type=str,
@@ -117,7 +119,9 @@ def parse_commandline():
 
     parser_uins = sps.add_parser('uninstall',
                                  help='Uninstalls an existing device. '
-                                 'Dependencies will not be uninstalled.')
+                                 'Dependencies will not be uninstalled.'
+                                 'NOTE: Not guaranteed to work for non '
+                                 'standard device packages nor dependencies')
     parser_uins.set_defaults(command=uninstall)
 
     parser_uins.add_argument('device',
@@ -131,7 +135,9 @@ def parse_commandline():
 
     parser_dev.add_argument('device',
                             type=str,
-                            help='The name of the device package')
+                            help='The name of the device package'
+                                 'Note: this name is not case sensitive'
+                                 ' on the repository side.')
 
     parser_dev.add_argument('-b', '--branch',
                             type=str,
@@ -151,7 +157,10 @@ def parse_commandline():
 
     parser_udev = sps.add_parser('undevelop',
                                  help='Deactivates develop mode for a given'
-                                      'device')
+                                      'device. '
+                                      'NOTE: Not guaranteed to work for non '
+                                      'standard device packages nor '
+                                      'dependencies')
     parser_udev.set_defaults(command=undevelop)
 
     parser_udev.add_argument('device',
@@ -341,7 +350,7 @@ def clean_dir(path, args):
             decode("utf-8").rstrip()
 
         def check_tag():
-            """ 
+            """
             Get SHA1 of new_tag from remote
 
             Note: "real" tags are marked with a trailing '^{}',
@@ -349,14 +358,14 @@ def clean_dir(path, args):
             """
             new_sha1 = ""
             # protect against hand-crafted credentials,
-            # which might raise an interactive prompt at this point 
+            # which might raise an interactive prompt at this point
             # if we do not have access to git under those credentials.
             remote_uri = run_cmd('cd {}; git ls-remote --get-url '
                                  'origin'.format(path)).decode("utf-8")
             expected_url = f"{args.git}/karaboDevices/{args.device}.git"
             if args.no_clobber and expected_url.strip() != remote_uri.strip():
                 print(f"Device at {path} has a different remote than "
-                        "the one expected: abort! ")
+                      "the one expected: abort! ")
                 sys.exit(1)
 
             cmd = 'cd {}; git ls-remote origin {tag} {tag}^{{}}'
