@@ -7,7 +7,7 @@ import time
 
 from .eventloop import async_tst, DeviceTest, sync_tst
 from karabo.middlelayer import (
-    allCompleted, background, firstCompleted, firstException, gather,
+    allCompleted, background, firstCompleted, firstException, gather, HAVE_UVLOOP,
     MetricPrefix, QuantityValue, sleep, synchronous, Unit, unit)
 from karabo.middlelayer_api.synchronization import FutureDict
 
@@ -344,7 +344,10 @@ class Tests(DeviceTest):
             err=raisor(), timeout=0.01)
 
         # UVLOOP provides a done of the fast.
-        self.assertEqual(done, {})
+        if HAVE_UVLOOP:
+            self.assertEqual(done, {})
+        else:
+            self.assertFalse(done)
         self.assertEqual(error, {"err": exception})
         self.assertEqual(set(pending.keys()), {0, "slow", "fast"})
 
