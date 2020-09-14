@@ -15,7 +15,7 @@ from karabo.common.scenemodel.api import (
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, background, Bool, Configurable,
-    coslot, DaqPolicy, Device, KaraboError, Hash, Overwrite, slot,
+    coslot, DaqPolicy, Device, dictToHash, KaraboError, Hash, Overwrite, slot,
     Slot, State, String, Timestamp, UInt32, VectorHash, VectorString)
 
 from karabo.config_db.configuration_database import (
@@ -27,24 +27,6 @@ HIDDEN_KARABO_FOLDER = op.join(os.environ['HOME'], '.karabo')
 KARABO_CONFIG_DB_FOLDER = op.join(HIDDEN_KARABO_FOLDER, 'config_db')
 
 DEVICE_TIMEOUT = 2
-
-
-def dictToHash(d):
-    """Convert a dictionary into a `Hash`"""
-    h = Hash()
-    for k, v in d.items():
-        if isinstance(v, dict):
-            h[k] = dictToHash(v)
-        elif isinstance(v, (list, tuple)):
-            if len(v) > 0 and isinstance(v[0], dict):
-                h[k] = [dictToHash(vv) for vv in v]
-            else:
-                h[k] = v
-        else:
-            h[k] = v
-    return h
-
-
 FILTER_KEYS = ["name", "timepoint", "description", "priority"]
 
 
