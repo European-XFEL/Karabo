@@ -2,7 +2,8 @@ import numpy as np
 
 from unittest import TestCase, main
 
-from karabo.native.data import dtype_from_number, get_image_data, Hash
+from karabo.native.data import (
+    dtype_from_number, get_image_data, Hash, dictToHash)
 
 
 class Tests(TestCase):
@@ -33,6 +34,19 @@ class Tests(TestCase):
         image = get_image_data(h)
         np.testing.assert_array_equal(
             image, np.array([[2, 4, 6], [6, 8, 10]], np.int64))
+
+    def test_dict_hash(self):
+        """TEST THAT A DICT CAN BE MOVED TO A HASH"""
+        b = {"b": 2}
+        e = ["a", "b", "c"]
+        d = {"a": 1, "c": 3, "d": 4, "b": b, "e": e}
+
+        h = dictToHash(d)
+        self.assertEqual(h["a"], 1)
+        node = h["b"]
+        self.assertIsInstance(node, Hash)
+        self.assertEqual(h["b.b"], 2)
+        self.assertEqual(h["e"], e)
 
 
 if __name__ == "__main__":
