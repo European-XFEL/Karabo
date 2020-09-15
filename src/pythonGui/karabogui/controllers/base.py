@@ -217,7 +217,8 @@ class BaseBindingController(HasStrictTraits):
         """Implemented by subclasses to update controller as requested by
         a change in the access level.
         """
-        self.widget.setEnabled(enable)
+        if get_class_const_trait(type(self), '_can_edit'):
+            self.widget.setEnabled(enable)
 
     # -------------------------------------------------------------------------
     # Traits
