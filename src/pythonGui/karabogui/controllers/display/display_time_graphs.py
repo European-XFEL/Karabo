@@ -139,13 +139,6 @@ class BaseSeriesGraph(BaseBindingController):
     def value_update(self, proxy):
         raise NotImplementedError
 
-    def setEnabled(self, enable):
-        """Reimplemented function of the base binding controller
-
-        We make sure that `AccessLevel` independent historic data can be
-        retrieved via the buttons.
-        """
-
     # ----------------------------------------------------------------
     # PyQt Slots
 
