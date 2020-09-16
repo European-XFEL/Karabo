@@ -38,8 +38,24 @@ namespace karabo {
         // See also OutputChannel::initializeServerConnection(...)
         const int kMaxCompleteInitializationAttempts = 2500;
 
+        // TODO: Move this to a constant of ConfigurationManager device once it becomes part of the Framework.
+        const std::string DEFAULT_CONFIG_MANAGER_ID("KaraboConfigurationManager");
+
+        void DeviceClient::initServiceDeviceIds(const Hash& serviceDeviceIds) {
+            if (serviceDeviceIds.has("dataLoggerManagerId")) {
+                m_dataLoggerManagerId = serviceDeviceIds.get<std::string>("dataLoggerManagerId");
+            } else {
+                m_dataLoggerManagerId = karabo::util::DATALOGMANAGER_ID;
+            }
+            if (serviceDeviceIds.has("configurationManagerId")) {
+                m_configManagerId = serviceDeviceIds.get<std::string>("configurationManagerId");
+            } else {
+                m_configManagerId = DEFAULT_CONFIG_MANAGER_ID;
+            }
+        }
+
         DeviceClient::DeviceClient(const std::string& instanceId, bool implicitInit,
-                                   const std::string& dataLoggerManagerId)
+                                   const Hash& serviceDeviceIds)
             : m_internalSignalSlotable()
             , m_signalSlotable()
             , m_isShared(false)
@@ -51,9 +67,9 @@ namespace karabo {
             , m_runSignalsChangedTimer(false)
             , m_signalsChangedInterval(-1)
             , m_loggerMapCached(false)
-            , m_instanceChangeThrottler(nullptr)
-            , m_dataLoggerManagerId(dataLoggerManagerId) {
+            , m_instanceChangeThrottler(nullptr) {
 
+            initServiceDeviceIds(serviceDeviceIds);
             const std::string ownInstanceId(instanceId.empty() ? generateOwnInstanceId() : instanceId);
             Hash instanceInfo;
             instanceInfo.set("type", "client");
@@ -76,7 +92,7 @@ namespace karabo {
 
 
         DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable, bool implicitInit,
-                                   const std::string &dataLoggerManagerId)
+                                   const Hash &serviceDeviceIds)
             : m_internalSignalSlotable()
             , m_signalSlotable(signalSlotable)
             , m_isShared(true)
@@ -88,9 +104,9 @@ namespace karabo {
             , m_runSignalsChangedTimer(false)
             , m_signalsChangedInterval(-1)
             , m_loggerMapCached(false)
-            , m_instanceChangeThrottler(nullptr)
-            , m_dataLoggerManagerId(dataLoggerManagerId) {
+            , m_instanceChangeThrottler(nullptr) {
 
+            initServiceDeviceIds(serviceDeviceIds);
             if (implicitInit) {
                 karabo::net::EventLoop::getIOService().post(boost::bind(&DeviceClient::completeInitialization,
                                                                         this, kMaxCompleteInitializationAttempts));
@@ -99,14 +115,14 @@ namespace karabo {
 
 
         DeviceClient::DeviceClient(const std::string &instanceId,
-                                   const std::string &dataLoggerManagerId)
-            : DeviceClient(instanceId, false, dataLoggerManagerId) {
+                                   const Hash& serviceDeviceIds)
+            : DeviceClient(instanceId, false, serviceDeviceIds) {
         }
 
 
         DeviceClient::DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
-                                   const std::string &dataLoggerManagerId)
-            : DeviceClient(signalSlotable, false, dataLoggerManagerId) {
+                                   const Hash& serviceDeviceIds)
+            : DeviceClient(signalSlotable, false, serviceDeviceIds) {
         }
 
 
@@ -1211,6 +1227,200 @@ namespace karabo {
             }
 
             return make_pair(hash, schema);
+        }
+
+
+        karabo::util::Hash DeviceClient::listConfigurationFromName(const std::string& deviceId,
+                                                                   const std::string& namePart) {
+            karabo::util::Hash slotReply;
+            std::vector<karabo::util::Hash> configs;
+            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+            if (p) {
+                try {
+                    const auto& listParams = karabo::util::Hash("deviceId", deviceId,
+                                                                "name", namePart);
+                    p->request(m_configManagerId, "slotListConfigurationFromName", listParams)
+                       .timeout(10 * m_internalTimeout).receive(slotReply);
+                    if (slotReply.has("items")) {
+                        std::swap(configs,
+                                  slotReply.get<std::vector<karabo::util::Hash>>("items"));
+                    }
+                    return karabo::util::Hash("success", true, "reason", "", "configs", configs);
+                } catch (const TimeoutException&) {
+                    Exception::clearTrace();
+                    std::string errMsg = "Request to get configurations with namePart '" +
+                                         namePart + "' for device '" + deviceId +
+                                         "' timed out.";
+                    KARABO_LOG_FRAMEWORK_ERROR <<  errMsg;
+                    return karabo::util::Hash("success", false,
+                                              "reason", errMsg,
+                                              "configs", std::vector<karabo::util::Hash>());
+                } catch (const RemoteException &re) {
+                    std::string errMsg = "Request to get configurations with namePart '" +
+                                         namePart + "' for device '" + deviceId +
+                                         "' failed with error:" + re.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    return karabo::util::Hash("success", false,
+                                              "reason", errMsg,
+                                              "configs", std::vector<karabo::util::Hash>());
+                }
+            } else {
+                // Could not promote m_signalSlotable to shared pointer. This should happen only when
+                // inappropriate use of DeviceClient is made.
+                std::string errMsg = "Request to get configurations with namePart '" +
+                                     namePart + "' for device '" + deviceId +
+                                     "' failed with error: DeviceClient being destroyed; " +
+                                     "could not call ConfigurationManager slot.";
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                return karabo::util::Hash("success", false,
+                                          "reason", errMsg,
+                                          "configs", std::vector<karabo::util::Hash>());
+            }
+
+        }
+
+
+        karabo::util::Hash DeviceClient::getConfigurationFromName(const std::string& deviceId,
+                                                                  const std::string& name) {
+            karabo::util::Hash slotReply;
+            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+            if (p) {
+                try {
+                    const auto& getParams = karabo::util::Hash("name", name,
+                                                               "deviceId", deviceId);
+                    p->request(m_configManagerId, "slotGetConfigurationFromName", getParams)
+                       .timeout(10 * m_internalTimeout).receive(slotReply);
+                    // The slot returns a hash with the slot arguments (input hash) under the key "input"
+                    // and the retrieved config (if any) under the key "item".
+                    karabo::util::Hash resultHash("success", true,
+                                                  "reason", "",
+                                                  "config", karabo::util::Hash());
+                    if (slotReply.has("item")) {
+                        std::swap(resultHash.get<karabo::util::Hash>("config"),
+                                  slotReply.get<karabo::util::Hash>("item"));
+                    }
+                    return resultHash;
+                } catch (const TimeoutException&) {
+                    Exception::clearTrace();
+                    std::string errMsg = "Request to get configuration with name '"  + name +
+                                         "' for device '" + deviceId + "' timed out.";
+                    KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    return karabo::util::Hash("success", false, "reason", errMsg,
+                                              "config", karabo::util::Hash());
+                } catch (const RemoteException &re) {
+                    std::string errMsg = "Request to get configuration with name '"  + name +
+                                         "' for device '" + deviceId + "' failed with error: " + re.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    return karabo::util::Hash("success", false, "reason", errMsg,
+                                              "config", karabo::util::Hash());
+                }
+            } else {
+                // Could not promote m_signalSlotable to shared pointer. This should happen only when
+                // inappropriate use of DeviceClient is made.
+                std::string errMsg = "Request to get configuration with name '" +
+                                     name + "' for device '" + deviceId +
+                                     "' failed with error: DeviceClient being destroyed; " +
+                                     "could not call ConfigurationManager slot.";
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                return karabo::util::Hash("success", false,
+                                          "reason", errMsg,
+                                          "config", karabo::util::Hash());
+            }
+        }
+
+
+        karabo::util::Hash DeviceClient::getLastConfiguration(const std::string& deviceId,
+                                                              int priority) {
+            karabo::util::Hash slotReply;
+            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+            if (p) {
+                try {
+                    const auto& getParams = karabo::util::Hash("deviceId", deviceId,
+                                                               "priority", priority);
+                    p->request(m_configManagerId, "slotGetLastConfiguration", getParams)
+                       .timeout(10 * m_internalTimeout).receive(slotReply);
+                    // The slot returns a hash with the slot arguments (input hash) under the key "input"
+                    // and the retrieved config (if any) under the key "item".
+                    karabo::util::Hash resultHash("success", true, "reason", "");
+                    if (slotReply.has("item")) {
+                        resultHash.set("config", slotReply.get<karabo::util::Hash>("item"));
+                    } else {
+                        resultHash.set("config", karabo::util::Hash());
+                    }
+                    return resultHash;
+                } catch (const TimeoutException&) {
+                    Exception::clearTrace();
+                    std::string errMsg = "Request to get last configuration with priority '" +
+                                         karabo::util::toString(priority) +
+                                         "' for device '" + deviceId + "' timed out.";
+                    KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    return karabo::util::Hash("success", false, "reason", errMsg,
+                                              "config", karabo::util::Hash());
+                } catch (const RemoteException &re) {
+                    std::string errMsg = "Request to get configuration with priority '" +
+                                         karabo::util::toString(priority) +
+                                         "' for device '" + deviceId + "' failed with error: " + re.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                    return karabo::util::Hash("success", false, "reason", errMsg,
+                                              "config", karabo::util::Hash());
+                }
+            } else {
+                // Could not promote m_signalSlotable to shared pointer. This should happen only when
+                // inappropriate use of DeviceClient is made.
+                std::string errMsg = "Request to get configuration with priority '" +
+                                     karabo::util::toString(priority) + "' for device '" + deviceId +
+                                     "' failed with error: DeviceClient being destroyed; " +
+                                     "could not call ConfigurationManager slot.";
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                return karabo::util::Hash("success", false,
+                                          "reason", errMsg,
+                                          "config", karabo::util::Hash());
+            }
+        }
+
+
+        std::pair<bool, std::string> DeviceClient::saveConfigurationFromName(const std::string& name,
+                                                                             const std::vector<std::string>& deviceIds,
+                                                                             const std::string& description,
+                                                                             int priority,
+                                                                             const std::string& user) {
+            // TODO: turn priority into an Enum class once ConfigurationManager moves into the Framework.
+            if (priority < 1 || priority > 3) {
+                return std::make_pair(false, "'priority' argument out of range; must be between 1 and 3.");
+            }
+
+            karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+            if (p) {
+                auto saveParams = karabo::util::Hash("name", name,
+                                                     "deviceIds", deviceIds,
+                                                     "priority", priority,
+                                                     "description", description);
+                if (user != ".") {
+                    saveParams.set<std::string>("user", user);
+                }
+                try {
+                    p->request(m_configManagerId, "slotSaveConfigurationFromName", saveParams)
+                       .timeout(10 * m_internalTimeout);
+                    return make_pair(true, std::string());
+                } catch (const TimeoutException&) {
+                    Exception::clearTrace();
+                    std::string failReason = "Request to save configuration(s) for " +
+                                             karabo::util::toString(deviceIds.size()) +
+                                             " device(s) under name '" + name + "' timed out.";
+                    KARABO_LOG_FRAMEWORK_ERROR << failReason;
+                    return make_pair(false, failReason);
+                } catch (const RemoteException &re) {
+                    std::string failReason = "Request to save configuration(s) for " +
+                                             karabo::util::toString(deviceIds.size()) +
+                                             " device(s) under name '" + name + "' failed with error: " +
+                                             re.what();
+                    KARABO_LOG_FRAMEWORK_ERROR << failReason;
+                    return make_pair(false, failReason);
+                }
+            } else { // Could not promote weak_ptr.
+                return std::make_pair(false,
+                                      "DeviceClient being destroyed; could not ConfigurationManager slot.");
+            }
         }
 
 
