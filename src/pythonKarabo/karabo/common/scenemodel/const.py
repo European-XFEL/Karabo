@@ -10,6 +10,7 @@ SCENE_MIN_WIDTH = 1024
 SCENE_MIN_HEIGHT = 768
 
 # Scene default font formatting
+SCENE_FONT_FAMILY = "Source Sans Pro"
 SCENE_FONT_SIZE = 10
 SCENE_FONT_WEIGHT = 'normal'
 
