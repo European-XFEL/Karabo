@@ -13,6 +13,7 @@
 #include <boost/thread.hpp>
 #include <boost/type_index.hpp>
 #include <unordered_map>
+#include <unordered_set>
 
 
 namespace karabo {
@@ -161,7 +162,8 @@ namespace karabo {
             typedef std::unordered_set<std::string> CategorySet;
             static CategorySet m_frameworkCategories;
 
-            static boost::mutex m_logMutex;
+            static boost::shared_mutex m_logMutex;
+            static boost::shared_mutex m_frameworkLogMutex;
 
             static karabo::util::Hash m_config;
         };
