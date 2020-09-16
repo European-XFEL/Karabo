@@ -157,6 +157,7 @@ namespace karabo {
             int m_accessLevel = karabo::util::Schema::ADMIN;
 
             std::string m_dataLoggerManagerId;
+            std::string m_configManagerId;
 
         public:
 
@@ -173,11 +174,14 @@ namespace karabo {
              *                     will implicitly try to trigger a call to initialize() via the event loop. Since this
              *                     can fail silently, it is strongly recommended to use implicitInit = false and
              *                     call the initialize() method right after the constructor.
-             * @param dataLoggerManagerId The name of the DataLoggerManager instance to be used for figuring out which
-             *                            reader to query for device history.
+             * @param serviceDeviceIds A hash with ids of core service devices; e.g, "dataLoggerManagerId" key and the
+             *                         value is the name of the DataLoggerManager the device client instance should use
+             *                         for data logging operations. Currently keys "dataLoggerManagerId" and
+             *                         "configurationManagerId" are supported.
              */
-            explicit DeviceClient(const std::string& instanceId = std::string(), bool implicitInit = true,
-                                  const std::string &dataLoggerManagerId = karabo::util::DATALOGMANAGER_ID);
+            explicit DeviceClient(const std::string& instanceId = std::string(),
+                                  bool implicitInit = true,
+                                  const karabo::util::Hash& serviceDeviceIds = karabo::util::Hash());
 
             /**
              * Constructor using instantiated signalSlotable class (shared communication)
@@ -186,12 +190,14 @@ namespace karabo {
              *                     will implicitly try to trigger a call to initialize() via the event loop. Since this
              *                     can fail silently, it is strongly recommended to use implicitInit = false and
              *                     call the initialize() method right after the constructor.
-             * @param dataLoggerManagerId The name of the DataLoggerManager instance to be used for figuring out which
-             *                            reader to query for device history.
+             * @param serviceDeviceIds A hash with ids of core service devices; e.g, "dataLoggerManagerId" key and the
+             *                         value is the name of the DataLoggerManager the device client instance should use
+             *                         for data logging operations. Currently keys "dataLoggerManagerId" and
+             *                         "configurationManagerId" are supported.
              */
             explicit DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
                                   bool implicitInit = true,
-                                  const std::string &dataLoggerManagerId = karabo::util::DATALOGMANAGER_ID);
+                                  const karabo::util::Hash& serviceDeviceIds = karabo::util::Hash());
 
             /**
              * Constructor aimed at cases where a specific DataLoggerManagerId is required.
@@ -200,10 +206,13 @@ namespace karabo {
              * @param instanceId The id with which the client should participate in the system.
              *                   If not unique or invalid, constructor will throw an exception.
              *                   If empty, an id will be generated from host name and process id.
-             * @param dataLoggerManagerId The name of the DataLoggerManager instance to be used for figuring out which
-             *                            reader to query for device history.
+             * @param serviceDeviceIds A hash with ids of core service devices; e.g, "dataLoggerManagerId" key and the
+             *                         value is the name of the DataLoggerManager the device client instance should use
+             *                         for data logging operations. Currently keys "dataLoggerManagerId" and
+             *                         "configurationManagerId" are supported.
              */
-            DeviceClient(const std::string &instanceId, const std::string &dataLoggerManagerId);
+            DeviceClient(const std::string &instanceId,
+                         const karabo::util::Hash& serviceDeviceIds);
 
             /**
              * Constructor using instantiated signalSlotable class (shared communication) and aimed at
@@ -211,11 +220,13 @@ namespace karabo {
              * Requires an explicit call to DeviceClient::initialize() after the construction takes place.
              *
              * @param signalSlotable An instance of the SignalSlotable lass
-             * @param dataLoggerManagerId The name of the DataLoggerManager instance to be used for figuring out which
-             *                            reader to query for device history.
+             * @param serviceDeviceIds A hash with ids of core service devices; e.g, "dataLoggerManagerId" key and the
+             *                         value is the name of the DataLoggerManager the device client instance should use
+             *                         for data logging operations. Currently keys "dataLoggerManagerId" and
+             *                         "configurationManagerId" are supported.
              */
             DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable,
-                         const std::string &dataLoggerManagerId);
+                         const karabo::util::Hash& serviceDeviceIds);
 
             virtual ~DeviceClient();
 
@@ -407,19 +418,19 @@ namespace karabo {
 
             /**
              * Attempt to instantiate a device of the specified class, on a remote server with a given initial configuration
-             * 
+             *
              * @param serverInstanceId of the server to instantiate the device on. Needs to have the device plugin available
              * @param classId of the device to be instantiate
-             * @param configuration Hash which contains the initial device configuration. It must have one out of the two 
+             * @param configuration Hash which contains the initial device configuration. It must have one out of the two
              *        following forms:
-             *          option 1: 
+             *          option 1:
              *               - key "classId" pointing to a string,
-             *          option 2: 
+             *          option 2:
              *               - no classId specified: class id to be instantiated is taken from classId parameter
              *          option 3 (for backward compatibility - not recommended):
              *               - a single key (e.g. "myClassId") representing the classId
              *               - the value for this key is a Hash with all the non-default properties
-             * 
+             *
              * @param timeoutInSeconds by default set to -1, which means block indefinitely, if a positive value an Exception is thrown
              *        if the device hasn't been instantiated.
              * @return (ok, reply) pair where ok is true if no exception occurred and reply is the answer received from server
@@ -440,30 +451,30 @@ namespace karabo {
                                                      const karabo::util::Hash& configuration,
                                                      int timeoutInSeconds = -1);
 
-            
+
             /**
-             * Utility method that takes care of adding classId to configuration of device to be instantiated 
-             * by instantiate and instantiateNoWait. If configuration does not have 'classId' key, this is added, 
+             * Utility method that takes care of adding classId to configuration of device to be instantiated
+             * by instantiate and instantiateNoWait. If configuration does not have 'classId' key, this is added,
              * with the value of classId parameter. Otherwise the configuration 'classId' value is used.
-             * In the latter case, if the value of classId parameter mismatches the one of 'classId' attribute of configuration 
+             * In the latter case, if the value of classId parameter mismatches the one of 'classId' attribute of configuration
              * a warning is thrown.
-             * @param classId of the device to be instantiated. 
+             * @param classId of the device to be instantiated.
              * @param configuration of the device to be instantiated.
              * @return configuration ready to be sent to device server
              */
             karabo::util::Hash formatConfigToInstantiate(const std::string& classId, const karabo::util::Hash& configuration);
-            
+
             /**
              * Instantiate a device on a remote server. In contrast to DeviceClient::instantiate, this function returns
              * immediately.
-             * 
+             *
              * @param serverInstanceId of the server to instantiate the device on. Needs to have the device plugin available
              * @param classId of the device to be instantiate
-             * @param configuration Hash which contains the initial device configuration. It must have one out of the two 
+             * @param configuration Hash which contains the initial device configuration. It must have one out of the two
              *        following forms:
-             *          option 1: 
+             *          option 1:
              *               - key "classId" pointing to a string,
-             *          option 2: 
+             *          option 2:
              *               - no classId specified: class id to be instantiated is taken from classId parameter
              *          option 3 (for backward compatibility - not recommended):
              *               - a single key (e.g. "myClassId") representing the classId
@@ -740,6 +751,77 @@ namespace karabo {
              * @return a pair of the configuration Hash and corresponding device Schema
              */
             std::pair<karabo::util::Hash, karabo::util::Schema> getConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
+
+            /**
+             * Returns the configurations saved for a device under names that contain a given name part.
+             *
+             * @param deviceId of the device whose named configuration(s) and schema(s) should be returned.
+             * @param namePart of the device configuration(s) and schema(s) to be returned. An empty namePart means
+             *                 returns all the named configuration(s) and schema(s)
+             * @return a hash with the operation execution status and the list of configuration(s) and schema(s) in
+             *         case of success. For the operation execution status, the returned hash has the keys "success"
+             *         with a boolean value that indicates whether the the operation was successful and a key
+             *         "reason" with a string value that will contain the reason for failure or will be empty
+             *         in the case of success. The returned hash will also have a key "configs" whose value will be
+             *         a vector of hashes with data about the configs that match the name part. If no configuration
+             *         is saved for the device under a name that contains the namePart, the "configs" vector will be
+             *         empty. Each hash in the "configs" vector contains the keys "name", "timepoint", "description",
+             *         "priority" and "user". The configuration itself and its corresponding schema are not returned
+             *         by this method.
+             */
+            karabo::util::Hash listConfigurationFromName(const std::string& deviceId, const std::string& namePart="");
+
+            /**
+             * Returns the configuration and schema saved for a device under a given name.
+             *
+             * @param deviceId of the device whose named configuration and schema should be returned.
+             * @param name of the device configuration and schema to be returned.
+             * @return a hash with the operation execution status and the device configuration and schema in
+             *         case of success. For the operation execution status, the returned hash has the keys
+             *         "success" with a boolean value that indicates whether the the operation was successful and
+             *         a key "reason" with a string value that will contain the reason for failure or will
+             *         be empty in the case of success. The returned hash will also have a key "config" whose value
+             *         will be a hash with the keys "name", "timepoint", "description", "priority", "user", "config"
+             *         and "schema" when a device configuration with the given name is found or an empty hash in case
+             *         of failure or when no device configuration with the given name exists.
+             */
+            karabo::util::Hash getConfigurationFromName(const std::string& deviceId, const std::string& name);
+
+            /**
+             * Returns the most recently saved configuration for a device that has a given priority.
+             *
+             * @param deviceId of the device whose named configuration and schema should be returned.
+             * @param priority of the device configuration and schema to be returned.
+             * @return a hash with the operation execution status and the device configuration and schema in
+             *         case of success. For the operation execution status, the returned hash has the keys
+             *         "success" with a boolean value that indicates whether the the operation was successful and
+             *         a key "reason" with a string value that will contain the reason for failure or will
+             *         be empty in the case of success. The returned hash will also have a key "config" whose value
+             *         will be a hash with the keys "name", "timepoint", "description", "priority", "user", "config"
+             *         and "schema" when a device configuration with the given priority is found or an empty hash in
+             *         case of failure or when no device configuration with the given priority exists.
+             */
+            karabo::util::Hash getLastConfiguration(const std::string& deviceId, int priority = 1);
+
+            /**
+             * Saves a collection of current device configurations (and the corresponding schemas) in the
+             * configuration database under a common name, user, priority and description.
+             *
+             * @param name to be assigned to the saved collection of device configurations (with schemas).
+             * @param deviceIds the devices whose current configurations (and schemas) are to be saved.
+             * @param description the description for the collection of saved configurations.
+             * @param priority the priority of the configurations saved (value between 1 and 3). An invalid
+             *                 value leads to an operation failure.
+             * @param user the user that requested the operation ("." means anonymous).
+             * @return a pair with a success flag (true when the operation succeeds) in the first position and
+             *         a reason failture description (empty in case of success) in the second position.
+             *
+             */
+            std::pair<bool, std::string> saveConfigurationFromName(const std::string& name,
+                                                                   const std::vector<std::string>& deviceIds,
+                                                                   const std::string& description=std::string(),
+                                                                   int priority=1,
+                                                                   const std::string& user=".");
 
             /**
              * Register a throttled callback handler to be triggered when a new device instance appears, updates its
@@ -1108,7 +1190,7 @@ s             *
             karabo::core::Lock lock(const std::string& deviceId, bool recursive = false, int timeout = -1);
 
             /**
-             * Get all <i>properties</i> with the suitable <i>accessMode</i> exposed by <i>dataSourceId</i>.  
+             * Get all <i>properties</i> with the suitable <i>accessMode</i> exposed by <i>dataSourceId</i>.
              * @param dataSourceId   data source containing properties
              * @param properties     properties that satisfy criteria below (output container)
              * @param accessMode     criteria used for filtering the data source's properties
@@ -1245,10 +1327,21 @@ s             *
             void recursivelyAddCompoundDataTypes(const karabo::util::Hash& schemaHash, karabo::util::Hash & hash) const;
 
             void completeInitialization(int countdown);
+
+            /**
+             * @brief Internal helper method to initialize the service device ids members of
+             * the DeviceClient instance.
+             *
+             * @param serviceDeviceIds A hash with ids of core service devices; e.g, "dataLoggerManagerId" key and the
+             *                         value is the name of the DataLoggerManager the device client instance should use
+             *                         for data logging operations. Currently keys "dataLoggerManagerId" and
+             *                         "configurationManagerId" are supported. If a supported key is missing, the
+             *                         default ID for the service device type is used.
+             */
+            void initServiceDeviceIds(const karabo::util::Hash& serviceDeviceIds);
         };
     }
 }
 
 
 #endif
-
