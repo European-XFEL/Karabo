@@ -473,7 +473,20 @@ class Manager(QObject):
                          'deviceId': deviceId})
 
     def handle_getConfigurationFromName(self, **info):
-        pass
+        success = info['success']
+        input_info = info['input']
+        deviceId = input_info['deviceId']
+        if not success:
+            reason = info['reason']
+            messagebox.show_error(f"Requesting a configuration for {deviceId} "
+                                  f"failed!", details=reason)
+            return
+
+        item = info['item']
+        broadcast_event(KaraboEvent.ShowConfigurationFromName,
+                        {'configuration': item['config'],
+                         'name': item['name'],
+                         'deviceId': deviceId})
 
     def handle_saveConfigurationFromName(self, **info):
         pass

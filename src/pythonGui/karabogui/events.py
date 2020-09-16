@@ -40,6 +40,7 @@ class KaraboEvent(Enum):
     ProjectUpdated = "Project Updated"
     ShowDaemonService = "Show daemon service"
     ShowConfiguration = "Show configuration"
+    ShowConfigurationFromName = "Show Configuration From Name"
     ShowConfigurationFromPast = "Show Configuration From Past"
     ShowDevice = "Show device"
     ShowMacroView = "Show macro"
