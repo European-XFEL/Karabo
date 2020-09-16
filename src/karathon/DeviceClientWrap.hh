@@ -326,6 +326,34 @@ namespace karathon {
             return Wrapper::fromStdVectorToPyHashList(this->getFromPast(deviceId, key, from, to, maxNumData));
         }
 
+        karabo::util::Hash listConfigurationFromName(const std::string& deviceId, const std::string& namePart) {
+            ScopedGILRelease nogil;
+            return this->DeviceClient::listConfigurationFromName(deviceId, namePart);
+        }
+
+        karabo::util::Hash getConfigurationFromName(const std::string& deviceId, const std::string& name) {
+            ScopedGILRelease nogil;
+            return this->DeviceClient::getConfigurationFromName(deviceId, name);
+        }
+
+        karabo::util::Hash getLastConfiguration(const std::string& deviceId, int priority) {
+            ScopedGILRelease nogil;
+            return this->DeviceClient::getLastConfiguration(deviceId, priority);
+        }
+
+        bp::tuple saveConfigurationFromNamePy(const std::string& name,
+                                              const std::vector<std::string>& deviceIds,
+                                              const std::string& description,
+                                              int priority,
+                                              const std::string& user) {
+            ScopedGILRelease nogil;
+            return Wrapper::fromStdPairToPyTuple(
+                this->DeviceClient::saveConfigurationFromName(name, deviceIds,
+                                                              description,
+                                                              priority, user)
+            );
+        }
+
         bp::object getConfigurationFromPastPy(const std::string& deviceId, const std::string& timePoint) {
             return Wrapper::fromStdPairToPyTuple<karabo::util::Hash, karabo::util::Schema>(this->getConfigurationFromPast(deviceId, timePoint));
         }
@@ -346,7 +374,7 @@ namespace karathon {
             getDataSourceSchemaAsHash(dataSourceId, properties, access);
             return bp::object(properties);
         }
-        
+
         boost::shared_ptr<karathon::LockWrap> lockPy(const std::string& deviceId, bool recursive, int timeout) {
             //non waiting request for lock
 
@@ -463,4 +491,3 @@ namespace karathon {
 }
 
 #endif /* KARATHON_DEVCOM_HH */
-
