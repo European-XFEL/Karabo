@@ -3,14 +3,15 @@ from traceback import print_exception, format_exception
 import warnings
 
 from PyQt5.QtCore import QLocale, Qt
-from PyQt5.QtGui import QFont, QIcon, QPixmap
+from PyQt5.QtGui import QFont, QFontDatabase, QIcon, QPixmap
 from PyQt5.QtWidgets import (
     QApplication, QMessageBox, QSplashScreen, QStyleFactory)
 from pyqtgraph import setConfigOptions
 
-from karabo.common.scenemodel.api import SCENE_FONT_SIZE
+from karabo.common.scenemodel.api import SCENE_FONT_FAMILY, SCENE_FONT_SIZE
 
 from karabogui.controllers.api import populate_controller_registry
+from karabogui.fonts import FONT_FILENAMES
 from karabogui.singletons.api import (
     get_manager, get_network, get_panel_wrangler)
 
@@ -41,9 +42,15 @@ def create_gui_app(args):
     app.setStyle(style)
     app.setPalette(QApplication.style().standardPalette())
 
+    # Add fonts
+    for font_file in FONT_FILENAMES:
+        QFontDatabase.addApplicationFont(font_file)
+    # Set default application font
     font = QFont()
-    font.setFamily("Sans Serif")
+    font.setFamily(SCENE_FONT_FAMILY)
     font.setPointSize(SCENE_FONT_SIZE)
+    font.insertSubstitution("Ubuntu", SCENE_FONT_FAMILY)
+    font.insertSubstitution("Sans Serif", SCENE_FONT_FAMILY)
     app.setFont(font)
 
     app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
@@ -53,8 +60,8 @@ def create_gui_app(args):
     # has been changed. Any unknown font will do to default to QApp font.
     # [QTBUG-29232]
     app.setStyleSheet(
-        "QTreeView { font: 10pt 'Unknown Font'; } "
-        "QTableView { font: 10pt 'Unknown Font'; }")
+        f"QTreeView {{ font: 10pt '{SCENE_FONT_FAMILY}'; }} "
+        f"QTableView {{ font: 10pt '{SCENE_FONT_FAMILY}'; }}")
     app.setAttribute(Qt.AA_DontShowIconsInMenus, False)
 
     # set a nice app logo
