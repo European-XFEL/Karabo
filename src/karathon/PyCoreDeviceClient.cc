@@ -70,6 +70,36 @@ void exportPyCoreDeviceClient() {
             .def("getFromPast", &DeviceClientWrap::getFromPastPy, (bp::arg("deviceId"), bp::arg("key"), bp::arg("from"), bp::arg("to") = "", bp::arg("maxNumData") = 0))
             .def("getPropertyHistory", &DeviceClientWrap::getPropertyHistoryPy, (bp::arg("deviceId"), bp::arg("key"), bp::arg("from"), bp::arg("to") = "", bp::arg("maxNumData") = 0))
             .def("getConfigurationFromPast", &DeviceClientWrap::getConfigurationFromPastPy, (bp::arg("deviceId"), bp::arg("timePoint")))
+            .def("listConfigurationFromName", &DeviceClientWrap::listConfigurationFromName, (bp::arg("deviceId"), bp::arg("namePart")),
+                 "listConfigurationFromName(deviceId, namePart): Returns the device configurations saved under names that contain a given name part.\n"
+                 "If an empty name part is given, all the configurations stored for the device will be returned.\n"
+                 "The function return is a Hash with the following keys:\n",
+                 "\"success\" a boolean indicating whether the operation was successful.\n"
+                 "\"reason\" a string describing the failure condition - empty on success.\n"
+                 "\"configs\" a vector of Hashes (HashList) with each hash containing information about a saved configuration.")
+            .def("getConfigurationFromName", &DeviceClientWrap::getConfigurationFromName, (bp::arg("deviceId"), bp::arg("name")),
+                 "getConfigurationFromName(deviceId, name): Returns the device configuration saved under a given name.\n"
+                 "May return an empty result if there's no configuration stored for the device under the given name.\n"
+                 "The function return is a Hash with the following keys:\n",
+                 "\"success\" a boolean indicating whether the operation was successful.\n"
+                 "\"reason\" a string describing the failure condition - empty on success.\n"
+                 "\"config\" a hash with data about the named device configuration.")
+            .def("getLastConfiguration", &DeviceClientWrap::getLastConfiguration, (bp::arg("deviceId"), bp::arg("priority") = 1),
+                 "getLastConfiguration(deviceId, priority): Returns the most recently saved device configuration with a given priority.\n"
+                 "May return an empty result if there's no configuration stored for the device with the given priority.\n"
+                 "The function return is a Hash with the following keys:\n",
+                 "\"success\" a boolean indicating whether the operation was successful.\n"
+                 "\"reason\" a string describing the failure condition - empty on success.\n"
+                 "\"config\" a hash with data about the most recent device configuration with the given priority.")
+            .def("saveConfigurationFromName",
+                 (bp::tuple(DeviceClientWrap::*)(const string&, const vector<Hash>&, const string&, int, const string&))(&DeviceClientWrap::saveConfigurationFromNamePy),
+                 (bp::arg("name"), bp::arg("deviceIds"), bp::arg("description"), bp::arg("priority") = 1, bp::arg("user") = "."),
+                 "saveConfigurationFromName(name, deviceIds, description, priority, user):\n"
+                 "Saves the current device configurations (and the corresponding schemas) for a list of deviceIds\n"
+                 "in the Configuration Database under a common name, user, priority and description.\n"
+                 "The function return is a pair (tuple) with a boolean value indicating the operation success as\n"
+                 "the first value and a string detailing the failure cause when the operation fails."
+                )
             .def("registerInstanceNewMonitor", &DeviceClientWrap::registerInstanceNewMonitor, bp::arg("callbackFunction"),
                  "registerInstanceNewMonitor(handler): Register callback handler \"handler\" to be called when new instances come online\n"
                  "The handler function should have the signature handler(topologyEntry) where \"topologyEntry\" is a Hash")
@@ -132,4 +162,3 @@ void exportPyCoreDeviceClient() {
             .def("lock", &DeviceClientWrap::lockPy, (bp::arg("deviceId"), bp::arg("recursive") = false, bp::arg("timeout") = -1))
             ;
 }
-
