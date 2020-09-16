@@ -47,6 +47,7 @@ class ConfigurationPanel(BasePanelWidget):
             KaraboEvent.ClearConfigurator: self._event_clear_configurator,
             KaraboEvent.LoadConfiguration: self._event_load_configuration,
             KaraboEvent.ShowConfigurationFromPast: self._event_config_past,
+            KaraboEvent.ShowConfigurationFromName: self._event_config_name,
             KaraboEvent.NetworkConnectStatus: self._event_network,
             KaraboEvent.AccessLevelChanged: self._event_access_level,
         }
@@ -87,6 +88,12 @@ class ConfigurationPanel(BasePanelWidget):
         time_match = data['time_match']
         self._apply_configuration_from_past(deviceId, configuration, req_time,
                                             config_time, time_match)
+
+    def _event_config_name(self, data):
+        deviceId = data['deviceId']
+        configuration = data['configuration']
+        name = data['name']
+        self._apply_configuration_from_name(deviceId, configuration, name)
 
     def _event_network(self, data):
         connected = data['status']
@@ -226,12 +233,10 @@ class ConfigurationPanel(BasePanelWidget):
     # -----------------------------------------------------------------------
     # private methods
 
-    def _apply_configuration_from_past(self, deviceId, config, req_time,
-                                       config_time, match):
-        """Apply the retrieved configuration from getConfigurationFromPast"""
+    def _check_configuration(self, deviceId, config):
         proxy = self._showing_proxy
         if proxy is None:
-            return
+            return False
 
         binding = proxy.binding
         # The check we can provide is to check the deviceId and classId
@@ -241,21 +246,44 @@ class ConfigurationPanel(BasePanelWidget):
             # XXX: We might still get an invalid configuration without classId
             messagebox.show_error("A configuration without classId arrived "
                                   "and is ignored! ", parent=self)
-            return
+            return False
 
         if proxy.device_id != deviceId:
             messagebox.show_error("A configuration for '{}' arrived, but is "
                                   "ignored since '{}' shown in editor.".format(
                                    deviceId, proxy.device_id), parent=self)
-            return
+            return False
         if binding.class_id != classId:
             messagebox.show_error("A configuration for classId '{}' arrived, "
                                   "but device in editor is a '{}'".format(
                                    classId, binding.class_id), parent=self)
+            return False
+
+        return True
+
+    def _apply_configuration_from_name(self, deviceId, config, name):
+        """Apply the retrieved configuration from getConfigurationFromPast"""
+        validated = self._check_configuration(deviceId, config)
+        if not validated:
             return
 
+        proxy = self._showing_proxy
         self._set_proxy_configuration(proxy, config)
+        # Show a nice information for the user!
+        text = "Configuration with name '{}' has arrived for '{}'.\n".format(
+            name, deviceId)
+        messagebox.show_information(text, parent=self)
 
+    def _apply_configuration_from_past(self, deviceId, config, req_time,
+                                       config_time, match):
+        """Apply the retrieved configuration from getConfigurationFromPast"""
+        validated = self._check_configuration(deviceId, config)
+        if not validated:
+            return
+
+        proxy = self._showing_proxy
+        self._set_proxy_configuration(proxy, config)
+        # Show a nice information for the user!
         matched_text = ("The configuration has been retrieved for the "
                         "requested time point!")
         no_match_text = ("Requested time was '{}', but the device was not "
