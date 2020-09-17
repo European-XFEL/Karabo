@@ -1,6 +1,6 @@
-*******************************
-How to properly document Karabo
-*******************************
+**************************************
+How to contibute to this documentation
+**************************************
 
 .. note::
 
@@ -18,8 +18,8 @@ How to properly document Karabo
     In order to allow proper cross-referencing later,
     use one of the following pre-fixes:
 
-    * *framework/* - For all framework related documenation
-    * *devices/* - For all device related documenation
+    * *framework/* - For all framework related documentation
+    * *devices/* - For all device related documentation
     * *projects/* - For documentation about karabo projects or setups
 
 Headers
