@@ -404,8 +404,9 @@ in the following code example.
     from karabo.bound.worker import Worker
     from karabo.bound.decorators import KARABO_CLASSINFO
     from karabo.bound.device import PythonDevice, launchPythonDevice
+    from ._version import version as deviceVersion
 
-    @KARABO_CLASSINFO("HardwarePollingDevice", "1.5")
+    @KARABO_CLASSINFO("HardwarePollingDevice", deviceVersion)
     class HardwarePollingDevice(PythonDevice):
 
         def __init__(self, configuration):
