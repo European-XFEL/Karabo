@@ -396,11 +396,16 @@ class Network(QObject):
         h["timeout"] = REQUEST_REPLY_TIMEOUT
         self._write_hash(h)
 
-    def onSaveConfigurationFromName(self, deviceIds):
+    def onSaveConfigurationFromName(self, name, deviceIds, description='',
+                                    priority=1, update=False):
         h = Hash("type", "saveConfigurationFromName")
+        h["name"] = name
         h["deviceIds"] = deviceIds
+        h["description"] = description
+        h["priority"] = priority
         h["client"] = krb_globals.KARABO_CLIENT_ID
         h["timeout"] = REQUEST_REPLY_TIMEOUT
+        h["update"] = update
         self._write_hash(h)
 
     # ---------------------------------------------------------------------
