@@ -10,4 +10,4 @@ Contents:
    git
    redmine
    gdb
-
+   documentation
