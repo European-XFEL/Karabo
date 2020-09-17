@@ -489,7 +489,17 @@ class Manager(QObject):
                          'deviceId': deviceId})
 
     def handle_saveConfigurationFromName(self, **info):
-        pass
+        success = info['success']
+        input_info = info['input']
+        deviceId = input_info['deviceIds'][0]
+        if not success:
+            reason = info['reason']
+            messagebox.show_error(f"Saving a configuration for {deviceId} "
+                                  f"failed!", details=reason)
+            return
+
+        if input_info.get('update', False):
+            get_network().onListConfigurationFromName(deviceId)
 
     # ---------------------------------------------------------------------
     # Current Project Interface
