@@ -16,6 +16,5 @@ Contents:
    general_concepts
    communication
    alarm_system
-   run_configuration
 
 

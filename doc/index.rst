@@ -12,7 +12,7 @@ Contents:
    tools/index
    documentation
    concepts/index
-   versionchanges
+   whatsnew/index
    :maxdepth: 1
 
 
