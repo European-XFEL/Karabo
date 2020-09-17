@@ -14,6 +14,26 @@ NAME_FIELD = 0
 DESCRIPTION_FIELD = 4
 
 
+class SaveDialog(QDialog):
+    """Save dialog for configuration details"""
+
+    def __init__(self, parent=None):
+        super(SaveDialog, self).__init__(parent)
+        uic.loadUi(op.join(op.dirname(__file__), "config_save.ui"), self)
+
+    @property
+    def description(self):
+        return self.ui_description.toPlainText()
+
+    @property
+    def priority(self):
+        return self.ui_priority.value()
+
+    @property
+    def name(self):
+        return self.ui_name.text()
+
+
 class ListConfigurationDialog(QDialog):
     """List configurations by ``name`` from the configuration database
     """
@@ -55,6 +75,9 @@ class ListConfigurationDialog(QDialog):
 
         self.ui_filter.setFocus()
 
+        # Provide saving option
+        self.ui_button_save.clicked.connect(self.open_save_dialog)
+
     def _event_list_updated(self, data):
         instance_id = data["deviceId"]
         if instance_id != self.instance_id:
@@ -85,6 +108,17 @@ class ListConfigurationDialog(QDialog):
 
     # --------------------------------------------------------------------
     # Qt Slots
+
+    @pyqtSlot()
+    def open_save_dialog(self):
+        dialog = SaveDialog(parent=self)
+        if dialog.exec() == QDialog.Accepted:
+            priority = dialog.priority
+            description = dialog.description
+            name = dialog.name
+            get_network().onSaveConfigurationFromName(
+                name, [self.instance_id], priority=priority,
+                description=description, update=True)
 
     @pyqtSlot()
     def accept(self):
