@@ -21,15 +21,10 @@ Advanced readers may want to have a look at Karabo's `design concepts
  
 If you want to cite Karabo please use this reference::
 
-  B.C. Heisen et al., Karabo: an integrated software framework
-  combining control, data management and scientific computing
-  tasks,14th International Conference on Accelerator & Large
-  Experimental Physics Control Systems, ICALEPCS 2013, San Francisco,
-  U.S.A.
+  Hauf, Steffen and Heisen, Burkhard et al., The Karabo distributed control system,
+  Journal of Synchrotron Radiation 26, no. 5 (2019) 1448--1461 doi:10.1107/S1600577519006696
 
- 
-The complete proceedings volume can be found `here <
-http://accelconf.web.cern.ch/AccelConf/ICALEPCS2013/papers/proceed.pdf>`_.
+Find the doi information `here <https://doi.org/10.1107/S1600577519006696>`_.
 
 
 What Karabo Is
