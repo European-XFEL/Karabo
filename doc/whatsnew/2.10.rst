@@ -10,7 +10,18 @@ The **most relevant improvements**, fixes and changes are:
   that were used to switch the feature (partially) on.
 
 - MDL: Every `requiredAccessLevel` which will be at least `AccessLevel.USER` for **reconfigurable** parameters
-       if not explicitly specified!
+  if not explicitly specified!
+
+- MDL: The eventloop can be configured and set to ``uvloop`` via an environemnt variable. Please set ``KARABO_UVLOOP`` 
+  before starting the device server to use ``uvloop`` instead of native ``asyncio``.
+
+- Core Devices: The ``DaemonManager`` device has been moved to the Framework.
+
+- Core Devices: A new Framework device has been created, the ``ConfigurationManager``.
+
+- Pipelines: The available options of the onSlowness parameter that defines how an output channel should react
+  if a connected input channel is not yet ready to receive more data, have changed: The non-functional throw has been 
+  removed and a new option queueDrop has been introduced. The default has changed from wait to **drop**.
 
 
 Detailed Merge-Log
