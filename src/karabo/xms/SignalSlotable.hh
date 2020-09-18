@@ -20,9 +20,7 @@
 #include "karabo/util/PackParameters.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/log/Logger.hh"
-#include "karabo/net/JmsConnection.hh"
-#include "karabo/net/JmsConsumer.hh"
-#include "karabo/net/JmsProducer.hh"
+#include "karabo/net/Broker.hh"
 #include "karabo/net/Strand.hh"
 #include "karabo/net/utils.hh"
 
@@ -33,6 +31,11 @@
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
+
+#ifndef KARABO_DEFAULT_BROKER_CLASS
+#define KARABO_DEFAULT_BROKER_CLASS "OpenMQBroker"
+#endif
+
 
 /**
  * The main European XFEL namespace
@@ -128,7 +131,7 @@ namespace karabo {
              * @param instanceInfo A hash containing any important additional information
              */
             SignalSlotable(const std::string& instanceId,
-                           const karabo::net::JmsConnection::Pointer& connection,
+                           const karabo::net::Broker::Pointer& connection,
                            const int heartbeatInterval = 30,
                            const karabo::util::Hash& instanceInfo = karabo::util::Hash());
 
@@ -137,13 +140,13 @@ namespace karabo {
              * 
              * Don't call init() afterwards.
              * @param instanceId The future instanceId of this object in the distributed system
-             * @param brokerType The broker type (currently only JMS available)
+             * @param brokerType The broker type. Supported values are MqttBroker, OpenMQBroker
              * @param brokerConfiguration The sub-configuration for the respective broker type
              * @param heartbeatInterval The interval (in s) in which a heartbeat is emitted
              * @param instanceInfo A hash containing any important additional information
              */
             SignalSlotable(const std::string& instanceId,
-                           const std::string& connectionClass = "JmsConnection",
+                           const std::string& connectionClass = KARABO_DEFAULT_BROKER_CLASS,
                            const karabo::util::Hash& brokerConfiguration = karabo::util::Hash(),
                            const int heartbeatInterval = 30,
                            const karabo::util::Hash& instanceInfo = karabo::util::Hash());
@@ -161,7 +164,7 @@ namespace karabo {
              *                          on its own. If false, some other mechanism has to ensure to deliver these.
              */
             void init(const std::string& instanceId,
-                      const karabo::net::JmsConnection::Pointer& connection,
+                      const karabo::net::Broker::Pointer& connection,
                       const int heartbeatInterval,
                       const karabo::util::Hash& instanceInfo, bool consumeBroadcasts = true);
 
@@ -232,7 +235,7 @@ namespace karabo {
 
             void registerBrokerErrorHandler(const BrokerErrorHandler& errorHandler);
 
-            karabo::net::JmsConnection::Pointer getConnection() const;
+            karabo::net::Broker::Pointer getConnection() const;
 
             // TODO This will BREAK during multi-topic refactoring
             const std::string& getTopic() const { return m_topic; }
@@ -696,11 +699,7 @@ namespace karabo {
             SignalSlotConnections m_signalSlotConnections; // keep track of established connections
             boost::mutex m_signalSlotConnectionsMutex;
 
-            karabo::net::JmsConnection::Pointer m_connection;
-            karabo::net::JmsProducer::Pointer m_producerChannel;
-            karabo::net::JmsConsumer::Pointer m_consumerChannel;
-            karabo::net::JmsProducer::Pointer m_heartbeatProducerChannel;
-            karabo::net::JmsConsumer::Pointer m_heartbeatConsumerChannel;
+            karabo::net::Broker::Pointer m_connection;
 
             int m_randPing;
 
@@ -785,7 +784,7 @@ namespace karabo {
             void stopEmittingHearbeats();
 
             void consumerErrorNotifier(const std::string& consumer,
-                                       karabo::net::JmsConsumer::Error ec, const std::string& message);
+                                       karabo::net::consumer::Error ec, const std::string& message);
 
             void onHeartbeatMessage(const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
@@ -954,8 +953,17 @@ namespace karabo {
              */
             void registerNewSlot(const std::string &funcName, SlotInstancePointer instance);
 
+            /// Register signal-slot connection on signal side
             void slotConnectToSignal(const std::string& signalFunction, const std::string& slotInstanceId,
                                      const std::string& slotFunction);
+
+            /// Slot to subscribe to remote signal
+            void slotSubscribeRemoteSignal(const std::string& signalInstanceId,
+                                                const std::string& signalFunction);
+
+            /// Slot to un-subscribe from remote signal
+            void slotUnsubscribeRemoteSignal(const std::string& signalInstanceId,
+                                                  const std::string& signalFunction);
 
             /// True if instance with ID 'slotInstanceId' has slot 'slotFunction'.
             /// Internally uses "slotHasSlot" for remote instances, but shortcuts if ID is the own one.
@@ -1365,7 +1373,7 @@ namespace karabo {
                 }
             }
             // TODO Check mutex here
-            auto s = boost::make_shared<Signal>(this, m_producerChannel, m_instanceId, signalFunction, priority,
+            auto s = boost::make_shared<Signal>(this, m_connection, m_instanceId, signalFunction, priority,
                                                 messageTimeToLive);
             s->setSignature < Args...>();
             storeSignal(signalFunction, s);

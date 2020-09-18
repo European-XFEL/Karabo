@@ -31,7 +31,12 @@ class Tests(DeviceTest):
             stdout=PIPE)
         schema = yield from self.process.stdout.read()
         yield from self.process.wait()
-        self.assertEqual(adler32(schema), 2697273170,
+        s = b'I love python, Hello world'
+        t = adler32(s)
+        self.assertEqual(t, 2073102698,
+                         "The adler32's behavior changed.")
+        print("\nCross schema test: schema length is {}".format(len(schema)))
+        self.assertEqual(adler32(schema), 1021321743,
                          "The generated schema changed. If this is "
                          "desired, change the checksum in the code.")
 

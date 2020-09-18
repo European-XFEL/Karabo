@@ -9,7 +9,7 @@
 #include "ConnectionWrap.hh"
 #include "ChannelWrap.hh"
 
-#include "karabo/net/JmsConnection.hh"
+#include "karabo/net/Broker.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/net/EventLoop.hh"
 #include <boost/python.hpp>
@@ -25,11 +25,11 @@ void exportp2p() {
     bp::docstring_options docs(true, true, false);
 
     {
-        bp::class_<JmsConnection, JmsConnection::Pointer, boost::noncopyable>("JmsConnection")
+        bp::class_<Broker, Broker::Pointer, boost::noncopyable>("Broker", bp::no_init)
                 .def("expectedParameters",
-                     &JmsConnection::expectedParameters,
+                     &Broker::expectedParameters,
                      (bp::arg("schema"))).staticmethod("expectedParameters")
-                .def("getBrokerUrl", &JmsConnection::getBrokerUrl,
+                .def("getBrokerUrl", &Broker::getBrokerUrl,
                      "Reports the url of the currently connected-to broker");
     }
 
