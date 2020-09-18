@@ -13,7 +13,7 @@
 #include "karabo/util/LeafElement.hh"
 #include "karabo/util/NodeElement.hh"
 #include "karabo/util/SimpleElement.hh"
-#include "karabo/net/JmsConnection.hh"
+#include "karabo/net/Broker.hh"
 #include "karabo/net/EventLoop.hh"
 #include <krb_log4cpp/LoggingEvent.hh>
 #include <iostream>
@@ -36,7 +36,7 @@ namespace karabo {
                     .commit();
 
             NODE_ELEMENT(s).key("connection")
-                    .appendParametersOf<JmsConnection>()
+                    .appendParametersOf<Broker>()
                     .commit();
 
             STRING_ELEMENT(s).key("topic")
@@ -75,15 +75,16 @@ namespace karabo {
 
         Log4CppNetApp::Log4CppNetApp(const karabo::util::Hash& config) :
             LayoutAppender(config.get<std::string>("name")),
-            m_connection(Configurator<JmsConnection>::createNode("connection", config)),
+            m_producer(),
             m_topic(config.get<std::string>("topic")),
             m_interval(config.get<unsigned int>("interval")),
             m_maxMessages(config.get<unsigned int>("maxNumMessages")),
             m_timer(EventLoop::getIOService()) {
 
             // If we created the connection ourselves we are still disconnected
-            if (!m_connection->isConnected()) m_connection->connect();
-            m_producer = m_connection->createProducer();
+            const std::string& connectionClass = config.getAttribute<std::string>("connection.brokers", "__classId");
+            m_producer = Configurator<Broker>::createNode("connection", connectionClass, Hash("connection.domain", m_topic));
+            if (!m_producer->isConnected()) m_producer->connect();
 
             // Time format should be ISO8601, for real, not the
             // log4cpp crippled version (missing T)
@@ -113,6 +114,7 @@ namespace karabo {
 
 
         void Log4CppNetApp::close() {
+            m_producer.reset();
         }
 
 
@@ -177,7 +179,7 @@ namespace karabo {
             }
             auto header = Hash::Pointer(new Hash("target", "log"));
             auto body = Hash::Pointer(new Hash("messages", m_logCache));
-            m_producer->write(m_topic, header, body, 0);
+            m_producer->write(m_topic, header, body, 0, 0);
             m_logCache.clear();
         }
 

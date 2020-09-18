@@ -110,7 +110,7 @@ namespace karabo {
 
             static void init();
 
-            static std::shared_ptr<EventLoop> instance();
+            static boost::shared_ptr<EventLoop> instance();
 
             void _addThread(const int nThreads);
 
@@ -132,8 +132,8 @@ namespace karabo {
             boost::thread_group m_threadPool;
             mutable boost::mutex m_threadPoolMutex;
 
-            static std::shared_ptr<EventLoop> m_instance;
-            static std::once_flag m_initInstanceFlag;
+            static boost::shared_ptr<EventLoop> m_instance;
+            static boost::once_flag m_initInstanceFlag;
 
             typedef std::map<boost::thread::id, boost::thread*> ThreadMap;
             ThreadMap m_threadMap;

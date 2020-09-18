@@ -51,7 +51,6 @@ DeviceClient_Test::~DeviceClient_Test() {
 void DeviceClient_Test::setUp() {
     // uncomment this if ever testing against a local broker
     // setenv("KARABO_BROKER", "tcp://localhost:7777", true);
-
     // Event loop is started in coreTestRunner.cc's main()
 
     const Hash config("serverId", "testServerDeviceClient", "scanPlugins", false, "Logger.priority", "FATAL");
@@ -195,7 +194,6 @@ void DeviceClient_Test::testGet() {
 
 void DeviceClient_Test::testSet() {
 
-    std::clog << "DeviceClient_Test::testSet" << std::endl;
     // CPPUNIT_ASSERT_EQUAL(true, m_deviceClient->get<bool>("TestedDevice", "archive"));
     // Cannot reconfigure non-reconfigurable parameters - here caught already by client
     CPPUNIT_ASSERT_THROW(m_deviceClient->set("TestedDevice", "archive", false), karabo::util::ParameterException);

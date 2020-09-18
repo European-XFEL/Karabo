@@ -15,8 +15,8 @@ namespace karabo {
     namespace net {
 
 
-        std::shared_ptr<EventLoop> EventLoop::m_instance {nullptr};
-        std::once_flag EventLoop::m_initInstanceFlag;
+        boost::shared_ptr<EventLoop> EventLoop::m_instance {nullptr};
+        boost::once_flag EventLoop::m_initInstanceFlag = BOOST_ONCE_INIT;
 
 
         void EventLoop::init() {
@@ -24,8 +24,8 @@ namespace karabo {
         } 
 
 
-        std::shared_ptr<EventLoop> EventLoop::instance() {
-            std::call_once(m_initInstanceFlag, &EventLoop::init);
+        boost::shared_ptr<EventLoop> EventLoop::instance() {
+            boost::call_once(&EventLoop::init, m_initInstanceFlag);
             return m_instance;
         }
 

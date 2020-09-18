@@ -62,6 +62,21 @@ private:
     void testRegisterSlotTwice();
     void testAsyncConnectInputChannel();
     void testUuid();
+    void _testUniqueInstanceId(const std::string& connectionClass);
+    void _testValidInstanceId(const std::string& connectionClass);
+    void _testReceiveAsync(const std::string& connectionClass);
+    void _testReceiveAsyncError(const std::string& connectionClass);
+    void _testReceiveAsyncNoReply(const std::string& connectionClass);
+    void _testReceiveExceptions(const std::string& connectionClass);
+    void _testMethod(const std::string& connectionClass);
+    void _testConnectAsync(const std::string& connectionClass);
+    void _testConnectAsyncMulti(const std::string& connectionClass);
+    void _testDisconnectAsync(const std::string& connectionClass);
+    void _testAsyncReply(const std::string& connectionClass);
+    void _testAutoConnectSignal(const std::string& connectionClass);
+    void _testAutoConnectSlot(const std::string& connectionClass);
+    void _testRegisterSlotTwice(const std::string& connectionClass);
+    void _testAsyncConnectInputChannel(const std::string& connectionClass);
 };
 
 #endif	/* SIGNALSLOTABLE_TEST_HH */

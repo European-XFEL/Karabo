@@ -20,7 +20,7 @@
 #include "karabo/io/Input.hh"
 #include "karabo/io/Output.hh"
 #include "karabo/io/FileTools.hh"
-#include "karabo/net/JmsConnection.hh"
+#include "karabo/net/Broker.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/Strand.hh"
 #include "karabo/net/utils.hh"
@@ -78,7 +78,7 @@ namespace karabo {
             NODE_ELEMENT(expected).key("connection")
                     .displayedName("Connection")
                     .description("The connection to the communication layer of the distributed system")
-                    .appendParametersOf<JmsConnection>()
+                    .appendParametersOf<karabo::net::Broker>()
                     .expertAccess()
                     .commit();
 
@@ -176,12 +176,31 @@ namespace karabo {
                 m_hostname = net::bareHostName();
             }
 
-            m_connection = Configurator<JmsConnection>::createNode("connection", config);
+            m_connectionClass = KARABO_DEFAULT_BROKER_CLASS;  // defined in SignalSlotable.hh
+            Hash brokerConfig = config;
+            {
+                char* env = getenv("KARABO_BROKER");
+                if (!env) throw KARABO_PARAMETER_EXCEPTION("No KARABO_BROKER environment defined");
+                std::string brokerStr = env;
+                if (brokerStr.substr(0, 6) == "tcp://") m_connectionClass = "OpenMQBroker";
+                else if (brokerStr.substr(0, 7) == "mqtt://") m_connectionClass = "MqttBroker";
+                std::vector<std::string> brokers = fromString<std::string, std::vector>(brokerStr);
+                brokerConfig.set("connection.brokers", brokers);
+                const std::string domain = getenv("KARABO_BROKER_TOPIC") ?
+                    getenv("KARABO_BROKER_TOPIC") : getenv("USER");
+                brokerConfig.set("connection.domain", domain);
+                brokerConfig.set("connection.instanceId", m_serverId);
+            }
+
+            // Setting "instanceId" ...
+            m_connection = Configurator<Broker>::createNode("connection",
+                                                            m_connectionClass,
+                                                            brokerConfig);
             m_connection->connect();
 
             m_pluginLoader = PluginLoader::create("PluginLoader", Hash("pluginDirectory", config.get<string>("pluginDirectory"),
                                                                        "pluginsToLoad", "*"));
-            loadLogger(config);
+            loadLogger(brokerConfig);
 
             karabo::util::Hash instanceInfo;
             instanceInfo.set("type", "server");
@@ -223,6 +242,17 @@ namespace karabo {
                 // If not specified, use the local topic for log messages
                 config.set("network.topic", m_topic);
             }
+
+            // Use existing configuration (not a connection) for logging service ...
+            // just adding connection class as an attribute.  Pass as parameter will
+            // be not allowed by validation.  The attribute should be assigned to leaf.
+            // Attempt to use an existing connection results in SEGFAULT during destruction phase.
+            if (!config.has("network.connection.brokers")) {
+                // If not specified, use the existing configuration ...
+                config.set("network.connection.brokers",
+                           input.get<std::vector<std::string> >("connection.brokers"));
+            }
+            config.setAttribute("network.connection.brokers", "__classId", m_connectionClass, '.');
 
             Logger::configure(config);
 

@@ -10,7 +10,7 @@
 
 #include <boost/python.hpp>
 #include <karabo/xms/Signal.hh>
-#include <karabo/net/JmsProducer.hh>
+#include <karabo/net/Broker.hh>
 #include "HashWrap.hh"
 #include "ScopedGILRelease.hh"
 
@@ -30,7 +30,7 @@ namespace karathon {
 
     public:
 
-        SignalWrap(const karabo::xms::SignalSlotable* signalSlotable, const karabo::net::JmsProducer::Pointer& producer,
+        SignalWrap(const karabo::xms::SignalSlotable* signalSlotable, const karabo::net::Broker::Pointer& producer,
                    const std::string& instanceId, const std::string& signalId,
                    const int priority = KARABO_SYS_PRIO, const int messageTimeToLive = KARABO_SYS_TTL)
             : karabo::xms::Signal(signalSlotable, producer, instanceId, signalId, priority, messageTimeToLive) {

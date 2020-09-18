@@ -15,7 +15,7 @@ namespace karabo {
     namespace xms {
 
 
-        Signal::Signal(const SignalSlotable* signalSlotable, const karabo::net::JmsProducer::Pointer& channel,
+        Signal::Signal(const SignalSlotable* signalSlotable, const karabo::net::Broker::Pointer& channel,
                        const std::string& signalInstanceId, const std::string& signalFunction,
                        const int priority, const int messageTimeToLive) :
             m_signalSlotable(const_cast<SignalSlotable*> (signalSlotable)),
@@ -69,7 +69,7 @@ namespace karabo {
         void Signal::doEmit(const karabo::util::Hash::Pointer& message) {
             using namespace karabo::util;
             try {
-
+                // prepareHeader should be called once per 'emit'!
                 Hash::Pointer header = prepareHeader(m_registeredSlots);
 
                 // Two ways to emit: 1) In-process 2) Broker
@@ -79,7 +79,7 @@ namespace karabo {
                 if (m_registeredSlots.empty()) {
                     // Heartbeats are an exception, must always be sent
                     if (m_signalFunction == "signalHeartbeat") {
-                        m_channel->write(m_topic, *header, *message, m_priority, m_messageTimeToLive);
+                        m_channel->write(m_topic, header, message, m_priority, m_messageTimeToLive);
                         return;
                     } else {
                         // Do not even produce traffic on the way to the broker, as no one cares for this message
@@ -102,7 +102,7 @@ namespace karabo {
                 // publish leftovers via broker
                 if (registeredSlots.size() > 0) {
                     // header contains updated slot leftovers
-                    m_channel->write(m_topic, *header, *message, m_priority, m_messageTimeToLive);
+                    m_channel->write(m_topic, header, message, m_priority, m_messageTimeToLive);
                 }
 
             } catch (const karabo::util::Exception& e) {

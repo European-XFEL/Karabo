@@ -14,6 +14,8 @@
 #define	KARABO_NET_JMSCONSUMER_HH
 
 #include "JmsConnection.hh"
+#include "utils.hh"
+#include "Broker.hh"
 #include "Strand.hh"
 #include "karabo/io/BinarySerializer.hh"
 #include <openmqc/mqtypes.h>
@@ -44,16 +46,6 @@ namespace karabo {
 
             KARABO_CLASSINFO(JmsConsumer, "JmsChannel", "0.1")
 
-            typedef boost::function< void (karabo::util::Hash::Pointer, karabo::util::Hash::Pointer) > MessageHandler;
-
-            enum class Error {
-
-                drop = 0, /// messages have been dropped
-                type, /// message of wrong type (i.e. non binary format) received and dropped
-                unknown /// status reported by openmqc that is not specially treated
-            };
-            typedef boost::function< void (Error, const std::string& description) > ErrorNotifier;
-
             /**
              * This triggers permanent reading of messages on the current topic that obey the provided selector.
              * The given MessageHandler will be called sequentially for each message. An error notifier
@@ -65,7 +57,7 @@ namespace karabo {
              * @param errorNotifier Error notifier of signature <void (JmsConsumer::Error, string)> with an Error and a
              *                      string indicating the problem
              */
-            void startReading(const MessageHandler& handler, const ErrorNotifier& errorNotifier = ErrorNotifier());
+            void startReading(const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier());
 
             /**
              * Stop permanent reading after having started it with startReading(..).
@@ -96,7 +88,7 @@ namespace karabo {
 
         private:
             // The 'skipSerialisation' flag is for expert use: Instead of deserialising the message body, the body
-            // provided to the JmsConsumer::MessageHandler will be a Hash with a single key "raw" containing an
+            // provided to the consumer::MessageHandler will be a Hash with a single key "raw" containing an
             // std::vector<char> of the serialised message.
             // This is e.g. used in karabo-brokerrates to speed up (it digests all messages of a topic!).
             JmsConsumer(const JmsConnection::Pointer& connection, const std::string& topic,
@@ -109,7 +101,7 @@ namespace karabo {
 
             void deserialize(const MQMessageHandlePointer& messageHandlerPtr);
 
-            void postErrorOnHandlerStrand(JmsConsumer::Error error, const std::string& msg);
+            void postErrorOnHandlerStrand(consumer::Error error, const std::string& msg);
 
             MQConsumerHandle getConsumer(const std::string& topic, const std::string& selector);
 
@@ -148,8 +140,8 @@ namespace karabo {
             std::map<std::string, MQConsumerHandle > m_consumers;
 
             bool m_reading;
-            MessageHandler m_messageHandler;
-            ErrorNotifier m_errorNotifier;
+            consumer::MessageHandler m_messageHandler;
+            consumer::ErrorNotifier m_errorNotifier;
 
             karabo::net::Strand::Pointer m_serializerStrand;
             karabo::net::Strand::Pointer m_handlerStrand;

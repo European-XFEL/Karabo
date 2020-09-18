@@ -41,7 +41,7 @@ namespace karabo {
         }
 
 
-        void JmsConsumer::startReading(const MessageHandler& handler, const ErrorNotifier& errorNotifier) {
+        void JmsConsumer::startReading(const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier) {
 
             if (m_reading) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Refuse 'startReading' since already reading!";
@@ -85,8 +85,8 @@ namespace karabo {
                 // The extra thread might call this when the logger singleton is already being cleaned-up.
 
                 // Better reset to avoid dangling handlers:
-                m_messageHandler = MessageHandler();
-                m_errorNotifier = ErrorNotifier();
+                m_messageHandler = consumer::MessageHandler();
+                m_errorNotifier = consumer::ErrorNotifier();
             }
         }
 
@@ -112,7 +112,7 @@ namespace karabo {
                         MQString statusString = MQGetStatusString(status);
                         const std::string stdStatusString(statusString);
                         MQFreeString(statusString);
-                        m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::drop, stdStatusString));
+                        m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, consumer::Error::drop, stdStatusString));
                         // No 'break;'!
                     }
                     case MQ_SUCCESS:
@@ -126,7 +126,7 @@ namespace karabo {
                         if (messageType != MQ_BYTES_MESSAGE) {
                             const std::string msg("Received a message of wrong type");
                             KARABO_LOG_FRAMEWORK_WARN << msg;
-                            m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::type, msg));
+                            m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, consumer::Error::type, msg));
                             break;
                         }
                         m_serializerStrand->post(bind_weak(&JmsConsumer::deserialize, this, messageHandlePtr));
@@ -151,7 +151,7 @@ namespace karabo {
                         MQFreeString(tmp);
                         const std::string msg("Untreated message consumption error '" + errorString + "', try again.");
                         KARABO_LOG_FRAMEWORK_WARN << msg;
-                        m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, Error::unknown, msg));
+                        m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, consumer::Error::unknown, msg));
                     }
                 }
                 if (selfGuard.unique()) {
@@ -186,7 +186,7 @@ namespace karabo {
         }
 
 
-        void JmsConsumer::postErrorOnHandlerStrand(JmsConsumer::Error error, const std::string& msg) {
+        void JmsConsumer::postErrorOnHandlerStrand(consumer::Error error, const std::string& msg) {
             if (m_errorNotifier) {
                 m_handlerStrand->post(boost::bind(m_errorNotifier, error, msg));
             } else {
