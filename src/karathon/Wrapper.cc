@@ -14,6 +14,7 @@
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/xms/ImageData.hh>
+#include <karabo/net/Broker.hh>
 
 using namespace std;
 
