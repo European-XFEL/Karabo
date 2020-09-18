@@ -193,10 +193,8 @@ namespace karathon {
                                            const std::string& connectionType,
                                            const karabo::util::Hash& connectionParameters,
                                            int heartbeatInterval,
-                                           const karabo::util::Hash& instanceInfo) : SignalSlotable() {
-
-        JmsConnection::Pointer connection = Configurator<JmsConnection>::create(connectionType, connectionParameters);
-        this->init(instanceId, connection, heartbeatInterval, instanceInfo);
+                                           const karabo::util::Hash& instanceInfo)
+        : SignalSlotable(instanceId, connectionType, connectionParameters, heartbeatInterval, instanceInfo) {
     }
 
 

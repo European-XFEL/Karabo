@@ -77,8 +77,21 @@ namespace karabo {
             instanceInfo.set("visibility", 4);
             instanceInfo.set("host", net::bareHostName());
             instanceInfo.set("status", "ok");
+            std::string connectionClass = KARABO_DEFAULT_BROKER_CLASS;  // defined in SignalSlotable.hh
+            Hash brokerConfig("instanceId", ownInstanceId);
+            {
+                std::string brokerStr = getenv("KARABO_BROKER") ? getenv("KARABO_BROKER") : "tcp://exfl-broker:7777";
+                if (brokerStr.substr(0, 6) == "tcp://") connectionClass = "OpenMQBroker";
+                else if (brokerStr.substr(0, 7) == "mqtt://") connectionClass = "MqttBroker";
+                std::vector<std::string> brokers = fromString<std::string, std::vector>(brokerStr);
+                brokerConfig.set("brokers", brokers);
+                const std::string domain = getenv("KARABO_BROKER_TOPIC") ?
+                    getenv("KARABO_BROKER_TOPIC") : getenv("USER");
+                brokerConfig.set("domain", domain);
+            }
             m_internalSignalSlotable = karabo::xms::SignalSlotable::Pointer(new SignalSlotable(ownInstanceId,
-                                                                                               "JmsConnection", Hash(),
+                                                                                               connectionClass,
+                                                                                               brokerConfig,
                                                                                                60, instanceInfo));
             m_internalSignalSlotable->start();
 
@@ -429,7 +442,7 @@ namespace karabo {
 
 
         void DeviceClient::kickSignalsChangedTimer() {
-            m_signalsChangedTimer.expires_from_now(boost::posix_time::milliseconds(m_signalsChangedInterval));
+            m_signalsChangedTimer.expires_from_now(boost::posix_time::milliseconds(std::atomic_load(&m_signalsChangedInterval)));
             m_signalsChangedTimer.async_wait(bind_weak(&DeviceClient::sendSignalsChanged,
                                                        this,
                                                        boost::asio::placeholders::error));

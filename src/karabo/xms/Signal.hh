@@ -11,9 +11,11 @@
 #ifndef KARABO_XMS_SIGNAL_HH
 #define	KARABO_XMS_SIGNAL_HH
 
+#include <vector>
+#include <tuple>
 #include <boost/asio.hpp>
 #include <karabo/util/Factory.hh>
-#include <karabo/net/JmsProducer.hh>
+#include <karabo/net/Broker.hh>
 #include <typeinfo>
 #include <typeindex>
 
@@ -54,7 +56,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(Signal, "Signal", "1.0")
 
-            Signal(const SignalSlotable* signalSlotable, const karabo::net::JmsProducer::Pointer& channel,
+            Signal(const SignalSlotable* signalSlotable, const karabo::net::Broker::Pointer& channel,
                    const std::string& signalInstanceId, const std::string& signalFunction,
                    const int priority, const int messageTimeToLive);
 
@@ -141,7 +143,7 @@ namespace karabo {
         protected:
 
             SignalSlotable* m_signalSlotable;
-            const karabo::net::JmsProducer::Pointer& m_channel;
+            const karabo::net::Broker::Pointer& m_channel;
             std::string m_signalInstanceId;
             std::string m_signalFunction;
             std::string m_registeredSlotsString;

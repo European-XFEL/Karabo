@@ -23,6 +23,9 @@ using namespace karabo::util;
 using namespace karabo::xms;
 
 
+#define MQTT_BROKER "mqtt://exfldl02n0:1883"
+#define OPENMQ_BROKER "tcp://exflbkr02n0:7777"
+
 class SignalSlotDemo : public karabo::xms::SignalSlotable {
 
     const std::string m_othersId;
@@ -35,8 +38,8 @@ public:
 
     KARABO_CLASSINFO(SignalSlotDemo, "SignalSlotDemo", "1.0")
 
-    SignalSlotDemo(const std::string& instanceId, const std::string& othersId) :
-        karabo::xms::SignalSlotable(instanceId), m_othersId(othersId), m_messageCount(0), m_allOk(true) {
+    SignalSlotDemo(const std::string& instanceId, const std::string& othersId, const std::string& connectionClass) :
+        karabo::xms::SignalSlotable(instanceId, connectionClass), m_othersId(othersId), m_messageCount(0), m_allOk(true) {
 
         KARABO_SIGNAL("signalA", std::string);
 
@@ -167,6 +170,7 @@ void SignalSlotable_Test::setUp() {
     //Logger::configure(Hash("priority", "ERROR"));
     //Logger::useOstream();
     // Event loop is started in xmsTestRunner.cc's main()
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
 }
 
 
@@ -175,14 +179,21 @@ void SignalSlotable_Test::tearDown() {
 
 
 void SignalSlotable_Test::testUniqueInstanceId() {
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testUniqueInstanceId("OpenMQBroker");
 
-    auto one = boost::make_shared<SignalSlotable>("one");
-    auto two = boost::make_shared<SignalSlotable>("two",
-                                                  "JmsConnection", // connectionClass
-                                                  karabo::util::Hash(), // brokerConfiguration
-                                                  30, // heartbeatInterval
-                                                  karabo::util::Hash("type", "sigslot")); // instanceInfo
-    auto one_again = boost::make_shared<SignalSlotable>("one");
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testUniqueInstanceId("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testUniqueInstanceId(const std::string& connectionClass) {
+
+    auto one = boost::make_shared<SignalSlotable>("one", connectionClass);
+    auto two = boost::make_shared<SignalSlotable>(
+            "two", connectionClass, karabo::util::Hash(),
+            30, karabo::util::Hash("type", "sigslot"));
+    auto one_again = boost::make_shared<SignalSlotable>("one", connectionClass);
 
     // Hijack test to check default "type"
     Hash instanceInfo(one->getInstanceInfo());
@@ -198,29 +209,47 @@ void SignalSlotable_Test::testUniqueInstanceId() {
 
 
 void SignalSlotable_Test::testValidInstanceId() {
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testValidInstanceId("OpenMQBroker");
+
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testValidInstanceId("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testValidInstanceId(const std::string& connectionClass) {
 
     const auto allowedChars = "0123456789_abcdefghijklmnopqrstuvwxyz-ABCDEFGHIJKLMNOPQRSTUVWXYZ/";
     // all allowed characters should allow the instance to start
-    auto s = boost::make_shared<SignalSlotable>(allowedChars);
+    auto s = boost::make_shared<SignalSlotable>(allowedChars, connectionClass);
     CPPUNIT_ASSERT_NO_THROW(s->start());
 
     // dot '.' is bad since id often used as key in Hash, so instance must not start
-    s = boost::make_shared<SignalSlotable>("a.b");
+    s = boost::make_shared<SignalSlotable>("a.b", connectionClass);
     CPPUNIT_ASSERT_THROW(s->start(), SignalSlotException);
 
     // space ' ' causes problem in xml serialisation, so instance must not start
-    s = boost::make_shared<SignalSlotable>("a b");
+    s = boost::make_shared<SignalSlotable>("a b", connectionClass);
     CPPUNIT_ASSERT_THROW(s->start(), SignalSlotException);
 
     // colon ':' separates instanceId and pipeline channel name, so instance must not start
-    s = boost::make_shared<SignalSlotable>("a:b");
+    s = boost::make_shared<SignalSlotable>("a:b", connectionClass);
     CPPUNIT_ASSERT_THROW(s->start(), SignalSlotException);
 }
 
 
 void SignalSlotable_Test::testReceiveAsync() {
-    auto greeter = boost::make_shared<SignalSlotable>("greeter");
-    auto responder = boost::make_shared<SignalSlotable>("responder");
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testReceiveAsync("OpenMQBroker");
+
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testReceiveAsync("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testReceiveAsync(const std::string& connectionClass) {
+    auto greeter = boost::make_shared<SignalSlotable>("greeter", connectionClass);
+    auto responder = boost::make_shared<SignalSlotable>("responder", connectionClass);
     greeter->start();
     responder->start();
 
@@ -260,8 +289,17 @@ void SignalSlotable_Test::testReceiveAsync() {
 
 
 void SignalSlotable_Test::testReceiveAsyncError() {
-    auto greeter = boost::make_shared<SignalSlotable>("greeter");
-    auto responder = boost::make_shared<SignalSlotable>("responder");
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testReceiveAsyncError("OpenMQBroker");
+
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testReceiveAsyncError("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testReceiveAsyncError(const std::string& connectionClass) {
+    auto greeter = boost::make_shared<SignalSlotable>("greeter", connectionClass);
+    auto responder = boost::make_shared<SignalSlotable>("responder", connectionClass);
     greeter->start();
     responder->start();
 
@@ -373,8 +411,17 @@ void SignalSlotable_Test::testReceiveAsyncError() {
 
 
 void SignalSlotable_Test::testReceiveAsyncNoReply() {
-    auto greeter = boost::make_shared<SignalSlotable>("greeter");
-    auto responder = boost::make_shared<SignalSlotable>("responder");
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testReceiveAsyncNoReply("OpenMQBroker");
+
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testReceiveAsyncNoReply("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testReceiveAsyncNoReply(const std::string& connectionClass) {
+    auto greeter = boost::make_shared<SignalSlotable>("greeter", connectionClass);
+    auto responder = boost::make_shared<SignalSlotable>("responder", connectionClass);
     greeter->start();
     responder->start();
 
@@ -435,9 +482,18 @@ void SignalSlotable_Test::testReceiveAsyncNoReply() {
 
 
 void SignalSlotable_Test::testReceiveExceptions() {
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testReceiveExceptions("OpenMQBroker");
+
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testReceiveExceptions("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testReceiveExceptions(const std::string& connectionClass) {
     // Testing the different kinds of exceptions
-    auto greeter = boost::make_shared<SignalSlotable>("greeter");
-    auto responder = boost::make_shared<SignalSlotable>("responder");
+    auto greeter = boost::make_shared<SignalSlotable>("greeter", connectionClass);
+    auto responder = boost::make_shared<SignalSlotable>("responder", connectionClass);
     greeter->start();
     responder->start();
 
@@ -488,12 +544,21 @@ void SignalSlotable_Test::testReceiveExceptions() {
 
 
 void SignalSlotable_Test::testConnectAsync() {
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testConnectAsync("OpenMQBroker");
 
-    auto signaler = boost::make_shared<SignalSlotable>("signalInstance");
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testConnectAsync("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testConnectAsync(const std::string& connectionClass) {
+
+    auto signaler = boost::make_shared<SignalSlotable>("signalInstance", connectionClass);
     signaler->registerSignal<int>("signal");
     signaler->start();
 
-    auto slotter = boost::make_shared<SignalSlotable>("slotInstance");
+    auto slotter = boost::make_shared<SignalSlotable>("slotInstance", connectionClass);
     bool slotCalled = false;
     int inSlot = -10;
     auto slotFunc = [&slotCalled, &inSlot] (int i) {
@@ -607,9 +672,18 @@ void SignalSlotable_Test::testConnectAsync() {
 
 
 void SignalSlotable_Test::testConnectAsyncMulti() {
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testConnectAsyncMulti("OpenMQBroker");
+
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testConnectAsyncMulti("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testConnectAsyncMulti(const std::string& connectionClass) {
 
     // One instance with and signalA and slotB...
-    auto signalerA = boost::make_shared<SignalSlotable>("signalA_slotB");
+    auto signalerA = boost::make_shared<SignalSlotable>("signalA_slotB", connectionClass);
     signalerA->registerSignal<int>("signalA");
     bool slotCalledB = false;
     int inSlotB = -10;
@@ -621,7 +695,7 @@ void SignalSlotable_Test::testConnectAsyncMulti() {
     signalerA->start();
 
     // .. and one with and signalB and slotA...
-    auto signalerB = boost::make_shared<SignalSlotable>("signalB_slotA");
+    auto signalerB = boost::make_shared<SignalSlotable>("signalB_slotA", connectionClass);
     signalerB->registerSignal<int>("signalB");
     bool slotCalledA = false;
     int inSlotA = -10;
@@ -791,12 +865,21 @@ void SignalSlotable_Test::testConnectAsyncMulti() {
 
 
 void SignalSlotable_Test::testDisconnectAsync() {
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testDisconnectAsync("OpenMQBroker");
 
-    auto signaler = boost::make_shared<SignalSlotable>("signalInstance");
-    signaler->registerSignal("signal");
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testDisconnectAsync("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testDisconnectAsync(const std::string& connectionClass) {
+
+    auto signaler = boost::make_shared<SignalSlotable>("signalInstance", connectionClass);
+    signaler->registerSignal<int>("signal");
     signaler->start();
 
-    auto slotter = boost::make_shared<SignalSlotable>("slotInstance");
+    auto slotter = boost::make_shared<SignalSlotable>("slotInstance", connectionClass);
     bool slotCalled = false;
     auto slotFunc = [&slotCalled] () {
         slotCalled = true;
@@ -807,6 +890,9 @@ void SignalSlotable_Test::testDisconnectAsync() {
     ///////////////////////////////////////////////////////////////////////////
     // First test successful asyncDisconnect
     CPPUNIT_ASSERT(signaler->connect("signalInstance", "signal", "slotInstance", "slot"));
+
+    // Give signal some time to travel - but it won't, since disconnected!
+    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
 
     bool disconnectSuccess = false;
     auto disconnectSuccessHandler = [&disconnectSuccess] () {
@@ -904,9 +990,18 @@ void SignalSlotable_Test::testDisconnectAsync() {
 }
 
 void SignalSlotable_Test::testMethod() {
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testMethod("OpenMQBroker");
+
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testMethod("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testMethod(const std::string& connectionClass) {
 
     const std::string instanceId("SignalSlotDemo");
-    auto demo = boost::make_shared<SignalSlotDemo>(instanceId, "dummy");
+    auto demo = boost::make_shared<SignalSlotDemo>(instanceId, "dummy", connectionClass);
     demo->start();
 
     demo->connect("signalA", "slotA");
@@ -962,6 +1057,15 @@ void SignalSlotable_Test::testMethod() {
 
 
 void SignalSlotable_Test::testAsyncReply() {
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testAsyncReply("OpenMQBroker");
+
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testAsyncReply("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testAsyncReply(const std::string& connectionClass) {
 
 
     class SignalSlotableAsyncReply : public karabo::xms::SignalSlotable {
@@ -972,8 +1076,8 @@ void SignalSlotable_Test::testAsyncReply() {
 
         KARABO_CLASSINFO(SignalSlotableAsyncReply, "SignalSlotAsyncReply", "1.0")
 
-        SignalSlotableAsyncReply(const std::string& instanceId)
-            : karabo::xms::SignalSlotable(instanceId)
+        SignalSlotableAsyncReply(const std::string& instanceId,const std::string& connectionClass)
+            : karabo::xms::SignalSlotable(instanceId, connectionClass)
             , m_slotCallEnded(false)
             , m_asynReplyHandlerCalled(false)
             , m_slotCallEnded_error(false)
@@ -1023,8 +1127,8 @@ void SignalSlotable_Test::testAsyncReply() {
 
     };
 
-    auto slotter = boost::make_shared<SignalSlotableAsyncReply>("slotter");
-    auto sender = boost::make_shared<SignalSlotable>("sender");
+    auto slotter = boost::make_shared<SignalSlotableAsyncReply>("slotter", connectionClass);
+    auto sender = boost::make_shared<SignalSlotable>("sender", connectionClass);
     sender->start();
     slotter->start();
 
@@ -1131,12 +1235,22 @@ void SignalSlotable_Test::testAsyncReply() {
 
 }
 
+
 void SignalSlotable_Test::testAutoConnectSignal() {
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testAutoConnectSignal("OpenMQBroker");
+
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testAutoConnectSignal("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testAutoConnectSignal(const std::string& connectionClass) {
 
     // Give a unique name to exclude interference with other tests
     const std::string instanceId("SignalSlotDemoAutoConnectSignal");
     const std::string instanceId2(instanceId + "2");
-    auto demo = boost::make_shared<SignalSlotDemo>(instanceId, instanceId2);
+    auto demo = boost::make_shared<SignalSlotDemo>(instanceId, instanceId2, connectionClass);
     demo->start();
 
     // Connect the other's signal to my slot - although the other is not yet there!
@@ -1146,7 +1260,7 @@ void SignalSlotable_Test::testAutoConnectSignal() {
     waitDemoOk(demo, 0, 6); // 6 trials: slightly more than 100 ms sleep
     CPPUNIT_ASSERT(demo->wasOk(0)); // demo is not interested in its own signals
 
-    auto demo2 = boost::make_shared<SignalSlotDemo>(instanceId2, instanceId);
+    auto demo2 = boost::make_shared<SignalSlotDemo>(instanceId2, instanceId, connectionClass);
     demo2->start();
 
     // Give demo some time to auto-connect now that demo2 is there:
@@ -1162,12 +1276,21 @@ void SignalSlotable_Test::testAutoConnectSignal() {
 
 
 void SignalSlotable_Test::testAutoConnectSlot() {
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testAutoConnectSlot("OpenMQBroker");
+
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testAutoConnectSlot("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testAutoConnectSlot(const std::string& connectionClass) {
 
     // Same as testAutoConnectSignal, but the other way round:
     // slot instance comes into game after connect was called.
     const std::string instanceId("SignalSlotDemoAutoConnectSlot");
     const std::string instanceId2(instanceId + "2");
-    auto demo = boost::make_shared<SignalSlotDemo>(instanceId, instanceId2);
+    auto demo = boost::make_shared<SignalSlotDemo>(instanceId, instanceId2, connectionClass);
     demo->start();
 
 
@@ -1179,7 +1302,7 @@ void SignalSlotable_Test::testAutoConnectSlot() {
     CPPUNIT_ASSERT(demo->wasOk(0)); // demo is not interested in its own signals
 
 
-    auto demo2 = boost::make_shared<SignalSlotDemo>(instanceId2, instanceId);
+    auto demo2 = boost::make_shared<SignalSlotDemo>(instanceId2, instanceId, connectionClass);
     demo2->start();
 
     // Give demo some time to auto-connect now that demo2 is there:
@@ -1194,9 +1317,18 @@ void SignalSlotable_Test::testAutoConnectSlot() {
 
 
 void SignalSlotable_Test::testRegisterSlotTwice() {
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testRegisterSlotTwice("OpenMQBroker");
+
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testRegisterSlotTwice("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testRegisterSlotTwice(const std::string& connectionClass) {
     // Registering two function of the same signature for the same slot means that both are executed
     // when the slot is called.
-    auto instance = boost::make_shared<SignalSlotable>("instance");
+    auto instance = boost::make_shared<SignalSlotable>("instance", connectionClass);
     instance->start();
 
     bool firstIsCalled = false;
@@ -1212,7 +1344,7 @@ void SignalSlotable_Test::testRegisterSlotTwice() {
     // Adding second with same signature is fine in contrast to third below:
     CPPUNIT_ASSERT_NO_THROW(instance->registerSlot(second, "slot"));
 
-    auto tester = boost::make_shared<SignalSlotable>("tester");
+    auto tester = boost::make_shared<SignalSlotable>("tester", connectionClass);
     tester->start();
     // Synchronous request to avoid sleeps in test - assert that no timeout happens.
     // Our slot functions do not place any answers, so an empty one will be added.
@@ -1230,16 +1362,25 @@ void SignalSlotable_Test::testRegisterSlotTwice() {
 
 
 void SignalSlotable_Test::testAsyncConnectInputChannel() {
+    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    _testAsyncConnectInputChannel("OpenMQBroker");
+
+//    setenv("KARABO_BROKER", MQTT_BROKER, true);
+//    _testAsyncConnectInputChannel("MqttBroker");
+}
+
+
+void SignalSlotable_Test::_testAsyncConnectInputChannel(const std::string& connectionClass) {
     using karabo::util::Hash;
 
     // Setup sender
-    auto sender = boost::make_shared<SignalSlotable>("sender");
+    auto sender = boost::make_shared<SignalSlotable>("sender", connectionClass);
     OutputChannel::Pointer outputChannel = sender->createOutputChannel("output", // default config
                                                                        Hash("output", karabo::util::Hash()));
     sender->start();
 
     // Setup receiver
-    auto receiver = boost::make_shared<SignalSlotable>("receiver");
+    auto receiver = boost::make_shared<SignalSlotable>("receiver", connectionClass);
     karabo::util::Hash inputCfg("connectedOutputChannels", std::vector<std::string>(1, "sender:output"));
     InputChannel::Pointer inputChannel = receiver->createInputChannel("input", Hash("input", inputCfg));
     receiver->start();

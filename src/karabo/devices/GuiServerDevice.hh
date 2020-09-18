@@ -14,7 +14,7 @@
 #include <set>
 
 #include <krb_log4cpp/Priority.hh>
-#include "karabo/net/JmsProducer.hh"
+#include "karabo/net/Broker.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/xms/InputChannel.hh"
 #include "karabo/util/Version.hh"
@@ -96,13 +96,13 @@ namespace karabo {
             boost::asio::deadline_timer m_networkStatsTimer;
             boost::asio::deadline_timer m_forwardLogsTimer;
 
-            karabo::net::JmsConsumer::Pointer m_loggerConsumer;
+            karabo::net::Broker::Pointer m_loggerConsumer;
             std::map<std::string, int> m_monitoredDevices;
             NetworkMap m_networkConnections;
             // Next map<string, ...> not unordered before use of C++14 because we erase from it while looping over it.
             std::map<std::string, std::map<WeakChannelPointer, bool> > m_readyNetworkConnections;
 
-            karabo::net::JmsProducer::Pointer m_guiDebugProducer;
+            karabo::net::Broker::Pointer m_guiDebugProducer;
 
             typedef std::map< karabo::net::Channel::Pointer, ChannelData>::const_iterator ConstChannelIterator;
             typedef std::map< karabo::net::Channel::Pointer, ChannelData>::iterator ChannelIterator;

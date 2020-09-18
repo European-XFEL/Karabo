@@ -17,7 +17,7 @@ from karathon import (
     UINT32_ELEMENT, MICROSEC, NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
     STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, WRITE,
-    AccessLevel, AccessType, AssemblyRules, ChannelMetaData, JmsConnection,
+    AccessLevel, AccessType, AssemblyRules, Broker, ChannelMetaData,
     EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
     LeafType, loadFromFile, Logger, MetricPrefix,
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
@@ -80,7 +80,7 @@ class PythonDevice(NoFsm):
             .displayedName("Connection")
             .description("The connection to the communication layer of the"
                          " distributed system")
-            .appendParametersOf(JmsConnection)
+            .appendParametersOf(Broker)
             .adminAccess()
             .commit(),
 
@@ -441,7 +441,23 @@ class PythonDevice(NoFsm):
             info["interfaces"] = interfaces
 
         # Instantiate SignalSlotable object
-        self._ss = SignalSlotable(self.deviceid, "JmsConnection",
+        try:
+            url = os.environ["KARABO_BROKER"]
+        except KeyError:
+            url = "tcp://exfl-broker:7777"
+        if url[0:7] == "mqtt://":
+            self._connectionClass = "MqttBroker"
+        else:
+            self._connectionClass = "OpenMQBroker"
+        self._parameters["_connection_.brokers"] = url
+        try:
+            domain = os.environ["KARABO_BROKER_TOPIC"]
+        except KeyError:
+            domain = os.environ["USER"]
+        self._parameters["_connection_.domain"] = domain
+        self._parameters["_connection_.instanceId"] = self.deviceid
+
+        self._ss = SignalSlotable(self.deviceid, self._connectionClass,
                                   self._parameters["_connection_"],
                                   self._parameters["heartbeatInterval"], info)
 
@@ -508,7 +524,8 @@ class PythonDevice(NoFsm):
 
         Uses config in self._parameters["Logger"]
         """
-        config = self._parameters["Logger"]
+        config = copy.copy(self._parameters["Logger"])
+
         stamp = self.getActualTimestamp()
 
         # cure the network part of the logger config
@@ -519,7 +536,8 @@ class PythonDevice(NoFsm):
             # Since manipulating self._parameters, add timestamp:
             topicAttrs = config.getNode(topicPath).getAttributes()
             stamp.toHashAttributes(topicAttrs)
-
+        config.setAttribute("network.connection.brokers",
+                            "__classId", self._connectionClass)
         # cure the file part of the logger config
         path = os.path.join(os.environ['KARABO'], "var", "log", self.serverid,
                             self.deviceid)

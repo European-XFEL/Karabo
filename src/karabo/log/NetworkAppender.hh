@@ -7,8 +7,7 @@
 
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Configurator.hh"
-#include "karabo/net/JmsConnection.hh"
-#include "karabo/net/JmsProducer.hh"
+#include "karabo/net/Broker.hh"
 #include <krb_log4cpp/LayoutAppender.hh>
 #include <krb_log4cpp/PatternLayout.hh>
 #include <boost/asio/deadline_timer.hpp>
@@ -19,8 +18,7 @@ namespace karabo {
 
     namespace net {
         // Forward
-        class JmsConnection;
-        class JmsProducer;
+        class Broker;
     }
 
     namespace log {
@@ -90,8 +88,7 @@ namespace karabo {
 
         private: // members
 
-            boost::shared_ptr<karabo::net::JmsConnection> m_connection;
-            boost::shared_ptr<karabo::net::JmsProducer> m_producer;
+            boost::shared_ptr<karabo::net::Broker> m_producer;
             std::string m_topic;
             unsigned int m_interval;
             unsigned int m_maxMessages;
