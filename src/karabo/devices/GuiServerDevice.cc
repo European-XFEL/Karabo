@@ -263,7 +263,7 @@ namespace karabo {
                 remote().registerSchemaUpdatedMonitor(boost::bind(&karabo::devices::GuiServerDevice::schemaUpdatedHandler, this, _1, _2));
                 remote().registerClassSchemaMonitor(boost::bind(&karabo::devices::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
 
-                remote().registerInstanceChangeMonitor(boost::bind(&karabo::devices::GuiServerDevice::instanceChangeHandler, this, _1));
+                remote().registerInstanceChangeMonitor(bind_weak(&karabo::devices::GuiServerDevice::instanceChangeHandler, this, _1));
 
                 remote().registerDevicesMonitor(bind_weak(&karabo::devices::GuiServerDevice::devicesChangedHandler, this, _1));
 
@@ -291,10 +291,11 @@ namespace karabo {
 
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
 
-                m_loggerConsumer = getConnection()->createConsumer(m_topic, "target = 'log'");
-                m_loggerConsumer->startReading(bind_weak(&karabo::devices::GuiServerDevice::logHandler, this, _1, _2));
+                m_loggerConsumer = getConnection();
+                m_loggerConsumer->startReadingLogs(bind_weak(&karabo::devices::GuiServerDevice::logHandler, this, _1, _2),
+                        consumer::ErrorNotifier());
 
-                m_guiDebugProducer = getConnection()->createProducer();
+                m_guiDebugProducer = getConnection();
 
                 startDeviceInstantiation();
                 startNetworkMonitor();
@@ -595,7 +596,9 @@ namespace karabo {
         void GuiServerDevice::onGuiError(const karabo::util::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGuiError";
-                m_guiDebugProducer->write("karaboGuiDebug", Hash()/*empty header*/, hash);
+                Hash::Pointer hdr = boost::make_shared<Hash>();
+                Hash::Pointer body = boost::make_shared<Hash>(hash);
+                m_guiDebugProducer->write("karaboGuiDebug", hdr, body, 0, 0);
 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGuiError(): " << e.userFriendlyMsg();

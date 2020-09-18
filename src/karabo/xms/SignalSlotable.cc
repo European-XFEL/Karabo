@@ -47,20 +47,19 @@ namespace karabo {
 
             // Global signals must go via the broker
             if (instanceId == "*") return false;
-
             SignalSlotable::Pointer ptr;
             {
                 boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
                 auto it = m_instanceMap.find(instanceId);
                 if (it != m_instanceMap.end()) {
-                    ptr = it->second.lock(); // if locking fails, should be being destructed
+                    ptr = it->second.lock();
                 }
             }
-            if (ptr) {
-                ptr->processEvent(header, body);
+            if (ptr) { // else likely being destructed
+                auto handler = boost::bind(&SignalSlotable::processEvent, ptr, _1, _2);
+                m_connection->writeLocal(handler, header, body);
                 return true;
             }
-
             return false;
         }
 
@@ -116,7 +115,7 @@ namespace karabo {
             }
 
             const std::string& t = topic.empty() ? m_topic : topic;
-            m_producerChannel->write(t, header, body, prio, timeToLive);
+            m_connection->write(t, header, body, prio, timeToLive);
         }
 
 
@@ -237,7 +236,7 @@ namespace karabo {
         }
 
 
-        SignalSlotable::SignalSlotable(const string& instanceId, const JmsConnection::Pointer& connection,
+        SignalSlotable::SignalSlotable(const string& instanceId, const Broker::Pointer& connection,
                                        const int heartbeatInterval, const karabo::util::Hash& instanceInfo) :
             SignalSlotable() {
             init(instanceId, connection, heartbeatInterval, instanceInfo);
@@ -248,7 +247,21 @@ namespace karabo {
                                        const karabo::util::Hash& brokerConfiguration,
                                        const int heartbeatInterval, const karabo::util::Hash& instanceInfo) :
             SignalSlotable() {
-            JmsConnection::Pointer connection = Configurator<JmsConnection>::create(connectionClass, brokerConfiguration);
+            karabo::util::Hash config = brokerConfiguration;
+            if (!config.has("instanceId")) config.set("instanceId", instanceId);
+            if (!config.has("brokers")) {
+                const std::string brokerStr = getenv("KARABO_BROKER") ?
+                        getenv("KARABO_BROKER") : "tcp://exfl-broker:7777";
+                std::vector<std::string> brokers = fromString<std::string, std::vector>(brokerStr);
+                config.set("brokers", brokers);
+            }
+            if (!config.has("domain")) {
+                const std::string domain = getenv("KARABO_BROKER_TOPIC") ?
+                    getenv("KARABO_BROKER_TOPIC") : getenv("USER");
+                config.set("domain", domain);
+            }
+
+            Broker::Pointer connection = Configurator<Broker>::create(connectionClass, config);
             init(instanceId, connection, heartbeatInterval, instanceInfo);
         }
 
@@ -291,12 +304,22 @@ namespace karabo {
 
 
         void SignalSlotable::init(const std::string& instanceId,
-                                  const karabo::net::JmsConnection::Pointer& connection,
+                                  const karabo::net::Broker::Pointer& connection,
                                   const int heartbeatInterval, const karabo::util::Hash& instanceInfo,
                                   bool consumeBroadcasts) {
 
             m_instanceId = instanceId;
             m_connection = connection;
+            // Inject actual instanceId into Broker connection object (new/old) if needed
+            if (m_connection->getInstanceId() != m_instanceId) {
+                std::ostringstream oss;
+                oss << "*** The instanceId in connection: \"" << m_connection->getInstanceId()
+                        << "\" doesn't match the requested \"" << m_instanceId << "\"";
+                throw KARABO_SIGNALSLOT_EXCEPTION(oss.str());
+            }
+            // Set the flag defining the way how to consume broadcast messages
+            m_connection->setConsumeBroadcasts(consumeBroadcasts);
+
             if (heartbeatInterval <= 0) {
                 throw KARABO_SIGNALSLOT_EXCEPTION("Non-positive heartbeat interval: " + toString(heartbeatInterval));
             }
@@ -307,16 +330,6 @@ namespace karabo {
             if (!m_connection->isConnected()) {
                 m_connection->connect();
             }
-
-            // Create producers and consumers
-            m_producerChannel = m_connection->createProducer();
-            // This will select messages addressed to me
-            string selector("slotInstanceIds LIKE '%|" + m_instanceId + "|%'");
-            if (consumeBroadcasts) { // ...and possibly broadcast messages
-                selector += " OR slotInstanceIds LIKE '%|*|%'";
-            }
-            m_consumerChannel = m_connection->createConsumer(m_topic, selector);
-            m_heartbeatProducerChannel = m_connection->createProducer();
 
             registerDefaultSignalsAndSlots();
 
@@ -330,8 +343,8 @@ namespace karabo {
 
 
         void SignalSlotable::start() {
-            m_consumerChannel->startReading(bind_weak(&SignalSlotable::processEvent, this, _1, _2),
-                                            bind_weak(&SignalSlotable::consumerErrorNotifier, this,
+            m_connection->startReading(bind_weak(&SignalSlotable::processEvent, this, _1, _2),
+                                       bind_weak(&SignalSlotable::consumerErrorNotifier, this,
                                                       std::string(), _1, _2));
             ensureInstanceIdIsValid(m_instanceId);
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up in topic '" << getTopic() << "' as '" << m_instanceId << "'";
@@ -396,7 +409,7 @@ namespace karabo {
 
 
         void SignalSlotable::consumerErrorNotifier(const std::string& consumer,
-                                                   karabo::net::JmsConsumer::Error ec, const std::string& message) {
+                                                   karabo::net::consumer::Error ec, const std::string& message) {
             const std::string fullMsg("Error " + toString(static_cast<int> (ec))
                                       + " from JmsConsumer '" + consumer + "': " + message);
             boost::mutex::scoped_lock lock(m_brokerErrorHandlerMutex);
@@ -946,7 +959,7 @@ namespace karabo {
             // - loss of a single heartbeat should not harm (see letInstanceSlowlyDieWithoutHeartbeat),
             // - a device sending heartbeats like crazy can compromise all heartbeat listeners (because they cannot digest
             //   quickly enough) - even worse, non-dropable heartbeats would create broker backlog in the beats topic
-            Signal::Pointer heartbeatSignal = boost::make_shared<Signal>(this, m_heartbeatProducerChannel,
+            Signal::Pointer heartbeatSignal = boost::make_shared<Signal>(this, m_connection,
                                                                          m_instanceId, "signalHeartbeat",
                                                                          KARABO_PUB_PRIO, KARABO_SYS_TTL);
             heartbeatSignal->setTopic(m_topic + beatsTopicSuffix);
@@ -977,11 +990,15 @@ namespace karabo {
             // Listener for ping answers
             KARABO_SLOT2(slotPingAnswer, string /*instanceId*/, Hash /*instanceInfo*/)
 
-            // Connects signal to slot
+            // Connects signal to slot from signal instance side
             KARABO_SLOT3(slotConnectToSignal, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
 
             // Replies whether slot exists on this instance
             KARABO_SLOT1(slotHasSlot, string /*slotFunction*/)
+
+            // Subscribe from slot instance side
+            KARABO_SLOT2(slotSubscribeRemoteSignal, string /*signalInstanceId*/, string /*signalFunction*/)
+            KARABO_SLOT2(slotUnsubscribeRemoteSignal, string /*signalInstanceId*/, string /*signalFunction*/)
 
             // Disconnects signal from slot
             KARABO_SLOT3(slotDisconnectFromSignal, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
@@ -999,10 +1016,8 @@ namespace karabo {
 
         void SignalSlotable::trackAllInstances() {
             m_trackAllInstances = true;
-            m_heartbeatConsumerChannel = m_connection->createConsumer(m_topic + beatsTopicSuffix,
-                                                                      "signalFunction = 'signalHeartbeat'");
-            m_heartbeatConsumerChannel->startReading(bind_weak(&SignalSlotable::onHeartbeatMessage, this, _1, _2),
-                                                     bind_weak(&SignalSlotable::consumerErrorNotifier, this,
+            m_connection->startReadingHeartbeats(bind_weak(&SignalSlotable::onHeartbeatMessage, this, _1, _2),
+                                         bind_weak(&SignalSlotable::consumerErrorNotifier, this,
                                                                std::string("heartbeats"), _1, _2));
             startTrackingSystem();
         }
@@ -1061,7 +1076,7 @@ namespace karabo {
         }
 
 
-        JmsConnection::Pointer SignalSlotable::getConnection() const {
+        Broker::Pointer SignalSlotable::getConnection() const {
             return m_connection;
         }
 
@@ -1348,6 +1363,39 @@ namespace karabo {
 
             bool signalExists = false;
 
+            if (slotInstanceId == m_instanceId) {
+                boost::system::error_code ec;
+                ec = m_connection->subscribeToRemoteSignal(signalInstanceId, signalFunction);
+                if (ec) {
+                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId
+                            << " : Failed to subscribe to remote signal \""
+                            << signalInstanceId << ":" << signalFunction << "\": #"
+                            << ec.value() << " -- " << ec.message();
+                    return signalExists;
+                }
+            } else {
+                bool subscribed = false;
+                try {
+                    request(slotInstanceId, "slotSubscribeRemoteSignal",
+                            signalInstanceId, signalFunction)
+                            .timeout(1000).receive(subscribed);
+                    if (!subscribed) {
+                        KARABO_LOG_FRAMEWORK_WARN << m_instanceId
+                                << " : Failed to subscribe to signal \""
+                                << signalInstanceId << ":" << signalFunction
+                                << "\" while delegating to \"" << slotInstanceId << ":slotSubscribeRemoteSignal\"";
+                        return signalExists;
+                    }
+                } catch (const karabo::util::TimeoutException&) {
+                    karabo::util::Exception::clearTrace();
+                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId
+                            << " : Timeout during subscription to signal \""
+                            << signalInstanceId << ":" << signalFunction
+                            << "\" while delegating to \"" << slotInstanceId << ":slotSubscribeRemoteSignal\"";
+                    return signalExists;
+                }
+            }
+
             if (signalInstanceId == m_instanceId) { // Local signal requested
                 boost::mutex::scoped_lock lock(m_signalSlotInstancesMutex);
                 auto it = m_signalInstances.find(signalFunction);
@@ -1465,6 +1513,42 @@ namespace karabo {
         }
 
 
+        void SignalSlotable::slotSubscribeRemoteSignal(const std::string& signalInstanceId,
+                                                       const std::string& signalFunction) {
+            AsyncReply aReply(this);
+            m_connection->subscribeToRemoteSignalAsync(
+                signalInstanceId, signalFunction,
+                [this, aReply{std::move(aReply)}](const boost::system::error_code& ec) {
+                    if (ec) {
+                        std::ostringstream oss;
+                        oss << "Connect signal-slot failed: #" << ec.value() << " -- " << ec.message();
+                        aReply.error(oss.str());
+                    } else {
+                        aReply(true);
+                    }
+                }
+            );
+        }
+
+
+        void SignalSlotable::slotUnsubscribeRemoteSignal(const std::string& signalInstanceId,
+                                                         const std::string& signalFunction) {
+            AsyncReply aReply(this);
+            m_connection->unsubscribeFromRemoteSignalAsync(
+                signalInstanceId, signalFunction,
+                [this, aReply{std::move(aReply)}](const boost::system::error_code& ec) {
+                    if (ec) {
+                        std::ostringstream oss;
+                        oss << "Disconnect signal-slot failed: #" << ec.value() << " -- " << ec.message();
+                        aReply.error(oss.str());
+                    } else {
+                        aReply(true);
+                    }
+                }
+            );
+        }
+
+
         bool SignalSlotable::connect(const std::string& signal, const std::string& slot) {
             std::pair<std::string, std::string> signalPair = splitIntoInstanceIdAndFunctionName(signal);
             std::pair<std::string, std::string> slotPair = splitIntoInstanceIdAndFunctionName(slot);
@@ -1485,19 +1569,22 @@ namespace karabo {
             storeConnection(signalInstanceId, signalSignature, slotInstanceId, slotSignature);
 
             // Prepare a success handler for the request to slotConnectToSignal:
-            auto signalConnectedHandler = [ = ] (bool signalExists){//capture copies
-                if (signalExists) {
-                    try {
-                        if (successHandler) successHandler();
-                    } catch (const std::exception& e) {
-                        KARABO_LOG_FRAMEWORK_ERROR << "Trouble with successHandler of asyncConnect("
-                                << signalInstanceId << ", " << signalSignature << ", " << slotInstanceId << ", "
-                                << slotSignature << "):\n" << e.what();
+            auto signalConnectedHandler =
+                [ this, signalInstanceId, signalSignature, slotInstanceId, slotSignature,
+                  successHandler{std::move(successHandler)}, failureHandler{std::move(failureHandler)} ]
+                (bool signalExists) {
+                    if (signalExists) {
+                        try {
+                            if (successHandler) successHandler();
+                        } catch (const std::exception& e) {
+                            KARABO_LOG_FRAMEWORK_ERROR << "Trouble with successHandler of asyncConnect("
+                                    << signalInstanceId << ", " << signalSignature << ", " << slotInstanceId << ", "
+                                    << slotSignature << "):\n" << e.what();
+                        }
+                    } else {
+                        callErrorHandler(failureHandler, signalInstanceId + " has no signal '" + signalSignature + "'.");
                     }
-                } else {
-                    callErrorHandler(failureHandler, signalInstanceId + " has no signal '" + signalSignature + "'.");
-                }
-            };
+                };
 
             // If slot is there, we want to connect it to the signal - so here is the handler for that:
             auto hasSlotSuccessHandler = [ = ] (bool hasSlot){// capture copies
@@ -1513,13 +1600,61 @@ namespace karabo {
                 }
             }; // end of lambda definition of success handler for slotHasSlot
 
-            // First check whether slot exists to avoid signal emits are send if no-one listens correctly.
-            auto requestor = request(slotInstanceId, "slotHasSlot", slotSignature);
-            if (timeout > 0) requestor.timeout(timeout);
-            requestor.receiveAsync<bool>(hasSlotSuccessHandler,
+            auto successConnectSignalSlot =
+                [ this, slotInstanceId, slotSignature, timeout,
+                  hasSlotSuccessHandler{std::move(hasSlotSuccessHandler)},
+                  failureHandler{std::move(failureHandler)} ]
+                () {
+                    // First check whether slot exists to avoid signal emits are send if no-one listens correctly.
+                    auto requestor = request(slotInstanceId, "slotHasSlot", slotSignature);
+                    if (timeout > 0) requestor.timeout(timeout);
+                    requestor.receiveAsync<bool>(hasSlotSuccessHandler,
                                          (failureHandler ? failureHandler : [slotInstanceId] {
-                                             KARABO_LOG_FRAMEWORK_ERROR << "Request '" << slotInstanceId << "'.slotHasSlot  failed.";
+                                             KARABO_LOG_FRAMEWORK_ERROR << "Request '" << slotInstanceId
+                                                     << "'.slotHasSlot  failed.";
                                          }));
+                };
+
+            if (m_instanceId == slotInstanceId) {
+                auto onComplete =
+                    [ this, failureHandler{std::move(failureHandler)},
+                      successConnectSignalSlot{std::move(successConnectSignalSlot)} ]
+                    (const boost::system::error_code& ec) {
+                        if (ec) {
+                            std::ostringstream oss;
+                            oss << "Karabo connect failure: code #" << ec.value() << " -- " << ec.message();
+                            callErrorHandler(failureHandler, oss.str());
+                            return;
+                        }
+                        successConnectSignalSlot();
+                    };
+
+                m_connection->subscribeToRemoteSignalAsync(signalInstanceId, signalSignature, onComplete);
+            } else {
+                auto requestor = request(slotInstanceId, "slotSubscribeRemoteSignal",
+                                         signalInstanceId, signalSignature);
+                if (timeout > 0) requestor.timeout(timeout);
+
+                auto handler = [ this, slotInstanceId, failureHandler{std::move(failureHandler)},
+                                 successConnectSignalSlot{std::move(successConnectSignalSlot)} ]
+                               (const bool& ok) {
+                    if (ok) {
+                        successConnectSignalSlot();
+                    } else {
+                        std::ostringstream oss;
+                        oss << "Karabo connect failure on remote slot \"" << slotInstanceId << "\"";
+                        callErrorHandler(failureHandler, oss.str());
+                    }
+                };
+
+                requestor.receiveAsync<bool>(
+                        handler,
+                        (failureHandler ? failureHandler : [slotInstanceId] {
+                                             KARABO_LOG_FRAMEWORK_ERROR << "Request '" << slotInstanceId
+                                                     << "'.slotSubscribeRemoteSignal  failed.";
+                                         }));
+            }
+
         }
 
 
@@ -1749,9 +1884,44 @@ namespace karabo {
         }
 
 
-        bool SignalSlotable::tryToDisconnectFromSignal(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction) {
+        bool SignalSlotable::tryToDisconnectFromSignal(const std::string& signalInstanceId,
+                                                       const std::string& signalFunction,
+                                                       const std::string& slotInstanceId,
+                                                       const std::string& slotFunction) {
 
             bool disconnected = false;
+
+            if (slotInstanceId == m_instanceId) {
+                boost::system::error_code ec;
+                ec = m_connection->unsubscribeFromRemoteSignal(signalInstanceId, signalFunction);
+                if (ec) {
+                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId
+                            << " : Failed to un-subscribe from remote signal \""
+                            << signalInstanceId << ":" << signalFunction << "\": #"
+                            << ec.value() << " -- " << ec.message();
+                    return disconnected;
+                }
+            } else {
+                try {
+                    request(slotInstanceId, "slotSubscribeRemoteSignal",
+                            signalInstanceId, signalFunction)
+                            .timeout(1000).receive(disconnected);
+                    if (!disconnected) {
+                        KARABO_LOG_FRAMEWORK_WARN << m_instanceId
+                                << " : Failed to un-subscribe from signal \""
+                                << signalInstanceId << ":" << signalFunction
+                                << "\" while delegating to \"" << slotInstanceId << ":slotUnsubscribeRemoteSignal\"";
+                        return disconnected;
+                    }
+                } catch (const karabo::util::TimeoutException&) {
+                    karabo::util::Exception::clearTrace();
+                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId
+                            << " : Timeout trying to un-subscribe from signal \""
+                            << signalInstanceId << ":" << signalFunction
+                            << "\" while delegating to \"" << slotInstanceId << ":slotSubscribeRemoteSignal\"";
+                    return disconnected;
+                }
+            }
 
             if (signalInstanceId == m_instanceId) { // Local signal requested
 
@@ -1812,37 +1982,95 @@ namespace karabo {
             const std::string instanceId(this->getInstanceId()); // copy for lambda since that should not copy a bare 'this'
             const std::string errorMsg(signalInstanceId + " failed to disconnect slot '" + slotInstanceId + "." + slotFunction
                                        + "' from signal '" + signalInstanceId + "." + signalFunction + "'");
-            auto innerSuccessHandler = [ = ] (bool disconnected){// '[ = ]' to copy all stuff by value
-                if (disconnected) {
-                    if (!connectionWasKnown) {
-                        KARABO_LOG_FRAMEWORK_WARN << instanceId << " disconnected slot '"
-                                << slotInstanceId << "." << slotFunction << "' from signal '"
-                                << signalInstanceId << "." << signalFunction << "', but did not connect them before. "
-                                << "Whoever connected them will probably re-connect once '" << signalInstanceId
-                                << "' or '" << slotInstanceId << "' come back.";
+            auto innerSuccessHandler =
+                [ this, signalInstanceId, signalFunction, slotInstanceId, slotFunction, connectionWasKnown, instanceId,
+                  errorMsg, successHandler{std::move(successHandler)}, failureHandler{std::move(failureHandler)} ]
+                (bool disconnected) {
+                    if (disconnected) {
+                        m_connection->unsubscribeFromRemoteSignal(signalInstanceId, signalFunction);
+                        if (!connectionWasKnown) {
+                            KARABO_LOG_FRAMEWORK_WARN << instanceId << " disconnected slot '"
+                                    << slotInstanceId << "." << slotFunction << "' from signal '"
+                                    << signalInstanceId << "." << signalFunction << "', but did not connect them before. "
+                                    << "Whoever connected them will probably re-connect once '" << signalInstanceId
+                                    << "' or '" << slotInstanceId << "' come back.";
+                        }
+                        if (successHandler) {
+                            successHandler();
+                        } else if (connectionWasKnown) { // else already logged above
+                            KARABO_LOG_FRAMEWORK_DEBUG << instanceId << " successfully disconnected slot '"
+                                    << slotInstanceId << "." << slotFunction
+                                    << "' from signal '" << signalInstanceId << "." << signalFunction << "'.";
+                        }
+                    } else {
+                        callErrorHandler(failureHandler, errorMsg + " - was not connected!");
                     }
-                    if (successHandler) {
-                        successHandler();
-                    } else if (connectionWasKnown) { // else already logged above
-                        KARABO_LOG_FRAMEWORK_DEBUG << instanceId << " successfully disconnected slot '" << slotInstanceId << "." << slotFunction
-                                << "' from signal '" << signalInstanceId << "." << signalFunction << "'.";
+                };
+
+            auto successDisconnectSignalSlot =
+                [ this, signalInstanceId, signalFunction, slotInstanceId, slotFunction,
+                  timeout, innerSuccessHandler{std::move(innerSuccessHandler)},
+                  failureHandler{std::move(failureHandler)}, errorMsg ]
+                () {
+                // Now send the request,
+                // potentially giving a non-default timeout and adding a meaningful log message for failures without handler.
+                auto requestor = request(signalInstanceId, "slotDisconnectFromSignal",
+                                         signalFunction, slotInstanceId, slotFunction);
+                if (timeout > 0) requestor.timeout(timeout);
+
+                requestor.receiveAsync<bool>(
+                    innerSuccessHandler,
+                    failureHandler ? failureHandler : [errorMsg] () {
+                        try {
+                            throw;
+                        } catch (const std::exception& e) {
+                            KARABO_LOG_FRAMEWORK_WARN << errorMsg << " - " << e.what();
+                        }
                     }
-                } else {
-                    callErrorHandler(failureHandler, errorMsg + " - was not connected!");
-                }
+                );
             };
 
-            // Now send the request,
-            // potentially giving a non-default timeout and adding a meaningful log message for failures without handler.
-            auto requestor = request(signalInstanceId, "slotDisconnectFromSignal", signalFunction, slotInstanceId, slotFunction);
-            if (timeout > 0) requestor.timeout(timeout);
-            requestor.receiveAsync<bool>(innerSuccessHandler, failureHandler ? failureHandler : [errorMsg]() {
-                try {
-                    throw;
-                } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_WARN << errorMsg << " - " << e.what();
-                }
-            });
+            if (m_instanceId == slotInstanceId) {
+                auto onComplete =
+                    [ this, failureHandler{std::move(failureHandler)},
+                      successDisconnectSignalSlot{std::move(successDisconnectSignalSlot)} ]
+                    (const boost::system::error_code& ec) {
+                    if (ec) {
+                        std::ostringstream oss;
+                        oss << "Karabo disconnect failure: code #" << ec.value() << " -- " << ec.message();
+                        callErrorHandler(failureHandler, oss.str());
+                        return;
+                    }
+                    successDisconnectSignalSlot();
+                };
+
+                m_connection->unsubscribeFromRemoteSignalAsync(signalInstanceId, signalFunction, onComplete);
+            } else {
+                auto requestor = request(slotInstanceId, "slotUnsubscribeRemoteSignal",
+                                         signalInstanceId, signalFunction);
+                if (timeout > 0) requestor.timeout(timeout);
+
+                auto handler = [ this, slotInstanceId, failureHandler{std::move(failureHandler)},
+                                 successDisconnectSignalSlot{std::move(successDisconnectSignalSlot)} ]
+                               (const bool& ok) {
+                    if (ok) {
+                        successDisconnectSignalSlot();
+                    } else {
+                        std::ostringstream oss;
+                        oss << "Karabo disconnect failure on remote slot \"" << slotInstanceId << "\"";
+                        callErrorHandler(failureHandler, oss.str());
+                    }
+                };
+
+                requestor.receiveAsync<bool>(
+                        handler,
+                        (failureHandler ? failureHandler : [slotInstanceId] {
+                            KARABO_LOG_FRAMEWORK_ERROR << "Request '" << slotInstanceId
+                                << "'.slotUnsubscribeRemoteSignal  failed.";
+                        })
+                );
+                
+            }
         }
 
 
@@ -2716,5 +2944,6 @@ namespace karabo {
         float SignalSlotable::LatencyStats::average() const {
             return counts > 0 ? sum / static_cast<float> (counts) : 0.f;
         }
+
     }
 }
