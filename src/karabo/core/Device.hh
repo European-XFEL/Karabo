@@ -249,7 +249,7 @@ namespace karabo {
                 NODE_ELEMENT(expected).key("_connection_")
                         .displayedName("_Connection_")
                         .description("Do not set this property, it will be set by the device-server")
-                        .appendParametersOf<karabo::net::JmsConnection>()
+                        .appendParametersOf<karabo::net::Broker>()
                         .expertAccess()
                         .commit();
 
@@ -471,7 +471,16 @@ namespace karabo {
                 , m_globalAlarmCondition(karabo::util::AlarmCondition::NONE)
                 , m_lastBrokerErrorStamp(0ull, 0ull) {
 
-                m_connection = karabo::util::Configurator<karabo::net::JmsConnection>::createNode("_connection_", configuration);
+                // Set serverId
+                if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
+                else m_serverId = KARABO_NO_SERVER;
+
+                // Set instanceId
+                if (configuration.has("_deviceId_")) configuration.get("_deviceId_", m_deviceId);
+                else m_deviceId = "__none__";
+
+                auto conn = karabo::util::Configurator<karabo::net::Broker>::createNode("_connection_", configuration);
+                m_connection = conn->clone(m_deviceId);
 
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
@@ -484,14 +493,6 @@ namespace karabo {
                 m_timeSec = 0;
                 m_timeFrac = 0;
                 m_timePeriod = 0; // zero as identifier of initial value used in slotTimeTick
-
-                // Set serverId
-                if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
-                else m_serverId = KARABO_NO_SERVER;
-
-                // Set instanceId
-                if (configuration.has("_deviceId_")) configuration.get("_deviceId_", m_deviceId);
-                else m_deviceId = "__none__";
 
                 // Setup the validation classes
                 karabo::util::Validator::ValidationRules rules;

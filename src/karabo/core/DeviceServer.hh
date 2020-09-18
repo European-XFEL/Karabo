@@ -70,10 +70,10 @@ namespace karabo {
             std::map<std::string, unsigned int> m_deviceInstanceCount;
             int m_visibility;
 
-            karabo::net::JmsConnection::Pointer m_connection;
+            karabo::net::Broker::Pointer m_connection;
 
             std::string m_serverId;
-
+            std::string m_connectionClass;
             std::string m_timeServerId;
             unsigned long long m_timeId;
             unsigned long long m_timeSec; // seconds

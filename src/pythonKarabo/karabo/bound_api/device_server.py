@@ -15,8 +15,8 @@ import threading
 from karathon import (
     VECTOR_STRING_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
     STRING_ELEMENT, LIST_ELEMENT,
-    AccessLevel, JmsConnection,
-    Hash, Logger, Schema, SignalSlotable, saveToFile, EventLoop
+    AccessLevel, Broker, Hash, Logger,
+    Schema, SignalSlotable, saveToFile, EventLoop
 )
 
 from karabo.common.states import State
@@ -79,7 +79,7 @@ class DeviceServer(object):
             .displayedName("Connection")
             .description("The connection to the communication layer of the"
                          " distributed system")
-            .appendParametersOf(JmsConnection)
+            .appendParametersOf(Broker)
             .expertAccess()
             .commit(),
 
@@ -230,7 +230,22 @@ class DeviceServer(object):
         # to self.ss when the signal handler wants to reset it to None.
         # But the process stops nevertheless due to the EventLoop.stop().
 
-        self.ss = SignalSlotable(self.serverid, "JmsConnection",
+        try:
+            url = os.environ["KARABO_BROKER"]
+        except KeyError:
+            url = "tcp://exfl-broker:7777"
+        if url[0:7] == "mqtt://":
+            self._connectionClass = "MqttBroker"
+        else:
+            self._connectionClass = "OpenMQBroker"
+        self.connectionParameters['brokers'] = url
+        try:
+            domain = os.environ["KARABO_BROKER_TOPIC"]
+        except KeyError:
+            domain = os.environ["USER"]
+        self.connectionParameters['domain'] = domain
+        self.connectionParameters['instanceId'] = self.serverid
+        self.ss = SignalSlotable(self.serverid, self._connectionClass,
                                  self.connectionParameters,
                                  config["heartbeatInterval"], info)
 
@@ -269,6 +284,8 @@ class DeviceServer(object):
             os.makedirs(path)
         path = os.path.join(path, 'device-server.log')
         config.set('Logger.file.filename', path)
+        config.setAttribute('Logger.network.connection.brokers',
+                            '__classId', self._connectionClass)
         Logger.configure(config["Logger"])
         Logger.useOstream()
         Logger.useFile()
