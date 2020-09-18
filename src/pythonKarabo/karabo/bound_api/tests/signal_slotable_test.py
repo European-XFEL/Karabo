@@ -2,6 +2,7 @@ from threading import Thread, Condition, Lock
 from unittest import TestCase, main
 
 from karathon import SignalSlotable, EventLoop
+import os
 
 
 class Tests(TestCase):
@@ -20,10 +21,15 @@ class Tests(TestCase):
         cls.event_loop.daemon = True
         cls.event_loop.start()
 
+        if "KARABO_BROKER" not in os.environ:
+            os.environ["KARABO_BROKER"] = "mqtt://exfldl02n0:1883"
+        url = os.environ["KARABO_BROKER"]
+        connectionClass = (
+                "MqttBroker" if url[0:4] == "mqtt" else "OpenMQBroker")
         # Set up slots.
-        cls.sigSender = SignalSlotable(cls.senderId)
+        cls.sigSender = SignalSlotable(cls.senderId, connectionClass)
         cls.sigSender.start()
-        cls.sigReceiver = SignalSlotable(cls.receiverId)
+        cls.sigReceiver = SignalSlotable(cls.receiverId, connectionClass)
         cls.sigReceiver.start()
 
     @classmethod

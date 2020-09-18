@@ -18,6 +18,7 @@
 
 namespace karabo {
     namespace net {
+
         /**
          * Return the bare host name after stripping domain (exflxxx12345.desy.de => exflxxx12345)
          * @return
