@@ -43,7 +43,7 @@ from karathon import (
     ArchivePolicy, AssemblyRules, AssignmentType,
     BAR, BAYER, BECQUEREL, BGR, BGRA, BIT, BMP, BOOL_ELEMENT, BYTE,
     BYTEARRAY_ELEMENT, BinarySerializerHash, BinarySerializerSchema,
-    JmsConnection, CANDELA, CENTI, CHOICE_ELEMENT, CHOICE_OF_NODES, CMYK,
+    Broker, CANDELA, CENTI, CHOICE_ELEMENT, CHOICE_OF_NODES, CMYK,
     COMMAND, COULOMB, COUNT, Category, Channel,
     ClassInfo, Connection,
     DAY, DECA, DECI, DEGREE, DEGREE_CELSIUS, DOUBLE_ELEMENT,

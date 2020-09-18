@@ -125,7 +125,7 @@ namespace karathon {
     public:
 
         SignalSlotableWrap(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
-                           const std::string& connectionType = "JmsConnection",
+                           const std::string& connectionType = KARABO_DEFAULT_BROKER_CLASS,
                            const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
                            int heartbeatInterval = 10,
                            const karabo::util::Hash& instanceInfo = karabo::util::Hash());
@@ -134,11 +134,10 @@ namespace karathon {
 
         static boost::shared_ptr<SignalSlotableWrap>
         create(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
-               const std::string& connectionType = "JmsConnection",
+               const std::string& connectionType = KARABO_DEFAULT_BROKER_CLASS,
                const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
                int heartbeatInterval = 10,
                const karabo::util::Hash& instanceInfo = karabo::util::Hash()) {
-
             return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId,
                                                                                 connectionType,
                                                                                 connectionParameters,

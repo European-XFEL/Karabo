@@ -462,7 +462,7 @@ void InstanceChangeThrottler_Test::testBigUpdateSequence() {
                            }, 12000u));
 
     auto finishTimePoint = boost::chrono::high_resolution_clock::now();
-    std::clog << "testBigUpdateSequence parameters:" << std::endl;
+    std::clog << "\ntestBigUpdateSequence parameters:" << std::endl;
     std::clog << "\tThrottler interval between bursts: " << kThrottlerIntervalMs << " milliseconds" << std::endl;
     std::clog << "\tThrottler max. changes per burst: " << kThrottlerMaxChanges << std::endl;
     std::clog << "testBigUpdateSequence results:" << std::endl;
