@@ -151,7 +151,7 @@ void JmsConnection_Test::testCommunication1() {
     producer->write("testTopic1", header, body);
 
     boost::thread t(boost::bind(&EventLoop::work));
-    int trials = 500;
+    int trials = 1000;
     while (--trials >= 0) {
         if (getMessageCount() >= 100) {
             break;

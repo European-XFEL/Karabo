@@ -50,7 +50,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
 
     bp::class_<SignalSlotable, boost::noncopyable > ("SignalSlotableIntern")
-            .def(bp::init<const std::string&, const karabo::net::JmsConnection::Pointer&>())
+            .def(bp::init<const std::string&, const karabo::net::Broker::Pointer&>())
             ;
 
     bp::class_<SignalSlotableWrap, boost::shared_ptr<SignalSlotableWrap>, bp::bases< SignalSlotable>, boost::noncopyable > ("SignalSlotable")
@@ -63,7 +63,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("create", &SignalSlotableWrap::create,
                  (bp::arg("instanceId"),
-                  bp::arg("connectionType") = "JmsConnection",
+                  bp::arg("connectionType") = "Broker",
                   bp::arg("connectionParameters") = karabo::util::Hash(),
                   bp::arg("heartbeatInterval") = 10,
                   bp::arg("instanceInfo") = karabo::util::Hash()
