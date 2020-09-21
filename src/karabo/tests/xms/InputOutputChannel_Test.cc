@@ -82,6 +82,112 @@ void InputOutputChannel_Test::testOutputChannelElement() {
 }
 
 
+void InputOutputChannel_Test::testManyToOne() {
+    // To switch on logging output for debugging, do e.g. the following:
+    //    karabo::log::Logger::configure(Hash("priority", "DEBUG",
+    //                                        // enable timestamps, with ms precision
+    //                                        "ostream.pattern", "%d{%F %H:%M:%S,%l} %p  %c  : %m%n"));
+    //    karabo::log::Logger::useOstream();
+
+    const unsigned int numOutputs = 6;
+    ThreadAdder extraThreads(numOutputs);
+
+    std::array<OutputChannel::Pointer, numOutputs> outputs;
+    std::vector<std::string> outputIds(outputs.size());
+    for (size_t i = 0; i < outputs.size(); ++i) {
+        const std::string channelId("output" + karabo::util::toString(i));
+        outputs[i] = Configurator<OutputChannel>::create("OutputChannel", Hash());
+        outputs[i]->setInstanceIdAndName("outputChannel", channelId);
+        outputIds[i] = outputs[i]->getInstanceId() + ":" + channelId;
+    }
+
+    // Setup input channel
+    const Hash cfg("connectedOutputChannels", outputIds);
+    InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
+    input->setInstanceId("inputChannel");
+
+    // Prepare and register data handler
+    Hash receivedData;
+    for (size_t i = 0; i < outputIds.size(); ++i) {
+        // Already add all entries in the map behind the Hash receivedData - so parallel access to items is thread safe
+        receivedData.set(outputIds[i], std::vector<unsigned int>());
+    }
+    input->registerDataHandler([&receivedData] (const Hash& data, const InputChannel::MetaData & meta) {
+        const std::string& sourceName = meta.getSource();
+        receivedData.get<std::vector<unsigned int>>(sourceName).push_back(data.get<unsigned int>("uint"));
+    });
+
+    // Handler to count endOfStream events
+    std::atomic<int> nReceivedEos(0);
+    input->registerEndOfStreamEventHandler([&nReceivedEos](const InputChannel::Pointer&) {
+        ++nReceivedEos;
+    });
+
+    for (size_t i = 0; i < outputs.size(); ++i) {
+        // Connect
+        Hash outputInfo(outputs[i]->getInformation());
+        outputInfo.set("outputChannelString", outputIds[i]);
+        // Alternate scenarios to test both memory location code paths:
+        outputInfo.set("memoryLocation", (i % 2 == 0 // alternate between...
+                                          ? "local" // - using inner-process data shortcut via static Memory class
+                                          : "remote")); // - sending data via Tcp (buggy till 2.9.X for many-to-one)
+
+        // Setup connection handler
+        std::promise<karabo::net::ErrorCode> connectErrorCode;
+        auto connectFuture = connectErrorCode.get_future();
+        auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode & ec) {
+            connectErrorCode.set_value(ec);
+        };
+        // Initiate connect and block until done - fail test if timeout.
+        // Being more clever and waiting only once for all connections in one go is not worth it in the test here.
+        input->connect(outputInfo, connectHandler);
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + outputIds[i],
+                                     std::future_status::ready,
+                                     connectFuture.wait_for(std::chrono::milliseconds(500)));
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + outputIds[i],
+                                     connectFuture.get(), karabo::net::ErrorCode()); // i.e. no error
+    } // all connected
+
+
+    // Prepare lambda to send data
+    const size_t numData = 200;
+    boost::function<void(unsigned int) > sending = [&outputs, numData](unsigned int outNum) {
+        for (unsigned int i = 0; i < numData; ++i) {
+            outputs[outNum]->write(Hash("uint", i));
+            outputs[outNum]->update();
+        }
+        outputs[outNum]->signalEndOfStream();
+    };
+
+    // Start to send data from all outputs in parallel (we added enough threads in the beginning!).
+    for (unsigned int i = 0; i < numOutputs; ++i) {
+        karabo::net::EventLoop::getIOService().post(boost::bind(sending, i));
+    }
+
+    // Wait for endOfStream arrival
+    int trials = 1000;
+    do {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+        if (nReceivedEos > 0) break;
+    } while (--trials >= 0);
+
+    // endOfStream received once
+    // We give some time for more to arrive - but there should only be one, although each output sent it!
+    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    CPPUNIT_ASSERT_EQUAL(1u, static_cast<unsigned int> (nReceivedEos));
+
+    // Proper number and order of data received from each output
+    for (size_t i = 0; i < outputIds.size(); ++i) {
+        const auto& data = receivedData.get<std::vector<unsigned int>>(outputIds[i]);
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(outputIds[i], numData, data.size());
+        for (unsigned int iData = 0; iData < data.size(); ++iData) {
+            CPPUNIT_ASSERT_EQUAL_MESSAGE("Output " + karabo::util::toString(i) += ", data " + karabo::util::toString(iData),
+                                         iData, data[iData]);
+        }
+    }
+}
+
+
 void InputOutputChannel_Test::testConnectDisconnect() {
     // To switch on logging output for debugging, do e.g. the following:
     //    karabo::log::Logger::configure(Hash("priority", "DEBUG",

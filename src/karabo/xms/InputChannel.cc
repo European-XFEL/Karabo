@@ -517,12 +517,7 @@ namespace karabo {
                     Memory::decrementChunkUsage(channelId, chunkId);
                 } else { // TCP data
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Reading from remote memory (over tcp)";
-                    if (!header.has("endOfStream")) {
-                        // FIXME: Erases previously stored data in same chunk - buggy for minData! (OK for local memory: writeChunk appends!)
-                        //        Serious bug also if connected to several input channels?
-                        //        If fixed, can also be done if eos in header (since then is a no-op)
-                        Memory::writeAsContiguousBlock(data, header, m_channelId, m_inactiveChunk);
-                    }
+                    Memory::writeFromBuffers(data, header, m_channelId, m_inactiveChunk);
                 }
                 // Due to minData needs, we may have a chunk marked as endOfStream that also contains data!
                 Memory::setEndOfStream(m_channelId, m_inactiveChunk, treatEndOfStream);
@@ -789,7 +784,8 @@ namespace karabo {
                     if (tmp.size() == 2) {
                         m_connectedOutputChannels[connectedOutputChannels[i]] = Hash();
                     } else {
-                        throw KARABO_PARAMETER_EXCEPTION("Illegal format for connected output channel, expecting <deviceId>:<channelName>");
+                        throw KARABO_PARAMETER_EXCEPTION("Illegal format for connected output channel '"
+                                                         + toString(connectedOutputChannels[i]) += "', expecting <deviceId>:<channelName>");
                     }
                 }
                 for (auto it = m_openConnections.begin(); it != m_openConnections.end();) {

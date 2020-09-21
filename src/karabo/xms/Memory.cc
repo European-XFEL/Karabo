@@ -162,8 +162,7 @@ namespace karabo {
         }
 
 
-        void Memory::readAsContiguousBlock(std::vector<karabo::io::BufferSet::Pointer>& buffers, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
-            Memory::_ensureSerializer();
+        void Memory::readIntoBuffers(std::vector<karabo::io::BufferSet::Pointer>& buffers, karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
 
             const Data& data = m_cache[channelIdx][chunkIdx];
             for (const auto& bp : data) {
@@ -192,17 +191,25 @@ namespace karabo {
                 copiedData[i]->rewind();
             }
 
-            m_cache[channelIdx][chunkIdx] = copiedData;
+            m_cache[channelIdx][chunkIdx].swap(copiedData);
         }
 
 
-        void Memory::writeAsContiguousBlock(const std::vector<karabo::io::BufferSet::Pointer>& buffers, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx, bool copyAllData) {
-            Memory::_ensureSerializer();
+        void Memory::writeFromBuffers(const std::vector<karabo::io::BufferSet::Pointer>& buffers, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx, bool copyAllData) {
 
-            const MetaDataEntries& metaData = *reinterpret_cast<const MetaDataEntries*>(&header.get<std::vector<karabo::util::Hash> >("sourceInfo"));
-            m_metaData[channelIdx][chunkIdx] = metaData;
             Data& chunkData = m_cache[channelIdx][chunkIdx];
-            chunkData.clear();
+
+            boost::optional<const karabo::util::Hash::Node&> sourceInfo = header.find("sourceInfo");
+            if (sourceInfo) {
+                const MetaDataEntries& newMetaData = *reinterpret_cast<const MetaDataEntries*> (&sourceInfo->getValue<std::vector<karabo::util::Hash> >());
+                if (buffers.size() != newMetaData.size()) {
+                    throw KARABO_LOGIC_EXCEPTION("Number of data tokens and number of meta data entries must be equal!");
+                }
+                MetaDataEntries& metaData = m_metaData[channelIdx][chunkIdx];
+                metaData.insert(metaData.end(), newMetaData.begin(), newMetaData.end());
+            } else if (!buffers.empty()) {
+                throw KARABO_LOGIC_EXCEPTION("Data tokens given, but header lacks meta data info!");
+            }
             chunkData.insert(chunkData.end(), buffers.begin(), buffers.end());
         }
 
