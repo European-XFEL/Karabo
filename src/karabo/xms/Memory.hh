@@ -145,11 +145,15 @@ namespace karabo {
 
             /**
              * Write the contents of a single Hash into the cache. The Hash will
-             * be serialized before control is returned to the caller. Therefore
+             * be serialized before control is returned to the caller. Note that the data of an NDArray inside the Hash
+             * will not be copied, i.e. the Memory internal buffer will point to the same memory as the NDArray,
+             * except if copyAllData = true.
              * it is safe to mutate the Hash after writing it.
-             * @param data
-             * @param channelIdx
-             * @param chunkIdx
+             * @param data input
+             * @param channelIdx where to store the serialised data
+             * @param chunkIdx where to store the serialised data
+             * @param metaData of the data
+             * @param copyAllData defines whether all data (incl. NDArray data) is copied into the internal buffer (default: true)
              */
             static void write(const karabo::util::Hash& data, const size_t channelIdx, const size_t chunkIdx, const MetaData& metaData, bool copyAllData=true);
             static void writeChunk(const Data& chunk, const size_t channelIdx, const size_t chunkIdx, const std::vector<MetaData>& metaData);
@@ -175,20 +179,24 @@ namespace karabo {
             static void setChannelStatus(const size_t channelIdx, const int status);
             static int getChunkStatus(const size_t channelIdx, const size_t chunkIdx);
 
+            /**
+             * Ensure that the data of given chunk is not shared with anyone else, i.e. copy data if needed.
+             *
+             * @param channelIdx
+             * @param chunkIdx
+             */
             static void assureAllDataIsCopied(const size_t channelIdx, const size_t chunkIdx);
 
-            static void readAsContiguousBlock(std::vector<karabo::io::BufferSet::Pointer>& buffers,
-                                              karabo::util::Hash& header,
-                                              const size_t channelIdx,
-                                              const size_t chunkIdx);
+            static void readIntoBuffers(std::vector<karabo::io::BufferSet::Pointer>& buffers,
+                                        karabo::util::Hash& header,
+                                        const size_t channelIdx,
+                                        const size_t chunkIdx);
 
-            static void writeAsContiguousBlock(const std::vector<karabo::io::BufferSet::Pointer>& buffers,
+            static void writeFromBuffers(const Data& /*std::vector<karabo::io::BufferSet::Pointer>&*/ buffers,
                                                const karabo::util::Hash& header,
                                                const size_t channelIdx,
                                                const size_t chunkIdx,
                                                bool copyAllData = false);
-
-            static void clearContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx);
 
             static size_t size(const size_t channelIdx, const size_t chunkIdx);
 
