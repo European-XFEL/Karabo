@@ -1442,7 +1442,7 @@ namespace karabo {
                 if (eos) {
                     header.set("endOfStream", true);
                 } else {
-                    Memory::readAsContiguousBlock(data, header, m_channelId, chunkId);
+                    Memory::readIntoBuffers(data, header, m_channelId, chunkId);
                 }
                 try {
                     tcpChannel->write(header, data);
