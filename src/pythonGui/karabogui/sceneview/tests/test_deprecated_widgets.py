@@ -16,7 +16,7 @@ from karabo.native import (
 from karabogui.binding.api import (
     apply_configuration, build_binding, DeviceProxy, PropertyProxy)
 from karabogui.controllers.display.tests.image import (
-    dimX, dimY, get_image_hash, OutputNode)
+    dimX, dimY, get_image_hash, get_output_node)
 from karabogui.testing import GuiTestCase, set_proxy_value
 from ..api import SceneView
 
@@ -29,7 +29,7 @@ class Object(Configurable):
     y_number = Int32()
     z_number = UInt32()
 
-    output = Node(OutputNode, displayType='OutputChannel')
+    output = Node(get_output_node(), displayType='OutputChannel')
 
 
 DEVICE_NAME = "DEVICE"
