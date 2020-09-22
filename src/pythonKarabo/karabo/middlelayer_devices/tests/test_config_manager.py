@@ -7,7 +7,8 @@ from contextlib import contextmanager
 import os
 
 from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
-from karabo.middlelayer import call, DaqPolicy, Device, Double, Hash, sleep
+from karabo.middlelayer import (
+    call, DaqPolicy, Device, Double, Hash, HashList, sleep)
 from karabo.middlelayer_devices.configuration_manager import (
     ConfigurationManager)
 
@@ -90,6 +91,7 @@ class TestConfigurationManager(DeviceTest):
         input_hash = r["input"]
         self.assertEqual(input_hash, h)
         items = r["items"]
+        self.assertIsInstance(items, HashList)
         # We stored two configurations!
         self.assertEqual(len(items), 2)
         item = items[0]
