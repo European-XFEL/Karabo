@@ -538,6 +538,8 @@ namespace karabo {
             template <class T>
             static std::string generateInstanceId();
 
+            static const std::string brokerTopicFromEnv();
+
             /**
              * A functor to place an asynchronous reply during slot execution.
              *
