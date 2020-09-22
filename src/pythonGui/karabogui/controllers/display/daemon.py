@@ -247,6 +247,7 @@ class DisplayDaemonService(BaseBindingController):
 
         # The main table view!
         table_view = QTableView(widget)
+        table_view.setSortingEnabled(True)
         self.table_model = DaemonTableModel(parent=table_view)
 
         # Set up the filter model!
