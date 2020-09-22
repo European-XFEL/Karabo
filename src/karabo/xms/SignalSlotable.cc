@@ -41,6 +41,29 @@ namespace karabo {
         std::unordered_map<std::string, SignalSlotable::WeakPointer> SignalSlotable::m_instanceMap;
         boost::shared_mutex SignalSlotable::m_instanceMapMutex;
 
+        const std::string SignalSlotable::brokerTopicFromEnv() {
+            // look for environment variables KARABO_BROKER_TOPIC
+            // as a fall back the environment variables
+            // LOGNAME, USER, LNAME and USERNAME, in order.
+            // This implementation is inspired by python's getpass.getuser
+
+            const std::vector<std::string> varNames = {
+                "KARABO_BROKER_TOPIC",
+                "LOGNAME",
+                "USER",
+                "LNAME",
+                "USERNAME"
+            };
+            for (const std::string& varName : varNames) {
+                char* env = getenv(varName.c_str());
+                if (env != 0 && strlen(env) > 0) {
+                    return std::string(env);
+                }
+            }
+            return "karabo";
+        }
+
+
         bool SignalSlotable::tryToCallDirectly(const std::string& instanceId,
                                                const karabo::util::Hash::Pointer& header,
                                                const karabo::util::Hash::Pointer& body) const {
@@ -256,8 +279,7 @@ namespace karabo {
                 config.set("brokers", brokers);
             }
             if (!config.has("domain")) {
-                const std::string domain = getenv("KARABO_BROKER_TOPIC") ?
-                    getenv("KARABO_BROKER_TOPIC") : getenv("USER");
+                const std::string domain = brokerTopicFromEnv();
                 config.set("domain", domain);
             }
 
@@ -2856,18 +2878,9 @@ namespace karabo {
 
         void SignalSlotable::setTopic(const std::string& topic) {
             // Set topic as given as argument.
-            // If empty, look for environment variables KARABO_BROKER_TOPIC and USER - the former has precedence.
+            // If empty, deduce from the environment.
             if (topic.empty()) {
-                m_topic = "karabo";
-                char* env = getenv("KARABO_BROKER_TOPIC");
-                if (env != 0 && strlen(env) > 0) {
-                    m_topic = env;
-                } else {
-                    env = getenv("USER");
-                    if (env != 0 && strlen(env) > 0) {
-                        m_topic = string(env);
-                    }
-                }
+                m_topic = brokerTopicFromEnv();
             } else {
                 m_topic = topic;
             }
