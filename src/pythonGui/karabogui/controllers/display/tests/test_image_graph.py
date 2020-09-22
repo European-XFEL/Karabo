@@ -1,6 +1,10 @@
 from unittest import mock
 
+from numpy.testing import assert_array_equal
 from PyQt5.QtWidgets import QGraphicsTextItem
+from pyqtgraph import ColorMap
+
+from karabo.native import EncodingType
 
 from karabogui.binding.builder import build_binding
 from karabogui.binding.config import apply_configuration
@@ -8,7 +12,8 @@ from karabogui.binding.proxy import DeviceProxy, PropertyProxy
 from karabo.common.scenemodel.api import (
     ImageGraphModel, CrossROIData, RectROIData)
 from karabogui.controllers.display.tests.image import (
-    PipelineData, get_image_hash)
+    get_image_hash, get_pipeline_schema)
+from karabogui.graph.common.api import COLORMAPS
 from karabogui.graph.common.enums import MouseMode
 from karabogui.graph.common.enums import AuxPlots, ROITool
 from karabogui.testing import GuiTestCase
@@ -21,7 +26,7 @@ class TestImageGraph(GuiTestCase):
     def setUp(self):
         super(TestImageGraph, self).setUp()
 
-        schema = PipelineData().getDeviceSchema()
+        schema = get_pipeline_schema(stack_axis=False)
         binding = build_binding(schema)
         root_proxy = DeviceProxy(binding=binding)
 
@@ -112,3 +117,61 @@ class TestImageGraph(GuiTestCase):
             expected_config = expected_roi_config[tool]
             self.assertEqual(roi_items[0].coords, expected_config)
         controller.destroy()
+
+    def test_value_update(self):
+        # Restore aux plots
+        widget = self.controller.widget
+        widget.restore({"aux_plots": AuxPlots.ProfilePlot,
+                        "colormap": "viridis"})
+        self.assertEqual(widget._aux_plots.current_plot, AuxPlots.ProfilePlot)
+
+        # Test update with dim=3, encoding=GRAY
+        image_hash = get_image_hash(dimZ=3, stack_axis=False)
+        apply_configuration(image_hash, self.output_proxy.binding)
+        self._assert_gray_features(enabled=True)
+
+        # Test update with dim=3, encoding=RGB
+        image_hash = get_image_hash(dimZ=3, encoding=EncodingType.RGB,
+                                    stack_axis=False)
+        apply_configuration(image_hash, self.output_proxy.binding)
+        self._assert_gray_features(enabled=False)
+
+        # Now, we update with dim=3, encoding=GRAY again
+        image_hash = get_image_hash(dimZ=3, stack_axis=False)
+        apply_configuration(image_hash, self.output_proxy.binding)
+        self._assert_gray_features(enabled=True)
+
+    def _assert_gray_features(self, enabled):
+        widget = self.controller.widget
+        cmap = widget.configuration.get("colormap", 'none')
+        lut = self._calc_cmap_lut(cmap)
+
+        # Check image item
+        ndim = 2 if enabled else 3
+        image_item = widget.plotItem.imageItem
+        self.assertEqual(image_item.image.ndim, ndim)
+        assert_array_equal(image_item.lut, lut)
+
+        # Check colorbar
+        if enabled:
+            self.assertIsNotNone(widget._colorbar)
+            assert_array_equal(widget._colorbar.barItem.lut, lut)
+
+        else:
+            self.assertIsNone(widget._colorbar)
+
+        # Check aux plots
+        expected_plot = widget.configuration.get("aux_plots", AuxPlots.NoPlot)
+        if not enabled:
+            expected_plot = AuxPlots.NoPlot
+        self.assertEqual(widget._aux_plots.current_plot, expected_plot)
+
+        # Check tool buttons
+        buttons = widget.toolbar.toolsets.get(AuxPlots).buttons
+        for tool, button in buttons.items():
+            self.assertEqual(button.isEnabled(), enabled)
+            self.assertEqual(button.isChecked(), tool == expected_plot)
+
+    def _calc_cmap_lut(self, cmap):
+        return (ColorMap(*zip(*COLORMAPS[cmap]), mode="RGB")
+                .getLookupTable(alpha=False, mode="RGB"))
