@@ -146,6 +146,15 @@ class KaraboImageView(QWidget):
 
         return self._colorbar
 
+    def remove_colorbar(self):
+        if self._colorbar is not None:
+            self.image_layout.removeItem(self._colorbar)
+            self.image_layout.ci.layout.setColumnStretchFactor(1, 3)
+            self._colorbar.deleteLater()
+            self._colorbar = None
+
+            self.remove_colormap_action()
+
     def add_roi(self, enable=True):
         if enable and self.roi is None:
             # Initialize ROI controller
@@ -214,6 +223,32 @@ class KaraboImageView(QWidget):
 
         return self._aux_plots
 
+    def enable_aux(self):
+        if self.toolbar is None:
+            return
+
+        # Enable toolbar buttons
+        toolset = self.toolbar.toolsets.get(AuxPlots)
+        if toolset is not None:
+            for button in toolset.buttons.values():
+                button.setEnabled(True)
+
+    def disable_aux(self):
+        if self._aux_plots is None:
+            return
+
+        # Hide existing aux plot if showing
+        self.restore({"aux_plots": AuxPlots.NoPlot})
+
+        # Disable toolbar buttons
+        if self.toolbar is not None:
+            toolset = self.toolbar.toolsets.get(AuxPlots)
+            if toolset is not None:
+                for aux_plot, button in toolset.buttons.items():
+                    if aux_plot == self._aux_plots.current_plot:
+                        button.setChecked(False)
+                    button.setEnabled(False)
+
     def add_colormap_action(self, cmap="none"):
         if self._colormap_action is None:
             menu = create_colormap_menu(COLORMAPS, cmap, self.set_colormap)
@@ -223,6 +258,12 @@ class KaraboImageView(QWidget):
             self.addAction(self._colormap_action)
 
         return self._colormap_action
+
+    def remove_colormap_action(self):
+        if self._colormap_action is not None:
+            self._colormap_action.deleteLater()
+            self.removeAction(self._colormap_action)
+            self._colormap_action = None
 
     def add_axes_labels_dialog(self):
         axes_action = QAction("Axes Labels", self)
@@ -274,9 +315,10 @@ class KaraboImageView(QWidget):
 
         Ideally this should be called at the end of the widget setup.
         """
-        # Restore colormap
+        # Update internal configuration
         self.configuration.update(**configuration)
 
+        # Restore colormap
         colormap = configuration.get('colormap')
         if colormap is not None:
             self.set_colormap(colormap, update=False)
@@ -287,15 +329,18 @@ class KaraboImageView(QWidget):
                         cmap_action.setChecked(True)
 
         # Restore labels
-        x_units = configuration.get('x_units', 'pixels')
-        self.set_label(axis=0,
-                       text=configuration.get('x_label', 'X-axis'),
-                       units=x_units)
-
-        y_units = configuration.get('y_units', 'pixels')
-        self.set_label(axis=1,
-                       text=configuration.get('y_label', 'Y-axis'),
-                       units=y_units)
+        x_label = configuration.get('x_label')
+        x_units = configuration.get('x_units')
+        if x_label is not None or x_units is not None:
+            self.set_label(axis=0,
+                           text=x_label or '',
+                           units=x_units or '')
+        y_label = configuration.get('y_label')
+        y_units = configuration.get('y_units')
+        if y_label is not None or y_units is not None:
+            self.set_label(axis=1,
+                           text=y_label or '',
+                           units=y_units or '')
 
         # Restore transforms
         transforms = {k: v for k, v in configuration.items()
@@ -312,45 +357,47 @@ class KaraboImageView(QWidget):
             self._update_scale_legend()
 
         # Restore ROIs
-        current_roi_tool = ROITool.NoROI
-
+        current_roi_tool = configuration.get('roi_tool')
+        roi_items = configuration.get('roi_items')
         if self.roi is not None:
-            self.roi.remove_all()
-            current_roi_tool = configuration.get('roi_tool')
-            roi_items = configuration.get('roi_items', [])
-            for roi_data in roi_items:
-                roi_type = roi_data['roi_type']
-                if roi_type == ROITool.Rect:
-                    x, y, w, h = (roi_data['x'], roi_data['y'],
-                                  roi_data['w'], roi_data['h'])
-                    pos = x, y
-                    size = w, h
-                elif roi_type == ROITool.Crosshair:
-                    pos = (roi_data['x'], roi_data['y'])
-                    size = None
-                else:
-                    continue
+            # Restore ROI items
+            if roi_items is not None:
+                self.roi.remove_all()
+                for roi_data in roi_items:
+                    roi_type = roi_data['roi_type']
+                    if roi_type == ROITool.Rect:
+                        x, y, w, h = (roi_data['x'], roi_data['y'],
+                                      roi_data['w'], roi_data['h'])
+                        pos = x, y
+                        size = w, h
+                    elif roi_type == ROITool.Crosshair:
+                        pos = (roi_data['x'], roi_data['y'])
+                        size = None
+                    else:
+                        continue
 
-                self.roi.add(roi_type, pos, size=size)
+                    self.roi.add(roi_type, pos, size=size)
 
-            self.roi.show(current_roi_tool)
+            # Show ROI tool
+            if current_roi_tool is not None:
+                self.roi.show(current_roi_tool)
+
+        # Restore auxiliary plots
+        aux_plots_class = configuration.get('aux_plots')
+        if self._aux_plots is not None and aux_plots_class is not None:
+            self.show_aux_plots(aux_plots_class)
 
         # Restore toolbar state
-        aux_plots_class = configuration.get('aux_plots', AuxPlots.NoPlot)
         if self.toolbar is not None:
-            toolset = self.toolbar.toolsets.get(AuxPlots)
-            if toolset is not None and aux_plots_class != AuxPlots.NoPlot:
-                toolset.check(aux_plots_class)
-
+            # Restore ROI state
             toolset = self.toolbar.toolsets.get(ROITool)
-            if toolset is not None and current_roi_tool != ROITool.NoROI:
+            if toolset is not None and current_roi_tool is not None:
                 toolset.check(current_roi_tool)
 
-        # Restore auxiliar plots
-        if self._aux_plots is not None:
-            if aux_plots_class != AuxPlots.NoPlot:
-                self.show_aux_plots(aux_plots_class)
-
+            # Restore aux plots state
+            toolset = self.toolbar.toolsets.get(AuxPlots)
+            if toolset is not None and aux_plots_class is not None:
+                toolset.check(aux_plots_class)
     # -----------------------------------------------------------------------
     # Qt Slots
 
