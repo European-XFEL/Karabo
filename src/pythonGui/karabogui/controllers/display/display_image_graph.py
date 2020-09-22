@@ -9,7 +9,7 @@ from karabogui.graph.image.api import (
     KaraboImagePlot, KaraboImageNode, KaraboImageView)
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
-    BaseBindingController, DIMENSIONS, register_binding_controller)
+    BaseBindingController, register_binding_controller)
 
 
 @register_binding_controller(ui_name='Image Graph',
@@ -76,13 +76,18 @@ class DisplayImageGraph(BaseBindingController):
         if not self._image_node.is_valid:
             return
 
-        if "stackAxis" in image_data:
-            axis = image_data.stackAxis.value
-            array = self._image_node.get_slice(axis, cell=0)
-        elif self._image_node.encoding == EncodingType.GRAY:
-            # NOTE: this might happen for RGB image
-            array = self._image_node.get_slice(DIMENSIONS['Z'], cell=0)
+        array = self._image_node.get_data()
+
+        # Enable/disable some widget features depending on the encoding
+        grayscale = (self._image_node.encoding == EncodingType.GRAY
+                     and array.ndim == 2)
+
+        if grayscale:
+            self.widget.add_colorbar()
+            self.widget.restore({"colormap": self.model.colormap})
+            self.widget.enable_aux()
         else:
-            array = self._image_node.get_data()
+            self.widget.remove_colorbar()
+            self.widget.disable_aux()
 
         self._plot.setData(array)
