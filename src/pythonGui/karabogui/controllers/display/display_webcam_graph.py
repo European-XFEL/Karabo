@@ -7,7 +7,6 @@ from karabogui.graph.image.api import (
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.controllers.images import DIMENSIONS
 
 
 @register_binding_controller(ui_name='WebCam Graph',
@@ -53,9 +52,4 @@ class DisplayWebCamGraph(BaseBindingController):
         if not self._image_node.is_valid:
             return
 
-        if self._image_node.dim_z:
-            array = self._image_node.get_slice(DIMENSIONS['Z'], 0)
-        else:
-            array = self._image_node.get_data()
-
-        self._plot.setData(array)
+        self._plot.setData(self._image_node.get_data())

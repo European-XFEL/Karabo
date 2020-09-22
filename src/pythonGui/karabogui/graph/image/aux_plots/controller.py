@@ -125,11 +125,11 @@ class AuxPlotsController(HasStrictTraits):
         self.labelItem.setVisible(new != AuxPlots.NoPlot)
 
         # Remove previous plot items
-        if old is not AuxPlots.NoPlot:
+        if old != AuxPlots.NoPlot:
             for plot in self._aggregators[old].plotItems:
                 self._remove_item(plot)
 
-        if new is not AuxPlots.NoPlot:
+        if new != AuxPlots.NoPlot:
             # Add new plot items
             aggregator = self._aggregators[new]
             for orientation, plot in aggregator.controllers.items():
