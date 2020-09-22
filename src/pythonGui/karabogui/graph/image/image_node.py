@@ -1,9 +1,9 @@
-from traits.api import ArrayOrNone, Enum, Int, HasStrictTraits
+from traits.api import Any, ArrayOrNone, Enum, Int, HasStrictTraits
 
 from karabo.native import EncodingType
 from karabogui.graph.common.api import Axes
 from karabogui.controllers.images import (
-    get_dimensions_and_encoding, get_image_data)
+    DIMENSIONS, get_dimensions_and_encoding, get_image_data)
 
 # Special image dimensions
 YUV422 = 2
@@ -15,6 +15,7 @@ class KaraboImageNode(HasStrictTraits):
     dim_y = Int
     dim_z = Int
     encoding = Enum(*EncodingType)
+    stack_axis = Any
 
     # Internal traits
     _data = ArrayOrNone
@@ -29,8 +30,19 @@ class KaraboImageNode(HasStrictTraits):
         self._data = get_image_data(image_node,
                                     self.dim_x, self.dim_y, self.dim_z)
 
+        stack_axis = None
+        if "stackAxis" in image_node:
+            stack_axis = image_node.stackAxis.value
+        self.stack_axis = stack_axis
+
     def get_data(self):
-        return self._data
+        # Get data depending on the image schema and encoding
+        if self.stack_axis is not None:
+            return self.get_slice(self.stack_axis, cell=0)
+        elif self.encoding == EncodingType.GRAY:
+            return self.get_slice(DIMENSIONS['Z'], cell=0)
+        else:
+            return self._data
 
     def get_axis_dimension(self, axis):
         """Return the correct dimension from a given axis"""
