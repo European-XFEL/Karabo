@@ -22,6 +22,8 @@ class AuxPlotsToolset(BaseToolsetController):
     tools = List([AuxPlots.ProfilePlot, AuxPlots.Histogram])
     factory = Callable(aux_plots_factory)
 
+    default_tool = AuxPlots.NoPlot
+
     def select(self, tool):
         """The toolset has can have one or more buttons, with check states
            being exclusive. When a button is unchecked, the toolset returns
@@ -41,3 +43,10 @@ class AuxPlotsToolset(BaseToolsetController):
             prof_button.setChecked(False)
 
         super(AuxPlotsToolset, self).select(tool)
+
+    def check(self, tool):
+        if tool == AuxPlots.NoPlot:
+            self.uncheck_all()
+            return
+
+        super(AuxPlotsToolset, self).check(tool)
