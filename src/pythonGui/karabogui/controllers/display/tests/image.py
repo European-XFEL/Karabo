@@ -39,21 +39,35 @@ class Geometry(Configurable):
 class ImageNode(Configurable):
     pixels = Node(Pixels)
     dims = VectorInt16()
-    stackAxis = Int8()
     geometry = Node(Geometry)
     encoding = Int8()
 
 
-class OutputNodeInner(Configurable):
-    image = Node(ImageNode, displayType='Image')
+class ImageNodeWithStackAxis(ImageNode):
+    stackAxis = Int8()
 
 
-class OutputNode(Configurable):
-    data = Node(OutputNodeInner)
+def get_output_node(stack_axis=True):
+    """Returns a node that contains an image node that could contain a
+       stackAxis property"""
+    image_node = ImageNodeWithStackAxis if stack_axis else ImageNode
+
+    class OutputNodeInner(Configurable):
+        image = Node(image_node, displayType='Image')
+
+    class OutputNode(Configurable):
+        data = Node(OutputNodeInner)
+
+    return OutputNode
 
 
-class PipelineData(Configurable):
-    output = Node(OutputNode, displayType='OutputChannel')
+def get_pipeline_schema(stack_axis=True):
+    """Returns a schema that contains an output node. This node has an image
+       node that could contain a stackAxis property"""
+    class PipelineData(Configurable):
+        output = Node(get_output_node(stack_axis), displayType='OutputChannel')
+
+    return PipelineData().getDeviceSchema()
 
 
 def _get_geometry_hash(update):
@@ -70,7 +84,7 @@ dimY = 30
 
 
 def get_image_hash(val=0, dimZ=None, *, encoding=EncodingType.GRAY,
-                   update=True):
+                   stack_axis=True, update=True):
     npix = dimX * dimY
     dims_val = [dimY, dimX]
     if dimZ:
@@ -80,7 +94,8 @@ def get_image_hash(val=0, dimZ=None, *, encoding=EncodingType.GRAY,
                      'data', bytearray([val for _ in range(npix)]))
     img_hsh = Hash('pixels', pixel_hsh,
                    'dims', dims_val,
-                   'stackAxis', ZAXIS,
                    'geometry', _get_geometry_hash(update),
                    'encoding', encoding)
+    if stack_axis:
+        img_hsh.set('stackAxis', ZAXIS)
     return Hash('image', img_hsh)
