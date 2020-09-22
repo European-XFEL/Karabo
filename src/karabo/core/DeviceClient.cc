@@ -85,8 +85,7 @@ namespace karabo {
                 else if (brokerStr.substr(0, 7) == "mqtt://") connectionClass = "MqttBroker";
                 std::vector<std::string> brokers = fromString<std::string, std::vector>(brokerStr);
                 brokerConfig.set("brokers", brokers);
-                const std::string domain = getenv("KARABO_BROKER_TOPIC") ?
-                    getenv("KARABO_BROKER_TOPIC") : getenv("USER");
+                const std::string domain = karabo::xms::SignalSlotable::brokerTopicFromEnv();
                 brokerConfig.set("domain", domain);
             }
             m_internalSignalSlotable = karabo::xms::SignalSlotable::Pointer(new SignalSlotable(ownInstanceId,

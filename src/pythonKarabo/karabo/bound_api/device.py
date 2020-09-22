@@ -11,6 +11,7 @@ import re
 import signal
 import traceback
 from functools import partial
+import getpass
 
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
@@ -450,10 +451,7 @@ class PythonDevice(NoFsm):
         else:
             self._connectionClass = "OpenMQBroker"
         self._parameters["_connection_.brokers"] = url
-        try:
-            domain = os.environ["KARABO_BROKER_TOPIC"]
-        except KeyError:
-            domain = os.environ["USER"]
+        domain = os.environ.get("KARABO_BROKER_TOPIC", getpass.getuser())
         self._parameters["_connection_.domain"] = domain
         self._parameters["_connection_.instanceId"] = self.deviceid
 
