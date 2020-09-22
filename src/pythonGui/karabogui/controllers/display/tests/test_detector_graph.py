@@ -8,7 +8,7 @@ from karabogui.binding.builder import build_binding
 from karabogui.binding.config import apply_configuration
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
 from karabogui.controllers.display.tests.image import (
-    PipelineData, get_image_hash)
+    get_image_hash, get_pipeline_schema)
 from karabogui.testing import GuiTestCase
 
 from ..display_detector_graph import DisplayDetectorGraph, FrameSlider
@@ -89,7 +89,7 @@ class TestDetectorGraph(GuiTestCase):
     def setUp(self):
         super(TestDetectorGraph, self).setUp()
 
-        schema = PipelineData().getDeviceSchema()
+        schema = get_pipeline_schema()
         binding = build_binding(schema)
         root_proxy = DeviceProxy(binding=binding)
 

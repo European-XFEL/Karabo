@@ -55,6 +55,7 @@ class BaseToolsetController(HasStrictTraits):
             action = button.defaultAction()
             if action:
                 action.setChecked(False)
+        self.trait_setq(current_tool=self.default_tool)
 
 
 class MouseModeToolset(BaseToolsetController):
@@ -83,6 +84,7 @@ class ROIToolset(BaseToolsetController):
     factory = Callable(roi_factory)
 
     current_tool = Enum(*ROITool)
+    default_tool = ROITool.NoROI
 
     def select(self, tool):
         """The toolset has can have one or more buttons, with check states
@@ -114,11 +116,10 @@ class ROIToolset(BaseToolsetController):
 
            Reimplementing since we want to change the default action"""
 
-        self.trait_setq(current_tool=tool)
-
         # Uncheck all if no ROI is selected
         if tool == ROITool.NoROI:
             self.uncheck_all()
+            return
 
         if tool in [ROITool.Rect, ROITool.DrawRect]:
             button = self.buttons[ROITool.Rect]
@@ -133,6 +134,8 @@ class ROIToolset(BaseToolsetController):
             if action.data() == tool:
                 button.setDefaultAction(action)
             action.setChecked(action.data() == tool)
+
+        self.trait_setq(current_tool=tool)
 
 
 class ExportToolset(BaseToolsetController):
