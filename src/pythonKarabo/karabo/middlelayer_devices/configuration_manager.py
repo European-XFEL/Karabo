@@ -15,8 +15,9 @@ from karabo.common.scenemodel.api import (
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, background, Bool, Configurable,
-    coslot, DaqPolicy, Device, dictToHash, KaraboError, Hash, Overwrite, slot,
-    Slot, State, String, Timestamp, UInt32, VectorHash, VectorString)
+    coslot, DaqPolicy, Device, dictToHash, KaraboError, Hash, HashList, 
+    Overwrite, slot, Slot, State, String, Timestamp, UInt32, VectorHash,
+    VectorString)
 
 from karabo.config_db.configuration_database import (
     ConfigurationDatabase, DbHandle)
@@ -264,7 +265,7 @@ class ConfigurationManager(Device):
         name_part = info.get("name", "")
 
         items = self.db.list_configurations(deviceId, name_part)
-        items = [dictToHash(config) for config in items]
+        items = HashList([dictToHash(config) for config in items])
 
         return Hash("items", items,
                     "input", info)
