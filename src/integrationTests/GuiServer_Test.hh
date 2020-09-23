@@ -38,6 +38,7 @@ private:
     void testSlowSlots();
     void testReconfigure();
     void testReadOnly();
+    void testRequestGeneric();
 
     /**
      * Checks that messages of type 'deviceConfigurations' sent by
