@@ -556,12 +556,8 @@ namespace karabo {
                         onProjectListDomains(channel, info);
                     } else if (type == "projectUpdateAttribute") {
                         onProjectUpdateAttribute(channel, info);
-                    } else if (type == "listConfigurationFromName") {
-                        onListConfigurationFromName(channel, info);
-                    } else if (type == "getConfigurationFromName") {
-                        onGetConfigurationFromName(channel, info);
-                    } else if (type == "saveConfigurationFromName") {
-                        onSaveConfigurationFromName(channel, info);
+                    } else if (type == "requestGeneric") {
+                        onRequestGeneric(channel, info);
                     } else {
                         KARABO_LOG_FRAMEWORK_WARN << "Ignoring request of unknown type '" << type << "'";
                     }
@@ -1974,33 +1970,51 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onListConfigurationFromName(WeakChannelPointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onRequestGeneric(WeakChannelPointer channel, const karabo::util::Hash& info){
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onListConfigurationFromName : info ...\n" << info;
-
+                KARABO_LOG_FRAMEWORK_DEBUG << "Generic request called with:  " << info;
+                const std::string& deviceId = info.get<std::string>("instanceId");
+                const std::string& slot = info.get<std::string>("slot");
+                const Hash& args = info.get<Hash>("args");
+                auto requestor = request(deviceId, slot, args);
+                if (info.has("timeout")) {
+                    requestor.timeout(info.get<int>("timeout") * 1000.); // convert to ms
+                }
+                auto successHandler = bind_weak(&GuiServerDevice::forwardHashReply, this, true, channel, info, _1);
+                auto failureHandler = bind_weak(&GuiServerDevice::forwardHashReply, this, false, channel, info, Hash());
+                requestor.receiveAsync<Hash>(successHandler, failureHandler);
             } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onListConfigurationFromName(): " << e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << "Error in generic request to slot with info " << info << "...\n" << e.what();
             }
         }
 
 
-        void GuiServerDevice::onGetConfigurationFromName(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onGetConfigurationFromName : info ...\n" << info;
+        void GuiServerDevice::forwardHashReply(bool success, WeakChannelPointer channel, const Hash& info, const Hash& reply) {
+            const std::string replyType(info.has("replyType") ? info.get<std::string>("replyType") : "requestGeneric");
+            Hash h("type", replyType,
+                   "success", success,
+                   "request", info,
+                   "reply", reply,
+                   "reason", "");
 
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetConfigurationFromName(): " << e.what();
+            if (!success) {
+                std::string& failTxt = h.get<std::string>("reason"); // modify via reference!
+                try {
+                    throw;
+                } catch (const karabo::util::TimeoutException& te) {
+                    failTxt += "Request not answered within ";
+                    if (info.has("timeout")){ 
+                        failTxt += toString(info.get<int>("timeout"));
+                    } else {  
+                        failTxt += toString(karabo::xms::SignalSlotable::Requestor::m_defaultAsyncTimeout / 1000.);
+                    }
+                    failTxt += " seconds.";
+                    karabo::util::Exception::clearTrace();
+                } catch (const std::exception& e) {
+                    (failTxt += "Request failed... details: ") += e.what();
+                }
             }
-        }
-
-
-        void GuiServerDevice::onSaveConfigurationFromName(WeakChannelPointer channel, const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onSaveConfigurationFromName : info ...\n" << info;
-
-            } catch (const std::exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onSaveConfigurationFromName(): " << e.what();
-            }
+            safeClientWrite(channel, h);
         }
 
 
