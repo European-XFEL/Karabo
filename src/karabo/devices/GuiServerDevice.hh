@@ -271,9 +271,7 @@ namespace karabo {
              *      projectListProjectManagers  onProjectListProjectManagers
              *      projectListItems            onProjectListItems
              *      projectListDomains          onProjectListDomains
-             *      listConfigurationFromName   onListConfigurationFromName
-             *      getConfigurationFromName    onGetConfigurationFromName
-             *      saveConfigurationFromName   onSaveConfigurationFromName
+             *      requestGeneric              onRequestGeneric
              *      =======================     =========================
              *
              * \endverbatim
@@ -304,6 +302,28 @@ namespace karabo {
              * @param input will be copied to the key ``input`` of the reply message
              */
             void forwardReconfigureReply(bool success, WeakChannelPointer channel, const karabo::util::Hash& input);
+
+            /**
+             * Callback helper for generic actions called by the gui server.
+             *
+             * @param success whether call succeeded
+             * @param channel who requested the call
+             * @param info the input info Hash
+             * @param reply the reply from the remote device or an empty Hash on failure
+             */
+            void forwardHashReply(bool success, WeakChannelPointer channel, const karabo::util::Hash& info, const karabo::util::Hash& reply);
+
+            /**
+             * Request a generic action internally.
+             * @param channel from which the request originates
+             * @param info is a Hash that should containing the slot information.
+             *  - instanceId: the instanceId to be called
+             *  - slot: the slot name of the instance
+             *  - replyType: the value of the key ``type`` in the reply to the client.
+             *  - timeout (optional) [s]: account for the slot call a specified timeout in seconds!
+             *  - args: The Hash containing the parameters for the slot call
+             */
+            void onRequestGeneric(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
              * Calls the Device::onReconfigure slot on the device specified in ``info``.
@@ -757,47 +777,6 @@ namespace karabo {
              */
             std::vector<std::string> getKnownProjectManagers() const;
 
-            /**
-             * Request a list of the configurations for a given device with `deviceId`. Optionally, a
-             * `filter` can be provided for filtering options. If no `filter` is provided, all
-             * configuration names will be provided.
-             * @param channel from which the request originates
-             * @param info is a Hash that should contain:
-             *          - deviceId: deviceId of the device
-             *          - filter: part or full name of a configuration
-             */
-            void onListConfigurationFromName(WeakChannelPointer channel, const karabo::util::Hash& info);
-
-            /**
-             * Request a configuration by name from a device with `deviceId`.
-             * @param channel from which the request originates
-             * @param info is a Hash that should contain:
-             *          - deviceId: deviceId of the device
-             *          - name: full name of a configuration
-             */
-            void onGetConfigurationFromName(WeakChannelPointer channel, const karabo::util::Hash& info);
-
-            /**
-             * Save configuration(s) by name from device(s) with `deviceId`(s).
-             * @param channel from which the request originates
-             * @param info is a Hash that should contain:
-             *      - client: client information
-             *      - name: the non-empty (and unique for the device) name to be associated
-             *              with the configuration(s);
-             *
-             *      - priority: priority of the configuration(s) as integer ranging from 1-3 with 3
-             *                  being the highest priority;
-             *
-             *      - description: an optional description for the named configuration(s)
-             *
-             *      - user: the user name of the currently logged in user in the client
-             *              session (to be used once Karabo authentication/authorization is in place; for
-             *              now stores '.' as the user in the same way the rest of the logging backends
-             *
-             *      - deviceIds: a vector of strings with deviceIds
-             *
-             */
-            void onSaveConfigurationFromName(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
              * Initialize a configuration database session for a user.
@@ -821,6 +800,7 @@ namespace karabo {
              * For the reply written to channel see the documentation of karabo.bound_devices.ProjectManager
              */
             void onProjectEndUserSession(WeakChannelPointer channel, const karabo::util::Hash& info);
+
 
             /**
              * Save items to the project database
