@@ -16,7 +16,7 @@ from karathon import (
     VECTOR_STRING_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
     STRING_ELEMENT, LIST_ELEMENT,
     AccessLevel, Broker, Hash, Logger,
-    Schema, SignalSlotable, saveToFile, EventLoop
+    Schema, SignalSlotable, Validator, saveToFile, EventLoop
 )
 
 from karabo.common.states import State
@@ -428,8 +428,16 @@ class DeviceServer(object):
         # Add time server ID configured for device server
         config['timeServerId'] = self.timeServerId
 
-        # Create temporary instance to check the configuration parameters
-        # are valid
+        # Before starting device process, validate config
+        schema = Configurator(PythonDevice).getSchema(classid)
+        validator = Validator()
+        (ok, msg, _) = validator.validate(schema, config)
+        if not ok:
+            msg = msg.strip()  # cut-off trailing newline...
+            self.log.WARN(f"Failed to start '{config['_deviceId_']}': {msg}")
+            self.ss.reply(ok, msg)
+            return
+
         try:
             if "_deviceId_" in config:
                 deviceid = config["_deviceId_"]
@@ -488,6 +496,10 @@ class DeviceServer(object):
                 launcher.start()
                 self.deviceInstanceMap[deviceid] = launcher
 
+            # Would be better to postpone the reply until device really gets
+            # "online". But to avoid blocking inside the slot we need an
+            # AsyncReply mechanism, something listening for instanceNew and
+            # something to check for when to reply final failure.
             self.ss.reply(True, deviceid)
         except Exception as e:
             self.log.WARN("Device '{}' could not be started because:"
