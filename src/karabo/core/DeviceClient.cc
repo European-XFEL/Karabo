@@ -1251,13 +1251,16 @@ namespace karabo {
                 try {
                     const auto& listParams = karabo::util::Hash("deviceId", deviceId,
                                                                 "name", namePart);
+
                     p->request(m_configManagerId, "slotListConfigurationFromName", listParams)
                        .timeout(10 * m_internalTimeout).receive(slotReply);
+
                     if (slotReply.has("items")) {
                         std::swap(configs,
                                   slotReply.get<std::vector<karabo::util::Hash>>("items"));
                     }
-                    return karabo::util::Hash("success", true, "reason", "", "configs", configs);
+                    karabo::util::Hash result("success", true, "reason", "", "configs", configs);
+                    return result;
                 } catch (const TimeoutException&) {
                     Exception::clearTrace();
                     std::string errMsg = "Request to get configurations with namePart '" +
@@ -1267,10 +1270,10 @@ namespace karabo {
                     return karabo::util::Hash("success", false,
                                               "reason", errMsg,
                                               "configs", std::vector<karabo::util::Hash>());
-                } catch (const RemoteException &re) {
+                } catch (const std::exception &ex) {
                     std::string errMsg = "Request to get configurations with namePart '" +
                                          namePart + "' for device '" + deviceId +
-                                         "' failed with error:" + re.what();
+                                         "' failed with error:" + ex.what();
                     KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                     return karabo::util::Hash("success", false,
                                               "reason", errMsg,
@@ -1319,9 +1322,9 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                     return karabo::util::Hash("success", false, "reason", errMsg,
                                               "config", karabo::util::Hash());
-                } catch (const RemoteException &re) {
+                } catch (const std::exception &ex) {
                     std::string errMsg = "Request to get configuration with name '"  + name +
-                                         "' for device '" + deviceId + "' failed with error: " + re.what();
+                                         "' for device '" + deviceId + "' failed with error: " + ex.what();
                     KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                     return karabo::util::Hash("success", false, "reason", errMsg,
                                               "config", karabo::util::Hash());
@@ -1368,14 +1371,15 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                     return karabo::util::Hash("success", false, "reason", errMsg,
                                               "config", karabo::util::Hash());
-                } catch (const RemoteException &re) {
+                } catch (const std::exception &ex) {
                     std::string errMsg = "Request to get configuration with priority '" +
                                          karabo::util::toString(priority) +
-                                         "' for device '" + deviceId + "' failed with error: " + re.what();
+                                         "' for device '" + deviceId + "' failed with error: " + ex.what();
                     KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                     return karabo::util::Hash("success", false, "reason", errMsg,
                                               "config", karabo::util::Hash());
                 }
+
             } else {
                 // Could not promote m_signalSlotable to shared pointer. This should happen only when
                 // inappropriate use of DeviceClient is made.
@@ -1410,9 +1414,11 @@ namespace karabo {
                 if (user != ".") {
                     saveParams.set<std::string>("user", user);
                 }
+
                 try {
+                    karabo::util::Hash slotReply;
                     p->request(m_configManagerId, "slotSaveConfigurationFromName", saveParams)
-                       .timeout(10 * m_internalTimeout);
+                       .timeout(10 * m_internalTimeout).receive(slotReply);
                     return make_pair(true, std::string());
                 } catch (const TimeoutException&) {
                     Exception::clearTrace();
@@ -1421,11 +1427,11 @@ namespace karabo {
                                              " device(s) under name '" + name + "' timed out.";
                     KARABO_LOG_FRAMEWORK_ERROR << failReason;
                     return make_pair(false, failReason);
-                } catch (const RemoteException &re) {
+                } catch (const std::exception &ex) {
                     std::string failReason = "Request to save configuration(s) for " +
                                              karabo::util::toString(deviceIds.size()) +
                                              " device(s) under name '" + name + "' failed with error: " +
-                                             re.what();
+                                             ex.what();
                     KARABO_LOG_FRAMEWORK_ERROR << failReason;
                     return make_pair(false, failReason);
                 }
