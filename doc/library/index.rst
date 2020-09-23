@@ -14,6 +14,7 @@ bindings, the native Python package and the pyQt-based GUI.
    serviceDevices
    states
    testing
+   concept_data_logging
    dataLogger
    guiServer
    alarmService
