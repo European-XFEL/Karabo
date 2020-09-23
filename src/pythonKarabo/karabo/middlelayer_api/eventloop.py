@@ -635,11 +635,6 @@ class EventLoop(SelectorEventLoop):
                     self.call_soon_threadsafe(
                         lambda: future.set_exception(exception))
                 finally:
-                    # Eventloop has to be stopped and closed if run in a
-                    # different thread! See for example ...
-                    # https://github.com/python-trio/trio-asyncio/issues/4
-                    loop.stop()
-                    loop.close()
                     set_event_loop(None)
 
             self.run_in_executor(None, thread)
