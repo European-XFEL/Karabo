@@ -1,10 +1,9 @@
 from __future__ import absolute_import, unicode_literals
 
 from asyncio import (
-    CancelledError, coroutine, ensure_future, Future,
-    gather, get_event_loop, iscoroutinefunction, Queue, set_event_loop,
-    shield, sleep, Task, TimeoutError, wait_for)
-from asyncio.events import BaseDefaultEventLoopPolicy
+    CancelledError, coroutine, ensure_future, Future, get_child_watcher,
+    DefaultEventLoopPolicy, gather, get_event_loop, iscoroutinefunction,
+    Queue, set_event_loop, shield, sleep, Task, TimeoutError, wait_for)
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing, ExitStack
 from functools import wraps
@@ -515,7 +514,7 @@ class NoEventLoop(AbstractEventLoop):
         return self._instance
 
 
-class EventLoopPolicy(BaseDefaultEventLoopPolicy):
+class EventLoopPolicy(DefaultEventLoopPolicy):
 
     def new_loop(self):
         return EventLoop()
