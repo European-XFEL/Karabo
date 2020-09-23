@@ -70,7 +70,7 @@ void exportPyCoreDeviceClient() {
             .def("getFromPast", &DeviceClientWrap::getFromPastPy, (bp::arg("deviceId"), bp::arg("key"), bp::arg("from"), bp::arg("to") = "", bp::arg("maxNumData") = 0))
             .def("getPropertyHistory", &DeviceClientWrap::getPropertyHistoryPy, (bp::arg("deviceId"), bp::arg("key"), bp::arg("from"), bp::arg("to") = "", bp::arg("maxNumData") = 0))
             .def("getConfigurationFromPast", &DeviceClientWrap::getConfigurationFromPastPy, (bp::arg("deviceId"), bp::arg("timePoint")))
-            .def("listConfigurationFromName", &DeviceClientWrap::listConfigurationFromName, (bp::arg("deviceId"), bp::arg("namePart")),
+            .def("listConfigurationFromName", &DeviceClientWrap::listConfigurationFromName, (bp::arg("deviceId"), bp::arg("namePart") = ""),
                  "listConfigurationFromName(deviceId, namePart): Returns the device configurations saved under names that contain a given name part.\n"
                  "If an empty name part is given, all the configurations stored for the device will be returned.\n"
                  "The function return is a Hash with the following keys:\n",
@@ -91,9 +91,8 @@ void exportPyCoreDeviceClient() {
                  "\"success\" a boolean indicating whether the operation was successful.\n"
                  "\"reason\" a string describing the failure condition - empty on success.\n"
                  "\"config\" a hash with data about the most recent device configuration with the given priority.")
-            .def("saveConfigurationFromName",
-                 (bp::tuple(DeviceClientWrap::*)(const string&, const vector<Hash>&, const string&, int, const string&))(&DeviceClientWrap::saveConfigurationFromNamePy),
-                 (bp::arg("name"), bp::arg("deviceIds"), bp::arg("description"), bp::arg("priority") = 1, bp::arg("user") = "."),
+            .def("saveConfigurationFromName", &DeviceClientWrap::saveConfigurationFromNamePy,
+                 (bp::arg("name"), bp::arg("deviceIds"), bp::arg("description") = "", bp::arg("priority") = 1, bp::arg("user") = "."),
                  "saveConfigurationFromName(name, deviceIds, description, priority, user):\n"
                  "Saves the current device configurations (and the corresponding schemas) for a list of deviceIds\n"
                  "in the Configuration Database under a common name, user, priority and description.\n"
