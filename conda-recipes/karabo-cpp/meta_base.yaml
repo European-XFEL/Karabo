@@ -31,7 +31,6 @@ requirements:
     - openssl
     - openmqc
     - openmq
-    - snappy
     - nss=3.35=xfel
     - hdf5=1.10.2
     - icu
@@ -47,7 +46,6 @@ requirements:
     - openssl
     - openmqc
     - openmq
-    - snappy
     - nss=3.35=xfel
     - hdf5=1.10.2
     - icu
