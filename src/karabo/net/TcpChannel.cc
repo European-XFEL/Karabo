@@ -8,7 +8,6 @@
 #include <karabo/util/Hash.hh>
 #include <karabo/util/MetaTools.hh>
 #include <boost/pointer_cast.hpp>
-#include <snappy.h>
 #include <boost/asio/buffers_iterator.hpp>
 #include "Channel.hh"
 #include "TcpChannel.hh"
@@ -185,54 +184,25 @@ namespace karabo {
 
         void TcpChannel::read(karabo::util::Hash& header, char* data, const size_t& size) {
             this->read(header);
-            if (header.has("__compression__")) {
-                std::vector<char> compressed;
-                this->read(compressed);
-                decompress(header, compressed, data, size);
-            } else {
-                this->read(data, size);
-            }
+            this->read(data, size);
         }
 
 
         void TcpChannel::read(karabo::util::Hash& header, std::vector<char>& data) {
             this->read(header);
-            if (header.has("__compression__")) {
-                std::vector<char> compressed;
-                this->read(compressed);
-                decompress(header, compressed, data);
-            } else {
-                this->read(data);
-            }
+            this->read(data);
         }
 
 
         void TcpChannel::read(karabo::util::Hash& header, boost::shared_ptr<std::vector<char> >& data) {
             this->read(header);
-            if (header.has("__compression__")) {
-                std::vector<char> compressed;
-                this->read(compressed);
-                decompress(header, compressed, *data);
-            } else {
-                this->read(*data);
-            }
+            this->read(*data);
         }
 
 
         void TcpChannel::read(karabo::util::Hash& header, karabo::util::Hash& data) {
             this->read(header);
-            if (header.has("__compression__")) {
-                std::vector<char> compressed, tmp;
-                this->read(compressed);
-                decompress(header, compressed, tmp);
-                if (m_textSerializer) {
-                    m_textSerializer->load(data, reinterpret_cast<const char*> (&tmp[0])); // Fasted method (no copy via string)
-                } else {
-                    m_binarySerializer->load(data, tmp);
-                }
-            } else {
-                this->read(data);
-            }
+            this->read(data);
         }
 
 
@@ -653,12 +623,8 @@ namespace karabo {
                     std::vector<char> inData;
                     if (!e) {
                         this->prepareHashFromHeader(header);
-                        if (header.has("__compression__"))
-                            decompress(header, *m_inboundData, inData);
-                        else {
-                            boost::any_cast<ReadHashVectorHandler>(readHandler) (e, header, *m_inboundData);
-                            break;
-                        }
+                        boost::any_cast<ReadHashVectorHandler>(readHandler) (e, header, *m_inboundData);
+                        break;
                     }
                     boost::any_cast<ReadHashVectorHandler>(readHandler) (e, header, inData);
                     break;
@@ -669,10 +635,7 @@ namespace karabo {
                     boost::shared_ptr<std::vector<char> > inData(new std::vector<char>());
                     if (!e) {
                         this->prepareHashFromHeader(header);
-                        if (header.has("__compression__"))
-                            decompress(header, *m_inboundData, *inData);
-                        else
-                            inData.swap(m_inboundData);
+                        inData.swap(m_inboundData);
                     }
                     boost::any_cast<ReadHashVectorPointerHandler>(readHandler) (e, header, inData);
                     break;
@@ -684,10 +647,7 @@ namespace karabo {
                     string tmp;
                     if (!e) {
                         this->prepareHashFromHeader(header);
-                        if (header.has("__compression__"))
-                            decompress(header, *m_inboundData, tmp);
-                        else
-                            tmp.assign(m_inboundData->begin(), m_inboundData->end());
+                        tmp.assign(m_inboundData->begin(), m_inboundData->end());
                     }
                     boost::any_cast<ReadHashStringHandler>(readHandler) (e, header, tmp);
                     break;
@@ -699,11 +659,6 @@ namespace karabo {
                     Hash body;
                     if (!e) {
                         this->prepareHashFromHeader(header);
-                        if (header.has("__compression__")) {
-                            boost::shared_ptr<std::vector<char> > tmp(new std::vector<char>());
-                            tmp.swap(m_inboundData);
-                            decompress(header, *tmp, *m_inboundData);
-                        }
                         this->prepareHashFromData(body);
                     }
                     boost::any_cast<ReadHashHashHandler>(readHandler) (e, header, body);
@@ -716,11 +671,6 @@ namespace karabo {
                     Hash::Pointer body(new Hash);
                     if (!e) {
                         this->prepareHashFromHeader(*header);
-                        if (header->has("__compression__")) {
-                            boost::shared_ptr<std::vector<char> > tmp(new std::vector<char>());
-                            tmp.swap(m_inboundData);
-                            decompress(*header, *tmp, *m_inboundData);
-                        }
                         this->prepareHashFromData(*body);
                     }
                     boost::any_cast<ReadHashPointerHashPointerHandler>(readHandler) (e, header, body);
@@ -737,97 +687,6 @@ namespace karabo {
                 default:
                     throw KARABO_LOGIC_EXCEPTION("UNKNOWN HANDLER TYPE: "+  str(boost::format("%1%") % type) +" (this should never happen)");
             }
-        }
-
-
-        void TcpChannel::decompress(karabo::util::Hash& header, const std::vector<char>& source, char* data, const size_t& size) {
-            if (header.get<string>("__compression__") == "snappy") {
-                decompressSnappy(&source[0], source.size(), data, size);
-            } else
-                throw KARABO_MESSAGE_EXCEPTION("Unsupported compression algorithm: \"" + header.get<string>("__compression__") + "\".");
-            header.erase("__compression__");
-        }
-
-
-        void TcpChannel::decompress(karabo::util::Hash& header, const std::vector<char>& source, std::vector<char>& target) {
-            if (header.get<string>("__compression__") == "snappy") {
-                decompressSnappy(&source[0], source.size(), target);
-            } else
-                throw KARABO_MESSAGE_EXCEPTION("Unsupported compression algorithm: \"" + header.get<string>("__compression__") + "\".");
-            header.erase("__compression__");
-        }
-
-
-        void TcpChannel::decompress(karabo::util::Hash& header, const std::vector<char>& source, std::string& target) {
-            if (header.get<string>("__compression__") == "snappy") {
-                std::vector<char> uncompressed;
-                decompressSnappy(&source[0], source.size(), uncompressed);
-                target.assign(uncompressed.begin(), uncompressed.end());
-            } else
-                throw KARABO_MESSAGE_EXCEPTION("Unsupported compression algorithm: \"" + header.get<string>("__compression__") + "\".");
-            header.erase("__compression__");
-        }
-
-
-        void TcpChannel::decompressSnappy(const char* compressed, size_t compressed_length, char* data, const size_t& size) {
-            // Get uncompressed length
-            size_t uncompressedLength;
-            bool res = snappy::GetUncompressedLength(compressed, compressed_length, &uncompressedLength);
-            if (!res) {
-                throw KARABO_NETWORK_EXCEPTION("Failed to call to GetUncompressedLength() for \"snappy\" compressed data.");
-            }
-            if (size < uncompressedLength) {
-                throw KARABO_PARAMETER_EXCEPTION("No enough room for uncompressed data array: " + toString(uncompressedLength) + " bytes are required.");
-            }
-            // Decompress to output array
-            if (!snappy::RawUncompress(compressed, compressed_length, data)) {
-                throw KARABO_NETWORK_EXCEPTION("Failed to uncompress \"snappy\" compressed data.");
-            }
-        }
-
-
-        void TcpChannel::decompressSnappy(const char* compressed, size_t compressed_length, std::vector<char>& target) {
-            // Get uncompressed length
-            size_t uncompressedLength;
-            bool res = snappy::GetUncompressedLength(compressed, compressed_length, &uncompressedLength);
-            if (!res) {
-                throw KARABO_NETWORK_EXCEPTION("Failed to call to GetUncompressedLength() for \"snappy\" compressed data.");
-            }
-            // Decompress to array
-            target.resize(uncompressedLength);
-            if (!snappy::RawUncompress(compressed, compressed_length, &target[0])) {
-                throw KARABO_NETWORK_EXCEPTION("Failed to uncompress \"snappy\" compressed data.");
-            }
-        }
-
-
-        void TcpChannel::compress(karabo::util::Hash& header, const std::string& cmprs, const char* source, const size_t& source_length, std::vector<char>& target) {
-            if (cmprs == "snappy")
-                compressSnappy(source, source_length, target);
-            else
-                throw KARABO_MESSAGE_EXCEPTION("Unsupported compression algorithm: \"" + cmprs + "\".");
-            header.set("__compression__", cmprs);
-        }
-
-
-        void TcpChannel::compress(karabo::util::Hash& header, const std::string& cmprs, const std::string& source, std::string& target) {
-            std::vector<char> compressed;
-            compress(header, cmprs, source.c_str(), source.size(), compressed);
-            target.assign(compressed.begin(), compressed.end());
-        }
-
-
-        void TcpChannel::compress(karabo::util::Hash& header, const std::string& cmprs, const std::vector<char>& source, std::vector<char>& target) {
-            compress(header, cmprs, &source[0], source.size(), target);
-        }
-
-
-        void TcpChannel::compressSnappy(const char* source, const size_t& source_length, std::vector<char>& target) {
-            size_t maxlen = snappy::MaxCompressedLength(source_length);
-            target.resize(maxlen);
-            size_t compressed_length;
-            snappy::RawCompress(source, source_length, &target[0], &compressed_length);
-            target.resize(compressed_length);
         }
 
 
@@ -925,30 +784,14 @@ namespace karabo {
                     string headerBuf;
                     string bodyBuf;
                     m_textSerializer->save(body, bodyBuf);
-                    if (m_connectionPointer->m_compressionUsageThreshold >= 0 && m_connectionPointer->m_compressionUsageThreshold < int(bodyBuf.size())) {
-                        Hash hdr = header;
-                        string compressed;
-                        compress(hdr, m_connectionPointer->m_compression, bodyBuf, compressed);
-                        m_textSerializer->save(hdr, headerBuf);
-                        this->write(headerBuf.c_str(), headerBuf.size(), compressed.c_str(), compressed.size());
-                    } else {
-                        m_textSerializer->save(header, headerBuf);
-                        this->write(headerBuf.c_str(), headerBuf.size(), bodyBuf.c_str(), bodyBuf.size());
-                    }
+                    m_textSerializer->save(header, headerBuf);
+                    this->write(headerBuf.c_str(), headerBuf.size(), bodyBuf.c_str(), bodyBuf.size());
                 } else {
                     std::vector<char> headerBuf;
                     std::vector<char> bodyBuf;
                     m_binarySerializer->save(body, bodyBuf);
-                    if (m_connectionPointer->m_compressionUsageThreshold >= 0 && m_connectionPointer->m_compressionUsageThreshold < int(bodyBuf.size())) {
-                        Hash hdr = header;
-                        std::vector<char> compressed;
-                        compress(hdr, m_connectionPointer->m_compression, bodyBuf, compressed);
-                        m_binarySerializer->save(hdr, headerBuf);
-                        this->write(&headerBuf[0], headerBuf.size(), &compressed[0], compressed.size());
-                    } else {
-                        m_binarySerializer->save(header, headerBuf);
-                        this->write(&headerBuf[0], headerBuf.size(), &bodyBuf[0], bodyBuf.size());
-                    }
+                    m_binarySerializer->save(header, headerBuf);
+                    this->write(&headerBuf[0], headerBuf.size(), &bodyBuf[0], bodyBuf.size());
                 }
             } catch (...) {
                 KARABO_RETHROW
@@ -964,28 +807,12 @@ namespace karabo {
                 }
                 if (m_textSerializer) {
                     string headerBuf;
-                    if (m_connectionPointer->m_compressionUsageThreshold >= 0 && m_connectionPointer->m_compressionUsageThreshold < int(size)) {
-                        Hash hdr = header;
-                        std::vector<char> compressed;
-                        compress(hdr, m_connectionPointer->m_compression, data, size, compressed);
-                        m_textSerializer->save(hdr, headerBuf);
-                        write(headerBuf.c_str(), headerBuf.size(), &compressed[0], compressed.size());
-                    } else {
-                        m_textSerializer->save(header, headerBuf);
-                        write(headerBuf.c_str(), headerBuf.size(), data, size);
-                    }
+                    m_textSerializer->save(header, headerBuf);
+                    write(headerBuf.c_str(), headerBuf.size(), data, size);
                 } else {
                     std::vector<char> headerBuf;
-                    if (m_connectionPointer->m_compressionUsageThreshold >= 0 && m_connectionPointer->m_compressionUsageThreshold < int(size)) {
-                        Hash hdr = header;
-                        std::vector<char> compressed;
-                        compress(hdr, m_connectionPointer->m_compression, data, size, compressed);
-                        m_binarySerializer->save(hdr, headerBuf);
-                        write(&headerBuf[0], headerBuf.size(), &compressed[0], compressed.size());
-                    } else {
-                        m_binarySerializer->save(header, headerBuf);
-                        write(&headerBuf[0], headerBuf.size(), data, size);
-                    }
+                    m_binarySerializer->save(header, headerBuf);
+                    write(&headerBuf[0], headerBuf.size(), data, size);
                 }
             } catch (...) {
                 KARABO_RETHROW
@@ -1300,27 +1127,13 @@ namespace karabo {
         void TcpChannel::writeAsyncHashRaw(const karabo::util::Hash& header, const char* data,
                                            const size_t& size, const WriteCompleteHandler& handler) {
             try {
-                if (m_connectionPointer->m_compressionUsageThreshold >= 0 && m_connectionPointer->m_compressionUsageThreshold < int(size)) {
-                    Hash hdr = header;
-                    if (m_connectionPointer->m_manageAsyncData) {
-                        m_outboundData->clear();
-                        compress(hdr, m_connectionPointer->m_compression, data, size, *m_outboundData); // from "data,size" to "m_outboundData" (compressed data)
-                        this->prepareHeaderFromHash(hdr);
-                        this->managedWriteAsyncWithHeader(handler);
-                    } else {
-                        this->prepareHeaderFromHash(hdr);
-                        this->unmanagedWriteAsyncWithHeader(data, size, handler);
-                    }
-
+                this->prepareHeaderFromHash(header);
+                if (m_connectionPointer->m_manageAsyncData) {
+                    m_outboundData->resize(size);
+                    std::memcpy(&(*m_outboundData)[0], data, size);
+                    this->managedWriteAsyncWithHeader(handler);
                 } else {
-                    this->prepareHeaderFromHash(header);
-                    if (m_connectionPointer->m_manageAsyncData) {
-                        m_outboundData->resize(size);
-                        std::memcpy(&(*m_outboundData)[0], data, size);
-                        this->managedWriteAsyncWithHeader(handler);
-                    } else {
-                        this->unmanagedWriteAsyncWithHeader(data, size, handler);
-                    }
+                    this->unmanagedWriteAsyncWithHeader(data, size, handler);
                 }
             } catch (...) {
                 KARABO_RETHROW
@@ -1369,16 +1182,8 @@ namespace karabo {
                 if (!data)
                     throw KARABO_PARAMETER_EXCEPTION("Input parameter dataPtr is uninitialized shared pointer.");
                 boost::shared_ptr<std::vector<char> > headerPtr(new std::vector<char>());
-                if (m_connectionPointer->m_compressionUsageThreshold >= 0 && m_connectionPointer->m_compressionUsageThreshold < int(data->size())) {
-                    Hash hdr = header;
-                    m_outboundData->clear();
-                    compress(hdr, m_connectionPointer->m_compression, *data, *m_outboundData);
-                    this->prepareDataFromHash(hdr, headerPtr);
-                    writeAsyncHeaderBodyImpl(headerPtr, m_outboundData, handler);
-                } else {
-                    this->prepareDataFromHash(header, headerPtr);
-                    writeAsyncHeaderBodyImpl(headerPtr, data, handler);
-                }
+                this->prepareDataFromHash(header, headerPtr);
+                writeAsyncHeaderBodyImpl(headerPtr, data, handler);
             } catch (...) {
                 KARABO_RETHROW
             }
