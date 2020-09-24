@@ -23,16 +23,17 @@ class TestConfiguration(GuiTestCase):
         config['domain'] = 'CAS_INTERNAL'
         config['db_token'] = 'admin'
 
-        self.assertEqual(len(config), 16)
+        self.assertEqual(len(config), 17)
         self.assertEqual(config['db_token'], 'admin')
         self.assertEqual(config['domain'], 'CAS_INTERNAL')
 
         self.assertEqual(list(config.keys()),
                          ['alarm_panel', 'alarm_service', 'broker_topic',
-                          'config_dir', 'console_panel', 'daemon_manager',
-                          'db_token', 'documentation', 'domain', 'gui_servers',
-                          'log_panel', 'macro_dir', 'project_manager',
-                          'scene_dir', 'username', 'wizard'])
+                          'config_dir', 'config_manager', 'console_panel',
+                          'daemon_manager', 'db_token', 'documentation',
+                          'domain', 'gui_servers', 'log_panel', 'macro_dir',
+                          'project_manager', 'scene_dir', 'username',
+                          'wizard'])
 
     def test_set_wrong_key(self):
         config = Configuration()
@@ -72,12 +73,13 @@ class TestConfiguration(GuiTestCase):
         self.assertIn('scene_dir', dir_group)
         self.assertIn('config_dir', dir_group)
         bone_group = [item.name for item in groups[BACKBONE]]
-        self.assertEqual(len(bone_group), 5)
+        self.assertEqual(len(bone_group), 6)
         self.assertIn('alarm_service', bone_group)
         self.assertIn('project_manager', bone_group)
         self.assertIn('broker_topic', bone_group)
         self.assertIn('documentation', bone_group)
         self.assertIn('daemon_manager', bone_group)
+        self.assertIn('config_manager', bone_group)
         panel_group = [item.name for item in groups[PANEL]]
         self.assertEqual(len(panel_group), 3)
         self.assertIn('alarm_panel', panel_group)

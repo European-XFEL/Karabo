@@ -457,48 +457,42 @@ class Manager(QObject):
     # ---------------------------------------------------------------------
     # Current Configuration Interface
 
-    def handle_listConfigurationFromName(self, **info):
-        """Handle the reply of the ListConfigurationsFromName call"""
-        success = info['success']
-        input_info = info['input']
-        deviceId = input_info['deviceId']
+    def handle_listConfigurationFromName(self, success, request,
+                                         reply, reason=''):
+        """Handle the reply of the ListConfigurationsFromName slot"""
+        deviceId = request['args.deviceId']
         if not success:
-            reason = info['reason']
             messagebox.show_error(f"Requesting a list of configurations for "
                                   f"{deviceId} failed!", details=reason)
             return
 
         broadcast_event(KaraboEvent.ListConfigurationUpdated,
-                        {'items': info['items'],
+                        {'items': reply['items'],
                          'deviceId': deviceId})
 
-    def handle_getConfigurationFromName(self, **info):
-        success = info['success']
-        input_info = info['input']
-        deviceId = input_info['deviceId']
+    def handle_getConfigurationFromName(self, success, request,
+                                        reply, reason=''):
+        deviceId = request['args.deviceId']
         if not success:
-            reason = info['reason']
             messagebox.show_error(f"Requesting a configuration for {deviceId} "
                                   f"failed!", details=reason)
             return
 
-        item = info['item']
+        item = reply['item']
         broadcast_event(KaraboEvent.ShowConfigurationFromName,
                         {'configuration': item['config'],
                          'name': item['name'],
                          'deviceId': deviceId})
 
-    def handle_saveConfigurationFromName(self, **info):
-        success = info['success']
-        input_info = info['input']
-        deviceId = input_info['deviceIds'][0]
+    def handle_saveConfigurationFromName(self, success, request,
+                                         reply, reason=''):
+        deviceId = request['args.deviceIds'][0]
         if not success:
-            reason = info['reason']
             messagebox.show_error(f"Saving a configuration for {deviceId} "
                                   f"failed!", details=reason)
             return
 
-        if input_info.get('update', False):
+        if request.get('update', False):
             get_network().onListConfigurationFromName(deviceId)
 
     # ---------------------------------------------------------------------
