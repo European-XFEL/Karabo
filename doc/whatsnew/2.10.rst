@@ -24,7 +24,7 @@ The **most relevant improvements**, fixes and changes are:
 - Pipelines: The available options of the onSlowness parameter that defines how an output channel should react
   if a connected input channel is not yet ready to receive more data, have changed: The non-functional throw has been 
   removed and a new option queueDrop has been introduced. The default has changed from wait to **drop**.
-
+  The ``compression`` key has been removed.
 
 Detailed Merge-Log
 ==================
