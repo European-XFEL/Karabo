@@ -109,8 +109,9 @@ Output Channel Configuration Properties
 * **noInputShared** (STRING): If input channels are connected in *shared* data distribution mode, defines what to do if none of them is ready to receive, but data shall be sent.
    * options are *drop*, *queue*, *wait* (default) and since 2.10.0 *queueDrop*.  Option *throw* exists until 2.9.X but is not recommended. See description  of the **onSlowness** property of input channels.
 * **hostname** (STRING): Hostname or IP address to which input channels shall connect. Default is "default" which means the hostname of the device. Otherwise one can specify the address of a second network card connected to e.g. a special high band width network.
-* **compression** (INT32): Intended to configure whether data shall be compressed before sending - but ignored as of Karabo 2.9.X.
 * **port** (UINT32): Port number which input channels shall address when establishing their TCP connections to the output channel. Default is 0 which means that the system will provide a port number. If another value is chosen, the port must be free and accessible.
+
+Note the **compression** (INT32) key has been removed from the Output Channel configuration in Karabo 2.10.0.
 
 Schema Description of Channels
 --------------------------------------
