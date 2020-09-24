@@ -71,7 +71,6 @@ function(add_dep LIBNAME INCLUDE_PATH)
 endfunction()
 
 add_dep(log4cpp krb_log4cpp)
-add_dep(snappy snappy.h)
 add_dep(pugixml pugixml.hpp)
 add_dep(cppunit cppunit)
 add_dep(openmqc openmqc)
@@ -136,7 +135,6 @@ target_link_libraries(
         ${HDF5_LIBRARIES}
         ${OPENSSL_LIBRARIES}
         ${openmqc_LIB}
-        ${snappy_LIB}
         ${log4cpp_LIB}
         ${pugixml_LIB}
 )
