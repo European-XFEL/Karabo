@@ -21,7 +21,8 @@ namespace karabo {
     namespace log {
 
         // Static initialization of logMutex
-        boost::mutex Logger::m_logMutex;
+        boost::shared_mutex Logger::m_logMutex;
+        boost::shared_mutex Logger::m_frameworkLogMutex;
 
         // Static initialization of LogStreamRegistry
         Logger::CategoryMap Logger::m_categories;
@@ -109,6 +110,7 @@ namespace karabo {
         void Logger::reset() {
             krb_log4cpp::Category::getRoot().removeAllAppenders();
             // Also remove all nested appenders
+            boost::shared_lock<boost::shared_mutex> lock(m_logMutex);
             for (auto it : m_categories) {
                 it.second->removeAllAppenders();
             }
@@ -136,12 +138,13 @@ namespace karabo {
 
 
         krb_log4cpp::Category& Logger::getCategory(const std::string& category) {
-            boost::mutex::scoped_lock lock(m_logMutex);
             if (category.empty()) return krb_log4cpp::Category::getRoot();
+            boost::upgrade_lock<boost::shared_mutex> lock(m_logMutex);
             CategoryMap::const_iterator it = m_categories.find(category);
             if (it != m_categories.end()) {
                 return *(it->second);
             } else {
+                boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
                 krb_log4cpp::Category* cat = &(krb_log4cpp::Category::getInstance(category));
                 m_categories[category] = cat;
                 return *cat;
@@ -150,12 +153,17 @@ namespace karabo {
 
 
         krb_log4cpp::Category& Logger::getCategory_(const std::string& category) {
-            m_frameworkCategories.insert(category);
+            boost::upgrade_lock<boost::shared_mutex> lock(m_frameworkLogMutex);
+            if (m_frameworkCategories.find(category) == m_frameworkCategories.end()) {
+                boost::upgrade_to_unique_lock<boost::shared_mutex> uniqueLock(lock);
+                m_frameworkCategories.insert(category);
+            }
             return getCategory(category);
         }
 
 
         bool Logger::isInCategoryNameSet(const std::string& category) {
+            boost::shared_lock<boost::shared_mutex> lock(m_frameworkLogMutex);
             return (m_frameworkCategories.find(category) != m_frameworkCategories.end());
         }
     }
