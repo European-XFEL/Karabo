@@ -13,8 +13,7 @@ class Server(object):
         # create connection object
         try:
             self.connection = Connection.create(
-                "Tcp", Hash("type", "server", "port", 0,
-                            "compressionUsageThreshold", 1))
+                "Tcp", Hash("type", "server", "port", 0))
             # register connect handler for incoming connections
             self.port = self.connection.startAsync(self.onConnect)
 
@@ -184,8 +183,7 @@ class P2p_asyncTestCase(unittest.TestCase):
         connection = Connection.create(
             "Tcp", Hash("type", "client",
                         "hostname", "localhost",
-                        "port", self.server.port,
-                        "compressionUsageThreshold", 1))
+                        "port", self.server.port))
         connection.startAsync(onConnect)
 
         EventLoop.run()
