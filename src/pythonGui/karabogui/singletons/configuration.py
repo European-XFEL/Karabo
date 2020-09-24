@@ -104,6 +104,8 @@ class Configuration(QObject):
                          group=BACKBONE)
     daemon_manager = Item(default='KaraboDaemonManager', q_set=False,
                           group=BACKBONE)
+    config_manager = Item(default='KaraboConfigurationManager', q_set=False,
+                          group=BACKBONE)
 
     # ----------------------------------------------
     # Last directories stored and used
