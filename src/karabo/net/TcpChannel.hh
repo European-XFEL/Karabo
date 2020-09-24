@@ -480,19 +480,6 @@ namespace karabo {
              */
             karabo::io::BufferSet::Pointer bufferSetFromHash(const karabo::util::Hash& data, bool copyAllData);
 
-            void decompress(karabo::util::Hash& header, const std::vector<char>&source, char* data, const size_t& size);
-            void decompress(karabo::util::Hash& header, const std::vector<char>&source, std::vector<char>& target);
-            void decompress(karabo::util::Hash& header, const std::vector<char>&source, std::string& target);
-
-            void decompressSnappy(const char* compressed, size_t compressed_length, char* data, const size_t& size);
-            void decompressSnappy(const char* compressed, size_t compressed_length, std::vector<char>& data);
-
-            void compress(karabo::util::Hash& header, const std::string& cmprs, const char* src, const size_t& srclen, std::vector<char>& target);
-            void compress(karabo::util::Hash& header, const std::string& cmprs, const std::string& source, std::string& target);
-            void compress(karabo::util::Hash& header, const std::string& cmprs, const std::vector<char>& source, std::vector<char>& target);
-
-            void compressSnappy(const char* source, const size_t& source_length, std::vector<char>& target);
-
             void read(char*& data, size_t& size, char*& hdr, size_t& hsize);
             void write(const char* header, const size_t& headerSize, const char* body, const size_t& bodySize);
 

@@ -57,16 +57,6 @@ namespace karabo {
                     .assignmentOptional().defaultValue("default")
                     .commit();
 
-
-            INT32_ELEMENT(expected).key("compression")
-                    .displayedName("Compression")
-                    .description("Configures when the data is compressed (-1 = off, 0 = always, >0 = threshold in MB")
-                    .expertAccess()
-                    .unit(Unit::BYTE)
-                    .metricPrefix(MetricPrefix::MEGA)
-                    .assignmentOptional().defaultValue(-1)
-                    .commit();
-
             UINT32_ELEMENT(expected).key("port")
                     .displayedName("Port")
                     .description("Port number for TCP connection")
@@ -175,7 +165,6 @@ namespace karabo {
             config.get("hostname", m_hostname);
             config.get("port", m_port);
             if (m_hostname == "default") m_hostname = boost::asio::ip::host_name();
-            config.get("compression", m_compression);
             config.get("updatePeriod", m_period);
 
             KARABO_LOG_FRAMEWORK_DEBUG << "NoInputShared: " << m_onNoSharedInputChannelAvailable;
@@ -238,7 +227,7 @@ namespace karabo {
             }
             // HACK ends
 
-            karabo::util::Hash h("type", "server", "port", m_port, "compressionUsageThreshold", m_compression * 1E6);
+            karabo::util::Hash h("type", "server", "port", m_port);
             Connection::Pointer connection = Connection::create("Tcp", h);
             // The following call can throw in case you provide with configuration's Hash the none-zero port number
             // and this port number is already used in the system, for example, by another application.
