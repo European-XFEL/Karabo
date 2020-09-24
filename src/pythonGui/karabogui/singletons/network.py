@@ -383,29 +383,44 @@ class Network(QObject):
         self._write_hash(h)
 
     def onGetConfigurationFromName(self, device_id, name):
-        h = Hash("type", "getConfigurationFromName")
-        h["deviceId"] = device_id
-        h["name"] = name
+        h = Hash("type", "requestGeneric")
+        args = Hash(
+            "deviceId", device_id,
+            "name", name)
+        h["args"] = args
         h["timeout"] = REQUEST_REPLY_TIMEOUT
+        h["instanceId"] = get_config()["config_manager"]
+        h["slot"] = "slotGetConfigurationFromName"
+        h["replyType"] = "getConfigurationFromName"
         self._write_hash(h)
 
-    def onListConfigurationFromName(self, device_id, conf_filter=""):
-        h = Hash("type", "listConfigurationFromName")
-        h["deviceId"] = device_id
-        h["name"] = conf_filter
+    def onListConfigurationFromName(self, device_id, name=""):
+        h = Hash("type", "requestGeneric")
+        args = Hash(
+            "name", name,
+            "deviceId", device_id)
+        h["args"] = args
         h["timeout"] = REQUEST_REPLY_TIMEOUT
+        h["instanceId"] = get_config()["config_manager"]
+        h["slot"] = "slotListConfigurationFromName"
+        h["replyType"] = "listConfigurationFromName"
         self._write_hash(h)
 
     def onSaveConfigurationFromName(self, name, deviceIds, description='',
                                     priority=1, update=False):
-        h = Hash("type", "saveConfigurationFromName")
-        h["name"] = name
-        h["deviceIds"] = deviceIds
-        h["description"] = description
-        h["priority"] = priority
-        h["client"] = krb_globals.KARABO_CLIENT_ID
-        h["timeout"] = REQUEST_REPLY_TIMEOUT
+        h = Hash("type", "requestGeneric")
+        args = Hash(
+            "name", name,
+            "deviceIds", deviceIds,
+            "description", description,
+            "priority", priority,
+            "client", krb_globals.KARABO_CLIENT_ID)
+        h["args"] = args
         h["update"] = update
+        h["timeout"] = REQUEST_REPLY_TIMEOUT
+        h["instanceId"] = get_config()["config_manager"]
+        h["slot"] = "slotSaveConfigurationFromName"
+        h["replyType"] = "saveConfigurationFromName"
         self._write_hash(h)
 
     # ---------------------------------------------------------------------
