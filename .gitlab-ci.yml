@@ -21,7 +21,11 @@ variables:
   script:
     - source ci/prepare "$CI_BUILD_NAME"
     - source ci/test "$CI_BUILD_NAME"
-
+  artifacts:
+    when: always
+    reports:
+      junit: junit.xml
+  
 .release_build: &release-build
   <<: *build
   only:
