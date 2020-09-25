@@ -5,7 +5,8 @@ import requests
 from unittest import mock, skip
 
 from karabogui.dialogs import update_dialog
-from karabogui.dialogs.update_dialog import UNDEFINED_VERSION
+from karabogui.dialogs.update_dialog import (
+    EXTENSIONS_URL_TEMPLATE, KARABO_CHANNEL, UNDEFINED_VERSION)
 from karabogui.testing import GuiTestCase
 
 
@@ -75,7 +76,8 @@ class TestCase(GuiTestCase):
         with mock.patch.object(update_dialog,
                                'retrieve_remote_html',
                                return_value=html):
-            latest_version = update_dialog.get_latest_version()
+            remote_server = EXTENSIONS_URL_TEMPLATE.format(KARABO_CHANNEL)
+            latest_version = update_dialog.get_latest_version(remote_server)
             assert latest_version == '2.3.4'
 
     @mock.patch.object(requests, 'get')
@@ -84,19 +86,20 @@ class TestCase(GuiTestCase):
         parameters"""
         expected_wheel = ('http://exflserv05.desy.de/karabo/karaboExtensions'
                           '/tags/0.0.0/GUIExtensions-0.0.0-py3-none-any.whl')
+        remote_server = EXTENSIONS_URL_TEMPLATE.format(KARABO_CHANNEL)
 
         get_mock.return_value = MockResponse(b'', requests.codes.ok)
-        with update_dialog.download_file_for_tag('0.0.0'):
+        with update_dialog.download_file_for_tag('0.0.0', remote_server):
             pass
 
         # Assert outgoing messages
         get_mock.assert_called_once_with(expected_wheel, stream=True,
-                                         timeout=0.1)
+                                         timeout=0.5)
 
         # Emulate a <not ok> get request
         get_mock.return_value = MockResponse(b'', requests.codes.not_found)
-        with update_dialog.download_file_for_tag('0.0.0'):
+        with update_dialog.download_file_for_tag('0.0.0', remote_server):
             pass
 
         assert get_mock.call_count == 2
-        get_mock.assert_called_with(expected_wheel, stream=True, timeout=0.1)
+        get_mock.assert_called_with(expected_wheel, stream=True, timeout=0.5)
