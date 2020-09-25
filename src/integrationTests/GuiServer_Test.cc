@@ -368,21 +368,21 @@ void GuiVersion_Test::testRequestGeneric() {
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
     const unsigned int messageTimeout = 2000u;
     {
-        Hash requestScene("type", "requestGeneric",
-                          "instanceId", "isnotonline",
-                          "timeout", 1,
-                          "slot", "requestScene");
-        requestScene.set("args", Hash("name", "scene"));
+        Hash h("type", "requestGeneric",
+               "instanceId", "isnotonline",
+               "timeout", 1,
+               "slot", "requestScene");
+        h.set("args", Hash("name", "scene"));
 
         karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("requestGeneric", 1, [&] {
-            m_tcpAdapter->sendMessage(requestScene);
+            m_tcpAdapter->sendMessage(h);
         }, messageTimeout);
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(false, replyMessage.get<bool>("success"));
         CPPUNIT_ASSERT_EQUAL(std::string("requestGeneric"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT_EQUAL(std::string("scene"), replyMessage.get<std::string>("request.args.name"));
-        std::clog << "requestSceneGeneric: OK" << std::endl;
+        std::clog << "requestGeneric: OK without specified replyType" << std::endl;
     }
     {
         Hash h("type", "requestGeneric",
@@ -398,17 +398,19 @@ void GuiVersion_Test::testRequestGeneric() {
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(false, replyMessage.get<bool>("success"));
+        CPPUNIT_ASSERT(h.fullyEquals(replyMessage.get<Hash>("request")));
         CPPUNIT_ASSERT_EQUAL(std::string("Request not answered within 1 seconds."), replyMessage.get<std::string>("reason"));
         CPPUNIT_ASSERT_EQUAL(std::string("requestSuperScene"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT_EQUAL(std::string("noname"), replyMessage.get<std::string>("request.args.name"));
 
-        std::clog << "requestScene: OK different replyType" << std::endl;
+        std::clog << "requestGeneric: OK different replyType" << std::endl;
     }
     {
         Hash h("type", "requestGeneric",
                "instanceId", "testGuiServerDevice",
                "timeout", 1,
                "replyType", "debug",
+               "empty", true,
                "slot", "slotDumpDebugInfo");
         h.set("args", Hash("clients", true));
 
@@ -419,11 +421,13 @@ void GuiVersion_Test::testRequestGeneric() {
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(true, replyMessage.get<bool>("success"));
         CPPUNIT_ASSERT_EQUAL(std::string("debug"), replyMessage.get<std::string>("type"));
+        const Hash& request = replyMessage.get<Hash>("request");
+        CPPUNIT_ASSERT(request.empty());
         const Hash& clients = replyMessage.get<Hash>("reply");
         const int number_clients = clients.size();
         CPPUNIT_ASSERT_EQUAL(1, number_clients);
 
-        std::clog << "requestGeneric: OK with slotDumpDebugInfo success" << std::endl;
+        std::clog << "requestGeneric: OK with online device and empty request" << std::endl;
     }
 }
 
