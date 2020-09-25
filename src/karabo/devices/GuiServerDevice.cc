@@ -1991,9 +1991,11 @@ namespace karabo {
 
         void GuiServerDevice::forwardHashReply(bool success, WeakChannelPointer channel, const Hash& info, const Hash& reply) {
             const std::string replyType(info.has("replyType") ? info.get<std::string>("replyType") : "requestGeneric");
+            const Hash& request(info.has("empty") ? Hash(): info);
+
             Hash h("type", replyType,
                    "success", success,
-                   "request", info,
+                   "request", request,
                    "reply", reply,
                    "reason", "");
 
