@@ -317,11 +317,32 @@ namespace karabo {
              * Request a generic action internally.
              * @param channel from which the request originates
              * @param info is a Hash that should containing the slot information.
+             *  - type: requestGeneric
              *  - instanceId: the instanceId to be called
              *  - slot: the slot name of the instance
-             *  - replyType: the value of the key ``type`` in the reply to the client.
+             *  - empty: if this property is provided, the input Hash is not bounced back
+             *  - replyType (optional): the value of the key ``type`` in the reply to the client
              *  - timeout (optional) [s]: account for the slot call a specified timeout in seconds!
              *  - args: The Hash containing the parameters for the slot call
+             * 
+             *  Geneeric interface to call slots that take a single Hash as argument and reply 
+             *  with a single Hash.
+             * 
+             *  The `forwardHashReply` method is used to relay information to the gui client.
+             *  
+             *  Returns:
+             *  --------
+             * 
+             *  In the default case, the return Hash is composed as follows::
+             *  
+             *  - success: boolean to indicate if the generic request was successful
+             *  - reason: information on the error if not succesful otherwise empty
+             *  - type: if specified in the input Hash, the `replyType` is used otherwise `requestGeneric`
+             *  - request: the full input Hash information, including `args`
+             *  - reply: The reply Hash of the instanceId
+             *  
+             *  .. note: If the info Hash from the client provides a `empty` property, an empty
+             *           Hash is send back to the client instead of the input Hash.
              */
             void onRequestGeneric(WeakChannelPointer channel, const karabo::util::Hash& info);
 
