@@ -29,6 +29,8 @@ from .proxy import (AutoDisconnectProxyFactory, DeviceClientProxyFactory,
 from .signalslot import coslot, slot
 from .synchronization import firstCompleted
 
+KARABO_CONFIG_MANAGER = "KaraboConfigurationManager"
+
 
 class DeviceClientBase(Device):
     """Keep track of other devices
@@ -340,6 +342,105 @@ def getSchemaFromPast(device, timepoint):
                                                 device, timepoint)
 
     return schema
+
+
+@synchronize
+def getConfigurationFromName(device, name):
+    """Get the configuration of a deviceId or proxy with a given `name`::
+
+        getConfigurationFromNAme(device, "run2012")
+
+    Returns a karabo configuration hash of the device saved under the `name`.
+    """
+    if isinstance(device, ProxyBase):
+        device = device._deviceId
+    instance = get_instance()
+    slot = "slotGetConfigurationFromName"
+    h = Hash("deviceId", device, "name", name)
+    reply = yield from instance.call(KARABO_CONFIG_MANAGER, slot, h)
+    config = reply["item.config"]
+
+    return config
+
+
+@synchronize
+def getLastConfiguration(device, priority=3):
+    """Get the last configuration of a deviceId with given `priority`::
+
+        getLastConfiguration(device, 3)
+
+    Returns a karabo configuration hash of the device.
+    """
+    if isinstance(device, ProxyBase):
+        device = device._deviceId
+    instance = get_instance()
+    slot = "slotGetLastConfiguration"
+    h = Hash("deviceId", device, "priority", priority)
+    reply = yield from instance.call(KARABO_CONFIG_MANAGER, slot, h)
+    item = reply["item"]
+
+    return item
+
+
+@synchronize
+def listConfigurationFromName(device, name_part=''):
+    """List the list of configurations of a deviceId with given `name_part`::
+
+        listConfigurationFromName(device, '')
+
+    Returns a list of configuration items of the device. Optionally, a `name
+    part` can be provided to filter the configurations on manager side.
+
+    Each configuration item is a Hash containing:
+
+        - name: the configuration name
+        - timepoint: the timepoint the device was taken
+        - description: the description of the configuration
+        - priority: the priority of the configuration
+        - user: the user belonging to the configuration
+    """
+    if isinstance(device, ProxyBase):
+        device = device._deviceId
+    instance = get_instance()
+    slot = "slotListConfigurationFromName"
+    h = Hash("deviceId", device, "name", name_part)
+    reply = yield from instance.call(KARABO_CONFIG_MANAGER, slot, h)
+    configs = reply["items"]
+
+    return configs
+
+
+@synchronize
+def saveConfigurationFromName(devices, name, description='', priority=1):
+    """Save configuration(s) in the KaraboConfigurationManager::
+
+        - The parameter `devices` can be a Karabo `proxy`, a list of deviceIds,
+          a list of proxies or a mixture of them. It can be as well a single
+          deviceId string.
+
+        - The description is by default empty.
+
+        - The priority default is the lowest -> 1.
+
+        saveConfigurationFromName(devices, name="proposal2020",
+                                  description="working at end", priority=3)
+    """
+    if isinstance(devices, list):
+        devices = [dev._deviceId if isinstance(dev, ProxyBase)
+                   else dev for dev in devices]
+        # Prepare uniqueness!
+        devices = list(set(devices))
+    elif isinstance(devices, ProxyBase):
+        devices = [devices._deviceId]
+    else:
+        # A single deviceId as string
+        devices = [devices]
+    instance = get_instance()
+    slot = "slotSaveConfigurationFromName"
+    h = Hash("deviceIds", devices, "priority", priority,
+             "name", name, "description", description)
+
+    yield from instance.call(KARABO_CONFIG_MANAGER, slot, h)
 
 
 class Queue(object):
