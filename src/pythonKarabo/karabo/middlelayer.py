@@ -15,11 +15,13 @@ from .common.states import State
 from .middlelayer_api.device_client import (
     call, connectDevice, DeviceClientBase, disconnectDevice, execute,
     executeNoWait, findDevices, filterByTags, findServers, getClasses,
-    getClients, getConfiguration, getConfigurationFromPast, getDevice,
-    getDevices, getDescriptors, getTopology, getSchema, getSchemaFromPast,
+    getClients, getConfiguration, getConfigurationFromPast,
+    getConfigurationFromName, getDevice, getLastConfiguration,
+    getDevices, getDescriptors, listConfigurationFromName,
+    getTopology, getSchema, getSchemaFromPast,
     getServers, getHistory, isAlive, instantiate, instantiateNoWait, lock,
-    waitUntilNew, waitUntil, waitWhile, setWait, shutdown, shutdownNoWait,
-    setNoWait, updateDevice, Queue
+    waitUntilNew, waitUntil, waitWhile, saveConfigurationFromName,
+    setWait, shutdown, shutdownNoWait, setNoWait, updateDevice, Queue
 )
 from .middlelayer_api.proxy import (
     ProxyBase as Proxy, ProxySlotBase as ProxySlot,
@@ -96,11 +98,13 @@ def _create_cli_submodule():
     symbols = (
         call, connectDevice, disconnectDevice, execute, executeNoWait,
         findDevices, findServers, getClasses, getClients, getConfiguration,
-        getConfigurationFromPast, getSchemaFromPast, getDevice, getDevices,
-        getHistory, getSchema, getServers, getTopology, get_timestamp,
-        Hash, instantiate, instantiateNoWait, karabo, setWait, setNoWait,
-        shutdown, shutdownNoWait, sleep, State, Timestamp, waitUntil,
-        waitUntilNew
+        getConfigurationFromPast, getSchemaFromPast,
+        getConfigurationFromName, getLastConfiguration, getDevice,
+        listConfigurationFromName, getDevices, getHistory, getSchema,
+        getServers, getTopology, get_timestamp, Hash, instantiate, 
+        instantiateNoWait, karabo, saveConfigurationFromName, setWait,
+        setNoWait, shutdown, shutdownNoWait, sleep, State, Timestamp, 
+        waitUntil, waitUntilNew
     )
     module = create_module('karabo.middlelayer.cli', *symbols)
     module.__file__ = __file__  # looks nicer when repr(cli) is used
