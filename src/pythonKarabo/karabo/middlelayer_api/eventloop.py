@@ -686,6 +686,14 @@ class EventLoop(SelectorEventLoop):
     def sync(self, coro, timeout, wait):
         return coro
 
+    @coroutine
+    def cancel_all_tasks(self):
+        """Cancel all running tasks except the current executing this"""
+        me = Task.current_task()
+        tasks = [t for t in Task.all_tasks(self) if t is not me]
+        for t in tasks:
+            t.cancel()
+
     def close(self):
         for t in Task.all_tasks(self):
             t.cancel()
