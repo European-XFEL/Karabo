@@ -18,11 +18,12 @@ from PyQt5.QtWidgets import QDialog
 from karabogui import icons
 from karabogui.controllers.util import load_extensions
 
-_TIMEOUT = 0.1
+_TIMEOUT = 0.5
 _TAG_REGEX = r'^\d+.\d+.\d+$'
 _PKG_NAME = 'GUIExtensions'
 _WHEEL_TEMPLATE = 'GUIExtensions-{}-py3-none-any.whl'
-_REMOTE_SVR = 'http://exflserv05.desy.de/karabo/karaboExtensions/tags/'
+EXTENSIONS_URL_TEMPLATE = 'http://{}/karabo/karaboExtensions/tags/'
+KARABO_CHANNEL = 'exflserv05.desy.de'
 
 UNDEFINED_VERSION = 'Undefined'
 
@@ -37,10 +38,10 @@ def get_current_version():
         return UNDEFINED_VERSION
 
 
-def retrieve_remote_html():
+def retrieve_remote_html(remote_server):
     """Retrieves the remote tag url html and decodes it"""
     try:
-        result = requests.get(_REMOTE_SVR, timeout=_TIMEOUT)
+        result = requests.get(remote_server, timeout=_TIMEOUT)
     except requests.Timeout:
         return None
 
@@ -48,9 +49,9 @@ def retrieve_remote_html():
     return html
 
 
-def get_latest_version():
+def get_latest_version(remote_server):
     """Gets the latest version of the package"""
-    html = retrieve_remote_html()
+    html = retrieve_remote_html(remote_server)
     if not html:
         return UNDEFINED_VERSION
 
@@ -70,12 +71,12 @@ def get_latest_version():
     return UNDEFINED_VERSION
 
 
-def _download_file_for_tag(tag):
+def _download_file_for_tag(tag, remote_server):
     """Downloads the wheel for the given tag and writes it to a file
 
     The file is removed on context exit."""
     wheel_file = _WHEEL_TEMPLATE.format(tag)
-    wheel_path = '{}{}/{}'.format(_REMOTE_SVR, tag, wheel_file)
+    wheel_path = '{}{}/{}'.format(remote_server, tag, wheel_file)
 
     try:
         wheel_request = requests.get(wheel_path, stream=True, timeout=_TIMEOUT)
@@ -93,9 +94,9 @@ def _download_file_for_tag(tag):
 
 
 @contextmanager
-def download_file_for_tag(tag):
+def download_file_for_tag(tag, remote_server):
     """Takes care of also cleaning resources after downloading"""
-    wheel_file, err = _download_file_for_tag(tag)
+    wheel_file, err = _download_file_for_tag(tag, remote_server)
 
     yield wheel_file, err
     if wheel_file is not None:
@@ -125,7 +126,7 @@ def install_package(wheel_file):
         return 'Error installing {} package: {}'.format(_PKG_NAME, str(e))
 
 
-def update_package(tag):
+def update_package(tag, remote_server):
     """Updates the package to the given tag version.
 
     :returns str:
@@ -133,7 +134,7 @@ def update_package(tag):
     """
     assert isinstance(tag, str)
 
-    with download_file_for_tag(tag) as (wheel_file, err):
+    with download_file_for_tag(tag, remote_server) as (wheel_file, err):
         if err is not None:
             return err
 
@@ -169,6 +170,7 @@ class UpdateDialog(QDialog):
         self._process = None
         self._wheel_file = None
 
+        self._remote_server = EXTENSIONS_URL_TEMPLATE.format(KARABO_CHANNEL)
         self.refresh_versions()
 
     def refresh_versions(self):
@@ -197,7 +199,7 @@ class UpdateDialog(QDialog):
         """Updates the latest version of the device"""
         self.lb_latest.setVisible(False)
 
-        latest_version = get_latest_version()
+        latest_version = get_latest_version(self._remote_server)
 
         self.lb_latest.setVisible(True)
         self.lb_latest.setText(latest_version)
@@ -222,7 +224,8 @@ class UpdateDialog(QDialog):
 
         This process' signals are connected to the given callbacks."""
         tag = self.lb_latest.text()
-        self._wheel_file, err = _download_file_for_tag(tag)
+        self._wheel_file, err = _download_file_for_tag(tag,
+                                                       self._remote_server)
         if err is not None:
             self.ed_log.append(err)
             return None
@@ -331,12 +334,16 @@ def main():
                     help='Upgrade to the latest tag')
     ap.add_argument('-V', '--version', action='store_true', required=False,
                     help='Print the installed version')
+    ap.add_argument('-c', '--channel', type=str, default=KARABO_CHANNEL,
+                    required=False, help='Remote Karabo server')
 
     args = ap.parse_args()
 
     if not any([args.uninstall, args.tag, args.latest, args.version]):
         print('At least one option must be given! Please use -h for help.')
         return
+
+    remote_server = EXTENSIONS_URL_TEMPLATE.format(args.channel)
 
     if args.version:
         version = get_current_version()
@@ -345,22 +352,22 @@ def main():
         else:
             print('{}: version {} installed'.format(_PKG_NAME, version))
 
-    if args.uninstall:
+    elif args.uninstall:
         print('Uninstalling {} package'.format(_PKG_NAME))
         output = uninstall_package()
         print(output)
 
-    if args.tag:
+    elif args.tag:
         tag = args.tag[0]
 
         print('Installing {} version {}\n'.format(_PKG_NAME, tag))
-        output = update_package(tag)
+        output = update_package(tag, remote_server)
         print(output)
 
-    if args.latest:
-        tag = get_latest_version()
+    elif args.latest:
+        tag = get_latest_version(remote_server)
         print('Installing {} version {}\n'.format(_PKG_NAME, tag))
-        output = update_package(tag)
+        output = update_package(tag, remote_server)
         print(output)
 
 
