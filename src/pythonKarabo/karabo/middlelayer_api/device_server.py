@@ -18,6 +18,7 @@ from karabo.native.exceptions import KaraboError
 from karabo.native.data.hash import Bool, Hash, Int32, String, VectorString
 from karabo.native.data.schema import Descriptor, Node
 
+from .compat import HAVE_UVLOOP
 from .eventloop import EventLoopPolicy
 from .logger import Logger
 from .output import KaraboStream
@@ -347,6 +348,11 @@ class DeviceServerBase(SignalSlotable):
             server.startInstance(broadcast=True)
             try:
                 loop.run_forever()
+            except KeyboardInterrupt:
+                # XXX: Make sure that the instanceGone signal of the server
+                # is send. We cancel all tasks!
+                if HAVE_UVLOOP:
+                    loop.run_until_complete(loop.cancel_all_tasks())
             finally:
                 loop.close()
 
