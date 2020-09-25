@@ -34,13 +34,33 @@ activateKarabo() {
 checkCppUnitTestResults() {
     local testDir="$1"
     local testNames="$2"
+    RET=0
+    local mergeArgs=""
     for name in $testNames; do
         local path=$(printf "%s/testresults/%sTest.xml" $testDir $name)
+        mergeArgs="$mergeArgs $path"
         if [ ! -e $path ]; then
             echo "Expected test results file: $path not found!"
-            echo
-            echo
-            exit 1
+            RET=1
+            # generate an CppUnit XML place holder
+            cat > $path << EOF
+<?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
+<TestRun>
+  <FailedTests>
+    <FailedTest id="1">
+      <Name>${path}</Name>
+      <FailureType>Error</FailureType>
+      <Message>${path} Test did not run</Message>
+    </FailedTest>
+  </FailedTests>
+  <Statistics>
+    <Tests>1</Tests>
+    <FailuresTotal>1</FailuresTotal>
+    <Errors>1</Errors>
+    <Failures>0</Failures>
+  </Statistics>
+</TestRun>
+EOF
         fi
         # xmllint is distributed with Karabo
         local fails=$(xmllint --xpath '/TestRun/Statistics/FailuresTotal/text()' $path)
@@ -48,10 +68,16 @@ checkCppUnitTestResults() {
             echo "Test failure found in results file: $path"
             echo
             echo
-            exit 1
+            RET=1
         fi
     done
 
+    safeRunCommand "python ci/utils/merge_xml.py $mergeArgs > junit.xml"
+
+
+    if [ $RET != 0 ]; then
+        exit $RET
+    fi
     # Fail when new test suites are added and we don't expect them
     pushd $testDir/testresults/ &> /dev/null
     local actualNames=$(ls *.xml | cut -d'.' -f1 | tr '\n' ' ')
