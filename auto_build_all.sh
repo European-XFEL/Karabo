@@ -9,16 +9,26 @@
 safeRunCommand() {
     typeset cmnd="$*"
     typeset ret_code
-
+    tmp_output=$(mktemp)
     echo cmnd=$cmnd
-    eval $cmnd
+    if [ -z "$KARABO_CI_QUIET" ]; then
+        exec 3>&1
+    else
+        exec 3>"$tmp_output"
+    fi
+    eval $cmnd>&3 2>&3
     ret_code=$?
     if [ $ret_code != 0 ]; then
+        cat $tmp_output
+        rm -f $tmp_output
+        exec 3>&1
         printf "Error : [%d] when executing command: '$cmnd'" $ret_code
         echo
         echo
         exit $ret_code
     fi
+    rm -f $tmp_output
+    exec 3>&1
 }
 
 activateKarabo() {
@@ -266,6 +276,7 @@ Available flags:
   --runLongTests
                - Run long running tests after building (for Debug|Release)
   --numJobs N  - Specify the number of jobs that make should use to run simultaneously
+  --quiet      - suppress commands' stdout on success
 
 Note: "Dependencies" builds only the external dependencies
       "Clean" cleans all Karabo code (src folder)
@@ -357,6 +368,9 @@ while [ -n "$1" ]; do
                 exit 1
             fi
             ;;
+        --quiet)
+            KARABO_CI_QUIET="y"
+            ;;
         *)
             # Make a little noise
             echo "Unrecognized commandline flag: $1"
@@ -404,6 +418,12 @@ elif [ "$BUNDLE" = "y" ]; then
     safeRunCommand "make CONF=$CONF PYOPT=$PYOPT -j$NUM_JOBS bundle-package"
 else
     safeRunCommand "make CONF=$CONF PYOPT=$PYOPT -j$NUM_JOBS bundle-install"
+fi
+
+# enable prints from now on.
+if [ "$KARABO_CI_QUIET" ]; then
+    echo "### Successfully finished building and packaging of karaboFramework ###"
+    unset KARABO_CI_QUIET
 fi
 
 if [ "$RUNTESTS" = "y" ]; then
