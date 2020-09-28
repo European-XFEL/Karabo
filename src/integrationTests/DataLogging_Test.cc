@@ -216,7 +216,6 @@ namespace CppUnit{
         }
     };
 
-    template<>
     template < typename T>
     struct assertion_traits<std::vector<T>>
     {
