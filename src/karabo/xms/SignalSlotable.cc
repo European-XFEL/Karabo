@@ -433,7 +433,7 @@ namespace karabo {
         void SignalSlotable::consumerErrorNotifier(const std::string& consumer,
                                                    karabo::net::consumer::Error ec, const std::string& message) {
             const std::string fullMsg("Error " + toString(static_cast<int> (ec))
-                                      + " from JmsConsumer '" + consumer + "': " + message);
+                                      + " from consumer '" + consumer + "': " + message);
             boost::mutex::scoped_lock lock(m_brokerErrorHandlerMutex);
             if (m_brokerErrorHandler) {
                 try {
@@ -2091,7 +2091,7 @@ namespace karabo {
                                 << "'.slotUnsubscribeRemoteSignal  failed.";
                         })
                 );
-                
+
             }
         }
 
