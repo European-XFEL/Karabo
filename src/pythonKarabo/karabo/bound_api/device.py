@@ -90,7 +90,7 @@ class PythonDevice(NoFsm):
             .description("Configures who is allowed to see this device at all")
             .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
             .expertAccess()
-            .reconfigurable()
+            .init()
             .commit(),
 
             STRING_ELEMENT(expected).key("deviceId")
@@ -1541,16 +1541,8 @@ class PythonDevice(NoFsm):
 
     def _applyReconfiguration(self, reconfiguration):
 
-        instanceInfoUpdate = Hash()
         with self._stateChangeLock:
-            prop = "visibility"
-            node = reconfiguration.find(prop)
-            if node and node.getValue() != self._parameters.get(prop):
-                instanceInfoUpdate.set(prop, node.getValue())
             self._parameters += reconfiguration
-
-        if not instanceInfoUpdate.empty():
-            self._ss.updateInstanceInfo(instanceInfoUpdate)
 
         if self.validatorExtern.hasReconfigurableParameter():
             self._ss.emit("signalStateChanged", reconfiguration, self.deviceid)
