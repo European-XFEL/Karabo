@@ -393,7 +393,6 @@ Here are the dependencies of the ``karabo-cpp`` python module:
 
     "karabo-cpp" -> "openmq"
     "karabo-cpp" -> "boost"
-    "karabo-cpp" -> "snappy"
     "karabo-cpp" -> "hdf5"
     "boost" -> "libxml2"
     "boost" -> "libxslt"
