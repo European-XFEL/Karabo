@@ -94,6 +94,11 @@ namespace karabo {
             JmsConsumer(const JmsConnection::Pointer& connection, const std::string& topic,
                         const std::string& selector, bool skipSerialisation = false);
 
+            void setHandlers(const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier);
+
+            void postSetHandlers(const Strand::Pointer& strand,
+                                 const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier);
+
             void consumeMessages(JmsConsumer::Pointer& selfGuard);
 
             /// A shared pointer to an MQMessageHandle that takes care to correctly free its memory
@@ -102,6 +107,8 @@ namespace karabo {
             void deserialize(const MQMessageHandlePointer& messageHandlerPtr);
 
             void postErrorOnHandlerStrand(consumer::Error error, const std::string& msg);
+
+            void notifyError(consumer::Error error, const std::string& msg);
 
             MQConsumerHandle getConsumer(const std::string& topic, const std::string& selector);
 
