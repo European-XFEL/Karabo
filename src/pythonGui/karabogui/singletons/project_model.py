@@ -23,6 +23,7 @@ from karabogui.project.controller.build import (
 from karabogui.project.controller.device_config import (
     DeviceConfigurationController)
 from karabogui.project.controller.device import DeviceInstanceController
+from karabogui.project.controller.project import ProjectController
 from karabogui.project.utils import show_no_configuration
 from karabogui.singletons.api import get_topology
 TABLE_HEADER_LABELS = ["Projects", "", ""]
@@ -320,10 +321,13 @@ class ProjectViewItemModel(QAbstractItemModel):
             elif role == Qt.CheckStateRole:
                 if ui_data.checkable:
                     return ui_data.check_state
-        elif isinstance(controller, DeviceInstanceController):
-            if column == ALARM_COLUMN and role == Qt.DecorationRole:
+        elif column == ALARM_COLUMN and role == Qt.DecorationRole:
+            if isinstance(controller, DeviceInstanceController):
                 return get_alarm_icon(ui_data.alarm_type)
-            elif column == STATUS_COLUMN and role == Qt.DecorationRole:
+            elif isinstance(controller, ProjectController):
+                return ui_data.conflict_icon
+        elif column == STATUS_COLUMN and role == Qt.DecorationRole:
+            if isinstance(controller, DeviceInstanceController):
                 return get_state_icon_for_status(ui_data.status)
 
     def setData(self, index, value, role):
