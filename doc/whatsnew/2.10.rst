@@ -26,6 +26,9 @@ The **most relevant improvements**, fixes and changes are:
   removed and a new option queueDrop has been introduced. The default has changed from wait to **drop**.
   The ``compression`` key has been removed.
 
+- All API: The `visibility` of devices cannot be configured on runtime anymore.
+
+
 Detailed Merge-Log
 ==================
 
