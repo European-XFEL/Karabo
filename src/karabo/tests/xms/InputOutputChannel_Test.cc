@@ -96,8 +96,9 @@ void InputOutputChannel_Test::testManyToOne() {
     std::vector<std::string> outputIds(outputs.size());
     for (size_t i = 0; i < outputs.size(); ++i) {
         const std::string channelId("output" + karabo::util::toString(i));
-        outputs[i] = Configurator<OutputChannel>::create("OutputChannel", Hash());
+        outputs[i] = Configurator<OutputChannel>::create("OutputChannel", Hash(), 0);
         outputs[i]->setInstanceIdAndName("outputChannel", channelId);
+        outputs[i]->initialize(); // needed due to additional int == 0 argument above
         outputIds[i] = outputs[i]->getInstanceId() + ":" + channelId;
     }
 
@@ -126,6 +127,7 @@ void InputOutputChannel_Test::testManyToOne() {
     for (size_t i = 0; i < outputs.size(); ++i) {
         // Connect
         Hash outputInfo(outputs[i]->getInformation());
+        CPPUNIT_ASSERT_GREATER(0u, outputInfo.get<unsigned int>("port"));
         outputInfo.set("outputChannelString", outputIds[i]);
         // Alternate scenarios to test both memory location code paths:
         outputInfo.set("memoryLocation", (i % 2 == 0 // alternate between...
@@ -179,7 +181,8 @@ void InputOutputChannel_Test::testManyToOne() {
     // Proper number and order of data received from each output
     for (size_t i = 0; i < outputIds.size(); ++i) {
         const auto& data = receivedData.get<std::vector<unsigned int>>(outputIds[i]);
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(outputIds[i], numData, data.size());
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(outputIds[i] + " lacks data, all received:\n" + karabo::util::toString(receivedData),
+                                     numData, data.size());
         for (unsigned int iData = 0; iData < data.size(); ++iData) {
             CPPUNIT_ASSERT_EQUAL_MESSAGE("Output " + karabo::util::toString(i) += ", data " + karabo::util::toString(iData),
                                          iData, data[iData]);
@@ -196,8 +199,10 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     //    karabo::log::Logger::useOstream();
 
     // Setup output channel
-    OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash());
+    OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash(), 0);
     output->setInstanceIdAndName("outputChannel", "output");
+    output->initialize(); // needed due to int == 0 argument above
+
     std::vector<karabo::util::Hash> table;
     boost::mutex tableMutex;
     output->registerShowConnectionsHandler([&table, &tableMutex](const std::vector<karabo::util::Hash>& connections) {
@@ -227,6 +232,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
 
     // Connect
     Hash outputInfo(output->getInformation());
+    CPPUNIT_ASSERT_GREATER(0u, outputInfo.get<unsigned int>("port"));
     outputInfo.set("outputChannelString", outputChannelId);
     outputInfo.set("memoryLocation", "local");
     const size_t n = 50;
@@ -340,8 +346,9 @@ void InputOutputChannel_Test::testConcurrentConnect() {
     //    karabo::log::Logger::useOstream();
 
     // Setup output channel
-    OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash());
+    OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash(), 0);
     output->setInstanceIdAndName("outputChannel", "output");
+    output->initialize(); // needed due to int == 0 argument above
 
     // Setup input channel
     const std::string outputChannelId(output->getInstanceId() + ":output");
@@ -349,18 +356,7 @@ void InputOutputChannel_Test::testConcurrentConnect() {
     InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
     input->setInstanceId("inputChannel");
 
-    // Hack taken from InputOutputChannel_LongTest.cc:
-    // Wait a little bit until OutputChannel has properly initialised, i.e. a proper port is attached
-    // (see its constructor...) FIXME :-(
-    Hash outputInfo;
-    int trials = 500;
-    while (--trials >= 0) {
-        outputInfo = output->getInformation();
-        if (outputInfo.get<unsigned int>("port") > 0) {
-            break;
-        }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-    }
+    Hash outputInfo(output->getInformation());
     CPPUNIT_ASSERT_MESSAGE("OutputChannel keeps port 0!", outputInfo.get<unsigned int>("port") > 0);
 
     outputInfo.set("outputChannelString", outputChannelId);
@@ -441,7 +437,7 @@ void InputOutputChannel_Test::testConcurrentConnect() {
     output->write(Hash());
     output->update();
 
-    trials = 500;
+    int trials = 500;
     while (--trials >= 0) {
         if (1u == calls) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(2)); // time for callback
