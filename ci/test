@@ -2,7 +2,7 @@
 
 __deps_build_tests() {
     export FORCED_DEPS_TAG=$CI_COMMIT_REF_SLUG
-    bash ./auto_build_all.sh Debug --runTests --runIntegrationTests
+    bash ./auto_build_all.sh Debug --runTests --runIntegrationTests --quiet
 }
 
 __cmake_tests() {
@@ -12,11 +12,11 @@ __cmake_tests() {
 }
 
 __unit_tests() {
-    bash ./auto_build_all.sh Debug --runTests
+    bash ./auto_build_all.sh Debug --runTests --quiet
 }
 
 __integration_tests() {
-    bash ./auto_build_all.sh Debug --runIntegrationTests
+    bash ./auto_build_all.sh Debug --runIntegrationTests --quiet
 }
 
 __long_tests() {
@@ -25,7 +25,7 @@ __long_tests() {
         echo "Not a 'long-tests' job. Skipping."
         exit 0
     fi
-    bash ./auto_build_all.sh Debug --runLongTests
+    bash ./auto_build_all.sh Debug --runLongTests --quiet
 }
 
 __coverage_tests() {
@@ -34,7 +34,7 @@ __coverage_tests() {
         echo "Not a 'coverage-tests' job. Skipping."
         exit 0
     fi
-    bash ./auto_build_all.sh CodeCoverage
+    bash ./auto_build_all.sh CodeCoverage --quiet
 }
 
 echo "Start to testing job: {$1}"
