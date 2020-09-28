@@ -113,7 +113,12 @@ namespace karabo {
                         const std::string stdStatusString(statusString);
                         MQFreeString(statusString);
                         m_serializerStrand->post(bind_weak(&JmsConsumer::postErrorOnHandlerStrand, this, consumer::Error::drop, stdStatusString));
-                        // No 'break;'!
+                        // MQ_CONSUMER_DROPPED_MESSAGES is an error code introduced by an XFEL modification
+                        // to OpenMQ. It means: Here is a new message, but be aware that other messages
+                        // received before have been dropped. These dropped messages have already been acknowledged,
+                        // but the current one not, so after informing about the error we should proceed with
+                        // the normal message processing logic. That's the reason for the intentional 'no break'
+                        // behavior of this case.
                     }
                     case MQ_SUCCESS:
                     { // Message received
