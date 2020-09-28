@@ -169,7 +169,10 @@ namespace karabo {
                 }
                 if (!m_reading) {
                     // We are done and reset handlers to avoid them dangling.
-                    // We put this on the strands to ensure that all messages read so far will not be lost.
+                    // Reseting takes the same "route" as messages, i.e. via serialiser strand to the handler strand
+                    // where the latter is the only one allowed to touch the cached handlers. This duplicated hop
+                    // guarantees that no message can get lost because it is processed in the handler strand when the
+                    // handler is already an empty function pointer.
                     m_serializerStrand->post(bind_weak(&JmsConsumer::postSetHandlers, this, m_handlerStrand,
                                                        consumer::MessageHandler(), consumer::ErrorNotifier()));
                     break;
