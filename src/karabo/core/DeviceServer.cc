@@ -72,7 +72,7 @@ namespace karabo {
                     .assignmentOptional().defaultValue(karabo::util::Schema::OBSERVER)
                     .options("0 1 2 3 4")
                     .adminAccess()
-                    .reconfigurable()
+                    .init()
                     .commit();
 
             NODE_ELEMENT(expected).key("connection")
