@@ -27,6 +27,7 @@ class ProjectControllerUiData(HasStrictTraits):
     check_state = Int(Qt.Checked)
     alarm_type = String
     status = Enum(*ProxyStatus)
+    conflict_icon = Instance(QIcon, args=())
 
 
 class BaseProjectController(ABCHasStrictTraits):
@@ -131,7 +132,7 @@ class BaseProjectController(ABCHasStrictTraits):
         if self._qt_model is not None:
             self._qt_model.controller_data_update(self, column=1)
 
-    @on_trait_change('ui_data.alarm_type')
+    @on_trait_change('ui_data.alarm_type,ui_data.conflict_icon')
     def _update_alarm(self):
         if self._qt_model is not None:
             self._qt_model.controller_data_update(self, column=2)
