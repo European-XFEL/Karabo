@@ -31,6 +31,11 @@ class ProjectController(BaseProjectController):
         font.setBold(True)
         return ProjectControllerUiData(font=font, icon=icons.folder)
 
+    @on_trait_change('model.conflict')
+    def _update_conflict_icon(self):
+        if self.model.conflict:
+            self.ui_data.conflict_icon = icons.alarmGlobal
+
     @on_trait_change('model.is_trashed')
     def _update_icon_style(self):
         if self.model.is_trashed:
