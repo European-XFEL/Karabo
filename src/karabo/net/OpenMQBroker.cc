@@ -34,17 +34,6 @@ namespace karabo {
 
 
         OpenMQBroker::~OpenMQBroker() {
-            stopReading();
-            stopReadingHeartbeats();
-            stopReadingLogs();
-            if (m_logConsumerChannel) m_logConsumerChannel.reset();
-            if (m_logProducerChannel) m_logProducerChannel.reset();
-            if (m_heartbeatConsumerChannel) m_heartbeatConsumerChannel.reset();
-            if (m_heartbeatProducerChannel) m_heartbeatProducerChannel.reset();
-            if (m_consumerChannel) m_consumerChannel.reset();
-            if (m_producerChannel) m_producerChannel.reset();
-            if (m_guiDebugProducerChannel) m_guiDebugProducerChannel.reset();
-            m_connection.reset();
         }
 
 
