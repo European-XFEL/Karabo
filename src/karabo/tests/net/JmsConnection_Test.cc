@@ -231,23 +231,30 @@ void JmsConnection_Test::testPermanentRead() {
     JmsProducer::Pointer producer = m_connection->createProducer();
 
     std::vector<unsigned int> counters;
-    consumer->startReading([this, &counters](karabo::util::Hash::Pointer h, karabo::util::Hash::Pointer body) {
+    auto read = [this, &counters](karabo::util::Hash::Pointer h, karabo::util::Hash::Pointer body) {
         incrementMessageCount();
         // Collect counters to test for sequentiality
         counters.push_back(body->get<unsigned int>("counter"));
-    });
+    };
+    consumer->startReading(read);
 
 
     auto header = boost::make_shared<Hash>("headerKey", "bar");
     auto body = boost::make_shared<Hash>();
 
-    const unsigned int numMessages = 10;
+    const unsigned int numMessages = 500;
     for (unsigned int i = 0; i < numMessages; ++i) {
         body->set("counter", i);
         producer->write(topic, header, body);
+        if (i == numMessages / 2) {
+            // stop reading to resume later
+            consumer->stopReading();
+        }
     }
+    // resume reading - no message should be lost!
+    consumer->startReading(read);
 
-    int trials = 100;
+    int trials = 1000;
     while (--trials >= 0) {
         if (getMessageCount() == numMessages) {
             break;
