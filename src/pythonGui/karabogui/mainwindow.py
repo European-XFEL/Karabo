@@ -17,7 +17,6 @@ from karabo.common.project.api import get_project_models
 from karabo.native import AccessLevel
 from karabogui import globals as krb_globals
 from karabogui import icons
-from karabogui import messagebox
 from karabogui.dialogs.configuration import ConfigurationDialog
 from karabogui.dialogs.dialogs import AboutDialog
 from karabogui.dialogs.update_dialog import UpdateDialog
@@ -243,20 +242,9 @@ class MainWindow(QMainWindow):
 
         projects = get_project_models(project)
         external_uuids = data['uuids']
-        uuids = {item.uuid: item.simple_name
-                 for item in projects
-                 if item.uuid in external_uuids}
-        if uuids:
-            table = ("<table>" +
-                     "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
-                             format(value, key)
-                             for key, value in uuids.items())
-                     + "</table>")
-            msg = ("Projects have been externally modified! <br>{}<br><br>"
-                   "In order to display the changes, please <b>reload</b> your"
-                   " <b>project(s)</b>.").format(table)
-
-            messagebox.show_information(msg, parent=self)
+        conflict = [item for item in projects if item.uuid in external_uuids]
+        for model in conflict:
+            model.conflict = True
 
     # -----------------------------------------------------------------------
 
