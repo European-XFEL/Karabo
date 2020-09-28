@@ -32,8 +32,6 @@ namespace karabo {
 
     namespace xms {
 
-#define KARABO_P2P_SOURCE_INFO "__sourceInfo"
-
         typedef boost::function<void(const std::vector<karabo::util::Hash>&)> ShowConnectionsHandler;
         typedef boost::function<void(const std::vector<unsigned long long>&,
                                      const std::vector<unsigned long long>&)> ShowStatisticsHandler;
@@ -168,12 +166,52 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected);
 
             /**
-             * If this object is constructed using the factory/configuration system this method is called
-             * @param input Validated (@see expectedParameters) and default-filled configuration
+             * If this object is constructed using the factory/configuration system this method is called.
+             *
+             * The initialize() method must not be called if constructed this way.
+             *
+             * Deprecated:
+             * Tcp server initialization is triggered, but there is no control when and whether it succeeded.
+             * So better use the constructor with additional int argument (and set it to zero).
+             *
+             * @param config Validated (@see expectedParameters) and default-filled configuration
              */
-            OutputChannel(const karabo::util::Hash& config);
+            explicit OutputChannel(const karabo::util::Hash& config);
+
+            /**
+             * Recommended constructor, allowing guaranteed-to-work initialization.
+             *
+             * The recommended way to call it is via the Configurator and with autoInit == 0,
+             * followed by calling initialize():
+             *
+             * Hash config(<here state non-default config parameters>);
+             * OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", cfg, 0);
+             * output->initialize();
+             *
+             * Caveat: Make sure you do not pass a 'bool' instead of an 'int' as argument to create(..) since then the
+             *         other constructor is chosen and the value of the 'bool' determines whether to validate cfg or not.
+             *
+             * @param config Validated (@see expectedParameters) and default-filled configuration
+             * @param autoInit If set to 0 (strongly recommended), the constructor does not yet try to initiate the
+             *                 TCP server initialization and the initialize() method has to be called as
+             *                 "second constructor". The advantage is that the initialization cannot fail on busy
+             *                 systems and one has control when the server is available for remote connections.
+             *                 If autoInit != 0, this constructor behaves as the other constructor and initialize()
+             *                 must not be called.
+             */
+            OutputChannel(const karabo::util::Hash& config, int autoInit);
 
             virtual ~OutputChannel();
+
+            /**
+             * "Second constructor", to be called after construction with second argument autoInit == 0.
+             *
+             * Initializes the underlying Tcp server connection and makes it available for others.
+             *
+             * May throw a karabo::util::NetworkException, e.g. if a non-zero port was defined in the input
+             * configuration and that is not available since used by something else.
+             */
+            void initialize();
 
             void setInstanceIdAndName(const std::string& instanceId, const std::string& name);
 
