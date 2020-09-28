@@ -258,7 +258,7 @@ namespace karabo {
                         .description("Configures who is allowed to see this device at all")
                         .assignmentOptional().defaultValue(karabo::util::Schema::OBSERVER)
                         .adminAccess()
-                        .reconfigurable()
+                        .init()
                         .commit();
 
                 STRING_ELEMENT(expected).key("deviceId")
@@ -1884,29 +1884,15 @@ namespace karabo {
             }
 
             void applyReconfiguration(const karabo::util::Hash& reconfiguration) {
-
-                karabo::util::Hash instanceInfoUpdate;
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-
-                    boost::optional<const karabo::util::Hash::Node&> node = reconfiguration.find("visibility");
-                    if (node && node->getValue<int>() != m_parameters.get<int>("visibility")) {
-                        instanceInfoUpdate.set("visibility", node->getValue<int>());
-                    }
-
                     m_parameters.merge(reconfiguration);
                 }
-
-                if (!instanceInfoUpdate.empty()) {
-                    updateInstanceInfo(instanceInfoUpdate);
-                }
-
                 KARABO_LOG_DEBUG << "After user interaction:\n" << reconfiguration;
                 if (m_validatorExtern.hasReconfigurableParameter())
                     emit("signalStateChanged", reconfiguration, getInstanceId());
                 else
                     emit("signalChanged", reconfiguration, getInstanceId());
-
             }
 
             void slotKillDevice() {
