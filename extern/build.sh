@@ -3,7 +3,7 @@
 ##############################################################################
 # Packages that we know how to build
 
-DEPENDENCIES_BASE=( bzip2 libpng snappy jpeg tiff python lapack boost
+DEPENDENCIES_BASE=( bzip2 libpng jpeg tiff python lapack boost
 freetype hdf5 log4cpp cppunit openmq nss openmqc patchelf gmock libxml libxslt
 daemontools libzmq nlohmann_json pugixml)
 
@@ -35,6 +35,7 @@ DEPS_BASE_NAME_MAP['Ubuntu16']='Ubuntu-16'
 DEPS_BASE_NAME_MAP['Ubuntu17']='Ubuntu-16'
 DEPS_BASE_NAME_MAP['Ubuntu18']='Ubuntu-18'
 DEPS_BASE_NAME_MAP['Ubuntu19']='Ubuntu-18'
+DEPS_BASE_NAME_MAP['Ubuntu20']='Ubuntu-20'
 DEPS_BASE_NAME_MAP['CentOS7']='CentOS-7'
 
 ##############################################################################
