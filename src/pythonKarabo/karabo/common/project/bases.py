@@ -5,7 +5,7 @@
 #############################################################################
 import uuid
 
-from traits.api import String
+from traits.api import Bool, String
 
 from karabo.common.api import BaseSavableModel
 
@@ -25,6 +25,9 @@ class BaseProjectObjectModel(BaseSavableModel):
 
     # Last modified date as string
     date = String(transient=True)
+
+    # Are we in conflict with items on the db
+    conflict = Bool(False, transient=True)
 
     def _uuid_default(self):
         """If a uuid isn't supplied, generate one
