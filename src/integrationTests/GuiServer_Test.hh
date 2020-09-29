@@ -39,6 +39,7 @@ private:
     void testReconfigure();
     void testReadOnly();
     void testRequestGeneric();
+    void testRequestFailProtocol();
 
     /**
      * Checks that messages of type 'deviceConfigurations' sent by
