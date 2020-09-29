@@ -48,8 +48,8 @@ namespace karabo {
                 return;
             }
             m_reading = true;
-            m_messageHandler = handler;
-            m_errorNotifier = errorNotifier;
+            // Set handlers on strand that uses them to circumvent mutex locks
+            m_handlerStrand->post(bind_weak(&JmsConsumer::setHandlers, this, handler, errorNotifier));
 
             // If startReading is scheduled before the event-loop is started, corresponding writes
             // (that are also only scheduled) may be executed first once the event-loop is started.
@@ -83,19 +83,26 @@ namespace karabo {
                 // 'self'-guard shared_ptr, this is even the normal scenario.
                 // But do not use Karabo logging in this else case:
                 // The extra thread might call this when the logger singleton is already being cleaned-up.
-
-                // Better reset to avoid dangling handlers:
-                m_messageHandler = consumer::MessageHandler();
-                m_errorNotifier = consumer::ErrorNotifier();
             }
         }
 
+
+        void JmsConsumer::postSetHandlers(const Strand::Pointer& strand,
+                                          const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier) {
+            strand->post(bind_weak(&JmsConsumer::setHandlers, this, handler, errorNotifier));
+        }
+
+
+        void JmsConsumer::setHandlers(const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier) {
+            m_messageHandler = handler;
+            m_errorNotifier = errorNotifier;
+        }
 
         void JmsConsumer::consumeMessages(JmsConsumer::Pointer& selfGuard) { // Sic! Non-const reference!
             // We go for an endless loop instead of reposting to the event loop after a single message has been read.
             // In this way we are safe against deadlocks blocking all threads in the event loop. Note that not being
             // able to read (and thus acknowledge!) would create a "black hole" that compromises the whole system!
-            while (m_reading) {
+            while (true) {
                 MQSessionHandle sessionHandle = this->ensureConsumerSessionAvailable(m_topic, m_selector);
                 MQConsumerHandle consumerHandle = this->getConsumer(m_topic, m_selector);
 
@@ -165,6 +172,16 @@ namespace karabo {
                     selfGuard.reset();
                     return;
                 }
+                if (!m_reading) {
+                    // We are done and reset handlers to avoid them dangling.
+                    // Reseting takes the same "route" as messages, i.e. via serialiser strand to the handler strand
+                    // where the latter is the only one allowed to touch the cached handlers. This duplicated hop
+                    // guarantees that no message can get lost because it is processed in the handler strand when the
+                    // handler is already an empty function pointer.
+                    m_serializerStrand->post(bind_weak(&JmsConsumer::postSetHandlers, this, m_handlerStrand,
+                                                       consumer::MessageHandler(), consumer::ErrorNotifier()));
+                    break;
+                }
             }
         }
 
@@ -192,13 +209,17 @@ namespace karabo {
 
 
         void JmsConsumer::postErrorOnHandlerStrand(consumer::Error error, const std::string& msg) {
+            m_handlerStrand->post(bind_weak(&JmsConsumer::notifyError, this, error, msg));
+        }
+
+
+        void JmsConsumer::notifyError(consumer::Error error, const std::string& msg) {
             if (m_errorNotifier) {
-                m_handlerStrand->post(boost::bind(m_errorNotifier, error, msg));
+                m_errorNotifier(error, msg);
             } else {
                 KARABO_LOG_FRAMEWORK_ERROR << "Error " << static_cast<int> (error) << ": " << msg;
             }
         }
-
 
         MQConsumerHandle JmsConsumer::getConsumer(const std::string& topic, const std::string& selector) {
 
