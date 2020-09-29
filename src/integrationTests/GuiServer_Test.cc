@@ -82,6 +82,7 @@ void GuiVersion_Test::appTestRunner() {
     testDeviceConfigUpdates();
     testDisconnect();
     testRequestGeneric();
+    testRequestFailProtocol();
 
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
@@ -360,6 +361,31 @@ void GuiVersion_Test::testExecute() {
     std::clog << "testExecute: OK" << std::endl;
 }
 
+
+void GuiVersion_Test::testRequestFailProtocol() {
+    resetClientConnection();
+    // check if we are connected
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+    const unsigned int messageTimeout = 2000u;
+    {
+        const std::string type = "GuiServerDoesNotHaveThisType";
+        Hash h("type", type);
+
+        const Hash conf = m_deviceClient->get("testGuiServerDevice");        
+        const std::string& classVersion = conf.get<string>("classVersion");
+ 
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        }, messageTimeout);
+        Hash replyMessage;
+        messageQ->pop(replyMessage);
+
+        std::string assert_message = "The gui server with version " + classVersion + " does not support the client application request of " + type;
+        CPPUNIT_ASSERT_EQUAL(assert_message, replyMessage.get<std::string>("message"));
+
+        std::clog << "testRequestFailProtocol: OK" << std::endl;
+    }
+}
 
 
 void GuiVersion_Test::testRequestGeneric() {

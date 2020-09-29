@@ -559,6 +559,11 @@ namespace karabo {
                     } else if (type == "requestGeneric") {
                         onRequestGeneric(channel, info);
                     } else {
+                        // Inform the client that he is using a non compatible protocol
+                        const std::string message("The gui server with version " + get<string>("classVersion") +
+                                                  " does not support the client application request of " + type);
+                        const Hash h("type", "notification", "message", message);
+                        safeClientWrite(channel, h);
                         KARABO_LOG_FRAMEWORK_WARN << "Ignoring request of unknown type '" << type << "'";
                     }
                 } else {
