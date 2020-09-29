@@ -23,11 +23,8 @@ namespace karabo {
                 , m_connection()
                 , m_producerChannel()
                 , m_consumerChannel()
-                , m_heartbeatProducerChannel()
                 , m_heartbeatConsumerChannel()
-                , m_logProducerChannel()
-                , m_logConsumerChannel()
-                , m_guiDebugProducerChannel() {
+                , m_logConsumerChannel() {
             Hash jmsConfig("brokers", m_availableBrokerUrls);
             m_connection = Configurator<JmsConnection>::create("JmsConnection", jmsConfig);
         }
@@ -41,11 +38,8 @@ namespace karabo {
             m_connection = o.m_connection;
             m_producerChannel.reset();
             m_consumerChannel.reset();
-            m_heartbeatProducerChannel.reset();
             m_heartbeatConsumerChannel.reset();
-            m_logProducerChannel.reset();
             m_logConsumerChannel.reset();
-            m_guiDebugProducerChannel.reset();
         }
 
 
@@ -104,19 +98,10 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_TRACE << "*** write TARGET = \"" << target
                     << "\"...\n... and HEADER is \n" << *header;
             if (m_topic.empty()) return;
-            if (target == m_topic) {
-                if (!m_producerChannel) m_producerChannel = m_connection->createProducer();
-                m_producerChannel->write(target, *header, *body, priority, timeToLive);
-            } else if (target == m_topic + "_beats") {
-                if (!m_heartbeatProducerChannel) m_heartbeatProducerChannel = m_connection->createProducer();
-                m_heartbeatProducerChannel->write(target, *header, *body, priority, timeToLive);
-            } else if (target == "karaboGuiDebug") {
-                if (!m_guiDebugProducerChannel) m_guiDebugProducerChannel = m_connection->createProducer();
-                m_guiDebugProducerChannel->write(target, *header, *body, priority, timeToLive);
-            } else { // target = 'log'
-                if (!m_logProducerChannel) m_logProducerChannel = m_connection->createProducer();
-                m_logProducerChannel->write(target, *header, *body, priority, timeToLive);
-            }
+
+            if (!m_producerChannel) m_producerChannel = m_connection->createProducer();
+
+            m_producerChannel->write(target, *header, *body, priority, timeToLive);
         }
 
 
