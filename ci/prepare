@@ -1,9 +1,16 @@
+__enable_gcc7() {
+    # for the Centos7 build
+    if [ "$1" = "7" ]; then
+        source /opt/rh/devtoolset-7/enable
+    fi
+}
+
 __lang_setting() {
     case "$1" in
         CentOS)
             localedef -c -i en_US -f UTF-8 en_US.utf8
             export LANG=en_US.UTF-8
-            source /opt/rh/devtoolset-7/enable
+            __enable_gcc7 $(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
             ;;
         Ubuntu)
             locale-gen en_US.UTF-8
@@ -17,6 +24,7 @@ __lang_setting() {
         *) echo "unknown target os for lang_setting: $1" ;;
     esac
 }
+
 
 XVFB=/usr/bin/Xvfb
 XVFB_DISP=:99.0
