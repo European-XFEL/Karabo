@@ -924,16 +924,22 @@ void Device_Test::testGetSet() {
     CPPUNIT_ASSERT_EQUAL(std::string("testServerDevice"), hash.get<std::string>("serverId"));
     CPPUNIT_ASSERT_EQUAL(::getpid(), hash.get<int>("pid"));
 
-    // We can set visibility and check that we really did.
+    // We cannot set visibility
     hash.clear();
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotReconfigure", Hash("visibility", static_cast<int> (karabo::util::Schema::ADMIN)))
-                            .timeout(timeoutInMs).receive());
+    CPPUNIT_ASSERT_THROW(m_deviceServer->request(deviceId, "slotReconfigure", Hash("visibility", static_cast<int> (karabo::util::Schema::ADMIN)))
+                         .timeout(timeoutInMs).receive(), karabo::util::RemoteException);
     CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
-    CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::util::Schema::ADMIN), hash.get<int>("visibility"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::util::Schema::OBSERVER), hash.get<int>("visibility"));
 
-    // But we cannot set archive since not reconfigurable.
+    // And we cannot set archive since not reconfigurable.
     CPPUNIT_ASSERT_THROW(m_deviceServer->request(deviceId, "slotReconfigure", Hash("archive", false))
                          .timeout(timeoutInMs).receive(), karabo::util::RemoteException);
+    // But we can set the performance statistics
+    hash.clear();
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotReconfigure", Hash("performanceStatistics.enable", true))
+                            .timeout(timeoutInMs).receive());
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    CPPUNIT_ASSERT_EQUAL(true, hash.get<bool>("performanceStatistics.enable"));
 }
 
 
