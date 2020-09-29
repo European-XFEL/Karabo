@@ -175,11 +175,8 @@ namespace karabo {
             karabo::net::JmsConnection::Pointer m_connection;
             karabo::net::JmsProducer::Pointer m_producerChannel;
             karabo::net::JmsConsumer::Pointer m_consumerChannel;
-            karabo::net::JmsProducer::Pointer m_heartbeatProducerChannel;
             karabo::net::JmsConsumer::Pointer m_heartbeatConsumerChannel;
-            karabo::net::JmsProducer::Pointer m_logProducerChannel;
             karabo::net::JmsConsumer::Pointer m_logConsumerChannel;
-            karabo::net::JmsProducer::Pointer m_guiDebugProducerChannel;
         };
 
     }
