@@ -277,7 +277,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         // Disconnect
         input->disconnect(outputChannelId);
         // Some time to travel for message
-        trials = 200;
+        trials = 1000; // failed with 200 in https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/131075/raw
         do {
             boost::this_thread::sleep(boost::posix_time::milliseconds(2));
             boost::mutex::scoped_lock lock(tableMutex);
