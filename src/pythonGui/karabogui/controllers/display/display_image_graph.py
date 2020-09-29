@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QAction
-from traits.api import Instance
+from traits.api import Bool, Instance
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, ImageGraphModel)
@@ -20,6 +20,7 @@ from karabogui.controllers.api import (
 class DisplayImageGraph(BaseBindingController):
     # Our Image Graph Model
     model = Instance(ImageGraphModel, args=())
+    grayscale = Bool(True)
 
     _plot = Instance(KaraboImagePlot)
     _image_node = Instance(KaraboImageNode, args=())
@@ -79,9 +80,12 @@ class DisplayImageGraph(BaseBindingController):
         array = self._image_node.get_data()
 
         # Enable/disable some widget features depending on the encoding
-        grayscale = (self._image_node.encoding == EncodingType.GRAY
-                     and array.ndim == 2)
+        self.grayscale = (self._image_node.encoding == EncodingType.GRAY
+                          and array.ndim == 2)
 
+        self._plot.setData(array)
+
+    def _grayscale_changed(self, grayscale):
         if grayscale:
             self.widget.add_colorbar()
             self.widget.restore({"colormap": self.model.colormap})
@@ -89,5 +93,3 @@ class DisplayImageGraph(BaseBindingController):
         else:
             self.widget.remove_colorbar()
             self.widget.disable_aux()
-
-        self._plot.setData(array)
