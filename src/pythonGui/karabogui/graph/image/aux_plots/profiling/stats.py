@@ -1,6 +1,6 @@
 from traits.api import Constant, Dict
 
-from ..base.stats import BaseStats, header_row, table_row
+from ..base.stats import BaseStats, table_body, table_header, table_row
 
 
 class ProfileStats(BaseStats):
@@ -11,19 +11,15 @@ class ProfileStats(BaseStats):
 
     # HTML table format for the stats
     html_table = Constant(
-        header_row(tabs=('x', 'y'))
-        + table_row(header="Amplitude", tabs=("{x_ampl}", "{y_ampl}"))
-        + table_row(header="Max Pos.",
-                    tabs=("{x_maxpos}", "{y_maxpos}"))
-        + table_row(header="FWHM", tabs=("{x_fwhm}", "{y_fwhm}")))
-
-    # -----------------------------------------------------------------------
-    # Private methods
-
-    @staticmethod
-    def _to_string(value):
-        """Converts the numerical value into an readable number"""
-        return "{:.3g}".format(value) if value is not None else "-"
+        "<b><u>Beam Profile Statistics</b></u><br/>"
+        + table_row(table_header(tabs=('x', 'y')))
+        + table_row(table_body(header="Amplitude",
+                               tabs=("{x_ampl}", "{y_ampl}")))
+        + table_row(table_body(header="Max Pos.",
+                               tabs=("{x_maxpos}", "{y_maxpos}")))
+        + table_row(table_body(header="FWHM",
+                               tabs=("{x_fwhm}", "{y_fwhm}")))
+    )
 
     # -----------------------------------------------------------------------
     # Trait properties

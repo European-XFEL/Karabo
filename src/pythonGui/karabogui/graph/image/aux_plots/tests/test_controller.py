@@ -27,8 +27,7 @@ class TestAuxPlots(GuiTestCase):
         self.assertEqual(self._controller.current_plot, AuxPlots.NoPlot)
 
         layout_plots = set(self._image_layout.ci.items.keys())
-        self.assertEquals(len(layout_plots), 1)
-        self.assertIn(self._controller.labelItem, layout_plots)
+        self.assertEquals(len(layout_plots), 0)
 
         # Show profile plot first
         self._controller.current_plot = AuxPlots.ProfilePlot
