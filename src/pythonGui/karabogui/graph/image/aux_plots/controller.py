@@ -40,15 +40,7 @@ class AuxPlotsController(HasStrictTraits):
     _aggregators = Dict
 
     # The UI item that shows HTML tables of the statistics
-    labelItem = Instance(LabelItem)
-
-    def __init__(self, **traits):
-        super(AuxPlotsController, self).__init__(**traits)
-
-        # Set up widgets
-        self.labelItem = LabelItem()
-        self.labelItem.setVisible(False)
-        self.image_layout.addItem(self.labelItem, 0, 0)
+    labelItem = Instance(LabelItem, kw={"justify": "left"})
 
     # -----------------------------------------------------------------------
     # Public methods
@@ -100,18 +92,47 @@ class AuxPlotsController(HasStrictTraits):
     def _add_item(self, plot_item, orientation="top"):
         row, col = GRID_ORIENTATION[orientation]
         self.image_layout.addItem(plot_item, row, col)
+        if orientation == "top":
+            self.image_layout.ci.layout.setRowStretchFactor(row, 1)
+            self.image_layout.ci.layout.setRowMinimumHeight(row, 100)
+        elif orientation == "left":
+            self.image_layout.ci.layout.setColumnStretchFactor(col, 1)
+            self.image_layout.ci.layout.setColumnMinimumWidth(col, 100)
 
-    def _remove_item(self, item):
+    def _remove_item(self, item, orientation=None):
         if item in self.image_layout.ci.items.keys():
             self.image_layout.removeItem(item)
+        # Collapse the grid space by removing the stretch factor of the
+        # emptied space
+        row, col = GRID_ORIENTATION[orientation]
+        if orientation == "top":
+            self.image_layout.ci.layout.setRowStretchFactor(row, 0)
+            self.image_layout.ci.layout.setRowMinimumHeight(row, 0)
+        elif orientation == "left":
+            self.image_layout.ci.layout.setColumnStretchFactor(col, 0)
+            self.image_layout.ci.layout.setColumnMinimumWidth(col, 0)
 
     def _show_stats(self, stats):
+        """Add the labelItem only if there's stats shown"""
+        label_added = self.labelItem in self.image_layout.ci.items.keys()
         if stats is not None:
+            if not label_added:
+                # Span the label on unoccupied orientation.
+                # The item spans by 1 row and column by default,
+                # but now we span to an unoccupied space if available.
+                # For instance, with histogram aux plot, that does not have a
+                # left plot, we span the label by two columns.
+                aggregator = self._aggregators[self.current_plot]
+                plot_orientations = aggregator.controllers.keys()
+                row_span = 1 + ("left" not in plot_orientations)
+                col_span = 1 + ("top" not in plot_orientations)
+                self.image_layout.addItem(self.labelItem, 0, 0,
+                                          row_span, col_span)
             self.labelItem.item.setHtml(stats.html)
-            self.labelItem.resizeEvent(None)
-        else:
-            # Clear labelItem
+        elif label_added:
             self.labelItem.setText('')
+            self.image_layout.removeItem(self.labelItem)
+        self.labelItem.resizeEvent(None)
 
     # -----------------------------------------------------------------------
     # Trait handlers
@@ -121,22 +142,19 @@ class AuxPlotsController(HasStrictTraits):
         if new not in self._aggregators:
             new = AuxPlots.NoPlot
 
-        # Set visibility of label item and previous plots, if any
-        self.labelItem.setVisible(new != AuxPlots.NoPlot)
-
         # Remove previous plot items
         if old != AuxPlots.NoPlot:
-            for plot in self._aggregators[old].plotItems:
-                self._remove_item(plot)
+            aggregator = self._aggregators[old]
+            for orientation, plot in aggregator.controllers.items():
+                self._remove_item(plot.plotItem, orientation)
+            self._show_stats(None)
 
         if new != AuxPlots.NoPlot:
             # Add new plot items
             aggregator = self._aggregators[new]
             for orientation, plot in aggregator.controllers.items():
                 self._add_item(plot.plotItem, orientation)
-
-        # Clear contents
-        self.labelItem.setText('')
+            self._show_stats(None)
 
         # Process the changes
         if self._region is not None:
