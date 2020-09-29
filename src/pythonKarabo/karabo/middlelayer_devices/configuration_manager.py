@@ -347,30 +347,22 @@ class ConfigurationManager(Device):
         deviceIds = info["deviceIds"]
 
         try:
-            schema_futures = []
-            config_futures = []
-            for deviceId in deviceIds:
-                schema_futures.append(self.call(deviceId, "slotGetSchema",
-                                                False))
-                config_futures.append(self.call(deviceId,
-                                                "slotGetConfiguration"))
 
-            timeout = len(deviceIds) * DEVICE_TIMEOUT
-            s_reply = await wait_for(gather(*schema_futures), timeout=timeout)
-            c_reply = await wait_for(gather(*config_futures), timeout=timeout)
-
-            items = []
-            schemas = [s[0] for s in s_reply]
-            configurations = [c[0] for c in c_reply]
-            for deviceId, schema, config in zip(deviceIds, schemas,
-                                                configurations):
+            async def poll_(device_id):
+                schema, _ = await self.call(device_id, "slotGetSchema", False)
+                config, _ = await self.call(device_id, "slotGetConfiguration")
                 config_dict = {}
                 config64 = hashToBase64Bin(config)
                 schema64 = schemaToBase64Bin(schema)
-                config_dict.update({"deviceId": deviceId})
+                config_dict.update({"deviceId": device_id})
                 config_dict.update({"config": config64})
                 config_dict.update({"schema": schema64})
-                items.append(config_dict)
+                return config_dict
+
+
+            futures = [poll_(device_id) for device_id in deviceIds]
+            timeout = len(deviceIds) * DEVICE_TIMEOUT
+            items = await wait_for(gather(*futures), timeout=timeout)
 
             self.db.save_configuration(
                 config_name, items, description=description, user=user,
