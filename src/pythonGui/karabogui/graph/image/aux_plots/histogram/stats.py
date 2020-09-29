@@ -1,30 +1,22 @@
 from traits.api import Constant
 
-from ..base.stats import BaseStats, table_row
+from ..base.stats import BaseStats, table_body, table_row
 
 
 class HistogramStats(BaseStats):
 
     # HTML table format for the stats
     html_table = Constant(
-        table_row(header="Count", tabs=("{count}",))
-        + table_row(header="Mean", tabs=("{mean}",))
-        + table_row(header="Minimum", tabs=("{min}",))
-        + table_row(header="Maximum", tabs=("{max}",))
-        + table_row(header="Std. Dev.", tabs=("{std}",))
-        + table_row(header="Mode", tabs=("{mode}",))
-        + table_row(header="Bins", tabs=("{bins}",))
-        + table_row(header="Bin Width", tabs=("{bin_width}",)))
-
-    # -----------------------------------------------------------------------
-    # Private methods
-
-    @staticmethod
-    def _to_string(value):
-        """Converts the numerical value into an readable number"""
-        if value is None:
-            return "-"
-        return "{:.2f}".format(value).rstrip('0').rstrip('.')
+        "<b><u>Histogram Statistics</b></u><br/>"
+        + table_row(table_body(header="Count", tabs=("{count}",)))
+        + table_row(table_body(header="Mean", tabs=("{mean}",)))
+        + table_row(table_body(header="Minimum", tabs=("{min}",)))
+        + table_row(table_body(header="Maximum", tabs=("{max}",)))
+        + table_row(table_body(header="Std. Dev.", tabs=("{std}",)))
+        + table_row(table_body(header="Mode", tabs=("{mode}",)))
+        + table_row(table_body(header="Bins", tabs=("{bins}",)))
+        + table_row(table_body(header="Bin Width", tabs=("{bin_width}",)))
+    )
 
     # -----------------------------------------------------------------------
     # Trait properties
