@@ -36,7 +36,7 @@ variables:
 
 .release_build_conda: &release-build-conda
   script:
-    - python ci/miniconda/build.py karabogui -c $MIRROR_HOSTNAME -D conda-recipes --clean --upload-to-mirror -P $CONDA_CHANNEL_PATH -C $CONDA_CHANNEL_PATH/mirror --index-mirror
+    - python ci/miniconda pack karabogui -D conda-recipes --clean --upload-env -E karaboEnvironments --upload-to-mirror -P $CONDA_CHANNEL_PATH -C $CONDA_CHANNEL_PATH/mirror --index-mirror
   only:
     - /^(\d+\.)(\d+\.)(\d+)((rc|\.)\d+)?$/
   except:
@@ -45,7 +45,7 @@ variables:
 
 .prerelease_build_conda: &prerelease-build-conda
   script:
-    - python ci/miniconda/build.py karabogui -c $MIRROR_HOSTNAME -D conda-recipes --clean --upload-to-mirror -P $CONDA_CHANNEL_PATH/nightly -C $CONDA_CHANNEL_PATH/mirror --index-mirror
+    - python ci/miniconda pack karabogui -D conda-recipes --clean --upload-env -E karaboEnvironments --upload-to-mirror -P $CONDA_CHANNEL_PATH/nightly -C $CONDA_CHANNEL_PATH/mirror --index-mirror
   only:
     - /^(\d+\.)(\d+\.)(\d+)(a|b)(\d+)$/
   except:
@@ -54,7 +54,7 @@ variables:
 
 .nightly_build_conda: &nightly-build-conda
   script:
-    - python ci/miniconda/build.py karabogui -c $MIRROR_HOSTNAME -D conda-recipes --clean --upload-to-mirror -P $CONDA_CHANNEL_PATH/nightly -C $CONDA_CHANNEL_PATH/mirror --index-mirror
+    - python ci/miniconda pack karabogui -D conda-recipes --clean --upload-env -E karaboEnvironments --upload-to-mirror -P $CONDA_CHANNEL_PATH/nightly -C $CONDA_CHANNEL_PATH/mirror --index-mirror
   only:
     - schedules
 
@@ -90,7 +90,7 @@ variables:
 
 .unit_tests_conda: &unit-tests-conda
   script:
-    - python ci/miniconda/build.py karabogui -D conda-recipes --clean --test
+    - python ci/miniconda pack karabogui -D conda-recipes --clean --test --skip-build
   only:
     - branches
   except:
