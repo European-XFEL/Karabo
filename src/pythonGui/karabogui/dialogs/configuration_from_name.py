@@ -21,6 +21,20 @@ class SaveDialog(QDialog):
         super(SaveDialog, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), "config_save.ui"), self)
 
+        self.event_map = {
+            KaraboEvent.NetworkConnectStatus: self._event_network
+        }
+        register_for_broadcasts(self.event_map)
+
+    def _event_network(self, data):
+        if not data.get("status"):
+            self.close()
+
+    def done(self, result):
+        """Stop listening for broadcast events"""
+        unregister_from_broadcasts(self.event_map)
+        super(SaveDialog, self).done(result)
+
     @property
     def description(self):
         return self.ui_description.toPlainText()
@@ -48,7 +62,8 @@ class ListConfigurationDialog(QDialog):
         self.ui_instance.setText(f"Device Id: {instance_id}")
 
         self.event_map = {
-            KaraboEvent.ListConfigurationUpdated: self._event_list_updated
+            KaraboEvent.ListConfigurationUpdated: self._event_list_updated,
+            KaraboEvent.NetworkConnectStatus: self._event_network
         }
         register_for_broadcasts(self.event_map)
 
@@ -90,6 +105,10 @@ class ListConfigurationDialog(QDialog):
         else:
             self.ui_status.setText("")
         model.set_internal_data(items)
+
+    def _event_network(self, data):
+        if not data.get("status"):
+            self.close()
 
     def done(self, result):
         """Stop listening for broadcast events"""
