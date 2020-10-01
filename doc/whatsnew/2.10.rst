@@ -28,6 +28,10 @@ The **most relevant improvements**, fixes and changes are:
 
 - All API: The `visibility` of devices cannot be configured on runtime anymore.
 
+- GUI: The DoubleWheelEdit controller has been deprecated.
+
+- GUI: The Slider widget has been deprecated.
+
 
 Detailed Merge-Log
 ==================
