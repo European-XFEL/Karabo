@@ -28,7 +28,7 @@ WIDGET_WIDTH_HINT = 450
 DEFAULT_BAR_WIDTH = 0.1
 DEFAULT_PEN_WIDTH = 1.0
 
-SYMBOL_SIZE = 7
+SYMBOL_SIZE = 5
 DEFAULT_SYMBOL = 'o'
 EMPTY_SYMBOL_OPTIONS = {'symbol': None, 'symbolSize': None,
                         'symbolPen': None, 'symbolBrush': None}
