@@ -1024,8 +1024,7 @@ s             *
              * @param channel is name of the output channel
              * @param dataHandler boost::function<void (const karabo::util::Hash&, const MetaData&) to be called whenever data arrives
              * @param inputChannelCfg configures via InputChanel::create(..) - use default except you know what your are doing
-             *        for the expert:  "connectedOutputChannels" will be overwritten,
-             *                         "onSlowness" default is overwritten to "drop"
+             *        for the expert:  "connectedOutputChannels" will be overwritten
              * @param eosHandler boost::function<void (const InputChannel::Pointer&)> called for EOS if given
              * @param inputHandler boost::function<void (const InputChannel::Pointer&)> to be called whenever data arrives
              *
@@ -1045,8 +1044,7 @@ s             *
              *                     the name of the output channel (e.g. A/COOL/DEVICE:output)
              * @param dataHandler boost::function<void (const karabo::util::Hash&, const MetaData&) to be called whenever data arrives
              * @param inputChannelCfg configures via InputChanel::create(..) - use default except you know what your are doing
-             *        for the expert:  "connectedOutputChannels" will be overwritten,
-             *                         "onSlowness" default is overwritten to "drop"
+             *        for the expert:  "connectedOutputChannels" will be overwritten
              * @param eosHandler boost::function<void (const InputChannel::Pointer&)> called for EOS if given
              * @param inputHandler boost::function<void (const InputChannel::Pointer&)> to be called whenever data arrives
              *
