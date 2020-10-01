@@ -3,7 +3,7 @@ from functools import partial
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QSize, Qt
 from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import QAction, QGridLayout, QSizePolicy, QWidget
-from pyqtgraph import GraphicsView, mkPen, PlotItem
+from pyqtgraph import GraphicsView, mkPen, PlotItem, mkBrush
 
 from karabogui.actions import build_qaction, KaraboAction
 from karabogui import icons
@@ -268,10 +268,11 @@ class KaraboPlotView(QWidget):
         self._show_symbols = show
         for item in self.plotItem.dataItems[:]:
             if show:
+                pen = item.opts['pen']
                 options = {'symbol': DEFAULT_SYMBOL,
                            'symbolSize': SYMBOL_SIZE,
-                           'symbolPen': item.opts['pen'],
-                           'symbolBrush': None}
+                           'symbolPen': pen,
+                           'symbolBrush': mkBrush(pen.color())}
             else:
                 options = EMPTY_SYMBOL_OPTIONS
             # NOTE: We are directly setting the options dict to avoid
@@ -476,8 +477,7 @@ class KaraboPlotView(QWidget):
 
         return item
 
-    def add_curve_item(self, name=None, pen=get_default_pen(),
-                       brush=get_default_brush(), **options):
+    def add_curve_item(self, name=None, pen=get_default_pen(), **options):
         """Add a plot to the built-in plotItem from PyQtGraph
 
         :param name: Set a name to automatically provide a legend
@@ -491,9 +491,10 @@ class KaraboPlotView(QWidget):
             # when desired!
             options.update({'symbol': DEFAULT_SYMBOL,
                             'symbolSize': SYMBOL_SIZE,
-                            'symbolPen': pen, 'symbolBrush': None})
+                            'symbolPen': pen,
+                            'symbolBrush': mkBrush(pen.color())})
 
-        return self.plotItem.plot(name=name, pen=pen, brush=brush, **options)
+        return self.plotItem.plot(name=name, pen=pen, **options)
 
     def add_scatter_item(self, pen=mkPen(None), cycle=True, **options):
         """Add a scatter item to the built-in plotItem
@@ -640,7 +641,7 @@ class KaraboPlotView(QWidget):
 
         # Revert viewbox values (log scale) to linear scale
         if self.configuration['x_log']:
-            x_min, x_max = 10**x_min, 10**x_max
+            x_min, x_max = 10 ** x_min, 10 ** x_max
         return x_min, x_max
 
     def get_view_range_y(self):
