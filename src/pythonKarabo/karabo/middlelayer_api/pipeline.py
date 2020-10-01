@@ -235,7 +235,7 @@ class NetworkInput(Configurable):
         description="Policy for what to do if this input is too slow for the "
                     "fed data rate (only used in copy mode)",
         options=["queue", "queueDrop", "drop", "wait", "throw"],
-        assignment=Assignment.OPTIONAL, defaultValue="wait",
+        assignment=Assignment.OPTIONAL, defaultValue="drop",
         accessMode=AccessMode.RECONFIGURABLE)
 
     delayOnInput = UInt32(

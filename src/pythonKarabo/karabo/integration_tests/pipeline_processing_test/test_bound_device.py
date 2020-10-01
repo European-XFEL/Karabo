@@ -22,7 +22,8 @@ class TestPipelineProcessing(BoundDeviceTestCase):
         # Complete setup - do not do it in setup to ensure that even in case of
         # exceptions 'tearDown' is called and stops Python processes.
 
-        config = Hash("deviceId", "p2pTestSender")
+        config = Hash("deviceId", "p2pTestSender",
+                      "output1.noInputShared", "wait")
         classConfig = Hash("classId", "PPSenderDevice",
                            "deviceId", "p2pTestSender",
                            "configuration", config)
@@ -35,10 +36,12 @@ class TestPipelineProcessing(BoundDeviceTestCase):
                       "input", Hash("connectedOutputChannels",
                                     "p2pTestSender:output1",
                                     "dataDistribution", "shared"),
-                      "input2.connectedOutputChannels",
-                      "p2pTestSender:output2",
-                      "node.input3.connectedOutputChannels",
-                      "p2pTestSender:node.output3"
+                      "input2", Hash("connectedOutputChannels",
+                                     "p2pTestSender:output2",
+                                     "onSlowness", "wait"),
+                      "node.input3", Hash("connectedOutputChannels",
+                                          "p2pTestSender:node.output3",
+                                          "onSlowness", "wait")
                       )
 
         classConfig = Hash("classId", "PPReceiverDevice",
@@ -56,7 +59,7 @@ class TestPipelineProcessing(BoundDeviceTestCase):
         self.assertTrue(len(ctable1) == 1)
         self.assertTrue(ctable1[0]["remoteId"] == "pipeTestReceiver:input")
         self.assertTrue(ctable1[0]["dataDistribution"] == "shared")
-        self.assertTrue(ctable1[0]["onSlowness"] == "wait")
+        self.assertTrue(ctable1[0]["onSlowness"] == "drop")  # unused for shared
         self.assertTrue(ctable1[0]["memoryLocation"] == "remote")
 
         self.assertTrue(len(ctable2) == 1)
