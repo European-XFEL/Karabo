@@ -43,7 +43,7 @@ from .widgets.simple import (
     AnalogModel, BitfieldModel, CheckBoxModel, ChoiceElementModel,
     ComboBoxModel, DaemonManagerModel, DirectoryModel, DisplayLabelModel,
     DisplayListModel, DisplayTextLogModel, DisplayTimeModel,
-    DoubleWheelBoxModel, EditableListElementModel, EditableListModel,
+    EditableListElementModel, EditableListModel,
     EditableSpinBoxModel, FileInModel, FileOutModel, GlobalAlarmModel,
     HexadecimalModel, IntLineEditModel, LabelModel, LampModel,
     LineEditModel, PopUpModel, RunConfiguratorModel, SceneLinkModel,
