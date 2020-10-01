@@ -47,7 +47,7 @@ namespace karabo {
                     .displayedName("No Input (Shared)")
                     .description("What to do if currently none of the share-input channels is available for writing to")
                     .options("drop,queue,queueDrop,wait")
-                    .assignmentOptional().defaultValue("wait")
+                    .assignmentOptional().defaultValue("drop")
                     .init()
                     .commit();
 
