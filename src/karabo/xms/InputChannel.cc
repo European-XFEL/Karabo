@@ -50,7 +50,7 @@ namespace karabo {
                     .displayedName("On Slowness")
                     .description("Policy for what to do if this input is too slow for the fed data rate (only used in copy mode)")
                     .options("drop,wait,queue,queueDrop")
-                    .assignmentOptional().defaultValue("wait")
+                    .assignmentOptional().defaultValue("drop")
                     .init()
                     .commit();
 
