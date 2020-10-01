@@ -102,7 +102,7 @@ void InputOutputChannel_Test::testManyToOne() {
     }
 
     // Setup input channel
-    const Hash cfg("connectedOutputChannels", outputIds);
+    const Hash cfg("connectedOutputChannels", outputIds, "onSlowness", "wait");
     InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
     input->setInstanceId("inputChannel");
 
@@ -145,7 +145,8 @@ void InputOutputChannel_Test::testManyToOne() {
                                      std::future_status::ready,
                                      connectFuture.wait_for(std::chrono::milliseconds(500)));
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + outputIds[i],
-                                     connectFuture.get(), karabo::net::ErrorCode()); // i.e. no error
+                                     karabo::net::ErrorCode(), // i.e. no error
+                                     connectFuture.get());
     } // all connected
 
 
@@ -165,9 +166,9 @@ void InputOutputChannel_Test::testManyToOne() {
     }
 
     // Wait for endOfStream arrival
-    int trials = 1000;
+    int trials = 2000;
     do {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(2));
         if (nReceivedEos > 0) break;
     } while (--trials >= 0);
 
@@ -259,7 +260,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         // ... and check the published connection information
         CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("remoteId"), input->getInstanceId());
         CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("dataDistribution"), std::string("copy"));
-        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("onSlowness"), std::string("wait"));
+        CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("onSlowness"), std::string("drop"));
         CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("memoryLocation"), std::string("local"));
 
         // Write data again (twice in one go...) - now input is connected.

@@ -1598,10 +1598,6 @@ namespace karabo {
             Hash masterCfg;
             Hash& channelCfg = masterCfg.set(channelName, inputChannelCfg).getValue<Hash>();
             channelCfg.set("connectedOutputChannels", std::vector<std::string>(1, channelName));
-            if (!channelCfg.has("onSlowness")) {
-                // overwrite default which is "wait" (should we tolerate "wait" at all?)
-                channelCfg.set("onSlowness", "drop");
-            }
             // Create InputChannel with handlers (this also enables auto-reconnect):
             InputChannel::Pointer input = sigSlotPtr->createInputChannel(channelName, masterCfg, dataHandler,
                                                                          inputHandler, eosHandler);
