@@ -17,6 +17,10 @@ The **most relevant improvements**, fixes and changes are:
   
   - For now, MDL servers started with ``uvloop`` cannot start devices from ``bound`` python.
 
+- MDL: Outputchannel can write end of stream token with coroutine `writeEndOfStream`.
+
+- MDL: A new karabo descriptor is introduced, the ``RegexString``. A string descriptor which validatas against regex pattern.
+
 - Core Devices: The ``DaemonManager`` device has been moved to the Framework.
 
 - Core Devices: A new Framework device has been created, the ``ConfigurationManager``.
