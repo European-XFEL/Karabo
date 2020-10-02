@@ -10,11 +10,11 @@ from karabo.middlelayer import (
     ComplexDouble, ComplexFloat, DaqDataType, DaqPolicy, decodeBinary,
     DeviceNode, Double, encodeBinary, Float, Hash, Image, ImageData, Int8,
     Int16, Int32, Int64, isSet, KaraboError, MetricPrefix, Node, Overwrite,
-    Slot, State, String, UInt8, UInt16, UInt32, UInt64, Unit, unit, VectorBool,
-    VectorChar, VectorComplexDouble, VectorComplexFloat, VectorDouble,
-    VectorHash, VectorFloat, VectorInt8, VectorInt16, VectorInt32,
-    VectorInt64, VectorString, VectorUInt8, VectorUInt16, VectorUInt32,
-    VectorUInt64)
+    RegexString, Slot, State, String, UInt8, UInt16, UInt32, UInt64,
+    Unit, unit, VectorBool, VectorChar, VectorComplexDouble,
+    VectorComplexFloat, VectorDouble, VectorHash, VectorFloat, VectorInt8,
+    VectorInt16, VectorInt32, VectorInt64, VectorString, VectorUInt8,
+    VectorUInt16, VectorUInt32, VectorUInt64)
 from ..injectable import InjectMixin
 
 
@@ -1024,6 +1024,24 @@ class Tests(TestCase):
                          "remote")
         # Becomes a node!
         self.assertEqual(a.node, None)
+
+    def test_regex_string(self):
+
+        class A(Configurable):
+            d = RegexString(
+                defaultValue="2",
+                regex=r"(0|1|[T]rue|[F]alse)")
+
+        # Regex does not comply with the defaultValue
+        with self.assertRaises(KaraboError):
+            a = A()
+
+        class B(A):
+            d = Overwrite(defaultValue="1")
+
+        a = B()
+        self.assertEqual(a.d.descriptor.defaultValue, "1")
+        self.assertEqual(a.d.descriptor.classId, "RegexString")
 
     def test_image_with_image_data(self):
         arrayEqual = numpy.testing.assert_array_equal
