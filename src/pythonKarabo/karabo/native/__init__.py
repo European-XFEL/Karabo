@@ -15,7 +15,7 @@ from .data.hash import (
     Attribute, Bool, ByteArray, Char, ComplexDouble, ComplexFloat, Descriptor,
     Double, Enumable, Float, Hash, HashList,
     HashMergePolicy, HashType, Int16, Int32, Int64, Int8, Integer,
-    Number, NumpyVector, Schema, SchemaHashType, Simple, Slot,
+    Number, NumpyVector, RegexString, Schema, SchemaHashType, Simple, Slot,
     Special, String, Type, UInt16, UInt32, UInt64, UInt8, Vector,
     VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
     VectorDouble, VectorFloat, VectorHash, VectorInt16, VectorInt32,
