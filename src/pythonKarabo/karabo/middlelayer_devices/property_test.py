@@ -7,10 +7,10 @@ from karabo.middlelayer import (
     AccessLevel, AccessMode, AlarmCondition,
     background, Bool, Configurable, DaqDataType,
     Device, Double, Float, Hash, InputChannel, Int32, Int64, MetricPrefix,
-    NDArray, Node,
-    OutputChannel, Overwrite, UInt32, UInt64, Unit, sleep, Slot, slot, State,
-    String, VectorBool, VectorChar, VectorDouble, VectorFloat, VectorHash,
-    VectorInt32, VectorInt64, VectorUInt32, VectorUInt64, VectorString)
+    NDArray, Node, OutputChannel, Overwrite, RegexString, UInt32, UInt64,
+    Unit, sleep, Slot, slot, State, String, VectorBool, VectorChar,
+    VectorDouble, VectorFloat, VectorHash, VectorInt32, VectorInt64,
+    VectorUInt32, VectorUInt64, VectorString)
 
 
 VECTOR_MAX_SIZE = 10
@@ -322,6 +322,12 @@ class PropertyTestMDL(Device):
         displayedName="String",
         description="A string property",
         defaultValue="XFEL")
+
+    regexProperty = RegexString(
+        displayedName="Regex String",
+        regex="[a-zA-Z]",
+        description="A regex string property",
+        defaultValue="RegexKarabo")
 
     @Slot(displayedName="Set Alarm",
           description="Set alarm to value of String property - if convertable")
