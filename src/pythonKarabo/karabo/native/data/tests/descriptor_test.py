@@ -9,9 +9,9 @@ from karabo.native import (
     AccessLevel, AccessMode, Assignment, Attribute, Bool, Char, ComplexFloat,
     Configurable, Double, decodeBinary, encodeBinary, Float, Hash, Image,
     ImageData, Int16, Int8, KaraboError, LeafType, MetricPrefix, NDArray,
-    NumpyVector, QuantityValue, Schema, String, Timestamp, Type, UInt8, UInt64,
-    Unit, unit, VectorBool, VectorChar, VectorComplexFloat, VectorFloat,
-    VectorHash, VectorInt32, VectorInt8, VectorString)
+    NumpyVector, QuantityValue, RegexString, Schema, String, Timestamp, Type,
+    UInt8, UInt64, Unit, unit, VectorBool, VectorChar, VectorComplexFloat,
+    VectorFloat, VectorHash, VectorInt32, VectorInt8, VectorString)
 
 
 class ArrayTestDevice(Configurable):
@@ -462,6 +462,16 @@ class Tests(TestCase):
         self.check_general(d, v)
         self.assertEqual(v, "bla")
         self.assertEqual(repr(v), "'bla'")
+
+    def test_regex(self):
+        d = RegexString(regex=r"(0|1|[T]rue|[F]alse)")
+        v = d.toKaraboValue("1")
+        self.check_general(d, v)
+        self.assertEqual(v, "1")
+        with self.assertRaises(KaraboError):
+            v = d.toKaraboValue("2")
+        self.assertEqual(d.displayType, "Regex|(0|1|[T]rue|[F]alse)")
+        self.assertEqual(d.classId, "RegexString")
 
     def test_string_enum(self):
         class E(Enum):
