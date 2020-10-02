@@ -15,6 +15,7 @@ from functools import partial, wraps
 import logging
 import numbers
 from struct import pack
+import re
 import sys
 from xml.sax.saxutils import escape, quoteattr
 
@@ -1199,6 +1200,32 @@ class String(Enumable, Type):
             return Enumable.toKaraboValue(self, data, strict)
         self.check(data)
         return basetypes.StringValue(data, descriptor=self)
+
+
+class RegexString(String):
+    """The `RegexString` descriptor is used as follows::
+
+        data = RegexString(regex="0|1")
+
+        A corresponding displayType is automatically set.
+        The descriptor validates value input on set.
+    """
+    classId = "RegexString"
+
+    def __init__(self, regex="", flags=0, **kwargs):
+        super().__init__(**kwargs)
+        self.pattern = re.compile(regex, flags)
+        self.displayType = f"Regex|{regex}"
+
+    def initialize(self, instance, value):
+        self.check(value)
+        return self.setter(instance, value)
+
+    def check(self, data):
+        if not self.pattern.match(data):
+            raise KaraboError(f"Value {data} does not comply with regex "
+                              f"pattern {self.pattern}!")
+        super().check(data)
 
 
 class VectorString(Vector):
