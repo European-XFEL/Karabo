@@ -11,7 +11,6 @@ import re
 import signal
 import traceback
 from functools import partial
-import getpass
 
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
@@ -82,7 +81,7 @@ class PythonDevice(NoFsm):
             .description("Do not set this node, will be set by the"
                          " device-server")
             .appendNodesOfConfigurationBase(Broker)
-            .assignmentMandatory()
+            .assignmentOptional().defaultValue(Broker.brokerTypeFromEnv())
             .adminAccess()
             .commit(),
 
