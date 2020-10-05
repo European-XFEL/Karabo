@@ -2304,8 +2304,11 @@ namespace karabo {
             if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
             Hash channelConfig = config.get<Hash>(channelName);
             if (channelConfig.has("schema")) channelConfig.erase("schema");
-            OutputChannel::Pointer channel = Configurator<OutputChannel>::create("OutputChannel", channelConfig);
+            // The recommended extra '0' argument requires to call initialize() afterwards:
+            OutputChannel::Pointer channel = Configurator<OutputChannel>::create("OutputChannel", channelConfig, 0);
             channel->setInstanceIdAndName(m_instanceId, channelName);
+            channel->initialize();
+
             if (onOutputPossibleHandler) {
                 channel->registerIOEventHandler(onOutputPossibleHandler);
             }

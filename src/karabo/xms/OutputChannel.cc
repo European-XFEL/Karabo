@@ -25,6 +25,8 @@ namespace karabo {
     namespace xms {
 
         KARABO_REGISTER_FOR_CONFIGURATION(OutputChannel);
+        // Register also the constructor with an extra int flag:
+        KARABO_REGISTER_FOR_CONFIGURATION_ADDON(int, OutputChannel);
 
         // Number of attempts for delayed 2nd construction phase, i.e. initializeServerConnection().
         // Seen it fail 1500 times (in a very busy host and C++ server) before adding the sleep in
@@ -33,7 +35,6 @@ namespace karabo {
 
         void OutputChannel::expectedParameters(karabo::util::Schema& expected) {
             using namespace karabo::util;
-
 
             STRING_ELEMENT(expected).key("distributionMode")
                     .displayedName("Distribution Mode")
@@ -151,7 +152,10 @@ namespace karabo {
         }
 
 
-        OutputChannel::OutputChannel(const karabo::util::Hash& config)
+        OutputChannel::OutputChannel(const karabo::util::Hash& config) : OutputChannel(config, 1) {
+        }
+
+        OutputChannel::OutputChannel(const karabo::util::Hash& config, int autoInit)
                 : m_port(0)
                 , m_sharedInputIndex(0)
                 , m_toUnregisterSharedInput(false)
@@ -180,12 +184,14 @@ namespace karabo {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "Outputting data on channel " << m_channelId << " and chunk " << m_chunkId;
 
-            // Initialize server connectivity:
-            // Cannot use bind_weak in constructor but... usually it is safe to use here boost::bind.
-            // And in this way we ensure that onTcpConnect is properly bound with bind_weak.
-            // But see the HACK in initializeServerConnection if even that is called too early.
-            karabo::net::EventLoop::getIOService().post(boost::bind(&OutputChannel::initializeServerConnection, this,
-                                                                    kMaxServerInitializationAttempts));
+            if (autoInit != 0) {
+                // Initialize server connectivity:
+                // Cannot use bind_weak in constructor but... usually it is safe to use here boost::bind.
+                // And in this way we ensure that onTcpConnect is properly bound with bind_weak.
+                // But see the HACK in initializeServerConnection if even that is called too early.
+                karabo::net::EventLoop::getIOService().post(boost::bind(&OutputChannel::initializeServerConnection, this,
+                                                                        kMaxServerInitializationAttempts));
+            }
         }
 
 
@@ -227,24 +233,28 @@ namespace karabo {
             }
             // HACK ends
 
+            initialize();
+        }
+
+
+        void OutputChannel::initialize() {
             karabo::util::Hash h("type", "server", "port", m_port);
             Connection::Pointer connection = Connection::create("Tcp", h);
             // The following call can throw in case you provide with configuration's Hash the none-zero port number
             // and this port number is already used in the system, for example, by another application.
-            // Or when bind_weak tries to create a shared_ptr, but fails - which we try to prevent above...
+            // Or when bind_weak tries to create a shared_ptr, but fails - which initializeServerConnection above prevents
             try {
                 m_port = connection->startAsync(bind_weak(&karabo::xms::OutputChannel::onTcpConnect, this, _1, _2));
             } catch (const std::exception& ex) {
                 std::ostringstream oss;
                 oss << "Could not start TcpServer for output channel (\"" << m_channelId
-                        <<  "\", port = " << m_port << ") : " << ex.what();
+                        << "\", port = " << m_port << ") : " << ex.what();
                 KARABO_LOG_FRAMEWORK_ERROR << oss.str();
                 KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION(oss.str()));
             }
             m_dataConnection = connection;
             KARABO_LOG_FRAMEWORK_DEBUG << "Started DeviceOutput-Server listening on port: " << m_port;
         }
-
 
         void OutputChannel::setInstanceIdAndName(const std::string& instanceId, const std::string& name) {
             m_instanceId = instanceId;
