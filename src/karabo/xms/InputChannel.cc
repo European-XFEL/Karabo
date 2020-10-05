@@ -500,7 +500,7 @@ namespace karabo {
                     m_eosChannels.insert(channel);
                     if (m_eosChannels.size() < m_openConnections.size()) {
                         KARABO_LOG_FRAMEWORK_DEBUG << debugId << "Received EOS #" << m_eosChannels.size() << ", await "
-                                << m_openConnections.size() << " more.";
+                                << m_openConnections.size() - m_eosChannels.size() << " more.";
                     } else {
                         treatEndOfStream = true;
                     }
@@ -519,7 +519,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Reading from remote memory (over tcp)";
                     Memory::writeFromBuffers(data, header, m_channelId, m_inactiveChunk);
                 }
-                // Due to minData needs, we may have a chunk marked as endOfStream that also contains data!
+                // Due to minData needs or multi-input, we may have a chunk marked as endOfStream that also contains data!
                 Memory::setEndOfStream(m_channelId, m_inactiveChunk, treatEndOfStream);
 
                 if (this->getMinimumNumberOfData() == 0 && !treatEndOfStream) { // should keep reading until EOS (minData == 0 means that)
