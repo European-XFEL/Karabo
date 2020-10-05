@@ -31,7 +31,7 @@ def main():
              .key("_connection_")
              .setNewDefaultValue("tcp")
              .commit(),
-            )
+             )
             h = schema.getParameterHash()
             for key in h["_connection_"]:
                 (OVERWRITE_ELEMENT(schema)
@@ -50,7 +50,7 @@ def main():
                  .key(f"Logger.network.connection.{key}.domain")
                  .setNewDefaultValue("karabo")
                  .commit(),
-                )
+                 )
         h = Hash()
         h[name] = schema
         ser = BinarySerializerHash.create("Bin")
