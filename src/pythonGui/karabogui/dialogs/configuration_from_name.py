@@ -11,7 +11,16 @@ from karabogui.events import (
 from karabogui.singletons.api import get_network
 
 NAME_FIELD = 0
+PRIORITY_FIELD = 2
 DESCRIPTION_FIELD = 4
+
+PRIORITY_TEXT = ["TEST", "COMMISSIONED", "SAFE"]
+PRIORITY_EXP = [
+    "The configuration is either transient or only used for testing!",
+    "The configuration is declared as commissioned and defines a possible "
+    "setting this device can operate with!",
+    "A safe configuration can be used for start up of this device!"
+]
 
 
 class SaveDialog(QDialog):
@@ -20,6 +29,21 @@ class SaveDialog(QDialog):
     def __init__(self, parent=None):
         super(SaveDialog, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), "config_save.ui"), self)
+        self.ui_priority.currentIndexChanged.connect(self._change_text)
+        index = self.ui_priority.currentIndex()
+        self.ui_priority_text.setText(PRIORITY_EXP[index])
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.ui_name.textChanged.connect(self._check_button)
+
+    @pyqtSlot()
+    def _check_button(self):
+        """Basic validation of configuration name"""
+        enable = self.ui_name.text() != ""
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+
+    @pyqtSlot(int)
+    def _change_text(self, index):
+        self.ui_priority_text.setText(PRIORITY_EXP[index])
 
         self.event_map = {
             KaraboEvent.NetworkConnectStatus: self._event_network
@@ -41,7 +65,7 @@ class SaveDialog(QDialog):
 
     @property
     def priority(self):
-        return self.ui_priority.value()
+        return int(self.ui_priority.currentIndex()) + 1
 
     @property
     def name(self):
@@ -226,7 +250,10 @@ class TableModel(QAbstractTableModel):
         entry = self.data[index.row()]
         column = index.column()
         if role == Qt.DisplayRole:
-            return entry[column]
+            if column == PRIORITY_FIELD:
+                return PRIORITY_TEXT[int(entry[column]) - 1]
+            else:
+                return entry[column]
         elif role == Qt.ToolTipRole:
             return entry[DESCRIPTION_FIELD]
         elif role == Qt.UserRole:
