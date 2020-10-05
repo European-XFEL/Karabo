@@ -65,23 +65,19 @@ class TestConfigurationManager(DeviceTest):
         h = Hash("name", config_name, "deviceIds", ["TEST_DEVICE"],
                  "priority", 3)
         r = await call(TEST_MANAGER, "slotSaveConfigurationFromName", h)
-        input_hash = r["input"]
-        self.assertEqual(input_hash, h)
+        self.assertEqual(r["success"], True)
         sleep(0.1)
         config_name = "testConfig1"
         h = Hash("name", config_name, "deviceIds", ["TEST_DEVICE"],
                  "priority", 2)
         r = await call(TEST_MANAGER, "slotSaveConfigurationFromName", h)
-        input_hash = r["input"]
-        self.assertEqual(input_hash, h)
+        self.assertEqual(r["success"], True)
 
     @async_tst
     async def test_get_configuration(self):
         config_name = "testConfig"
         h = Hash("name", config_name, "deviceId", "TEST_DEVICE")
         r = await call(TEST_MANAGER, "slotGetConfigurationFromName", h)
-        input_hash = r["input"]
-        self.assertEqual(input_hash, h)
         item = r["item"]
         priority = item["priority"]
         self.assertEqual(priority, 3)
@@ -98,8 +94,6 @@ class TestConfigurationManager(DeviceTest):
     async def test_list_configuration(self):
         h = Hash("name", "", "deviceId", "TEST_DEVICE")
         r = await call(TEST_MANAGER, "slotListConfigurationFromName", h)
-        input_hash = r["input"]
-        self.assertEqual(input_hash, h)
         items = r["items"]
         self.assertIsInstance(items, HashList)
         # We stored two configurations!
@@ -113,8 +107,6 @@ class TestConfigurationManager(DeviceTest):
     async def test_z_get_last_configuration(self):
         h = Hash("deviceId", "TEST_DEVICE")
         r = await call(TEST_MANAGER, "slotListConfigurationFromName", h)
-        input_hash = r["input"]
-        self.assertEqual(input_hash, h)
         items = r["items"]
         # We stored two configurations!
         self.assertEqual(len(items), 2)
@@ -122,8 +114,6 @@ class TestConfigurationManager(DeviceTest):
         # Get the last configuration!
         h = Hash("deviceId", "TEST_DEVICE", "priority", 3)
         r = await call(TEST_MANAGER, "slotGetLastConfiguration",  h)
-        input_hash = r["input"]
-        self.assertEqual(input_hash, h)
 
         item = r["item"]
         name = item["name"]
