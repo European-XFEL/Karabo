@@ -1,3 +1,4 @@
+import os
 import os.path as op
 from platform import system
 from traceback import print_exception, format_exception
@@ -40,22 +41,24 @@ def excepthook(exc_type, value, traceback):
 
 def create_gui_app(args):
     """Create the QApplication with all necessary fonts and settings"""
-    # Create a preliminary QApplication to check system/screen properties.
-    # This is needed as setting QApplication attributes should be done before
-    # the instantiation (Qt bug as of 5.9).
     app = QApplication(args)
-    dpi = app.primaryScreen().logicalDotsPerInch()
-    app.quit()
-    del app
+    # We check our `KARABO_TEST_GUI` variable before due to Squish cracks!
+    if not os.environ.get("KARABO_TEST_GUI"):
+        # Create a preliminary QApplication to check system/screen properties.
+        # This is needed as setting QApplication attributes should be done
+        # before the instantiation (Qt bug as of 5.9).
+        dpi = app.primaryScreen().logicalDotsPerInch()
+        app.quit()
+        del app
 
-    # Set the QApplication attributes before its instantiation.
-    # Only apply high DPI scaling when the logical DPI is greater than
-    # the default DPI (96). This is usually observed on scaled desktops
-    # (e.g., 150% scaling on Windows)
-    if dpi > DEFAULT_DPI and system() != "Darwin":
-        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
-    app = QApplication(args)
+        # Set the QApplication attributes before its instantiation.
+        # Only apply high DPI scaling when the logical DPI is greater than
+        # the default DPI (96). This is usually observed on scaled desktops
+        # (e.g., 150% scaling on Windows)
+        if dpi > DEFAULT_DPI and system() != "Darwin":
+            QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+            QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+        app = QApplication(args)
 
     # Set the style among all operating systems
     style = QStyleFactory.create("Fusion")
