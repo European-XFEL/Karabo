@@ -2064,7 +2064,7 @@ if (nodeData) {\
 
             // Sends all updates if there's a handler defined.
             {
-                boost::mutex::scoped_lock(m_devicesChangesMutex);
+                boost::mutex::scoped_lock lock(m_devicesChangesMutex);
                 if (m_devicesChangesHandler && !allUpdates.empty()) {
                     m_devicesChangesHandler(allUpdates);
                 }

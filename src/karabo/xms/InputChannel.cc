@@ -433,13 +433,15 @@ namespace karabo {
 
             bool runEndOfStream = false;
             {
-                boost::mutex::scoped_lock(m_outputChannelsMutex);
-                for (auto it = m_eosChannels.begin(); it != m_eosChannels.end(); ++it) {
+                boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+                for (auto it = m_eosChannels.begin(); it != m_eosChannels.end(); ) {
                     net::Channel::Pointer ptr = it->lock();
                     if (!ptr // should not happen, but if it does clean up nevertheless
                         || ptr == channel) {
-                        m_eosChannels.erase(it);
-                    }
+                        it = m_eosChannels.erase(it);
+                    } else {
+                        ++it;
+		    }
                 }
                 // If the only output (of several) that did not yet provide endOfStream disconnects, trigger eos handling
                 runEndOfStream = (!m_openConnections.empty() && m_eosChannels.size() == m_openConnections.size());
@@ -496,7 +498,7 @@ namespace karabo {
             try {
                 bool treatEndOfStream = false;
                 if (header.has("endOfStream")) {
-                    boost::mutex::scoped_lock(m_outputChannelsMutex);
+                    boost::mutex::scoped_lock lock(m_outputChannelsMutex);
                     m_eosChannels.insert(channel);
                     if (m_eosChannels.size() < m_openConnections.size()) {
                         KARABO_LOG_FRAMEWORK_DEBUG << debugId << "Received EOS #" << m_eosChannels.size() << ", await "
