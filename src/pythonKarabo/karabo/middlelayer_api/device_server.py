@@ -606,15 +606,11 @@ class BoundDeviceServer(DeviceServerBase):
                     .startDevice(classId, deviceId, config))
         if "Logger.priority" not in config:
             config["Logger.priority"] = self.log.level
-        # Inject conncetion parameters
-        # TODO: Should get brokers from somewhere else, at least same
-        #       place as EventLoop.getBroker(..)
-        defaultBrokers = "tcp://exfl-broker.desy.de:7777,tcp://localhost:7777"
-        brokers = os.environ.get("KARABO_BROKER", defaultBrokers).split(',')
-        brokerCfg = Hash("domain", get_event_loop().topic,
-                         "brokers", brokers)
-        config["_connection_." + brokers[0].split("://", 1)[0]] = brokerCfg
-
+        # Would be nice to inject _conncetion_ config here from what the
+        # server uses, i.e. domain, brokers and the broker type.
+        # Since that is not easily available (except domain via
+        # 'get_event_loop().topic'), we rely on the bound device extracting
+        # the defaults from the environment.
         env = dict(os.environ)
         env["PYTHONPATH"] = self.pluginDirectory
         future = self._new_device_futures[deviceId]
