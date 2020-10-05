@@ -36,7 +36,7 @@ class Tests(DeviceTest):
         self.assertEqual(t, 2073102698,
                          "The adler32's behavior changed.")
         print("\nCross schema test: schema length is {}".format(len(schema)))
-        self.assertEqual(adler32(schema), 10229233,
+        self.assertEqual(adler32(schema), 708056560,
                          "The generated schema changed. If this is "
                          "desired, change the checksum in the code.")
 
