@@ -97,7 +97,6 @@ namespace karabo {
 
             KARABO_LOG_FRAMEWORK_TRACE << "*** write TARGET = \"" << target
                     << "\"...\n... and HEADER is \n" << *header;
-            if (m_topic.empty()) return;
 
             if (!m_producerChannel) m_producerChannel = m_connection->createProducer();
 
