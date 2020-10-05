@@ -126,8 +126,10 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
     // Setup output channel - configure only for "shared" InputChannel
     OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel",
                                                                         Hash("distributionMode", receiver_distributionMode,
-                                                                             "noInputShared", receiver_noInputShared));
+                                                                             "noInputShared", receiver_noInputShared),
+                                                                        0);
     output->setInstanceIdAndName("outputChannel", "output");
+    output->initialize(); // required due to additional '0' argument passed to create(..) above
 
     // Setup input channel
     const std::string outputChannelId(output->getInstanceId() + ":output");
@@ -143,17 +145,7 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
                                boost::this_thread::sleep(boost::posix_time::milliseconds(processTime));
     });
 
-    // Wait a little bit until OutputChannel has properly initialised, i.e. a proper port is attached
-    // (see its constructor...) FIXME :-(
-    Hash outputInfo;
-    int trials = 500;
-    while (--trials >= 0) {
-        outputInfo = output->getInformation();
-        if (outputInfo.get<unsigned int>("port") > 0) {
-            break;
-        }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(20));
-    }
+    Hash outputInfo = output->getInformation();
     CPPUNIT_ASSERT_MESSAGE("OutputChannel keeps port 0!", outputInfo.get<unsigned int>("port") > 0);
 
     //
