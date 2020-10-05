@@ -190,11 +190,10 @@ namespace karathon {
 
 
     SignalSlotableWrap::SignalSlotableWrap(const std::string& instanceId,
-                                           const std::string& connectionType,
                                            const karabo::util::Hash& connectionParameters,
                                            int heartbeatInterval,
                                            const karabo::util::Hash& instanceInfo)
-        : SignalSlotable(instanceId, connectionType, connectionParameters, heartbeatInterval, instanceInfo) {
+        : SignalSlotable(instanceId, connectionParameters, heartbeatInterval, instanceInfo) {
     }
 
 

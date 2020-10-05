@@ -77,21 +77,10 @@ namespace karabo {
             instanceInfo.set("visibility", 4);
             instanceInfo.set("host", net::bareHostName());
             instanceInfo.set("status", "ok");
-            std::string connectionClass = KARABO_DEFAULT_BROKER_CLASS;  // defined in SignalSlotable.hh
-            Hash brokerConfig("instanceId", ownInstanceId);
-            {
-                std::string brokerStr = getenv("KARABO_BROKER") ? getenv("KARABO_BROKER") : "tcp://exfl-broker:7777";
-                if (brokerStr.substr(0, 6) == "tcp://") connectionClass = "OpenMQBroker";
-                else if (brokerStr.substr(0, 7) == "mqtt://") connectionClass = "MqttBroker";
-                std::vector<std::string> brokers = fromString<std::string, std::vector>(brokerStr);
-                brokerConfig.set("brokers", brokers);
-                const std::string domain = karabo::xms::SignalSlotable::brokerTopicFromEnv();
-                brokerConfig.set("domain", domain);
-            }
-            m_internalSignalSlotable = karabo::xms::SignalSlotable::Pointer(new SignalSlotable(ownInstanceId,
-                                                                                               connectionClass,
-                                                                                               brokerConfig,
-                                                                                               60, instanceInfo));
+
+            m_internalSignalSlotable = boost::make_shared<karabo::xms::SignalSlotable>(ownInstanceId,
+                                                                                       Hash(), // default broker cfg
+                                                                                       60, instanceInfo);
             m_internalSignalSlotable->start();
 
             m_signalSlotable = m_internalSignalSlotable;

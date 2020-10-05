@@ -89,7 +89,6 @@ namespace karabo {
         private: // members
 
             boost::shared_ptr<karabo::net::Broker> m_producer;
-            std::string m_topic;
             unsigned int m_interval;
             unsigned int m_maxMessages;
 

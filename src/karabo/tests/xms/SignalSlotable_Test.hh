@@ -62,21 +62,21 @@ private:
     void testRegisterSlotTwice();
     void testAsyncConnectInputChannel();
     void testUuid();
-    void _testUniqueInstanceId(const std::string& connectionClass);
-    void _testValidInstanceId(const std::string& connectionClass);
-    void _testReceiveAsync(const std::string& connectionClass);
-    void _testReceiveAsyncError(const std::string& connectionClass);
-    void _testReceiveAsyncNoReply(const std::string& connectionClass);
-    void _testReceiveExceptions(const std::string& connectionClass);
-    void _testMethod(const std::string& connectionClass);
-    void _testConnectAsync(const std::string& connectionClass);
-    void _testConnectAsyncMulti(const std::string& connectionClass);
-    void _testDisconnectAsync(const std::string& connectionClass);
-    void _testAsyncReply(const std::string& connectionClass);
-    void _testAutoConnectSignal(const std::string& connectionClass);
-    void _testAutoConnectSlot(const std::string& connectionClass);
-    void _testRegisterSlotTwice(const std::string& connectionClass);
-    void _testAsyncConnectInputChannel(const std::string& connectionClass);
+    void _testUniqueInstanceId();
+    void _testValidInstanceId();
+    void _testReceiveAsync();
+    void _testReceiveAsyncError();
+    void _testReceiveAsyncNoReply();
+    void _testReceiveExceptions();
+    void _testMethod();
+    void _testConnectAsync();
+    void _testConnectAsyncMulti();
+    void _testDisconnectAsync();
+    void _testAsyncReply();
+    void _testAutoConnectSignal();
+    void _testAutoConnectSlot();
+    void _testRegisterSlotTwice();
+    void _testAsyncConnectInputChannel();
 };
 
 #endif	/* SIGNALSLOTABLE_TEST_HH */

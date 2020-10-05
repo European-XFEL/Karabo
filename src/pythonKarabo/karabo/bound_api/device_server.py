@@ -14,7 +14,7 @@ import threading
 
 from karathon import (
     VECTOR_STRING_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
-    STRING_ELEMENT, LIST_ELEMENT,
+    STRING_ELEMENT, LIST_ELEMENT, CHOICE_ELEMENT,
     AccessLevel, Broker, Hash, Logger,
     Schema, SignalSlotable, Validator, saveToFile, EventLoop
 )
@@ -75,11 +75,12 @@ class DeviceServer(object):
             .init()
             .commit(),
 
-            NODE_ELEMENT(expected).key("connection")
+            CHOICE_ELEMENT(expected).key("connection")
             .displayedName("Connection")
             .description("The connection to the communication layer of the"
                          " distributed system")
-            .appendParametersOf(Broker)
+            .appendNodesOfConfigurationBase(Broker)
+            .assignmentOptional().defaultValue(Broker.brokerTypeFromEnv())
             .expertAccess()
             .commit(),
 
@@ -230,23 +231,7 @@ class DeviceServer(object):
         # to self.ss when the signal handler wants to reset it to None.
         # But the process stops nevertheless due to the EventLoop.stop().
 
-        try:
-            url = os.environ["KARABO_BROKER"]
-        except KeyError:
-            url = "tcp://exfl-broker:7777"
-        if url[0:7] == "mqtt://":
-            self._connectionClass = "MqttBroker"
-        else:
-            self._connectionClass = "OpenMQBroker"
-        self.connectionParameters['brokers'] = url
-        try:
-            domain = os.environ["KARABO_BROKER_TOPIC"]
-        except KeyError:
-            domain = os.environ["USER"]
-        self.connectionParameters['domain'] = domain
-        self.connectionParameters['instanceId'] = self.serverid
-        self.ss = SignalSlotable(self.serverid, self._connectionClass,
-                                 self.connectionParameters,
+        self.ss = SignalSlotable(self.serverid, self.connectionParameters,
                                  config["heartbeatInterval"], info)
 
         # Now we can start the logging system (needs self.ss.getTopic())
@@ -275,18 +260,22 @@ class DeviceServer(object):
     def _generateDefaultServerId(self):
         return self.hostname + "_Server_" + str(os.getpid())
 
-    def loadLogger(self, config):
-        if not config.has("Logger.network.topic"):
-            # If not specified, use the local topic for log messages
-            config.set("Logger.network.topic", self.ss.getTopic())
+    def loadLogger(self, inputCfg):
+        config = copy.copy(inputCfg["Logger"])
         path = os.path.join(os.environ['KARABO'], "var", "log", self.serverid)
         if not os.path.isdir(path):
             os.makedirs(path)
         path = os.path.join(path, 'device-server.log')
-        config.set('Logger.file.filename', path)
-        config.setAttribute('Logger.network.connection.brokers',
-                            '__classId', self._connectionClass)
-        Logger.configure(config["Logger"])
+        config.set('file.filename', path)
+
+        config.set("network.connection", self.connectionParameters)
+        typeKey = self.connectionParameters.getKeys()[0]
+        # Avoid name clash with any SignalSlotable since there ':' is not
+        # allowed as instanceId:
+        config.set("network.connection." + typeKey + ".instanceId",
+                   self.serverid + ":logger")
+
+        Logger.configure(config)
         Logger.useOstream()
         Logger.useFile()
         Logger.useNetwork()
