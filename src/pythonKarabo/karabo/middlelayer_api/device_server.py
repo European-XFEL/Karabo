@@ -606,6 +606,15 @@ class BoundDeviceServer(DeviceServerBase):
                     .startDevice(classId, deviceId, config))
         if "Logger.priority" not in config:
             config["Logger.priority"] = self.log.level
+        # Inject conncetion parameters
+        # TODO: Should get brokers from somewhere else, at least same
+        #       place as EventLoop.getBroker(..)
+        defaultBrokers = "tcp://exfl-broker.desy.de:7777,tcp://localhost:7777"
+        brokers = os.environ.get("KARABO_BROKER", defaultBrokers).split(',')
+        brokerCfg = Hash("domain", get_event_loop().topic,
+                         "brokers", brokers)
+        config["_connection_." + brokers[0].split("://", 1)[0]] = brokerCfg
+
         env = dict(os.environ)
         env["PYTHONPATH"] = self.pluginDirectory
         future = self._new_device_futures[deviceId]

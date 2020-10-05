@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
         string topic("karabo");
         if (options.has("-t")) options.get("-t", topic);
         else {
-            topic = SignalSlotable::brokerTopicFromEnv();
+            topic = karabo::net::Broker::brokerDomainFromEnv();
         }
         string selector;
         if (options.has("-s")) options.get("-s", selector);

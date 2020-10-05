@@ -6,9 +6,6 @@
 using namespace karabo::util;
 
 
-#define DEFAULT_BROKER_STRING "tcp://exfl-broker.desy.de:7777,tcp://localhost:7777"
-
-
 namespace karabo {
     namespace net {
 
@@ -19,7 +16,7 @@ namespace karabo {
                     .displayedName("Brokers")
                     .description("Brokers must be provided as URLs of format: "
                                  "tcp://<host>:<port>. Extra URLs serve as fallback.")
-                    .assignmentOptional().defaultValueFromString("tcp://localhost:7777")
+                    .assignmentOptional().defaultValue(brokersFromEnv())
                     .init()
                     .commit();
 
@@ -33,7 +30,7 @@ namespace karabo {
             STRING_ELEMENT(s).key("domain")
                     .displayedName("Domain")
                     .description("Domain or root topic like SPB, FXE, MID, ...")
-                    .assignmentOptional().defaultValue("KARABO")
+                    .assignmentOptional().defaultValue(Broker::brokerDomainFromEnv())
                     .init()
                     .commit();
         }
@@ -57,6 +54,53 @@ namespace karabo {
 
 
         Broker::~Broker() {
+        }
+
+
+        std::vector<std::string> Broker::brokersFromEnv() {
+            const char* env = getenv("KARABO_BROKER");
+            return karabo::util::fromString<std::string, std::vector>(env ? env : "tcp://exfl-broker.desy.de:7777,tcp://localhost:7777");
+        }
+
+
+        std::string Broker::brokerTypeFromEnv() {
+
+            std::string type;
+            for (const std::string& address : brokersFromEnv()) {
+                const size_t pos = address.find("://");
+                if (pos == std::string::npos || pos == 0u) {
+                    throw KARABO_LOGIC_EXCEPTION("Broker address '" + address + "' does not specify protocol.");
+                }
+                const std::string protocol(address.substr(0, pos));
+                if (type.empty()) {
+                    type = protocol;
+                } else if (type != protocol) {
+                    throw KARABO_LOGIC_EXCEPTION("Inconsistent broker types in " + karabo::util::toString(brokersFromEnv()));
+                }
+            }
+            return type;
+        }
+
+        std::string Broker::brokerDomainFromEnv() {
+            // look for environment variables KARABO_BROKER_TOPIC
+            // as a fall back the environment variables
+            // LOGNAME, USER, LNAME and USERNAME, in order.
+            // This implementation is inspired by python's getpass.getuser
+
+            const std::vector<std::string> varNames = {
+                                                       "KARABO_BROKER_TOPIC",
+                                                       "LOGNAME",
+                                                       "USER",
+                                                       "LNAME",
+                                                       "USERNAME"
+            };
+            for (const std::string& varName : varNames) {
+                const char* env = getenv(varName.c_str());
+                if (env && strlen(env) > 0) {
+                    return std::string(env);
+                }
+            }
+            return "karabo";
         }
 
     }

@@ -10,7 +10,11 @@ from .device_with_table_parameter import DeviceWithTableElementParam
 
 
 class Schema_Injection_TestCase(unittest.TestCase):
-    deviceCfg = Hash('Logger.priority', "FATAL")
+    # FIXME!
+    deviceCfg = Hash('Logger.priority', "FATAL",
+                     "_connection_.tcp.brokers", "tcp://exfl-broker:7777",
+                     "_connection_.tcp.domain", "flucke",
+    )
 
     def test_schemaInjection(self):
         device = Configurator(PythonDevice).create(

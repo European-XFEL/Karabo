@@ -32,10 +32,6 @@
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
 
-#ifndef KARABO_DEFAULT_BROKER_CLASS
-#define KARABO_DEFAULT_BROKER_CLASS "OpenMQBroker"
-#endif
-
 
 /**
  * The main European XFEL namespace
@@ -140,16 +136,18 @@ namespace karabo {
              * 
              * Don't call init() afterwards.
              * @param instanceId The future instanceId of this object in the distributed system
-             * @param brokerType The broker type. Supported values are MqttBroker, OpenMQBroker
-             * @param brokerConfiguration The sub-configuration for the respective broker type
+             * @param brokerConfiguration A single keyed Hash where the key is the broker type
+             *                            and the Hash at that key is the configuration for the respective broker type
+             *                            (a given instanceId it will be replaced by the first constructor argument).
+             *                            Can be empty or can contain an empty Hash() at the single key, i.e. will be
+             *                            expanded from defaults.
              * @param heartbeatInterval The interval (in s) in which a heartbeat is emitted
              * @param instanceInfo A hash containing any important additional information
              */
-            SignalSlotable(const std::string& instanceId,
-                           const std::string& connectionClass = KARABO_DEFAULT_BROKER_CLASS,
-                           const karabo::util::Hash& brokerConfiguration = karabo::util::Hash(),
-                           const int heartbeatInterval = 30,
-                           const karabo::util::Hash& instanceInfo = karabo::util::Hash());
+            explicit SignalSlotable(const std::string& instanceId,
+                                    const karabo::util::Hash& brokerConfiguration = karabo::util::Hash(),
+                                    const int heartbeatInterval = 30,
+                                    const karabo::util::Hash& instanceInfo = karabo::util::Hash());
 
             virtual ~SignalSlotable();
 
@@ -537,8 +535,6 @@ namespace karabo {
 
             template <class T>
             static std::string generateInstanceId();
-
-            static const std::string brokerTopicFromEnv();
 
             /**
              * A functor to place an asynchronous reply during slot execution.

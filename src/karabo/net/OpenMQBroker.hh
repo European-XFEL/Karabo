@@ -28,11 +28,13 @@
 namespace karabo {
     namespace net {
 
+        class OpenMQBroker : public Broker {
 
-        class OpenMQBroker : public Broker  {
         public:
 
-            KARABO_CLASSINFO(OpenMQBroker, "OpenMQBroker", "1.0")
+            // Register under protocol alias  (tcp) instead of class name (OpenMQBroker) to generically choose
+            // the broker implementation from the connection string and still stay backward compatible.
+            KARABO_CLASSINFO(OpenMQBroker, "tcp", "1.0")
             
             static void expectedParameters(karabo::util::Schema& s);      
 
