@@ -15,7 +15,7 @@ from karabo.common.scenemodel.api import (
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, background, Bool, Configurable,
-    coslot, DaqPolicy, Device, dictToHash, KaraboError, Hash, HashList, 
+    coslot, DaqPolicy, Device, dictToHash, KaraboError, Hash, HashList,
     Overwrite, slot, Slot, State, String, Timestamp, UInt32, VectorHash,
     VectorString)
 
@@ -111,10 +111,10 @@ class ConfigurationManager(Device):
         daqPolicy=DaqPolicy.OMIT,
         defaultValue=['scene'])
 
-    lastError = Bool(
-        defaultValue=False,
-        displayedName="Last Error",
-        description="Indicates if the last action was providing an error",
+    lastSuccess = Bool(
+        defaultValue=True,
+        displayedName="Last Success",
+        description="Indicates if the last action was successful",
         accessMode=AccessMode.READONLY)
 
     view = VectorHash(
@@ -154,7 +154,6 @@ class ConfigurationManager(Device):
           allowedStates=[State.ON])
     async def listConfigurations(self):
         """List all configuration for a device in the table element!"""
-        self.lastError = False
         self.state = State.CHANGING
         background(self._list_configurations())
 
@@ -170,9 +169,11 @@ class ConfigurationManager(Device):
             items = [dictToHash(c) for c in items]
         except Exception as e:
             self.status = str(e)
-            self.lastError = True
+            self.lastSuccess = False
         else:
             self.status = f"Listing configurations for {deviceId}"
+            self.lastSuccess = True
+
         self.view = items
         self.state = State.ON
 
@@ -181,7 +182,6 @@ class ConfigurationManager(Device):
           allowedStates=[State.ON])
     async def saveConfigurations(self):
         """Save a configuration for a given `deviceId`"""
-        self.lastError = False
         self.state = State.CHANGING
         background(self._save_configuration())
 
@@ -208,11 +208,11 @@ class ConfigurationManager(Device):
         except (CancelledError, TimeoutError):
             self.status = (f"Saving configuration for {deviceId} failed. The "
                            f"device is not online")
-            self.lastError = True
+            self.lastSuccess = False
         except Exception as e:
             # Config DB Error
             self.status = str(e)
-            self.lastError = True
+            self.lastSuccess = False
         else:
             self.status = (f"Saved configuration {config_name} for "
                            f"device {deviceId}!")
@@ -224,7 +224,9 @@ class ConfigurationManager(Device):
                 self.view = current_items
             except Exception as e:
                 self.status = str(e)
-                self.lastError = True
+                self.lastSuccess = False
+            else:
+                self.lastSuccess = True
         finally:
             self.state = State.ON
 
@@ -267,8 +269,7 @@ class ConfigurationManager(Device):
         items = self.db.list_configurations(deviceId, name_part)
         items = HashList([dictToHash(config) for config in items])
 
-        return Hash("items", items,
-                    "input", info)
+        return Hash("items", items)
 
     @coslot
     async def slotGetConfigurationFromName(self, info):
@@ -291,8 +292,7 @@ class ConfigurationManager(Device):
         item["config"] = hashFromBase64Bin(config64)
         item["schema"] = schemaFromBase64Bin(schema64)
 
-        return Hash("item", item,
-                    "input", info)
+        return Hash("item", item)
 
     @coslot
     async def slotGetLastConfiguration(self, info):
@@ -315,8 +315,7 @@ class ConfigurationManager(Device):
         item["config"] = hashFromBase64Bin(config64)
         item["schema"] = schemaFromBase64Bin(schema64)
 
-        return Hash("item", item,
-                    "input", info)
+        return Hash("item", item)
 
     @coslot
     async def slotSaveConfigurationFromName(self, info):
@@ -359,7 +358,6 @@ class ConfigurationManager(Device):
                 config_dict.update({"schema": schema64})
                 return config_dict
 
-
             futures = [poll_(device_id) for device_id in deviceIds]
             timeout = len(deviceIds) * DEVICE_TIMEOUT
             items = await wait_for(gather(*futures), timeout=timeout)
@@ -370,11 +368,10 @@ class ConfigurationManager(Device):
         except (CancelledError, TimeoutError):
             raise
 
-        return Hash("input", info)
+        return Hash("success", True)
 
 
 def get_scene(deviceId):
-    """Return a device scene"""
     scene0 = TableElementModel(
         height=431.0, keys=['{}.view'.format(deviceId)],
         parent_component='DisplayComponent',
@@ -390,7 +387,7 @@ def get_scene(deviceId):
         height=35.0, keys=['{}.saveConfigurations'.format(deviceId)],
         parent_component='DisplayComponent', width=321.0, x=80.0, y=346.0)
     scene2 = BoxLayoutModel(
-        direction=2, height=80.0, width=311.0, x=10.0, y=310.0,
+        direction=2, height=80.0, width=321.0, x=10.0, y=320.0,
         children=[scene20, scene21])
     scene3 = LabelModel(
         font='Sans Serif,14,-1,5,50,0,1,0,0,0', height=31.0,
@@ -405,10 +402,10 @@ def get_scene(deviceId):
         show_string=True, width=311.0, x=70.0, y=90.0)
     scene420 = LabelModel(
         font='Sans Serif,10,-1,5,50,0,0,0,0,0', foreground='#000000',
-        height=31.0, parent_component='DisplayComponent', text='Last Error',
+        height=31.0, parent_component='DisplayComponent', text='Last Success',
         width=73.0, x=70.0, y=130.0)
     scene421 = ErrorBoolModel(
-        height=31.0, invert=True, keys=['{}.lastError'.format(deviceId)],
+        height=31.0, keys=['{}.lastSuccess'.format(deviceId)],
         parent_component='DisplayComponent', width=68.0, x=143.0, y=130.0)
     scene42 = BoxLayoutModel(
         height=37.0, width=391.0, x=10.0, y=114.0,
@@ -418,86 +415,83 @@ def get_scene(deviceId):
         children=[scene40, scene41, scene42])
     scene5 = LineModel(
         stroke='#000000', x1=30.0, x2=900.0, y1=210.0, y2=210.0)
-    scene60 = LabelModel(
-        font='Sans Serif,10,-1,5,50,0,0,0,0,0', foreground='#000000',
-        height=27.0, parent_component='DisplayComponent', text='Device',
-        width=71.0, x=10.0, y=250.0)
-    scene610 = DisplayLabelModel(
-        font_size=10, height=27.0, keys=['{}.deviceName'.format(deviceId)],
-        parent_component='DisplayComponent', width=156.0, x=10.0, y=280.0)
-    scene611 = LineEditModel(
-        height=27.0, keys=['{}.deviceName'.format(deviceId)],
-        klass='EditableLineEdit',
-        parent_component='EditableApplyLaterComponent', width=155.0, x=166.0,
-        y=280.0)
-    scene61 = BoxLayoutModel(
-        height=27.0, width=311.0, x=10.0, y=270.0,
-        children=[scene610, scene611])
-    scene6 = BoxLayoutModel(
-        direction=2, height=47.0, width=311.0, x=10.0, y=250.0,
-        children=[scene60, scene61])
-    scene7 = LabelModel(
+    scene6 = LabelModel(
         font='Sans Serif,10,-1,5,50,0,0,0,0,0,Normal', height=31.0,
         parent_component='DisplayComponent', text='Save options', width=161.0,
         x=10.0, y=410.0)
-    scene8 = LineModel(
+    scene7 = LineModel(
         stroke='#000000', x1=10.0, x2=330.0, y1=450.0, y2=450.0)
-    scene900 = LabelModel(
+    scene800 = LabelModel(
         font='Sans Serif,10,-1,5,50,0,0,0,0,0', foreground='#000000',
         height=20.0, parent_component='DisplayComponent',
         text='configurationName', width=321.0, x=10.0, y=470.0)
-    scene9010 = DisplayLabelModel(
+    scene8010 = DisplayLabelModel(
         font_size=10, height=27.0,
         keys=['{}.configurationName'.format(deviceId)],
         parent_component='DisplayComponent', width=161.0, x=10.0, y=490.0)
-    scene9011 = LineEditModel(
+    scene8011 = LineEditModel(
         height=27.0, keys=['{}.configurationName'.format(deviceId)],
         klass='EditableLineEdit',
         parent_component='EditableApplyLaterComponent', width=160.0, x=171.0,
         y=490.0)
-    scene901 = BoxLayoutModel(
+    scene801 = BoxLayoutModel(
         height=37.0, width=321.0, x=10.0, y=490.0,
-        children=[scene9010, scene9011])
-    scene90 = BoxLayoutModel(
+        children=[scene8010, scene8011])
+    scene80 = BoxLayoutModel(
         direction=2, height=57.0, width=321.0, x=10.0, y=470.0,
-        children=[scene900, scene901])
-    scene910 = LabelModel(
+        children=[scene800, scene801])
+    scene810 = LabelModel(
         font='Sans Serif,10,-1,5,50,0,0,0,0,0', foreground='#000000',
         height=20.0, parent_component='DisplayComponent', text='priority',
         width=321.0, x=10.0, y=530.0)
-    scene9110 = DisplayLabelModel(
+    scene8110 = DisplayLabelModel(
         font_size=10, height=34.0, keys=['{}.priority'.format(deviceId)],
         parent_component='DisplayComponent', width=161.0, x=10.0, y=550.0)
-    scene9111 = IntLineEditModel(
+    scene8111 = IntLineEditModel(
         height=34.0, keys=['{}.priority'.format(deviceId)],
         parent_component='EditableApplyLaterComponent', width=160.0, x=171.0,
         y=550.0)
-    scene911 = BoxLayoutModel(
+    scene811 = BoxLayoutModel(
         height=37.0, width=321.0, x=10.0, y=547.0,
-        children=[scene9110, scene9111])
-    scene91 = BoxLayoutModel(
+        children=[scene8110, scene8111])
+    scene81 = BoxLayoutModel(
         direction=2, height=57.0, width=321.0, x=10.0, y=527.0,
-        children=[scene910, scene911])
-    scene920 = LabelModel(
+        children=[scene810, scene811])
+    scene820 = LabelModel(
         font='Sans Serif,10,-1,5,50,0,0,0,0,0', foreground='#000000',
         height=20.0, parent_component='DisplayComponent', text='description',
         width=321.0, x=10.0, y=584.0)
-    scene9210 = DisplayLabelModel(
+    scene8210 = DisplayLabelModel(
         font_size=10, height=34.0, keys=['{}.description'.format(deviceId)],
         parent_component='DisplayComponent', width=161.0, x=10.0, y=604.0)
-    scene9211 = LineEditModel(
+    scene8211 = LineEditModel(
         height=34.0, keys=['{}.description'.format(deviceId)],
         klass='EditableLineEdit',
         parent_component='EditableApplyLaterComponent', width=160.0, x=171.0,
         y=604.0)
-    scene921 = BoxLayoutModel(
+    scene821 = BoxLayoutModel(
         height=37.0, width=321.0, x=10.0, y=604.0,
-        children=[scene9210, scene9211])
-    scene92 = BoxLayoutModel(
+        children=[scene8210, scene8211])
+    scene82 = BoxLayoutModel(
         direction=2, height=57.0, width=321.0, x=10.0, y=584.0,
-        children=[scene920, scene921])
-    scene9 = BoxLayoutModel(
+        children=[scene820, scene821])
+    scene8 = BoxLayoutModel(
         direction=2, height=171.0, width=321.0, x=10.0, y=470.0,
+        children=[scene80, scene81, scene82])
+    scene90 = LabelModel(
+        font='Sans Serif,10,-1,5,50,0,0,0,0,0', foreground='#000000',
+        height=20.0, parent_component='DisplayComponent', text='Device',
+        width=311.0, x=10.0, y=220.0)
+    scene91 = DisplayLabelModel(
+        font_size=10, height=27.0, keys=['{}.deviceName'.format(deviceId)],
+        parent_component='DisplayComponent', width=311.0, x=10.0, y=240.0)
+    scene92 = LineEditModel(
+        height=27.0, keys=['{}.deviceName'.format(deviceId)],
+        klass='EditableLineEdit',
+        parent_component='EditableApplyLaterComponent', width=311.0, x=10.0,
+        y=270.0)
+    scene9 = BoxLayoutModel(
+        direction=2, height=91.0, width=321.0, x=10.0, y=220.0,
         children=[scene90, scene91, scene92])
     scene = SceneModel(
         height=673.0, width=948.0,
