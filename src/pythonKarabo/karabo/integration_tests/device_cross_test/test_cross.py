@@ -153,18 +153,10 @@ class Tests(DeviceTest):
         # Logging set to FATAL to swallow the misleading ERROR that comes
         # if we try (and fail as expected) to set a readOly property on
         # For debugging you may switch to INFO or DEBUG.
-        # FIXME: Remove tcp.brokers and replace from environment
         self.process.stdin.write(b"""\
             <root KRB_Artificial="">
                 <_deviceId_>boundDevice</_deviceId_>
-                <_connection_>
-                    <tcp>
-                        <brokers>
-                            tcp://exfl-broker.desy.de:7777
-                        </brokers>
-                    </tcp>
-                </_connection_>
-                <Logger><priority>INFO</priority></Logger>
+                <Logger><priority>FATAL</priority></Logger>
                 <middlelayerDevice>middlelayerDevice</middlelayerDevice>
                 <input>
                     <connectedOutputChannels>
