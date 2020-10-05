@@ -75,10 +75,11 @@ namespace karabo {
                     .init()
                     .commit();
 
-            NODE_ELEMENT(expected).key("connection")
+            CHOICE_ELEMENT(expected).key("connection")
                     .displayedName("Connection")
                     .description("The connection to the communication layer of the distributed system")
-                    .appendParametersOf<karabo::net::Broker>()
+                    .appendNodesOfConfigurationBase<karabo::net::Broker>()
+                    .assignmentOptional().defaultValue(karabo::net::Broker::brokerTypeFromEnv())
                     .expertAccess()
                     .commit();
 
@@ -176,30 +177,18 @@ namespace karabo {
                 m_hostname = net::bareHostName();
             }
 
-            m_connectionClass = KARABO_DEFAULT_BROKER_CLASS;  // defined in SignalSlotable.hh
-            Hash brokerConfig = config;
-            {
-                char* env = getenv("KARABO_BROKER");
-                if (!env) throw KARABO_PARAMETER_EXCEPTION("No KARABO_BROKER environment defined");
-                std::string brokerStr = env;
-                if (brokerStr.substr(0, 6) == "tcp://") m_connectionClass = "OpenMQBroker";
-                else if (brokerStr.substr(0, 7) == "mqtt://") m_connectionClass = "MqttBroker";
-                std::vector<std::string> brokers = fromString<std::string, std::vector>(brokerStr);
-                brokerConfig.set("connection.brokers", brokers);
-                const std::string domain = karabo::xms::SignalSlotable::brokerTopicFromEnv();
-                brokerConfig.set("connection.domain", domain);
-                brokerConfig.set("connection.instanceId", m_serverId);
-            }
-
-            // Setting "instanceId" ...
-            m_connection = Configurator<Broker>::createNode("connection",
-                                                            m_connectionClass,
-                                                            brokerConfig);
+            // For a choice element, there is exactly one sub-Hash where the key is the chosen (here: Broker) sub-class.
+            // We have to transfer the instance id and thus copy the relevant part of the (const) config.
+            // (Otherwise we could just pass 'input' to createChoice(..).)
+            Hash brokerConfig("connection", config.get<Hash>("connection"));
+            Hash& connectionCfg = brokerConfig.get<Hash>("connection").begin()->getValue<Hash>();
+            connectionCfg.set("instanceId", m_serverId);
+            m_connection = Configurator<Broker>::createChoice("connection", brokerConfig);
             m_connection->connect();
 
             m_pluginLoader = PluginLoader::create("PluginLoader", Hash("pluginDirectory", config.get<string>("pluginDirectory"),
                                                                        "pluginsToLoad", "*"));
-            loadLogger(brokerConfig);
+            loadLogger(config);
 
             karabo::util::Hash instanceInfo;
             instanceInfo.set("type", "server");
@@ -237,21 +226,12 @@ namespace karabo {
             path += "/device-server.log";
 
             config.set("file.filename", path.generic_string());
-            if (!config.has("network.topic")) {
-                // If not specified, use the local topic for log messages
-                config.set("network.topic", m_topic);
-            }
-
-            // Use existing configuration (not a connection) for logging service ...
-            // just adding connection class as an attribute.  Pass as parameter will
-            // be not allowed by validation.  The attribute should be assigned to leaf.
-            // Attempt to use an existing connection results in SEGFAULT during destruction phase.
-            if (!config.has("network.connection.brokers")) {
-                // If not specified, use the existing configuration ...
-                config.set("network.connection.brokers",
-                           input.get<std::vector<std::string> >("connection.brokers"));
-            }
-            config.setAttribute("network.connection.brokers", "__classId", m_connectionClass, '.');
+            // Copy the connection properties and specify an instanceId.
+            // Remember that for the choice element "connection" there is a single leaf with the key specifying the type.
+            Hash::Node& connectionNode = config.set("network.connection", input.get<Hash>("connection"));
+            Hash& brokerCfg = connectionNode.getValue<Hash>().begin()->getValue<Hash>();
+            // Avoid name clash with any SignalSlotable since there ':' is not allowed as instanceId:
+            brokerCfg.set("instanceId", m_serverId + ":logger");
 
             Logger::configure(config);
 
@@ -600,9 +580,6 @@ namespace karabo {
                     config.set("_deviceId_", configuration.get<string>("deviceId"));
                 }
 
-                // Inject connection
-                config.set("_connection_", m_connection);
-
                 // Inject Hostname
                 config.set("hostName", m_hostname);
 
@@ -624,9 +601,6 @@ namespace karabo {
                 } else {
                     tmp.set("_deviceId_", tmp.get<string>("deviceId"));
                 }
-
-                // Inject connection
-                tmp.set("_connection_", m_connection);
 
                 // Inject Hostname
                 tmp.set("hostName", m_hostname);
@@ -660,7 +634,8 @@ namespace karabo {
                 }
 
                 // This will throw an exception if it can't be started (because of duplicated name for example)
-                device->finalizeInternalInitialization(false); // DeviceServer will forward broadcasts!
+                device->finalizeInternalInitialization(getConnection()->clone(deviceId), // use clone to potentially share
+                                                       false); // DeviceServer will forward broadcasts!
 
                 {
                     boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
