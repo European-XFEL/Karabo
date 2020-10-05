@@ -30,7 +30,11 @@ void exportp2p() {
                      &Broker::expectedParameters,
                      (bp::arg("schema"))).staticmethod("expectedParameters")
                 .def("getBrokerUrl", &Broker::getBrokerUrl,
-                     "Reports the url of the currently connected-to broker");
+                     "Reports the url of the currently connected-to broker")
+                .def("brokerTypeFromEnv",
+                     &Broker::brokerTypeFromEnv).staticmethod("brokerTypeFromEnv")
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(Broker)
+                ;
     }
 
     {
