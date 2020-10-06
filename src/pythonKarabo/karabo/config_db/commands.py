@@ -49,22 +49,35 @@ CREATE_INDEX_NAME_TABLE = """
 # Functions
 
 CMD_LIST_NAME = """
-        SELECT cfg.config_name, cfg.timestamp, cfg.config_data,
-               sch.schema_data, cfg.description, cfg.priority,
-               cfg.user
-        FROM DeviceConfig cfg, ConfigSchema sch
-        WHERE cfg.schema_id = sch.id
-          AND cfg.device_id = ?
+        SELECT cfg.config_name, cfg.timestamp, cfg.description,
+               cfg.priority, cfg.user
+        FROM DeviceConfig cfg
+        WHERE cfg.device_id = ?
           AND cfg.config_name LIKE ?
     """
 
 CMD_LIST_NO_NAME = """
-        SELECT cfg.config_name, cfg.timestamp, cfg.config_data,
-               sch.schema_data, cfg.description, cfg.priority,
-               cfg.user
-        FROM DeviceConfig cfg, ConfigSchema sch
-        WHERE cfg.schema_id = sch.id
-          AND cfg.device_id = ?
+        SELECT cfg.config_name, cfg.timestamp, cfg.description,
+               cfg.priority, cfg.user
+        FROM DeviceConfig cfg
+        WHERE cfg.device_id = ?
+    """
+
+def CMD_LIST_DEVS_NAME(num_of_devices):
+    return f"""
+        SELECT cfg.device_id, cfg.config_name, cfg.timestamp,
+               cfg.description, cfg.priority, cfg.user
+        FROM DeviceConfig cfg
+        WHERE cfg.device_id IN ({','.join('?'*num_of_devices)})
+          AND cfg.config_name LIKE ?
+    """
+
+def CMD_LIST_DEVS_NO_NAME(num_of_devices):
+    return f"""
+        SELECT cfg.device_id, cfg.config_name, cfg.timestamp,
+               cfg.description, cfg.priority, cfg.user
+        FROM DeviceConfig cfg
+        WHERE cfg.device_id IN ({','.join('?'*num_of_devices)})
     """
 
 CMD_GET_CONFIGURATION = """
