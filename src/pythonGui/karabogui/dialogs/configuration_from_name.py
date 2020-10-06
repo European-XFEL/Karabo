@@ -35,6 +35,11 @@ class SaveDialog(QDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.ui_name.textChanged.connect(self._check_button)
 
+        self.event_map = {
+            KaraboEvent.NetworkConnectStatus: self._event_network
+        }
+        register_for_broadcasts(self.event_map)
+
     @pyqtSlot()
     def _check_button(self):
         """Basic validation of configuration name"""
@@ -44,11 +49,6 @@ class SaveDialog(QDialog):
     @pyqtSlot(int)
     def _change_text(self, index):
         self.ui_priority_text.setText(PRIORITY_EXP[index])
-
-        self.event_map = {
-            KaraboEvent.NetworkConnectStatus: self._event_network
-        }
-        register_for_broadcasts(self.event_map)
 
     def _event_network(self, data):
         if not data.get("status"):
