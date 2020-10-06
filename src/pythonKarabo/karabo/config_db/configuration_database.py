@@ -9,6 +9,7 @@ from .commands import (
     CREATE_INDEX_DEVICE_ID_TABLE, CREATE_INDEX_SCHEMA_DIGEST_TABLE,
     CMD_GET_CONFIGURATION, CMD_GET_LAST_CONFIGURATION,
     CMD_LIST_NO_NAME, CMD_LIST_NAME,
+    CMD_LIST_DEVS_NO_NAME, CMD_LIST_DEVS_NAME,
     CMD_CHECK_NAME_TAKEN, CMD_CHECK_SCHEMA_ALREADY_SAVED,
     CMD_SAVE_CONFIGURATION, CMD_SAVE_CONFIGURATION_NO_TIMESTAMP,
     CMD_SAVE_SCHEMA
@@ -94,9 +95,50 @@ class ConfigurationDatabase(object):
                 conf_dict = {}
                 conf_dict[CONFIG_DB_NAME] = rec[0]
                 conf_dict[CONFIG_DB_TIMEPOINT] = rec[1]
-                conf_dict[CONFIG_DB_DESCRIPTION] = rec[4]
-                conf_dict[CONFIG_DB_PRIORITY] = rec[5]
-                conf_dict[CONFIG_DB_USER] = rec[6]
+                conf_dict[CONFIG_DB_DESCRIPTION] = rec[2]
+                conf_dict[CONFIG_DB_PRIORITY] = rec[3]
+                conf_dict[CONFIG_DB_USER] = rec[4]
+
+                ret_recordings.append(conf_dict)
+
+            return ret_recordings
+
+    def list_devices_configurations(self, deviceIds, name_part=''):
+        """Retrieves the set configurations related to a name part for a set of
+        devices.
+
+        :param deviceIds: list of deviceIds whose configurations should be
+                          listed.
+        :param name_part: the name part of the device configurations. empty
+                          means all the named configurations.
+
+        :returns: list of configuration records (can be empty). Each configu-
+                  ration record is a dictionary.
+        """
+        if len(deviceIds) == 0:
+            raise ConfigurationDBError('Please provide at least one device id')
+        with self.dbHandle as db:
+            if name_part:
+                name_part = f'%{name_part}%'
+                cmd = CMD_LIST_DEVS_NAME(len(deviceIds))
+                cmd_params = deviceIds.copy()
+                cmd_params.append(name_part)
+                cursor = db.execute(cmd, cmd_params)
+            else:
+                # When no namePart is given, get all configurations.
+                cmd = CMD_LIST_DEVS_NO_NAME(len(deviceIds))
+                cursor = db.execute(cmd, deviceIds)
+            recordings = cursor.fetchall()
+            ret_recordings = []
+
+            for rec in recordings:
+                conf_dict = {}
+                conf_dict[CONFIG_DB_DEVICE_ID] = rec[0]
+                conf_dict[CONFIG_DB_NAME] = rec[1]
+                conf_dict[CONFIG_DB_TIMEPOINT] = rec[2]
+                conf_dict[CONFIG_DB_DESCRIPTION] = rec[3]
+                conf_dict[CONFIG_DB_PRIORITY] = rec[4]
+                conf_dict[CONFIG_DB_USER] = rec[5]
 
                 ret_recordings.append(conf_dict)
 
