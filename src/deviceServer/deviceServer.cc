@@ -10,6 +10,7 @@
 #include "karabo/log/Logger.hh"
 
 #include <iostream>
+#include <future>
 
 using namespace karabo::util;
 using namespace karabo::log;
@@ -48,13 +49,27 @@ int main(int argc, const char** argv) {
             });
 
             // Prepare start of the device server on the event loop
-            auto& service = EventLoop::getIOService();
-            // Use bind_weak since boost::bind with shared_ptr would keep the server alive when event loop stopped
-            // before finalizeInternalInitialization is started.
-            service.post(bind_weak(&DeviceServer::finalizeInternalInitialization, deviceServer.get()));
+            std::promise<void> prom;
+            std::future<void> serverInitialized = prom.get_future();
+            // Bind weak_ptr: shared_ptr would keep the server alive when event loop stopped before initializer started.
+            DeviceServer::WeakPointer weakServer(deviceServer);
+            auto initializer = [weakServer, &prom]() {
+                try {
+                    DeviceServer::Pointer server(weakServer); // throws if not available
+                    server->finalizeInternalInitialization(); // throws if e.g. invalid serverId
+                    prom.set_value();
+                } catch (std::exception&) {
+                    // Stop event loop, otherwise EventLoop::work() blocks and serverInitialised.get() is not reached.
+                    EventLoop::stop();
+                    prom.set_exception(std::current_exception());
+                }
+            };
+
+            EventLoop::getIOService().post(initializer);
 
             // Start central event loop  and block until event loop stopped, usually by a signal
             EventLoop::work();
+            serverInitialized.get(); // throws if initializer failed
         }
 
         Logger::logInfo() << argv[0] << " has exited!\n";
