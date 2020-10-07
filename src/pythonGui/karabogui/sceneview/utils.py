@@ -7,7 +7,9 @@ from contextlib import contextmanager
 import math
 
 from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import QFont, QFontMetrics
+from PyQt5.QtGui import QFontMetrics
+
+from karabogui.fonts import get_font_from_string
 
 from .const import GRID_STEP, SCREEN_MAX_VALUE
 
@@ -42,8 +44,7 @@ def calc_rect_from_text(font, text):
 
     A tuple including x, y, width and height.
     """
-    q_font = QFont()
-    q_font.fromString(font)
+    q_font = get_font_from_string(font)
     fm = QFontMetrics(q_font)
     CONTENT_MARGIN = 10
     width = fm.width(text) + CONTENT_MARGIN
