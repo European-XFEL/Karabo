@@ -6,13 +6,14 @@
 import webbrowser
 
 from PyQt5.QtCore import pyqtSlot, QPoint, QRect, QRectF, QSize, Qt
-from PyQt5.QtGui import QColor, QFont, QPainter, QPen
+from PyQt5.QtGui import QColor, QPainter, QPen
 from PyQt5.QtWidgets import QAction, QDialog, QPushButton
 
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
 from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.fonts import get_font_from_string, substitute_font
 from karabogui import messagebox
 
 
@@ -23,6 +24,9 @@ class SceneLinkWidget(QPushButton):
     def __init__(self, model, parent=None):
         super(SceneLinkWidget, self).__init__(parent)
         self.model = model
+        # Check and substitute the font with the application fonts
+        substitute_font(model)
+        self.setFont(get_font_from_string(model.font))
         self.setToolTip(self.model.target)
         self.setCursor(Qt.PointingHandCursor)
         self.clicked.connect(self._handle_click)
@@ -55,9 +59,7 @@ class SceneLinkWidget(QPushButton):
             painter.setPen(pen)
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
             # Before painting the text, set the font
-            font_properties = QFont()
-            font_properties.fromString(self.model.font)
-            painter.setFont(font_properties)
+            painter.setFont(self.font())
             pen = QPen(QColor(self.model.foreground))
             painter.setPen(pen)
             painter.drawText(boundary, Qt.AlignCenter, self.model.text)
@@ -118,6 +120,10 @@ class SceneLinkWidget(QPushButton):
                              font=label.font, background=label.background,
                              foreground=label.foreground)
 
+        # Record the QFont on the widget
+        self.setFont(get_font_from_string(label.font))
+        self.update()
+
     @pyqtSlot()
     def edit_target(self):
         self.edit()
@@ -139,6 +145,8 @@ class WebLinkWidget(QPushButton):
     def __init__(self, model, parent=None):
         super(WebLinkWidget, self).__init__(parent)
         self.model = model
+        substitute_font(model)
+        self.setFont(get_font_from_string(model.font))
         self.setToolTip(self.model.target)
         self.setCursor(Qt.PointingHandCursor)
         self.clicked.connect(self._handle_click)
@@ -171,9 +179,7 @@ class WebLinkWidget(QPushButton):
             painter.setPen(pen)
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
             # Before painting the text, set the font
-            font_properties = QFont()
-            font_properties.fromString(self.model.font)
-            painter.setFont(font_properties)
+            painter.setFont(self.font())
             pen = QPen(QColor(self.model.foreground))
             painter.setPen(pen)
             painter.drawText(boundary, Qt.AlignCenter, self.model.text)
@@ -225,6 +231,10 @@ class WebLinkWidget(QPushButton):
         self.model.trait_set(text=label.text, frame_width=label.frame_width,
                              font=label.font, background=label.background,
                              foreground=label.foreground)
+
+        # Record the QFont on the widget
+        self.setFont(get_font_from_string(label.font))
+        self.update()
 
     @pyqtSlot()
     def edit_target(self):

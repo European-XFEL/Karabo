@@ -1,7 +1,7 @@
 from functools import partial
 
 from PyQt5.QtCore import QPoint, QRect, QRectF, QSize, Qt, pyqtSlot
-from PyQt5.QtGui import QColor, QFont, QPainter, QPen
+from PyQt5.QtGui import QColor, QPainter, QPen
 from PyQt5.QtWidgets import QAction, QDialog, QPushButton, QSizePolicy
 from traits.api import Instance
 
@@ -15,6 +15,7 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.dialogs.device_scenelink_dialog import DeviceSceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
+from karabogui.fonts import get_font_from_string, substitute_font
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_topology
 from karabogui.util import handle_scene_from_server
@@ -36,6 +37,9 @@ class LinkWidget(QPushButton):
     def __init__(self, model, parent=None):
         super(LinkWidget, self).__init__(parent)
         self.model = model
+        # Check and substitute the font with the application fonts
+        substitute_font(model)
+        self.setFont(get_font_from_string(model.font))
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.clicked.connect(self._handle_click)
         self.setCursor(Qt.PointingHandCursor)
@@ -66,9 +70,7 @@ class LinkWidget(QPushButton):
             painter.setPen(pen)
             painter.drawLine(pt + QPoint(4, 4), pt + QPoint(15, 4))
             # Before painting the text, set the font
-            font_properties = QFont()
-            font_properties.fromString(self.model.font)
-            painter.setFont(font_properties)
+            painter.setFont(self.font())
             pen = QPen(QColor(self.model.foreground))
             painter.setPen(pen)
             painter.drawText(boundary, Qt.AlignCenter, self.model.text)
@@ -83,6 +85,10 @@ class LinkWidget(QPushButton):
         self.model.trait_set(text=model.text, frame_width=model.frame_width,
                              font=model.font, background=model.background,
                              foreground=model.foreground)
+
+        # Record the QFont on the widget
+        self.setFont(get_font_from_string(model.font))
+        self.update()
 
     def _set_tooltip(self):
         tooltip = "{}|{}".format(
