@@ -14,6 +14,8 @@ from PyQt5.QtWidgets import (
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
+from karabogui.events import (
+    register_for_broadcasts, unregister_from_broadcasts, KaraboEvent)
 from karabogui import icons
 from karabogui.singletons.api import (
     get_manager, get_network, get_project_model)
@@ -439,13 +441,44 @@ TEN_MINUTES = "Ten Minutes"
 
 
 class ConfigurationFromPastDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, instance_id, parent=None):
         super(ConfigurationFromPastDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'conftime.ui')
         uic.loadUi(filepath, self)
+        self.instance_id = instance_id
         self.setModal(False)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint
+                            | Qt.WindowStaysOnTopHint)
         self.ui_timepoint.setDateTime(QDateTime.currentDateTime())
+        self.ui_instance_id.setText(instance_id)
+        self.ui_request.clicked.connect(self._request_configuration)
+        self.event_map = {
+            KaraboEvent.NetworkConnectStatus: self._event_network
+        }
+        register_for_broadcasts(self.event_map)
+
+    def _event_network(self, data):
+        if not data.get("status"):
+            self.close()
+
+    @pyqtSlot()
+    def accept(self):
+        """The dialog was accepted and we can request a configuration"""
+        self._request_configuration()
+        super(ConfigurationFromPastDialog, self).accept()
+
+    def _request_configuration(self):
+        # Karabo time points are in UTC
+        time_point = self.ui_timepoint.dateTime().toUTC()
+        # Explicitly specifiy ISODate!
+        time = str(time_point.toString(Qt.ISODate))
+        get_network().onGetConfigurationFromPast(self.instance_id, time=time)
+
+    def done(self, result):
+        """Stop listening for broadcast events"""
+        unregister_from_broadcasts(self.event_map)
+        super(ConfigurationFromPastDialog, self).done(result)
 
     def _get_time_information(self, selected_time_point):
         current_date_time = QDateTime.currentDateTime()
