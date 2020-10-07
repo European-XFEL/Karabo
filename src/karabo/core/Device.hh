@@ -95,11 +95,13 @@ namespace karabo {
              * It will typically be called by the DeviceServer.
              * The call is blocking and afterwards communication should happen only via slot calls.
              *
+             * @param connection The broker connection for the device.
              * @param consumeBroadcasts If true, listen directly to broadcast messages (addressed to '*'), as usually expected.
              *                          Whoever sets this to false has to enure that broadcast messages reach the Device
              *                          in some other way, otherwise the device will not work correctly.
              */
-            virtual void finalizeInternalInitialization(bool consumeBroadcasts) = 0;
+            virtual void finalizeInternalInitialization(const karabo::net::Broker::Pointer& connection,
+                                                        bool consumeBroadcasts) = 0;
 
             // public since called by DeviceServer
             /**
@@ -244,13 +246,6 @@ namespace karabo {
                         .adminAccess()
                         .assignmentOptional().noDefaultValue()
                         .init()
-                        .commit();
-
-                NODE_ELEMENT(expected).key("_connection_")
-                        .displayedName("_Connection_")
-                        .description("Do not set this property, it will be set by the device-server")
-                        .appendParametersOf<karabo::net::Broker>()
-                        .expertAccess()
                         .commit();
 
                 INT32_ELEMENT(expected).key("visibility")
@@ -479,15 +474,8 @@ namespace karabo {
                 if (configuration.has("_deviceId_")) configuration.get("_deviceId_", m_deviceId);
                 else m_deviceId = "__none__";
 
-                auto conn = karabo::util::Configurator<karabo::net::Broker>::createNode("_connection_", configuration);
-                m_connection = conn->clone(m_deviceId);
-
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
-
-                // This is a hack until a better solution is found
-                // Will remove a potential JmsConnection::Pointer instance from the m_parameters
-                m_parameters.set("_connection_", karabo::util::Hash());
 
                 m_timeId = 0;
                 m_timeSec = 0;
@@ -1506,11 +1494,12 @@ namespace karabo {
              * This function will typically be called by the DeviceServer.
              * The call is blocking and afterwards communication should happen only via slot calls.
              *
+             * @param connection The broker connection for the device.
              * @param consumeBroadcasts If false, do not listen directly to broadcast messages (addressed to '*').
              *                          Whoever sets this to true has to enure that broadcast messages reach the Device
              *                          in some other way.
              */
-            void finalizeInternalInitialization(bool consumeBroadcasts) {
+            void finalizeInternalInitialization(const karabo::net::Broker::Pointer& connection, bool consumeBroadcasts) {
 
                 using namespace karabo::util;
                 using namespace karabo::net;
@@ -1593,7 +1582,7 @@ namespace karabo {
                     instanceInfo.set("interfaces", interfaces);
                 }
 
-                init(m_deviceId, m_connection, heartbeatInterval, instanceInfo, consumeBroadcasts);
+                init(m_deviceId, connection, heartbeatInterval, instanceInfo, consumeBroadcasts);
 
                 //
                 // Now do all registrations etc. (Note that it is safe to register slots in the constructor)

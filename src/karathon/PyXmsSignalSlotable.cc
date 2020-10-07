@@ -56,19 +56,17 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
     bp::class_<SignalSlotableWrap, boost::shared_ptr<SignalSlotableWrap>, bp::bases< SignalSlotable>, boost::noncopyable > ("SignalSlotable")
             .def(bp::init<>())
             .def(bp::init<const std::string&>())
-            .def(bp::init<const std::string&, const std::string&>())
-            .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&>())
-            .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&, const int>())
-            .def(bp::init<const std::string&, const std::string&, const karabo::util::Hash&, const int, const karabo::util::Hash& >())
+            .def(bp::init<const std::string&, const karabo::util::Hash&>())
+            .def(bp::init<const std::string&, const karabo::util::Hash&, const int>())
+            .def(bp::init<const std::string&, const karabo::util::Hash&, const int, const karabo::util::Hash& >())
 
             .def("create", &SignalSlotableWrap::create,
                  (bp::arg("instanceId"),
-                  bp::arg("connectionType") = "Broker",
                   bp::arg("connectionParameters") = karabo::util::Hash(),
                   bp::arg("heartbeatInterval") = 10,
                   bp::arg("instanceInfo") = karabo::util::Hash()
                   ),
-                 "\nUse this factory method to create SignalSlotable object with given 'instanceId', 'connectionType', 'connectionParameters' and 'autostart' of event loop (by default, no start).\n"
+                 "\nUse this factory method to create SignalSlotable object with given 'instanceId', 'connectionParameters', 'heartbeatInterval' and 'instanceInfo'.\n"
                  "Example:\n\tss = SignalSlotable.create('a')\n"
                  ).staticmethod("create")
 

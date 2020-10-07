@@ -107,10 +107,10 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/EventLoop.o \
 	${OBJECTDIR}/_ext/1103112890/HttpResponse.o \
 	${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o \
+	${OBJECTDIR}/_ext/1103112890/JmsBroker.o \
 	${OBJECTDIR}/_ext/1103112890/JmsConnection.o \
 	${OBJECTDIR}/_ext/1103112890/JmsConsumer.o \
 	${OBJECTDIR}/_ext/1103112890/JmsProducer.o \
-	${OBJECTDIR}/_ext/1103112890/OpenMQBroker.o \
 	${OBJECTDIR}/_ext/1103112890/Strand.o \
 	${OBJECTDIR}/_ext/1103112890/TcpChannel.o \
 	${OBJECTDIR}/_ext/1103112890/TcpConnection.o \
@@ -552,6 +552,11 @@ ${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o: ../../../src/karabo/net/InfluxDbC
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o ../../../src/karabo/net/InfluxDbClient.cc
 
+${OBJECTDIR}/_ext/1103112890/JmsBroker.o: ../../../src/karabo/net/JmsBroker.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsBroker.o ../../../src/karabo/net/JmsBroker.cc
+
 ${OBJECTDIR}/_ext/1103112890/JmsConnection.o: ../../../src/karabo/net/JmsConnection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
@@ -566,11 +571,6 @@ ${OBJECTDIR}/_ext/1103112890/JmsProducer.o: ../../../src/karabo/net/JmsProducer.
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -Wno-unused-variable -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsProducer.o ../../../src/karabo/net/JmsProducer.cc
-
-${OBJECTDIR}/_ext/1103112890/OpenMQBroker.o: ../../../src/karabo/net/OpenMQBroker.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/OpenMQBroker.o ../../../src/karabo/net/OpenMQBroker.cc
 
 ${OBJECTDIR}/_ext/1103112890/Strand.o: ../../../src/karabo/net/Strand.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
@@ -2070,6 +2070,19 @@ ${OBJECTDIR}/_ext/1103112890/InfluxDbClient_nomain.o: ${OBJECTDIR}/_ext/11031128
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/InfluxDbClient.o ${OBJECTDIR}/_ext/1103112890/InfluxDbClient_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/1103112890/JmsBroker_nomain.o: ${OBJECTDIR}/_ext/1103112890/JmsBroker.o ../../../src/karabo/net/JmsBroker.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/JmsBroker.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsBroker_nomain.o ../../../src/karabo/net/JmsBroker.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsBroker.o ${OBJECTDIR}/_ext/1103112890/JmsBroker_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/1103112890/JmsConnection_nomain.o: ${OBJECTDIR}/_ext/1103112890/JmsConnection.o ../../../src/karabo/net/JmsConnection.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/JmsConnection.o`; \
@@ -2107,19 +2120,6 @@ ${OBJECTDIR}/_ext/1103112890/JmsProducer_nomain.o: ${OBJECTDIR}/_ext/1103112890/
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -Wno-unused-variable -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsProducer_nomain.o ../../../src/karabo/net/JmsProducer.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsProducer.o ${OBJECTDIR}/_ext/1103112890/JmsProducer_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1103112890/OpenMQBroker_nomain.o: ${OBJECTDIR}/_ext/1103112890/OpenMQBroker.o ../../../src/karabo/net/OpenMQBroker.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/OpenMQBroker.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/OpenMQBroker_nomain.o ../../../src/karabo/net/OpenMQBroker.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103112890/OpenMQBroker.o ${OBJECTDIR}/_ext/1103112890/OpenMQBroker_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/Strand_nomain.o: ${OBJECTDIR}/_ext/1103112890/Strand.o ../../../src/karabo/net/Strand.cc 

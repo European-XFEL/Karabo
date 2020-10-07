@@ -11,12 +11,11 @@ import re
 import signal
 import traceback
 from functools import partial
-import getpass
 
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
     UINT32_ELEMENT, MICROSEC, NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
-    STATE_ELEMENT, STRING_ELEMENT,
+    STATE_ELEMENT, STRING_ELEMENT, CHOICE_ELEMENT,
     OBSERVER, WRITE,
     AccessLevel, AccessType, AssemblyRules, Broker, ChannelMetaData,
     EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
@@ -77,11 +76,12 @@ class PythonDevice(NoFsm):
             .expertAccess().assignmentInternal().noDefaultValue().init()
             .commit(),
 
-            NODE_ELEMENT(expected).key("_connection_")
+            CHOICE_ELEMENT(expected).key("_connection_")
             .displayedName("Connection")
-            .description("The connection to the communication layer of the"
-                         " distributed system")
-            .appendParametersOf(Broker)
+            .description("Do not set this node, will be set by the"
+                         " device-server")
+            .appendNodesOfConfigurationBase(Broker)
+            .assignmentOptional().defaultValue(Broker.brokerTypeFromEnv())
             .adminAccess()
             .commit(),
 
@@ -442,20 +442,7 @@ class PythonDevice(NoFsm):
             info["interfaces"] = interfaces
 
         # Instantiate SignalSlotable object
-        try:
-            url = os.environ["KARABO_BROKER"]
-        except KeyError:
-            url = "tcp://exfl-broker:7777"
-        if url[0:7] == "mqtt://":
-            self._connectionClass = "MqttBroker"
-        else:
-            self._connectionClass = "OpenMQBroker"
-        self._parameters["_connection_.brokers"] = url
-        domain = os.environ.get("KARABO_BROKER_TOPIC", getpass.getuser())
-        self._parameters["_connection_.domain"] = domain
-        self._parameters["_connection_.instanceId"] = self.deviceid
-
-        self._ss = SignalSlotable(self.deviceid, self._connectionClass,
+        self._ss = SignalSlotable(self.deviceid,
                                   self._parameters["_connection_"],
                                   self._parameters["heartbeatInterval"], info)
 
@@ -522,20 +509,22 @@ class PythonDevice(NoFsm):
 
         Uses config in self._parameters["Logger"]
         """
-        config = copy.copy(self._parameters["Logger"])
+        config = self._parameters["Logger"]
 
         stamp = self.getActualTimestamp()
 
         # cure the network part of the logger config
-        topicPath = "network.topic"
-        if config.get(topicPath, default="") == "":
-            # If not specified or empty, use the local topic for log messages
-            config.set(topicPath, self._ss.getTopic())
-            # Since manipulating self._parameters, add timestamp:
-            topicAttrs = config.getNode(topicPath).getAttributes()
-            stamp.toHashAttributes(topicAttrs)
-        config.setAttribute("network.connection.brokers",
-                            "__classId", self._connectionClass)
+        config.set("network.connection", self._parameters["_connection_"])
+        typeKey = self._parameters["_connection_"].getKeys()[0]
+        # Avoid name clash with any SignalSlotable since there ':' is not
+        # allowed as instanceId:
+        config.set("network.connection." + typeKey + ".instanceId",
+                   self.deviceid + ":logger")
+        # Since manipulating self._parameters, add timestamps:
+        for key in config["network.connection"].getPaths():
+            pathNode = config.getNode("network.connection." + key)
+            stamp.toHashAttributes(pathNode.getAttributes())
+
         # cure the file part of the logger config
         path = os.path.join(os.environ['KARABO'], "var", "log", self.serverid,
                             self.deviceid)
