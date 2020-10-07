@@ -7,7 +7,7 @@
 from PyQt5.QtCore import pyqtSlot, Qt, QPoint
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import (
-    QAbstractItemView, QAction, QDialog, QHeaderView, QMenu, QTreeView)
+    QAbstractItemView, QAction, QHeaderView, QMenu, QTreeView)
 
 from karabogui import icons
 from karabogui import messagebox
@@ -16,7 +16,7 @@ from karabogui.globals import access_role_allowed
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.singletons.api import (
-    get_manager, get_network, get_selection_tracker)
+    get_manager, get_selection_tracker)
 from karabogui.util import open_documentation_link
 from karabogui.widgets.popup import PopupWidget
 
@@ -173,15 +173,11 @@ class DeviceTreeView(QTreeView):
                 f"time but before that, you will receive an outdated "
                 f"configuration.")
 
-        dialog = ConfigurationFromPastDialog(parent=self)
+        device_id = info.get('deviceId')
+        dialog = ConfigurationFromPastDialog(instance_id=device_id,
+                                             parent=self)
         dialog.move(QCursor.pos())
-        if dialog.exec_() == QDialog.Accepted:
-            device_id = info.get('deviceId')
-            # Karabo time points are in UTC
-            time_point = dialog.ui_timepoint.dateTime().toUTC()
-            # Explicitly specifiy ISODate!
-            time = str(time_point.toString(Qt.ISODate))
-            get_network().onGetConfigurationFromPast(device_id, time=time)
+        dialog.show()
 
     @pyqtSlot(QPoint)
     def onCustomContextMenuRequested(self, pos):
