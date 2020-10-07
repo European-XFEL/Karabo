@@ -8,6 +8,7 @@ from PyQt5.QtGui import QFontMetrics
 from PyQt5.QtWidgets import QAction, QDialog, QFrame, QLabel
 
 from karabogui.dialogs.textdialog import TextDialog
+from karabogui.fonts import substitute_font
 
 
 class LabelWidget(QLabel):
@@ -18,6 +19,8 @@ class LabelWidget(QLabel):
         self.setFrameShape(QFrame.Box)
         self.setAutoFillBackground(True)
         self.model = model
+        # Check and substitute the font with the application fonts
+        substitute_font(model)
         self.set_model(model)
         edit_action = QAction("Edit Label", self)
         edit_action.triggered.connect(self.edit_colors_text)
