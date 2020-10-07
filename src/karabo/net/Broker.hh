@@ -98,7 +98,17 @@ namespace karabo {
              * Get current instance ID associated with this broker object
              * @return instanceId
              */
-            const std::string& getInstanceId() const { return m_instanceId; }
+            const std::string& getInstanceId() const {
+                return m_instanceId;
+            }
+
+            /**
+             * Get the domain this broker is communicating to
+             * @return domain
+             */
+            const std::string& getDomain() const {
+                return m_topic;
+            }
 
             /**
              * Set flag defining the way how to handle broadcast messages.
@@ -228,10 +238,30 @@ namespace karabo {
                                     const karabo::util::Hash::Pointer& header,
                                     const karabo::util::Hash::Pointer& body) = 0;
 
+            /**
+             *  Specifies the string of broker URLs from the environment variable KARABO_BROKER.
+             *  If KARABO_BROKER is not defined, uses a hard coded fallback.
+             */
+            static std::vector<std::string> brokersFromEnv();
+
+            /**
+             *  Specifies the broker type as the protocol of the broker URLs defined by brokersFromEnv().
+             *  Throws LogicException if broker addresses specified with different types or without protocol.
+             */
+            static std::string brokerTypeFromEnv();
+
+            /**
+             * Specify broker domain (i.e. topic for OpenMQBroker) from environment variables.
+             *
+             * First source is KARABO_BROKER_TOPIC, as a fall back the environment variables
+             * LOGNAME, USER, LNAME and USERNAME are checked in that order.
+             */
+            static std::string brokerDomainFromEnv();
+
         protected:
 
             std::vector<std::string> m_availableBrokerUrls;
-            std::string m_topic;
+            const std::string m_topic;
             std::string m_instanceId;
             bool m_consumeBroadcasts;
             consumer::MessageHandler m_messageHandler;

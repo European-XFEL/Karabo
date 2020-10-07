@@ -606,6 +606,11 @@ class BoundDeviceServer(DeviceServerBase):
                     .startDevice(classId, deviceId, config))
         if "Logger.priority" not in config:
             config["Logger.priority"] = self.log.level
+        # Would be nice to inject _conncetion_ config here from what the
+        # server uses, i.e. domain, brokers and the broker type.
+        # Since that is not easily available (except domain via
+        # 'get_event_loop().topic'), we rely on the bound device extracting
+        # the defaults from the environment.
         env = dict(os.environ)
         env["PYTHONPATH"] = self.pluginDirectory
         future = self._new_device_futures[deviceId]
