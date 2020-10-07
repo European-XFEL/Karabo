@@ -7,9 +7,11 @@ import os.path as op
 
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot, QSize, Qt
-from PyQt5.QtGui import QColor, QFont, QIcon, QPixmap, QTextFormat
+from PyQt5.QtGui import QColor, QIcon, QPixmap, QTextFormat
 from PyQt5.QtWidgets import (
     QApplication, QColorDialog, QDialog, QFontDialog, QTextEdit)
+
+from karabogui.fonts import get_font_from_string, substitute_font
 
 HIGHLIGHT_COLOR = QColor(Qt.yellow).lighter(180)
 GREY = "#d3d3d3"
@@ -22,11 +24,11 @@ class StickerDialog(QDialog):
         uic.loadUi(op.join(op.dirname(__file__), 'stickerdialog.ui'), self)
 
         self.model = model.clone_traits()
+        substitute_font(self.model)
 
         # Set default font if the model font is empty
         if self.model.font:
-            self.text_font = QFont()
-            self.text_font.fromString(self.model.font)
+            self.text_font = get_font_from_string(self.model.font)
         else:
             self.text_font = QApplication.font()
             self.model.font = self.text_font.toString()
