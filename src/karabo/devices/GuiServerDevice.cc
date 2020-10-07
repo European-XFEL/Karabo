@@ -1823,7 +1823,7 @@ namespace karabo {
                     KARABO_LOG_ERROR<<"Schema attribute update failed for device: "<< deviceId;
                 }
 
-                boost::mutex::scoped_lock(m_pendingAttributesMutex);
+                boost::mutex::scoped_lock lock(m_pendingAttributesMutex);
                 if (m_pendingAttributeUpdates.erase(deviceId) == 0) {
                    KARABO_LOG_ERROR<<"Received non-requested attribute update response from: "<< deviceId;
                 }
