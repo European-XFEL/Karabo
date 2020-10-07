@@ -21,12 +21,36 @@ def main():
         # print the schema of a device class to stdout
         schema = entrypoint.load().getSchema(entrypoint.name)
         if command != "schema":  # i.e. schemaVersionHack
-            # manipulate: use fixed karabo version for unit test
+            # manipulate for unit test: use fixed karabo version
+            # and fixed connection defaults (not from environment variables)
             (OVERWRITE_ELEMENT(schema)
              .key("karaboVersion")
              .setNewDefaultValue("UNKNOWN")
              .commit(),
+             OVERWRITE_ELEMENT(schema)
+             .key("_connection_")
+             .setNewDefaultValue("tcp")
+             .commit(),
              )
+            h = schema.getParameterHash()
+            for key in h["_connection_"]:
+                (OVERWRITE_ELEMENT(schema)
+                 .key(f"_connection_.{key}.brokers")
+                 .setNewDefaultValue("tcp://localhost:7777")
+                 .commit(),
+                 OVERWRITE_ELEMENT(schema)
+                 .key(f"_connection_.{key}.domain")
+                 .setNewDefaultValue("karabo")
+                 .commit(),
+                 OVERWRITE_ELEMENT(schema)
+                 .key(f"Logger.network.connection.{key}.brokers")
+                 .setNewDefaultValue("tcp://localhost:7777")
+                 .commit(),
+                 OVERWRITE_ELEMENT(schema)
+                 .key(f"Logger.network.connection.{key}.domain")
+                 .setNewDefaultValue("karabo")
+                 .commit(),
+                 )
         h = Hash()
         h[name] = schema
         ser = BinarySerializerHash.create("Bin")
