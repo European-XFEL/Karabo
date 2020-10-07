@@ -1095,7 +1095,7 @@ void TcpNetworking_Test::testWriteAsync() {
 
     // Getter for the current TestOutcome value.
     auto testOutcomeFn = [&]() -> const TestOutcome& {
-        boost::mutex::scoped_lock(testResultsMutex);
+        boost::mutex::scoped_lock lock(testResultsMutex);
         return testOutcome;
     };
 
