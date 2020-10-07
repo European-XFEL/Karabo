@@ -9,8 +9,10 @@
  */
 
 #include "SignalSlotable.hh"
-#include "karabo/util/Version.hh"
+#include "karabo/util/ChoiceElement.hh"
 #include "karabo/util/Exception.hh"
+#include "karabo/util/Version.hh"
+#include "karabo/util/Validator.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/utils.hh"
 
@@ -40,28 +42,6 @@ namespace karabo {
         boost::uuids::random_generator SignalSlotable::m_uuidGenerator;
         std::unordered_map<std::string, SignalSlotable::WeakPointer> SignalSlotable::m_instanceMap;
         boost::shared_mutex SignalSlotable::m_instanceMapMutex;
-
-        const std::string SignalSlotable::brokerTopicFromEnv() {
-            // look for environment variables KARABO_BROKER_TOPIC
-            // as a fall back the environment variables
-            // LOGNAME, USER, LNAME and USERNAME, in order.
-            // This implementation is inspired by python's getpass.getuser
-
-            const std::vector<std::string> varNames = {
-                "KARABO_BROKER_TOPIC",
-                "LOGNAME",
-                "USER",
-                "LNAME",
-                "USERNAME"
-            };
-            for (const std::string& varName : varNames) {
-                char* env = getenv(varName.c_str());
-                if (env != 0 && strlen(env) > 0) {
-                    return std::string(env);
-                }
-            }
-            return "karabo";
-        }
 
 
         bool SignalSlotable::tryToCallDirectly(const std::string& instanceId,
@@ -254,6 +234,8 @@ namespace karabo {
             m_heartbeatTimer(EventLoop::getIOService()),
             m_performanceTimer(EventLoop::getIOService()) {
 
+            // TODO: Consider to move setTopic() to init(..) and inside it set topic from connection (instead of from environment).
+            //       Caveat: Ensure that Signals registered in device constructors get the correct topic!
             setTopic();
             EventLoop::addThread();
         }
@@ -266,24 +248,25 @@ namespace karabo {
         }
 
 
-        SignalSlotable::SignalSlotable(const std::string& instanceId, const std::string& connectionClass,
+        SignalSlotable::SignalSlotable(const std::string& instanceId,
                                        const karabo::util::Hash& brokerConfiguration,
                                        const int heartbeatInterval, const karabo::util::Hash& instanceInfo) :
             SignalSlotable() {
-            karabo::util::Hash config = brokerConfiguration;
-            if (!config.has("instanceId")) config.set("instanceId", instanceId);
-            if (!config.has("brokers")) {
-                const std::string brokerStr = getenv("KARABO_BROKER") ?
-                        getenv("KARABO_BROKER") : "tcp://exfl-broker:7777";
-                std::vector<std::string> brokers = fromString<std::string, std::vector>(brokerStr);
-                config.set("brokers", brokers);
-            }
-            if (!config.has("domain")) {
-                const std::string domain = brokerTopicFromEnv();
-                config.set("domain", domain);
-            }
 
-            Broker::Pointer connection = Configurator<Broker>::create(connectionClass, config);
+            // Assemble broker configuration, filling up from defaults and given instanceId
+            Schema s;
+            CHOICE_ELEMENT(s).key("con")
+                    .appendNodesOfConfigurationBase<karabo::net::Broker>()
+                    .assignmentOptional().defaultValue(karabo::net::Broker::brokerTypeFromEnv())
+                    .commit();
+            Validator validator;
+            Hash valBrokerCfg;
+            validator.validate(s, brokerConfiguration, valBrokerCfg);
+            Hash& brokerCfg = valBrokerCfg.get<Hash>("con").begin()->getValue<Hash>();
+            brokerCfg.set("instanceId", instanceId);
+
+            // Create Broker and call init(..)
+            Broker::Pointer connection = Configurator<Broker>::createChoice("con", valBrokerCfg);
             init(instanceId, connection, heartbeatInterval, instanceInfo);
         }
 
@@ -2883,7 +2866,7 @@ namespace karabo {
             // Set topic as given as argument.
             // If empty, deduce from the environment.
             if (topic.empty()) {
-                m_topic = brokerTopicFromEnv();
+                m_topic = karabo::net::Broker::brokerDomainFromEnv();
             } else {
                 m_topic = topic;
             }
