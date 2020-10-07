@@ -1,7 +1,6 @@
-#include "karabo/net/OpenMQBroker.hh"
+#include "karabo/net/JmsBroker.hh"
 #include "karabo/net/JmsConnection.hh"
 #include "karabo/net/utils.hh"
-#include "karabo/tests/util/Factory_Test.hh"
 #include <karabo/log.hpp>
 
 
@@ -10,15 +9,15 @@ using namespace karabo::util;
 
 namespace karabo {
     namespace net {
-        
 
-        KARABO_REGISTER_FOR_CONFIGURATION(Broker, OpenMQBroker)
 
-        void OpenMQBroker::expectedParameters(karabo::util::Schema& s) {
+        KARABO_REGISTER_FOR_CONFIGURATION(Broker, JmsBroker)
+
+        void JmsBroker::expectedParameters(karabo::util::Schema& s) {
         }
 
 
-        OpenMQBroker::OpenMQBroker(const karabo::util::Hash& config)
+        JmsBroker::JmsBroker(const karabo::util::Hash& config)
                 : Broker(config)
                 , m_connection()
                 , m_producerChannel()
@@ -30,11 +29,11 @@ namespace karabo {
         }
 
 
-        OpenMQBroker::~OpenMQBroker() {
+        JmsBroker::~JmsBroker() {
         }
 
 
-        OpenMQBroker::OpenMQBroker(const OpenMQBroker& o) : Broker(o) {
+        JmsBroker::JmsBroker(const JmsBroker& o) : Broker(o) {
             m_connection = o.m_connection;
             m_producerChannel.reset();
             m_consumerChannel.reset();
@@ -43,14 +42,14 @@ namespace karabo {
         }
 
 
-        Broker::Pointer OpenMQBroker::clone(const std::string& instanceId) {
-            auto o = boost::make_shared<OpenMQBroker>(*this);
+        Broker::Pointer JmsBroker::clone(const std::string& instanceId) {
+            auto o = boost::make_shared<JmsBroker>(*this);
             o->m_instanceId = instanceId;
             return boost::static_pointer_cast<Broker>(o);
         }
 
 
-        void OpenMQBroker::connect() {
+        void JmsBroker::connect() {
             if (!m_connection) {
                 std::ostringstream oss;
                 oss << "Broker::connect : JMS connection pointer is not initialized";
@@ -60,21 +59,21 @@ namespace karabo {
         }
 
 
-        void OpenMQBroker::disconnect() {
+        void JmsBroker::disconnect() {
         }
 
 
-        bool OpenMQBroker::isConnected() const {
+        bool JmsBroker::isConnected() const {
             return (m_connection && m_connection->isConnected());
         }
 
 
-        std::string OpenMQBroker::getBrokerUrl() const {
+        std::string JmsBroker::getBrokerUrl() const {
             return m_connection->getBrokerUrl();
         }
 
 
-        boost::system::error_code OpenMQBroker::subscribeToRemoteSignal(
+        boost::system::error_code JmsBroker::subscribeToRemoteSignal(
                 const std::string& signalInstanceId,
                 const std::string& signalFunction,
                 const consumer::MessageHandler& handler,
@@ -83,17 +82,17 @@ namespace karabo {
         }
 
 
-        boost::system::error_code OpenMQBroker::unsubscribeFromRemoteSignal(
+        boost::system::error_code JmsBroker::unsubscribeFromRemoteSignal(
                 const std::string& signalInstanceId,
                 const std::string& signalFunction) {
             return boost::system::errc::make_error_code(boost::system::errc::success);
         }
 
 
-        void OpenMQBroker::write(const std::string& target,
-                                 const karabo::util::Hash::Pointer& header,
-                                 const karabo::util::Hash::Pointer& body,
-                                 const int priority, const int timeToLive) {
+        void JmsBroker::write(const std::string& target,
+                              const karabo::util::Hash::Pointer& header,
+                              const karabo::util::Hash::Pointer& body,
+                              const int priority, const int timeToLive) {
 
             KARABO_LOG_FRAMEWORK_TRACE << "*** write TARGET = \"" << target
                     << "\"...\n... and HEADER is \n" << *header;
@@ -113,8 +112,8 @@ namespace karabo {
          * @param handler       - success handler
          * @param errorNotifier - error handler
          */
-        void OpenMQBroker::startReading(const consumer::MessageHandler& handler,
-                                        const consumer::ErrorNotifier& errorNotifier) {
+        void JmsBroker::startReading(const consumer::MessageHandler& handler,
+                                     const consumer::ErrorNotifier& errorNotifier) {
             if (!m_consumerChannel) {
                 std::string selector("slotInstanceIds LIKE '%|"
                                      + m_instanceId + "|%'");
@@ -129,14 +128,14 @@ namespace karabo {
         }
 
 
-        void OpenMQBroker::stopReading() {
+        void JmsBroker::stopReading() {
             if (m_consumerChannel) m_consumerChannel->stopReading();
         }
 
 
-        void OpenMQBroker::writeLocal(const consumer::MessageHandler& handler,
-                                const karabo::util::Hash::Pointer& header,
-                                const karabo::util::Hash::Pointer& body) {
+        void JmsBroker::writeLocal(const consumer::MessageHandler& handler,
+                                   const karabo::util::Hash::Pointer& header,
+                                   const karabo::util::Hash::Pointer& body) {
             handler(header, body);
         }
 
@@ -151,8 +150,8 @@ namespace karabo {
          * @param handler       - success handler
          * @param errorNotifier - error handler
          */
-        void OpenMQBroker::startReadingHeartbeats(const consumer::MessageHandler& handler,
-                                          const consumer::ErrorNotifier& errorNotifier) {
+        void JmsBroker::startReadingHeartbeats(const consumer::MessageHandler& handler,
+                                               const consumer::ErrorNotifier& errorNotifier) {
             if (!m_heartbeatConsumerChannel) {
                 std::string selector = "signalFunction = 'signalHeartbeat'";
                 m_heartbeatConsumerChannel = m_connection->createConsumer(m_topic + "_beats", selector);
@@ -161,12 +160,12 @@ namespace karabo {
         }
 
 
-        void OpenMQBroker::stopReadingHeartbeats() {
+        void JmsBroker::stopReadingHeartbeats() {
             if (m_heartbeatConsumerChannel) m_heartbeatConsumerChannel->stopReading();
         }
 
 
-        /**
+/**
          * JMS subscription.
          * 'selector' is SQL-like expression on properties (in header)
          *   "target = 'log'"
@@ -174,7 +173,7 @@ namespace karabo {
          * @param handler       - success handler
          * @param errorNotifier - error handler
          */
-        void OpenMQBroker::startReadingLogs(const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier) {
+        void JmsBroker::startReadingLogs(const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier) {
             if (!m_logConsumerChannel) {
                 m_logConsumerChannel = m_connection->createConsumer(m_topic, "target = 'log'");
             }
@@ -182,7 +181,7 @@ namespace karabo {
         }
 
 
-        void OpenMQBroker::stopReadingLogs() {
+        void JmsBroker::stopReadingLogs() {
             if (m_logConsumerChannel) m_logConsumerChannel->stopReading();
         }
 

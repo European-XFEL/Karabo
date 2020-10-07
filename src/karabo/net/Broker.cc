@@ -78,6 +78,10 @@ namespace karabo {
                     throw KARABO_LOGIC_EXCEPTION("Inconsistent broker types in " + karabo::util::toString(brokersFromEnv()));
                 }
             }
+            // For backward compatibility: jms uses a tcp connection, specified in KARABO_BROKER...
+            if (type == "tcp") {
+                type = "jms";
+            }
             return type;
         }
 

@@ -1,11 +1,11 @@
 /* 
- * File:   OpenMQBroker.hh
+ * File:   JmsBroker.hh
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  * Created on June 27, 2020, 9:10 PM
  */
 
-#ifndef KARABO_NET_OPENMQBROKER_HH
-#define	KARABO_NET_OPENMQBROKER_HH
+#ifndef KARABO_NET_JMSBROKER_HH
+#define KARABO_NET_JMSBROKER_HH
 
 #include <list>
 #include <vector>
@@ -28,21 +28,20 @@
 namespace karabo {
     namespace net {
 
-        class OpenMQBroker : public Broker {
+        class JmsBroker : public Broker {
+
 
         public:
 
-            // Register under protocol alias  (tcp) instead of class name (OpenMQBroker) to generically choose
-            // the broker implementation from the connection string and still stay backward compatible.
-            KARABO_CLASSINFO(OpenMQBroker, "tcp", "1.0")
+            KARABO_CLASSINFO(JmsBroker, "jms", "1.0")
             
-            static void expectedParameters(karabo::util::Schema& s);      
+            static void expectedParameters(karabo::util::Schema& s);
 
-            OpenMQBroker(const karabo::util::Hash& configuration);
+            JmsBroker(const karabo::util::Hash& configuration);
 
-            OpenMQBroker(const OpenMQBroker& o);
+            JmsBroker(const JmsBroker& o);
 
-            virtual ~OpenMQBroker();
+            virtual ~JmsBroker();
 
             Broker::Pointer clone(const std::string& instanceId) override;
 
@@ -184,5 +183,5 @@ namespace karabo {
     }
 }
 
-#endif	/* KARABO_NET_OPENMQBROKER_HH */
+#endif	/* KARABO_NET_JMSBROKER_HH */
 
