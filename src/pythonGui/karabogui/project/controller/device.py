@@ -602,14 +602,9 @@ class DeviceInstanceController(BaseProjectGroupController):
                     f"in time but before that, you will receive an outdated "
                     f"configuration.")
 
-        dialog = ConfigurationFromPastDialog(parent=parent)
-        if dialog.exec() == QDialog.Accepted:
-            device_id = self.model.instance_id
-            # Karabo time points are in UTC
-            time_point = dialog.ui_timepoint.dateTime().toUTC()
-            # Explicitly specifiy ISODate!
-            time = str(time_point.toString(Qt.ISODate))
-            get_network().onGetConfigurationFromPast(device_id, time=time)
+        dialog = ConfigurationFromPastDialog(
+            instance_id=self.model.instance_id, parent=parent)
+        dialog.show()
 
     def _get_configuration_from_name(self, parent=None):
         """Request a configuration from name from configuration manager"""
