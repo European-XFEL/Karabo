@@ -145,7 +145,7 @@ namespace karabo {
             , m_timeId(0ull)
             , m_timeSec(0ull)
             , m_timeFrac(0ull)
-            , m_timePeriod(0ull)
+            , m_timePeriod(1ull) // non-zero as double protection against division by zero in DeviceServer::timeTick
             , m_noTimeTickYet(true)
             , m_timeIdLastTick(0ull)
             , m_timeTickerTimer(EventLoop::getIOService()) {
@@ -325,6 +325,11 @@ namespace karabo {
 
 
         void DeviceServer::slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            if (period == 0ull) {
+                KARABO_LOG_ERROR << "Ignore invalid input in slotTimeTick: period=0, id=" << id
+                        << ", sec=" << sec << ", frac=" << frac;
+                return;
+            }
             bool firstCall = false;
             {
                 karabo::util::Epochstamp epochNow; // before mutex lock since that could add a delay
@@ -397,6 +402,7 @@ namespace karabo {
             //
             // But first some safeguards for first tick at all or if a very big jump happened.
             if (m_timeIdLastTick == 0ull) m_timeIdLastTick = newId - 1; // first time tick
+            // It is safe to divide by period: non-zero value taken care of when setting m_timePeriod:
             const unsigned long long largestOnTimeUpdateBacklog = 600000000ull / period; // 6*10^8: 10 min in microsec
             if (newId > m_timeIdLastTick + largestOnTimeUpdateBacklog) {
                 // Don't treat an 'id' older than 10 min - for a period of 100 millisec that is 6000 ids in the past
