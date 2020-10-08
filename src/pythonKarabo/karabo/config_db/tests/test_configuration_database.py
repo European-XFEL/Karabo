@@ -93,17 +93,17 @@ class TestConfigurationManagerData(unittest.TestCase):
         self.assertEqual(3, cfg[0]['priority'])
 
         devices_ids = [CFG_DEVICE_1, CFG_DEVICE_2]
-        cfg = self.database.list_devices_configurations(
-            devices_ids, CFG_NAME_2[:4]
-        )
-        self.assertEqual(len(cfg), 2)
-        self.assertTrue(cfg[0]['deviceId'] in [CFG_DEVICE_1, CFG_DEVICE_2])
-        self.assertTrue(cfg[1]['deviceId'] in [CFG_DEVICE_1, CFG_DEVICE_2])
-        self.assertEqual(CFG_NAME_2, cfg[0]['name'])
-        self.assertEqual(cfg[0]['timepoint'], TIMESTAMP_2)
-        self.assertEqual('Bla bla', cfg[0]['description'])
-        self.assertEqual('Bob', cfg[0]['user'])
-        self.assertEqual(3, cfg[0]['priority'])
+        cfg = self.database.list_configuration_sets(devices_ids)
+        self.assertEqual(len(cfg), 1)
+        config_set = cfg[0]
+        self.assertTrue('deviceId' not in config_set)
+        self.assertEqual(config_set['name'], CFG_NAME_2)
+        self.assertEqual(config_set['min_timepoint'], TIMESTAMP_2)
+        self.assertEqual(config_set['max_timepoint'], TIMESTAMP_2)
+        self.assertEqual(config_set['diff_timepoint'], 0.0)
+        self.assertEqual(config_set['description'], 'Bla bla')
+        self.assertEqual(config_set['user'], 'Bob')
+        self.assertEqual(config_set['priority'], 3)
 
         cfg = self.database.list_configurations(CFG_DEVICE_1)
         # With an empty name part, all the configs for CFG_DEVICE_1 should be
@@ -112,20 +112,8 @@ class TestConfigurationManagerData(unittest.TestCase):
         self.assertTrue(cfg[0]['name'] in [CFG_NAME_1, CFG_NAME_2])
         self.assertTrue(cfg[1]['name'] in [CFG_NAME_1, CFG_NAME_2])
 
-        cfg = self.database.list_devices_configurations(devices_ids)
-        # With an empty name part, all the configs for CFG_DEVICE_1 and
-        # CFG_DEVICE_2 should be retrieved.
-        self.assertEqual(len(cfg), 3)
-        self.assertTrue(cfg[0]['name'] in [CFG_NAME_1, CFG_NAME_2])
-        self.assertTrue(cfg[1]['name'] in [CFG_NAME_1, CFG_NAME_2])
-        self.assertTrue(cfg[2]['name'] in [CFG_NAME_1, CFG_NAME_2])
-
         # A name part known to not happen in the data should retrieve nothing.
         cfg = self.database.list_configurations(CFG_DEVICE_1, 'inv part')
-        self.assertEqual(cfg, [])
-        cfg = self.database.list_devices_configurations(
-            [CFG_DEVICE_1, CFG_DEVICE_2], 'inv part'
-        )
         self.assertEqual(cfg, [])
 
     def test_save_get_last_config_priority(self):

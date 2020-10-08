@@ -8,15 +8,15 @@ from .commands import (
     CREATE_INDEX_NAME_TABLE, CREATE_INDEX_PRIORITY_TABLE,
     CREATE_INDEX_DEVICE_ID_TABLE, CREATE_INDEX_SCHEMA_DIGEST_TABLE,
     CMD_GET_CONFIGURATION, CMD_GET_LAST_CONFIGURATION,
-    CMD_LIST_NO_NAME, CMD_LIST_NAME,
-    CMD_LIST_DEVS_NO_NAME, CMD_LIST_DEVS_NAME,
+    CMD_LIST_NO_NAME, CMD_LIST_NAME, CMD_LIST_DEVS_NO_NAME,
     CMD_CHECK_NAME_TAKEN, CMD_CHECK_SCHEMA_ALREADY_SAVED,
     CMD_SAVE_CONFIGURATION, CMD_SAVE_CONFIGURATION_NO_TIMESTAMP,
     CMD_SAVE_SCHEMA
 )
 from .utils import (
     CONFIG_DB_DATA, CONFIG_DB_DEVICE_ID, CONFIG_DB_DESCRIPTION, CONFIG_DB_NAME,
-    CONFIG_DB_PRIORITY, CONFIG_DB_SCHEMA, CONFIG_DB_TIMEPOINT, CONFIG_DB_USER
+    CONFIG_DB_PRIORITY, CONFIG_DB_SCHEMA, CONFIG_DB_TIMEPOINT, CONFIG_DB_USER,
+    CONFIG_DB_MIN_TIMEPOINT, CONFIG_DB_MAX_TIMEPOINT, CONFIG_DB_DIFF_TIMEPOINT
 )
 from .utils import ConfigurationDBError
 
@@ -103,14 +103,17 @@ class ConfigurationDatabase(object):
 
             return ret_recordings
 
-    def list_devices_configurations(self, deviceIds, name_part=''):
-        """Retrieves the set configurations related to a name part for a set of
+    def list_configuration_sets(self, deviceIds):
+        """Retrieves the set of configurations related to for a list of
         devices.
 
         :param deviceIds: list of deviceIds whose configurations should be
                           listed.
-        :param name_part: the name part of the device configurations. empty
-                          means all the named configurations.
+
+        Example: If deviceA has configurations Alice and Bob ...
+                 DeviceB has configurations Bob ...
+                 Only Bob will be returned in this query and only if Bob has
+                 been saved in a time difference of 120 seconds.
 
         :returns: list of configuration records (can be empty). Each configu-
                   ration record is a dictionary.
@@ -118,28 +121,20 @@ class ConfigurationDatabase(object):
         if len(deviceIds) == 0:
             raise ConfigurationDBError('Please provide at least one device id')
         with self.dbHandle as db:
-            if name_part:
-                name_part = f'%{name_part}%'
-                cmd = CMD_LIST_DEVS_NAME(len(deviceIds))
-                cmd_params = deviceIds.copy()
-                cmd_params.append(name_part)
-                cursor = db.execute(cmd, cmd_params)
-            else:
-                # When no namePart is given, get all configurations.
-                cmd = CMD_LIST_DEVS_NO_NAME(len(deviceIds))
-                cursor = db.execute(cmd, deviceIds)
+            cmd = CMD_LIST_DEVS_NO_NAME(len(deviceIds))
+            cursor = db.execute(cmd, deviceIds)
             recordings = cursor.fetchall()
             ret_recordings = []
 
             for rec in recordings:
                 conf_dict = {}
-                conf_dict[CONFIG_DB_DEVICE_ID] = rec[0]
                 conf_dict[CONFIG_DB_NAME] = rec[1]
-                conf_dict[CONFIG_DB_TIMEPOINT] = rec[2]
-                conf_dict[CONFIG_DB_DESCRIPTION] = rec[3]
-                conf_dict[CONFIG_DB_PRIORITY] = rec[4]
-                conf_dict[CONFIG_DB_USER] = rec[5]
-
+                conf_dict[CONFIG_DB_DESCRIPTION] = rec[2]
+                conf_dict[CONFIG_DB_PRIORITY] = rec[3]
+                conf_dict[CONFIG_DB_USER] = rec[4]
+                conf_dict[CONFIG_DB_MIN_TIMEPOINT] = rec[5]
+                conf_dict[CONFIG_DB_MAX_TIMEPOINT] = rec[6]
+                conf_dict[CONFIG_DB_DIFF_TIMEPOINT] = rec[7]
                 ret_recordings.append(conf_dict)
 
             return ret_recordings
