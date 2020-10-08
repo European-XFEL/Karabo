@@ -272,6 +272,29 @@ class ConfigurationManager(Device):
         return Hash("items", items)
 
     @coslot
+    async def slotListConfigurationSets(self, info):
+        """Slot to list configurations from name
+
+        This slot requires an info Hash with:
+            - `deviceIds`: list of deviceIds whose configurations should be
+                           listed.
+
+        :returns: list of configuration items (can be empty) with meta
+                  information. Only configuration records are listed
+                  by name which are available for each device in a time
+                  frame of 120 seconds.
+                  A configuration item has keys `name`, `priority`,
+                  `description`, `user`, `min_point`, `max_timepoint`
+                  and `diff_timepoint`.
+        """
+        deviceIds = info["deviceIds"]
+
+        items = self.db.list_configuration_sets(deviceIds)
+        items = HashList([dictToHash(config) for config in items])
+
+        return Hash("items", items)
+
+    @coslot
     async def slotGetConfigurationFromName(self, info):
         """Slot to get a configuration from name
 
