@@ -7,7 +7,8 @@ from PyQt5.QtCore import (
 from PyQt5.QtWidgets import QDialog, QHeaderView, QDialogButtonBox
 
 from karabogui.events import (
-    register_for_broadcasts, unregister_from_broadcasts, KaraboEvent)
+    broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
+    KaraboEvent)
 from karabogui.singletons.api import get_network
 
 NAME_FIELD = 0
@@ -116,6 +117,8 @@ class ListConfigurationDialog(QDialog):
 
         # Provide saving option
         self.ui_button_save.clicked.connect(self.open_save_dialog)
+        # Show device option!
+        self.ui_show_device.clicked.connect(self._show_device)
 
     def _event_list_updated(self, data):
         instance_id = data["deviceId"]
@@ -151,6 +154,10 @@ class ListConfigurationDialog(QDialog):
 
     # --------------------------------------------------------------------
     # Qt Slots
+
+    @pyqtSlot()
+    def _show_device(self):
+        broadcast_event(KaraboEvent.ShowDevice, {'deviceId': self.instance_id})
 
     @pyqtSlot()
     def open_save_dialog(self):
