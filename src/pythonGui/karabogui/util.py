@@ -431,6 +431,30 @@ class InputValidator(QValidator):
         return self.Acceptable, input, pos
 
 
+class RegexValidator(QValidator):
+    """This is a soft generic regex validator that accepts a regex pattern
+
+    Returns `Intermediate` if the pattern does not match, otherwise
+    `Acceptable`!
+    """
+    pattern = None
+
+    def __init__(self, pattern="", parent=None):
+        super(RegexValidator, self).__init__(parent)
+        self.pattern = re.compile(pattern)
+
+    def setRegex(self, pattern):
+        """Set a new regex pattern"""
+        self.pattern = re.compile(pattern)
+
+    def validate(self, input, pos):
+        """The main validate function"""
+        if not self.pattern.match(input):
+            return self.Intermediate, input, pos
+
+        return self.Acceptable, input, pos
+
+
 def show_filename_error(filename, parent=None):
     invalid_chars = sorted(_get_invalid_chars(filename))
 
