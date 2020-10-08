@@ -30,6 +30,10 @@ conf_test_device = {
     "_deviceId_": "TEST_DEVICE"
 }
 
+conf_another_test_device = {
+    "_deviceId_": "ANOTHER_TEST_DEVICE"
+}
+
 conf_client_device = {
     "_deviceId_": "TEST_CLIENT_DEVICE"
 }
@@ -54,8 +58,10 @@ class TestConfigurationManager(DeviceTest):
     def lifetimeManager(cls):
         cls.dev = ConfigurationManager(conf)
         cls.testDev = TestDevice(conf_test_device)
+        cls.anotherTestDev = TestDevice(conf_another_test_device)
         cls.clientDev = TestDevice(conf_client_device)
-        with cls.deviceManager(cls.testDev, cls.clientDev, lead=cls.dev):
+        with cls.deviceManager(cls.testDev, cls.clientDev, cls.anotherTestDev,
+                               lead=cls.dev):
             yield
 
     @async_tst
@@ -66,10 +72,9 @@ class TestConfigurationManager(DeviceTest):
                  "priority", 3)
         r = await call(TEST_MANAGER, "slotSaveConfigurationFromName", h)
         self.assertEqual(r["success"], True)
-        sleep(0.1)
         config_name = "testConfig1"
-        h = Hash("name", config_name, "deviceIds", ["TEST_DEVICE"],
-                 "priority", 2)
+        h = Hash("name", config_name, "deviceIds", ["TEST_DEVICE",
+                 "ANOTHER_TEST_DEVICE"], "priority", 2)
         r = await call(TEST_MANAGER, "slotSaveConfigurationFromName", h)
         self.assertEqual(r["success"], True)
 
@@ -102,6 +107,26 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(item["name"], "testConfig")
         item = items[1]
         self.assertEqual(item["name"], "testConfig1")
+
+        h = Hash("name", "", "deviceId", "ANOTHER_TEST_DEVICE")
+        r = await call(TEST_MANAGER, "slotListConfigurationFromName", h)
+        items = r["items"]
+        self.assertIsInstance(items, HashList)
+        # We stored one configuration!
+        self.assertEqual(len(items), 1)
+
+    @async_tst
+    async def test_list_configuration_sets(self):
+        h = Hash("deviceIds", ["TEST_DEVICE", "ANOTHER_TEST_DEVICE"])
+        r = await call(TEST_MANAGER, "slotListConfigurationSets", h)
+        items = r["items"]
+        # The other one for TEST_DEVICE is off in time.
+        self.assertEqual(len(items), 1)
+        config_set = items[0]
+        self.assertEqual(config_set["name"], "testConfig1")
+        self.assertEqual(config_set["diff_timepoint"], 0.0)
+        self.assertEqual(config_set["description"], "")
+        self.assertEqual(config_set["user"], ".")
 
     @async_tst
     async def test_z_get_last_configuration(self):
