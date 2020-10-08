@@ -4,12 +4,15 @@ import os.path as op
 from PyQt5 import uic
 from PyQt5.QtCore import (
     pyqtSlot, QAbstractTableModel, QItemSelection, QSortFilterProxyModel, Qt)
+from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import QDialog, QHeaderView, QDialogButtonBox
 
 from karabogui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
     KaraboEvent)
 from karabogui.singletons.api import get_network
+from karabogui.util import RegexValidator
+
 
 NAME_FIELD = 0
 PRIORITY_FIELD = 2
@@ -35,6 +38,13 @@ class SaveDialog(QDialog):
         self.ui_priority_text.setText(PRIORITY_EXP[index])
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.ui_name.textChanged.connect(self._check_button)
+        # We allow only characters and numbers up to a length of 30!
+        validator = RegexValidator(pattern="^[A-Za-z0-9_-]{1,30}$")
+        self.ui_name.setValidator(validator)
+
+        self._normal_palette = self.ui_name.palette()
+        self._error_palette = QPalette(self._normal_palette)
+        self._error_palette.setColor(QPalette.Text, Qt.red)
 
         self.event_map = {
             KaraboEvent.NetworkConnectStatus: self._event_network
@@ -44,7 +54,11 @@ class SaveDialog(QDialog):
     @pyqtSlot()
     def _check_button(self):
         """Basic validation of configuration name"""
-        enable = self.ui_name.text() != ""
+        enable = self.ui_name.hasAcceptableInput()
+        if enable:
+            self.ui_name.setPalette(self._normal_palette)
+        else:
+            self.ui_name.setPalette(self._error_palette)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
     @pyqtSlot(int)
