@@ -3,12 +3,14 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import pyqtSlot, QSize
-from PyQt5.QtGui import QFontMetrics
-from PyQt5.QtWidgets import QAction, QDialog, QFrame, QLabel
+from PyQt5.QtCore import pyqtSlot, QSize, Qt
+from PyQt5.QtGui import QFontMetrics, QPainter
+from PyQt5.QtWidgets import (
+    QAction, QDialog, QFrame, QLabel, QStyle, QStyleOption)
 
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.fonts import substitute_font
+from karabogui.util import generateObjectName
 
 
 class LabelWidget(QLabel):
@@ -18,6 +20,7 @@ class LabelWidget(QLabel):
         super(LabelWidget, self).__init__(model.text, parent)
         self.setFrameShape(QFrame.Box)
         self.setAutoFillBackground(True)
+        self.setObjectName(generateObjectName(self))
         self.model = model
         # Check and substitute the font with the application fonts
         substitute_font(model)
@@ -33,7 +36,6 @@ class LabelWidget(QLabel):
                              font=model.font, background=model.background,
                              foreground=model.foreground)
 
-        self.setText(model.text)
         self.setToolTip(model.text)
         self.setLineWidth(model.frame_width)
         styleSheet = []
@@ -42,15 +44,38 @@ class LabelWidget(QLabel):
         if model.background:
             styleSheet.append('background-color: "{}";'.format(
                 model.background))
-        self.setStyleSheet("QLabel {{ {} }}".format("".join(styleSheet)))
+        self.setStyleSheet("QLabel#{name} {{ {stylesheet} }}".format(
+            name=self.objectName(), stylesheet="".join(styleSheet)))
         self.setGeometry(model.x, model.y, model.width, model.height)
 
     def sizeHint(self):
-        fm = QFontMetrics(self.font())
-        CONTENT_MARGIN = 10
-        width = fm.width(self.text()) + CONTENT_MARGIN
+        """Calculate the size hint from the text if model is newly
+           instantiated (no width/height yet). Else, return the model size."""
+        if self.model.width == 0 and self.model.height == 0:
+            # Calculate the suggested widget size from the model text
+            fm = QFontMetrics(self.font())
+            CONTENT_MARGIN = 10
+            width = fm.width(self.model.text) + CONTENT_MARGIN
+            return QSize(width, max(self.height(), 20))
+        return QSize(self.model.width, self.model.height)
 
-        return QSize(width, 20)
+    def minimumSizeHint(self):
+        return QSize(self.model.width, self.model.height)
+
+    def paintEvent(self, event):
+        option = QStyleOption()
+        with QPainter(self) as painter:
+            self.style().drawPrimitive(QStyle.PE_Widget, option, painter, self)
+            painter.drawText(self.rect(), self.alignment(),
+                             self._get_elided_text())
+
+    def _get_elided_text(self):
+        fm = QFontMetrics(self.font())
+        text = self.model.text
+        if fm.width(text) > self.width():
+            text = fm.elidedText(text, Qt.ElideRight, self.width())
+
+        return text
 
     def add_proxies(self, proxies):
         """Satisfy the informal widget interface."""
