@@ -63,21 +63,21 @@ CMD_LIST_NO_NAME = """
         WHERE cfg.device_id = ?
     """
 
-def CMD_LIST_DEVS_NAME(num_of_devices):
-    return f"""
-        SELECT cfg.device_id, cfg.config_name, cfg.timestamp,
-               cfg.description, cfg.priority, cfg.user
-        FROM DeviceConfig cfg
-        WHERE cfg.device_id IN ({','.join('?'*num_of_devices)})
-          AND cfg.config_name LIKE ?
-    """
-
 def CMD_LIST_DEVS_NO_NAME(num_of_devices):
     return f"""
-        SELECT cfg.device_id, cfg.config_name, cfg.timestamp,
-               cfg.description, cfg.priority, cfg.user
-        FROM DeviceConfig cfg
-        WHERE cfg.device_id IN ({','.join('?'*num_of_devices)})
+        SELECT *,
+        ((JULIANDAY(max_timepoint)-JULIANDAY(min_timepoint))*86400) timepoint_diff_sec
+    FROM (
+        SELECT COUNT(device_id) num_cfgs, config_name,
+            description, priority, user,
+            MIN(timestamp) min_timepoint,
+            MAX(timestamp) max_timepoint
+        FROM DeviceConfig
+        WHERE device_id IN ({','.join('?'*num_of_devices)})
+        GROUP BY config_name
+    )
+    WHERE num_cfgs = {num_of_devices}
+        AND timepoint_diff_sec <= 120
     """
 
 CMD_GET_CONFIGURATION = """
