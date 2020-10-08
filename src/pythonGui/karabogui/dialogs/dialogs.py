@@ -15,7 +15,8 @@ from PyQt5.QtWidgets import (
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabogui.events import (
-    register_for_broadcasts, unregister_from_broadcasts, KaraboEvent)
+    broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
+    KaraboEvent)
 from karabogui import icons
 from karabogui.singletons.api import (
     get_manager, get_network, get_project_model)
@@ -453,6 +454,7 @@ class ConfigurationFromPastDialog(QDialog):
         self.ui_timepoint.setDateTime(QDateTime.currentDateTime())
         self.ui_instance_id.setText(instance_id)
         self.ui_request.clicked.connect(self._request_configuration)
+        self.ui_show_device.clicked.connect(self._show_device)
         self.event_map = {
             KaraboEvent.NetworkConnectStatus: self._event_network
         }
@@ -461,6 +463,10 @@ class ConfigurationFromPastDialog(QDialog):
     def _event_network(self, data):
         if not data.get("status"):
             self.close()
+
+    @pyqtSlot()
+    def _show_device(self):
+        broadcast_event(KaraboEvent.ShowDevice, {'deviceId': self.instance_id})
 
     @pyqtSlot()
     def accept(self):
