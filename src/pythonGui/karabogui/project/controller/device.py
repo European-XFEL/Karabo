@@ -103,7 +103,7 @@ class DeviceInstanceController(BaseProjectGroupController):
                                                parent=parent))
         scene_action.setEnabled(has_scene and project_allowed)
 
-        conf_action = QAction('Get Configuration (Time)', menu)
+        conf_action = QAction(icons.clock, 'Get Configuration (Time)', menu)
         can_get_conf = (server_online and
                         proj_device_status not in NO_CONFIG_STATUSES)
         conf_action.triggered.connect(partial(
