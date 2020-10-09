@@ -95,7 +95,8 @@ class ListConfigurationDialog(QDialog):
         super(ListConfigurationDialog, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), "config_handle.ui"), self)
         self.setModal(False)
-        self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint
+                            | Qt.WindowStaysOnTopHint)
 
         self.instance_id = instance_id
         self.ui_instance.setText(f"Device Id: {instance_id}")

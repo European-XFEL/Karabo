@@ -1,7 +1,7 @@
 import os.path as op
 
 from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, QSize, QTimer
+from PyQt5.QtCore import pyqtSlot, QSize, Qt, QTimer
 from PyQt5.QtWidgets import QApplication, QDialog, QMessageBox, QStyle
 
 MESSAGE_POPUP = 60  # Seconds
@@ -20,7 +20,7 @@ class KaraboMessageBox(QDialog):
     def __init__(self, parent=None):
         super(KaraboMessageBox, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), "messagebox.ui"), self)
-
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         # Set focus on the OK button
         self.ok_button.clicked.connect(self.close)
         self.ok_button.setFocus()
