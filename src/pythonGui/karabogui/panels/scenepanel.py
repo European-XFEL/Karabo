@@ -17,7 +17,7 @@ from karabogui.sceneview.api import SceneView
 from karabogui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabogui.sceneview.tools.api import (
     ArrowSceneTool, BoxVSceneAction, BoxHSceneAction, CreateToolAction,
-    GroupEntireSceneAction, GridSceneAction, GroupSceneAction,
+    GroupEntireSceneAction, GroupSceneAction,
     UngroupSceneAction, LineSceneTool,  TextSceneTool, RectangleSceneTool,
     SceneBringToFrontAction, SceneCopyAction, SceneCutAction,
     SceneDeleteAction, SceneMoveAction, SceneLinkTool, ScenePasteAction,
@@ -304,10 +304,6 @@ class ScenePanel(BasePanelWidget):
                                        text="Group Horizontally",
                                        tooltip="Group selected items in "
                                                "horizontal layout"))
-        actions.append(GridSceneAction(icon=icons.groupGrid,
-                                       text="Group in a Grid",
-                                       tooltip="Group selected items in "
-                                               "in a grid layout"))
         actions.append(UngroupSceneAction(icon=icons.ungroup,
                                           text="Ungroup",
                                           tooltip="Ungroup selected items"))
