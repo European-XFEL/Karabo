@@ -3,11 +3,11 @@ import os.path as op
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QColor, QPixmap, QIcon
-from PyQt5.QtWidgets import (
-    QApplication, QColorDialog, QDialog, QFontDialog)
+from PyQt5.QtWidgets import QApplication, QColorDialog, QDialog
 
 from karabo.common.scenemodel.api import LabelModel, SCENE_FONT_SIZE
-from karabogui.fonts import get_font_from_string
+from karabogui.fonts import get_alias_from_font, get_font_from_string
+from karabogui.dialogs.font_dialog import FontDialog
 
 
 class TextDialog(QDialog):
@@ -41,7 +41,7 @@ class TextDialog(QDialog):
 
     def set_text_font_button(self):
         self.pbFont.setFont(self.text_font)
-        self.pbFont.setText(self.text_font.family())
+        self.pbFont.setText(get_alias_from_font((self.text_font.family())))
 
     def set_text_color_button(self):
         pixmap = QPixmap(24, 16)
@@ -65,8 +65,9 @@ class TextDialog(QDialog):
 
     @pyqtSlot()
     def on_pbFont_clicked(self):
-        self.text_font, ok = QFontDialog.getFont(self.text_font, self)
-        if ok:
+        dialog = FontDialog(self.text_font, parent=self)
+        if dialog.exec_() == QDialog.Accepted:
+            self.text_font = dialog.qfont
             self.label_model.font = self.text_font.toString()
             self.set_text_font_button()
 
