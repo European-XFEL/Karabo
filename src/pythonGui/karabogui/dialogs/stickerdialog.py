@@ -8,10 +8,11 @@ import os.path as op
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot, QSize, Qt
 from PyQt5.QtGui import QColor, QIcon, QPixmap, QTextFormat
-from PyQt5.QtWidgets import (
-    QApplication, QColorDialog, QDialog, QFontDialog, QTextEdit)
+from PyQt5.QtWidgets import QApplication, QColorDialog, QDialog, QTextEdit
 
-from karabogui.fonts import get_font_from_string, substitute_font
+from karabogui.fonts import (
+    get_alias_from_font, get_font_from_string, substitute_font)
+from karabogui.dialogs.font_dialog import FontDialog
 
 HIGHLIGHT_COLOR = QColor(Qt.yellow).lighter(180)
 GREY = "#d3d3d3"
@@ -63,7 +64,7 @@ class StickerDialog(QDialog):
 
     def set_text_font_button(self):
         self.pbFont.setFont(self.text_font)
-        self.pbFont.setText(self.text_font.family())
+        self.pbFont.setText(get_alias_from_font(self.text_font.family()))
 
     def set_text_color_button(self):
         pixmap = QPixmap(24, 16)
@@ -95,8 +96,9 @@ class StickerDialog(QDialog):
 
     @pyqtSlot()
     def on_pbFont_clicked(self):
-        self.text_font, ok = QFontDialog.getFont(self.text_font, self)
-        if ok:
+        dialog = FontDialog(self.text_font, parent=self)
+        if dialog.exec_() == QDialog.Accepted:
+            self.text_font = dialog.qfont
             self.model.font = self.text_font.toString()
             self.set_text_font_button()
             self.update_plain_widget()
