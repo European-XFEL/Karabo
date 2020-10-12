@@ -36,10 +36,34 @@ FONT_FILENAMES = _get_font_filenames()
 
 # This maps the font family to a Qt style hint to ease font replacement
 FONT_STYLE_HINTS = {
-    QFont.AnyStyle: "Source Sans Pro",
     QFont.Helvetica: "Source Sans Pro",
     QFont.Times: "Source Serif Pro",
     QFont.Courier: "Source Code Pro"
 }
 
-FONT_FAMILIES = set(FONT_STYLE_HINTS.values())
+FONT_FAMILIES = sorted(list(set(FONT_STYLE_HINTS.values())))
+
+# This maps the font family to a Qt style hint to ease font replacement
+FONT_STYLE_ALIAS = {
+    QFont.Helvetica: "Sans Serif",
+    QFont.Times: "Serif",
+    QFont.Courier: "Monospaced"
+}
+
+FONT_ALIAS = sorted(list(set(FONT_STYLE_ALIAS.values())))
+
+
+def get_font_from_alias(alias):
+    for hint, name in FONT_STYLE_ALIAS.items():
+        if alias == name:
+            return FONT_STYLE_HINTS[hint]
+
+    return SCENE_FONT_FAMILY
+
+
+def get_alias_from_font(font):
+    for hint, family in FONT_STYLE_HINTS.items():
+        if font == family:
+            return FONT_STYLE_ALIAS[hint]
+
+    return SCENE_FONT_FAMILY
