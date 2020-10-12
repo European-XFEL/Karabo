@@ -39,9 +39,7 @@ class BaseSeriesGraph(BaseBindingController):
 
     _plot = Instance(KaraboPlotView)
     _timer = Instance(QTimer)
-    # Set the start and creation time of this widget at the earliest way
-    # possible!
-    _start_time = Instance(QDateTime, args=(QDateTime.currentDateTime(),))
+    _start_time = Instance(QDateTime)
 
     # Holds if the user is rescaling via mouse interaction
     _button_scale = Bool(False)
@@ -61,6 +59,7 @@ class BaseSeriesGraph(BaseBindingController):
         widget = QWidget(parent)
         uic.loadUi(op.join(op.dirname(__file__), "ui_trendline.ui"), widget)
 
+        self._start_time = QDateTime.currentDateTime()
         widget.dt_start.setDateTime(self._start_time)
         widget.dt_end.setDateTime(self._start_time)
 
