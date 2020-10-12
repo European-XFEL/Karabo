@@ -32,6 +32,10 @@ The **most relevant improvements**, fixes and changes are:
 
 - All API: The `visibility` of devices cannot be configured on runtime anymore.
 
+- GUI: The Karabo GUI is shipped now with open license fonts: Source Sans Pro, Source Serif Pro, Source Code Pro. **All other fonts won't be offered anymore.**
+
+- GUI: The grid layout has been deprecated. It can be still read and written, but won't be offered anymore on grouping.
+
 - GUI: The DoubleWheelEdit controller has been deprecated.
 
 - GUI: The Slider widget has been deprecated.
