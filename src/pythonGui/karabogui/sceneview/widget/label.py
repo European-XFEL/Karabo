@@ -4,13 +4,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt5.QtCore import pyqtSlot, QSize, Qt
-from PyQt5.QtGui import QFontMetrics, QPainter
-from PyQt5.QtWidgets import (
-    QAction, QDialog, QFrame, QLabel, QStyle, QStyleOption)
+from PyQt5.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen
+from PyQt5.QtWidgets import QAction, QDialog, QLabel
 
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.fonts import substitute_font
-from karabogui.util import generateObjectName
 
 
 class LabelWidget(QLabel):
@@ -18,9 +16,6 @@ class LabelWidget(QLabel):
     """
     def __init__(self, model, parent=None):
         super(LabelWidget, self).__init__(model.text, parent)
-        self.setFrameShape(QFrame.Box)
-        self.setAutoFillBackground(True)
-        self.setObjectName(generateObjectName(self))
         self.model = model
         # Check and substitute the font with the application fonts
         substitute_font(model)
@@ -36,16 +31,11 @@ class LabelWidget(QLabel):
                              font=model.font, background=model.background,
                              foreground=model.foreground)
 
+        qfont = QFont()
+        qfont.fromString(model.font)
+        self.setFont(qfont)
+
         self.setToolTip(model.text)
-        self.setLineWidth(model.frame_width)
-        styleSheet = []
-        styleSheet.append('qproperty-font: "{}";'.format(model.font))
-        styleSheet.append('color: "{}";'.format(model.foreground))
-        if model.background:
-            styleSheet.append('background-color: "{}";'.format(
-                model.background))
-        self.setStyleSheet("QLabel#{name} {{ {stylesheet} }}".format(
-            name=self.objectName(), stylesheet="".join(styleSheet)))
         self.setGeometry(model.x, model.y, model.width, model.height)
 
     def sizeHint(self):
@@ -56,17 +46,35 @@ class LabelWidget(QLabel):
             fm = QFontMetrics(self.font())
             CONTENT_MARGIN = 10
             width = fm.width(self.model.text) + CONTENT_MARGIN
-            return QSize(width, max(self.height(), 20))
+            height = fm.height() + self.model.frame_width
+            return QSize(width, max(height, 20))
         return QSize(self.model.width, self.model.height)
 
     def minimumSizeHint(self):
         return QSize(self.model.width, self.model.height)
 
     def paintEvent(self, event):
-        option = QStyleOption()
         with QPainter(self) as painter:
-            self.style().drawPrimitive(QStyle.PE_Widget, option, painter, self)
-            painter.drawText(self.rect(), self.alignment(),
+            # Calculate the effective rectangle which considers the
+            # frame width as it is expands inwards. The bottom and the right
+            # edge needs to have another pixel offset.
+            eff_rect = self.model.frame_width / 2
+            boundary = self.rect().adjusted(eff_rect, eff_rect,
+                                            -eff_rect - 1, -eff_rect - 1)
+            painter.fillRect(boundary, QColor(self.model.background))
+
+            # Draw the boundary
+            if self.model.frame_width:
+                pen = QPen(Qt.black)
+                pen.setWidth(self.model.frame_width)
+                painter.setPen(pen)
+                painter.drawRect(self.rect())
+
+            # Draw text
+            pen = QPen(QColor(self.model.foreground))
+            painter.setPen(pen)
+            painter.setFont(self.font())
+            painter.drawText(boundary, self.alignment(),
                              self._get_elided_text())
 
     def _get_elided_text(self):
