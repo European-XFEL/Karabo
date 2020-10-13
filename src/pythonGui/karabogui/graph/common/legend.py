@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QBrush, QColor, QPen
+from PyQt5.QtGui import QColor
 from pyqtgraph import LabelItem, mkBrush, mkPen
 from pyqtgraph.graphicsItems.LegendItem import ItemSample, LegendItem
 
@@ -7,15 +7,16 @@ SYMBOL_COLUMN = 0
 TEXT_COLUMN = 1
 
 TEXT_SIZE = "8pt"
+LEGEND_PEN = mkPen(QColor(192, 192, 192, 200))
+LEGEND_BRUSH = mkBrush(QColor(0, 0, 0, 50))
+LABEL_COLOR = QColor(0, 0, 0, 200)
 
 
 class KaraboLegend(LegendItem):
-    def __init__(self, size=None, offset=None):
-        super(KaraboLegend, self).__init__(size, offset)
-        self._pen = QPen(QColor(192, 192, 192, 200), 1)
-        self._pen.setCosmetic(True)
-        self._brush = QBrush(QColor(0, 0, 0, 50))
-        self._label_item_color = QColor(0, 0, 0, 200)
+    def __init__(self, size=None, offset=None, **kwargs):
+        super(KaraboLegend, self).__init__(
+            size, offset, pen=LEGEND_PEN, brush=LEGEND_BRUSH,
+            labelTextColor=LABEL_COLOR)
 
     def addItem(self, item, name):
         """Reimplemented function of LegendItem
@@ -24,7 +25,8 @@ class KaraboLegend(LegendItem):
                      of the item will be determined
         :param name: The title to display for this item. Simple HTML allowed.
         """
-        label = LabelItem(name, justify='left', color=self._label_item_color,
+        label = LabelItem(name, justify='left',
+                          color=self.opts['labelTextColor'],
                           size=TEXT_SIZE)
         sample = (item if isinstance(item, ItemSample)
                   else ColorBox(item))
@@ -33,17 +35,6 @@ class KaraboLegend(LegendItem):
         self.layout.addItem(sample, row, SYMBOL_COLUMN)
         self.layout.addItem(label, row, TEXT_COLUMN)
         self.updateSize()
-
-    def setBackgroundColor(self, color):
-        """External method to apply a different background to our legend"""
-        self._brush = mkBrush(color)
-
-    def paint(self, painter, *args):
-        """Reimplemented function of LegendItem"""
-        painter.setPen(self._pen)
-        painter.setBrush(self._brush)
-        rect = self.boundingRect()
-        painter.drawRoundedRect(rect, 2, 2)
 
 
 class CoordsLegend(KaraboLegend):
