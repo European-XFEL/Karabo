@@ -27,6 +27,7 @@ if __name__ == '__main__':
             "karabogui.graph.common.dialogs": ["*.ui"],
             "karabogui.graph.image.dialogs": ["*.ui"],
             "karabogui.dialogs": ["*.ui", 'tests/*.html'],
+            "karabogui.fonts": ["*.*", "*/*"],
             "karabogui.icons": ["*.*", "statefulicons/iconset/*.svg"],
             "karabogui.panels": ["*.ui"],
             "karabogui.project.dialog": ["*.ui"],
