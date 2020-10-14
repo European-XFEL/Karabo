@@ -5,7 +5,7 @@ from itertools import cycle
 
 from PyQt5 import uic
 from PyQt5.QtCore import QDateTime, QTimer
-from PyQt5.QtWidgets import QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QAction, QDialog, QVBoxLayout, QWidget
 from traits.api import Bool, Dict, Instance, Int, Set, String
 
 from karabo.common.scenemodel.api import (
@@ -23,10 +23,21 @@ from karabogui.graph.common.api import AxisType, create_button, get_pen_cycler
 from karabogui.graph.common.const import ALARM_INTEGER_MAP, STATE_INTEGER_MAP
 from karabogui.graph.plots.base import KaraboPlotView
 
+FILE_PATH = op.dirname(__file__)
+
 # NOTE: We limit ourselves to selected karabo actions!
 ALLOWED_ACTIONS = ['x_grid', 'y_grid', 'y_invert', 'y_log', 'axes', 'y_range']
 MIN_TIMESTAMP = datetime.datetime(1970, 1, 31).timestamp()
 MAX_TIMESTAMP = datetime.datetime(2038, 12, 31).timestamp()
+
+
+class RequestTime(QDialog):
+    def __init__(self, start, end, parent=None):
+        super(RequestTime, self).__init__(parent)
+        self.setModal(False)
+        uic.loadUi(op.join(FILE_PATH, 'ui_trendline_detail.ui'), self)
+        self.dt_start.setDateTime(start)
+        self.dt_end.setDateTime(end)
 
 
 def curve_to_axis(value):
@@ -57,7 +68,7 @@ class BaseSeriesGraph(BaseBindingController):
     def create_widget(self, parent):
         """Setup all widgets correctly"""
         widget = QWidget(parent)
-        uic.loadUi(op.join(op.dirname(__file__), "ui_trendline.ui"), widget)
+        uic.loadUi(op.join(FILE_PATH, "ui_trendline.ui"), widget)
 
         self._start_time = QDateTime.currentDateTime()
         widget.dt_start.setDateTime(self._start_time)
@@ -96,6 +107,9 @@ class BaseSeriesGraph(BaseBindingController):
         viewbox.sigRangeChangedManually.connect(self._range_change_manually)
         viewbox.middleButtonClicked.connect(self._autorange_requested)
 
+        dialog_ac = QAction("Request Time", parent=widget)
+        dialog_ac.triggered.connect(self._request_dialog)
+        viewbox.add_action(dialog_ac, separator=False)
         # Update datetime widgets everytime range changes and limit zoom
         self._plot.plotItem.setLimits(xMin=MIN_TIMESTAMP, xMax=MAX_TIMESTAMP)
         self._plot.plotItem.sigXRangeChanged.connect(self._update_date_widgets)
@@ -140,6 +154,23 @@ class BaseSeriesGraph(BaseBindingController):
 
     # ----------------------------------------------------------------
     # PyQt Slots
+
+    def _request_dialog(self):
+        """Set a new time interval and request historic data"""
+        x_axis = self._plot.plotItem.getAxis("bottom")
+        x_min, x_max = x_axis.range
+        start = QDateTime.fromMSecsSinceEpoch(x_min * 1000)
+        end = QDateTime.fromMSecsSinceEpoch(x_max * 1000)
+
+        dialog = RequestTime(start=start, end=end, parent=self.widget)
+        if dialog.exec() == QDialog.Accepted:
+            # Convert to again to set the interval
+            self._button_scale = False
+            self._uncheck_button()
+            start = dialog.dt_start.dateTime().toMSecsSinceEpoch() / 1000
+            end = dialog.dt_end.dateTime().toMSecsSinceEpoch() / 1000
+            self.set_time_interval(start, end, force=True)
+            self._plot.plotItem.setRange(xRange=(start, end))
 
     def _purge_curves(self):
         """Purge all curves and request historic again"""
