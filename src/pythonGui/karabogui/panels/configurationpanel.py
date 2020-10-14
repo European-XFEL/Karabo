@@ -9,12 +9,13 @@ from PyQt5.QtWidgets import (
     QAction, QHBoxLayout, QPushButton, QScrollArea, QStackedWidget,
     QVBoxLayout, QWidget)
 
-from karabo.native import AccessMode
+from karabo.native import AccessMode, Hash
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy, ListOfNodesBinding,
     ProjectDeviceProxy, attr_fast_deepcopy, apply_configuration,
-    extract_configuration, flat_iter_hash, has_changes)
+    extract_configuration, flat_iter_hash, get_binding_value, has_changes,
+    validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.enums import AccessRole
 from karabogui.events import KaraboEvent, register_for_broadcasts
@@ -25,6 +26,7 @@ from karabogui.util import (
 )
 from karabogui.widgets.toolbar import ToolBar
 from .base import BasePanelWidget
+from .utils import format_property_details
 
 BLANK_PAGE = 0
 WAITING_PAGE = 1
@@ -314,44 +316,130 @@ class ConfigurationPanel(BasePanelWidget):
     def _set_proxy_configuration(self, proxy, configuration):
         """Internal method to apply the configuration in the Configurator
         """
-        binding = proxy.binding
-        access_level = krb_globals.GLOBAL_ACCESS_LEVEL
         if isinstance(proxy, DeviceProxy):
-            # Load the configuration into PropertyProxy instances
-            state = proxy.state_binding.value
-            editor = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
-            model = editor.model()
-            for path, value, _ in flat_iter_hash(configuration):
-                prop_proxy = model.property_proxy(path)
-                prop_binding = prop_proxy.binding
-                if prop_binding is None or isinstance(
-                        prop_binding, RECURSIVE_BINDINGS):
-                    # NOTE: This property most likely was removed from the
-                    # device, we have schema evolution and will continue here!
-                    # NOTE: Recursive bindings are not supported here!
-                    continue
-                if prop_binding.access_mode is AccessMode.RECONFIGURABLE:
-                    if (prop_binding.required_access_level <= access_level and
-                            prop_binding.is_allowed(state) and
-                            has_changes(prop_binding,
-                                        prop_proxy.value, value)):
-                        prop_proxy.edit_value = value
-                    else:
-                        prop_proxy.edit_value = None
-            # NOTE: We tell the model directly to send dataChanged signal and
-            # notify for changes!
-            model._config_update()
+            self._set_device_config(proxy, configuration)
         else:
-            # Load the configuration directly into the binding
-            apply_configuration(configuration, binding)
-            # Apply attributes in a second step
-            for path, _, attrs in flat_iter_hash(configuration):
-                binding = proxy.get_property_binding(path)
-                if binding is not None:
-                    # only update editable attribute values
-                    binding.update_attributes(attr_fast_deepcopy(attrs, {}))
-            # Notify again. XXX: Schema update too?
-            proxy.binding.config_update = True
+            self._set_project_device_config(proxy, configuration)
+
+    def _set_device_config(self, proxy, configuration):
+        """Sets the configuration of an online device by validating and setting
+           the edit value of every reconfigurable property. This is done as
+           follows:
+
+           1. Iterate over each property
+           2. Check if the property binding is valid
+           3. Check if the binding can be edited
+              (reconfigurable, allowed state and allowed access level)
+           4. Check if there are changes in the value (first check)
+           5. If there are changes, we validate the value from the binding
+              information. If it fails to be validated, we report it as invalid
+           6. We again compare to check changes (second check)
+           7. If there are changes, we set it on the edit value.
+        """
+        # Load the configuration into PropertyProxy instances
+        invalid_prop = {}
+        access_level = krb_globals.GLOBAL_ACCESS_LEVEL
+        state = proxy.state_binding.value
+
+        editor = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
+        model = editor.model()
+        for path, value, _ in flat_iter_hash(configuration):
+            prop_proxy = model.property_proxy(path)
+            prop_binding = prop_proxy.binding
+            if prop_binding is None or isinstance(
+                    prop_binding, RECURSIVE_BINDINGS):
+                # NOTE: This property most likely was removed from the
+                # device, we have schema evolution and will continue here!
+                # NOTE: Recursive bindings are not supported here!
+                continue
+            if prop_binding.access_mode is not AccessMode.RECONFIGURABLE:
+                continue
+            prop_value = get_binding_value(prop_binding)
+            edit_value = None
+            if (prop_binding.required_access_level <= access_level
+                    and prop_binding.is_allowed(state)):
+                if has_changes(prop_binding, prop_value, value):
+                    edit_value = validate_value(prop_binding, value)
+                    if edit_value is None:
+                        invalid_prop[path] = value
+                    elif not has_changes(prop_binding, prop_value,
+                                         edit_value):
+                        edit_value = None
+            prop_proxy.edit_value = edit_value
+        # NOTE: We tell the model directly to send dataChanged signal and
+        # notify for changes!
+        model._config_update()
+
+        # Show a dialog for invalid keys:
+        if invalid_prop:
+            self._show_not_loaded_properties(proxy, invalid_prop)
+
+    def _set_project_device_config(self, proxy, configuration):
+        """Sets the configuration of an of device by validating and setting
+           the value of every non-readonly property. This is done as follows:
+
+           1. Iterate over each writable property by (deep)copying the
+              configuration and deleting nonexistent and non-configurable
+              properties to exclude it from bulk setting
+           2. Check if the property binding is valid and writeable
+              (non-readonly). If not, we exclude the property from the bulk
+              setting by deleting it from the configuration
+           3. Validate the value from the binding information. If it fails to
+              be validated, we report it as invalid and exclude it from
+              the bulk setting.
+           4. Apply the validated configuration and its attributes
+        """
+
+        # Get the validated config for the bulk update
+        valid, invalid = self._get_validated_config(proxy, configuration)
+
+        # Load the configuration directly into the binding
+        apply_configuration(valid, proxy.binding)
+        # Apply attributes in a second step
+        for path, _, attrs in flat_iter_hash(valid):
+            binding = proxy.get_property_binding(path)
+            if binding is not None:
+                # only update editable attribute values
+                binding.update_attributes(attr_fast_deepcopy(attrs, {}))
+        # Notify again. XXX: Schema update too?
+        proxy.binding.config_update = True
+
+        # Show a dialog for invalid keys:
+        if invalid:
+            self._show_not_loaded_properties(proxy, invalid)
+
+    def _get_validated_config(self, proxy, configuration):
+        """Validate the configuration by populating a new Hash with the
+           validated values and attributes. We ignore read-only properties
+           and with invalid values"""
+
+        valid, invalid = Hash(), Hash()  # {path: value}
+        for path, value, attrs in flat_iter_hash(configuration):
+            prop_binding = proxy.get_property_binding(path)
+            writable = (prop_binding is not None and
+                        prop_binding.access_mode != AccessMode.READONLY)
+            if writable:
+                validated_value = validate_value(prop_binding, value)
+                if validated_value is not None:
+                    valid[path] = validated_value
+                    valid[path, ...] = attrs
+                else:
+                    # Report only existing and configurable properties but
+                    # with invalid values.
+                    invalid[path] = value
+
+        return valid, invalid
+
+    def _show_not_loaded_properties(self, device_proxy, invalid_prop):
+        msg = ("Some values are not loaded as they are "
+               "invalid for the current property.")
+        details = []
+        for path, value in invalid_prop.items():
+            binding = device_proxy.get_property_binding(path)
+            details.append(format_property_details(binding, path, value))
+
+        messagebox.show_warning(msg, details="\n".join(details),
+                                parent=self)
 
     def _update_buttons(self, proxy):
         """Main method to update the button visibility of the configurator"""
