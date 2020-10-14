@@ -2,7 +2,7 @@ from PyQt5.QtCore import Qt
 
 from karabo.common.api import (
     KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_ROW_SCHEMA)
-from karabo.native import Configurable, Bool, String, Hash, encodeXML
+from karabo.native import Configurable, Bool, String, Hash
 from karabogui.binding.api import (
     BindingNamespace, BindingRoot, BoolBinding, DeviceClassProxy,
     ListOfNodesBinding, PropertyProxy, StringBinding, TableBinding,
@@ -24,11 +24,6 @@ class _TableRow(Configurable):
     monitored = Bool(displayedName='Monitor out', defaultValue=False)
     access = String(displayedName='Access', defaultValue='expert',
                     options=['expert', 'user'])
-
-    @classmethod
-    def getClassSchema(cls):
-        schema = super(_TableRow, cls).getClassSchema()
-        return encodeXML(schema.hash)
 
 
 def _build_binding():
