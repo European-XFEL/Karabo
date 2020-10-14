@@ -1,12 +1,22 @@
+from ast import literal_eval
+
+import numpy as np
 from traits.api import TraitError, Undefined
 
 from karabo.common import const
-from karabo.native import AccessMode, Hash, MetricPrefix, Unit, Timestamp
+from karabo.native import (
+    AccessMode, Hash, MetricPrefix, Unit, Timestamp)
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
-    BindingNamespace, BindingRoot, NodeBinding, SlotBinding, VectorHashBinding)
-from .util import attr_fast_deepcopy, is_equal
+    BindingNamespace, BindingRoot, CharBinding, NodeBinding, SlotBinding,
+    StringBinding, VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
+    VectorNumberBinding)
+from .util import array_equal, attr_fast_deepcopy, is_equal
+
+VECTOR_FLOAT_BINDINGS = (VectorFloatBinding, VectorDoubleBinding)
+RECURSIVE_BINDINGS = (NodeBinding, ListOfNodesBinding,
+                      ChoiceOfNodesBinding)
 
 
 def apply_fast_data(config, binding, timestamp):
@@ -319,3 +329,46 @@ def extract_sparse_configurations(proxies, devices=None):
         hsh[key] = _get_value(proxy)
 
     return devices
+
+
+def validate_value(binding, value):
+    if type(value) is str:
+        # There are cases that values are saved as strings.
+        # We try to convert it back to a literal.
+        if not isinstance(binding, (StringBinding, CharBinding)):
+            value = convert_string(value)
+    try:
+        if isinstance(binding, VectorNumberBinding):
+            # Check if binding is a vector, then test array against its
+            # expected dtype.
+            casted_value = binding.validate_trait("value", value)
+            if isinstance(binding, VECTOR_FLOAT_BINDINGS):
+                value = np.array(value, dtype=casted_value.dtype)
+            value = casted_value if array_equal(casted_value, value) else None
+        elif isinstance(binding, VectorHashBinding):
+            # VectorHashBinding is not a valid value
+            value = None
+        elif isinstance(binding, RECURSIVE_BINDINGS):
+            # Nothing to do here! We automatically return the value
+            pass
+        else:
+            # The value is a simple data type. We validate it with the binding
+            # traits.
+            value = binding.validate_trait("value", value)
+    except (TraitError, TypeError, ValueError):
+        # Validation has failed, we inform that there's no validated value
+        value = None
+
+    return value
+
+
+def check_if_all(lst, value=None):
+    return lst.count(value) == len(lst)
+
+
+def convert_string(value):
+    try:
+        return literal_eval(value)
+    except ValueError:
+        # Conversion of string to a literal failed, we return the value as is.
+        return value

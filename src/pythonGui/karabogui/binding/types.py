@@ -1,10 +1,12 @@
 from traits.api import (
-    Array, CArray, CBool, Complex, Dict, Enum, Event, Float, HasStrictTraits,
-    Instance, List, Property, Range, String, Trait, TraitHandler, Undefined)
+    Array, Any, CArray, CBool, Complex, Dict, Enum, Event, Float,
+    HasStrictTraits, Instance, List, Property, Range, String, Trait,
+    TraitHandler, Undefined, cached_property)
 
 from karabo.common import const
 from karabo.common.states import State
-from karabo.native import AccessLevel, AccessMode, Assignment, Hash, Timestamp
+from karabo.native import (
+    AccessLevel, AccessMode, Assignment, Hash, HashList, Timestamp)
 
 KEY_DISPLAYED_NAME = const.KARABO_SCHEMA_DISPLAYED_NAME
 KEY_DISPLAY_TYPE = const.KARABO_SCHEMA_DISPLAY_TYPE
@@ -14,6 +16,7 @@ KEY_ACCLVL = const.KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL
 KEY_OPT = const.KARABO_SCHEMA_OPTIONS
 KEY_UNIT = const.KARABO_SCHEMA_UNIT_SYMBOL
 KEY_UNITPREFIX = const.KARABO_SCHEMA_METRIC_PREFIX_SYMBOL
+KEY_ROW_SCHEMA = const.KARABO_SCHEMA_ROW_SCHEMA
 
 
 class BaseBinding(HasStrictTraits):
@@ -362,7 +365,31 @@ class VectorFloatBinding(VectorNumberBinding):
 
 
 class VectorHashBinding(VectorBinding):
-    value = List(Instance(Hash))
+    value = Any((Instance(HashList), List))
+    row_schema = Instance(Hash)
+    _bindings = Property(depends_on="row_schema")
+
+    @cached_property
+    def _get__bindings(self):
+        from .builder import _BINDING_MAP
+        bindings = {}
+        for key in self.row_schema.getKeys():
+            value_type = self.row_schema[key, const.KARABO_SCHEMA_VALUE_TYPE]
+            binding_factory = _BINDING_MAP[value_type]
+            attrs = self.row_schema[key, ...]
+            bindings[key] = binding_factory(attributes=attrs, value=Undefined)
+        return bindings
+
+    def get_binding(self, key):
+        return self._bindings.get(key)
+
+    def _update_shortcuts(self, attrs):
+        super(VectorHashBinding, self)._update_shortcuts(attrs)
+        row_schema = attrs.get(KEY_ROW_SCHEMA)
+        if row_schema is None:
+            return
+
+        self.row_schema = row_schema.hash
 
 
 class VectorInt8Binding(VectorNumberBinding):
