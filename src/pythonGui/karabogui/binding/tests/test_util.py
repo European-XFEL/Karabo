@@ -79,7 +79,7 @@ def test_attr_fast_deepcopy():
     assert diff == {KARABO_SCHEMA_MIN_EXC: 0}
 
 
-def test_is_equal():
+def test_array_equal():
     assert is_equal(np.array([1, 2, 3]), np.array([1, 2, 3]))
 
 
