@@ -12,6 +12,9 @@ from karabo.native import Hash, Schema
 from . import types
 
 
+FLOAT_TOLERANCE = 1e-7
+
+
 def attr_fast_deepcopy(d, ref=None):
     """copy.deepcopy is criminally slow. We can bypass its fanciness as long
     as we only copy 'simple' datastructures.
@@ -112,34 +115,58 @@ def has_changes(binding, old_value, new_value):
     a real difference.
     """
     # Check if changes were made
-    if old_value is None:
-        changes = True
-    elif (isinstance(old_value, (numbers.Complex, np.inexact))
-            and not isinstance(old_value, numbers.Integral)):
-        diff = abs(old_value - new_value)
-        abs_err = binding.attributes.get(const.KARABO_SCHEMA_ABSOLUTE_ERROR)
-        rel_err = binding.attributes.get(const.KARABO_SCHEMA_RELATIVE_ERROR)
-        if abs_err is not None:
-            changes = (diff >= abs_err)
-        elif rel_err is not None:
-            changes = (diff >= abs(old_value * rel_err))
-        else:
-            changes = (diff >= abs(old_value * 1e-7))  # IEEE 754 compliance
-    elif isinstance(old_value, (list, np.ndarray)):
-        if len(old_value) != len(new_value):
+    try:
+        if old_value is None:
             changes = True
+        elif is_nonintegral_number(old_value):
+            abs_err, rel_err = None, None
+            if binding is not None:
+                attrs = binding.attributes
+                abs_err = attrs.get(const.KARABO_SCHEMA_ABSOLUTE_ERROR)
+                rel_err = attrs.get(const.KARABO_SCHEMA_RELATIVE_ERROR)
+            diff = abs(old_value - new_value)
+            if abs_err is not None:
+                changes = (diff >= abs_err)
+            elif rel_err is not None:
+                changes = (diff >= abs(old_value * rel_err))
+            else:
+                # IEEE 754 compliance
+                changes = (diff >= abs(old_value * FLOAT_TOLERANCE))
+        elif isinstance(old_value, np.ndarray):
+            changes = not array_equal(new_value, old_value)
+        elif isinstance(old_value, list):
+            if len(old_value) != len(new_value):
+                changes = True
+            else:
+                changes = False
+                for i in range(len(old_value)):
+                    if not is_equal(old_value[i], new_value[i]):
+                        changes = True
+                        break
         else:
-            changes = False
-            cmp = is_equal
-            if isinstance(old_value, np.ndarray):
-                cmp = _build_array_cmp(old_value.dtype)
-            for i in range(len(old_value)):
-                if not cmp(old_value[i], new_value[i]):
-                    changes = True
-                    break
-    else:
-        changes = (str(old_value) != str(new_value))
+            changes = (str(old_value) != str(new_value))
+    except TypeError:
+        # When old_value and new_value have different types and cannot be
+        # operated/compared together, it signifies that there are changes.
+        changes = True
+
     return changes
+
+
+def is_nonintegral_number(number):
+    # Check a value if it is not an integral number. Common cases are floats.
+    return (isinstance(number, (numbers.Complex, np.inexact))
+            and not isinstance(number, numbers.Integral))
+
+
+def has_diff(old_value, new_value, abs_err=None, rel_err=None):
+    diff = abs(old_value - new_value)
+    if abs_err is not None:
+        return diff >= abs_err
+    elif rel_err is not None:
+        return diff >= abs(old_value * rel_err)
+    else:
+        return diff >= abs(old_value * 1e-7)  # IEEE 754 compliance
 
 
 def is_equal(a, b):
@@ -235,3 +262,9 @@ def has_min_max_attributes(binding):
 
     return ((min_inc is not None or min_exc is not None) and
             (max_inc is not None or max_exc is not None))
+
+
+def array_equal(actual, expected):
+    if len(actual) != len(expected):
+        return False
+    return np.allclose(actual, expected, atol=FLOAT_TOLERANCE)
