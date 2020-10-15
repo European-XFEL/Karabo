@@ -24,8 +24,9 @@ from karabo.middlelayer_api.injectable import Injectable
 from .eventloop import DeviceTest, async_tst
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
-FLAKY_MAX_RUNS=7
-FLAKY_MIN_PASSES=3
+FLAKY_MAX_RUNS = 7
+FLAKY_MIN_PASSES = 3
+
 
 class Superslot(Slot):
     @coroutine
@@ -460,7 +461,7 @@ class Tests(DeviceTest):
         """test setting a property with a setter method"""
         with (yield from getDevice("remote")) as d:
             d.other = 102
-        yield from sleep(0.1)
+        yield from sleep(0.5)
         self.assertEqual(self.remote.value, 102)
 
     @async_tst
@@ -555,13 +556,13 @@ class Tests(DeviceTest):
         self.remote.nested.val = None
         # NOTE: Protect against a race condition in getDevice and cycle once!
         # Can be cured with async with which is not possible at the moment.
-        yield from sleep(0)
+        yield from sleep(0.1)
         with (yield from getDevice("remote")) as d:
             d.counter = 0
             # we test that d.counter and d.nested.val are still None (it
             # must be, no yield from since last line). This asserts that
             # waitUntilNew also works with uninitialized values, which
-            # had been a bug before.
+            # had been a bug before
             self.assertEqual(d.counter, None)
             self.assertEqual(d.nested.val, None)
             yield from waitUntilNew(d.value, d.counter, d.nested.val)
@@ -664,7 +665,8 @@ class Tests(DeviceTest):
             delta = abs(ts - datetime.now())
             # NOTE: `delta` is a timedelta object, which contains only
             # days, seconds, and microseconds.
-            return delta.days * 3600 * 24 + delta.seconds + delta.microseconds * 1e-6
+            return (delta.days * 3600 * 24 + delta.seconds +
+                    delta.microseconds * 1e-6)
 
         with (yield from getDevice("remote")) as d:
             t = ensure_future(d.read_log())
@@ -856,7 +858,7 @@ class Tests(DeviceTest):
         try:
             self.assertNotEqual(d.value, 123)
             self.remote.value = 123
-            yield from sleep(0.02)
+            yield from sleep(0.5)
             self.assertEqual(d.value, 123)
         finally:
             # check the proxy gets collected when not used anymore

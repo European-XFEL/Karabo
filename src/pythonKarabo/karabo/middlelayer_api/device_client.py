@@ -289,8 +289,8 @@ def getHistory(prop, begin, end, *, maxNumData=10000, timeout=-1, wait=True):
     # GuiServerDevice::onGetPropertyHistory. One day we should
     # de-hard-code both.
 
-    if (isinstance(prop, ProxyBase) or isinstance(prop, str)
-            and "." not in prop):
+    if (isinstance(prop, ProxyBase) or isinstance(prop, str) and
+            "." not in prop):
         assert wait
         return _getHistory_old(prop, begin, end, maxNumData, timeout)
     else:
@@ -949,8 +949,8 @@ def filterByTags(proxy, *tags):
     assert isinstance(proxy, ProxyBase)
     tags = frozenset(tags)
     filtered = [desc for desc in getDescriptors(proxy)
-                if desc.tags is not None
-                and not tags.isdisjoint(desc.tags)]
+                if desc.tags is not None and
+                not tags.isdisjoint(desc.tags)]
 
     return filtered
 

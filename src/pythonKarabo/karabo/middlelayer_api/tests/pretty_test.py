@@ -8,10 +8,12 @@ from IPython.lib.pretty import pretty
 from karabo.middlelayer import (
     Proxy, ProxyNode, Hash, Float, Int32, SubProxy, Unit, VectorString)
 
+
 class Node(SubProxy):
     strings = VectorString(key="strings")
 
     _allattrs = ["strings"]
+
 
 class Words(Enum):
     a = 5
