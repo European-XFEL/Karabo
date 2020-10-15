@@ -76,7 +76,7 @@ class BaseLayout(object):
     def translate(self, offset):
         rect = QRect(self.model.x + offset.x(), self.model.y + offset.y(),
                      self.model.width, self.model.height)
-        self.setGeometry(rect)
+        self.set_geometry(rect)
 
     # --------------------------------------------
     # QLayout Virtual Functions

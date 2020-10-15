@@ -159,7 +159,7 @@ def create_object_from_model(layout, model, parent_widget, object_dict,
                     model_rect.setSize(obj.sizeHint())
                 else:
                     model_rect = rect
-            obj.setGeometry(model_rect)
+            obj.set_geometry(model_rect)
         elif is_widget(obj):
             model_rect = QRect(model.x, model.y, model.width, model.height)
             widget_rect = obj.geometry()
