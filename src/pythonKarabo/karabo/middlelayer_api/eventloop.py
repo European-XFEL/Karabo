@@ -18,6 +18,7 @@ import time
 import threading
 import traceback
 import weakref
+from abc import ABC, abstractmethod
 
 from karabo.native.data.basetypes import KaraboValue, unit_registry as unit
 from karabo.native.exceptions import KaraboError
@@ -35,8 +36,105 @@ _MSG_PRIORITY_LOW = 3  # can be dropped in case of congestion
 _NUM_THREADS = 200
 
 
-class Broker:
+class Broker(ABC):
+    def __init__(self, need_subscribe):
+        self.needSubscribe = need_subscribe
+
+    @abstractmethod
+    def send(self, p, args):
+        pass
+
+    @abstractmethod
+    def heartbeat(self, interval):
+        pass
+
+    @abstractmethod
+    def notify_network(self, info):
+        pass
+
+    @abstractmethod
+    def call(self, signal, targets, reply, args):
+        pass
+
+    @abstractmethod
+    def request(self, device, target, *args):
+        pass
+
+    @abstractmethod
+    def log(self, message):
+        pass
+
+    @abstractmethod
+    def emit(self, signal, targets, *args):
+        pass
+
+    @abstractmethod
+    def reply(self, message, reply, error=False):
+        pass
+
+    @abstractmethod
+    def replyException(self, message, exception):
+        pass
+
+    @abstractmethod
+    def connect(self, deviceId, signal, slot):
+        pass
+
+    @abstractmethod
+    def disconnect(self, deviceId, signal, slot):
+        pass
+
+    @abstractmethod
+    def consume(self, device):
+        pass
+
+    @abstractmethod
+    def handleMessage(self, message, device):
+        pass
+
+    def register_slot(self, name, slot):
+        pass
+
+    @abstractmethod
+    def main(self, device):
+        pass
+
+    @abstractmethod
+    def stop_tasks(self):
+        pass
+
+    @abstractmethod
+    def enter_context(self, context):
+        pass
+
+    @abstractmethod
+    def updateInstanceInfo(self, info):
+        pass
+
+    @abstractmethod
+    def decodeMessage(self, message):
+        pass
+
+    @abstractmethod
+    def get_property(self, message, prop):
+        return None
+
+    @staticmethod
+    def create_connection(hosts, connection):
+        # Get scheme (protocol) of first URI...
+        scheme, _, _ = hosts[0].split(':')
+        if scheme == 'tcp':
+            return (JmsBroker.create_connection(hosts, connection),
+                    JmsBroker)
+        # elif scheme == 'mqtt':
+        #    return None, MqttBroker
+        else:
+            raise RuntimeError(f"Unsupported protocol {scheme}")
+
+
+class JmsBroker(Broker):
     def __init__(self, loop, deviceId, classId, broadcast=True):
+        super(JmsBroker, self).__init__(False)
         self.loop = loop
         self.connection = loop.connection
         self.session = openmq.Session(self.connection, False, 1, 0)
@@ -366,6 +464,35 @@ class Broker:
         return ({k: v.split(",") for k, v in (s.split(":") for s in slots)},
                 params)
 
+    def get_property(self, message, prop):
+        return message.properties[prop].decode('ascii')
+
+    @staticmethod
+    def create_connection(hosts, connection):
+        if connection is not None:
+            return connection
+        for hp in hosts:
+            protocol, host, port = hp.split(':')
+            if protocol != 'tcp':
+                raise RuntimeError(f"All URIs in KARABO_BROKER must"
+                                   f" contain the same scheme (protocol)")
+            host = host[2:]
+            p = openmq.Properties()
+            p["MQBrokerHostName"] = host.strip()
+            p["MQBrokerHostPort"] = int(port)
+            p["MQConnectionType"] = "TCP"
+            p["MQPingInterval"] = 20
+            p["MQSSLIsHostTrusted"] = True
+            p["MQAckOnProduce"] = False
+            p["MQAckTimeout"] = 0
+            try:
+                connection = openmq.Connection(p, "guest", "guest")
+                connection.start()
+                return connection
+            except Exception:
+                connection = None
+        raise RuntimeError(f"No connection can be established for {hosts}")
+
 
 def synchronize(coro):
     """Decorate coroutine to play well in threads
@@ -558,28 +685,11 @@ class EventLoop(SelectorEventLoop):
             self.default_exception_handler(context)
 
     def getBroker(self, deviceId, classId, broadcast):
-        if self.connection is None:
-            hosts = os.environ.get("KARABO_BROKER",
-                                   "tcp://exfl-broker.desy.de:7777").split(',')
-            for hp in hosts:
-                protocol, host, port = hp.split(':')
-                host = host[2:]
-                p = openmq.Properties()
-                p["MQBrokerHostName"] = host.strip()
-                p["MQBrokerHostPort"] = int(port)
-                p["MQConnectionType"] = "TCP"
-                p["MQPingInterval"] = 20
-                p["MQSSLIsHostTrusted"] = True
-                p["MQAckOnProduce"] = False
-                p["MQAckTimeout"] = 0
-                try:
-                    self.connection = openmq.Connection(p, "guest", "guest")
-                    break
-                except Exception:
-                    self.connection = None
-            self.connection.start()
-
-        return Broker(self, deviceId, classId, broadcast)
+        hosts = os.environ.get("KARABO_BROKER",
+                               "tcp://exfl-broker.desy.de:7777,"
+                               "tcp://localhost:7777").split(',')
+        self.connection, Cls = Broker.create_connection(hosts, self.connection)
+        return Cls(self, deviceId, classId, broadcast)
 
     def create_task(self, coro, instance=None):
         """Create a new task, running coroutine *coro*

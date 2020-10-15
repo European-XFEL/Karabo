@@ -20,8 +20,8 @@ class Tests(TestCase):
     @classmethod
     def setUpClass(cls):
         mods = (obj.__module__ for obj in middlelayer.__dict__.values()
-                if hasattr(obj, "__module__")
-                and obj.__module__.startswith("karabo"))
+                if hasattr(obj, "__module__") and
+                obj.__module__.startswith("karabo"))
         cls.modules = {sys.modules[m].__file__ for m in mods}
 
     def test_pep8(self):
