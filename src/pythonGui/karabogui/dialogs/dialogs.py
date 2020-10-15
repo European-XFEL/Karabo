@@ -54,6 +54,7 @@ class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super(AboutDialog, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), 'about.ui'), self)
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         image_path = op.join(op.dirname(icons.__file__), 'tunnel.png')
         tunnel_img = QPixmap(image_path)
