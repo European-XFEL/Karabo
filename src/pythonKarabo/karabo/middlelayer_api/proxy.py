@@ -26,8 +26,8 @@ class _ProxyBase(object):
     def __repr__(self):
         subs = ", ".join("{}={!r}".format(k, getattr(self, k))
                          for k, v in self.__class__.__dict__.items()
-                         if isinstance(v, Descriptor)
-                         and not isinstance(v, Slot) and hasattr(self, k))
+                         if isinstance(v, Descriptor) and
+                         not isinstance(v, Slot) and hasattr(self, k))
         return self.__class__.__name__ + "[{}]".format(subs)
 
     def _repr_html_generator_(self, nest=0):

@@ -105,7 +105,7 @@ class RemotePipelineTest(DeviceTest):
             await waitUntil(lambda: self.bob.received == 1)
             self.assertEqual(self.bob.received, 1)
             await proxy.sendEndOfStream()
-            await waitUntil(lambda: self.bob.eosReceived.value  == True)
+            await waitUntil(lambda: self.bob.eosReceived.value is True)
             self.assertEqual(self.bob.eosReceived.value, True)
             await proxy.sendData()
             await waitUntil(lambda: self.bob.received == 2)

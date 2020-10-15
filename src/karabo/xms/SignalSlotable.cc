@@ -1908,7 +1908,7 @@ namespace karabo {
                 }
             } else {
                 try {
-                    request(slotInstanceId, "slotSubscribeRemoteSignal",
+                    request(slotInstanceId, "slotUnsubscribeRemoteSignal",
                             signalInstanceId, signalFunction)
                             .timeout(1000).receive(disconnected);
                     if (!disconnected) {
@@ -1923,7 +1923,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_WARN << m_instanceId
                             << " : Timeout trying to un-subscribe from signal \""
                             << signalInstanceId << ":" << signalFunction
-                            << "\" while delegating to \"" << slotInstanceId << ":slotSubscribeRemoteSignal\"";
+                            << "\" while delegating to \"" << slotInstanceId << ":slotUnsubscribeRemoteSignal\"";
                     return disconnected;
                 }
             }

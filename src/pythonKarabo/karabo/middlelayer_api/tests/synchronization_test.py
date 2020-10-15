@@ -7,8 +7,9 @@ import time
 
 from .eventloop import async_tst, DeviceTest, sync_tst
 from karabo.middlelayer import (
-    allCompleted, background, firstCompleted, firstException, gather, HAVE_UVLOOP,
-    MetricPrefix, QuantityValue, sleep, synchronous, Unit, unit)
+    allCompleted, background, firstCompleted, firstException, gather,
+    HAVE_UVLOOP, MetricPrefix, QuantityValue, sleep, synchronous,
+    Unit, unit)
 from karabo.middlelayer_api.synchronization import FutureDict
 
 

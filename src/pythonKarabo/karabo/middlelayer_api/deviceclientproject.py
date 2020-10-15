@@ -185,7 +185,8 @@ class DeviceClientProject(Project):
             return
 
         timestamp = datetime.now().isoformat()
-        row = [timestamp] + [self.deviceClient.get(deviceData[0], deviceData[1])
+        row = [timestamp] + [self.deviceClient.get(deviceData[0],
+                                                   deviceData[1])
                              for deviceData in self.monitorTuples]
         self.monitorWriter.writerow(row)
 

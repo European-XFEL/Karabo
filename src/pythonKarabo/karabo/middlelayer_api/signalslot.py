@@ -30,9 +30,10 @@ class Signal(object):
 def _log_exception(func, device, message):
     logger = logging.getLogger(device.deviceId)
     _, exception, _ = sys.exc_info()
+    # Use properties directly ...
     default = ('Exception in slot "%s" of device "%s" called by "%s"',
                func.__qualname__, device.deviceId,
-               message.properties['signalInstanceId'].decode("ascii"))
+               device._ss.get_property(message, 'signalInstanceId'))
     logmessage = getattr(exception, "logmessage", default)
     level = getattr(exception, "loglevel", logging.ERROR)
     logger.log(level, *logmessage, exc_info=True)
@@ -80,9 +81,21 @@ class BoundSignal(object):
         self.args = signal.args
 
     def connect(self, target, slot):
+        # Check first that broker protocol requires a subscription
+        # initiated from 'target' side ...
+        if self.device._ss.needSubscribe:
+            self.device._ss.emit("call",
+                                 {target: ["slotSubscribeRemoteSignal"]},
+                                 self.device.deviceId, self.name)
         self.connected.setdefault(target, set()).add(slot)
 
     def disconnect(self, target, slot):
+        # Check first that broker protocol requires a un-subscription
+        # initiated from 'target' side ...
+        if self.device._ss.needSubscribe:
+            self.device._ss.emit("call",
+                                 {target: ["slotUnsubscribeRemoteSignal"]},
+                                 self.device.deviceId, self.name)
         s = self.connected.get(target, None)
         if s is None:
             return False
@@ -342,17 +355,48 @@ class SignalSlotable(Configurable):
         """
         get_event_loop().stop()
 
+    @coslot
+    def slotSubscribeRemoteSignal(self, signalInstanceId, signalFunction):
+        """Slot used to delegate a subscription to remote signal
+        asynchronously if such subscription is required by used broker...
+        """
+        # Check first if 'subscriber' is implemented for broker
+        subscriber = getattr(self._ss, 'subscribeToRemoteSignal', None)
+        if subscriber is None:
+            return False
+        yield from subscriber(signalInstanceId, signalFunction)
+        return True
+
+    @coslot
+    def slotUnsubscribeRemoteSignal(self, signalInstanceId, signalFunction):
+        """Slot used to delegate an un-subscription from remote signal
+        asynchronously if such un-subscription is required by used broker...
+        """
+        # Check first if 'subscriber' is implemented for broker
+        subscriber = getattr(self._ss, 'unsubscribeFromRemoteSignal', None)
+        if subscriber is None:
+            return False
+        yield from subscriber(signalInstanceId, signalFunction)
+        return True
+
     @slot
-    def slotConnectToSignal(self, signal, target, slot):
-        signalObj = getattr(self, signal, None)
+    def slotConnectToSignal(self, signalFunction,
+                            slotInstanceId, slotFunction):
+        """Slot used to delegate a 'connection' between signal and slot to
+        signal side (synchronously)
+        """
+        signalObj = getattr(self, signalFunction, None)
         if signalObj is None:
             return False
         else:
-            signalObj.connect(target, slot)
+            signalObj.connect(slotInstanceId, slotFunction)
             return True
 
     @slot
     def slotDisconnectFromSignal(self, signal, target, slot):
+        """Slot used to delegate a 'disconnection' of signal and slot to
+        signal side (synchronously)
+        """
         signalObj = getattr(self, signal, None)
         if signalObj is None:
             return False
