@@ -225,11 +225,12 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
     def _checkLocked(self, message):
         """return an error message if device is locked or None if not"""
         lock_clear = ("slotClearLock"
-                      in message.properties["slotFunctions"].decode("ascii"))
+                      in self._ss.get_property(message, "slotFunctions"))
         if (self.lockedBy and self.lockedBy !=
-                message.properties["signalInstanceId"].decode("ascii") and not
-                lock_clear):
+                self._ss.get_property(message, "signalInstanceId") and
+                not lock_clear):
             return 'Device locked by "{}"'.format(self.lockedBy)
+        return None
 
     def slotReconfigure(self, reconfiguration, message):
         # This can only be called as a slot
