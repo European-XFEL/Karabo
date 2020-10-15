@@ -12,7 +12,7 @@ import sys
 from lxml import etree
 import pkg_resources
 from PyQt5 import uic
-from PyQt5.QtCore import QProcess, pyqtSlot
+from PyQt5.QtCore import QProcess, pyqtSlot, Qt
 from PyQt5.QtWidgets import QDialog
 
 from karabogui import icons
@@ -153,6 +153,7 @@ class UpdateDialog(QDialog):
     def __init__(self, parent=None):
         super(UpdateDialog, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), 'update_dialog.ui'), self)
+        self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.lb_current.setText(UNDEFINED_VERSION)
         self.lb_latest.setText(UNDEFINED_VERSION)

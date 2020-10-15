@@ -3,7 +3,7 @@ from lxml import etree
 from pathlib import Path
 import random
 
-from PyQt5.QtCore import pyqtSlot, QSize
+from PyQt5.QtCore import pyqtSlot, QSize, Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import (
     QCheckBox, QLabel, QPushButton, QVBoxLayout, QWizard, QWizardPage)
@@ -43,6 +43,7 @@ class Wizard(QWizard):
 
     def __init__(self, parent=None):
         super(Wizard, self).__init__(parent)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("Karabo Tips & Tricks")
 
         checkbox = QCheckBox("Don't show tips at startup!")
