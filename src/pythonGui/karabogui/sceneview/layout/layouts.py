@@ -139,6 +139,27 @@ class BoxLayout(BaseLayout, QBoxLayout):
 
         return super(BoxLayout, self).sizeHint()
 
+    def setGeometry(self, rect):
+        super(BoxLayout, self).setGeometry(rect)
+
+        # Update the geometry of the widget in their model
+        for i in range(self.count()):
+            item = self.itemAt(i)
+            rect = item.geometry()
+
+            if isinstance(item, BaseLayout):
+                model = item.model
+            elif isinstance(item, QWidgetItem):  # QWidgetItem
+                model = item.widget().model
+            else:
+                # This is probably a ShapeLayoutItem. It has a `set_geometry`
+                # that sets the values to its model. We do nothing instead.
+                return
+
+            # Update the model geometry
+            model.trait_set(x=rect.x(), y=rect.y(),
+                            width=rect.width(), height=rect.height())
+
 
 class GridLayout(BaseLayout, QGridLayout):
     def __init__(self, model, parent=None):
