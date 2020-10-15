@@ -31,8 +31,8 @@ class Tests(TestCase):
         self.assertTrue(all(numeric.linspace(3, 5 * unit.m / unit.m, 3) ==
                             [3, 4, 5]))
 
-        self.assertEqual(
-            numeric.linspace(self.ts1, 3 * self.ts1, self.nounit).timestamp, 300)
+        self.assertEqual(numeric.linspace(self.ts1, 3 * self.ts1,
+                                          self.nounit).timestamp, 300)
 
         with self.assertRaises(DimensionalityError):
             numeric.linspace(2 * unit.kg, 3 * unit.m, 3)

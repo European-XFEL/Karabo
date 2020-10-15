@@ -746,14 +746,14 @@ class NetworkOutput(Configurable):
         finally:
             # XXX: Rewrite to channel name!
             for index, row in enumerate(self.connections.value):
-                if (row['remoteAddress'] == remote_host
-                        and row['remotePort'] == remote_port):
+                if (row['remoteAddress'] == remote_host and
+                        row['remotePort'] == remote_port):
                     del self.connections[index]
             channel.close()
 
     def writeChunkNoWait(self, chunk):
-        if (self.has_shared and self.noInputShared != "wait"
-                and not self.shared_queue.full()):
+        if (self.has_shared and self.noInputShared != "wait" and
+                not self.shared_queue.full()):
             self.shared_queue.put_nowait(chunk)
         for future in self.copy_futures:
             if not future.done():
