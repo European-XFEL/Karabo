@@ -477,8 +477,8 @@ class MiddleLayerDeviceServer(DeviceServerBase):
     def slotInstanceNew(self, instanceId, info):
         yield from super(MiddleLayerDeviceServer, self).slotInstanceNew(
             instanceId, info)
-        if (info.get("classId") == "TimeServer"
-                and instanceId == self.timeServerId):
+        if (info.get("classId") == "TimeServer" and
+                instanceId == self.timeServerId):
             self._ss.connect(self.timeServerId, "signalTimeTick",
                              self.slotTimeTick)
         # Forward the broadcast to the device instances!
@@ -517,8 +517,9 @@ class BoundDeviceServer(DeviceServerBase):
         class_ban = set(self.bannedClasses)
         entrypoints = self.pluginLoader.list_plugins(self.boundNamespace)
         for ep in entrypoints:
-            if (ep.name in self.bounds or (classes and ep.name not in classes)
-                    or ep.name in class_ban):
+            if (ep.name in self.bounds or (classes and
+                                           ep.name not in classes) or
+                    ep.name in class_ban):
                 continue
             try:
                 env = dict(os.environ)
