@@ -20,6 +20,7 @@ class KaraboMessageBox(QDialog):
     def __init__(self, parent=None):
         super(KaraboMessageBox, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), "messagebox.ui"), self)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         # Set focus on the OK button
         self.ok_button.clicked.connect(self.close)
@@ -47,10 +48,7 @@ class KaraboMessageBox(QDialog):
         """Close the ticker before closing the dialog"""
         if self._ticker.isActive():
             self._ticker.stop()
-
-        # Calling the super method will not close the dialog for messageboxes
-        # with details. We just accept the event here.
-        event.accept()
+        super(KaraboMessageBox, self).closeEvent(event)
 
     def sizeHint(self):
         return self._size_hint
