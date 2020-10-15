@@ -74,6 +74,19 @@ class PanelContainer(QTabWidget):
         if self.count() == 0:
             self.hide()
 
+    def removeUndockedPanel(self, panel):
+        """Remove an undocked panel from tracking
+
+        This method is called by the panel itself as only closing signals
+        are emitted for docked panels
+        """
+        index = self.indexOf(panel)
+        assert index < 0
+
+        self.panel_set.remove(panel)
+        panel.setParent(None)
+        panel.deleteLater()
+
     def minimize(self, minimized):
         """Minimize/unminimize a tab container.
         """
