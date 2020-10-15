@@ -142,6 +142,9 @@ class BasePanelWidget(QFrame):
         else:
             if self.close():
                 event.accept()
+                if self.panel_container is not None and not self.is_docked:
+                    # We are undocked and notify!
+                    self.panel_container.removeUndockedPanel(self)
             else:
                 event.ignore()
 
