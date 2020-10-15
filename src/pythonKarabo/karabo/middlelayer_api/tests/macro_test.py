@@ -23,8 +23,8 @@ from karabo.middlelayer_api.synchronization import background, sleep
 
 from .eventloop import DeviceTest, sync_tst, async_tst
 
-FLAKY_MAX_RUNS=7
-FLAKY_MIN_PASSES=3
+FLAKY_MAX_RUNS = 7
+FLAKY_MIN_PASSES = 3
 
 
 class Superslot(Slot):
@@ -179,6 +179,7 @@ class Tests(DeviceTest):
         self.assertEqual(d.counter, -1)
         with updateDevice(d):
             self.assertNotEqual(d.counter, -1)
+            time.sleep(0.1)
             self.assertNotEqual(d.counter, 29)
         time.sleep(0.1)
         last = d.counter
@@ -460,7 +461,8 @@ class Tests(DeviceTest):
             yield from karabo_sleep(0.13)
             # Then cancel, while the macro is in that interruptable sleep
             yield from d.cancel()
-            # Sleep a little while, so the task can finish - with 0.03 failed here:
+            # Sleep a little while, so the task can finish - with 0.03
+            # failed here:
             # https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/47690
             yield from karabo_sleep(0.06)
             self.assertEqual(self.local.slept_count, 2)
