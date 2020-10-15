@@ -183,6 +183,7 @@ class ConfigurationDialog(QDialog):
 
     def __init__(self, parent=None):
         super(ConfigurationDialog, self).__init__(parent)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'configuration.ui')
         # Don't block the event loop!
