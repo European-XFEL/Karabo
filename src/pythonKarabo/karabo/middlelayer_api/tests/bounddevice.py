@@ -79,11 +79,11 @@ class TestDevice(PythonDevice):
             .commit(),
 
             BOOL_ELEMENT(expected).key("eosReceived")
-                .displayedName("EOS Received")
-                .assignmentOptional()
-                .defaultValue(False)
-                .reconfigurable()
-                .commit(),
+            .displayedName("EOS Received")
+            .assignmentOptional()
+            .defaultValue(False)
+            .reconfigurable()
+            .commit(),
 
             INT32_ELEMENT(expected).key("readonly")
             .displayedName("Readonly")
