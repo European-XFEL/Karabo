@@ -57,11 +57,14 @@ class PanelContainer(QTabWidget):
         # trigger this to class closeEvent for panels and destroy connections
         # properly
         panel.close()
-        # Then go about the removal of the tab
+
+        # Check if panel is undocked. Remove it with the corresponding function
         index = self.indexOf(panel)
         if index < 0:
-            # dock again to get rid of it
-            panel.onDock()
+            self.removeUndockedPanel(panel)
+            return
+
+        # Then go about the removal of the tab
         self.removeTab(index)
         panel.setParent(None)
         self.panel_set.remove(panel)
@@ -80,8 +83,12 @@ class PanelContainer(QTabWidget):
         This method is called by the panel itself as only closing signals
         are emitted for docked panels
         """
+        # Check if the panel is in the process or has been removed already.
+        if panel not in self.panel_set:
+            return
+
         index = self.indexOf(panel)
-        assert index < 0
+        assert index < 0 and not panel.is_docked
 
         self.panel_set.remove(panel)
         panel.setParent(None)
