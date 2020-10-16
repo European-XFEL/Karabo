@@ -338,12 +338,12 @@ def request_daemon_action(serverId, hostId, action):
 def handle_daemon_from_server(serverId, action, success, reply):
     """Callback handler for a request the daemon manager"""
     if not (success and reply.get('payload.success', False)):
-        msg = 'The command "{}" for the server "{}" was not succesful!'
+        msg = 'The command "{}" for the server "{}" was not successful!'
         messagebox.show_warning(msg.format(action, serverId),
                                 title='Daemon Service Failed')
         return
 
-    msg = 'The command "{}" for the server "{}" was succesful!'
+    msg = 'The command "{}" for the server "{}" was successful!'
     messagebox.show_information(msg.format(action, serverId),
                                 title='Daemon Service Success!')
 
