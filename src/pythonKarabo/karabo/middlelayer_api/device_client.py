@@ -582,7 +582,7 @@ def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
         yield from proxy
         return proxy
 
-    future = asyncio.async(create())
+    future = asyncio.ensure_future(create())
     futures[deviceId] = future
     return (yield from asyncio.shield(future))
 

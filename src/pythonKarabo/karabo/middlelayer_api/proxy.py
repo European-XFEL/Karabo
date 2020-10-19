@@ -349,7 +349,7 @@ class DeviceClientProxyFactory(ProxyFactory):
                 update = not self._sethash
                 self._sethash[desc.longkey], _ = desc.toDataAndAttrs(value)
                 if update:
-                    self._last_update_task = asyncio.async(
+                    self._last_update_task = asyncio.ensure_future(
                         self._update(self._last_update_task))
 
         def _callSlot(self, descriptor, timeout=-1, wait=True):
@@ -435,7 +435,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             """
             if not self._alive:
                 raise KaraboError('device "{}" died'.format(self._deviceId))
-            task = asyncio.async(coro)
+            task = asyncio.ensure_future(coro)
             self._running_tasks.add(task)
             task.add_done_callback(
                 lambda fut: self._running_tasks.discard(fut))
@@ -505,7 +505,7 @@ class AutoDisconnectProxyFactory(DeviceClientProxyFactory):
             super().__init__(device, deviceId, sync)
             self._interval = 1
             self._lastused = time.time()
-            self._task = asyncio.async(self._connector())
+            self._task = asyncio.ensure_future(self._connector())
 
         def _use(self):
             self._lastused = time.time()
@@ -516,7 +516,7 @@ class AutoDisconnectProxyFactory(DeviceClientProxyFactory):
         def _connect(self):
             if self._task.done():
                 yield from self
-                self._task = asyncio.async(self._connector())
+                self._task = asyncio.ensure_future(self._connector())
 
         @asyncio.coroutine
         def _connector(self):
