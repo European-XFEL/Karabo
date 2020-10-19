@@ -35,7 +35,7 @@ namespace karabo {
         void DataLogger::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("state")
-                    .setNewOptions(State::INIT, State::NORMAL)
+                    .setNewOptions(State::INIT, State::ON)
                     .setNewDefaultValue(State::INIT)
                     .commit();
 
@@ -87,7 +87,7 @@ namespace karabo {
             SLOT_ELEMENT(expected).key("flush")
                     .displayedName("Flush")
                     .description("Persist buffered data")
-                    .allowedStates(State::NORMAL)
+                    .allowedStates(State::ON)
                     .commit();
         }
 
@@ -185,11 +185,20 @@ namespace karabo {
             // Initiate connection to logged devices - will leave INIT state when all are connected (or failed)
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             auto counter = boost::make_shared<std::atomic<unsigned int>>(m_perDeviceData.size());
-            if (0 == *counter && this->get<karabo::util::State>("state") == State::INIT) {
-                // No devices to log, so declare readiness immediately. The requirement
-                // of being INIT state avoids overwriting any ERROR (or other) state
-                // that might have been set by an instance of a DataLogger subclass.
-                updateState(State::NORMAL);
+            if (0 == *counter) {
+                // No devices to log, so declare readiness immediately.
+                if (this->get<karabo::util::State>("state") != State::ERROR) {
+                    // We only go to ON state when there's no ERROR condition
+                    // signaled by the DataLogger subclass. InfluxDataLogger, for
+                    // instance, uses ERROR state to indicate issues with
+                    // Influx server availability.
+                    updateState(State::ON);
+                } else {
+                    KARABO_LOG_ERROR << "DataLogger '" << m_instanceId
+                        << "' in ERROR state and cannot goto ON state. "
+                        << "Current status is '"
+                        << this->get<string>("status") << "'";
+                }
             } else {
                 for (DeviceDataMap::value_type& pair : m_perDeviceData) {
                     const DeviceData::Pointer& data = pair.second;
@@ -288,11 +297,19 @@ namespace karabo {
 
         void DataLogger::checkReady(std::atomic<unsigned int>& counter) {
             // Update State once all configured device are connected.
-            // The requirement of being INIT state avoids overwriting any ERROR
-            // (or other) state that might have been set by an instance of a
-            // DataLogger subclass.
-            if (--counter == 0 && this->get<karabo::util::State>("state") == State::INIT) {
-                updateState(State::NORMAL);
+            if (--counter == 0) {
+                if (this->get<karabo::util::State>("state") != State::ERROR) {
+                    // We only go to ON state when there's no ERROR condition
+                    // signaled by the DataLogger subclass. InfluxDataLogger, for
+                    // instance, uses ERROR state to indicate issues with
+                    // InfluxServer availabilty.
+                    updateState(State::ON);
+                } else {
+                    KARABO_LOG_ERROR << "DataLogger '" << m_instanceId
+                        << "' in ERROR state and cannot goto ON state. "
+                        << "Current status is '"
+                        << this->get<string>("status") << "'";
+                }
             }
         }
 
