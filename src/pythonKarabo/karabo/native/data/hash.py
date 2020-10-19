@@ -6,7 +6,7 @@ The C++ types are mostly implemented by using the corresponding numpy type.
 """
 
 from asyncio import (
-    async, coroutine, get_event_loop, iscoroutinefunction)
+    coroutine, ensure_future, get_event_loop, iscoroutinefunction)
 import base64
 from collections import OrderedDict
 from collections.abc import Iterable
@@ -610,7 +610,7 @@ class Slot(Descriptor):
                 yield from device._onException(self, exc, tb)
                 device._ss.replyException(message, e)
 
-        return async(wrapper())
+        return ensure_future(wrapper())
 
     def _initialize(self, instance, value=None):
         return []  # nothing to initialize in a Slot
