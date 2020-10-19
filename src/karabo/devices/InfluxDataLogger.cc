@@ -395,7 +395,7 @@ namespace karabo {
         void InfluxDataLogger::expectedParameters(karabo::util::Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("state")
-                    .setNewOptions(State::INIT, State::NORMAL, State::ERROR)
+                    .setNewOptions(State::INIT, State::ON, State::ERROR)
                     .setNewDefaultValue(State::INIT)
                     .commit();
 
@@ -530,13 +530,13 @@ namespace karabo {
 
 
         void InfluxDataLogger::initializeLoggerSpecific() {
-            m_clientWrite->connectDbIfDisconnected(bind_weak(&InfluxDataLogger::checkDb, this));
+            m_clientWrite->connectDbIfDisconnected(bind_weak(&InfluxDataLogger::checkDb, this, _1));
         }
 
 
         void InfluxDataLogger::showDatabases(const InfluxResponseHandler& action) {
             std::string statement = "SHOW DATABASES";
-            m_clientRead->postQueryDb(statement, action);
+            m_clientRead->queryDb(statement, action);
             KARABO_LOG_FRAMEWORK_INFO << statement << "\n";
         }
 
@@ -605,7 +605,7 @@ namespace karabo {
 
         void InfluxDataLogger::onPingDb(const HttpResponse& o) {
             if (o.code >= 300) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Failed to ping Inlfux DB: " << o.toString();
+                KARABO_LOG_FRAMEWORK_ERROR << "Failed to ping Influx DB: " << o.toString();
                 updateState(State::ERROR, Hash("status", "Failed to ping InfluxDB."));
                 return;
             }
@@ -615,9 +615,18 @@ namespace karabo {
         }
 
 
-        void InfluxDataLogger::checkDb() {
-            KARABO_LOG_FRAMEWORK_INFO << "PING InfluxDB server ...";
-            m_clientWrite->getPingDb(bind_weak(&karabo::devices::InfluxDataLogger::onPingDb, this, _1));
+        void InfluxDataLogger::checkDb(bool connected) {
+            if (connected) {
+                // A connection to the InfluxDb server host and port combination could be established.
+                // Go ahead with the Ping -> Show Databases ... sequence.
+                KARABO_LOG_FRAMEWORK_INFO << "PING InfluxDB server ...";
+                m_clientWrite->getPingDb(bind_weak(&karabo::devices::InfluxDataLogger::onPingDb, this, _1));
+            } else {
+                // Either the InfluxDb server is not available or the connection params are invalid.
+                const std::string errMsg("Failed to connect to Influx DB server at '" + m_urlWrite + "'");
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                updateState(State::ERROR, Hash("status", errMsg));
+            }
         }
 
 

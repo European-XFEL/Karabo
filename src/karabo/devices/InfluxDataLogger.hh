@@ -82,7 +82,7 @@ namespace karabo {
 
         private:
 
-            void checkDb();
+            void checkDb(bool connected);
 
             void onPingDb(const karabo::net::HttpResponse& o);
 
