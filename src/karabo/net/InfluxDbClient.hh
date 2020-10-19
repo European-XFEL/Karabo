@@ -1,8 +1,8 @@
-/* 
+/*
  * File:   InfluxDbClient.hh
  *
  * Created on November 14, 2019, 9:57 AM
- * 
+ *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
@@ -38,7 +38,7 @@ namespace karabo {
 
 
         using InfluxResponseHandler = boost::function<void(const HttpResponse &) >;
-        typedef boost::function<void()> AsyncHandler;
+        using AsyncHandler = boost::function<void(bool)>;
 
 
         /**
@@ -57,7 +57,7 @@ namespace karabo {
          * possible that if the client cannot cope with input load rate some overflow
          * condition can be encountered.  The practice should show how we can handle
          * these problems.
-         */    
+         */
         class InfluxDbClient : public boost::enable_shared_from_this<InfluxDbClient> {
         public:
 
@@ -261,7 +261,7 @@ namespace karabo {
         };
 
     } // namespace net
-    
+
 } // namespace karabo
 
 
