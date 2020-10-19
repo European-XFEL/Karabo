@@ -355,6 +355,7 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_responseHandlersMutex);
                     m_registeredInfluxResponseHandlers.clear();
                 }
+                if (hook) hook(false); // false means connection failed
                 return;
             } else {
                 boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
@@ -366,7 +367,7 @@ namespace karabo {
             oss << "InfluxDbClient : connection to \"" << m_url << "\" established";
             KARABO_LOG_FRAMEWORK_DEBUG << oss.str();
 
-            if (hook) hook();
+            if (hook) hook(true); // true means connected successfuly.
 
             m_dbChannel->readAsyncStringUntil("\r\n\r\n", bind_weak(&InfluxDbClient::onDbRead, this, _1, _2));
         }
@@ -632,17 +633,16 @@ namespace karabo {
 
         bool InfluxDbClient::connectWait(std::size_t millis) {
             if (isConnected()) return true;
-            auto prom = boost::make_shared<std::promise<void>>();
-            std::future<void> fut = prom->get_future();
-            connectDbIfDisconnected([prom]() {
-                prom->set_value();
+            auto prom = boost::make_shared < std::promise<bool>>();
+            std::future<bool> fut = prom->get_future();
+            connectDbIfDisconnected([prom](bool connected) {
+                prom->set_value(connected);
             });
             auto status = fut.wait_for(std::chrono::milliseconds(millis));
             if (status != std::future_status::ready) {
                 return false;
             }
-            fut.get();
-            return true;
+            return fut.get();
         }
 
     } // namespace net
