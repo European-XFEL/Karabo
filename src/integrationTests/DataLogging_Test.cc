@@ -40,7 +40,7 @@ using karabo::xms::SLOT_ELEMENT;
 #define PAUSE_BEFORE_RETRY_MILLIS (m_switchedToTelegrafEnv ? PAUSE_BEFORE_RETRY_TELEGRAF : PAUSE_BEFORE_RETRY_INFLUX)
 
 #define NUM_RETRY_INFLUX 400
-#define NUM_RETRY_TELEGRAF 1600  // TODO: Reduce this to 600 (10 minutes) once load on exflserv10 gets normal.
+#define NUM_RETRY_TELEGRAF 1800  // TODO: Reduce this to 600 (10 minutes) once load on exflserv10 gets normal.
 #define NUM_RETRY (m_switchedToTelegrafEnv ? NUM_RETRY_TELEGRAF : NUM_RETRY_INFLUX)
 
 #define FLUSH_INTERVAL_SEC_INFLUX 1u
@@ -819,7 +819,7 @@ void DataLogging_Test::influxAllTestRunner() {
 
 
 bool DataLogging_Test::isTelegrafEnvResponsive() {
-    const int timeoutSecs = 90;
+    const int timeoutSecs = 45;
 
     std::clog
             << "Check if Telegraf environment is responsive (updates retrieved within "
@@ -967,25 +967,25 @@ void DataLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
     CPPUNIT_ASSERT_MESSAGE("Timeout while looking for data logger and readers instances.", timeout > 0);
 
     if (waitForLoggerReady) {
-        // Makes sure that the DataLogger has reached NORMAL state before proceeding.
+        // Makes sure that the DataLogger has reached ON state before proceeding.
         // Any call to the Flush slot while the DataLogger is in a different state will trigger an exception.
         // For the Influx Logger case, this initialization time can be quite long - if the db does not exist
-        // yet, the DataLogger must create it before reaching the NORMAL state.
+        // yet, the DataLogger must create it before reaching the ON state.
         int timeout = 10 * KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds
 
         karabo::util::State loggerState = karabo::util::State::UNKNOWN;
         const std::string &dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
         while (timeout > 0) {
             loggerState = m_deviceClient->get<karabo::util::State>(dataLoggerId, "state");
-            if (loggerState == karabo::util::State::NORMAL) {
+            if (loggerState == karabo::util::State::ON) {
                 break;
             }
             boost::this_thread::sleep(boost::posix_time::milliseconds(50));
             timeout -= 50;
         }
 
-        CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach NORMAL state.",
-                               loggerState == karabo::util::State::NORMAL);
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach ON state.",
+                                     karabo::util::State::ON, loggerState);
     }
 
     std::clog << "Ok" << std::endl;
@@ -1299,10 +1299,28 @@ void DataLogging_Test::testNoInfluxServerHandling() {
 
     testAllInstantiated(false);
 
-    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    // The DataLogger should be in ERROR state.
+    int timeout = KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds
+    karabo::util::State loggerState = karabo::util::State::UNKNOWN;
+    std::string loggerStatus;
+    const std::string &dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    while (timeout > 0) {
+        loggerState = m_deviceClient->get<karabo::util::State>(dataLoggerId, "state");
+        loggerStatus = m_deviceClient->get<std::string>(dataLoggerId, "status");
+        if (loggerState == karabo::util::State::ERROR) {
+            break;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+        timeout -= 50;
+    }
+    CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach ERROR state.",
+                           loggerState == karabo::util::State::ERROR);
 
-    // Any attempt to recover a configuration from Influx should fail if the Influx Server is not
+    std::clog << "... Influx logger in ERROR state, as expected, with status '" << loggerStatus << "'" << std::endl;
+
+    // Any attempt to recover a configuration from Influx should fail when the Influx Server is not
     // available.
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
     Epochstamp withNoServer;
     std::clog << "Requested config at '" << withNoServer.toIso8601() << "' with an invalid server url ... "
             << std::endl;
@@ -1318,8 +1336,11 @@ void DataLogging_Test::testNoInfluxServerHandling() {
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(conf, schema, cfgAtTime, cfgTime);
     } catch (const karabo::util::RemoteException &exc) {
         bool condition = (exc.detailedMsg().find("Could not connect to InfluxDb at") != std::string::npos)
-            || (exc.detailedMsg().find("Reading from InfluxDB failed") != std::string::npos);
-        CPPUNIT_ASSERT(condition);
+                || (exc.detailedMsg().find("Reading from InfluxDB failed") != std::string::npos)
+                || (exc.detailedMsg().find("Connection reset by peer"));
+        CPPUNIT_ASSERT_MESSAGE(string("Unexpected RemoteException while handling no Influx server:\n'")
+                               + exc.detailedMsg() + "'\n",
+                               condition);
         remoteExceptionCaught = true;
     }
 
@@ -1364,9 +1385,11 @@ void DataLogging_Test::testInfluxDbNotAvailableTelegraf() {
 
     int timeout = KRB_TEST_MAX_TIMEOUT * 1000; // milliseconds
     karabo::util::State loggerState = karabo::util::State::UNKNOWN;
+    std::string loggerStatus;
     const std::string &dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
     while (timeout > 0) {
         loggerState = m_deviceClient->get<karabo::util::State>(dataLoggerId, "state");
+        loggerStatus = m_deviceClient->get<std::string>(dataLoggerId, "status");
         if (loggerState == karabo::util::State::ERROR) {
             break;
         }
@@ -1377,7 +1400,7 @@ void DataLogging_Test::testInfluxDbNotAvailableTelegraf() {
     CPPUNIT_ASSERT_MESSAGE("Timeout while waiting for DataLogger '" + dataLoggerId + "' to reach ERROR state.",
                            loggerState == karabo::util::State::ERROR);
 
-    std::clog << "... logger in ERROR state as expected." << std::endl;
+    std::clog << "... logger in ERROR state with status: '\n" << loggerStatus << "'\n(as expected)." << std::endl;
 
     // Restores Influx environment for upcoming tests.
     switchFromTelegrafEnv();
