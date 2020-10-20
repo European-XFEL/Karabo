@@ -1,0 +1,4 @@
+#!/bin/bash
+# This file is part of the initial configuration of Karabo
+cd $KARABO/var/data
+exec envdir $KARABO/var/environment karabo-webserver serverId=karabo/webServer --webserver_aggregators="localhost:8585"
