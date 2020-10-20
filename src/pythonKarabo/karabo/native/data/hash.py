@@ -1211,20 +1211,22 @@ class RegexString(String):
         The descriptor validates value input on set.
     """
     classId = "RegexString"
+    regex = Attribute("")
 
     def __init__(self, regex="", flags=0, **kwargs):
         super().__init__(**kwargs)
-        self.pattern = re.compile(regex, flags)
-        self.displayType = f"Regex|{regex}"
+        self._pattern = re.compile(regex, flags)
+        self.displayType = "RegexString"
+        self.regex = regex
 
     def initialize(self, instance, value):
         self.check(value)
         return self.setter(instance, value)
 
     def check(self, data):
-        if not self.pattern.match(data):
+        if not self._pattern.match(data):
             raise KaraboError(f"Value {data} does not comply with regex "
-                              f"pattern {self.pattern}!")
+                              f"pattern {self.regex}!")
         super().check(data)
 
 
