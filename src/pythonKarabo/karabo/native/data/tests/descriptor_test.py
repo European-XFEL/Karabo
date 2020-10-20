@@ -470,7 +470,8 @@ class Tests(TestCase):
         self.assertEqual(v, "1")
         with self.assertRaises(KaraboError):
             v = d.toKaraboValue("2")
-        self.assertEqual(d.displayType, "Regex|(0|1|[T]rue|[F]alse)")
+        self.assertEqual(d.displayType, "RegexString")
+        self.assertEqual(d.regex, "(0|1|[T]rue|[F]alse)")
         self.assertEqual(d.classId, "RegexString")
 
     def test_string_enum(self):

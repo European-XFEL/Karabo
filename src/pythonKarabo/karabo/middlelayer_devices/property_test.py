@@ -325,7 +325,7 @@ class PropertyTestMDL(Device):
 
     regexProperty = RegexString(
         displayedName="Regex String",
-        regex="[a-zA-Z]",
+        regex="^[A-Za-z0-9_-]{1,20}$",
         description="A regex string property",
         defaultValue="RegexKarabo")
 
