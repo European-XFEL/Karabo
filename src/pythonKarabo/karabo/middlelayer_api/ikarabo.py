@@ -95,6 +95,8 @@ def start_ikarabo():
                        "getConfigurationFromName|"
                        "saveConfigurationFromName|"
                        "listConfigurationFromName|"
-                       "getLastConfiguration")
+                       "getLastConfiguration|"
+                       "getConfigurationFromPast|"
+                       "getSchemaFromPast")
     ip.set_hook("complete_command", class_completer,
                 re_key=".*instantiate(NoWait)?\(")
