@@ -1,0 +1,4 @@
+#!/bin/bash
+# This file is part of the initial configuration of Karabo
+cd $KARABO/var/data
+exec envdir $KARABO/var/environment karabo-middlelayerserver serverId=karabo/daemonServer 'deviceClasses=DaemonManager' init='{"KaraboDaemonManager":{"classId":"DaemonManager"}}' 'visibility=4' 2>&1
