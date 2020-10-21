@@ -43,10 +43,10 @@ from .widgets.simple import (
     AnalogModel, BitfieldModel, CheckBoxModel, ChoiceElementModel,
     ComboBoxModel, DaemonManagerModel, DirectoryModel, DisplayLabelModel,
     DisplayListModel, DisplayTextLogModel, DisplayTimeModel,
-    EditableListElementModel, EditableListModel,
-    EditableSpinBoxModel, FileInModel, FileOutModel, GlobalAlarmModel,
-    HexadecimalModel, IntLineEditModel, LabelModel, LampModel,
-    LineEditModel, PopUpModel, RunConfiguratorModel, SceneLinkModel,
+    EditableRegexModel, EditableListElementModel,
+    EditableListModel, EditableSpinBoxModel, FileInModel, FileOutModel,
+    GlobalAlarmModel, HexadecimalModel, IntLineEditModel, LabelModel,
+    LampModel, LineEditModel, PopUpModel, RunConfiguratorModel, SceneLinkModel,
     SliderModel, StickerModel, TickSliderModel, WebLinkModel, WidgetNodeModel)
 from .widgets.vacuum import VacuumWidgetModel
 from .widgets.statefulicon import StatefulIconWidgetModel
