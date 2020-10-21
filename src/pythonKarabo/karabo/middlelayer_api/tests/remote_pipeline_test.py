@@ -4,8 +4,8 @@ from unittest import main
 
 from karabo.middlelayer import (
     Bool, call, Configurable, Device, getDevice, Hash, isAlive, InputChannel,
-    Int32, Overwrite, OutputChannel, setWait, coslot, Slot, State, Timestamp,
-    UInt32, waitUntil)
+    Int32, Overwrite, OutputChannel, setWait, coslot, shutdown, Slot, State,
+    Timestamp, UInt32, waitUntil)
 from .eventloop import DeviceTest, async_tst
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
@@ -15,7 +15,7 @@ class ChannelNode(Configurable):
     data = Int32(defaultValue=0)
 
 
-class Alice(Device):
+class Sender(Device):
     # The state is explicitly overwritten, State.UNKNOWN is always possible by
     # default! We test that a proxy can reach State.UNKNOWN even if it is
     # removed from the allowed options.
@@ -40,7 +40,7 @@ class Alice(Device):
         super().__init__(configuration)
 
 
-class Bob(Device):
+class Receiver(Device):
 
     received = UInt32(
         defaultValue=0,
@@ -51,6 +51,9 @@ class Bob(Device):
 
     eosReceived = Bool(
         defaultValue=False)
+
+    def __init__(self, configuration):
+        super().__init__(configuration)
 
     @coslot
     async def connectInputChannel(self):
@@ -79,9 +82,14 @@ class RemotePipelineTest(DeviceTest):
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
-        cls.alice = Alice({"_deviceId_": "alice"})
-        cls.bob = Bob({"_deviceId_": "bob"})
-        with cls.deviceManager(cls.bob, lead=cls.alice):
+        cls.alice = Sender({"_deviceId_": "alice"})
+        cls.bob = Receiver({"_deviceId_": "bob", 
+                            "input": {"dataDistribution": "copy",
+                                      "onSlowness": "drop"}})
+        cls.charlie = Receiver({"_deviceId_": "charlie", 
+                                "input": {"dataDistribution": "shared",
+                                          "onSlowness": "wait"}})
+        with cls.deviceManager(cls.bob, cls.charlie, lead=cls.alice):
             yield
 
     @async_tst
@@ -95,26 +103,50 @@ class RemotePipelineTest(DeviceTest):
         """Test the input and output channel connection"""
         ret = await call("bob", "connectInputChannel")
         self.assertTrue(ret)
+        ret = await call("charlie", "connectInputChannel")
+        self.assertTrue(ret)
         await sleep(1)
         channels = self.bob.input.connectedOutputChannels.value
         self.assertIn("alice:output", channels)
+        channels = self.charlie.input.connectedOutputChannels.value
+        self.assertIn("alice:output", channels)
+
+        self.assertEqual(self.bob.input.onSlowness, "drop")
+        self.assertEqual(self.bob.input.dataDistribution, "copy")
+        self.assertEqual(self.charlie.input.onSlowness, "wait")
+        self.assertEqual(self.charlie.input.dataDistribution, "shared")
+
         proxy = await getDevice("alice")
         with proxy:
             self.assertEqual(self.bob.received, 0)
+            self.assertEqual(self.charlie.received, 0)
             await proxy.sendData()
             await waitUntil(lambda: self.bob.received == 1)
+            await waitUntil(lambda: self.charlie.received == 1)
+            self.assertEqual(self.charlie.received, 1)
             self.assertEqual(self.bob.received, 1)
             await proxy.sendEndOfStream()
             await waitUntil(lambda: self.bob.eosReceived.value is True)
+            await waitUntil(lambda: self.charlie.eosReceived.value is True)
             self.assertEqual(self.bob.eosReceived.value, True)
+            self.assertEqual(self.charlie.eosReceived.value, True)
             await proxy.sendData()
             await waitUntil(lambda: self.bob.received == 2)
+            await waitUntil(lambda: self.charlie.received == 2)
             self.assertEqual(self.bob.received, 2)
+            self.assertEqual(self.charlie.received, 2)
+            # Shutdown the shared channel. The queue gets removed and 
+            # we test that we are not blocked.
+            await shutdown(self.charlie.deviceId)
+
+            await proxy.sendData()
+            await waitUntil(lambda: self.bob.received == 3)
+            self.assertEqual(self.bob.received, 3)
 
     @async_tst
     async def test_output_reconnect(self):
         NUM_DATA = 5
-        output_device = Alice({"_deviceId_": "outputdevice"})
+        output_device = Sender({"_deviceId_": "outputdevice"})
         await output_device.startInstance()
 
         with (await getDevice("outputdevice")) as proxy:
@@ -142,7 +174,7 @@ class RemotePipelineTest(DeviceTest):
             self.assertFalse(isAlive(proxy))
             # The device is gone, now we instantiate the device with same
             # deviceId to see if the output automatically reconnects
-            output_device = Alice({"_deviceId_": "outputdevice"})
+            output_device = Sender({"_deviceId_": "outputdevice"})
             await output_device.startInstance()
             await waitUntil(lambda: isAlive(proxy))
             self.assertEqual(received, True)
@@ -163,7 +195,7 @@ class RemotePipelineTest(DeviceTest):
 
         # Bring up our device with same deviceId, we should not have a
         # channel active with the handler
-        output_device = Alice({"_deviceId_": "outputdevice"})
+        output_device = Sender({"_deviceId_": "outputdevice"})
         await output_device.startInstance()
         with (await getDevice("outputdevice")) as proxy:
             self.assertTrue(isAlive(proxy))
@@ -177,7 +209,7 @@ class RemotePipelineTest(DeviceTest):
     @async_tst
     async def test_output_timestamp(self):
         NUM_DATA = 5
-        output_device = Alice({"_deviceId_": "outputdevice"})
+        output_device = Sender({"_deviceId_": "outputdevice"})
         await output_device.startInstance()
 
         with (await getDevice("outputdevice")) as proxy:
