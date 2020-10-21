@@ -8,20 +8,22 @@ from PyQt5.QtGui import QPalette, QValidator
 from PyQt5.QtWidgets import QAction, QInputDialog, QLineEdit
 from traits.api import Instance, Int, on_trait_change, Str
 
+from karabo.common.api import KARABO_SCHEMA_REGEX
 from karabo.common.scenemodel.api import (
-    DoubleLineEditModel, HexadecimalModel, IntLineEditModel)
+    DoubleLineEditModel, EditableRegexModel, HexadecimalModel,
+    IntLineEditModel)
 from karabogui.binding.api import (
-    get_editor_value, get_min_max, FloatBinding, IntBinding)
+    get_editor_value, get_min_max, FloatBinding, IntBinding, StringBinding)
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, HexValidator, IntValidator,
     is_proxy_allowed, NumberValidator, register_binding_controller)
-from karabogui.util import SignalBlocker
+from karabogui.util import RegexValidator, SignalBlocker
 from karabogui.widgets.hints import LineEdit
 
 MAX_FLOATING_PRECISION = 12
 
 
-class NumberLineEdit(BaseBindingController):
+class BaseLineEdit(BaseBindingController):
     _validator = Instance(QValidator)
     _internal_widget = Instance(QLineEdit)
     _normal_palette = Instance(QPalette)
@@ -100,7 +102,7 @@ class NumberLineEdit(BaseBindingController):
 @register_binding_controller(ui_name='Float Field', can_edit=True,
                              klassname='DoubleLineEdit',
                              binding_type=FloatBinding, priority=10)
-class DoubleLineEdit(NumberLineEdit):
+class DoubleLineEdit(BaseLineEdit):
     # The scene model class used by this controller
     model = Instance(DoubleLineEditModel, args=())
 
@@ -146,7 +148,7 @@ class DoubleLineEdit(NumberLineEdit):
 @register_binding_controller(ui_name='Integer Field', can_edit=True,
                              klassname='IntLineEdit', binding_type=IntBinding,
                              priority=10)
-class IntLineEdit(NumberLineEdit):
+class IntLineEdit(BaseLineEdit):
     # The scene model class used by this controller
     model = Instance(IntLineEditModel, args=())
 
@@ -170,7 +172,7 @@ class IntLineEdit(NumberLineEdit):
 
 @register_binding_controller(ui_name='Hexadecimal', can_edit=True,
                              klassname='Hexadecimal', binding_type=IntBinding)
-class Hexadecimal(NumberLineEdit):
+class Hexadecimal(BaseLineEdit):
     model = Instance(HexadecimalModel, args=())
 
     def create_widget(self, parent):
@@ -191,3 +193,40 @@ class Hexadecimal(NumberLineEdit):
     def _validate_value(self):
         ret = super(Hexadecimal, self)._validate_value()
         return int(ret, base=16) if ret is not None else None
+
+
+def _is_regex_compatible(binding):
+    return binding.attributes.get(KARABO_SCHEMA_REGEX, None) is not None
+
+
+@register_binding_controller(ui_name='Regex Field', can_edit=True,
+                             is_compatible=_is_regex_compatible,
+                             klassname='RegexEdit', binding_type=StringBinding,
+                             priority=90)
+class EditRegex(BaseLineEdit):
+    model = Instance(EditableRegexModel, args=())
+
+    def create_widget(self, parent):
+        self._validator = RegexValidator()
+        return super(EditRegex, self).create_widget(parent)
+
+    def binding_update(self, proxy):
+        binding = proxy.binding
+        regex = binding.attributes.get(KARABO_SCHEMA_REGEX, '')
+        self._validator.setRegex(regex)
+
+    def value_update(self, proxy):
+        value = get_editor_value(proxy, '')
+        self.widget.update_label(proxy)
+        self._internal_value = str(value)
+        with SignalBlocker(self._internal_widget):
+            self._display_value = "{}".format(value)
+            self._internal_widget.setText(self._display_value)
+        self._internal_widget.setCursorPosition(self._last_cursor_pos)
+
+    def _validate_value(self):
+        value = self._internal_value
+        state, _, _ = self._validator.validate(value, 0)
+        if state == QValidator.Invalid:
+            value = None
+        return str(value) if value is not None else None
