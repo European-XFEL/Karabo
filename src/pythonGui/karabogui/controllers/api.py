@@ -1,7 +1,7 @@
 # flake8: noqa
 from .base import BaseBindingController
-from .images import (
-    get_dimensions_and_encoding, get_image_data, DIMENSIONS,
+from .arrays import (
+    get_array_data, get_dimensions_and_encoding, get_image_data, DIMENSIONS,
     REFERENCE_TYPENUM_TO_DTYPE)
 from .registry import (
     get_class_const_trait, get_compatible_controllers, get_model_controller,
