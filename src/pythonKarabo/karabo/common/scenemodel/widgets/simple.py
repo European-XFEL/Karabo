@@ -91,6 +91,10 @@ class EditableSpinBoxModel(BaseEditWidget):
     """ A model for EditableSpinBox"""
 
 
+class EditableRegexModel(BaseEditWidget):
+    """ A model for RegexEdit"""
+
+
 class FileInModel(BaseDisplayEditableWidget):
     """ A model for DisplayFileIn/EditableFileIn
     """
@@ -441,6 +445,7 @@ def __sticker_widget_writer(model, parent):
 def _build_empty_widget_readers_and_writers():
     """ Build readers and writers for the empty widget classes
     """
+
     def _build_reader_func(klass):
         def reader(element):
             traits = read_base_widget_data(element)
@@ -459,8 +464,8 @@ def _build_empty_widget_readers_and_writers():
     names = ('AnalogModel', 'BitfieldModel', 'DaemonManagerModel',
              'DisplayListModel', 'DisplayTextLogModel',
              'EditableListModel', 'EditableListElementModel',
-             'EditableSpinBoxModel', 'GlobalAlarmModel', 'HexadecimalModel',
-             'IntLineEditModel', 'LampModel', 'PopUpModel',
+             'EditableRegexModel', 'EditableSpinBoxModel', 'GlobalAlarmModel',
+             'HexadecimalModel', 'IntLineEditModel', 'LampModel', 'PopUpModel',
              'RunConfiguratorModel', 'WidgetNodeModel')
     for name in names:
         klass = globals()[name]
