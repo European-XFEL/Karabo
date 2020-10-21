@@ -669,13 +669,13 @@ class NetworkOutput(Configurable):
         self.copy_queues = []
         self.wait_queues = []
         self.copy_futures = []
-        self.has_shared = False
+        self.has_shared = 0
         if self.noInputShared == "queue":
-            self.shared_queue = Queue(0)
+            self.shared_queue = CancelQueue(0)
         elif self.noInputShared == "queueDrop":
             self.shared_queue = RingQueue(100)
         else:
-            self.shared_queue = Queue(1)
+            self.shared_queue = CancelQueue(1)
 
     @coroutine
     def getInformation(self, channelName):
@@ -691,6 +691,7 @@ class NetworkOutput(Configurable):
     @coroutine
     def serve(self, reader, writer):
         channel = Channel(reader, writer, self.channelName)
+        distribution = "unknown"
         try:
             message = yield from channel.readHash()
             assert message["reason"] == "hello"
@@ -710,7 +711,7 @@ class NetworkOutput(Configurable):
             self.connections.extend(entry)
 
             if distribution == "shared":
-                self.has_shared = True
+                self.has_shared += 1
                 while True:
                     yield from channel.nextChunk(self.shared_queue.get())
             elif slowness == "drop":
@@ -745,6 +746,12 @@ class NetworkOutput(Configurable):
                 raise
         finally:
             # XXX: Rewrite to channel name!
+            if distribution == "shared":
+                self.has_shared -= 1
+                if self.has_shared == 0:
+                    # XXX: Make sure nothing is stuck and cancel all futures
+                    # where the consumer does not shutdown gracefully!
+                    self.shared_queue.cancel()
             for index, row in enumerate(self.connections.value):
                 if (row['remoteAddress'] == remote_host and
                         row['remotePort'] == remote_port):
@@ -752,8 +759,8 @@ class NetworkOutput(Configurable):
             channel.close()
 
     def writeChunkNoWait(self, chunk):
-        if (self.has_shared and self.noInputShared != "wait" and
-                not self.shared_queue.full()):
+        if (self.has_shared > 0 and self.noInputShared != "wait"
+                and not self.shared_queue.full()):
             self.shared_queue.put_nowait(chunk)
         for future in self.copy_futures:
             if not future.done():
@@ -767,7 +774,7 @@ class NetworkOutput(Configurable):
         tasks = [sleep(0)]
         try:
             self.writeChunkNoWait(chunk)
-            if self.has_shared and self.noInputShared == "wait":
+            if self.has_shared > 0 and self.noInputShared == "wait":
                 tasks.append(self.shared_queue.put(chunk))
             for queue in self.wait_queues:
                 tasks.append(queue.put(chunk))
