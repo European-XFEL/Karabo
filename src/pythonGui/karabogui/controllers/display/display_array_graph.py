@@ -3,15 +3,14 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-import numpy as np
 from PyQt5.QtWidgets import QAction
-from traits.api import Instance, Undefined
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
     build_graph_config, NDArrayGraphModel, restore_graph_config)
 from karabogui.binding.api import NDArrayBinding
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller)
+    BaseBindingController, get_array_data, register_binding_controller)
 from karabogui.graph.plots.api import (
     KaraboPlotView, generate_down_sample, generate_baseline, get_view_range,
     TransformDialog)
@@ -47,14 +46,8 @@ class DisplayNDArrayGraph(BaseBindingController):
     # ----------------------------------------------------------------
 
     def value_update(self, proxy):
-        node = proxy.value
-        data = node.data.value
-        if data is None or data is Undefined:
-            return
-
-        arr_type = REFERENCE_TYPENUM_TO_DTYPE[node.type.value]
-        value = np.frombuffer(data, dtype=arr_type)
-        if value.ndim == 1:
+        value = get_array_data(proxy)
+        if value is not None:
             model = self.model
             # Generate the baseline for the x-axis
             x = generate_baseline(value, offset=model.offset,
