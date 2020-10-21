@@ -21,6 +21,7 @@ import dateutil.tz
 from karabo.native.data.basetypes import KaraboValue
 from karabo.native.exceptions import KaraboError
 from karabo.native.data.hash import Hash, Schema, Type
+from karabo.native.timestamp import Timestamp
 
 from .device import Device
 from .eventloop import EventLoop, synchronize
@@ -137,6 +138,8 @@ def waitUntilNew(*props):
 
 
 def _parse_date(date):
+    if isinstance(date, Timestamp):
+        date = date.toLocal()
     d = dateutil.parser.parse(date)
     if d.tzinfo is None:
         d = d.replace(tzinfo=dateutil.tz.tzlocal())
@@ -317,7 +320,6 @@ def getConfigurationFromPast(device, timepoint):
     slot = "slotGetConfigurationFromPast"
     conf, schema, *_ = yield from instance.call(reader, slot,
                                                 device, timepoint)
-
     return conf
 
 
