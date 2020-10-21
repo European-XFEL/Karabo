@@ -3,7 +3,6 @@
 # Created on February 25, 2019
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
 from PyQt5.QtGui import QValidator
 
 
