@@ -2,7 +2,7 @@ from traits.api import Any, ArrayOrNone, Enum, Int, HasStrictTraits
 
 from karabo.native import EncodingType
 from karabogui.graph.common.api import Axes
-from karabogui.controllers.images import (
+from karabogui.controllers.arrays import (
     DIMENSIONS, get_dimensions_and_encoding, get_image_data)
 
 # Special image dimensions
