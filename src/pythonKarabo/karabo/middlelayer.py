@@ -21,7 +21,7 @@ from .middlelayer_api.device_client import (
     getTopology, getSchema, getSchemaFromPast,
     getServers, getHistory, isAlive, instantiate, instantiateNoWait, lock,
     waitUntilNew, waitUntil, waitWhile, saveConfigurationFromName,
-    setWait, shutdown, shutdownNoWait, setNoWait, updateDevice, Queue
+    setWait, shutdown, shutdownNoWait, setNoWait, updateDevice, Queue,
 )
 from .middlelayer_api.proxy import (
     ProxyBase as Proxy, ProxySlotBase as ProxySlot,
@@ -85,7 +85,7 @@ from karabo.native.project import (
 )
 from karabo.native.registry import MetaRegistry, Registry
 from karabo.native.time_mixin import TimeMixin, get_timestamp
-from karabo.native.timestamp import Timestamp
+from karabo.native.timestamp import daysAgo, hoursAgo, minutesAgo, Timestamp
 
 
 def _create_cli_submodule():
@@ -96,14 +96,14 @@ def _create_cli_submodule():
 
     # NOTE: This is the middlelayer part of the ikarabo namespace
     symbols = (
-        call, connectDevice, disconnectDevice, execute, executeNoWait,
-        findDevices, findServers, getClasses, getClients, getConfiguration,
-        getConfigurationFromPast, getSchemaFromPast,
+        call, connectDevice, daysAgo, disconnectDevice, execute,
+        executeNoWait, findDevices, findServers, getClasses, getClients,
+        getConfiguration, getConfigurationFromPast, getSchemaFromPast,
         getConfigurationFromName, getLastConfiguration, getDevice,
         listConfigurationFromName, getDevices, getHistory, getSchema,
-        getServers, getTopology, get_timestamp, Hash, instantiate, 
-        instantiateNoWait, karabo, saveConfigurationFromName, setWait,
-        setNoWait, shutdown, shutdownNoWait, sleep, State, Timestamp, 
+        getServers, getTopology, get_timestamp, Hash, hoursAgo, instantiate,
+        instantiateNoWait, karabo, minutesAgo, saveConfigurationFromName,
+        setWait, setNoWait, shutdown, shutdownNoWait, sleep, State, Timestamp,
         waitUntil, waitUntilNew
     )
     module = create_module('karabo.middlelayer.cli', *symbols)

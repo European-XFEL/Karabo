@@ -8,6 +8,9 @@ import numpy
 import time
 
 RESOLUTION = 10 ** 18  # current Karabo resolution is attoseconds
+MINUTE_IN_SECONDS = 60
+HOUR_IN_SECONDS = MINUTE_IN_SECONDS * 60
+DAY_IN_SECONDS = HOUR_IN_SECONDS * 24
 
 
 @total_ordering
@@ -124,3 +127,27 @@ class Timestamp(object):
             return self.toTimestamp() - other
 
         return NotImplemented
+
+
+def minutesAgo(n=1):
+    """Return a timestamp from `n` minutes ago
+
+    :param n: minutes, defaults to `1`
+    """
+    return Timestamp(Timestamp() - (MINUTE_IN_SECONDS * n))
+
+
+def hoursAgo(n=1):
+    """Return a timestamp from `n` hours ago
+
+    :param n: hours, defaults to `1`
+    """
+    return Timestamp(Timestamp() - (HOUR_IN_SECONDS * n))
+
+
+def daysAgo(n=1):
+    """Return a timestamp from `n` days ago
+
+    :param n: days, defaults to `1`
+    """
+    return Timestamp(Timestamp() - (DAY_IN_SECONDS * n))
