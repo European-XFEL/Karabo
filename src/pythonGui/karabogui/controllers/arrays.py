@@ -7,7 +7,6 @@ import numpy as np
 
 from karabo.native import EncodingType
 
-
 # Ensure correct mapping of reference type to numpy dtype.
 REFERENCE_TYPENUM_TO_DTYPE = {
     0: 'bool',
@@ -23,7 +22,6 @@ REFERENCE_TYPENUM_TO_DTYPE = {
     20: 'float32',
     22: 'float64'
 }
-
 
 # Maps image physical dimension to ndarray dimension
 DIMENSIONS = {
@@ -92,3 +90,19 @@ def get_dimensions_and_encoding(image_node):
                 encoding = EncodingType.GRAY  # assume it's a stack of GRAY
 
     return dimX, dimY, dimZ, encoding
+
+
+def get_array_data(proxy):
+    """Retrieve the NDArray from a property proxy belonging an NDArray binding
+    """
+    node = proxy.value
+    pixels = node.data.value
+    if pixels is None:
+        return
+
+    arr_type = REFERENCE_TYPENUM_TO_DTYPE[node.type.value]
+    value = np.frombuffer(pixels, dtype=arr_type)
+    if value.ndim == 1:
+        return value
+
+    return None
