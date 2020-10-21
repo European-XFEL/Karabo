@@ -3,13 +3,17 @@ from unittest import skipIf
 from platform import system
 
 from karabo.common.states import State
-from karabo.common.scenemodel.api import DoubleLineEditModel
+from karabo.common.scenemodel.api import (
+    DoubleLineEditModel, EditableRegexModel)
 from karabo.common.scenemodel.widgets.simple import IntLineEditModel
-from karabo.native import Configurable, Double, Int32, String, UInt8
+from karabo.native import (
+    Configurable, Double, Int32, String, UInt8, RegexString)
+from karabogui.binding.api import build_binding
 from karabogui.binding.util import get_editor_value
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
-from ..numberlineedit import DoubleLineEdit, Hexadecimal, IntLineEdit
+from ..numberlineedit import (
+    DoubleLineEdit, Hexadecimal, IntLineEdit, EditRegex)
 
 
 class IntObject(Configurable):
@@ -26,6 +30,69 @@ class FloatObject(Configurable):
 
 class Uint8Object(Configurable):
     prop = UInt8()
+
+
+class StringObject(Configurable):
+    prop = RegexString(regex="^(0|1|[T]rue|[F]alse)")
+
+
+class TestRegexEdit(GuiTestCase):
+
+    def setUp(self):
+        super(TestRegexEdit, self).setUp()
+        self.proxy = get_class_property_proxy(StringObject.getClassSchema(),
+                                              'prop')
+        self.controller = EditRegex(proxy=self.proxy,
+                                    model=EditableRegexModel())
+        self.controller.create(None)
+        self.controller.set_read_only(False)
+        build_binding(StringObject.getClassSchema(),
+                      existing=self.proxy.root_proxy.binding)
+
+        self.controller.binding_update(self.proxy)
+        self.normal_palette = self.controller._normal_palette
+        self.error_palette = self.controller._error_palette
+
+    @property
+    def palette(self):
+        return self.controller._internal_widget.palette()
+
+    @property
+    def text(self):
+        return self.controller._internal_widget.text()
+
+    @text.setter
+    def text(self, value):
+        return self.controller._internal_widget.setText(value)
+
+    def tearDown(self):
+        super(TestRegexEdit, self).tearDown()
+        self.controller.destroy()
+        self.assertIsNone(self.controller.widget)
+
+    def test_set_value(self):
+        set_proxy_value(self.proxy, 'prop', '1')
+        self.assertEqual(self.text, '1')
+
+        set_proxy_value(self.proxy, 'prop', '2')
+        self.assertEqual(self.text, '2')
+
+        set_proxy_value(self.proxy, 'prop', 'False')
+        self.assertEqual(self.text, 'False')
+
+    def test_edit_value(self):
+        self.text = '2'
+        self.assertIsNone(self.proxy.edit_value)
+        self.text = '1'
+        self.assertIsNotNone(self.proxy.edit_value)
+
+    @skipIf(system() in ("Darwin"), reason="MacOS Palette misbehaves")
+    def test_decline_color(self):
+        self.text = '2.0'
+        self.assertIsNone(self.proxy.edit_value)
+        self.assertEqual(self.palette, self.error_palette)
+        self.controller.on_decline()
+        self.assertEqual(self.palette, self.normal_palette)
 
 
 class TestNumberLineEdit(GuiTestCase):
@@ -159,7 +226,8 @@ class TestNumberLineEdit(GuiTestCase):
 
 
 class IntObject24(Configurable):
-    prop = Int32(minExc=-2**24, maxExc=2**24)   # 12345678 < 2*24 < 123456789
+    prop = Int32(minExc=-2 ** 24,
+                 maxExc=2 ** 24)  # 12345678 < 2*24 < 123456789
 
 
 class TestNumberIntEdit(GuiTestCase):
@@ -218,21 +286,29 @@ class TestHexadecimal(GuiTestCase):
     def palette(self):
         return self.controller._internal_widget.palette()
 
+    @property
+    def text(self):
+        return self.controller._internal_widget.text()
+
+    @text.setter
+    def text(self, value):
+        return self.controller._internal_widget.setText(value)
+
     @skipIf(system() in ("Darwin"), reason="MacOS Palette misbehaves")
     def test_set_value(self):
         set_proxy_value(self.proxy, 'prop', 0x40)
-        self.controller._internal_widget.setText('')
+        self.text = ""
         self.assertEqual(self.palette, self.error_palette)
 
-        self.controller._internal_widget.setText('40')
-        self.assertEqual(self.controller._internal_widget.text(), '40')
+        self.text = '40'
+        self.assertEqual(self.text, '40')
         self.assertEqual(self.palette, self.normal_palette)
 
-        self.controller._internal_widget.setText('-40')
-        self.assertEqual(self.controller._internal_widget.text(), '-40')
+        self.text = '-40'
+        self.assertEqual(self.text, '-40')
         self.assertNotEqual(get_editor_value(self.proxy), -0x40)
         self.assertEqual(self.palette, self.error_palette)
 
-        self.controller._internal_widget.setText('8F')
+        self.text = '8F'
         self.assertEqual(self.palette, self.normal_palette)
         self.assertEqual(get_editor_value(self.proxy), 0x8F)
