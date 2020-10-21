@@ -2,9 +2,8 @@ from datetime import datetime
 
 import numpy as np
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QPen
 from pyqtgraph import AxisItem as PgAxisItem
-from pyqtgraph.functions import siScale
 
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, X_AXIS_HEIGHT, Y_AXIS_WIDTH, INTEGER_ALARM_MAP,
@@ -16,7 +15,6 @@ DAY_IN_SECONDS = HOUR_IN_SECONDS * 24
 MONTH_IN_SECONDS = DAY_IN_SECONDS * 30
 YEAR_IN_SECONDS = MONTH_IN_SECONDS * 12
 
-
 STEPS_BY_5 = np.array([1., 2., 10., 20., 100.])
 STEPS_BY_4 = np.array([2.5, 5., 10., 25., 50., 100.])
 
@@ -24,37 +22,36 @@ STEPS_BY_4 = np.array([2.5, 5., 10., 25., 50., 100.])
 class AxisItem(PgAxisItem):
     axisDoubleClicked = pyqtSignal()
 
-    STYLE = {
+    axisStyle = {
         "autoExpandTextSpace": False,
         "tickTextWidth": 50,
-        "tickTextHeight": 24
-    }
+        "tickTextHeight": 24}
 
-    FONT_SIZE = 10
+    tickFontSize = 10
 
-    def __init__(self, orientation, has_ticks=True):
+    def __init__(self, orientation, showValues=True):
         """Base class for pretty axis items.
 
         :param orientation: Location of the axis item in the plot
             Choose from ["left", "right", "top", "bottom"]
-        :param has_ticks: Set if it will show ticks and labels.
+        :param showValues: Set if it will show ticks and labels.
             Usually major axis has the ticks (bottom and left for normal plots)
         """
 
-        self.has_ticks = has_ticks
-        super(AxisItem, self).__init__(orientation)
+        super(AxisItem, self).__init__(orientation, showValues=showValues)
         self.enableAutoSIPrefix(False)
         # Modify tick aesthetics if major axis
-        # (tick strings and labels are shown)
-        if has_ticks:
-            self.setStyle(**self.STYLE)
+        if showValues:
+            self.setStyle(**self.axisStyle)
         else:
+            # tick strings and labels are not shown
             self.fixedWidth = 0
             self.fixedHeight = 0
+            self.setTextPen(QPen())
 
         font = QFont()
-        font.setPixelSize(self.FONT_SIZE)
-        self.tickFont = font
+        font.setPixelSize(self.tickFontSize)
+        self.setTickFont(font)
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -65,40 +62,16 @@ class AxisItem(PgAxisItem):
 
     def setLabel(self, text=None, units=None, unitPrefix=None, **args):
         """Reimplemented because we don't want labels for minor axes"""
-        if not self.has_ticks:
+        if not self.style["showValues"]:
             return
         super(AxisItem, self).setLabel(text=text, units=units,
                                        unitPrefix=unitPrefix, **args)
 
     def showLabel(self, show=True):
-        # Always do not show label if it is not a tick axis
-        if not self.has_ticks:
+        """Always do not show label if it is not a tick axis"""
+        if not self.style["showValues"]:
             show = False
         super(AxisItem, self).showLabel(show)
-
-    def drawPicture(self, p, axisSpec, tickSpecs, textSpecs):
-        """Reimplemented because we don't want tick strings for minor axes"""
-        p.setRenderHint(p.Antialiasing, False)
-        p.setRenderHint(p.TextAntialiasing, True)
-
-        # draw long line along axis
-        pen, p1, p2 = axisSpec
-        p.setPen(pen)
-        p.drawLine(p1, p2)
-        p.translate(0.5, 0)  # resolves some damn pixel ambiguity
-
-        # draw ticks
-        for pen, p1, p2 in tickSpecs:
-            p.setPen(pen)
-            p.drawLine(p1, p2)
-
-        if self.has_ticks:
-            # Draw all text
-            if self.tickFont is not None:
-                p.setFont(self.tickFont)
-            p.setPen(self.pen())
-            for rect, flags, text in textSpecs:
-                p.drawText(rect, flags, text)
 
     def mouseDragEvent(self, event):
         """Reimplemented function of PyQt
@@ -196,8 +169,8 @@ class TimeAxisItem(AxisItem):
 class StateAxisItem(AxisItem):
     """The State Axis Item for displaying Karabo States as major ticks"""
 
-    STYLE = {"autoExpandTextSpace": True}
-    FONT_SIZE = 9
+    axisStyle = {"autoExpandTextSpace": True}
+    tickFontSize = 9
 
     def tickStrings(self, values, scale, spacing):
         """Return the state names as a function of integers values
@@ -210,8 +183,8 @@ class StateAxisItem(AxisItem):
 class AlarmAxisItem(AxisItem):
     """The Alarm Axis Item for displaying Karabo Alarms as major ticks"""
 
-    STYLE = {"autoExpandTextSpace": True}
-    FONT_SIZE = 9
+    axisStyle = {"autoExpandTextSpace": True}
+    tickFontSize = 9
 
     def tickStrings(self, values, scale, spacing):
         """Return the alarm names as a function of integers values
@@ -222,21 +195,19 @@ class AlarmAxisItem(AxisItem):
 
 
 class AuxPlotAxisItem(AxisItem):
-    """AxisItem for the aux plots."""
+    """The AxisItem for the aux plots in the image widgets"""
+    tickFontSize = 8
+    axisStyle = {"autoExpandTextSpace": False}
 
-    def __init__(self, orientation, has_ticks=True):
-        super(AuxPlotAxisItem, self).__init__(orientation, has_ticks)
-        self.setStyle(autoExpandTextSpace=False)
-        font = QFont()
-        font.setPixelSize(8)
-        self.tickFont = font
+    def __init__(self, orientation, showValues=True):
+        super(AuxPlotAxisItem, self).__init__(orientation, showValues)
 
     # ---------------------------------------------------------------------
     # PyQtGraph methods
 
     def _updateWidth(self):
         """Reimplemented function to match known width of main plot"""
-        if self.has_ticks:
+        if self.style["showValues"]:
             self.setFixedWidth(Y_AXIS_WIDTH)
             self.picture = None
         else:
@@ -244,7 +215,7 @@ class AuxPlotAxisItem(AxisItem):
 
     def _updateHeight(self):
         """Reimplemented function to match known height of main plot"""
-        if self.has_ticks:
+        if self.style["showValues"]:
             height = X_AXIS_HEIGHT
             # Reduce space between label and axis for x-axis
             if self.orientation == "bottom":
@@ -253,22 +224,6 @@ class AuxPlotAxisItem(AxisItem):
             self.picture = None
         else:
             super(AuxPlotAxisItem, self)._updateHeight()
-
-    def updateAutoSIPrefix(self):
-        """Reimplemented function to scale tick values after ~10^3"""
-        if self.label.isVisible():
-            (scale, prefix) = siScale(max(abs(self.range[0] * self.scale),
-                                          abs(self.range[1] * self.scale)))
-            if self.labelUnits == '' and prefix == 'k':
-                scale = 1.0
-                prefix = ''
-            self.setLabel(unitPrefix=prefix)
-        else:
-            scale = 1.0
-
-        self.autoSIPrefixScale = scale
-        self.picture = None
-        self.update()
 
     def labelString(self):
         """Reimplemented function to improve label display of scaled axes
