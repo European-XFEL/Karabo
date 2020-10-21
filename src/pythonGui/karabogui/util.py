@@ -448,7 +448,7 @@ class RegexValidator(QValidator):
         self.pattern = re.compile(pattern)
 
     def validate(self, input, pos):
-        """The main validate function"""
+        """The main validate function checking to match the regex pattern"""
         if not self.pattern.match(input):
             return self.Intermediate, input, pos
 
