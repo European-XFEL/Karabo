@@ -11,7 +11,7 @@ from PyQt5.QtCore import pyqtSlot, QObject
 from PyQt5.QtWidgets import QMessageBox
 
 from karabo.common.api import ProxyStatus
-from karabo.native import AccessMode, Hash, Timestamp
+from karabo.native import sanitize_init_configuration, Timestamp
 from karabogui.alarms.api import extract_alarms_data
 from karabogui.background import executeLater, Priority
 from karabogui.binding.api import (
@@ -92,30 +92,8 @@ class Manager(QObject):
         if config is None:
             config = extract_configuration(class_proxy.binding)
 
-        def _walk_config(config, base=''):
-            base = base + '.' if base else ''
-            for key, value, _ in config.iterall():
-                subkey = base + key
-                if isinstance(value, Hash):
-                    yield from _walk_config(value, base=subkey)
-                else:
-                    yield subkey
-
-        # XXX: Temporary fix - due to the state changes
-        # Old projects save all parameters, even invalid ones. This fix
-        # removes them from the initial configuration to not stop the validator
-        # from instantiating
-        obsolete_paths = [pth for pth in _walk_config(config)
-                          if pth not in schema.hash]
-        for key in obsolete_paths:
-            config.erase(key)
-
-        readonly_paths = [pth for pth in _walk_config(config)
-                          if schema.hash[pth, "accessMode"] ==
-                          AccessMode.READONLY.value]
-        for key in readonly_paths:
-            config.erase(key)
-
+        # Remove readOnly and assignment internal parts
+        config = sanitize_init_configuration(schema, config)
         # Compute a runtime schema from the project device proxy and an
         # unmodified copy of the device class schema.
         attr_updates = None
