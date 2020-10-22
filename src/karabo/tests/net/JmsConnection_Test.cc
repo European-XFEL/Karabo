@@ -6,6 +6,7 @@
  */
 
 #include "JmsConnection_Test.hh"
+#include "karabo/net/Broker.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/JmsConnection.hh"
 #include "karabo/net/JmsConsumer.hh"
@@ -31,23 +32,13 @@ using namespace karabo::net;
 CPPUNIT_TEST_SUITE_REGISTRATION(JmsConnection_Test);
 
 
-JmsConnection_Test::JmsConnection_Test() {
+JmsConnection_Test::JmsConnection_Test()
+    : m_baseTopic(Broker::brokerDomainFromEnv()), // parallel CIs or users must get different topics, so take from environment
+    m_messageCount(0) {
 }
 
 
 JmsConnection_Test::~JmsConnection_Test() {
-}
-
-
-unsigned int JmsConnection_Test::incrementMessageCount() {
-    boost::mutex::scoped_lock lock(m_mutex);
-    return ++m_messageCount;
-}
-
-
-unsigned int JmsConnection_Test::getMessageCount() {
-    boost::mutex::scoped_lock lock(m_mutex);
-    return m_messageCount;
 }
 
 
@@ -104,24 +95,33 @@ void JmsConnection_Test::readHandler1(karabo::net::JmsConsumer::Pointer consumer
 
     if (m_messageCount == 0) {
         m_tick = boost::posix_time::microsec_clock::local_time();
-        CPPUNIT_ASSERT(header->has("header"));
-        CPPUNIT_ASSERT(header->get<std::string>("header") == "some header");
-        CPPUNIT_ASSERT(body->has("body"));
-        CPPUNIT_ASSERT(body->get<int>("body") == 42);
+
+        if (!header->has("header")) {
+            m_failures.push_back("Missing header");
+        } else if (header->get<std::string>("header") != "some header") {
+            m_failures.push_back(" Wrong header: " + karabo::util::toString(header->get<std::string>("header")));
+        }
+        if (!body->has("body")) {
+            m_failures.push_back(" Missing body");
+        } else if (body->get<int>("body") != 42) {
+            m_failures.push_back(" Wrong body: " + karabo::util::toString(body->get<int>("body")));
+        }
         consumer->stopReading();
         // We switch topic now!
-        consumer->setTopic("testTopic2");
+        consumer->setTopic(m_baseTopic + "_2");
         consumer->startReading(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2));
     }
 
     if (m_messageCount < 100) {
         body->set<int>("body", m_messageCount + 1);
-        producer->write("testTopic2", header, body);
+        producer->write(m_baseTopic + "_2", header, body);
     } else if (m_messageCount == 100) {
-        consumer->stopReading();
         boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - m_tick;
-        const float msPerMsg = diff.total_milliseconds() / 100.;
-        CPPUNIT_ASSERT(msPerMsg < 5); // Performance assert...
+        consumer->stopReading(); // may block for a while, therefore after calculating diff
+        const float msPerMsg = diff.total_milliseconds() / 100.f;
+        if (msPerMsg > 7.f) { // Performance assert...
+            m_failures.push_back("Slow turnaround: " + karabo::util::toString(msPerMsg));
+        }
         return;
     }
 
@@ -134,12 +134,13 @@ void JmsConnection_Test::testCommunication1() {
 
     // Here we test e.g. switching topic in consumer and producer
     m_messageCount = 0;
+    m_failures.clear();
 
     m_connection = JmsConnection::Pointer(new JmsConnection());
 
     m_connection->connect();
 
-    JmsConsumer::Pointer consumer = m_connection->createConsumer("testTopic1");
+    JmsConsumer::Pointer consumer = m_connection->createConsumer(m_baseTopic);
     JmsProducer::Pointer producer = m_connection->createProducer();
 
     consumer->startReading(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2));
@@ -148,12 +149,12 @@ void JmsConnection_Test::testCommunication1() {
 
     Hash::Pointer body(new Hash("body", 42));
 
-    producer->write("testTopic1", header, body);
+    producer->write(m_baseTopic, header, body);
 
     boost::thread t(boost::bind(&EventLoop::work));
-    int trials = 1000;
+    int trials = 2000;
     while (--trials >= 0) {
-        if (getMessageCount() >= 100) {
+        if (m_messageCount >= 100) {
             break;
         }
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
@@ -163,14 +164,16 @@ void JmsConnection_Test::testCommunication1() {
     t.join();
 
     // After stop() and join() since otherwise they are missed in case of failure - and program does not stop...
-    CPPUNIT_ASSERT_EQUAL(100u, m_messageCount);
+    CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(m_failures) += ", messageCount " + karabo::util::toString(m_messageCount),
+                           m_failures.empty());
+    CPPUNIT_ASSERT_EQUAL(100u, static_cast<unsigned int> (m_messageCount));
 }
 
 
 void JmsConnection_Test::readHandler2(karabo::net::JmsConsumer::Pointer channel,
                                       karabo::util::Hash::Pointer header,
                                       karabo::util::Hash::Pointer body) {
-    incrementMessageCount();
+    ++m_messageCount;
 }
 
 
@@ -182,38 +185,38 @@ void JmsConnection_Test::testCommunication2() {
     m_connection = JmsConnection::Pointer(new JmsConnection());
     
     m_connection->connect();   
-    
+
     m_messageCount = 0;
     Hash::Pointer header1(new Hash("key", "foo"));
     Hash::Pointer header2(new Hash("key", "bar"));
     Hash::Pointer body(new Hash("body", 42));
 
-    JmsConsumer::Pointer c1 = m_connection->createConsumer("testTopic1", "key = 'foo'");
-    JmsConsumer::Pointer c2 = m_connection->createConsumer("testTopic1", "key = 'bar'");
-    JmsConsumer::Pointer c3 = m_connection->createConsumer("testTopic1");
+    JmsConsumer::Pointer c1 = m_connection->createConsumer(m_baseTopic, "key = 'foo'");
+    JmsConsumer::Pointer c2 = m_connection->createConsumer(m_baseTopic, "key = 'bar'");
+    JmsConsumer::Pointer c3 = m_connection->createConsumer(m_baseTopic);
     JmsProducer::Pointer p = m_connection->createProducer();
 
     c1->startReading(boost::bind(&JmsConnection_Test::readHandler2, this, c1, _1, _2));
     c2->startReading(boost::bind(&JmsConnection_Test::readHandler2, this, c2, _1, _2));
     c3->startReading(boost::bind(&JmsConnection_Test::readHandler2, this, c3, _1, _2));
 
-    p->write("testTopic1", header1, body); // received by c1 and c3
-    p->write("testTopic1", header2, body); // received by c2 and c3
+    p->write(m_baseTopic, header1, body); // received by c1 and c3
+    p->write(m_baseTopic, header2, body); // received by c2 and c3
 
     boost::thread t(boost::bind(&EventLoop::work));
-    int trials = 100;
+    int trials = 500;
     while (--trials >= 0) {
-        if (getMessageCount() == 4u) {
+        if (m_messageCount == 4u) {
             break;
         }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(2));
     }
 
     EventLoop::stop();
     t.join();
 
     // After stop() and join() since otherwise they are missed in case of failure - and program does not stop...
-    CPPUNIT_ASSERT_EQUAL(4u, m_messageCount);
+    CPPUNIT_ASSERT_EQUAL(4u, static_cast<unsigned int>(m_messageCount));
 }
 
 
@@ -226,15 +229,16 @@ void JmsConnection_Test::testPermanentRead() {
 
     boost::thread t(boost::bind(&EventLoop::work));
 
-    const std::string topic("nochEinTestTopic");
+    const std::string topic(m_baseTopic += "_oneMore");
     JmsConsumer::Pointer consumer = m_connection->createConsumer(topic);
     JmsProducer::Pointer producer = m_connection->createProducer();
 
     std::vector<unsigned int> counters;
     auto read = [this, &counters](karabo::util::Hash::Pointer h, karabo::util::Hash::Pointer body) {
-        incrementMessageCount();
         // Collect counters to test for sequentiality
         counters.push_back(body->get<unsigned int>("counter"));
+        // increment at the end since its value is in the break condition
+        ++m_messageCount;
     };
     consumer->startReading(read);
 
@@ -254,9 +258,9 @@ void JmsConnection_Test::testPermanentRead() {
     // resume reading - no message should be lost!
     consumer->startReading(read);
 
-    int trials = 1000;
+    int trials = 2000;
     while (--trials >= 0) {
-        if (getMessageCount() == numMessages) {
+        if (m_messageCount == numMessages) {
             break;
         }
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
@@ -266,7 +270,7 @@ void JmsConnection_Test::testPermanentRead() {
     t.join();
 
     // After stop() and join() since otherwise they are missed in case of failure - and program does not stop...
-    CPPUNIT_ASSERT_EQUAL(numMessages, m_messageCount);
+    CPPUNIT_ASSERT_EQUAL(numMessages, static_cast<unsigned int> (m_messageCount));
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (numMessages), counters.size());
     for (unsigned i = 0; i < numMessages; ++i) {
         // Test correct ordering
