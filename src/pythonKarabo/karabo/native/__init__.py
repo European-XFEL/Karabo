@@ -8,6 +8,7 @@ from .data.basetypes import (
     BoolValue, EnumValue, ImageData, isSet, KaraboValue, NoneValue,
     QuantityValue, StringValue, TableValue, unit_registry as unit,
     VectorStringValue, VectorCharValue, wrap, newest_timestamp, wrap_function)
+from .configuration import sanitize_init_configuration
 from .data.enums import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqDataType,
     DaqPolicy, EncodingType, LeafType, MetricPrefix, NodeType, Unit)
