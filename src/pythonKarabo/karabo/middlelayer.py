@@ -67,6 +67,7 @@ from karabo.native.data.hash import (
     VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
     VectorUInt64, VectorUInt8
 )
+from karabo.native.configuration import sanitize_init_configuration
 from karabo.native.data.ndarray import NDArray
 from karabo.native.data.image_data import Image
 
