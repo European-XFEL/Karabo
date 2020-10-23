@@ -539,7 +539,13 @@ namespace karabo {
             /**
              * A functor to place an asynchronous reply during slot execution.
              *
-             * Must not be used once the SignalSlotable object that created it is (being) destructed.
+             * - Create only inside a slot call of a SignalSlotable
+             * - Can be copied around as wished
+             * - Call either the operator or the error(..) method exactly once for one of the copies.
+             * - Call these methods from another context/thread, i.e. between creation and use of its methods you have
+             *   to leave the thread at least once)
+             * - Must not be used once the SignalSlotable object that created it is (being) destructed (e.g. protect
+             *   by bind_weak to member functions of the SignalSlotable)
              */
             class AsyncReply {
 
@@ -547,7 +553,7 @@ namespace karabo {
 
                 /**
                  * Construct functor for an asynchronous reply.
-                 * Use only within a slot call of a SignalSlotable
+                 * Create only within a slot call of a SignalSlotable
                  * @param signalSlotable pointer to the SignalSlotable whose slot is currently executed (usually: this)
                  */
                 explicit AsyncReply(SignalSlotable* signalSlotable)
