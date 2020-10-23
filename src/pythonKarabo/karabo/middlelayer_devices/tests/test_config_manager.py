@@ -8,9 +8,10 @@ import os
 
 from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
 from karabo.middlelayer import (
-    call, connectDevice, DaqPolicy, Device, Double, getConfigurationFromName,
-    getLastConfiguration, Hash, HashList,
-    listConfigurationFromName, saveConfigurationFromName, sleep)
+    call, coslot, connectDevice, DaqPolicy, Device, Double,
+    getConfigurationFromName, getLastConfiguration, Hash, HashList,
+    KaraboError, listConfigurationFromName, saveConfigurationFromName, sleep,
+    Slot, slot, String)
 from karabo.middlelayer_devices.configuration_manager import (
     ConfigurationManager)
 
@@ -45,6 +46,53 @@ class TestDevice(Device):
         daqPolicy=DaqPolicy.SAVE)
 
 
+DEFAULT_LAST_DOUBLE = -1.0
+
+
+class MockServer(Device):
+
+    lastClassId = String(
+        defaultValue=""
+    )
+
+    lastDeviceId = String(
+        defaultValue=""
+    )
+
+    lastConfigDouble = Double(
+        defaultValue=DEFAULT_LAST_DOUBLE
+    )
+
+    @Slot()
+    async def reset(self):
+        self.lastClassId = ""
+        self.lastConfigDouble = DEFAULT_LAST_DOUBLE
+        self.lastDeviceId = ""
+
+    @coslot
+    async def slotStartDevice(self, info):
+        """The info hash should contain
+
+        - configuration
+        - deviceId
+        - classId
+        """
+        deviceId = info["deviceId"]
+        config = info["configuration"]
+        classId = info["classId"]
+
+        self.lastDeviceId = deviceId
+        self.lastClassId = classId
+        self.lastConfigDouble = config.get('value', DEFAULT_LAST_DOUBLE)
+        return True, self.deviceId
+
+    @slot
+    def slotGetClassSchema(self, classId):
+        """Fake the retrieval of a class schema retrieval"""
+        schema = TestDevice.getClassSchema()
+        return schema, "TestDevice", self.deviceId
+
+
 class TestConfigurationManager(DeviceTest):
 
     @classmethod
@@ -66,7 +114,7 @@ class TestConfigurationManager(DeviceTest):
 
     @async_tst
     async def test_configuration_save(self):
-        # Manual saving
+        """Test the manual saving of configurations"""
         config_name = "testConfig"
         h = Hash("name", config_name, "deviceIds", ["TEST_DEVICE"],
                  "priority", 3)
@@ -80,6 +128,7 @@ class TestConfigurationManager(DeviceTest):
 
     @async_tst
     async def test_get_configuration(self):
+        """Test the manual retrieving of configurations"""
         config_name = "testConfig"
         h = Hash("name", config_name, "deviceId", "TEST_DEVICE")
         r = await call(TEST_MANAGER, "slotGetConfigurationFromName", h)
@@ -129,7 +178,8 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(config_set["user"], ".")
 
     @async_tst
-    async def test_z_get_last_configuration(self):
+    async def test_zhe_get_last_configuration(self):
+        """The typo is intended as order of tests is alphabetically done"""
         h = Hash("deviceId", "TEST_DEVICE")
         r = await call(TEST_MANAGER, "slotListConfigurationFromName", h)
         items = r["items"]
@@ -152,6 +202,7 @@ class TestConfigurationManager(DeviceTest):
 
     @async_tst
     async def test_device_client_configuration(self):
+        """Test the functions that can be used from ikarabo"""
         # Device client functions
         await saveConfigurationFromName(
             "TEST_CLIENT_DEVICE", name="testConfigClient",
@@ -184,3 +235,41 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(item["priority"], 3)
         self.assertEqual(item["user"], ".")
         self.assertEqual(item["description"], "No desc")
+
+    @async_tst
+    async def test_instantiate_device(self):
+        serverMock = MockServer({"_deviceId_": "TEST_SERVER"})
+        await serverMock.startInstance()
+        try:
+            h = Hash()
+            h["deviceId"] = "TEST_DEVICE"
+            h["name"] = "testConfig"
+            h["serverId"] = "TEST_SERVER"
+
+            await call(TEST_MANAGER, "slotInstantiateDevice", h)
+
+            self.assertEqual(serverMock.lastClassId, "TestDevice")
+            self.assertEqual(serverMock.lastDeviceId, "TEST_DEVICE")
+            self.assertEqual(serverMock.lastConfigDouble, 5.0)
+            await serverMock.reset()
+            self.assertEqual(serverMock.lastClassId, "")
+            self.assertEqual(serverMock.lastDeviceId, "")
+            self.assertEqual(serverMock.lastConfigDouble, DEFAULT_LAST_DOUBLE)
+            h = Hash()
+            h["deviceId"] = "TEST_DEVICE"
+            h["name"] = "testConfig"
+            h["classId"] = "NoClass"
+            h["serverId"] = "TEST_SERVER"
+            # ClassId missmatch ...
+            with self.assertRaises(KaraboError):
+                await call(TEST_MANAGER, "slotInstantiateDevice", h)
+
+            h = Hash()
+            h["deviceId"] = "TEST_DEVICE"
+            h["serverId"] = "TEST_SERVER"
+            await call(TEST_MANAGER, "slotInstantiateDevice", h)
+            self.assertEqual(serverMock.lastClassId, "TestDevice")
+            self.assertEqual(serverMock.lastDeviceId, "TEST_DEVICE")
+            self.assertEqual(serverMock.lastConfigDouble, 5.0)
+        finally:
+            await serverMock.slotKillDevice()
