@@ -89,6 +89,7 @@ else:
             'ProjectManager=karabo.middlelayer_devices.project_manager:ProjectManager',
             'ConfigurationManager=karabo.middlelayer_devices.configuration_manager:ConfigurationManager',
             'DaemonManager=karabo.middlelayer_devices.daemon_manager:DaemonManager',
+            'ComponentManager=karabo.middlelayer_devices.component_manager:ComponentManager',
         ],
         'karabo.macro_device': [
             'IPythonKernel=karabo.macro_devices.ipython:IPythonKernel',
