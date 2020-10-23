@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QDialog
 from pyqtgraph import PlotDataItem
 from traits.api import (
     HasStrictTraits, Array, Constant, Float, Instance, Int, List,
-    on_trait_change)
+    on_trait_change, WeakRef)
 
 from karabogui.binding.api import PropertyProxy
 from karabogui.const import MAX_NUMBER_LIMIT
@@ -116,7 +116,7 @@ class Curve(HasStrictTraits):
     Once the basic storage in self.x and self.y flows over, it gets replaced
     by the averaged data in self.generations.
     """
-    curve = Instance(PlotDataItem)
+    curve = WeakRef(PlotDataItem)
     proxy = Instance(PropertyProxy)
     generations = List(Instance(_Generation))
 
@@ -221,8 +221,9 @@ class Curve(HasStrictTraits):
         self.t1 = t1
 
     def update(self):
-        """ Show the new data on screen """
-        self.curve.setData(self.x[:self.fill], self.y[:self.fill])
+        """ Show the new data on screen"""
+        if self.curve:
+            self.curve.setData(self.x[:self.fill], self.y[:self.fill])
 
     @on_trait_change('proxy:visible')
     def _visibility_update(self, visible):
