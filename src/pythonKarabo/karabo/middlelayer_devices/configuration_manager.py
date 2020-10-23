@@ -13,6 +13,7 @@ from karabo.common.scenemodel.api import (
     LineEditModel, IntLineEditModel, LineModel, SceneModel, TableElementModel,
     write_scene)
 
+from karabo.native.configuration import sanitize_init_configuration
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, background, Bool, Configurable,
     coslot, DaqPolicy, Device, dictToHash, KaraboError, Hash, HashList,
@@ -390,6 +391,72 @@ class ConfigurationManager(Device):
                 priority=priority, timestamp=timestamp)
         except (CancelledError, TimeoutError):
             raise
+
+        return Hash("success", True)
+
+    @coslot
+    async def slotInstantiateDevice(self, info):
+        """Slot to instantiate a device via the configuration manager
+
+        The required info `Hash` must have at least the params:
+
+        - deviceId: The mandatory parameter
+        - name: Optional parameter. If no `name` is provided, the latest
+                configuration is retrieved with priority 3 (INIT).
+        - classId: Optional parameter for validation
+        - serverId: Optional parameter
+        """
+        deviceId = info["deviceId"]
+        name = info.get("name", None)
+        # Note: classId and serverId can be optional
+        # classId is taken for validation!
+        classId = info.get("classId", None)
+        serverId = info.get("serverId", None)
+
+        # If no `name` is provided, we try to get the latest config
+        if name is None:
+            item = self.db.get_last_configuration(deviceId, priority=3)
+            if not item:
+                reason = (f"No configuration for device {deviceId} and "
+                          f"priority {priority} found!")
+                raise KaraboError(reason)
+        else:
+            item = self.db.get_configuration(deviceId, name)
+            if not item:
+                reason = (f"No configuration for device {deviceId} and name "
+                          f"{name} found!")
+                raise KaraboError(reason)
+        config = hashFromBase64Bin(item["config"])
+        # If the classId was provided we can validate!
+        if classId is not None and classId != config["classId"]:
+            raise KaraboError(f"The configuration for {deviceId} was "
+                              f"recorded for classId {classId}. The "
+                              f"input classId {classId} does not match!")
+        # If we did not provide the classId, we take it from the configuration!
+        if classId is None:
+            classId = config["classId"]
+        # If we did not provide a serverId, we take it from the config
+        if serverId is None:
+            serverId = config["serverId"]
+        # Get the class schema for this device!
+        # XXX: Eventually start caching schemas...
+        try:
+            schema, *_ = await wait_for(
+                self.call(serverId, "slotGetClassSchema", classId), timeout=2)
+        except TimeoutError:
+            raise KaraboError(f"server {serverId} is not available to start"
+                              f"device with deviceId {deviceId}")
+
+        config = sanitize_init_configuration(schema, config)
+        h = Hash()
+        h["deviceId"] = deviceId
+        h["classId"] = classId
+        h["serverId"] = serverId
+        h["configuration"] = config
+
+        success, msg = await self.call(serverId, "slotStartDevice", h)
+        if not success:
+            raise KaraboError(msg)
 
         return Hash("success", True)
 
