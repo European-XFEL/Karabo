@@ -152,6 +152,10 @@ class BaseSeriesGraph(BaseBindingController):
     def value_update(self, proxy):
         raise NotImplementedError
 
+    def destroy_widget(self):
+        """Remove all curves and their trait handlers"""
+        self._curves = {}
+
     # ----------------------------------------------------------------
     # PyQt Slots
 
