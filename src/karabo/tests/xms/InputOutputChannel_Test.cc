@@ -170,14 +170,15 @@ void InputOutputChannel_Test::testManyToOne() {
     // Wait for endOfStream arrival
     int trials = 2000;
     do {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(3));
         if (nReceivedEos > 0) break;
     } while (--trials >= 0);
 
     // endOfStream received once
     // We give some time for more to arrive - but there should only be one, although each output sent it!
     boost::this_thread::sleep(boost::posix_time::milliseconds(200));
-    CPPUNIT_ASSERT_EQUAL(1u, static_cast<unsigned int> (nReceivedEos));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("All received data:\n" + karabo::util::toString(receivedData),
+                                 1u, static_cast<unsigned int> (nReceivedEos));
 
     // Proper number and order of data received from each output
     for (size_t i = 0; i < outputIds.size(); ++i) {
