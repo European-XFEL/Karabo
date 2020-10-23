@@ -282,6 +282,7 @@ class ComboBoxDelegate(QItemDelegate):
 class KaraboTableView(QTableView):
     def __init__(self, parent=None):
         super(KaraboTableView, self).__init__(parent)
+        self._header = None
 
     def set_column_hash(self, column_hash):
         self._column_hash = column_hash
@@ -320,6 +321,10 @@ class KaraboTableView(QTableView):
             model.setData(index, deviceId, Qt.EditRole)
 
     def _validate_drag_event(self, event):
+        if self._header is None:
+            # Header is present after the schema has arrived.
+            return False, None, False, 'None'
+
         items = event.mimeData().data('treeItems').data()
         if len(items) == 0:
             event.ignore()
