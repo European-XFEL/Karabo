@@ -1213,11 +1213,10 @@ class RegexString(String):
     classId = "RegexString"
     regex = Attribute("")
 
-    def __init__(self, regex="", flags=0, **kwargs):
+    def __init__(self, flags=0, **kwargs):
         super().__init__(**kwargs)
-        self._pattern = re.compile(regex, flags)
+        self._pattern = re.compile(self.regex, flags)
         self.displayType = "RegexString"
-        self.regex = regex
 
     def initialize(self, instance, value):
         self.check(value)
@@ -1263,6 +1262,37 @@ class VectorString(Vector):
     def toKaraboValue(self, data, strict=True):
         self.check(data)
         return basetypes.VectorStringValue(data, descriptor=self)
+
+
+class VectorRegexString(VectorString):
+    """The `VectorRegexString` descriptor is used as follows::
+
+        data = VectorRegexString(regex="0|1")
+
+        A corresponding displayType is automatically set.
+        The descriptor validates value input on set.
+
+        The regex is validated with each single value of the
+        vector (list).
+    """
+    classId = "VectorRegexString"
+    regex = Attribute("")
+
+    def __init__(self, flags=0, **kwargs):
+        super().__init__(**kwargs)
+        self._pattern = re.compile(self.regex, flags)
+        self.displayType = "VectorRegexString"
+
+    def initialize(self, instance, value):
+        self.check(value)
+        return self.setter(instance, value)
+
+    def check(self, data):
+        super().check(data)
+        for index, string in enumerate(data):
+            if not self._pattern.match(string):
+                raise KaraboError(f"Value {string} on index {index} does not "
+                                  f"comply with regex pattern {self.regex}!")
 
 
 class HashType(Type):
