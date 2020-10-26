@@ -96,7 +96,7 @@ else:
             'MetaMacro=karabo.macro_devices.metamacro:MetaMacro'
         ],
         'karabo.bound_device_test': [
-            'TestDevice=karabo.middlelayer_api.tests.bounddevice:TestDevice'
+            'TestDevice=karabo.bound_api.tests.boundDevice:TestDevice'
         ],
         'karabo.middlelayer_device_test': [
             'DataLoggerManager=karabo.middlelayer_devices.influxdb_reader:DataLoggerManager',
