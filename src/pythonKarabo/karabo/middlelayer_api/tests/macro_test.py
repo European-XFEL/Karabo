@@ -350,6 +350,7 @@ class Tests(DeviceTest):
 
         hash_deviceId = schema_deviceId.hash
         hash_proxy = schema_proxy.hash
+
         self.assertEqual(hash_deviceId.paths(),
                          hash_proxy.paths())
         self.assertEqual(hash_proxy["value", "accessMode"],
@@ -365,10 +366,14 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_getConfiguration(self):
-        """test calling get Schema"""
+        """test calling get getConfiguration"""
         conf_deviceId = getConfiguration("remote")
         with getDevice("remote") as d:
             conf_proxy = getConfiguration(d)
+
+        # ListOfNodes is not supported yet, hence we remove
+        conf_deviceId.pop("log.filters")
+        conf_deviceId.pop("log.handlers")
         self.assertEqual(conf_deviceId.paths(), conf_proxy.paths())
 
     @sync_tst
