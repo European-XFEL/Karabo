@@ -72,6 +72,8 @@ namespace karabo {
 
             /**
              * Set the broker topic to consume messages from
+             *
+             * Use only when not reading, otherwise potential race condition.
              * @param topic
              */
             void setTopic(const std::string& topic);
