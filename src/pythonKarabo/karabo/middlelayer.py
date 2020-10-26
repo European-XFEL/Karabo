@@ -64,8 +64,8 @@ from karabo.native.data.hash import (
     Special, String, Type, UInt16, UInt32, UInt64, UInt8, Vector,
     VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
     VectorDouble, VectorFloat, VectorHash, VectorInt16, VectorInt32,
-    VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
-    VectorUInt64, VectorUInt8
+    VectorInt64, VectorInt8, VectorRegexString, VectorString, VectorUInt16,
+    VectorUInt32, VectorUInt64, VectorUInt8
 )
 from karabo.native.configuration import sanitize_init_configuration
 from karabo.native.data.ndarray import NDArray
