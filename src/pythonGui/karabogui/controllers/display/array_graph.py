@@ -8,25 +8,21 @@ import numpy as np
 from PyQt5.QtWidgets import QAction
 from traits.api import Dict, Instance
 
-from karabogui.binding.api import VectorNumberBinding
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, VectorGraphModel)
+from karabo.common.scenemodel.widgets.graph_plots import NDArrayGraphModel
+from karabogui.binding.api import VectorNumberBinding
+from karabogui.binding.types import NDArrayBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
+from karabogui.controllers.arrays import get_array_data
 from karabogui.graph.common.api import get_pen_cycler
 from karabogui.graph.plots.api import (
     KaraboPlotView, generate_down_sample, generate_baseline, get_view_range,
     TransformDialog)
 
 
-@register_binding_controller(ui_name='Vector Graph', klassname='VectorGraph',
-                             binding_type=VectorNumberBinding,
-                             priority=90,
-                             can_show_nothing=False)
-class DisplayVectorGraph(BaseBindingController):
-    """The VectorGraph controller for display basic vector data
-    """
-    model = Instance(VectorGraphModel, args=())
+class BaseArrayGraph(BaseBindingController):
     _curves = Dict
     _pens = Instance(cycle, allow_none=False)
 
@@ -73,8 +69,36 @@ class DisplayVectorGraph(BaseBindingController):
         curve = widget.add_curve_item(name=name, pen=next(self._pens))
         self._curves[proxy] = curve
 
+    # ----------------------------------------------------------------
+    # Qt Slots
+
+    def _change_model(self, content):
+        self.model.trait_set(**restore_graph_config(content))
+
+    def configure_transformation(self):
+        content, ok = TransformDialog.get(build_graph_config(self.model),
+                                          parent=self.widget)
+        if ok:
+            self.model.trait_set(**content)
+            for proxy in self.proxies:
+                self.value_update(proxy)
+
+    def value_update(self, proxy):
+        raise NotImplementedError
+
+
+@register_binding_controller(ui_name='Vector Graph', klassname='VectorGraph',
+                             binding_type=VectorNumberBinding,
+                             priority=90,
+                             can_show_nothing=False)
+class DisplayVectorGraph(BaseArrayGraph):
+    """The VectorGraph controller for display basic vector data
+    """
+    model = Instance(VectorGraphModel, args=())
+
     def value_update(self, proxy):
         if not self._curves:
+            # WHY did we do this?
             return
 
         y = proxy.value
@@ -96,16 +120,26 @@ class DisplayVectorGraph(BaseBindingController):
         x, y = generate_down_sample(y, x=x, rect=rect, deviation=True)
         plot.setData(x, y)
 
-    # ----------------------------------------------------------------
-    # Qt Slots
 
-    def _change_model(self, content):
-        self.model.trait_set(**restore_graph_config(content))
+@register_binding_controller(ui_name='NDArray Graph',
+                             klassname='NDArrayGraph',
+                             binding_type=NDArrayBinding,
+                             can_show_nothing=False)
+class DisplayNDArrayGraph(BaseArrayGraph):
+    """The NDArray controller for display of pulse data"""
+    model = Instance(NDArrayGraphModel, args=())
 
-    def configure_transformation(self):
-        content, ok = TransformDialog.get(build_graph_config(self.model),
-                                          parent=self.widget)
-        if ok:
-            self.model.trait_set(**content)
-            for proxy in self.proxies:
-                self.value_update(proxy)
+    def value_update(self, proxy):
+        if not self._curves:
+            # WHY did we do this?
+            return
+        value = get_array_data(proxy)
+        if value is not None:
+            model = self.model
+            plot = self._curves[proxy]
+            # Generate the baseline for the x-axis
+            x = generate_baseline(value, offset=model.offset,
+                                  step=model.step)
+            rect = get_view_range(plot)
+            x, y = generate_down_sample(value, rect=rect, x=x, deviation=True)
+            plot.setData(x, y)
