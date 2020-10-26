@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
+<TestRun>
+  <FailedTests></FailedTests>
+  <SuccessfulTests>
+    <Test id="1">
+      <Name>EventLoop_Test::testMethod</Name>
+    </Test>
+    <Test id="2">
+      <Name>EventLoop_Test::testMethod2</Name>
+    </Test>
+    <Test id="3">
+      <Name>EventLoop_Test::testSignalCapture</Name>
+    </Test>
+    <Test id="4">
+      <Name>JmsConnection_Test::testConnect</Name>
+    </Test>
+    <Test id="5">
+      <Name>JmsConnection_Test::testCommunication1</Name>
+    </Test>
+    <Test id="6">
+      <Name>JmsConnection_Test::testCommunication2</Name>
+    </Test>
+    <Test id="7">
+      <Name>JmsConnection_Test::testPermanentRead</Name>
+    </Test>
+    <Test id="8">
+      <Name>MQTcpNetworking::testClientServerMethod</Name>
+    </Test>
+    <Test id="9">
+      <Name>ReadAsyncStringUntil_Test::runTest</Name>
+    </Test>
+    <Test id="10">
+      <Name>Strand_Test::testSequential</Name>
+    </Test>
+    <Test id="11">
+      <Name>Strand_Test::testStrandDies</Name>
+    </Test>
+    <Test id="12">
+      <Name>TcpNetworking_Test::testClientServer</Name>
+    </Test>
+    <Test id="13">
+      <Name>TcpNetworking_Test::testWriteAsync</Name>
+    </Test>
+    <Test id="14">
+      <Name>TcpNetworking_Test::testBufferSet</Name>
+    </Test>
+    <Test id="15">
+      <Name>TcpNetworking_Test::testConsumeBytesAfterReadUntil</Name>
+    </Test>
+  </SuccessfulTests>
+  <Statistics>
+    <Tests>15</Tests>
+    <FailuresTotal>0</FailuresTotal>
+    <Errors>0</Errors>
+    <Failures>0</Failures>
+  </Statistics>
+</TestRun>
