@@ -54,7 +54,7 @@ def filter_services(service_id, service_list):
     return allowed
 
 
-def getdata(name):
+def getdata(name, allowed_services):
     try:
         path = absolute("var", "service", name, "name")
         try:
@@ -88,12 +88,13 @@ def getdata(name):
             status += ", once"
 
         return {'name': name, 'karabo_name': karabo_name, 'status': status,
-                'since': since, 'duration': duration}
+                'since': since, 'duration': duration,
+                'control_allowed': name in allowed_services}
     except Exception as e:
         print('{}: Exception {} when fetching service status {}'
               ''.format(datetime.now(), str(e), name))
         return {'name': name, 'karabo_name': name,  'status': 'error',
-                'since': '', 'duration': -1}
+                'since': '', 'duration': -1, 'control_allowed': False}
 
 
 def get_log_row(text):
@@ -109,14 +110,13 @@ def server_up(server):
 class DaemonHandler(web.RequestHandler):
     """Rest interface to handle the control of the services via json"""
     def initialize(self, service_list=None, service_id=None, subscriber=None):
-        self.service_list = service_list
-        self.service_id = service_id
         self.subscriber = subscriber
+        self.allowed = filter_services(service_id, service_list)
 
     def get(self, server_id=None):
         response = EMPTY_RESPONSE
         success = {'error': False, '': False}
-        response['servers'] = [getdata(server_id)]
+        response['servers'] = [getdata(server_id, self.allowed)]
         response['success'] = success.get(response['servers'][0]['status'],
                                           True)
         response['status_ok'] = server_up(response['servers'][0])
@@ -127,8 +127,7 @@ class DaemonHandler(web.RequestHandler):
         data = json_decode(self.request.body)
         conf = data['server']
         server_id = server_id.replace('/', '_')
-        allowed = filter_services(self.service_id, self.service_list)
-        if server_id not in allowed:
+        if server_id not in self.allowed:
             self.write(response)
             return
         command = conf['command'].lower()
@@ -193,23 +192,20 @@ class FileHandler(web.RequestHandler):
 
 class MainHandler(web.RequestHandler):
     def initialize(self, service_list=None, service_id=None, subscriber=None):
-        self.service_list = service_list
-        self.service_id = service_id
-        # The subscriber class to post on an eventual aggregator
+        # The subscriber class to update an optional aggregator
         self.subscriber = subscriber
+        self.allowed = filter_services(service_id, service_list)
 
     def get(self):
-        data = [getdata(d) for d in filter_services(self.service_id,
-                                                    self.service_list)]
+        data = [getdata(d, self.allowed) for d in self.allowed]
         self.render("index.html", table=data)
 
     def post(self):
         self.render("refresh.html")
         cmd = self.get_argument("cmd")
         servers = self.get_arguments("servers")
-        allowed = filter_services(self.service_id, self.service_list)
         for s in servers:
-            if s not in allowed:
+            if s not in self.allowed:
                 # if a client tried to post a not allowed server
                 print('{}: {} attempted an illegal post:'
                       'command {} on service {}'
@@ -221,9 +217,17 @@ class MainHandler(web.RequestHandler):
 
 
 class StatusHandler(web.RequestHandler):
+    # unused parameter to match initialisation dictionary
+    def initialize(self, service_list=None, service_id=None, subscriber=None):
+        self.allowed = filter_services(service_id, service_list)
+
     def get(self):
         response = EMPTY_RESPONSE
-        response['servers'] = [getdata(s) for s in defaultall()]
+        servers = []
+        for server_id in defaultall():
+            serv_data = getdata(server_id, self.allowed)
+            servers.append(serv_data)
+        response['servers'] = servers
         statuses = [server_up(s) for s in response['servers']]
         response['status_ok'] = all(statuses)
         response['success'] = True
@@ -326,7 +330,8 @@ def run_webserver():
                    'subscriber': subscribe}
 
     app = web.Application([('/', MainHandler, server_dict),
-                           ('/api/servers.json', StatusHandler),
+                           ('/api/servers.json',
+                            StatusHandler, server_dict),
                            ('/api/servers/([a-zA-Z0-9_/-]+)/log.html',
                             LogHandler),
                            ('/api/servers/logs/([a-zA-Z0-9_/-]+).txt',
