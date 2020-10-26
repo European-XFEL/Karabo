@@ -11,7 +11,8 @@ from karabo.native import (
     ImageData, Int16, Int8, KaraboError, LeafType, MetricPrefix, NDArray,
     NumpyVector, QuantityValue, RegexString, Schema, String, Timestamp, Type,
     UInt8, UInt64, Unit, unit, VectorBool, VectorChar, VectorComplexFloat,
-    VectorFloat, VectorHash, VectorInt32, VectorInt8, VectorString)
+    VectorFloat, VectorHash, VectorInt32, VectorInt8, VectorRegexString,
+    VectorString)
 
 
 class ArrayTestDevice(Configurable):
@@ -462,6 +463,22 @@ class Tests(TestCase):
         self.check_general(d, v)
         self.assertEqual(v, "bla")
         self.assertEqual(repr(v), "'bla'")
+
+    def test_vector_regex(self):
+        d = VectorRegexString(regex=r"[a-z]+")
+        v = d.toKaraboValue(["a", "b", "c"])
+        self.check_general(d, v)
+        self.assertEqual(v, ["a", "b", "c"])
+
+        d = VectorRegexString(regex=r"[a-z]+:[a-z]+")
+        v = d.toKaraboValue(["device:output"])
+        self.check_general(d, v)
+        self.assertEqual(v, ["device:output"])
+        with self.assertRaises(KaraboError):
+            v = d.toKaraboValue("[nodevice:valid:invalid]")
+        self.assertEqual(d.regex, "[a-z]+:[a-z]+")
+        self.assertEqual(d.displayType, "VectorRegexString")
+        self.assertEqual(d.classId, "VectorRegexString")
 
     def test_regex(self):
         d = RegexString(regex=r"(0|1|[T]rue|[F]alse)")
