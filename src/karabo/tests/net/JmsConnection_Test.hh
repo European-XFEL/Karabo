@@ -8,10 +8,12 @@
 #ifndef JMSCONNECTION_TEST_HH
 #define	JMSCONNECTION_TEST_HH
 
-#include <karabo/net/JmsConsumer.hh>
-#include <karabo/net/JmsProducer.hh>
-#include <karabo/net/JmsConnection.hh>
+#include "karabo/net/JmsConsumer.hh"
+#include "karabo/net/JmsProducer.hh"
+#include "karabo/net/JmsConnection.hh"
 #include <cppunit/extensions/HelperMacros.h>
+#include <atomic>
+#include <string>
 
 class JmsConnection_Test : public CPPUNIT_NS::TestFixture {
 
@@ -25,20 +27,16 @@ class JmsConnection_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
     karabo::net::JmsConnection::Pointer m_connection;
-    unsigned int m_messageCount;
+    std::string m_baseTopic;
+    std::atomic<unsigned int> m_messageCount;
+    std::vector<std::string> m_failures;
     boost::posix_time::ptime m_tick;
-    boost::mutex m_mutex;
-    
 
 public:
     JmsConnection_Test();
     virtual ~JmsConnection_Test();
 
 private:
-
-    unsigned int incrementMessageCount();
-
-    unsigned int getMessageCount();
 
     void testConnect();
 
