@@ -24,7 +24,7 @@ variables:
   artifacts:
     when: always
     reports:
-      junit: junit.xml
+      junit: junitoutput.xml
   
 .release_build: &release-build
   <<: *build

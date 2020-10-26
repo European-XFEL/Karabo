@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
+<TestRun>
+  <FailedTests></FailedTests>
+  <SuccessfulTests>
+    <Test id="1">
+      <Name>ImageData_Test::testConstructor</Name>
+    </Test>
+    <Test id="2">
+      <Name>ImageData_Test::testSetAndGetMethods</Name>
+    </Test>
+    <Test id="3">
+      <Name>ImageData_Test::testImageDataElementMaxSize</Name>
+    </Test>
+    <Test id="4">
+      <Name>InputOutputChannel_Test::testOutputChannelElement</Name>
+    </Test>
+    <Test id="5">
+      <Name>InputOutputChannel_Test::testConnectDisconnect</Name>
+    </Test>
+    <Test id="6">
+      <Name>InputOutputChannel_Test::testManyToOne</Name>
+    </Test>
+    <Test id="7">
+      <Name>InputOutputChannel_Test::testConcurrentConnect</Name>
+    </Test>
+    <Test id="8">
+      <Name>Memory_Test::testSimpleReadAndWrite</Name>
+    </Test>
+    <Test id="9">
+      <Name>Memory_Test::testModifyAfterWrite</Name>
+    </Test>
+    <Test id="10">
+      <Name>SignalSlotable_Test::testUniqueInstanceId</Name>
+    </Test>
+    <Test id="11">
+      <Name>SignalSlotable_Test::testValidInstanceId</Name>
+    </Test>
+    <Test id="12">
+      <Name>SignalSlotable_Test::testReceiveAsync</Name>
+    </Test>
+    <Test id="13">
+      <Name>SignalSlotable_Test::testReceiveAsyncError</Name>
+    </Test>
+    <Test id="14">
+      <Name>SignalSlotable_Test::testReceiveAsyncNoReply</Name>
+    </Test>
+    <Test id="15">
+      <Name>SignalSlotable_Test::testReceiveExceptions</Name>
+    </Test>
+    <Test id="16">
+      <Name>SignalSlotable_Test::testMethod</Name>
+    </Test>
+    <Test id="17">
+      <Name>SignalSlotable_Test::testConnectAsync</Name>
+    </Test>
+    <Test id="18">
+      <Name>SignalSlotable_Test::testConnectAsyncMulti</Name>
+    </Test>
+    <Test id="19">
+      <Name>SignalSlotable_Test::testDisconnectAsync</Name>
+    </Test>
+    <Test id="20">
+      <Name>SignalSlotable_Test::testAsyncReply</Name>
+    </Test>
+    <Test id="21">
+      <Name>SignalSlotable_Test::testAutoConnectSignal</Name>
+    </Test>
+    <Test id="22">
+      <Name>SignalSlotable_Test::testAutoConnectSlot</Name>
+    </Test>
+    <Test id="23">
+      <Name>SignalSlotable_Test::testRegisterSlotTwice</Name>
+    </Test>
+    <Test id="24">
+      <Name>SignalSlotable_Test::testAsyncConnectInputChannel</Name>
+    </Test>
+    <Test id="25">
+      <Name>SignalSlotable_Test::testUuid</Name>
+    </Test>
+  </SuccessfulTests>
+  <Statistics>
+    <Tests>25</Tests>
+    <FailuresTotal>0</FailuresTotal>
+    <Errors>0</Errors>
+    <Failures>0</Failures>
+  </Statistics>
+</TestRun>
