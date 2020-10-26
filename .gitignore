@@ -70,7 +70,8 @@ build/python/*.exe
 /ci/coverage/report/????-??-??_????_integrationTest
 /ci/coverage/report/*.zip
 /ci/coverage/pyReport/
-junit.xml
+*.junit.xml
+junitoutput.xml
 # Conda stuff
 *environment.yml
 /src/pythonGui/conda-recipe/meta.yaml

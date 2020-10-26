@@ -1,24 +1,14 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
+import argparse
+import fnmatch
+import os
 import sys
 import xml.etree.ElementTree as ET
 
-def main():
-    """Merge multiple CPPUnit XML files into a JUnit single results file.
-    Output dumps to stdout.
-    example usage:
-        $ python merge_xml.py results1.xml results2.xml > results.xml
-    """
-    args = sys.argv[1:]
-    if not args:
-        usage()
-        sys.exit(2)
-    if '-h' in args or '--help' in args:
-        usage()
-        sys.exit()
-    merge_results(args[:])
 
-
-def merge_results(xml_files):
+def merge_results(xml_files, output_file):
     failures = 0
     tests = 0
     errors = 0
@@ -64,11 +54,37 @@ def merge_results(xml_files):
     new_root.attrib['errors'] = '%s' % errors
     new_root.attrib['time'] = 'N/A'
     new_tree = ET.ElementTree(new_root)
-    ET.dump(new_tree)
+    if output_file == 'STDOUT':
+        ET.dump(new_tree)
+    else:
+        new_tree.write(output_file)
+    return (errors + failures)
 
 
-def usage():
-    print(main.__doc__)
+DESCRIPTION = """
+Merge multiple CPPUnit XML files into a JUnit single results file.
+Output dumps to stdout.
+"""
  
+def main():
+    parser = argparse.ArgumentParser(description=DESCRIPTION,
+                                     formatter_class=argparse.HelpFormatter)
+    parser.add_argument('--file-glob', '-g', default='*.xml',
+                        help='The glob used to locate the XML files.')
+    parser.add_argument('--directory', '-d', required=True,
+                        help='The root directory of the XML files.')
+    parser.add_argument('--output', '-o', default='STDOUT',
+                        help='The outputfile')
+    args = parser.parse_args()
+
+    xml_files = []
+    for fn in os.listdir(args.directory):
+         if fnmatch.fnmatch(fn, args.file_glob):
+             xml_files.append(os.path.join(args.directory, fn))
+
+    ret = merge_results(xml_files, args.output)
+    exit(ret)
+
+
 if __name__ == '__main__':
     main()
