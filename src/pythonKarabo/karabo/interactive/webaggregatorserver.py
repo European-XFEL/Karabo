@@ -29,7 +29,11 @@ class MainHandler(web.RequestHandler):
         server = self.servers.setdefault(
             khostname, dict(hostname=hostname, link=url))
         h = json.loads(r.body)
-        table = h['servers']
+        # filter servers that cannot be controlled.
+        # note: using `get` for compatibility with versions < 2.10
+        table = [server
+                 for server in h['servers']
+                 if server.get('control_allowed')]
         table.sort(key=lambda x: x['name'])
         server['services'] = table
 
