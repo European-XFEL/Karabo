@@ -5,7 +5,7 @@ from weakref import WeakKeyDictionary
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
 from karabo.native.data.basetypes import KaraboValue, NoneValue, isSet
-from karabo.native.data.enums import NodeType
+from karabo.native.data.enums import AccessLevel, NodeType
 from karabo.native.data.hash import (Attribute, Descriptor, Hash, HashList,
                                      Integer, Schema, Slot)
 from karabo.native.registry import Registry
@@ -275,9 +275,11 @@ class Node(Descriptor):
     """
     defaultValue = Hash()
 
-    def __init__(self, cls, **kwargs):
+    def __init__(self, cls, requiredAccessLevel=AccessLevel.OBSERVER,
+                 **kwargs):
         self.cls = cls
-        Descriptor.__init__(self, **kwargs)
+        Descriptor.__init__(self, requiredAccessLevel=requiredAccessLevel,
+                            **kwargs)
 
     def toSchemaAndAttrs(self, device, state):
         _, attrs = super(Node, self).toSchemaAndAttrs(device, state)

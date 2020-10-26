@@ -1007,7 +1007,7 @@ class Tests(DeviceTest):
             'alarmNeedsAck_warnLow': False,
         })
         self.assertEqual(h["nested", ...], {
-            'requiredAccessLevel': 1,
+            'requiredAccessLevel': 0,
             'assignment': 0,
             'nodeType': 1,
             'accessMode': 4})
