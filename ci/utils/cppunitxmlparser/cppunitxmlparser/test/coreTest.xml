@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
+<TestRun>
+  <FailedTests>
+    <FailedTest id="1">
+      <Name>/home/silenzi/Framework/build/netbeans/karabo/testresults/coreTest.xml</Name>
+      <FailureType>Error</FailureType>
+      <Message>Test did not run</Message>
+    </FailedTest>
+  </FailedTests>
+  <Statistics>
+    <Tests>1</Tests>
+    <FailuresTotal>1</FailuresTotal>
+    <Errors>1</Errors>
+    <Failures>0</Failures>
+  </Statistics>
+</TestRun>
