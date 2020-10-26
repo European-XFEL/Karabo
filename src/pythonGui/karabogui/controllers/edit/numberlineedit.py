@@ -15,9 +15,11 @@ from karabo.common.scenemodel.api import (
 from karabogui.binding.api import (
     get_editor_value, get_min_max, FloatBinding, IntBinding, StringBinding)
 from karabogui.controllers.api import (
-    BaseBindingController, add_unit_label, HexValidator, IntValidator,
-    is_proxy_allowed, NumberValidator, register_binding_controller)
-from karabogui.util import RegexValidator, SignalBlocker
+    BaseBindingController, add_unit_label, is_proxy_allowed,
+    register_binding_controller)
+from karabogui.util import SignalBlocker
+from karabogui.validators import (
+    HexValidator, IntValidator, NumberValidator, RegexValidator)
 from karabogui.widgets.hints import LineEdit
 
 MAX_FLOATING_PRECISION = 12
