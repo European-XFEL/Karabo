@@ -4,7 +4,7 @@ from contextlib import suppress
 import time
 from weakref import WeakSet
 
-from karabo.native.data.basetypes import KaraboValue, NoneValue
+from karabo.native.data.basetypes import KaraboValue, isSet, NoneValue
 from karabo.native.data.enums import NodeType
 from karabo.native.data.hash import Descriptor, Hash, Slot, Type
 from karabo.native.data.ndarray import NDArray
@@ -124,6 +124,35 @@ class ProxyBase(_ProxyBase):
         :change: is the Hash with the changes
         """
         self._onChanged_r(change, self)
+
+    def configurationAsHash(self):
+        """Extract a configuration in a Hash from the proxy
+
+        NOTE: Unsupported types -> `ChoiceOfNodes`, `ListOfNodes`
+
+        Some values of a `ListOfNodes` appear in the configuration, but are not
+        available on the proxy (for now).
+        """
+        ret = Hash()
+
+        def recurse(proxy):
+            nonlocal ret
+            for key in proxy._allattrs:
+                descr = getattr(type(proxy), key, None)
+                if descr is None:
+                    # Unsupported types, ListOfNodes, ChoiceOfNodes
+                    continue
+                if isinstance(descr, ProxyNodeBase):  # recurse Nodes
+                    recurse(getattr(proxy, descr.key))
+                else:
+                    value = getattr(proxy, key, None)
+                    if isSet(value):
+                        data, attrs = descr.toDataAndAttrs(value)
+                        ret[descr.longkey] = data
+                        ret[descr.longkey, ...].update(attrs)
+        recurse(self)
+
+        return ret
 
     def _notifyChanged(self, descriptor, value):
         """this is called by _onChanged for each change"""
