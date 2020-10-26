@@ -7,7 +7,6 @@
 # This variables are created to ensure that 'nosetest' and 'coverage'
 # are executed from the karabo environment.
 COVERAGE="python $(which coverage)"
-NOSETESTS="python $(which nosetests)"
 # For some tests we allow flakiness:
 FLAKY_FLAGS="--with-flaky --no-success-flaky-report"
 
@@ -37,7 +36,6 @@ Available flags:
   --runUnitTests - Run Python unit tests.
   --runIntegrationTests - Run Python integration tests.
   --runLongTests - Run Python long tests
-  --runCondaUnitTests - Run the conda python unit tests (gui only)
   --collectCoverage - Collect Python code coverage.
   --generateCoverageReport - Collect Python code coverage and generate coverage
         report.
@@ -160,21 +158,10 @@ onExit() {
 safeRunCommand() {
     typeset cmnd="$*"
     typeset ret_code
-    typeset -i max_tries=4
 
     echo cmnd=$cmnd
     eval $cmnd
     ret_code=$?
-    if $ACCEPT_SIGSEGV; then
-        # the default return code of a process segfaulting is 139
-        # which is the "abnormal termination" code 128 plus the signal number (SIGSEGV=11)
-        while [ $max_tries -gt 1 ] && [ $ret_code == 139 ]; do
-            ((max_tries--))
-            printf "Segmentation Fault: [%d] when executing command: '$cmnd' - %d tries left" $ret_code $max_tries
-            eval $cmnd
-            ret_code=$?
-        done
-    fi
     if [ $ret_code != 0 ]; then
         printf "Error : [%d] when executing command: '$cmnd'" $ret_code
         echo
@@ -189,30 +176,31 @@ safeRunCommand() {
     fi
 }
 
-runCondaUnitTests() {
-    # Setup the environment
-    safeRunCommand source ./build_conda_env.sh clean install
-
-    PLATFORM=$(python -m platform)
-    if [[ $PLATFORM == Darwin* ]]; then
-        # TODO: figure out why the GUI tests fail on MacOs
-        ACCEPT_SIGSEGV=true
-        safeRunCommand "nosetests -v $COVER_FLAGS -e 'test_basics|test_set_value|test_decline_color|test_property_proxy_edit_values_from_text_input|test_get_alarm_pixmap' karabogui"
-        unset ACCEPT_SIGSEGV
-        # TODO: figure out why these tests fail on MacOs
-        safeRunCommand "nosetests -v $COVER_FLAGS -e 'test_actual_timestamp|test_floor_divide|test_fmod|test_mod|test_remainder' karabo.native"
-        safeRunCommand "nosetests -v $COVER_FLAGS karabo.common"
-        conda deactivate
-        return 0
+safeRunTests() {
+    # mandatory argument: the python module specification
+    # optional argument: extra options
+    # optional argument: output_xml_filename
+    MODULE_SPEC=$1
+    JUNIT_OUTPUT=""
+    if $COLLECT_COVERAGE; then
+        safeRunCommand "python $(which nosetests) -v $COVER_FLAGS $FLAKY_FLAGS $MODULE_SPEC"
+    else
+        _OLD_ACCEPT=$ACCEPT_FAILURES
+        ACCEPT_FAILURES=true
+        PYTHON_TESTS="py.test -v --pyargs"
+        JUNIT_RESULT_FILE="${MODULE_SPEC}${2}.junit.xml"
+        rm -f $JUNIT_RESULT_FILE
+        JUNIT_OUTPUT="--junitxml=$JUNIT_RESULT_FILE"
+        safeRunCommand "$PYTHON_TESTS $JUNIT_OUTPUT $MODULE_SPEC"
+        ACCEPT_FAILURES=$_OLD_ACCEPT
+        unset _OLD_ACCEPT
     fi
-    # Allow gui tests to crash sometimes - for the time being:
-    ACCEPT_SIGSEGV=true
-    safeRunCommand "nosetests -v $COVER_FLAGS -e test_get_alarm_pixmap karabogui"
-    unset ACCEPT_SIGSEGV
-    safeRunCommand "nosetests -v $COVER_FLAGS karabo.native"
-    safeRunCommand "nosetests -v $COVER_FLAGS karabo.common"
+}
 
-    conda deactivate
+compileJunitReport() {
+    safeRunCommand "python -m pip install --upgrade $KARABO_PROJECT_ROOT_DIR/ci/utils/cppunitxmlparser/."
+    safeRunCommand "cppunitxml-junitmerge -d . -o junitoutput.xml"
+    safeRunCommand "rm -f *.junit.xml"
 }
 
 runPythonUnitTests() {
@@ -220,28 +208,24 @@ runPythonUnitTests() {
     echo Running Karabo Python unit tests ...
     echo
 
-    # Pass the bound_api/launcher.py file. If the file is imported, a
-    # part of its code is executed. That results in an error.
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.bound_api"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.bound_devices"
-    # Some middlelayer tests are flaky for the time being, so add proper flags:
-    safeRunCommand "$NOSETESTS -v $FLAKY_FLAGS $COVER_FLAGS karabo.middlelayer_api"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.middlelayer_devices"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.common"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.macro_api"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.macro_devices"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.influxdb"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.native"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.project_db"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.config_db"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.tests"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.interactive"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.macro_api"
-    # Allow gui tests to crash sometimes - for the time being:
-    # MR-3871: disable while karabogui doesn't support Qt5 on the old deps
-    #ACCEPT_SIGSEGV=true
-    #safeRunCommand "$NOSETESTS -v $COVER_FLAGS -e test_extensions_dialog karabogui"
-    #unset ACCEPT_SIGSEGV
+    safeRunTests "karabo.bound_api"
+    safeRunTests "karabo.bound_devices"
+    safeRunTests "karabo.middlelayer_api"
+    safeRunTests "karabo.middlelayer_devices"
+    safeRunTests "karabo.common"
+    safeRunTests "karabo.macro_api"
+    safeRunTests "karabo.macro_devices"
+    safeRunTests "karabo.influxdb"
+    safeRunTests "karabo.native"
+    safeRunTests "karabo.project_db"
+    safeRunTests "karabo.config_db"
+    safeRunTests "karabo.tests"
+    safeRunTests "karabo.interactive"
+    safeRunTests "karabo.macro_api"
+    export KARABO_UVLOOP=1
+    safeRunTests "karabo.middlelayer_api" "_uvloop"
+    safeRunTests "karabo.middlelayer_devices" "_uvloop"
+    unset KARABO_UVLOOP
 
     echo
     echo Karabo Python unit tests complete
@@ -255,18 +239,14 @@ runPythonIntegrationTests() {
     echo
 
     # TODO: Needs to be uncommented when the bound_device_test integration test is added.
-    #safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.bound_device_test"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.all_api_alarm_test"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_comm_test"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_provided_scenes_test"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.pipeline_processing_test"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_cross_test"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.device_schema_injection_test"
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.config_manager_cross_test"
-    # Rerun the middlelayer here for UVLOOP business
-    export KARABO_UVLOOP=1
-    safeRunCommand "$NOSETESTS -v $FLAKY_FLAGS $COVER_FLAGS karabo.middlelayer_api"
-    unset KARABO_UVLOOP
+    #safeRunTests "karabo.integration_tests.bound_device_test"
+    safeRunTests "karabo.integration_tests.all_api_alarm_test"
+    safeRunTests "karabo.integration_tests.device_comm_test"
+    safeRunTests "karabo.integration_tests.device_provided_scenes_test"
+    safeRunTests "karabo.integration_tests.pipeline_processing_test"
+    safeRunTests "karabo.integration_tests.device_cross_test"
+    safeRunTests "karabo.integration_tests.device_schema_injection_test"
+    safeRunTests "karabo.integration_tests.config_manager_cross_test"
     echo
     echo Karabo Python integration tests complete
     echo
@@ -277,7 +257,7 @@ runPythonLongTests() {
     echo Running Karabo Python long tests ...
     echo
 
-    safeRunCommand "$NOSETESTS -v $COVER_FLAGS karabo.integration_tests.pipeline_cross_test"
+    safeRunTests "karabo.integration_tests.pipeline_cross_test"
 
     echo
     echo Karabo Python long tests complete
@@ -368,9 +348,6 @@ if (( $# == 0 )); then
 else
     while [ -n "$1" ]; do
         case "$1" in
-            --runCondaUnitTests)
-                RUN_CONDA_UNIT_TEST=true
-                ;;
             --runUnitTests)
                 RUN_UNIT_TEST=true
                 ;;
@@ -461,10 +438,6 @@ if $COLLECT_COVERAGE; then
     setupCoverageTool
 fi
 
-if $RUN_CONDA_UNIT_TEST; then
-    runCondaUnitTests
-fi
-
 if $RUN_UNIT_TEST; then
     runPythonUnitTests
 fi
@@ -483,6 +456,8 @@ if $COLLECT_COVERAGE; then
 
     # Tear-down configuration for coverage tool.
     teardownCoverageTool
+else
+    compileJunitReport
 fi
 
 # Generate report.
