@@ -6,7 +6,6 @@ from karabo.common.savable import BaseSavableModel
 from karabo.common.scenemodel.const import NS_KARABO
 from karabo.common.scenemodel.io_utils import read_base_widget_data
 
-
 KARABO_NoROI = 0
 KARABO_RECT = 1
 KARABO_CROSSHAIR = 2
@@ -239,3 +238,29 @@ def restore_graph_config(config):
         config[KARABO_ROI_ITEMS] = roi_items
 
     return config
+
+
+def read_histogram_model(element):
+    traits = {}
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    traits['bins'] = int(element.get(NS_KARABO + 'bins', 10))
+    auto = element.get(NS_KARABO + 'auto', 'true')
+    traits['auto'] = auto.lower() == 'true'
+    traits['start'] = float(element.get(NS_KARABO + 'start', 0.0))
+    traits['stop'] = float(element.get(NS_KARABO + 'stop', 0.0))
+
+    return traits
+
+
+def write_histogram_model(model, element):
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+    element.set(NS_KARABO + 'bins', str(model.bins))
+    element.set(NS_KARABO + 'start', str(model.start))
+    element.set(NS_KARABO + 'stop', str(model.stop))
+    element.set(NS_KARABO + 'auto', str(model.auto))
+
+    return element

@@ -37,7 +37,8 @@ from .widgets.graph_plots import (
     AlarmGraphModel, BasePlotModel, NDArrayGraphModel, ScatterGraphModel,
     VectorGraphModel, VectorHistGraphModel, VectorBarGraphModel,
     MultiCurveGraphModel, VectorScatterGraphModel, VectorXYGraphModel,
-    VectorFillGraphModel, StateGraphModel, TrendGraphModel)
+    VectorFillGraphModel, StateGraphModel, TrendGraphModel,
+    NDArrayHistGraphModel)
 from .widgets.plot import SparklineModel
 from .widgets.simple import (
     AnalogModel, BitfieldModel, CheckBoxModel, ChoiceElementModel,
