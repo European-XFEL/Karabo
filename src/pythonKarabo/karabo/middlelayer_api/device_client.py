@@ -180,11 +180,15 @@ def getConfiguration(device):
 
     :param device: deviceId or proxy
 
+    NOTE: When passing a proxy, the proxy is updated and the configuration
+    if extracted from the proxy. In this case, `ChoiceOfNodes` and
+    `ListOfNodes` (mostly) properties will be omitted in the configuration.
+
     :returns: Configuration Hash
     """
     if isinstance(device, ProxyBase):
         yield from device._update()
-        device = device._deviceId
+        return device.configurationAsHash()
 
     hsh, _ = yield from get_instance().call(device, "slotGetConfiguration")
     return hsh
