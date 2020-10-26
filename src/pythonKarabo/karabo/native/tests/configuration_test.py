@@ -1,5 +1,6 @@
 from copy import deepcopy
-from ..configuration import sanitize_init_configuration
+from ..configuration import (
+    sanitize_init_configuration, sanitize_write_configuration)
 
 from karabo.native import (
     AccessMode, Assignment, Configurable, Double, Int32)
@@ -49,5 +50,21 @@ def test_sanitize_init_configuration():
     assert "readOnlyInteger" not in new_config
     assert "double" in config
     assert "initOnlyDouble" in new_config
+    assert "internalInitOnlyDouble" in config
+    assert "internalInitOnlyDouble" not in new_config
+
+    # Check runtime configuration!
+    new_config = sanitize_write_configuration(schema, deepcopy(config))
+    assert config is not None
+    assert new_config is not None
+    assert "integer" in new_config
+    assert "internalInteger" in config
+    assert "internalInteger" not in new_config
+    assert "readOnlyInteger" in config
+    assert "readOnlyInteger" not in new_config
+    assert "double" in config
+    assert "double" in new_config
+    assert "initOnlyDouble" in config
+    assert "initOnlyDouble" not in new_config
     assert "internalInitOnlyDouble" in config
     assert "internalInitOnlyDouble" not in new_config
