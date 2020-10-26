@@ -44,49 +44,20 @@ activateKarabo() {
 checkCppUnitTestResults() {
     local testDir="$1"
     local testNames="$2"
-    RET=0
     local mergeArgs=""
+    safeRunCommand "python -m pip install --upgrade $scriptDir/ci/utils/cppunitxmlparser/."
     for name in $testNames; do
         local path=$(printf "%s/testresults/%sTest.xml" $testDir $name)
-        mergeArgs="$mergeArgs $path"
-        if [ ! -e $path ]; then
-            echo "Expected test results file: $path not found!"
-            RET=1
-            # generate an CppUnit XML place holder
-            cat > $path << EOF
-<?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
-<TestRun>
-  <FailedTests>
-    <FailedTest id="1">
-      <Name>${path}</Name>
-      <FailureType>Error</FailureType>
-      <Message>${path} Test did not run</Message>
-    </FailedTest>
-  </FailedTests>
-  <Statistics>
-    <Tests>1</Tests>
-    <FailuresTotal>1</FailuresTotal>
-    <Errors>1</Errors>
-    <Failures>0</Failures>
-  </Statistics>
-</TestRun>
-EOF
-        fi
-        # xmllint is distributed with Karabo
-        local fails=$(xmllint --xpath '/TestRun/Statistics/FailuresTotal/text()' $path)
-        if [ $fails != "0" ]; then
-            echo "Test failure found in results file: $path"
-            echo
-            echo
-            RET=1
-        fi
+        mergeArgs="${mergeArgs} ${path}"
     done
-
-    safeRunCommand "python ci/utils/merge_xml.py $mergeArgs > junit.xml"
-
-
-    if [ $RET != 0 ]; then
-        exit $RET
+    cppunitxml-check -f${mergeArgs} -o cpp.junit.xml
+    ret_code=$?
+    if [ $ret_code != 0 ]; then
+        # the output file is expected to be 'junitoutput.xml'
+        # by the CI application, if we do not fail here, the python
+        # tests will aggreagate this file into a global result file.
+        mv cpp.junit.xml junitoutput.xml
+        exit $ret_code
     fi
     # Fail when new test suites are added and we don't expect them
     pushd $testDir/testresults/ &> /dev/null
