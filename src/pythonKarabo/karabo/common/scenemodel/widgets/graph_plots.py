@@ -12,7 +12,8 @@ from karabo.common.scenemodel.registry import (
 from .graph_utils import (
     BaseROIData, read_axes_set, read_basic_label, read_baseline,
     read_range_set, read_roi_info, write_axes_set, write_basic_label,
-    write_baseline, write_range_set, write_roi_info)
+    write_baseline, write_range_set, write_roi_info,
+    read_histogram_model, write_histogram_model)
 
 
 class BasePlotModel(BaseWidgetObjectData):
@@ -43,6 +44,7 @@ class ScatterGraphModel(BasePlotModel):
 
 class XYPlotModel(ScatterGraphModel):
     """ a legacy model """
+
     def __init__(self, **traits):
         super().__init__(**traits)
         msg = f"{type(self).__name__} is deprecated, use ScatterGraphModel"
@@ -55,6 +57,7 @@ class MultiCurveGraphModel(BasePlotModel):
 
 class MultiCurvePlotModel(MultiCurveGraphModel):
     """ a legacy model """
+
     def __init__(self, **traits):
         super().__init__(**traits)
         msg = f"{type(self).__name__} is deprecated, use MultiCurveGraphModel"
@@ -74,6 +77,7 @@ class VectorXYGraphModel(BasePlotModel):
 
 class XYVectorModel(VectorXYGraphModel):
     """ a legacy model """
+
     def __init__(self, **traits):
         super().__init__(**traits)
         msg = f"{type(self)} is deprecate, use VectorXYGraphModel"
@@ -96,12 +100,20 @@ class NDArrayGraphModel(BasePlotModel):
     y_grid = Bool(True)
 
 
-class VectorHistGraphModel(BasePlotModel):
-    """ A model for the VectorHist Graph"""
+class HistoGramModel(BasePlotModel):
+    """ A base model for histograms"""
     bins = Int(10)
     auto = Bool(True)
     start = Float(0.0)
     stop = Float(0.0)
+
+
+class VectorHistGraphModel(HistoGramModel):
+    """ A model for the VectorHist Graph"""
+
+
+class NDArrayHistGraphModel(HistoGramModel):
+    """ A model for the ArrayGraph Graph"""
 
 
 class VectorFillGraphModel(BasePlotModel):
@@ -121,6 +133,7 @@ class VectorGraphModel(BasePlotModel):
 
 class DisplayPlotModel(VectorGraphModel):
     """ a legacy model """
+
     def __init__(self, **traits):
         super().__init__(**traits)
         msg = f"{type(self).__name__} is deprecated, use VectorGraphModel"
@@ -135,6 +148,7 @@ class TrendGraphModel(BasePlotModel):
 
 class DisplayTrendlineModel(TrendGraphModel):
     """ a legacy model """
+
     def __init__(self, **traits):
         super().__init__(**traits)
         msg = f"{type(self).__name__} is deprecated, use TrendGraphModel"
@@ -264,15 +278,7 @@ def _vector_bar_graph_writer(model, parent):
 @register_scene_reader('VectorHistGraph')
 def _vector_hist_graph_reader(element):
     traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
-    traits['bins'] = int(element.get(NS_KARABO + 'bins', 10))
-    auto = element.get(NS_KARABO + 'auto', 'true')
-    traits['auto'] = auto.lower() == 'true'
-    traits['start'] = float(element.get(NS_KARABO + 'start', 0.0))
-    traits['stop'] = float(element.get(NS_KARABO + 'stop', 0.0))
-
+    traits.update(read_histogram_model(element))
     return VectorHistGraphModel(**traits)
 
 
@@ -280,13 +286,23 @@ def _vector_hist_graph_reader(element):
 def _vector_hist_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'VectorHistGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
-    element.set(NS_KARABO + 'bins', str(model.bins))
-    element.set(NS_KARABO + 'start', str(model.start))
-    element.set(NS_KARABO + 'stop', str(model.stop))
-    element.set(NS_KARABO + 'auto', str(model.auto))
+    write_histogram_model(model, element)
+
+    return element
+
+
+@register_scene_reader('NDArrayHistGraph')
+def _array_hist_graph_reader(element):
+    traits = read_base_widget_data(element)
+    traits.update(read_histogram_model(element))
+    return NDArrayHistGraphModel(**traits)
+
+
+@register_scene_writer(NDArrayHistGraphModel)
+def _array_hist_graph_writer(model, parent):
+    element = SubElement(parent, WIDGET_ELEMENT_TAG)
+    write_base_widget_data(model, element, 'NDArrayHistGraph')
+    write_histogram_model(model, element)
 
     return element
 
