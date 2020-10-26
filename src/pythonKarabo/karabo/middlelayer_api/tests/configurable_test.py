@@ -13,8 +13,8 @@ from karabo.middlelayer import (
     RegexString, Slot, State, String, UInt8, UInt16, UInt32, UInt64,
     Unit, unit, VectorBool, VectorChar, VectorComplexDouble,
     VectorComplexFloat, VectorDouble, VectorHash, VectorFloat, VectorInt8,
-    VectorInt16, VectorInt32, VectorInt64, VectorString, VectorUInt8,
-    VectorUInt16, VectorUInt32, VectorUInt64)
+    VectorInt16, VectorInt32, VectorInt64, VectorString, VectorRegexString,
+    VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64)
 from ..injectable import InjectMixin
 
 
@@ -1042,6 +1042,25 @@ class Tests(TestCase):
         a = B()
         self.assertEqual(a.d.descriptor.defaultValue, "1")
         self.assertEqual(a.d.descriptor.classId, "RegexString")
+
+    def test_vector_regex_string(self):
+
+        class A(Configurable):
+            d = VectorRegexString(
+                defaultValue=["remote:output "], # add a whitespace
+                regex=r"^[A-Za-z0-9_-]{1,60}(:)[A-Za-z0-9_-]{1,60}$")
+
+        # Regex does not comply with the defaultValue
+        with self.assertRaises(KaraboError):
+            a = A()
+
+        class B(A):
+            d = Overwrite(defaultValue=["remote:output"])
+
+        b = B()
+        self.assertEqual(b.d.descriptor.defaultValue, ["remote:output"])
+        self.assertEqual(b.d.descriptor.classId, "VectorRegexString")
+        self.assertEqual(b.d.descriptor.displayType, "VectorRegexString")
 
     def test_image_with_image_data(self):
         arrayEqual = numpy.testing.assert_array_equal

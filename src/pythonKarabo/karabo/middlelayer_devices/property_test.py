@@ -10,7 +10,7 @@ from karabo.middlelayer import (
     NDArray, Node, OutputChannel, Overwrite, RegexString, UInt32, UInt64,
     Unit, sleep, Slot, slot, State, String, VectorBool, VectorChar,
     VectorDouble, VectorFloat, VectorHash, VectorInt32, VectorInt64,
-    VectorUInt32, VectorUInt64, VectorString)
+    VectorUInt32, VectorUInt64, VectorRegexString, VectorString)
 
 
 VECTOR_MAX_SIZE = 10
@@ -325,9 +325,15 @@ class PropertyTestMDL(Device):
 
     regexProperty = RegexString(
         displayedName="Regex String",
-        regex="^[A-Za-z0-9_-]{1,20}$",
+        regex="^[A-Za-z0-9_\-]{1,20}$",
         description="A regex string property",
         defaultValue="RegexKarabo")
+
+    vectorRegexProperty = VectorRegexString(
+        displayedName="Vector Regex String",
+        regex="^[A-Za-z0-9_\-]{1,20}$",
+        description="A vector regex string property",
+        defaultValue=["VectorRegexKarabo"])
 
     @Slot(displayedName="Set Alarm",
           description="Set alarm to value of String property - if convertable")
