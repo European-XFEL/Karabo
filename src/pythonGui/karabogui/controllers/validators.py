@@ -1,118 +1,117 @@
-#############################################################################
-# Author: <dennis.goeries@xfel.eu>
-# Created on February 25, 2019
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
-#############################################################################
+from ast import literal_eval
+import re
+
+import numpy as np
 from PyQt5.QtGui import QValidator
 
+from karabogui.binding.api import (
+    VectorBoolBinding, VectorComplexDoubleBinding, VectorComplexFloatBinding,
+    VectorDoubleBinding, VectorFloatBinding, VectorInt8Binding,
+    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
+    VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
+    VectorUint32Binding, VectorUint64Binding)
 
-class HexValidator(QValidator):
-    def __init__(self, min=None, max=None, parent=None):
-        QValidator.__init__(self, parent)
-        self.min = min
-        self.max = max
+INT_REGEX = r"^[-+]?\d+$"
+UINT_REGEX = r"^[+]?\d+$"
+DOUBLE_REGEX = r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$"
 
-    def is_hex(self, input):
-        return all(i in "0123456789abcdefABCDEF" for i in input)
+CAST_MAP = {
+    VectorInt8Binding: np.int8,
+    VectorInt16Binding: np.int16,
+    VectorInt32Binding: np.int32,
+    VectorInt64Binding: np.int64,
+    VectorUint8Binding: np.uint8,
+    VectorUint16Binding: np.uint16,
+    VectorUint32Binding: np.uint32,
+    VectorUint64Binding: np.uint64,
+}
+
+REGEX_MAP = {
+    VectorBoolBinding: r"(0|1|[T]rue|[F]alse)",
+    VectorComplexDoubleBinding: DOUBLE_REGEX,  # XXX
+    VectorComplexFloatBinding: DOUBLE_REGEX,  # XXX
+    VectorDoubleBinding: DOUBLE_REGEX,
+    VectorFloatBinding: DOUBLE_REGEX,
+    VectorInt8Binding: INT_REGEX,
+    VectorInt16Binding: INT_REGEX,
+    VectorInt32Binding: INT_REGEX,
+    VectorInt64Binding: INT_REGEX,
+    VectorStringBinding: r"^.+$",
+    VectorUint8Binding: UINT_REGEX,
+    VectorUint16Binding: UINT_REGEX,
+    VectorUint32Binding: UINT_REGEX,
+    VectorUint64Binding: UINT_REGEX,
+}
+
+MEDIATE_MAP = {
+    VectorBoolBinding: ('T', 't', 'r', 'u', 'F', 'a', 'l', 's', ','),
+    VectorComplexDoubleBinding: ('+', '-', 'j', ','),  # X
+    VectorComplexFloatBinding: ('+', '-', 'j', ','),  # X
+    VectorDoubleBinding: ('+', '-', ','),
+    VectorFloatBinding: ('+', '-', ',', '.'),
+    VectorInt8Binding: ('+', '-', ','),
+    VectorInt16Binding: ('+', '-', ','),
+    VectorInt32Binding: ('+', '-', ','),
+    VectorInt64Binding: ('+', '-', ','),
+    VectorStringBinding: (','),
+    VectorUint8Binding: ('+', ','),
+    VectorUint16Binding: ('+', ','),
+    VectorUint32Binding: ('+', ','),
+    VectorUint64Binding: ('+', ','),
+}
+
+
+class ListValidator(QValidator):
+    pattern = None
+    intermediate = ()
+
+    def __init__(self, binding=None, min_size=None, max_size=None):
+        super(ListValidator, self).__init__()
+        bind_type = type(binding)
+        self.pattern = re.compile(REGEX_MAP.get(bind_type, ''))
+        self.intermediate = MEDIATE_MAP.get(bind_type, ())
+        self.literal = (str if bind_type == VectorStringBinding
+                        else literal_eval)
+        # vector of integers are downcasted, here we get a function
+        # to validate that the user input matches the casted value
+        self.cast = CAST_MAP.get(bind_type, self.literal)
+        self.min_size = min_size
+        self.max_size = max_size
 
     def validate(self, input, pos):
-        if input in ('+', '-', ''):
-            return self.Intermediate, input, pos
-
-        if not (self.is_hex(input) or
-                input[0] in '+-' and self.is_hex(input[1:])):
-            return self.Invalid, input, pos
-
-        if self.min is not None and self.min >= 0 and input.startswith('-'):
-            return self.Invalid, input, pos
-
-        if self.max is not None and self.max < 0 and input.startswith('+'):
-            return self.Invalid, input, pos
-
-        if ((self.min is None or self.min <= int(input, base=16)) and
-                (self.max is None or int(input, base=16) <= self.max)):
+        """The main validate function
+        """
+        # completely empty input might be acceptable!
+        if input in ('', []) and (self.min_size is None or self.min_size == 0):
             return self.Acceptable, input, pos
-        else:
+        elif (input in ('', []) and self.min_size is not None
+              and self.min_size > 0):
+            return self.Intermediate, input, pos
+        elif input.startswith(','):
             return self.Intermediate, input, pos
 
-    def setBottom(self, min):
-        self.min = min
-
-    def setTop(self, max):
-        self.max = max
-
-
-class IntValidator(QValidator):
-    def __init__(self, min=None, max=None, parent=None):
-        QValidator.__init__(self, parent)
-        self.min = min
-        self.max = max
-
-    def validate(self, input, pos):
-        if input in ('+', '-', ''):
+        # check for size first
+        values = [val for val in input.split(',')]
+        if self.min_size is not None and len(values) < self.min_size:
+            return self.Intermediate, input, pos
+        if self.max_size is not None and len(values) > self.max_size:
             return self.Intermediate, input, pos
 
-        if not (input.isdigit() or input[0] in '+-' and input[1:].isdigit()):
-            return self.Invalid, input, pos
-
-        if self.min is not None and self.min >= 0 and input.startswith('-'):
-            return self.Invalid, input, pos
-
-        if self.max is not None and self.max < 0 and input.startswith('+'):
-            return self.Invalid, input, pos
-
-        if ((self.min is None or self.min <= int(input)) and
-                (self.max is None or int(input) <= self.max)):
-            return self.Acceptable, input, pos
-        else:
+        # intermediate positions
+        if input[-1] in self.intermediate:
             return self.Intermediate, input, pos
 
-    def setBottom(self, min):
-        self.min = min
-
-    def setTop(self, max):
-        self.max = max
-
-
-class NumberValidator(QValidator):
-    def __init__(self, min=None, max=None, decimals=-1, parent=None):
-        QValidator.__init__(self, parent)
-        self.min = min
-        self.max = max
-        self.decimals = decimals
-
-    def validate(self, input, pos):
-        # start input check
-        if input in ('+', '-', ''):
-            return self.Intermediate, input, pos
-
-        # we might not have standard notation
-        if input[-1] in ('+', '-', 'e'):
-            return self.Intermediate, input, pos
-        # we might not have standard notation
-        elif input[-1] in (' '):
-            return self.Invalid, input, pos
-
-        # check for floating point precision
-        if self.decimals != -1:
-            input_split = input.split('.')
-            if len(input_split) > 1 and len(input_split[1]) > self.decimals:
+        # check every single list value if it is valid
+        for value in values:
+            if not self.pattern.match(value):
                 return self.Invalid, input, pos
+            # We have to check other behavior, e.g. leading zeros, and see
+            # if we can cast it properly (SyntaxError)
+            # Check for changes in between Vectors (ValueError)
+            # or if self.cast casts down integers (AssertionError)
+            try:
+                assert self.literal(value) == self.cast(value)
+            except (ValueError, SyntaxError, AssertionError):
+                return self.Intermediate, input, pos
 
-        # try if we can cast input
-        try:
-            value = float(input)
-        except ValueError:
-            return self.Invalid, input, pos
-        # then check for limits
-        if ((self.min is None or self.min <= value) and
-                (self.max is None or value <= self.max)):
-            return self.Acceptable, input, pos
-        else:
-            return self.Intermediate, input, pos
-
-    def setBottom(self, min):
-        self.min = min
-
-    def setTop(self, max):
-        self.max = max
+        return self.Acceptable, input, pos
