@@ -89,6 +89,21 @@ def test_vector_hist_graph_model():
     assert read_model.auto is False
 
 
+def test_array_hist_graph_model():
+    traits = _geometry_traits()
+    traits['bins'] = 21
+    traits['auto'] = False
+    traits['start'] = 0.333
+    traits['stop'] = 10.1
+    model = api.NDArrayHistGraphModel(**traits)
+    read_model = single_model_round_trip(model)
+    _assert_geometry_traits(read_model)
+    assert read_model.bins == 21
+    assert read_model.start == 0.333
+    assert read_model.stop == 10.1
+    assert read_model.auto is False
+
+
 def test_vector_graph():
     traits = _geometry_traits()
     roi_data = [
