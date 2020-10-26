@@ -17,10 +17,10 @@ def main():
 
     entrypoint = next(working_set.iter_entry_points(namespace, name))
 
-    if command == "schema" or command == "schemaVersionHack":
+    if command == "schema" or command == "schemaOverwriteVersion":
         # print the schema of a device class to stdout
         schema = entrypoint.load().getSchema(entrypoint.name)
-        if command != "schema":  # i.e. schemaVersionHack
+        if command != "schema":  # i.e. schemaOverwriteVersion
             # manipulate for unit test: use fixed karabo version
             # and fixed connection defaults (not from environment variables)
             (OVERWRITE_ELEMENT(schema)
