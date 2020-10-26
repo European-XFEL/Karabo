@@ -8,7 +8,7 @@ from weakref import WeakValueDictionary
 from PyQt5.QtCore import pyqtSignal, QAbstractItemModel, QModelIndex, Qt
 from PyQt5.QtGui import QBrush, QColor, QFont
 
-from karabo.native import AccessMode
+from karabo.native import AccessLevel, AccessMode
 from karabo.common.api import (
     State, KARABO_SCHEMA_ALLOWED_STATES, KARABO_WARN_LOW, KARABO_WARN_HIGH,
     KARABO_ALARM_LOW, KARABO_ALARM_HIGH)
@@ -17,6 +17,7 @@ from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, ImageBinding, ListOfNodesBinding,
     NDArrayBinding, NodeBinding, ProjectDeviceProxy, PropertyProxy,
     SlotBinding, get_binding_value, has_changes, WidgetNodeBinding)
+import karabogui.globals as krb_globals
 from karabogui.indicators import (
     OK_COLOR, ERROR_COLOR_ALPHA, get_state_color, LOCKED_COLOR,
     PROPERTY_ALARM_COLOR, PROPERTY_ALARM_COLOR_MAP, PROPERTY_READONLY_COLOR,
@@ -606,7 +607,10 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
     def _attribute_flags(self, binding):
         """flags() implementation for property attributes"""
-        return Qt.ItemIsEditable
+        if krb_globals.GLOBAL_ACCESS_LEVEL >= AccessLevel.USER:
+            return Qt.ItemIsEditable
+
+        return 0
 
     def _proxy_flags(self, proxy):
         """flags() implementation for properties"""
