@@ -4,7 +4,7 @@ from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QDialog
 
-from karabogui.controllers.validators import NumberValidator
+from karabogui.validators import NumberValidator
 
 DECIMALS = 6
 
