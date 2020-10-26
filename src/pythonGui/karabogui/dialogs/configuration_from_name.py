@@ -11,8 +11,7 @@ from karabogui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
     KaraboEvent)
 from karabogui.singletons.api import get_network
-from karabogui.util import RegexValidator
-
+from karabogui.validators import RegexValidator
 
 NAME_FIELD = 0
 PRIORITY_FIELD = 2
