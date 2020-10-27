@@ -19,7 +19,7 @@ from karabo.middlelayer import (
     VectorString, waitUntilNew)
 
 KARABO_CONFIGURATION_MANAGER = "KaraboConfigurationManager"
-DEVICE_TIMEOUT = 5
+DEVICE_TIMEOUT = 4
 
 
 class RowSchema(Configurable):
@@ -190,15 +190,27 @@ class ComponentManager(Device):
             self.state = State.ON
             return
 
-        h = Hash("deviceIds", self.deviceNames.value,
-                 "name", self.configurationName.value,
-                 "priority", int(self.priority.value),
-                 "description", self.description.value)
+        def chunks(sequence, n):
+            """Yield successive n-sized chunks from sequence"""
+            for i in range(0, len(sequence), n):
+                yield sequence[i:i + n]
         try:
-            timeout = DEVICE_TIMEOUT * len(self.deviceNames.value)
-            await wait_for(self.call(KARABO_CONFIGURATION_MANAGER,
-                                     "slotSaveConfigurationFromName", h),
-                           timeout=timeout)
+            names = self.deviceNames.value
+            priority = int(self.priority.value)
+            description = self.description.value
+            name = self.configurationName.value
+
+            chunk_size = int(self.db.confBulkLimit)
+            for chunk in chunks(names, chunk_size):
+                h = Hash("deviceIds", chunk,
+                         "name", name,
+                         "priority", priority,
+                         "description", description)
+
+                timeout = DEVICE_TIMEOUT * len(chunk)
+                await wait_for(self.call(KARABO_CONFIGURATION_MANAGER,
+                                         "slotSaveConfigurationFromName", h),
+                               timeout=timeout)
         except TimeoutError:
             self.lastSuccess = False
             self.status = "Saving configurations failed due to timeout!"
