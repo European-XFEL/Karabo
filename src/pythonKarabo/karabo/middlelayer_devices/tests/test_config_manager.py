@@ -127,6 +127,16 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(r["success"], True)
 
     @async_tst
+    async def test_configuration_bulk_save_reject(self):
+        """Test the reject of saving of too many configurations"""
+        deviceIds = ["TEST_DEVICE"] * 11
+        config_name = "testConfig"
+        h = Hash("name", config_name, "deviceIds", deviceIds,
+                 "priority", 3)
+        with self.assertRaises(KaraboError):
+            await call(TEST_MANAGER, "slotSaveConfigurationFromName", h)
+
+    @async_tst
     async def test_get_configuration(self):
         """Test the manual retrieving of configurations"""
         config_name = "testConfig"
