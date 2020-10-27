@@ -12,9 +12,9 @@ The **most relevant improvements**, fixes and changes are:
 - MDL: Every `requiredAccessLevel` which will be at least `AccessLevel.USER` for **reconfigurable** parameters
   if not explicitly specified!
 
-- MDL: The eventloop can be configured and set to ``uvloop`` via an environemnt variable. Please set ``KARABO_UVLOOP`` 
+- MDL: The eventloop can be configured and set to ``uvloop`` via an environemnt variable. Please set ``KARABO_UVLOOP``
   before starting the device server to use ``uvloop`` instead of native ``asyncio``.
-  
+
   - For now, MDL servers started with ``uvloop`` cannot start devices from ``bound`` python.
 
 - MDL: Outputchannel can write end of stream token with coroutine `writeEndOfStream`.
@@ -26,11 +26,17 @@ The **most relevant improvements**, fixes and changes are:
 - Core Devices: A new Framework device has been created, the ``ConfigurationManager``.
 
 - Pipelines: The available options of the onSlowness parameter that defines how an output channel should react
-  if a connected input channel is not yet ready to receive more data, have changed: The non-functional throw has been 
+  if a connected input channel is not yet ready to receive more data, have changed: The non-functional throw has been
   removed and a new option queueDrop has been introduced. The default has changed from wait to **drop**.
   The ``compression`` key has been removed.
 
 - All API: The `visibility` of devices cannot be configured on runtime anymore.
+
+- All API: The core devices get a common place with deviceId definitions. In the future, these deviceIds must be used:
+  KARABO_ALARM_SERVICE = "Karabo_AlarmService"
+  KARABO_CONFIG_MANAGER = "KaraboConfigurationManager"
+  KARABO_DAEMON_MANAGER = "KaraboDaemonManager"
+  KARABO_PROJECT_MANAGER = "KaraboProjectManager"
 
 - GUI: The Karabo GUI is shipped now with open license fonts: Source Sans Pro, Source Serif Pro, Source Code Pro. **All other fonts won't be offered anymore.**
 
