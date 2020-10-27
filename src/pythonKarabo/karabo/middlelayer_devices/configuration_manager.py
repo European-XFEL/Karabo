@@ -231,6 +231,13 @@ class ConfigurationManager(Device):
         finally:
             self.state = State.ON
 
+    confBulkLimit = UInt32(
+        defaultValue=10,
+        description="The limit of configurations allowed in a single save "
+                    "configuration call",
+        requiredAccessLevel=AccessLevel.ADMIN,
+        accessMode=AccessMode.READONLY)
+
     def __init__(self, configuration):
         super(ConfigurationManager, self).__init__(configuration)
         self.db = None
@@ -369,8 +376,11 @@ class ConfigurationManager(Device):
         config_name = info["name"]  # Note: Must be there!
         deviceIds = info["deviceIds"]
 
-        try:
+        if len(deviceIds) > int(self.confBulkLimit):
+            raise KaraboError(f"The number of configurations {len(deviceIds)}"
+                              f" exceeds the allowed limit {self.confBulkLimit}")
 
+        try:
             async def poll_(device_id):
                 schema, _ = await self.call(device_id, "slotGetSchema", False)
                 config, _ = await self.call(device_id, "slotGetConfiguration")
