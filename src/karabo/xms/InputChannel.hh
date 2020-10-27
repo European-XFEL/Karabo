@@ -15,10 +15,10 @@
 
 #include <map>
 #include <unordered_map>
-#include <queue>
 
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
+#include <boost/random/mersenne_twister.hpp>
 
 #include "karabo/net.hpp"
 #include "karabo/io.hpp"
@@ -102,10 +102,9 @@ namespace karabo {
             boost::mutex m_outputChannelsMutex;
             ConnectedOutputChannels m_connectedOutputChannels;
             OpenConnections m_openConnections;
-            /// A queue for otherwise concurrent connection attempts
-            typedef std::queue<std::pair<karabo::util::Hash, boost::function<void (const karabo::net::ErrorCode&)>>> ConnectionQueue;
-            /// Map all currently attempted connections to their 'outputChannelString'
-            std::unordered_map<std::string, ConnectionQueue> m_connectionsBeingSetup;
+            /// All 'outputChannelString' for that a connection attempt is currently ongoing, with their handlers and ids
+            std::unordered_map<std::string, std::pair<unsigned int, boost::function<void(const karabo::net::ErrorCode&)>>> m_connectionsBeingSetup;
+            boost::random::mt19937 m_random; // any random generator would suite...
 
             bool m_respondToEndOfStream;
 
@@ -225,16 +224,13 @@ namespace karabo {
             void disconnect(const std::string& connectionString);
 
         private:
-            void connectImpl(const karabo::util::Hash& outputChannelInfo,
-                             const boost::function<void (const karabo::net::ErrorCode&)>& handler,
-                             bool forceNew);
-
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const;
 
             void onConnect(karabo::net::ErrorCode error,
                            karabo::net::Connection::Pointer connection,
                            const karabo::util::Hash& outputChannelInfo,
                            karabo::net::Channel::Pointer channel,
+                           unsigned int connectId,
                            const boost::function<void (const karabo::net::ErrorCode&)>& handler);
 
             void onTcpChannelError(const karabo::net::ErrorCode&, const karabo::net::Channel::Pointer&);
