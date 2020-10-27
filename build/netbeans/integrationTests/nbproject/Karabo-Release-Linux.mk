@@ -85,7 +85,7 @@ ${TESTDIR}/TestFiles/alarmservice_test: ${TESTDIR}/_ext/567603001/AlarmService_T
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/alarmservice_test $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `pkg-config cppunit --libs`   
 
-${TESTDIR}/TestFiles/f10: ${TESTDIR}/_ext/567603001/DataLogging_Test.o ${TESTDIR}/_ext/567603001/integrationRunner_11.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f10: ${TESTDIR}/_ext/567603001/BaseLogging_Test.o ${TESTDIR}/_ext/567603001/DataLogging_Test.o ${TESTDIR}/_ext/567603001/integrationRunner_11.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f10 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `pkg-config cppunit --libs`   
 
@@ -144,6 +144,12 @@ ${TESTDIR}/_ext/567603001/integrationRunner.o: ../../../src/integrationTests/int
 	${MKDIR} -p ${TESTDIR}/_ext/567603001
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/integrationRunner.o ../../../src/integrationTests/integrationRunner.cc
+
+
+${TESTDIR}/_ext/567603001/BaseLogging_Test.o: ../../../src/integrationTests/BaseLogging_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/567603001
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/integrationTests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/567603001/BaseLogging_Test.o ../../../src/integrationTests/BaseLogging_Test.cc
 
 
 ${TESTDIR}/_ext/567603001/DataLogging_Test.o: ../../../src/integrationTests/DataLogging_Test.cc 

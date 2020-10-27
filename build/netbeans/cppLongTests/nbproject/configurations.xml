@@ -5,6 +5,16 @@
                    displayName="Test Files"
                    projectFiles="false"
                    kind="TEST_LOGICAL_FOLDER">
+      <logicalFolder name="f1"
+                     displayName="device_test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>../../../src/cppLongTests/devices/BaseLogging_Test.cc</itemPath>
+        <itemPath>../../../src/cppLongTests/devices/BaseLogging_Test.hh</itemPath>
+        <itemPath>../../../src/cppLongTests/devices/TelegrafLogging_Test.cc</itemPath>
+        <itemPath>../../../src/cppLongTests/devices/TelegrafLogging_Test.hh</itemPath>
+        <itemPath>../../../src/cppLongTests/devices/deviceTestRunner.cc</itemPath>
+      </logicalFolder>
       <logicalFolder name="f2" displayName="xms_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/cppLongTests/xms/InputOutputChannel_LongTest.cc</itemPath>
         <itemPath>../../../src/cppLongTests/xms/InputOutputChannel_LongTest.hh</itemPath>
@@ -59,6 +69,31 @@
           <commandLine>-Wl,-rpath-link,${KARABO}/extern/lib</commandLine>
         </linkerTool>
       </compileType>
+      <item path="../../../src/cppLongTests/devices/BaseLogging_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/devices/BaseLogging_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/devices/TelegrafLogging_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/devices/TelegrafLogging_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/devices/deviceTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/cppLongTests/xms/InputOutputChannel_LongTest.cc"
             ex="false"
             tool="1"
@@ -84,6 +119,17 @@
             tool="1"
             flavor2="0">
       </item>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
       <folder path="TestFiles/f2">
         <cTool>
           <incDir>
@@ -145,6 +191,31 @@
           <commandLine>-Wl,-rpath-link,${KARABO}/extern/lib</commandLine>
         </linkerTool>
       </compileType>
+      <item path="../../../src/cppLongTests/devices/BaseLogging_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/devices/BaseLogging_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/devices/TelegrafLogging_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/devices/TelegrafLogging_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/devices/deviceTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/cppLongTests/xms/InputOutputChannel_LongTest.cc"
             ex="false"
             tool="1"
@@ -170,6 +241,20 @@
             tool="1"
             flavor2="0">
       </item>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
       <folder path="TestFiles/f2">
         <cTool>
           <incDir>
@@ -220,6 +305,31 @@
           <commandLine>-Wl,-rpath-link,${KARABO}/extern/lib</commandLine>
         </linkerTool>
       </compileType>
+      <item path="../../../src/cppLongTests/devices/BaseLogging_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/devices/BaseLogging_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/devices/TelegrafLogging_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/devices/TelegrafLogging_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/cppLongTests/devices/deviceTestRunner.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/cppLongTests/xms/InputOutputChannel_LongTest.cc"
             ex="false"
             tool="1"
@@ -245,6 +355,20 @@
             tool="1"
             flavor2="0">
       </item>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </cTool>
+        <ccTool>
+          <commandLine>`cppunit-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>`cppunit-config --libs`</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
       <folder path="TestFiles/f2">
         <cTool>
           <incDir>
