@@ -554,7 +554,7 @@ namespace karabo {
                 // Database not available and could not be created. A response for an unsuccessful database creation
                 // can also have a 200 status code but will have the fixed payload '{"result":[]}'. A successful
                 // database creation will have a 200 status code, will have 'chunked' as transfer encoding and will
-                // have the payload '{"results:[{"stattement-id":0}]}'.
+                // have the payload '{"results:[{"statement-id":0}]}'.
                 KARABO_LOG_FRAMEWORK_ERROR << "Database '" << m_dbName << "' not available. "
                         << "Tried to create it but got error with http status code '"
                         << o.code << "' and message '" << o.message << "'. InfluxDataLogger going to ERROR state.";
