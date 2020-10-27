@@ -7,7 +7,7 @@ from functools import partial
 
 from PyQt5.QtCore import QObject
 
-from karabo.common.api import set_modified_flag
+from karabo.common.api import set_modified_flag, KARABO_PROJECT_MANAGER
 from karabo.common.project.api import (
     MemCacheWrapper, get_user_cache, read_lazy_object)
 from karabo.common.scenemodel.api import SceneModel
@@ -75,7 +75,7 @@ class ProjectDatabaseConnection(QObject):
         self._read_items_buffer = []
         self._write_items_buffer = []
 
-        self.project_manager = get_config()['project_manager']
+        self.project_manager = KARABO_PROJECT_MANAGER
         self._ignore_cache = True
 
         # XXX: This is really asinine right now!
