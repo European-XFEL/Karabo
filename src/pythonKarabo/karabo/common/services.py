@@ -1,7 +1,7 @@
 KARABO_ALARM_SERVICE = "Karabo_AlarmService"
 KARABO_CONFIG_MANAGER = "KaraboConfigurationManager"
 KARABO_DAEMON_MANAGER = "KaraboDaemonManager"
-KARABO_PROJECT_MANAGER = "KaraboProjectManager"
+KARABO_PROJECT_MANAGER = "KaraboProjectDB"
 
 CORE_DEVICES_NAMES = (
     KARABO_ALARM_SERVICE,
