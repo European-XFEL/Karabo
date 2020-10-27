@@ -96,16 +96,8 @@ class Configuration(QObject):
             might be wrong.
     """
     broker_topic = Item(q_set=False, group=BACKBONE)
-    project_manager = Item(default='KaraboProjectDB', q_set=False,
-                           group=BACKBONE)
-    alarm_service = Item(default='Karabo_AlarmService', q_set=False,
-                         group=BACKBONE)
     documentation = Item(default=DOCU, q_set=False,
                          group=BACKBONE)
-    daemon_manager = Item(default='KaraboDaemonManager', q_set=False,
-                          group=BACKBONE)
-    config_manager = Item(default='KaraboConfigurationManager', q_set=False,
-                          group=BACKBONE)
 
     # ----------------------------------------------
     # Last directories stored and used

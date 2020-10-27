@@ -5,10 +5,11 @@
 #############################################################################
 from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt
 
+from karabo.common.api import KARABO_ALARM_SERVICE
+
 from .const import (
     ALARM_DATA, ALARM_TYPE, REMOVE_ALARM_TYPES, UPDATE_ALARM_TYPES,
     get_alarm_icon, get_alarm_key_index)
-from karabogui.singletons.api import get_config
 
 
 class AlarmModel(QAbstractTableModel):
@@ -22,7 +23,7 @@ class AlarmModel(QAbstractTableModel):
 
     def __init__(self, parent=None):
         super(AlarmModel, self).__init__(parent)
-        self.instanceId = get_config()['alarm_service']
+        self.instanceId = KARABO_ALARM_SERVICE
         self.all_entries = []  # All alarm entries
 
     def init_alarms_info(self, data):
