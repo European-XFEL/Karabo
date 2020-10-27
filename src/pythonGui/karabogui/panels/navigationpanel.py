@@ -6,11 +6,11 @@
 
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget
 
-from karabo.common.api import KARABO_SCHEMA_DEFAULT_SCENE
+from karabo.common.api import (
+    KARABO_DAEMON_MANAGER, KARABO_SCHEMA_DEFAULT_SCENE)
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.system_view import SystemTreeView
 from karabogui.util import get_scene_from_server
-from karabogui.singletons.api import get_config
 
 from .base import BasePanelWidget
 from .searchwidget import SearchBar
@@ -64,12 +64,12 @@ class TopologyPanel(BasePanelWidget):
 
     def _event_show_daemon(self, data):
         instance_id = data.get('instanceId')
-        if instance_id == get_config()['daemon_manager']:
+        if instance_id == KARABO_DAEMON_MANAGER:
             self.daemon_button.setVisible(True)
 
     def _event_remove_daemon(self, data):
         instance_id = data.get('instanceId')
-        if instance_id == get_config()['daemon_manager']:
+        if instance_id == KARABO_DAEMON_MANAGER:
             self.daemon_button.setVisible(False)
 
     def _event_show_device(self, data):
@@ -84,5 +84,5 @@ class TopologyPanel(BasePanelWidget):
             widget.close()
 
     def _retrieve_service_scene(self):
-        instance_id = get_config()['daemon_manager']
+        instance_id = KARABO_DAEMON_MANAGER
         get_scene_from_server(instance_id, KARABO_SCHEMA_DEFAULT_SCENE)
