@@ -8,71 +8,25 @@
 #ifndef DATALOGGING_TEST_HH
 #define	DATALOGGING_TEST_HH
 
-#include <cppunit/extensions/HelperMacros.h>
-#include "karabo/karabo.hpp"
+#include "BaseLogging_Test.hh"
 
-class DataLogging_Test : public CPPUNIT_NS::TestFixture {
+class DataLogging_Test : public BaseLogging_Test {
 
     CPPUNIT_TEST_SUITE(DataLogging_Test);
 
     CPPUNIT_TEST(fileAllTestRunner);
-    CPPUNIT_TEST(influxAllTestRunner);
+    CPPUNIT_TEST(influxAllTestRunnerWithDataMigration);
     CPPUNIT_TEST(testNoInfluxServerHandling);
-    CPPUNIT_TEST(influxAllTestRunnerWithTelegraf);
-    CPPUNIT_TEST(testInfluxDbNotAvailableTelegraf);
-    
-    CPPUNIT_TEST_SUITE_END();
 
-public:
-    DataLogging_Test();
-    virtual ~DataLogging_Test();
-    void setUp();
-    void tearDown();
+    CPPUNIT_TEST_SUITE_END();
 
 private:
     void fileAllTestRunner();
-    void influxAllTestRunner();
-    void influxAllTestRunnerWithTelegraf();
-    void testAllInstantiated(bool waitForLoggerReady = true);
+    void influxAllTestRunnerWithDataMigration(); // Supports data migration test.
     void testMigrateFileLoggerData();
 
-    void testInt(bool testPastConf = true);
-    void testUInt64(bool testPastConf = false);
-    void testFloat(bool testPastConf = false);
-    void testString(bool testPastConf = false);
-    void testVectorString(bool testPastConf = false);
-    void testVectorChar(bool testPastConf = false);
-    void testVectorSignedChar(bool testPastConf = false);
-    void testVectorUnsignedChar(bool testPastConf = false);
-    void testVectorShort(bool testPastConf = false);
-    void testVectorUnsignedShort(bool testPastConf = false);
-    void testVectorInt(bool testPastConf = false);
-    void testVectorUnsignedInt(bool testPastConf = false);
-    void testVectorLongLong(bool testPastConf = false);
-    void testVectorUnsignedLongLong(bool testPastConf = false);
-
-    void testVectorBool(bool testPastConf = false);
-    void testTable(bool testPastConf = false);
-    void testChar(bool testPastConf = true);
-
-    void testLastKnownConfiguration();
-    void testCfgFromPastRestart();
-
     /**
-     * Checks that the DataLoggers handle NaN floats and doubles.
-     */
-    void testNans();
-
-    /**
-     * Checks that the InfluxDataLogger goes to ERROR state
-     * when an attempt to use a non-existing Influx database
-     * is made in an environment where the Influx user lacks
-     * admin privileges (like the Telegraf based environments).
-     */
-    void testInfluxDbNotAvailableTelegraf();
-
-    /**
-     * Checks that the Influx logger and reader fail as soon as 
+     * Checks that the Influx logger and reader fail as soon as
      * possible when there's no Influx server available. Uses an
      * invalid url configuration for simulating the scenario of
      * the Influx server not being available.
@@ -85,85 +39,9 @@ private:
      */
     void testNoInfluxServerHandling();
 
-    /**
-     * Checks that slotGetPropertyHistory logging works when a
-     * Schema evolution changes the device schema at some timepoint
-     * within the requested history interval.
-     */
-    void testSchemaEvolution();
-
-    /**
-     * Checks that the InfluxLogReader doesn't accept out of range
-     * values for the 'maxNumData' parameter in calls to
-     * 'slotGetPropertyHistory'.
-     */
-    void testMaxNumDataRange();
-
-    /**
-     * Checks that the InfluxLogReader is properly enforcing the
-     * 'maxNumData' parameter in calls to 'slotGetPropertyHistory'.
-     * Histories with up to 'maxNumData' entries should return
-     * 'maxNumData' property values as they were written. Histories
-     * with more than 'maxNumData' entries should return 'maxNumData'
-     * property values samples.
-     */
-    void testMaxNumDataHistory();
-
-    template <class T> void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
-
-    std::pair<bool, std::string> startDataLoggerManager(const std::string& loggerType,
-                                                        bool useInvalidInfluxUrl = false,
-                                                        bool useInvalidDbName = false);
-
-    /**
-     * Returns whether the environment composed by the Telegraf writing node and
-     * the InfluxDb reading node is available and responsive.
-     */
-    bool isTelegrafEnvResponsive();
-
-    const std::string m_server;
-    const std::string m_deviceId;
-    const std::string m_fileLoggerDirectory;
-    bool m_changedPath;
-    std::string m_oldPath;
-
-    karabo::core::DeviceServer::Pointer m_deviceServer;
-    boost::thread m_eventLoopThread;
-    karabo::xms::SignalSlotable::Pointer m_sigSlot;
-    karabo::core::DeviceClient::Pointer m_deviceClient;
-
-    // Used to control switching to Telegraf environment
-    std::string m_influxDb_dbName;
-    std::string m_influxDb_query_user;
-    std::string m_influxDb_query_password;
-    std::string m_influxDb_query_url;
-    std::string m_influxDb_write_user;
-    std::string m_influxDb_write_password;
-    std::string m_influxDb_write_url;
-    bool m_switchedToTelegrafEnv = false;
-    bool m_keepLoggerDirectory = true;
     bool m_dataWasMigrated = false;
     karabo::util::Epochstamp m_fileMigratedDataEndsBefore;
 
-    /**
-     * Sets up an InfluxDB cluster with telegraf front-end and 2 InfluxDB cpus
-     * as a backend. Stores the current environment setup for a future restore.
-     */
-    void switchToTelegrafEnv();
-
-    /**
-     * Restores the environment set up to how it was before swithing to the
-     * Telegraf environment.
-     */
-    void switchFromTelegrafEnv();
-
-    /**
-     * Sets PropertyTestDevice Schema
-     *
-     * circumvent min/max limits and vector size specification
-     */
-    void setPropertyTestSchema();
 };
 
 #endif	/* DATALOGGING_TEST_HH */
-

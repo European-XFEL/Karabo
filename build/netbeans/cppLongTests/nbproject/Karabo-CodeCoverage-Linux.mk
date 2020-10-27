@@ -41,6 +41,7 @@ TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
 
 # Test Files
 TESTFILES= \
+	${TESTDIR}/TestFiles/f1 \
 	${TESTDIR}/TestFiles/f2
 
 # C Compiler Flags
@@ -72,9 +73,31 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libcppLongTests.${CND_DLIB_EXT}: ${OB
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
+${TESTDIR}/TestFiles/f1: ${TESTDIR}/_ext/565560950/BaseLogging_Test.o ${TESTDIR}/_ext/565560950/TelegrafLogging_Test.o ${TESTDIR}/_ext/565560950/deviceTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+	${MKDIR} -p ${TESTDIR}/TestFiles
+	${LINK.cc}   -o ${TESTDIR}/TestFiles/f1 $^ ${LDLIBSOPTIONS} `cppunit-config --libs`   
+
 ${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/783893685/InputOutputChannel_LongTest.o ${TESTDIR}/_ext/783893685/SignalSlotable_LongTest.o ${TESTDIR}/_ext/783893685/xmsLongTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f2 $^ ${LDLIBSOPTIONS} 
+
+
+${TESTDIR}/_ext/565560950/BaseLogging_Test.o: ../../../src/cppLongTests/devices/BaseLogging_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/565560950
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/565560950/BaseLogging_Test.o ../../../src/cppLongTests/devices/BaseLogging_Test.cc
+
+
+${TESTDIR}/_ext/565560950/TelegrafLogging_Test.o: ../../../src/cppLongTests/devices/TelegrafLogging_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/565560950
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/565560950/TelegrafLogging_Test.o ../../../src/cppLongTests/devices/TelegrafLogging_Test.cc
+
+
+${TESTDIR}/_ext/565560950/deviceTestRunner.o: ../../../src/cppLongTests/devices/deviceTestRunner.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/565560950
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/565560950/deviceTestRunner.o ../../../src/cppLongTests/devices/deviceTestRunner.cc
 
 
 ${TESTDIR}/_ext/783893685/InputOutputChannel_LongTest.o: ../../../src/cppLongTests/xms/InputOutputChannel_LongTest.cc 
@@ -99,6 +122,7 @@ ${TESTDIR}/_ext/783893685/xmsLongTestRunner.o: ../../../src/cppLongTests/xms/xms
 .test-conf:
 	@if [ "${TEST}" = "" ]; \
 	then  \
+	    ${TESTDIR}/TestFiles/f1 || true; \
 	    ${TESTDIR}/TestFiles/f2 || true; \
 	else  \
 	    ./${TEST} || true; \
