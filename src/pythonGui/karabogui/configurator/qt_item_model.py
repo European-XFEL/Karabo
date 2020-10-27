@@ -8,7 +8,7 @@ from weakref import WeakValueDictionary
 from PyQt5.QtCore import pyqtSignal, QAbstractItemModel, QModelIndex, Qt
 from PyQt5.QtGui import QBrush, QColor, QFont
 
-from karabo.native import AccessLevel, AccessMode
+from karabo.native import AccessLevel, AccessMode, Assignment
 from karabo.common.api import (
     State, KARABO_SCHEMA_ALLOWED_STATES, KARABO_WARN_LOW, KARABO_WARN_HIGH,
     KARABO_ALARM_LOW, KARABO_ALARM_HIGH)
@@ -584,7 +584,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
                     return font
             elif role == Qt.ForegroundRole:
                 is_class = isinstance(self.root, DeviceClassProxy)
-                if is_class and binding.access_mode is AccessMode.READONLY:
+                if (is_class and (binding.access_mode is AccessMode.READONLY or
+                                  binding.assignment is Assignment.INTERNAL)):
                     return QColor(*PROPERTY_READONLY_COLOR)
             elif role == Qt.DecorationRole:
                 return get_icon(binding)
@@ -626,7 +627,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
         is_editable_type = (not is_uneditable_node or (is_project and
                             isinstance(binding, ChoiceOfNodesBinding)))
         is_project_editable = (is_project and binding.access_mode in
-                               configure_access)
+                               configure_access and binding.assignment
+                               is not Assignment.INTERNAL)
         is_inst_editable = (not is_class and binding.is_allowed(state) and
                             binding.access_mode is AccessMode.RECONFIGURABLE)
         if is_editable_type and (is_project_editable or is_inst_editable):
