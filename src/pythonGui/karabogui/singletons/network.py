@@ -6,6 +6,7 @@ from PyQt5.QtCore import (
     pyqtSignal, pyqtSlot, QByteArray, QObject)
 from PyQt5.QtWidgets import QDialog, QMessageBox, qApp
 
+from karabo.common.api import KARABO_CONFIG_MANAGER
 from karabo.native import (
     AccessLevel, decodeBinary, encodeBinary, Hash, Timestamp)
 from karabogui import background
@@ -389,7 +390,7 @@ class Network(QObject):
             "name", name)
         h["args"] = args
         h["timeout"] = REQUEST_REPLY_TIMEOUT
-        h["instanceId"] = get_config()["config_manager"]
+        h["instanceId"] = KARABO_CONFIG_MANAGER
         h["slot"] = "slotGetConfigurationFromName"
         h["replyType"] = "getConfigurationFromName"
         self._write_hash(h)
@@ -401,7 +402,7 @@ class Network(QObject):
             "deviceId", device_id)
         h["args"] = args
         h["timeout"] = REQUEST_REPLY_TIMEOUT
-        h["instanceId"] = get_config()["config_manager"]
+        h["instanceId"] = KARABO_CONFIG_MANAGER
         h["slot"] = "slotListConfigurationFromName"
         h["replyType"] = "listConfigurationFromName"
         self._write_hash(h)
@@ -418,7 +419,7 @@ class Network(QObject):
         h["args"] = args
         h["update"] = update
         h["timeout"] = REQUEST_REPLY_TIMEOUT
-        h["instanceId"] = get_config()["config_manager"]
+        h["instanceId"] = KARABO_CONFIG_MANAGER
         h["slot"] = "slotSaveConfigurationFromName"
         h["replyType"] = "saveConfigurationFromName"
         self._write_hash(h)
