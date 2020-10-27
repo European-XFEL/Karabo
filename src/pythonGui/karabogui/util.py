@@ -20,6 +20,7 @@ from PyQt5.QtGui import QCursor, QMovie, QValidator
 from karabo.common.enums import ONLINE_STATUSES
 from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import SceneTargetWindow, read_scene
+from karabo.common.services import KARABO_DAEMON_MANAGER
 from karabo.native import decodeXML, Hash, writeXML
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
@@ -322,7 +323,7 @@ def request_daemon_action(serverId, hostId, action):
     :param hostId: The `hostId` of the server with `serverId`
     :param action: The action to be performed, e.g. `kill`, ...
     """
-    device_id = get_config()['daemon_manager']
+    device_id = KARABO_DAEMON_MANAGER
     device = get_topology().get_device(device_id)
     # XXX: Protect here if the device is offline. We share the same
     # logic as the device scene link!
