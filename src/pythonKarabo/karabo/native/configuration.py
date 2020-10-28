@@ -1,21 +1,9 @@
 from karabo.common.api import (
     KARABO_SCHEMA_ACCESS_MODE, KARABO_SCHEMA_ASSIGNMENT)
-from .data.hash import Hash
-from .data.enums import AccessMode, Assignment
-
-
-def flat_iter_hash(config, base=''):
-    """Recursively iterate over all the values in a Hash object such that
-    a simple iterator interface is exposed. In this way, a single for-loop
-    is sufficient to see an entire Hash.
-    """
-    base = base + '.' if base else ''
-    for key, value, _ in config.iterall():
-        subkey = base + key
-        if isinstance(value, Hash):
-            yield from flat_iter_hash(value, base=subkey)
-        else:
-            yield subkey
+from karabo.common import const
+from .data.hash import Hash, Schema
+from .data.enums import AccessMode, Assignment, Unit, MetricPrefix
+from .data.utils import flat_iter_hash, flat_iter_schema_hash, is_equal
 
 
 def _erase_obsolete_path(schema, config):
@@ -67,3 +55,91 @@ def sanitize_write_configuration(schema, config):
         config.erase(key)
 
     return config
+
+
+def attr_fast_deepcopy(d, ref=None):
+    """copy.deepcopy is criminally slow. We can bypass its fanciness as long
+    as we only copy 'simple' datastructures.
+
+    Pass a not None attributes dict to `ref` to get only changed attributes
+    """
+    out = {}
+
+    for k, v in d.items():
+        if ref is not None:
+            if (k not in const.KARABO_EDITABLE_ATTRIBUTES or
+                    is_equal(v, ref.get(k))):
+                continue
+        try:
+            out[k] = v.copy()  # dicts, sets, ndarrays
+        except TypeError:
+            # This is a Schema, which has a terrible API
+            assert isinstance(v, Schema)
+            cpy = Schema()
+            cpy.copy(v)
+            out[k] = cpy
+        except AttributeError:
+            try:
+                out[k] = v[:]  # lists, tuples, strings, unicode
+            except TypeError:
+                out[k] = v  # simple values
+
+    return out
+
+
+def extract_modified_schema_attributes(runtime_schema, class_schema):
+    """Extract modified attributes from a runtime schema relative to a
+    class schema
+
+    :param runtime_schema: Runtime schema of device
+    :param class_schema: Class schema of device
+
+    Returns a list of Hashes containing the differences, or None if there are
+    none.
+
+    NOTE: `_NAME_MAP` and `_remap_value` are handling conversion of str
+    'Symbol' values to C++ enumeration values (integers). This is because the
+    C++ Schema code only knows how to assign from enumeration values, not from
+    their stringified representations.
+    """
+
+    assert isinstance(runtime_schema, Schema)
+    assert isinstance(class_schema, Schema)
+
+    _NAME_MAP = {
+        const.KARABO_SCHEMA_METRIC_PREFIX_SYMBOL:
+            const.KARABO_SCHEMA_METRIC_PREFIX_ENUM,
+        const.KARABO_SCHEMA_UNIT_SYMBOL: const.KARABO_SCHEMA_UNIT_ENUM
+    }
+    _SYMBOL_MAP = {const.KARABO_SCHEMA_METRIC_PREFIX_SYMBOL: MetricPrefix,
+                   const.KARABO_SCHEMA_UNIT_SYMBOL: Unit}
+
+    def _remap_value(name, value):
+        enum = _SYMBOL_MAP.get(name, None)
+        return list(enum).index(enum(value)) if enum else value
+
+    def _get_updates(path, attrs):
+        # Format is specified by Device::slotUpdateSchemaAttributes
+        return [Hash("path", path, "attribute", k, "value", v)
+                for k, v in attrs.items()]
+
+    retval = []
+    runtime_schema_hash = runtime_schema.hash
+    class_schema_hash = class_schema.hash
+    for key in flat_iter_schema_hash(runtime_schema_hash):
+        if key not in class_schema_hash:
+            # If key is not there offline, we don't care
+            continue
+        offline_attrs = class_schema_hash[key, ...]
+        online_attrs = runtime_schema_hash[key, ...]
+        # Reference is the class schema, offline
+        diff = attr_fast_deepcopy(online_attrs, ref=offline_attrs)
+        if not diff:
+            continue
+        diff = {_NAME_MAP.get(k, k): _remap_value(k, v)
+                for k, v in diff.items()}
+        retval.extend(_get_updates(key, diff))
+
+    if retval:
+        return retval
+    return None
