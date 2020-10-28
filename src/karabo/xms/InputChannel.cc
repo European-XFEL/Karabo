@@ -171,6 +171,24 @@ namespace karabo {
             return m_connectedOutputChannels;
         }
 
+        std::unordered_map<std::string, karabo::net::ConnectionStatus> InputChannel::getConnectionStatus() {
+            std::unordered_map<std::string, karabo::net::ConnectionStatus> result;
+
+            boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+            for (auto itChannel = m_connectedOutputChannels.begin(); itChannel != m_connectedOutputChannels.end(); ++itChannel) {
+                const std::string& outputChannel = itChannel->first;
+                if (m_openConnections.find(outputChannel) != m_openConnections.end()) {
+                    result[outputChannel] = net::ConnectionStatus::CONNECTED;
+                } else if (m_connectionsBeingSetup.find(outputChannel) != m_connectionsBeingSetup.end()) {
+                    result[outputChannel] = net::ConnectionStatus::CONNECTING;
+                } else {
+                    result[outputChannel] = net::ConnectionStatus::DISCONNECTED;
+                }
+            }
+
+            return result;
+        }
+
 
         const InputChannel::MetaData& InputChannel::read(karabo::util::Hash& data, size_t idx) {
             Memory::read(data, idx, m_channelId, m_activeChunk);
