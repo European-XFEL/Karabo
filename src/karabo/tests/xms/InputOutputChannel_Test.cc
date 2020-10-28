@@ -149,6 +149,18 @@ void InputOutputChannel_Test::testManyToOne() {
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + outputIds[i],
                                      karabo::net::ErrorCode(), // i.e. no error
                                      connectFuture.get());
+
+        // All up to the last one are connected now
+        auto connectStatusMap(input->getConnectionStatus());
+        CPPUNIT_ASSERT_EQUAL(outputs.size(), connectStatusMap.size());
+        for (size_t j = 0; j < outputs.size(); ++j) {
+            CPPUNIT_ASSERT(connectStatusMap.find(outputIds[j]) != connectStatusMap.end());
+            namespace ku = karabo::util;
+            namespace kn = karabo::net;
+            CPPUNIT_ASSERT_EQUAL_MESSAGE("Tested j = " + ku::toString(j) += ", connected i = " + ku::toString(i),
+                                         (j <= i ? kn::ConnectionStatus::CONNECTED : kn::ConnectionStatus::DISCONNECTED),
+                                         connectStatusMap[outputIds[j]]);
+        }
     } // all connected
 
 
@@ -246,8 +258,24 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode & ec) {
             connectErrorCode.set_value(ec);
         };
+        // Not connected yet
+        auto connectStatusMap(input->getConnectionStatus());
+        CPPUNIT_ASSERT_EQUAL(1ul, connectStatusMap.size());
+        CPPUNIT_ASSERT_EQUAL(outputChannelId, connectStatusMap.begin()->first);
+        CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(static_cast<int> (connectStatusMap[outputChannelId])),
+                               connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::DISCONNECTED);
+
         // initiate connect and block until done (fail test if timeout))
         input->connect(outputInfo, connectHandler);
+
+        // Now connecting or - with very weird threading - already connected
+        connectStatusMap = input->getConnectionStatus();
+        CPPUNIT_ASSERT_EQUAL(1ul, connectStatusMap.size());
+        CPPUNIT_ASSERT_EQUAL(outputChannelId, connectStatusMap.begin()->first);
+        CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(static_cast<int> (connectStatusMap[outputChannelId])),
+                               connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTING
+                               || connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTED);
+
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::util::toString(i),
                                      std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(500)));
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::util::toString(i),
@@ -270,6 +298,13 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("onSlowness"), std::string("drop"));
         CPPUNIT_ASSERT_EQUAL(table[0].get<std::string>("memoryLocation"), std::string("local"));
 
+        // Now we are indeed connected:
+        connectStatusMap = input->getConnectionStatus();
+        CPPUNIT_ASSERT_EQUAL(1ul, connectStatusMap.size());
+        CPPUNIT_ASSERT_EQUAL(outputChannelId, connectStatusMap.begin()->first);
+        CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(static_cast<int> (connectStatusMap[outputChannelId])),
+                               connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTED);
+
         // Write data again (twice in one go...) - now input is connected.
         output->write(Hash("key", 43));
         output->write(Hash("key", -43));
@@ -284,6 +319,12 @@ void InputOutputChannel_Test::testConnectDisconnect() {
 
         // Disconnect
         input->disconnect(outputChannelId);
+        connectStatusMap = input->getConnectionStatus();
+        CPPUNIT_ASSERT_EQUAL(1ul, connectStatusMap.size());
+        CPPUNIT_ASSERT_EQUAL(outputChannelId, connectStatusMap.begin()->first);
+        CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(static_cast<int> (connectStatusMap[outputChannelId])),
+                               connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::DISCONNECTED);
+
         // Some time to travel for message
         trials = 1000; // failed with 200 in https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/131075/raw
         do {
