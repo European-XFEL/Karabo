@@ -1,7 +1,12 @@
+from collections import Iterable
+
 import numpy as np
 from xml.sax.saxutils import escape
 
-from .hash import Hash, HashList, Type
+from .enums import NodeType
+from .hash import Hash, HashList, Type, Schema
+
+NODE_TYPES = (NodeType.Node, NodeType.ChoiceOfNodes, NodeType.ListOfNodes)
 
 
 def dtype_from_number(number):
@@ -101,3 +106,65 @@ def dictToHash(d):
         else:
             h[k] = v
     return h
+
+
+def flat_iter_hash(config, base=''):
+    """Recursively iterate over all the keys in a Hash object such that
+    a simple iterator interface is exposed.
+    """
+    base = base + '.' if base else ''
+    for key, value, _ in config.iterall():
+        subkey = base + key
+        if isinstance(value, Hash):
+            yield from flat_iter_hash(value, base=subkey)
+        else:
+            yield subkey
+
+
+def flat_iterall_hash(config, base=''):
+    """Recursively iterate over all parameters in a Hash object such that
+    a simple iterator interface is exposed.
+    """
+    base = base + '.' if base else ''
+    for key, value, attrs in config.iterall():
+        subkey = base + key
+        if isinstance(value, Hash):
+            yield from flat_iterall_hash(value, base=subkey)
+        else:
+            yield subkey, value, attrs
+
+
+def flat_iter_schema_hash(schema, base=''):
+    """Expose a flat iteration over a schema Hash.
+
+    :param schema: The schema Hash or Schema object
+
+    NOTE: Schema Hashes are special because every property
+    comes with an empty `Hash` as value. Hence, we ask for the Nodetype!
+    """
+    schema_hash = schema.hash if isinstance(schema, Schema) else schema
+    base = base + '.' if base else ''
+    for key, value, attrs in schema_hash.iterall():
+        subkey = base + key
+        is_node = attrs["nodeType"] in NODE_TYPES
+        if is_node:
+            yield from flat_iter_schema_hash(value, base=subkey)
+        else:
+            yield subkey
+
+
+def is_equal(a, b):
+    """A compare function deals with element-wise comparison result and
+    Schema object comparison
+    """
+    type_check = map(lambda x: isinstance(x, Schema), (a, b))
+    if any(type_check):
+        if all(type_check):
+            # Compare Schema objects' names and hashes
+            return a.name == b.name and a.hash == b.hash
+        else:
+            # one of a, b is not Schema, simply return False
+            return False
+    res = (a == b)
+    # comparison of numpy arrays result in an array
+    return all(res) if isinstance(res, Iterable) else res
