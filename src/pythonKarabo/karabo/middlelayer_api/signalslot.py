@@ -350,6 +350,9 @@ class SignalSlotable(Configurable):
     def call(self, device, target, *args):
         return (yield from self._ss.request(device, target, *args))
 
+    def callNoWait(self, device, target, *args):
+        self._ss.emit("call", {device: [target]}, *args)
+
     def stopEventLoop(self):
         """Method called by the device server to stop the event loop
         """
