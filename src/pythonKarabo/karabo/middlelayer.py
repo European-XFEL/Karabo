@@ -13,9 +13,9 @@ from .common.states import State
 
 # Middlelayer api
 from .middlelayer_api.device_client import (
-    call, connectDevice, DeviceClientBase, disconnectDevice, execute,
-    executeNoWait, findDevices, filterByTags, findServers, getClasses,
-    getClients, getConfiguration, getConfigurationFromPast,
+    call, callNoWait, connectDevice, DeviceClientBase, disconnectDevice,
+    execute, executeNoWait, findDevices, filterByTags, findServers,
+    getClasses, getClients, getConfiguration, getConfigurationFromPast,
     getConfigurationFromName, getDevice, getLastConfiguration,
     getDevices, getDescriptors, listConfigurationFromName,
     getTopology, getSchema, getSchemaFromPast,
@@ -97,7 +97,7 @@ def _create_cli_submodule():
 
     # NOTE: This is the middlelayer part of the ikarabo namespace
     symbols = (
-        call, connectDevice, daysAgo, disconnectDevice, execute,
+        call, callNoWait, connectDevice, daysAgo, disconnectDevice, execute,
         executeNoWait, findDevices, findServers, getClasses, getClients,
         getConfiguration, getConfigurationFromPast, getSchemaFromPast,
         getConfigurationFromName, getLastConfiguration, getDevice,

@@ -1,4 +1,4 @@
-from asyncio import coroutine, ensure_future, TimeoutError
+from asyncio import coroutine, ensure_future, Future, TimeoutError
 from contextlib import contextmanager
 from flaky import flaky
 import sys
@@ -9,9 +9,9 @@ import weakref
 from karabo.common.states import State
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
-    call, waitUntilNew, waitUntil, waitWhile, setWait, setNoWait, getDevice,
-    getConfiguration, getSchema, executeNoWait, updateDevice, Queue,
-    connectDevice, lock)
+    call, callNoWait, waitUntilNew, waitUntil, waitWhile, setWait, setNoWait,
+    getDevice, getConfiguration, getSchema, executeNoWait, updateDevice,
+    Queue, connectDevice, lock)
 from karabo.middlelayer_api.device_server import KaraboStream
 from karabo.native.data.enums import AccessMode
 from karabo.native.exceptions import KaraboError
@@ -39,12 +39,19 @@ class MyNode(Configurable):
 
 
 class Remote(Device):
+    status_fut = []
+
     value = Int(
         defaultValue=7,
         accessMode=AccessMode.RECONFIGURABLE)
 
     counter = Int(defaultValue=-1)
     deep = Node(MyNode)
+
+    def get_future(self):
+        fut = Future()
+        self.status_fut.append(fut)
+        return fut
 
     @Int()
     def other(self, value):
@@ -73,6 +80,9 @@ class Remote(Device):
     @slot
     def setStatus(self, token):
         self.status = token
+        for future in self.status_fut:
+            future.set_result(token)
+        self.status_fut = []
         return token
 
     @Slot()
@@ -382,6 +392,14 @@ class Tests(DeviceTest):
         h = call("remote", "setStatus", "Token")
         self.assertEqual(self.remote.status, "Token")
         self.assertEqual(h, "Token")
+
+    @async_tst
+    def test_call_param_nowait(self):
+        """test no wait calling a slot with a parameter"""
+        fut = self.remote.get_future()
+        callNoWait("remote", "setStatus", "NewToken")
+        yield from fut
+        self.assertEqual(fut.result(), "NewToken")
 
     @sync_tst
     def test_queue(self):
