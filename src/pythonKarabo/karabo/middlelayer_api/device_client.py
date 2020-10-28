@@ -157,6 +157,17 @@ def call(device, target_slot, *args):
     return (yield from get_instance().call(device, target_slot, *args))
 
 
+def callNoWait(device, target_slot, *args):
+    """Call a target slot from a device without waiting
+
+    :param device: deviceId or proxy
+    :param target_slot: slot to be called
+    """
+    if isinstance(device, ProxyBase):
+        device = device._deviceId
+    get_instance().callNoWait(device, target_slot, *args)
+
+
 @synchronize
 def getSchema(device):
     """Get a schema from a target device
