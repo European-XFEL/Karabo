@@ -176,9 +176,17 @@ namespace karabo {
              * Returns a map of between  "output channel string" and "output channel info" Hash
              * outputChannelString (STRING) represented like "instanceId@channelName" or "instanceId:channelName"
              * outputChannelInfo contains connection parameters or is empty, depending on connection state.
+             * This contains all output channels that the InputChannel is configured for, irrespective whether
+             * currently connected or not.
              * @return map.
              */
             std::map<std::string, karabo::util::Hash> getConnectedOutputChannels();
+
+            /**
+             * Provide a map between the output channels that are configured  and their connection status.
+             * @return map
+             */
+            std::unordered_map<std::string, karabo::net::ConnectionStatus> getConnectionStatus();
 
             /**
              * Read data from the InputChannel - to be called inside an InputHandler callback
