@@ -205,16 +205,7 @@ namespace karabo {
 
         void InputChannel::connect(const karabo::util::Hash& outputChannelInfo,
                                    const boost::function<void (const karabo::net::ErrorCode&)>& handler) {
-            connectImpl(outputChannelInfo, handler, false);
-        }
-
-
-        void InputChannel::connectImpl(const karabo::util::Hash& outputChannelInfo,
-                                       const boost::function<void (const karabo::net::ErrorCode&)>& handler,
-                                       bool forceNew) {
             namespace bse = boost::system::errc;
-            KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\"  :   outputChannelInfo is ...\n" << outputChannelInfo;
-
             karabo::net::ErrorCode ec;
             const std::string& connectionType = outputChannelInfo.get<std::string > ("connectionType");
             if (connectionType != "tcp") {
@@ -238,35 +229,34 @@ namespace karabo {
                             << " not configured to connect to " << outputChannelString;
                     ec = bse::make_error_code(bse::argument_out_of_domain);
                 } else if (m_openConnections.find(outputChannelString) != m_openConnections.end()) {
-                    // Can happen from interfering connect/reconnect of SignalSlotable if sender and receiver
-                    // are instantiated concurrently.
                     KARABO_LOG_FRAMEWORK_INFO << "InputChannel with id " << getInstanceId()
                             << " already connected to " << outputChannelString;
                     ec = bse::make_error_code(bse::already_connected);
+                } else if (m_connectionsBeingSetup.find(outputChannelString) != m_connectionsBeingSetup.end()) {
+                    KARABO_LOG_FRAMEWORK_INFO << "InputChannel with id " << getInstanceId()
+                            << " already in connection process to " << outputChannelString;
+                    ec = bse::make_error_code(bse::connection_already_in_progress);
                 } else {
-                    auto it = m_connectionsBeingSetup.find(outputChannelString);
-                    if (!forceNew && it != m_connectionsBeingSetup.end()) {
-                        // Currently someone is already trying to connect us - let's just hijack that try
-                        KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\" - use previous try";
-                        it->second.push(std::make_pair(outputChannelInfo, handler));
-                    } else {
-                        m_connectionsBeingSetup[outputChannelString]; // mark as being tried - for further tries later
-                        KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\" - create connection!";
+                    // Store a random number together with handler - this helps to distinguish whether a call to
+                    // onConnect(..) was triggered by a connection attempt that was already cancelled or a following
+                    // new connection attempt.
+                    const unsigned int id = m_random();
+                    m_connectionsBeingSetup[outputChannelString] = std::make_pair(id, handler);
+                    lock.unlock();
+                    KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\" - create connection!";
+                    // Prepare connection configuration given output channel information
+                    karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
+                    // Instantiate connection object
+                    karabo::net::Connection::Pointer connection = karabo::net::Connection::create(config);
 
-                        // Prepare connection configuration given output channel information
-                        karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
-                        // Instantiate connection object
-                        karabo::net::Connection::Pointer connection = karabo::net::Connection::create(config);
-
-                        // Establish connection (and define sub-type of server)
-                        connection->startAsync(karabo::util::bind_weak(&InputChannel::onConnect, this, _1, connection,
-                                                                       outputChannelInfo, _2, handler));
-                    }
-                    return; // avoid calling handler that is otherwise posted below
+                    // Establish connection (and define sub-type of server)
+                    connection->startAsync(karabo::util::bind_weak(&InputChannel::onConnect, this, _1, connection,
+                                                                   outputChannelInfo, _2, id, handler));
+                    return; // Do not call handler below
                 }
             }
 
-            // OK, end up here in error condition only - call handler (if given) with failure code
+            // We are left here with a detected failure:
             if (handler) {
                 EventLoop::getIOService().post(boost::bind(handler, ec));
             }
@@ -310,12 +300,8 @@ namespace karabo {
             // If someone is still waiting for connection, tell that this was canceled
             auto itBeingSetup = m_connectionsBeingSetup.find(outputChannelString);
             if (itBeingSetup != m_connectionsBeingSetup.end()) {
-                ConnectionQueue& pending = itBeingSetup->second;
-                while (!pending.empty()) {
-                    const auto& handler = pending.front().second;
-                    if (handler) handler(boost::system::errc::make_error_code(boost::system::errc::operation_canceled));
-                    pending.pop();
-                }
+                const auto& handler = itBeingSetup->second.second;
+                if (handler) handler(boost::system::errc::make_error_code(boost::system::errc::operation_canceled));
                 m_connectionsBeingSetup.erase(itBeingSetup);
             }
 
@@ -356,6 +342,7 @@ namespace karabo {
                                      karabo::net::Connection::Pointer connection,
                                      const karabo::util::Hash& outputChannelInfo,
                                      karabo::net::Channel::Pointer channel,
+                                     unsigned int connectId,
                                      const boost::function<void (const karabo::net::ErrorCode&)>& handler) {
 
             KARABO_LOG_FRAMEWORK_DEBUG << "onConnect  :  outputChannelInfo is ...\n" << outputChannelInfo;
@@ -374,58 +361,32 @@ namespace karabo {
 
             const string& outputChannelString = outputChannelInfo.get<string>("outputChannelString");
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-            auto itNextTries = m_connectionsBeingSetup.find(outputChannelString);
-            if (itNextTries == m_connectionsBeingSetup.end()) {
+            auto itSetup = m_connectionsBeingSetup.find(outputChannelString);
+            if (itSetup == m_connectionsBeingSetup.end()) {
                 // TODO: In case of success so far, we should not have tried to write hello above!
                 KARABO_LOG_FRAMEWORK_INFO << "onConnect for " << outputChannelString << ": No preparation found, "
                         << "likely disconnected before, so cut connection.";
-                lock.unlock();
-                if (handler) {
-                    if (!ec) ec = boost::system::errc::make_error_code(boost::system::errc::operation_canceled);
-                    handler(ec);
-                }
-                return;
-            }
-            if (ec) { // failed
-                ConnectionQueue& nextTries = itNextTries->second;
-                if (!nextTries.empty()) {
-                    KARABO_LOG_FRAMEWORK_WARN << "Connecting to " << outputChannelString << " failed (" << ec.message()
-                            << "), attempt to connect once more";
-                    // Try again with more recent outputChannelInfo
-                    // (retrieve pair of Hash and handler from queue without copy since pop()-ed from queue anyway)
-                    const ConnectionQueue::value_type outInfo_handler_pair(std::move(nextTries.front()));
-                    nextTries.pop();
-                    lock.unlock();
-                    // forceNew to 'true' avoids adding to m_connectionsBeingSetup again:
-                    connectImpl(outInfo_handler_pair.first, outInfo_handler_pair.second, true);
-                } else {
-                    KARABO_LOG_FRAMEWORK_WARN << "Connecting to " << outputChannelString << " failed finally ("
-                            << ec.message() << ")";
-                    // Just unmark as being tried (invalidates 'nextTries'!)
-                    m_connectionsBeingSetup.erase(outputChannelString);
-                    lock.unlock();
-                }
-                // Call handler if given - but without mutex lock as unlock()-ed above
-                if (handler) handler(ec);
-                return;
+                ec = boost::system::errc::make_error_code(boost::system::errc::operation_canceled);
+            } else if (itSetup->second.first != connectId) {
+                KARABO_LOG_FRAMEWORK_INFO << "onConnect for " << outputChannelString << ": Preparation found with "
+                        << "wrong id, likely disconnected directly after connecting and then reconnected - reaching "
+                        << "here from disconnected first attempt";
+                // handler already called with failure from disconnectImpl(..)
+                return; // connection and channel will 'fade out'
+            } else {
+                m_connectionsBeingSetup.erase(itSetup);
             }
 
-            channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this,
-                                                                         _1, net::Channel::WeakPointer(channel), _2, _3));
+            if (!ec) {
+                KARABO_LOG_FRAMEWORK_WARN << "Connected to " << outputChannelString;
+                channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this,
+                                                                             _1, net::Channel::WeakPointer(channel), _2, _3));
+                m_openConnections[outputChannelString] = std::make_pair(connection, channel);
+            }
 
-            m_openConnections[outputChannelString] = std::make_pair(connection, channel);
-
-            // Call handler(s) if given - but without mutex lock, so move from m_connectionsBeingSetup all other tries
-            ConnectionQueue otherTries(std::move(m_connectionsBeingSetup[outputChannelString]));
-            m_connectionsBeingSetup.erase(outputChannelString);
+            // Call handler if given - but without mutex lock
             lock.unlock();
-            KARABO_LOG_FRAMEWORK_DEBUG << "Call " << 1u + otherTries.size() << " handler(s) for success " << ec;
             if (handler) handler(ec);
-            while (!otherTries.empty()) {
-                const auto& otherHandler = otherTries.front().second;
-                if (otherHandler) otherHandler(ec);
-                otherTries.pop();
-            }
         }
 
 
