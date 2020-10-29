@@ -29,7 +29,7 @@ from karabo.config_db.utils import (
 HIDDEN_KARABO_FOLDER = op.join(os.environ['HOME'], '.karabo')
 KARABO_CONFIG_DB_FOLDER = op.join(HIDDEN_KARABO_FOLDER, 'config_db')
 
-DEVICE_TIMEOUT = 2
+DEVICE_TIMEOUT = 3
 FILTER_KEYS = ["name", "timepoint", "description", "priority"]
 
 
@@ -192,45 +192,56 @@ class ConfigurationManager(DeviceClientBase):
         priority = int(self.priority.value)
         description = self.description.value
         config_name = self.configurationName.value
+
+        taken = self.db.is_config_name_taken(config_name, [deviceId])
+        if taken:
+            self.status = (f"Failure: Configuration name {config_name} "
+                           f"is already taken for device {deviceId}")
+            self.lastSuccess = False
+            self.state = State.ON
+            return
+        # Get the schema and the configuration first!
         try:
             schema, _ = await wait_for(self.call(
                 deviceId, "slotGetSchema", False), timeout=DEVICE_TIMEOUT)
             conf, _ = await wait_for(self.call(
                 deviceId, "slotGetConfiguration"), timeout=DEVICE_TIMEOUT)
-
+        except (CancelledError, TimeoutError):
+            self.status = (f"Failure: Saving configuration for {deviceId} "
+                           f"failed. The device is not online.")
+            self.lastSuccess = False
+        except Exception as e:
+            # Handle unexpected error
+            self.status = str(e)
+            self.lastSuccess = False
+        else:
             configs = {}
             configs.update({"deviceId": deviceId})
             configs.update({"config": hashToBase64Bin(conf)})
             configs.update({"schema": schemaToBase64Bin(schema)})
-
             items = [configs]
-            self.db.save_configuration(
+            # Now we save and list again, and we should not expect any errors
+            try:
+                self.db.save_configuration(
                 config_name, items, description=description, user=".",
                 priority=priority, timestamp="")
-        except (CancelledError, TimeoutError):
-            self.status = (f"Saving configuration for {deviceId} failed. The "
-                           f"device is not online")
-            self.lastSuccess = False
-        except Exception as e:
-            # Config DB Error
-            self.status = str(e)
-            self.lastSuccess = False
-        else:
-            self.status = (f"Saved configuration {config_name} for "
-                           f"device {deviceId}!")
-            try:
+
+                self.status = (f"Success: Saved configuration {config_name} for "
+                               f"device {deviceId}!")
                 current_items = self.db.list_configurations(
                     deviceId, name_part="")
                 current_items = [scratch_conf(c) for c in current_items]
                 current_items = [dictToHash(c) for c in current_items]
                 self.view = current_items
             except Exception as e:
+                # Handle unexpected errors as bulk
                 self.status = str(e)
                 self.lastSuccess = False
             else:
                 self.lastSuccess = True
-        finally:
-            self.state = State.ON
+
+        # At the very end, go to `ON` state again
+        self.state = State.ON
 
     confBulkLimit = UInt32(
         defaultValue=10,
@@ -322,15 +333,18 @@ class ConfigurationManager(DeviceClientBase):
     async def slotGetConfigurationFromName(self, info):
         """Slot to get a configuration from name
 
-        The info Hash must contain `deviceId` and `name`.
+        The info `Hash` must contain `deviceId` and `name`.
+
+        Note: If the info `Hash` contains `schema`, a schema is returned
+        as well.
         """
         deviceId = info["deviceId"]
         name = info["name"]
 
         item = self.db.get_configuration(deviceId, name)
         if not item:
-            reason = (f"No configuration for device {deviceId} and name "
-                      f"{name} found!")
+            reason = (f"Failure: No configuration for device {deviceId} and "
+                      f"name {name} found!")
             raise KaraboError(reason)
 
         item = dictToHash(item)
@@ -339,13 +353,22 @@ class ConfigurationManager(DeviceClientBase):
         item["config"] = hashFromBase64Bin(config64)
         item["schema"] = schemaFromBase64Bin(schema64)
 
+        # A configuration is always connected to a schema, but typically
+        # the majority is not interested in that. Hence, we remove it
+        # under conditions here and not in the config db logic.
+        if not info.has("schema") or info["schema"] is False:
+            item.pop("schema")
+
         return Hash("item", item)
 
     @coslot
     async def slotGetLastConfiguration(self, info):
         """Slot to get a the last configuration
 
-        The info Hash must contain `deviceId` and can obtain `priority`.
+        The info `Hash` must contain `deviceId` and can obtain `priority`.
+
+        Note: If the info `Hash` contains `schema`, a schema is returned
+        as well.
         """
         deviceId = info["deviceId"]
         priority = info.get("priority", 3)
@@ -362,7 +385,27 @@ class ConfigurationManager(DeviceClientBase):
         item["config"] = hashFromBase64Bin(config64)
         item["schema"] = schemaFromBase64Bin(schema64)
 
+        # A configuration is always connected to a schema, but typically
+        # the majority is not interested in that. Hence, we remove it
+        # under conditions here and not in the config db logic.
+        if not info.has("schema") or info["schema"] is False:
+            item.pop("schema")
+
         return Hash("item", item)
+
+    @coslot
+    async def slotCheckConfigurationFromName(self, info):
+        """Slot to check configuration(s) from name
+           - name: the non-empty (and unique for the device) name to be
+                   associated with the configuration(s)
+
+           - deviceIds: a vector of strings with deviceIds
+        """
+        config_name = info["name"]  # Note: Must be there!
+        deviceIds = info["deviceIds"]
+        taken = self.db.is_config_name_taken(config_name, deviceIds)
+
+        return Hash("success", True, "taken", taken)
 
     @coslot
     async def slotSaveConfigurationFromName(self, info):
@@ -396,6 +439,11 @@ class ConfigurationManager(DeviceClientBase):
             raise KaraboError(f"The number of configurations {len(deviceIds)}"
                               f" exceeds the allowed limit {self.confBulkLimit}")
 
+        is_taken = self.db.is_config_name_taken(config_name, deviceIds)
+        if is_taken:
+            raise KaraboError(f"The config name {config_name} is already "
+                              f"taken from any of the device(s) {deviceIds}")
+
         try:
             async def poll_(device_id):
                 schema, _ = await self.call(device_id, "slotGetSchema", False)
@@ -411,12 +459,13 @@ class ConfigurationManager(DeviceClientBase):
             futures = [poll_(device_id) for device_id in deviceIds]
             timeout = len(deviceIds) * DEVICE_TIMEOUT
             items = await wait_for(gather(*futures), timeout=timeout)
-
-            self.db.save_configuration(
-                config_name, items, description=description, user=user,
-                priority=priority, timestamp=timestamp)
         except (CancelledError, TimeoutError):
             raise
+
+        # Let it throw here if needed!
+        self.db.save_configuration(
+            config_name, items, description=description, user=user,
+            priority=priority, timestamp=timestamp)
 
         return Hash("success", True)
 
@@ -479,8 +528,8 @@ class ConfigurationManager(DeviceClientBase):
                 try:
                     schema, *_ = await wait_for(
                         self.call(serverId, "slotGetClassSchema", classId),
-                                  timeout=3)
-                except TimeoutError as e:
+                                  timeout=DEVICE_TIMEOUT)
+                except (CancelledError, TimeoutError) as e:
                     future.set_exception(e)
                     raise KaraboError(
                             f"server {serverId} is not available to start "
