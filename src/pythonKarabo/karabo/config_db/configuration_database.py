@@ -9,9 +9,9 @@ from .commands import (
     CREATE_INDEX_DEVICE_ID_TABLE, CREATE_INDEX_SCHEMA_DIGEST_TABLE,
     CMD_GET_CONFIGURATION, CMD_GET_LAST_CONFIGURATION,
     CMD_LIST_NO_NAME, CMD_LIST_NAME, CMD_LIST_DEVS_NO_NAME,
-    CMD_CHECK_NAME_TAKEN, CMD_CHECK_SCHEMA_ALREADY_SAVED,
-    CMD_SAVE_CONFIGURATION, CMD_SAVE_CONFIGURATION_NO_TIMESTAMP,
-    CMD_SAVE_SCHEMA
+    CMD_CHECK_NAME_TAKEN, CMD_CHECK_NAME_TAKEN_ANY_DEVICE,
+    CMD_CHECK_SCHEMA_ALREADY_SAVED, CMD_SAVE_CONFIGURATION,
+    CMD_SAVE_CONFIGURATION_NO_TIMESTAMP, CMD_SAVE_SCHEMA
 )
 from .utils import (
     CONFIG_DB_DATA, CONFIG_DB_DEVICE_ID, CONFIG_DB_DESCRIPTION, CONFIG_DB_NAME,
@@ -231,6 +231,26 @@ class ConfigurationDatabase(object):
                 raise ConfigurationDBError(f"{e}")
             else:
                 db.commit()
+
+    def is_config_name_taken(self, name, deviceIds):
+        """Checks if a config name is already in use by any of the devices in a
+        list.
+
+        :param  name: the configuration name to be checked.
+        :param deviceIds: list of deviceIds whose taken configurations names
+                          should be searched.
+
+        :returns: True if the config name is already taken by any of the
+                  devices in the list.
+        """
+        with self.dbHandle as db:
+            cmd = CMD_CHECK_NAME_TAKEN_ANY_DEVICE(len(deviceIds))
+            params = [name]
+            params.extend(deviceIds)
+            cursor = db.execute(cmd, params)
+            rec_with_name = int(cursor.fetchone()[0])
+
+            return rec_with_name > 0
 
     # Private Interface
     # --------------------------------------------------------------------
