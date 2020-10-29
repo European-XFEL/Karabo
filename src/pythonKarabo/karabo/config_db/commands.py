@@ -108,6 +108,13 @@ CMD_CHECK_NAME_TAKEN = """
           AND device_id = ?
     """
 
+def CMD_CHECK_NAME_TAKEN_ANY_DEVICE(num_of_devices):
+    return f"""
+        SELECT COUNT(id) FROM DeviceConfig
+        WHERE config_name = ?
+          AND device_id IN ({','.join('?'*num_of_devices)})
+    """
+
 CMD_CHECK_CONFIG_ALREADY_SAVED = """
         SELECT COUNT(id) FROM DeviceConfig
         WHERE device_id = ?
