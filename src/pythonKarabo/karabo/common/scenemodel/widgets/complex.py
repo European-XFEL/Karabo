@@ -8,9 +8,11 @@ from karabo.common.scenemodel.const import (
     NS_KARABO, WIDGET_ELEMENT_TAG, SceneTargetWindow)
 from karabo.common.scenemodel.io_utils import (
     read_base_widget_data, read_empty_display_editable_widget,
-    write_base_widget_data)
+    read_font_format_data, write_base_widget_data, write_font_format_data)
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
+
+from .simple import DisplayLabelModel
 
 
 class ColorBoolModel(BaseWidgetObjectData):
@@ -74,7 +76,7 @@ class ErrorBoolModel(BaseWidgetObjectData):
     invert = Bool(False)
 
 
-class EvaluatorModel(BaseWidgetObjectData):
+class EvaluatorModel(DisplayLabelModel):
     """ A model for Evaluator
     """
     # The expression which is evaluated
@@ -267,6 +269,7 @@ def _display_state_color_writer(model, parent):
 @register_scene_reader('Evaluator', version=1)
 def _evaluator_reader(element):
     traits = read_base_widget_data(element)
+    traits.update(read_font_format_data(element))
     traits['expression'] = element.get('expression')
     return EvaluatorModel(**traits)
 
@@ -275,6 +278,7 @@ def _evaluator_reader(element):
 def _evaluator_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'Evaluator')
+    write_font_format_data(model, element)
     element.set('expression', model.expression)
     return element
 

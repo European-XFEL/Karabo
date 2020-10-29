@@ -1,7 +1,7 @@
 import traceback
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAction, QFrame, QInputDialog, QLabel
+from PyQt5.QtWidgets import QAction, QDialog, QFrame, QInputDialog, QLabel
 from traits.api import Callable, Dict, Instance, Str, Tuple
 
 from karabo.common.scenemodel.api import EvaluatorModel
@@ -11,6 +11,7 @@ from karabogui.binding.api import (
     StringBinding
 )
 from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.dialogs.format_label import FormatLabelDialog
 from karabogui.indicators import (
     ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
 from karabo.common.api import (
@@ -66,6 +67,12 @@ class Evaluator(BaseBindingController):
         widget.setObjectName(objectName)
         sheet = self._style_sheet.format(ALL_OK_COLOR)
         widget.setStyleSheet(sheet)
+
+        # Add an action for formatting options
+        format_action = QAction("Format field..", widget)
+        format_action.triggered.connect(self._format_field)
+        widget.addAction(format_action)
+        self._apply_format(widget)
 
         return widget
 
@@ -124,3 +131,27 @@ class Evaluator(BaseBindingController):
             self._bg_color = ALL_OK_COLOR
         sheet = self._style_sheet.format(self._bg_color)
         self.widget.setStyleSheet(sheet)
+
+    # -----------------------------------------------------------------------
+    # Formatting methods
+
+    def _format_field(self):
+        dialog = FormatLabelDialog(font_size=self.model.font_size,
+                                   font_weight=self.model.font_weight,
+                                   parent=self.widget)
+        if dialog.exec_() == QDialog.Accepted:
+            self.model.trait_set(font_size=dialog.font_size,
+                                 font_weight=dialog.font_weight)
+            self._apply_format()
+
+    def _apply_format(self, widget=None):
+        """The widget is passed as an argument in create_widget as it is not
+           yet bound to self.widget then"""
+        if widget is None:
+            widget = self.widget
+
+        # Apply font formatting
+        font = widget.font()
+        font.setPointSize(self.model.font_size)
+        font.setBold(self.model.font_weight == "bold")
+        widget.setFont(font)
