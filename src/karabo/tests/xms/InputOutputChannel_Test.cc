@@ -347,154 +347,83 @@ void InputOutputChannel_Test::testConcurrentConnect() {
     //                                        "ostream.pattern", "%d{%F %H:%M:%S,%l} %p  %c  : %m%n"));
     //    karabo::log::Logger::useOstream();
 
-    // Setup output channel
-    OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash(), 0);
-    output->setInstanceIdAndName("outputChannel", "output");
-    output->initialize(); // needed due to int == 0 argument above
+    int counter = 100;
+    while (--counter >= 0) { // repeat test since it depends on timing!
+        // Setup output channel
+        OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel", Hash(), 0);
+        output->setInstanceIdAndName("outputChannel", "output");
+        output->initialize(); // needed due to int == 0 argument above
 
-    // Setup input channel
-    const std::string outputChannelId(output->getInstanceId() + ":output");
-    const Hash cfg("connectedOutputChannels", std::vector<std::string>(1, outputChannelId));
-    InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
-    input->setInstanceId("inputChannel");
+        // Setup input channel
+        const std::string outputChannelId(output->getInstanceId() + ":output");
+        const Hash cfg("connectedOutputChannels", std::vector<std::string>(1, outputChannelId));
+        InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
+        input->setInstanceId("inputChannel");
 
-    Hash outputInfo(output->getInformation());
-    CPPUNIT_ASSERT_MESSAGE("OutputChannel keeps port 0!", outputInfo.get<unsigned int>("port") > 0);
+        Hash outputInfo(output->getInformation());
+        CPPUNIT_ASSERT_MESSAGE("OutputChannel keeps port 0!", outputInfo.get<unsigned int>("port") > 0);
 
-    outputInfo.set("outputChannelString", outputChannelId);
-    outputInfo.set("memoryLocation", "local");
+        outputInfo.set("outputChannelString", outputChannelId);
+        outputInfo.set("memoryLocation", "local");
 
-    // Setup connection handlers
-    const unsigned int numConnect = 100; // > 5, see below
-    std::vector<std::promise<karabo::net::ErrorCode>> connectErrorCodes(numConnect);
-    std::vector<std::future<karabo::net::ErrorCode>> connectFutures;
-    std::vector<std::function<void(const karabo::net::ErrorCode&)>> connectHandlers;
-    for (auto& promise : connectErrorCodes) {
-        connectFutures.push_back(promise.get_future());
-        connectHandlers.push_back([&promise](const karabo::net::ErrorCode & ec) {
-            promise.set_value(ec);
-        });
-    }
+        // Setup connection handlers
+        std::promise<karabo::net::ErrorCode> connectPromise1;
+        std::future<karabo::net::ErrorCode> connectFuture1 = connectPromise1.get_future();
+        boost::function<void(const karabo::net::ErrorCode&) > connectHandler1 = [&connectPromise1](const karabo::net::ErrorCode & ec) {
+            connectPromise1.set_value(ec);
+        };
+        std::promise<karabo::net::ErrorCode> connectPromise2;
+        std::future<karabo::net::ErrorCode> connectFuture2 = connectPromise2.get_future();
+        boost::function<void(const karabo::net::ErrorCode&) > connectHandler2 = [&connectPromise2](const karabo::net::ErrorCode & ec) {
+            connectPromise2.set_value(ec);
+        };
+        // Subsequent connect(..): first succeeds, second fails since already connected (less likely) or connecting
+        input->connect(outputInfo, connectHandler1);
+        input->connect(outputInfo, connectHandler2);
 
-    // Connect all in one go - add threads to increase likelihood of concurrency
-    ThreadAdder extraThreads(5);
-    unsigned int counter = 0;
-    for (auto& handler : connectHandlers) {
-        Hash h(outputInfo);
-        // Introduce some failure reasons
-        if (counter == 0) {
-            h.erase("memoryLocation");
-        } else if (counter == 1) {
-            h.erase("outputChannelString");
-        } else if (counter == 2) {
-            h.set("connectionType", "udp");
-        } else if (counter == 3) {
-            h.set("outputChannelString", "no_configured_string");
-        }
-        // Skip test of invalid port - it seems to be unreliable - maybe just something else accepts the connection?
-        //  } else if (counter == 4) {
-        //      h.set("port", 0u); // invalid port
-        karabo::net::EventLoop::getIOService().post(karabo::util::bind_weak(&InputChannel::connect, input.get(),
-                                                                            h, handler));
-        ++counter;
-    }
-    // Wait for handler completion
-    counter = 0;
-    for (auto& future : connectFutures) {
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Callback for connection attempt number " + karabo::util::toString(counter++)
-                                     += " not called in time",
-                                     std::future_status::ready, future.wait_for(std::chrono::milliseconds(1000)));
-    }
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture1.wait_for(std::chrono::milliseconds(2000)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture2.wait_for(std::chrono::milliseconds(2000)));
 
-    // ... check results
-    counter = 0;
-    for (auto& future : connectFutures) {
+        CPPUNIT_ASSERT_EQUAL(karabo::net::ErrorCode(), connectFuture1.get());
+        const karabo::net::ErrorCode ec = connectFuture2.get();
         namespace bse = boost::system::errc;
-        // The first four are mis-configured and will fail for different reasons.
-        // The next should succeed, the following may either be declared as succeeded as well (because they "jumped on"
-        // the previous) or fail as "already connected".
-        if (counter == 0) { // missing "memoryLocation"
-            CPPUNIT_ASSERT_EQUAL(bse::make_error_code(bse::argument_out_of_domain), future.get());
-        } else if (counter == 1) { // missing "outputChannelString"
-            CPPUNIT_ASSERT_EQUAL(bse::make_error_code(bse::invalid_argument), future.get());
-        } else if (counter == 2) { // invalid "connectionType" ("udp")
-            CPPUNIT_ASSERT_EQUAL(bse::make_error_code(bse::protocol_not_supported), future.get());
-        } else if (counter == 3) { // non-configured "outputChannelString"
-            CPPUNIT_ASSERT_EQUAL(bse::make_error_code(bse::argument_out_of_domain), future.get());
-        } else if (counter == 4) { // first success (If 'invalid port' is added back above, treat it here!)
-            CPPUNIT_ASSERT_EQUAL(karabo::net::ErrorCode(), future.get());
-        } else {
-            const karabo::net::ErrorCode ec = future.get();
-            CPPUNIT_ASSERT_MESSAGE("attempt number " + karabo::util::toString(counter) + ": " + karabo::util::toString(ec),
-                                   ec == karabo::net::ErrorCode() || ec == bse::make_error_code(bse::already_connected));
-        }
-        ++counter;
+        CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(ec),
+                               ec == bse::make_error_code(bse::connection_already_in_progress) || ec == bse::make_error_code(bse::already_connected));
+
+        input->disconnect(outputInfo);
+
+        //
+        // Now second scenario: disconnect in between two connect attempts:
+        //
+        boost::this_thread::sleep(boost::posix_time::milliseconds(100)); // make sure all disconnection has finished
+        // Setup more connection handlers
+        std::promise<karabo::net::ErrorCode> connectPromise3;
+        std::future<karabo::net::ErrorCode> connectFuture3 = connectPromise3.get_future();
+        boost::function<void(const karabo::net::ErrorCode&) > connectHandler3 = [&connectPromise3](const karabo::net::ErrorCode & ec) {
+            connectPromise3.set_value(ec);
+        };
+        std::promise<karabo::net::ErrorCode> connectPromise4;
+        std::future<karabo::net::ErrorCode> connectFuture4 = connectPromise4.get_future();
+        boost::function<void(const karabo::net::ErrorCode&) > connectHandler4 = [&connectPromise4](const karabo::net::ErrorCode & ec) {
+            connectPromise4.set_value(ec);
+        };
+
+        input->connect(outputInfo, connectHandler3);
+        input->disconnect(outputInfo);
+        input->connect(outputInfo, connectHandler4);
+
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture3.wait_for(std::chrono::milliseconds(2000)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture4.wait_for(std::chrono::milliseconds(2000)));
+
+        // Now it is not exactly clear what to expect - depends on timing of threads:
+        // - 1st fails as operation_canceled, 2nd succeeds, i.e. disconnect(..) clears from "being setup"
+        // - 1st succeeds and 2nd succeeds, i.e. disconnect(..) got called when 1st connect(..) already succeeded
+        // (a return value of disconnect(..) telling what state the connection was could help to differentiate...)
+        const karabo::net::ErrorCode ec1 = connectFuture3.get();
+        const karabo::net::ErrorCode ec2 = connectFuture4.get();
+
+        CPPUNIT_ASSERT_MESSAGE("1: " + karabo::util::toString(ec1) += ", 2: " + karabo::util::toString(ec2),
+                               (ec1 == bse::make_error_code(bse::operation_canceled) && ec2 == karabo::net::ErrorCode())
+                               || (ec1 == karabo::net::ErrorCode() && ec2 == karabo::net::ErrorCode()));
     }
-
-    // Check that connection actually OK and data goes through
-    unsigned int calls = 0;
-    input->registerDataHandler([&calls](const Hash& data, const InputChannel::MetaData & meta) {
-        ++calls;
-    });
-    output->write(Hash());
-    output->update();
-
-    int trials = 500;
-    while (--trials >= 0) {
-        if (1u == calls) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(2)); // time for callback
-    }
-    CPPUNIT_ASSERT_EQUAL(1u, calls);
-
-    //
-    // Now check disconnect while connecting
-    //
-    input->disconnect(outputChannelId);
-    const unsigned numConnect2 = 10;
-    // Re-setup connection handlers
-    connectErrorCodes.clear();
-    connectErrorCodes.resize(numConnect2);
-    connectFutures.clear();
-    connectHandlers.clear();
-    for (auto& promise : connectErrorCodes) {
-        connectFutures.push_back(promise.get_future());
-        connectHandlers.push_back([&promise](const karabo::net::ErrorCode & ec) {
-            promise.set_value(ec);
-        });
-    }
-
-    // Launch all the connects and then disconnect
-    for (auto& handler : connectHandlers) {
-        // Call one after another now to be sure that connect part is done,
-        // concurrency will be on the callback onConnect
-        input->connect(outputInfo, handler);
-    }
-    input->disconnect(outputChannelId);
-
-    // Wait for handler completion
-    counter = 0;
-    for (auto& future : connectFutures) {
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::util::toString(counter++),
-                                     std::future_status::ready, future.wait_for(std::chrono::milliseconds(1000)));
-    }
-
-    // The actual handler result is hard to predict: Can be
-    // - 'operation_canceled' for those that disconnect found as 'being setup'
-    // - success for those connect(..) that are actually executed after disconnect
-    // - I also saw 'connection_refused'
-    // We cannot test either whether now we are really disconnected
-    // ... and thus the following test is not predictive either and is thus removed, see e.g.
-    //     https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/82010
-    // FIXME for next round (2.8.X)!
-    return;
-
-    // So after having checked that all handlers are called we skip their result test,
-    // but take care that the connection is gone.
-    output->write(Hash());
-    output->update();
-
-    // Give some time for data to travel in case connection alive (although it should not).
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
-    // Still 1 as from above
-    CPPUNIT_ASSERT_EQUAL(1u, calls);
 }
