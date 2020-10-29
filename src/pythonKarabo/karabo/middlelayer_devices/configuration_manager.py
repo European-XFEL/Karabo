@@ -3,7 +3,8 @@
 # Created on August 21, 2020, 11:42 AM
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from asyncio import CancelledError, gather, TimeoutError, wait_for
+from asyncio import CancelledError, Future, gather, TimeoutError, wait_for
+from collections import defaultdict
 import os
 import os.path as op
 
@@ -16,9 +17,9 @@ from karabo.common.scenemodel.api import (
 from karabo.native.configuration import sanitize_init_configuration
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, background, Bool, Configurable,
-    coslot, DaqPolicy, Device, dictToHash, KaraboError, Hash, HashList,
-    Overwrite, slot, Slot, State, String, Timestamp, UInt32, VectorHash,
-    VectorString)
+    coslot, DaqPolicy, DeviceClientBase, dictToHash, KaraboError, Hash,
+    HashList, Overwrite, slot, Slot, State, String, Timestamp, UInt32,
+    VectorHash, VectorString)
 
 from karabo.config_db.configuration_database import (
     ConfigurationDatabase, DbHandle)
@@ -60,7 +61,7 @@ class RowSchema(Configurable):
         accessMode=AccessMode.READONLY)
 
 
-class ConfigurationManager(Device):
+class ConfigurationManager(DeviceClientBase):
     """This configuration manager service is to control device configurations
 
     Requests from various clients (GUI's and devices) will be managed.
@@ -238,9 +239,23 @@ class ConfigurationManager(Device):
         requiredAccessLevel=AccessLevel.ADMIN,
         accessMode=AccessMode.READONLY)
 
+    @coslot
+    async def slotInstanceNew(self, instanceId, info):
+        if info["type"] == "server":
+            self._class_schemas.pop(instanceId, None)
+        await super().slotInstanceNew(instanceId, info)
+
+    @slot
+    def slotInstanceGone(self, instanceId, info):
+        if info["type"] == "server":
+            self._class_schemas.pop(instanceId, None)
+        return super().slotInstanceGone(instanceId, info)
+
     def __init__(self, configuration):
         super(ConfigurationManager, self).__init__(configuration)
         self.db = None
+        # Dictionary of serverId: {classId: schema}
+        self._class_schemas = defaultdict(dict)
 
     async def onInitialization(self):
         """Initialize the configuration database device and create the `DB`"""
@@ -258,6 +273,7 @@ class ConfigurationManager(Device):
         self.db.assureExisting()
         self.state = State.ON
 
+        self._schema_futures = {}
         # If we have a device name already we can retrieve a list!
         if self.deviceName:
             background(self._list_configurations())
@@ -449,13 +465,39 @@ class ConfigurationManager(Device):
         if serverId is None:
             serverId = config["serverId"]
         # Get the class schema for this device!
-        # XXX: Eventually start caching schemas...
-        try:
-            schema, *_ = await wait_for(
-                self.call(serverId, "slotGetClassSchema", classId), timeout=2)
-        except TimeoutError:
-            raise KaraboError(f"server {serverId} is not available to start"
-                              f"device with deviceId {deviceId}")
+        schema = self._class_schemas[serverId].get(classId, None)
+        if schema is None:
+            # No schema there, check if we are already looking for it!
+            future = self._schema_futures.get((serverId, classId), None)
+            if future is not None:
+                # Let it throw here in case of failure
+                await future
+                schema = future.result()
+            else:
+                future = Future()
+                self._schema_futures[(serverId, classId)] = future
+                try:
+                    schema, *_ = await wait_for(
+                        self.call(serverId, "slotGetClassSchema", classId),
+                                  timeout=3)
+                except TimeoutError as e:
+                    future.set_exception(e)
+                    raise KaraboError(
+                            f"server {serverId} is not available to start "
+                            f"device with deviceId {deviceId} ... Could not "
+                            f"retrieve the schema!")
+                except Exception as e:
+                    # In case we experience an unknown error, notify!
+                    future.set_exception(e)
+                    raise KaraboError(
+                            f"Exception occured when starting device with "
+                            f"deviceId {deviceId} on {serverId}: {e}")
+                else:
+                    future.set_result(schema)
+                    # Got a new schema, cache it!
+                    self._class_schemas[serverId][classId] = schema
+                finally:
+                    self._schema_futures.pop((serverId, classId), None)
 
         config = sanitize_init_configuration(schema, config)
         h = Hash()
