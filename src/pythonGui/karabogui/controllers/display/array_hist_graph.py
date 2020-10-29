@@ -81,6 +81,7 @@ class HistogramGraph(BaseBindingController):
 @register_binding_controller(ui_name='Vector HistoGram Graph',
                              klassname='VectorHistGraph',
                              binding_type=VectorNumberBinding,
+                             priority=-10,
                              can_show_nothing=False)
 class VectorHistogramGraph(HistogramGraph):
     """The BarGraph controller for display of pulse data in a histogram format
@@ -99,6 +100,7 @@ class VectorHistogramGraph(HistogramGraph):
 @register_binding_controller(ui_name='Array HistoGram Graph',
                              klassname='NDArrayHistGraph',
                              binding_type=NDArrayBinding,
+                             priority=-10,
                              can_show_nothing=False)
 class NDArrayHistogramGraph(HistogramGraph):
     """The BarGraph controller to display histograms of NDArray data
