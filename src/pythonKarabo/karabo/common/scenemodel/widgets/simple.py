@@ -9,7 +9,8 @@ from karabo.common.scenemodel.const import (
     SCENE_FONT_WEIGHTS, SceneTargetWindow, WIDGET_ELEMENT_TAG)
 from karabo.common.scenemodel.io_utils import (
     get_numbers, set_numbers, read_base_widget_data,
-    read_empty_display_editable_widget, write_base_widget_data)
+    read_empty_display_editable_widget, read_font_format_data,
+    write_base_widget_data, write_font_format_data)
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
@@ -320,12 +321,7 @@ def _time_label_writer(model, parent):
 @register_scene_reader('DisplayLabel')
 def _display_label_reader(element):
     traits = read_base_widget_data(element)
-
-    # Add font formatting
-    font_size = int(element.get(NS_KARABO + 'font_size', SCENE_FONT_SIZE))
-    traits['font_size'] = font_size
-    font_weight = element.get(NS_KARABO + 'font_weight', SCENE_FONT_WEIGHT)
-    traits['font_weight'] = font_weight
+    traits.update(read_font_format_data(element))
 
     return DisplayLabelModel(**traits)
 
@@ -334,12 +330,7 @@ def _display_label_reader(element):
 def _display_label_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayLabel')
-
-    # Write only modified display label formatting
-    if model.font_size != SCENE_FONT_SIZE:
-        element.set(NS_KARABO + 'font_size', str(model.font_size))
-    if model.font_weight != SCENE_FONT_WEIGHT:
-        element.set(NS_KARABO + 'font_weight', model.font_weight)
+    write_font_format_data(model, element)
 
     return element
 
