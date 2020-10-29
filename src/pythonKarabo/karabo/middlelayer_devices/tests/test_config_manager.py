@@ -127,6 +127,32 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(r["success"], True)
 
     @async_tst
+    async def test_configuration_save_check(self):
+        """Cross check if we saved the config"""
+        config_name = "testConfig1"
+        h = Hash("name", config_name, "deviceIds", ["TEST_DEVICE",
+                 "ANOTHER_TEST_DEVICE"])
+        r = await call(KARABO_CONFIG_MANAGER, "slotCheckConfigurationFromName", h)
+        self.assertEqual(r["success"], True)
+        self.assertEqual(r["taken"], True)
+
+        # Wrong config name
+        config_name = "NotSavedConfig"
+        h = Hash("name", config_name, "deviceIds", ["TEST_DEVICE",
+                 "ANOTHER_TEST_DEVICE"])
+        r = await call(KARABO_CONFIG_MANAGER, "slotCheckConfigurationFromName", h)
+        self.assertEqual(r["success"], True)
+        self.assertEqual(r["taken"], False)
+
+        # Wrong device names
+        config_name = "testConfig1"
+        h = Hash("name", config_name, "deviceIds", ["FOODEVICE",
+                 "BARDEVICE"])
+        r = await call(KARABO_CONFIG_MANAGER, "slotCheckConfigurationFromName", h)
+        self.assertEqual(r["success"], True)
+        self.assertEqual(r["taken"], False)
+
+    @async_tst
     async def test_configuration_bulk_save_reject(self):
         """Test the reject of saving of too many configurations"""
         deviceIds = ["TEST_DEVICE"] * 11
@@ -140,7 +166,7 @@ class TestConfigurationManager(DeviceTest):
     async def test_get_configuration(self):
         """Test the manual retrieving of configurations"""
         config_name = "testConfig"
-        h = Hash("name", config_name, "deviceId", "TEST_DEVICE")
+        h = Hash("name", config_name, "deviceId", "TEST_DEVICE", "schema", True)
         r = await call(KARABO_CONFIG_MANAGER, "slotGetConfigurationFromName", h)
         item = r["item"]
         priority = item["priority"]
@@ -198,7 +224,7 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(len(items), 2)
 
         # Get the last configuration!
-        h = Hash("deviceId", "TEST_DEVICE", "priority", 3)
+        h = Hash("deviceId", "TEST_DEVICE", "priority", 3, "schema", True)
         r = await call(KARABO_CONFIG_MANAGER, "slotGetLastConfiguration",  h)
 
         item = r["item"]
@@ -210,6 +236,12 @@ class TestConfigurationManager(DeviceTest):
         schema = item["schema"]
         policy = schema.hash["value", "daqPolicy"]
         self.assertEqual(policy, DaqPolicy.SAVE)
+
+        # Get the last config without schema!
+        h = Hash("deviceId", "TEST_DEVICE", "priority", 3)
+        r = await call(KARABO_CONFIG_MANAGER, "slotGetLastConfiguration",  h)
+        item = r["item"]
+        self.assertNotIn("schema", item)
 
     @async_tst
     async def test_device_client_configuration(self):
