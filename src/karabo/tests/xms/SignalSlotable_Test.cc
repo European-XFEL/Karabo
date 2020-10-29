@@ -733,7 +733,7 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     signalerB->emit("signalB", -32);
 
     // Give signal some time to travel
-    for (int i = 0; i < 200; ++i) {
+    for (int i = 0; i < 1000; ++i) {
         if (slotCalledA && slotCalledB) break;
         boost::this_thread::sleep(boost::posix_time::milliseconds(5));
     };
