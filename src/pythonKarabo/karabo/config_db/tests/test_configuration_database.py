@@ -1,7 +1,7 @@
 import os
 import unittest
-import shutil
-from karabo.config_db.configuration_database import DbHandle, ConfigurationDatabase
+from karabo.config_db.configuration_database import (
+    DbHandle, ConfigurationDatabase)
 from karabo.config_db.utils import ConfigurationDBError
 
 TEST_DB_PATH = 'cfgMngrTest.db'
@@ -169,6 +169,30 @@ class TestConfigurationManagerData(unittest.TestCase):
             self.database.save_configuration(CFG_NAME_1, CFG_SET)
         self.assertTrue(verr.exception.args[0].find(
             'already has a configuration named') > -1)
+
+    def test_config_name_taken(self):
+        """ Checks that the is_config_name_taken returns false when there's no
+            no config with a given name for any device in the list and true
+            when at least one of the devices in the list has a config with the
+            given name.
+        """
+        self.database.save_configuration(CFG_NAME_1, CFG_1)
+        self.assertFalse(
+            self.database.is_config_name_taken(CFG_NAME_1, [CFG_DEVICE_2])
+        )
+        self.assertTrue(
+            self.database.is_config_name_taken(CFG_NAME_1, [CFG_DEVICE_1])
+        )
+        self.assertTrue(
+            self.database.is_config_name_taken(
+                CFG_NAME_1,
+                [CFG_DEVICE_1, CFG_DEVICE_2])
+        )
+        self.assertFalse(
+            self.database.is_config_name_taken(
+                CFG_NAME_2,
+                [CFG_DEVICE_1, CFG_DEVICE_2])
+        )
 
 
 if __name__ == '__main__':
