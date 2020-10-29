@@ -50,10 +50,19 @@ namespace karabo {
         std::string urlencode(const std::string& value);
 
         enum class AsyncStatus {
-	    PENDING = 0,
-	    FAILED = -1,
-	    DONE = 1
-	};
+
+            PENDING = 0,
+            FAILED = -1,
+            DONE = 1
+        };
+
+        enum class ConnectionStatus {
+
+            DISCONNECTED = 0,
+            CONNECTING,
+            CONNECTED,
+            DISCONNECTING // needed?
+        };
     }
 }
 #endif	/* KARABO_NET_UTILS_HH */
