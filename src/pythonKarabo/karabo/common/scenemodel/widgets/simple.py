@@ -84,6 +84,10 @@ class EditableListModel(BaseEditWidget):
     """ A model for EditableList"""
 
 
+class EditableRegexListModel(BaseEditWidget):
+    """ A model for EditableRegexList"""
+
+
 class EditableListElementModel(BaseEditWidget):
     """ A model for EditableListElement"""
 
@@ -454,8 +458,9 @@ def _build_empty_widget_readers_and_writers():
 
     names = ('AnalogModel', 'BitfieldModel', 'DaemonManagerModel',
              'DisplayListModel', 'DisplayTextLogModel',
-             'EditableListModel', 'EditableListElementModel',
-             'EditableRegexModel', 'EditableSpinBoxModel', 'GlobalAlarmModel',
+             'EditableListModel', 'EditableRegexListModel',
+             'EditableListElementModel', 'EditableRegexModel',
+             'EditableSpinBoxModel', 'GlobalAlarmModel',
              'HexadecimalModel', 'IntLineEditModel', 'LampModel', 'PopUpModel',
              'RunConfiguratorModel', 'WidgetNodeModel')
     for name in names:

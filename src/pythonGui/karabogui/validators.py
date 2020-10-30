@@ -142,3 +142,53 @@ class RegexValidator(QValidator):
             return self.Intermediate, input, pos
 
         return self.Acceptable, input, pos
+
+
+class RegexListValidator(QValidator):
+    """This is a list generic regex validator that accepts a regex pattern
+
+    Every element is validated against the regex pattern
+
+    :param regex: the regex expression
+    :param delimiter: the delimiter (default: ".") which splits the input
+    :param min_size: The minimum size of the list (default: None)
+    :param max_size: The maximum size of the list (default: None)
+    """
+    pattern = None
+
+    def __init__(self, pattern="", delimiter=",", min_size=None, max_size=None,
+                 parent=None):
+        super(RegexListValidator, self).__init__(parent)
+        self.pattern = re.compile(pattern)
+        self.delimiter = delimiter
+        self.min_size = min_size
+        self.max_size = max_size
+
+    def setRegex(self, pattern):
+        """Set a new regex pattern"""
+        self.pattern = re.compile(pattern)
+
+    def validate(self, input, pos):
+        """The main validate function checking to match the regex pattern"""
+        if not input and (self.min_size is None or self.min_size == 0):
+            return self.Acceptable, input, pos
+        elif not input and self.min_size is not None and self.min_size > 0:
+            return self.Intermediate, input, pos
+        elif input.startswith(self.delimiter):
+            return self.Intermediate, input, pos
+
+        # check for size first
+        values = input.split(self.delimiter)
+        if self.min_size is not None and len(values) < self.min_size:
+            return self.Intermediate, input, pos
+        if self.max_size is not None and len(values) > self.max_size:
+            return self.Intermediate, input, pos
+
+        if input.endswith(self.delimiter):
+            return self.Intermediate, input, pos
+
+        for string in values:
+            if not self.pattern.match(string):
+                return self.Intermediate, input, pos
+
+        return self.Acceptable, input, pos
