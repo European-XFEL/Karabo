@@ -6,7 +6,9 @@ from PyQt5.QtWidgets import (
     QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget)
 from traits.api import Instance, Int
 
-from karabo.common.scenemodel.api import DisplayListModel, EditableListModel
+from karabo.common.scenemodel.api import (
+    DisplayListModel, EditableListModel, EditableRegexListModel)
+from karabo.common.api import KARABO_SCHEMA_REGEX
 from karabogui import icons
 from karabogui.binding.api import (
     get_editor_value, get_min_max_size, VectorBinding, VectorCharBinding,
@@ -17,6 +19,7 @@ from karabogui.controllers.api import (
     register_binding_controller)
 from karabogui.dialogs.listedit import ListEditDialog
 from karabogui.util import SignalBlocker
+from karabogui.validators import RegexListValidator
 from karabogui.widgets.hints import LineEdit
 
 
@@ -45,7 +48,7 @@ class _BaseListController(BaseBindingController):
     def binding_update(self, proxy):
         binding = proxy.binding
         min_size, max_size = get_min_max_size(proxy.binding)
-        self._validator = ListValidator(binding=binding)
+        self._validator = ListValidator(binding=binding, parent=self.widget)
         self._validator.min_size = min_size
         self._validator.max_size = max_size
         self._internal_widget.setValidator(self._validator)
@@ -125,6 +128,7 @@ class _BaseListController(BaseBindingController):
                                    parent=self.widget)
         list_edit.set_texts("Add", "&Value", "Edit")
         if list_edit.exec_() == QDialog.Accepted:
+            # XXX: Validate bug here
             self.proxy.edit_value = list_edit.values
             self._set_edit_field_text(list_edit.values)
 
@@ -152,3 +156,25 @@ class EditableList(_BaseListController):
 class DisplayList(_BaseListController):
     """The display version of the list widget"""
     model = Instance(DisplayListModel, args=())
+
+
+def _has_regex_binding(binding):
+    attrs = binding.attributes
+    return attrs.get(KARABO_SCHEMA_REGEX, None) is not None
+
+
+@register_binding_controller(ui_name='Edit Regex List', can_edit=True,
+                             is_compatible=_has_regex_binding,
+                             klassname='EditableRegexList',
+                             binding_type=VectorStringBinding,
+                             priority=10)
+class EditableRegexList(_BaseListController):
+    model = Instance(EditableRegexListModel, args=())
+
+    def binding_update(self, proxy):
+        binding = proxy.binding
+        regex = binding.attributes.get(KARABO_SCHEMA_REGEX, "")
+        min_size, max_size = get_min_max_size(binding)
+        self._validator = RegexListValidator(
+            regex, min_size=min_size, max_size=max_size, parent=self.widget)
+        self._internal_widget.setValidator(self._validator)

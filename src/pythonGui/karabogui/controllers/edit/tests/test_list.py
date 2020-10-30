@@ -2,13 +2,15 @@ from unittest.mock import patch
 
 from PyQt5.QtWidgets import QDialog
 
-from karabo.common.scenemodel.api import EditableListModel
-from karabo.native import Configurable, VectorInt32, VectorInt8
+from karabo.common.scenemodel.api import (
+    EditableListModel, EditableRegexListModel)
+from karabo.native import (
+    Configurable, VectorInt32, VectorInt8, VectorRegexString)
 from karabogui.binding.api import apply_default_configuration, get_min_max_size
 from karabogui.dialogs.listedit import ListEditDialog
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
-from ..list import EditableList
+from ..list import EditableList, EditableRegexList
 
 
 class Object(Configurable):
@@ -21,6 +23,12 @@ class SizeObject(Configurable):
 
 class ShortObject(Configurable):
     prop = VectorInt8(defaultValue=[1])
+
+
+class RegexObject(Configurable):
+    prop = VectorRegexString(
+        defaultValue=["remote:output"],
+        regex=r"^[A-Za-z0-9_-]{1,60}(:)[A-Za-z0-9_-]{1,60}$")
 
 
 class ListEditMock(ListEditDialog):
@@ -118,3 +126,39 @@ class TestEditableList(GuiTestCase):
         # out of range
         self.short_controller._internal_widget.setText('10300')
         assert self.short_proxy.edit_value is None
+
+
+class TestEditableRegexList(GuiTestCase):
+    def setUp(self):
+        super(TestEditableRegexList, self).setUp()
+        self.proxy = get_class_property_proxy(
+            RegexObject.getClassSchema(), 'prop')
+        self.controller = EditableRegexList(
+            proxy=self.proxy, model=EditableRegexListModel())
+        self.controller.create(None)
+        apply_default_configuration(self.proxy.root_proxy.binding)
+
+    def tearDown(self):
+        self.controller.destroy()
+        assert self.controller.widget is None
+
+    def test_set_value(self):
+        self.controller.last_cursor_position = 0
+        set_proxy_value(self.proxy, 'prop', ["remote:outputDaq"])
+        assert self.controller._internal_widget.text() == "remote:outputDaq"
+        assert self.controller._internal_widget.cursorPosition() == 0
+
+    def test_edit_value(self):
+        self.controller.set_read_only(False)
+        self.controller._internal_widget.setText(
+            "remote:outputDaq,remote:output")
+        self.assertEqual(self.proxy.edit_value,
+                         ["remote:outputDaq", "remote:output"])
+
+    def test_edit_empty_value(self):
+        self.controller.set_read_only(False)
+        self.controller._internal_widget.setText('remote:output')
+        self.assertEqual(self.proxy.edit_value, ["remote:output"])
+        self.controller._internal_widget.setText('')
+        value = self.proxy.edit_value
+        self.assertEqual(value, [])
