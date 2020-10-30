@@ -101,7 +101,8 @@ def dictToHash(d):
             h[k] = dictToHash(v)
         elif isinstance(v, (list, tuple)):
             if len(v) > 0 and isinstance(v[0], dict):
-                h[k] = [dictToHash(vv) for vv in v]
+                # Note: This is a VectorHash
+                h[k] = HashList([dictToHash(vv) for vv in v])
             else:
                 h[k] = v
         else:
