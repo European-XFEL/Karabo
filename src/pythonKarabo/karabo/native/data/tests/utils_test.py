@@ -3,7 +3,7 @@ import numpy as np
 
 from karabo.native.configuration import attr_fast_deepcopy
 from karabo.native.data import (
-    dtype_from_number, get_image_data, Hash, is_equal, Schema,
+    dtype_from_number, get_image_data, Hash, HashList, is_equal, Schema,
     dictToHash)
 
 
@@ -44,7 +44,8 @@ def test_dict_hash():
     """TEST THAT A DICT CAN BE MOVED TO A HASH"""
     b = {"b": 2}
     e = ["a", "b", "c"]
-    d = {"a": 1, "c": 3, "d": 4, "b": b, "e": e}
+    f = [{"a": 1}, {"b": 2}]
+    d = {"a": 1, "c": 3, "d": 4, "b": b, "e": e, "f": f}
 
     h = dictToHash(d)
     assert h["a"] == 1
@@ -52,6 +53,10 @@ def test_dict_hash():
     assert isinstance(node, Hash)
     assert h["b.b"] == 2
     assert h["e"] == e
+    node = h["f"]
+    assert isinstance(node, HashList)
+    assert node[0] == Hash("a", 1)
+    assert node[1] == Hash("b", 2)
 
 
 def test_array_equal():
