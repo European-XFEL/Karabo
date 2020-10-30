@@ -1,4 +1,6 @@
+from collections import OrderedDict
 from collections.abc import Iterable
+from itertools import zip_longest
 import numbers
 
 import numpy as np
@@ -8,7 +10,7 @@ from karabo.common import const
 from karabo.common.api import (
     KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
     KARABO_SCHEMA_MIN_INC)
-from karabo.native import Hash, Schema
+from karabo.native import Hash, HashList, Schema
 from . import types
 
 
@@ -134,6 +136,9 @@ def has_changes(binding, old_value, new_value):
                 changes = (diff >= abs(old_value * FLOAT_TOLERANCE))
         elif isinstance(old_value, np.ndarray):
             changes = not array_equal(new_value, old_value)
+        elif isinstance(old_value, HashList):
+            hash_list = get_vector_hash_changes(binding, old_value, new_value)
+            changes = hash_list is not None
         elif isinstance(old_value, list):
             if len(old_value) != len(new_value):
                 changes = True
@@ -268,3 +273,85 @@ def array_equal(actual, expected):
     if len(actual) != len(expected):
         return False
     return np.allclose(actual, expected, atol=FLOAT_TOLERANCE)
+
+
+def get_vector_hash_changes(binding, old, new):
+    """Returns the diff of the old hash and the new hash.
+
+    :param binding: (VectorHashBinding) the binding which contains
+        the current value and the row schema
+    :param old, new: (Hash or None) the hashes to be compared
+    :return changes: (HashList or None)
+        Returns HashList if there are changes, None otherwise.
+        The values could contain [None, Hash()]
+    """
+    changes = HashList()
+    if old is None:
+        return new
+
+    iter_hashes = zip_longest(old, new)
+    for old_hash, new_hash in iter_hashes:
+        change = get_vector_hash_element_changes(binding, old_hash, new_hash)
+        changes.append(change)
+
+    if changes.count(None) == len(changes):
+        changes = None
+
+    return changes
+
+
+def get_vector_hash_element_changes(binding, old, new):
+    """Returns the diff of the old hash and the new hash.
+
+    :param binding: (VectorHashBinding) the binding which contains
+        the current value and the row schema
+    :param old, new: (Hash or None) the hashes to be compared
+    :return (Hash or None): returns hash if there's changes, or None otherwise
+    """
+    if old is None:
+        # There's no prior value, we return the new hash immediately
+        return new
+
+    if new is None:
+        # There's no prior value, we return None immediately
+        return None
+
+    # Check if order of the keys are respected
+    if list(old.keys()) != list(new.keys()):
+        new = realign_hash(new, keys=old.keys())
+
+    # Check over if there are changes by iterating and comparing the hashes
+    column_bindings = binding.bindings
+    iter_prop = zip_longest(old.items(), new.items(),
+                            fillvalue=(None, None))
+    for (old_name, old_value), (new_name, new_value) in iter_prop:
+        prop_binding = column_bindings.get(new_name)
+        if new_name is None:
+            continue
+        if (old_name is None
+                or has_changes(prop_binding, old_value, new_value)):
+            # There are changes! We now return the whole string
+            return new
+
+    # No changes detected, we return None
+    return None
+
+
+def realign_hash(hsh, keys):
+    """Realigns the hash according to the key order.
+       Fills the property with None if path is not present in keys.
+       The properties not in the keys are placed after the keys.
+
+    :param hsh: (Hash) dictionary of bindings {path: binding}
+    :param keys: (sequence) a list of paths (in strings) to base the order on
+    :return (Hash): returns the realigned hash
+    """
+    # Reorder according to the old key orders
+    new_dict = OrderedDict([(old_key, hsh.get(old_key))
+                            for old_key in keys])
+    # Include the new keys (not existing on the old hash)
+    for new_key, new_value in hsh.items():
+        if new_key in keys:
+            continue
+        new_dict[new_key] = new_value
+    return Hash(new_dict)
