@@ -1,5 +1,5 @@
 from traits.api import (
-    Array, Any, CArray, CBool, Complex, Dict, Enum, Event, Float,
+    Array, CArray, CBool, Complex, Dict, Either, Enum, Event, Float,
     HasStrictTraits, Instance, List, Property, Range, String, Trait,
     TraitHandler, Undefined, cached_property)
 
@@ -365,12 +365,12 @@ class VectorFloatBinding(VectorNumberBinding):
 
 
 class VectorHashBinding(VectorBinding):
-    value = Any((Instance(HashList), List))
+    value = Either((Instance(HashList), List))
     row_schema = Instance(Hash)
-    _bindings = Property(depends_on="row_schema")
+    bindings = Property(depends_on="row_schema")
 
     @cached_property
-    def _get__bindings(self):
+    def _get_bindings(self):
         from .builder import _BINDING_MAP
         bindings = {}
         for key in self.row_schema.getKeys():
@@ -381,7 +381,7 @@ class VectorHashBinding(VectorBinding):
         return bindings
 
     def get_binding(self, key):
-        return self._bindings.get(key)
+        return self.bindings.get(key)
 
     def _update_shortcuts(self, attrs):
         super(VectorHashBinding, self)._update_shortcuts(attrs)
