@@ -10,7 +10,7 @@ from karabo.native.configuration import (
 from karabo.native.data.enums import Unit, MetricPrefix
 from karabo.native.data import (
     AccessMode, Assignment, Hash, Configurable, Double, Int32, Node,
-    Overwrite, Schema)
+    Overwrite, Schema, Slot)
 
 
 def test_sanitize_init_configuration():
@@ -44,6 +44,11 @@ def test_sanitize_init_configuration():
             defaultValue=20,
             accessMode=AccessMode.RECONFIGURABLE)
 
+        integerWithOptions = Int32(
+            defaultValue=2,
+            options=[1, 2, 3, 4],
+            accessMode=AccessMode.RECONFIGURABLE)
+
         initOnlyDouble = Double(
             defaultValue=100.0,
             accessMode=AccessMode.INITONLY)
@@ -55,47 +60,63 @@ def test_sanitize_init_configuration():
 
         nested = Node(Nested)
 
+        @Slot()
+        async def move(self):
+            """Dummy move slot"""
+
     obj = Object()
     config = obj.configurationAsHash()
     schema = Object.getClassSchema()
-    # Make a deepcopy for testing!
-    new_config = sanitize_init_configuration(schema, deepcopy(config))
-    assert config is not None
-    assert new_config is not None
-    assert "integer" in new_config
-    assert "internalInteger" in config
-    assert "internalInteger" not in new_config
-    assert "readOnlyInteger" in config
-    assert "readOnlyInteger" not in new_config
-    assert "double" in config
-    assert "double" in new_config
-    assert "nested.readOnlyInteger" in config
-    assert "nested.readOnlyInteger" not in new_config
-    assert "nested.double" in config
-    assert "nested.double" in new_config
-    assert "initOnlyDouble" in new_config
-    assert "internalInitOnlyDouble" in config
-    assert "internalInitOnlyDouble" not in new_config
 
-    # Check runtime configuration!
-    new_config = sanitize_write_configuration(schema, deepcopy(config))
+    assert isinstance(schema, Schema)
+    # Make a deepcopy for testing!
+    sanitized = sanitize_init_configuration(schema, deepcopy(config))
     assert config is not None
-    assert new_config is not None
-    assert "integer" in new_config
+    assert sanitized is not None
+    assert "integer" in sanitized
     assert "internalInteger" in config
-    assert "internalInteger" not in new_config
+    assert "internalInteger" not in sanitized
     assert "readOnlyInteger" in config
-    assert "readOnlyInteger" not in new_config
+    assert "readOnlyInteger" not in sanitized
     assert "double" in config
-    assert "double" in new_config
+    assert "double" in sanitized
     assert "nested.readOnlyInteger" in config
-    assert "nested.readOnlyInteger" not in new_config
+    assert "nested.readOnlyInteger" not in sanitized
     assert "nested.double" in config
-    assert "nested.double" in new_config
-    assert "initOnlyDouble" in config
-    assert "initOnlyDouble" not in new_config
+    assert "nested.double" in sanitized
+    assert "initOnlyDouble" in sanitized
     assert "internalInitOnlyDouble" in config
-    assert "internalInitOnlyDouble" not in new_config
+    assert "internalInitOnlyDouble" not in sanitized
+
+    # ------------------------------------------------------------
+    # Check runtime configuration!
+
+    run_time_conf = deepcopy(config)
+    # We are evil no, we provide a value that is not in the options
+    # This can happen if we have an outdated configuration not
+    # matching the schema
+    run_time_conf["integerWithOptions"] = 20
+    sanitized = sanitize_write_configuration(schema, run_time_conf)
+    assert sanitized is not None
+    assert "integer" in sanitized
+    assert "internalInteger" in run_time_conf
+    assert "internalInteger" not in sanitized
+    assert "readOnlyInteger" in run_time_conf
+    assert "readOnlyInteger" not in sanitized
+    assert "double" in run_time_conf
+    assert "double" in sanitized
+    assert "nested.readOnlyInteger" in run_time_conf
+    assert "nested.readOnlyInteger" not in sanitized
+    assert "nested.double" in run_time_conf
+    assert "nested.double" in sanitized
+    assert "initOnlyDouble" in run_time_conf
+    assert "initOnlyDouble" not in sanitized
+    assert "internalInitOnlyDouble" in run_time_conf
+    assert "internalInitOnlyDouble" not in sanitized
+    assert "integerWithOptions" in run_time_conf
+    assert "integerWithOptions" not in sanitized
+    assert "move" in run_time_conf
+    assert "move" not in sanitized
 
 
 def test_attr_fast_deepcopy():
@@ -166,20 +187,19 @@ def test_attribute_schema_extract():
         readOnlyDouble = Overwrite(
             warnLow=-20.0, warnHigh=15.0)
 
-
-    offline_schema_hash = Offline.getClassSchema()
-    online_schema_hash = Online.getClassSchema()
+    offline_schema = Offline.getClassSchema()
+    online_schema = Online.getClassSchema()
 
     attrs = extract_modified_schema_attributes(
-        online_schema_hash, offline_schema_hash)
+        online_schema, offline_schema)
     assert attrs is not None
     assert len(attrs) == 3
     assert attrs[0] == Hash('path', 'readOnlyDouble',
                             'attribute', "warnHigh",
-                             'value', 15)
+                            'value', 15)
     assert attrs[1] == Hash('path', 'readOnlyDouble',
                             'attribute', "warnLow",
-                             'value', -20)
+                            'value', -20)
     assert attrs[2] == Hash('path', 'integer',
                             'attribute', "metricPrefixEnum",
                             'value', 13)
