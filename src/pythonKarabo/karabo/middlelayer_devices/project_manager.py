@@ -4,27 +4,12 @@ from lxml import etree
 from karabo.common.scenemodel.api import write_scene
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Bool, Device, Hash, HashType, Overwrite, slot,
-    Slot, String, UInt32, VectorString)
+    AccessLevel, AccessMode, Bool, Device, dictToHash, Hash, HashType,
+    Overwrite, slot, Slot, String, UInt32, VectorString)
 from karabo.middlelayer_api.signalslot import Signal
 from karabo.native import read_project_model
 from karabo.project_db.project_database import ProjectDatabase
 from karabo.project_db.util import get_db_credentials, ProjectDBError
-
-
-def dictToHash(d):
-    h = Hash()
-    for k, v in d.items():
-        if isinstance(v, dict):
-            h[k] = dictToHash(v)
-        elif isinstance(v, (list, tuple)):
-            if len(v) > 0 and isinstance(v[0], dict):
-                h[k] = [dictToHash(vv) for vv in v]
-            else:
-                h[k] = v
-        else:
-            h[k] = v
-    return h
 
 
 class ProjectManager(Device):
