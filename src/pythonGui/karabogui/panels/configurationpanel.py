@@ -13,9 +13,9 @@ from karabo.native import AccessMode, Hash
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy, ListOfNodesBinding,
-    ProjectDeviceProxy, attr_fast_deepcopy, apply_configuration,
-    extract_configuration, flat_iter_hash, get_binding_value, has_changes,
-    validate_value)
+    ProjectDeviceProxy, VectorHashBinding, attr_fast_deepcopy,
+    apply_configuration, extract_configuration, flat_iter_hash,
+    get_binding_value, has_changes, validate_vector_hash, validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.enums import AccessRole
 from karabogui.events import KaraboEvent, register_for_broadcasts
@@ -26,7 +26,7 @@ from karabogui.util import (
 )
 from karabogui.widgets.toolbar import ToolBar
 from .base import BasePanelWidget
-from .utils import format_property_details
+from .utils import format_property_details, format_vector_hash_details
 
 BLANK_PAGE = 0
 WAITING_PAGE = 1
@@ -358,13 +358,20 @@ class ConfigurationPanel(BasePanelWidget):
             edit_value = None
             if (prop_binding.required_access_level <= access_level
                     and prop_binding.is_allowed(state)):
-                if has_changes(prop_binding, prop_value, value):
-                    edit_value = validate_value(prop_binding, value)
-                    if edit_value is None:
+                if isinstance(prop_binding, VectorHashBinding):
+                    valid, invalid = validate_vector_hash(prop_binding, value,
+                                                          drop_none=True)
+                    if (len(valid)
+                            and has_changes(prop_binding, prop_value, valid)):
+                        edit_value = valid
+                    if invalid:
+                        invalid_prop[path] = invalid
+                elif has_changes(prop_binding, prop_value, value):
+                    valid = validate_value(prop_binding, value)
+                    if valid is None:
                         invalid_prop[path] = value
-                    elif not has_changes(prop_binding, prop_value,
-                                         edit_value):
-                        edit_value = None
+                    elif has_changes(prop_binding, prop_value, valid):
+                        edit_value = valid
             prop_proxy.edit_value = edit_value
         # NOTE: We tell the model directly to send dataChanged signal and
         # notify for changes!
@@ -394,15 +401,16 @@ class ConfigurationPanel(BasePanelWidget):
         valid, invalid = self._get_validated_config(proxy, configuration)
 
         # Load the configuration directly into the binding
-        apply_configuration(valid, proxy.binding)
-        # Apply attributes in a second step
-        for path, _, attrs in flat_iter_hash(valid):
-            binding = proxy.get_property_binding(path)
-            if binding is not None:
-                # only update editable attribute values
-                binding.update_attributes(attr_fast_deepcopy(attrs, {}))
-        # Notify again. XXX: Schema update too?
-        proxy.binding.config_update = True
+        if len(valid):
+            apply_configuration(valid, proxy.binding)
+            # Apply attributes in a second step
+            for path, _, attrs in flat_iter_hash(valid):
+                binding = proxy.get_property_binding(path)
+                if binding is not None:
+                    # only update editable attribute values
+                    binding.update_attributes(attr_fast_deepcopy(attrs, {}))
+            # Notify again. XXX: Schema update too?
+            proxy.binding.config_update = True
 
         # Show a dialog for invalid keys:
         if invalid:
@@ -415,11 +423,22 @@ class ConfigurationPanel(BasePanelWidget):
 
         valid, invalid = Hash(), Hash()  # {path: value}
         for path, value, attrs in flat_iter_hash(configuration):
-            prop_binding = proxy.get_property_binding(path)
-            writable = (prop_binding is not None and
-                        prop_binding.access_mode != AccessMode.READONLY)
-            if writable:
-                validated_value = validate_value(prop_binding, value)
+            binding = proxy.get_property_binding(path)
+            writable = (binding is not None and
+                        binding.access_mode != AccessMode.READONLY)
+            if not writable:
+                continue
+            if isinstance(binding, VectorHashBinding):
+                valid_vhash, invalid_vhash = validate_vector_hash(
+                    binding, value, init=True, drop_none=True)
+                if invalid_vhash:
+                    invalid[path] = invalid_vhash
+                if valid_vhash:
+                    old_value = get_binding_value(binding)
+                    if has_changes(binding, old_value, valid_vhash):
+                        valid[path] = valid_vhash
+            else:
+                validated_value = validate_value(binding, value)
                 if validated_value is not None:
                     valid[path] = validated_value
                     valid[path, ...] = attrs
@@ -436,6 +455,8 @@ class ConfigurationPanel(BasePanelWidget):
         details = []
         for path, value in invalid_prop.items():
             binding = device_proxy.get_property_binding(path)
+            if isinstance(binding, VectorHashBinding):
+                value = format_vector_hash_details(binding, value)
             details.append(format_property_details(binding, path, value))
 
         messagebox.show_warning(msg, details="\n".join(details),
