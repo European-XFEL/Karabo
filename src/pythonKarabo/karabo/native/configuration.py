@@ -1,19 +1,20 @@
 from karabo.common.api import (
-    KARABO_SCHEMA_ACCESS_MODE, KARABO_SCHEMA_ASSIGNMENT)
+    KARABO_SCHEMA_ACCESS_MODE, KARABO_SCHEMA_ASSIGNMENT,
+    KARABO_SCHEMA_OPTIONS, KARABO_SCHEMA_DISPLAY_TYPE,
+    KARABO_SCHEMA_CLASS_ID, KARABO_SCHEMA_NODE_TYPE)
 from karabo.common import const
 from .data.hash import Hash, Schema
-from .data.enums import AccessMode, Assignment, Unit, MetricPrefix
+from .data.enums import AccessMode, Assignment, NodeType, Unit, MetricPrefix
 from .data.utils import flat_iter_hash, flat_iter_schema_hash, is_equal
+from .data.enums import AccessMode, Assignment
 
 
-def _erase_obsolete_path(schema, config):
-    """Helper function to erase obsolete path of a configuration"""
-    obsolete_paths = [pth for pth in flat_iter_hash(config)
-                      if pth not in schema.hash]
-    for key in obsolete_paths:
-        config.erase(key)
+# Broken path accumulated in the history of karabo ...
+# Choice of Nodes connection and Beckhoff properties that will throw!
 
-    return config
+BROKEN_PATHS = set([
+    "_connection_",
+    ])
 
 
 def sanitize_init_configuration(schema, config):
@@ -25,8 +26,9 @@ def sanitize_init_configuration(schema, config):
     :param schema: The `Schema` object of the device
     :param config: The configuration `Hash`
     """
+    assert isinstance(schema, Schema)
 
-    config = _erase_obsolete_path(schema, config)
+    config = extract_configuration(schema, config, init=True)
 
     readonly_paths = [pth for pth in flat_iter_hash(config)
                       if schema.hash[pth, KARABO_SCHEMA_ACCESS_MODE] ==
@@ -40,12 +42,15 @@ def sanitize_init_configuration(schema, config):
 
 
 def sanitize_write_configuration(schema, config):
-    """Sanitize a configuration to be applied as runtime configuration"""
+    """Sanitize a configuration to be applied as runtime configuration
 
-    config = _erase_obsolete_path(schema, config)
+    :param schema: state dependent runtime schema
+    :param config: configuration hash
+    """
+    assert isinstance(schema, Schema)
 
-    # The Assignment.INTERNAL check should not be needed, as it comes
-    # by policy with AccessMode.INITONLY. However, we go safe ...
+    config = extract_configuration(schema, config)
+
     readonly_paths = [pth for pth in flat_iter_hash(config)
                       if schema.hash[pth, KARABO_SCHEMA_ACCESS_MODE] in
                       [AccessMode.READONLY.value, AccessMode.INITONLY.value]
@@ -55,6 +60,63 @@ def sanitize_write_configuration(schema, config):
         config.erase(key)
 
     return config
+
+
+def extract_configuration(schema, config, init=False):
+    """Extract a configuration with a reference schema from a config `Hash`
+
+    :param schema: The schema for filtering
+    :param config: The configuration to be used
+    :param init: Declare if this configuration is used for initialization
+
+    Note: For runtime use, the schema should be the state dependent schema
+
+    Note: Returns a configuration Hash, that:
+        - Does not contain Slots
+        - Does not have obsolete paths, e.g. key has to be in schema
+        - The configuration won't have `None` values
+        - Attribute Options is taken into account
+        - Init takes into account ChoiceOfNodes
+        - Special Types: ListOfNodes, ChoiceOfNodes are omitted on runtime
+    """
+    assert isinstance(schema, Schema)
+
+    def _iter_schema(schema_hash, base=''):
+        base = base + '.' if base else ''
+        for key, value, attrs in schema_hash.iterall():
+            subkey = base + key
+            is_slot = attrs.get(KARABO_SCHEMA_CLASS_ID, "") == "Slot"
+            is_node = attrs["nodeType"] == NodeType.Node.value
+            is_choice = attrs["nodeType"] == NodeType.ChoiceOfNodes.value
+            is_special = attrs["nodeType"] in [NodeType.ListOfNodes.value,
+                                               NodeType.ChoiceOfNodes.value]
+            if is_node and not is_slot:
+                yield from _iter_schema(value, base=subkey)
+            elif init and is_choice:
+                yield subkey, attrs
+            elif not is_slot and not is_special:
+                yield subkey, attrs
+
+    retval = Hash()
+
+    for key, attrs in _iter_schema(schema.hash):
+        value = config.get(key, None)
+        # If the key is not in the config, we continue
+        if value is None:
+            continue
+        # Check if we have options and act accordingly, yes
+        # some fancy schema evolution can always appear
+        options = attrs.get(KARABO_SCHEMA_OPTIONS, None)
+        if options is not None and value not in options:
+            continue
+        retval[key] = value
+
+    # XXX: This for general backward compatibility ...
+    for key in BROKEN_PATHS:
+        if key in retval:
+            retval.erase(key)
+
+    return retval
 
 
 def attr_fast_deepcopy(d, ref=None):
