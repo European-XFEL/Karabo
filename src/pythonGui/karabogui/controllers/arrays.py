@@ -4,6 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import numpy as np
+from traits.api import Undefined
 
 from karabo.native import EncodingType
 
@@ -94,11 +95,15 @@ def get_dimensions_and_encoding(image_node):
 
 def get_array_data(proxy):
     """Retrieve the NDArray from a property proxy belonging an NDArray binding
+
+    Check for `Undefined` on the proxy value and `None` data.
     """
     node = proxy.value
+    if node is Undefined:
+        return None
     pixels = node.data.value
     if pixels is None:
-        return
+        return None
 
     arr_type = REFERENCE_TYPENUM_TO_DTYPE[node.type.value]
     value = np.frombuffer(pixels, dtype=arr_type)
