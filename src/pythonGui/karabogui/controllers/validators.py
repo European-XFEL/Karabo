@@ -65,8 +65,9 @@ class ListValidator(QValidator):
     pattern = None
     intermediate = ()
 
-    def __init__(self, binding=None, min_size=None, max_size=None):
-        super(ListValidator, self).__init__()
+    def __init__(self, binding=None, min_size=None, max_size=None,
+                 parent=None):
+        super(ListValidator, self).__init__(parent)
         bind_type = type(binding)
         self.pattern = re.compile(REGEX_MAP.get(bind_type, ''))
         self.intermediate = MEDIATE_MAP.get(bind_type, ())
