@@ -5,14 +5,14 @@ from traits.api import TraitError, Undefined
 
 from karabo.common import const
 from karabo.native import (
-    AccessMode, Hash, MetricPrefix, Unit, Timestamp)
+    AccessMode, Hash, HashList, MetricPrefix, Unit, Timestamp)
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
     BindingNamespace, BindingRoot, CharBinding, NodeBinding, SlotBinding,
     StringBinding, VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
     VectorNumberBinding)
-from .util import array_equal, attr_fast_deepcopy, is_equal
+from .util import array_equal, attr_fast_deepcopy, is_equal, realign_hash
 
 VECTOR_FLOAT_BINDINGS = (VectorFloatBinding, VectorDoubleBinding)
 RECURSIVE_BINDINGS = (NodeBinding, ListOfNodesBinding,
@@ -362,8 +362,94 @@ def validate_value(binding, value):
     return value
 
 
-def check_if_all(lst, value=None):
-    return lst.count(value) == len(lst)
+def validate_vector_hash(binding, hash_list, init=False, drop_none=False):
+    """Validate a HashList against existing binding.
+
+    :param binding: (VectorHashBinding) the binding which contains
+        the current value and the row schema
+    :param hash_list: (HashList) the value to be validated
+    :param init: (bool) Denote if init_only properties are also valid
+    :param drop_none: (bool) Drop None values if specified
+    :return valid, invalid: (HashList) The values could contain [None, Hash()]
+    """
+    # Set default values
+    valid, invalid = HashList(), HashList()
+
+    for new_hash in hash_list:
+        valid_hash, invalid_hash = validate_hash(binding, new_hash, init)
+        if (valid_hash is not None and drop_none) or not drop_none:
+            valid.append(valid_hash)
+
+        if (invalid_hash is not None and drop_none) or not drop_none:
+            invalid.append(invalid_hash)
+
+    return valid, invalid
+
+
+def validate_hash(binding, new, init=False):
+    """Returns the diff of the old hash and the new hash by iterating over the
+    properties.
+    - We ignore properties with nonexistent bindings and are not reported
+    as invalid.
+    - If access mode is invalid or the value is None, we use the default value,
+    if existing.
+    - If validation fails, we report the value as invalid and we also use the
+    default value, if existing.
+
+    :param binding: (VectorHashBinding) the binding which contains
+        the current value and the row schema
+    :param new: (Hash or None) the hash to be validated
+    :param init: (bool) Denote if init_only properties are also valid
+    :return valid, invalid (Hash or None):
+        returns validated hash, or None if validation fails
+        return invalid hash that contains invalid properties, if any
+    """
+    # If hash is None: report as invalid value
+    if new is None:
+        return None, Hash()
+
+    valid = Hash()
+    column_bindings = binding.bindings
+
+    # Allow init only values when merging
+    access_modes = (AccessMode.RECONFIGURABLE,)
+    if init:
+        access_modes += (AccessMode.INITONLY,)
+
+    # Check if order of the keys are respected
+    if list(column_bindings.keys()) != list(new.keys()):
+        new = realign_hash(new, keys=column_bindings.keys())
+
+    for path, value in new.items():
+        column_binding = column_bindings.get(path)
+        if column_binding is None:
+            # We ignore properties with nonexistent bindings.
+            # This is not reported as invalid.
+            continue
+
+        writable = column_binding.access_mode in access_modes
+        if not writable or value is None:
+            # The property is not writable or the value doesn't exist
+            # (from realign_hash`). Use the default value from the binding.
+            validated_value = get_default_value(column_bindings.get(path))
+        else:
+            validated_value = validate_value(column_binding, value)
+
+        if validated_value is None:
+            # We report the invalid property
+            return None, new
+
+        valid[path] = validated_value
+
+    return valid, None
+
+
+def get_default_value(binding):
+    value = None
+    if binding is not None:
+        attrs = binding.attributes
+        value = attrs.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
+    return value
 
 
 def convert_string(value):

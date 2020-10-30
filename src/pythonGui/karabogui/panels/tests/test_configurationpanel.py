@@ -6,11 +6,11 @@ from traits.api import Undefined
 from karabo.common.api import ProxyStatus, State
 from karabo.native import (
     AccessMode, Configurable, Float, Hash, HashList, String, UInt32,
-    VectorBool, VectorUInt32)
+    VectorBool, VectorHash, VectorUInt32)
 
 from karabogui.binding.api import (
     apply_configuration, build_binding, DeviceProxy, ProjectDeviceProxy,
-    validate_value)
+    validate_value, validate_vector_hash, VectorHashBinding)
 from karabogui.testing import GuiTestCase
 
 from ..configurationpanel import ConfigurationPanel, CONFIGURATION_PAGE
@@ -26,7 +26,35 @@ DEFAULT_VALUES = {
     "stringProperty": "foo",
     "vectorUint": [1, 2, 3],
     "vectorBool": [True, False, True],
-}
+    "vectorHash": [Hash('uintProperty', 1,
+                        'stringProperty', 'spam',
+                        'floatProperty', 5.0)],
+    "vectorHashReadOnlyColumn": [Hash('uintProperty', 1,
+                                      'floatProperty', 5.0)],
+    "vectorHashInitOnlyColumn": [Hash('uintProperty', 1,
+                                      'floatProperty', 5.0)]}
+
+
+class TableRow(Configurable):
+    uintProperty = UInt32(defaultValue=1)
+    stringProperty = String(defaultValue="spam")
+    floatProperty = Float(defaultValue=5.0)
+
+
+class TableRowEmpty(Configurable):
+    uintProperty = UInt32()
+    stringProperty = String()
+    floatProperty = Float()
+
+
+class TableRowReadOnly(Configurable):
+    uintProperty = UInt32(defaultValue=1, accessMode=AccessMode.READONLY)
+    floatProperty = Float(defaultValue=5.0)
+
+
+class TableRowInitOnly(Configurable):
+    uintProperty = UInt32(defaultValue=1, accessMode=AccessMode.INITONLY)
+    floatProperty = Float(defaultValue=5.0)
 
 
 class Object(Configurable):
@@ -38,9 +66,17 @@ class Object(Configurable):
 
     vectorUint = VectorUInt32()
     vectorBool = VectorBool()
+    vectorHash = VectorHash(TableRow)
 
     uintReadOnly = UInt32(accessMode=AccessMode.READONLY)
     uintInitOnly = UInt32(accessMode=AccessMode.INITONLY)
+    vectorHashReadOnly = VectorHash(TableRow,
+                                    accessMode=AccessMode.READONLY)
+    vectorHashInitOnly = VectorHash(TableRow,
+                                    accessMode=AccessMode.INITONLY)
+    vectorHashReadOnlyColumn = VectorHash(TableRowReadOnly)
+    vectorHashInitOnlyColumn = VectorHash(TableRowInitOnly)
+    vectorHashEmpty = VectorHash(TableRowEmpty)
 
 
 class TestSetProxyConfiguration(GuiTestCase):
@@ -144,10 +180,125 @@ class TestSetProxyConfiguration(GuiTestCase):
         self._assert_config(vectorBool={"value": [1, 2, 3], "valid": False})
         self._assert_config(vectorBool={"value": "foo", "valid": False})
 
+    def test_valid_vector_hash(self):
+        # Check setting the default value again.. It shouldn't trigger change.
+        self._assert_default_value("vectorHash")
+
+        # Check with only one value changed. Should trigger a change.
+        value = [Hash('uintProperty', 2,  # this changed
+                      'stringProperty', 'spam',
+                      'floatProperty', 5.0)]
+        self._assert_config(vectorHash={"value": value, "valid": True})
+
+        # Check with values as strings. Should still be a valid change.
+        value = [Hash('uintProperty', '2',
+                      'stringProperty', 'spam',
+                      'floatProperty', '5.0')]
+        self._assert_config(
+            vectorHash={"value": value, "valid": True, "casted": True})
+
+        # Reordering the default value is a valid input but should not
+        # trigger change
+        value = [Hash('stringProperty', 'spam',
+                      'uintProperty', 1,
+                      'floatProperty', 5.0)]
+        self._assert_config(
+            vectorHash={"value": value, "valid": True, "changed": False})
+
+        # Check multiple rows: one reordered Hash, one new row
+        value = [Hash('stringProperty', 'spam',
+                      'uintProperty', 1,
+                      'floatProperty', 5.0),
+                 Hash('uintProperty', 4,
+                      'stringProperty', 'foobarbar',
+                      'floatProperty', 5.6)]
+        self._assert_config(
+            vectorHash={"value": value, "valid": True})
+
+        # Check additional columns that are not on the schema. It is ignored.
+        # We use the default value as control, it shouldn't trigger change.
+        value = [Hash('stringProperty', 'spam',
+                      'uintProperty', 1,
+                      'floatProperty', 5.0,
+                      'nonExistentProperty', 0)]
+        self._assert_config(
+            vectorHash={"value": value, "valid": True, "changed": False})
+
+        # Check comparison with empty vector hash
+        value = [Hash('uintProperty', 1,  # this changed
+                      'stringProperty', 'spam',
+                      'floatProperty', 5.0)]
+        self._assert_config(vectorHashEmpty={"value": value, "valid": True})
+
+    def test_invalid_vector_hash(self):
+        # Check with only one invalid value changed.
+        # Should not trigger change as the rest are default values
+        value = [Hash('uintProperty', -2,  # invalid value for a uint
+                      'stringProperty', 'spam',
+                      'floatProperty', 5.0)]
+        self._assert_config(
+            vectorHash={"value": value, "valid": False, "changed": False})
+
+        # Check with changes with one invalid value
+        value = [Hash('uintProperty', -2,  # invalid value for a uint
+                      'stringProperty', 'foo',  # changed
+                      'floatProperty', 5.5)]  # changed
+        self._assert_config(
+            vectorHash={"value": value, "valid": False, "changed": False})
+
+        # Check with changes with all invalid value
+        value = [Hash('uintProperty', -2,  # invalid value for a uint
+                      'stringProperty', None,  # invalid for a string
+                      'floatProperty', 'foo')]  # invalid for a float
+        self._assert_config(
+            vectorHash={"value": value, "valid": False, "changed": False})
+
+        # Check comparison with empty vector hash
+        value = [Hash('uintProperty', -2,  # invalid value for a uint
+                      'stringProperty', 'spam',
+                      'floatProperty', 5.0)]
+        self._assert_config(
+            vectorHashEmpty={"value": value, "valid": False, "changed": False})
+
     def test_readonly_properties(self):
         # Check with uint read only value. Shouldn't trigger change
         self._assert_config(
             uintReadOnly={"value": 22, "valid": True, "changed": False})
+
+        # Check with a readonly table element. Shouldn't trigger changes.
+        value = [Hash('uintProperty', 4,  # new values
+                      'floatProperty', 5.6)]  # changed, and valid
+        self._assert_config(
+            vectorHashReadOnly={"value": value,
+                                "valid": True,
+                                "changed": False})
+
+        # Check with a reconfigurable table element with a read-only column
+        # by setting a changed data on the read-only column and unchanged on
+        # the reconfigurable column. Shouldn't trigger changes.
+        value = [Hash('uintProperty', 4,  # changed, but read only
+                      'floatProperty', 5.0)]  # not changed
+        self._assert_config(
+            vectorHashReadOnlyColumn={"value": value,
+                                      "valid": True,
+                                      "changed": False})
+
+        # Check with a reconfigurable table element with a read-only column
+        # by setting a changed data on both the read-only and reconfigurable
+        # Should trigger changes.
+        value = [Hash('uintProperty', 4,  # changed, but read only
+                      'floatProperty', 6.0)]  # changed
+        self._assert_config(
+            vectorHashReadOnlyColumn={"value": value,
+                                      "valid": True,
+                                      "changed": True})
+
+        # Check comparison with incomplete vector hash (without default value).
+        value = [Hash('uintProperty', 1,  # this changed
+                      'floatProperty', 5.0)]
+        self._assert_config(vectorHashEmpty={"value": value,
+                                             "valid": False,
+                                             "changed": False})
 
     def test_initonly_properties(self):
         """In this test, the behavior of offline and online configurations are
@@ -159,6 +310,50 @@ class TestSetProxyConfiguration(GuiTestCase):
             uintInitOnly={"value": 22, "valid": True, "changed": False})
         self._assert_offline_config(
             uintInitOnly={"value": 22, "valid": True, "changed": True})
+
+        # Check with an init-only table element. Shouldn't trigger changes on
+        # online device but should trigger change on offline device.
+        value = [Hash('uintProperty', 4,  # new value
+                      'stringProperty', 'spam',
+                      'floatProperty', 5.0)]  # new value
+        self._assert_online_config(
+            vectorHashInitOnly={"value": value,
+                                "valid": True,
+                                "changed": False})
+        self._assert_offline_config(
+            vectorHashInitOnly={"value": value,
+                                "valid": True,
+                                "changed": True})
+
+        # Check with a reconfigurable table element with a init-only column
+        # by setting a changed data on the init-only column and unchanged on
+        # the reconfigurable column. Shouldn't trigger changes on online device
+        # but should change on offline device.
+        value = [Hash('uintProperty', 4,  # new value
+                      'stringProperty', 'spam',
+                      'floatProperty', 5.0)]  # new value
+        self._assert_online_config(
+            vectorHashInitOnly={"value": value,
+                                "valid": True,
+                                "changed": False})
+        self._assert_offline_config(
+            vectorHashInitOnly={"value": value,
+                                "valid": True,
+                                "changed": True})
+
+        # Check with a reconfigurable table element with a init-only column
+        # by setting a changed data on both the init-only and reconfigurable
+        # column Should trigger changes both on online and offline devices.
+        value = [Hash('uintProperty', 4,  # changed, but init only
+                      'floatProperty', 6.0)]  # not changed
+        self._assert_online_config(
+            vectorHashInitOnlyColumn={"value": value,
+                                      "valid": True,
+                                      "changed": True})
+        self._assert_offline_config(
+            vectorHashInitOnlyColumn={"value": value,
+                                      "valid": True,
+                                      "changed": True})
 
     def test_multiple_properties(self):
         # Check both valid values
@@ -202,7 +397,11 @@ class TestSetProxyConfiguration(GuiTestCase):
             if binding is None:
                 continue
             value = config[path]
-            if validate_value(binding, value) is None:
+            if isinstance(binding, VectorHashBinding):
+                valid, invalid = validate_vector_hash(binding, value)
+                config[path] = valid
+                invalid_config[path] = invalid
+            elif validate_value(binding, value) is None:
                 invalid_config[path] = value
 
         # Check if dialog is called
@@ -242,7 +441,12 @@ class TestSetProxyConfiguration(GuiTestCase):
             if binding is None:
                 continue
             value = config[path]
-            if validate_value(binding, value) is None:
+            if isinstance(binding, VectorHashBinding):
+                valid, invalid = validate_vector_hash(
+                    binding, value, init=True, drop_none=True)
+                config[path] = valid
+                invalid_config[path] = invalid
+            elif validate_value(binding, value) is None:
                 invalid_config[path] = value
 
         # Check if dialog is called
