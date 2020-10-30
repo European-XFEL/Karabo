@@ -97,13 +97,12 @@ class DisplayVectorGraph(BaseArrayGraph):
     model = Instance(VectorGraphModel, args=())
 
     def value_update(self, proxy):
-        if not self._curves:
-            # WHY did we do this?
+        if proxy not in self._curves:
             return
 
-        y = proxy.value
         plot = self._curves[proxy]
         # NOTE: With empty data or only inf we clear as NaN will clear as well!
+        y = proxy.value
         if not len(y) or np.isinf(y).all():
             plot.setData([], [])
             return
@@ -130,16 +129,19 @@ class DisplayNDArrayGraph(BaseArrayGraph):
     model = Instance(NDArrayGraphModel, args=())
 
     def value_update(self, proxy):
-        if not self._curves:
-            # WHY did we do this?
+        if proxy not in self._curves:
             return
+
+        plot = self._curves[proxy]
         value = get_array_data(proxy)
-        if value is not None:
-            model = self.model
-            plot = self._curves[proxy]
-            # Generate the baseline for the x-axis
-            x = generate_baseline(value, offset=model.offset,
-                                  step=model.step)
-            rect = get_view_range(plot)
-            x, y = generate_down_sample(value, rect=rect, x=x, deviation=True)
-            plot.setData(x, y)
+        if value is None or not len(value):
+            plot.setData([], [])
+            return
+
+        model = self.model
+        # Generate the baseline for the x-axis
+        x = generate_baseline(value, offset=model.offset,
+                              step=model.step)
+        rect = get_view_range(plot)
+        x, y = generate_down_sample(value, rect=rect, x=x, deviation=True)
+        plot.setData(x, y)
