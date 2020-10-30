@@ -8,13 +8,16 @@ from karabo.common.api import (
     KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_ABSOLUTE_ERROR,
     KARABO_SCHEMA_RELATIVE_ERROR, KARABO_SCHEMA_DISPLAYED_NAME
 )
-from karabo.native import Hash, Schema
+from karabo.native import (
+    Configurable, Bool, Hash, HashList, Schema, String, UInt8, VectorHash)
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
     Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
     VectorBoolBinding, VectorInt32Binding, VectorFloatBinding,
-    attr_fast_deepcopy, get_min_max, get_min_max_size, has_changes,
-    has_min_max_attributes, is_equal)
+    VectorHashBinding, attr_fast_deepcopy, get_vector_hash_changes,
+    get_min_max, get_min_max_size, has_changes, has_min_max_attributes,
+    is_equal)
+from ..util import get_vector_hash_element_changes, realign_hash
 
 
 def test_simple_int_min_max():
@@ -153,3 +156,110 @@ def test_has_min_max():
     binding = FloatBinding(attributes={KARABO_SCHEMA_MAX_EXC: 1,
                                        KARABO_SCHEMA_MAX_INC: 5})
     assert has_min_max_attributes(binding) is False
+
+
+class TableRow(Configurable):
+    stringProperty = String()
+    uintProperty = UInt8()
+    boolProperty = Bool()
+
+
+def test_get_hash_list_changes():
+    binding = VectorHashBinding(row_schema=VectorHash(TableRow).rowSchema.hash)
+    foo_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "boolProperty", 2)
+    bar_hash = Hash("stringProperty", "bar",  # changed
+                    "uintProperty", 1,
+                    "boolProperty", 2)
+
+    # Verify that there are no changes
+    old_list = HashList([foo_hash])
+    assert get_vector_hash_changes(binding, old_list, new=old_list) is None
+
+    # Check changes for one hash
+    new_list = HashList([bar_hash])
+    changes = get_vector_hash_changes(binding, old_list, new_list)
+    assert changes == new_list
+
+    # Check changes for two hashes
+    old_list = HashList([foo_hash, foo_hash])
+    new_list = HashList([foo_hash, bar_hash])  # second row contains changes
+    changes = get_vector_hash_changes(binding, old_list, new_list)
+    # First row doesn't have changes, second row has "stringProperty" change
+    assert changes == HashList([None, bar_hash])
+
+
+def test_get_hash_changes():
+    binding = VectorHashBinding(row_schema=VectorHash(TableRow).rowSchema.hash)
+    foo_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "boolProperty", 2)
+    bar_hash = Hash("stringProperty", "bar",  # changed
+                    "uintProperty", 1,
+                    "boolProperty", 2)
+
+    # Check if there's no changes
+    assert get_vector_hash_element_changes(binding, foo_hash, foo_hash) is None
+
+    # Check if there's a changed property
+    changes = get_vector_hash_element_changes(binding, foo_hash, bar_hash)
+    assert changes == bar_hash
+
+    # Check if there's no change for reordered hash
+    expected = Hash("uintProperty", 1,
+                    "stringProperty", "foo",
+                    "boolProperty", 2)
+    changes = get_vector_hash_element_changes(binding, foo_hash, expected)
+    assert changes is None
+
+    # Check if there's a new property added
+    new_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "intProperty", 1,  # new property
+                    "boolProperty", 2)
+    changes = get_vector_hash_element_changes(binding, foo_hash, new_hash)
+    assert changes == realign_hash(new_hash, keys=foo_hash.keys())
+
+    # Check if there's a property removed
+    new_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1)
+    changes = get_vector_hash_element_changes(binding, foo_hash, new_hash)
+    assert changes == Hash("stringProperty", "foo",
+                           "uintProperty", 1,
+                           "boolProperty", None)
+
+
+def test_reorder_hash():
+    # Check if ordering has not been changed
+    foo_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "boolProperty", 2)
+    assert realign_hash(foo_hash, keys=foo_hash.keys()) == foo_hash
+
+    # Check if the hash has been jumbled and would still respect the keys order
+    jumbled_hash = Hash("uintProperty", 1,
+                        "stringProperty", "foo",
+                        "boolProperty", 2)
+    assert realign_hash(jumbled_hash, keys=foo_hash.keys()) == foo_hash
+
+    # Check if the hash contains a new property than the desired keys.
+    # It should appear at the end of the hash
+    new_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "intProperty", 1,  # new property
+                    "boolProperty", 2)
+    reordered_hash = realign_hash(new_hash, keys=foo_hash.keys())
+    copy_hash = Hash(foo_hash)
+    copy_hash["intProperty"] = 1  # append the new property at the end
+    assert reordered_hash == copy_hash
+
+    # Check if the hash has a deleted property from the keys
+    # In this canse, "uintProperty" is deleted
+    new_hash = Hash("stringProperty", "foo",
+                    "boolProperty", 2)
+    reordered_hash = realign_hash(new_hash, keys=foo_hash.keys())
+    # The deleted property contains a None to still respect the keys order
+    copy_hash = Hash(foo_hash)
+    copy_hash["uintProperty"] = None
+    assert reordered_hash == copy_hash

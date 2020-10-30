@@ -2,19 +2,25 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from karabo.native import (
-    Bool, Configurable, Hash, HashList, String, UInt8)
+    Bool, Configurable, Hash, HashList, String, UInt8, VectorHash)
 
-from ..config import validate_value
+from ..config import validate_value, validate_vector_hash
 from ..types import (
     BoolBinding, FloatBinding, Int8Binding, Uint8Binding, StringBinding,
-    VectorDoubleBinding, VectorFloatBinding, VectorInt8Binding,
-    VectorUint8Binding)
+    VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
+    VectorInt8Binding, VectorUint8Binding)
 
 
 class TableRow(Configurable):
     stringProperty = String(defaultValue='foo')
     uintProperty = UInt8(defaultValue=1)
     boolProperty = Bool(defaultValue=True)
+
+
+class TableRowEmpty(Configurable):
+    stringProperty = String()
+    uintProperty = UInt8()
+    boolProperty = Bool()
 
 
 def test_validate_value_float():
@@ -180,6 +186,85 @@ def test_validate_value_vectordouble():
     assert validate_value(binding, 1.0) is None
     assert validate_value(binding, "foo") is None
     assert validate_value(binding, HashList([Hash(), Hash()])) is None
+
+
+def test_validate_vector_hash():
+    """Test vector hash binding validation.
+    It returns both valid and invalid values in the form of a HashList([]) for
+    each row."""
+    binding = VectorHashBinding(row_schema=VectorHash(TableRow).rowSchema.hash)
+    empty_binding = VectorHashBinding(
+        row_schema=VectorHash(TableRowEmpty).rowSchema.hash)
+
+    # Check with one valid hash
+    valid_hash = Hash("stringProperty", "foo",
+                      "uintProperty", 1,
+                      "boolProperty", True)
+    valid_hashlist = HashList([valid_hash])
+    valid, invalid = validate_vector_hash(binding, valid_hashlist)
+    assert valid == valid_hashlist
+    assert invalid == HashList([None])
+
+    # Check two valid hashes
+    valid_hash = Hash("stringProperty", "foo",
+                      "uintProperty", 1,
+                      "boolProperty", True)
+    valid_hashlist = HashList([valid_hash, valid_hash])
+    valid, invalid = validate_vector_hash(binding, valid_hashlist)
+    assert valid == valid_hashlist
+    assert invalid == HashList([None, None])
+
+    # Check with one hash that contains an invalid property
+    invalid_hash = Hash("stringProperty", "foo",
+                        "uintProperty", -1,  # invalid for a uintProperty
+                        "boolProperty", True)
+    valid, invalid = validate_vector_hash(binding, HashList([invalid_hash]))
+    assert valid == HashList([None])
+    assert invalid == HashList([invalid_hash])
+
+    # Check with two hashes which one hash contains invalid properties
+    valid_hash = Hash("stringProperty", "foo",
+                      "uintProperty", 1,
+                      "boolProperty", True)
+    invalid_hash = Hash("stringProperty", "foo",
+                        "uintProperty", -1,  # invalid for a uintProperty
+                        "boolProperty", True)
+    hash_list = HashList([valid_hash, invalid_hash])
+    valid, invalid = validate_vector_hash(binding, hash_list)
+    assert valid == HashList([valid_hash, None])  # drop the row with invalids
+    assert invalid == HashList([None, invalid_hash])
+
+    # Check with two hashes which both contains invalid properties
+    valid_hash = Hash("stringProperty", [1, 2],  # invalid for a uintProperty
+                      "uintProperty", 1,
+                      "boolProperty", "bar")
+    invalid_hash = Hash("stringProperty", "foo",
+                        "uintProperty", -1,  # invalid for a uintProperty
+                        "boolProperty", True)
+    hash_list = HashList([valid_hash, invalid_hash])
+    valid, invalid = validate_vector_hash(binding, hash_list)
+    assert valid == HashList([None, None])  # drop the row with invalids
+    assert invalid == HashList([valid_hash, invalid_hash])
+
+    # Check with a hash that contains an invalid property and default value
+    invalid_hash = Hash("stringProperty", "foo",
+                        "boolProperty", True)
+    valid, invalid = validate_vector_hash(binding, HashList([invalid_hash]))
+    assert valid == HashList([Hash("stringProperty", "foo",
+                                   "uintProperty", 1,  # default value
+                                   "boolProperty", True)])
+    assert invalid == HashList([None])
+
+    # Check with a hash that contains an invalid property
+    # and without default value
+    invalid_hash = Hash("stringProperty", "foo",
+                        "boolProperty", True)
+    valid, invalid = validate_vector_hash(empty_binding,
+                                          HashList([invalid_hash]))
+    assert valid == HashList([None])
+    assert invalid == HashList([Hash("stringProperty", "foo",
+                                     "uintProperty", None,  # dropped value
+                                     "boolProperty", True)])
 
 
 def _assert_array(binding, value, dtype):
