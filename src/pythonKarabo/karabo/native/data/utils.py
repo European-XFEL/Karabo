@@ -6,7 +6,8 @@ from xml.sax.saxutils import escape
 from .enums import NodeType
 from .hash import Hash, HashList, Type, Schema
 
-NODE_TYPES = (NodeType.Node, NodeType.ChoiceOfNodes, NodeType.ListOfNodes)
+NODE_TYPE = (NodeType.Node.value,)
+SPECIAL_TYPES = (NodeType.ChoiceOfNodes.value, NodeType.ListOfNodes.value)
 
 
 def dtype_from_number(number):
@@ -134,22 +135,24 @@ def flat_iterall_hash(config, base=''):
             yield subkey, value, attrs
 
 
-def flat_iter_schema_hash(schema, base=''):
+def flat_iter_schema_hash(schema_hash, base=''):
     """Expose a flat iteration over a schema Hash.
 
     :param schema: The schema Hash or Schema object
 
-    NOTE: Schema Hashes are special because every property
+    Note: Schema Hashes are special because every property
     comes with an empty `Hash` as value. Hence, we ask for the Nodetype!
     """
-    schema_hash = schema.hash if isinstance(schema, Schema) else schema
+    assert isinstance(schema_hash, Hash)
+
     base = base + '.' if base else ''
     for key, value, attrs in schema_hash.iterall():
         subkey = base + key
-        is_node = attrs["nodeType"] in NODE_TYPES
+        is_node = attrs["nodeType"] in NODE_TYPE
+        is_special = attrs["nodeType"] in SPECIAL_TYPES
         if is_node:
             yield from flat_iter_schema_hash(value, base=subkey)
-        else:
+        elif not is_special:
             yield subkey
 
 
