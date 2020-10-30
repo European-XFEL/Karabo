@@ -143,7 +143,7 @@ def test_scene_model_registry():
 def test_display_edit_overlap():
     # IntLineEdit should be returned for both edit and non-edit widgets
     from karabo.common.scenemodel.api import IntLineEditModel
-    from ..edit.numberlineedit import IntLineEdit
+    from ..edit.lineedit import IntLineEdit
 
     model = IntLineEditModel(parent_component='DisplayComponent')
     assert get_model_controller(model) is IntLineEdit
