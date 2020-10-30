@@ -108,11 +108,6 @@ class NDArrayHistogramGraph(HistogramGraph):
     model = Instance(NDArrayHistGraphModel, args=())
 
     def value_update(self, proxy):
-        value = proxy.value
-        if value is Undefined:
-            self._plot.setData([], stepMode=None)
-            return
-
         value = get_array_data(proxy)
         if value is None or not len(value):
             self._plot.setData([], stepMode=None)
