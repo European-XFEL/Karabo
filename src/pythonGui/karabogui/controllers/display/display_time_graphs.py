@@ -107,7 +107,7 @@ class BaseSeriesGraph(BaseBindingController):
         viewbox.sigRangeChangedManually.connect(self._range_change_manually)
         viewbox.middleButtonClicked.connect(self._autorange_requested)
 
-        dialog_ac = QAction("Request Time", parent=widget)
+        dialog_ac = QAction(icons.clock, "Request Time", parent=widget)
         dialog_ac.triggered.connect(self._request_dialog)
         viewbox.add_action(dialog_ac, separator=False)
         # Update datetime widgets everytime range changes and limit zoom
