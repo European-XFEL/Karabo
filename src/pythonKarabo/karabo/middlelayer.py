@@ -27,6 +27,8 @@ from .middlelayer_api.proxy import (
     ProxyBase as Proxy, ProxySlotBase as ProxySlot,
     ProxyNodeBase as ProxyNode, SubProxyBase as SubProxy
 )
+from .middlelayer_api.configuration import (
+    sanitize_init_configuration, sanitize_write_configuration, is_equal)
 from .middlelayer_api.compat import HAVE_UVLOOP
 from .middlelayer_api.eventloop import KaraboFuture
 from .middlelayer_api.devicenode import DeviceNode
@@ -67,7 +69,6 @@ from karabo.native.data.hash import (
     VectorInt64, VectorInt8, VectorRegexString, VectorString, VectorUInt16,
     VectorUInt32, VectorUInt64, VectorUInt8
 )
-from karabo.native.configuration import sanitize_init_configuration
 from karabo.native.data.ndarray import NDArray
 from karabo.native.data.image_data import Image
 
