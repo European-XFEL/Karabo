@@ -8,9 +8,6 @@ from .data.basetypes import (
     BoolValue, EnumValue, ImageData, isSet, KaraboValue, NoneValue,
     QuantityValue, StringValue, TableValue, unit_registry as unit,
     VectorStringValue, VectorCharValue, wrap, newest_timestamp, wrap_function)
-from .configuration import (
-    sanitize_init_configuration, sanitize_write_configuration,
-    extract_modified_schema_attributes)
 from .data.enums import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqDataType,
     DaqPolicy, EncodingType, LeafType, MetricPrefix, NodeType, Unit)
@@ -32,7 +29,8 @@ from .data.schema import (
 from .data.serializers import (
     decodeBinary, decodeXML, encodeBinary, encodeXML, loadFromFile, saveToFile,
     writeBinary, writeXML, XMLParser, XMLWriter)
-from .data.utils import create_html_hash, flat_iter_hash, is_equal
+from .data.utils import (
+    flat_iter_hash, create_html_hash, flat_iter_schema_hash, flat_iterall_hash)
 from .exceptions import KaraboError
 # Import project namespace
 from karabo.native.project.convert import convert_old_project
