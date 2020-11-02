@@ -39,7 +39,7 @@ namespace karabo {
         /**
          * @class OutputChannel
          * @brief An OutputChannel for passing data to pipelined processing
-         * 
+         *
          * The OutputChannel class is used for writing data to pipelined processing
          * inputs. It supports tracking of meta data for each data token written to it.
          * Specifically, it e.g. allows for keeping track of data producers, here called
@@ -48,18 +48,18 @@ namespace karabo {
          * output channel interaction with a remote host, as well as aggregation of
          * multiple train-related data of the same source. A mixture of both scenarios
          * is possible.
-         * 
+         *
          * An example of these use cases
-         * 
+         *
          * @code
-         * 
-         * OutputChannel::Pointer output = ... // 
-         * 
+         *
+         * OutputChannel::Pointer output = ... //
+         *
          * Hash data1;
          * ....
          * OutputChannel::MetaData meta1("THIS/IS/SOURCE/A/channel1", karabo::util::Timestamp());
          * output->write(data1, meta1)
-         * 
+         *
          * Hash data2_10;
          * ....
          * OutputChannel::MetaData meta2_10("THIS/IS/SOURCE/B/channel2", timestampForTrain10);
@@ -72,7 +72,7 @@ namespace karabo {
          * // not passing any meta data to write will default the source to [deviceId]/[channelName]
          * // and the timestamp to the current timestamp
          * output->write(data_this_source);
-         * 
+         *
          * // now actually send over the network
          * output->update();
          * @endcode
@@ -247,7 +247,7 @@ namespace karabo {
              * @param data input Hash object
              * @param metaData a MetaData object containing meta data for this data token.
              * @param copyAllData If false, serialization is optimized to avoid copies for big data.
-             * 
+             *
              * Note: when using copyAllData==false, data must stay untouched and in scope until update() has been
              * called for the channel.
              *
@@ -255,14 +255,14 @@ namespace karabo {
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
              */
             void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool copyAllData=true);
-            
+
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * Metadata is initialized to default values. Namely the sending devices device id and the output channel's
              * name are used as data source.
              * @param data input Hash object
              * @param copyAllData If false, serialization is optimized to avoid copies for big data.
-             * 
+             *
              * Note: when using copyAllData==false, data must stay untouched and in scope until update() has been
              * called for the channel.
              *
@@ -280,7 +280,7 @@ namespace karabo {
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
              */
             KARABO_DEPRECATED void write(const karabo::util::Hash::Pointer& data, const Memory::MetaData& metaData);
-            
+
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
              * Metadata is initialized to default values. Namely the sending devices device id and the output channel's

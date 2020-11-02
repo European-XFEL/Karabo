@@ -1,7 +1,7 @@
 /*
  * File:   PipelineProcessing_Test.hh
  * Author: haufs
- * 
+ *
  * Modified by J. Zhu
  *
  * Created on Sep 20, 2016, 3:40:33 PM
@@ -112,7 +112,9 @@ private:
     void testPipeQueue(unsigned int processingTime, unsigned int delayTime);
 
     void testPipeQueueAtLimit(unsigned int processingTime, unsigned int delayTime,
-                              const std::string& queueOption, bool expectDataLoss, bool slowReceiver);
+                              const std::string& queueOption,
+                              unsigned int activeQueueLimit,
+                              bool expectDataLoss, bool slowReceiver);
 
     // roundRobin = true means that sender is supposed to be configured round-robin - extra tests of fair share are done
     void testPipeTwoSharedReceivers(unsigned int processingTime1,
@@ -127,7 +129,7 @@ private:
      * significantly higher than the sender delayTime. Queuing should not be detected when the opposite is true -
      * the sender delayTime is significantly higher than the receivers processingTime.
      *
-     * Note: the queuing behavior should be detected regardless of the sender's output distribution mode value 
+     * Note: the queuing behavior should be detected regardless of the sender's output distribution mode value
      * being 'round-robin' or 'load-balanced'.
      */
     void testTwoSharedReceiversQueuing(unsigned int processingTime, unsigned int delayTime);
@@ -170,7 +172,7 @@ private:
      * Otherwise 'load-balanced' distribution mode is used.
      */
     void testQueueClearOnDisconnectSharedQueue(bool useRoundRobin);
-    
+
     void testProfileTransferTimes(bool noShortCut, bool copy);
 
     template <typename T>
@@ -198,7 +200,7 @@ private:
     const std::string m_sender = "p2pTestSender"; // sender instance ID
     const std::string m_senderOutput1 = "p2pTestSender:output1"; // sender output channel 1
     const std::string m_senderOutput2 = "p2pTestSender:output2"; // sender output channel 2
-    
+
     const karabo::util::Hash m_receiverBaseConfig{"input.connectedOutputChannels", m_senderOutput1,
                                                   "input2.connectedOutputChannels", m_senderOutput2};
 };
