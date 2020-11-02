@@ -11,6 +11,7 @@
 #include <karabo/core/Device.hh>
 #include <karabo/net/EventLoop.hh>
 #include <karabo/xms/SignalSlotable.hh>
+#include <karabo/xms/InputChannel.hh>
 #include <karabo/xms/OutputChannel.hh>
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/OverwriteElement.hh>
@@ -41,6 +42,7 @@ using karabo::util::VECTOR_FLOAT_ELEMENT;
 using karabo::core::DeviceServer;
 using karabo::core::DeviceClient;
 using karabo::xms::SignalSlotable;
+using karabo::xms::INPUT_CHANNEL;
 using karabo::xms::OUTPUT_CHANNEL;
 using karabo::xms::SLOT_ELEMENT;
 
@@ -323,6 +325,8 @@ void Device_Test::appTestRunner() {
     testSchemaWithAttrAppend();
     testChangeSchemaOutputChannel("slotUpdateSchema");
     testChangeSchemaOutputChannel("slotAppendSchema");
+    testInputOutputChannelInjection("slotUpdateSchema");
+    testInputOutputChannelInjection("slotAppendSchema");
     testNodedSlot();
     testGetSet();
     testUpdateState();
@@ -706,9 +710,10 @@ void Device_Test::testSchemaWithAttrUpdate() {
     std::vector<Hash> newAttrs { Hash("path", "valueWithAlarm",
                                       "attribute", "alarmHigh",
                                       "value", alarmHighValue)};
+    Hash dummy;
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchemaAttributes", newAttrs)
                            .timeout(requestTimeoutMs)
-                           .receive());
+                           .receive(dummy));
     // Checks that the new attribute value will be available within an interval.
     CPPUNIT_ASSERT(waitForCondition([this, alarmHighValue] {
         return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") == alarmHighValue;
@@ -776,9 +781,10 @@ void Device_Test::testSchemaWithAttrAppend() {
     std::vector<Hash> newAttrs{Hash("path", "valueWithAlarm",
                                     "attribute", "alarmHigh",
                                     "value", alarmHighValue)};
+    Hash dummy;
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotUpdateSchemaAttributes", newAttrs)
                             .timeout(requestTimeoutMs)
-                            .receive());
+                            .receive(dummy));
     // Checks that the new attribute value will be available within an interval.
     CPPUNIT_ASSERT(waitForCondition([this, alarmHighValue] {
         return m_deviceClient->getDeviceSchema("TestDevice").getAlarmHigh<double>("valueWithAlarm") == alarmHighValue;
@@ -909,6 +915,97 @@ void Device_Test::testChangeSchemaOutputChannel(const std::string& updateSlot) {
     CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotUpdateSchema", Schema())
                             .timeout(requestTimeoutMs)
                             .receive());
+    std::clog << "OK." << std::endl;
+}
+
+
+void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot) {
+    std::clog << "Start testInputOutputChannelInjection for " << updateSlot << ": " << std::flush;
+
+    // Setup a communication helper
+    auto sigSlot = m_deviceServer;
+
+    // Timeout, in milliseconds, for a request for one of the test device slots.
+    const int requestTimeoutMs = 2000;
+    // Time, in milliseconds, to wait for DeviceClient to update its internal cache after a schema change.
+    const int cacheUpdateWaitMs = 1000;
+
+    // At the beginning, only the static channel is there:
+    std::vector<std::string> outputChannels;
+    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotGetOutputChannelNames")
+                            .timeout(requestTimeoutMs)
+                            .receive(outputChannels));
+    CPPUNIT_ASSERT_EQUAL(1ul, outputChannels.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("output"), outputChannels[0]);
+
+    // Checks that appendSchema creates injected input and output channels
+    // ----------
+    Schema dataSchema;
+    INT32_ELEMENT(dataSchema).key("int32")
+            .readOnly()
+            .commit();
+    Schema schema;
+    OUTPUT_CHANNEL(schema).key("injectedOutput")
+            .dataSchema(dataSchema)
+            .commit();
+    INPUT_CHANNEL(schema).key("injectedInput")
+            .dataSchema(dataSchema)
+            .commit();
+    OVERWRITE_ELEMENT(schema).key("injectedInput.connectedOutputChannels")
+            .setNewDefaultValue<std::vector < std::string >> ({"TestDevice:injectedOutput", "TestDevice:output"})
+    .commit();
+
+    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", updateSlot, schema)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+
+    // Now, also the injectedOutput is there:
+    outputChannels.clear();
+    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotGetOutputChannelNames")
+                            .timeout(requestTimeoutMs)
+                            .receive(outputChannels));
+    CPPUNIT_ASSERT_EQUAL(2ul, outputChannels.size());
+    CPPUNIT_ASSERT(std::find(outputChannels.begin(), outputChannels.end(), "output") != outputChannels.end());
+    CPPUNIT_ASSERT(std::find(outputChannels.begin(), outputChannels.end(), "injectedOutput") != outputChannels.end());
+
+    // Check that, after some time, the injected input is connected to both, the injected and the static output
+    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get("TestDevice")), waitForCondition([this] () {
+        const Hash cfg(m_deviceClient->get("TestDevice"));
+        if (cfg.has("output.connections") && cfg.has("injectedOutput.connections")) {
+            std::vector<Hash> tableStatic, tableInjected;
+            cfg.get("output.connections", tableStatic);
+            cfg.get("injectedOutput.connections", tableInjected);
+            if (tableStatic.size() == 1ul && tableInjected.size() == 1ul
+                && tableStatic[0].get<std::string>("remoteId") == "TestDevice:injectedInput"
+                && tableInjected[0].get<std::string>("remoteId") == "TestDevice:injectedInput") {
+                return true;
+            }
+        }
+        return false;
+    }, cacheUpdateWaitMs * 20)); // longer timeout: automatic connection tries happen only every 5 seconds
+
+    // Remove the channels again:
+    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotUpdateSchema", Schema())
+                            .timeout(requestTimeoutMs)
+                            .receive());
+    // Now only the static OutputChannel is kept
+    outputChannels.clear();
+    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotGetOutputChannelNames")
+                            .timeout(requestTimeoutMs)
+                            .receive(outputChannels));
+    CPPUNIT_ASSERT_EQUAL(1ul, outputChannels.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("output"), outputChannels[0]);
+
+    // TODO: We directly call slotGetConfiguration instead of using m_deviceClient->get("TestDevice"):
+    //       Looks like the client cache will not erase removed properties.
+    Hash cfg;
+    std::string dummy;
+    sigSlot->request("TestDevice", "slotGetConfiguration").timeout(requestTimeoutMs).receive(cfg, dummy);
+    // FIXME: Should check for !cfg.has("injectedOutput") &&  !cfg.has("injectedInput"),
+    //        but for not yet understood reasons, empty nodes at "injectedOutput.schema" and "injectedInput.schema" stay...
+    CPPUNIT_ASSERT_MESSAGE(toString(cfg), !cfg.has("injectedOutput.distributionMode"));
+    CPPUNIT_ASSERT_MESSAGE(toString(cfg), !cfg.has("injectedInput.connectedOutputChannels"));
+
     std::clog << "OK." << std::endl;
 }
 
