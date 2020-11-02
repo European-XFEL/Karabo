@@ -491,7 +491,7 @@ class ConfigurationManager(DeviceClientBase):
             item = self.db.get_last_configuration(deviceId, priority=3)
             if not item:
                 reason = (f"No configuration for device {deviceId} and "
-                          f"priority {priority} found!")
+                          f"priority 3 (INIT) found!")
                 raise KaraboError(reason)
         else:
             item = self.db.get_configuration(deviceId, name)
