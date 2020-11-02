@@ -39,8 +39,8 @@ namespace karabo {
          *        processing OutputChannels.
          *
          * The InputChannel class is used to receive data from pipelined
-         * processing OutputChannels. It additionally supports receiving 
-         * meta data associated with each data token read. Specifically, the 
+         * processing OutputChannels. It additionally supports receiving
+         * meta data associated with each data token read. Specifically, the
          * meta information contains source information, i.e. what produced the
          * data token, and timing information, e.g. train ids.
          *
@@ -66,6 +66,12 @@ namespace karabo {
             typedef boost::function<void (const InputChannel::Pointer&) > InputHandler;
             typedef boost::function<void (const karabo::util::Hash&, const MetaData&) > DataHandler;
 
+            // Default maximum queue length on a connected output channel before
+            // it starts dropping data or waiting for sending data. The max
+            // queue length only comes into play when the input channel is
+            // is connected in "copy" mode with "queue" or "queueDrop" for its
+            // "onSlowness" policy.
+            static const unsigned int DEFAULT_MAX_QUEUE_LENGTH;
 
         private:
             // Maps outputChannelString to the Hash with connection parameters
@@ -90,6 +96,7 @@ namespace karabo {
             std::string m_dataDistribution;
             unsigned int m_minData;
             std::string m_onSlowness;
+            unsigned int m_maxQueueLength;
 
             unsigned int m_channelId;
 
@@ -117,7 +124,7 @@ namespace karabo {
             std::multimap<std::string, unsigned int> m_sourceMap;
             std::multimap<unsigned long long, unsigned int> m_trainIdMap;
             std::map<unsigned int, MetaData> m_reverseMetaDataMap;
-            
+
         public:
 
             /**
@@ -245,7 +252,7 @@ namespace karabo {
 
             void onTcpChannelRead(const karabo::net::ErrorCode& ec, karabo::net::Channel::WeakPointer channel,
                                   const karabo::util::Hash& header, const std::vector<karabo::io::BufferSet::Pointer>& data);
-                                  
+
             void notifyOutputChannelsForPossibleRead();
 
             void notifyOutputChannelForPossibleRead(const karabo::net::Channel::WeakPointer& channel);
