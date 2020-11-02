@@ -402,8 +402,8 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
             // poll until nTotalDataOnEos changes (increases)
             CPPUNIT_ASSERT(pollDeviceProperty<unsigned int>(m_receiver, "nTotalDataOnEos", nDataExpected, false));
 
-            // if the processing time is comparable to or larger than the delay time, 
-            // the number of received data is random, but should be larger than the 
+            // if the processing time is comparable to or larger than the delay time,
+            // the number of received data is random, but should be larger than the
             // number of local buffers (currently one 'active' and one 'inactive')
             unsigned int nTotalData = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
             CPPUNIT_ASSERT(nTotalData < nDataExpected + m_nDataPerRun);
@@ -448,7 +448,7 @@ void PipelinedProcessing_Test::testPipeQueue() {
     testSenderOutputChannelConnections(1UL, {m_receiver + ":input"}, "copy", "queue", "local",
                                        {m_receiver + ":input2"}, "copy", "drop", "local");
 
-    // Higher processing times are used to allow observation that data is sent faster than it is 
+    // Higher processing times are used to allow observation that data is sent faster than it is
     // handled by the receiver.
     testPipeQueue(50, 5);
     // Higher delay times are used to allow observation that the sender becomes the bottleneck in
@@ -505,7 +505,7 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
             // If delayTime is significantly bigger than the processing time, we are bound by the delayTime. This means
             // that between two successive data writes the sender will wait delayTime milliseconds and the sender is
             // expected to be slowest part.
-            // We assert that the amount of received data must be at the maximum m_nPots lower than the amount of 
+            // We assert that the amount of received data must be at the maximum m_nPots lower than the amount of
             // expected sent data (no bottleneck on the receiver).
             const unsigned int receivedSoFar = m_deviceClient->get<unsigned int>(m_receiver, "nTotalData");
             CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(receivedSoFar) + " " + karabo::util::toString(nDataExpected),
@@ -549,30 +549,52 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
 
 void PipelinedProcessing_Test::testPipeQueueAtLimit() {
 
+    // 1) Test specifically configured queue length - here the default
+    const unsigned int maxLengthCfg = 100u;
+
     // Receiver processing time much higher than sender delay between data sending:
     // With "queueDrop" option data will be queued until queue is full and then drop some data
-    testPipeQueueAtLimit(2, 0, "queueDrop", true, true); // true, true ==> expectDataLoss, slowReceiver
+    testPipeQueueAtLimit(2, 0, "queueDrop", maxLengthCfg, true, true); // true, true ==> expectDataLoss, slowReceiver
 
     // With the "queue" option, all data is received since the sender waits if queue is full
-    testPipeQueueAtLimit(2, 0, "queue", false, true);
+    testPipeQueueAtLimit(2, 0, "queue", maxLengthCfg, false, true);
 
     // If sender delay time much higher than the receiver processing time, no data loss despite the queueDrop option
     // (the 'slowReceiver == false' test fails sometimes with delay = 2, so choose 4)
-    testPipeQueueAtLimit(0, 4, "queueDrop", false, false);
+    testPipeQueueAtLimit(0, 4, "queueDrop", maxLengthCfg, false, false);
 
+     // 2) Test overall limit from Memory, no effective queue length limit (queue can be as big as the whole Memory buffer of the Output Channel).
+
+    // Receiver processing time much higher than sender delay between data sending:
+    // With "queueDrop" option data will be queued until queue is full and then drop some data
+    testPipeQueueAtLimit(2, 0, "queueDrop", karabo::xms::Memory::MAX_N_CHUNKS, true, true); // true, true ==> expectDataLoss, slowReceiver
+
+    // With the "queue" option, all data is received since the sender waits if queue is full
+    testPipeQueueAtLimit(2, 0, "queue", karabo::xms::Memory::MAX_N_CHUNKS, false, true);
+
+    // If sender delay time much higher than the receiver processing time, no data loss despite the queueDrop option
+    // (the 'slowReceiver == false' test fails sometimes with delay = 2, so choose 4)
+    testPipeQueueAtLimit(0, 4, "queueDrop", karabo::xms::Memory::MAX_N_CHUNKS, false, false);
 }
 
 
 void PipelinedProcessing_Test::testPipeQueueAtLimit(unsigned int processingTime, unsigned int delayTime,
-                                                    const std::string& queueOption, bool expectDataLoss, bool slowReceiver) {
+                                                    const std::string& queueOption,
+                                                    unsigned int activeQueueLimit,
+                                                    bool expectDataLoss, bool slowReceiver) {
     std::clog << "---\ntestPipeQueueAtLimit (onSlowness = '" << queueOption << "', dataDistribution = 'copy') "
-            << "- processingTime = " << processingTime << " ms, delayTime = " << delayTime << " ms\n";
+            << "- processingTime = " << processingTime << " ms, delayTime = " << delayTime << " ms, "
+            << "activeQueueLimit = " << activeQueueLimit << "\n";
 
     karabo::util::Hash config(m_receiverBaseConfig);
-    config.merge(Hash("deviceId", m_receiver, "input.onSlowness", queueOption, "input.dataDistribution", "copy"));
+    config.merge(Hash("deviceId", m_receiver,
+                      "input.onSlowness", queueOption,
+                      "input.dataDistribution", "copy",
+                      "input.maxQueueLength", activeQueueLimit));
     instantiateDeviceWithAssert("PipeReceiverDevice", config);
     CPPUNIT_ASSERT_EQUAL(queueOption, m_deviceClient->get<std::string>(m_receiver, "input.onSlowness"));
     CPPUNIT_ASSERT_EQUAL(std::string("copy"), m_deviceClient->get<std::string>(m_receiver, "input.dataDistribution"));
+    CPPUNIT_ASSERT_EQUAL(activeQueueLimit, m_deviceClient->get<unsigned int>(m_receiver, "input.maxQueueLength"));
 
     testSenderOutputChannelConnections(1UL, {m_receiver + ":input"}, "copy", queueOption, "local",{m_receiver + ":input2"}, "copy", "drop", "local");
 
@@ -582,7 +604,7 @@ void PipelinedProcessing_Test::testPipeQueueAtLimit(unsigned int processingTime,
     const int prev_nData = m_deviceClient->get<unsigned int>(m_sender, "nData");
     const int prev_dataSize = m_deviceClient->get<unsigned int>(m_sender, "dataSize");
     // We need a lot of data to fill up the queue so that data is indeed dropped
-    const unsigned int nData = karabo::xms::Memory::MAX_N_CHUNKS + 1000u;
+    const unsigned int nData = activeQueueLimit + 1000u;
     const unsigned int dataSize = 1000u; // else memory trouble with big queues on small memory machines
     m_deviceClient->set(m_sender, Hash("delay", delayTime,
                                        "nData", nData,
@@ -623,7 +645,7 @@ void PipelinedProcessing_Test::testPipeQueueAtLimit(unsigned int processingTime,
         // If the receiver is very slow, data is dropped Note: dropped only if queue was full, > 2000 items!
         CPPUNIT_ASSERT_LESS(nDataExpected, nTotalDataEnd);
         // But at least the queue length arrived
-        CPPUNIT_ASSERT_GREATER(static_cast<unsigned int> (karabo::xms::Memory::MAX_N_CHUNKS), nTotalDataEnd);
+        CPPUNIT_ASSERT_GREATER(activeQueueLimit, nTotalDataEnd);
     } else {
         // Sender is bottleneck? Or queue and wait if queue full? All data arrived!
         CPPUNIT_ASSERT_EQUAL(nDataExpected, nTotalDataEnd);

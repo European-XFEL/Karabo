@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   InputOutputChannel_Test.cc
  * Author: flucke
- * 
+ *
  * Created on November 8, 2016, 3:54 PM
  */
 
@@ -180,7 +180,7 @@ void InputOutputChannel_Test::testManyToOne() {
     }
 
     // Wait for endOfStream arrival
-    int trials = 2000;
+    int trials = 3000;
     do {
         boost::this_thread::sleep(boost::posix_time::milliseconds(3));
         if (nReceivedEos > 0) break;
@@ -189,7 +189,7 @@ void InputOutputChannel_Test::testManyToOne() {
     // endOfStream received once
     // We give some time for more to arrive - but there should only be one, although each output sent it!
     boost::this_thread::sleep(boost::posix_time::milliseconds(200));
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("All received data:\n" + karabo::util::toString(receivedData),
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Data received:\n" + karabo::util::toString(receivedData),
                                  1u, static_cast<unsigned int> (nReceivedEos));
 
     // Proper number and order of data received from each output
