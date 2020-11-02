@@ -155,20 +155,3 @@ def flat_iter_schema_hash(schema_hash, base=''):
             yield from flat_iter_schema_hash(value, base=subkey)
         elif not is_special:
             yield subkey
-
-
-def is_equal(a, b):
-    """A compare function deals with element-wise comparison result and
-    Schema object comparison
-    """
-    type_check = map(lambda x: isinstance(x, Schema), (a, b))
-    if any(type_check):
-        if all(type_check):
-            # Compare Schema objects' names and hashes
-            return a.name == b.name and a.hash == b.hash
-        else:
-            # one of a, b is not Schema, simply return False
-            return False
-    res = (a == b)
-    # comparison of numpy arrays result in an array
-    return all(res) if isinstance(res, Iterable) else res
