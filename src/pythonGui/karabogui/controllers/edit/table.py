@@ -109,8 +109,13 @@ class _BaseTableElement(BaseBindingController):
 
         The schema must not be `None` and is protected when calling this func.
         """
+        if self._item_model is not None:
+            self._item_model.setParent(None)
+            self._item_model = None
+
         self._column_hash = schema.hash
-        self._item_model = TableModel(self._column_hash, self._on_user_edit)
+        self._item_model = TableModel(self._column_hash, self._on_user_edit,
+                                      parent=self.widget)
         self._item_model.set_role(self._role)
 
         self.widget.setModel(self._item_model)
