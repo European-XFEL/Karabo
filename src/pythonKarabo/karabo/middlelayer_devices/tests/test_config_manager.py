@@ -11,8 +11,8 @@ from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
 from karabo.middlelayer import (
     call, coslot, connectDevice, DaqPolicy, Device, Double,
     getConfigurationFromName, getLastConfiguration, Hash, HashList,
-    KaraboError, listConfigurationFromName, saveConfigurationFromName, sleep,
-    Slot, slot, String)
+    instantiateFromName, KaraboError, listConfigurationFromName,
+    saveConfigurationFromName, sleep, Slot, slot, String)
 from karabo.middlelayer_devices.configuration_manager import (
     ConfigurationManager)
 
@@ -278,6 +278,21 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(item["priority"], 3)
         self.assertEqual(item["user"], ".")
         self.assertEqual(item["description"], "No desc")
+
+        # Instantiate a device with a device client function
+        serverMock = MockServer({"_deviceId_": "TEST_SERVER"})
+        await serverMock.startInstance()
+        try:
+            self.assertEqual(serverMock.lastClassId, "")
+            self.assertEqual(serverMock.lastDeviceId, "")
+            self.assertEqual(serverMock.lastConfigDouble, DEFAULT_LAST_DOUBLE)
+            await instantiateFromName("TEST_DEVICE", name="testConfig",
+                                      serverId="TEST_SERVER")
+            self.assertEqual(serverMock.lastClassId, "TestDevice")
+            self.assertEqual(serverMock.lastDeviceId, "TEST_DEVICE")
+            self.assertEqual(serverMock.lastConfigDouble, 5.0)
+        finally:
+            await serverMock.slotKillDevice()
 
     @async_tst
     async def test_instantiate_device(self):
