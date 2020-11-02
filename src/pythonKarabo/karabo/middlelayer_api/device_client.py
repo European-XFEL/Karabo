@@ -364,7 +364,7 @@ def getSchemaFromPast(device, timepoint):
 def getConfigurationFromName(device, name):
     """Get the configuration of a deviceId or proxy with a given `name`::
 
-        getConfigurationFromNAme(device, "run2012")
+        getConfigurationFromName(device, "run2012")
 
     Returns a karabo configuration hash of the device saved under the `name`.
     """
@@ -424,6 +424,36 @@ def listConfigurationFromName(device, name_part=''):
     configs = reply["items"]
 
     return configs
+
+
+@synchronize
+def instantiateFromName(device, name=None, classId=None, serverId=None):
+    """Instantiate a device from `name` via the ConfigurationManager::
+
+        instantiateFromName(device, name='run2015')
+
+    - device: The mandatory parameter, either deviceId or proxy
+    - name: Optional parameter. If no `name` is provided, the latest
+            configuration is retrieved with priority 3 (INIT).
+    - classId: Optional parameter for validation of classId
+    - serverId: Optional parameter
+    """
+    if isinstance(device, ProxyBase):
+        device = device._deviceId
+    h = Hash("deviceId", device)
+    if name is not None:
+        h["name"] = name
+    if classId is not None:
+        h["classId"] = classId
+    if serverId is not None:
+        h["serverId"] = serverId
+
+    instance = get_instance()
+    slot = "slotInstantiateDevice"
+    reply = yield from instance.call(KARABO_CONFIG_MANAGER, slot, h)
+    success = reply["success"]
+
+    return success
 
 
 @synchronize
