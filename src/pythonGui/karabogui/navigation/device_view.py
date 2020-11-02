@@ -14,6 +14,7 @@ from karabogui import messagebox
 from karabogui.enums import AccessRole, NavigationItemTypes
 from karabogui.globals import access_role_allowed
 from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.dialogs.configuration_from_name import ListConfigurationDialog
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.singletons.api import (
     get_manager, get_selection_tracker)
@@ -63,11 +64,17 @@ class DeviceTreeView(QTreeView):
         self.ac_about.setToolTip(text)
         self.ac_about.triggered.connect(self.onAbout)
 
-        text = "Get Configuration"
-        self.ac_config_past = QAction("Get Configuration", self)
+        text = "Get Configuration (Time)"
+        self.ac_config_past = QAction(icons.clock, text, self)
         self.ac_config_past.setStatusTip(text)
         self.ac_config_past.setToolTip(text)
         self.ac_config_past.triggered.connect(self.onGetConfigurationFromPast)
+
+        text = "Get Configuration (Name)"
+        self.ac_config_name = QAction(text, self)
+        self.ac_config_name.setStatusTip(text)
+        self.ac_config_name.setToolTip(text)
+        self.ac_config_name.triggered.connect(self.onGetConfigurationFromName)
 
         text = "Shutdown device"
         self.ac_kill_device = QAction(icons.delete, text, self)
@@ -80,6 +87,7 @@ class DeviceTreeView(QTreeView):
         self.ac_docu.triggered.connect(self.onGetDocumenation)
 
         self.menu.addAction(self.ac_config_past)
+        self.menu.addAction(self.ac_config_name)
         self.menu.addAction(self.ac_kill_device)
         self.menu.addSeparator()
         self.menu.addAction(self.ac_about)
@@ -176,6 +184,15 @@ class DeviceTreeView(QTreeView):
         device_id = info.get('deviceId')
         dialog = ConfigurationFromPastDialog(instance_id=device_id,
                                              parent=self)
+        dialog.move(QCursor.pos())
+        dialog.show()
+
+    @pyqtSlot()
+    def onGetConfigurationFromName(self):
+        info = self.indexInfo()
+        device_id = info.get('deviceId')
+        dialog = ListConfigurationDialog(instance_id=device_id,
+                                         parent=self)
         dialog.move(QCursor.pos())
         dialog.show()
 
