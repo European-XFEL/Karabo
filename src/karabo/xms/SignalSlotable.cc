@@ -37,6 +37,7 @@ namespace karabo {
         const int msPingTimeoutInIsValidInstanceId = 1000;
         const char* beatsTopicSuffix = "_beats";
 
+        const int channelReconnectIntervalSec = 5;
         // Static initializations
         boost::mutex SignalSlotable::m_uuidGeneratorMutex;
         boost::uuids::random_generator SignalSlotable::m_uuidGenerator;
@@ -2304,6 +2305,13 @@ namespace karabo {
         }
 
 
+        bool SignalSlotable::removeOutputChannel(const std::string& channelName) {
+
+            boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
+            return (m_outputChannels.erase(channelName) > 0);
+        }
+
+
         SignalSlotable::InputChannels SignalSlotable::getInputChannels() const {
             boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
             return m_inputChannels;
@@ -2421,6 +2429,11 @@ namespace karabo {
                                                             aMutex, status, counter, outputsToIgnore.size()),
                                          outputsToIgnore);
             }
+            if (m_inputChannels.empty()) {
+                // Also in this case repeat connection tries - an InputChannel might get injected
+                m_channelConnectTimer.expires_from_now(boost::posix_time::seconds(channelReconnectIntervalSec));
+                m_channelConnectTimer.async_wait(bind_weak(&SignalSlotable::connectInputChannels, this, boost::asio::placeholders::error));
+            }
         }
 
         void SignalSlotable::handleInputConnected(bool success, const std::string& channelName, const boost::shared_ptr<boost::mutex>& mut,
@@ -2449,7 +2462,7 @@ namespace karabo {
             }
 
             // All are done - charge timer again
-            m_channelConnectTimer.expires_from_now(boost::posix_time::seconds(5));
+            m_channelConnectTimer.expires_from_now(boost::posix_time::seconds(channelReconnectIntervalSec));
             m_channelConnectTimer.async_wait(bind_weak(&SignalSlotable::connectInputChannels, this, boost::asio::placeholders::error));
         }
 
@@ -2731,7 +2744,7 @@ namespace karabo {
                 }
             };
             this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid()))
-                    .timeout(10000) // 10 s
+                    .timeout(5000) // 5 s - not too long, a used timeout adds to the interval of reconnection retries
                     .receiveAsync<bool, karabo::util::Hash > (successHandler, failureHandler);
         }
 
