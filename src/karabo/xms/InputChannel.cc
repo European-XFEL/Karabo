@@ -27,6 +27,8 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(InputChannel);
 
+        const unsigned int InputChannel::DEFAULT_MAX_QUEUE_LENGTH = 100u;
+
         void InputChannel::expectedParameters(karabo::util::Schema& expected) {
             using namespace karabo::util;
 
@@ -51,6 +53,14 @@ namespace karabo {
                     .description("Policy for what to do if this input is too slow for the fed data rate (only used in copy mode)")
                     .options("drop,wait,queue,queueDrop")
                     .assignmentOptional().defaultValue("drop")
+                    .init()
+                    .commit();
+
+            UINT32_ELEMENT(expected).key("maxQueueLength")
+                    .displayedName("Max. Queue Length Output Channels")
+                    .description("Maximum number of data items to be queued by connected Output Channels (only in copy mode and for queue and queueDrop policies)")
+                    .assignmentOptional().defaultValue(InputChannel::DEFAULT_MAX_QUEUE_LENGTH)
+                    .minInc(1u)
                     .init()
                     .commit();
 
@@ -110,6 +120,7 @@ namespace karabo {
             if (!allowMissing || config.has("onSlowness")) config.get("onSlowness", m_onSlowness);
             if (!allowMissing || config.has("respondToEndOfStream")) config.get("respondToEndOfStream", m_respondToEndOfStream);
             if (!allowMissing || config.has("delayOnInput")) config.get("delayOnInput", m_delayOnInput);
+            if (!allowMissing || config.has("maxQueueLength")) config.get("maxQueueLength", m_maxQueueLength);
         }
 
 
@@ -370,7 +381,8 @@ namespace karabo {
                     channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(),
                                                       "memoryLocation", outputChannelInfo.get<std::string > ("memoryLocation"),
                                                       "dataDistribution", m_dataDistribution,
-                                                      "onSlowness", m_onSlowness)); // Say hello!
+                                                      "onSlowness", m_onSlowness,
+                                                      "maxQueueLength", m_maxQueueLength)); // Say hello!
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << ": connecting failed while writing hello: " << e.what();
                     ec = boost::system::errc::make_error_code(boost::system::errc::operation_canceled);
@@ -597,7 +609,7 @@ namespace karabo {
             } else {
                 throw KARABO_LOGIC_EXCEPTION("No meta data available for given index");
             }
-            
+
         }
 
 
@@ -622,8 +634,8 @@ namespace karabo {
                         m_inputHandler.clear();
                     }
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will prepare Metadata";
-                    
-                    prepareMetaData(); 
+
+                    prepareMetaData();
                     if (m_dataHandler) {
                         Hash data;
                         for (size_t i = 0; i < this->size(); ++i) {
