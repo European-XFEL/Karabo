@@ -458,7 +458,7 @@ namespace karabo {
             /**
              * Remove the InputChannel created via createInputChannel
              *
-             * @param channelName identifies the channel (first argument that was given to createOutputChannel)
+             * @param channelName identifies the channel (first argument that was given to createInputChannel)
              * @return true if such a channel existed and could be removed
              */
             virtual bool removeInputChannel(const std::string& channelName);
@@ -466,6 +466,14 @@ namespace karabo {
             virtual OutputChannel::Pointer createOutputChannel(const std::string& channelName,
                                                                const karabo::util::Hash& config,
                                                                const OutputHandler& onOutputPossibleHandler = OutputHandler());
+
+            /**
+             * Remove the OutputChannel created via createOutputChannel
+             *
+             * @param channelName identifies the channel (first argument that was given to createOutputChannel)
+             * @return true if such a channel existed and could be removed
+             */
+            virtual bool removeOutputChannel(const std::string& channelName);
 
             InputChannels getInputChannels() const;
 
