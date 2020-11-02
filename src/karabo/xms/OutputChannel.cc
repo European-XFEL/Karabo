@@ -363,12 +363,18 @@ namespace karabo {
                  *     memoryLocation (std::string) [local/remote]
                  *     dataDistribution (std::string) [shared/copy]
                  *     onSlowness (std::string) [queue/drop/queueDrop/wait]
+                 *     maxQueueLength (unsigned int; when onSlowness is queue or queueDrop)
                  */
 
                 const std::string& instanceId = message.get<std::string > ("instanceId");
                 const std::string& memoryLocation = message.get<std::string > ("memoryLocation");
                 const std::string& dataDistribution = message.get<std::string > ("dataDistribution");
                 const std::string& onSlowness = message.get<std::string > ("onSlowness");
+
+                const unsigned int maxQueueLength =
+                    (message.has("maxQueueLength") ?
+                     message.get<unsigned int>("maxQueueLength") :
+                     InputChannel::DEFAULT_MAX_QUEUE_LENGTH);
 
                 karabo::util::Hash info;
                 info.set("instanceId", instanceId);
@@ -381,6 +387,7 @@ namespace karabo {
                 } else {
                     info.set("onSlowness", onSlowness);
                 }
+                info.set("maxQueueLength", maxQueueLength);
                 info.set("queuedChunks", std::deque<int>());
                 info.set("bytesRead", 0ull);
                 info.set("bytesWritten", 0ull);
@@ -605,7 +612,7 @@ namespace karabo {
             const std::string tcpAddress(tcpInfo.get<std::string>("remoteAddress") + ':'
                                          + toString(tcpInfo.get<unsigned short>("remotePort")));
 
-            // Clean specific channel from bookkeeping structures and ... 
+            // Clean specific channel from bookkeeping structures and ...
             // ... clean expired entries as well (we are not expecting them but we want to be on the safe side!)
             unsigned int inputsLeft = 0;
             {
@@ -1010,7 +1017,7 @@ namespace karabo {
         void OutputChannel::distribute(unsigned int chunkId) {
 
             boost::mutex::scoped_lock lock(m_registeredSharedInputsMutex);
-            
+
             // If no shared input channels are registered at all, we do not go on
             if (m_registeredSharedInputs.empty()) return;
             if (!m_toUnregisterSharedInput) {
@@ -1311,7 +1318,9 @@ namespace karabo {
                         unregisterWriterFromChunk(chunkId);
                         KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Dropping (copied) data package for " << instanceId;
                     } else if (boost::algorithm::starts_with(onSlowness, "queue")) { // i.e. queue(-Wait) or queueDrop
-                        if (m_chunkId != m_invalidChunkId) { // i.e. all fine with queue length
+                        if (m_chunkId != m_invalidChunkId &&
+                            static_cast<unsigned int>(channelInfo.get<std::deque<int>>("queuedChunks").size()) < channelInfo.get<unsigned int>("maxQueueLength")) {
+                            // i.e. all fine with queue length
                             KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " Queuing (copied) data package for "
                                     << instanceId << ", chunk " << chunkId;
                             Memory::assureAllDataIsCopied(m_channelId, chunkId);
@@ -1340,7 +1349,16 @@ namespace karabo {
                 bool instanceDisconnected = false;
                 while (true) {
                     if (isQueue) {
-                        if (m_invalidChunkId != m_chunkId || updateChunkId()) break;
+                        if (m_invalidChunkId != m_chunkId || updateChunkId()) {
+                            // Still need to check queue length - but note that we only have a copy at
+                            // channelInfo.get<std::deque<int> >("queuedChunks") - need mutex lock for the real one:
+                            boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
+                            auto it = m_registeredCopyInputs.find(instanceId);
+                            if (it != m_registeredCopyInputs.end() && // other, disconnected case treated below
+                                it->second.get<std::deque<int> >("queuedChunks").size() < it->second.get<unsigned int>("maxQueueLength")) {
+                                break;
+                            }
+                        }
                     } else { // i.e. wait
                         if (hasCopyInput(instanceId)) break;
                     }
