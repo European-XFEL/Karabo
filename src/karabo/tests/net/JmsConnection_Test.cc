@@ -92,7 +92,7 @@ void JmsConnection_Test::readHandler1(karabo::net::JmsConsumer::Pointer consumer
                                       karabo::util::Hash::Pointer body) {
 
 
-
+    const std::string topic2(m_baseTopic + "_anotherTopic");
     if (m_messageCount == 0) {
         m_tick = boost::posix_time::microsec_clock::local_time();
 
@@ -108,13 +108,14 @@ void JmsConnection_Test::readHandler1(karabo::net::JmsConsumer::Pointer consumer
         }
         consumer->stopReading();
         // We switch topic now!
-        consumer->setTopic(m_baseTopic + "_2");
+        consumer->setTopic(topic2);
         consumer->startReading(boost::bind(&JmsConnection_Test::readHandler1, this, consumer, producer, _1, _2));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(50)); // Needed? Maybe switching topic does not read immediately...
     }
 
     if (m_messageCount < 100) {
         body->set<int>("body", m_messageCount + 1);
-        producer->write(m_baseTopic + "_2", header, body);
+        producer->write(topic2, header, body);
     } else if (m_messageCount == 100) {
         boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - m_tick;
         consumer->stopReading(); // may block for a while, therefore after calculating diff
