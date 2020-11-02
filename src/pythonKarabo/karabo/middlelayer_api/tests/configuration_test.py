@@ -4,13 +4,12 @@ import numpy as np
 
 from karabo.common.api import (
     KARABO_SCHEMA_DISPLAYED_NAME, KARABO_SCHEMA_MIN_EXC)
-from karabo.native.configuration import (
-    attr_fast_deepcopy, sanitize_init_configuration,
+from karabo.middlelayer_api.configuration import (
+    attr_fast_deepcopy, sanitize_init_configuration, is_equal,
     sanitize_write_configuration, extract_modified_schema_attributes)
-from karabo.native.data.enums import Unit, MetricPrefix
-from karabo.native.data import (
-    AccessMode, Assignment, Hash, Configurable, Double, Int32, Node,
-    Overwrite, Schema, Slot)
+from karabo.native import (
+    AccessMode, Assignment, Configurable, Double, Hash, Int32,
+    MetricPrefix, Node, Overwrite, Schema, Slot, Unit)
 
 
 def test_sanitize_init_configuration():
@@ -203,3 +202,7 @@ def test_attribute_schema_extract():
     assert attrs[2] == Hash('path', 'integer',
                             'attribute', "metricPrefixEnum",
                             'value', 13)
+
+
+def test_array_equal():
+    assert is_equal(np.array([1, 2, 3]), np.array([1, 2, 3]))
