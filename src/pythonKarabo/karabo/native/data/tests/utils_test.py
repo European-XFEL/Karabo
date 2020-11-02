@@ -1,9 +1,7 @@
 import numpy as np
 
-
-from karabo.native.configuration import attr_fast_deepcopy
 from karabo.native.data import (
-    dtype_from_number, get_image_data, Hash, HashList, is_equal, Schema,
+    dtype_from_number, get_image_data, Hash, HashList, Schema,
     dictToHash)
 
 
@@ -57,7 +55,3 @@ def test_dict_hash():
     assert isinstance(node, HashList)
     assert node[0] == Hash("a", 1)
     assert node[1] == Hash("b", 2)
-
-
-def test_array_equal():
-    assert is_equal(np.array([1, 2, 3]), np.array([1, 2, 3]))
