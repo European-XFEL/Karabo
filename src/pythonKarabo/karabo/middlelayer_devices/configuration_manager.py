@@ -14,17 +14,15 @@ from karabo.common.scenemodel.api import (
     LineEditModel, IntLineEditModel, LineModel, SceneModel, TableElementModel,
     write_scene)
 
-from karabo.native.configuration import sanitize_init_configuration
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, background, Bool, Configurable,
     coslot, DaqPolicy, DeviceClientBase, dictToHash, KaraboError, Hash,
-    HashList, Overwrite, slot, Slot, State, String, Timestamp, UInt32,
-    VectorHash, VectorString)
+    HashList, Overwrite, sanitize_init_configuration, slot, Slot, State,
+    String, Timestamp, UInt32, VectorHash, VectorString)
 
-from karabo.config_db.configuration_database import (
-    ConfigurationDatabase, DbHandle)
-from karabo.config_db.utils import (
-    hashFromBase64Bin, hashToBase64Bin, schemaToBase64Bin, schemaFromBase64Bin)
+from karabo.config_db import (
+    ConfigurationDatabase, DbHandle, hashFromBase64Bin, hashToBase64Bin,
+    schemaToBase64Bin, schemaFromBase64Bin)
 
 HIDDEN_KARABO_FOLDER = op.join(os.environ['HOME'], '.karabo')
 KARABO_CONFIG_DB_FOLDER = op.join(HIDDEN_KARABO_FOLDER, 'config_db')
