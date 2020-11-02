@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import QDialog, QHeaderView, QDialogButtonBox
 from karabogui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
     KaraboEvent)
+import karabogui.icons as icons
 from karabogui.singletons.api import get_network
 from karabogui.validators import RegexValidator
 
@@ -129,6 +130,9 @@ class ListConfigurationDialog(QDialog):
 
         self.ui_filter.setFocus()
 
+        self.ui_button_save.setIcon(icons.save)
+        self.ui_show_device.setIcon(icons.deviceInstance)
+        self.ui_button_refresh.setIcon(icons.reset)
         # Provide saving option
         self.ui_button_save.clicked.connect(self.open_save_dialog)
         # Show device option!
