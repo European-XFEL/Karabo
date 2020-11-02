@@ -1,13 +1,13 @@
+from collections import Iterable
+
 from karabo.common.api import (
     KARABO_SCHEMA_ACCESS_MODE, KARABO_SCHEMA_ASSIGNMENT,
     KARABO_SCHEMA_OPTIONS, KARABO_SCHEMA_DISPLAY_TYPE,
     KARABO_SCHEMA_CLASS_ID, KARABO_SCHEMA_NODE_TYPE)
 from karabo.common import const
-from .data.hash import Hash, Schema
-from .data.enums import AccessMode, Assignment, NodeType, Unit, MetricPrefix
-from .data.utils import flat_iter_hash, flat_iter_schema_hash, is_equal
-from .data.enums import AccessMode, Assignment
-
+from karabo.native import (
+    AccessMode, Assignment, Hash, NodeType, Unit, Schema, MetricPrefix,
+    flat_iter_hash, flat_iter_schema_hash)
 
 # Broken path accumulated in the history of karabo ...
 # Choice of Nodes connection and Beckhoff properties that will throw!
@@ -15,6 +15,23 @@ from .data.enums import AccessMode, Assignment
 BROKEN_PATHS = set([
     "_connection_",
     ])
+
+
+def is_equal(a, b):
+    """A compare function deals with element-wise comparison result and
+    Schema object comparison
+    """
+    type_check = map(lambda x: isinstance(x, Schema), (a, b))
+    if any(type_check):
+        if all(type_check):
+            # Compare Schema objects' names and hashes
+            return a.name == b.name and a.hash == b.hash
+        else:
+            # one of a, b is not Schema, simply return False
+            return False
+    res = (a == b)
+    # comparison of numpy arrays result in an array
+    return all(res) if isinstance(res, Iterable) else res
 
 
 def sanitize_init_configuration(schema, config):
