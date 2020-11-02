@@ -249,7 +249,6 @@ class ConfigurationDatabase(object):
             params.extend(deviceIds)
             cursor = db.execute(cmd, params)
             rec_with_name = int(cursor.fetchone()[0])
-
             return rec_with_name > 0
 
     # Private Interface
