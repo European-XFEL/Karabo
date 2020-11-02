@@ -8,6 +8,7 @@ from karabo.middlelayer_devices.configuration_manager import (
 )
 from karabo.native.exceptions import KaraboError
 
+
 class TestCrossConfigManager(BoundDeviceTestCase):
     """Tests for sync and async DeviceClient operations related to the
        ConfigurationManager.
@@ -28,7 +29,7 @@ class TestCrossConfigManager(BoundDeviceTestCase):
     CFG_MANAGER_ID = 'KaraboConfigurationManager'
     CFG_MANAGER_CLASS_ID = 'ConfigurationManager'
 
-    PROP_TEST_DEVICE_ID = 'PropTestDevice'
+    PROP_TEST_DEVICE_ID = 'PropertyTestDevice'
     PROP_TEST_CLASS_ID = 'PropertyTest'
 
     def test_sync_operations(self):
@@ -88,7 +89,7 @@ class TestCrossConfigManager(BoundDeviceTestCase):
         # Gets the current device configuration for later checking
         dev_cfg = self.dc.get(self.PROP_TEST_DEVICE_ID)
 
-        cfg_name = 'Property Test Config I'
+        cfg_name = 'PropertyTestConfigI'
         cfg_desc = 'A simple description for the configuration'
         ok, msg = self.dc.saveConfigurationFromName(
             cfg_name, [self.PROP_TEST_DEVICE_ID], cfg_desc
@@ -126,7 +127,8 @@ class TestCrossConfigManager(BoundDeviceTestCase):
             cfg_name, [self.PROP_TEST_DEVICE_ID]
         )
         self.assertFalse(get_resp_used_name[0])
-        self.assertIn('has a configuration named', get_resp_used_name[1])
+        self.assertIn('The config name PropertyTestConfigI is already taken',
+                      get_resp_used_name[1])
 
     def _test_save_list_config(self):
         """Checks that saving more than one config and then retrieving them by
@@ -136,7 +138,7 @@ class TestCrossConfigManager(BoundDeviceTestCase):
            for the device and that an unused name part returns an empty list
            of configurations.
         """
-        cfg_name_2 = 'Property Test Config II'
+        cfg_name_2 = 'PropertyTestConfigII'
         cfg_desc_2 = 'Another simple description for the configuration'
         ok, msg = self.dc.saveConfigurationFromName(
             cfg_name_2, [self.PROP_TEST_DEVICE_ID], cfg_desc_2
@@ -146,7 +148,7 @@ class TestCrossConfigManager(BoundDeviceTestCase):
             f"Save configuration for device '{self.PROP_TEST_DEVICE_ID}' "
             f"failed: '{msg}'"
         )
-        cfg_name_3 = 'Property Test Config III'
+        cfg_name_3 = 'PropertyTestConfigIII'
         cfg_desc_3 = 'Yet another simple description for the configuration'
         ok, msg = self.dc.saveConfigurationFromName(
             cfg_name_3, [self.PROP_TEST_DEVICE_ID], cfg_desc_3
@@ -211,7 +213,7 @@ class TestCrossConfigManager(BoundDeviceTestCase):
            Also checks that an attempt to retrieve the latest configuration
            for a priority that hasn't yet been used triggers a RemoteException.
         """
-        cfg_name_4 = 'Property Test Config IV'
+        cfg_name_4 = 'PropertyTestConfigIV'
         cfg_desc_4 = 'Another simple description for the configuration'
         ok, msg = self.dc.saveConfigurationFromName(
             cfg_name_4, [self.PROP_TEST_DEVICE_ID], cfg_desc_4, 2
@@ -221,7 +223,7 @@ class TestCrossConfigManager(BoundDeviceTestCase):
             f"Save configuration for device '{self.PROP_TEST_DEVICE_ID}' "
             f"failed: '{msg}'"
         )
-        cfg_name_5 = 'Property Test Config V'
+        cfg_name_5 = 'PropertyTestConfigV'
         cfg_desc_5 = 'Yet another simple description for the configuration'
         ok, msg = self.dc.saveConfigurationFromName(
             cfg_name_5, [self.PROP_TEST_DEVICE_ID], cfg_desc_5, 1
