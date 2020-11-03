@@ -1,10 +1,14 @@
 from unittest import TestCase, main
 
+import numpy as np
+
 from karabo.common.states import State
-from karabo.native.data.basetypes import QuantityValue
-from karabo.native.data.hash import Float, String
+from karabo.native import (
+    Bool, Configurable, Float, Int32, MetricPrefix, String, Timestamp, Unit,
+    unit, QuantityValue, StringValue, BoolValue, VectorDouble)
 
 from ..unitutil import minimum, maximum, removeQuantity, StateSignifier
+from ..utils import build_karabo_value
 
 
 class Tests(TestCase):
@@ -172,6 +176,71 @@ class Tests(TestCase):
         new_summation = calculate(a, b=b, d=c)
         self.assertNotIsInstance(new_summation, QuantityValue)
         self.assertEqual(new_summation, 12)
+
+    def test_build_karabo_value(self):
+        class A(Configurable):
+            boolProperty = Bool(
+                defaultValue=False)
+
+            floatProperty = Float(
+                defaultValue=2.0,
+                unitSymbol=Unit.METER,
+                metricPrefixSymbol=MetricPrefix.MILLI)
+
+            stringProperty = String(
+                unitSymbol=Unit.AMPERE,
+                defaultValue="XFEL")
+
+            integerProperty = Int32(
+                defaultValue=-1.0,
+                unitSymbol=Unit.SECOND)
+
+            vectorProperty = VectorDouble(
+                defaultValue=[2.0, 3.2],
+                unitSymbol=Unit.METER,
+                metricPrefixSymbol=MetricPrefix.MILLI)
+
+        a = A()
+        ts = Timestamp()
+        value = build_karabo_value(a, 'floatProperty', 7.6, ts)
+        self.assertEqual(type(value), QuantityValue)
+        # Values are casted properly
+        self.assertEqual(value.value, np.float32(7.6))
+        self.assertEqual(value.value.dtype, np.float32)
+        self.assertEqual(value.timestamp, ts)
+        self.assertEqual(value.units, unit.millimeter)
+
+        value = build_karabo_value(a, 'stringProperty', "New", ts)
+        self.assertEqual(type(value), StringValue)
+        self.assertEqual(value.value, "New")
+        self.assertEqual(value.timestamp, ts)
+
+        value = build_karabo_value(a, 'boolProperty', True, ts)
+        self.assertEqual(type(value), BoolValue)
+        self.assertEqual(value.value, True)
+        self.assertEqual(value.timestamp, ts)
+
+        vector = np.array([4.5, 3.3], dtype=np.float64)
+        value = build_karabo_value(a, 'vectorProperty', vector, ts)
+        self.assertEqual(type(value), QuantityValue)
+        np.testing.assert_array_equal(value.value, vector)
+        self.assertEqual(value.timestamp, ts)
+        self.assertEqual(value.units, unit.millimeter)
+
+        # Check wrong dtype of vector value
+        vector = np.array([4.5, 3.3], dtype=np.int32)
+        value = build_karabo_value(a, 'vectorProperty', vector, ts)
+        self.assertEqual(type(value), QuantityValue)
+        np.testing.assert_array_equal(value.value, vector)
+        self.assertEqual(value.value.dtype, np.float64)
+        self.assertEqual(value.timestamp, ts)
+        self.assertEqual(value.units, unit.millimeter)
+
+        value = build_karabo_value(a, 'integerProperty', 12, ts)
+        self.assertEqual(type(value), QuantityValue)
+        self.assertEqual(value.value, 12)
+        self.assertEqual(value.timestamp, ts)
+        self.assertEqual(value.units, unit.second)
 
 
 if __name__ == "__main__":
