@@ -4,9 +4,10 @@ from unittest import mock, skipIf
 import numpy as np
 from PyQt5.QtWidgets import QGraphicsTextItem
 
-from ..display_vector_roll import DisplayVectorRollGraph
+from ..array_roll_graph import ArrayRollGraph
 from karabo.common.scenemodel.api import VectorRollGraphModel
-from karabo.native import Configurable, Hash, Timestamp, VectorInt32
+from karabo.native import (
+    Configurable, Hash, Int32, NDArray, Timestamp, VectorInt32)
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash, set_proxy_value)
 
@@ -17,6 +18,13 @@ class Object(Configurable):
     prop = VectorInt32(defaultValue=[1, 2, 3])
 
 
+class NDArrayObject(Configurable):
+    prop = NDArray(
+        defaultValue=np.arange(10, dtype=np.int32),
+        shape=(10,),
+        dtype=Int32)
+
+
 class TestVectorRollGraph(GuiTestCase):
 
     def setUp(self):
@@ -24,8 +32,9 @@ class TestVectorRollGraph(GuiTestCase):
 
         schema = Object.getClassSchema()
         self.proxy = get_class_property_proxy(schema, 'prop')
-        self.controller = DisplayVectorRollGraph(proxy=self.proxy,
-                                                 model=VectorRollGraphModel())
+        self.controller = ArrayRollGraph(proxy=self.proxy,
+                                         model=VectorRollGraphModel())
+
         with mock.patch.object(QGraphicsTextItem, 'setHtml'):
             self.controller.create(None)
             self.assertIsNotNone(self.controller.widget)
@@ -70,15 +79,15 @@ class TestVectorRollGraph(GuiTestCase):
         np.testing.assert_almost_equal(image.data[0], [2, 4, 6])
 
     def test_image_stack_configuration(self):
-        controller = DisplayVectorRollGraph(proxy=self.proxy,
-                                            model=VectorRollGraphModel())
+        controller = ArrayRollGraph(proxy=self.proxy,
+                                    model=VectorRollGraphModel())
         with mock.patch.object(QGraphicsTextItem, 'setHtml'):
             controller.create(None)
 
         action = controller.widget.actions()[3]
         self.assertEqual(action.text(), 'Image Size')
 
-        dsym = 'karabogui.controllers.display.display_vector_roll.QInputDialog'
+        dsym = 'karabogui.controllers.display.array_roll_graph.QInputDialog'
         with mock.patch(dsym) as QInputDialog:
             QInputDialog.getInt.return_value = 20, True
             action.trigger()
@@ -87,3 +96,31 @@ class TestVectorRollGraph(GuiTestCase):
             self.assertIsNone(controller._image.data)
 
         controller.destroy()
+
+
+class TestArrayRollGraph(GuiTestCase):
+    def setUp(self):
+        super(TestArrayRollGraph, self).setUp()
+        schema = NDArrayObject.getClassSchema()
+        self.proxy = get_class_property_proxy(schema, 'prop')
+        self.controller = ArrayRollGraph(proxy=self.proxy)
+        self.controller.create(None)
+        self.assertIsNotNone(self.controller.widget)
+
+    def tearDown(self):
+        super(TestArrayRollGraph, self).tearDown()
+        self.controller.destroy()
+        self.assertIsNone(self.controller.widget)
+
+    @skipIf(system() == "Windows",
+            reason="image.data is None in Windows tests")
+    def test_set_value(self):
+        value = np.array(
+            [2, 3, 2, 3, 2, 3, 2, 3, 2, 3],
+            dtype=np.int32)
+        array_hash = Hash('type', 12,
+                          'data', value.tobytes())
+        set_proxy_value(self.proxy, 'prop', array_hash)
+
+        image = self.controller._image
+        np.testing.assert_almost_equal(image.data[0], value)
