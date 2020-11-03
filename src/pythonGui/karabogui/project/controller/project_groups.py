@@ -245,12 +245,12 @@ def _add_scene(project_controller, parent=None):
 
 
 def _about_scene(project_controller, parent=None):
-    """ Retrieve the uuid's of the scenes in the project controller for display
+    """ Retrieve the UUIDs of the scenes in the project controller for display
     """
     project = project_controller.model
     html = "<ul>" + "".join(["<li>" + child.uuid + "</li>"
                              for child in project.scenes]) + "</ul>"
-    messagebox.show_information(html, title="List of scene uuid's",
+    messagebox.show_information(html, title="List of scene UUIDs",
                                 parent=parent)
 
 
