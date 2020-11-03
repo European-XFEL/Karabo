@@ -115,6 +115,18 @@ def CMD_CHECK_NAME_TAKEN_ANY_DEVICE(num_of_devices):
           AND device_id IN ({','.join('?'*num_of_devices)})
     """
 
+
+def CMD_CHECK_DEVICE_LIMIT(num_of_devices):
+    return f"""
+    SELECT COUNT(device_id) FROM (
+        SELECT device_id, COUNT(id) num_configs
+        FROM DeviceConfig
+        WHERE device_id IN ({','.join('?'*num_of_devices)})
+        GROUP BY device_id )
+    WHERE num_configs >= ?
+"""
+
+
 CMD_CHECK_CONFIG_ALREADY_SAVED = """
         SELECT COUNT(id) FROM DeviceConfig
         WHERE device_id = ?
