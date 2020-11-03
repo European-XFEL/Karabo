@@ -11,21 +11,22 @@ from karabo.native import Timestamp
 from karabogui.graph.common.api import AuxPlots, create_button
 from karabogui.graph.image.api import (
     KaraboImagePlot, KaraboImageView, RollImage)
-from karabogui.binding.api import get_binding_value, VectorNumberBinding
+from karabogui.binding.api import (
+    get_binding_value, NDArrayBinding, VectorNumberBinding)
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller)
+    BaseBindingController, get_array_data, register_binding_controller)
 from karabogui import icons
-
 
 MAX_NUM_VECTORS = 500
 
 
-@register_binding_controller(ui_name='VectorRoll Graph',
-                             klassname='VectorRollGraph',
-                             binding_type=VectorNumberBinding,
-                             priority=0,
-                             can_show_nothing=False)
-class DisplayVectorRollGraph(BaseBindingController):
+@register_binding_controller(
+    ui_name='VectorRoll Graph',
+    klassname='VectorRollGraph',
+    binding_type=(NDArrayBinding, VectorNumberBinding),
+    priority=0,
+    can_show_nothing=False)
+class ArrayRollGraph(BaseBindingController):
     # Our VectorRollGraph Model
     model = Instance(VectorRollGraphModel, args=())
 
@@ -95,11 +96,17 @@ class DisplayVectorRollGraph(BaseBindingController):
     # -----------------------------------------------------------------------
 
     def value_update(self, proxy):
-        value = get_binding_value(proxy.binding)
-        if value is None:
-            return
+        if isinstance(proxy.binding, NDArrayBinding):
+            value = get_array_data(proxy)
+            if value is None:
+                return
+            timestamp = proxy.binding.value.data.timestamp
+        else:
+            value = get_binding_value(proxy.binding)
+            if value is None:
+                return
+            timestamp = proxy.binding.timestamp
 
-        timestamp = proxy.binding.timestamp
         if timestamp != self._timestamp:
             # Get new timestamp reference!
             self._timestamp = timestamp
