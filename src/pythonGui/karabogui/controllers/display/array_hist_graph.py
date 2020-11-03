@@ -5,18 +5,28 @@
 
 import numpy as np
 from PyQt5.QtWidgets import QAction
-from traits.api import Instance, Undefined
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
-    build_model_config, VectorHistGraphModel, NDArrayHistGraphModel)
-from karabogui.binding.api import NDArrayBinding, VectorNumberBinding
+    build_model_config, VectorHistGraphModel)
+from karabogui.binding.api import (
+    get_binding_value, NDArrayBinding, VectorNumberBinding)
 from karabogui.controllers.api import (
     BaseBindingController, get_array_data, register_binding_controller)
 from karabogui.graph.plots.api import HistogramDialog, KaraboPlotView
 from karabogui import icons
 
 
-class HistogramGraph(BaseBindingController):
+@register_binding_controller(
+    ui_name='Vector HistoGram Graph',
+    klassname='VectorHistGraph',
+    binding_type=(VectorNumberBinding, NDArrayBinding),
+    priority=-10,
+    can_show_nothing=False)
+class VectorHistogramGraph(BaseBindingController):
+    """The controller for display of data in a histogram format"""
+    model = Instance(VectorHistGraphModel, args=())
+
     _plot = Instance(object)
 
     def create_widget(self, parent):
@@ -71,44 +81,11 @@ class HistogramGraph(BaseBindingController):
             self._plot.setData(edges - bin_w / 2, hist, fillLevel=0,
                                stepMode=True)
 
-    # ----------------------------------------------------------------------
-    # Abstract interface
-
     def value_update(self, proxy):
-        raise NotImplementedError
-
-
-@register_binding_controller(ui_name='Vector HistoGram Graph',
-                             klassname='VectorHistGraph',
-                             binding_type=VectorNumberBinding,
-                             priority=-10,
-                             can_show_nothing=False)
-class VectorHistogramGraph(HistogramGraph):
-    """The BarGraph controller for display of pulse data in a histogram format
-    """
-    model = Instance(VectorHistGraphModel, args=())
-
-    def value_update(self, proxy):
-        value = proxy.value
-        if value is Undefined or not len(value):
-            self._plot.setData([], stepMode=None)
-            return
-
-        self._plot_histogram(value)
-
-
-@register_binding_controller(ui_name='Array HistoGram Graph',
-                             klassname='NDArrayHistGraph',
-                             binding_type=NDArrayBinding,
-                             priority=-10,
-                             can_show_nothing=False)
-class NDArrayHistogramGraph(HistogramGraph):
-    """The BarGraph controller to display histograms of NDArray data
-    """
-    model = Instance(NDArrayHistGraphModel, args=())
-
-    def value_update(self, proxy):
-        value = get_array_data(proxy)
+        if isinstance(proxy.binding, NDArrayBinding):
+            value = get_array_data(proxy)
+        else:
+            value = get_binding_value(proxy)
         if value is None or not len(value):
             self._plot.setData([], stepMode=None)
             return
