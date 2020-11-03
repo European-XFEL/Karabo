@@ -29,7 +29,8 @@ from .middlelayer_api.proxy import (
     ProxyNodeBase as ProxyNode, SubProxyBase as SubProxy
 )
 from .middlelayer_api.configuration import (
-    sanitize_init_configuration, sanitize_write_configuration, is_equal)
+    sanitize_init_configuration, sanitize_write_configuration,
+    extract_modified_schema_attributes, is_equal)
 from .middlelayer_api.compat import HAVE_UVLOOP
 from .middlelayer_api.eventloop import KaraboFuture
 from .middlelayer_api.devicenode import DeviceNode
