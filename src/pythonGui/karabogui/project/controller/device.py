@@ -8,6 +8,7 @@ from io import StringIO
 
 from traits.api import Undefined
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, Property, on_trait_change
 
@@ -21,7 +22,7 @@ import karabogui.icons as icons
 from karabogui import messagebox
 from karabogui.binding.api import extract_configuration
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
-from karabogui.dialogs.configuration_from_name import ListConfigurationDialog
+from karabogui.dialogs.configuration_from_name import ConfigurationFromName
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.enums import AccessRole, ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
@@ -604,14 +605,20 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         dialog = ConfigurationFromPastDialog(
             instance_id=self.model.instance_id, parent=parent)
+        dialog.move(QCursor.pos())
         dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
 
     def _get_configuration_from_name(self, parent=None):
         """Request a configuration from name from configuration manager"""
         device_id = self.model.instance_id
-        dialog = ListConfigurationDialog(instance_id=device_id, parent=parent)
+        dialog = ConfigurationFromName(instance_id=device_id, parent=parent)
         get_network().onListConfigurationFromName(device_id=device_id)
+        dialog.move(QCursor.pos())
         dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
 
     def instantiate(self, server):
         """ Instantiate this device instance on the given `server`
