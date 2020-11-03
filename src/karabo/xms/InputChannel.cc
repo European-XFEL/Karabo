@@ -408,7 +408,7 @@ namespace karabo {
             }
 
             if (!ec) {
-                KARABO_LOG_FRAMEWORK_WARN << "Connected to " << outputChannelString;
+                KARABO_LOG_FRAMEWORK_INFO << "'" << m_instanceId << "' connected to '" << outputChannelString << "'";
                 channel->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this,
                                                                              _1, net::Channel::WeakPointer(channel), _2, _3));
                 m_openConnections[outputChannelString] = std::make_pair(connection, channel);
