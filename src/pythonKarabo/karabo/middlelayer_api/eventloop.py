@@ -415,7 +415,17 @@ class JmsBroker(Broker):
         tasks = [t for t in self.tasks if t is not me]
         for t in tasks:
             t.cancel()
-        yield from gather(*tasks, return_exceptions=True)
+        # A task is immediately cancelled. We are waiting for the tasks here
+        # to be done, which might take forever and thus we are not able to
+        # exit here if we are not putting a timeout of a few seconds.
+        # We also do not expect a very long procedure to be executed in a
+        # cancellation.
+        # A typical case which gets stuck is a logging after an exception when
+        # the device is shutdown.
+        # Hence, this makes sure the device gets killed and thus a server
+        # can shutdown by closing the eventloop.
+        yield from wait_for(gather(*tasks, return_exceptions=True),
+                            timeout=5)
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
