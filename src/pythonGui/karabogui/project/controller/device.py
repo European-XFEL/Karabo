@@ -468,9 +468,10 @@ class DeviceInstanceController(BaseProjectGroupController):
     def _about_device(self, parent=None):
         device = self.model
         info = {}
-        for name in device.editable_traits():
-            value = getattr(device, name)
-            info[name] = value
+        info["deviceId"] = device.instance_id
+        info["classId"] = device.class_id
+        info["serverId"] = device.server_id
+        info["uuid"] = device.uuid
 
         htmlString = ("<table>" +
                       "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
