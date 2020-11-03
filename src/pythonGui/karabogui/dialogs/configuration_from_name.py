@@ -88,16 +88,16 @@ class SaveConfigurationDialog(QDialog):
         return self.ui_name.text()
 
 
-class ListConfigurationDialog(QDialog):
+class ConfigurationFromName(QDialog):
     """List configurations by ``name`` from the configuration database
     """
 
     def __init__(self, instance_id, parent=None):
-        super(ListConfigurationDialog, self).__init__(parent)
+        super(ConfigurationFromName, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), "config_handle.ui"), self)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(False)
-        self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint
-                            | Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint)
 
         self.instance_id = instance_id
         self.ui_instance.setText(f"Device Id: {instance_id}")
@@ -159,7 +159,7 @@ class ListConfigurationDialog(QDialog):
     def done(self, result):
         """Stop listening for broadcast events"""
         unregister_from_broadcasts(self.event_map)
-        super(ListConfigurationDialog, self).done(result)
+        super(ConfigurationFromName, self).done(result)
 
     def _check_existing(self):
         if self.ui_table_widget.selectionModel().hasSelection():
@@ -199,7 +199,7 @@ class ListConfigurationDialog(QDialog):
     def accept(self):
         """The dialog was accepted and we can request a configuration"""
         self._request_configuration()
-        super(ListConfigurationDialog, self).accept()
+        super(ConfigurationFromName, self).accept()
 
     @pyqtSlot()
     def _request_configuration(self):
