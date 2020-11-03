@@ -10,8 +10,9 @@ from PyQt5.QtWidgets import QDialog, QHeaderView, QDialogButtonBox
 from karabogui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
     KaraboEvent)
+from karabogui import messagebox
 import karabogui.icons as icons
-from karabogui.singletons.api import get_network
+from karabogui.singletons.api import get_network, get_topology
 from karabogui.validators import RegexValidator
 
 NAME_FIELD = 0
@@ -20,18 +21,18 @@ DESCRIPTION_FIELD = 4
 
 PRIORITY_TEXT = ["TEST", "COMMISSIONED", "SAFE"]
 PRIORITY_EXP = [
-    "The configuration is either transient or only used for testing!",
+    "The configuration is either transient or only used for testing.",
     "The configuration is declared as commissioned and defines a possible "
-    "setting this device can operate with!",
-    "A safe configuration can be used for start up of this device!"
+    "setting this device can operate with.",
+    "A safe configuration can be used for start up of this device."
 ]
 
 
-class SaveDialog(QDialog):
+class SaveConfigurationDialog(QDialog):
     """Save dialog for configuration details"""
 
     def __init__(self, parent=None):
-        super(SaveDialog, self).__init__(parent)
+        super(SaveConfigurationDialog, self).__init__(parent)
         uic.loadUi(op.join(op.dirname(__file__), "config_save.ui"), self)
         self.ui_priority.currentIndexChanged.connect(self._change_text)
         index = self.ui_priority.currentIndex()
@@ -72,7 +73,7 @@ class SaveDialog(QDialog):
     def done(self, result):
         """Stop listening for broadcast events"""
         unregister_from_broadcasts(self.event_map)
-        super(SaveDialog, self).done(result)
+        super(SaveConfigurationDialog, self).done(result)
 
     @property
     def description(self):
@@ -179,8 +180,14 @@ class ListConfigurationDialog(QDialog):
 
     @pyqtSlot()
     def open_save_dialog(self):
-        dialog = SaveDialog(parent=self)
+        dialog = SaveConfigurationDialog(parent=self)
         if dialog.exec() == QDialog.Accepted:
+            device = get_topology().get_device(self.instance_id)
+            if not device.online:
+                text = (f"The device {self.instance_id} is not online, the "
+                        f"configuration cannot be saved.")
+                messagebox.show_alarm(text, parent=self)
+                return
             priority = dialog.priority
             description = dialog.description
             name = dialog.name
