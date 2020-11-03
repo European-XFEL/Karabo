@@ -6,9 +6,9 @@
 from PyQt5.QtWidgets import QAction, QInputDialog
 from traits.api import Instance
 
-from karabogui.binding.api import VectorNumberBinding
+from karabogui.binding.api import (NDArrayBinding, VectorNumberBinding)
 from karabogui.controllers.api import (
-    BaseBindingController, register_binding_controller)
+    BaseBindingController, get_array_data, register_binding_controller)
 
 from karabo.common.scenemodel.api import (
     build_model_config, VectorBarGraphModel)
@@ -19,11 +19,12 @@ MAX_WIDTH = 100
 MAX_BARS = 3000
 
 
-@register_binding_controller(ui_name='Vector Bar Graph',
-                             klassname='VectorBarGraph',
-                             binding_type=VectorNumberBinding,
-                             can_show_nothing=False)
-class DisplayBarGraph(BaseBindingController):
+@register_binding_controller(
+    ui_name='Vector Bar Graph',
+    klassname='VectorBarGraph',
+    binding_type=(NDArrayBinding, VectorNumberBinding),
+    can_show_nothing=False)
+class ArrayBarGraph(BaseBindingController):
     """The BarGraph controller for display of pulse data in a histogram format
     """
     model = Instance(VectorBarGraphModel, args=())
@@ -46,7 +47,14 @@ class DisplayBarGraph(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
-        value = proxy.value
+        if isinstance(proxy.binding, NDArrayBinding):
+            value = get_array_data(proxy)
+        else:
+            value = proxy.value
+        if value is None or not len(value):
+            self._plot.setData([], [])
+            return
+
         rect = get_view_range(self._plot)
         x, y = generate_down_sample(value, threshold=MAX_BARS, rect=rect)
         self._plot.setData(x, y)
