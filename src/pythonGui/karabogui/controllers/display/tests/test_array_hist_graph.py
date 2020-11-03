@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..array_hist_graph import NDArrayHistogramGraph, VectorHistogramGraph
+from ..array_hist_graph import VectorHistogramGraph
 
 from karabo.native import Configurable, Double, Hash, VectorFloat, NDArray
 from karabogui.testing import (
@@ -59,7 +59,7 @@ class TestsNDArrayHistGraph(GuiTestCase):
         super(TestsNDArrayHistGraph, self).setUp()
         schema = NDArrayObject.getClassSchema()
         self.proxy = get_class_property_proxy(schema, 'prop')
-        self.controller = NDArrayHistogramGraph(proxy=self.proxy)
+        self.controller = VectorHistogramGraph(proxy=self.proxy)
         self.controller.create(None)
         self.assertIsNotNone(self.controller.widget)
 
