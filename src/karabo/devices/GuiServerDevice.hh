@@ -615,7 +615,6 @@ namespace karabo {
              *
              * @param channel
              */
-            void sendSystemVersion(WeakChannelPointer channel);
 
             void instanceNewHandler(const karabo::util::Hash& topologyEntry);
 
