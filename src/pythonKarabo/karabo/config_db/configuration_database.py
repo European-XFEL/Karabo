@@ -11,14 +11,16 @@ from .commands import (
     CMD_LIST_NO_NAME, CMD_LIST_NAME, CMD_LIST_DEVS_NO_NAME,
     CMD_CHECK_NAME_TAKEN, CMD_CHECK_NAME_TAKEN_ANY_DEVICE,
     CMD_CHECK_SCHEMA_ALREADY_SAVED, CMD_SAVE_CONFIGURATION,
-    CMD_SAVE_CONFIGURATION_NO_TIMESTAMP, CMD_SAVE_SCHEMA
-)
+    CMD_SAVE_CONFIGURATION_NO_TIMESTAMP, CMD_SAVE_SCHEMA,
+    CMD_CHECK_DEVICE_LIMIT)
 from .utils import (
     CONFIG_DB_DATA, CONFIG_DB_DEVICE_ID, CONFIG_DB_DESCRIPTION, CONFIG_DB_NAME,
     CONFIG_DB_PRIORITY, CONFIG_DB_SCHEMA, CONFIG_DB_TIMEPOINT, CONFIG_DB_USER,
     CONFIG_DB_MIN_TIMEPOINT, CONFIG_DB_MAX_TIMEPOINT, CONFIG_DB_DIFF_TIMEPOINT
 )
 from .utils import ConfigurationDBError
+
+CONFIGURATION_LIMIT = 300
 
 
 class DbHandle(ContextDecorator):
@@ -38,8 +40,9 @@ class DbHandle(ContextDecorator):
         return self.dbConn
 
     def __exit__(self, type, value, traceback):
-        self.dbConn.close()
-        self.dbConn = None
+        if self.dbConn is not None:
+            self.dbConn.close()
+            self.dbConn = None
 
     def authenticate(self):
         return True
@@ -139,6 +142,21 @@ class ConfigurationDatabase(object):
 
             return ret_recordings
 
+    def check_configurations_limits(self, deviceIds):
+        """Checks if any of the devices exceeds the configuration limit
+
+        :param deviceIds: list of deviceIds who should be validated
+
+        :returns: boolean (True or False)
+        """
+        with self.dbHandle as db:
+            cmd = CMD_CHECK_DEVICE_LIMIT(len(deviceIds))
+            params = list(deviceIds)
+            params.append(CONFIGURATION_LIMIT)
+            cursor = db.execute(cmd, params)
+            rec_with_name = int(cursor.fetchone()[0])
+            return rec_with_name > 0
+
     def get_configuration(self, deviceId, name):
         """Retrieves a device configuration given its name.
 
@@ -210,6 +228,13 @@ class ConfigurationDatabase(object):
                         f'Configuration #{index} is missing key "{key}".')
 
         with self.dbHandle as db:
+            deviceIds = [conf[CONFIG_DB_DEVICE_ID] for conf in configs]
+            is_limit = self.check_configurations_limits(deviceIds)
+            if is_limit:
+                raise ConfigurationDBError(
+                    f'One of the devices "{deviceIds}" would exceed the number'
+                    f' of configurations {CONFIGURATION_LIMIT} per device.')
+
             for config in configs:
                 # Checks that the config name isn't already taken for any of
                 # the devices.

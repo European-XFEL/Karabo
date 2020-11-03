@@ -1,3 +1,4 @@
+# flake8: noqa
 from .utils import (
     ConfigurationDBError, hashFromBase64Bin, hashToBase64Bin,
     schemaFromBase64Bin, schemaToBase64Bin,

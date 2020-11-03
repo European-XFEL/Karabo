@@ -16,26 +16,17 @@ CFG_DEVICE_2 = 'CAS_LAB/Digitizer/ADQ-12'
 TIMESTAMP_1 = '2020-01-30 12:02:02.123'
 TIMESTAMP_2 = '2019-01-30 12:02:02.123'
 
-CFG_1 = [
-    {
-        'deviceId': CFG_DEVICE_1,
-        'config': 'JFDHFYE947AGEUFHFSJDPOWIAKLS',
-        'schema': 'QREPLCMBab789oeiryJAAHDDBAVDUUWY98==='
-    }
-]
 
-CFG_SET = [
-    {
-        'deviceId': CFG_DEVICE_1,
-        'config': 'JFDHFYE947AGEUFHFSJDPOWIAKLSIDHD',
-        'schema': 'QREPLCMBab789oeiryJAAHDDBAVDUUWY93948==='
-    },
-    {
-        'deviceId': CFG_DEVICE_2,
-        'config': 'JFDHFYE947AGEUFHFSJDPOWIAKLSIDHD',
-        'schema': 'QREPLCMBab789oeiryJAAHDDBAVDUUWY93948==='
-    }
-]
+def create_config(deviceId):
+    return {'deviceId': deviceId,
+            'config': 'JFDHFYE947AGEUFHFSJDPOWIAKLSIDHD',
+            'schema': 'QREPLCMBab789oeiryJAAHDDBAVDUUWY93948==='}
+
+
+CFG_1 = [create_config(CFG_DEVICE_1)]
+CFG_2 = [create_config(CFG_DEVICE_2)]
+
+CFG_SET = [create_config(CFG_DEVICE_1), create_config(CFG_DEVICE_2)]
 
 
 class TestConfigurationManagerData(unittest.TestCase):
@@ -193,6 +184,19 @@ class TestConfigurationManagerData(unittest.TestCase):
                 CFG_NAME_2,
                 [CFG_DEVICE_1, CFG_DEVICE_2])
         )
+
+    def test_device_conf_limit(self):
+        import karabo.config_db.configuration_database as dbsettings
+        dbsettings.CONFIGURATION_LIMIT = 20
+        deviceName = "DeviceExceeds"
+
+        config = [create_config(deviceName)]
+        for i in range(dbsettings.CONFIGURATION_LIMIT):
+            config_name = f"exceed-{i}"
+            self.database.save_configuration(config_name, config)
+
+        with self.assertRaises(ConfigurationDBError):
+            self.database.save_configuration(f"exceed-crash", config)
 
 
 if __name__ == '__main__':
