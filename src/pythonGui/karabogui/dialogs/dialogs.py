@@ -448,10 +448,10 @@ class ConfigurationFromPastDialog(QDialog):
         filepath = op.join(op.abspath(op.dirname(__file__)),
                            'conftime.ui')
         uic.loadUi(filepath, self)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.instance_id = instance_id
         self.setModal(False)
-        self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint
-                            | Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint)
         self.ui_timepoint.setDateTime(QDateTime.currentDateTime())
         self.ui_instance_id.setText(instance_id)
         self.ui_request.clicked.connect(self._request_configuration)
