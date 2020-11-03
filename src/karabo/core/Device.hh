@@ -1623,7 +1623,7 @@ namespace karabo {
                 //
 
                 // Connect input channels - requires SignalSlotable to be started
-                this->connectInputChannels();
+                this->connectInputChannels(boost::system::error_code());
 
                 // Start the state machine (call initialization methods in case of noFsm)
                 // Do that on the event loop since any blocking should not influence the success of the instantiation

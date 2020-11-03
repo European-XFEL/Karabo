@@ -232,7 +232,8 @@ namespace karabo {
             m_heartbeatInterval(10),
             m_trackingTimer(EventLoop::getIOService()),
             m_heartbeatTimer(EventLoop::getIOService()),
-            m_performanceTimer(EventLoop::getIOService()) {
+            m_performanceTimer(EventLoop::getIOService()),
+            m_channelConnectTimer(EventLoop::getIOService()) {
 
             // TODO: Consider to move setTopic() to init(..) and inside it set topic from connection (instead of from environment).
             //       Caveat: Ensure that Signals registered in device constructors get the correct topic!
@@ -2388,46 +2389,69 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::connectInputChannels() {
 
-            struct Handler {
-                std::string m_channelName;
-                size_t m_numOutputs;
-                std::string m_instanceId;
+        void SignalSlotable::connectInputChannels(const boost::system::error_code& e) {
 
-                Handler(const std::string& channelName, size_t numOutputs, const std::string& instanceId)
-                    : m_channelName(channelName), m_numOutputs(numOutputs), m_instanceId(instanceId) {
-                }
+            if (e) return; // cancelled
 
-                void operator()(bool success) {
-                    if (success) {
-                        KARABO_LOG_FRAMEWORK_INFO << m_instanceId << " Connected InputChannel '" << m_channelName << "' to "
-                                << m_numOutputs << " output channel(s)";
-                    } else if (m_numOutputs > 1u) {
-                        try {
-                            throw;
-                        } catch (const std::exception& e) {
-                            // Should we give it another try? But what if other end is not online.. Need to distinguish...
-                            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << " failed to connect InputChannel '"
-                                    << m_channelName << "' to all " << "its outputs: " << e.what();
-                        }
-                    } else {
-                        // No need to log anything if there is only one connection and that failed:
-                        // We have already the log from SignalSlotable::connectSingleInputHandler.
-                        // (But single success is not logged there.)
-                    }
-                }
-            };
             // Loop channels
             boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
-            for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
-                // In theory, the number of channels can change between its 'capture' here and when the handler is
-                // processed. But in praxis that does not happen - if it does, just a log messages is not 100% precise.
-                asyncConnectInputChannel(it->second, Handler(it->first, it->second->getConnectedOutputChannels().size(),
-                                                             getInstanceId()));
+            using karabo::net::AsyncStatus;
+            auto status = boost::make_shared<std::vector<AsyncStatus>>(m_inputChannels.size(), AsyncStatus::PENDING);
+            auto aMutex = boost::make_shared<boost::mutex>(); // protects access to above vector of status
+            size_t counter = 0;
+            for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it, ++counter) {
+                const std::string& channelName = it->first;
+                const InputChannel::Pointer& channel = it->second;
+
+                // Treat only connections that are disconnected
+                std::vector<std::string> outputsToIgnore;
+                using karabo::net::ConnectionStatus;
+                const std::unordered_map<std::string, ConnectionStatus> connectStatus(channel->getConnectionStatus());
+                for (auto mapIt = connectStatus.begin(); mapIt != connectStatus.end(); ++mapIt) {
+                    const std::string& outputChannel = mapIt->first;
+                    const ConnectionStatus status = mapIt->second;
+                    if (status == ConnectionStatus::DISCONNECTED) {
+                        KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << " Try connecting '" << channelName << "' to '" << outputChannel << "'";
+                    } else {
+                        outputsToIgnore.push_back(outputChannel);
+                    }
+                }
+                asyncConnectInputChannel(channel, bind_weak(&SignalSlotable::handleInputConnected, this, _1, channelName,
+                                                            aMutex, status, counter, outputsToIgnore.size()),
+                                         outputsToIgnore);
             }
         }
 
+        void SignalSlotable::handleInputConnected(bool success, const std::string& channelName, const boost::shared_ptr<boost::mutex>& mut,
+                                                  const boost::shared_ptr<std::vector<karabo::net::AsyncStatus>>&status, size_t i,
+                                                  size_t numOutputsToIgnore) {
+            const InputChannel::Pointer input = getInputChannelNoThrow(channelName);
+            const size_t numOutputs = (input ? input->getConnectedOutputChannels().size() : 0ul);
+            if (success) {
+                if (numOutputs > numOutputsToIgnore) { // avoid spam in logs
+                    KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << " connected InputChannel '" << channelName
+                            << "' to " << numOutputs - numOutputsToIgnore << " output channel(s)";
+                }
+            } else {
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << " failed to connect InputChannel '" << channelName
+                            << "' to some of its " << numOutputs - numOutputsToIgnore << " output channels: " << e.what();
+                }
+            }
+
+            boost::mutex::scoped_lock lock(*mut);
+            (*status)[i] = (success ? AsyncStatus::DONE : AsyncStatus::FAILED);
+            for (size_t j = 0; j < status->size(); ++j) {
+                if ((*status)[j] == AsyncStatus::PENDING) return;
+            }
+
+            // All are done - charge timer again
+            m_channelConnectTimer.expires_from_now(boost::posix_time::seconds(5));
+            m_channelConnectTimer.async_wait(bind_weak(&SignalSlotable::connectInputChannels, this, boost::asio::placeholders::error));
+        }
 
         void SignalSlotable::reconnectInputChannels(const std::string& instanceId) {
 
@@ -2481,9 +2505,13 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::asyncConnectInputChannel(const InputChannel::Pointer& channel, const boost::function<void(bool)>& handler) {
+        void SignalSlotable::asyncConnectInputChannel(const InputChannel::Pointer& channel, const boost::function<void(bool)>& handler,
+                                                      const std::vector<std::string>& outputChannelsToIgnore) {
 
-            const std::map<std::string, karabo::util::Hash> outputChannels(channel->getConnectedOutputChannels());
+            std::map<std::string, karabo::util::Hash> outputChannels(channel->getConnectedOutputChannels());
+            for (const std::string& outputToIgnore : outputChannelsToIgnore) {
+                outputChannels.erase(outputToIgnore);
+            }
 
             // Nothing to do except informing that this 'nothing' succeeded ;-)
             if (outputChannels.empty()) {
@@ -2526,7 +2554,7 @@ namespace karabo {
                     if (why.find("Transport endpoint is already connected") != std::string::npos) {
                         why = "Already connected"; // Do not spam log with exception printout
                     }
-                    KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << " failed to connect InputChannel to '"
+                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << " failed to connect InputChannel to '"
                             << outputChannelString << "': " << why;
                 }
             }
