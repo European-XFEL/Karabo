@@ -17,7 +17,8 @@ from karabo.common.scenemodel.api import (
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, background, Bool, Configurable,
-    coslot, DaqPolicy, DeviceClientBase, dictToHash, KaraboError, Hash,
+    coslot, DaqPolicy, DeviceClientBase, dictToHash,
+    extract_modified_schema_attributes, KaraboError, Hash,
     HashList, Overwrite, RegexString, sanitize_init_configuration, slot, Slot,
     State, String, Timestamp, UInt32, VectorHash, VectorString)
 
@@ -223,11 +224,11 @@ class ConfigurationManager(DeviceClientBase):
             # Now we save and list again, and we should not expect any errors
             try:
                 self.db.save_configuration(
-                config_name, items, description=description, user=".",
-                priority=priority, timestamp="")
+                    config_name, items, description=description, user=".",
+                    priority=priority, timestamp="")
 
-                self.status = (f"Success: Saved configuration {config_name} for "
-                               f"device {deviceId}!")
+                self.status = (f"Success: Saved configuration {config_name} "
+                               f"for device {deviceId}!")
                 current_items = self.db.list_configurations(
                     deviceId, name_part="")
                 current_items = [scratch_conf(c) for c in current_items]
@@ -438,8 +439,9 @@ class ConfigurationManager(DeviceClientBase):
                               f"size is 30 characters.")
 
         if len(deviceIds) > int(self.confBulkLimit):
-            raise KaraboError(f"The number of configurations {len(deviceIds)}"
-                              f" exceeds the allowed limit {self.confBulkLimit}")
+            raise KaraboError(
+                f"The number of configurations {len(deviceIds)}"
+                f" exceeds the allowed limit {self.confBulkLimit}")
 
         is_taken = self.db.is_config_name_taken(config_name, deviceIds)
         if is_taken:
@@ -510,6 +512,8 @@ class ConfigurationManager(DeviceClientBase):
                           f"{name} found!")
                 raise KaraboError(reason)
         config = hashFromBase64Bin(item["config"])
+        # Runtime schema for attributes
+        runtime_schema = schemaFromBase64Bin(item["schema"])
         # If the classId was provided we can validate!
         if classId is not None and classId != config["classId"]:
             raise KaraboError(f"The configuration for {deviceId} was "
@@ -536,7 +540,7 @@ class ConfigurationManager(DeviceClientBase):
                 try:
                     schema, *_ = await wait_for(
                         self.call(serverId, "slotGetClassSchema", classId),
-                                  timeout=DEVICE_TIMEOUT)
+                        timeout=DEVICE_TIMEOUT)
                 except (CancelledError, TimeoutError) as e:
                     future.set_exception(e)
                     raise KaraboError(
@@ -566,6 +570,16 @@ class ConfigurationManager(DeviceClientBase):
         success, msg = await self.call(serverId, "slotStartDevice", h)
         if not success:
             raise KaraboError(msg)
+        else:
+            attrs = extract_modified_schema_attributes(
+                runtime_schema, class_schema=schema)
+            if attrs is not None:
+                try:
+                    await wait_for(self._call_once_alive(
+                        deviceId, "slotUpdateSchemaAttributes", attrs),
+                        timeout=DEVICE_TIMEOUT)
+                except TimeoutError:
+                    raise
 
         return Hash("success", True)
 
