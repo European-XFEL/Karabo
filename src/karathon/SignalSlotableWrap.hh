@@ -294,7 +294,7 @@ namespace karathon {
 
         void connectInputChannelsPy() {
             ScopedGILRelease nogil;
-            this->connectInputChannels();
+            this->connectInputChannels(boost::system::error_code());
         }
 
         bp::object getOutputChannelPy(const std::string& name) {
