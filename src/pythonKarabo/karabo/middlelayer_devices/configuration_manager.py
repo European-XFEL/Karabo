@@ -7,18 +7,19 @@ from asyncio import CancelledError, Future, gather, TimeoutError, wait_for
 from collections import defaultdict
 import os
 import os.path as op
+import re
 
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, DisplayCommandModel, DisplayLabelModel,
     DisplayStateColorModel, DisplayTextLogModel, ErrorBoolModel, LabelModel,
     LineEditModel, IntLineEditModel, LineModel, SceneModel, TableElementModel,
-    write_scene)
+    EditableRegexModel, write_scene)
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, background, Bool, Configurable,
     coslot, DaqPolicy, DeviceClientBase, dictToHash, KaraboError, Hash,
-    HashList, Overwrite, sanitize_init_configuration, slot, Slot, State,
-    String, Timestamp, UInt32, VectorHash, VectorString)
+    HashList, Overwrite, RegexString, sanitize_init_configuration, slot, Slot,
+    State, String, Timestamp, UInt32, VectorHash, VectorString)
 
 from karabo.config_db import (
     ConfigurationDatabase, DbHandle, hashFromBase64Bin, hashToBase64Bin,
@@ -86,7 +87,8 @@ class ConfigurationManager(DeviceClientBase):
             if self.db is not None:
                 background(self._list_configurations())
 
-    configurationName = String(
+    configurationName = RegexString(
+        regex="^[A-Za-z0-9_-]{1,30}$",
         defaultValue="default",
         description="The configuration name",
         requiredAccessLevel=AccessLevel.OPERATOR)
@@ -263,6 +265,9 @@ class ConfigurationManager(DeviceClientBase):
     def __init__(self, configuration):
         super(ConfigurationManager, self).__init__(configuration)
         self.db = None
+        regex = self.configurationName.descriptor.regex
+        self.name_pattern = re.compile(regex)
+
         # Dictionary of serverId: {classId: schema}
         self._class_schemas = defaultdict(dict)
 
@@ -424,14 +429,13 @@ class ConfigurationManager(DeviceClientBase):
 
            - deviceIds: a vector of strings with deviceIds
         """
-        # Optional information that can be taken as defaults!
-        user = info.get("user", ".")
-        description = info.get("description", "")
-        priority = info.get("priority", 1)
-        timestamp = info.get("timestamp", Timestamp().toLocal())
-
         config_name = info["name"]  # Note: Must be there!
         deviceIds = info["deviceIds"]
+        if not self.name_pattern.match(config_name):
+            raise KaraboError(f"The config name {config_name} does not "
+                              f"comply with the allowed settings. Don't use "
+                              f"special character or spaces and the maximum "
+                              f"size is 30 characters.")
 
         if len(deviceIds) > int(self.confBulkLimit):
             raise KaraboError(f"The number of configurations {len(deviceIds)}"
@@ -441,6 +445,12 @@ class ConfigurationManager(DeviceClientBase):
         if is_taken:
             raise KaraboError(f"The config name {config_name} is already "
                               f"taken from any of the device(s) {deviceIds}")
+
+        # Optional information that can be taken as defaults!
+        user = info.get("user", ".")
+        description = info.get("description", "")
+        priority = info.get("priority", 1)
+        timestamp = info.get("timestamp", Timestamp().toLocal())
 
         try:
             async def poll_(device_id):
@@ -579,7 +589,7 @@ def get_scene(deviceId):
         direction=2, height=80.0, width=321.0, x=10.0, y=320.0,
         children=[scene20, scene21])
     scene3 = LabelModel(
-        font='Sans Serif,14,-1,5,50,0,1,0,0,0', height=31.0,
+        font='Source Sans Pro,14,-1,5,50,0,1,0,0,0', height=31.0,
         parent_component='DisplayComponent', text='Configuration Manager',
         width=391.0, x=20.0, y=10.0)
     scene40 = DisplayLabelModel(
@@ -590,7 +600,7 @@ def get_scene(deviceId):
         parent_component='DisplayComponent',
         show_string=True, width=311.0, x=70.0, y=90.0)
     scene420 = LabelModel(
-        font='Sans Serif,10,-1,5,50,0,0,0,0,0', foreground='#000000',
+        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
         height=31.0, parent_component='DisplayComponent', text='Last Success',
         width=73.0, x=70.0, y=130.0)
     scene421 = ErrorBoolModel(
@@ -605,22 +615,21 @@ def get_scene(deviceId):
     scene5 = LineModel(
         stroke='#000000', x1=30.0, x2=900.0, y1=210.0, y2=210.0)
     scene6 = LabelModel(
-        font='Sans Serif,10,-1,5,50,0,0,0,0,0,Normal', height=31.0,
+        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0,Normal', height=31.0,
         parent_component='DisplayComponent', text='Save options', width=161.0,
         x=10.0, y=410.0)
     scene7 = LineModel(
         stroke='#000000', x1=10.0, x2=330.0, y1=450.0, y2=450.0)
     scene800 = LabelModel(
-        font='Sans Serif,10,-1,5,50,0,0,0,0,0', foreground='#000000',
+        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
         height=20.0, parent_component='DisplayComponent',
         text='configurationName', width=321.0, x=10.0, y=470.0)
     scene8010 = DisplayLabelModel(
         font_size=10, height=27.0,
         keys=['{}.configurationName'.format(deviceId)],
         parent_component='DisplayComponent', width=161.0, x=10.0, y=490.0)
-    scene8011 = LineEditModel(
+    scene8011 = EditableRegexModel(
         height=27.0, keys=['{}.configurationName'.format(deviceId)],
-        klass='EditableLineEdit',
         parent_component='EditableApplyLaterComponent', width=160.0, x=171.0,
         y=490.0)
     scene801 = BoxLayoutModel(
@@ -630,7 +639,7 @@ def get_scene(deviceId):
         direction=2, height=57.0, width=321.0, x=10.0, y=470.0,
         children=[scene800, scene801])
     scene810 = LabelModel(
-        font='Sans Serif,10,-1,5,50,0,0,0,0,0', foreground='#000000',
+        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
         height=20.0, parent_component='DisplayComponent', text='priority',
         width=321.0, x=10.0, y=530.0)
     scene8110 = DisplayLabelModel(
@@ -647,7 +656,7 @@ def get_scene(deviceId):
         direction=2, height=57.0, width=321.0, x=10.0, y=527.0,
         children=[scene810, scene811])
     scene820 = LabelModel(
-        font='Sans Serif,10,-1,5,50,0,0,0,0,0', foreground='#000000',
+        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
         height=20.0, parent_component='DisplayComponent', text='description',
         width=321.0, x=10.0, y=584.0)
     scene8210 = DisplayLabelModel(
@@ -668,7 +677,7 @@ def get_scene(deviceId):
         direction=2, height=171.0, width=321.0, x=10.0, y=470.0,
         children=[scene80, scene81, scene82])
     scene90 = LabelModel(
-        font='Sans Serif,10,-1,5,50,0,0,0,0,0', foreground='#000000',
+        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
         height=20.0, parent_component='DisplayComponent', text='Device',
         width=311.0, x=10.0, y=220.0)
     scene91 = DisplayLabelModel(
