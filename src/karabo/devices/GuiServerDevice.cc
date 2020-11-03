@@ -456,15 +456,16 @@ namespace karabo {
 
                 channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, WeakChannelPointer(channel), _2));
 
-                Hash brokerInfo("type", "brokerInformation");
-                // Required information on InitInfo
-                brokerInfo.set("topic", m_topic);
-                brokerInfo.set("hostname", get<std::string>("hostName"));
-                brokerInfo.set("hostport", get<unsigned int>("port"));
-                brokerInfo.set("deviceId", getInstanceId());
-                brokerInfo.set("readOnly", m_isReadOnly);
+                string const version = karabo::util::Version::getVersion();
+                Hash systemInfo("type", "brokerInformation");
+                systemInfo.set("topic", m_topic);
+                systemInfo.set("hostname", get<std::string>("hostName"));
+                systemInfo.set("hostport", get<unsigned int>("port"));
+                systemInfo.set("deviceId", getInstanceId());
+                systemInfo.set("readOnly", m_isReadOnly);
+                systemInfo.set("version", version);
 
-                channel->writeAsync(brokerInfo);
+                channel->writeAsync(systemInfo);
 
                 // Re-register acceptor socket (allows handling multiple clients)
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
@@ -617,7 +618,6 @@ namespace karabo {
                 if (clientVersion >= minVersion) {
                     KARABO_LOG_INFO << "Login request of user: " << hash.get<string > ("username")
                             << " (version " << clientVersion.getString() << ")";
-                    sendSystemVersion(channel);
                     sendSystemTopology(channel);
                     return;
                 }
@@ -1324,18 +1324,6 @@ namespace karabo {
                 } // else: all clients lost interest, but still some data arrives
             } catch (const std::exception &e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onNetworkData: " << e.what();
-            }
-        }
-
-        void GuiServerDevice::sendSystemVersion(WeakChannelPointer channel) {
-            try {
-                string const version = karabo::util::Version::getVersion();
-                KARABO_LOG_FRAMEWORK_DEBUG << "sendSystemVersion";
-                KARABO_LOG_FRAMEWORK_DEBUG << version;
-                Hash h("type", "systemVersion", "version", version);
-                safeClientWrite(channel, h);
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in sendSystemVersion(): " << e.userFriendlyMsg();
             }
         }
 
