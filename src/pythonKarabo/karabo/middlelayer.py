@@ -49,7 +49,7 @@ from .middlelayer_api.synchronization import (
 )
 from .middlelayer_api.unitutil import (
     maximum, minimum, removeQuantity, StateSignifier)
-from .middlelayer_api.utils import get_property
+from .middlelayer_api.utils import build_karabo_value, get_property
 # Native api
 from karabo.native.data.basetypes import (
     BoolValue, EnumValue, ImageData, isSet, KaraboValue, NoneValue,
