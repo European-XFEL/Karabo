@@ -126,6 +126,18 @@ class TestConfigurationManager(DeviceTest):
         r = await call(KARABO_CONFIG_MANAGER, "slotSaveConfigurationFromName", h)
         self.assertEqual(r["success"], True)
 
+        invalid_config_name = "s#invalid"
+        h = Hash("name", invalid_config_name, "deviceIds", ["TEST_DEVICE",
+                 "ANOTHER_TEST_DEVICE"], "priority", 2)
+        with self.assertRaises(KaraboError):
+            await call(KARABO_CONFIG_MANAGER, "slotSaveConfigurationFromName", h)
+
+        long_name = "s" * 40
+        h = Hash("name", long_name, "deviceIds", ["TEST_DEVICE",
+                 "ANOTHER_TEST_DEVICE"], "priority", 2)
+        with self.assertRaises(KaraboError):
+            await call(KARABO_CONFIG_MANAGER, "slotSaveConfigurationFromName", h)
+
     @async_tst
     async def test_configuration_save_check(self):
         """Cross check if we saved the config"""
