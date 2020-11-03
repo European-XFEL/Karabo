@@ -21,6 +21,7 @@ from karabogui.dialogs.configuration import ConfigurationDialog
 from karabogui.dialogs.dialogs import AboutDialog
 from karabogui.dialogs.update_dialog import UpdateDialog
 from karabogui.indicators import get_processing_color
+from karabogui.enums import AccessRole
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.panels.api import (
@@ -538,7 +539,8 @@ class MainWindow(QMainWindow):
         project = get_project_model().root_model
         if project is None:
             return False
-        if project.modified or get_db_conn().is_writing():
+        allowed = krb_globals.access_role_allowed(AccessRole.PROJECT_EDIT)
+        if get_db_conn().is_writing() or (project.modified and allowed):
             ask = ('Unsaved changes on project \"<b>{}</b>\" will be '
                    'permanently lost.<br /> Continue action?'
                    .format(project.simple_name))
