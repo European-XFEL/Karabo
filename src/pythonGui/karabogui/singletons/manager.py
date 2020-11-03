@@ -270,9 +270,10 @@ class Manager(QObject):
                          'time_match': time_match})
 
     def handle_brokerInformation(self, **info):
-        read_only = info.get('readOnly', False)
-        get_network().set_server_information(read_only=read_only)
-        broadcast_event(KaraboEvent.BrokerInformationUpdate, info)
+        self._set_server_information(info)
+
+    def handle_serverInformation(self, **info):
+        self._set_server_information(info)
 
     @show_wait_cursor
     def handle_systemTopology(self, systemTopology):
@@ -644,6 +645,10 @@ class Manager(QObject):
                 return True
         return False
 
+    def _set_server_information(self, info):
+        read_only = info.get('readOnly', False)
+        get_network().set_server_information(read_only=read_only)
+        broadcast_event(KaraboEvent.BrokerInformationUpdate, info)
 
 # ------------------------------------------------------------------
 
