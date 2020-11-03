@@ -524,10 +524,20 @@ namespace karabo {
              *                about the failure can be retrieved via
              *                     try { throw; } catch (const std::exception&e) { const std::string reason(e.what());}
              *                in the same way as in SignalSlotable::AsyncErrorHandler
+             * @param outputChannelsToIgnore outputChannels that shall not be connected, e.g. because they are already
+             *                               connected (defaults to empty vector)
              */
-            void asyncConnectInputChannel(const InputChannel::Pointer& channel, const boost::function<void(bool)>& handler);
+            void asyncConnectInputChannel(const InputChannel::Pointer& channel, const boost::function<void(bool)>& handler,
+                                          const std::vector<std::string>& outputChannelsToIgnore = std::vector<std::string>());
 
-            void connectInputChannels();
+            /**
+             *  Trigger connection of all not connected input channel connections
+             *
+             * Re-triggers itself regularly via internal  m_channelConnectTimer
+             *
+             * @param e do nothing if evaluates to true
+             */
+            void connectInputChannels(const boost::system::error_code& e);
 
             void reconnectInputChannels(const std::string& instanceId);
 
@@ -757,9 +767,8 @@ namespace karabo {
             boost::asio::deadline_timer m_heartbeatTimer;
             boost::asio::deadline_timer m_performanceTimer;
 
-            std::vector<std::pair<std::string, karabo::util::Hash> > m_availableInstances;
-
             // IO channel related
+            boost::asio::deadline_timer m_channelConnectTimer;
             mutable boost::mutex m_pipelineChannelsMutex;
             InputChannels m_inputChannels;
             OutputChannels m_outputChannels;
@@ -1027,6 +1036,11 @@ namespace karabo {
 
             void connectInputToOutputChannel(const InputChannel::Pointer& channel, const std::string& outputChannelString,
                                              const boost::function<void (bool)>& handler);
+
+            /// helper for connectInputChannels()
+            void handleInputConnected(bool success, const std::string& channel, const boost::shared_ptr<boost::mutex>& mut,
+                                      const boost::shared_ptr<std::vector<karabo::net::AsyncStatus>>&status, size_t i,
+                                      size_t numOutputsToIgnore);
 
             void connectSingleInputHandler
             (boost::shared_ptr<std::tuple<boost::mutex, std::vector<karabo::net::AsyncStatus>, boost::function<void(bool)> > > status,
