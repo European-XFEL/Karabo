@@ -14,7 +14,7 @@ from karabogui import messagebox
 from karabogui.enums import AccessRole, NavigationItemTypes
 from karabogui.globals import access_role_allowed
 from karabogui.events import broadcast_event, KaraboEvent
-from karabogui.dialogs.configuration_from_name import ListConfigurationDialog
+from karabogui.dialogs.configuration_from_name import ConfigurationFromName
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.singletons.api import (
     get_manager, get_selection_tracker)
@@ -186,15 +186,19 @@ class DeviceTreeView(QTreeView):
                                              parent=self)
         dialog.move(QCursor.pos())
         dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
 
     @pyqtSlot()
     def onGetConfigurationFromName(self):
         info = self.indexInfo()
         device_id = info.get('deviceId')
-        dialog = ListConfigurationDialog(instance_id=device_id,
-                                         parent=self)
+        dialog = ConfigurationFromName(instance_id=device_id,
+                                       parent=self)
         dialog.move(QCursor.pos())
         dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
 
     @pyqtSlot(QPoint)
     def onCustomContextMenuRequested(self, pos):
