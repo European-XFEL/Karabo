@@ -100,20 +100,12 @@ class NDArrayGraphModel(BasePlotModel):
     y_grid = Bool(True)
 
 
-class HistoGramModel(BasePlotModel):
+class VectorHistGraphModel(BasePlotModel):
     """ A base model for histograms"""
     bins = Int(10)
     auto = Bool(True)
     start = Float(0.0)
     stop = Float(0.0)
-
-
-class VectorHistGraphModel(HistoGramModel):
-    """ A model for the VectorHist Graph"""
-
-
-class NDArrayHistGraphModel(HistoGramModel):
-    """ A model for the ArrayGraph Graph"""
 
 
 class VectorFillGraphModel(BasePlotModel):
@@ -286,22 +278,6 @@ def _vector_hist_graph_reader(element):
 def _vector_hist_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'VectorHistGraph')
-    write_histogram_model(model, element)
-
-    return element
-
-
-@register_scene_reader('NDArrayHistGraph')
-def _array_hist_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_histogram_model(element))
-    return NDArrayHistGraphModel(**traits)
-
-
-@register_scene_writer(NDArrayHistGraphModel)
-def _array_hist_graph_writer(model, parent):
-    element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'NDArrayHistGraph')
     write_histogram_model(model, element)
 
     return element
