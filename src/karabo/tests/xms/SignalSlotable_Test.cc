@@ -26,6 +26,9 @@ using namespace karabo::xms;
 #define MQTT_BROKER "mqtt://exfldl02n0:1883"
 #define OPENMQ_BROKER "tcp://exflbkr02n0:7777"
 
+const int numWaitIterations = 1000;
+const int sleepPerWaitIterationMs = 5;
+
 class SignalSlotDemo : public karabo::xms::SignalSlotable {
 
     const std::string m_othersId;
@@ -576,18 +579,18 @@ void SignalSlotable_Test::_testConnectAsync() {
     };
     signaler->asyncConnect("signalInstance", "signal", "slotInstance", "slot", connectedHandler);
     // Give some time to connect
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < numWaitIterations; ++i) {
         if (connected) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connected);
 
     signaler->emit("signal", 52);
 
     // Give signal some time to travel
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < numWaitIterations; ++i) {
         if (slotCalled) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(slotCalled);
     CPPUNIT_ASSERT_EQUAL(42, inSlot);
@@ -614,9 +617,9 @@ void SignalSlotable_Test::_testConnectAsync() {
                            dummyHandler, connectFailedHandler);
 
     // Give some time to find out that signal is not there
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < numWaitIterations; ++i) {
         if (connectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connectTimeout);
@@ -633,9 +636,9 @@ void SignalSlotable_Test::_testConnectAsync() {
                            dummyHandler, connectFailedHandler);
 
     // Give some time to find out that slot is not there.
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < numWaitIterations; ++i) {
         if (connectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connectTimeout);
@@ -722,9 +725,9 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
                                                         SignalSlotConnection("signalB_slotA", "signalB", "signalA_slotB", "slotB")};
     signalerA->asyncConnect(connections, connectedHandler, failureHandler);
     // Give some time to connect
-    for (int i = 0; i < 200; ++i) {
+    for (int i = 0; i < numWaitIterations; ++i) {
         if (connected) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connected);
     CPPUNIT_ASSERT(!connectFailed);
@@ -733,9 +736,9 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     signalerB->emit("signalB", -32);
 
     // Give signal some time to travel
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < numWaitIterations; ++i) {
         if (slotCalledA && slotCalledB) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(slotCalledA);
     CPPUNIT_ASSERT(slotCalledB);
@@ -774,9 +777,9 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     signalerA->asyncConnect(badConnections, connectedHandler, connectFailedHandler);
 
     // Give some time to find out that signal is not there
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < numWaitIterations; ++i) {
         if (connected || connectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connected);
@@ -801,9 +804,9 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
     signalerA->asyncConnect(badConnections, connectedHandler, connectFailedHandler);
 
     // Give some time to find out that slot is not there
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < numWaitIterations; ++i) {
         if (connected || connectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(connectFailed);
     CPPUNIT_ASSERT(!connected);
@@ -916,9 +919,9 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     signaler->asyncDisconnect("signalInstance", "signal", "slotInstance", "slot",
                               disconnectSuccessHandler, disconnectFailedHandler);
     // Give disconnection call some time to travel
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg, !disconnectFailed);
     CPPUNIT_ASSERT(disconnectSuccess);
@@ -937,9 +940,9 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     signaler->asyncDisconnect("signalInstance", "signal", "slotInstance", "slot",
                               disconnectSuccessHandler, disconnectFailedHandler);
     // Give some time to find out that signal is not there
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(!disconnectSuccess);
     CPPUNIT_ASSERT(disconnectFailed);
@@ -957,9 +960,9 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     signaler->asyncDisconnect("signalInstance", "NOT_A_signal", "slotInstance", "slot",
                               disconnectSuccessHandler, disconnectFailedHandler);
     // Give some time to find out that signal is not there
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(!disconnectSuccess);
     CPPUNIT_ASSERT(disconnectFailed);
@@ -977,9 +980,9 @@ void SignalSlotable_Test::_testDisconnectAsync() {
     signaler->asyncDisconnect("NOT_A_signalInstance", "signal", "slotInstance", "slot",
                               disconnectSuccessHandler, disconnectFailedHandler, 150); // timeout of 150 ms
     // Give some time to find out that signal is not there
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < numWaitIterations; ++i) {
         if (disconnectSuccess || disconnectFailed) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     };
     CPPUNIT_ASSERT(!disconnectSuccess);
     CPPUNIT_ASSERT_MESSAGE(disconnectFailedMsg, disconnectFailed);
@@ -1144,20 +1147,20 @@ void SignalSlotable_Test::_testAsyncReply() {
     };
     sender->request("slotter", "slotAsyncReply", 3).receiveAsync<int>(successHandler, errorHandler);
     // Some time for message travel and execution until slot call is finished...
-    int counter = 100;
+    int counter = numWaitIterations;
     while (--counter >= 0) {
         if (slotter->m_slotCallEnded) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     }
     CPPUNIT_ASSERT(slotter->m_slotCallEnded);
     // ...but reply is not yet received
     CPPUNIT_ASSERT(!received);
 
     // Now wait until reply is received
-    counter = 100;
+    counter = numWaitIterations;
     while (--counter >= 0) {
         if (received) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     }
     // Assert and also check result:
     CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled);
@@ -1189,20 +1192,20 @@ void SignalSlotable_Test::_testAsyncReply() {
 
     sender->request("slotter", "slotAsyncErrorReply").receiveAsync(successHandler2, errorHandler2);
     // Some time for message travel and execution until slot call is finished...
-    counter = 100;
+    counter = numWaitIterations;
     while (--counter >= 0) {
         if (slotter->m_slotCallEnded_error) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     }
     CPPUNIT_ASSERT(slotter->m_slotCallEnded_error);
     // ...but reply is not yet received
     CPPUNIT_ASSERT(!receivedSuccess && !receivedError);
 
     // Now wait until reply is received
-    counter = 100;
+    counter = numWaitIterations;
     while (--counter >= 0) {
         if (receivedSuccess || receivedError) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     }
     // Assert and also check result:
     CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled_error);
@@ -1226,10 +1229,10 @@ void SignalSlotable_Test::_testAsyncReply() {
     CPPUNIT_ASSERT_NO_THROW(slotter->slotAsyncReply(3));
     CPPUNIT_ASSERT(slotter->m_slotCallEnded);
 
-    counter = 100;
+    counter = numWaitIterations;
     while (--counter >= 0) {
         if (slotter->m_asynReplyHandlerCalled) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerWaitIterationMs));
     }
     CPPUNIT_ASSERT(slotter->m_asynReplyHandlerCalled);
 
