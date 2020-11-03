@@ -17,7 +17,9 @@ from karabo.common.scenemodel.api import (
 )
 from karabo.native import Hash, read_project_model
 from karabogui import messagebox
+from karabogui.enums import AccessRole
 from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.globals import access_role_allowed
 from karabogui.singletons.api import (
     get_db_conn, get_project_model, get_network)
 from karabogui.topology.util import get_macro_servers
@@ -343,7 +345,9 @@ def show_save_project_message(project, parent=None):
 
     :return Whether the user wants to save
     """
-    if project is not None and project.modified:
+
+    if (project is not None and project.modified
+            and access_role_allowed(AccessRole.PROJECT_EDIT)):
         ask = ('The project \"<b>{}</b>\" has been modified.<br />Do you want '
                'to save the project?').format(project.simple_name)
         options = (QMessageBox.Save | QMessageBox.No)
