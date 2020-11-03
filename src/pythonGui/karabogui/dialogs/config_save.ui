@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>399</width>
-    <height>308</height>
+    <width>466</width>
+    <height>328</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Save a configuration from name</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -36,31 +36,14 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
+     <item row="2" column="0">
       <widget class="QLabel" name="label_priority">
        <property name="text">
         <string>Priority:</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_description">
-       <property name="text">
-        <string>Description:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QTextEdit" name="ui_description">
-       <property name="toolTip">
-        <string>The description for this configuration. Please leave your credentials!</string>
-       </property>
-       <property name="statusTip">
-        <string>The description for this configuration. Please leave your credentials!</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
+     <item row="2" column="1">
       <widget class="QComboBox" name="ui_priority">
        <property name="currentIndex">
         <number>0</number>
@@ -82,7 +65,7 @@
        </item>
       </widget>
      </item>
-     <item row="2" column="1">
+     <item row="3" column="1">
       <widget class="QLabel" name="ui_priority_text">
        <property name="minimumSize">
         <size>
@@ -101,6 +84,53 @@
        </property>
        <property name="text">
         <string>Priority Description</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_description">
+       <property name="text">
+        <string>Description:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QTextEdit" name="ui_description">
+       <property name="toolTip">
+        <string>The description for this configuration. Please leave your credentials!</string>
+       </property>
+       <property name="statusTip">
+        <string>The description for this configuration. Please leave your credentials!</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QLabel" name="note_online">
+       <property name="font">
+        <font>
+         <italic>true</italic>
+        </font>
+       </property>
+       <property name="text">
+        <string>Note: Configurations can only be stored if the device is online.</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLabel" name="label">
+       <property name="font">
+        <font>
+         <italic>true</italic>
+        </font>
+       </property>
+       <property name="text">
+        <string>Note: No special characters or symbols are allowed.</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
