@@ -69,19 +69,19 @@ class BaseROIController(QObject):
 
             self._show_roi_class(roi)
 
-    def add(self, tool, pos, size=None, ignore_bounds=False,
+    def add(self, tool, pos, size=None, name='', ignore_bounds=False,
             current_item=True):
         # Get the ROI class
         roi_class = self.TOOL_MAP[tool]
         pos = Point(pos)
 
         if size is not None:
-            roi_item = roi_class(pos=pos, size=size,
+            roi_item = roi_class(pos=pos, size=size, name=name,
                                  scale_snap=self._scale_snap,
                                  translate_snap=self._translate_snap,
                                  pen=self._pen)
         else:
-            roi_item = roi_class(pos=pos,
+            roi_item = roi_class(pos=pos, name=name,
                                  scale_snap=self._scale_snap,
                                  translate_snap=self._translate_snap,
                                  pen=self._pen)

@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Float, Int
+from traits.api import Float, Int, String
 
 from karabo.common.savable import BaseSavableModel
 from karabo.common.scenemodel.const import NS_KARABO
@@ -25,6 +25,7 @@ KARABO_ROI_TYPE = 'roi_type'
 class BaseROIData(BaseSavableModel):
     """The BaseROI Data Model being ``Savable`` and conering the ``type``"""
     roi_type = Int()
+    name = String
 
 
 class CrossROIData(BaseROIData):
@@ -91,7 +92,8 @@ def read_roi_info(element):
             continue
 
         roi_type = int(child_elem.get('roi_type', 0))
-        traits = {'roi_type': roi_type}
+        name = child_elem.get('name', '')
+        traits = {'roi_type': roi_type, 'name': name}
         if roi_type == 1:  # Rect:
             traits['x'] = float(child_elem.get('x'))
             traits['y'] = float(child_elem.get('y'))

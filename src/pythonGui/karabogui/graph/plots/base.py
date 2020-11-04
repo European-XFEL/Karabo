@@ -342,13 +342,14 @@ class KaraboPlotView(QWidget):
             roi_items = config.get('roi_items', [])
             for roi_data in roi_items:
                 roi_type = roi_data['roi_type']
+                name = roi_data['name']
                 if roi_type == ROITool.Crosshair:
                     pos = (roi_data['x'], roi_data['y'])
                     size = None
                 else:
                     continue
 
-                self._roi.add(roi_type, pos, size=size)
+                self._roi.add(roi_type, pos, size=size, name=name)
 
             self._roi.show(roi_tool)
 
@@ -397,7 +398,7 @@ class KaraboPlotView(QWidget):
         for tool, roi_items in self._roi.roi_items.items():
             # Each tool has multiple roi objects
             for roi in roi_items:
-                traits = {'roi_type': tool}
+                traits = {'roi_type': tool, 'name': roi.name}
                 if tool == ROITool.Crosshair:
                     x, y = roi.coords
                     traits.update({'x': x, 'y': y})
