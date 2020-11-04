@@ -288,7 +288,7 @@ class TestPlotViewRestore(_BasePlotTest):
 
         # Restore ROI items
         roi_tool = int(ROITool.Crosshair)
-        roi_items = [{"roi_type": roi_tool, "x": 15, "y": 15}]
+        roi_items = [{"roi_type": roi_tool, "x": 15, "y": 15, "name": "ROI"}]
         self.restore(roi_items=roi_items, roi_tool=roi_tool)
 
         # Check if only one ROI type is present and current
