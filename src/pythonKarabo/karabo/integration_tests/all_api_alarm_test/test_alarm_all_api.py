@@ -51,7 +51,10 @@ class TestDeviceAlarmApi(BoundDeviceTestCase):
         # - add a slot and connect it to a remote signal
         # - and have it ensured that a signal triggered by a slot call
         #   is received before the slot reply
-        caller = SignalSlotable("helperAlarmTests")
+        # Note: Use API specific name since we cannot be sure when Python
+        #       calls the destructor of the underlying C++ SignalSlotable
+        #       of the incarnation for the previously tested API.
+        caller = SignalSlotable("helperAlarmTests_" + api)
         caller.start()
         signal_id = signal_payload = None
 
