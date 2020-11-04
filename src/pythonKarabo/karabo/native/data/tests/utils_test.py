@@ -1,8 +1,7 @@
 import numpy as np
 
 from karabo.native.data import (
-    dtype_from_number, get_image_data, Hash, HashList, Schema,
-    dictToHash)
+    dtype_from_number, dictToHash, get_image_data, Hash, HashList)
 
 
 def test_numpy_int32_dtype():
@@ -28,8 +27,7 @@ def test_numpy_unknwon():
 def test_get_image_data():
     h = Hash()
     h['data.image.pixels'] = Hash()
-    h['data.image.pixels.data'] = np.array([[2, 4, 6], [6, 8, 10]],
-                                            np.int64)
+    h['data.image.pixels.data'] = np.array([[2, 4, 6], [6, 8, 10]], np.int64)
     h['data.image.pixels.type'] = 16
     h['data.image.pixels.shape'] = np.array([2, 3], np.uint64)
     h['data.image.pixels.isBigEndian'] = False

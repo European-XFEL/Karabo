@@ -10,7 +10,6 @@ from karabo.native import (
 
 from karabo.native.data.tests.utils import WithTable
 
-
 # The following XML was generated using the C++ API `saveToFile`
 BOUND_HASH_XML = """<?xml version="1.0"?>
 <root KRB_Artificial="" KRB_Type="HASH">
@@ -251,7 +250,6 @@ class TestSerializers(TestCase):
         )
         self.assertTrue(sch_hash['table', 'defaultValue'].startswith("'e1'"))
 
-
     def test_xml_MDLSchema_load(self):
         """Tests that a xml for an MDL Hash with vector of hash and schema
         attributes can be successfully loaded by the xml serializer.
@@ -269,9 +267,9 @@ class TestSerializers(TestCase):
         self.assertTrue('rowSchema' in schema_hash.getAttributes('table'))
         self.assertTrue(isinstance(schema_hash['table', 'rowSchema'], str))
         # TODO: make encodeXML compatible with the Bound XML serializer from
-        #       Karabo version 2.6.0 and above. Once that is done, 'rowSchema'
-        #       should become an instance of Schema and 'table' should become an
-        #       instance of HashList.
+        # Karabo version 2.6.0 and above. Once that is done, 'rowSchema'
+        # should become an instance of Schema and 'table' should become
+        # an instance of HashList.
 
 
 if __name__ == "__main__":
