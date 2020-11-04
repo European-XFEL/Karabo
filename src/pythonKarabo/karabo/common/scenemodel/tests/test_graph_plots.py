@@ -92,8 +92,8 @@ def test_vector_hist_graph_model():
 def test_vector_graph():
     traits = _geometry_traits()
     roi_data = [
-        CrossROIData(**{'roi_type': 2, 'x': 150, 'y': 150}),
-        CrossROIData(**{'roi_type': 2, 'x': 150, 'y': 150}),
+        CrossROIData(**{'roi_type': 2, 'x': 150, 'y': 150, "name": "Cross 1"}),
+        CrossROIData(**{'roi_type': 2, 'x': 150, 'y': 150, "name": "Cross 2"}),
 
     ]
     traits['half_samples'] = 10000
@@ -128,8 +128,8 @@ def test_vector_scatter_graph():
 def test_ndarray_graph():
     traits = _geometry_traits()
     roi_data = [
-        CrossROIData(**{'roi_type': 2, 'x': 150, 'y': 150}),
-        CrossROIData(**{'roi_type': 2, 'x': 150, 'y': 150}),
+        CrossROIData(**{'roi_type': 2, 'x': 150, 'y': 150, "name": "Cross 1"}),
+        CrossROIData(**{'roi_type': 2, 'x': 150, 'y': 150, "name": "Cross 2"}),
 
     ]
     traits['half_samples'] = 10000

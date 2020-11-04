@@ -1,23 +1,26 @@
 import numpy as np
 from PyQt5.QtCore import Qt, QRectF, pyqtSlot, QPoint
 from PyQt5.QtGui import QTransform
-from PyQt5.QtWidgets import QMenu, QAction
+from PyQt5.QtWidgets import (
+    QAction, QInputDialog, QLabel, QMenu, QWidgetAction)
 from pyqtgraph import ROI, TextItem, functions as fn, Point
 
+from karabogui import icons
 from karabogui.graph.common.utils import float_to_string
 
-from .utils import ROI_CENTER_HTML, ROI_CENTER_SIZE_HTML
+from .utils import set_roi_html
 
 
 class KaraboROI(ROI):
 
-    def __init__(self, pos, size=Point(1, 1),
+    def __init__(self, pos=(0, 0), size=Point(1, 1), name='',
                  scale_snap=False, translate_snap=False, pen=None):
         super(KaraboROI, self).__init__(pos, size,
                                         scaleSnap=scale_snap,
                                         translateSnap=translate_snap,
                                         pen=pen,
                                         removable=True)
+        self.name = name
         self.setZValue(100)
         self._selected = False
         self._scaling = np.array([1, 1])
@@ -25,8 +28,9 @@ class KaraboROI(ROI):
 
         self._add_handles()
 
-        self.textItem = TextItem(html=ROI_CENTER_HTML.format(0, 0),
-                                 fill=(0, 0, 0, 50))
+        self.textItem = TextItem(
+            html=set_roi_html(name=self.name, center=(0, 0)),
+            fill=(0, 0, 0, 50))
         self.textItem.setZValue(99)
         self._change_roi_text_item_details()
 
@@ -78,7 +82,9 @@ class KaraboROI(ROI):
         self.textItem.setPos(*(self.pos() + (self.size() * direction)))
         center = [float_to_string(coord) for coord in self.center]
         size = [float_to_string(s) for s in self.size()]
-        self.textItem.setHtml(ROI_CENTER_SIZE_HTML.format(*(center + size)))
+        self.textItem.setHtml(set_roi_html(name=self.name,
+                                           center=center,
+                                           size=size))
 
     # ---------------------------------------------------------------------
     # Properties
@@ -138,14 +144,30 @@ class KaraboROI(ROI):
         menu.popup(QPoint(pos.x(), pos.y()))
 
     def getMenu(self):
-        if self.menu is None:
-            menu = QMenu()
-            menu.setTitle("ROI")
-            remove_action = QAction("Remove ROI", menu)
-            remove_action.triggered.connect(self.removeClicked)
-            menu.addAction(remove_action)
-            self.menu = menu
-        return self.menu
+        if self.menu is not None:
+            self.menu.destroy()
+
+        self.menu = menu = QMenu()
+        menu.setTitle("ROI")
+        # Label action
+        label = QLabel(self.name or "Region of Interest")
+        label.setMargin(2)
+        label.setAlignment(Qt.AlignCenter)
+        label_action = QWidgetAction(menu)
+        label_action.setDefaultWidget(label)
+        menu.addAction(label_action)
+        menu.addSeparator()
+        # Remove action
+        remove_action = QAction("Remove", menu)
+        remove_action.triggered.connect(self.removeClicked)
+        remove_action.setIcon(icons.delete)
+        menu.addAction(remove_action)
+        # Configure action
+        configure_action = QAction("Configure", menu)
+        configure_action.triggered.connect(self._configure_roi)
+        configure_action.setIcon(icons.edit)
+        menu.addAction(configure_action)
+        return menu
 
     def mouseDragEvent(self, ev):
         if ev.isStart():
@@ -378,3 +400,14 @@ class KaraboROI(ROI):
             return tuple(sl), tr
         else:
             return bounds, tr
+
+    # ---------------------------------------------------------------------
+    # Private methods
+
+    @pyqtSlot()
+    def _configure_roi(self):
+        text, ok = QInputDialog.getText(None, 'Configure ROI', 'Name:',
+                                        text=self.name)
+        if ok:
+            self.name = text
+            self._change_roi_text_item_details()
