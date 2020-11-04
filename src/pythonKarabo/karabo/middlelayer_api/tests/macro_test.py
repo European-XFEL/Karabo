@@ -484,10 +484,15 @@ class Tests(DeviceTest):
             yield from karabo_sleep(0.13)
             # Then cancel, while the macro is in that interruptable sleep
             yield from d.cancel()
-            # Sleep a little while, so the task can finish - with 0.03
-            # failed here:
-            # https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/47690
-            yield from karabo_sleep(0.06)
+            # Sleep a little while, so the task can finish. With a static
+            # karabo_sleep of 0.06 this failed e.g. in
+            # https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/141622
+            counter = 100
+            while counter > 0:
+                yield from karabo_sleep(0.01)
+                if self.local.slept_count == 2:
+                    break
+                counter -= 1
             self.assertEqual(self.local.slept_count, 2)
             self.assertEqual(self.local.cancelled_slot, Local.sleepalot)
             assert task.done()
