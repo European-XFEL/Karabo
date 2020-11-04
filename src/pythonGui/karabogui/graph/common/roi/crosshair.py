@@ -6,12 +6,12 @@ from pyqtgraph import Point
 from karabogui.graph.common.utils import float_to_string
 
 from .base import KaraboROI
-from .utils import ROI_CENTER_HTML, ImageRegion
+from .utils import ImageRegion, set_roi_html
 
 
 class CrosshairROI(KaraboROI):
 
-    def __init__(self, pos=None, size=(1, 1),
+    def __init__(self, pos=None, size=(1, 1), name='',
                  scale_snap=False, translate_snap=False, pen=None):
         """Reimplementation of pyqtgraph CrosshairROI to support transforms
         and add a few fixes/performance improvements:
@@ -20,7 +20,7 @@ class CrosshairROI(KaraboROI):
           (+ scale/2, where scale = 1)
         - Force redraw the crosshair shape with sigRegionChanged"""
 
-        super(CrosshairROI, self).__init__(pos + 0.5, size,
+        super(CrosshairROI, self).__init__(pos + 0.5, size, name,
                                            scale_snap, translate_snap,
                                            pen=pen)
         self._shape = None
@@ -35,7 +35,7 @@ class CrosshairROI(KaraboROI):
 
         self.textItem.setPos(self.pos())
         x, y = [float_to_string(coord) for coord in self.center]
-        self.textItem.setHtml(ROI_CENTER_HTML.format(x, y))
+        self.textItem.setHtml(set_roi_html(name=self.name, center=(x, y)))
 
     def invalidate(self):
         self._shape = None
