@@ -6,7 +6,7 @@
 import os.path as op
 
 from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QIntValidator
 from PyQt5.QtWidgets import QComboBox, QDialog
 
@@ -17,6 +17,7 @@ class LoginDialog(QDialog):
         super(LoginDialog, self).__init__(parent)
         filepath = op.join(op.abspath(op.dirname(__file__)), "logindialog.ui")
         uic.loadUi(filepath, self)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         index = self.ui_username.findText(username)
         self.ui_username.setCurrentIndex(index)
