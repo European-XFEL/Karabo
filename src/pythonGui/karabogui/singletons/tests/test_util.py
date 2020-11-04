@@ -110,10 +110,15 @@ RuntimeError: Something went wrong.
 """
 
 
+SIMPLE_ERROR_MESSAGE = """\
+Failure on request to execute 'reset' on device 'plcMonitor. Request not answered within 5 seconds."""
+
+
 EXPECTED_MESSAGE = {
     CPP_SLOT_ERROR_MESSAGE: 'Command "move" is not allowed in current state "ERROR" of device "MOV_TEST/MOTOR/SERVO_1".',
     PYTHON_SLOT_ERROR_MESSAGE: 'RuntimeError: Problematic execute: ProblematicSlot',
-    PYTHON_MULTIPLE_ERROR_MESSAGE: 'RuntimeError: Something went wrong.'
+    PYTHON_MULTIPLE_ERROR_MESSAGE: 'RuntimeError: Something went wrong.',
+    SIMPLE_ERROR_MESSAGE: SIMPLE_ERROR_MESSAGE
 }
 
 
@@ -121,6 +126,7 @@ def test_get_error_message():
     _assert_error_message(CPP_SLOT_ERROR_MESSAGE)
     _assert_error_message(PYTHON_SLOT_ERROR_MESSAGE)
     _assert_error_message(PYTHON_MULTIPLE_ERROR_MESSAGE)
+    _assert_error_message(SIMPLE_ERROR_MESSAGE)
 
 
 def _assert_error_message(message):
