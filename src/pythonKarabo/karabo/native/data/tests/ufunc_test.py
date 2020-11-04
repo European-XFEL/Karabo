@@ -185,7 +185,7 @@ class Tests(TestCase):
 
         self._assert_binary_ufunc(ufunc, A, B, expected, debug=debug,
                                   msg=f"in QuantityValue part of "
-                                  f"'{ufunc.__name__}', {msg}")
+                                      f"'{ufunc.__name__}', {msg}")
 
         # Now the same for descriptor-based objects
         dA = self.descriptors_from_QV(A)
@@ -195,7 +195,7 @@ class Tests(TestCase):
             dB = B
         self._assert_binary_ufunc(ufunc, dA, dB, expected, debug=debug,
                                   msg=f"in descriptor-based part of "
-                                  f"'{ufunc.__name__}', {msg}")
+                                      f"'{ufunc.__name__}', {msg}")
 
     def _assert_unary_ufunc(self, ufunc, A, expected, msg, debug):
         """
@@ -233,17 +233,18 @@ class Tests(TestCase):
         """
         self._assert_unary_ufunc(ufunc, A, expected, debug=debug,
                                  msg=f"in QuantityValue part of "
-                                 f"'{ufunc.__name__}({A})', {msg}")
+                                     f"'{ufunc.__name__}({A})', {msg}")
 
         # Now the same for descriptor-based objects
         dA = self.descriptors_from_QV(A)
         self._assert_unary_ufunc(ufunc, dA, expected, debug=debug,
                                  msg=f"in descriptor-based part of "
-                                 f"'{ufunc.__name__}', {msg}")
+                                     f"'{ufunc.__name__}', {msg}")
 
     """
     ** Math operations **
     """
+
     def test_add(self):
         ufunc = np.add
 
@@ -305,9 +306,9 @@ class Tests(TestCase):
 
         # Compatible units
         v4 = QV([1, 1, 1], unit='mm', timestamp=self.ts3)
-        self.assertBinaryUfunc(ufunc, v4, self.v1,    # 1m × 1mm = 1 m×mm
+        self.assertBinaryUfunc(ufunc, v4, self.v1,  # 1m × 1mm = 1 m×mm
                                QV([1, 1, 1], unit='m * mm'))
-        self.assertBinaryUfunc(ufunc, v4, self.v1,    # 1m × 1mm = 1 mm×m
+        self.assertBinaryUfunc(ufunc, v4, self.v1,  # 1m × 1mm = 1 mm×m
                                QV([1, 1, 1], unit='mm * m'))
         self.assertBinaryUfunc(ufunc, v4, self.v1,  # 1m × 1mm = 0.001 m²
                                QV([0.001, 0.001, 0.001], unit='m ** 2'))
@@ -367,7 +368,7 @@ class Tests(TestCase):
         """
         ufunc = np.logaddexp
 
-        ret = np.log(2*np.exp(1))
+        ret = np.log(2 * np.exp(1))
         v_ret = np.array([ret, ret, ret])
 
         self.assertBinaryUfunc(ufunc, self.one, self.one, v_ret)
@@ -718,7 +719,7 @@ class Tests(TestCase):
 
         # from numpy documentation:
         a = np.array([-1.7, -1.5, -0.2, 0.2, 1.5, 1.7, 2.0])
-        r = np.array([-2., -2., -0.,  0.,  2.,  2.,  2.])
+        r = np.array([-2., -2., -0., 0., 2., 2., 2.])
         inp = QV(a, unit='m', timestamp=self.ts1)
         out = QV(r, unit='m', timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, inp, out)
@@ -767,8 +768,8 @@ class Tests(TestCase):
         """
         Return the complex conjugate, element-wise."""
         ufunc = np.conjugate
-        a = QV([1+1j, 1j, 1-1j, 1], unit='m', timestamp=self.ts1)
-        r = QV([1-1j, -1j, 1+1j, 1], unit='m', timestamp=self.ts1)
+        a = QV([1 + 1j, 1j, 1 - 1j, 1], unit='m', timestamp=self.ts1)
+        r = QV([1 - 1j, -1j, 1 + 1j, 1], unit='m', timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, a, r)
 
     def test_exp(self):
@@ -863,8 +864,8 @@ class Tests(TestCase):
             self.assertUnaryUfunc(ufunc, a, r)
 
         # Complex values from the official manual
-        a = QV([0+1.j, 1, 2+0.j, 4.j], timestamp=self.ts1)
-        r = QV([2.26618007j, 0, 1, 2.+2.26618007j], timestamp=self.ts1)
+        a = QV([0 + 1.j, 1, 2 + 0.j, 4.j], timestamp=self.ts1)
+        r = QV([2.26618007j, 0, 1, 2. + 2.26618007j], timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, a, r)
 
         with self.assertRaises(DimensionalityError):
@@ -905,7 +906,7 @@ class Tests(TestCase):
 
         # [exp(iπ)-1, exp(-iπ/2)+1, exp(iπ/4)] = [-2, -1-i, (1+i)sqrt(2)/2-1]
         a = QV([1j * pi, -1j * pi / 2, 1j * pi / 4])
-        r = QV([-2., -1-1j, (1 + 1j) * np.sqrt(2) / 2 - 1])
+        r = QV([-2., -1 - 1j, (1 + 1j) * np.sqrt(2) / 2 - 1])
         self.assertUnaryUfunc(ufunc, a, r)
 
         with self.assertRaises(DimensionalityError):
@@ -920,14 +921,14 @@ class Tests(TestCase):
         """
         ufunc = np.log1p
         # log([-2, -1, 0, 1, e]) = [-Nan, -∞, 0, 1]
-        a = QV([-2, -1, 0, 1e-99, e-1], timestamp=self.ts1)
+        a = QV([-2, -1, 0, 1e-99, e - 1], timestamp=self.ts1)
         r = QV([np.nan, -np.inf, 0, 1e-99, 1], timestamp=self.ts1)
         with self.assertWarns(RuntimeWarning):
             self.assertUnaryUfunc(ufunc, a, r)
 
         #
         # log([-i, i]) = [-iπ/2, iπ/2]
-        a = QV([-1-1j, -1+1j], timestamp=self.ts1)
+        a = QV([-1 - 1j, -1 + 1j], timestamp=self.ts1)
         r = QV([-1j * pi / 2, 1j * pi / 2], timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, a, r)
 
@@ -944,13 +945,13 @@ class Tests(TestCase):
         self.assertUnaryUfunc(ufunc, self.v1 * self.v1, self.v1)
 
         x = QV([4, -1, np.inf], unit='m ** 2', timestamp=self.ts1)
-        res = QV([2.,  np.nan,  np.inf], unit='m', timestamp=self.ts1)
+        res = QV([2., np.nan, np.inf], unit='m', timestamp=self.ts1)
         with self.assertWarns(RuntimeWarning):
             self.assertUnaryUfunc(ufunc, x, res)
 
         # sqrt(4, -1, -3+4j] s² = [2, 1j, 1+2j] s
-        x = QV([4, -1, -3+4.0j], unit='s ** 2', timestamp=self.ts1)
-        res = QV([2.+0.j, 0.+1.j, 1.+2.j], unit='s', timestamp=self.ts1)
+        x = QV([4, -1, -3 + 4.0j], unit='s ** 2', timestamp=self.ts1)
+        res = QV([2. + 0.j, 0. + 1.j, 1. + 2.j], unit='s', timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, x, res)
 
     def test_square(self):
@@ -960,8 +961,8 @@ class Tests(TestCase):
         m_square = QV([0, 4, 16], unit='m ** 2', timestamp=self.ts3)
         self.assertUnaryUfunc(ufunc, self.v2, m_square)
         # ([-1j, 1, 1j] mm )² = ([-1, 1, -1] mm²
-        a = QV([-1.j, 1,  1.j], unit='mm', timestamp=self.ts1)
-        r = QV([-1., 1,  -1], unit='mm ** 2', timestamp=self.ts1)
+        a = QV([-1.j, 1, 1.j], unit='mm', timestamp=self.ts1)
+        r = QV([-1., 1, -1], unit='mm ** 2', timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, a, r)
 
     def test_cbrt(self):
@@ -996,8 +997,8 @@ class Tests(TestCase):
                 self.assertUnaryUfunc(ufunc, self.v2, r)
 
         # complex values are also possible
-        a = QV([1j, -1j, 1+1j], unit='s', timestamp=self.ts1)
-        r = QV([-1j, 1j, 0.5-0.5j], unit='1/s', timestamp=self.ts1)
+        a = QV([1j, -1j, 1 + 1j], unit='s', timestamp=self.ts1)
+        r = QV([-1j, 1j, 0.5 - 0.5j], unit='1/s', timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, a, r)
 
     def test_gcd(self):
@@ -1025,7 +1026,7 @@ class Tests(TestCase):
         f = QV([1., 2., 3.])
         with self.assertRaises(TypeError):
             self.assertBinaryUfunc(ufunc, f, self.v1, self.v1)
-        c = QV([1+1j, 2., 3.])
+        c = QV([1 + 1j, 2., 3.])
         with self.assertRaises(TypeError):
             self.assertBinaryUfunc(ufunc, c, self.v1, self.v1)
 
@@ -1060,6 +1061,7 @@ class Tests(TestCase):
     All trigonometric functions use radians when an angle is called for.
     The ratio of degrees to radians is 180°/π.
     """
+
     def test_sin(self):
         ufunc = np.sin
         self.assertUnaryUfunc(ufunc, self.zero_rad, self.zero)
@@ -1176,7 +1178,7 @@ class Tests(TestCase):
         # examples from the scipy reference:
         x = QV([-1, +1, +1, -1], unit='mm', timestamp=self.ts1)
         y = QV([-1, -1, +1, +1], unit='mm', timestamp=self.ts2)
-        res = QV([-135.,  -45.,   45.,  135.], unit='rad', timestamp=self.ts2)
+        res = QV([-135., -45., 45., 135.], unit='rad', timestamp=self.ts2)
         self.assertBinaryUfunc(ufunc, y, x, res / 180 * np.pi)
 
         x = QV([1., -1.], unit='s', timestamp=self.ts1)
@@ -1347,6 +1349,7 @@ class Tests(TestCase):
     These function all require integer arguments and they manipulate
     the bit-pattern of those arguments.
     """
+
     def test_bitwise_and(self):
         """
         Compute the bit-wise AND of two arrays element-wise.
@@ -1510,6 +1513,7 @@ class Tests(TestCase):
     """
     ** Comparison functions **
     """
+
     def test_greater(self):
         """
         XXX: Returns numpy.array
@@ -1533,7 +1537,7 @@ class Tests(TestCase):
         # XXX: complex numbers shouldn't be compared, but by default they are.
         #      In this case only real parts are compared
         c1 = QV([1j, 0, 1 - 1j], unit='m')
-        c2 = QV([-1, -1-1j, 2j], unit='m')
+        c2 = QV([-1, -1 - 1j, 2j], unit='m')
         self.assertBinaryUfunc(ufunc, c1, c2, self.true)
 
     def test_greater_equal(self):
@@ -1560,7 +1564,7 @@ class Tests(TestCase):
         # XXX: complex numbers shouldn't be compared, but by default they are.
         #      In this case only real parts are compared
         c1 = QV([-1.1 + 1j, 0, 1 - 1j], unit='m')
-        c2 = QV([-1, -1-1j, 2j], unit='m')
+        c2 = QV([-1, -1 - 1j, 2j], unit='m')
         self.assertBinaryUfunc(ufunc, c1, c2, [False, True, True])
 
     def test_less(self):
@@ -1587,7 +1591,7 @@ class Tests(TestCase):
         # XXX: complex numbers shouldn't be compared, but by default they are.
         #      In this case only real parts are compared
         c1 = QV([-1.1 + 1j, 0, 1 - 1j], unit='m')
-        c2 = QV([-1, -1-1j, 2j], unit='m')
+        c2 = QV([-1, -1 - 1j, 2j], unit='m')
         self.assertBinaryUfunc(ufunc, c1, c2, [True, False, False])
 
     def test_less_equal(self):
@@ -1614,7 +1618,7 @@ class Tests(TestCase):
         # XXX: complex numbers shouldn't be compared, but by default they are.
         #      In this case only real parts are compared
         c1 = QV([-1 + 1j, 0, 1 - 1j], unit='m')
-        c2 = QV([-1, -1-1j, 2j], unit='m')
+        c2 = QV([-1, -1 - 1j, 2j], unit='m')
         self.assertBinaryUfunc(ufunc, c1, c2, self.false)
 
     def test_not_equal(self):
@@ -1641,7 +1645,7 @@ class Tests(TestCase):
             self.assertBinaryUfunc(ufunc, self.v1, self.s1, r)
 
         c1 = QV([-1j, 0, 1 - 1j], unit='m')
-        c2 = QV([-1j, -1-1j, 2j], unit='m')
+        c2 = QV([-1j, -1 - 1j, 2j], unit='m')
         self.assertBinaryUfunc(ufunc, c1, c2, [False, True, True])
 
     def test_equal(self):
@@ -1667,7 +1671,7 @@ class Tests(TestCase):
         with self.assertRaises(DimensionalityError):
             self.assertBinaryUfunc(ufunc, self.v1, self.s1, r)
 
-        c1 = QV([0-1j, 0, 1 - 1j], unit='m')
+        c1 = QV([0 - 1j, 0, 1 - 1j], unit='m')
         c2 = QV([-1j, -1 - 1j, 2j], unit='m')
         self.assertBinaryUfunc(ufunc, c1, c2, [True, False, False])
 
@@ -1753,7 +1757,7 @@ class Tests(TestCase):
         # if abs(c) != 0, then bool(c) == True.
         c1 = QV([0 - 1j, 0, 1 - 1j])
         c2 = QV([-1j, -1 - 1j, 2j])
-        self.assertBinaryUfunc(ufunc, c1, c2, [False,  True, False])
+        self.assertBinaryUfunc(ufunc, c1, c2, [False, True, False])
 
     def test_logical_not(self):
         """
@@ -1777,7 +1781,7 @@ class Tests(TestCase):
         # Complex numbers are treated as usual:
         # if abs(c) != 0, then bool(c) == True.
         c1 = QV([0 - 1j, 0, 1 - 1j])
-        self.assertUnaryUfunc(ufunc, c1, [False,  True, False])
+        self.assertUnaryUfunc(ufunc, c1, [False, True, False])
 
     @skip
     def test_maximum(self):
@@ -1871,7 +1875,7 @@ class Tests(TestCase):
         #      still in the answer
         c1 = QV([1 - 1j, 0, 1 - 1j])
         c2 = QV([2j, -1 - 1j, 3 + 1j])
-        self.assertBinaryUfunc(ufunc, c1, c2, [2j, -1 - 1j,  1 - 1j])
+        self.assertBinaryUfunc(ufunc, c1, c2, [2j, -1 - 1j, 1 - 1j])
 
     @skip
     def test_fmax(self):
@@ -1965,11 +1969,12 @@ class Tests(TestCase):
         #      still in the answer
         c1 = QV([1 - 1j, 0, 1 - 1j])
         c2 = QV([2j, -1 - 1j, 3 + 1j])
-        self.assertBinaryUfunc(ufunc, c1, c2, [2j, -1 - 1j,  1 - 1j])
+        self.assertBinaryUfunc(ufunc, c1, c2, [2j, -1 - 1j, 1 - 1j])
 
     """
     ** Floating functions **
     """
+
     def test_isfinite(self):
         """
         Test element-wise for finiteness (not infinity or not Not a Number).
@@ -1982,7 +1987,7 @@ class Tests(TestCase):
         self.assertUnaryUfunc(ufunc, self.v1, self.true)
         with self.assertWarns(RuntimeWarning):
             x1 = QV([np.log(-1.), 1, np.log(0)], unit='m', timestamp=self.ts1)
-        self.assertUnaryUfunc(ufunc, x1, [False,  True, False])
+        self.assertUnaryUfunc(ufunc, x1, [False, True, False])
 
         x2 = QV([np.nan, np.inf, np.NINF], unit='m', timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, x2, self.false)
@@ -2001,7 +2006,7 @@ class Tests(TestCase):
         self.assertUnaryUfunc(ufunc, self.v1, self.false)
 
         x1 = QV([np.inf, -np.inf, 1.0, np.nan])
-        self.assertUnaryUfunc(ufunc, x1, [True,  True, False, False])
+        self.assertUnaryUfunc(ufunc, x1, [True, True, False, False])
 
         x2 = QV([np.inf, np.nan, np.NINF], unit='m', timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, x2, [True, False, True])
@@ -2118,7 +2123,7 @@ class Tests(TestCase):
         """
         Returns `x1 * 2**x2`, element-wise.
 
-        The mantissas `x1` and twos exponents `x2` are used to construct 
+        The mantissas `x1` and twos exponents `x2` are used to construct
         floating point numbers `x1 * 2**x2`.
 
         Complex dtypes are not supported, they will raise a TypeError.
@@ -2166,7 +2171,7 @@ class Tests(TestCase):
         ufunc = np.floor
         x = QV([-1.7, -1.5, -0.2, 0.2, 1.5, 1.7, 2.0], unit='m',
                timestamp=self.ts1)
-        res = QV([-2., -2., -1.,  0.,  1.,  1.,  2.], unit='m',
+        res = QV([-2., -2., -1., 0., 1., 1., 2.], unit='m',
                  timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, x, res)
 
@@ -2186,12 +2191,12 @@ class Tests(TestCase):
         ufunc = np.ceil
         x = QV([-1.7, -1.5, -0.2, 0.2, 1.5, 1.7, 2.0], unit='m',
                timestamp=self.ts1)
-        res = QV([-1., -1., -0.,  1.,  2.,  2.,  2.], unit='m',
+        res = QV([-1., -1., -0., 1., 2., 2., 2.], unit='m',
                  timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, x, res)
 
         # Incompatible units
-        wrong_res = QV([-1., -1., -0.,  1.,  2.,  2.,  2.], unit='s',
+        wrong_res = QV([-1., -1., -0., 1., 2., 2., 2.], unit='s',
                        timestamp=self.ts1)
         with self.assertRaises(DimensionalityError):
             self.assertUnaryUfunc(ufunc, x, wrong_res)
@@ -2207,12 +2212,12 @@ class Tests(TestCase):
         ufunc = np.trunc
         x = QV([-1.7, -1.5, -0.2, 0.2, 1.5, 1.7, 2.0], unit='m',
                timestamp=self.ts1)
-        res = QV([-1., -1., -0.,  0.,  1.,  1.,  2.], unit='m',
+        res = QV([-1., -1., -0., 0., 1., 1., 2.], unit='m',
                  timestamp=self.ts1)
         self.assertUnaryUfunc(ufunc, x, res)
 
         # Incompatible units
-        wrong_res = QV([-1., -1., -0.,  0.,  1.,  1.,  2.], unit='s',
+        wrong_res = QV([-1., -1., -0., 0., 1., 1., 2.], unit='s',
                        timestamp=self.ts1)
         with self.assertRaises(DimensionalityError):
             self.assertUnaryUfunc(ufunc, x, wrong_res)
