@@ -1,10 +1,8 @@
-from collections import Iterable
-
 import numpy as np
 from xml.sax.saxutils import escape
 
 from .enums import NodeType
-from .hash import Hash, HashList, Type, Schema
+from .hash import Hash, HashList, Type
 
 NODE_TYPE = (NodeType.Node.value,)
 SPECIAL_TYPES = (NodeType.ChoiceOfNodes.value, NodeType.ListOfNodes.value)
