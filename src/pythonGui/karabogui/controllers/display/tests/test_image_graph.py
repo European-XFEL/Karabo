@@ -66,18 +66,20 @@ class TestImageGraph(GuiTestCase):
 
         # Add some ROIs
         roi_controller = self.controller.widget.roi
-        roi_controller.add(ROITool.Crosshair, (50, 50))
-        roi_controller.add(ROITool.Crosshair, (35, 35))
-        roi_controller.add(ROITool.Rect, (15, 15), (10, 10))
+        roi_controller.add(ROITool.Crosshair, (50, 50), name='Cross 1')
+        roi_controller.add(ROITool.Crosshair, (35, 35), name='Cross 2')
+        roi_controller.add(ROITool.Rect, (15, 15), (10, 10), name='Rect')
 
-        expected_configs = {ROITool.Crosshair: [(50, 50), (35, 35)],
-                            ROITool.Rect: [(15, 15, 10, 10)]}
+        expected_configs = {
+            ROITool.Crosshair: [('Cross 1', (50, 50)), ('Cross 2', (35, 35))],
+            ROITool.Rect: [('Rect', (15, 15, 10, 10))]}
 
         # Assert the expected configuration
         for tool, roi_items in roi_controller._rois.items():
-            current = [roi.coords for roi in roi_items]
-            expected = expected_configs[tool]
-            self.assertListEqual(current, expected)
+            configs = expected_configs[tool]
+            for (name, coords), roi_item in zip(configs, roi_items):
+                self.assertEqual(roi_item.name, name)
+                self.assertEqual(roi_item.coords, coords)
 
         apply_action = self.controller.widget.actions()[1]
 
@@ -96,10 +98,11 @@ class TestImageGraph(GuiTestCase):
         model.aux_plots = AuxPlots.ProfilePlot
 
         roi_items = [CrossROIData(**{'roi_type': ROITool.Crosshair,
-                                     'x': 15, 'y': 15}),
+                                     'x': 15, 'y': 15, 'name': 'CrossROI'}),
                      RectROIData(**{'roi_type': ROITool.Rect,
                                     'x': 25, 'y': 25,
-                                    'w': 10, 'h': 10})]
+                                    'w': 10, 'h': 10,
+                                    'name': 'RectROI'})]
         model.roi_items = roi_items
 
         controller = DisplayImageGraph(proxy=self.img_proxy, model=model)
@@ -110,12 +113,14 @@ class TestImageGraph(GuiTestCase):
         widget = controller.widget
 
         # Assert ROI configuration
-        expected_roi_config = {ROITool.Crosshair: (15, 15),
-                               ROITool.Rect: (25, 25, 10, 10)}
+        expected_roi_config = {ROITool.Crosshair: ('CrossROI', (15, 15)),
+                               ROITool.Rect: ('RectROI', (25, 25, 10, 10))}
 
         for tool, roi_items in widget.roi.roi_items.items():
-            expected_config = expected_roi_config[tool]
-            self.assertEqual(roi_items[0].coords, expected_config)
+            roi_item = roi_items[0]
+            name, coords = expected_roi_config[tool]
+            self.assertEqual(roi_item.coords, coords)
+            self.assertEqual(roi_item.name, name)
         controller.destroy()
 
     def test_value_update(self):
