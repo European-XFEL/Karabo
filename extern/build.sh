@@ -3,9 +3,9 @@
 ##############################################################################
 # Packages that we know how to build
 
-DEPENDENCIES_BASE=( bzip2 libpng jpeg tiff python cmake lapack boost
+DEPENDENCIES_BASE=( bzip2 libpng jpeg tiff python lapack boost
 freetype hdf5 log4cpp cppunit openmq nss openmqc patchelf gmock libxml libxslt
-daemontools libzmq nlohmann_json pugixml mqtt)
+daemontools libzmq nlohmann_json pugixml)
 
 DEPENDENCIES_PYTHON=( setuptools setuptools_scm pip wheel cython numpy scipy six
 nose py pytest pytest_runner pillow sip backports backports_abc tornado
@@ -17,7 +17,7 @@ jsonschema ecdsa tzlocal httplib2 traits pint nbformat
 notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml certifi
 chardet idna urllib3 requests ply psutil pycodestyle pyflakes mccabe flake8
 msgpack msgpack-numpy flaky pyyaml docker_pycreds websocket_client docker
-coverage matplotlib eulxml eulexist uvloop mqtt_python)
+coverage matplotlib eulxml eulexist uvloop)
 
 ##############################################################################
 # Important constants
