@@ -9,6 +9,7 @@ MESSAGE_PATTERN = (r"(?<=\n)\s*(?:{message_tag})\s*(.*?)(?=\n|$)"
 MESSAGE_REGEX = re.compile(MESSAGE_PATTERN)
 EXCEPTION_REGEX = re.compile(r"(?<=\n)(.*?(?:Exception|Error)):"
                              r"\s*(.*?)(?=\n|$)")
+MAX_CHARS = 150
 
 
 def get_error_message(failure_reason):
@@ -16,6 +17,10 @@ def get_error_message(failure_reason):
     have a message string. But in Python devices, it could just have an
     exception message. We try to parse it (by regex)
     """
+
+    # 0. Return the whole message if it's short
+    if len(failure_reason) <= MAX_CHARS:
+        return failure_reason
 
     # 1. Check if there's a verbose error message from the C++ devices
     messages = MESSAGE_REGEX.findall(failure_reason)
