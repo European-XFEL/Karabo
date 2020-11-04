@@ -37,7 +37,7 @@ dependencies:
   - lxml=4.4.1
   - requests=2.22
   - python-dateutil=2.8
-  - lttbc=0.1.9
+  - lttbc=0.2.0
   - jupyter_client=5.3.4
   - conda=4.8.4
 environment:
