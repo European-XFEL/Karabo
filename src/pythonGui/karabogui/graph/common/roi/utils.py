@@ -1,22 +1,26 @@
 import numpy as np
 
-ROI_CENTER_HTML = (
-    '<div style="text-align: center">'
-    '<span style="color: #FFF; font-size: 8pt; font-weight: bold;">'
-    'Cross Section</span><br>'
-    '<span style="color: #FFF; font-size: 8pt;">'
-    'Center: ({}, {})</span>'
-    '</div>')
 
-ROI_CENTER_SIZE_HTML = (
-    '<div style="text-align: center">'
-    '<span style="color: #FFF; font-size: 8pt; font-weight: bold;">'
-    'Region of Interest</span><br>'
-    '<span style="color: #FFF; font-size: 8pt;">'
-    'Center: ({}, {})</span><br>'
-    '<span style="color: #FFF; font-size: 8pt;">'
-    'Size: ({}, {})</span>'
-    '</div>')
+def set_roi_html(name, center=None, size=None):
+    html_list = []
+
+    # Name
+    html_list.append(
+        f'<span style="color: #FFF; font-size: 8pt; font-weight: bold;">'
+        f'{name or "Region of Interest"}</span>')
+    # Center
+    if center is not None:
+        html_list.append(
+            f'<span style="color: #FFF; font-size: 8pt;">'
+            f'Center: ({center[0]}, {center[1]})</span>')
+    # Size
+    if size is not None:
+        html_list.append(
+            f'<span style="color: #FFF; font-size: 8pt;">'
+            f'Size: ({size[0]}, {size[1]})</span>')
+
+    html = "<br>".join(html_list)
+    return f'<div style="text-align: center">{html}</div>'
 
 
 class ImageRegion:

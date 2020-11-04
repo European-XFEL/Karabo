@@ -365,6 +365,7 @@ class KaraboImageView(QWidget):
                 self.roi.remove_all()
                 for roi_data in roi_items:
                     roi_type = roi_data['roi_type']
+                    name = roi_data['name']
                     if roi_type == ROITool.Rect:
                         x, y, w, h = (roi_data['x'], roi_data['y'],
                                       roi_data['w'], roi_data['h'])
@@ -376,7 +377,7 @@ class KaraboImageView(QWidget):
                     else:
                         continue
 
-                    self.roi.add(roi_type, pos, size=size)
+                    self.roi.add(roi_type, pos, size=size, name=name)
 
             # Show ROI tool
             if current_roi_tool is not None:
@@ -514,7 +515,7 @@ class KaraboImageView(QWidget):
         for tool, roi_items in self.roi.roi_items.items():
             # Each tool has multiple roi objects
             for roi in roi_items:
-                traits = {'roi_type': tool}
+                traits = {'roi_type': tool, "name": roi.name}
                 if tool == ROITool.Crosshair:
                     x, y = roi.coords
                     traits.update({'x': x, 'y': y})
