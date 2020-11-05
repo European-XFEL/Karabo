@@ -13,7 +13,7 @@ from .data.enums import (
     DaqPolicy, EncodingType, LeafType, MetricPrefix, NodeType, Unit)
 from .data.hash import (
     Attribute, Bool, ByteArray, Char, ComplexDouble, ComplexFloat, Descriptor,
-    Double, Enumable, Float, Hash, HashList,
+    Double, Enumable, Float, Hash, HashList, is_equal,
     HashMergePolicy, HashType, Int16, Int32, Int64, Int8, Integer,
     Number, NumpyVector, RegexString, Schema, SchemaHashType, Simple, Slot,
     Special, String, Type, UInt16, UInt32, UInt64, UInt8, Vector,
@@ -30,7 +30,7 @@ from .data.serializers import (
     decodeBinary, decodeXML, encodeBinary, encodeXML, loadFromFile, saveToFile,
     writeBinary, writeXML, XMLParser, XMLWriter)
 from .data.utils import (
-    flat_iter_hash, create_html_hash, flat_iter_schema_hash, flat_iterall_hash)
+    flat_iter_hash, create_html_hash, flat_iter_schema_hash)
 from .exceptions import KaraboError
 # Import project namespace
 from karabo.native.project.convert import convert_old_project
