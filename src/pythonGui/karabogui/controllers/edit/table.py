@@ -7,7 +7,7 @@ from functools import partial
 
 from PyQt5.QtCore import Qt, QModelIndex
 from PyQt5.QtWidgets import QAbstractItemView, QMenu, QStyledItemDelegate
-from traits.api import Instance, Int
+from traits.api import Instance, Int, WeakRef
 
 from karabo.common.api import (
     KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_ROW_SCHEMA,
@@ -37,7 +37,7 @@ class _BaseTableElement(BaseBindingController):
     # Internal traits
     _column_hash = Instance(Hash)
     _role = Int(Qt.DisplayRole)
-    _item_model = Instance(TableModel)
+    _item_model = WeakRef(TableModel)
 
     def create_widget(self, parent):
         widget = KaraboTableView(parent=parent)
@@ -104,6 +104,10 @@ class _BaseTableElement(BaseBindingController):
         """Callback method used by `self._item_model` when data changes"""
         self.proxy.edit_value = data
 
+    def destroy_widget(self):
+        if self._item_model is not None:
+            self._item_model.setParent(None)
+
     def _set_column_hash(self, schema):
         """Configure the column schema hashes and keys
 
@@ -111,7 +115,6 @@ class _BaseTableElement(BaseBindingController):
         """
         if self._item_model is not None:
             self._item_model.setParent(None)
-            self._item_model = None
 
         self._column_hash = schema.hash
         self._item_model = TableModel(self._column_hash, self._on_user_edit,
