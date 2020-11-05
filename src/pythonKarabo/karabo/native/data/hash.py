@@ -1831,7 +1831,107 @@ class Hash(OrderedDict):
     def empty(self):
         return len(self) == 0
 
+    def deepcopy(self):
+        """This method retrieves a quick deepcopy of the `Hash` element
+
+        This method bypasses `copy.deepcopy`, assuming we only copy
+        'simple' datastructures.
+        """
+        ret = Hash()
+        for key, value, attrs in Hash.flat_iterall(self):
+            ret[key] = simple_deepcopy(value)
+            copy_attr = {}
+            for ak, av in attrs.items():
+                copy_attr[ak] = simple_deepcopy(av)
+            ret[key, ...] = copy_attr
+
+        return ret
+
+    def fullyEqual(self, other):
+        """Compare two `Hash` objects and check if they have equal content
+
+        Note: This function does not consider the insertion order of elements
+        """
+        assert isinstance(other, Hash)
+
+        # Do the fast path check first!
+        h_paths = sorted(self.paths())
+        other_paths = sorted(other.paths())
+        if h_paths != other_paths:
+            return False
+
+        for key, value, attr in Hash.flat_iterall(other):
+            h_value = self[key]
+            if not is_equal(value, h_value):
+                return False
+
+            h_attr = self[key, ...]
+            # We can check the attributes `keys` first!
+            h_attr_keys = sorted(h_attr.keys())
+            a_keys = sorted(attr.keys())
+            if h_attr_keys != a_keys:
+                return False
+            for a_key, a_value in attr.items():
+                if not is_equal(a_value, h_attr[a_key]):
+                    return False
+
+        return True
+
+    @staticmethod
+    def flat_iterall(hsh, base=''):
+        """Recursively iterate over all parameters in a Hash object such that
+        a simple iterator interface is exposed.
+        """
+        assert isinstance(hsh, Hash)
+
+        base = base + '.' if base else ''
+        for key, value, attrs in hsh.iterall():
+            subkey = base + key
+            if isinstance(value, Hash):
+                yield from Hash.flat_iterall(value, base=subkey)
+            else:
+                yield subkey, value, attrs
+
 
 class HashMergePolicy:
     MERGE_ATTRIBUTES = "merge"
     REPLACE_ATTRIBUTES = "replace"
+
+
+def is_equal(a, b):
+    """A compare function deals with element-wise comparison result and
+    Schema object comparison
+    """
+    type_check = map(lambda x: isinstance(x, Schema), (a, b))
+    if any(type_check):
+        if all(type_check):
+            # Compare Schema objects' names and hashes
+            return a.name == b.name and a.hash == b.hash
+        else:
+            # one of a, b is not Schema, simply return False
+            return False
+    res = (a == b)
+    # comparison of numpy arrays result in an array
+    return all(res) if isinstance(res, Iterable) else res
+
+
+def simple_deepcopy(value):
+    """A simple and quick deepcopy mechanism for simple data structures
+    """
+    try:
+        # dicts, sets, ndarrays
+        v = value.copy()
+    except TypeError:
+        # Must be schema
+        assert isinstance(value, Schema)
+        cpy = Schema()
+        cpy.copy(value)
+        v = cpy
+    except AttributeError:
+        try:
+            # lists, tuples, strings, unicode
+            v = value[:]
+        except TypeError:
+            # Simple values
+            v = value
+    return v
