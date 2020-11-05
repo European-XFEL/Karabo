@@ -121,19 +121,6 @@ def flat_iter_hash(config, base=''):
             yield subkey
 
 
-def flat_iterall_hash(config, base=''):
-    """Recursively iterate over all parameters in a Hash object such that
-    a simple iterator interface is exposed.
-    """
-    base = base + '.' if base else ''
-    for key, value, attrs in config.iterall():
-        subkey = base + key
-        if isinstance(value, Hash):
-            yield from flat_iterall_hash(value, base=subkey)
-        else:
-            yield subkey, value, attrs
-
-
 def flat_iter_schema_hash(schema_hash, base=''):
     """Expose a flat iteration over a schema Hash.
 
