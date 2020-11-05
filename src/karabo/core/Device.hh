@@ -236,7 +236,7 @@ namespace karabo {
                         .displayedName("_ServerID_")
                         .description("Do not set this property, it will be set by the device-server")
                         .adminAccess()
-                        .assignmentOptional().noDefaultValue()
+                        .assignmentInternal().noDefaultValue()
                         .init()
                         .commit();
 
@@ -244,7 +244,7 @@ namespace karabo {
                         .displayedName("_DeviceID_")
                         .description("Do not set this property, it will be set by the device-server")
                         .adminAccess()
-                        .assignmentOptional().noDefaultValue()
+                        .assignmentInternal().noDefaultValue()
                         .init()
                         .commit();
 
