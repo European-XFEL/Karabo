@@ -403,10 +403,6 @@ class DeviceServer(object):
         self.log.DEBUG(
             "with the following configuration:\n{}".format(input_config))
 
-        # Add connection type and parameters used by device server for
-        # connecting to broker
-        config['_connection_'] = self.connectionParameters
-
         # Inject HostName
         config['hostName'] = self.hostname
 
@@ -426,6 +422,10 @@ class DeviceServer(object):
             self.log.WARN(f"Failed to start '{config['_deviceId_']}': {msg}")
             self.ss.reply(ok, msg)
             return
+
+        # Add connection type and parameters used by device server for
+        # connecting to broker.  This was added AFTER 'validate' intentionally!
+        config['_connection_'] = self.connectionParameters
 
         try:
             if "_deviceId_" in config:

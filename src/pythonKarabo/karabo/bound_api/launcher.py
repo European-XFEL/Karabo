@@ -3,11 +3,13 @@ import os.path
 import signal
 import sys
 import threading
+import copy
 
 from pkg_resources import working_set
 
 from karabo.bound import (EventLoop, Hash, TextSerializerHash,
-                          BinarySerializerHash, OVERWRITE_ELEMENT)
+                          BinarySerializerHash, OVERWRITE_ELEMENT,
+                          PythonDevice)
 
 
 def main():
@@ -27,22 +29,10 @@ def main():
              .key("karaboVersion")
              .setNewDefaultValue("UNKNOWN")
              .commit(),
-             OVERWRITE_ELEMENT(schema)
-             .key("_connection_")
-             .setNewDefaultValue("tcp")
-             .commit(),
              )
             h = schema.getParameterHash()
-            for key in h["_connection_"]:
+            for key in h["Logger.network.connection"]:
                 (OVERWRITE_ELEMENT(schema)
-                 .key(f"_connection_.{key}.brokers")
-                 .setNewDefaultValue("tcp://localhost:7777")
-                 .commit(),
-                 OVERWRITE_ELEMENT(schema)
-                 .key(f"_connection_.{key}.domain")
-                 .setNewDefaultValue("karabo")
-                 .commit(),
-                 OVERWRITE_ELEMENT(schema)
                  .key(f"Logger.network.connection.{key}.brokers")
                  .setNewDefaultValue("tcp://localhost:7777")
                  .commit(),
@@ -60,6 +50,9 @@ def main():
         config = sys.stdin.read()
         ser = TextSerializerHash.create("Xml")
         config = ser.load(config)
+        if '_connection_' in config:
+            PythonDevice.connectionParams = copy.copy(config['_connection_'])
+            config.erase('_connection_')
 
         # in case our parent process (the device server) dies,
         # tell linux to terminate this device process
