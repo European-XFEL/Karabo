@@ -30,7 +30,7 @@ from .middlelayer_api.proxy import (
 )
 from .middlelayer_api.configuration import (
     sanitize_init_configuration, sanitize_write_configuration,
-    extract_modified_schema_attributes, is_equal)
+    extract_modified_schema_attributes)
 from .middlelayer_api.compat import HAVE_UVLOOP
 from .middlelayer_api.eventloop import KaraboFuture
 from .middlelayer_api.devicenode import DeviceNode
@@ -62,7 +62,7 @@ from karabo.native.data.enums import (
 )
 from karabo.native.data.hash import (
     Attribute, Bool, ByteArray, Char, ComplexDouble, ComplexFloat, Descriptor,
-    Double, Enumable, Float, Hash, HashList,
+    Double, Enumable, Float, Hash, HashList, is_equal,
     HashMergePolicy, HashType, Int16, Int32, Int64, Int8, Integer,
     Number, NumpyVector, RegexString, Schema, SchemaHashType, Simple, Slot,
     Special, String, Type, UInt16, UInt32, UInt64, UInt8, Vector,

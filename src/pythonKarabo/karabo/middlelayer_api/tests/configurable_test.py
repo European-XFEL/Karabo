@@ -725,6 +725,13 @@ class Tests(TestCase):
 
         self.assertEqual(adler32(str(a.table).encode("ascii")), 3585240932)
 
+        # Test the comparison of table element with Hash
+        h = a.configurationAsHash()
+        # Check if we are equal to ourselves ...
+        self.assertTrue(h.fullyEqual(a.configurationAsHash()))
+        a.table.insert(2, ("C", 11, 5, ["Itchy", "Burns"]))
+        self.assertFalse(h.fullyEqual(a.configurationAsHash()))
+
         a = A(Hash("table", [Hash("name", "bla",
                                   "number", 5, "counter", 2,
                                   "vectorString", ["Itchy", "Burns"])]))
