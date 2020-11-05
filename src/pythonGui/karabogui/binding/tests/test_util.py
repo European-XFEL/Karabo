@@ -164,7 +164,7 @@ class TableRow(Configurable):
     boolProperty = Bool()
 
 
-def test_get_hash_list_changes():
+def test_get_vector_hash_changes():
     binding = VectorHashBinding(row_schema=VectorHash(TableRow).rowSchema.hash)
     foo_hash = Hash("stringProperty", "foo",
                     "uintProperty", 1,
@@ -188,6 +188,18 @@ def test_get_hash_list_changes():
     changes = get_vector_hash_changes(binding, old_list, new_list)
     # First row doesn't have changes, second row has "stringProperty" change
     assert changes == HashList([None, bar_hash])
+
+    # Check deleted hash change on first row
+    old_list = HashList([foo_hash, bar_hash])
+    new_list = HashList([foo_hash])  # second hash is deleted
+    changes = get_vector_hash_changes(binding, old_list, new_list)
+    assert changes == new_list
+
+    # Check deleted hash change on second row
+    old_list = HashList([foo_hash, bar_hash])
+    new_list = HashList([bar_hash])  # first hash is deleted
+    changes = get_vector_hash_changes(binding, old_list, new_list)
+    assert changes == new_list
 
 
 def test_get_hash_changes():
