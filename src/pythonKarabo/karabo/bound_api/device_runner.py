@@ -1,6 +1,7 @@
 import argparse
 import os
 import threading
+import copy
 
 from pkg_resources import iter_entry_points
 
@@ -31,6 +32,10 @@ def _run_device(classid, config):
 
     NOTE: This function should not be expected to return
     """
+    if "_connection_" in config:
+        PythonDevice.connectionParams = copy.copy(config['_connection_'])
+        config.erase('_connection_')
+
     if "Logger.file.filename" not in config:
         deviceId = config["_deviceId_"]
         defaultLog = "device-{}.log".format(deviceId.replace(os.path.sep, "_"))
