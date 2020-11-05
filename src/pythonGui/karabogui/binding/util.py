@@ -291,11 +291,16 @@ def get_vector_hash_changes(binding, old, new):
 
     iter_hashes = zip_longest(old, new)
     for old_hash, new_hash in iter_hashes:
+        # The hash is deleted, we don't record
+        if new_hash is None:
+            continue
         change = get_vector_hash_element_changes(binding, old_hash, new_hash)
         changes.append(change)
 
     if changes.count(None) == len(changes):
-        changes = None
+        # No changes if all of the values are Nones and the number of rows is
+        # the same. Else, rows are deleted and we use the new value instead.
+        changes = None if len(old) == len(changes) else new
 
     return changes
 
@@ -313,8 +318,8 @@ def get_vector_hash_element_changes(binding, old, new):
         return new
 
     if new is None:
-        # There's no prior value, we return None immediately
-        return None
+        # The hash is deleted, we return an empty hash
+        return Hash()
 
     # Check if order of the keys are respected
     if list(old.keys()) != list(new.keys()):
