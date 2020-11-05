@@ -26,4 +26,4 @@ from karabo.native.data.serializers import (
     writeBinary, writeXML, XMLParser, XMLWriter)
 from karabo.native.data.utils import (
     dictToHash, dtype_from_number, numpy_from_number, get_image_data,
-    flat_iter_hash, flat_iter_schema_hash, flat_iterall_hash)
+    flat_iter_hash, flat_iter_schema_hash)
