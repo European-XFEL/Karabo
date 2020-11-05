@@ -26,6 +26,8 @@ class TableDialog(QDialog):
         # `EditDelegate` method `setModelData` refers to this dialog as the
         # passed `editor` and fetches the data of the `controller`
         self.controller = EditableTableElement(proxy=proxy)
+        # This is parented by the `EditDelegate`, which means it will stay
+        # alive very long!
         self.controller.create(parent)
         self.controller.set_read_only(not editable)
         self.controller.binding_update(proxy)
@@ -38,3 +40,7 @@ class TableDialog(QDialog):
         self.empty_widget.setLayout(layout)
         cancel_button = self.buttonBox.button(QDialogButtonBox.Cancel)
         cancel_button.setVisible(editable)
+
+    def done(self, result):
+        self.controller.destroy_widget()
+        return super(TableDialog, self).done(result)
