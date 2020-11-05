@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest import TestCase, main
 
 from karabo.native import Hash, Schema
@@ -7,7 +8,7 @@ from karabo.native.data.enums import NodeType
 class Tests(TestCase):
     def setUp(self):
         h = Hash("node", Hash("b", None), "a", None,
-                 "c", None, "d", None)
+                 "c", None, "d", None, "e", None)
 
         h["a", "nodeType"] = NodeType.Leaf.value
         h["a", "valueType"] = "INT32"
@@ -39,6 +40,12 @@ class Tests(TestCase):
         h["d", "defaultValue"] = 27.5
         h["d", "tags"] = ["mpod", "plc"]
 
+        h["e", "nodeType"] = NodeType.Leaf.value
+        h["e", "valueType"] = "VECTOR_STRING"
+        h["e", "description"] = "e's description"
+        h["e", "unitSymbol"] = ""
+        h["e", "defaultValue"] = ["One", "Two", "Three"]
+
         self.schema = Schema("XFEL", hash=h)
 
     def test_getKeyFromAlias(self):
@@ -66,6 +73,45 @@ class Tests(TestCase):
         self.assertIn("node.b", path)
         self.assertIn("c", path)
         self.assertIn("d", path)
+
+    def test_schema_equal(self):
+        h = self.schema.hash
+        self.assertTrue(h.fullyEqual(self.schema.hash))
+        # Test schema value modification
+        s = h.deepcopy()
+        self.assertTrue(h.fullyEqual(s))
+        s.erase("d")
+        self.assertFalse(h.fullyEqual(s))
+        self.assertFalse(s.fullyEqual(h))
+
+        s = h.deepcopy()
+        self.assertTrue(h.fullyEqual(s))
+        s["e", "defaultValue"] = ["Three"]
+        self.assertFalse(h.fullyEqual(s))
+
+        # Test schema attr modification
+        s = h.deepcopy()
+        self.assertTrue(h.fullyEqual(s))
+        s["d", "tags"] = ["mpod"]
+        self.assertFalse(h.fullyEqual(s))
+
+        deep = deepcopy(h)
+        # Python deepcopy loses attributes
+        self.assertEqual(deep["node.b", ...], {})
+        self.assertNotEqual(h["node.b", ...], {})
+        self.assertFalse(h.fullyEqual(deep))
+
+        # Hash quick deepcopy test
+        mutable = [1, 2, 3, 4]
+        h["mutable"] = mutable
+        s = h.deepcopy()
+        self.assertTrue(h.fullyEqual(s))
+        self.assertEqual(h["mutable"], mutable)
+        self.assertEqual(s["mutable"], mutable)
+        mutable.append(6)
+        # h changes, while the quick deepcopy does not
+        self.assertEqual(h["mutable"], mutable)
+        self.assertNotEqual(s["mutable"], mutable)
 
 
 if __name__ == "__main__":
