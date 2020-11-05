@@ -15,7 +15,7 @@ from functools import partial
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
     UINT32_ELEMENT, MICROSEC, NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
-    STATE_ELEMENT, STRING_ELEMENT, CHOICE_ELEMENT,
+    STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, WRITE,
     AccessLevel, AccessType, AssemblyRules, Broker, ChannelMetaData,
     EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
@@ -58,6 +58,7 @@ class PythonDevice(NoFsm):
 
     instanceCountPerDeviceServer = dict()
     instanceCountLock = threading.Lock()
+    connectionParams = Hash(Broker.brokerTypeFromEnv(), Hash())
 
     @staticmethod
     def expectedParameters(expected):
@@ -74,15 +75,6 @@ class PythonDevice(NoFsm):
             .description("Do not set this property, it will be set by the"
                          " device-server")
             .expertAccess().assignmentInternal().noDefaultValue().init()
-            .commit(),
-
-            CHOICE_ELEMENT(expected).key("_connection_")
-            .displayedName("Connection")
-            .description("Do not set this node, will be set by the"
-                         " device-server")
-            .appendNodesOfConfigurationBase(Broker)
-            .assignmentOptional().defaultValue(Broker.brokerTypeFromEnv())
-            .adminAccess()
             .commit(),
 
             INT32_ELEMENT(expected).key("visibility")
@@ -443,7 +435,7 @@ class PythonDevice(NoFsm):
 
         # Instantiate SignalSlotable object
         self._ss = SignalSlotable(self.deviceid,
-                                  self._parameters["_connection_"],
+                                  PythonDevice.connectionParams,
                                   self._parameters["heartbeatInterval"], info)
 
         # Setup device logger (needs self._ss and self._parameters)
@@ -514,8 +506,8 @@ class PythonDevice(NoFsm):
         stamp = self.getActualTimestamp()
 
         # cure the network part of the logger config
-        config.set("network.connection", self._parameters["_connection_"])
-        typeKey = self._parameters["_connection_"].getKeys()[0]
+        config.set("network.connection", PythonDevice.connectionParams)
+        typeKey = PythonDevice.connectionParams.getKeys()[0]
         # Avoid name clash with any SignalSlotable since there ':' is not
         # allowed as instanceId:
         config.set("network.connection." + typeKey + ".instanceId",
@@ -1901,6 +1893,12 @@ def launchPythonDevice():
     # NOTE: The first argument is '-c'
     _, modname, classid, xmlfile = tuple(sys.argv)
     config = PythonDevice.loadConfiguration(xmlfile)
+    if '_connection_' in config:
+        # Inject broker connection parameters into PythonDevice class, so
+        # all possible instances share the same broker configuration
+        PythonDevice.connectionParams = copy.copy(config['_connection_'])
+        # Clean _connection_ to validate input configuration
+        config.erase('_connection_')
     # If log filename not specified, make use of device name to avoid
     # that different processes write to the same file.
     # TODO:
