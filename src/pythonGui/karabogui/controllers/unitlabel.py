@@ -47,6 +47,6 @@ class UnitLabelWrapper(QFrame):
 def add_unit_label(proxy, widget, parent=None):
     """Add a unit label to a widget, if available."""
 
-    wrapper_widget = UnitLabelWrapper(widget, parent=None)
+    wrapper_widget = UnitLabelWrapper(widget, parent=parent)
     wrapper_widget.update_label(proxy)
     return wrapper_widget
