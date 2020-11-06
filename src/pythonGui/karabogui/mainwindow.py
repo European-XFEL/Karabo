@@ -8,10 +8,10 @@ from enum import Enum
 from functools import partial
 import os.path
 
-from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtCore import QEventLoop, Qt, pyqtSlot
 from PyQt5.QtWidgets import (
-    QAction, QActionGroup, QFrame, QLabel, QMainWindow, QMenu, QMessageBox,
-    QSizePolicy, QSplitter, QToolButton, QWidget, qApp)
+    QApplication, QAction, QActionGroup, QFrame, QLabel, QMainWindow, QMenu,
+    QMessageBox, QSizePolicy, QSplitter, QToolButton, QWidget, qApp)
 
 from karabo.common.project.api import get_project_models
 from karabo.native import AccessLevel
@@ -483,6 +483,7 @@ class MainWindow(QMainWindow):
         if info is not None:
             panel, area_enum = info
             self.removePanel(panel, area_enum)
+            QApplication.processEvents(QEventLoop.AllEvents, 5000)
 
     def _enable_toolbar(self, enable):
         self.acServerConnect.setEnabled(enable)
