@@ -8,7 +8,7 @@ from .widgets.simple import DisplayLabelModel, LabelModel
 
 def _get_plot_scene(model, device_id, path):
     line = LineModel(
-        stroke='#000000', x1=15.0, x2=615.0, y1=75.0, y2=75.0)
+        stroke='#000000', x1=15.0, x2=700.0, y1=75.0, y2=75.0)
 
     plot = model(
         height=337.0,
@@ -16,11 +16,11 @@ def _get_plot_scene(model, device_id, path):
         y_label=path,
         x_grid=True,
         y_grid=True,
-        parent_component='DisplayComponent', width=600.0,
+        parent_component='DisplayComponent', width=700.0,
         x=10.0, y=80.0)
 
     label = LabelModel(
-        font='Sans Serif,10,-1,5,50,0,0,0,0,0',
+        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0',
         foreground='#000000', height=31.0,
         parent_component='DisplayComponent', text='DeviceID',
         width=60.0, x=20.0, y=20.0)
@@ -29,9 +29,9 @@ def _get_plot_scene(model, device_id, path):
         height=30.0,
         keys=['{}.deviceId'.format(device_id)],
         parent_component='DisplayComponent',
-        width=540.0, x=80.0, y=20.0)
+        width=600.0, x=80.0, y=20.0)
 
-    scene = SceneModel(height=440.0, width=630.0,
+    scene = SceneModel(height=440.0, width=730.0,
                        children=[line, plot, label, display_label])
 
     return scene
@@ -98,7 +98,7 @@ def get_image_scene(device_id, path):
         width=603.0, x=15.0, y=83.0)
 
     label = LabelModel(
-        font='Sans Serif,10,-1,5,50,0,0,0,0,0',
+        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0',
         foreground='#000000', height=31.0,
         parent_component='DisplayComponent', text='DeviceID',
         width=60.0, x=20.0, y=20.0)
