@@ -459,6 +459,7 @@ class ConfigurationFromPastDialog(QDialog):
         self.event_map = {
             KaraboEvent.NetworkConnectStatus: self._event_network
         }
+        self.ui_show_device.setIcon(icons.deviceInstance)
         register_for_broadcasts(self.event_map)
 
     def _event_network(self, data):
@@ -467,7 +468,8 @@ class ConfigurationFromPastDialog(QDialog):
 
     @pyqtSlot()
     def _show_device(self):
-        broadcast_event(KaraboEvent.ShowDevice, {'deviceId': self.instance_id})
+        broadcast_event(KaraboEvent.ShowDevice, {'deviceId': self.instance_id,
+                                                 'showTopology': True})
 
     @pyqtSlot()
     def accept(self):
