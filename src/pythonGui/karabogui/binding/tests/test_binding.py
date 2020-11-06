@@ -14,21 +14,13 @@ from karabo.native import (
     Schema, Timestamp, Unit
 )
 from ..api import (
-    BoolBinding, ByteArrayBinding, CharBinding, ChoiceOfNodesBinding,
-    ComplexBinding, FloatBinding, HashBinding,
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    ListOfNodesBinding, NodeBinding, SchemaBinding, SlotBinding, StringBinding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    VectorBoolBinding, VectorCharBinding, VectorComplexDoubleBinding,
-    VectorComplexFloatBinding, VectorDoubleBinding, VectorFloatBinding,
-    VectorHashBinding, VectorInt8Binding, VectorInt16Binding,
-    VectorInt32Binding, VectorInt64Binding, VectorStringBinding,
-    VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
-    VectorUint64Binding,
-    apply_configuration, apply_default_configuration, apply_fast_data,
+    Int8Binding, Int16Binding, Int32Binding, Int64Binding, Uint16Binding,
+    Uint32Binding, Uint64Binding, apply_configuration,
+    apply_default_configuration, apply_fast_data,
     build_binding, extract_attribute_modifications, extract_configuration,
     extract_edits, flat_iter_hash)
-from .schema import get_all_props_schema, get_vectorattr_schema
+from .schema import (
+    ALL_PROPERTIES_MAP, get_all_props_schema, get_vectorattr_schema)
 
 TEST_DATA_DIR = op.join(op.dirname(__file__), 'data')
 
@@ -83,32 +75,13 @@ def test_data_files():
 
 
 def test_complete_schema():
-    expected = {
-        'a': BoolBinding, 'b': CharBinding, 'c': ComplexBinding,
-        'd': ComplexBinding, 'e': FloatBinding, 'f': FloatBinding,
-        'g': HashBinding, 'h': Int16Binding, 'i': Int32Binding,
-        'j': Int64Binding, 'k': Int8Binding, 'll': SchemaBinding,
-        'm': StringBinding, 'n': Uint16Binding, 'o': Uint32Binding,
-        'p': Uint64Binding, 'q': Uint8Binding, 'r': VectorBoolBinding,
-        's': VectorCharBinding, 't': VectorComplexDoubleBinding,
-        'u': VectorComplexFloatBinding, 'v': VectorDoubleBinding,
-        'w': VectorFloatBinding, 'x': VectorHashBinding,
-        'y': VectorInt16Binding, 'z': VectorInt32Binding,
-        'a1': VectorInt64Binding, 'b1': VectorInt8Binding,
-        'c1': VectorStringBinding, 'd1': VectorUint16Binding,
-        'e1': VectorUint32Binding, 'f1': VectorUint64Binding,
-        'g1': VectorUint8Binding, 'h1': NodeBinding,
-        'i1': ChoiceOfNodesBinding, 'j1': ListOfNodesBinding,
-        'k1': SlotBinding, 'mm': ByteArrayBinding,
-    }
-
     schema = get_all_props_schema()
     binding = build_binding(schema)
 
     namespace = binding.value
     for name in namespace:
         node = getattr(namespace, name)
-        assert isinstance(node, expected[name])
+        assert isinstance(node, ALL_PROPERTIES_MAP[name])
 
 
 def test_build_binding_stability():

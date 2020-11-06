@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QRect, Qt
+from PyQt5.QtCore import QRect, QSize, Qt
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
 from karabo.common.api import ProxyStatus, State
@@ -6,16 +6,16 @@ from karabogui import globals as krb_globals
 from karabogui.indicators import get_device_status_pixmap, STATE_COLORS
 from karabogui.request import send_property_changes
 from karabogui.util import generateObjectName
+from karabogui.widgets.hints import KaraboSceneWidget
 from .utils import get_proxy
 
 
-class ControllerContainer(QWidget):
+class ControllerContainer(KaraboSceneWidget, QWidget):
     """A container for scene widgets which provides the interface needed
     by the scene tools.
     """
     def __init__(self, klass, model, parent):
-        super(ControllerContainer, self).__init__(parent)
-        self.model = model
+        super(ControllerContainer, self).__init__(model=model, parent=parent)
         # Variables used by editable widgets
         self.is_editable = False
         self._style_sheet = ''
@@ -180,7 +180,7 @@ class ControllerContainer(QWidget):
         the `widget_controller`.
         """
         controller = self.widget_controller
-        layout = QHBoxLayout()
+        layout = ControllerLayout()
         layout.addWidget(controller.widget)
 
         # create our color layout
@@ -232,3 +232,19 @@ class ControllerContainer(QWidget):
 
         formatted_sheet = self._style_sheet.format(color)
         self.setStyleSheet(formatted_sheet)
+
+
+class ControllerLayout(QHBoxLayout):
+    """This is the layout for the layout widget that contains the controller
+       widget.
+
+       There is a need to subclass the minimum size to not dynamically update
+       the minimum size depending on the content margins (for the borders)."""
+
+    def minimumSize(self):
+        size = super(ControllerLayout, self).minimumSize()
+        if not size.isEmpty():
+            left, top, right, bottom = self.getContentsMargins()
+            size = QSize(size.width() - (left + right),
+                         size.height() - (top + bottom))
+        return size

@@ -8,17 +8,15 @@ from PyQt5.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen
 from PyQt5.QtWidgets import QAction, QDialog, QLabel
 
 from karabogui.dialogs.textdialog import TextDialog
-from karabogui.fonts import substitute_font
+from karabogui.widgets.hints import KaraboSceneWidget
 
 
-class LabelWidget(QLabel):
+class LabelWidget(KaraboSceneWidget, QLabel):
     """A label which can appear in a scene
     """
     def __init__(self, model, parent=None):
-        super(LabelWidget, self).__init__(model.text, parent)
-        self.model = model
-        # Check and substitute the font with the application fonts
-        substitute_font(model)
+        super(LabelWidget, self).__init__(model.text,
+                                          model=model, parent=parent)
         self.set_model(model)
         edit_action = QAction("Edit Label", self)
         edit_action.triggered.connect(self.edit_colors_text)
@@ -41,17 +39,15 @@ class LabelWidget(QLabel):
     def sizeHint(self):
         """Calculate the size hint from the text if model is newly
            instantiated (no width/height yet). Else, return the model size."""
-        if self.model.width == 0 and self.model.height == 0:
-            # Calculate the suggested widget size from the model text
+        # Calculate the suggested widget size from the model text
+        size = super(LabelWidget, self).sizeHint()
+        if size.isEmpty():
             fm = QFontMetrics(self.font())
             CONTENT_MARGIN = 10
             width = fm.width(self.model.text) + CONTENT_MARGIN
             height = fm.height() + self.model.frame_width
-            return QSize(width, max(height, 20))
-        return QSize(self.model.width, self.model.height)
-
-    def minimumSizeHint(self):
-        return QSize(self.model.width, self.model.height)
+            size = QSize(width, max(height, 20))
+        return size
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
