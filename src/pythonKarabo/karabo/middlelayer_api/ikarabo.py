@@ -95,6 +95,7 @@ def start_ikarabo():
                        "(getConfiguration|saveConfiguration)FromName|"
                        "listConfigurationFromName|call(NoWait)?|"
                        "getConfiguration(FromPast)?|"
-                       "getLastConfiguration|getSchema(FromPast)?")
+                       "getLastConfiguration|getSchema(FromPast)?|"
+                       "compareDeviceWithPast|compareDeviceConfiguration")
     ip.set_hook("complete_command", class_completer,
                 re_key=".*instantiate(NoWait)?\(")
