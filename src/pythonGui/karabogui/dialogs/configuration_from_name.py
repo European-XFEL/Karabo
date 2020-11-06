@@ -176,7 +176,8 @@ class ConfigurationFromName(QDialog):
 
     @pyqtSlot()
     def _show_device(self):
-        broadcast_event(KaraboEvent.ShowDevice, {'deviceId': self.instance_id})
+        broadcast_event(KaraboEvent.ShowDevice, {'deviceId': self.instance_id,
+                                                 'showTopology': True})
 
     @pyqtSlot()
     def open_save_dialog(self):
