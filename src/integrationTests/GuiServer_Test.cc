@@ -103,7 +103,7 @@ void GuiVersion_Test::appTestRunner() {
         auto state = m_deviceClient->get<State>("testGuiServerDevice", "state");
         return state == State::ON;
     }, KRB_TEST_MAX_TIMEOUT * 1000);
-    
+
     testReadOnly();
 
     if (m_tcpAdapter->connected()) {
@@ -224,6 +224,7 @@ void GuiVersion_Test::testReadOnly() {
         Hash("type", "projectUpdateAttribute"),
         Hash("type", "updateAttributes"),
         Hash("type", "reconfigure"),
+        Hash("type", "requestGeneric", "slot", "slotSaveConfigurationFromName"),
         };
     for (const Hash &h : commands) {
         const std::string& type = h.get<std::string>("type");
@@ -371,9 +372,9 @@ void GuiVersion_Test::testRequestFailProtocol() {
         const std::string type = "GuiServerDoesNotHaveThisType";
         Hash h("type", type);
 
-        const Hash conf = m_deviceClient->get("testGuiServerDevice");        
+        const Hash conf = m_deviceClient->get("testGuiServerDevice");
         const std::string& classVersion = conf.get<string>("classVersion");
- 
+
         karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
             m_tcpAdapter->sendMessage(h);
         }, messageTimeout);
