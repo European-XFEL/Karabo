@@ -8,16 +8,14 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QDialog, QPlainTextEdit
 
 from karabogui.dialogs.stickerdialog import GREY, StickerDialog
-from karabogui.fonts import substitute_font
+from karabogui.widgets.hints import KaraboSceneWidget
 
 
-class StickerWidget(QPlainTextEdit):
+class StickerWidget(KaraboSceneWidget, QPlainTextEdit):
     """A `StickerWidget` for creating editable text widgets on the `scene`"""
 
     def __init__(self, model, parent=None):
-        super(StickerWidget, self).__init__(parent)
-        self.model = model
-        substitute_font(model)
+        super(StickerWidget, self).__init__(model=model, parent=parent)
         self.set_widget_properties(model)
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
         self.setReadOnly(True)
