@@ -3,8 +3,8 @@ from struct import calcsize, pack, unpack
 
 from PyQt5.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt5.QtCore import (
-    pyqtSignal, pyqtSlot, QByteArray, QObject)
-from PyQt5.QtWidgets import QDialog, QMessageBox, qApp
+    pyqtSignal, pyqtSlot, QByteArray, QEventLoop, QObject)
+from PyQt5.QtWidgets import QApplication, QDialog, QMessageBox, qApp
 
 from karabo.common.api import KARABO_CONFIG_MANAGER
 from karabo.native import (
@@ -101,6 +101,7 @@ class Network(QObject):
         """Disconnect from server"""
         # All panels need to be reset and all projects closed
         self.signalServerConnectionChanged.emit(False)
+        QApplication.processEvents(QEventLoop.AllEvents, 5000)
         self.endServerConnection()
 
     def startServerConnection(self):
