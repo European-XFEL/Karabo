@@ -242,63 +242,60 @@ class DaemonManager(Device):
 
 
 def get_scene(deviceId):
-    scene0 = DaemonManagerModel(height=533.0,
-                                keys=['{}.services'.format(deviceId)],
-                                parent_component='DisplayComponent',
-                                width=954.0, x=11.0, y=158.0)
-    scene1 = LabelModel(font='Arial,12,-1,5,75,0,0,0,0,0,Bold', height=42.0,
-                        parent_component='DisplayComponent',
-                        text='Karabo Service Manager', width=363.0, x=12.0,
-                        y=10.0)
-    scene3 = RectangleModel(fill='#b8b8b8', height=4.0, stroke='#000000',
-                            width=958.0, x=9.0, y=141.0)
-    scene40 = DisplayLabelModel(height=23.0,
-                                keys=['{}.numHosts'.format(deviceId)],
-                                parent_component='DisplayComponent',
-                                width=109.0, x=186.0, y=62.0)
-    scene41 = DisplayLabelModel(height=23.0,
-                                keys=['{}.numServices'.format(deviceId)],
-                                parent_component='DisplayComponent',
-                                width=99.0, x=185.0, y=93.0)
-    scene4 = BoxLayoutModel(direction=2, height=71.0, width=109.0, x=173.0,
-                            y=52.0, children=[scene40, scene41])
-    scene50 = LabelModel(font='Sans Serif,10,-1,5,50,0,0,0,0,0',
-                         foreground='#000000', height=23.0,
-                         parent_component='DisplayComponent',
-                         text='Number of Hosts', width=110.0, x=28.0, y=60.0)
-    scene51 = LabelModel(font='Sans Serif,10,-1,5,50,0,0,0,0,0',
-                         foreground='#000000', height=23.0,
-                         parent_component='DisplayComponent',
-                         text='Number of Services', width=128.0, x=28.0,
-                         y=94.0)
-    scene5 = BoxLayoutModel(direction=2, height=70.0, width=148.0, x=29.0,
-                            y=52.0, children=[scene50, scene51])
-    scene60 = LabelModel(font='Sans Serif,10,-1,5,50,0,0,0,0,0',
-                         foreground='#000000', height=17.0,
-                         parent_component='DisplayComponent', text='DeviceID',
-                         width=59.0)
-    scene61 = DisplayLabelModel(height=23.0,
-                                keys=['{}.deviceId'.format(deviceId)],
-                                parent_component='DisplayComponent',
-                                width=74.0)
-    scene6 = BoxLayoutModel(height=36.0, width=457.0, x=268.0, y=18.0,
-                            children=[scene60, scene61])
-    scene70 = LabelModel(font='Sans Serif,10,-1,5,50,0,0,0,0,0',
-                         foreground='#000000', height=17.0,
-                         parent_component='DisplayComponent', text='Status',
-                         width=42.0)
-    scene71 = DisplayLabelModel(height=23.0,
-                                keys=['{}.status'.format(deviceId)],
-                                parent_component='DisplayComponent',
-                                width=23.0)
-    scene7 = BoxLayoutModel(height=54.0, width=585.0, x=285.0, y=60.0,
-                            children=[scene70, scene71])
-    scene8 = DisplayStateColorModel(height=26.0,
-                                    keys=['{}.state'.format(deviceId)],
-                                    parent_component='DisplayComponent',
-                                    show_string=True, width=139.0, x=724.0,
-                                    y=23.0)
-    scene = SceneModel(height=712.0, width=983.0,
-                       children=[scene0, scene1, scene3, scene4,
-                                 scene5, scene6, scene7, scene8])
+    scene0 = DaemonManagerModel(
+        height=533.0, keys=[f'{deviceId}.services'],
+        parent_component='DisplayComponent', width=960.0, x=11.0, y=158.0)
+    scene1 = LabelModel(
+        font='Source Sans Pro,12,-1,5,75,0,0,0,0,0,Bold', height=42.0,
+        parent_component='DisplayComponent', text='Karabo Daemon Manager',
+        width=363.0, x=12.0, y=10.0)
+    scene2 = RectangleModel(
+        fill='#b8b8b8', height=4.0, stroke='#000000', width=958.0, x=9.0,
+        y=141.0)
+    scene30 = DisplayLabelModel(
+        font_size=10, height=36.0, keys=[f'{deviceId}.numHosts'],
+        parent_component='DisplayComponent', width=109.0, x=173.0, y=52.0)
+    scene31 = DisplayLabelModel(
+        font_size=10, height=35.0, keys=[f'{deviceId}.numServices'],
+        parent_component='DisplayComponent', width=109.0, x=173.0, y=88.0)
+    scene3 = BoxLayoutModel(
+        direction=2, height=71.0, width=109.0, x=173.0, y=52.0,
+        children=[scene30, scene31])
+    scene40 = LabelModel(
+        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
+        height=35.0, parent_component='DisplayComponent',
+        text='Number of Hosts', width=148.0, x=29.0, y=52.0)
+    scene41 = LabelModel(
+        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
+        height=35.0, parent_component='DisplayComponent',
+        text='Number of Services', width=148.0, x=29.0, y=87.0)
+    scene4 = BoxLayoutModel(
+        direction=2, height=70.0, width=148.0, x=29.0, y=52.0,
+        children=[scene40, scene41])
+    scene50 = LabelModel(
+        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
+        height=36.0, parent_component='DisplayComponent', text='DeviceID',
+        width=59.0, x=268.0, y=18.0)
+    scene51 = DisplayLabelModel(
+        font_size=10, height=36.0, keys=[f'{deviceId}.deviceId'],
+        parent_component='DisplayComponent', width=398.0, x=327.0, y=18.0)
+    scene5 = BoxLayoutModel(
+        height=36.0, width=457.0, x=268.0, y=18.0, children=[scene50, scene51])
+    scene60 = LabelModel(
+        font='Source Sans Pro,10,-1,5,50,0,0,0,0,0', foreground='#000000',
+        height=54.0, parent_component='DisplayComponent', text='Status',
+        width=42.0, x=285.0, y=60.0)
+    scene61 = DisplayLabelModel(
+        font_size=10, height=54.0, keys=[f'{deviceId}.status'],
+        parent_component='DisplayComponent', width=543.0, x=327.0, y=60.0)
+    scene6 = BoxLayoutModel(
+        height=54.0, width=585.0, x=285.0, y=60.0, children=[scene60, scene61])
+    scene7 = DisplayStateColorModel(
+        height=26.0, keys=[f'{deviceId}.state'],
+        parent_component='DisplayComponent', show_string=True, width=237.0,
+        x=734.0, y=23.0)
+    scene = SceneModel(
+        height=712.0, width=983.0,
+        children=[scene0, scene1, scene2, scene3, scene4, scene5, scene6,
+                  scene7])
     return write_scene(scene)
