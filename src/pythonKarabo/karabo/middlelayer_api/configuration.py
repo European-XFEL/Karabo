@@ -202,3 +202,31 @@ def extract_modified_schema_attributes(runtime_schema, class_schema):
     if retval:
         return retval
     return None
+
+
+def config_changes(a, b):
+    """Compare two `Hash` configurations by `key`, `value`
+
+    Note: This function does not consider attributes modifications.
+
+    :param a: input `Hash` a
+    :param b: input `Hash` b
+
+    :returns: changes Hash
+    """
+    assert isinstance(a, Hash), isinstance(b, Hash)
+
+    changes = Hash()
+    for key, a_value, _ in Hash.flat_iterall(a):
+        if key not in b:
+            changes[key] = [a_value, None]
+            continue
+        b_value = b[key]
+        if not is_equal(a_value, b_value):
+            changes[key] = [a_value, b_value]
+
+    for key, b_value, _ in Hash.flat_iterall(b):
+        if key not in a:
+            changes[key] = [None, b_value]
+
+    return changes

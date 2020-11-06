@@ -1,65 +1,62 @@
-from asyncio import coroutine, get_event_loop, new_event_loop, set_event_loop
+from contextlib import contextmanager
 from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest import mock
 
-from nose.tools import assert_raises
-
+from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
 from karabo.middlelayer import (
-    getConfigurationFromPast, getSchemaFromPast, Hash, KaraboError, Schema,
-    SignalSlotable
-)
+    coslot, Device, getConfigurationFromPast, getSchemaFromPast, Schema,
+    Hash, KaraboError)
+from karabo.middlelayer_api.synchronization import synchronize
 
 
-def setup():
-    set_event_loop(new_event_loop())
+DEVICE_ID = "data_logger_device_id"
+
+conf = {
+    "classId": "DataLogReader",
+    "_deviceId_": DEVICE_ID,
+}
 
 
-@coroutine
-def _get_log_reader_id(device_id):
-    if device_id == "aDeviceNotInHistory":
-        raise KaraboError
-    return 'data_logger_device_id'
+@synchronize
+def _getLogReaderId(device):
+    return DEVICE_ID
 
 
-@patch('karabo.middlelayer_api.device_client.get_instance')
-@patch('karabo.middlelayer_api.device_client._getLogReaderId',
-       side_effect=_get_log_reader_id)
-def test_getConfigurationSchemaFromPast(_getLogReaderId, get_instance):
-    # REMOVE the @synchronize wrapping
-    global getConfigurationFromPast, getSchemaFromPast
-    getConfigurationFromPast = getConfigurationFromPast.__wrapped__
-    getSchemaFromPast = getSchemaFromPast.__wrapped__
+class DataLogReader(Device):
 
-    call_args = []
+    @coslot
+    async def slotGetConfigurationFromPast(self, deviceId, timepoint):
+        if deviceId == "aDeviceNotInHistory":
+            raise KaraboError
+        h = Hash('value', 42)
+        s = Schema(name=DEVICE_ID, hash=Hash())
 
-    @coroutine
-    def call(*args):
-        call_args.append(args)
-        return Hash('value', 42), Schema(), True, datetime.now().isoformat()
+        return h, s, True, datetime.now().isoformat()
 
-    instance = Mock(SignalSlotable)
-    instance.call = call
-    get_instance.return_value = instance
-    time = datetime.now().isoformat()
 
-    @coroutine
-    def sub_test_1():
-        with assert_raises(KaraboError):
-            yield from getConfigurationFromPast("aDeviceNotInHistory", time)
+class TestDeviceClient(DeviceTest):
 
-    get_event_loop().run_until_complete(sub_test_1())
+    @classmethod
+    @contextmanager
+    def lifetimeManager(cls):
+        cls.dev = DataLogReader(conf)
+        with cls.deviceManager(lead=cls.dev):
+            yield
 
-    @coroutine
-    def sub_test_2():
-        h = yield from getConfigurationFromPast("aDeviceInHistory", time)
-        assert isinstance(h, Hash)
-        assert h['value'] == 42
+    @async_tst
+    async def test_getConfigurationSchemaFromPast(self):
+        with mock.patch('karabo.middlelayer_api.device_client._getLogReaderId',
+                        new=_getLogReaderId):
 
-    get_event_loop().run_until_complete(sub_test_2())
+            time = datetime.now().isoformat()
 
-    @coroutine
-    def sub_test_3():
-        s = yield from getSchemaFromPast("aDeviceInHistory", time)
-        assert isinstance(s, Schema)
+            with self.assertRaises(KaraboError):
+                await getConfigurationFromPast("aDeviceNotInHistory", time)
 
-    get_event_loop().run_until_complete(sub_test_3())
+            h = await getConfigurationFromPast("aDeviceInHistory", time)
+            self.assertIsInstance(h, Hash)
+            self.assertEqual(h['value'], 42)
+
+            s = await getSchemaFromPast("aDeviceInHistory", time)
+            self.assertIsInstance(s, Schema)
+            self.assertEqual(s.name, DEVICE_ID)
