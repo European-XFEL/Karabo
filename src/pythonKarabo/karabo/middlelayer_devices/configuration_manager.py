@@ -245,7 +245,7 @@ class ConfigurationManager(DeviceClientBase):
         self.state = State.ON
 
     confBulkLimit = UInt32(
-        defaultValue=10,
+        defaultValue=30,
         description="The limit of configurations allowed in a single save "
                     "configuration call",
         requiredAccessLevel=AccessLevel.ADMIN,
