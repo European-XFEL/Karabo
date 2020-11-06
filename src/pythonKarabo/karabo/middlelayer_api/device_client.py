@@ -9,7 +9,7 @@ only very simple. This can be achieved by functions which operate directly
 on the deviceId, without going through the hazzle of creating a device
 proxy. """
 import asyncio
-from asyncio import get_event_loop, sleep
+from asyncio import gather, get_event_loop, sleep
 from contextlib import contextmanager
 from copy import copy
 from decimal import Decimal
@@ -25,6 +25,7 @@ from karabo.native.data.hash import Hash, Schema, Type
 from karabo.native.timestamp import Timestamp
 
 from .device import Device
+from .configuration import config_changes, sanitize_init_configuration
 from .eventloop import EventLoop, synchronize
 from .proxy import (AutoDisconnectProxyFactory, DeviceClientProxyFactory,
                     ProxyBase, ProxyNodeBase)
@@ -205,6 +206,60 @@ def getConfiguration(device):
 
 
 @synchronize
+def compareDeviceConfiguration(device_a, device_b):
+    """Compare device configurations (key, values) of two devices
+
+    The changes are provided in a list for comparison::
+
+    -> h = compareDeviceConfiguration(device_a, device_b)
+    -> h
+    -> <disableEpsilonFeedback{}: [True, False]>
+
+    :returns: changes Hash
+    """
+    a_schema, b_schema = yield from gather(
+        getSchema(device_a), getSchema(device_b))
+    a_conf, b_conf = yield from gather(
+        getConfiguration(device_a), getConfiguration(device_b))
+
+    # Take into account only reconfigurable and init parameters!
+    a_san = sanitize_init_configuration(a_schema, a_conf)
+    b_san = sanitize_init_configuration(b_schema, b_conf)
+    changes = config_changes(a_san, b_san)
+
+    return changes
+
+
+@synchronize
+def compareDeviceWithPast(device, timepoint):
+    """Compare device configuration (key, values) between present and past
+
+    The changes are provided in a list for comparison::
+
+    changes = [PRESENT | PAST]
+
+    -> h = compareDeviceWithPast(device, minutesAgo(2))
+    -> h
+    -> <disableEpsilonFeedback{}: [True, False]>
+
+    :param timepoint: The timepoint to compare
+
+    :returns: changes Hash
+    """
+    # Get the config and schema first!
+    a_conf, a_schema = yield from gather(
+        getConfiguration(device), getSchema(device))
+    b_conf, b_schema = yield from _get_configuration_from_past(
+        device, timepoint)
+    # Take into account only reconfigurable and init parameters!
+    a_san = sanitize_init_configuration(a_schema, a_conf)
+    b_san = sanitize_init_configuration(b_schema, b_conf)
+    changes = config_changes(a_san, b_san)
+
+    return changes
+
+
+@synchronize
 def _getLogReaderId(deviceId):
     instance = get_instance()
     did = "DataLogger-{}".format(deviceId)
@@ -316,6 +371,25 @@ def getHistory(prop, begin, end, *, maxNumData=10000, timeout=-1, wait=True):
 
 
 @synchronize
+def _get_configuration_from_past(device, timepoint):
+    """The configuration from past implementation to retrieve a configuration
+    and schema from the archiving system
+
+    :param device: deviceId or Karabo proxy
+    :param timepoint: time point parsed using :func:`dateutil.parser.parse`,
+    """
+    if isinstance(device, ProxyBase):
+        device = device._deviceId
+    timepoint = _parse_date(timepoint)
+    instance = get_instance()
+    reader = yield from _getLogReaderId(device)
+    slot = "slotGetConfigurationFromPast"
+    conf, schema, *_ = yield from instance.call(reader, slot,
+                                                device, timepoint)
+    return conf, schema
+
+
+@synchronize
 def getConfigurationFromPast(device, timepoint):
     """Get the configuration of a deviceId or proxy at a given time::
 
@@ -326,14 +400,7 @@ def getConfigurationFromPast(device, timepoint):
     The date of the time point is parsed using :func:`dateutil.parser.parse`,
     allowing many ways to write the date.
     """
-    if isinstance(device, ProxyBase):
-        device = device._deviceId
-    timepoint = _parse_date(timepoint)
-    instance = get_instance()
-    reader = yield from _getLogReaderId(device)
-    slot = "slotGetConfigurationFromPast"
-    conf, schema, *_ = yield from instance.call(reader, slot,
-                                                device, timepoint)
+    conf, _ = yield from _get_configuration_from_past(device, timepoint)
     return conf
 
 
@@ -348,15 +415,7 @@ def getSchemaFromPast(device, timepoint):
     The date of the time point is parsed using :func:`dateutil.parser.parse`,
     allowing many ways to write the date.
     """
-    if isinstance(device, ProxyBase):
-        device = device._deviceId
-    timepoint = _parse_date(timepoint)
-    instance = get_instance()
-    reader = yield from _getLogReaderId(device)
-    slot = "slotGetConfigurationFromPast"
-    conf, schema, *_ = yield from instance.call(reader, slot,
-                                                device, timepoint)
-
+    _, schema = yield from _get_configuration_from_past(device, timepoint)
     return schema
 
 
