@@ -33,7 +33,7 @@ from karabogui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabogui.project.utils import (
     check_device_config_exists, check_device_instance_exists)
 from karabogui.request import call_device_slot
-from karabogui.singletons.api import get_manager, get_network, get_topology
+from karabogui.singletons.api import get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from karabogui.util import (
     get_scene_from_server, handle_scene_from_server, handle_macro_from_server,
@@ -615,7 +615,6 @@ class DeviceInstanceController(BaseProjectGroupController):
         """Request a configuration from name from configuration manager"""
         device_id = self.model.instance_id
         dialog = ConfigurationFromName(instance_id=device_id, parent=parent)
-        get_network().onListConfigurationFromName(device_id=device_id)
         dialog.move(QCursor.pos())
         dialog.show()
         dialog.raise_()
