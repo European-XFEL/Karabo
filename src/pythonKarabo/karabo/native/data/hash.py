@@ -10,6 +10,7 @@ from asyncio import (
 import base64
 from collections import OrderedDict
 from collections.abc import Iterable
+from copy import deepcopy
 from enum import Enum
 from functools import partial, wraps
 import logging
@@ -1831,6 +1832,17 @@ class Hash(OrderedDict):
     def empty(self):
         return len(self) == 0
 
+    def __deepcopy__(self, memo):
+        Cls = type(self)
+        ret = Cls.__new__(Cls)
+        # let deepcopy know now about us!
+        memo[id(self)] = ret
+        for key, value, attrs in Hash.flat_iterall(self, empty=True):
+            ret[key] = deepcopy(value, memo)
+            ret[key, ...] = deepcopy(attrs, memo)
+
+        return ret
+
     def deepcopy(self):
         """This method retrieves a quick deepcopy of the `Hash` element
 
@@ -1838,7 +1850,7 @@ class Hash(OrderedDict):
         'simple' datastructures.
         """
         ret = Hash()
-        for key, value, attrs in Hash.flat_iterall(self):
+        for key, value, attrs in Hash.flat_iterall(self, empty=True):
             ret[key] = simple_deepcopy(value)
             copy_attr = {}
             for ak, av in attrs.items():
@@ -1860,7 +1872,7 @@ class Hash(OrderedDict):
         if h_paths != other_paths:
             return False
 
-        for key, value, attr in Hash.flat_iterall(other):
+        for key, value, attr in Hash.flat_iterall(other, empty=True):
             h_value = self[key]
             if not is_equal(value, h_value):
                 return False
@@ -1878,9 +1890,11 @@ class Hash(OrderedDict):
         return True
 
     @staticmethod
-    def flat_iterall(hsh, base=''):
+    def flat_iterall(hsh, base='', empty=False):
         """Recursively iterate over all parameters in a Hash object such that
         a simple iterator interface is exposed.
+
+        :param empty: Sets if empty Hashes should be returned (default: False)
         """
         assert isinstance(hsh, Hash)
 
@@ -1888,7 +1902,11 @@ class Hash(OrderedDict):
         for key, value, attrs in hsh.iterall():
             subkey = base + key
             if isinstance(value, Hash):
-                yield from Hash.flat_iterall(value, base=subkey)
+                if value.empty() and empty:
+                    yield subkey, value, attrs
+                else:
+                    yield from Hash.flat_iterall(
+                        value, base=subkey, empty=empty)
             else:
                 yield subkey, value, attrs
 
