@@ -139,6 +139,9 @@ class ConfigurationFromName(QDialog):
         # Show device option!
         self.ui_show_device.clicked.connect(self._show_device)
 
+        # Request fresh at startup!
+        get_network().onListConfigurationFromName(device_id=self.instance_id)
+
     def _event_list_updated(self, data):
         instance_id = data["deviceId"]
         if instance_id != self.instance_id:
