@@ -13,19 +13,17 @@ from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
 from karabogui.events import broadcast_event, KaraboEvent
-from karabogui.fonts import get_font_from_string, substitute_font
+from karabogui.fonts import get_font_from_string
+from karabogui.widgets.hints import KaraboSceneWidget
 from karabogui import messagebox
 
 
-class SceneLinkWidget(QPushButton):
+class SceneLinkWidget(KaraboSceneWidget, QPushButton):
     """A clickable link which opens another scene
     """
 
     def __init__(self, model, parent=None):
-        super(SceneLinkWidget, self).__init__(parent)
-        self.model = model
-        # Check and substitute the font with the application fonts
-        substitute_font(model)
+        super(SceneLinkWidget, self).__init__(model=model, parent=parent)
         self.setFont(get_font_from_string(model.font))
         self.setToolTip(self.model.target)
         self.setCursor(Qt.PointingHandCursor)
@@ -138,14 +136,12 @@ class SceneLinkWidget(QPushButton):
         self.setToolTip(self.model.target)
 
 
-class WebLinkWidget(QPushButton):
+class WebLinkWidget(KaraboSceneWidget, QPushButton):
     """A clickable widget which opens a hyperlink
     """
 
     def __init__(self, model, parent=None):
-        super(WebLinkWidget, self).__init__(parent)
-        self.model = model
-        substitute_font(model)
+        super(WebLinkWidget, self).__init__(model=model, parent=parent)
         self.setFont(get_font_from_string(model.font))
         self.setToolTip(self.model.target)
         self.setCursor(Qt.PointingHandCursor)

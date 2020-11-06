@@ -3,7 +3,7 @@ from functools import partial
 from PyQt5.QtCore import QPoint, QRect, QRectF, QSize, Qt, pyqtSlot
 from PyQt5.QtGui import QColor, QPainter, QPen
 from PyQt5.QtWidgets import QAction, QDialog, QPushButton, QSizePolicy
-from traits.api import Instance
+from traits.api import Instance, Undefined
 
 from karabogui import messagebox
 from karabo.common.enums import ONLINE_STATUSES
@@ -32,6 +32,9 @@ def _get_device_id(keys):
 
 class LinkWidget(QPushButton):
     """ A clickable widget which opens a detached scene
+
+    This is an internal widget of a controller. Geometry management is done
+    on its container, so avoid applying any geometry in this class.
     """
 
     def __init__(self, model, parent=None):
@@ -151,6 +154,9 @@ class DisplayDeviceSceneLink(BaseBindingController):
         self.widget.set_label_model(dialog.label_model)
 
     def binding_update(self, proxy):
+        if proxy.value is Undefined or not proxy.value:
+            return
+
         if self.model.target == '':
             self.model.target = proxy.value[0]
             self.model.target_window = SceneTargetWindow.Dialog
