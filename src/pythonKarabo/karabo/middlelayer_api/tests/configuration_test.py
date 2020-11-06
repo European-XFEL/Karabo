@@ -5,64 +5,65 @@ import numpy as np
 from karabo.common.api import (
     KARABO_SCHEMA_DISPLAYED_NAME, KARABO_SCHEMA_MIN_EXC)
 from karabo.middlelayer_api.configuration import (
-    attr_fast_deepcopy, sanitize_init_configuration, is_equal,
+    attr_fast_deepcopy, sanitize_init_configuration, config_changes, is_equal,
     sanitize_write_configuration, extract_modified_schema_attributes)
 from karabo.native import (
     AccessMode, Assignment, Configurable, Double, Hash, Int32,
     MetricPrefix, Node, Overwrite, Schema, Slot, Unit)
 
 
+class Nested(Configurable):
+    double = Double(
+        defaultValue=2.0,
+        minInc=-10.0, maxInc=10.0, absoluteError=0.5,
+        accessMode=AccessMode.RECONFIGURABLE)
+
+    readOnlyInteger = Int32(
+        defaultValue=20,
+        accessMode=AccessMode.READONLY)
+
+
+class Object(Configurable):
+    double = Double(
+        defaultValue=2.0,
+        minInc=-10.0, maxInc=10.0, absoluteError=0.5,
+        accessMode=AccessMode.RECONFIGURABLE)
+
+    readOnlyInteger = Int32(
+        defaultValue=20,
+        accessMode=AccessMode.READONLY)
+
+    internalInteger = Int32(
+        defaultValue=20,
+        assignment=Assignment.INTERNAL)
+
+    integer = Int32(
+        defaultValue=20,
+        accessMode=AccessMode.RECONFIGURABLE)
+
+    integerWithOptions = Int32(
+        defaultValue=2,
+        options=[1, 2, 3, 4],
+        accessMode=AccessMode.RECONFIGURABLE)
+
+    initOnlyDouble = Double(
+        defaultValue=100.0,
+        accessMode=AccessMode.INITONLY)
+
+    internalInitOnlyDouble = Double(
+        defaultValue=30.0,
+        accessMode=AccessMode.INITONLY,
+        assignment=Assignment.INTERNAL)
+
+    nested = Node(Nested)
+
+    @Slot()
+    async def move(self):
+        """Dummy move slot"""
+
+
 def test_sanitize_init_configuration():
     """Test if we can sanitize a configuration"""
-
-    class Nested(Configurable):
-        double = Double(
-            defaultValue=2.0,
-            minInc=-10.0, maxInc=10.0, absoluteError=0.5,
-            accessMode=AccessMode.RECONFIGURABLE)
-
-        readOnlyInteger = Int32(
-            defaultValue=20,
-            accessMode=AccessMode.READONLY)
-
-    class Object(Configurable):
-        double = Double(
-            defaultValue=2.0,
-            minInc=-10.0, maxInc=10.0, absoluteError=0.5,
-            accessMode=AccessMode.RECONFIGURABLE)
-
-        readOnlyInteger = Int32(
-            defaultValue=20,
-            accessMode=AccessMode.READONLY)
-
-        internalInteger = Int32(
-            defaultValue=20,
-            assignment=Assignment.INTERNAL)
-
-        integer = Int32(
-            defaultValue=20,
-            accessMode=AccessMode.RECONFIGURABLE)
-
-        integerWithOptions = Int32(
-            defaultValue=2,
-            options=[1, 2, 3, 4],
-            accessMode=AccessMode.RECONFIGURABLE)
-
-        initOnlyDouble = Double(
-            defaultValue=100.0,
-            accessMode=AccessMode.INITONLY)
-
-        internalInitOnlyDouble = Double(
-            defaultValue=30.0,
-            accessMode=AccessMode.INITONLY,
-            assignment=Assignment.INTERNAL)
-
-        nested = Node(Nested)
-
-        @Slot()
-        async def move(self):
-            """Dummy move slot"""
-
     obj = Object()
     config = obj.configurationAsHash()
     schema = Object.getClassSchema()
@@ -116,6 +117,26 @@ def test_sanitize_init_configuration():
     assert "integerWithOptions" not in sanitized
     assert "move" in run_time_conf
     assert "move" not in sanitized
+
+
+def test_config_changes():
+    obj = Object()
+    device_a = obj.configurationAsHash()
+    device_b = obj.configurationAsHash()
+    changes = config_changes(device_a, device_b)
+    assert changes == Hash()
+    device_b["double"] = 4.7
+    changes = config_changes(device_a, device_b)
+    assert changes == Hash("double", [2.0, 4.7])
+
+    # Add properties and check
+    device_a["notB"] = True
+    device_b["notA"] = True
+    changes = config_changes(device_a, device_b)
+    assert changes.fullyEqual(
+        Hash("double", [2.0, 4.7],
+             "notA", [None, True],
+             "notB", [True, None]))
 
 
 def test_attr_fast_deepcopy():
