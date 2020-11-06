@@ -589,6 +589,9 @@ namespace karabo {
             } else if (type == "requestFromSlot" && info.has("slot") && info.get<string>("slot") != "requestScene" && info.get<string>("slot") != "slotGetScene") {
                 // requestFromSlot must have a 'slot' argument. If not, it should fail somewhere else.
                 return true;
+            } else if (type == "requestGeneric" && info.has("slot") && info.get<string>("slot") == "slotSaveConfigurationFromName") {
+                // slotSaveConfigurationFromName is not allowed in read-only mode.
+                return true;
             } else {
                 return false;
             }
@@ -1998,9 +2001,9 @@ namespace karabo {
                     throw;
                 } catch (const karabo::util::TimeoutException& te) {
                     failTxt += "Request not answered within ";
-                    if (info.has("timeout")){ 
+                    if (info.has("timeout")){
                         failTxt += toString(info.get<int>("timeout"));
-                    } else {  
+                    } else {
                         failTxt += toString(karabo::xms::SignalSlotable::Requestor::m_defaultAsyncTimeout / 1000.);
                     }
                     failTxt += " seconds.";
