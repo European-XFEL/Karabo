@@ -115,6 +115,7 @@ class BaseSeriesGraph(BaseBindingController):
         self._plot.plotItem.sigXRangeChanged.connect(self._update_date_widgets)
 
         layout = QVBoxLayout()
+        layout.setSizeConstraint(QVBoxLayout.SetNoConstraint)
         layout.addWidget(self._plot)
         widget.time_frame.setLayout(layout)
 
