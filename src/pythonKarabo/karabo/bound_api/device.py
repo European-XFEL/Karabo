@@ -131,7 +131,7 @@ class PythonDevice(NoFsm):
             .description("Do not set this property, it will be set by the"
                          " device-server.")
             .expertAccess()
-            .assignmentOptional().noDefaultValue()
+            .assignmentInternal().noDefaultValue()
             .init()
             .commit(),
 
