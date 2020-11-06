@@ -96,22 +96,28 @@ class Tests(TestCase):
         self.assertFalse(h.fullyEqual(s))
 
         deep = deepcopy(h)
-        # Python deepcopy loses attributes
-        self.assertEqual(deep["node.b", ...], {})
+        # Python deepcopy is working
+        self.assertNotEqual(deep["node.b", ...], {})
         self.assertNotEqual(h["node.b", ...], {})
-        self.assertFalse(h.fullyEqual(deep))
+        self.assertTrue(h.fullyEqual(deep))
 
         # Hash quick deepcopy test
         mutable = [1, 2, 3, 4]
         h["mutable"] = mutable
         s = h.deepcopy()
+        deep = deepcopy(h)
         self.assertTrue(h.fullyEqual(s))
         self.assertEqual(h["mutable"], mutable)
         self.assertEqual(s["mutable"], mutable)
+        self.assertEqual(deep["mutable"], mutable)
         mutable.append(6)
-        # h changes, while the quick deepcopy does not
         self.assertEqual(h["mutable"], mutable)
         self.assertNotEqual(s["mutable"], mutable)
+        self.assertNotEqual(deep["mutable"], mutable)
+        self.assertTrue(h["mutable"] is mutable)
+        self.assertFalse(s["mutable"] is mutable)
+        self.assertFalse(deep["mutable"] is mutable)
+        self.assertTrue(deep.fullyEqual(s))
 
 
 if __name__ == "__main__":

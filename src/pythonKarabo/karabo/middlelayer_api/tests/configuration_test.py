@@ -67,7 +67,6 @@ def test_sanitize_init_configuration():
     obj = Object()
     config = obj.configurationAsHash()
     schema = Object.getClassSchema()
-
     assert isinstance(schema, Schema)
     # Make a deepcopy for testing!
     sanitized = sanitize_init_configuration(schema, deepcopy(config))
@@ -87,10 +86,11 @@ def test_sanitize_init_configuration():
     assert "initOnlyDouble" in sanitized
     assert "internalInitOnlyDouble" in config
     assert "internalInitOnlyDouble" not in sanitized
+    assert "move" in config
+    assert "move" not in sanitized
 
     # ------------------------------------------------------------
     # Check runtime configuration!
-
     run_time_conf = deepcopy(config)
     # We are evil no, we provide a value that is not in the options
     # This can happen if we have an outdated configuration not
