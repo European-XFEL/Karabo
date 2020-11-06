@@ -10,6 +10,8 @@ from PyQt5.QtSvg import QSvgWidget
 from PyQt5.QtWidgets import QFrame, QLabel, QLineEdit
 
 from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
+from karabogui.fonts import substitute_font
+
 
 CONTENT_MARGIN = 10
 MAX_SVG_SIZE = 24
@@ -18,6 +20,29 @@ SIZE_HINT_SVG = 20
 MIN_STATE_SIZE = 10
 SIZE_HINT_STATE_WIDTH = 30
 SIZE_HINT_STATE_HEIGHT = 20
+
+
+class KaraboSceneWidget:
+
+    def __init__(self, *args, model=None, **kwargs):
+        super(KaraboSceneWidget, self).__init__(*args, **kwargs)
+        self.model = model
+        # Check and substitute the font with the application fonts
+        substitute_font(model)
+
+    def sizeHint(self):
+        if self._has_model_size():
+            return QSize(self.model.width, self.model.height)
+        return super(KaraboSceneWidget, self).sizeHint()
+
+    def minimumSizeHint(self):
+        if self._has_model_size():
+            return QSize(self.model.width, self.model.height)
+        return super(KaraboSceneWidget, self).minimumSizeHint()
+
+    def _has_model_size(self):
+        model = self.model
+        return model is not None and (model.width, model.height) != (0, 0)
 
 
 class Label(QLabel):
