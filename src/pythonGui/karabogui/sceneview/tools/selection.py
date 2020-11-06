@@ -257,6 +257,7 @@ class SceneSelectionTool(BaseSceneTool):
 
         min_size = self._hover_item.minimumSize()
         max_size = self._hover_item.maximumSize()
+
         if (not min_size.width() <= g.size().width() <= max_size.width() or
             not min_size.height() <= g.size().height() <= max_size.height() and
             (min_size.width() <= og.size().width() <= max_size.width() and

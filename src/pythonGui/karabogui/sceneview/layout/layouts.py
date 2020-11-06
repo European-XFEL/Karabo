@@ -119,6 +119,11 @@ class BoxLayout(BaseLayout, QBoxLayout):
     def _add_widget(self, widget):
         self.addWidget(widget)
 
+    def minimumSize(self):
+        # We don't set a minimum size on the layout to enable more flexible
+        # resizing
+        return QSize()
+
     def sizeHint(self):
         """Calculate the sizeHint of the layout from the sizeHints of the
            children. This varies with direction."""
