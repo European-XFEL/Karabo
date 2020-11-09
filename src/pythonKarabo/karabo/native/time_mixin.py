@@ -27,6 +27,9 @@ class TimeMixin(object):
         :param frac: remaining time in attoseconds
         :param period: update interval between train Ids in microsec
         """
+        if not period:
+            # Protect against bad periods from the timeserver
+            return
         cls._tid = np.uint64(train_id)
         cls._time_sec = np.uint64(sec)
         cls._time_frac = np.uint64(frac)
