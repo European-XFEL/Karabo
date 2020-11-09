@@ -10,10 +10,13 @@ from PyQt5.QtWidgets import QAction, QDialog, QLabel
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.widgets.hints import KaraboSceneWidget
 
+TEXT_OFFSET = 5
+
 
 class LabelWidget(KaraboSceneWidget, QLabel):
     """A label which can appear in a scene
     """
+
     def __init__(self, model, parent=None):
         super(LabelWidget, self).__init__(model.text,
                                           model=model, parent=parent)
@@ -55,29 +58,36 @@ class LabelWidget(KaraboSceneWidget, QLabel):
             # frame width as it is expands inwards. The bottom and the right
             # edge needs to have another pixel offset.
             eff_rect = self.model.frame_width / 2
-            boundary = self.rect().adjusted(eff_rect, eff_rect,
-                                            -eff_rect - 1, -eff_rect - 1)
+            boundary = self.rect()
             painter.fillRect(boundary, QColor(self.model.background))
-
-            # Draw the boundary
+            fore_color = QColor(self.model.foreground)
+            # Draw the boundary and adjust the rect
             if self.model.frame_width:
-                pen = QPen(Qt.black)
+                boundary = boundary.adjusted(eff_rect, eff_rect,
+                                             -eff_rect - 1, -eff_rect - 1)
+                pen = QPen(fore_color)
                 pen.setWidth(self.model.frame_width)
                 painter.setPen(pen)
-                painter.drawRect(self.rect())
+                painter.drawRect(boundary)
 
             # Draw text
-            pen = QPen(QColor(self.model.foreground))
+            pen = QPen(fore_color)
             painter.setPen(pen)
             painter.setFont(self.font())
+            boundary.setLeft(TEXT_OFFSET)
             painter.drawText(boundary, self.alignment(),
                              self._get_elided_text())
+
+    @property
+    def text_width(self):
+        return self.width() - TEXT_OFFSET
 
     def _get_elided_text(self):
         fm = QFontMetrics(self.font())
         text = self.model.text
-        if fm.width(text) > self.width():
-            text = fm.elidedText(text, Qt.ElideRight, self.width())
+        text_width = self.text_width
+        if fm.width(text) > text_width:
+            text = fm.elidedText(text, Qt.ElideRight, text_width)
 
         return text
 
