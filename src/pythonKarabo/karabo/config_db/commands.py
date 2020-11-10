@@ -63,6 +63,12 @@ CMD_LIST_NO_NAME = """
         WHERE cfg.device_id = ?
     """
 
+CMD_LIST_DEVICES_PRIORITY = """
+        SELECT DISTINCT cfg.device_id
+        FROM DeviceConfig cfg
+        WHERE cfg.priority = ?
+    """
+
 def CMD_LIST_DEVS_NO_NAME(num_of_devices):
     return f"""
         SELECT *,
