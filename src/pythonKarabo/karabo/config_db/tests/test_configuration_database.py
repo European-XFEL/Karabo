@@ -4,14 +4,14 @@ from karabo.config_db.configuration_database import (
     DbHandle, ConfigurationDatabase)
 from karabo.config_db.utils import ConfigurationDBError
 
-TEST_DB_PATH = 'cfgMngrTest.db'
+TEST_DB_PATH = 'configManagerTest.db'
 
-CFG_NAME_1 = 'Simple config for test'
-CFG_NAME_2 = 'Second config for test'
-CFG_NAME_3 = 'Third config for test'
+CFG_NAME_1 = 'FirstConfig'
+CFG_NAME_2 = 'SecondConfig'
+CFG_NAME_3 = 'ThirdConfig'
 
-CFG_DEVICE_1 = 'SCS/Cameras/Basle_1'
-CFG_DEVICE_2 = 'CAS_LAB/Digitizer/ADQ-12'
+CFG_DEVICE_1 = 'SCS/CAM/BASLER'
+CFG_DEVICE_2 = 'CAS_LAB/DIGI/ADQ-12'
 
 TIMESTAMP_1 = '2020-01-30 12:02:02.123'
 TIMESTAMP_2 = '2019-01-30 12:02:02.123'
@@ -64,6 +64,7 @@ class TestConfigurationManagerData(unittest.TestCase):
         """ Checks that saving a set of configs and then retrieving them by
             name parts works.
         """
+        # Save with priority 1
         self.database.save_configuration(CFG_NAME_1, CFG_1,
                                          timestamp=TIMESTAMP_1)
 
@@ -106,6 +107,20 @@ class TestConfigurationManagerData(unittest.TestCase):
         # A name part known to not happen in the data should retrieve nothing.
         cfg = self.database.list_configurations(CFG_DEVICE_1, 'inv part')
         self.assertEqual(cfg, [])
+
+        # We should have stored 2 devices in the database
+        devices = self.database.list_devices()
+        self.assertIn(CFG_DEVICE_1, devices)
+        self.assertIn(CFG_DEVICE_2, devices)
+        self.assertEqual(len(devices), 2)
+
+        devices = self.database.list_devices(priority=2)
+        self.assertEqual(devices, [])
+
+        devices = self.database.list_devices(priority=1)
+        self.assertIn(CFG_DEVICE_1, devices)
+        self.assertNotIn(CFG_DEVICE_2, devices)
+        self.assertEqual(len(devices), 1)
 
     def test_save_get_last_config_priority(self):
         """ Checks that saving a set of configs and then retrieving the latest
