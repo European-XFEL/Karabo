@@ -31,18 +31,26 @@ class KaraboSceneWidget:
         substitute_font(model)
 
     def sizeHint(self):
-        if self._has_model_size():
+        """On old GUI, the geometry of the widgets in a layout are saved
+        with smaller dimensions and with (0, 0) position. We only use the
+        model geometry as size hint if it is the corrected one."""
+        if self._has_model_pos():
             return QSize(self.model.width, self.model.height)
+
         return super(KaraboSceneWidget, self).sizeHint()
 
     def minimumSizeHint(self):
-        if self._has_model_size():
+        """On old GUI, the geometry of the widgets in a layout are saved
+        with smaller dimensions and with (0, 0) position. We only use the
+        model geometry as size hint if it is the corrected one."""
+        if self._has_model_pos():
             return QSize(self.model.width, self.model.height)
+
         return super(KaraboSceneWidget, self).minimumSizeHint()
 
-    def _has_model_size(self):
+    def _has_model_pos(self):
         model = self.model
-        return model is not None and (model.width, model.height) != (0, 0)
+        return model is not None and (model.x, model.y) != (0, 0)
 
 
 class Label(QLabel):
