@@ -20,14 +20,10 @@ class UnitLabelWrapper(QFrame):
 
         # Add and populate layout
         layout = QHBoxLayout(self)
-        layout.setSizeConstraint(QHBoxLayout.SetMinimumSize)
+        layout.setSizeConstraint(QHBoxLayout.SetNoConstraint)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(widget)
         layout.addWidget(label)
-
-        # Set size properties
-        self.setSizePolicy(QSizePolicy.MinimumExpanding,
-                           QSizePolicy.MinimumExpanding)
 
     def update_label(self, proxy):
         # Add an `update_label` "method" for keeping things synced
