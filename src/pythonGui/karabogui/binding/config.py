@@ -9,10 +9,13 @@ from karabo.native import (
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
-    BindingNamespace, BindingRoot, CharBinding, NodeBinding, SlotBinding,
-    StringBinding, VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
+    BindingNamespace, BindingRoot, CharBinding, FloatBinding, IntBinding,
+    Int8Binding, Int16Binding, Int32Binding, Int64Binding, NodeBinding,
+    SlotBinding, StringBinding, Uint8Binding, Uint16Binding, Uint32Binding,
+    Uint64Binding, VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
     VectorNumberBinding)
-from .util import array_equal, attr_fast_deepcopy, is_equal, realign_hash
+from .util import (
+    array_equal, attr_fast_deepcopy, is_equal, is_writable, realign_hash)
 
 VECTOR_FLOAT_BINDINGS = (VectorFloatBinding, VectorDoubleBinding)
 RECURSIVE_BINDINGS = (NodeBinding, ListOfNodesBinding,
@@ -351,11 +354,25 @@ def validate_value(binding, value):
         elif isinstance(binding, RECURSIVE_BINDINGS):
             # Nothing to do here! We automatically return the value
             pass
+        elif isinstance(binding, IntBinding):
+            dtype = INTEGER_TO_NUMPY[type(binding)]
+            value = binding.validate_trait("value", value)
+            if value is not None:
+                value = dtype(value)
+        elif isinstance(binding, FloatBinding):
+            # XXX: This is very bad! We first make sure if we have a dtype
+            # of a `float` and reuse that. If not, we cast to `float`.
+            dtype = getattr(value, 'dtype', None)
+            if isinstance(dtype, (np.float64, np.float32)):
+                value = dtype.type(binding.validate_trait("value", value))
+            else:
+                value = binding.validate_trait("value", value)
         else:
             # The value is a simple data type. We validate it with the binding
             # traits.
             value = binding.validate_trait("value", value)
     except (TraitError, TypeError, ValueError):
+        # TraitError happens when traits cannot cast, e.g. str to bool
         # Validation has failed, we inform that there's no validated value
         value = None
 
@@ -411,11 +428,6 @@ def validate_hash(binding, new, init=False):
     valid = Hash()
     column_bindings = binding.bindings
 
-    # Allow init only values when merging
-    access_modes = (AccessMode.RECONFIGURABLE,)
-    if init:
-        access_modes += (AccessMode.INITONLY,)
-
     # Check if order of the keys are respected
     if list(column_bindings.keys()) != list(new.keys()):
         new = realign_hash(new, keys=column_bindings.keys())
@@ -427,8 +439,7 @@ def validate_hash(binding, new, init=False):
             # This is not reported as invalid.
             continue
 
-        writable = column_binding.access_mode in access_modes
-        if not writable or value is None:
+        if not is_writable(column_binding, init) or value is None:
             # The property is not writable or the value doesn't exist
             # (from realign_hash`). Use the default value from the binding.
             validated_value = get_default_value(column_bindings.get(path))
@@ -458,3 +469,15 @@ def convert_string(value):
     except ValueError:
         # Conversion of string to a literal failed, we return the value as is.
         return value
+
+
+INTEGER_TO_NUMPY = {
+    Int8Binding: np.int8,
+    Uint8Binding: np.uint8,
+    Int16Binding: np.int16,
+    Uint16Binding: np.uint16,
+    Int32Binding: np.int32,
+    Uint32Binding: np.uint32,
+    Int64Binding: np.int64,
+    Uint64Binding: np.uint64,
+}
