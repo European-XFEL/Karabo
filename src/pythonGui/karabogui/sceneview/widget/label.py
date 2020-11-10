@@ -43,14 +43,17 @@ class LabelWidget(KaraboSceneWidget, QLabel):
         """Calculate the size hint from the text if model is newly
            instantiated (no width/height yet). Else, return the model size."""
         # Calculate the suggested widget size from the model text
+        size = QSize()
         if self._has_model_pos():
-            return super(LabelWidget, self).sizeHint()
+            size = super(LabelWidget, self).sizeHint()
 
-        fm = QFontMetrics(self.font())
-        CONTENT_MARGIN = 10
-        width = fm.width(self.model.text) + CONTENT_MARGIN
-        height = fm.height() + self.model.frame_width
-        return QSize(width, max(height, 20))
+        if size.isEmpty():
+            fm = QFontMetrics(self.font())
+            CONTENT_MARGIN = 10
+            width = fm.width(self.model.text) + CONTENT_MARGIN
+            height = fm.height() + self.model.frame_width
+            size = QSize(width, max(height, 20))
+        return size
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
