@@ -308,7 +308,7 @@ class ConfigurationManager(DeviceClientBase):
         items = self.db.list_configurations(deviceId, name_part)
         items = HashList([dictToHash(config) for config in items])
 
-        return Hash("items", items)
+        return Hash("success", True, "items", items)
 
     @coslot
     async def slotListConfigurationSets(self, info):
@@ -331,7 +331,7 @@ class ConfigurationManager(DeviceClientBase):
         items = self.db.list_configuration_sets(deviceIds)
         items = HashList([dictToHash(config) for config in items])
 
-        return Hash("items", items)
+        return Hash("success", True, "items", items)
 
     @coslot
     async def slotGetConfigurationFromName(self, info):
@@ -363,7 +363,7 @@ class ConfigurationManager(DeviceClientBase):
         if not info.has("schema") or info["schema"] is False:
             item.pop("schema")
 
-        return Hash("item", item)
+        return Hash("success", True, "item", item)
 
     @coslot
     async def slotGetLastConfiguration(self, info):
@@ -395,7 +395,7 @@ class ConfigurationManager(DeviceClientBase):
         if not info.has("schema") or info["schema"] is False:
             item.pop("schema")
 
-        return Hash("item", item)
+        return Hash("success", True, "item", item)
 
     @coslot
     async def slotCheckConfigurationFromName(self, info):
@@ -410,6 +410,16 @@ class ConfigurationManager(DeviceClientBase):
         taken = self.db.is_config_name_taken(config_name, deviceIds)
 
         return Hash("success", True, "taken", taken)
+
+    @coslot
+    async def slotListDevices(self, info):
+        """List deviceIds that are stored in the database for a priority
+
+        The info hash must contain the priority!
+        """
+        priority = info.get("priority", 3)
+        devices = self.db.list_devices(priority=int(priority))
+        return Hash("success", True, "item", devices)
 
     @coslot
     async def slotSaveConfigurationFromName(self, info):

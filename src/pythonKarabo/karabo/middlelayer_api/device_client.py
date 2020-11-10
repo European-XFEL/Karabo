@@ -486,6 +486,23 @@ def listConfigurationFromName(device, name_part=''):
 
 
 @synchronize
+def listDevicesWithConfiguration(priority=3):
+    """Return the list of devices which have a configuration of `priority`::
+
+        listDevicesWithConfiguration(priority=3)
+
+    Returns a list of deviceIds.
+    """
+    instance = get_instance()
+    slot = "slotListDevices"
+    h = Hash("priority", priority)
+    reply = yield from instance.call(KARABO_CONFIG_MANAGER, slot, h)
+    deviceIds = reply["item"]
+
+    return deviceIds
+
+
+@synchronize
 def instantiateFromName(device, name=None, classId=None, serverId=None):
     """Instantiate a device from `name` via the ConfigurationManager::
 
