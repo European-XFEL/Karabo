@@ -12,7 +12,7 @@ from .commands import (
     CMD_CHECK_NAME_TAKEN, CMD_CHECK_NAME_TAKEN_ANY_DEVICE,
     CMD_CHECK_SCHEMA_ALREADY_SAVED, CMD_SAVE_CONFIGURATION,
     CMD_SAVE_CONFIGURATION_NO_TIMESTAMP, CMD_SAVE_SCHEMA,
-    CMD_CHECK_DEVICE_LIMIT)
+    CMD_CHECK_DEVICE_LIMIT, CMD_LIST_DEVICES_PRIORITY)
 from .utils import (
     CONFIG_DB_DATA, CONFIG_DB_DEVICE_ID, CONFIG_DB_DESCRIPTION, CONFIG_DB_NAME,
     CONFIG_DB_PRIORITY, CONFIG_DB_SCHEMA, CONFIG_DB_TIMEPOINT, CONFIG_DB_USER,
@@ -105,6 +105,19 @@ class ConfigurationDatabase(object):
                 ret_recordings.append(conf_dict)
 
             return ret_recordings
+
+    def list_devices(self, priority=3):
+        """Retrieves the set of deviceIds related to configuration priority
+
+        :param priority: the desired priority
+
+        :returns: list of deviceIds records (can be empty).
+        """
+        with self.dbHandle as db:
+            cursor = db.execute(CMD_LIST_DEVICES_PRIORITY, (int(priority),))
+            recordings = cursor.fetchall()
+            ret = [rec[0] for rec in recordings]
+            return ret
 
     def list_configuration_sets(self, deviceIds):
         """Retrieves the set of configurations related to for a list of

@@ -12,7 +12,8 @@ from karabo.middlelayer import (
     call, coslot, connectDevice, DaqPolicy, Device, Double,
     getConfigurationFromName, getLastConfiguration, Hash, HashList,
     instantiateFromName, KaraboError, listConfigurationFromName,
-    saveConfigurationFromName, sleep, Slot, slot, String)
+    listDevicesWithConfiguration, saveConfigurationFromName, sleep, Slot,
+    slot, String)
 from karabo.middlelayer_devices.configuration_manager import (
     ConfigurationManager)
 
@@ -169,6 +170,22 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(r["success"], True)
         self.assertEqual(r["taken"], False)
 
+        h = Hash("priority", 3)
+        r = await call(MANAGER, "slotListDevices", h)
+        self.assertEqual(r["success"], True)
+        devices = r["item"]
+        self.assertNotIn("FOODEVICE", devices)
+        self.assertIn("TEST_DEVICE", devices)
+        self.assertNotIn("ANOTHER_TEST_DEVICE", devices)
+
+        h = Hash("priority", 2)
+        r = await call(MANAGER, "slotListDevices", h)
+        self.assertEqual(r["success"], True)
+        devices = r["item"]
+        self.assertNotIn("FOODEVICE", devices)
+        self.assertIn("TEST_DEVICE", devices)
+        self.assertIn("ANOTHER_TEST_DEVICE", devices)
+
     @async_tst
     async def test_configuration_bulk_save_reject(self):
         """Test the reject of saving of too many configurations"""
@@ -296,6 +313,16 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(item["priority"], 3)
         self.assertEqual(item["user"], ".")
         self.assertEqual(item["description"], "No desc")
+
+        deviceIds = await listDevicesWithConfiguration()
+        self.assertIn("TEST_CLIENT_DEVICE", deviceIds)
+        self.assertIn("TEST_DEVICE", deviceIds)
+        self.assertNotIn("ANOTHER_TEST_DEVICE", deviceIds)
+
+        deviceIds = await listDevicesWithConfiguration(priority=2)
+        self.assertIn("TEST_CLIENT_DEVICE", deviceIds)
+        self.assertIn("TEST_DEVICE", deviceIds)
+        self.assertIn("ANOTHER_TEST_DEVICE", deviceIds)
 
         # Instantiate a device with a device client function
         serverMock = MockServer({"_deviceId_": "TEST_SERVER"})
