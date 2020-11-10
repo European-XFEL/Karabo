@@ -15,7 +15,8 @@ from karabogui.binding.api import (
     ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy, ListOfNodesBinding,
     ProjectDeviceProxy, VectorHashBinding, attr_fast_deepcopy,
     apply_configuration, extract_configuration, flat_iter_hash,
-    get_binding_value, has_changes, validate_vector_hash, validate_value)
+    get_binding_value, has_changes, has_vector_hash_changes,
+    validate_vector_hash, validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.enums import AccessRole
 from karabogui.events import KaraboEvent, register_for_broadcasts
@@ -362,7 +363,8 @@ class ConfigurationPanel(BasePanelWidget):
                     valid, invalid = validate_vector_hash(prop_binding, value,
                                                           drop_none=True)
                     if (len(valid)
-                            and has_changes(prop_binding, prop_value, valid)):
+                            and has_vector_hash_changes(prop_binding,
+                                                        prop_value, valid)):
                         edit_value = valid
                     if invalid:
                         invalid_prop[path] = invalid
@@ -435,7 +437,8 @@ class ConfigurationPanel(BasePanelWidget):
                     invalid[path] = invalid_vhash
                 if valid_vhash:
                     old_value = get_binding_value(binding)
-                    if has_changes(binding, old_value, valid_vhash):
+                    if has_vector_hash_changes(binding, old_value,
+                                               valid_vhash, init=True):
                         valid[path] = valid_vhash
             else:
                 validated_value = validate_value(binding, value)

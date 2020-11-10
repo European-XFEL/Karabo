@@ -1,5 +1,5 @@
-from collections import OrderedDict
 from collections.abc import Iterable
+from copy import deepcopy
 from itertools import zip_longest
 import numbers
 
@@ -10,9 +10,8 @@ from karabo.common import const
 from karabo.common.api import (
     KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
     KARABO_SCHEMA_MIN_INC)
-from karabo.native import Hash, HashList, Schema
+from karabo.native import AccessMode, Hash, HashList, Schema
 from . import types
-
 
 FLOAT_TOLERANCE = 1e-7
 
@@ -137,8 +136,7 @@ def has_changes(binding, old_value, new_value):
         elif isinstance(old_value, np.ndarray):
             changes = not array_equal(new_value, old_value)
         elif isinstance(old_value, HashList):
-            hash_list = get_vector_hash_changes(binding, old_value, new_value)
-            changes = hash_list is not None
+            changes = has_vector_hash_changes(binding, old_value, new_value)
         elif isinstance(old_value, list):
             if len(old_value) != len(new_value):
                 changes = True
@@ -270,20 +268,37 @@ def has_min_max_attributes(binding):
 
 
 def array_equal(actual, expected):
+    """Compare if arrays are equal with a floating point tolerance (IEEE 754)
+    """
     if len(actual) != len(expected):
         return False
+
     return np.allclose(actual, expected, atol=FLOAT_TOLERANCE)
 
 
-def get_vector_hash_changes(binding, old, new):
+def has_vector_hash_changes(binding, old, new, init=False):
+    """Check if a table element has changes
+
+    :param binding: The VectorHash binding
+    :param old, new: The vector hashes to be compared
+    :param init: (bool) Denote if `INITONLY` properties are also valid
+    """
+    hash_list = get_vector_hash_changes(binding, old, new, init)
+    return hash_list is not None
+
+
+def get_vector_hash_changes(binding, old, new, init=False):
     """Returns the diff of the old hash and the new hash.
 
     :param binding: (VectorHashBinding) the binding which contains
         the current value and the row schema
     :param old, new: (Hash or None) the hashes to be compared
+    :param init: (bool) Denote if `INITONLY` properties are also valid
+
     :return changes: (HashList or None)
-        Returns HashList if there are changes, None otherwise.
-        The values could contain [None, Hash()]
+
+            Returns HashList if there are changes, None otherwise.
+            The values could contain [None, Hash()]
     """
     changes = HashList()
     if old is None:
@@ -294,7 +309,8 @@ def get_vector_hash_changes(binding, old, new):
         # The hash is deleted, we don't record
         if new_hash is None:
             continue
-        change = get_vector_hash_element_changes(binding, old_hash, new_hash)
+        change = get_vector_hash_element_changes(binding, old_hash, new_hash,
+                                                 init)
         changes.append(change)
 
     if changes.count(None) == len(changes):
@@ -305,12 +321,13 @@ def get_vector_hash_changes(binding, old, new):
     return changes
 
 
-def get_vector_hash_element_changes(binding, old, new):
+def get_vector_hash_element_changes(binding, old, new, init=False):
     """Returns the diff of the old hash and the new hash.
 
     :param binding: (VectorHashBinding) the binding which contains
-        the current value and the row schema
+                     the current value and the row schema
     :param old, new: (Hash or None) the hashes to be compared
+
     :return (Hash or None): returns hash if there's changes, or None otherwise
     """
     if old is None:
@@ -331,32 +348,61 @@ def get_vector_hash_element_changes(binding, old, new):
                             fillvalue=(None, None))
     for (old_name, old_value), (new_name, new_value) in iter_prop:
         prop_binding = column_bindings.get(new_name)
-        if new_name is None:
+        if new_name is None or not is_writable(prop_binding, init):
             continue
-        if (old_name is None
-                or has_changes(prop_binding, old_value, new_value)):
-            # There are changes! We now return the whole string
+        if (old_name is None or has_changes(
+                prop_binding, old_value, new_value)):
+            # There are changes and it can be written!
+            # Hence, we now return the whole hash.
             return new
 
     # No changes detected, we return None
     return None
 
 
+def is_writable(binding, init=False):
+    """Check if a binding is reconfigurable with the attributes
+
+    :param init: boolean to consider `INITONLY` properties. Default is `False`.
+    """
+    if binding is None:
+        return False
+
+    # Allow init only values when merging
+    access_modes = (AccessMode.RECONFIGURABLE,)
+    if init:
+        access_modes += (AccessMode.INITONLY,)
+    return binding.access_mode in access_modes
+
+
 def realign_hash(hsh, keys):
-    """Realigns the hash according to the key order.
-       Fills the property with None if path is not present in keys.
-       The properties not in the keys are placed after the keys.
+    """Realigns the hash `hsh` according to the key order `keys`.
+
+    Fills properties with `None` if key is not present in `keys`. The
+    properties not in the `keys` are appended at the end.
 
     :param hsh: (Hash) dictionary of bindings {path: binding}
-    :param keys: (sequence) a list of paths (in strings) to base the order on
-    :return (Hash): returns the realigned hash
+    :param keys: (sequence) a list of `keys` as reference
+
+    :return (Hash): returns a new realigned `Hash` (copy)
     """
-    # Reorder according to the old key orders
-    new_dict = OrderedDict([(old_key, hsh.get(old_key))
-                            for old_key in keys])
-    # Include the new keys (not existing on the old hash)
-    for new_key, new_value in hsh.items():
-        if new_key in keys:
+
+    ret = Hash()
+    for old_key in keys:
+        if old_key in hsh:
+            ret[old_key] = deepcopy(hsh[old_key])
+            ret[old_key, ...] = deepcopy(hsh[old_key, ...])
+        else:
+            ret[old_key] = None
+            ret[old_key, ...] = {}
+
+    # Now, we include the hsh keys (not existing on the old hash)
+    # We expect a purely flat Hash here!
+    for key, value, attrs in Hash.flat_iterall(hsh):
+        if key in keys:
+            # Already considered
             continue
-        new_dict[new_key] = new_value
-    return Hash(new_dict)
+        ret[key] = deepcopy(value)
+        ret[key, ...] = deepcopy(attrs)
+
+    return ret
