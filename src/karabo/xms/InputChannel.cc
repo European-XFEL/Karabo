@@ -27,7 +27,7 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(InputChannel);
 
-        const unsigned int InputChannel::DEFAULT_MAX_QUEUE_LENGTH = 100u;
+        const unsigned int InputChannel::DEFAULT_MAX_QUEUE_LENGTH = 2u;
 
         void InputChannel::expectedParameters(karabo::util::Schema& expected) {
             using namespace karabo::util;
