@@ -194,7 +194,11 @@ class TestLoadSceneModel(GuiTestCase):
     def _assert_geometry(self, model_klass, **traits):
         self._assert_single_model(model_klass, **traits)
         self._assert_valid_layout(model_klass, **traits)
-        self._assert_dead_layout(model_klass, **traits)
+
+        # Dead layouts mean that the children widgets do not follow the desired
+        # geometry. We let Qt handle such cases, which is as such on the
+        # previous implementations. There's no need to check this.
+        # self._assert_dead_layout(model_klass, **traits)
 
     def _assert_single_model(self, model_klass, **traits):
         model = model_klass(x=10, y=10, width=100, height=30, **traits)
@@ -218,6 +222,11 @@ class TestLoadSceneModel(GuiTestCase):
                                    modified=True)
 
     def _assert_dead_layout(self, model_klass, **traits):
+        """Dead layouts mean that the children widgets do not follow the
+        desired geometry, with the dimensions saved smaller and the position
+        always at (0, 0). We let Qt handle such cases, which is as such on the
+        previous implementations. There's no need to check this.
+        """
         # Initialize expected models
         expected = self._get_layout_model(model_klass, modified=True, **traits)
 
