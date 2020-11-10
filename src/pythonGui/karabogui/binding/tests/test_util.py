@@ -202,7 +202,7 @@ def test_get_vector_hash_changes():
     assert changes == new_list
 
 
-def test_get_hash_changes():
+def test_get_vector_hash_element_changes():
     binding = VectorHashBinding(row_schema=VectorHash(TableRow).rowSchema.hash)
     foo_hash = Hash("stringProperty", "foo",
                     "uintProperty", 1,
@@ -231,7 +231,7 @@ def test_get_hash_changes():
                     "intProperty", 1,  # new property
                     "boolProperty", 2)
     changes = get_vector_hash_element_changes(binding, foo_hash, new_hash)
-    assert changes == realign_hash(new_hash, keys=foo_hash.keys())
+    assert changes is None  # `intProperty` is not applied
 
     # Check if there's a property removed
     new_hash = Hash("stringProperty", "foo",

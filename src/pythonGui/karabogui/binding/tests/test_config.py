@@ -8,7 +8,8 @@ from ..config import validate_value, validate_vector_hash
 from ..types import (
     BoolBinding, FloatBinding, Int8Binding, Uint8Binding, StringBinding,
     VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
-    VectorInt8Binding, VectorUint8Binding)
+    VectorInt8Binding, VectorUint8Binding, Int16Binding, Uint16Binding,
+    Int32Binding, Uint32Binding, Int64Binding, Uint64Binding)
 
 
 class TableRow(Configurable):
@@ -24,59 +25,191 @@ class TableRowEmpty(Configurable):
 
 
 def test_validate_value_float():
-    """Test float binding validation.
-    If valid, it should return the casted value"""
-    binding = FloatBinding()
-
+    """Test float binding validation"""
     # Check valid values
-    assert validate_value(binding, 1.3) == 1.3
-    assert validate_value(binding, np.float32(1.3)) == np.float32(1.3)
-    assert validate_value(binding, np.float64(1.3)) == np.float64(1.3)
-    assert validate_value(binding, np.uint32(1)) == np.float32(1.0)
-    assert validate_value(binding, np.int32(-1)) == np.float32(-1.0)
-    assert validate_value(binding, "1.0") == np.float32(1.0)
+    binding = FloatBinding()
+    assert_binding(binding, 1.3)
+    assert_binding(binding, np.float32(1.3), expected=np.float32(1.3))
+    assert_binding(binding, np.float64(1.3), expected=np.float64(1.3))
+    assert_binding(binding, np.uint32(1), expected=float(1.0))
+    assert_binding(binding, np.int32(-1), expected=float(-1.0))
+    assert_binding(binding, "1.0", expected=float(1.0))
 
     # Check invalid values for floats
-    assert validate_value(binding, "foo") is None
-    assert validate_value(binding, [1, 2, 3]) is None
+    assert_binding(binding, "foo", valid=False)
+    assert_binding(binding, [1, 2, 3], valid=False)
+
+
+def assert_binding(binding, value, expected=None, valid=True):
+    """Validate a value against its binding
+
+    :param binding: The corresponding binding
+    :param value: The value to be verified
+    :param expected: None by default. If not provided, the `value` is taken
+                     as `expected` in the `valid` case.
+    :param valid: If we have a `valid` value assert. Default is `True`.
+    """
+    validated = validate_value(binding, value)
+    if valid and expected is None:
+        expected = value
+    assert validated == expected
+    assert type(validated) == type(expected)
 
 
 def test_validate_value_uint8():
-    """Test uint8 binding validation.
-    If valid, it should return the casted value"""
+    """Test uint8 binding validation."""
     binding = Uint8Binding()
 
     # Check valid values
-    assert validate_value(binding, 0) == 0
-    assert validate_value(binding, 255) == 255
-    assert validate_value(binding, '1') == 1
+    assert_binding(binding, 0, expected=np.uint8(0))
+    assert_binding(binding, 255, expected=np.uint8(255))
+    assert_binding(binding, np.int8(8), expected=np.uint8(8))
+    assert_binding(binding, '1', expected=np.uint8(1))
 
     # Check invalid values
-    assert validate_value(binding, -1) is None
-    assert validate_value(binding, 256) is None
-    assert validate_value(binding, 1.0) is None  # the value is a float
-    assert validate_value(binding, "foo") is None
-    assert validate_value(binding, [1, 2, 3]) is None
-    assert validate_value(binding, HashList()) is None
+    assert_binding(binding, -1, valid=False)
+    assert_binding(binding, 256, valid=False)
+    assert_binding(binding, 1.0, valid=False)  # the value is a float
+    assert_binding(binding, "foo", valid=False)
+    assert_binding(binding, [1, 2, 3], valid=False)
+    assert_binding(binding, HashList(), valid=False)
 
 
 def test_validate_value_int8():
-    """Test int8 binding validation.
-    If valid, it should return the casted value"""
+    """Test int8 binding validation."""
     binding = Int8Binding()
 
     # Check valid values
-    assert validate_value(binding, -128) == -128
-    assert validate_value(binding, 127) == 127
-    assert validate_value(binding, '1') == 1
+    assert_binding(binding, -128, expected=np.int8(-128))
+    assert_binding(binding, 127, expected=np.int8(127))
+    assert_binding(binding, '1', expected=np.int8(1))
+    assert_binding(binding, np.uint32(1), expected=np.int8(1))
 
     # Check invalid values
-    assert validate_value(binding, -129) is None
-    assert validate_value(binding, 128) is None
-    assert validate_value(binding, 1.0) is None  # the value is a float
-    assert validate_value(binding, "foo") is None
-    assert validate_value(binding, [1, 2, 3]) is None
-    assert validate_value(binding, HashList([Hash(), Hash()])) is None
+    assert_binding(binding, -129, valid=False)
+    assert_binding(binding, 128, valid=False)
+    assert_binding(binding, 1.0, valid=False)  # the value is a float
+    assert_binding(binding, np.float(1.0), valid=False)
+    assert_binding(binding, "foo", valid=False)
+    assert_binding(binding, [1, 2, 3], valid=False)
+    assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
+
+
+def test_validate_value_int16():
+    """Test the int16 binding validation."""
+    binding = Int16Binding()
+
+    # Check valid values
+    assert_binding(binding, 0, expected=np.int16(0))
+    assert_binding(binding, (2 ** 15) - 1, expected=np.int16((2 ** 15) - 1))
+    assert_binding(binding, np.int8(8), expected=np.int16(8))
+    assert_binding(binding, '1', expected=np.int16(1))
+
+    # Check invalid values
+    assert_binding(binding, -(2 ** 64), valid=False)
+    assert_binding(binding, 1.0, valid=False)  # the value is a float
+    assert_binding(binding, "foo", valid=False)
+    assert_binding(binding, [1, 2, 3], valid=False)
+    assert_binding(binding, HashList(), valid=False)
+
+
+def test_validate_value_uint16():
+    """Test uint16 binding validation."""
+    binding = Uint16Binding()
+
+    # Check valid values
+    assert_binding(binding, 0, expected=np.uint16(0))
+    assert_binding(binding, (2 ** 16) - 1, expected=np.uint16((2 ** 16) - 1))
+    assert_binding(binding, np.int8(8), expected=np.uint16(8))
+    assert_binding(binding, '1', expected=np.uint16(1))
+
+    # Check invalid values
+    assert_binding(binding, -1, valid=False)
+    assert_binding(binding, (2 ** 16), valid=False)
+    assert_binding(binding, 1.0, valid=False)  # the value is a float
+    assert_binding(binding, "foo", valid=False)
+    assert_binding(binding, [1, 2, 3], valid=False)
+    assert_binding(binding, HashList(), valid=False)
+
+
+def test_validate_value_int32():
+    """Test int32 binding validation."""
+    binding = Int32Binding()
+
+    # Check valid values
+    assert_binding(binding, -(2 ** 31), expected=np.int32(-(2 ** 31)))
+    assert_binding(binding, (2 ** 31) - 1, expected=np.int32((2 ** 31) - 1))
+    assert_binding(binding, '1', expected=np.int32(1))
+    assert_binding(binding, np.uint32(1), expected=np.int32(1))
+
+    # Check invalid values
+    assert_binding(binding, -(2 ** 32), valid=False)
+    assert_binding(binding, (2 ** 32) - 1, valid=False)
+    assert_binding(binding, 1.0, valid=False)  # the value is a float
+    assert_binding(binding, np.float(1.0), valid=False)
+    assert_binding(binding, "foo", valid=False)
+    assert_binding(binding, [1, 2, 3], valid=False)
+    assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
+
+
+def test_validate_value_uint32():
+    """Test uint32 binding validation."""
+    binding = Uint32Binding()
+
+    # Check valid values
+    assert_binding(binding, 1, expected=np.uint32(1))
+    assert_binding(binding, (2 ** 32) - 1, expected=np.uint32((2 ** 32) - 1))
+    assert_binding(binding, '1', expected=np.uint32(1))
+    assert_binding(binding, np.uint32(1), expected=np.uint32(1))
+
+    # Check invalid values
+    assert_binding(binding, -(2 ** 32), valid=False)
+    assert_binding(binding, (2 ** 32), valid=False)
+    assert_binding(binding, 1.0, valid=False)  # the value is a float
+    assert_binding(binding, np.float(1.0), valid=False)
+    assert_binding(binding, "foo", valid=False)
+    assert_binding(binding, [1, 2, 3], valid=False)
+    assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
+
+
+def test_validate_value_int64():
+    """Test int64 binding validation."""
+    binding = Int64Binding()
+
+    # Check valid values
+    assert_binding(binding, -(2 ** 63), expected=np.int64(-(2 ** 63)))
+    assert_binding(binding, (2 ** 63) - 1, expected=np.int64((2 ** 63) - 1))
+    assert_binding(binding, '1', expected=np.int64(1))
+    assert_binding(binding, np.uint32(1), expected=np.int64(1))
+
+    # Check invalid values
+    assert_binding(binding, -(2 ** 64), valid=False)
+    assert_binding(binding, (2 ** 64) - 1, valid=False)
+    assert_binding(binding, 1.0, valid=False)  # the value is a float
+    assert_binding(binding, np.float(1.0), valid=False)
+    assert_binding(binding, "foo", valid=False)
+    assert_binding(binding, [1, 2, 3], valid=False)
+    assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
+
+
+def test_validate_value_uint64():
+    """Test uint64 binding validation."""
+    binding = Uint64Binding()
+
+    # Check valid values
+    assert_binding(binding, 1, expected=np.uint64(1))
+    assert_binding(binding, (2 ** 64) - 1, expected=np.uint64((2 ** 64) - 1))
+    assert_binding(binding, '1', expected=np.uint64(1))
+    assert_binding(binding, np.uint32(1), expected=np.uint64(1))
+
+    # Check invalid values
+    assert_binding(binding, -(2 ** 128), valid=False)
+    assert_binding(binding, (2 ** 128) - 1, valid=False)
+    assert_binding(binding, 1.0, valid=False)  # the value is a float
+    assert_binding(binding, np.float(1.0), valid=False)
+    assert_binding(binding, "foo", valid=False)
+    assert_binding(binding, [1, 2, 3], valid=False)
+    assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
 
 
 def test_validate_value_string():
