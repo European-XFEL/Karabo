@@ -22,6 +22,8 @@ from karabo.native.time_mixin import get_timestamp
 from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
 from .synchronization import background, firstCompleted
 
+DEFAULT_MAX_QUEUE_LENGTH = 2
+
 
 class CancelQueue(Queue):
     """A queue with an added cancel method
@@ -238,6 +240,16 @@ class NetworkInput(Configurable):
         assignment=Assignment.OPTIONAL, defaultValue="drop",
         accessMode=AccessMode.RECONFIGURABLE)
 
+    maxQueueLength = UInt32(
+        defaultValue=DEFAULT_MAX_QUEUE_LENGTH,
+        minInc=1,
+        maxInc=10,
+        displayedName="Max. Queue Length Output Channels",
+        description="Maximum number of data items to be queued by connected "
+                    "Output Channels (only in copy mode and for "
+                    "queueDrop policies)",
+        accessMode=AccessMode.INITONLY)
+
     delayOnInput = UInt32(
         defaultValue=0,
         displayedName="Delay on Input channel",
@@ -315,7 +327,8 @@ class NetworkInput(Configurable):
                            "instanceId", instance_id,
                            "memoryLocation", "remote",
                            "dataDistribution", self.dataDistribution,
-                           "onSlowness", self.onSlowness)
+                           "onSlowness", self.onSlowness,
+                           "maxQueueLength", self.maxQueueLength.value)
                 channel.writeHash(cmd)
                 cmd = Hash("reason", "update",
                            "instanceId", instance_id)
@@ -670,12 +683,8 @@ class NetworkOutput(Configurable):
         self.wait_queues = []
         self.copy_futures = []
         self.has_shared = 0
-        if self.noInputShared == "queue":
-            self.shared_queue = CancelQueue(0)
-        elif self.noInputShared == "queueDrop":
-            self.shared_queue = RingQueue(100)
-        else:
-            self.shared_queue = CancelQueue(1)
+        self.shared_queue = CancelQueue(0 if self.noInputShared
+                                        in ["queue", "queueDrop"] else 1)
 
     @coroutine
     def getInformation(self, channelName):
@@ -700,6 +709,11 @@ class NetworkOutput(Configurable):
             channel_name = message["instanceId"]
             distribution = message["dataDistribution"]
             slowness = message["onSlowness"]
+            maxQueueLength = int(message.get("maxQueueLength",
+                                             DEFAULT_MAX_QUEUE_LENGTH))
+            # Protect against unnecessary high values from outside!
+            # The MDL does not have a memory queue ...
+            maxQueueLength = min(maxQueueLength, 10)
             if slowness == "throw":
                 print(f"Throw configuration detected for {channel_name}!")
                 slowness = "drop"
@@ -723,8 +737,7 @@ class NetworkOutput(Configurable):
                 if slowness == "queue":
                     queue = CancelQueue()
                 elif slowness == "queueDrop":
-                    # XXX: 100 until its reconfigurable!
-                    queue = RingQueue(100)
+                    queue = RingQueue(maxQueueLength)
                 else:
                     queue = CancelQueue(1)
                 if slowness == "wait":
