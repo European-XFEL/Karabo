@@ -128,9 +128,9 @@ class _BaseListController(BaseBindingController):
                                    parent=self.widget)
         list_edit.set_texts("Add", "&Value", "Edit")
         if list_edit.exec_() == QDialog.Accepted:
-            # XXX: Validate bug here
-            self.proxy.edit_value = list_edit.values
-            self._set_edit_field_text(list_edit.values)
+            edit_value = ','.join(str(v) for v in list_edit.values)
+            self._internal_widget.setText(edit_value)
+            self._internal_widget.setCursorPosition(self.last_cursor_position)
 
         # Give back the focus!
         self._internal_widget.setFocus(Qt.PopupFocusReason)
@@ -158,13 +158,13 @@ class DisplayList(_BaseListController):
     model = Instance(DisplayListModel, args=())
 
 
-def _has_regex_binding(binding):
+def _has_regex_attribute(binding):
     attrs = binding.attributes
     return attrs.get(KARABO_SCHEMA_REGEX, None) is not None
 
 
 @register_binding_controller(ui_name='Edit Regex List', can_edit=True,
-                             is_compatible=_has_regex_binding,
+                             is_compatible=_has_regex_attribute,
                              klassname='EditableRegexList',
                              binding_type=VectorStringBinding,
                              priority=10)
