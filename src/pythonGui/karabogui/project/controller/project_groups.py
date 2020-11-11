@@ -25,7 +25,7 @@ from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_config
 from karabogui.util import (
     getOpenFileName, handle_macro_from_server, handle_scene_from_server,
-    show_filename_error, VALID_PROJECT_OBJECT_NAME)
+    move_to_cursor, show_filename_error, VALID_PROJECT_OBJECT_NAME)
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 
 
@@ -169,6 +169,7 @@ def _add_macro(project_controller, parent=None):
     """
     project = project_controller.model
     dialog = ObjectEditDialog(object_type='macro', parent=parent)
+    move_to_cursor(dialog)
     if dialog.exec() == QDialog.Accepted:
         classname = dialog.simple_name.title()
         classname = "".join(c for c in classname if c.isalpha())
@@ -236,6 +237,7 @@ def _add_scene(project_controller, parent=None):
     """
     project = project_controller.model
     dialog = ObjectEditDialog(object_type='scene', parent=parent)
+    move_to_cursor(dialog)
     if dialog.exec() == QDialog.Accepted:
         # XXX: TODO check for existing
         scene = SceneModel(simple_name=dialog.simple_name)
@@ -311,6 +313,7 @@ def _add_server(project_controller, parent=None):
     """
     project = project_controller.model
     dialog = ServerHandleDialog(parent=parent)
+    move_to_cursor(dialog)
     if dialog.exec() == QDialog.Accepted:
         serverId = dialog.server_id
         if check_device_server_exists(serverId):

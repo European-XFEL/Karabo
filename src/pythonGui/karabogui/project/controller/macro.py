@@ -25,7 +25,7 @@ from karabogui.project.dialog.object_handle import (
 from karabogui.project.topo_listener import SystemTopologyListener
 from karabogui.project.utils import run_macro
 from karabogui.singletons.api import get_config, get_manager, get_topology
-from karabogui.util import getSaveFileName
+from karabogui.util import getSaveFileName, move_to_cursor
 from .bases import (BaseProjectGroupController, BaseProjectController,
                     ProjectControllerUiData)
 
@@ -213,6 +213,7 @@ class MacroController(BaseProjectGroupController):
                               parent=parent)
         msg_box.setModal(False)
         msg_box.setDefaultButton(QMessageBox.No)
+        move_to_cursor(msg_box)
         if msg_box.exec() == QMessageBox.Yes:
             project = project_controller.model
             if macro in project.macros:
@@ -225,6 +226,7 @@ class MacroController(BaseProjectGroupController):
     def _edit_macro(self, parent=None):
         dialog = ObjectEditDialog(object_type='macro', model=self.model,
                                   parent=parent)
+        move_to_cursor(dialog)
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name
@@ -233,6 +235,7 @@ class MacroController(BaseProjectGroupController):
         macro = self.model
         project = project_controller.model
         dialog = ObjectDuplicateDialog(macro.simple_name, parent=parent)
+        move_to_cursor(dialog)
         if dialog.exec() == QDialog.Accepted:
             code = write_macro(macro)
             for simple_name in dialog.duplicate_names:

@@ -20,6 +20,7 @@ from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.loading_watcher import ProjectLoadingWatcher
 from karabogui.project.utils import load_project
 from karabogui.singletons.api import get_project_model
+from karabogui.util import move_to_cursor
 from .project_groups import ProjectSubgroupController
 
 
@@ -52,6 +53,7 @@ class SubprojectController(ProjectSubgroupController):
         """ Add a new subproject to the associated project
         """
         dialog = NewProjectDialog(default=True, parent=parent)
+        move_to_cursor(dialog)
         if dialog.exec() == QDialog.Accepted:
             # XXX: TODO check for existing
             project = ProjectModel(simple_name=dialog.simple_name)
