@@ -480,3 +480,10 @@ def open_documentation_link(deviceId):
         webbrowser.open_new(url)
     except webbrowser.Error:
         messagebox.show_error("No web browser available!")
+
+
+def move_to_cursor(widget):
+    pos = QCursor.pos()
+    pos.setX(pos.x() + 10)
+    pos.setY(pos.y() + 10)
+    widget.move(pos)
