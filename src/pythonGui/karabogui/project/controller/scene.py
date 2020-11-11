@@ -22,7 +22,7 @@ from karabogui.globals import access_role_allowed
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
 from karabogui.singletons.api import get_db_conn, get_panel_wrangler
-from karabogui.util import getOpenFileName, getSaveFileName
+from karabogui.util import getOpenFileName, getSaveFileName, move_to_cursor
 from karabogui.singletons.api import get_config
 from .bases import BaseProjectController, ProjectControllerUiData
 
@@ -149,6 +149,7 @@ class SceneController(BaseProjectController):
                               parent=parent)
         msg_box.setModal(False)
         msg_box.setDefaultButton(QMessageBox.No)
+        move_to_cursor(msg_box)
         if msg_box.exec() == QMessageBox.Yes:
             project = project_controller.model
             if scene in project.scenes:
@@ -161,6 +162,7 @@ class SceneController(BaseProjectController):
     def _edit_scene(self, parent=None):
         dialog = ObjectEditDialog(object_type='scene', model=self.model,
                                   parent=parent)
+        move_to_cursor(dialog)
         result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.simple_name = dialog.simple_name
@@ -169,6 +171,7 @@ class SceneController(BaseProjectController):
         scene = self.model
         project = project_controller.model
         dialog = ObjectDuplicateDialog(scene.simple_name, parent=parent)
+        move_to_cursor(dialog)
         if dialog.exec() == QDialog.Accepted:
             xml = write_scene(scene)
             for simple_name in dialog.duplicate_names:
