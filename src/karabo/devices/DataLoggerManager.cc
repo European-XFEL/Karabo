@@ -592,7 +592,7 @@ namespace karabo {
                 }
                 if (!idsWithoutTimestamp.empty()) {
                     (*loggedDevCounter) -= idsWithoutTimestamp.size();
-                    KARABO_LOG_FRAMEWORK_INFO << "Logger lacks last update timestamp of " << toString(idsWithoutTimestamp);
+                    KARABO_LOG_FRAMEWORK_INFO << "Logger " << loggerId << " lacks last update timestamp of " << toString(idsWithoutTimestamp);
                     m_checkStatus.set(serverId + ".emptyTimestamp",
                                       std::set<std::string>(idsWithoutTimestamp.begin(), idsWithoutTimestamp.end()));
                 }
