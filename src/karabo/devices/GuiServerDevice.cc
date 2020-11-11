@@ -180,7 +180,7 @@ namespace karabo {
                     .displayedName("Minimum Client Version")
                     .description("If this variable does not respect the N.N.N(.N) convention,"
                                  " the Server will not enforce a version check")
-                    .assignmentOptional().defaultValue("2.7.0")
+                    .assignmentOptional().defaultValue("2.9.0")
                     .reconfigurable()
                     .adminAccess()
                     .commit();
