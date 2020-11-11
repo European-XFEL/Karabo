@@ -20,6 +20,7 @@ from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.topo_listener import SystemTopologyListener
 from karabogui.project.utils import add_device_to_server
 from karabogui.singletons.api import get_manager, get_topology
+from karabogui.util import move_to_cursor
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 
 
@@ -172,6 +173,7 @@ class DeviceServerController(BaseProjectGroupController):
                               parent=parent)
         msg_box.setModal(False)
         msg_box.setDefaultButton(QMessageBox.No)
+        move_to_cursor(msg_box)
         if msg_box.exec() == QMessageBox.Yes:
             project = project_controller.model
             if server in project.servers:
@@ -180,6 +182,7 @@ class DeviceServerController(BaseProjectGroupController):
     # @pyqtSlot()
     def _edit_server(self, parent=None):
         dialog = ServerHandleDialog(self.model, parent=parent)
+        move_to_cursor(dialog)
         result = dialog.exec_()
         if result == QDialog.Accepted:
             self.model.server_id = dialog.server_id
@@ -195,10 +198,12 @@ class DeviceServerController(BaseProjectGroupController):
         server = self.model
         ask = ('Do you really want to delete all devices of <br> server '
                '<b>{}</b>?').format(server.simple_name)
-        reply = QMessageBox.question(parent, 'Delete all devices', ask,
-                                     QMessageBox.Yes | QMessageBox.No,
-                                     QMessageBox.No)
-        if reply == QMessageBox.No:
+        msg_box = QMessageBox(QMessageBox.Question, 'Delete all devices', ask,
+                              QMessageBox.Yes | QMessageBox.No, parent=parent)
+        msg_box.setModal(False)
+        msg_box.setDefaultButton(QMessageBox.No)
+        move_to_cursor(msg_box)
+        if msg_box.exec() == QMessageBox.No:
             return
 
         server.devices[:] = []
@@ -218,10 +223,13 @@ class DeviceServerController(BaseProjectGroupController):
         server = self.model
         ask = ('Do you really want to shutdown all devices of <br> server '
                '<b>{}</b>?').format(server.simple_name)
-        reply = QMessageBox.question(parent, 'Shutdown all devices', ask,
-                                     QMessageBox.Yes | QMessageBox.No,
-                                     QMessageBox.No)
-        if reply == QMessageBox.No:
+        msg_box = QMessageBox(QMessageBox.Question, 'Shutdown all devices',
+                              ask, QMessageBox.Yes | QMessageBox.No,
+                              parent=parent)
+        msg_box.setModal(False)
+        msg_box.setDefaultButton(QMessageBox.No)
+        move_to_cursor(msg_box)
+        if msg_box.exec() == QMessageBox.No:
             return
 
         for dev_inst_item in self.children:
