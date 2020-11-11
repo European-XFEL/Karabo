@@ -37,7 +37,7 @@ from karabogui.singletons.api import get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from karabogui.util import (
     get_scene_from_server, handle_scene_from_server, handle_macro_from_server,
-    open_documentation_link)
+    move_to_cursor, open_documentation_link)
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 from .server import DeviceServerController
 
@@ -426,6 +426,7 @@ class DeviceInstanceController(BaseProjectGroupController):
                               parent=parent)
         msg_box.setModal(False)
         msg_box.setDefaultButton(QMessageBox.No)
+        move_to_cursor(msg_box)
         if msg_box.exec_() == QMessageBox.Yes:
             server_model = find_parent_object(device, project_controller.model,
                                               DeviceServerModel)
@@ -444,6 +445,7 @@ class DeviceInstanceController(BaseProjectGroupController):
                                     model=device,
                                     is_online=self.project_device.online,
                                     parent=parent)
+        move_to_cursor(dialog)
         result = dialog.exec_()
         if result == QDialog.Accepted:
             # Check for existing device
@@ -489,6 +491,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         dialog = DeviceHandleDialog(server_id=server_model.server_id,
                                     model=device, add_config=True,
                                     parent=parent)
+        move_to_cursor(dialog)
         result = dialog.exec()
         if result == QDialog.Accepted:
             # Check for existing device configuration
@@ -519,6 +522,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             return
 
         dialog = ObjectDuplicateDialog(device.instance_id, parent=parent)
+        move_to_cursor(dialog)
         if dialog.exec() == QDialog.Accepted:
             xml = write_project_model(active_config)
             for simple_name in dialog.duplicate_names:

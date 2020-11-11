@@ -37,7 +37,7 @@ class TestManager(GuiTestCase):
             network.reset_mock()
             manager.shutdownDevice('dev', showConfirm=False)
             with patch('karabogui.singletons.manager.QMessageBox') as mb:
-                mb.question.return_value = mb.Yes
+                mb().exec.return_value = mb.Yes
                 manager.shutdownDevice('dev')
                 network.onKillDevice.assert_called_with('dev')
                 network.onKillDevice.reset_mock()
@@ -46,17 +46,17 @@ class TestManager(GuiTestCase):
                 manager.shutdownDevice('dev', showConfirm=False)
                 network.onKillDevice.assert_called_with('dev')
                 network.onKillDevice.reset_mock()
-                mb.question.return_value = mb.No
+                mb().exec.return_value = mb.No
                 manager.shutdownDevice('dev')
                 network.onKillDevice.assert_not_called()
 
             with patch('karabogui.singletons.manager.QMessageBox') as mb:
-                mb.question.return_value = mb.Yes
+                mb().exec.return_value = mb.Yes
                 network.reset_mock()
                 manager.shutdownDevice('dev')
                 network.onKillDevice.assert_called_with('dev')
 
-                mb.question.return_value = mb.No
+                mb().exec.return_value = mb.No
                 network.reset_mock()
                 manager.shutdownDevice('dev')
                 network.onKillDevice.assert_not_called()
@@ -66,16 +66,16 @@ class TestManager(GuiTestCase):
         with singletons(network=network):
             manager = Manager()
             with patch('karabogui.singletons.manager.QMessageBox') as mb:
-                mb.question.return_value = mb.Yes
+                mb().exec.return_value = mb.Yes
                 manager.shutdownServer('swerver')
                 network.onKillServer.assert_called_with('swerver')
                 network.onKillServer.reset_mock()
                 mb.reset_mock()
-                mb.question.return_value = mb.No
+                mb().exec.return_value = mb.No
                 manager.shutdownServer('swerver')
                 network.onKillServer.assert_not_called()
 
-                mb.question.return_value = mb.No
+                mb().exec.return_value = mb.No
                 manager.shutdownServer('swerver')
                 network.onKillServer.assert_not_called()
 
