@@ -464,8 +464,8 @@ class Tests(DeviceTest):
             # cancel during time.sleep
             self.local.cancelled_slot = None
             task = ensure_future(d.sleepalot())
-            # Sleep for a short time so that the macro gets started
-            yield from karabo_sleep(0.01)
+            # wait for a short time so that the macro gets started
+            yield from waitUntil(lambda: d.state == State.ACTIVE)
             # Cancel the macro, which is in a non-interruptable non-karabo
             # sleep.
             # (which is just a place-holder for any other type of
@@ -473,7 +473,18 @@ class Tests(DeviceTest):
             yield from d.cancel()
             # Finally, sleep for long enough that the macro runs in to the
             # karabo sleep which CAN be interrupted.
-            yield from karabo_sleep(0.13)
+            counter = 100
+            while counter > 0:
+                yield from karabo_sleep(0.01)
+                if self.local.slept_count == 1:
+                    break
+                counter -= 1
+            counter = 100
+            while counter > 0:
+                yield from karabo_sleep(0.01)
+                if task.done():
+                    break
+                counter -= 1
             self.assertEqual(self.local.cancelled_slot, Local.sleepalot)
             self.assertEqual(self.local.slept_count, 1)
             assert task.done()
