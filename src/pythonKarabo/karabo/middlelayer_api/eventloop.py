@@ -749,10 +749,26 @@ class EventLoop(SelectorEventLoop):
                     self.call_soon_threadsafe(
                         lambda: future.set_exception(exception))
                 finally:
-                    set_event_loop(None)
+                    if not HAVE_ASYNCIO:
+                        # XXX: Loop started in a different thread should be
+                        # stopped and closed!
+                        loop.stop()
+                        loop.close()
+                    # Previously we did set loop to `None`. However, since
+                    # threads are complaining that no loop is found in
+                    # current thread, we might deal with races.
+                    # XXX: Thread in thread?
+                    # Hence, in case of asyncio we let the `NoEventLoop`
+                    # die in the other thread.
 
             self.run_in_executor(None, thread)
             while True:
+                # Why `while` loop???
+                # well, it is actually documented some lines down. If this
+                # coroutine gets cancelled, we do not want to just give up,
+                # but transfer the cancellation to the thread we control.
+                # So we catch the exception, send it to the controlled thread
+                # instead, and continue. This "and continue" is the while loop
                 future = Future(loop=self)
                 try:
                     return (yield from future)
