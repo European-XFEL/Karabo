@@ -18,6 +18,7 @@ from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.globals import access_role_allowed
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.utils import check_device_config_exists
+from karabogui.util import move_to_cursor
 from karabo.native import create_html_hash, Hash
 
 from .bases import BaseProjectController, ProjectControllerUiData
@@ -122,6 +123,7 @@ class DeviceConfigurationController(BaseProjectController):
     def _show_config(self, project_controller, parent=None):
         model = self.model
         dialog = ConfigurationDialog(model=model, parent=parent)
+        move_to_cursor(dialog)
         dialog.exec_()
 
     def _load_config(self, project_controller, parent=None):
@@ -184,6 +186,7 @@ class DeviceConfigurationController(BaseProjectController):
 
         dialog = ObjectEditDialog(object_type='device configuration',
                                   model=config, parent=parent)
+        move_to_cursor(dialog)
         result = dialog.exec()
         if result == QDialog.Accepted:
             # Check for existing device configuration

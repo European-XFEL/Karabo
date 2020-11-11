@@ -20,7 +20,8 @@ from karabogui.project.utils import (
     maybe_save_modified_project, save_object)
 from karabogui.singletons.api import (get_db_conn, get_project_model,
                                       get_selection_tracker)
-from karabogui.util import is_database_processing, set_treeview_header
+from karabogui.util import (
+    is_database_processing, move_to_cursor, set_treeview_header)
 import karabogui.icons as icons
 from .controller.bases import BaseProjectGroupController
 from .controller.device import DeviceInstanceController
@@ -223,6 +224,7 @@ class ProjectView(QTreeView):
         """ Change the ``simple_name`` of the given ``project``
         """
         dialog = NewProjectDialog(model=project, is_rename=True, parent=self)
+        move_to_cursor(dialog)
         result = dialog.exec()
         if result == QDialog.Accepted:
             project.simple_name = dialog.simple_name
