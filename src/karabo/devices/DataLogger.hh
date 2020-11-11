@@ -88,6 +88,8 @@ namespace karabo {
             bool m_updatedLastTimestamp;
 
             bool m_pendingLogin;
+
+            unsigned int m_onDataBeforeComplete; // Only to avoid spamming...
         };
 
         /**
@@ -106,12 +108,11 @@ namespace karabo {
         protected:
             // https://www.quora.com/Is-it-thread-safe-to-write-to-distinct-keys-different-key-for-each-thread-in-a-std-map-in-C-for-keys-that-have-existing-entries-in-the-map
             typedef std::unordered_map<std::string, DeviceData::Pointer> DeviceDataMap;
-            DeviceDataMap m_perDeviceData;
             boost::mutex m_perDeviceDataMutex;
+            DeviceDataMap m_perDeviceData;
+            std::unordered_map<std::string, unsigned int> m_nonTreatedSlotChanged; // also needs m_perDeviceDataMutex protection
 
         private:
-            bool m_useP2p;
-
             boost::mutex m_changeVectorPropMutex;
 
             boost::asio::deadline_timer m_flushDeadline;
@@ -216,7 +217,10 @@ namespace karabo {
 
             void checkReady(std::atomic<unsigned int>& counter);
 
-            bool stopLogging(const std::string& deviceId);
+            bool stopLogging(const std::string& deviceId, bool retry);
+
+            void disconnectHandler(bool isFailure, const std::string& devId, const std::string& signal,
+                                   bool retry, const boost::shared_ptr<std::atomic<int>>&counter);
 
             void flushActor(const boost::system::error_code& e);
 
