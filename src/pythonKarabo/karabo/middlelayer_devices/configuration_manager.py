@@ -30,6 +30,7 @@ HIDDEN_KARABO_FOLDER = op.join(os.environ['HOME'], '.karabo')
 KARABO_CONFIG_DB_FOLDER = op.join(HIDDEN_KARABO_FOLDER, 'config_db')
 
 DEVICE_TIMEOUT = 3
+INSTANCE_NEW_TIMEOUT = 15
 FILTER_KEYS = ["name", "timepoint", "description", "priority"]
 
 
@@ -587,7 +588,7 @@ class ConfigurationManager(DeviceClientBase):
                 try:
                     await wait_for(self._call_once_alive(
                         deviceId, "slotUpdateSchemaAttributes", attrs),
-                        timeout=DEVICE_TIMEOUT)
+                        timeout=INSTANCE_NEW_TIMEOUT)
                 except TimeoutError:
                     raise
 
