@@ -27,7 +27,7 @@ class AxisItem(PgAxisItem):
         "tickTextWidth": 50,
         "tickTextHeight": 24}
 
-    tickFontSize = 10
+    tickFontSize = 11
 
     def __init__(self, orientation, showValues=True):
         """Base class for pretty axis items.
@@ -170,7 +170,7 @@ class StateAxisItem(AxisItem):
     """The State Axis Item for displaying Karabo States as major ticks"""
 
     axisStyle = {"autoExpandTextSpace": True}
-    tickFontSize = 9
+    tickFontSize = 10
 
     def tickStrings(self, values, scale, spacing):
         """Return the state names as a function of integers values
@@ -184,7 +184,7 @@ class AlarmAxisItem(AxisItem):
     """The Alarm Axis Item for displaying Karabo Alarms as major ticks"""
 
     axisStyle = {"autoExpandTextSpace": True}
-    tickFontSize = 9
+    tickFontSize = 10
 
     def tickStrings(self, values, scale, spacing):
         """Return the alarm names as a function of integers values
@@ -196,7 +196,7 @@ class AlarmAxisItem(AxisItem):
 
 class AuxPlotAxisItem(AxisItem):
     """The AxisItem for the aux plots in the image widgets"""
-    tickFontSize = 8
+    tickFontSize = 9
     axisStyle = {"autoExpandTextSpace": False}
 
     def __init__(self, orientation, showValues=True):
