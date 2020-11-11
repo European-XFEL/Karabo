@@ -20,7 +20,7 @@ from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.globals import KARABO_CLIENT_ID
 from karabogui import messagebox
 from karabogui.singletons.api import get_alarm_model, get_network, get_topology
-from karabogui.util import show_wait_cursor
+from karabogui.util import move_to_cursor, show_wait_cursor
 
 from .util import get_error_message
 
@@ -140,10 +140,14 @@ class Manager(QObject):
         if showConfirm:
             ask = ('Do you really want to shutdown the device '
                    '"<b>{}</b>"?').format(deviceId)
-            reply = QMessageBox.question(parent, 'Shutdown device', ask,
-                                         QMessageBox.Yes | QMessageBox.No,
-                                         QMessageBox.No)
-            if reply == QMessageBox.No:
+            msg_box = QMessageBox(QMessageBox.Question, 'Shutdown device', ask,
+                                  QMessageBox.Yes | QMessageBox.No,
+                                  parent=parent)
+
+            msg_box.setModal(False)
+            msg_box.setDefaultButton(QMessageBox.No)
+            move_to_cursor(msg_box)
+            if msg_box.exec() == QMessageBox.No:
                 return
 
         get_network().onKillDevice(deviceId)
@@ -151,10 +155,12 @@ class Manager(QObject):
     def shutdownServer(self, serverId, parent=None):
         ask = ('Do you really want to shutdown the server '
                '"<b>{}</b>"?').format(serverId)
-        reply = QMessageBox.question(parent, 'Shutdown server', ask,
-                                     QMessageBox.Yes | QMessageBox.No,
-                                     QMessageBox.No)
-        if reply == QMessageBox.No:
+        msg_box = QMessageBox(QMessageBox.Question, 'Shutdown server', ask,
+                              QMessageBox.Yes | QMessageBox.No, parent=parent)
+        msg_box.setModal(False)
+        msg_box.setDefaultButton(QMessageBox.No)
+        move_to_cursor(msg_box)
+        if msg_box.exec() == QMessageBox.No:
             return
 
         get_network().onKillServer(serverId)
