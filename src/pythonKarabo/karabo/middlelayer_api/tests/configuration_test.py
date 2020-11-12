@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 
 from karabo.common.api import (
-    KARABO_SCHEMA_DISPLAYED_NAME, KARABO_SCHEMA_MIN_EXC)
+    KARABO_SCHEMA_DISPLAYED_NAME, KARABO_WARN_HIGH)
 from karabo.middlelayer_api.configuration import (
     attr_fast_deepcopy, sanitize_init_configuration, config_changes, is_equal,
     sanitize_write_configuration, extract_modified_schema_attributes)
@@ -158,16 +158,16 @@ def test_attr_fast_deepcopy():
 
     d0 = {
         KARABO_SCHEMA_DISPLAYED_NAME: 'foo',
-        KARABO_SCHEMA_MIN_EXC: 0,
+        KARABO_WARN_HIGH: 0,
     }
     ref = {
         KARABO_SCHEMA_DISPLAYED_NAME: 'bar',
-        KARABO_SCHEMA_MIN_EXC: 1,
+        KARABO_WARN_HIGH: 1,
     }
     # get diff between d0 and ref, KARABO_SCHEMA_DISPLAYED_NAME is not in
     # KARABO_EDITABLE_ATTRIBUTES, should not be included in the diff
     diff = attr_fast_deepcopy(d0, ref)
-    assert diff == {KARABO_SCHEMA_MIN_EXC: 0}
+    assert diff == {KARABO_WARN_HIGH: 0}
 
 
 def test_attribute_schema_extract():

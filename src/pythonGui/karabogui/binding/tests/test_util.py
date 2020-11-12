@@ -6,7 +6,8 @@ from karabo.common.api import (
     KARABO_SCHEMA_VALUE_TYPE, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_SIZE,
     KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_ABSOLUTE_ERROR,
-    KARABO_SCHEMA_RELATIVE_ERROR, KARABO_SCHEMA_DISPLAYED_NAME
+    KARABO_SCHEMA_RELATIVE_ERROR, KARABO_SCHEMA_DISPLAYED_NAME,
+    KARABO_SCHEMA_UNIT_SYMBOL
 )
 from karabo.native import (
     Configurable, Bool, Hash, HashList, Schema, String, UInt8, VectorHash)
@@ -52,6 +53,7 @@ def test_unsupported():
 
 
 def test_attr_fast_deepcopy():
+    # XXX: This is as well in MDL conf. Find proper place!
     def _safe_compare(a, b):
         # Use repr() to get around the lack of Schema comparison
         return len(a) == len(b) and all(repr(a[k]) == repr(b[k]) for k in a)
@@ -70,16 +72,16 @@ def test_attr_fast_deepcopy():
 
     d0 = {
         KARABO_SCHEMA_DISPLAYED_NAME: 'foo',
-        KARABO_SCHEMA_MIN_EXC: 0,
+        KARABO_SCHEMA_UNIT_SYMBOL: 's',
     }
     ref = {
         KARABO_SCHEMA_DISPLAYED_NAME: 'bar',
-        KARABO_SCHEMA_MIN_EXC: 1,
+        KARABO_SCHEMA_UNIT_SYMBOL: 'm',
     }
     # get diff between d0 and ref, KARABO_SCHEMA_DISPLAYED_NAME is not in
     # KARABO_EDITABLE_ATTRIBUTES, should not be included in the diff
     diff = attr_fast_deepcopy(d0, ref)
-    assert diff == {KARABO_SCHEMA_MIN_EXC: 0}
+    assert diff == {KARABO_SCHEMA_UNIT_SYMBOL: 's'}
 
 
 def test_array_equal():
