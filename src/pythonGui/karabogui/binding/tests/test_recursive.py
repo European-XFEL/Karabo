@@ -1,7 +1,7 @@
 from nose.tools import assert_raises
 from traits.api import TraitError
 
-from karabo.common.api import KARABO_SCHEMA_ABSOLUTE_ERROR
+from karabo.common.api import KARABO_WARN_HIGH
 from karabo.native import Hash
 from ..api import (
     BindingNamespace, BindingRoot, ChoiceOfNodesBinding, FloatBinding,
@@ -160,18 +160,18 @@ def test_extract_attribute_modifications():
     # no changes
     assert ret is None
 
-    # Change absoluteError to _NodeOne
+    # Change warnHigh to _NodeOne
     # (for testing purposes it doesn't matter that this is nonsense)
-    binding.value.con.attributes[KARABO_SCHEMA_ABSOLUTE_ERROR] = '_NodeOne'
+    binding.value.con.attributes[KARABO_WARN_HIGH] = '_NodeOne'
     ret = extract_attribute_modifications(schema, binding)
     assert ret[0] == Hash('path', 'con',
-                          'attribute', KARABO_SCHEMA_ABSOLUTE_ERROR,
+                          'attribute', KARABO_WARN_HIGH,
                           'value', '_NodeOne')
 
     binding = build_binding(schema)
-    binding.value.lon.attributes[KARABO_SCHEMA_ABSOLUTE_ERROR] = ['_NodeOne',
-                                                                  '_NodeTwo']
+    binding.value.lon.attributes[KARABO_WARN_HIGH] = ['_NodeOne',
+                                                      '_NodeTwo']
     ret = extract_attribute_modifications(schema, binding)
     assert ret[0] == Hash('path', 'lon',
-                          'attribute', KARABO_SCHEMA_ABSOLUTE_ERROR,
+                          'attribute', KARABO_WARN_HIGH,
                           'value', ['_NodeOne', '_NodeTwo'])
