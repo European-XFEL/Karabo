@@ -210,6 +210,15 @@ namespace karabo {
                     .reconfigurable()
                     .adminAccess()
                     .commit();
+
+            INT32_ELEMENT(expected).key("timeout")
+                    .displayedName("Request Timeout")
+                    .description("If client requests to 'reconfigure', 'execute' or 'requestGeneric' have a 'timeout' "
+                                 "specified, take in fact the maximum of that value and this one.")
+                    .assignmentOptional().defaultValue(10) // in 2.10.0, client has 5
+                    .reconfigurable()
+                    .adminAccess()
+                    .commit();
         }
 
 
@@ -217,7 +226,8 @@ namespace karabo {
         : Device<>(config)
         , m_deviceInitTimer(EventLoop::getIOService())
         , m_networkStatsTimer(EventLoop::getIOService())
-        , m_forwardLogsTimer(EventLoop::getIOService()) {
+        , m_forwardLogsTimer(EventLoop::getIOService())
+        , m_timeout(config.get<int>("timeout")) {
 
             KARABO_INITIAL_FUNCTION(initialize)
 
@@ -321,6 +331,9 @@ namespace karabo {
             if (incomingReconfiguration.has("ignoreTimeoutClasses")) {
                 const std::vector<std::string>& timingOutClasses = incomingReconfiguration.get<std::vector<std::string>>("ignoreTimeoutClasses");
                 recalculateTimingOutDevices(remote().getSystemTopology(), timingOutClasses, true);
+            }
+            if (incomingReconfiguration.has("timeout")) {
+                m_timeout = incomingReconfiguration.get<int>("timeout");
             }
         }
 
@@ -657,6 +670,19 @@ namespace karabo {
         }
 
 
+        void GuiServerDevice::setTimeout(karabo::xms::SignalSlotable::Requestor& requestor,
+                                         const karabo::util::Hash& input, const std::string& instanceKey) {
+            if (input.has("timeout")) {
+                // TODO: remove `skipExecutionTimeout` once "fast slot reply policy" is enforced
+                if (!(input.has(instanceKey) && skipExecutionTimeout(input.get<std::string>(instanceKey)))) {
+                    // Take the max of what was requested by client and configured on GUI server
+                    const int timeoutSec = std::max(input.get<int>("timeout"), m_timeout.load()); // load() for template resolution
+                    requestor.timeout(timeoutSec * 1000); // convert to ms
+                }
+            }
+        }
+
+
         void GuiServerDevice::onReconfigure(WeakChannelPointer channel, const karabo::util::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onReconfigure";
@@ -665,10 +691,7 @@ namespace karabo {
                 // TODO Supply user specific context
                 if (hash.has("reply") && hash.get<bool>("reply")) {
                     auto requestor = request(deviceId, "slotReconfigure", config);
-                    // TODO: remove `skipExecutionTimeout` once "fast slot reply policy" is enforced
-                    if (hash.has("timeout") && !skipExecutionTimeout(deviceId)) {
-                        requestor.timeout(hash.get<int>("timeout") * 1000); // convert to ms
-                    }
+                    setTimeout(requestor, hash, "deviceId");
                     auto successHandler = bind_weak(&GuiServerDevice::forwardReconfigureReply, this, true, channel, hash);
                     auto failureHandler = bind_weak(&GuiServerDevice::forwardReconfigureReply, this, false, channel, hash);
                     requestor.receiveAsync(successHandler, failureHandler);
@@ -706,11 +729,15 @@ namespace karabo {
                         // default timeout is in ms. Convert to minutes
                         (failTxt += toString(karabo::xms::SignalSlotable::Requestor::m_defaultAsyncTimeout/60000.f)) += " minutes.";
                     } else {
-                        (failTxt += toString(input.get<int>("timeout"))) += " seconds.";
+                        // Not 100% precise if "timeout" got reconfigured after request was sent...
+                        const int timeout = std::max(input.get<int>("timeout"), m_timeout.load());
+                        (failTxt += toString(timeout)) += " seconds.";
                     }
                     karabo::util::Exception::clearTrace();
+                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
                 } catch (const std::exception& e) {
                     (failTxt += ", details:\n") += e.what();
+                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
                 }
             }
             safeClientWrite(channel, h);
@@ -724,10 +751,7 @@ namespace karabo {
                 // TODO Supply user specific context
                 if (hash.has("reply") && hash.get<bool>("reply")) {
                     auto requestor = request(deviceId, command);
-                    // TODO: remove `skipExecutionTimeout` once "fast slot reply policy" is enforced
-                    if (hash.has("timeout") && !skipExecutionTimeout(deviceId)) {
-                        requestor.timeout(hash.get<int>("timeout") * 1000); // convert to ms
-                    }
+                    setTimeout(requestor, hash, "deviceId");
                     // Any reply values are ignored (we do not know their types):
                     auto successHandler = bind_weak(&GuiServerDevice::forwardExecuteReply, this, true, channel, hash);
                     auto failureHandler = bind_weak(&GuiServerDevice::forwardExecuteReply, this, false, channel, hash);
@@ -764,11 +788,15 @@ namespace karabo {
                         // default timeout is in ms. Convert to minutes
                         (failTxt += toString(karabo::xms::SignalSlotable::Requestor::m_defaultAsyncTimeout/60000.f)) += " minutes.";
                     } else {
-                        (failTxt += toString(input.get<int>("timeout"))) += " seconds.";
+                        // Not 100% precise if "timeout" got reconfigured after request was sent...
+                        const int timeout = std::max(input.get<int>("timeout"), m_timeout.load());
+                        (failTxt += toString(timeout)) += " seconds.";
                     }
                     karabo::util::Exception::clearTrace();
+                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
                 } catch (const std::exception& e) {
                     (failTxt += ", details:\n") += e.what();
+                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
                 }
             }
             safeClientWrite(channel, h);
@@ -1969,13 +1997,11 @@ namespace karabo {
         void GuiServerDevice::onRequestGeneric(WeakChannelPointer channel, const karabo::util::Hash& info){
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Generic request called with:  " << info;
-                const std::string& deviceId = info.get<std::string>("instanceId");
+                const std::string& instanceId = info.get<std::string>("instanceId");
                 const std::string& slot = info.get<std::string>("slot");
                 const Hash& args = info.get<Hash>("args");
-                auto requestor = request(deviceId, slot, args);
-                if (info.has("timeout")) {
-                    requestor.timeout(info.get<int>("timeout") * 1000.); // convert to ms
-                }
+                auto requestor = request(instanceId, slot, args);
+                setTimeout(requestor, info, "instanceId");
                 auto successHandler = bind_weak(&GuiServerDevice::forwardHashReply, this, true, channel, info, _1);
                 auto failureHandler = bind_weak(&GuiServerDevice::forwardHashReply, this, false, channel, info, Hash());
                 requestor.receiveAsync<Hash>(successHandler, failureHandler);
@@ -1996,20 +2022,27 @@ namespace karabo {
                    "reason", "");
 
             if (!success) {
+                std::ostringstream oss;
+                oss << "Failure on request to " << info.get<std::string>("instanceId") << "." << info.get<std::string>("slot");
                 std::string& failTxt = h.get<std::string>("reason"); // modify via reference!
+                failTxt = oss.str();
                 try {
                     throw;
                 } catch (const karabo::util::TimeoutException& te) {
-                    failTxt += "Request not answered within ";
-                    if (info.has("timeout")){
-                        failTxt += toString(info.get<int>("timeout"));
+                    failTxt += ", not answered within ";
+                    if (info.has("timeout")) {
+                        // Not 100% precise if "timeout" got reconfigured after request was sent...
+                        const int timeout = std::max(info.get<int>("timeout"), m_timeout.load()); // load() for template resolution
+                        failTxt += toString(timeout);
                     } else {
-                        failTxt += toString(karabo::xms::SignalSlotable::Requestor::m_defaultAsyncTimeout / 1000.);
+                        failTxt += toString(karabo::xms::SignalSlotable::Requestor::m_defaultAsyncTimeout / 1000.f);
                     }
                     failTxt += " seconds.";
                     karabo::util::Exception::clearTrace();
+                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
                 } catch (const std::exception& e) {
-                    (failTxt += "Request failed... details: ") += e.what();
+                    (failTxt += "... details: ") += e.what();
+                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
                 }
             }
             safeClientWrite(channel, h);

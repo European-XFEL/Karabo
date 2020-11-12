@@ -12,6 +12,7 @@
 
 #include <unordered_map>
 #include <set>
+#include <atomic>
 
 #include <krb_log4cpp/Priority.hh>
 #include "karabo/net/Broker.hh"
@@ -124,6 +125,8 @@ namespace karabo {
             // list of devices that do not respect fast slot reply policy
             std::unordered_set <std::string> m_timingOutDevices;
 
+            std::atomic<int> m_timeout; // might overwrite timeout from client if client is smaller
+
         public:
 
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "karabo-" + karabo::util::Version::getVersion())
@@ -136,7 +139,7 @@ namespace karabo {
 
             void initialize();
 
-            virtual void preReconfigure(karabo::util::Hash& incomingReconfiguration);
+            virtual void preReconfigure(karabo::util::Hash& incomingReconfiguration) override;
 
         private: // Functions
             /** Wrapping requestNoWait */
@@ -285,6 +288,15 @@ namespace karabo {
              */
 
             void onRead(const karabo::net::ErrorCode& e, WeakChannelPointer channel, karabo::util::Hash& info);
+
+            /**
+             * Sets the appropriate timeout to a Requestor
+             *
+             * If input has a "timeout" key, set the maximum value of that and the gui server timeout on the requestor,
+             * except if input.get<std::string>(instanceKey) is one instance of the classes in "ignoreTimeoutClasses".
+             */
+            void setTimeout(karabo::xms::SignalSlotable::Requestor& requestor, const karabo::util::Hash& input,
+                            const std::string& instanceKey);
 
             /**
              * Handles a login request of a user on a gui client. If the login credentials
