@@ -34,19 +34,23 @@ class KaraboSceneWidget:
         """On old GUI, the geometry of the widgets in a layout are saved
         with smaller dimensions and with (0, 0) position. We only use the
         model geometry as size hint if it is the corrected one."""
+        size = QSize()
         if self._has_model_pos():
-            return QSize(self.model.width, self.model.height)
-
-        return super(KaraboSceneWidget, self).sizeHint()
+            size = QSize(self.model.width, self.model.height)
+        if size.isEmpty():
+            size = super(KaraboSceneWidget, self).sizeHint()
+        return size
 
     def minimumSizeHint(self):
         """On old GUI, the geometry of the widgets in a layout are saved
         with smaller dimensions and with (0, 0) position. We only use the
         model geometry as size hint if it is the corrected one."""
+        size = QSize()
         if self._has_model_pos():
-            return QSize(self.model.width, self.model.height)
-
-        return super(KaraboSceneWidget, self).minimumSizeHint()
+            size = QSize(self.model.width, self.model.height)
+        if size.isEmpty():
+            size = super(KaraboSceneWidget, self).minimumSizeHint()
+        return size
 
     def _has_model_pos(self):
         model = self.model
