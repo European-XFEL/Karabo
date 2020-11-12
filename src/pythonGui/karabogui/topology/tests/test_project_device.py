@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from karabo.common.api import ProxyStatus, KARABO_SCHEMA_ABSOLUTE_ERROR
+from karabo.common.api import ProxyStatus, KARABO_WARN_HIGH
 from karabo.native import Configurable, Hash, String
 from karabogui.testing import singletons, system_hash
 from karabogui.topology.system_topology import SystemTopology
@@ -32,11 +32,11 @@ def test_project_device():
             assert device._offline_proxy.binding.value.val.value == 'foo'
 
             config = Hash('val', 'bar')
-            config['val', KARABO_SCHEMA_ABSOLUTE_ERROR] = 42
+            config['val', KARABO_WARN_HIGH] = 42
             device.set_project_config_hash(config)
             assert device._offline_proxy.binding.value.val.value == 'bar'
             extracted_config = device.get_user_edited_config_hash()
-            assert extracted_config['val', KARABO_SCHEMA_ABSOLUTE_ERROR] == 42
+            assert extracted_config['val', KARABO_WARN_HIGH] == 42
 
             device.start_monitoring()
             assert device._online_proxy._monitor_count == 1
