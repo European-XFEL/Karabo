@@ -42,7 +42,7 @@ class TestDevice(Device):
     value = Double(
         defaultValue=5.0,
         daqPolicy=DaqPolicy.SAVE,
-        maxInc=100.0)
+        warnHigh=100.0)
 
 
 DEFAULT_LAST_DOUBLE = -1.0
@@ -116,9 +116,9 @@ class TestConfigurationManager(DeviceTest):
         """Test the manual saving of configurations"""
         config_name = "testConfig"
 
-        attrs = [Hash("path", "value", "attribute", "maxInc", "value", 50.0)]
+        attrs = [Hash("path", "value", "attribute", "warnHigh", "value", 50.0)]
         r = await call("TEST_DEVICE", "slotUpdateSchemaAttributes", attrs)
-        self.assertEqual(self.testDev.value.descriptor.maxInc, 50.0)
+        self.assertEqual(self.testDev.value.descriptor.warnHigh, 50.0)
         h = Hash("name", config_name, "deviceIds", ["TEST_DEVICE"],
                  "priority", 3)
         r = await call(MANAGER, "slotSaveConfigurationFromName", h)
@@ -349,9 +349,9 @@ class TestConfigurationManager(DeviceTest):
             h["name"] = "testConfig"
             h["serverId"] = "TEST_SERVER"
             attrs = [Hash("path", "value", "attribute",
-                          "maxInc", "value", 200.0)]
+                          "warnHigh", "value", 200.0)]
             await call("TEST_DEVICE", "slotUpdateSchemaAttributes", attrs)
-            self.assertEqual(self.testDev.value.descriptor.maxInc, 200.0)
+            self.assertEqual(self.testDev.value.descriptor.warnHigh, 200.0)
             # Note: This is sneaky and a mind game. We have a fake server
             # that we call to instantiate a device which is already online
             # Hence, we can check if this was called to instantiate, but also
@@ -362,7 +362,7 @@ class TestConfigurationManager(DeviceTest):
             self.assertEqual(serverMock.lastClassId, "TestDevice")
             self.assertEqual(serverMock.lastDeviceId, "TEST_DEVICE")
             self.assertEqual(serverMock.lastConfigDouble, 5.0)
-            self.assertEqual(self.testDev.value.descriptor.maxInc, 50.0)
+            self.assertEqual(self.testDev.value.descriptor.warnHigh, 50.0)
 
             # attribute settings
             await serverMock.reset()
