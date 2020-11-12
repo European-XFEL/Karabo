@@ -3,14 +3,16 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import pyqtSlot, QSize, Qt
+from PyQt5.QtCore import QMargins, pyqtSlot, QSize, Qt
 from PyQt5.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen
 from PyQt5.QtWidgets import QAction, QDialog, QLabel
 
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.widgets.hints import KaraboSceneWidget
 
-TEXT_OFFSET = 5
+MARGINS = (5, 0, 5, 0)  # left, top, right, bottom
+WIDTH_MARGIN = MARGINS[0] + MARGINS[2]
+HEIGHT_MARGIN = MARGINS[1] + MARGINS[3]
 
 
 class LabelWidget(KaraboSceneWidget, QLabel):
@@ -40,19 +42,20 @@ class LabelWidget(KaraboSceneWidget, QLabel):
         self.setGeometry(model.x, model.y, model.width, model.height)
 
     def sizeHint(self):
-        """Calculate the size hint from the text if model is newly
-           instantiated (no width/height yet). Else, return the model size."""
-        # Calculate the suggested widget size from the model text
-        size = QSize()
-        if self._has_model_pos():
-            size = super(LabelWidget, self).sizeHint()
+        """Reimplemented `sizeHint` of KaraboSceneWidget since we want to get
+        the suggested sizeHint from the font metrics and not from `QLabel`
 
+        Calculate the size hint from the text if model is newly
+        instantiated (no width/height yet). Else, return the model size."""
+        size = QSize()
+        model = self.model
+        if (model.x, model.y) != (0, 0):
+            size = QSize(model.width, model.height)
         if size.isEmpty():
             fm = QFontMetrics(self.font())
-            CONTENT_MARGIN = 10
-            width = fm.width(self.model.text) + CONTENT_MARGIN
+            width = fm.width(self.model.text)
             height = fm.height() + self.model.frame_width
-            size = QSize(width, max(height, 20))
+            size = QSize(width + WIDTH_MARGIN, max(height, 20) + HEIGHT_MARGIN)
         return size
 
     def paintEvent(self, event):
@@ -77,13 +80,12 @@ class LabelWidget(KaraboSceneWidget, QLabel):
             pen = QPen(fore_color)
             painter.setPen(pen)
             painter.setFont(self.font())
-            boundary.setLeft(TEXT_OFFSET)
-            painter.drawText(boundary, self.alignment(),
-                             self._get_elided_text())
+            painter.drawText(boundary.marginsRemoved(QMargins(*MARGINS)),
+                             self.alignment(), self._get_elided_text())
 
     @property
     def text_width(self):
-        return self.width() - TEXT_OFFSET
+        return self.width() - WIDTH_MARGIN
 
     def _get_elided_text(self):
         fm = QFontMetrics(self.font())
