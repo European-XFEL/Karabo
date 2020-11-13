@@ -65,7 +65,8 @@ void GuiVersion_Test::appTestRunner() {
     std::pair<bool, std::string> success = m_deviceClient->instantiate("testGuiVersionServer", "GuiServerDevice",
                                                                        Hash("deviceId", "testGuiServerDevice",
                                                                             "port", 44450,
-                                                                            "minClientVersion", "2.2.3"),
+                                                                            "minClientVersion", "2.2.3",
+                                                                            "timeout", 0),
                                                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
@@ -96,7 +97,8 @@ void GuiVersion_Test::appTestRunner() {
                                                                          Hash("deviceId", "testGuiServerDevice",
                                                                               "port", 44450,
                                                                               "minClientVersion", "2.2.3",
-                                                                              "isReadOnly", true),
+                                                                              "isReadOnly", true,
+                                                                              "timeout", 0),
                                                                          KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success_n.second, success_n.first);
     waitForCondition([this](){
@@ -426,7 +428,8 @@ void GuiVersion_Test::testRequestGeneric() {
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(false, replyMessage.get<bool>("success"));
         CPPUNIT_ASSERT(h.fullyEquals(replyMessage.get<Hash>("request")));
-        CPPUNIT_ASSERT_EQUAL(std::string("Request not answered within 1 seconds."), replyMessage.get<std::string>("reason"));
+        CPPUNIT_ASSERT_EQUAL(std::string("Failure on request to isnotonline.slotDumpDebugInfo, not answered within 1 seconds."),
+                             replyMessage.get<std::string>("reason"));
         CPPUNIT_ASSERT_EQUAL(std::string("requestSuperScene"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT_EQUAL(std::string("noname"), replyMessage.get<std::string>("request.args.name"));
 
@@ -490,6 +493,8 @@ void GuiVersion_Test::testSlowSlots() {
         const std::string& failureMsg = replyMessage.get<std::string>("failureReason");
         CPPUNIT_ASSERT_MESSAGE(failureMsg, failureMsg.find("Request not answered within 1 seconds") != std::string::npos);
     }
+
+    ////////////////////////////////////////////////////////////////
     //
     // Request execution of existing slot of the PropertyTest device `testGuiServerDevicePropertyTest`
     // After setting the `ignoreTimeoutClasses` the call will succeed.
@@ -522,6 +527,51 @@ void GuiVersion_Test::testSlowSlots() {
                      "command", "slowSlot",
                      "reply", true,
                      "timeout", 1);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        });
+        Hash replyMessage;
+        messageQ->pop(replyMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
+        CPPUNIT_ASSERT(replyMessage.has("failureReason"));
+        const std::string& failureMsg = replyMessage.get<std::string>("failureReason");
+        CPPUNIT_ASSERT_MESSAGE(failureMsg, failureMsg.find("Request not answered within 1 seconds") != std::string::npos);
+    }
+
+    ////////////////////////////////////////////////////////////////
+    //
+    // Request execution of existing slot of the PropertyTest device `testGuiServerDevicePropertyTest`
+    // After setting the a larger`"timeout" the call will succeed.
+    //
+    const int previousTimeout = m_deviceClient->get<int>("testGuiServerDevice", "timeout");
+    m_deviceClient->set("testGuiServerDevice", "timeout", 30);
+    {
+        const Hash h("type", "execute",
+                     "deviceId", "testGuiServerDevicePropertyTest",
+                     "command", "slowSlot",
+                     "reply", true,
+                     "timeout", 1); // smaller than the "timeout" property of the server, so gets ignored
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        });
+        Hash replyMessage;
+        messageQ->pop(replyMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
+        std::string message = (replyMessage.has("failureReason")) ? replyMessage.get<std::string>("failureReason") : "NO REASON";
+        CPPUNIT_ASSERT_MESSAGE(message, replyMessage.get<bool>("success"));
+        CPPUNIT_ASSERT(!replyMessage.has("failureReason"));
+    }
+    //
+    // Test that the server will handle timeout after  resetting the "timeout" property.
+    //
+    m_deviceClient->set("testGuiServerDevice", "timeout", previousTimeout);
+    {
+        const Hash h("type", "execute",
+                     "deviceId", "testGuiServerDevicePropertyTest",
+                     "command", "slowSlot",
+                     "reply", true,
+                     "timeout", 1); // now this rules again, so the 2s slow slowSlot will timeout again
         karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
             m_tcpAdapter->sendMessage(h);
         });
