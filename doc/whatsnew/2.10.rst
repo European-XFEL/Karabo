@@ -50,27 +50,420 @@ The **most relevant improvements**, fixes and changes are:
 Detailed Merge-Log
 ==================
 
-To be filled.
+- All API: Add test for alarm behaviour plus fixes to succeed !4396
+- All API: test signalAlarmUpdateI integrated tests for the signal emitted !4432
+- All APIs: Class version property from version control !4587
+- All API: Pipeline default onSlowness to drop !4726
+
+
+Influx Database
++++++++++++++++
+
+- InfluxDB: Add a last line of defense against malformed influx queries. !4439
+- InfluxDB: Integration test for data logging when schema evolution happens. !4455
+- InfluxDB: Nan treatment for influx logger !4460
+- InfluxDB: no base64 encoding for vector_uint8 !4475
+- Influx migration: save last run info !4431
+- InfluxDB: Support VECTOR_BOOL in Influx Logging !4472
+- InfluxDB: Handle BYTE_ARRAY for the Influx case in the same way it is handled for file based logging. !4476
+- InfluxDB: Influx Line Protocol does not accept NaNs !4437
+- InfluxDB: Display success when influx migration succeeds!4493
+- InfluxDB migration: do not try to parse LOGOUT lines !4498
+- InfluxDB: adapt migration to new format !4458
+- InfluxDB: Implement Vector of Chars !4456
+- InfluxDB: Fix influx reader when schema injection happens and empty strings and vectors are involved. !4450
+- InfluxDB: Migration Script. VECTOR_UINT8 unpack and bugfix !4473
+- InfluxDB: Migration base64 encodes single chars !4479
+- InfluxDB: encode CHAR in base64 !4477
+- InfluxDB: Log the whole answer in case of failing request !4526
+- InfluxDB: align schema digest field name in MDL logger !4531
+- InfluxDB: fix schema_digest event name !4530
+- InfluxDB: Fix more cycling in InfluxLogReader !4559
+- InfluxDB: Fix cycling in InfluxLogReader for FLOAT and DOUBLE !4551
+- InfluxDB: quote on tag for schema_digest entry + add integration test !4546
+- InfluxDB: Cast UINT64 to INT64 not STRING !4555
+- InfluxDB: UINT64s are not saved as strings anymore !4563
+- InfluxDB: Introduce VECTOR_STRING_BASE64 encoding for vector of string !4459
+- InfluxDB: Migrator does not add quotes to field keys !4412
+- InfluxDB: better failure detectionThe setup to connect to InfluxDB and check/create databases was not properly checking HTTP return codes. !4414
+- InfluxDB: Better error messages when Influx Server is not available . !4442
+- InfluxDB: Allow for a date range on migration !4597
+- InfluxDB: Refactors InfluxDbClient to host just one TcpChannel and fix some issues with Telegraf integration tests. !4603
+- InfluxDB: Add limit to 'maxNumData' parameter for slot 'getPropertyHistory' for Influx. !4616
+- InfluxDB: handle partial results !4617
+- InfluxDB: allow configurable max history size request !4628
+- InfluxDB: Add all logger and readers as visible classes of default logger server !4632
+- InfluxDB: Fix influx logger crash !4506
+- InfluxDB: Telegraf integrated tests as long running tests. !4792
+
 
 Bound/cpp core
 ++++++++++++++
 
-
-Middlelayer Core
-++++++++++++++++
+- Bound: Validate config before launching device process !4725
+- Bound: Allow to specify DaqPolicy of STATE_ELEMENTAlso fix typo hiding duplicated test function. !4502
+- Bound: Make global alarms 'sticky' !4451
+- Bound: Make changed log level visible !4550
+- Bound: Fix schema evolution problem with broker connection in bound python !4881
+- C++: Notify old gui clients about scene problems !4925
+- C++: Add method 'TcpChannel::consumeBytesAfterReadUntil' as a complement for 'TcpChannel::readAsyncStringUntil' !4515
+- C++: Log readers reply time string with timezone in slotGetConfigurationFromPast !4536
+- C++: Provide a readOnly version for the GUI Server !4448
+- C++: Silence gui server log file !4415
+- C++: Clean AlarmCondition* Make use of 'default' and 'delete' for constructors. !4417
+- C++: string contain pipes are read correctly in for (1|2|3) scenario. !4592
+- C++: Ensure that output channel keys do not contain device/channel id delimiters !4666
+- C++: Refactor endOfStream handlingMark chunks in `Memory` to be *endOfStream* !4672
+- C++: Clean Memory classJust remove stuff not used. !4678
+- C++: Add support for ConfigurationManager operations to DeviceClient. !4694
+- C++: Fix many-to-one pipelines receiving from remote !4705
+- C++: Make gcc version < 5 fail !4708
+- C++: remove compression option !4712
+- C++: Add missing mutex locks and go for read-only locks !4697
+- C++: Initial BrokerMessageLogger support for OpenMQ and MQTT. !4717
+- C++: JMS reading with race condition free setting of handlers !4735
+- C++: Use single JmsProducer in OpenMQBrokerThe JmsProducer itself can deal with many topics. !4736
+- C++: Enable safe output channel init !4741
+- C++: Fix non-effective mutex locks and properly erase from set while iterate !4763
+- C++: Protect server against bad input from time server !4772
+- C++: server process stops again if invalid serverId detected !4764
+- C++/bound: Regular retries to connect InputChannel !4848
+- C++ tests: Try to fix JmsConnection_Test !4851
+- C++: Add maxQueueLength to InputChannel and enforce it on the OutputChannel side. !4845
+- C++: Underscore parameters (deviceId, serverId) become assignment Internal !4889
+- C++: Loggers now retry connection to device after failed attempts !4918
+- C++: No slotSaveConfigurationFromName when GUI Server is in read-only mode. !4896
+- C++/Bound: make hostName Assignment.INTERNAL !4898
+- C++: Jms test - avoid topic clash and increase timeout and message travel time !4806
+- C++: More robust pipeline tests* !4808
+- C++: Reliable InputChannel::disconnect !4832
+- C++: queueDrop option for shared input channels !4636
+- C++: Use weak (not bare) pointer in static map for shortcuts !4638
+- C++: Allow to change loggermap file !4607
+- C++: Avoid code duplication in OutputChannel !4640
+- C++: Channel callbacks need  weak pointers !4642
+- C++: OVERWRITE_ELEMENT.setNewTags is now aligned !4429
+- C++: Remove "throw" behaviour for pipelines senders !4644
+- C++: Potential fix for SignalSlotable destruction freeze. !4663
+- C++: Reliable pipeline queuing !4605
+- C++: GuiServerDevice can ignore timeouts on configuration !4649
+- C++: Enable DAQPolicy setting for the state element !4446
+- C++: Protect log manager. A data logger started 'by hand' with a short id lead to an exception and stopped
+- the logger manager functioning. !4501
+- C++: Make global alarms 'sticky' !4507
+- C++/Bound: Always notify output channels for possible read after end-of-stream !4474
+- C++: Fix alarm service integration test !4507 !4516
+- C++: Fix default fromString for vectors,Including some performance optimisations. !4484
+- C++/Bound: Deprecate visibility setting on runtime !4730
+- C++/Bound/MDL: Cross API test for endOfStream !4683
+- C++/Bound: Introduce broker API to allow support of different brokers !4608
+- C++/Bound: refactor topic from env. var. !4711
+- C++/Bound: Choice of node for broker connection configuration. !4762
+- C++/Bound: Proper "lang" and version print for (interactive bound) device client !4595
+- C++/Bound: UNKNOWN as default data type for image and ndarray elements !4588
+- C++/Bound: Remove p2p shortcut messaging !4664
 
 
 Dependencies and deployment
 +++++++++++++++++++++++++++
+
+- CI: run integration tests on hotfix branch !4487
+- CI: windows CI is less verbose, unit tests skip build !4599
+- CI: do not run prerelease tasks on release !4604
+- CI: optimize tests execution !4606
+- CI: forgot to remove the int. tests !4613
+- CI: add junit artifacts !4723
+- CI: Restore default CI testing configuration. !4855
+- CI: reduce number of docker pulls !4890
+- BUILD: Use conda-pack for packing a relocatable environment !4591
+- BUILD: Preserve egg dir when building the package !4618
+- BUILD: Compile framework with C++14 compiler !4535
+- BUILD: revive cmake build !4420
+- DEPS: package libgfortran4 !4602
+- DEPS: upgrade setuptools_scm !4660
+- DEPS: Update PyQtGraph to 0.11 !4732
+- DEPS: Enable Ubuntu20 !4707
+- DEPS: upgrade openmq C Client to 5.1.4 !4418
+- DEPS: Add CentOS8 Build !4733
+- DEPS: Fix for building issue on Ubuntu 16 - Boost built with c++14 std. !4834
+- TOOLS: splitting away jkarabo !4823
 
 
 Tests
 +++++
 
 
+- Test: Even more robust C++ pipeline integration test !4902
+- Integration test: Very long timeouts for data loggers* longer timeout for "flush" calls !4537
+- Integration tests: Reliable test_alarm_all_api !4438
+- TOOLS: automated device version for templates !4657
+- Test: Fix config manager integration test !4854
+- Test: More robust integration tests about alarms !4884
+- Test: Make logging directory for logger integration tests unique !4565
+- Test: Tests for the DeviceClient interface to the ConfigurationManager operations. !4704
+- Test: Add junit artifact to python tests !4757
+- Test: Tune constants for DataLogging_Test. !4639
+- Test: extend cross api pipe test to cover MDL and onSlowness=="queueDrop"Prerequisite: harmonise the `PropertyTestMDL` device with other APIs concerning pipelines.
+- Test: Furthermore some fixes and tuning for the test to get it robust and not lasting too long. !4614
+- Test: Enable testNans() for file logger test !4489
+- Test: Add schedules for coverage and long tests !4427
+- Test: Partially harmonise PropertyTest devices !4395
+
+
 Core Devices
 ++++++++++++
+
+- Daemon Service: Add default host !4819
+- Gui Server: Provide serverInformation in single message !4867
+- Gui-Server: Provide information on failure protocol !4720
+- Gui-Server: Forward replies of the configurationManager !4673
+- Gui-Server: Request Generic optionally sends back an empty Hash and documentation !4718
+- Gui Server: Increase min client version to 2.9.0 !4922
+- Gui Server: Enable device provided scenes in read only mode !4483
+- Core Devices: Add component manager that can save / list configuration snapshots !4768
+- Core Devices: PropertyTest MDL gets a scene !4838
+- Core Devices: Enhance configuration manager with checks for config names and schema return only on demand !4841
+- Core Devices: Daemon Manager default port !4850
+- Core Devices: Component Manager can reconfigure devices !4835
+- Core Devices: Configuration manager returns HashList !4713
+- Core Devices: Provide a Configuration Manager device (MDL) !4685
+- Core Devices: Move DaemonManager to Core Devices !4698
+- Core Devices: Update ConfigurationManager !4744
+- Core Devices: Input services for daemon handling !4703
+- Core Devices: Webserver doesn't handles device servers with a minus sign !4600
+- Core Devices: Create service and environment dirs only when needed !4590
+- Core Devices: REMOVE CentralLogging !3870
+- Alarm service: Fix alarm id duplication bug !4421
+- Logger test: Test vector cases for data logger history !4482
+- WEB: aggregator displays only enabled services !4814
+- DataLogger: DataLogger goes to ON after hooking into logged devices, unless in ERROR. !4748
+- DataLogger: Fix regression of file logger for old VECTOR_STRING format !4654
+- Core Devices: Daemon manager scene font alignment !4899
+- Core Devices: Configuration Manager instanceNew timeout !4921
+- Core Devices: Config limit to 30 !4892
+- Core devices: Gui timeout and logs !4927
+- Core Devices: ConfigManager can handle runtime attributes !4874
+- ConfigDB Manager in service.in !4870
+- Configuration Manager: Protect device configuration name with regex !4863
+- Config DB: List devices with configurations !4907
+- Config DB: Limit of configurations !4862
+- Config DB: Find configuration sets !4765
+
+
+Middlelayer Core
+++++++++++++++++
+
+- Common: Provide unique and constant deviceId names for our singletons !4731
+- Common: Use const services in python karabo !4830
+- ikarabo: add instantiateFromName !4843
+- MDL: Set the default access level of Slots to USER !4469
+- MDL: Visibility becomes an init only feature !4648
+- MDL: Add queueDrop to noInputShared, deprecate throw option !4650
+- MDL: QueueDrop functionality !4646
+- MDL: Default numpy for NDArray change !4637
+- MDL: Provide a RingQueue !4645
+- MDL: Stop and close the fake eventloop started in a different thread !4689
+- MDL: Use default event loop policy for child processes !4716
+- MDL: Assure instanceGone in UVLOOP !4728
+- MDL: Add configuration from name function to CLI !4701
+- MDL: optimize parallel execution on slotSave !4737
+- MDL: Autocomplete configuration function in ikarabo !4738
+- MDL: Provide Nodes with default access level of OBSERVER !4815
+- MDL: Fix input handler capture of exception in pipelining !4633
+- MDL: Handle NDARRAY of UNKNOWN type !4610
+- MDL: code quality follow up !4615
+- MDL: DictToHash treats vector hash correctly and is used in project manager !4844
+- MDL: Provide utility function to build karabo value !4869
+- MDL: remove references to async !4791
+- MDL: Use attribute and not displaytype for regex in regexstring !4796
+- MDL: Fix has_shared behavior for pipelining !4665
+- MDL: Remove schema cross test permanently !4802
+- MDL: Config Manager can init Devices !4803
+- MDL: Use uvloop for asyncio !4026
+- MDL: Set the access level to USER (minimum) for reconfigurable parameters !4634
+- MDL: Add Regex string !4709
+- MDL: Make global alarm 'sticky'As in !4451 and !4507 for bound Python and C++, respectively.!4514
+- MDL: Fix load from file exception raise !4528
+- MDL: Visibility of macro devices !4510
+- MDL: Split the pipeline tests from Remote test !4544
+- MDL: Test the manual connection of input channel !4545
+- MDL: Provide endOfStream for output channels !4242
+- MDL: Fix setting log level for device servers !4682
+- MDL: Provide dictToHash function !4687
+- MDL: Harmonise log levels with C++/bound, i.e. add FATAL !4688
+- MDL: Optionally activate UVLOOP !4680
+- MDL: Provide Hash fully equal and deepcopy !4880
+- MDL: Code quality check in native !4879
+- MDL: Add test for multiple shared pipelines !4801
+- MDL: Provide a native deepcopy mechanism of Hash !4893
+- MDL Devices: Code quality and top layer import !4859
+- MDL: Compare configurations !4888
+- MDL: Protect against bad timeserver !4908
+- MDL: Max queue lengh for pipelines !4909
+- MDL: Remove setting loop to None !4727
+- MDL: One more fix for the cancel test !4920
+- MDL: Fully stop MDL server if requested !4864
+- MDL test: Dynamic waiting in macro_test.test_cancel() !4878
+- MDL-Native: Reorder packages !4852
+- MDL: Add MDL broker API !4719
+- MDL: Provide a callNoWait option in the cli !4829
+- MDL: Extract attribute modifications from schema !4828
+- MDL: Implement VectorRegexString !4758
+- MDL: Extract a configuration from a proxy !4807
+- MDL: Sanitize a reconfigurable configuration !4826
 
 
 Graphical User Interface
 ++++++++++++++++++++++++
+
+- GUI: Add label widget margins !4929
+- GUI: Remove minInc maxInc etc. pp. from being editable by GUI !4911
+- GUI: Provide enough rendering time for karabo-alarms !4651
+- GUI: Calculate scene layout sizehint from children sizehints only when it is invalid !4661
+- GUI: Minor typo fixes and constant adjustments for the tips&tricks wizard !4630
+- GUI: Enable AccessLevel independent historic data retrieval in the trendgraphs !4635
+- GUI: Protocol Skeleton for ConfigurationFromName !4539
+- GUI: Add the histogram aux to Detector Graph !4586
+- GUI: Destroy ipython console properly !4492
+- GUI: Empty table widget !4659
+- GUI: Better messages when using configuration from past !4404
+- GUI: Show compatibility for min max dependent controllers better !3950
+- GUI: Trigger value_update when additional proxies are added !4413
+- GUI: Arrow shape model !4333
+- GUI: Take into account state updates and fix the range setting for disabling !4444
+- GUI: Remove additional value update for the vector xy !4445
+- GUI: Hide the labelItem in the aux plots by default !4486
+- GUI: Improve Image Graph stats HTML !4693
+- GUI: Only enable/disable image graph grayscale features only when type changes !4747
+- GUI: Visualize conflicting projects with an alarm icon !4641
+- GUI: New protocol for configuration manager !4702
+- GUI: Adjust image widget rgb !4517
+- GUI: Add optional forwarded channel for updating GUI extensions: !4729
+- GUI: No editing of attributes in AccessLevel OBSERVER !4809
+- GUI: Account for assignment internal in the configurator !4799
+- GUI: Move vector curves addition to add_proxy !4453
+- GUI: Refactor scene writer !4443
+- GUI: A place for hint widgets !4447
+- GUI: Enable readOnly utility in client !4457
+- GUI: Implement access level configuration for project toolbar !4461
+- GUI: Better access logic for project bar !4465
+- GUI: AccessLevel service kill in topology !4462
+- GUI: Provide an alarm runner !4468
+- GUI: Context menu properly PROJECT EDIT sensitive for devices !4508
+- GUI: Cleanup of the network code !4495
+- GUI: Run macro from macro panel has access role !4505
+- GUI: Fix the initial check state of a device configuration when a device is added !3733
+- GUI: Change to Qt5 in controller test !4512
+- GUI: Fix vector bar graph !4496
+- GUI: Concurrence forwarding of client id !4478
+- GUI: Make not working device servers visible in daemon manager widget !4511
+- GUI: Enable project concurrence in the GUI client !4509
+- GUI: Fix graph toolbar toggling !4519
+- GUI: More plot range fixes !4540
+- GUI: AccessRole implementation for configurator toolbar !4470
+- GUI: Scripting console access role !4467
+- GUI: Implement access role for device topology !4471
+- GUI: Fix backward compatibility in read and write element !4480
+- GUI: Implement access roles in the project view !4497
+- GUI: Fix plot log range !4504
+- GUI: Extract important part of stack trace of the error dialog !4670
+- GUI: Use QDialog for error dialogs instead of QMessageBox !4679
+- GUI: Provide the list of named configuration via dialog !4676
+- GUI: Save booleans and retrieve them on mac !4681
+- GUI: Save configurations from name !4696
+- GUI: Make the columns in the daemon table sortable !4699
+- GUI: No archive notification before retrieving configuration from past !4527
+- GUI: Draw the arrow shape !4334
+- GUI: Hide the axis labels when there is no text or unit !4553
+- GUI: Set a global Locale !4533
+- GUI: Quick path for projects and subprojects comparison on projectUpdate !4518
+- GUI: Check for SVG id attributes before temporarily storing !4520
+- GUI: Set dragged widgets as initialized !4534
+- GUI: Extend image widget for other encodings !4513
+- GUI: Show/hide labels in image plots whether there are text/units !4554
+- GUI: Delete project device references upon deleting device instance !4560
+- GUI: Update x-transform after trigger !4572
+- GUI: Provide a Tips&Tricks Wizard !4573
+- GUI: Improve visualization of vectors with invalid numbers for VectorBarGraph in log mode !4570
+- GUI: Increase the frequency of axis ticks on small widgets !4574
+- GUI: Disable only writable widgets on wrong access level !4667
+- GUI: Get configuration from name !4677
+- GUI: Add an application font !4549
+- GUI: Remove patches in AxisItem !4779
+- GUI: Provide util function to get array data !4797
+- GUI: Add regex edit field !4710
+- GUI: Format evaluate expression widget !4784
+- GUI: Configurable ROI name !4866
+- GUI: Lower the priority to create histogram widgets as default [ci skip] !4839
+- GUI: Label configurations from name !4745
+- GUI: Adapt to squish testing for high dpi !4760
+- GUI: Provide event map in save detail dialog (fix) !4761
+- GUI: Configuration dialog from time enhanced !4759
+- GUI: Substitute fonts with the Source Pro Family !4767
+- GUI: Enhance configuration dialogs with show device option !4769
+- GUI: Elide labels when the text is longer than the widget geometry !4766
+- GUI: Protect configuration by name saving with regex validator !4770
+- GUI: Add scene reader registry !4330
+- GUI: Hard deprecate on Knob and soft deprecate on Slider !4435
+- GUI: Purge trendline option !4416
+- GUI: Compatiblity patch between new scene model readers and gui extensions !4440
+- GUI: Clean the Tick Slider !4434
+- GUI: Account connection loss in configuration dialogs !4746
+- GUI: Enable DPI scaling for application on scaled Windows and Ubuntu desktops !4740
+- GUI: Deprecate DoubleWheelEdit controller !4752
+- GUI: Change the symbol style of our plots !4749
+- GUI: Add vector regex controller !4846
+- GUI: Clean and unify NDArray controllers !4847
+- GUI: Vector hash validation !4785
+- GUI: Again remove assignment internal !4891
+- GUI: Fix table parent setting !4853
+- GUI: Provide configuration from name dialog in device topology !4861
+- GUI: Add clock icon to trendline requst time !4868
+- GUI: Combine histogram graphs in a single controller !4858
+- GUI: No project saving if you are not allowed !4865
+- GUI: Prevent unnecessary request for config save when device is offline !4871
+- GUI: Consider deleted rows when comparing vector hash !4887
+- GUI: Sanitize an init configuration, delete readonly and internal parts !4800
+- GUI: Destroy trendlines properly to protect against historic data !4805
+- GUI: Provide a header in the table view on init !4804
+- GUI: Provide Histogram Controller for NDArrays !4813
+- GUI: Add test for binding types, check if numpy type is preserved !4820
+- GUI: provide full array graph support !4810
+- GUI: Separate/move validators !4822
+- GUI: Deprecate grid for the time beeing in the layout !4751
+- GUI: Make sure windows stay on top for message boxes and listConfig dialog !4739
+- GUI: Provide a clock icon (first) !4776
+- GUI: New font dialog !4774
+- GUI: Always provide a new date time for start of new trendline !4778
+- GUI: Include fonts in package_data !4780
+- GUI: Remove a few LegendItem patches !4782
+- GUI: Avoid loading values in the configurator that does not conform to current property type !4629
+- GUI: Provide request time interval feature for trendline on viewBox menu !4775
+- GUI: Propagate closing of undocked Panels correctly to their Containers !4781
+- GUI: Destroy messagebox properly !4783
+- GUI: Quietly record the layout children geomerty in their model !4750
+- GUI: Fix typos for the daemon action !4789
+- GUI: Remove undocked panel !4788
+- GUI: Strip about device dialog (pretty) !4875
+- GUI: Logindialog must stay on top !4882
+- GUI: Display the whole error message if it's short !4883
+- GUI: Update lttbc !4885
+- GUI: Destroy table model from configurator !4886
+- GUI: Add NDArray RollGraph !4857
+- GUI: Don't stack on top the conf dialogs but raise them !4872
+- GUI: Enable copying of messagebox text !4873
+- GUI: Add ndarray support for vector bar !4860
+- GUI: Change tickfont for axis items, increase size !4919
+- GUI: Show project panel dialogs on mouse cursor !4903
+- GUI: Use vector regex validation in list dialog !4923
+- GUI: Fight message box strong modality !4926
+- GUI: Use widget size hint if model geometry is None !4928
+- GUI: Fix float / numpy, reliagn hash and table validation !4910
+- GUI: Fix scene widget model geometry check !4914
+- GUI: Fix label initial size hint !4917
+- GUI: Always request list of configurations at start in configuration from name dialog !4901
+- GUI: Make sure console is closed on disconnect !4904
+- GUI: Draw boundary correctly !4906
+- GUI: Make generic trendline wider for more labels !4894
+- GUI: Respect model geometry by reflecting it to widget size hint !4798
+- GUI: Show topology on show device in dialogs !4895
