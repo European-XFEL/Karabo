@@ -634,6 +634,15 @@ namespace karabo {
                 if (clientVersion >= minVersion) {
                     KARABO_LOG_INFO << "Login request of user: " << hash.get<string > ("username")
                             << " (version " << clientVersion.getString() << ")";
+                    if (clientVersion < Version("2.10.0rc4")) {
+                        std::ostringstream msg;
+                        msg << "You are using an outdated Karabo GUI client!\n\n"
+                                << "Due to bugs in the version you are using, you will cause unwanted changes to "
+                                << "project scenes if you save them in this session.\n\n"
+                                << "=> Please upgrade to the latest version!";
+                        const Hash h("type", "notification", "message", msg.str());
+                        safeClientWrite(channel, h);
+                    }
                     sendSystemTopology(channel);
                     return;
                 }
