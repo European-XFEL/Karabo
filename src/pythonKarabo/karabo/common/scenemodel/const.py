@@ -9,6 +9,10 @@ SCENE_FILE_VERSION = 2
 SCENE_MIN_WIDTH = 1024
 SCENE_MIN_HEIGHT = 768
 
+# Scene display constants
+SCENE_DEFAULT_DPI = 96
+SCENE_MAC_DPI = 72
+
 # Scene default font formatting
 SCENE_FONT_FAMILY = "Source Sans Pro"
 SCENE_FONT_SIZE = 10
