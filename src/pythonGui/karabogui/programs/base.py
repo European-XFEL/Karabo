@@ -10,15 +10,13 @@ from PyQt5.QtWidgets import (
     QApplication, QMessageBox, QSplashScreen, QStyleFactory)
 from pyqtgraph import setConfigOptions
 
-from karabo.common.scenemodel.api import SCENE_FONT_FAMILY, SCENE_FONT_SIZE
+from karabo.common.scenemodel.api import (
+    SCENE_DEFAULT_DPI, SCENE_FONT_FAMILY, SCENE_FONT_SIZE)
 
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.fonts import FONT_FILENAMES
 from karabogui.singletons.api import (
     get_manager, get_network, get_panel_wrangler)
-
-
-DEFAULT_DPI = 96
 
 
 def excepthook(exc_type, value, traceback):
@@ -55,7 +53,7 @@ def create_gui_app(args):
         # Only apply high DPI scaling when the logical DPI is greater than
         # the default DPI (96). This is usually observed on scaled desktops
         # (e.g., 150% scaling on Windows)
-        if dpi > DEFAULT_DPI and system() != "Darwin":
+        if dpi > SCENE_DEFAULT_DPI and system() != "Darwin":
             QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
             QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
         app = QApplication(args)
