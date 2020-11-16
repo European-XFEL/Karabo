@@ -4,8 +4,9 @@ from .bases import (
     BaseSceneObjectData, BaseShapeObjectData, BaseWidgetObjectData)
 from .const import (
     ARROW_HEAD, DISPLAY_COMPONENT, EDITABLE_COMPONENT, NS_KARABO, NS_SVG,
-    SCENE_FILE_VERSION, SCENE_FONT_FAMILY, SCENE_FONT_SIZE, SCENE_FONT_WEIGHT,
-    SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH, SceneTargetWindow)
+    SCENE_DEFAULT_DPI, SCENE_FILE_VERSION, SCENE_FONT_FAMILY, SCENE_FONT_SIZE,
+    SCENE_FONT_WEIGHT, SCENE_MAC_DPI, SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH,
+    SceneTargetWindow)
 from .exceptions import SceneReaderException, SceneWriterException
 from .generic_scenes import (
     get_alarm_graph_scene, get_state_graph_scene, get_trendline_scene,
