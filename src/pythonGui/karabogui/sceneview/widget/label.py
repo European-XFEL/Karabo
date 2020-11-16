@@ -10,6 +10,8 @@ from PyQt5.QtWidgets import QAction, QDialog, QLabel
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.widgets.hints import KaraboSceneWidget
 
+from .utils import get_size_from_dpi
+
 MARGINS = (5, 0, 5, 0)  # left, top, right, bottom
 WIDTH_MARGIN = MARGINS[0] + MARGINS[2]
 HEIGHT_MARGIN = MARGINS[1] + MARGINS[3]
@@ -56,6 +58,9 @@ class LabelWidget(KaraboSceneWidget, QLabel):
             width = fm.width(self.model.text)
             height = fm.height() + self.model.frame_width
             size = QSize(width + WIDTH_MARGIN, max(height, 20) + HEIGHT_MARGIN)
+            # Calculate effective size from the DPI of the OS. This is needed
+            # as MacOSX DPI has a different value from the rest.
+            size = get_size_from_dpi(size)
         return size
 
     def paintEvent(self, event):
