@@ -38,6 +38,7 @@ private:
     void testSchemaInjection();
     void testGetSet();
     void testUpdateState();
+    void testSignal();
     void testBadInit();
 
     /** Tests that updateSchema resets attributes in the static schema. */
