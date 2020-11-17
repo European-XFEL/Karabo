@@ -146,6 +146,10 @@ public:
         KARABO_SLOT(node_slot);
 
         KARABO_SLOT(slotGetCurrentConfiguration, const std::string /*tags*/);
+
+        KARABO_SIGNAL("signalA");
+
+        KARABO_SLOT(slotEmitSignalA);
     }
 
 
@@ -192,6 +196,11 @@ public:
 
     void slotGetCurrentConfiguration(const std::string& tags) {
         reply(getCurrentConfiguration(tags));
+    }
+
+
+    void slotEmitSignalA() {
+        emit("signalA");
     }
 };
 
@@ -317,6 +326,7 @@ void Device_Test::appTestRunner() {
     testNodedSlot();
     testGetSet();
     testUpdateState();
+    testSignal();
     // Last tests needs its own device, so clean-up before
     m_deviceClient->killDeviceNoWait("TestDevice");
     testBadInit();
@@ -994,6 +1004,35 @@ void Device_Test::testUpdateState() {
 
 }
 
+
+void Device_Test::testSignal() {
+    // Test that signals registered in constructor of devices inheriting from Device carry the signalInstanceId in header
+    // (in 2.10.0 the SignalSlotable::init method is called after the constructor, so no id yet when registering).
+
+    std::string signalInstanceId;
+    DeviceServer::WeakPointer weakServer(m_deviceServer);
+    boost::function<void() > slot = [&signalInstanceId, weakServer]() {
+        DeviceServer::Pointer ptr(weakServer.lock());
+        if (ptr) {
+            const karabo::util::Hash::Pointer header(ptr->getSenderInfo("slotForSignalA")->getHeaderOfSender());
+            signalInstanceId = header->get<std::string>("signalInstanceId");
+        } else {
+            std::clog << "DeviceServer pointer invalid!" << std::endl; // Should be impossible
+        }
+    };
+    m_deviceServer->registerSlot(slot, "slotForSignalA");
+    CPPUNIT_ASSERT(m_deviceServer->connect("TestDevice", "signalA", "", "slotForSignalA"));
+    // If request returns, we can be sure that the signal has been received.
+    // That order would be undefined if instead of 'm_deviceServer->request' we would use
+    // 'm_deviceClient->execute' since signal is emitted to m_deviceServer.
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request("TestDevice", "slotEmitSignalA").timeout(5000).receive());
+
+    CPPUNIT_ASSERT_EQUAL(std::string("TestDevice"), signalInstanceId);
+
+    // Clean up
+    m_deviceServer->disconnect("TestDevice", "signalA", "", "slotForSignalA");
+    // m_deviceServer->removeSlot("slotForSignalA"); private, but who cares here...
+}
 
 void Device_Test::testBadInit() {
 
