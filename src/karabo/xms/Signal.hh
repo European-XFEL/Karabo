@@ -132,7 +132,7 @@ namespace karabo {
 
         protected:
 
-            std::pair<std::string, std::string> generateSlotStrings(const SlotMap& slots) const;
+            void setSlotStrings(const SlotMap& slots, karabo::util::Hash& header) const;
 
             karabo::util::Hash::Pointer prepareHeader(const SlotMap& slots) const;
 
