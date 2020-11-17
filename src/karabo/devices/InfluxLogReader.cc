@@ -66,7 +66,8 @@ namespace karabo {
         ConfigFromPastContext::ConfigFromPastContext(const std::string &deviceId,
                                                      const karabo::util::Epochstamp &atTime,
                                                      const karabo::xms::SignalSlotable::AsyncReply &aReply) :
-            deviceId(deviceId), atTime(atTime), configTimePoint(Epochstamp(0, 0)), aReply(aReply) {
+            deviceId(deviceId), atTime(atTime), configTimePoint(Epochstamp(0, 0)),
+            lastLoginBeforeTime(0UL), lastLogoutBeforeTime(0UL), aReply(aReply) {
         };
 
 
