@@ -144,8 +144,8 @@ namespace karabo {
 
             SignalSlotable* m_signalSlotable;
             const karabo::net::Broker::Pointer& m_channel;
-            std::string m_signalInstanceId;
-            std::string m_signalFunction;
+            const std::string m_signalInstanceId;
+            const std::string m_signalFunction;
             std::string m_registeredSlotsString;
             std::string m_registeredSlotInstanceIdsString;
             size_t m_nRegisteredSlots;

@@ -112,7 +112,13 @@ namespace karabo {
 
 
         karabo::util::Hash::Pointer Signal::prepareHeader(const SlotMap& slots) const {
-            karabo::util::Hash::Pointer header(new karabo::util::Hash);
+            if (m_signalInstanceId.empty() && m_signalSlotable) {
+                // Hack to fix empty id if signal created before SignalSlotable::init (which defines the id) was called.
+                // Happens currently (2.10.0) for signals registered in constructors of devices
+                *const_cast<std::string*> (&m_signalInstanceId) = m_signalSlotable->getInstanceId();
+            }
+
+            karabo::util::Hash::Pointer header(boost::make_shared<karabo::util::Hash>());
             std::pair<std::string, std::string> slotStrings = generateSlotStrings(slots);
             header->set("signalInstanceId", m_signalInstanceId);
             header->set("signalFunction", m_signalFunction);

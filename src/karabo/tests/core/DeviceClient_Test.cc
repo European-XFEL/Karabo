@@ -30,6 +30,9 @@ using karabo::xms::InputChannel;
 using karabo::xms::ImageData;
 
 
+const int maxIterWait = 1000;
+const int sleepPerIter = 5;
+
 template<class Container>
 void assertIgnoringOrder(const Container& expected, const Container& actual, const std::string& which) {
     CPPUNIT_ASSERT_EQUAL_MESSAGE(which, expected.size(), actual.size());
@@ -243,9 +246,9 @@ void DeviceClient_Test::testMonitorChannel() {
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
 
     int counter = 0;
-    while (counter++ < 100) {
+    while (counter++ < maxIterWait) { // failed with 100 in https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/144940
         if (imageEntry == 1) break; // Check the last variable assigned in dataHandler
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
     }
     // Now check all data arrived as it should:
     CPPUNIT_ASSERT_EQUAL(1, int32inChannel);
@@ -273,9 +276,9 @@ void DeviceClient_Test::testMonitorChannel() {
 
     // Now should get the next number, i.e. 3
     counter = 0;
-    while (counter++ < 100) {
+    while (counter++ < maxIterWait) {
         if (int32inChannel == 3) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
     }
     CPPUNIT_ASSERT_EQUAL(3, int32inChannel);
 
@@ -289,10 +292,10 @@ void DeviceClient_Test::testMonitorChannel() {
 
     int32inChannel = -1;
     counter = 0;
-    while (counter++ < 100) {
+    while (counter++ < maxIterWait) {
         if (int32inChannel > 0) break; // see comment below
         CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
     }
     // Do not care about the exact value of int32inChannel since auto-reconnect might take time
     CPPUNIT_ASSERT(int32inChannel > 0);
@@ -316,9 +319,9 @@ void DeviceClient_Test::testMonitorChannel() {
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice3", "writeOutput", KRB_TEST_MAX_TIMEOUT));
 
     counter = 0;
-    while (counter++ < 100) {
+    while (counter++ < maxIterWait) {
         if (dataCounter == 3) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
     }
     CPPUNIT_ASSERT_EQUAL(3, dataCounter);
     CPPUNIT_ASSERT_EQUAL(1, sizeMsg);
@@ -405,9 +408,9 @@ void DeviceClient_Test::testGetSchemaNoWait() {
 
     // Wait a bit until schema arrived and thus handler is called
     unsigned int counter = 0;
-    while (counter++ < 500) {
+    while (counter++ < maxIterWait) {
         if (schemaReceived) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
     }
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for schema update monitor", schemaReceived);
     // Now take from cache
@@ -424,9 +427,9 @@ void DeviceClient_Test::testGetSchemaNoWait() {
 
     // Wait a bit until new schema arrived
     counter = 0;
-    while (counter++ < 500) {
+    while (counter++ < maxIterWait) {
         if (schemaReceived) break;
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(sleepPerIter));
     }
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for schema update monitor", schemaReceived);
 
