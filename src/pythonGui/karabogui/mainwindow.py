@@ -7,6 +7,7 @@ from collections import OrderedDict
 from enum import Enum
 from functools import partial
 import os.path
+import webbrowser
 
 from PyQt5.QtCore import QEventLoop, Qt, pyqtSlot
 from PyQt5.QtWidgets import (
@@ -24,6 +25,7 @@ from karabogui.indicators import get_processing_color
 from karabogui.enums import AccessRole
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
+from karabogui import messagebox
 from karabogui.panels.api import (
     AlarmPanel, ConfigurationPanel, DevicePanel, PanelContainer, LoggingPanel,
     ProjectPanel, ScriptingPanel, TopologyPanel)
@@ -100,6 +102,7 @@ _PANELS = {
 }
 
 VIEW_MENU_TITLE = '&View'
+GRAFANA_LINK = "https://ctrend.xfel.eu/"
 
 
 class MainWindow(QMainWindow):
@@ -369,6 +372,9 @@ class MainWindow(QMainWindow):
         self.acCheckUpdates = QAction("Check for Updates", self)
         self.acCheckUpdates.triggered.connect(self.onCheckUpdates)
 
+        self.acGrafana = QAction(icons.weblink, "Grafana", self)
+        self.acGrafana.triggered.connect(self.onGrafana)
+
     def _setupMenuBar(self):
         menuBar = self.menuBar()
 
@@ -385,6 +391,9 @@ class MainWindow(QMainWindow):
         panelAction.triggered.connect(self._store_panel_configuration)
         mViewMenu.addAction(panelAction)
         mViewMenu.addSeparator()
+
+        mHelpMenu = menuBar.addMenu("&Tools")
+        mHelpMenu.addAction(self.acGrafana)
 
         mHelpMenu = menuBar.addMenu("&Help")
         mHelpMenu.addAction(self.acHelpAbout)
@@ -572,6 +581,13 @@ class MainWindow(QMainWindow):
     def onCheckUpdates(self):
         dialog = UpdateDialog(parent=self)
         dialog.open()
+
+    @pyqtSlot()
+    def onGrafana(self):
+        try:
+            webbrowser.open_new(GRAFANA_LINK)
+        except webbrowser.Error:
+            messagebox.show_error("No web browser available!", parent=self)
 
     @pyqtSlot()
     def onWizard(self):
