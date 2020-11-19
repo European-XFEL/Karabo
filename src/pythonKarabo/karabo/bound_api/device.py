@@ -206,12 +206,6 @@ class PythonDevice(NoFsm):
             .assignmentOptional().defaultValue("")
             .commit(),
 
-            INT32_ELEMENT(expected).key("progress")
-            .displayedName("Progress")
-            .description("The progress of the current action")
-            .readOnly().initialValue(0)
-            .commit(),
-
             INT32_ELEMENT(expected).key("heartbeatInterval")
             .displayedName("Heartbeat interval")
             .description("The heartbeat interval")
@@ -1071,29 +1065,6 @@ class PythonDevice(NoFsm):
             if emitFlag:
                 self._ss.emit("signalSchemaUpdated",
                               self._fullSchema, self.deviceid)
-
-    def setProgress(self, value, associatedText=""):
-        """Set progress indicator on this device
-        Use this for processing on devices, or a slow hardware related process.
-        :param value:
-        :param associatedText: optionally set a text describing the progress
-        :return:
-        """
-        v = self.progressMin + value / (self.progressMax - self.progressMin)
-        self.set("progress", v)
-
-    def resetProgress(self):
-        """Reset progress to the minimum progress range."""
-        set("progress", self.progressMin)
-
-    def setProgressRange(self, minimum, maximum):
-        """Set the range used for progress indication.
-
-        :param minimum: lower bound of value used in `setProgress`
-        :param maximum: upper bound of value used in `setProgress`
-        :return:
-        """
-        self.progressMin, self.progressMax = minimum, maximum
 
     def getAliasFromKey(self, key, aliasReferenceType):
         """
