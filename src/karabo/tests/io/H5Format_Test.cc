@@ -263,7 +263,7 @@ void H5Format_Test::testDiscoverFromHash() {
                 //  clog << ":size " << dims.size()  << endl;
             }
 
-        } catch (Exception e) {
+        } catch (const Exception& e) {
             std::clog << e.detailedMsg() << std::endl;
             KARABO_RETHROW
         }
