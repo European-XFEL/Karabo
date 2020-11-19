@@ -324,9 +324,9 @@ unit tests miniconda-win64:
     - Win10
   <<: *unit-tests-conda
 
-#unit tests miniconda-cmake:
-#  image: europeanxfel/karabo-ci:miniconda-3
-#  <<: *unit-tests
+unit tests miniconda-cmake:
+  image: europeanxfel/karabo-ci:miniconda-3
+  <<: *unit-tests
 
 # Post-merge integration test builds
 
