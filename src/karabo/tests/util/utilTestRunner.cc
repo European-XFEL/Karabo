@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
         // one can run a single test by passing the class name as an argumnent. e.g. States_Test
         try {
             test = test->findTest(argv[1]);
-        } catch (std::invalid_argument) {
+        } catch (const std::invalid_argument&) {
             // bad argument
             std::cerr << "Test '" << argv[1] << "' not found!" << std::endl;
             return 1;
