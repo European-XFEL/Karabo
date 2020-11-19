@@ -601,7 +601,7 @@ void HashFilter_Test::testFilterByTag() {
         CPPUNIT_ASSERT(result.has("table") == false);
 
 
-    } catch (karabo::util::Exception e) {
+    } catch (const karabo::util::Exception& e) {
         KARABO_LOG_FRAMEWORK_DEBUG << e;
     }
 }
@@ -722,7 +722,7 @@ void HashFilter_Test::testFilterByAccessMode() {
         CPPUNIT_ASSERT(result.has("state") == false);
         CPPUNIT_ASSERT(result.has("table") == false);
 
-    } catch (karabo::util::Exception e) {
+    } catch (const karabo::util::Exception& e) {
         KARABO_LOG_FRAMEWORK_DEBUG << e;
     }
 }
@@ -775,7 +775,7 @@ void HashFilter_Test::testHdf5Filter() {
 
         KARABO_LOG_FRAMEWORK_DEBUG << "permanent: \n" << result;
 
-    } catch (karabo::util::Exception e) {
+    } catch (const karabo::util::Exception& e) {
         KARABO_LOG_FRAMEWORK_DEBUG << e;
     }
 
