@@ -181,10 +181,6 @@ namespace karabo {
             // Regular expression for error detection in state word
             boost::regex m_errorRegex;
 
-            // progressBar related
-            int m_progressMin;
-            int m_progressMax;
-
             unsigned long long m_timeId;
             unsigned long long m_timeSec; // seconds
             unsigned long long m_timeFrac; // attoseconds
@@ -363,13 +359,6 @@ namespace karabo {
                         .init()
                         .adminAccess()
                         .assignmentOptional().defaultValue(true)
-                        .commit();
-
-                INT32_ELEMENT(expected).key("progress")
-                        .displayedName("Progress")
-                        .description("The progress of the current action")
-                        .readOnly()
-                        .initialValue(0)
                         .commit();
 
                 INT32_ELEMENT(expected).key("heartbeatInterval")
@@ -960,32 +949,6 @@ namespace karabo {
                 set(validated);
 
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Schema updated";
-            }
-
-            /**
-             * Set the progress of an operation
-             * @param value
-             */
-            void setProgress(const int value, const std::string& associatedText = "") {
-                int v = (m_progressMin + value / float(m_progressMax - m_progressMin)) * 100;
-                set("progress", v);
-            }
-
-            /**
-             * Reset progress to the lowest value
-             */
-            void resetProgress() {
-                set("progress", m_progressMin);
-            }
-
-            /**
-             * Set the range for progress values
-             * @param minimum
-             * @param maximum
-             */
-            void setProgressRange(const int minimum, const int maximum) {
-                m_progressMin = minimum;
-                m_progressMax = maximum;
             }
 
             /**
@@ -2120,11 +2083,10 @@ namespace karabo {
              * original update request, as received through onUpdateAttributes
              */
             void slotUpdateSchemaAttributes(const std::vector<karabo::util::Hash>& updates) {
-                bool success = false;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                 // Whenever updating the m_fullSchema, we have to clear the cache
                 m_stateDependentSchema.clear();
-                success = m_fullSchema.applyRuntimeUpdates(updates);
+                bool success = m_fullSchema.applyRuntimeUpdates(updates);
                 if (success) {
                     m_injectedSchema.applyRuntimeUpdates(updates);
                     // Notify the distributed system
