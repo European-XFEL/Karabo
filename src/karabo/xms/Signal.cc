@@ -29,19 +29,33 @@ namespace karabo {
         }
 
 
-        std::pair<std::string, std::string> Signal::generateSlotStrings(const SlotMap& slots) const {
-            std::string registeredSlotInstanceIdsString;
-            std::string registeredSlotsString;
+        void Signal::setSlotStrings(const SlotMap& slots, karabo::util::Hash& header) const {
+            std::ostringstream registeredSlotsString;
+            std::ostringstream registeredSlotInstanceIdsString;
             if (slots.empty()) {
-                registeredSlotsString = "__none__";
-                registeredSlotInstanceIdsString = "__none__";
+                registeredSlotsString << "__none__";
+                registeredSlotInstanceIdsString << "__none__";
             } else {
                 for (auto it = slots.cbegin(); it != slots.cend(); ++it) {
-                    registeredSlotInstanceIdsString += "|" + it->first + "|";
-                    registeredSlotsString += "|" + it->first + ":" + karabo::util::toString(it->second) + "|";
+                    registeredSlotInstanceIdsString << '|' << it->first << '|';
+                    registeredSlotsString << '|' << it->first << ':';
+                    // it->second is a set<string> - optimize here compared to simple '<< toString(it->second)'
+                    bool first = true;
+                    for (const std::string& slot : it->second) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            registeredSlotsString << ',';
+                        }
+                        registeredSlotsString << slot;
+                    } // end optimization
+                    registeredSlotsString << '|';
                 }
             }
-            return std::make_pair(registeredSlotInstanceIdsString, registeredSlotsString);
+            // To avoid a copy of the (temporary!) string returned by ostringstream::str(), use bindReference and assign
+            // (Hash::set has no rvalue reference argument overload, but string has move assignment...)
+            header.bindReference<std::string>("slotInstanceIds") = registeredSlotInstanceIdsString.str();
+            header.bindReference<std::string>("slotFunctions") = registeredSlotsString.str();
         }
 
 
@@ -101,7 +115,10 @@ namespace karabo {
 
                 // publish leftovers via broker
                 if (registeredSlots.size() > 0) {
-                    // header contains updated slot leftovers
+                    if (registeredSlots.size() != m_registeredSlots.size()) {
+                        // overwrite destinations to erase those that received locally, to avoid duplicates
+                        setSlotStrings(registeredSlots, *header);
+                    }
                     m_channel->write(m_topic, header, message, m_priority, m_messageTimeToLive);
                 }
 
@@ -119,11 +136,9 @@ namespace karabo {
             }
 
             karabo::util::Hash::Pointer header(boost::make_shared<karabo::util::Hash>());
-            std::pair<std::string, std::string> slotStrings = generateSlotStrings(slots);
             header->set("signalInstanceId", m_signalInstanceId);
             header->set("signalFunction", m_signalFunction);
-            header->set("slotInstanceIds", slotStrings.first);
-            header->set("slotFunctions", slotStrings.second);
+            setSlotStrings(slots, *header);
             header->set("hostName", boost::asio::ip::host_name());
             header->set("userName", m_signalSlotable->getUserName());
             // Timestamp added to be able to measure latencies even if broker is by-passed
