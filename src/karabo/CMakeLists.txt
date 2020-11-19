@@ -15,7 +15,7 @@ set(EXTERN_DEPS_LIBS "" )
 find_package(HDF5 REQUIRED)
 list(APPEND EXTERN_DEPS_LIBS ${HDF5_LIBRARIES})
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -109,10 +109,11 @@ add_library(
 
 target_compile_options(${PROJECT_NAME} PUBLIC -Wfatal-errors -Wno-unused-local-typedefs -Wno-deprecated-declarations -Wall -D__SO__)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
-
 include_directories(
-        "${karabo_SOURCE_DIR}/.."
-        "${EXTERN_DEPS_INCLUDE_DIRS}"
+    SYSTEM "${EXTERN_DEPS_INCLUDE_DIRS}"
+)
+include_directories(
+    "${karabo_SOURCE_DIR}/.."    
 )
 
 source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${HEADER_LIST})
