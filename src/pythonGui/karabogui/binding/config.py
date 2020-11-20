@@ -9,11 +9,9 @@ from karabo.native import (
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
-    BindingNamespace, BindingRoot, CharBinding, FloatBinding, IntBinding,
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding, NodeBinding,
-    SlotBinding, StringBinding, Uint8Binding, Uint16Binding, Uint32Binding,
-    Uint64Binding, VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
-    VectorNumberBinding)
+    BindingNamespace, BindingRoot, CharBinding, NodeBinding,
+    SlotBinding, StringBinding, VectorDoubleBinding, VectorFloatBinding,
+    VectorHashBinding, VectorNumberBinding)
 from .util import (
     array_equal, attr_fast_deepcopy, is_equal, is_writable, realign_hash)
 
@@ -354,19 +352,6 @@ def validate_value(binding, value):
         elif isinstance(binding, RECURSIVE_BINDINGS):
             # Nothing to do here! We automatically return the value
             pass
-        elif isinstance(binding, IntBinding):
-            dtype = INTEGER_TO_NUMPY[type(binding)]
-            value = binding.validate_trait("value", value)
-            if value is not None:
-                value = dtype(value)
-        elif isinstance(binding, FloatBinding):
-            # XXX: This is very bad! We first make sure if we have a dtype
-            # of a `float` and reuse that. If not, we cast to `float`.
-            dtype = getattr(value, 'dtype', None)
-            if isinstance(dtype, (np.float64, np.float32)):
-                value = dtype.type(binding.validate_trait("value", value))
-            else:
-                value = binding.validate_trait("value", value)
         else:
             # The value is a simple data type. We validate it with the binding
             # traits.
@@ -469,15 +454,3 @@ def convert_string(value):
     except ValueError:
         # Conversion of string to a literal failed, we return the value as is.
         return value
-
-
-INTEGER_TO_NUMPY = {
-    Int8Binding: np.int8,
-    Uint8Binding: np.uint8,
-    Int16Binding: np.int16,
-    Uint16Binding: np.uint16,
-    Int32Binding: np.int32,
-    Uint32Binding: np.uint32,
-    Int64Binding: np.int64,
-    Uint64Binding: np.uint64,
-}

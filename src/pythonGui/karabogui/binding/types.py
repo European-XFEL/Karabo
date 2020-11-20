@@ -1,8 +1,10 @@
+import numpy as np
 from traits.api import (
     Array, CArray, CBool, Complex, Dict, Either, Enum, Event, Float,
-    HasStrictTraits, Instance, List, Property, Range, String, Trait,
+    HasStrictTraits, Instance, List, Property, String, Trait,
     TraitHandler, Undefined, cached_property)
 
+from .trait_types import NumpyRange
 from karabo.common import const
 from karabo.common.states import State
 from karabo.native import (
@@ -124,6 +126,7 @@ class BindingNamespace(object):
     were added. Additionally, the type of the values in the namespace can be
     restricted with an `item_type` which is a type or tuple of types.
     """
+
     def __init__(self, *, item_type=object):
         priv_prefix = '_' + type(self).__name__
         # Avoid __setattr__ recursion by modifying __dict__ directly
@@ -203,6 +206,7 @@ class BoolBinding(BaseBinding):
 class _ByteArrayHandler(TraitHandler):
     """A trait handler to work around middlelater stupidity.
     """
+
     def validate(self, obj, name, value):
         if isinstance(value, bytearray):
             return value
@@ -246,23 +250,23 @@ class UnsignedIntBinding(IntBinding):
 
 
 class Int8Binding(SignedIntBinding):
-    value = Range(low=(-1 - (1 << 7)), high=(1 << 7), value=0,
-                  exclude_low=True, exclude_high=True)
+    value = NumpyRange(low=(-1 - (1 << 7)), high=(1 << 7), value=0,
+                       exclude_low=True, exclude_high=True, dtype=np.int8)
 
 
 class Int16Binding(SignedIntBinding):
-    value = Range(low=(-1 - (1 << 15)), high=(1 << 15), value=0,
-                  exclude_low=True, exclude_high=True)
+    value = NumpyRange(low=(-1 - (1 << 15)), high=(1 << 15), value=0,
+                       exclude_low=True, exclude_high=True, dtype=np.int16)
 
 
 class Int32Binding(SignedIntBinding):
-    value = Range(low=(-1 - (1 << 31)), high=(1 << 31), value=0,
-                  exclude_low=True, exclude_high=True)
+    value = NumpyRange(low=(-1 - (1 << 31)), high=(1 << 31), value=0,
+                       exclude_low=True, exclude_high=True, dtype=np.int32)
 
 
 class Int64Binding(SignedIntBinding):
-    value = Range(low=(-1 - (1 << 63)), high=(1 << 63), value=0,
-                  exclude_low=True, exclude_high=True)
+    value = NumpyRange(low=(-1 - (1 << 63)), high=(1 << 63), value=0,
+                       exclude_low=True, exclude_high=True, dtype=np.int64)
 
 
 class NodeBinding(BaseBinding):
@@ -304,19 +308,23 @@ class StringBinding(BaseBinding):
 
 
 class Uint8Binding(UnsignedIntBinding):
-    value = Range(low=0, high=(1 << 8), value=0, exclude_high=True)
+    value = NumpyRange(low=0, high=(1 << 8), value=0, exclude_high=True,
+                       dtype=np.uint8)
 
 
 class Uint16Binding(UnsignedIntBinding):
-    value = Range(low=0, high=(1 << 16), value=0, exclude_high=True)
+    value = NumpyRange(low=0, high=(1 << 16), value=0, exclude_high=True,
+                       dtype=np.uint16)
 
 
 class Uint32Binding(UnsignedIntBinding):
-    value = Range(low=0, high=(1 << 32), value=0, exclude_high=True)
+    value = NumpyRange(low=0, high=(1 << 32), value=0, exclude_high=True,
+                       dtype=np.uint32)
 
 
 class Uint64Binding(UnsignedIntBinding):
-    value = Range(low=0, high=(1 << 64), value=0, exclude_high=True)
+    value = NumpyRange(low=0, high=(1 << 64), value=0, exclude_high=True,
+                       dtype=np.uint64)
 
 
 class VectorBinding(BaseBinding):
@@ -336,6 +344,7 @@ class VectorBoolBinding(VectorNumberBinding):
 class _ByteHandler(TraitHandler):
     """A trait handler to handle string to bytes conversion
     """
+
     def validate(self, obj, name, value):
         if isinstance(value, bytes):
             return value
