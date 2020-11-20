@@ -3,7 +3,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt5.QtWidgets import QAction, QInputDialog
-from traits.api import Instance
+from traits.api import Instance, WeakRef
 
 from karabo.common.scenemodel.api import (
     restore_graph_config, build_graph_config, VectorRollGraphModel)
@@ -30,7 +30,7 @@ class ArrayRollGraph(BaseBindingController):
     # Our VectorRollGraph Model
     model = Instance(VectorRollGraphModel, args=())
 
-    _plot = Instance(KaraboImagePlot)
+    _plot = WeakRef(KaraboImagePlot)
     _image = Instance(RollImage)
     _timestamp = Instance(Timestamp, args=())
 
