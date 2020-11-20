@@ -5,6 +5,7 @@
 from collections import deque
 from functools import partial
 from itertools import cycle, product
+from weakref import WeakValueDictionary
 
 import numpy as np
 from PyQt5.QtWidgets import QWidget
@@ -41,7 +42,8 @@ class DisplayMultiCurveGraph(BaseBindingController):
     _draw_start = Bool(False)  # indicate there is at least one x-y pair
     _resetbox_linked = Callable
 
-    _curves = Dict  # The associated plot curves
+    # The associated plot curves
+    _curves = Instance(WeakValueDictionary, args=())
     _pens = Instance(cycle, allow_none=False)
 
     def __pens_default(self):
