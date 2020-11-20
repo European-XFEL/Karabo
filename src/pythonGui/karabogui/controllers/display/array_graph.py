@@ -3,10 +3,11 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from itertools import cycle
+from weakref import WeakValueDictionary
 
 import numpy as np
 from PyQt5.QtWidgets import QAction
-from traits.api import Dict, Instance
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, VectorGraphModel)
@@ -23,7 +24,7 @@ from karabogui.graph.plots.api import (
 
 
 class BaseArrayGraph(BaseBindingController):
-    _curves = Dict
+    _curves = Instance(WeakValueDictionary, args=())
     _pens = Instance(cycle, allow_none=False)
 
     def create_widget(self, parent):

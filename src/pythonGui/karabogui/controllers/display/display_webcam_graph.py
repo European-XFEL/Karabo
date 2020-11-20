@@ -1,4 +1,4 @@
-from traits.api import Instance
+from traits.api import Instance, WeakRef
 
 from karabo.common.scenemodel.api import WebCamGraphModel
 
@@ -16,7 +16,7 @@ from karabogui.controllers.api import (
 class DisplayWebCamGraph(BaseBindingController):
     model = Instance(WebCamGraphModel, args=())
 
-    _plot = Instance(KaraboImagePlot)
+    _plot = WeakRef(KaraboImagePlot)
     _image_node = Instance(KaraboImageNode, args=())
 
     def create_widget(self, parent):

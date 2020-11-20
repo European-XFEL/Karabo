@@ -4,7 +4,7 @@
 #############################################################################
 
 from PyQt5.QtWidgets import QAction, QInputDialog
-from traits.api import Instance
+from traits.api import Instance, WeakRef
 
 from karabogui.binding.api import (NDArrayBinding, VectorNumberBinding)
 from karabogui.controllers.api import (
@@ -28,7 +28,7 @@ class ArrayBarGraph(BaseBindingController):
     """The BarGraph controller for display of pulse data in a histogram format
     """
     model = Instance(VectorBarGraphModel, args=())
-    _plot = Instance(VectorBarGraphPlot)
+    _plot = WeakRef(VectorBarGraphPlot)
 
     def create_widget(self, parent):
         widget = KaraboPlotView(parent=parent)

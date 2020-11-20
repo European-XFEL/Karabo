@@ -3,7 +3,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from traits.api import Instance
+from traits.api import Instance, WeakRef
 
 from karabogui.binding.api import VectorNumberBinding
 from karabogui.controllers.api import (
@@ -23,7 +23,7 @@ class DisplayVectorFillGraph(BaseBindingController):
     This widget fills the background between curve and axis.
     """
     model = Instance(VectorFillGraphModel, args=())
-    _plot = Instance(object)
+    _plot = WeakRef(object)
 
     def create_widget(self, parent):
         widget = KaraboPlotView(parent=parent)
