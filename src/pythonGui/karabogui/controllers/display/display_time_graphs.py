@@ -6,7 +6,7 @@ from itertools import cycle
 from PyQt5 import uic
 from PyQt5.QtCore import QDateTime, QTimer
 from PyQt5.QtWidgets import QAction, QDialog, QVBoxLayout, QWidget
-from traits.api import Bool, Dict, Instance, Int, Set, String
+from traits.api import Bool, Dict, Instance, Int, Set, String, WeakRef
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, AlarmGraphModel, StateGraphModel,
@@ -48,7 +48,7 @@ def curve_to_axis(value):
 class BaseSeriesGraph(BaseBindingController):
     # The scene model class used by this controller
 
-    _plot = Instance(KaraboPlotView)
+    _plot = WeakRef(KaraboPlotView)
     _timer = Instance(QTimer)
     _start_time = Instance(QDateTime)
 
