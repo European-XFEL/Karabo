@@ -3,7 +3,7 @@ from os import path as op
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget
-from traits.api import Enum, Instance, Int
+from traits.api import Enum, Instance, Int, WeakRef
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, DetectorGraphModel)
@@ -86,7 +86,7 @@ class DisplayDetectorGraph(BaseBindingController):
 
     _frame_slider = Instance(FrameSlider)
     _image_node = Instance(KaraboImageNode, args=())
-    _plot = Instance(KaraboImagePlot)
+    _plot = WeakRef(KaraboImagePlot)
 
     def create_widget(self, parent):
         """
