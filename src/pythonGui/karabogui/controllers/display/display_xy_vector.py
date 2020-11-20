@@ -3,8 +3,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from itertools import cycle
+from weakref import WeakValueDictionary
 
-from traits.api import Dict, Instance
+from traits.api import Instance
 
 from karabo.common.scenemodel.api import build_model_config, VectorXYGraphModel
 from karabogui.binding.api import (
@@ -34,7 +35,7 @@ class DisplayVectorXYGraph(BaseBindingController):
     """
     model = Instance(VectorXYGraphModel, args=())
     # Internal traits
-    _curves = Dict
+    _curves = Instance(WeakValueDictionary, args=())
     _pens = Instance(cycle, allow_none=False)
 
     def create_widget(self, parent):
