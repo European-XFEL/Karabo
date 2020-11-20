@@ -14,8 +14,8 @@ from karabo.native import (
     Schema, Timestamp, Unit
 )
 from ..api import (
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding, Uint16Binding,
-    Uint32Binding, Uint64Binding, apply_configuration,
+    Int8Binding, Int16Binding, Int32Binding, Int64Binding, Uint8Binding,
+    Uint16Binding, Uint32Binding, Uint64Binding, apply_configuration,
     apply_default_configuration, apply_fast_data,
     build_binding, extract_attribute_modifications, extract_configuration,
     extract_edits, flat_iter_hash)
@@ -268,38 +268,81 @@ def test_numpy_binding_types():
     int64Property.value = np.int64(23)
     assert int64Property.value == 23
     assert type(int64Property.value) == np.int64
+    int64Property.value = 64
+    assert int64Property.value == 64
+    assert type(int64Property.value) == np.int64
+    int64Property.value = 23
+    assert int64Property.value == 23
+    assert type(int64Property.value) == np.int64
 
     int32Property = Int32Binding()
     int32Property.value = np.int32(23)
     assert int32Property.value == 23
+    assert type(int32Property.value) == np.int32
+    int32Property.value = 64
+    assert int32Property.value == 64
+    assert type(int32Property.value) == np.int32
+    int32Property.value = np.int16(16)
+    assert int32Property.value == 16
     assert type(int32Property.value) == np.int32
 
     int16Property = Int16Binding()
     int16Property.value = np.int16(23)
     assert int16Property.value == 23
     assert type(int16Property.value) == np.int16
+    int16Property.value = 64
+    assert int16Property.value == 64
+    assert type(int16Property.value) == np.int16
+    int16Property.value = np.int8(16)
+    assert int16Property.value == 16
+    assert type(int16Property.value) == np.int16
 
     int8Property = Int8Binding()
     int8Property.value = np.int8(23)
     assert int8Property.value == 23
+    assert type(int8Property.value) == np.int8
+    int8Property.value = 64
+    assert int8Property.value == 64
+    print(type(int8Property.value))
+    assert type(int8Property.value) == np.int8
+    int8Property.value = np.int16(16)
+    assert int8Property.value == 16
     assert type(int8Property.value) == np.int8
 
     uint64Property = Uint64Binding()
     uint64Property.value = np.uint64(23)
     assert uint64Property.value == 23
     assert type(uint64Property.value) == np.uint64
+    uint64Property.value = 64
+    assert uint64Property.value == 64
+    assert type(uint64Property.value) == np.uint64
+    uint64Property.value = np.int16(16)
+    assert uint64Property.value == 16
+    assert type(uint64Property.value) == np.uint64
 
     uint32Property = Uint32Binding()
     uint32Property.value = np.uint32(23)
     assert uint32Property.value == 23
+    assert type(uint32Property.value) == np.uint32
+    uint32Property.value = 64
+    assert uint32Property.value == 64
+    assert type(uint32Property.value) == np.uint32
+    uint32Property.value = np.int16(16)
+    assert uint32Property.value == 16
     assert type(uint32Property.value) == np.uint32
 
     uint16Property = Uint16Binding()
     uint16Property.value = np.uint16(23)
     assert uint16Property.value == 23
     assert type(uint16Property.value) == np.uint16
+    uint16Property.value = 64
+    assert uint16Property.value == 64
+    assert type(uint16Property.value) == np.uint16
 
-    uint8Property = Int8Binding()
+    uint8Property = Uint8Binding()
     uint8Property.value = np.uint8(23)
     assert uint8Property.value == 23
+    assert type(uint8Property.value) == np.uint8
+    uint8Property.value = 64
+    assert uint8Property.value == 64
     assert type(uint8Property.value) == np.uint8
