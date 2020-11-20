@@ -116,29 +116,29 @@
 ### Jobs
 
 # static source code analysis with cppcheck
-cppcheck-analysis:
-  before_script:
-    - echo '*** Install cppcheck ***'
-    # Pro tempore solution (Ubuntu-18-only): cppcheck could go to container
-    - export http_proxy="http://exflwgs06.desy.de:3128/"
-    - export https_proxy="http://exflwgs06.desy.de:3128/"
-    - apt-get update
-    - apt-get install -y cppcheck
-    - unset http_proxy
-    - unset https_proxy
-  image: europeanxfel/karabo-ci:ubuntu-18
-  allow_failure: true
-  script:
-    - cppcheck --error-exitcode=0 --output-file=cppcheck_performance_report.txt --enable=performance --force $CI_PROJECT_DIR/src/karabo
-    - cppcheck --error-exitcode=0 --output-file=cppcheck_style_report.txt --enable=style --force $CI_PROJECT_DIR/src/karabo
-    - cppcheck --error-exitcode=0 --output-file=cppcheck_warning_report.txt --enable=warning --force $CI_PROJECT_DIR/src/karabo
-  only:
-    - merge_requests
-  artifacts:
-    name: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
-    when: always
-    paths:
-      - cppcheck_*_report.txt
+#cppcheck-analysis:
+#  before_script:
+#    - echo '*** Install cppcheck ***'
+#    # Pro tempore solution (Ubuntu-18-only): cppcheck could go to container
+#    - export http_proxy="http://exflwgs06.desy.de:3128/"
+#    - export https_proxy="http://exflwgs06.desy.de:3128/"
+#    - apt-get update
+#    - apt-get install -y cppcheck
+#    - unset http_proxy
+#    - unset https_proxy
+#  image: europeanxfel/karabo-ci:ubuntu-18
+#  allow_failure: true
+#  script:
+#    - cppcheck --error-exitcode=0 --output-file=cppcheck_performance_report.txt --enable=performance --force $CI_PROJECT_DIR/src/karabo
+#    - cppcheck --error-exitcode=0 --output-file=cppcheck_style_report.txt --enable=style --force $CI_PROJECT_DIR/src/karabo
+#    - cppcheck --error-exitcode=0 --output-file=cppcheck_warning_report.txt --enable=warning --force $CI_PROJECT_DIR/src/karabo
+#  only:
+#    - merge_requests
+#  artifacts:
+#    name: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
+#    when: always
+#    paths:
+#      - cppcheck_*_report.txt
 
 # release build
 
