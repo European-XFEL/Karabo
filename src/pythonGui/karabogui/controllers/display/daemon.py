@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, QHeaderView, QLineEdit, QMessageBox, QPushButton, QStyle,
     QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
 
-from traits.api import Instance
+from traits.api import Instance, WeakRef
 
 from karabo.common.scenemodel.api import DaemonManagerModel
 from karabogui.binding.api import VectorHashBinding, get_editor_value
@@ -237,8 +237,8 @@ _is_compatible = with_display_type('DaemonManager')
                              is_compatible=_is_compatible, priority=0)
 class DisplayDaemonService(BaseBindingController):
     model = Instance(DaemonManagerModel, args=())
-    table_model = Instance(QAbstractTableModel)
-    delegate = Instance(ButtonDelegate)
+    table_model = WeakRef(QAbstractTableModel)
+    delegate = WeakRef(ButtonDelegate)
 
     def create_widget(self, parent):
         widget = QWidget(parent)
@@ -296,6 +296,6 @@ class DisplayDaemonService(BaseBindingController):
 
         We enable and disable the action button on access level change!
         """
-        if self.delegate.clickable != enable:
+        if self.delegate and self.delegate.clickable != enable:
             with self.table_model.reset_context():
                 self.delegate.clickable = enable
