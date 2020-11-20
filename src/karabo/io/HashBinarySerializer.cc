@@ -137,7 +137,7 @@ namespace karabo {
             // ATTENTION: Some optimization takes place here, the size indicator for a key is limited to 1 byte
             // instead of the generic 4 byte for everything else!!
             if (str.size() > 255) {
-                throw KARABO_IO_EXCEPTION("Could not serialize key \"" + str + "\" of length " + std::to_string(str.size()) + ": over 255 characters");
+                throw KARABO_IO_EXCEPTION("Could not serialize key \"" + str + "\" of length " + std::to_string(str.size()) + ": over 255 bytes");
             }
             const unsigned char size = str.size();
             writeSingleValue(buffer, size);
