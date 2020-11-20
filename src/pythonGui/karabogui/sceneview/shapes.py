@@ -90,7 +90,7 @@ class BaseShape(ABCHasStrictTraits):
             fill_opacity = 1.0
 
         pen = dialog.pen
-        self.model.set(
+        self.model.trait_set(
             stroke='none' if pen.style() == Qt.NoPen else pen.color().name(),
             stroke_opacity=pen.color().alphaF(),
             stroke_linecap=QT_PEN_CAP_STYLE_TO_STR[pen.capStyle()],
@@ -215,13 +215,14 @@ class LineShape(BaseShape):
         if self.has_negative_height:
             y1, y2 = y2, y1
 
-        self.model.set(x1=x1, y1=y1, x2=x2, y2=y2)
+        self.model.trait_set(x1=x1, y1=y1, x2=x2, y2=y2)
 
     def translate(self, offset):
         x1, y1 = self.model.x1, self.model.y1
         x2, y2 = self.model.x2, self.model.y2
         xoff, yoff = offset.x(), offset.y()
-        self.model.set(x1=x1 + xoff, y1=y1 + yoff, x2=x2 + xoff, y2=y2 + yoff)
+        self.model.trait_set(x1=x1 + xoff, y1=y1 + yoff,
+                             x2=x2 + xoff, y2=y2 + yoff)
 
     def minimumSize(self):
         """We use the margins for the minimum size. This just means that the
@@ -375,12 +376,12 @@ class RectangleShape(BaseShape):
         return self.shape
 
     def set_geometry(self, rect):
-        self.model.set(x=rect.x(), y=rect.y(),
-                       width=rect.width(), height=rect.height())
+        self.model.trait_set(x=rect.x(), y=rect.y(),
+                             width=rect.width(), height=rect.height())
 
     def translate(self, offset):
         x, y = self.model.x, self.model.y
-        self.model.set(x=x + offset.x(), y=y + offset.y())
+        self.model.trait_set(x=x + offset.x(), y=y + offset.y())
 
 
 class PathShape(BaseShape):
