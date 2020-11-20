@@ -132,8 +132,8 @@ class UnknownWidget(PlaceholderWidget):
         """Satisfy the informal widget interface."""
 
     def set_geometry(self, rect):
-        self.model.set(x=rect.x(), y=rect.y(),
-                       width=rect.width(), height=rect.height())
+        self.model.trait_set(x=rect.x(), y=rect.y(),
+                             width=rect.width(), height=rect.height())
         self.setGeometry(rect)
 
     def translate(self, offset):

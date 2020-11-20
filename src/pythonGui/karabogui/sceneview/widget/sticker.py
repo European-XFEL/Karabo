@@ -48,13 +48,13 @@ class StickerWidget(KaraboSceneWidget, QPlainTextEdit):
 
     def set_geometry(self, rect):
         """Satisfy the informal widget interface."""
-        self.model.set(x=rect.x(), y=rect.y(),
-                       width=rect.width(), height=rect.height())
+        self.model.trait_set(x=rect.x(), y=rect.y(),
+                             width=rect.width(), height=rect.height())
         self.setGeometry(rect)
 
     def translate(self, offset):
         new_pos = self.pos() + offset
-        self.model.set(x=new_pos.x(), y=new_pos.y())
+        self.model.trait_set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
     @pyqtSlot()
