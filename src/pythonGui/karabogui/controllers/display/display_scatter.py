@@ -7,7 +7,7 @@ from collections import deque
 from functools import partial
 
 from PyQt5.QtWidgets import QAction, QInputDialog
-from traits.api import Any, Callable, Instance
+from traits.api import Any, Callable, Instance, WeakRef
 
 
 from karabo.common.scenemodel.api import build_model_config, ScatterGraphModel
@@ -46,7 +46,7 @@ class DisplayScatterGraph(BaseBindingController):
     _x_values = Instance(deque)
     _y_values = Instance(deque)
     _last_x_value = Any
-    _plot = Instance(ScatterGraphPlot)
+    _plot = WeakRef(ScatterGraphPlot)
     _resetbox_linked = Callable
 
     _timestamp = Instance(Timestamp, args=())

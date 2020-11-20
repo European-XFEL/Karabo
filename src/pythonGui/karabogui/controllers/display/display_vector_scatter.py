@@ -4,7 +4,7 @@
 #############################################################################
 
 from PyQt5.QtWidgets import QAction, QInputDialog
-from traits.api import ArrayOrNone, Instance
+from traits.api import ArrayOrNone, Instance, WeakRef
 
 from karabogui.binding.api import (
     get_binding_value, PropertyProxy, VectorNumberBinding)
@@ -32,7 +32,7 @@ class DisplayVectorScatterGraph(BaseBindingController):
     _x_proxy = Instance(PropertyProxy)
     _y_proxy = Instance(PropertyProxy)
     _last_x_value = ArrayOrNone
-    _plot = Instance(ScatterGraphPlot)
+    _plot = WeakRef(ScatterGraphPlot)
 
     def create_widget(self, parent):
         widget = KaraboPlotView(parent=parent)

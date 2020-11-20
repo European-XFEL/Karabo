@@ -5,7 +5,7 @@
 
 import numpy as np
 from PyQt5.QtWidgets import QAction
-from traits.api import Instance
+from traits.api import Instance, WeakRef
 
 from karabo.common.scenemodel.api import (
     build_model_config, VectorHistGraphModel)
@@ -27,7 +27,7 @@ class VectorHistogramGraph(BaseBindingController):
     """The controller for display of data in a histogram format"""
     model = Instance(VectorHistGraphModel, args=())
 
-    _plot = Instance(object)
+    _plot = WeakRef(object)
 
     def create_widget(self, parent):
         widget = KaraboPlotView(parent=parent)

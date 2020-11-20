@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QAction
-from traits.api import Bool, Instance
+from traits.api import Bool, Instance, WeakRef
 
 from karabo.common.scenemodel.api import (
     build_graph_config, restore_graph_config, ImageGraphModel)
@@ -22,7 +22,7 @@ class DisplayImageGraph(BaseBindingController):
     model = Instance(ImageGraphModel, args=())
     grayscale = Bool(True)
 
-    _plot = Instance(KaraboImagePlot)
+    _plot = WeakRef(KaraboImagePlot)
     _image_node = Instance(KaraboImageNode, args=())
 
     _colormap_action = Instance(QAction)
