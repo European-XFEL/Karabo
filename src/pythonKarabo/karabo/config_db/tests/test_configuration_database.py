@@ -3,6 +3,7 @@ import unittest
 from karabo.config_db.configuration_database import (
     DbHandle, ConfigurationDatabase)
 from karabo.config_db.utils import ConfigurationDBError
+from datetime import datetime
 
 TEST_DB_PATH = 'configManagerTest.db'
 
@@ -146,21 +147,23 @@ class TestConfigurationManagerData(unittest.TestCase):
 
         cfg = self.database.get_last_configuration(CFG_DEVICE_1, priority=1)
         # For priority 1, the last config is the one saved under CFG_NAME_3.
-        self.assertEqual(len(cfg), 7)
+        self.assertEqual(len(cfg), 8)
         self.assertEqual(CFG_NAME_3, cfg['name'])
         self.assertEqual(cfg['timepoint'], TIMESTAMP_1)
         self.assertEqual('Bla bla', cfg['description'])
         self.assertEqual('Bob', cfg['user'])
         self.assertEqual(1, cfg['priority'])
+        self.assertEqual(False, cfg['overwritable'])
 
         cfg = self.database.get_last_configuration(CFG_DEVICE_1, priority=2)
         # For priority 2, the last config is the one saved under CFG_NAME_1.
-        self.assertEqual(len(cfg), 7)
+        self.assertEqual(len(cfg), 8)
         self.assertEqual(CFG_NAME_1, cfg['name'])
         self.assertEqual(cfg['timepoint'], TIMESTAMP_2)
         self.assertEqual('', cfg['description'])
         self.assertEqual('.', cfg['user'])
         self.assertEqual(2, cfg['priority'])
+        self.assertEqual(False, cfg['overwritable'])
 
         cfg = self.database.get_last_configuration(CFG_DEVICE_1, priority=3)
         # For priority 3, there's no config of CFG_DEVICE_1.
@@ -174,7 +177,7 @@ class TestConfigurationManagerData(unittest.TestCase):
         with self.assertRaises(ConfigurationDBError) as verr:
             self.database.save_configuration(CFG_NAME_1, CFG_SET)
         self.assertTrue(verr.exception.args[0].find(
-            'already has a configuration named') > -1)
+            'is already taken for at least') > -1)
 
     def test_config_name_taken(self):
         """ Checks that the is_config_name_taken returns false when there's no
@@ -212,6 +215,63 @@ class TestConfigurationManagerData(unittest.TestCase):
 
         with self.assertRaises(ConfigurationDBError):
             self.database.save_configuration(f"exceed-crash", config)
+
+    def test_overwritable_conf(self):
+        """ Checks that an overwritable configuration can be overwritten,
+            even at the edge of configuration limit per device. Also checks
+            that ovewriting a configuration without specifying a timestamp
+            updates the timestamp to the current time.
+        """
+        import karabo.config_db.configuration_database as dbsettings
+        dbsettings.CONFIGURATION_LIMIT = 10
+        deviceName = "DeviceExceeds-WithOverwritableConfig"
+
+        config = [create_config(deviceName)]
+        for i in range(dbsettings.CONFIGURATION_LIMIT - 1):
+            config_name = f"exceed-{i}"
+            self.database.save_configuration(config_name, config)
+
+        # Saves an overwritable configuration at the limit.
+        overCfg = [create_config(deviceName)]
+        overCfgName = f"exceed-over-{dbsettings.CONFIGURATION_LIMIT}"
+        self.database.save_configuration(
+            overCfgName, overCfg, overwritable=True)
+
+        cfg = self.database.get_configuration(deviceName, overCfgName)
+        self.assertEqual(len(cfg), 8)
+        self.assertEqual(overCfgName, cfg['name'])
+        self.assertEqual('', cfg['description'])
+        self.assertEqual('.', cfg['user'])
+        self.assertEqual(1, cfg['priority'])
+        self.assertEqual(True, cfg['overwritable'])
+        timeStamp1 = datetime.strptime(
+            cfg['timepoint'], '%Y-%m-%d %H:%M:%S.%f')
+
+        # Ovewrites the configuration at the limit.
+        # Overwritable flag must not be updated.
+        # Priority, description and timestamp must be updated.
+        self.database.save_configuration(
+            overCfgName, overCfg, description="BlahBlah",
+            priority=3, overwritable=False
+        )
+        cfg = self.database.get_configuration(deviceName, overCfgName)
+        self.assertEqual(len(cfg), 8)
+        self.assertEqual(overCfgName, cfg['name'])
+        self.assertEqual('BlahBlah', cfg['description'])
+        self.assertEqual('.', cfg['user'])
+        self.assertEqual(3, cfg['priority'])
+        self.assertEqual(True, cfg['overwritable'])
+        timeStamp2 = datetime.strptime(
+            cfg['timepoint'], '%Y-%m-%d %H:%M:%S.%f')
+
+        self.assertGreater(timeStamp2, timeStamp1)
+
+        # An attempt to save a new configuration, overwritable or not,
+        # should fail once the limit is reached.
+        with self.assertRaises(ConfigurationDBError):
+            self.database.save_configuration(
+                "exceed-crash",  overCfg, f"{overCfgName}-limit",
+                overwritable=True)
 
 
 if __name__ == '__main__':

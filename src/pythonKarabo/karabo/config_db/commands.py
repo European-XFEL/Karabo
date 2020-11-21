@@ -1,18 +1,29 @@
 # flake8: noqa
 
-CREATE_CONFIG_TABLE = """
-    CREATE TABLE IF NOT EXISTS DeviceConfig (
+CREATE_CONFIG_SET_TABLE = """
+    CREATE TABLE IF NOT EXISTS ConfigSet (
       id            INTEGER      PRIMARY KEY AUTOINCREMENT,
-      device_id     STRING(1024) NOT NULL,
-      timestamp     DATETIME     NOT NULL DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),
+      device_set_id STRING(40)   NOT NULL,
       config_name   STRING(80)   NOT NULL,
-      config_data   TEXT         NOT NULL,
-      schema_id     INTEGER      NOT NULL,
       user          STRING(64)   DEFAULT "." NOT NULL,
       priority      INTEGER      DEFAULT 1 CHECK(priority > 0 AND priority < 4),
       description   TEXT,
+      overwritable  BOOL         DEFAULT FALSE NOT NULL,
 
-      UNIQUE(device_id, config_name),
+      UNIQUE(device_set_id, config_name)
+    );"""
+
+CREATE_CONFIG_TABLE = """
+    CREATE TABLE IF NOT EXISTS DeviceConfig (
+      id            INTEGER      PRIMARY KEY AUTOINCREMENT,
+      config_set_id INTEGER      NOT NULL,
+      device_id     STRING(1024) NOT NULL,
+      config_data   TEXT         NOT NULL,
+      schema_id     INTEGER      NOT NULL,
+      timestamp     DATETIME     NOT NULL DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),
+
+      UNIQUE(config_set_id, device_id),
+      FOREIGN KEY(config_set_id) REFERENCES ConfigSet(id),
       FOREIGN KEY(schema_id) REFERENCES ConfigSchema(id)
     );"""
 
@@ -36,37 +47,45 @@ CREATE_INDEX_DEVICE_ID_TABLE = """
     );"""
 
 CREATE_INDEX_PRIORITY_TABLE = """
-    CREATE INDEX IF NOT EXISTS IdxPriority ON DeviceConfig (
+    CREATE INDEX IF NOT EXISTS IdxPriority ON ConfigSet (
       priority ASC
     );"""
 
 CREATE_INDEX_NAME_TABLE = """
-    CREATE INDEX IF NOT EXISTS IdxName ON DeviceConfig (
+    CREATE INDEX IF NOT EXISTS IdxName ON ConfigSet (
       config_name ASC
+    );"""
+
+CREATE_INDEX_DEVICE_SET_ID_TABLE = """
+    CREATE INDEX IF NOT EXISTS IdxDeviceSetId ON ConfigSet (
+      device_set_id ASC
     );"""
 
 # --------------------------------------------------------------------------
 # Functions
 
 CMD_LIST_NAME = """
-        SELECT cfg.config_name, cfg.timestamp, cfg.description,
-               cfg.priority, cfg.user
-        FROM DeviceConfig cfg
+        SELECT cfg_set.config_name, cfg.timestamp, cfg_set.description,
+               cfg_set.priority, cfg_set.user, cfg_set.overwritable
+        FROM DeviceConfig cfg, ConfigSet cfg_set
         WHERE cfg.device_id = ?
-          AND cfg.config_name LIKE ?
+          AND cfg.config_set_id = cfg_set.id
+          AND cfg_set.config_name LIKE ?
     """
 
 CMD_LIST_NO_NAME = """
-        SELECT cfg.config_name, cfg.timestamp, cfg.description,
-               cfg.priority, cfg.user
-        FROM DeviceConfig cfg
+        SELECT cfg_set.config_name, cfg.timestamp, cfg_set.description,
+               cfg_set.priority, cfg_set.user, cfg_set.overwritable
+        FROM DeviceConfig cfg, ConfigSet cfg_set
         WHERE cfg.device_id = ?
+          AND cfg.config_set_id = cfg_set.id
     """
 
 CMD_LIST_DEVICES_PRIORITY = """
         SELECT DISTINCT cfg.device_id
-        FROM DeviceConfig cfg
-        WHERE cfg.priority = ?
+        FROM DeviceConfig cfg, ConfigSet cfg_set
+        WHERE cfg_set.priority = ?
+          AND cfg.config_set_id = cfg_set.id
     """
 
 def CMD_LIST_DEVS_NO_NAME(num_of_devices):
@@ -74,53 +93,59 @@ def CMD_LIST_DEVS_NO_NAME(num_of_devices):
         SELECT *,
         ((JULIANDAY(max_timepoint)-JULIANDAY(min_timepoint))*86400) timepoint_diff_sec
     FROM (
-        SELECT COUNT(device_id) num_cfgs, config_name,
-            description, priority, user,
+        SELECT COUNT(cfg.device_id) num_cfgs, cfg_set.config_name,
+            cfg_set.description, cfg_set.priority, cfg_set.user, cfg_set.overwritable,
             MIN(timestamp) min_timepoint,
             MAX(timestamp) max_timepoint
-        FROM DeviceConfig
-        WHERE device_id IN ({','.join('?'*num_of_devices)})
-        GROUP BY config_name
+        FROM DeviceConfig cfg, ConfigSet cfg_set
+        WHERE cfg.device_id IN ({','.join('?'*num_of_devices)})
+          AND cfg.config_set_id = cfg_set.id
+        GROUP BY cfg_set.config_name, cfg_set.device_set_id
     )
     WHERE num_cfgs = {num_of_devices}
-        AND timepoint_diff_sec <= 120
     """
 
 CMD_GET_CONFIGURATION = """
-        SELECT cfg.config_name, cfg.timestamp, cfg.config_data,
-               sch.schema_data, cfg.description, cfg.priority,
-               cfg.user
-        FROM DeviceConfig cfg, ConfigSchema sch
+        SELECT cfg_set.config_name, cfg.timestamp, cfg.config_data,
+               sch.schema_data, cfg_set.description, cfg_set.priority,
+               cfg_set.user, cfg_set.overwritable
+        FROM DeviceConfig cfg, ConfigSchema sch, ConfigSet cfg_set
         WHERE cfg.schema_id = sch.id
+          AND cfg.config_set_id = cfg_set.id
           AND cfg.device_id = ?
-          AND cfg.config_name = ?
+          AND cfg_set.config_name = ?
+    """
+
+CMD_GET_OVERWRITABLE_CONFIG_FOR_SET = """
+        SELECT id
+        FROM ConfigSet
+        WHERE device_set_id = ?
+          AND config_name = ?
+          AND overwritable = 1
     """
 
 CMD_GET_LAST_CONFIGURATION = """
-        SELECT cfg.config_name, cfg.timestamp, cfg.config_data,
-               sch.schema_data, cfg.description, cfg.priority,
-               cfg.user
-        FROM DeviceConfig cfg, ConfigSchema sch
+        SELECT cfg_set.config_name, cfg.timestamp, cfg.config_data,
+               sch.schema_data, cfg_set.description, cfg_set.priority,
+               cfg_set.user, cfg_set.overwritable
+        FROM DeviceConfig cfg, ConfigSchema sch, ConfigSet cfg_set
         WHERE cfg.schema_id = sch.id
+          AND cfg.config_set_id = cfg_set.id
           AND cfg.device_id = ?
-          AND cfg.priority = ?
+          AND cfg_set.priority = ?
         ORDER BY timestamp DESC
         LIMIT 1
     """
 
-CMD_CHECK_NAME_TAKEN = """
-        SELECT COUNT(id) FROM DeviceConfig
-        WHERE config_name = ?
-          AND device_id = ?
-    """
-
 def CMD_CHECK_NAME_TAKEN_ANY_DEVICE(num_of_devices):
     return f"""
-        SELECT COUNT(id) FROM DeviceConfig
-        WHERE config_name = ?
-          AND device_id IN ({','.join('?'*num_of_devices)})
+        SELECT COUNT(cfg.id)
+        FROM DeviceConfig cfg, ConfigSet cfg_set
+        WHERE cfg.config_set_id = cfg_set.id
+          AND cfg_set.config_name = ?
+          AND cfg.device_id IN ({','.join('?'*num_of_devices)})
+          AND cfg_set.overwritable = 0
     """
-
 
 def CMD_CHECK_DEVICE_LIMIT(num_of_devices):
     return f"""
@@ -132,7 +157,6 @@ def CMD_CHECK_DEVICE_LIMIT(num_of_devices):
     WHERE num_configs >= ?
 """
 
-
 CMD_CHECK_CONFIG_ALREADY_SAVED = """
         SELECT COUNT(id) FROM DeviceConfig
         WHERE device_id = ?
@@ -140,25 +164,61 @@ CMD_CHECK_CONFIG_ALREADY_SAVED = """
     """
 
 CMD_CHECK_SCHEMA_ALREADY_SAVED = """
-        SELECT id FROM ConfigSChema
+        SELECT id FROM ConfigSchema
         WHERE digest=?
     """
 
-CMD_SAVE_SCHEMA = """
+CMD_INSERT_CONFIG_SET = """
+        INSERT INTO ConfigSet
+        (device_set_id, config_name, user, priority, description, overwritable)
+        VALUES
+        (?, ?, ?, ?, ?, ?)
+    """
+
+CMD_INSERT_SCHEMA = """
         INSERT INTO ConfigSchema(digest, schema_data)
         VALUES (?, ?)
     """
 
-CMD_SAVE_CONFIGURATION_NO_TIMESTAMP = """
+CMD_INSERT_CONFIGURATION_NO_TIMESTAMP = """
         INSERT INTO DeviceConfig
-        (device_id, config_name, config_data, schema_id, user, priority, description)
+        (config_set_id, device_id, config_data, schema_id)
         VALUES
-        (?, ?, ?, ?, ?, ?, ?)
+        (?, ?, ?, ?)
     """
 
-CMD_SAVE_CONFIGURATION = """
+CMD_INSERT_CONFIGURATION = """
         INSERT INTO DeviceConfig
-        (device_id, config_name, timestamp, config_data, schema_id, user, priority, description)
+        (config_set_id, device_id, timestamp, config_data, schema_id)
         VALUES
-        (?, ?, strftime('%Y-%m-%d %H:%M:%f', ?), ?, ?, ?, ?, ?)
+        (?, ?, strftime('%Y-%m-%d %H:%M:%f', ?), ?, ?)
+    """
+
+CMD_UPDATE_CONFIG_SET = """
+        UPDATE ConfigSet
+        SET
+          user = ?,
+          priority = ?,
+          description = ?
+        WHERE id = ?
+    """
+
+CMD_UPDATE_CONFIGURATION_NO_TIMESTAMP = """
+        UPDATE DeviceConfig
+        SET
+          config_data = ?,
+          schema_id = ?,
+          timestamp = STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')
+        WHERE config_set_id = ?
+          AND device_id = ?
+    """
+
+CMD_UPDATE_CONFIGURATION = """
+        UPDATE DeviceConfig
+        SET
+          config_data = ?,
+          schema_id = ?,
+          timestamp = strftime('%Y-%m-%d %H:%M:%f', ?)
+        WHERE config_set_id = ?
+          AND device_id = ?
     """
