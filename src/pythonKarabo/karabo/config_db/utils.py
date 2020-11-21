@@ -1,4 +1,5 @@
 import base64
+import hashlib
 
 from karabo.native import encodeBinary, decodeBinary, Hash
 
@@ -13,6 +14,7 @@ CONFIG_DB_MAX_TIMEPOINT = "max_timepoint"
 CONFIG_DB_DIFF_TIMEPOINT = "diff_timepoint"
 CONFIG_DB_TIMEPOINT = "timepoint"
 CONFIG_DB_USER = "user"
+CONFIG_DB_OVERWRITABLE = "overwritable"
 
 
 class ConfigurationDBError(Exception):
@@ -67,3 +69,15 @@ def schemaFromBase64Bin(encodedSch):
     hashWithSch = decodeBinary(buf)
     sch = hashWithSch['sch']
     return sch
+
+
+def create_config_set_id(deviceIds):
+    """Generates a setId that is unique for a given set of devices.
+
+    :param deviceIds: list of deviceIds whose setId should be generated.
+
+    :return: a sha1 hash that is unique for a given set of devices.
+    """
+    uniques = sorted(set([devId.upper() for devId in deviceIds]))
+    ids_str = '::'.join(uniques)
+    return hashlib.sha1(ids_str.encode('utf-8')).hexdigest()
