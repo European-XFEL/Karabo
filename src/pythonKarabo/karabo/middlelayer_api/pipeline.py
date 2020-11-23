@@ -12,9 +12,10 @@ import numpy
 
 from karabo.middlelayer_api.synchronization import sleep
 from karabo.native.data.basetypes import isSet
-from karabo.native.data.enums import Assignment, AccessMode, Unit, MetricPrefix
+from karabo.native.data.enums import (
+    Assignment, AccessMode, Unit, MetricPrefix)
 from karabo.native.data.hash import (
-    Bool, Hash, VectorHash, VectorString, Schema, String, UInt16, UInt32)
+    Bool, Hash, VectorHash, VectorRegexString, Schema, String, UInt16, UInt32)
 from karabo.native.data.schema import Configurable, Node
 from karabo.native.data.serializers import decodeBinary, encodeBinary
 from karabo.native.time_mixin import get_timestamp
@@ -196,11 +197,12 @@ class NetworkInput(Configurable):
     # Internal name to be set by the input channel
     _name = None
 
-    @VectorString(
+    @VectorRegexString(
         displayedName="Connected Output Channels",
         description="A list of output channels to receive data from, format: "
                     "<instance ID>:<channel name>",
         assignment=Assignment.OPTIONAL, accessMode=AccessMode.RECONFIGURABLE,
+        regex=r"^[a-zA-Z0-9\.\-\:\/]+$",
         defaultValue=[])
     @coroutine
     def connectedOutputChannels(self, value):
