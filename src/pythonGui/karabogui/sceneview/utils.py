@@ -87,3 +87,12 @@ def calc_rotated_point(x, y, angle=0, scale=1):
     rotated_y = - x * sin + y * cos
 
     return QPoint(rotated_x * scale, rotated_y * scale)
+
+
+def add_offset(model, x=0, y=0):
+    model.trait_setq(x=model.x + x, y=model.y + y)
+
+    # Recursively offset the children
+    if "children" in model.trait_names():
+        for child in model.children:
+            add_offset(child, x=x, y=y)
