@@ -317,21 +317,37 @@ class SignalSlotable(Configurable):
                 server.addChild(self.deviceId, self)
             yield from super(SignalSlotable, self)._run(**kwargs)
             yield from get_event_loop().run_coroutine_or_thread(
-                self.onInitialization)
+                self.preInitialization)
             self.__initialized = True
         except CancelledError:
             pass
-            # NOTE: onInitialization might still be active and creating proxies
-            # and we simply catch the CancelledError. There is no need
-            # to additionally kill the device, as this will be called
-            # by the device server. Calling twice slotKillDevice will
-            # deal with cyclic references and crash the server
-            #
             # NOTE: Initializers for device nodes might still be active and the
-            # Cancellation is also catched here.
+            # Cancellation is caught here.
         except Exception:
             yield from self.slotKillDevice()
             raise
+        else:
+            ensure_future(self._initialize_instance())
+
+    @coroutine
+    def _initialize_instance(self):
+        """Method to execute the `onInitialization method"""
+        try:
+            yield from get_event_loop().run_coroutine_or_thread(
+                self.onInitialization)
+        except CancelledError:
+            raise
+        except Exception as e:
+            try:
+                logger = logging.getLogger(self.deviceId)
+            except Exception:
+                # Make absolutely sure that this the log message is done!
+                logger = logging.getLogger()
+            logger.exception("Error in onInitialization ...")
+            try:
+                self.status = f"Error in onInitialization: {e}"
+            except Exception:
+                pass
 
     @coslot
     def slotKillDevice(self):
@@ -497,8 +513,16 @@ class SignalSlotable(Configurable):
         get_event_loop().something_changed()
 
     @coroutine
+    def preInitialization(self):
+        """This method is called directly after the instance is created
+
+        Subclass this method to validate the `instance` behavior. Throwing
+        an exception will shutdown the `instance`.
+        """
+
+    @coroutine
     def onInitialization(self):
-        """This method is called just after everything is initialized"""
+        """This method is called just after instance is running"""
 
     @coroutine
     def onDestruction(self):
