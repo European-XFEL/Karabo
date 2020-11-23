@@ -2,12 +2,25 @@ from pathlib import Path
 
 from PyQt5.QtGui import QFont
 
-from karabo.common.scenemodel.api import SCENE_FONT_FAMILY
+from karabo.common.scenemodel.api import SCENE_FONT_FAMILY, SCENE_FONT_SIZE
+from karabogui.const import GUI_DPI_FACTOR
 
 
-def get_font_from_string(font_string):
+def get_qfont(font_string='', adjust_size=True):
+    assert type(font_string) is str
+
     q_font = QFont()
-    q_font.fromString(font_string)
+    if font_string:
+        q_font.fromString(font_string)
+    else:
+        # Enforce scene font size. We do not depend on the QApplication font
+        # anymore as it scales depending on the OS
+        q_font.setPointSize(SCENE_FONT_SIZE)
+
+    # Correct font size for Mac OSX
+    if adjust_size:
+        font_size = get_font_size_from_dpi(q_font.pointSize())
+        q_font.setPointSize(font_size)
 
     # Compare style hint and replace accordingly
     if q_font.family() not in FONT_FAMILIES:
@@ -21,7 +34,7 @@ def substitute_font(model):
     if "font" not in model.trait_names():
         return
 
-    q_font = get_font_from_string(model.font)
+    q_font = get_qfont(model.font, adjust_size=False)
     model.trait_setq(font=q_font.toString())
 
 
@@ -67,3 +80,11 @@ def get_alias_from_font(font):
             return FONT_STYLE_ALIAS[hint]
 
     return SCENE_FONT_FAMILY
+
+
+def get_font_size_from_dpi(size):
+    """Calculates the effective font size from the OS DPI.
+    As Qt and the majority of the OSes use DPI=96, we should add some
+    scaling factor on the sizes for Mac DPI, as it has DPI=72.
+    We round off to the nearest integer."""
+    return round(size * GUI_DPI_FACTOR)

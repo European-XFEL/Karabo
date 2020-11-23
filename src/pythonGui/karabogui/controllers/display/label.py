@@ -18,6 +18,7 @@ from karabogui.binding.api import (
     StringBinding
 )
 from karabogui.dialogs.format_label import FormatLabelDialog
+from karabogui.fonts import get_font_size_from_dpi
 from karabogui.indicators import (
     ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
 from karabogui.controllers.api import (
@@ -147,6 +148,6 @@ class DisplayLabel(BaseBindingController):
 
         # Apply font formatting
         font = widget.font()
-        font.setPointSize(self.model.font_size)
+        font.setPointSize(get_font_size_from_dpi(self.model.font_size))
         font.setBold(self.model.font_weight == "bold")
         widget.setFont(font)

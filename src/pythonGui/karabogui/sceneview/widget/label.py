@@ -4,13 +4,12 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from PyQt5.QtCore import QMargins, pyqtSlot, QSize, Qt
-from PyQt5.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen
+from PyQt5.QtGui import QColor, QFontMetrics, QPainter, QPen
 from PyQt5.QtWidgets import QAction, QDialog, QLabel
 
+from karabogui.fonts import get_qfont
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.widgets.hints import KaraboSceneWidget
-
-from .utils import get_size_from_dpi
 
 MARGINS = (5, 0, 5, 0)  # left, top, right, bottom
 WIDTH_MARGIN = MARGINS[0] + MARGINS[2]
@@ -36,10 +35,7 @@ class LabelWidget(KaraboSceneWidget, QLabel):
                              font=model.font, background=model.background,
                              foreground=model.foreground)
 
-        qfont = QFont()
-        qfont.fromString(model.font)
-        self.setFont(qfont)
-
+        self.setFont(get_qfont(model.font))
         self.setToolTip(model.text)
         self.setGeometry(model.x, model.y, model.width, model.height)
 
@@ -58,9 +54,6 @@ class LabelWidget(KaraboSceneWidget, QLabel):
             width = fm.width(self.model.text)
             height = fm.height() + self.model.frame_width
             size = QSize(width + WIDTH_MARGIN, max(height, 20) + HEIGHT_MARGIN)
-            # Calculate effective size from the DPI of the OS. This is needed
-            # as MacOSX DPI has a different value from the rest.
-            size = get_size_from_dpi(size)
         return size
 
     def paintEvent(self, event):
