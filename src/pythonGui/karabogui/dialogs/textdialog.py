@@ -2,11 +2,12 @@ import os.path as op
 
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtGui import QColor, QPixmap, QIcon
-from PyQt5.QtWidgets import QApplication, QColorDialog, QDialog
+from PyQt5.QtGui import QColor, QFont, QPixmap, QIcon
+from PyQt5.QtWidgets import QColorDialog, QDialog
 
-from karabo.common.scenemodel.api import LabelModel, SCENE_FONT_SIZE
-from karabogui.fonts import get_alias_from_font, get_font_from_string
+from karabogui.fonts import get_font_size_from_dpi
+from karabo.common.scenemodel.api import LabelModel
+from karabogui.fonts import get_alias_from_font, get_qfont
 from karabogui.dialogs.font_dialog import FontDialog
 
 
@@ -19,13 +20,11 @@ class TextDialog(QDialog):
         if label_model is None:
             # NOTE: Fonts similar on all OS are Arial, Helvetica, sans-serif!
             self.label_model = LabelModel()
-            self.text_font = QApplication.font()
-            self.text_font.setStyleName("Normal")
-            self.text_font.setPointSize(SCENE_FONT_SIZE)
-            self.label_model.font = self.text_font.toString()
         else:
             self.label_model = label_model.clone_traits()
-            self.text_font = get_font_from_string(self.label_model.font)
+        self.text_font = get_qfont(self.label_model.font, adjust_size=False)
+        # Save font string after corrections
+        self.label_model.font = self.text_font.toString()
         self.leText.setText(self.label_model.text)
 
         self.set_text_font_button()
@@ -40,7 +39,9 @@ class TextDialog(QDialog):
             self.label_model.background != 'transparent')
 
     def set_text_font_button(self):
-        self.pbFont.setFont(self.text_font)
+        qfont = QFont(self.text_font)
+        qfont.setPointSize(get_font_size_from_dpi(qfont.pointSize()))
+        self.pbFont.setFont(qfont)
         self.pbFont.setText(get_alias_from_font((self.text_font.family())))
 
     def set_text_color_button(self):

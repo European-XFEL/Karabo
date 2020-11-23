@@ -8,7 +8,8 @@ from PyQt5.QtWidgets import QDialog
 from karabo.common.scenemodel.const import SCENE_FONT_SIZES
 
 from karabogui.fonts import (
-    FONT_ALIAS, get_alias_from_font, get_font_from_alias)
+    FONT_ALIAS, get_alias_from_font, get_font_from_alias,
+    get_font_size_from_dpi)
 
 DEFAULT_STYLE = "Regular"
 
@@ -53,7 +54,9 @@ class FontDialog(QDialog):
 
     @pyqtSlot()
     def _preview(self):
-        self.preview_label.setFont(self.qfont)
+        qfont = QFont(self.qfont)
+        qfont.setPointSize(get_font_size_from_dpi(qfont.pointSize()))
+        self.preview_label.setFont(qfont)
 
     @pyqtSlot(str)
     def _update_font(self, family):

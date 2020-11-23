@@ -13,7 +13,7 @@ from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
 from karabogui.events import broadcast_event, KaraboEvent
-from karabogui.fonts import get_font_from_string
+from karabogui.fonts import get_qfont
 from karabogui.widgets.hints import KaraboSceneWidget
 from karabogui import messagebox
 
@@ -24,7 +24,7 @@ class SceneLinkWidget(KaraboSceneWidget, QPushButton):
 
     def __init__(self, model, parent=None):
         super(SceneLinkWidget, self).__init__(model=model, parent=parent)
-        self.setFont(get_font_from_string(model.font))
+        self.setFont(get_qfont(model.font))
         self.setToolTip(self.model.target)
         self.setCursor(Qt.PointingHandCursor)
         self.clicked.connect(self._handle_click)
@@ -119,7 +119,7 @@ class SceneLinkWidget(KaraboSceneWidget, QPushButton):
                              foreground=label.foreground)
 
         # Record the QFont on the widget
-        self.setFont(get_font_from_string(label.font))
+        self.setFont(get_qfont(label.font))
         self.update()
 
     @pyqtSlot()
@@ -142,7 +142,7 @@ class WebLinkWidget(KaraboSceneWidget, QPushButton):
 
     def __init__(self, model, parent=None):
         super(WebLinkWidget, self).__init__(model=model, parent=parent)
-        self.setFont(get_font_from_string(model.font))
+        self.setFont(get_qfont(model.font))
         self.setToolTip(self.model.target)
         self.setCursor(Qt.PointingHandCursor)
         self.clicked.connect(self._handle_click)
@@ -229,7 +229,7 @@ class WebLinkWidget(KaraboSceneWidget, QPushButton):
                              foreground=label.foreground)
 
         # Record the QFont on the widget
-        self.setFont(get_font_from_string(label.font))
+        self.setFont(get_qfont(label.font))
         self.update()
 
     @pyqtSlot()

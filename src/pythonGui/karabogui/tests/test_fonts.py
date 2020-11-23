@@ -1,6 +1,6 @@
 from PyQt5.QtGui import QFont
 
-from ..fonts import FONT_STYLE_HINTS, get_font_from_string
+from ..fonts import FONT_STYLE_HINTS, get_qfont
 
 
 # This maps the font family to a Qt style hint to ease font replacement
@@ -20,5 +20,5 @@ def test_get_font_from_string():
 
         # Check if suggested font family is replaced by the application font
         # accordingly
-        new_qfont = get_font_from_string(family)
+        new_qfont = get_qfont(family)
         assert new_qfont.family() == FONT_STYLE_HINTS[style]

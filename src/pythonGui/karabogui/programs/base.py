@@ -1,6 +1,5 @@
 import os
 import os.path as op
-from platform import system
 from traceback import print_exception, format_exception
 import warnings
 
@@ -14,7 +13,7 @@ from karabo.common.scenemodel.api import (
     SCENE_DEFAULT_DPI, SCENE_FONT_FAMILY, SCENE_FONT_SIZE)
 
 from karabogui.controllers.api import populate_controller_registry
-from karabogui.fonts import FONT_FILENAMES
+from karabogui.fonts import FONT_FILENAMES, get_font_size_from_dpi
 from karabogui.singletons.api import (
     get_manager, get_network, get_panel_wrangler)
 
@@ -53,7 +52,7 @@ def create_gui_app(args):
         # Only apply high DPI scaling when the logical DPI is greater than
         # the default DPI (96). This is usually observed on scaled desktops
         # (e.g., 150% scaling on Windows)
-        if dpi > SCENE_DEFAULT_DPI and system() != "Darwin":
+        if dpi > SCENE_DEFAULT_DPI:
             QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
             QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
         app = QApplication(args)
@@ -67,9 +66,10 @@ def create_gui_app(args):
     for font_file in FONT_FILENAMES:
         QFontDatabase.addApplicationFont(font_file)
     # Set default application font
+    font_size = get_font_size_from_dpi(SCENE_FONT_SIZE)
     font = QFont()
     font.setFamily(SCENE_FONT_FAMILY)
-    font.setPointSize(SCENE_FONT_SIZE)
+    font.setPointSize(font_size)
     font.insertSubstitution("Ubuntu", SCENE_FONT_FAMILY)
     font.insertSubstitution("Sans Serif", SCENE_FONT_FAMILY)
     app.setFont(font)
@@ -81,8 +81,8 @@ def create_gui_app(args):
     # has been changed. Any unknown font will do to default to QApp font.
     # [QTBUG-29232]
     app.setStyleSheet(
-        f"QTreeView {{ font: 10pt '{SCENE_FONT_FAMILY}'; }} "
-        f"QTableView {{ font: 10pt '{SCENE_FONT_FAMILY}'; }}")
+        f"QTreeView {{ font: {font_size}pt '{SCENE_FONT_FAMILY}'; }} "
+        f"QTableView {{ font: {font_size}pt '{SCENE_FONT_FAMILY}'; }}")
     app.setAttribute(Qt.AA_DontShowIconsInMenus, False)
 
     # set a nice app logo

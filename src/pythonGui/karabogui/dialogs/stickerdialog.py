@@ -11,7 +11,7 @@ from PyQt5.QtGui import QColor, QIcon, QPixmap, QTextFormat
 from PyQt5.QtWidgets import QApplication, QColorDialog, QDialog, QTextEdit
 
 from karabogui.fonts import (
-    get_alias_from_font, get_font_from_string, substitute_font)
+    get_alias_from_font, get_qfont, substitute_font)
 from karabogui.dialogs.font_dialog import FontDialog
 
 HIGHLIGHT_COLOR = QColor(Qt.yellow).lighter(180)
@@ -29,7 +29,7 @@ class StickerDialog(QDialog):
 
         # Set default font if the model font is empty
         if self.model.font:
-            self.text_font = get_font_from_string(self.model.font)
+            self.text_font = get_qfont(self.model.font)
         else:
             self.text_font = QApplication.font()
             self.model.font = self.text_font.toString()
