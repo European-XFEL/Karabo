@@ -470,6 +470,17 @@ namespace karabo {
             const std::string traceId("(" + boost::lexical_cast<std::string>(boost::this_thread::get_id()) + ": onTcpChannelRead) ");
 
             try {
+                // The twoPotsLock has to be here before potentially assigning treatEndOfStream = true although it
+                // protects usually only m_[in]activeChunk: Otherwise, if receiving data from several output channels,
+                // their 'onTcpChannelRead' can run in parallel and block at the lock. If these calls to 'onTcpChannelRead'
+                // are the endOfStream messages, a problem would arise if then the endOfStream call of the last output
+                // that sets treatEndOfStream = true overtakes  one of the earlier endOfStream calls. Then the overtaken
+                // one will set Memory::setEndOfStream(.., false) again and the endOfStream handler is not called.
+                // Unfortunately, that means we lock sometimes both, m_twoPotsMutex and m_outputChannelsMutex, but that
+                // fortunately does not harm.
+                // Instead of the the m_twoPotsMutex, one might consider to post onTcpChannelRead on the same strand as
+                // triggerIOEvent - anyway almost all of these functions is protected by that mutex...
+                boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
                 bool treatEndOfStream = false;
                 if (header.has("endOfStream")) {
                     boost::mutex::scoped_lock lock(m_outputChannelsMutex);
@@ -478,11 +489,11 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_DEBUG << debugId << "Received EOS #" << m_eosChannels.size() << ", await "
                                 << m_openConnections.size() - m_eosChannels.size() << " more.";
                     } else {
+                        KARABO_LOG_FRAMEWORK_DEBUG << debugId << "Received EOS #" << m_eosChannels.size()
+                                << ", i.e. the last one.";
                         treatEndOfStream = true;
                     }
                 }
-
-                boost::mutex::scoped_lock twoPotsLock(m_twoPotsMutex);
 
                 if (header.has("channelId") && header.has("chunkId")) {
                     // Local memory
