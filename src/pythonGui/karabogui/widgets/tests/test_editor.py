@@ -1,11 +1,17 @@
-from platform import system
-from unittest import skipIf
+import os
 
+from karabogui.programs.base import create_gui_app
 from karabogui.testing import GuiTestCase
 from karabogui.widgets.codeeditor import CodeEditor
 
 
 class TestConst(GuiTestCase):
+
+    def setUp(self):
+        os.environ["KARABO_TEST_GUI"] = "1"
+        self.app = create_gui_app([])
+        super(TestConst, self).setUp()
+
     def test_numbers(self):
         widget = CodeEditor(None)
         widget.appendPlainText("Karabo")
@@ -19,23 +25,19 @@ class TestConst(GuiTestCase):
         self.assertEqual(widget.cache_lines, 1)
         widget.destroy()
 
-    @skipIf(system() == "Windows",
-            reason="numberWidgetArea is 9 on windows")
     def test_margins(self):
-        # The line numbers are derived from 8 per digit + 3.
-        # Hence, 2 digits give 19 and 3 digits give 27
+        # The line numbers are derived from 6 per digit + 3.
+        # Hence, 2 digits give 15 and 3 digits give 21
         widget = CodeEditor(None)
         widget.appendPlainText("Karabo")
-        # NOTE: Depending on the machine (OS), we either match the value or
-        # are constantly shifted
-        self.assertGreaterEqual(widget.numberWidgetArea(), 11)
+        self.assertGreaterEqual(widget.numberWidgetArea(), 9)
         for text in range(10):
             widget.appendPlainText("{}".format(text))
         # We have double digits now
-        self.assertGreaterEqual(widget.numberWidgetArea(), 19)
+        self.assertGreaterEqual(widget.numberWidgetArea(), 15)
         for text in range(90):
             widget.appendPlainText("{}".format(text))
         # We have three digits now
-        self.assertGreaterEqual(widget.numberWidgetArea(), 27)
+        self.assertGreaterEqual(widget.numberWidgetArea(), 21)
         self.assertEqual(widget.textCursor().block().lineCount(), 1)
         widget.destroy()
