@@ -163,6 +163,22 @@ void InputOutputChannel_Test::testManyToOne() {
         }
     } // all connected
 
+    // Did the output channels already take note of the connection, i.e. received the 'hello' message?
+    // As long as not, output->update() in 'sending' function below will actually not send!
+    // Instead of this check here, we could introduce a "hello-back" message from the output channel to the input
+    // channel and fire the 'connected' handler of InputChannel::connect only when this is received.
+    // But would require a protocol extension, i.e. change in all APIs - without real use in the field...
+    for (size_t i = 0; i < outputs.size(); ++i) {
+        int trials = 1000;
+        bool registered = false;
+        while (--trials >= 0) {
+            registered = outputs[i]->hasRegisteredCopyInputChannel(input->getInstanceId());
+            if (registered) break;
+            // Happesn very rarely - seen 6 times in 20,000 local test runs.
+                boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+        }
+        CPPUNIT_ASSERT_MESSAGE("Not yet ready: output " + karabo::util::toString(i), registered);
+    }
 
     // Prepare lambda to send data
     const size_t numData = 200;
@@ -203,7 +219,6 @@ void InputOutputChannel_Test::testManyToOne() {
         }
     }
 }
-
 
 void InputOutputChannel_Test::testConnectDisconnect() {
     // To switch on logging output for debugging, do e.g. the following:
