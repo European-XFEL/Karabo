@@ -6,7 +6,7 @@
 from weakref import WeakValueDictionary
 
 from PyQt5.QtCore import pyqtSignal, QAbstractItemModel, QModelIndex, Qt
-from PyQt5.QtGui import QBrush, QColor, QFont
+from PyQt5.QtGui import QBrush, QColor
 
 from karabo.native import AccessLevel, AccessMode, Assignment
 from karabo.common.api import (
@@ -17,6 +17,7 @@ from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, ImageBinding, ListOfNodesBinding,
     NDArrayBinding, NodeBinding, ProjectDeviceProxy, PropertyProxy,
     SlotBinding, get_binding_value, has_changes, WidgetNodeBinding)
+from karabogui.fonts import get_qfont
 import karabogui.globals as krb_globals
 from karabogui.indicators import (
     OK_COLOR, ERROR_COLOR_ALPHA, get_state_color, LOCKED_COLOR,
@@ -579,7 +580,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             elif role == Qt.FontRole:
                 is_class = isinstance(self.root, DeviceClassProxy)
                 if is_class and is_mandatory(binding):
-                    font = QFont()
+                    font = get_qfont()
                     font.setBold(True)
                     return font
             elif role == Qt.ForegroundRole:

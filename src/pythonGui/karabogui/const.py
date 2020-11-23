@@ -3,7 +3,10 @@
 # Created on November 7, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+from platform import system
 from xml.etree import ElementTree
+
+from karabo.common.scenemodel.api import SCENE_DEFAULT_DPI, SCENE_MAC_DPI
 
 
 ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
@@ -21,3 +24,6 @@ MAX_NUMBER_LIMIT = 1e30
 
 # COMMUNICATION
 REQUEST_REPLY_TIMEOUT = 5  # in seconds
+
+GUI_DPI_FACTOR = (
+    SCENE_DEFAULT_DPI / SCENE_MAC_DPI if system() == "Darwin" else 1)

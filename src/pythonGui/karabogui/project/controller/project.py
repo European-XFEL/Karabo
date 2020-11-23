@@ -3,7 +3,6 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QMenu
 from traits.api import Instance, List, on_trait_change
 
@@ -11,6 +10,7 @@ from karabo.common.project.api import ProjectModel
 from karabogui import icons
 from karabogui import messagebox
 from karabogui.enums import ProjectItemTypes
+from karabogui.fonts import get_qfont
 from .bases import BaseProjectController
 from .project_groups import ProjectSubgroupController, ProjectControllerUiData
 
@@ -27,7 +27,7 @@ class ProjectController(BaseProjectController):
         return QMenu(parent)
 
     def create_ui_data(self):
-        font = QFont()
+        font = get_qfont()
         font.setBold(True)
         return ProjectControllerUiData(font=font, icon=icons.folder)
 
