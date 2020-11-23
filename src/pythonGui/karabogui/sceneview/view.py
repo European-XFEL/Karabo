@@ -466,6 +466,16 @@ class SceneView(QWidget):
             self.selection_model.select_object(obj)
         self.update()
 
+    def select_models(self, *models):
+        """Select multiple widget objects for the given ``models``.
+        This is used by the scene paste action"""
+        self.selection_model.clear_selection()
+        for model in models:
+            obj = self._scene_obj_cache.get(model)
+            if obj is not None:
+                self.selection_model.select_object(obj)
+        self.update()
+
     def set_cursor(self, name):
         """Sets the cursor for the scene view."""
         if name == 'none':
