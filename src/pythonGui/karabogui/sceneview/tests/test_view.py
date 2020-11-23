@@ -4,8 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import os.path as op
-from platform import system
-from unittest import mock, skipIf
+from unittest import mock
 
 from PyQt5.QtCore import QPoint
 from PyQt5.QtWidgets import QBoxLayout
@@ -78,7 +77,6 @@ REIMPLEMENTED_BINDINGS = {
     WidgetNodeBinding: NodeBinding}
 
 
-@skipIf(system() == "Darwin", reason="Segfault in MacOS")
 class TestLoadSceneModel(GuiTestCase):
 
     def setUp(self):
@@ -99,7 +97,7 @@ class TestLoadSceneModel(GuiTestCase):
         self.scene_model = sm.SceneModel()
 
     def tearDown(self):
-        super(TestLoadSceneModel, self).setUp()
+        super(TestLoadSceneModel, self).tearDown()
         self.scene_view.destroy()
         self.scene_view = None
         self.scene_model = None

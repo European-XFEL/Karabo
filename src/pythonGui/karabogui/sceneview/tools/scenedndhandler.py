@@ -7,7 +7,6 @@ from abc import abstractmethod
 import json
 
 from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QBoxLayout
 from traits.api import ABCHasStrictTraits
 
@@ -79,8 +78,7 @@ class ConfigurationDropHandler(SceneDnDHandler):
                                       x=round_down_to_grid(pos.x()),
                                       y=round_down_to_grid(pos.y()))
         # Add label to layout model
-        label_model = LabelModel(text=item['label'], font=QFont().toString(),
-                                 foreground='#000000')
+        label_model = LabelModel(text=item['label'], foreground='#000000')
         layout_model.children.append(label_model)
 
         def create_model(klass, key, layout_model):

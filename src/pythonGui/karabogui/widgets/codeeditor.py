@@ -129,5 +129,6 @@ class CodeEditor(QPlainTextEdit):
         while count >= 10:
             count /= 10
             digits += 1
+        # The font widget is around 6 pixels
         space = 3 + self.fontMetrics().width('9') * digits
         return space
