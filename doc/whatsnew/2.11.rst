@@ -1,0 +1,8 @@
+***************************
+What's New in Karabo 2.11.0
+***************************
+
+The **most relevant improvements**, fixes and changes are:
+
+- MDL API CHANGE: The method `onInitialization` will not shutdown the instance anymore on exception. If this is a desired behavior, please validate
+                  the instance with the new method `preInitialization`.
