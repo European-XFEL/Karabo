@@ -11,7 +11,7 @@ from karabo.middlelayer import (
 from karabo.middlelayer_api.compat import HAVE_UVLOOP
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import call, getSchema
-from karabo.native.data.hash import Float, Hash, Int32, Slot, VectorHash
+from karabo.native.data.hash import Bool, Float, Hash, Int32, Slot, VectorHash
 from karabo.native.timestamp import Timestamp
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
 from karabo.middlelayer_api.utils import get_property
@@ -49,6 +49,20 @@ class ChannelNode(Configurable):
 
 class MyDevice(Device):
     __version__ = "1.2.3"
+
+    goDown = Bool(
+        defaultValue=False,
+        description="Decide if this device should go down")
+
+    initError = Bool(
+        defaultValue=False,
+        description="Decide if this device should throw an error in "
+                    "onInitialization")
+
+    isDown = Bool(
+        defaultValue=False,
+        description="Indicator if this device went down. This is set"
+                    "on onDestruction")
 
     integer = Int32(
         defaultValue=0,
@@ -95,8 +109,18 @@ class MyDevice(Device):
     async def start(self):
         return 5
 
+    async def preInitialization(self):
+        if self.goDown:
+            raise RuntimeError("I am going down")
+
     async def onInitialization(self):
         self.state = State.ON
+        if self.initError:
+            raise RuntimeError("Status must not be empty")
+
+    async def slotKillDevice(self):
+        self.isDown = True
+        await super().slotKillDevice()
 
 
 class Tests(DeviceTest):
@@ -337,6 +361,28 @@ class Tests(DeviceTest):
         h = await call("MyDevice", "slotGetTime")
         timestamp_second = Timestamp.fromHashAttributes(h["time", ...])
         self.assertGreater(timestamp_second, timestamp_first)
+
+    @async_tst
+    async def test_initialization(self):
+        alice = MyDevice({"_deviceId_": "alice", "initError": True})
+        try:
+            await alice.startInstance()
+        finally:
+            status = alice.status
+            self.assertIn(
+                "Error in onInitialization: Status must not be empty", status)
+            self.assertFalse(alice.isDown)
+            self.assertEqual(alice.state, State.ON)
+            await alice.slotKillDevice()
+            self.assertTrue(alice.isDown)
+
+        bob = MyDevice({"_deviceId_": "bob", "goDown": True})
+        try:
+            await bob.startInstance()
+        except RuntimeError as e:
+            self.assertIn("I am going down", str(e))
+        finally:
+            self.assertTrue(bob.isDown)
 
 
 if __name__ == '__main__':
