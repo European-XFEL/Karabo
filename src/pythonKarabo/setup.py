@@ -97,11 +97,6 @@ else:
         'karabo.bound_device_test': [
             'TestDevice=karabo.bound_api.tests.boundDevice:TestDevice'
         ],
-        'karabo.middlelayer_device_test': [
-            'DataLoggerManager=karabo.middlelayer_devices.influxdb_reader:DataLoggerManager',
-            'DataLogReader=karabo.middlelayer_devices.influxdb_reader:DataLogReader',
-            'InfluxDBLogger=karabo.middlelayer_devices.influxdb_logger:InfluxDBLogger',
-        ],
     }
 
 CURRENT_FOLDER = os.path.dirname(os.path.realpath(__file__))
