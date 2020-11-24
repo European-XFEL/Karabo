@@ -1,9 +1,8 @@
 from asyncio import coroutine, get_event_loop
 import pkg_resources
 
-from karabo.native.data.enums import Assignment, AccessLevel
-from karabo.native.data.hash import String
-from karabo.native.data.schema import Configurable
+from karabo.native import Assignment, AccessLevel
+from karabo.native import Configurable, String
 
 
 class PluginLoader(Configurable):
