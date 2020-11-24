@@ -2,10 +2,8 @@ from asyncio import (
     CancelledError, coroutine, ensure_future, TimeoutError, wait_for, Queue)
 from itertools import chain
 
-from karabo.native.data.basetypes import isSet
-from karabo.native.data.enums import AccessMode, Assignment, NodeType
-from karabo.native.exceptions import KaraboError
-from karabo.native.data.hash import Hash, String
+from karabo.native import isSet, KaraboError, String
+from karabo.native import AccessMode, Assignment, NodeType, Hash
 
 from .device_client import getDevice, lock
 from .signalslot import coslot

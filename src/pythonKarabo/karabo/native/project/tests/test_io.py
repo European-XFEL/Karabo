@@ -16,7 +16,7 @@ from karabo.common.project.api import (
     ProjectModel, read_lazy_object, recursive_save_object
 )
 from karabo.common.scenemodel.api import SceneModel
-from karabo.native.data import encodeXML, Hash
+from karabo.native import encodeXML, Hash
 
 from ..api import (
     convert_old_project, OldProject, read_project_model, write_project_model
@@ -29,6 +29,7 @@ class _StorageWrapper(object):
     """A thin wrapper around storage objects which handles serialization of
     project objects.
     """
+
     def __init__(self, storage):
         self._storage = storage
 
