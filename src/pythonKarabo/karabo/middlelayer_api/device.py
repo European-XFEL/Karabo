@@ -4,14 +4,11 @@ import socket
 
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.common.states import State
-from karabo.native.data.basetypes import isSet
-from karabo.native.data.enums import (
-    AccessLevel, AccessMode, Assignment, DaqPolicy)
-from karabo.native.exceptions import KaraboError
-from karabo.native.data.hash import (
-    Bool, Hash, HashType, Int32, SchemaHashType, Slot, String)
-from karabo.native.data.schema import Node
-from karabo.native.time_mixin import get_timestamp
+from karabo.native import (
+    AccessLevel, AccessMode, Assignment, DaqPolicy, Hash)
+from karabo.native import (
+    Bool, HashType, get_timestamp, isSet, Int32, KaraboError, Node,
+    SchemaHashType, Slot, String)
 
 from karabo import __version__ as karaboVersion
 

@@ -1,6 +1,6 @@
 import numpy as np
 
-from karabo.native.data import (
+from karabo.native import (
     dtype_from_number, dictToHash, get_image_data, Hash, HashList)
 
 
