@@ -179,14 +179,14 @@ namespace karabo {
 
         std::map<std::string, karabo::util::Hash> InputChannel::getConnectedOutputChannels() {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-            return m_connectedOutputChannels;
+            return m_configuredOutputChannels;
         }
 
         std::unordered_map<std::string, karabo::net::ConnectionStatus> InputChannel::getConnectionStatus() {
             std::unordered_map<std::string, karabo::net::ConnectionStatus> result;
 
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-            for (auto itChannel = m_connectedOutputChannels.begin(); itChannel != m_connectedOutputChannels.end(); ++itChannel) {
+            for (auto itChannel = m_configuredOutputChannels.begin(); itChannel != m_configuredOutputChannels.end(); ++itChannel) {
                 const std::string& outputChannel = itChannel->first;
                 if (m_openConnections.find(outputChannel) != m_openConnections.end()) {
                     result[outputChannel] = net::ConnectionStatus::CONNECTED;
@@ -253,7 +253,7 @@ namespace karabo {
             } else {
                 const string& outputChannelString = outputChannelInfo.get<string>("outputChannelString");
                 boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-                if (m_connectedOutputChannels.find(outputChannelString) == m_connectedOutputChannels.end()) {
+                if (m_configuredOutputChannels.find(outputChannelString) == m_configuredOutputChannels.end()) {
                     KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
                             << " not configured to connect to " << outputChannelString;
                     ec = bse::make_error_code(bse::argument_out_of_domain);
@@ -302,7 +302,7 @@ namespace karabo {
                 const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
                 unsigned int port = outputChannelInfo.get<unsigned int>("port");
                 boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-                for (ConnectedOutputChannels::const_iterator it = m_connectedOutputChannels.begin(); it != m_connectedOutputChannels.end(); ++it) {
+                for (ConfiguredOutputChannels::const_iterator it = m_configuredOutputChannels.begin(); it != m_configuredOutputChannels.end(); ++it) {
                     if (it->second.get<string>("hostname") != hostname) continue;
                     if (it->second.get<unsigned int>("port") != port) continue;
                     disconnectImpl(it->first);
@@ -321,11 +321,7 @@ namespace karabo {
         }
 
 
-        void InputChannel::disconnectImpl(std::string outputChannelString) {
-            // For safety, take 'outputChannelString' as a value and not as a const reference:
-            // It might come from an iterator looping over m_openConnections - then it would be invalid
-            // after m_openConnections.erase(it) below
-
+        void InputChannel::disconnectImpl(const std::string& outputChannelString) {
             // If someone is still waiting for connection, tell that this was canceled
             auto itBeingSetup = m_connectionsBeingSetup.find(outputChannelString);
             if (itBeingSetup != m_connectionsBeingSetup.end()) {
@@ -341,11 +337,9 @@ namespace karabo {
             it->second.second->close(); // Closes channel
             it->second.first->stop();
             m_openConnections.erase(it);
-
-            // Also clean stored info in m_connectedOutputChannels - but we keep the keys stable to the
-            // initially configured list of (to be [!]) connected output channels.
-            // (Note: Only things in m_connectedOutputChannels can get into m_openConnections, so operator[] is safe.)
-            m_connectedOutputChannels[outputChannelString].clear();
+            // Note: If 'outputChannelString' is used beyond this point, it would be better to
+            // take it as a value and not as a const reference: It might come from an iterator
+            // looping over m_openConnections - then it would be invalid now.
         }
 
 
@@ -781,15 +775,15 @@ namespace karabo {
                 std::vector<std::string> connectedOutputChannels;
                 config.get("connectedOutputChannels", connectedOutputChannels);
                 boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-                m_connectedOutputChannels.clear();
+                m_configuredOutputChannels.clear();
                 for (size_t i = 0; i < connectedOutputChannels.size(); ++i) {
                     std::vector<std::string> tmp;
                     boost::split(tmp, connectedOutputChannels[i], boost::is_any_of("@:"));
                     if (tmp.size() == 2) {
-                        m_connectedOutputChannels[connectedOutputChannels[i]] = Hash();
+                        m_configuredOutputChannels[connectedOutputChannels[i]] = Hash();
                     } else {
                         throw KARABO_PARAMETER_EXCEPTION("Illegal format for connected output channel '"
-                                                         + toString(connectedOutputChannels[i]) += "', expecting <deviceId>:<channelName>");
+                                                         + connectedOutputChannels[i] + "', expecting <deviceId>:<channelName>");
                     }
                 }
                 for (auto it = m_openConnections.begin(); it != m_openConnections.end();) {
@@ -809,7 +803,7 @@ namespace karabo {
 
         void InputChannel::updateOutputChannelConfiguration(const std::string& outputChannelString, const karabo::util::Hash& config) {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-            m_connectedOutputChannels[outputChannelString] = config;
+            m_configuredOutputChannels[outputChannelString] = config;
         }
 
     }
