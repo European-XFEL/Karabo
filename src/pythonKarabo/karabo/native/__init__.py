@@ -7,13 +7,14 @@ from .weak import Weak
 from .data.basetypes import (
     BoolValue, EnumValue, ImageData, isSet, KaraboValue, NoneValue,
     QuantityValue, StringValue, TableValue, unit_registry as unit,
-    VectorStringValue, VectorCharValue, wrap, newest_timestamp, wrap_function)
+    unit_registry, VectorStringValue, VectorCharValue, wrap,
+    newest_timestamp, wrap_function)
 from .data.enums import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqDataType,
     DaqPolicy, EncodingType, LeafType, MetricPrefix, NodeType, Unit)
 from .data.hash import (
     Attribute, Bool, ByteArray, Char, ComplexDouble, ComplexFloat, Descriptor,
-    Double, Enumable, Float, Hash, HashList, is_equal,
+    Double, Enumable, Float, Hash, HashList, HashElement, is_equal,
     HashMergePolicy, HashType, Int16, Int32, Int64, Int8, Integer,
     Number, NumpyVector, RegexString, Schema, SchemaHashType, Simple, Slot,
     Special, String, Type, UInt16, UInt32, UInt64, UInt8, Vector,
@@ -30,7 +31,8 @@ from .data.serializers import (
     decodeBinary, decodeXML, encodeBinary, encodeXML, loadFromFile, saveToFile,
     writeBinary, writeXML, XMLParser, XMLWriter)
 from .data.utils import (
-    flat_iter_hash, create_html_hash, flat_iter_schema_hash)
+    dtype_from_number, numpy_from_number, dictToHash, flat_iter_hash, get_image_data,
+    create_html_hash, flat_iter_schema_hash)
 from .exceptions import KaraboError
 # Import project namespace
 from karabo.native.project.convert import convert_old_project

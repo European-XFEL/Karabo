@@ -3,7 +3,7 @@ import json
 
 from numpy import ndarray
 
-from karabo.native.data.hash import Hash
+from karabo.native import Hash
 
 
 class KaraboJSONEncoder(json.JSONEncoder):
@@ -12,6 +12,7 @@ class KaraboJSONEncoder(json.JSONEncoder):
     The encoding is pretty greedy: Hashes lose their attributes, Karabo
     values their timestamp, and no bit sizes are preserved.
     """
+
     def default(self, v):
         try:
             v = v.value

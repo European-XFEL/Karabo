@@ -19,10 +19,8 @@ import dateutil.parser
 import dateutil.tz
 
 from karabo.common.services import KARABO_CONFIG_MANAGER
-from karabo.native.data.basetypes import KaraboValue
-from karabo.native.exceptions import KaraboError
-from karabo.native.data.hash import Hash, Schema, Type
-from karabo.native.timestamp import Timestamp
+from karabo.native import KaraboError, KaraboValue, Type
+from karabo.native import Hash, Schema, Timestamp
 
 from .device import Device
 from .configuration import config_changes, sanitize_init_configuration

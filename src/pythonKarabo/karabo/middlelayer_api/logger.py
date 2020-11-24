@@ -4,9 +4,8 @@ from datetime import datetime
 import logging
 import traceback
 
-from karabo.native.data.enums import AccessMode
-from karabo.native.data.hash import Hash, String
-from karabo.native.data.schema import Configurable, ListOfNodes
+from karabo.native import AccessMode, Hash
+from karabo.native import Configurable, ListOfNodes, String
 
 
 class _Filter(logging.Filter):

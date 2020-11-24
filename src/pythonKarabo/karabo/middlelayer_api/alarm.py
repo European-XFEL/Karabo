@@ -1,8 +1,6 @@
 from karabo.common.alarm_conditions import AlarmCondition
-from karabo.native.data.basetypes import EnumValue
-from karabo.native.data.enums import AccessLevel, AccessMode, DaqPolicy
-from karabo.native.data.hash import Hash, HashType, String
-from karabo.native.data.schema import Configurable
+from karabo.native import AccessLevel, AccessMode, Hash, DaqPolicy
+from karabo.native import Configurable, EnumValue, HashType, String
 
 from .signalslot import Signal, slot
 

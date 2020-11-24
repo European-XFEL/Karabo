@@ -4,14 +4,13 @@ from contextlib import suppress
 import time
 from weakref import WeakSet
 
-from karabo.native.data.basetypes import KaraboValue, isSet, NoneValue
-from karabo.native.data.enums import NodeType
-from karabo.native.data.hash import Descriptor, Hash, Slot, Type
-from karabo.native.data.ndarray import NDArray
-from karabo.native.exceptions import KaraboError
-from karabo.native.time_mixin import get_timestamp
-from karabo.native.timestamp import Timestamp
-from karabo.native.weak import Weak
+from karabo.native import KaraboValue, isSet, NoneValue
+from karabo.native import NodeType, Hash, Timestamp
+from karabo.native import Descriptor, Slot, Type
+from karabo.native import NDArray
+from karabo.native import KaraboError
+from karabo.native import get_timestamp
+from karabo.native import Weak
 
 from .eventloop import synchronize
 
@@ -77,6 +76,7 @@ class ProxyBase(_ProxyBase):
     The :class:`ProxyFactory` will subclass this class and add
     the necessary descriptors.
     """
+
     def __init__(self):
         super().__init__()
         self._parent = self
@@ -164,6 +164,7 @@ class ProxyNodeBase(Descriptor):
     This is the :class:`Descriptor` for a node in the class. The actual
     data's base class is :class:`SubProxyBase`.
     """
+
     def __init__(self, *, cls, **kwargs):
         super().__init__(**kwargs)
         self.cls = cls
@@ -185,6 +186,7 @@ class ProxyNodeBase(Descriptor):
 
 class ProxySlotBase(Slot, Descriptor):
     """The base class for Slots in proxies"""
+
     def __get__(self, instance, owner):
         if instance is None:
             return self
@@ -197,6 +199,7 @@ class ProxySlotBase(Slot, Descriptor):
 
 class SubProxyBase(_ProxyBase):
     """The base class for nodes in a Proxy"""
+
     def setValue(self, desc, value):
         return self._parent.setValue(desc, value)
 
@@ -321,6 +324,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             with getDevice("someDevice") as device:
                 print(device.speed)
         """
+
         def __init__(self, device, deviceId, sync):
             super().__init__()
             # device holding the proxy, e.g. DeviceClient (CLI) or

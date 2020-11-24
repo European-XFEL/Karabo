@@ -12,9 +12,8 @@ import csv
 from datetime import datetime
 from threading import Timer
 
-from karabo.native.data.hash import Hash
+from karabo.native import decodeXML, encodeXML, Hash
 from karabo.native.project.old import Project, BaseDevice, BaseDeviceGroup
-from karabo.native.data.serializers import decodeXML, encodeXML
 
 
 class ProjectDevice(BaseDevice):
@@ -201,6 +200,7 @@ class MonitorTimer(object):
     sleep(5)
     mt.stop()
     """
+
     def __init__(self, interval, function, *args, **kwargs):
         self._timer = None
         self.interval = interval
