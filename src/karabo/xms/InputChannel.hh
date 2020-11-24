@@ -75,7 +75,7 @@ namespace karabo {
 
         private:
             // Maps outputChannelString to the Hash with connection parameters
-            typedef std::map<std::string, karabo::util::Hash> ConnectedOutputChannels;
+            typedef std::map<std::string, karabo::util::Hash> ConfiguredOutputChannels;
             // Maps outputChannelString to the TCP (connection, channel) pair
             typedef std::map<std::string, std::pair<karabo::net::Connection::Pointer, karabo::net::Channel::Pointer> > OpenConnections;
 
@@ -107,7 +107,7 @@ namespace karabo {
             int m_inactiveChunk;
 
             boost::mutex m_outputChannelsMutex;
-            ConnectedOutputChannels m_connectedOutputChannels;
+            ConfiguredOutputChannels m_configuredOutputChannels;
             OpenConnections m_openConnections;
             /// All 'outputChannelString' for that a connection attempt is currently ongoing, with their handlers and ids
             std::unordered_map<std::string, std::pair<unsigned int, boost::function<void(const karabo::net::ErrorCode&)>>> m_connectionsBeingSetup;
@@ -318,7 +318,7 @@ namespace karabo {
              *
              * @param outputChannelString One of the "connectedOutputChannels" given at construction
              */
-            void disconnectImpl(std::string outputChannelString);
+            void disconnectImpl(const std::string& outputChannelString);
 
             void deferredNotificationsOfOutputChannelsForPossibleRead();
 
