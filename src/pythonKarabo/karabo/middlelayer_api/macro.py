@@ -9,8 +9,8 @@ import sys
 import threading
 
 from karabo.common.states import State
-from karabo.native.data.enums import AccessLevel, AccessMode, DaqPolicy
-from karabo.native.data.hash import Descriptor, Int32, Slot, String
+from karabo.native import AccessLevel, AccessMode, DaqPolicy
+from karabo.native import Descriptor, Int32, Slot, String
 
 from .eventloop import EventLoop
 from .device import Device
@@ -200,7 +200,7 @@ class Macro(Device):
         ts = type(self)
         attributes = ((k, getattr(ts, k)) for k in dir(ts))
         yield from gather(*(connect(k, v) for k, v in attributes
-                          if isinstance(v, RemoteDevice)))
+                            if isinstance(v, RemoteDevice)))
         for h in holders:
             ensure_future(h)
         self.state = State.PASSIVE

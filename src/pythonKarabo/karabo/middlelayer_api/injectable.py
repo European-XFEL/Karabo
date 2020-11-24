@@ -1,8 +1,8 @@
 from asyncio import coroutine, gather
 from itertools import chain
 
-from karabo.native.data.hash import Descriptor
-from karabo.native.data.schema import Configurable, Overwrite, MetaConfigurable
+from karabo.native import Descriptor
+from karabo.native import Configurable, Overwrite, MetaConfigurable
 
 
 class MetaInjectable(MetaConfigurable):
@@ -24,6 +24,7 @@ class MetaInjectable(MetaConfigurable):
 class Injectable(Configurable):
     """This is a dummy class for backward compatiblity
     """
+
     def __init__(self, configuration={}):
         super(Injectable, self).__init__(configuration)
 
