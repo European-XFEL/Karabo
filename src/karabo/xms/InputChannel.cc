@@ -135,22 +135,11 @@ namespace karabo {
 
 
         void InputChannel::registerInputHandler(const InputHandler& ioInputHandler) {
-            if (m_dataHandler) {
-                KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
-                        << "data handler per Data since setting one per InputChannel";
-                m_dataHandler.clear();
-            }
             m_inputHandler = ioInputHandler;
         }
 
 
         void InputChannel::registerDataHandler(const DataHandler& ioDataHandler) {
-            if (m_inputHandler) {
-                KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
-                        << "data handler per InputChannel since setting one per Data";
-                m_inputHandler.clear();
-            }
-
             m_dataHandler = ioDataHandler;
         }
 
@@ -628,16 +617,6 @@ namespace karabo {
                 // Cache need for endOfStream handling since cleared in clearChunkData
                 treatEndOfStream = Memory::isEndOfStream(m_channelId, m_activeChunk);
                 try {
-                    // There is either m_inputHandler or m_dataHandler
-                    // (or neither), see registerInputHandler and registerDataHandler.
-                    if (m_inputHandler && m_dataHandler) {
-                        // Just in case that the above promise is not the case...
-                        KARABO_LOG_FRAMEWORK_WARN << this->getInstanceId() << ": Clear "
-                                << "input handler since we have a data handler.";
-                        // Clear inputHandler since dataHandler is the recommended
-                        // interface (though inputHandler is more general...).
-                        m_inputHandler.clear();
-                    }
                     KARABO_LOG_FRAMEWORK_TRACE << traceId << "Will prepare Metadata";
 
                     prepareMetaData();
@@ -651,7 +630,8 @@ namespace karabo {
                             // That is safe as long as this loop does nothing with 'data' after calling the data handler.
                             m_dataHandler(data, m_metaDataList[i]);
                         }
-                    } else if (m_inputHandler && size() > 0) { // size could be zero if only endOfStream
+                    }
+                    if (m_inputHandler && size() > 0) { // size could be zero if only endOfStream
                         KARABO_LOG_FRAMEWORK_TRACE << traceId << "Calling inputHandler";
                         m_inputHandler(shared_from_this());
                     }
