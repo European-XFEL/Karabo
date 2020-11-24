@@ -12,21 +12,18 @@ from subprocess import PIPE
 
 import numpy
 
-from karabo.native.data.basetypes import isSet
-from karabo.native.data.enums import AccessLevel, AccessMode, Assignment
-from karabo.native.exceptions import KaraboError
-from karabo.native.data.hash import Bool, Hash, Int32, String, VectorString
-from karabo.native.data.schema import Descriptor, Node
+from karabo.native import (
+    Bool, Descriptor, Int32, isSet, KaraboError, Node, String, TimeMixin, VectorString)
+from karabo.native import (
+    AccessLevel, AccessMode, Assignment, decodeBinary, encodeXML, Hash)
 
 from .compat import HAVE_UVLOOP
 from .eventloop import EventLoopPolicy
 from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
-from karabo.native.data.serializers import decodeBinary, encodeXML
 from .signalslot import SignalSlotable, slot, coslot
 from .synchronization import background, firstCompleted
-from karabo.native.time_mixin import TimeMixin
 
 INIT_DESCRIPTION = """A JSON object representing the devices to be initialized.
 It should be formatted like a dictionary of dictionaries.

@@ -20,10 +20,8 @@ import traceback
 import weakref
 from abc import ABC, abstractmethod
 
-from karabo.native.data.basetypes import KaraboValue, unit_registry as unit
-from karabo.native.exceptions import KaraboError
-from karabo.native.data.hash import Hash
-from karabo.native.data.serializers import decodeBinary, encodeBinary
+from karabo.native import KaraboValue, KaraboError, unit_registry as unit
+from karabo.native import decodeBinary, encodeBinary, Hash
 
 from .compat import HAVE_ASYNCIO, AbstractEventLoop, SelectorEventLoop
 from . import openmq
