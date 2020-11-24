@@ -2261,7 +2261,6 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
                 m_inputChannels[channelName] = channel;
             }
-            // in fact, only one of the following two can be set...
             if (onDataAvailableHandler) {
                 this->registerDataHandler(channelName, onDataAvailableHandler);
             }
