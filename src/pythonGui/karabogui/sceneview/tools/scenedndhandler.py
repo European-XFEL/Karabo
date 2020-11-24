@@ -10,6 +10,7 @@ from PyQt5.QtCore import QPoint
 from PyQt5.QtWidgets import QBoxLayout
 from traits.api import ABCHasStrictTraits
 
+from karabogui.binding.api import ImageBinding, SlotBinding
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, LabelModel, SceneLinkModel)
 from karabo.common.scenemodel.const import SceneTargetWindow
@@ -21,6 +22,7 @@ from karabogui.sceneview.utils import round_down_to_grid
 from karabogui.sceneview.widget.utils import get_proxy
 
 _STACKED_WIDGET_OFFSET = 30
+_NO_LABEL_BINDINGS = (ImageBinding, SlotBinding)
 
 
 class SceneDnDHandler(ABCHasStrictTraits):
@@ -73,6 +75,24 @@ class ConfigurationDropHandler(SceneDnDHandler):
     def _create_model_from_parameter_item(self, item, proxy, pos):
         """Create the scene models for a single item
         """
+
+        def _create_model(klass, key):
+            """Create a single widget from a class `klass` with a `key`"""
+            model_klass = get_scene_model_class(klass)
+            model = model_klass(keys=[key])
+            model.x = round_down_to_grid(pos.x())
+            model.y = round_down_to_grid(pos.y())
+            if hasattr(model, 'klass'):
+                model.klass = get_class_const_trait(klass, '_klassname')
+            return model
+
+        if isinstance(proxy.binding, _NO_LABEL_BINDINGS):
+            # Note: Some bindings do not require a label widget and will
+            # only appear with one widget
+            klasses = get_compatible_controllers(proxy.binding)
+            if klasses:
+                return _create_model(klasses[0], proxy.key)
+
         # Horizonal layout
         layout_model = BoxLayoutModel(direction=QBoxLayout.LeftToRight,
                                       x=round_down_to_grid(pos.x()),
@@ -81,7 +101,7 @@ class ConfigurationDropHandler(SceneDnDHandler):
         label_model = LabelModel(text=item['label'], foreground='#000000')
         layout_model.children.append(label_model)
 
-        def create_model(klass, key, layout_model):
+        def insert_model_layout(klass, key, layout_model):
             model_klass = get_scene_model_class(klass)
             model = model_klass(keys=[key])
             if hasattr(model, 'klass'):
@@ -91,13 +111,13 @@ class ConfigurationDropHandler(SceneDnDHandler):
         # Add the display and editable widgets, as needed
         klasses = get_compatible_controllers(proxy.binding)
         if klasses:
-            create_model(klasses[0], proxy.key, layout_model)
+            insert_model_layout(klasses[0], proxy.key, layout_model)
 
         # Only editable if RECONFIGURABLE
         if proxy.binding.access_mode is AccessMode.RECONFIGURABLE:
             klasses = get_compatible_controllers(proxy.binding, can_edit=True)
             if klasses:
-                create_model(klasses[0], proxy.key, layout_model)
+                insert_model_layout(klasses[0], proxy.key, layout_model)
 
         return layout_model
 
