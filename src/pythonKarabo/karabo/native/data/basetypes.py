@@ -126,7 +126,6 @@ class KaraboValue(object):
       This is the bare value, without any special Karabo things or units
       attached.
     """
-
     # Karabo stores the device this value belongs to here to do its magic
     _parent = Weak()
 
@@ -377,6 +376,7 @@ class ImageData(KaraboValue):
     :type flipX: bool
     :type flipY: bool
     """
+
     def __init__(self, value, *args, binning=None, encoding=None,
                  rotation=None, roiOffsets=None, dimScales=None, dimTypes=None,
                  bitsPerPixel=None, flipX=False, flipY=False, **kwargs):
@@ -470,7 +470,7 @@ class TableValue(KaraboValue):
             return TableValue(val, units, timestamp=self.timestamp)
 
         if isinstance(val, numpy.ndarray) and (
-                        val.base is self.value
+            val.base is self.value
                 or val.base is self.value.base) and (
                     val.dtype.char == "O"):
             return TableValue(val, units, timestamp=self.timestamp)
