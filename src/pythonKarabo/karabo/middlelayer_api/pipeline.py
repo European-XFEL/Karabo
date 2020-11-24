@@ -11,14 +11,13 @@ import socket
 import numpy
 
 from karabo.middlelayer_api.synchronization import sleep
-from karabo.native.data.basetypes import isSet
-from karabo.native.data.enums import (
-    Assignment, AccessMode, Unit, MetricPrefix)
-from karabo.native.data.hash import (
-    Bool, Hash, VectorHash, VectorRegexString, Schema, String, UInt16, UInt32)
-from karabo.native.data.schema import Configurable, Node
-from karabo.native.data.serializers import decodeBinary, encodeBinary
-from karabo.native.time_mixin import get_timestamp
+from karabo.native import (
+    Assignment, AccessMode, decodeBinary, encodeBinary, Hash, Unit, Schema,
+    MetricPrefix)
+from karabo.native import (
+    Bool, isSet, VectorHash, VectorRegexString, String, UInt16, UInt32)
+from karabo.native import Configurable, Node
+from karabo.native import get_timestamp
 
 from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
 from .synchronization import background, firstCompleted
