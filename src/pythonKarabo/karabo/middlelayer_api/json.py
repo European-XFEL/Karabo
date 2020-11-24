@@ -3,7 +3,6 @@ import json
 
 from numpy import ndarray
 
-from karabo.native.data.basetypes import KaraboValue
 from karabo.native.data.hash import Hash
 
 
@@ -14,8 +13,11 @@ class KaraboJSONEncoder(json.JSONEncoder):
     values their timestamp, and no bit sizes are preserved.
     """
     def default(self, v):
-        if isinstance(v, KaraboValue):
+        try:
             v = v.value
+        except AttributeError:
+            # No KaraboValue
+            pass
         if isinstance(v, Hash):
             return {k: self.default(v) for k, v in v.items()}
         elif isinstance(v, (ndarray, list)):
