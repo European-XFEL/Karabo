@@ -1,0 +1,150 @@
+import os
+
+import base64
+from xml.sax.saxutils import escape, quoteattr
+
+from .typenums import HashType, HASH_TYPE_TO_XML_TYPE
+from .hash import Hash, get_hash_type_from_data
+
+__all__ = ['encodeXML', 'writeXML', 'saveToFile']
+
+
+def yieldXML(data):
+    if len(data) == 1 and isinstance(next(iter(data.values())), Hash):
+        yield from yield_xml_hash(data)
+    else:
+        yield '<root KRB_Artificial="">'
+        yield from yield_xml_hash(data)
+        yield '</root>'
+
+
+def encodeXML(data):
+    return "".join(yieldXML(data))
+
+
+def writeXML(data, file):
+    for d in yieldXML(data):
+        file.write(d)
+
+
+def yield_xml_hash(data):
+    for key, value, attrs in data.iterall():
+        value_type = get_hash_type_from_data(value)
+        value_name = HASH_TYPE_TO_XML_TYPE[value_type]
+        value_writer = __WRITER_MAP[value_type]
+        yield '<{key} KRB_Type="{value_type}" '.format(
+            key=key, value_type=value_name)
+        for k, v in attrs.items():
+            attr_type = get_hash_type_from_data(v)
+            attr_name = HASH_TYPE_TO_XML_TYPE[attr_type]
+            attr_writer = __WRITER_MAP[attr_type]
+            attr = "KRB_{attr_type}:{data}".format(
+                attr_type=attr_name,
+                data="".join(attr_writer(v)))
+            yield '{key}={attr} '.format(
+                key=k, attr=quoteattr(attr))
+        yield ">"
+
+        yield from value_writer(value)
+        yield "</{}>".format(key)
+
+
+def yield_xml_simple(data):
+    yield escape(str(data))
+
+
+def yield_xml_numpy_vector(data):
+    yield escape(",".join(str(x) for x in data))
+
+
+def yield_xml_vector_char(data):
+    yield escape(base64.b64encode(data).decode("ascii"))
+
+
+def yield_xml_byte_array(data):
+    yield escape(base64.b64encode(data).decode("ascii"))
+
+
+def yield_xml_vector_bool(data):
+    yield escape(",".join(str(int(i)) for i in data))
+
+
+def yield_xml_list(data):
+    yield escape(",".join(str(x) for x in data))
+
+
+def yield_xml_vector_hash(data):
+    for d in data:
+        yield "<KRB_Item>"
+        yield from yield_xml_hash(d)
+        yield "</KRB_Item>"
+
+
+def yield_xml_schema(data):
+    yield data.name
+    yield ":"
+    yield escape("".join(yield_xml_hash(data.hash)))
+
+
+def yield_xml_bool(data):
+    yield escape('1' if data else '0')
+
+
+def yield_xml_complex(data):
+    yield escape("({},{})".format(data.real, data.imag))
+
+
+__WRITER_MAP = {
+    HashType.Bool: yield_xml_bool,
+    HashType.Char: yield_xml_simple,
+    HashType.Int8: yield_xml_simple,
+    HashType.Int16: yield_xml_simple,
+    HashType.Int32: yield_xml_simple,
+    HashType.Int64: yield_xml_simple,
+    HashType.UInt8: yield_xml_simple,
+    HashType.UInt16: yield_xml_simple,
+    HashType.UInt32: yield_xml_simple,
+    HashType.UInt64: yield_xml_simple,
+    HashType.Float: yield_xml_simple,
+    HashType.Double: yield_xml_simple,
+    HashType.ComplexFloat: yield_xml_complex,
+    HashType.ComplexDouble: yield_xml_complex,
+
+    HashType.VectorBool: yield_xml_vector_bool,
+    HashType.VectorChar: yield_xml_vector_char,
+    HashType.VectorInt8: yield_xml_numpy_vector,
+    HashType.VectorInt16: yield_xml_numpy_vector,
+    HashType.VectorInt32: yield_xml_numpy_vector,
+    HashType.VectorInt64: yield_xml_numpy_vector,
+    HashType.VectorUInt8: yield_xml_numpy_vector,
+    HashType.VectorUInt16: yield_xml_numpy_vector,
+    HashType.VectorUInt32: yield_xml_numpy_vector,
+    HashType.VectorUInt64: yield_xml_numpy_vector,
+    HashType.VectorFloat: yield_xml_numpy_vector,
+    HashType.VectorDouble: yield_xml_numpy_vector,
+    HashType.VectorComplexFloat: yield_xml_numpy_vector,
+    HashType.VectorComplexDouble: yield_xml_numpy_vector,
+
+    HashType.String: yield_xml_simple,
+    HashType.VectorString: yield_xml_list,
+    HashType.Hash: yield_xml_hash,
+    HashType.VectorHash: yield_xml_vector_hash,
+    HashType.Schema: yield_xml_schema,
+    HashType.None_: yield_xml_simple,
+    HashType.ByteArray: yield_xml_byte_array,
+}
+
+
+def saveToFile(hash_, filename):
+    """Write a Hash to XML
+
+    Note: If the file already exists, it gets overwritten!
+    """
+
+    assert isinstance(hash_, Hash), "Expected Hash, not {}".format(type(hash_))
+    directory = os.path.dirname(filename)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+
+    with open(filename, "w") as fout:
+        fout.write(encodeXML(hash_))
