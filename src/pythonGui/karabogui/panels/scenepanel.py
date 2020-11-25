@@ -8,11 +8,12 @@ from functools import partial
 from PyQt5.QtCore import pyqtSlot, QEvent, QSize, Qt
 from PyQt5.QtGui import QKeySequence, QPalette
 from PyQt5.QtWidgets import (
-    QAction, QActionGroup, QApplication, QMenu, QScrollArea)
+    QAction, QActionGroup, QApplication, QDialog, QMenu, QScrollArea)
 
 from karabogui import icons
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.indicators import get_topic_color
+from karabogui.dialogs.dialogs import ResizeSceneDialog
 from karabogui.sceneview.api import SceneView
 from karabogui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabogui.sceneview.tools.api import (
@@ -24,6 +25,7 @@ from karabogui.sceneview.tools.api import (
     ScenePasteReplaceAction, SceneSelectAllAction, SceneSendToBackAction,
     SceneSelectionTool, StickerTool, WebLinkTool)
 from karabogui.widgets.toolbar import ToolBar
+from karabogui.util import move_to_cursor
 from .base import BasePanelWidget
 
 # NOTE: This is the amount of padding added by ScenePanel's QFrame parent
@@ -161,6 +163,18 @@ class ScenePanel(BasePanelWidget):
     def toggle_snap_to_grid(self, is_checked):
         self.scene_view.snap_to_grid = is_checked
 
+    @pyqtSlot()
+    def resize_scene(self):
+        dialog = ResizeSceneDialog(self.scene_view.size(), parent=self)
+        move_to_cursor(dialog)
+        if dialog.exec() != QDialog.Accepted:
+            return
+
+        self.scene_view.resize(dialog.scene_size)
+        if not self.is_docked:
+            width, height = self._compute_panel_size()
+            self.resize(width, height)
+
     @pyqtSlot(bool)
     def design_mode_changed(self, is_checked):
         self.drawing_tool_bar.setVisible(is_checked)
@@ -210,12 +224,7 @@ class ScenePanel(BasePanelWidget):
         self.qactions.extend(mode_qactions)
         self.qactions.append(self._build_separator())
 
-        # Add grid mode action
-        show_grid_action = QAction(icons.grid, 'Snap to Grid', self)
-        show_grid_action.setCheckable(True)
-        show_grid_action.setChecked(self.scene_view.snap_to_grid)
-        show_grid_action.triggered.connect(self.toggle_snap_to_grid)
-        self.qactions.append(show_grid_action)
+        self.qactions.extend(self.create_scene_tool_actions())
         self.qactions.append(self._build_separator())
 
         self.qactions.extend(tool_qactions)
@@ -256,6 +265,17 @@ class ScenePanel(BasePanelWidget):
         # Save a reference to the SceneSelectionTool QAction
         self.ac_selection_tool = q_actions[0]
         return q_actions
+
+    def create_scene_tool_actions(self):
+        show_grid_action = QAction(icons.grid, 'Snap to Grid', self)
+        show_grid_action.setCheckable(True)
+        show_grid_action.setChecked(self.scene_view.snap_to_grid)
+        show_grid_action.triggered.connect(self.toggle_snap_to_grid)
+
+        resize_scene_action = QAction(icons.resize, 'Resize Scene', self)
+        resize_scene_action.triggered.connect(self.resize_scene)
+
+        return [show_grid_action, resize_scene_action]
 
     def create_tool_actions(self):
         """ Create tool actions and return list of them"""
