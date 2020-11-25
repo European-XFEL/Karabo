@@ -3,7 +3,7 @@
     - source ci/prepare "$CI_BUILD_NAME"
     - source ci/build "$CI_BUILD_NAME"
 
-.test_template: &test
+.services_template: &services_template
   services:
     - name: europeanxfel/existdb:2.2
       alias: existdb_host
@@ -16,6 +16,9 @@
     INFLUXDB_ADMIN_PASSWORD: "admpwd"
     INFLUXDB_USER: "infusr"
     INFLUXDB_USER_PASSWORD: "usrpwd"
+
+.test_template: &test
+  <<: *services_template
   script:
     - source ci/prepare "$CI_BUILD_NAME"
     - source ci/test "$CI_BUILD_NAME"
@@ -97,6 +100,7 @@
     - /^deps-mr-.+$/
         
 .deps_build_tests: &deps-build-tests
+  <<: *services_template
   script:
     - source ci/prepare "$CI_BUILD_NAME"
     - source ci/build "$CI_BUILD_NAME"
