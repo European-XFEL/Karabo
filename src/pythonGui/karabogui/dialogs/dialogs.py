@@ -525,3 +525,19 @@ class ConfigurationFromPastDialog(QDialog):
     @pyqtSlot()
     def on_ui_ten_minutes_clicked(self):
         self._set_timepoint(TEN_MINUTES)
+
+
+class ResizeSceneDialog(QDialog):
+    def __init__(self, size=QSize(), parent=None):
+        super(ResizeSceneDialog, self).__init__(parent)
+        self.setModal(False)
+        ui_path = op.join(op.abspath(op.dirname(__file__)), 'resizedialog.ui')
+        uic.loadUi(ui_path, self)
+        self.width_spinbox.setValue(size.width())
+        self.height_spinbox.setValue(size.height())
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+
+    @property
+    def scene_size(self):
+        return QSize(self.width_spinbox.value(), self.height_spinbox.value())
