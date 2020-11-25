@@ -351,7 +351,7 @@ namespace karabo {
         void SignalSlotable::start() {
             m_connection->startReading(bind_weak(&SignalSlotable::processEvent, this, _1, _2),
                                        bind_weak(&SignalSlotable::consumerErrorNotifier, this,
-                                                      std::string(), _1, _2));
+                                                 std::string(), _1, _2));
             ensureInstanceIdIsValid(m_instanceId);
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up in topic '" << getTopic() << "' as '" << m_instanceId << "'";
             m_randPing = 0; // Allows to answer on slotPing with argument rand = 0.
@@ -1024,7 +1024,7 @@ namespace karabo {
             m_trackAllInstances = true;
             m_connection->startReadingHeartbeats(bind_weak(&SignalSlotable::onHeartbeatMessage, this, _1, _2),
                                          bind_weak(&SignalSlotable::consumerErrorNotifier, this,
-                                                               std::string("heartbeats"), _1, _2));
+                                                   std::string("heartbeats"), _1, _2));
             startTrackingSystem();
         }
 

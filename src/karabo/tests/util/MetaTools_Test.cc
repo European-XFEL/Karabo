@@ -168,7 +168,7 @@ struct Bar {
 };
 
 
-void MetaTools_Test::testCallFromTuple() {   
+void MetaTools_Test::testCallFromTuple() {
     
     int i(42);
     std::string s("test");
