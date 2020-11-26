@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <map>
+#include <unordered_set>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -26,7 +27,9 @@
 #include <karabo/net/JmsConnection.hh>
 #include <karabo/net/JmsConsumer.hh>
 #include <karabo/net/EventLoop.hh>
+#include <karabo/net/Broker.hh>
 #include <karabo/log/Logger.hh>
+#include <karabo/core/DeviceClient.hh>
 
 using namespace karabo;
 
@@ -53,8 +56,13 @@ public:
     /// Constructor with length of interval to use for averaging.
 
 
-    BrokerStatistics(util::TimeValue intervalSec)
-        : m_interval(intervalSec, 0ll), m_start(0ull, 0ull) {
+    BrokerStatistics(util::TimeValue intervalSec, const std::vector<std::string>& receiverIds,
+                     const std::vector<std::string>& senderIds)
+        :
+        m_interval(intervalSec, 0ll),
+        m_receivers(receiverIds.begin(), receiverIds.end()),
+        m_senders(senderIds.begin(), senderIds.end()),
+        m_start(0ull, 0ull) {
     }
 
     // virtual ~BrokerStatistics() {} // no need for virtual...
@@ -68,6 +76,15 @@ private:
     void registerPerSignal(const util::Hash::Pointer& header, size_t bodySize);
 
     void registerPerSlot(const util::Hash::Pointer& header, size_t bodySize);
+
+    /**
+     * Helper checking whether slot is currently among receivers - empty receivers means everything is received
+     *
+     * @param slot slot id from message header
+     * @param receivers set of recever instance ids
+     * @return whether received
+     */
+    bool slotReceivedBy(const SlotId& slot, const std::unordered_set<std::string>& receivers) const;
 
     void registerLogMessage(size_t bodySize);
 
@@ -93,6 +110,8 @@ private:
     void printId(std::ostream& out, const IdType& id) const;
 
     const util::TimeDuration m_interval;
+    const std::unordered_set<std::string> m_receivers;
+    const std::unordered_set<std::string> m_senders;
     util::Epochstamp m_start;
 
     /// mapping SignalId to Stats
@@ -191,6 +210,10 @@ void BrokerStatistics::registerMessage(const util::Hash::Pointer& header,
 void BrokerStatistics::registerPerSignal(const util::Hash::Pointer& header, size_t bodySize) {
     // Get who sent the message:
     const std::string& signalId = header->get<std::string>("signalInstanceId");
+    // If special senders requested (i.e. m_senders non-empty), go on only for those
+    if (!m_senders.empty() && m_senders.find(signalId) == m_senders.end()) {
+        return;
+    }
     const std::string& signalFunc = header->get<std::string>("signalFunction");
 
     // Find signal ID in map and increase statistics.
@@ -204,7 +227,7 @@ void BrokerStatistics::registerPerSignal(const util::Hash::Pointer& header, size
 
 
 void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header, size_t bodySize) {
-    // Get who sent the message, e.g.:
+    // Get who receives the message, e.g.:
     // "slotFunctions": |DataLogger-Cam7_Proc:slotChanged||Karabo_GuiServer_0:_slotChanged|
     // Asynchronous replies do not have that key, so we use instead:
     // "slotInstanceIds": |DataLogger-Cam7_Proc||Karabo_GuiServer_0|
@@ -221,12 +244,26 @@ void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header, size_t
         if (iSlot->empty()) continue; // before first or after last '|'
 
         // Find slot ID in map and increase statistics.
-        const SlotId& key = *iSlot;
-        Stats& stats = m_slotStats[key];
-        ++stats.first;
-        stats.second += bodySize;
+        const SlotId& slot = *iSlot;
+        if (this->slotReceivedBy(slot, m_receivers)) {
+            Stats& stats = m_slotStats[slot];
+            ++stats.first;
+            stats.second += bodySize;
+        }
     }
 }
+
+
+bool BrokerStatistics::slotReceivedBy(const SlotId& slot, const std::unordered_set<std::string>& receivers) const {
+
+    if (receivers.empty()) {
+        return true;
+    }
+
+    const std::string slotInstanceId(slot.substr(0, slot.find(':'))); // i.e. copy of slot if no ':'
+    return (receivers.find(slotInstanceId) != receivers.end());
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -234,7 +271,7 @@ void BrokerStatistics::registerPerSlot(const util::Hash::Pointer& header, size_t
 void BrokerStatistics::registerLogMessage(size_t bodySize) {
 
     // We have no clue who sends or receives log messages.
-    // Treat them as send and received once:
+    // Treat them as sent and received once:
     const SignalId signalKey("?", "log");
     Stats& senderStats = m_signalStats[signalKey];
     ++senderStats.first;
@@ -337,6 +374,56 @@ void BrokerStatistics::printLine(const IdType& id, const Stats& stats,
 ////////////////////////////////////////////////////////////////////////////
 
 
+std::pair<std::vector<std::string>, std::vector<std::string>>
+instancesOfServers(const std::string& serverIn, const std::string& serverOut, unsigned int sleepSeconds, bool debug) {
+    std::pair<std::vector<std::string>, std::vector < std::string>> receiversSenders;
+
+    if (!serverIn.empty() || !serverOut.empty()) {
+        std::cout << "\nGathering topology to identify devices of servers. . " << std::flush;
+        // Instead of the gymnastics below, we could add a slot to the server to query it for all their devices...
+
+        // Need an event loop for
+        boost::thread thread(boost::bind(&net::EventLoop::work));
+        std::cout << ". " << std::flush;
+
+        auto client = boost::make_shared<core::DeviceClient>("", false); // default unique id, explicitly call initialize()
+        client->initialize();
+        std::cout << ". " << std::flush; // output some progress markers...
+        client->enableInstanceTracking(); // blocking a while to gather topology
+        std::cout << ". " << std::flush;
+
+        // If servers busy, discovery might take longer than the above blocking
+        while (sleepSeconds-- > 0u) { // postfix decrement!
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
+            std::cout << ". " << std::flush;
+        }
+        std::cout << "\n";
+        if (!serverIn.empty()) {
+            std::vector<std::string>& instances = receiversSenders.first;
+            instances.push_back(serverIn);
+            const std::vector<std::string> devices(client->getDevices(serverIn));
+            if (debug) {
+                std::cout << "\nFound " << devices.size() << " devices of receiving server " << serverIn << ": "
+                        << util::toString(devices) << std::endl;
+            }
+            instances.insert(instances.end(), devices.begin(), devices.end());
+        }
+        if (!serverOut.empty()) {
+            std::vector<std::string>& instances = receiversSenders.second;
+            instances.push_back(serverOut);
+            const std::vector<std::string> devices(client->getDevices(serverOut));
+            if (debug) {
+                std::cout << "\nFound " << devices.size() << " devices of sending server " << serverOut << ": "
+                        << util::toString(devices) << std::endl;
+            }
+            instances.insert(instances.end(), devices.begin(), devices.end());
+        }
+        net::EventLoop::stop();
+        thread.join();
+    }
+    return receiversSenders;
+}
+
 void printHelp(const char* name) {
     // Get name without leading directories
     std::string nameStr(name ? name : "'command'");
@@ -344,15 +431,28 @@ void printHelp(const char* name) {
     if (lastSlashPos != std::string::npos) {
         nameStr.replace(0, lastSlashPos + 1, "");
     }
-    std::cout << "\n  " << nameStr << " [-h|--help] [interValSec]\n\n"
+    std::cout << "\n  " << nameStr << " [-h|--help] [other options with values] [interval]\n\n"
             << "Prints the rate and average size of all signals sent to the "
             << "broker and of\n"
             << "the intended calls of the slots that receive the signals.\n"
             << "Broker host and topic are read from the usual environment "
             << "variables\nKARABO_BROKER and KARABO_BROKER_TOPIC or, if "
-            << "these are not defined, use\nthe usual defaults.\n"
-            << "Optional argument is the time (in seconds) for averaging "
-            << "(default: 20).\n"
+            << "these are not defined, use the\n"
+            << "usual defaults. Optional 'interval' argument specifies the time in seconds\n"
+            << "for averaging (default: 5).\n"
+            << "Available options:\n"
+            << "   --receivers a[,b[,c[,...]]]  Consider only messages FOR given ids\n"
+            << "   --senders a[,b[,c[,...]]]    Consider only messages FROM given ids\n"
+            << "   --receiversServer serverId   Consider only messages FOR given serverId,\n"
+            << "                                   including its devices\n"
+            << "   --sendersServer serverId     Consider only messages FROM given serverId,\n"
+            << "                                   including its devices\n"
+            << "   --discoveryWait seconds      Extra seconds for topology discovery\n"
+            << "   --debug y|n                  If yes, adds some debug output\n\n"
+            << "The options '--receiversServer' and '--sendersServer' require to discover the\n"
+            << "topology of the Karabo installation. If a server of interest is slowly\n"
+            << "responding, the normal discovery time might be too short to identify all its\n"
+            << "devices and some extra delay should be added using '--discoveryWait'.\n"
             << std::endl;
 }
 
@@ -361,37 +461,72 @@ void printHelp(const char* name) {
 ////////////////////////////////////////////////////////////////////////////
 
 
-int main(int argc, char** argv) {
+int main(int argc, const char** argv) {
 
-    util::TimeValue interval = 20ull; // in seconds
-    if (argc > 1) {
-        const std::string arg1(argv[1]);
-        if (arg1 == "-h" || arg1 == "--help") {
+    net::EventLoop::addThread(2); // e.g. for JmsConsumer's serializer and handler strands
+
+    // Setup option defaults
+    karabo::util::Hash options("period", static_cast<util::TimeValue> (5ull),
+                               "--receivers", "",
+                               "--senders", "",
+                               "--receiversServer", "",
+                               "--sendersServer", "",
+                               "--discoveryWait", "0");
+    for (int i = 1; i < argc; i += 2) {
+        const std::string argv_i(argv[i]);
+        if (argv_i == "-h" || argv_i == "--help") { // both for backward compatibility
             printHelp(argv[0]);
             return EXIT_SUCCESS;
+        } else if (argc == i + 1) {
+            // The last of an odd number of arguments maybe the averaging period
+            options.set("period", strtoull(argv[i], 0, 0));
+        } else if (argv_i != "--receivers" && argv_i != "--senders"
+                   && argv_i != "--receiversServer" && argv_i != "--sendersServer"
+                   && argv_i != "--discoveryWait" && argv_i != "--debug") {
+            printHelp(argv[0]);
+            return EXIT_FAILURE;
         } else {
-            const long int argument = strtol(argv[1], 0, 0);
-            if (argument > 0) {
-                interval = static_cast<util::TimeValue> (argument);
-            } else { // Maybe not an unsigned integer or 0 passed.
-                std::cerr << "Refusing time interval '" << argv[1] << "'." << std::endl;
-                return EXIT_FAILURE;
-            }
+            options.set(argv[i], argv[i + 1]);
         }
     }
+    // fromString<bool>(..) understands y, yes, Yes, true, True, 1, n, no, No, false, False, 0 and maybe more...
+    const bool debug = (options.has("--debug") ? util::fromString<bool>(options.get<std::string>("--debug")) : false);
 
-    std::string topic;
-    char* env = getenv("KARABO_BROKER_TOPIC");
-    if (env != 0) {
-        topic = env;
-    } else {
-        env = getenv("USER");
-        if (env != 0) topic = env;
+    const std::string topic(karabo::net::Broker::brokerDomainFromEnv());
+    const util::TimeValue interval = options.get<util::TimeValue>("period");
+
+    // Unpack configured senders and receivers.
+    std::vector<std::string> receivers(karabo::util::fromString<std::string, std::vector>(options.get<std::string>("--receivers")));
+    std::vector<std::string> senders(karabo::util::fromString<std::string, std::vector>(options.get<std::string>("--senders")));
+    // If full servers are requested, unpack and insert to senders and receivers as well.
+    const auto recAndSendFromServers = instancesOfServers(options.get<std::string>("--receiversServer"),
+                                                          options.get<std::string>("--sendersServer"),
+                                                          util::fromString<unsigned int>(options.get<std::string>("--discoveryWait")),
+                                                          debug);
+    receivers.insert(receivers.end(), recAndSendFromServers.first.begin(), recAndSendFromServers.first.end());
+    senders.insert(senders.end(), recAndSendFromServers.second.begin(), recAndSendFromServers.second.end());
+
+    // Assemble selector
+    std::ostringstream str;
+    bool first = true;
+    for (const auto& receiverId : receivers) {
+        if (first) first = false;
+        else str << " OR ";
+        str << "slotInstanceIds LIKE '%|" << receiverId << "|%'";
     }
-    if (topic.empty()) {
-        std::cerr << "No topic specified since neither KARABO_BROKER_TOPIC nor USER set." << std::endl;
-        return EXIT_FAILURE;
+    for (const auto& senderId : senders) {
+        if (first) first = false;
+        else str << " OR ";
+        str << "signalInstanceId = '" << senderId << "'";
     }
+    if (!first) {
+        // Take care that broadcasts are also listed if senders/receivers are specified
+        str << " OR slotInstanceIds LIKE '%|*|%'"; // if logs are of interest: add " OR  target = 'log'"
+    }
+    const std::string selector(str.str());
+
+    if (debug) std::cout << "\nSelector:\n" << selector << std::endl;
+
     // Start Logger, but suppress INFO and DEBUG
     log::Logger::configure(util::Hash("priority", "WARN"));
     log::Logger::useOstream();
@@ -401,18 +536,23 @@ int main(int argc, char** argv) {
         net::JmsConnection::Pointer connection = boost::make_shared<net::JmsConnection>();
         connection->connect();
 
-        std::string selector; // Could be made configurable as in broker MessageLogger.
         // 3rd argument true: skip serialisation (but get access to raw message size)!
         net::JmsConsumer::Pointer consumer = connection->createConsumer(topic, selector, true);
 
-        std::cout << "\nStart monitoring signal and slot rates of \n   topic     '"
-                << topic << "'\n   on broker '"
-                << connection->getBrokerUrl() << "',\n"
-                << "intervall is " << interval << " s."
+        std::cout << "\nStart monitoring signal and slot rates of \n   topic         '"
+                << topic << "'\n   on broker     '"
+                << connection->getBrokerUrl() << "',\n   ";
+        if (!receivers.empty()) {
+            std::cout << "messages to   '" << util::toString(receivers) << "',\n   ";
+        }
+        if (!senders.empty()) {
+            std::cout << "messages from '" << util::toString(senders) << "',\n   ";
+        }
+        std::cout << "interval is   " << interval << " s."
                 << std::endl;
 
         // Register our registration message as async reader:
-        boost::shared_ptr<BrokerStatistics> stats(new BrokerStatistics(interval));
+        boost::shared_ptr<BrokerStatistics> stats(boost::make_shared<BrokerStatistics>(interval, receivers, senders));
         consumer->startReading(boost::bind(&BrokerStatistics::registerMessage, stats, _1, _2));
 
         // Block forever
