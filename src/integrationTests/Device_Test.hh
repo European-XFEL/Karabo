@@ -53,6 +53,12 @@ private:
      */
     void testChangeSchemaOutputChannel(const std::string& updateSlot);
 
+    /** Test that updateSchema/appendSchema properly creates (and destroys) input/output channels
+     *
+     * @param updateSlot which TestDevice slot to change the schema: "slotUpdateSchema" or "slotAppendSchema"
+     */
+    void testInputOutputChannelInjection(const std::string& updateSlot);
+
     /**
      * Test calling a slot under a node
      */
