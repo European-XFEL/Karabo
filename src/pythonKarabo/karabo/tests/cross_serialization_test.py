@@ -1,3 +1,6 @@
+from karabo.native.karabo_hash import (
+    encodeXML, decodeXML, encodeBinary, decodeBinary)
+
 import numpy as np
 from numpy.testing import assert_equal
 
@@ -76,6 +79,18 @@ def check_hash(h):
     assert sh["a", "nodeType"] == 0
 
 
+def create_middlelayer_api_hash():
+    from karabo.middlelayer import Hash, Schema
+
+    return _pure_py_style_hash(Hash, Schema)
+
+
+def create_refactor_hash():
+    from karabo.native.karabo_hash import Hash, Schema
+
+    return _pure_py_style_hash(Hash, Schema)
+
+
 def create_bound_api_hash():
     from karabo.bound import Hash, Schema
 
@@ -118,7 +133,7 @@ def create_bound_api_hash():
     return h
 
 
-def __middlelayer_api_style_hash(hash_klass, schema_klass):
+def _pure_py_style_hash(hash_klass, schema_klass):
     h = hash_klass()
     h["bool"] = True
     h["int"] = 4
@@ -157,13 +172,84 @@ def __middlelayer_api_style_hash(hash_klass, schema_klass):
     return h
 
 
-def create_middlelayer_api_hash():
-    from karabo.middlelayer import Hash, Schema
+def test_xml_middlelayer_api_mixed_round_trip():
+    from karabo.native import (
+        encodeXML as encodeXMLOld,
+        decodeXML as decodeXMLOld)
 
-    return __middlelayer_api_style_hash(Hash, Schema)
+    # Old encoder, new decoder
+    tst_hash = create_middlelayer_api_hash()
+    buffer = encodeXMLOld(tst_hash)
+    check_hash(decodeXML(buffer))
+
+    # New encoder, old decoder
+    tst_hash = create_refactor_hash()
+    buffer = encodeXML(tst_hash)
+    check_hash(decodeXMLOld(buffer))
 
 
-def create_refactor_hash():
-    from ..hash import Hash, Schema
+def test_xml_bound_api_mixed_round_trip():
+    from karabo.bound import TextSerializerHash
 
-    return __middlelayer_api_style_hash(Hash, Schema)
+    ser = TextSerializerHash.create("Xml")
+
+    tst_hash = create_bound_api_hash()
+    buffer = ser.save(tst_hash)
+    check_hash_simple(decodeXML(buffer))
+
+    tst_hash = create_refactor_hash()
+    buffer = encodeXML(tst_hash)
+    check_hash_simple(ser.load(buffer))
+
+
+def test_bin_bound_api_mixed_round_trip():
+    from karabo.bound import BinarySerializerHash
+
+    tst_hash = create_bound_api_hash()
+    ser = BinarySerializerHash.create("Bin")
+
+    buffer = ser.save(tst_hash)
+    check_hash_simple(decodeBinary(buffer))
+
+    tst_hash = create_refactor_hash()
+    buffer = encodeBinary(tst_hash)
+    check_hash_simple(ser.load(buffer))
+
+
+def test_bin_python_roundtrip():
+    from karabo.native import (
+        decodeBinary as decodeBinaryOld,
+        encodeBinary as encodeBinaryOld)
+
+    # old binary encoder, new decoder
+    tst_hash = create_middlelayer_api_hash()
+    buffer = encodeBinaryOld(tst_hash)
+    check_hash(decodeBinary(buffer))
+
+    # new binary encoder, old decoder
+    tst_hash = create_refactor_hash()
+    buffer = encodeBinary(tst_hash)
+    check_hash(decodeBinaryOld(buffer))
+
+
+def test_hash_native_roundtrip():
+    tst_hash = create_refactor_hash()
+    buffer = encodeBinary(tst_hash)
+    hsh = decodeBinary(buffer)
+    check_hash(hsh)
+
+
+def test_schema_native_round_trip():
+    from karabo.native.karabo_hash import Hash, Schema
+    sh = Hash()
+    sh["a"] = Hash()
+    sh["a", "nodeType"] = 0
+    tst_schema = Schema(name="foo", hash=sh)
+
+    # XXX: Have to piggy back!
+    h = Hash('sch', tst_schema)
+    buffer = encodeBinary(h)
+    sch = decodeBinary(buffer)
+    sch = sch['sch']
+    assert sch.name == tst_schema.name
+    assert sch.hash == tst_schema.hash
