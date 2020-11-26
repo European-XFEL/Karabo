@@ -65,6 +65,7 @@ namespace karabo {
             typedef Memory::MetaData MetaData;
             typedef boost::function<void (const InputChannel::Pointer&) > InputHandler;
             typedef boost::function<void (const karabo::util::Hash&, const MetaData&) > DataHandler;
+            using ConnectionTracker = boost::function<void(const std::string&, net::ConnectionStatus)>;
 
             // Default maximum queue length on a connected output channel before
             // it starts dropping data or waiting for sending data. The max
@@ -90,6 +91,8 @@ namespace karabo {
 
             // Callback on end-of-stream
             InputHandler m_endOfStreamHandler;
+
+            ConnectionTracker m_connectionTracker;
 
             std::string m_instanceId;
 
@@ -161,6 +164,9 @@ namespace karabo {
             void registerDataHandler(const DataHandler& ioDataHandler);
 
             void registerEndOfStreamEventHandler(const InputHandler& endOfStreamEventHandler);
+
+            void registerConnectionTracker(const ConnectionTracker& tracker);
+
         private:
             void triggerIOEvent();
 
@@ -314,11 +320,12 @@ namespace karabo {
 
         private: // functions
             /**
-             * Disconnect and clean internals - needs protection by m_outputChannelsMutex
+             * Disconnect internals - needs protection by m_outputChannelsMutex
              *
              * @param outputChannelString One of the "connectedOutputChannels" given at construction
+             * @param lock lock of m_outputChannelsMutex, will likely be unlocked during execution
              */
-            void disconnectImpl(const std::string& outputChannelString);
+            void disconnectImpl(const std::string& outputChannelString, boost::mutex::scoped_lock& lock);
 
             void deferredNotificationsOfOutputChannelsForPossibleRead();
 
