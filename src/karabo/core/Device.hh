@@ -637,9 +637,17 @@ namespace karabo {
              *                  Timestamp::hashAttributesContainTimeInformation(hash.getAttributes(<path>)))
              */
             void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
-                using namespace karabo::util;
 
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                setNoLock(hash, timestamp);
+            }
+        private:
+
+            /**
+             * Internal method for set(Hash, Timestamp), requiring m_objectStateChangeMutex to be locked
+             */
+            void setNoLock(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
+                using namespace karabo::util;
                 karabo::util::Hash validated;
                 std::pair<bool, std::string> result;
 
@@ -679,6 +687,7 @@ namespace karabo {
                     emit(signal, validated, getInstanceId());
                 }
             }
+        public:
 
             /**
              * Updates the state of the device with all key/value pairs given in the hash.
@@ -846,21 +855,22 @@ namespace karabo {
 
             /**
              * Append a schema to the existing device schema
-             * @param schema to be appended
+             * @param schema to be appended - if it contains Input-/OutputChannels, they are created
              * @param unused parameter, kept for backward compatibility.
              */
             void appendSchema(const karabo::util::Schema& schema, const bool /*unused*/ = false) {
                 KARABO_LOG_DEBUG << "Append Schema requested";
+                const karabo::util::Timestamp stamp(getActualTimestamp());
                 karabo::util::Hash validated;
                 karabo::util::Validator::ValidationRules rules;
                 rules.allowAdditionalKeys = true;
                 rules.allowMissingKeys = true;
                 rules.allowUnrootedConfiguration = true;
                 rules.injectDefaults = true;
-                rules.injectTimestamps = true;
+                rules.injectTimestamps = false; // add later when set(validated) is called
                 karabo::util::Validator v(rules);
                 // Set default values for all parameters in appended Schema
-                v.validate(schema, karabo::util::Hash(), validated, getActualTimestamp());
+                v.validate(schema, karabo::util::Hash(), validated);
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
@@ -884,18 +894,24 @@ namespace karabo {
                     for (const std::string& p : prevFullSchemaPaths) {
                         validated.erasePath(p);
                     }
+
+                    setNoLock(validated, stamp);
+                    // Just init any freshly injected channels,
+                    // Input- and OutputChannels will be recreated (and need reconnection)
+                    initChannels(schema);
                 }
 
-                set(validated);
 
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Schema appended";
             }
 
             /**
              * Replace existing schema descriptions by static (hard coded in expectedParameters) part and
-             * add additional (dynamic) descriptions
+             * add additional (dynamic) descriptions. Previous additions will be removed.
+             *
              * @param schema additional, dynamic schema - may also contain existing elements to overwrite their
              *                attributes like min/max values/sizes, alarm ranges, etc.
+             *                If it contains Input-/OutputChannels, they are created (and previously added ones removed)
              * @param unused parameter, kept for backward compatibility.
              */
             void updateSchema(const karabo::util::Schema& schema, const bool /*unused*/ = false) {
@@ -907,9 +923,10 @@ namespace karabo {
                 rules.allowMissingKeys = true;
                 rules.allowUnrootedConfiguration = true;
                 rules.injectDefaults = true;
-                rules.injectTimestamps = true;
+                rules.injectTimestamps = false; // Will do later when set(validated,..) is called
                 karabo::util::Validator v(rules);
-                v.validate(schema, karabo::util::Hash(), validated, getActualTimestamp());
+                const karabo::util::Timestamp stamp(getActualTimestamp());
+                v.validate(schema, karabo::util::Hash(), validated);
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     // Clear previously injected parameters.
@@ -925,6 +942,24 @@ namespace karabo {
                     m_stateDependentSchema.clear();
 
                     const std::vector<std::string>prevFullSchemaPaths = m_fullSchema.getPaths();
+
+                    // Erase any previously injected Input-/OutputChannels
+                    for (const auto& inputNameChannel : getInputChannels()) {
+                        const std::string& path = inputNameChannel.first;
+                        // Do not touch static InputChannel (even if injected again to change some properties)
+                        if (m_staticSchema.has(path)) continue;
+                        if (m_injectedSchema.has(path)) {
+                            removeInputChannel(path);
+                        }
+                    }
+                    for (const auto& outputNameChannel : getOutputChannels()) {
+                        const std::string& path = outputNameChannel.first;
+                        // Do not touch static OutputChannel (even if injected again to change some properties)
+                        if (m_staticSchema.has(path)) continue;
+                        if (m_injectedSchema.has(path)) {
+                            removeOutputChannel(path);
+                        }
+                    }
 
                     // Resets fullSchema
                     m_fullSchema = m_staticSchema;
@@ -944,9 +979,12 @@ namespace karabo {
                     for (const std::string& p : prevFullSchemaPaths) {
                         validated.erasePath(p);
                     }
+                    setNoLock(validated, stamp);
+                    // Init any freshly injected channels,
+                    // Input- and OutputChannels will be recreated (and need reconnection)
+                    initChannels(m_injectedSchema);
                 }
 
-                set(validated);
 
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Schema updated";
             }
@@ -1571,7 +1609,7 @@ namespace karabo {
                 // Instantiate all channels - needs mutex
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
-                    this->initChannels();
+                    this->initChannels(m_fullSchema);
                 }
                 //
                 // Then start SignalSlotable: communication (incl. system registration) starts and thus parallelism!
@@ -1646,26 +1684,28 @@ namespace karabo {
                 KARABO_SLOT(slotClearLock);
 
                 KARABO_SLOT(slotGetTime);
-           }
+            }
 
             /**
-             *  Called in beginning of run() to setup pipeline channels, will
-             *  recursively go through the schema of the device.
+             *  Called to setup pipeline channels, will
+             *  recursively go through the given schema, assuming it to be at least
+             *  a part of the schema of the device.
              *  Needs to be called with m_objectStateChangeMutex being locked.
              *  *
+             *  * @param schema: the schema to traverse
              *  * @param topLevel: std::string: empty or existing path of full
              *  *                  schema of the device
              *  */
-            void initChannels(const std::string& topLevel = "") {
+            void initChannels(const karabo::util::Schema& schema, const std::string& topLevel = "") {
 
                 // Keys under topLevel, without leading "topLevel.":
-                const std::vector<std::string>& subKeys = m_fullSchema.getKeys(topLevel);
+                const std::vector<std::string>& subKeys = schema.getKeys(topLevel);
 
                 for (const std::string &subKey : subKeys) {
                     // Assemble full path out of topLevel and subKey
                     const std::string key(topLevel.empty() ? subKey : (topLevel + '.') += subKey);
-                    if (m_fullSchema.hasDisplayType(key)) {
-                        const std::string& displayType = m_fullSchema.getDisplayType(key);
+                    if (schema.hasDisplayType(key)) {
+                        const std::string& displayType = schema.getDisplayType(key);
                         if (displayType == "OutputChannel") {
                             KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates output channel '" << key << "'";
                             try {
@@ -1700,11 +1740,11 @@ namespace karabo {
                             KARABO_LOG_FRAMEWORK_DEBUG << "'" << this->getInstanceId() << "' does not create in-/output "
                                     << "channel for '" << key << "' since it's a '" << displayType << "'";
                         }
-                    } else if (m_fullSchema.isNode(key)) {
+                    } else if (schema.isNode(key)) {
                         // Recursive call going down the tree for channels within nodes
                         KARABO_LOG_FRAMEWORK_DEBUG << "'" << this->getInstanceId() << "' looks for input/output channels "
                                 << "under node \"" << key << "\"";
-                        this->initChannels(key);
+                        initChannels(schema, key);
                     }
                 }
             }
