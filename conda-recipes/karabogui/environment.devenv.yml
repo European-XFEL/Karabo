@@ -18,7 +18,7 @@ dependencies:
   - python=3.6.* # [osx]
   # for tests and building
   - flake8=3.3.0
-  - nose=1.3.7
+  - pytest=6.1.1
   - setuptools=42.0.1
   - setuptools_scm=3.3.3
   # GUI
