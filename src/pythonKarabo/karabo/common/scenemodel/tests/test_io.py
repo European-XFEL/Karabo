@@ -3,7 +3,7 @@ import os
 import os.path as op
 from xml.etree.ElementTree import Element, fromstring, tostring
 
-from nose.tools import assert_raises
+from pytest import raises as assert_raises
 
 from karabo.testing.utils import temp_cwd, temp_xml_file, xml_is_equal
 # Import via the API module so that all the readers/writers get registered

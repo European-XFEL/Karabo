@@ -188,19 +188,13 @@ safeRunTests() {
         _OLD_ACCEPT=$ACCEPT_FAILURES
         ACCEPT_FAILURES=true
         PYTHON_TESTS="py.test -v --pyargs"
-        JUNIT_RESULT_FILE="${MODULE_SPEC}${2}.junit.xml"
+        JUNIT_RESULT_FILE="junit.${MODULE_SPEC}${2}.xml"
         rm -f $JUNIT_RESULT_FILE
         JUNIT_OUTPUT="--junitxml=$JUNIT_RESULT_FILE"
         safeRunCommand "$PYTHON_TESTS $JUNIT_OUTPUT $MODULE_SPEC"
         ACCEPT_FAILURES=$_OLD_ACCEPT
         unset _OLD_ACCEPT
     fi
-}
-
-compileJunitReport() {
-    safeRunCommand "python -m pip install --upgrade $KARABO_PROJECT_ROOT_DIR/ci/utils/cppunitxmlparser/."
-    safeRunCommand "cppunitxml-junitmerge -d . -o junitoutput.xml"
-    safeRunCommand "rm -f *.junit.xml"
 }
 
 runPythonUnitTests() {
@@ -456,8 +450,6 @@ if $COLLECT_COVERAGE; then
 
     # Tear-down configuration for coverage tool.
     teardownCoverageTool
-else
-    compileJunitReport
 fi
 
 # Generate report.
