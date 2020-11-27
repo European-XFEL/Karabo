@@ -1,6 +1,6 @@
 from unittest import mock, skip
 
-from nose.tools import assert_raises
+from pytest import raises as assert_raises
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import QSize
 

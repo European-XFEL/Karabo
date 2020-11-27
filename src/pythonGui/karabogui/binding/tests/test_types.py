@@ -1,4 +1,4 @@
-from nose.tools import assert_raises
+from pytest import raises as assert_raises
 
 from ..api import (
     BindingNamespace,
