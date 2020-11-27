@@ -3,7 +3,7 @@ from karabo.common.project.api import (
     MacroModel, ProjectModel, device_config_exists, device_instance_exists,
     device_server_exists, get_project_models, macro_exists, find_parent_object
 )
-from nose.tools import assert_raises
+from pytest import raises as assert_raises
 
 
 def test_find_parent_object():

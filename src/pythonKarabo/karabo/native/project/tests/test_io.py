@@ -5,7 +5,7 @@ import os.path as op
 from tempfile import TemporaryDirectory
 from uuid import uuid4
 
-from nose.tools import assert_raises
+from pytest import raises as assert_raises
 from traits.api import HasTraits, Bool, Enum, Float, Int, Range, String
 
 from karabo.common.api import set_modified_flag, walk_traits_object

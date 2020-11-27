@@ -1,6 +1,6 @@
 import argparse
 
-from builder import builder_main, get_build_args, get_pack_args, packer_main
+from builder import get_build_args, get_pack_args
 
 
 DESCRIPTION = """
@@ -12,21 +12,16 @@ environment and built recipe.
 This can be used in conjuction with the build script.
 """
 
-root_ap = argparse.ArgumentParser(description=DESCRIPTION)
-
-operation_kwargs = {
-    'type': str,
-    'default': 'build',
-    'choices': ['build', 'pack']
-}
-
-root_ap.add_argument('operation', **operation_kwargs)
-get_build_args(parser=root_ap)
-get_pack_args(parser=root_ap)
+root_ap = argparse.ArgumentParser(
+    description=DESCRIPTION,
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+sps = root_ap.add_subparsers(metavar='')
+get_build_args(sub_parser=sps)
+get_pack_args(sub_parser=sps)
 
 args = root_ap.parse_args()
-
-if args.operation == 'build':
-    builder_main(args)
-elif args.operation == 'pack':
-    packer_main(args)
+if not hasattr(args, 'klass'):
+    root_ap.print_help()
+    root_ap.exit()
+b = args.klass(args)
+b.run()
