@@ -148,6 +148,11 @@ namespace karabo {
             m_endOfStreamHandler = endOfStreamEventHandler;
         }
 
+
+        void InputChannel::registerConnectionTracker(const ConnectionTracker& tracker) {
+            m_connectionTracker = tracker;
+        }
+
         size_t InputChannel::dataQuantityRead() {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             size_t bytesRead = 0;
@@ -177,7 +182,8 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             for (auto itChannel = m_configuredOutputChannels.begin(); itChannel != m_configuredOutputChannels.end(); ++itChannel) {
                 const std::string& outputChannel = itChannel->first;
-                if (m_openConnections.find(outputChannel) != m_openConnections.end()) {
+                auto itOpenConn = m_openConnections.find(outputChannel);
+                if (itOpenConn != m_openConnections.end()) {
                     result[outputChannel] = net::ConnectionStatus::CONNECTED;
                 } else if (m_connectionsBeingSetup.find(outputChannel) != m_connectionsBeingSetup.end()) {
                     result[outputChannel] = net::ConnectionStatus::CONNECTING;
@@ -262,6 +268,7 @@ namespace karabo {
                     m_connectionsBeingSetup[outputChannelString] = std::make_pair(id, handler);
                     lock.unlock();
                     KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\" - create connection!";
+                    if (m_connectionTracker) m_connectionTracker(outputChannelString, net::ConnectionStatus::CONNECTING);
                     // Prepare connection configuration given output channel information
                     karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
                     // Instantiate connection object
@@ -294,7 +301,7 @@ namespace karabo {
                 for (ConfiguredOutputChannels::const_iterator it = m_configuredOutputChannels.begin(); it != m_configuredOutputChannels.end(); ++it) {
                     if (it->second.get<string>("hostname") != hostname) continue;
                     if (it->second.get<unsigned int>("port") != port) continue;
-                    disconnectImpl(it->first);
+                    disconnectImpl(it->first, lock);
                     return;
                 }
             }
@@ -306,29 +313,31 @@ namespace karabo {
 
         void InputChannel::disconnect(const std::string& outputChannelString) {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
-            disconnectImpl(outputChannelString);
+            disconnectImpl(outputChannelString, lock);
         }
 
 
-        void InputChannel::disconnectImpl(const std::string& outputChannelString) {
+        void InputChannel::disconnectImpl(const std::string& outputChannelString, boost::mutex::scoped_lock& lock) {
             // If someone is still waiting for connection, tell that this was canceled
             auto itBeingSetup = m_connectionsBeingSetup.find(outputChannelString);
             if (itBeingSetup != m_connectionsBeingSetup.end()) {
-                const auto& handler = itBeingSetup->second.second;
-                if (handler) handler(boost::system::errc::make_error_code(boost::system::errc::operation_canceled));
+                const auto handler = std::move(itBeingSetup->second.second);
                 m_connectionsBeingSetup.erase(itBeingSetup);
+                lock.unlock(); // handlers are better called without mutex lock
+                if (handler) handler(boost::system::errc::make_error_code(boost::system::errc::operation_canceled));
+                if (m_connectionTracker) m_connectionTracker(outputChannelString, net::ConnectionStatus::DISCONNECTED);
+                return;
             }
 
             OpenConnections::iterator it = m_openConnections.find(outputChannelString);
             if (it == m_openConnections.end()) return; // see below
 
-            KARABO_LOG_FRAMEWORK_DEBUG << "Disconnecting... " << outputChannelString;
+            KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ": Disconnecting " << outputChannelString;
             it->second.second->close(); // Closes channel
             it->second.first->stop();
             m_openConnections.erase(it);
-            // Note: If 'outputChannelString' is used beyond this point, it would be better to
-            // take it as a value and not as a const reference: It might come from an iterator
-            // looping over m_openConnections - then it would be invalid now.
+            lock.unlock(); // handler is better called without mutex lock
+            if (m_connectionTracker) m_connectionTracker(outputChannelString, net::ConnectionStatus::DISCONNECTED);
         }
 
 
@@ -397,8 +406,12 @@ namespace karabo {
                 m_openConnections[outputChannelString] = std::make_pair(connection, channel);
             }
 
-            // Call handler if given - but without mutex lock
+            // Call handlers if given - but without mutex lock, i.e. with some bad luck, first data arrived before..
             lock.unlock();
+            // Which order of handlers? InputOutputChannel_Test::testConnectDisconnect assumes first connection tracker
+            if (m_connectionTracker) {
+                m_connectionTracker(outputChannelString, (ec ? net::ConnectionStatus::DISCONNECTED : net::ConnectionStatus::CONNECTED));
+            }
             if (handler) handler(ec);
         }
 
@@ -438,10 +451,16 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             for (OpenConnections::iterator ii = m_openConnections.begin(); ii != m_openConnections.end(); ++ii) {
                 if (ii->second.second == channel) {
-                    const std::string& outputChannelString = ii->first;
+                    const std::string outputChannelString = std::move(ii->first); // move: erase(ii) will invalidate
                     KARABO_LOG_FRAMEWORK_INFO << "onTcpChannelError on \"" << m_instanceId << "\"  connected to \""
-                            << outputChannelString << "\"  :  code #" << error.value() << " -- \"" << error.message() << "\".  Disconnect.";
-                    disconnectImpl(outputChannelString);
+                            << outputChannelString << "\"  :  code #" << error.value() << " -- \"" << error.message()
+                            << "\". Erase connection...";
+                    m_openConnections.erase(ii);
+                    // Better call m_connectionTracker last (which needs outputChannelString to be a copy, see above).
+                    if (m_connectionTracker) {
+                        lock.unlock(); // release mutex lock before calling handler
+                        m_connectionTracker(outputChannelString, net::ConnectionStatus::DISCONNECTED);
+                    }
                     return;
                 }
             }
