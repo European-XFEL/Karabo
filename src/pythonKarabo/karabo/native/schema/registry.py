@@ -1,6 +1,7 @@
-
 """ This module contains a little helper class which allows
 to register subclasses of one class """
+
+__all__ = ['MetaRegistry', 'Registry']
 
 
 class Registry(object):

@@ -11,11 +11,10 @@ from karabo.middlelayer import (
 from karabo.middlelayer_api.compat import HAVE_UVLOOP
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import call, getSchema
-from karabo.native.data.hash import Bool, Float, Hash, Int32, Slot, VectorHash
-from karabo.native.timestamp import Timestamp
+from karabo.native import (
+    Bool, Configurable, Float, Hash, Int32, Node, Slot, Timestamp, VectorHash)
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
 from karabo.middlelayer_api.utils import get_property
-from karabo.native.data.schema import Configurable, Node
 
 from karabo import __version__ as karaboVersion
 

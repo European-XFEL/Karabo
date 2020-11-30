@@ -10,8 +10,9 @@ from urllib.parse import urlencode
 from tornado.httpclient import AsyncHTTPClient, HTTPError
 from tornado.platform.asyncio import AsyncIOMainLoop, to_asyncio_future
 
-from karabo.native import Hash
-from karabo.native.data.hash import _gettype
+from karabo.native import (
+    convert_string_hashtype, get_hash_type_from_data, Hash,
+    HASH_TYPE_TO_XML_TYPE, encodeXML)
 
 from .dlutils import escape_tag_field_key
 
@@ -37,18 +38,11 @@ def get_key_value(key, value):
     elif isinstance(value, numbers.Real):
         return f'{key}={repr(value)}'.encode('utf-8')
     else:
-        _type = _gettype(value)
-        if hasattr(_type, "toString"):
-            return b''.join(
-                [f'{key}=\"'.encode('utf-8'),
-                 escape_tag_field_key(_type.toString(value)).encode('utf-8'),
-                 b'\"'])
-        else:
-            return b''.join(
-                [f'{key}=\"'.encode('utf-8'),
-                 escape_tag_field_key(
-                     "".join(_type.yieldXML(value))).encode('utf-8'),
-                 b'\"'])
+        data = convert_string_hashtype(value)
+        return b''.join(
+            [f'{key}=\"'.encode('utf-8'),
+                escape_tag_field_key(data).encode('utf-8'),
+                b'\"'])
 
 
 def get_line_fromdicts(measurement, field_dict, tag_dict=None, timestamp=None):
@@ -92,14 +86,15 @@ def lines_fromhash(device_id, hash_, tags=""):
         nonlocal timestamp, tid, fields
         for k, v, a in h.iterall():
             newts = int(a.get("frac", 0) // 10**12) +\
-                 int(a.get("sec", 0)) * 10**6
+                int(a.get("sec", 0)) * 10**6
             newtid = a.get("tid", 0)
             if newts > timestamp:
                 timestamp = newts
             if newtid > tid:
                 tid = newtid
             if not isinstance(v, Hash):
-                typename = _gettype(v)._hashname
+                hashtype = get_hash_type_from_data(v)
+                typename = HASH_TYPE_TO_XML_TYPE[hashtype]
                 yield get_key_value(f'{prefix}{k}-{typename}', v)
                 yield b','
             else:
@@ -123,6 +118,7 @@ class Results():
     The format is not pretty and is defined here:
     https://docs.influxdata.com/influxdb/v1.7/guides/querying_data/
     """
+
     def __init__(self, result):
         if isinstance(result, (str, bytes)):
             result = loads(result)

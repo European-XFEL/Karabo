@@ -1,35 +1,40 @@
 """ This module contains the type hierarchy implied by the Karabo hash.
-
-This file closely corresponds to karabo.util.ReferenceType.
-
-The C++ types are mostly implemented by using the corresponding numpy type.
 """
-
 from asyncio import (
     coroutine, ensure_future, get_event_loop, iscoroutinefunction)
 import base64
-from collections import OrderedDict
-from collections.abc import Iterable
-from copy import deepcopy
 from enum import Enum
 from functools import partial, wraps
 import logging
-import numbers
-from struct import pack
 import re
 import sys
-from xml.sax.saxutils import escape, quoteattr
 
 import numpy as np
 
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
-from karabo.native.data import basetypes
-from karabo.native.data.enums import (
+from karabo.native.karabo_hash import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqPolicy,
     LeafType, MetricPrefix, NodeType, Unit)
-from karabo.native.exceptions import KaraboError
-from karabo.native.registry import Registry
+from karabo.native.karabo_hash import (
+    decodeXML, Hash, HashByte, HashList, Schema)
+from karabo.native import KaraboError
+
+from .basetypes import (
+    BoolValue, EnumValue, isSet, NoneValue, KaraboValue,
+    StringValue, TableValue, VectorCharValue, VectorStringValue, QuantityValue)
+from .registry import Registry
+
+__all__ = [
+    'Attribute', 'Bool', 'ByteArray', 'Char',  'ComplexFloat',
+    'ComplexDouble', 'Descriptor', 'Double', 'Enumable', 'Float',
+    'Integer', 'Int8', 'Int16', 'Int32', 'Int64', 'NumpyVector', 'Number',
+    'RegexString',  'Simple', 'Slot', 'String', 'Type', 'TypeHash',
+    'TypeSchema', 'UInt8', 'UInt16', 'UInt32',  'UInt64', 'Vector',
+    'VectorString', 'VectorFloat', 'VectorBool', 'VectorChar', 'VectorDouble',
+    'VectorRegexString', 'VectorComplexFloat', 'VectorComplexDouble',
+    'VectorHash', 'VectorInt8', 'VectorUInt8', 'VectorInt16', 'VectorUInt16',
+    'VectorInt32', 'VectorUInt32', 'VectorInt64', 'VectorUInt64']
 
 
 def get_instance_parent(instance):
@@ -42,12 +47,6 @@ def get_instance_parent(instance):
             break
 
     return parent
-
-
-def yieldKey(key):
-    key = key.encode('utf8')
-    yield pack('B', len(key))
-    yield key
 
 
 class Attribute(object):
@@ -67,7 +66,7 @@ class Attribute(object):
         instance.__dict__[self] = self.check(value)
 
     def check(self, value):
-        if self.dtype is None or not basetypes.isSet(value):
+        if self.dtype is None or not isSet(value):
             return value
 
         info = np.iinfo(self.dtype)
@@ -129,7 +128,7 @@ class Enumable(object):
         if not strict and not isinstance(data, self.enum):
             data = self.enum(data)
         self.check(data)
-        return basetypes.EnumValue(data, descriptor=self)
+        return EnumValue(data, descriptor=self)
 
 
 class Simple(object):
@@ -163,18 +162,8 @@ class Simple(object):
     alarmNeedsAck_warnLow = Attribute(False)
 
     @classmethod
-    def read(cls, file):
-        ret = np.frombuffer(file.data, cls.numpy, 1, file.pos)[0]
-        file.pos += cls.numpy().itemsize
-        return ret
-
-    @classmethod
     def fromstring(cls, s):
         return cls.numpy(s)
-
-    @classmethod
-    def yieldBinary(cls, data):
-        yield pack(cls.format, data)
 
     def cast(self, other):
         if self.enum is not None:
@@ -196,9 +185,9 @@ class Simple(object):
         super().check(ret)
 
     def alarmCondition(self, data):
-        if not basetypes.isSet(data):
+        if not isSet(data):
             return AlarmCondition.NONE
-        if isinstance(data, basetypes.KaraboValue):
+        if isinstance(data, KaraboValue):
             data = data.value
         if self.alarmLow is not None and data < self.alarmLow:
             return AlarmCondition.ALARM_LOW
@@ -213,17 +202,17 @@ class Simple(object):
     def toKaraboValue(self, data, strict=True):
         if self.enum is not None:
             return Enumable.toKaraboValue(self, data, strict)
-        if isinstance(data, basetypes.KaraboValue):
+        if isinstance(data, KaraboValue):
             timestamp = data.timestamp
         else:
             timestamp = None
         if isinstance(data, str):
-            data = basetypes.QuantityValue(data, descriptor=self)
-        if isinstance(data, basetypes.QuantityValue):
+            data = QuantityValue(data, descriptor=self)
+        if isinstance(data, QuantityValue):
             data = data.to(self.units).value
         self.check(data)
-        data = basetypes.QuantityValue(self.numpy(data), descriptor=self,
-                                       timestamp=timestamp)
+        data = QuantityValue(self.numpy(data), descriptor=self,
+                             timestamp=timestamp)
         return data
 
     def getMinMax(self):
@@ -374,9 +363,8 @@ class Descriptor(object):
             if strict:
                 self.allowedStates = set(allowedStates)
                 if not all((isinstance(s, State) for s in self.allowedStates)):
-                    raise TypeError(
-                        'allowedStates must contain States, not "{}"'.
-                        format(allowedStates))
+                    raise TypeError('allowedStates must contain States, '
+                                    'not "{}"'.format(allowedStates))
             else:
                 self.allowedStates = set((State(s) for s in allowedStates))
         if tags is not None:
@@ -397,8 +385,8 @@ class Descriptor(object):
         else:
             if strict and not isinstance(requiredAccessLevel, AccessLevel):
                 raise TypeError(
-                        'requiredAccessLevel must be of type AccessLevel,'
-                        ' got {} instead'.format(requiredAccessLevel))
+                    'requiredAccessLevel must be of type AccessLevel,'
+                    ' got {} instead'.format(requiredAccessLevel))
             self.requiredAccessLevel = AccessLevel(requiredAccessLevel)
 
         self.__doc__ = self.description
@@ -436,8 +424,8 @@ class Descriptor(object):
 
     def __set__(self, instance, value):
         if (self.assignment is Assignment.OPTIONAL and
-                not basetypes.isSet(value)):
-            value = basetypes.NoneValue(value, descriptor=self)
+                not isSet(value)):
+            value = NoneValue(value, descriptor=self)
         else:
             value = self.toKaraboValue(value)
         value._parent = instance
@@ -477,7 +465,7 @@ class Descriptor(object):
         `initialize` is called with corresponding `KaraboValue`.
         """
         if value is None:
-            value = basetypes.NoneValue(descriptor=self)
+            value = NoneValue(descriptor=self)
         else:
             value = self.toKaraboValue(value, strict=False)
 
@@ -624,11 +612,6 @@ class Slot(Descriptor):
         return self
 
 
-class Special(object):
-    """These is the base class for special types, which neither have
-    a python nor numpy equivalent"""
-
-
 class Type(Descriptor, Registry):
     """A Type is a descriptor that does not contain other descriptors.
 
@@ -639,6 +622,7 @@ class Type(Descriptor, Registry):
     daqPolicy = Attribute(DaqPolicy.UNSPECIFIED)
     enum = None
 
+    # Note: Require lookup dicts!
     types = [None] * 51
     fromname = {}
     strs = {}
@@ -647,9 +631,9 @@ class Type(Descriptor, Registry):
 
     def __init__(self, strict=True, **kwargs):
         super().__init__(strict=strict, **kwargs)
-        self.units = basetypes.QuantityValue(
-                1, unit=self.unitSymbol, metricPrefix=self.metricPrefixSymbol
-            ).units
+        self.units = QuantityValue(
+            1, unit=self.unitSymbol, metricPrefix=self.metricPrefixSymbol
+        ).units
         self.dimensionality = self.units.dimensionality
 
         # re-write the options. We first delete them so we don't check
@@ -705,12 +689,8 @@ class Type(Descriptor, Registry):
         if 'numpy' in dict:
             cls.strs[np.dtype(cls.numpy).str] = cls
 
-    @classmethod
-    def toString(cls, data):
-        return str(data)
-
     def toDataAndAttrs(self, data):
-        if not isinstance(data, basetypes.KaraboValue):
+        if not isinstance(data, KaraboValue):
             return self.cast(data), {}
         if data.timestamp is not None:
             attrs = data.timestamp.toDict()
@@ -734,16 +714,6 @@ class Type(Descriptor, Registry):
         self.setter = method
         return self
 
-    @classmethod
-    def yieldBinary(cls, data):
-        """iterating over this yields the binary serialization of `data`"""
-        raise NotImplementedError
-
-    @classmethod
-    def yieldXML(cls, data):
-        """iterating over this yields the XML representation of `data`"""
-        yield escape(cls.toString(data))
-
 
 class Vector(Type):
     """This is the base class for all vectors of data"""
@@ -756,27 +726,16 @@ class Vector(Type):
         if "basetype" in dict:
             cls.basetype.vectortype = cls
 
-    @classmethod
-    def read(cls, file):
-        size, = file.readFormat('I')
-        return (cls.basetype.read(file) for i in range(size))
-
     def check(self, ret):
         if self.minSize is not None and len(ret) < self.minSize:
             raise ValueError("Vector {} of {} with size {} is shorter than "
                              "the allowed size of {}".format(
-                                ret, self.key, len(ret), self.minSize))
+                                 ret, self.key, len(ret), self.minSize))
         if self.maxSize is not None and len(ret) > self.maxSize:
             raise ValueError("Vector {} of {} with size {} is larger than "
                              "the allowed size of {}".format(
-                                ret, self.key, len(ret), self.maxSize))
+                                 ret, self.key, len(ret), self.maxSize))
         super().check(ret)
-
-    @classmethod
-    def yieldBinary(cls, data):
-        yield pack('I', len(data))
-        for d in data:
-            yield from cls.basetype.yieldBinary(d)
 
 
 class NumpyVector(Vector):
@@ -791,22 +750,11 @@ class NumpyVector(Vector):
         cls.vstrs[cls.basetype.numpy().dtype.str] = cls
 
     @classmethod
-    def read(cls, file):
-        size, = file.readFormat('I')
-        ret = np.frombuffer(file.data, cls.basetype.numpy, size, file.pos)
-        file.pos += cls.basetype.numpy().itemsize * size
-        return ret
-
-    @classmethod
     def fromstring(cls, s):
         if s:
             return np.fromstring(s, sep=",", dtype=cls.basetype.numpy)
         else:
             return np.array([], dtype=cls.basetype.numpy)
-
-    @classmethod
-    def toString(cls, data):
-        return ",".join(str(x) for x in data)
 
     def cast(self, other):
         if (isinstance(other, np.ndarray) and
@@ -820,9 +768,9 @@ class NumpyVector(Vector):
         return ret
 
     def toKaraboValue(self, data, strict=True):
-        if not isinstance(data, basetypes.KaraboValue):
+        if not isinstance(data, KaraboValue):
             data = self.cast(data)
-        data = basetypes.QuantityValue(data, descriptor=self)
+        data = QuantityValue(data, descriptor=self)
         if data.units != self.units:
             data = data.to(self.units)
             data.descriptor = self
@@ -830,50 +778,26 @@ class NumpyVector(Vector):
 
         return data
 
-    @classmethod
-    def yieldBinary(cls, data):
-        if (not isinstance(data, np.ndarray)
-                or data.dtype != cls.basetype.numpy):
-            data = np.array(data, dtype=cls.basetype.numpy)
-        yield pack('I', len(data))
-        yield data.data
-
 
 class Bool(Type):
     """This describes a boolean: ``True`` or ``False``"""
     number = 0
     numpy = np.bool_
 
-    @classmethod
-    def read(cls, file):
-        return bool(Int8.read(file) != 0)
-
-    @classmethod
-    def yieldBinary(cls, data):
-        yield from Int8.yieldBinary(1 if data else 0)
-
     @staticmethod
     def fromstring(s):
         return bool(int(s))
-
-    @classmethod
-    def toString(cls, data):
-        return '1' if data else '0'
 
     def cast(self, other):
         return bool(other)
 
     def toKaraboValue(self, data, strict=True):
-        return basetypes.BoolValue(data, descriptor=self)
+        return BoolValue(data, descriptor=self)
 
 
 class VectorBool(NumpyVector):
     basetype = Bool
     number = 1
-
-    @classmethod
-    def toString(cls, data):
-        return ",".join(str(int(i)) for i in data)
 
     def cast(self, other):
         if isinstance(other, list) and other and isinstance(other[0], str):
@@ -885,34 +809,20 @@ class Char(Simple, Type):
     number = 2
     numpy = np.uint8  # actually not used, for convenience only
 
-    @staticmethod
-    def read(file):
-        file.pos += 1
-        return _Byte(file.data[file.pos - 1:file.pos].decode("ascii"))
-
-    @classmethod
-    def toString(cls, data):
-        return data
-
     @classmethod
     def fromstring(cls, s):
         return s
 
-    @classmethod
-    def yieldBinary(cls, data):
-        assert len(data) == 1
-        yield data.encode("ascii")
-
     def cast(self, other):
         try:
-            return _Byte(chr(other))
+            return HashByte(chr(other))
         except TypeError:
             if len(str(other)) == 1:
-                return _Byte(other)
+                return HashByte(other)
             elif isinstance(other, bytes):
                 o = other.decode("ascii")
                 if len(o) == 1:
-                    return _Byte(o)
+                    return HashByte(o)
             raise
 
     def toKaraboValue(self, data, strict=True):
@@ -924,16 +834,7 @@ class Char(Simple, Type):
             raise ValueError(
                 "Character must be bytes or string of length 1 "
                 "or positive number < 256")
-        return basetypes.QuantityValue(data, descriptor=self)
-
-
-class _Byte(Special, str):
-    """This represents just one byte, so that we can distinguish
-    CHAR and VECTOR_CHAR."""
-    hashtype = Char
-
-    def __repr__(self):
-        return "${:x}".format(ord(self))
+        return QuantityValue(data, descriptor=self)
 
 
 class VectorChar(Vector):
@@ -943,24 +844,9 @@ class VectorChar(Vector):
     number = 3
     numpy = np.object_
 
-    @staticmethod
-    def read(file):
-        size, = file.readFormat('I')
-        file.pos += size
-        return bytes(file.data[file.pos - size:file.pos])
-
-    @classmethod
-    def toString(cls, data):
-        return base64.b64encode(data).decode("ascii")
-
     @classmethod
     def fromstring(cls, s):
         return base64.b64decode(s)
-
-    @classmethod
-    def yieldBinary(cls, data):
-        yield pack('I', len(data))
-        yield data
 
     def cast(self, other):
         if isinstance(other, bytes):
@@ -970,7 +856,7 @@ class VectorChar(Vector):
 
     def toKaraboValue(self, data, strict=True):
         self.check(data)
-        return basetypes.VectorCharValue(data, descriptor=self)
+        return VectorCharValue(data, descriptor=self)
 
 
 class ByteArray(Vector):
@@ -980,26 +866,10 @@ class ByteArray(Vector):
     number = 37
     numpy = np.object_
 
-    @staticmethod
-    def read(file):
-        size, = file.readFormat('I')
-        file.pos += size
-        return bytearray(file.data[file.pos - size:file.pos])
-
-    @classmethod
-    def toString(cls, data):
-        return base64.b64encode(data).decode("ascii")
-
     @classmethod
     def fromstring(cls, s):
         # XXX: should return bytearray(base64.b64decode(s))
         return base64.b64decode(s)
-
-    @classmethod
-    def yieldBinary(cls, data):
-        mv = memoryview(data)
-        yield pack('I', mv.nbytes)
-        yield mv
 
     def cast(self, other):
         if isinstance(other, bytearray):
@@ -1008,7 +878,7 @@ class ByteArray(Vector):
             return bytearray(other)
 
     def toKaraboValue(self, data, strict=True):
-        return basetypes.VectorCharValue(data, descriptor=self)
+        return VectorCharValue(data, descriptor=self)
 
 
 class Int8(Integer, Type):
@@ -1035,7 +905,6 @@ class VectorUInt8(NumpyVector):
 
 class Int16(Integer, Type):
     number = 8
-    format = "h"
     numpy = np.int16
 
 
@@ -1046,7 +915,6 @@ class VectorInt16(NumpyVector):
 
 class UInt16(Integer, Type):
     number = 10
-    format = "H"
     numpy = np.uint16
 
 
@@ -1057,7 +925,6 @@ class VectorUInt16(NumpyVector):
 
 class Int32(Integer, Type):
     number = 12
-    format = "i"
     numpy = np.int32
 
 
@@ -1068,7 +935,6 @@ class VectorInt32(NumpyVector):
 
 class UInt32(Integer, Type):
     number = 14
-    format = "I"
     numpy = np.uint32
 
 
@@ -1079,7 +945,6 @@ class VectorUInt32(NumpyVector):
 
 class Int64(Integer, Type):
     number = 16
-    format = "q"
     numpy = np.int64
 
 
@@ -1090,7 +955,6 @@ class VectorInt64(NumpyVector):
 
 class UInt64(Integer, Type):
     number = 18
-    format = "Q"
     numpy = np.uint64
 
 
@@ -1101,7 +965,6 @@ class VectorUInt64(NumpyVector):
 
 class Float(Number, Type):
     number = 20
-    format = "f"
     numpy = np.float32
 
 
@@ -1112,7 +975,6 @@ class VectorFloat(NumpyVector):
 
 class Double(Number, Type):
     number = 22
-    format = "d"
     numpy = np.float64
 
 
@@ -1123,20 +985,11 @@ class VectorDouble(NumpyVector):
 
 class ComplexFloat(Number, Type):
     number = 24
-    format = "ff"
     numpy = np.complex64
 
     @classmethod
     def fromstring(cls, s):
         return complex(*[float(n) for n in s[1:-1].split(',')])
-
-    @classmethod
-    def toString(cls, data):
-        return "({},{})".format(data.real, data.imag)
-
-    @classmethod
-    def yieldBinary(cls, data):
-        yield pack(cls.format, data.real, data.imag)
 
 
 class VectorComplexFloat(NumpyVector):
@@ -1146,20 +999,11 @@ class VectorComplexFloat(NumpyVector):
 
 class ComplexDouble(Number, Type):
     number = 26
-    format = "dd"
     numpy = np.complex128
 
     @classmethod
     def fromstring(cls, s):
         return complex(*[float(n) for n in s[1:-1].split(',')])
-
-    @classmethod
-    def toString(cls, data):
-        return "({},{})".format(data.real, data.imag)
-
-    @classmethod
-    def yieldBinary(cls, data):
-        yield pack(cls.format, data.real, data.imag)
 
 
 class VectorComplexDouble(NumpyVector):
@@ -1174,19 +1018,9 @@ class String(Enumable, Type):
     number = 28
     numpy = np.object_  # strings better be stored as objects in numpy tables
 
-    @classmethod
-    def read(cls, file):
-        size, = file.readFormat('I')
-        file.pos += size
-        return str(file.data[file.pos - size:file.pos], 'utf8')
-
     @staticmethod
     def fromstring(s):
         return str(s)
-
-    @classmethod
-    def yieldBinary(cls, data):
-        yield from VectorChar.yieldBinary(data.encode('utf8'))
 
     def cast(self, other):
         if self.enum is not None:
@@ -1200,7 +1034,7 @@ class String(Enumable, Type):
         if self.enum is not None:
             return Enumable.toKaraboValue(self, data, strict)
         self.check(data)
-        return basetypes.StringValue(data, descriptor=self)
+        return StringValue(data, descriptor=self)
 
 
 class RegexString(String):
@@ -1234,6 +1068,7 @@ class VectorString(Vector):
     basetype = String
     number = 29
     numpy = np.object_
+
     # NOTE: Vectorstring should be represented as python lists
     # the np.object is simply for the table element
 
@@ -1242,14 +1077,6 @@ class VectorString(Vector):
         if not s:
             return []
         return [ss.strip() for ss in s.split(',')]
-
-    @classmethod
-    def read(cls, file):
-        return list(super(VectorString, cls).read(file))
-
-    @classmethod
-    def toString(cls, data):
-        return ",".join(str(x) for x in data)
 
     def cast(self, other):
         def check(s):
@@ -1262,7 +1089,7 @@ class VectorString(Vector):
 
     def toKaraboValue(self, data, strict=True):
         self.check(data)
-        return basetypes.VectorStringValue(data, descriptor=self)
+        return VectorStringValue(data, descriptor=self)
 
 
 class VectorRegexString(VectorString):
@@ -1296,74 +1123,47 @@ class VectorRegexString(VectorString):
                                   f"comply with regex pattern {self.regex}!")
 
 
-class HashType(Type):
-    number = 30
-
-    @classmethod
-    def read(cls, file):
-        size, = file.readFormat('I')
-        ret = Hash()
-        for i in range(size):
-            key = file.readKey()
-            type_idx, = file.readFormat('I')
-            type = cls.types[type_idx]
-            asize, = file.readFormat('I')
-            attrs = {}
-            for i in range(asize):
-                akey = file.readKey()
-                atype, = file.readFormat('I')
-                atype = cls.types[atype]
-                attrs[akey] = atype.read(file)
-            # Optimization: Set value and attributes simultaneously
-            ret._setelement(key, HashElement(type.read(file), attrs))
-            if type_idx == 31 and key == 'KRB_Sequence':
-                # Special case: This is the equivalent of what is done by the
-                # C++ binary serializer, HashBinarySerializer, in its method
-                # 'load(vector<Hash>&, const char*, const size_t)'
-                ret = ret['KRB_Sequence']
-        return ret
-
-    @classmethod
-    def yieldBinary(cls, data):
-        yield pack('I', len(data))
-        for k, v, attrs in data.iterall():
-            yield from yieldKey(k)
-            hashtype = _gettype(v)
-            yield pack('II', hashtype.number, len(attrs))
-            for ak, av in attrs.items():
-                atype = _gettype(av)
-                yield from yieldKey(ak)
-                yield pack('I', atype.number)
-                yield from atype.yieldBinary(av)
-            yield from hashtype.yieldBinary(v)
+class None_(Type):
+    number = 35
 
     def cast(self, other):
-        if other.hashtype is type(self):
+        if other is not None:
+            raise TypeError('cannot cast to None (was {})'.format(other))
+
+
+class TypeHash(Type):
+    number = 30
+
+    def cast(self, other):
+        if isinstance(other, Hash):
             return other
         else:
-            raise TypeError('cannot cast anything to {} (was {})'.
-                            format(type(self).__name__, type(other).__name__))
+            raise TypeError('cannot cast anything to Hash (was {})'.
+                            format(type(other).__name__))
 
     @classmethod
     def hashname(cls):
         return "HASH"
 
+
+class TypeSchema(TypeHash):
+    number = 32
+
+    def cast(self, other):
+        if isinstance(other, Schema):
+            return other
+        else:
+            raise TypeError('cannot cast anything to Schema (was {})'.
+                            format(type(other).__name__))
+
     @classmethod
-    def yieldXML(cls, data):
-        for key, value, attrs in data.iterall():
-            value_type = _gettype(value)
-            yield '<{key} KRB_Type="{value_type}" '.format(
-                key=key, value_type=value_type.hashname())
-            for k, v in attrs.items():
-                attr_type = _gettype(v)
-                attr = "KRB_{attr_type}:{data}".format(
-                    attr_type=attr_type.hashname(),
-                    data="".join(attr_type.yieldXML(v)))
-                yield '{key}={attr} '.format(
-                    key=k, attr=quoteattr(attr))
-            yield ">"
-            yield from value_type.yieldXML(value)
-            yield "</{}>".format(key)
+    def fromstring(cls, s):
+        name, xml = s.split(":", 1)
+        return Schema(name, hash=decodeXML(xml))
+
+    @classmethod
+    def hashname(cls):
+        return "SCHEMA"
 
 
 class VectorHash(Vector):
@@ -1377,7 +1177,7 @@ class VectorHash(Vector):
     :param row: The structure of each row. This is a :class:`Configurable`
     class.
     """
-    basetype = HashType
+    basetype = TypeHash
     number = 31
     displayType = Attribute("Table")
     rowSchema = Attribute()
@@ -1399,18 +1199,14 @@ class VectorHash(Vector):
                           a.get("metricPrefixSymbol", MetricPrefix.NONE))
                       for k, _, a in self.rowSchema.hash.iterall()}
 
-    @classmethod
-    def read(cls, file):
-        return HashList(super(VectorHash, cls).read(file))
-
     def cast(self, other):
-        ht = HashType()
+        ht = TypeHash()
         return HashList(ht.cast(o) for o in other)
 
     def toKaraboValue(self, data, strict=True):
         timestamp = None
         if strict:
-            if isinstance(data, basetypes.KaraboValue):
+            if isinstance(data, KaraboValue):
                 timestamp = data.timestamp
                 data = data.value
             elif isinstance(data, list) and data:
@@ -1433,11 +1229,11 @@ class VectorHash(Vector):
                     tablerow += (kvalue.value,)
                 table.append(tablerow)
             table = np.array(table, dtype=self.dtype)
-        return basetypes.TableValue(table, descriptor=self, units=self.units,
-                                    timestamp=timestamp)
+        return TableValue(table, descriptor=self, units=self.units,
+                          timestamp=timestamp)
 
     def toDataAndAttrs(self, value):
-        if (isinstance(value, basetypes.KaraboValue)
+        if (isinstance(value, KaraboValue)
                 and value.timestamp is not None):
             attrs = value.timestamp.toDict()
         else:
@@ -1446,510 +1242,3 @@ class VectorHash(Vector):
         data = [Hash((col, row[col]) for col in self.dtype.names)
                 for row in value.value]
         return data, attrs
-
-    @classmethod
-    def yieldXML(cls, data):
-        for d in data:
-            yield "<KRB_Item>"
-            yield from HashType.yieldXML(d)
-            yield "</KRB_Item>"
-
-
-class HashList(list, Special):
-    hashtype = VectorHash
-
-    def __repr__(self):
-        return "HashList(" + super(HashList, self).__repr__() + ")"
-
-
-class SchemaHashType(HashType):
-    number = 32
-
-    @classmethod
-    def read(cls, file):
-        l, = file.readFormat('I')  # ignore length
-        op = file.pos
-        size, = file.readFormat('B')
-        name = str(file.data[file.pos:file.pos + size], "utf8")
-        file.pos += size
-        ret = super(SchemaHashType, cls).read(file)
-        assert file.pos - op == l, 'failed: {} {} {}'.format(file.pos, op, l)
-        return Schema(name, hash=ret)
-
-    @classmethod
-    def yieldBinary(cls, data):
-        for p in data.hash.paths():
-            nodeType = NodeType(data.hash[p, "nodeType"])
-            if nodeType is NodeType.Leaf:
-                assert not data.hash[p], "no proper leaf: {}".format(p)
-            else:
-                assert isinstance(data.hash[p], Hash), \
-                    "no proper node: {}".format(p)
-        binary = b''.join(HashType.yieldBinary(data.hash))
-        s = data.name.encode('utf8')
-        yield pack('IB', len(binary) + len(s) + 1, len(s))
-        yield s
-        yield binary
-
-    @classmethod
-    def toString(cls, data):
-        from .serializers import encodeXML
-        return data.name + ":" + "".join(encodeXML(data.hash))
-
-    @classmethod
-    def fromstring(cls, s):
-        from .serializers import decodeXML
-        name, xml = s.split(":", 1)
-        return Schema(name, hash=decodeXML(xml))
-
-    @classmethod
-    def hashname(cls):
-        return 'SCHEMA'
-
-    @classmethod
-    def yieldXML(cls, data):
-        yield data.name
-        yield ":"
-        yield escape("".join(HashType.yieldXML(data.hash)))
-
-
-class Schema(Special):
-    hashtype = SchemaHashType
-
-    def __init__(self, name=None, rules=None, hash=None):
-        self.name = name
-        if hash is None:
-            self.hash = Hash()
-        else:
-            self.hash = hash
-        self.rules = rules
-
-    def copy(self, other):
-        self.hash = Hash()
-        self.hash.merge(other.hash)
-        self.name = other.name
-        self.rules = other.rules
-
-    def keyHasAlias(self, key):
-        return "alias" in self.hash[key, ...]
-
-    def getAliasAsString(self, key):
-        if self.hash.hasAttribute(key, "alias"):
-            return self.hash[key, "alias"]
-
-    def getKeyFromAlias(self, alias):
-        for k in self.hash.paths():
-            if alias == self.hash[k, ...].get("alias", None):
-                return k
-
-    def getValueType(self, key):
-        return Type.fromname[self.hash[key, "valueType"]]
-
-    def filterByTags(self, *args):
-        args = set(args)
-        h = Hash()
-        for k in self.hash.paths():
-            tags = self.hash[k, ...].get("tags", ())
-            if not args.isdisjoint(tags):
-                h[k] = self.hash[k]
-        return h
-
-    def __repr__(self):
-        return "Schema('{}', {})".format(self.name, self.hash)
-
-
-class None_(Type):
-    number = 35
-
-    @staticmethod
-    def read(file):
-        file.readFormat('I')  # ignore length
-        return None
-
-    @classmethod
-    def toString(cls, data):
-        return ''
-
-    @classmethod
-    def fromstring(cls, s):
-        return None
-
-    @classmethod
-    def yieldBinary(cls, data):
-        yield pack('I', 0)
-
-    def cast(self, other):
-        if other is not None:
-            raise TypeError('cannot cast to None (was {})'.format(other))
-
-
-def _gettype(data):
-    try:
-        if data.ndim == 1 and isinstance(data, np.ndarray):
-            return NumpyVector.vstrs[data.dtype.str]
-        else:
-            return Type.strs[data.dtype.str]
-    except AttributeError:
-        if hasattr(data, "hashtype"):
-            return data.hashtype
-        elif isinstance(data, (bool, basetypes.BoolValue)):
-            return Bool
-        elif isinstance(data, (Enum, numbers.Integral)):
-            return Int32
-        elif isinstance(data, numbers.Real):
-            return Double
-        elif isinstance(data, numbers.Complex):
-            return ComplexDouble
-        elif isinstance(data, bytes):
-            return VectorChar
-        elif isinstance(data, str):
-            return String
-        elif isinstance(data, list):
-            if data:
-                return _gettype(data[0]).vectortype
-            else:
-                return VectorString
-        elif not basetypes.isSet(data):
-            return None_
-        try:
-            memoryview(data)
-            return ByteArray
-        except TypeError:
-            raise TypeError('unknown datatype {}'.format(data.__class__))
-
-
-class HashElement(object):
-    __slots__ = ["data", "attrs"]
-
-    def __init__(self, data, attrs):
-        self.data = data
-        self.attrs = attrs
-
-    def __eq__(self, other):
-        if isinstance(other, HashElement):
-            def _equal(d0, d1):
-                ret = (d0 == d1)
-                return all(ret) if isinstance(ret, Iterable) else ret
-
-            return (_equal(self.data, other.data) and
-                    _equal(self.attrs, other.attrs))
-        return super().__eq__(other)
-
-
-SEPARATOR = "."
-
-
-class Hash(OrderedDict):
-    """This is the serialization data structure of Karabo
-
-    Every data that gets transfered over the network or saved to file
-    by Karabo is in this format.
-
-    It is mostly an extended :class:`dict`.
-
-    The big difference to normal Python containers is the dot-access method.
-    The hash has a built-in knowledge about it containing itself. Thus,
-    one can access subhashes by ``hash['key.subhash']``.
-
-    The other speciality are attributes. In Python, these can be accessed
-    using a second parameter to the brackets, as in
-    ``hash['key', 'attribute']``.
-
-    All attributes at the same time can be accessed by ``hash['key', ...]``."""
-
-    hashtype = HashType
-
-    def __init__(self, *args):
-        if len(args) == 1:
-            if isinstance(args[0], Hash):
-                OrderedDict.__init__(self)
-                for k, v, a in args[0].iterall():
-                    OrderedDict.__setitem__(self, k, HashElement(v, a))
-            else:
-                OrderedDict.__init__(self, args[0])
-        else:
-            OrderedDict.__init__(self)
-            for k, v in zip(args[::2], args[1::2]):
-                self[k] = v
-
-    def _path(self, path, auto=False):
-        path = path.split(SEPARATOR)
-        s = self
-        for p in path[:-1]:
-            if auto and p not in s:
-                OrderedDict.__setitem__(s, p, HashElement(Hash(), {}))
-            s = OrderedDict.__getitem__(s, p).data
-        if not isinstance(s, Hash):
-            raise KeyError(path)
-        return s, path[-1]
-
-    def _get(self, path, auto=False):
-        if SEPARATOR not in path:
-            # We can use the fast path here for methods like ``__contains__``
-            return OrderedDict.__getitem__(self, path)
-
-        return OrderedDict.__getitem__(*self._path(path, auto))
-
-    def __repr__(self):
-        r = ', '.join('{}{!r}: {!r}'.format(k, self[k, ...], self[k])
-                      for k in self)
-        return '<' + r + '>'
-
-    def _setelement(self, key, value):
-        # NOTE: This is a fast path for __setitem__ to be use by the binary
-        # deserializer. It must only be called for values in this hash, never
-        # for values in sub-hashes!
-        assert '.' not in key, "Can't set values in sub-hashes!"
-        OrderedDict.__setitem__(self, key, value)
-
-    def __setitem__(self, item, value):
-        if isinstance(item, tuple):
-            key, attr = item
-            if attr is Ellipsis:
-                self._get(key).attrs = value
-            else:
-                self._get(key).attrs[attr] = value
-        else:
-            item = str(item)
-            if SEPARATOR not in item:
-                if item not in self:
-                    OrderedDict.__setitem__(self, item, HashElement(value, {}))
-                else:
-                    attrs = OrderedDict.__getitem__(self, item).attrs
-                    OrderedDict.__setitem__(self, item,
-                                            HashElement(value, attrs))
-            else:
-                s, p = self._path(item, True)
-                if p in s:
-                    attrs = OrderedDict.__getitem__(s, p).attrs
-                else:
-                    attrs = {}
-                OrderedDict.__setitem__(s, p, HashElement(value, attrs))
-
-    def __getitem__(self, item):
-        if isinstance(item, tuple):
-            key, attr = item
-            if attr is Ellipsis:
-                return self._get(key).attrs
-            else:
-                return self._get(key).attrs[attr]
-        else:
-            if SEPARATOR not in item:
-                return OrderedDict.__getitem__(self, item).data
-            return self._get(item).data
-
-    def __delitem__(self, item):
-        if isinstance(item, tuple):
-            key, attr = item
-            del self._get(key).attrib[attr]
-        else:
-            OrderedDict.__delitem__(*self._path(item))
-
-    def __contains__(self, key):
-        try:
-            self._get(key)
-            return True
-        except KeyError:
-            return False
-
-    def iterall(self):
-        """ Iterate over key, value and attributes
-
-        This behaves like the :meth:`~dict.items` method of Python
-        :class:`dict`, except that it yields not only key and value but
-        also the attributes for it.
-        """
-        # NOTE: Because this only iterates over a single level of the Hash,
-        # none of the keys contain '.' and thus OrderedDict.__getitem__ can
-        # be called directly for a fairly big speedup
-        for k in self:
-            elem = OrderedDict.__getitem__(self, k)
-            yield k, elem.data, elem.attrs
-
-    def items(self):
-        for k in self:
-            yield k, OrderedDict.__getitem__(self, k).data
-
-    def merge(self, other, attribute_policy='merge'):
-        """Merge the hash other into this hash.
-
-        If the *attribute_policy* is ``'merge'``, the attributes from the other
-        hash are merged with the existing ones, otherwise they are overwritten.
-        """
-        merge = attribute_policy == "merge"
-        for k, v in other.items():
-            if isinstance(v, Hash):
-                if k not in self or self[k] is None:
-                    self[k] = Hash()
-                self[k].merge(v, attribute_policy)
-            else:
-                self[k] = v
-            if merge:
-                self[k, ...].update(other[k, ...])
-            else:
-                self[k, ...] = other[k, ...].copy()
-
-    def get(self, item, default=None):
-        try:
-            return self[item]
-        except KeyError:
-            return default
-
-    def set(self, item, value):
-        self[item] = value
-
-    def setAttribute(self, item, key, value):
-        self[item, key] = value
-
-    def getAttribute(self, item, key):
-        return self[item, key]
-
-    def getAttributes(self, item):
-        return self[item, ...]
-
-    def has(self, item):
-        return item in self
-
-    def getKeys(self, keys=None):
-        if keys is None:
-            return list(self.keys())
-        return keys.extend(list(self.keys()))
-
-    def hasAttribute(self, item, key):
-        return key in self[item, ...]
-
-    def erase(self, key):
-        del self[key]
-
-    def paths(self):
-        ret = []
-        for k, v in self.items():
-            if isinstance(v, Hash):
-                ret.extend(k + '.' + kk for kk in v.paths())
-            ret.append(k)
-        return ret
-
-    def empty(self):
-        return len(self) == 0
-
-    def __deepcopy__(self, memo):
-        Cls = type(self)
-        ret = Cls.__new__(Cls)
-        # let deepcopy know now about us!
-        memo[id(self)] = ret
-        for key, value, attrs in Hash.flat_iterall(self, empty=True):
-            ret[key] = deepcopy(value, memo)
-            ret[key, ...] = deepcopy(attrs, memo)
-
-        return ret
-
-    def deepcopy(self):
-        """This method retrieves a quick deepcopy of the `Hash` element
-
-        This method bypasses `copy.deepcopy`, assuming we only copy
-        'simple' datastructures.
-        """
-        ret = Hash()
-        for key, value, attrs in Hash.flat_iterall(self, empty=True):
-            ret[key] = simple_deepcopy(value)
-            copy_attr = {}
-            for ak, av in attrs.items():
-                copy_attr[ak] = simple_deepcopy(av)
-            ret[key, ...] = copy_attr
-
-        return ret
-
-    def fullyEqual(self, other):
-        """Compare two `Hash` objects and check if they have equal content
-
-        Note: This function does not consider the insertion order of elements
-        """
-        assert isinstance(other, Hash)
-
-        # Do the fast path check first!
-        h_paths = sorted(self.paths())
-        other_paths = sorted(other.paths())
-        if h_paths != other_paths:
-            return False
-
-        for key, value, attr in Hash.flat_iterall(other, empty=True):
-            h_value = self[key]
-            if not is_equal(value, h_value):
-                return False
-
-            h_attr = self[key, ...]
-            # We can check the attributes `keys` first!
-            h_attr_keys = sorted(h_attr.keys())
-            a_keys = sorted(attr.keys())
-            if h_attr_keys != a_keys:
-                return False
-            for a_key, a_value in attr.items():
-                if not is_equal(a_value, h_attr[a_key]):
-                    return False
-
-        return True
-
-    @staticmethod
-    def flat_iterall(hsh, base='', empty=False):
-        """Recursively iterate over all parameters in a Hash object such that
-        a simple iterator interface is exposed.
-
-        :param empty: Sets if empty Hashes should be returned (default: False)
-        """
-        assert isinstance(hsh, Hash)
-
-        base = base + '.' if base else ''
-        for key, value, attrs in hsh.iterall():
-            subkey = base + key
-            if isinstance(value, Hash):
-                if value.empty() and empty:
-                    yield subkey, value, attrs
-                else:
-                    yield from Hash.flat_iterall(
-                        value, base=subkey, empty=empty)
-            else:
-                yield subkey, value, attrs
-
-
-class HashMergePolicy:
-    MERGE_ATTRIBUTES = "merge"
-    REPLACE_ATTRIBUTES = "replace"
-
-
-def is_equal(a, b):
-    """A compare function deals with element-wise comparison result and
-    Schema object comparison
-    """
-    type_check = map(lambda x: isinstance(x, Schema), (a, b))
-    if any(type_check):
-        if all(type_check):
-            # Compare Schema objects' names and hashes
-            return a.name == b.name and a.hash == b.hash
-        else:
-            # one of a, b is not Schema, simply return False
-            return False
-    res = (a == b)
-    # comparison of numpy arrays result in an array
-    return all(res) if isinstance(res, Iterable) else res
-
-
-def simple_deepcopy(value):
-    """A simple and quick deepcopy mechanism for simple data structures
-    """
-    try:
-        # dicts, sets, ndarrays
-        v = value.copy()
-    except TypeError:
-        # Must be schema
-        assert isinstance(value, Schema)
-        cpy = Schema()
-        cpy.copy(value)
-        v = cpy
-    except AttributeError:
-        try:
-            # lists, tuples, strings, unicode
-            v = value[:]
-        except TypeError:
-            # Simple values
-            v = value
-    return v
