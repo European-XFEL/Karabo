@@ -1559,20 +1559,8 @@ namespace karabo {
         }
 
 
-        bool DeviceClient::registerChannelMonitor(const std::string& instanceId, const std::string& channel,
-                                                  const karabo::xms::SignalSlotable::DataHandler& dataHandler,
-                                                  const karabo::util::Hash& inputChannelCfg,
-                                                  const karabo::xms::SignalSlotable::InputHandler& eosHandler,
-					                        	  const karabo::xms::SignalSlotable::InputHandler& inputHandler) {
-            return registerChannelMonitor(instanceId + ":" + channel, dataHandler, inputChannelCfg, eosHandler, inputHandler);
-        }
-
-
-        bool DeviceClient::registerChannelMonitor(const std::string& channelName,
-                                                  const karabo::xms::SignalSlotable::DataHandler& dataHandler,
-                                                  const karabo::util::Hash& inputChannelCfg,
-                                                  const karabo::xms::SignalSlotable::InputHandler& eosHandler,
-			                        			  const karabo::xms::SignalSlotable::InputHandler& inputHandler) {
+        bool DeviceClient::registerChannelMonitor(const std::string& channelName, const karabo::core::DeviceClient::InputChannelHandlers& handlers,
+                                                  const karabo::util::Hash& inputChannelCfg) {
             auto sigSlotPtr = m_signalSlotable.lock();
             // No SignalSlotable or channel already there? ==> Fail!
             if (!sigSlotPtr || sigSlotPtr->getInputChannelNoThrow(channelName)) {
@@ -1588,8 +1576,15 @@ namespace karabo {
             Hash& channelCfg = masterCfg.set(channelName, inputChannelCfg).getValue<Hash>();
             channelCfg.set("connectedOutputChannels", std::vector<std::string>(1, channelName));
             // Create InputChannel with handlers (this also enables auto-reconnect):
-            InputChannel::Pointer input = sigSlotPtr->createInputChannel(channelName, masterCfg, dataHandler,
-                                                                         inputHandler, eosHandler);
+            InputChannel::Pointer input = sigSlotPtr->createInputChannel(channelName, masterCfg, handlers.dataHandler,
+                                                                         handlers.inputHandler, handlers.eosHandler);
+            if (handlers.statusTracker) {
+                // wrap connection tracker to remove redundant channelName as first argument
+                input->registerConnectionTracker([tracker = handlers.statusTracker, channelName]
+                                                 (const std::string& outId, karabo::net::ConnectionStatus status){
+                    if (channelName == outId) tracker(status);
+                });
+            }
             // Set an id for the input channel - since we do not allow to connect more than once to the same
             // output channel, our instance id is sufficient.
             const std::string myInstanceId(sigSlotPtr->getInstanceId());
@@ -1602,13 +1597,37 @@ namespace karabo {
                         throw;
                     } catch (const std::exception& e) {
                         KARABO_LOG_FRAMEWORK_WARN << myInstanceId << " Failed to connect to output channel '"
-                                << channelName << "'. Automatic reconnect will be tried if destination comes up.";
+                                << channelName << "'. Automatic reconnect will be tried regularly or if destination comes up.";
                     }
                 }
             };
             sigSlotPtr->asyncConnectInputChannel(input, handler);
 
             return true;
+        }
+
+
+        bool DeviceClient::registerChannelMonitor(const std::string& instanceId, const std::string& channel,
+                                                  const karabo::xms::SignalSlotable::DataHandler& dataHandler,
+                                                  const karabo::util::Hash& inputChannelCfg,
+                                                  const karabo::xms::SignalSlotable::InputHandler& eosHandler,
+                                                  const karabo::xms::SignalSlotable::InputHandler& inputHandler) {
+            InputChannelHandlers handlers(dataHandler, eosHandler);
+            handlers.inputHandler = inputHandler;
+
+            return registerChannelMonitor(instanceId + ":" + channel, handlers, inputChannelCfg);
+        }
+
+
+        bool DeviceClient::registerChannelMonitor(const std::string& channelName,
+                                                  const karabo::xms::SignalSlotable::DataHandler& dataHandler,
+                                                  const karabo::util::Hash& inputChannelCfg,
+                                                  const karabo::xms::SignalSlotable::InputHandler& eosHandler,
+                                                  const karabo::xms::SignalSlotable::InputHandler& inputHandler) {
+            InputChannelHandlers handlers(dataHandler, eosHandler);
+            handlers.inputHandler = inputHandler;
+
+            return registerChannelMonitor(channelName, handlers, inputChannelCfg);
         }
 
 
