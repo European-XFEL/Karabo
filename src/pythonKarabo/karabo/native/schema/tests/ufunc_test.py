@@ -6,10 +6,10 @@ from numpy import e, pi
 from pint import DimensionalityError
 
 from karabo.native import (
-    Int32, MetricPrefix, Timestamp, Unit, VectorComplexDouble, VectorDouble,
+    Int32, VectorComplexDouble, VectorDouble,
     VectorInt32)
-
-from karabo.native.data.basetypes import QuantityValue as QV
+from karabo.native import MetricPrefix, Timestamp, Unit
+from karabo.native import QuantityValue as QV
 
 
 class Tests(TestCase):

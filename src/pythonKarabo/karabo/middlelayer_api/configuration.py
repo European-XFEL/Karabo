@@ -4,14 +4,14 @@ from karabo.common.api import (
 from karabo.common import const
 from karabo.native import (
     AccessMode, Assignment, Hash, is_equal, NodeType, Unit, Schema,
-    MetricPrefix, flat_iter_hash, flat_iter_schema_hash)
+    MetricPrefix)
 
 # Broken path accumulated in the history of karabo ...
 # Choice of Nodes connection and Beckhoff properties that will throw!
 
 BROKEN_PATHS = set([
     "_connection_",
-    ])
+])
 
 
 def sanitize_init_configuration(schema, config):
@@ -27,7 +27,7 @@ def sanitize_init_configuration(schema, config):
 
     config = extract_configuration(schema, config, init=True)
 
-    readonly_paths = [pth for pth in flat_iter_hash(config)
+    readonly_paths = [pth for pth, _, _ in Hash.flat_iterall(config)
                       if schema.hash[pth, KARABO_SCHEMA_ACCESS_MODE] ==
                       AccessMode.READONLY.value
                       or schema.hash[pth, KARABO_SCHEMA_ASSIGNMENT] ==
@@ -48,7 +48,7 @@ def sanitize_write_configuration(schema, config):
 
     config = extract_configuration(schema, config)
 
-    readonly_paths = [pth for pth in flat_iter_hash(config)
+    readonly_paths = [pth for pth, _, _ in Hash.flat_iterall(config)
                       if schema.hash[pth, KARABO_SCHEMA_ACCESS_MODE] in
                       [AccessMode.READONLY.value, AccessMode.INITONLY.value]
                       or schema.hash[pth, KARABO_SCHEMA_ASSIGNMENT] ==
@@ -161,6 +161,30 @@ def extract_modified_schema_attributes(runtime_schema, class_schema):
     C++ Schema code only knows how to assign from enumeration values, not from
     their stringified representations.
     """
+
+    NODE_TYPE = (NodeType.Node.value,)
+    SPECIAL_TYPES = (NodeType.ChoiceOfNodes.value,
+                     NodeType.ListOfNodes.value)
+
+    def flat_iter_schema_hash(schema_hash, base=''):
+        """Expose a flat iteration over a schema Hash.
+
+        :param schema: The schema Hash or Schema object
+
+        Note: Schema Hashes are special because every property
+        comes with an empty `Hash` as value. Hence, we ask for the Nodetype!
+        """
+        assert isinstance(schema_hash, Hash)
+
+        base = base + '.' if base else ''
+        for key, value, attrs in schema_hash.iterall():
+            subkey = base + key
+            is_node = attrs["nodeType"] in NODE_TYPE
+            is_special = attrs["nodeType"] in SPECIAL_TYPES
+            if is_node:
+                yield from flat_iter_schema_hash(value, base=subkey)
+            elif not is_special:
+                yield subkey
 
     assert isinstance(runtime_schema, Schema)
     assert isinstance(class_schema, Schema)

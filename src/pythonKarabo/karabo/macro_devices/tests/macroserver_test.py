@@ -5,7 +5,7 @@ import uuid
 
 from karabo.middlelayer import getDevice
 from karabo.middlelayer_api.tests.eventloop import setEventLoop
-from karabo.native.data.hash import Hash
+from karabo.native import Hash
 
 from ..macro_server import MacroServer
 

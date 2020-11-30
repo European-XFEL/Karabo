@@ -7,8 +7,8 @@ from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, DaqPolicy, Hash)
 from karabo.native import (
-    Bool, HashType, get_timestamp, isSet, Int32, KaraboError, Node,
-    SchemaHashType, Slot, String)
+    Bool, get_timestamp, isSet, Int32, KaraboError, Node,
+    TypeHash, TypeSchema, Slot, String)
 
 from karabo import __version__ as karaboVersion
 
@@ -143,9 +143,9 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
                displayedName="Logger",
                requiredAccessLevel=AccessLevel.EXPERT)
 
-    signalChanged = Signal(HashType(), String())
-    signalStateChanged = Signal(HashType(), String())
-    signalSchemaUpdated = Signal(SchemaHashType(), String())
+    signalChanged = Signal(TypeHash(), String())
+    signalStateChanged = Signal(TypeHash(), String())
+    signalSchemaUpdated = Signal(TypeSchema(), String())
 
     def __init__(self, configuration):
         super(Device, self).__init__(configuration)

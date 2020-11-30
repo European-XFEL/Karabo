@@ -5,7 +5,7 @@ from .typenums import HashType
 from .hash import Hash, HashList
 
 __all__ = ['create_html_hash', 'dictToHash', 'dtype_from_number',
-           'numpy_from_number']
+           'get_image_data', 'numpy_from_number']
 
 
 def dtype_from_number(number):

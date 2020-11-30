@@ -13,11 +13,10 @@ from karabo.middlelayer_api.device_client import (
     getDevice, getConfiguration, getSchema, executeNoWait, updateDevice,
     Queue, connectDevice, lock)
 from karabo.middlelayer_api.device_server import KaraboStream
-from karabo.native.data.enums import AccessMode
-from karabo.native.exceptions import KaraboError
-from karabo.native.data.hash import Int32 as Int, Slot
+from karabo.native import (
+    AccessMode, Configurable, KaraboError, Int32 as Int, Node, Slot)
+
 from karabo.middlelayer_api.macro import Macro
-from karabo.native.data.schema import Configurable, Node
 from karabo.middlelayer_api.signalslot import slot
 from karabo.middlelayer_api.synchronization import background, sleep
 
