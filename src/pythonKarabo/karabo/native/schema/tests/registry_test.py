@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from karabo.native.registry import Registry
+from karabo.native import Registry
 
 
 def test_registry_metaclass():
