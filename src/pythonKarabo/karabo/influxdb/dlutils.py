@@ -1,15 +1,5 @@
-import os
 import os.path as op
 import re
-from struct import calcsize, unpack
-import sys
-import warnings
-from xml.sax import make_parser, SAXException
-from xml.sax.saxutils import unescape
-from xml.sax.handler import ContentHandler
-
-from karabo.native.data.hash import _gettype, Hash, HashList, HashType, Type
-from karabo.native.data.serializers import XMLParser
 
 
 SEC_TO_USEC = 1000000

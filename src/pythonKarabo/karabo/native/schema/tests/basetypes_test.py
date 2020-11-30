@@ -5,13 +5,12 @@ from unittest import TestCase, main
 import pint
 import numpy
 
-from karabo.native import encodeBinary, unit
-from karabo.native.data.enums import EncodingType, Unit, MetricPrefix
-from karabo.native.data.basetypes import (
+from karabo.native import (
     NoneValue, QuantityValue, isSet, StringValue, VectorCharValue, BoolValue,
     EnumValue, ImageData, TableValue, VectorStringValue, wrap)
-from karabo.native.data.hash import Hash, Int32, Float, VectorFloat
-from karabo.native.timestamp import Timestamp
+from karabo.native import unit_registry as unit, Int32, Float, VectorFloat
+from karabo.native import EncodingType, Unit, MetricPrefix
+from karabo.native import encodeBinary, Hash, Timestamp
 
 
 class Tests(TestCase):
