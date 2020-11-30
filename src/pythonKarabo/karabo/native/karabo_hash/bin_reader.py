@@ -3,7 +3,7 @@ from struct import calcsize, unpack
 
 import numpy as np
 
-from .hash import Hash, HashElement, Schema
+from .hash import Hash, HashByte, HashElement, HashList, Schema
 from .typenums import HashType
 
 __all__ = ['decodeBinary']
@@ -100,12 +100,17 @@ def read_binary_bool(file, numpy=np.int8):
 
 def read_binary_char(file):
     file.pos += 1
-    return str(file.data[file.pos - 1:file.pos].decode("ascii"))
+    return HashByte(file.data[file.pos - 1:file.pos].decode("ascii"))
 
 
-def read_binary_list(file, reader=None):
+def read_binary_string_list(file):
     size, = file.readFormat('I')
-    return [reader(file) for _ in range(size)]
+    return [read_binary_string(file) for _ in range(size)]
+
+
+def read_vector_hash(file):
+    size, = file.readFormat('I')
+    return HashList(read_binary_hash(file) for _ in range(size))
 
 
 def read_binary_bytearray(file):
@@ -159,10 +164,9 @@ __READER_MAP = {
                                           numpy=np.complex128),
 
     HashType.String: read_binary_string,
-    HashType.VectorString: partial(read_binary_list,
-                                   reader=read_binary_string),
+    HashType.VectorString: read_binary_string_list,
     HashType.Hash: read_binary_hash,
-    HashType.VectorHash: partial(read_binary_list, reader=read_binary_hash),
+    HashType.VectorHash: read_vector_hash,
     HashType.Schema: read_binary_schema,
     HashType.None_: read_binary_empty,
     HashType.ByteArray: read_binary_bytearray,

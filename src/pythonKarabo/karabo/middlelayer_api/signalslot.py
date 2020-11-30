@@ -12,7 +12,7 @@ import re
 from karabo.native import (
     AccessLevel, Assignment, AccessMode,  Hash, DaqPolicy)
 from karabo.native import (
-    Descriptor, HashType, Int32, KaraboError, Slot, String)
+    Descriptor, Int32, KaraboError, Slot, String, TypeHash)
 from karabo.native import Configurable
 
 from .synchronization import firstCompleted, FutureDict
@@ -127,7 +127,7 @@ class SignalSlotable(Configurable):
         class Spam(SignalSlotable):
             signalHam = Signal(String(), Int())"""
     naming_regex = re.compile("[A-Za-z0-9_/-]+")
-    signalChanged = Signal(HashType(), String())
+    signalChanged = Signal(TypeHash(), String())
 
     @String(
         displayedName="_DeviceID_",

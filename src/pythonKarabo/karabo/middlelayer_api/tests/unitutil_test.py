@@ -59,7 +59,7 @@ class Tests(TestCase):
         self.assertEqual(numeric.dot([1, 2, 3] * unit.s, [4, 5, 6] * unit.m),
                          32 * unit.m * unit.s)
         self.assertEqual(numeric.dot([1, 2, 3] * self.ts1,
-                         [4, 5, 6] * self.ts2).timestamp, 200)
+                                     [4, 5, 6] * self.ts2).timestamp, 200)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,8 @@
 from asyncio import gather
 
 from karabo.common.macro_sanity_check import validate_macro
-from karabo.native.data.enums import AccessLevel, AccessMode
-from karabo.native.data.hash import String
-from karabo.middlelayer import Device, Macro, Overwrite
+from karabo.middlelayer import (
+    AccessLevel, AccessMode, Device, Macro, String, Overwrite)
 
 
 class MetaMacro(Device):

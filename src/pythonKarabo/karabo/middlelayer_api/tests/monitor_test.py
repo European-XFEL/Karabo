@@ -4,7 +4,7 @@ import time
 from unittest import main
 
 from karabo.middlelayer_api.device import Device
-from karabo.native.data.hash import Int32 as Int, Slot
+from karabo.native import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro, Monitor, RemoteDevice
 
 from .eventloop import DeviceTest, sync_tst
