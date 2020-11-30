@@ -7,8 +7,9 @@ import numpy as np
 
 from .typenums import HashType, XML_TYPE_TO_HASH_TYPE
 
-__all__ = ['Hash', 'HashList', 'HashElement', 'Schema', 'simple_deepcopy',
-           'get_hash_type_from_data', 'is_equal']
+__all__ = ['get_hash_type_from_data', 'Hash', 'HashByte', 'HashElement',
+           'HashList', 'HashMergePolicy', 'is_equal', 'Schema',
+           'simple_deepcopy']
 
 
 class HashElement:
@@ -312,6 +313,18 @@ class HashMergePolicy:
 class HashList(list):
     _hashType = HashType.VectorHash
 
+    def __repr__(self):
+        return "HashList(" + super(HashList, self).__repr__() + ")"
+
+
+class HashByte(str):
+    """This represents just one byte, so that we can distinguish
+    CHAR and VECTOR_CHAR."""
+    _hashType = HashType.Char
+
+    def __repr__(self):
+        return "${:x}".format(ord(self))
+
 
 class Schema:
     _hashType = HashType.Schema
@@ -363,7 +376,7 @@ NUMPY_TO_HASH_TYPE_VECTOR = {
     np.int8: HashType.VectorInt8,
     np.uint8: HashType.VectorUInt8,
     np.int16: HashType.VectorInt16,
-    np.uint16: HashType.VectorUInt8,
+    np.uint16: HashType.VectorUInt16,
     np.int32: HashType.VectorInt32,
     np.uint32: HashType.VectorUInt32,
     np.int64: HashType.VectorInt64,

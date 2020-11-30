@@ -10,7 +10,7 @@ from xml.sax.handler import ContentHandler
 from .hash import Hash, HashList, Schema
 from .typenums import HashType, XML_TYPE_TO_HASH_TYPE
 
-__all__ = ['decodeXML', 'loadFromFile']
+__all__ = ['decodeXML', 'loadFromFile', 'XMLParser']
 
 
 # XML is parsed using a SAX parser. This SAX parser sends all the parsed
@@ -168,6 +168,11 @@ def read_xml_bool(data):
 
 
 def read_xml_char(data):
+    # This is the status of the MDL. Maybe check to return different
+    return data
+
+
+def read_xml_string(data):
     return data
 
 
@@ -240,7 +245,7 @@ __READER_MAP = {
     HashType.VectorComplexDouble: partial(read_xml_numpy_vector,
                                           numpy=np.complex128),
 
-    HashType.String: read_xml_char,
+    HashType.String: read_xml_string,
     HashType.VectorString: read_xml_vector_string,
     HashType.Schema: read_xml_schema,
     HashType.None_: read_xml_empty,

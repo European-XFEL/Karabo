@@ -4,8 +4,8 @@ from lxml import etree
 from karabo.common.scenemodel.api import write_scene
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Bool, Device, dictToHash, Hash, HashType,
-    Overwrite, slot, Slot, String, UInt32, VectorString)
+    AccessLevel, AccessMode, Bool, Device, dictToHash, Hash, Overwrite,
+    slot, Slot, String, TypeHash, UInt32, VectorString)
 from karabo.middlelayer_api.signalslot import Signal
 from karabo.native import read_project_model
 from karabo.project_db.project_database import ProjectDatabase
@@ -46,7 +46,7 @@ class ProjectManager(Device):
                     "restrictions.",
         accessMode=AccessMode.INITONLY)
 
-    signalProjectUpdate = Signal(HashType(), String())
+    signalProjectUpdate = Signal(TypeHash(), String())
 
     def __init__(self, configuration):
         super(ProjectManager, self).__init__(configuration)

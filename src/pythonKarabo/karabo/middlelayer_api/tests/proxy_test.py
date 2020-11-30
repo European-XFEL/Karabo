@@ -5,7 +5,7 @@ from karabo.middlelayer import (Hash, isSet, Proxy, ProxyNode, ProxySlot,
                                 Schema, State, SubProxy, Timestamp, Unit, unit)
 from karabo.middlelayer_api.device_client import (
     filterByTags, getAliasFromKey, getDescriptors, getKeyFromAlias)
-from karabo.native.data.enums import NodeType
+from karabo.native import NodeType
 from karabo.middlelayer_api.proxy import ProxyFactory
 
 

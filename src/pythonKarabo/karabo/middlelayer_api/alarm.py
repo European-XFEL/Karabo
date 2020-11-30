@@ -1,6 +1,6 @@
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.native import AccessLevel, AccessMode, Hash, DaqPolicy
-from karabo.native import Configurable, EnumValue, HashType, String
+from karabo.native import Configurable, EnumValue, TypeHash, String
 
 from .signalslot import Signal, slot
 
@@ -39,7 +39,7 @@ class AlarmMixin(Configurable):
         classId="AlarmCondition",
         daqPolicy=DaqPolicy.OMIT)
 
-    signalAlarmUpdate = Signal(String(), HashType())
+    signalAlarmUpdate = Signal(String(), TypeHash())
 
     def __init__(self, configuration):
         self._alarmConditions = {}
