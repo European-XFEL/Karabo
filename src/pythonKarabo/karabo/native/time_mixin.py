@@ -1,6 +1,6 @@
 import numpy as np
 
-from .timestamp import Timestamp
+from .karabo_hash import Timestamp
 
 
 class TimeMixin(object):

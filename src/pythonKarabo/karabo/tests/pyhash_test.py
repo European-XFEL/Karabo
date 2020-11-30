@@ -9,9 +9,9 @@ from karabo.bound import (BinarySerializerHash, TextSerializerHash,
                           NODE_ELEMENT, NodeType, setStdVectorDefaultConversion,
                           isStdVectorDefaultConversion, Types)
 from karabo.middlelayer import (
-    Hash, NodeType, Schema, HashList, Int64, decodeBinary, decodeXML,
-    encodeBinary, encodeXML, XMLWriter, XMLParser)
-from karabo.native.data.hash import _Byte
+    Hash, NodeType, Int64, decodeBinary, decodeXML,
+    encodeBinary, encodeXML, HashList, Schema)
+from karabo.native import HashByte
 
 
 class Hash_TestCase(unittest.TestCase):
@@ -145,7 +145,7 @@ class Hash_TestCase(unittest.TestCase):
         h["stringlist"] = ["bla", "blub"]
         h["chars"] = b"bla"
         h["emptystringlist"] = []
-        h["char"] = _Byte("c")
+        h["char"] = HashByte("c")
         if use_bound:
             restore_stdVector = False
             if isStdVectorDefaultConversion(Types.NUMPY):
@@ -265,12 +265,6 @@ class Hash_TestCase(unittest.TestCase):
         sh = h["schema"].hash
         self.assertFalse(sh["a"].keys())
         self.assertEqual(sh["a", "nodeType"], NodeType.Node)
-
-    def test_xml_old(self):
-        writer = XMLWriter()
-        parser = XMLParser()
-        s = writer.write(self.create_hash())
-        self.check_hash(parser.read(s))
 
     def test_xml(self):
         s = encodeXML(self.create_hash())

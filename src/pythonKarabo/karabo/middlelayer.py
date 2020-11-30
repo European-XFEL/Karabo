@@ -51,46 +51,39 @@ from .middlelayer_api.synchronization import (
 from .middlelayer_api.unitutil import (
     maximum, minimum, removeQuantity, StateSignifier)
 from .middlelayer_api.utils import build_karabo_value, get_property
-# Native api
-from karabo.native.data.basetypes import (
+# native basetypes
+from karabo.native import (
     BoolValue, EnumValue, ImageData, isSet, KaraboValue, NoneValue,
     QuantityValue, StringValue, TableValue, unit_registry as unit,
-    VectorStringValue, VectorCharValue
-)
-from karabo.native.data.enums import (
+    VectorStringValue, VectorCharValue)
+# native enums
+from karabo.native import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqDataType,
-    DaqPolicy, EncodingType, LeafType, MetricPrefix, NodeType, Unit
-)
-from karabo.native.data.hash import (
-    Attribute, Bool, ByteArray, Char, ComplexDouble, ComplexFloat, Descriptor,
-    Double, Enumable, Float, Hash, HashList, is_equal,
-    HashMergePolicy, HashType, Int16, Int32, Int64, Int8, Integer,
-    Number, NumpyVector, RegexString, Schema, SchemaHashType, Simple, Slot,
-    Special, String, Type, UInt16, UInt32, UInt64, UInt8, Vector,
-    VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
-    VectorDouble, VectorFloat, VectorHash, VectorInt16, VectorInt32,
-    VectorInt64, VectorInt8, VectorRegexString, VectorString, VectorUInt16,
-    VectorUInt32, VectorUInt64, VectorUInt8
-)
-from karabo.native.data.ndarray import NDArray
-from karabo.native.data.image_data import Image
-
-from karabo.native.data.schema import (
-    Configurable, Node, ChoiceOfNodes, ListOfNodes, Overwrite
-)
-from karabo.native.data.serializers import (
-    decodeBinary, decodeXML, encodeBinary, encodeXML, loadFromFile, saveToFile,
-    writeBinary, writeXML, XMLParser, XMLWriter
-)
-from karabo.native.data.utils import (
-    dictToHash, dtype_from_number, get_image_data)
-from karabo.native.exceptions import KaraboError
-from karabo.native.project import (
+    DaqPolicy, EncodingType, LeafType, MetricPrefix, NodeType, Unit)
+# native schema
+from karabo.native import (
+    Attribute, Bool, ByteArray, Char, ChoiceOfNodes, ComplexDouble,
+    ComplexFloat, Configurable, Descriptor, Double, Enumable, Float,
+    Int16, Int32, Int64, Int8, Integer, Image, ListOfNodes,
+    NDArray, Node, Number, NumpyVector, Overwrite, RegexString, Schema,
+    TypeHash, TypeSchema, Simple, Slot, String, Type, UInt16, UInt32,
+    UInt64, UInt8, Vector, VectorBool, VectorChar, VectorComplexDouble,
+    VectorComplexFloat, VectorDouble, VectorFloat, VectorHash, VectorInt16,
+    VectorInt32, VectorInt64, VectorInt8, VectorRegexString, VectorString,
+    VectorUInt16, VectorUInt32, VectorUInt64, VectorUInt8)
+# native hash serialisers
+from karabo.native import (
+    daysAgo, decodeBinary, decodeXML, dictToHash, dtype_from_number,
+    encodeBinary, encodeXML, get_image_data, hoursAgo, Hash, HashType,
+    HashByte, HashList, is_equal, loadFromFile, minutesAgo, HashMergePolicy,
+    saveToFile, Timestamp, writeBinary, writeXML)
+# native extra
+from karabo.native import (
+    KaraboError, MetaRegistry, Registry, TimeMixin, get_timestamp, Weak)
+# project
+from karabo.native import (
     convert_old_project, OldProject, read_project_model, write_project_model
 )
-from karabo.native.registry import MetaRegistry, Registry
-from karabo.native.time_mixin import TimeMixin, get_timestamp
-from karabo.native.timestamp import daysAgo, hoursAgo, minutesAgo, Timestamp
 
 
 def _create_cli_submodule():

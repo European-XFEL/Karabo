@@ -2,14 +2,14 @@ import numpy as np
 
 from karabo.common.states import State
 from karabo.native import (
-    Bool, ByteArray, Char, ComplexDouble, ComplexFloat, Configurable,
-    Double, Float, HashType, Int16, Int32, Int64, Int8,
-    SchemaHashType, Slot, String, UInt16, UInt32, UInt64, UInt8,
-    VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
+    AccessLevel, AccessMode, Assignment, Bool, ByteArray, Char,
+    ChoiceOfNodes, ComplexDouble, ComplexFloat, Configurable,
+    Double, Float, Int16, Int32, Int64, Int8, ListOfNodes, Node,
+    TypeSchema, Slot, String, TypeHash, UInt16, UInt32, UInt64, UInt8,
+    Unit, VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
     VectorDouble, VectorFloat, VectorHash, VectorInt16, VectorInt32,
     VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
-    VectorUInt64, VectorUInt8, Node, ChoiceOfNodes, ListOfNodes,
-    AccessLevel, AccessMode, Assignment, Unit
+    VectorUInt64, VectorUInt8,
 )
 
 from ..api import (
@@ -129,12 +129,12 @@ class AllProperties(Configurable):
                      assignment=Assignment.INTERNAL)
     e = Double(unitSymbol=Unit.METER)
     f = Float()
-    g = HashType()
+    g = TypeHash()
     h = Int16()
     i = Int32()
     j = Int64()
     k = Int8()
-    ll = SchemaHashType()
+    ll = TypeSchema()
     m = String(options=['foo', 'bar', 'baz', 'qux'])
     n = UInt16()
     o = UInt32()

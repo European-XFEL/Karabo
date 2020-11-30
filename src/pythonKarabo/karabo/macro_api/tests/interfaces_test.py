@@ -8,7 +8,7 @@ from karabo.macro_api.device_interface import (
 from karabo.middlelayer_api.device_client import getDevice, DeviceClientBase
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, async_tst)
-from karabo.native.data.hash import Int32, VectorString
+from karabo.native import Int32, VectorString
 
 
 class MyDevice(DeviceClientBase):
