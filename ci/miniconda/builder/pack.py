@@ -131,6 +131,9 @@ class Packer(Builder):
 
     @connected_to_remote
     def download_environment(self, ssh):
+        # TODO: compare environments properly
+        # now forcing environment build
+        return None
         with ssh.open_sftp() as sftp:
             latest_env = self.get_latest_env(sftp)
             if latest_env is None:
