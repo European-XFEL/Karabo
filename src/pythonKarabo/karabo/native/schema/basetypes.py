@@ -1,4 +1,4 @@
-"""This module contains the base classes for Karabo data types
+"""This module contains the base classes for Karabo schema types
 
 Karabo keeps some metadata with its values. This module contains the
 classes which have the metadata attached."""
@@ -13,8 +13,14 @@ from xml.sax.saxutils import escape
 import numpy
 import pint
 
-from karabo.native.data.enums import EncodingType, MetricPrefix, Unit
-from karabo.native.weak import Weak
+from karabo.native.karabo_hash import EncodingType, MetricPrefix, Unit
+from ..weak import Weak
+
+__all__ = ['BoolValue', 'EnumValue', 'ImageData', 'isSet', 'KaraboValue',
+           'NoneValue', 'newest_timestamp', 'Quantity', 'QuantityValue',
+           'StringValue', 'StringlikeValue', 'TableValue', 'unit_registry',
+           'VectorCharValue', 'VectorStringValue', 'wrap', 'wrap_function',
+           'wrap_methods']
 
 
 def wrap(data):
@@ -190,6 +196,7 @@ class BoolValue(_Singleton):
     Objects of this class behave effectively like normal bools, just
     with a timestamp and a descriptor added.
     """
+    _hashBool = 1
 
     # We cannot inherit from bool, so we need a brand-new class
 
@@ -212,6 +219,7 @@ class NoneValue(_Singleton):
 
     This is mostly the Karabo equivalent of `None`.
     """
+    _hashNone = 1
     value = None
 
     def __init__(self, value=None, **kwargs):
@@ -470,9 +478,9 @@ class TableValue(KaraboValue):
             return TableValue(val, units, timestamp=self.timestamp)
 
         if isinstance(val, numpy.ndarray) and (
-            val.base is self.value
+                val.base is self.value
                 or val.base is self.value.base) and (
-                    val.dtype.char == "O"):
+                val.dtype.char == "O"):
             return TableValue(val, units, timestamp=self.timestamp)
 
         ret = wrap(val)
@@ -657,7 +665,6 @@ class QuantityValue(KaraboValue, Quantity):
         if isinstance(self.magnitude, numpy.ndarray):
             return super().__array_interface__
         else:
-
             # This is pure black magic. In functions like numpy.mean, we
             # convert lists into arrays. This fails, as numpy first tries to
             # convert the value into a numpy data type, but fails miserably.
