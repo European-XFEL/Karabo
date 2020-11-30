@@ -237,12 +237,27 @@ void DeviceClient_Test::testMonitorChannel() {
         imageDims = image.getDimensions();
         imageEntry = image.getData().getData<unsigned short>()[0];
     };
-    CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor("TestedDevice2", "output", dataHandler));
-    // not allowed to register again for same channel
-    CPPUNIT_ASSERT(!m_deviceClient->registerChannelMonitor("TestedDevice2", "output", dataHandler));
 
-    // Sleep a bit to ensure that input channel is connected (no callback to wait for... :-()
-    boost::this_thread::sleep(boost::posix_time::milliseconds(50)); // TODO: How to make dynamic?
+    std::promise <karabo::net::ConnectionStatus> trackerPromise;
+    auto trackerFuture = trackerPromise.get_future();
+    auto connectionTracker = [&trackerPromise](karabo::net::ConnectionStatus status) {
+        // Should first receive CONNECTING and then CONNECTED - ignore the first (tested in InputOutputChannel_Test).
+        if (status != karabo::net::ConnectionStatus::CONNECTING) {
+            trackerPromise.set_value(status);
+        }
+    };
+
+    karabo::core::DeviceClient::InputChannelHandlers handlers;
+    handlers.dataHandler = dataHandler;
+    handlers.statusTracker = connectionTracker;
+    CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor("TestedDevice2:output", handlers));
+    // not allowed to register again for same channel
+    CPPUNIT_ASSERT(!m_deviceClient->registerChannelMonitor("TestedDevice2:output", dataHandler));
+
+    // Check that we are connected:
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, trackerFuture.wait_for(std::chrono::milliseconds(500)));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::net::ConnectionStatus::CONNECTED), static_cast<int> (trackerFuture.get()));
+
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
 
     int counter = 0;
