@@ -6,7 +6,7 @@ from asyncio import (CancelledError, coroutine, ensure_future, Future,
 from functools import wraps
 import logging
 
-from karabo.native.data.basetypes import KaraboValue, unit_registry as unit
+from karabo.native import KaraboValue, unit_registry as unit
 
 from .eventloop import (
     EventLoop, KaraboFuture, synchronize, synchronize_notimeout)
@@ -231,6 +231,7 @@ class FutureDict(object):
 
     and everyone waiting on this value will continue.
     """
+
     def __init__(self):
         self.futures = {}
 
