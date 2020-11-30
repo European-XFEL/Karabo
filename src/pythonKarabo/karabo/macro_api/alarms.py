@@ -3,7 +3,7 @@ from collections import OrderedDict, namedtuple
 
 from karabo.middlelayer_api.device_client import call, get_instance
 from karabo.middlelayer_api.eventloop import synchronize
-from karabo.native.timestamp import Timestamp
+from karabo.native import Timestamp
 
 # Alarm basic definitions
 # ---------------------------

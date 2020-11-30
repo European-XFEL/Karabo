@@ -1,5 +1,7 @@
 import weakref
 
+__all__ = ['Weak']
+
 
 class Weak:
     """ This declares a member variable of a class to be weak
@@ -15,6 +17,7 @@ class Weak:
     to define a weak variable ham. As a bonus to standard weak
     references, one may set the value to None.
     """
+
     def __init__(self):
         self.myid = str(id(self))
 

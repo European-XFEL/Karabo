@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 
-from karabo.native.weak import Weak
+from karabo.native import Weak
 
 
 class Tests(TestCase):

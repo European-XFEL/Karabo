@@ -1,25 +1,21 @@
 #!/usr/bin/env python
-import argparse
 import base64
 import hashlib
 import json
 import numpy as np
 import os
 import os.path as op
-import re
-import shutil
 import time
 
-from asyncio import get_event_loop
 from urllib.parse import urlparse
 
 from karabo.influxdb.client import InfluxDbClient
 from karabo.influxdb.dlutils import (
-    device_id_from_path, escape_measurement, format_line_protocol_body
+    device_id_from_path, escape_measurement
 )
 # we use karathon here to ensure serialization compatiblity between
 # the loggers running in C++ and the migration script
-from karathon import BinarySerializerSchema, TextSerializerSchema  
+from karathon import BinarySerializerSchema, TextSerializerSchema
 
 
 PROCESSED_SCHEMAS_FILE_NAME = '.processed_schemas.txt'
@@ -49,16 +45,16 @@ class DlSchema2Influx():
         write_host = url_write_parts.hostname
 
         self.read_client = InfluxDbClient(
-                             host=read_host, port=read_port,
-                             protocol=read_protocol, user=read_user,
-                             password=read_pwd, db=self.db_name,
-                            )
+            host=read_host, port=read_port,
+            protocol=read_protocol, user=read_user,
+            password=read_pwd, db=self.db_name,
+        )
         self.write_client = InfluxDbClient(
-                             host=write_host, port=write_port,
-                             protocol=write_protocol, user=write_user,
-                             password=write_pwd, db=self.db_name,
-                             request_timeout=write_timeout
-                            )
+            host=write_host, port=write_port,
+            protocol=write_protocol, user=write_user,
+            password=write_pwd, db=self.db_name,
+            request_timeout=write_timeout
+        )
 
         if self.device_id is None:  # infers device_id from directory structure
             self.device_id = device_id_from_path(self.schema_path)
@@ -129,7 +125,8 @@ class DlSchema2Influx():
                             # database.
                             qry = (
                                 "select count(*) from \"{m}__SCHEMAS\" "
-                                "where digest='\"{d}\"'".format(m=safe_m, d=digest)
+                                "where digest='\"{d}\"'".format(
+                                    m=safe_m, d=digest)
                             )
                             qry_args = {"db": self.db_name, "q": qry}
                             rs = await self.read_client.query(qry_args)
@@ -221,16 +218,16 @@ class DlSchema2Influx():
             schema = tokens[3].strip()
         except IndexError:
             raise Exception(
-                      "Unable to parse line: '{}'".format(line.strip()))
+                "Unable to parse line: '{}'".format(line.strip()))
 
         try:
             timestamp_ns = np.int(np.float(secs)*1E9 + np.float(frac_secs)/1E9)
             train_id = np.uint32(train_id)
         except ValueError:
             raise Exception(
-                      "Unable to parse timestamp ({}.{}) and/or "
-                      "train_id ({})."
-                      .format(secs, frac_secs, train_id))
+                "Unable to parse timestamp ({}.{}) and/or "
+                "train_id ({})."
+                .format(secs, frac_secs, train_id))
 
         line_fields["timestamp"] = int(timestamp_ns//1000)
         line_fields["train_id"] = train_id
