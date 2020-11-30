@@ -1013,12 +1013,70 @@ s             *
              */
             void unregisterDeviceMonitor(const std::string& instanceId);
 
+            /**
+             * Container of handlers for InputChannel, to be passed to
+             *
+             * bool registerChannelMonitor(const std::string& channelName, const InputChannelHandlers& handlers,
+             *                             const karabo::util::Hash& inputChannelCfg = karabo::util::Hash());
+             *
+             * See documentation of that method for meaning of various handlers.
+             */
+            struct InputChannelHandlers {
 
+                InputChannelHandlers() { // members are correctly initialised by their default empty constructors
+                };
 
+                /**
+                 * Construct with all handlers except input handler (could be specified afterwards)
+                 */
+                explicit InputChannelHandlers(const karabo::xms::SignalSlotable::DataHandler& data,
+                                              const karabo::xms::SignalSlotable::InputHandler& eos = karabo::xms::SignalSlotable::InputHandler(),
+                                              const boost::function<void(karabo::net::ConnectionStatus)>& status = boost::function<void(karabo::net::ConnectionStatus)>())
+                    : dataHandler(data), inputHandler(), eosHandler(eos), statusTracker(status) {
+                };
+
+                /**
+                 * Construct with all handlers except data handler (could be specified afterwards)
+                 */
+                explicit InputChannelHandlers(const karabo::xms::SignalSlotable::InputHandler& input,
+                                              const karabo::xms::SignalSlotable::InputHandler& eos = karabo::xms::SignalSlotable::InputHandler(),
+                                              const boost::function<void(karabo::net::ConnectionStatus)>& status = boost::function<void(karabo::net::ConnectionStatus)>())
+                    : dataHandler(), inputHandler(input), eosHandler(eos), statusTracker(status) {
+                };
+
+                karabo::xms::SignalSlotable::DataHandler dataHandler;
+                karabo::xms::SignalSlotable::InputHandler inputHandler;
+                karabo::xms::SignalSlotable::InputHandler eosHandler;
+                boost::function<void(karabo::net::ConnectionStatus)> statusTracker;
+            };
 
             /**
              * Register handlers to be called whenever the defined output channel receives data or end-of-stream (EOS).
-             * Internally, an InputChannel is created and configured using the cfg Hash.
+             * Internally, an InputChannel is created and configured using the cfg Hash and its connection status
+             * can be monitored via the 'statusTracker' of the handlers argument
+             *
+             * @param channelName identifies the channel as a concatenation of the id of its devices, a colon (:) and
+             *                    the name of the output channel (e.g. A/COOL/DEVICE:output)
+             * @param handlers container for various handlers (handlers can be empty function pointers):
+             *                 - dataHandler boost::function<void (const karabo::util::Hash&, const MetaData&)> to be
+             *                               called whenever data arrives
+             *                 - inputHandler boost::function<void (const InputChannel::Pointer&)> to be called whenever
+             *                                data arrives
+             *                 - eosHandler boost::function<void (const InputChannel::Pointer&)> called for EOS
+             *                 - statusTracker boost::function<void(karabo::net::ConnectionStatus)> called whenever
+             *                                 the connection status of the underlying InputChannel changes
+             * @param inputChannelCfg configures via InputChanel::create(..) - use default except you know what your are doing
+             *                        for the expert: "connectedOutputChannels" will be overwritten
+             *
+             * @return false if channel is already registered
+             */
+            bool registerChannelMonitor(const std::string& channelName, const InputChannelHandlers& handlers,
+                                        const karabo::util::Hash& inputChannelCfg = karabo::util::Hash());
+
+            /**
+             * Register handlers to be called whenever the defined output channel receives data or end-of-stream (EOS).
+             *
+             * DEPRECATED - use interface with 'InputChannelHandlers' argument!
              *
              * @param instanceId of the device having the output channel
              * @param channel is name of the output channel
@@ -1034,11 +1092,12 @@ s             *
                                         const karabo::xms::SignalSlotable::DataHandler& dataHandler,
                                         const karabo::util::Hash& inputChannelCfg = karabo::util::Hash(),
                                         const karabo::xms::SignalSlotable::InputHandler& eosHandler = karabo::xms::SignalSlotable::InputHandler(),
-					const karabo::xms::SignalSlotable::InputHandler& inputHandler = karabo::xms::SignalSlotable::InputHandler());
+                                        const karabo::xms::SignalSlotable::InputHandler& inputHandler = karabo::xms::SignalSlotable::InputHandler());
 
             /**
              * Register handlers to be called whenever the defined output channel receives data or end-of-stream (EOS).
-             * Internally, an InputChannel is created and configured using the cfg Hash.
+             *
+             * DEPRECATED - use interface with 'InputChannelHandlers' argument!
              *
              * @param channelName identifies the channel as a concatenation of the id of its devices, a colon (:) and
              *                     the name of the output channel (e.g. A/COOL/DEVICE:output)
@@ -1054,7 +1113,7 @@ s             *
                                         const karabo::xms::SignalSlotable::DataHandler& dataHandler,
                                         const karabo::util::Hash& inputChannelCfg = karabo::util::Hash(),
                                         const karabo::xms::SignalSlotable::InputHandler& eosHandler = karabo::xms::SignalSlotable::InputHandler(),
-					const karabo::xms::SignalSlotable::InputHandler& inputHandler = karabo::xms::SignalSlotable::InputHandler());
+                                        const karabo::xms::SignalSlotable::InputHandler& inputHandler = karabo::xms::SignalSlotable::InputHandler());
 
             /**
              * Unregister monitoring of output channel
