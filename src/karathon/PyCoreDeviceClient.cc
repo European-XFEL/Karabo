@@ -127,7 +127,7 @@ void exportPyCoreDeviceClient() {
             .def("unregisterDeviceMonitor", (void (DeviceClient::*)(const string&))(&DeviceClient::unregisterDeviceMonitor), bp::arg("instanceId"))
             .def("registerChannelMonitor", &DeviceClientWrap::registerChannelMonitorPy,
                  (bp::arg("channelName"), bp::arg("dataHandler") = bp::object(), bp::arg("inputChannelCfg") = karabo::util::Hash(),
-                  bp::arg("eosHandler") = bp::object(), bp::arg("inputHandler") = bp::object()),
+                  bp::arg("eosHandler") = bp::object(), bp::arg("inputHandler") = bp::object(), bp::arg("statusTracker") = bp::object()),
                  "Register a handler to monitor defined output channel.\n\n"
                  "Internally, an InputChannel is created and configured.\n"
                  "@param channelName identifies the channel as a concatenation of the id of\n"
@@ -137,10 +137,11 @@ void exportPyCoreDeviceClient() {
                  "                   meta data (Hash/MetaData)\n"
                  "@param inputChannelCfg configures the channel via InputChannel.create(..)\n"
                  "                 use default except you know what your are doing\n"
-                 "                 for experts: \"connectedOutputChannels\" will be overwritten,\n"
-                 "                              \"onSlowness\" default is overwritten to \"drop\"\n"
+                 "                 for experts: \"connectedOutputChannels\" will be overwritten\n"
                  "@param eosHandler called on end of stream, argument is the InputChannel\n\n"
                  "@param inputHandler called when data arrives, argument is the InputChannel\n\n"
+                 "@param statusTracker called with a 'ConnectionStatus' as argument when the connection\n"
+                 "                     status of the underlying InputChannel changes\n"
                  "@return False if channel is already registered")
             .def("unregisterChannelMonitor", &DeviceClientWrap::unregisterChannelMonitorPy, bp::arg("channelName"),
                  "Unregister monitoring of output channel\n\n"
