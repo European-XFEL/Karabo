@@ -1,7 +1,12 @@
 import numpy as np
-from numpy.testing import assert_equal
+from numpy.testing import assert_array_equal
 
-from ..hash import Hash, Schema
+from .. import Hash, HashByte, HashList, Schema
+
+
+def check_array(array, expected):
+    assert_array_equal(array, expected)
+    assert array.dtype == expected.dtype
 
 
 def check_hash(h):
@@ -11,30 +16,53 @@ def check_hash(h):
     Python-only hashes.
     """
 
-    keys = ["bool", "int", "string", "stringlist", "chars", "vector",
-            "emptyvector", "hash", "hashlist", "emptystringlist", "nada",
-            "schema"]
+    keys = ["bool", "int", "string", "stringlist", "char", "chars",
+            "vector", "emptyvector", "hash", "emptyhashlist",
+            "hashlist", "emptystringlist", "nada", "schema"]
     assert list(h.keys()) == keys
     assert h["bool"] is True
     assert h["int"] == 4
     assert h["string"] == "bla"
     assert isinstance(h["string"], str)
     assert h["stringlist"] == ["bla", "blub"]
+
+    # Char and chars
+    assert h["char"] == "c"
     assert h["chars"] == b"bla"
+    assert isinstance(h["chars"], bytes)
+
+    # Nested values
     assert h["hash.a"] == 3
     assert h["hash.b"] == 7.1
+
+    # Hashlist
+    assert h["emptyhashlist"] == []
+    assert isinstance(h["emptyhashlist"], HashList)
     assert len(h["hashlist"]) == 2
     assert h["hashlist"][0]["a"] == 3
     assert len(h["hashlist"][1]) == 0
-    assert_equal(h["vector"], np.arange(7))
-    assert_equal(h["emptyvector"], np.array([]))
+
+    # Test all vector types
+    assert_array_equal(h["vector"], np.arange(7))
+    check_array(h["vector", "int8"], np.arange(8, dtype=np.int8))
+    check_array(h["vector", "int16"], np.arange(16, dtype=np.int16))
+    check_array(h["vector", "int32"], np.arange(32, dtype=np.int32))
+    check_array(h["vector", "int64"], np.arange(64, dtype=np.int64))
+    check_array(h["vector", "uint8"], np.arange(8, dtype=np.uint8))
+    check_array(h["vector", "uint16"], np.arange(16, dtype=np.uint16))
+    check_array(h["vector", "uint32"], np.arange(32, dtype=np.uint32))
+    check_array(h["vector", "uint64"], np.arange(64, dtype=np.uint64))
+
+    # Empty vectors and lists
+    check_array(h["emptyvector"], np.array([]))
     assert h["emptystringlist"] == []
 
-    assert isinstance(h["chars"], bytes)
+    # Simple values
     assert h["bool", "bool"] is False
     assert h["int", "float"] == np.float32(7.3)
     assert h["int", "double"] == np.float64(24)
 
+    # Simple values as attribute
     value = h["hash", "int8"]
     assert value == 8
     assert value.dtype == np.int8
@@ -62,6 +90,7 @@ def check_hash(h):
 
     assert h["string", "chars"] == b"blub"
     assert isinstance(h["string", "chars"], bytes)
+
     assert h["chars", "string"] == "laber"
     assert h["vector", "complex"] == 1.0 + 1.0j
     assert isinstance(h["chars", "string"], str)
@@ -77,10 +106,12 @@ def create_hash():
     h["int"] = 4
     h["string"] = "bla"
     h["stringlist"] = ["bla", "blub"]
+    h["char"] = HashByte("c")
     h["chars"] = b"bla"
     h["vector"] = np.arange(7, dtype=np.int64)
     h["emptyvector"] = np.array([])
     h["hash"] = Hash("a", 3, "b", 7.1)
+    h["emptyhashlist"] = HashList()
     h["hashlist"] = [Hash("a", 3), Hash()]
     h["emptystringlist"] = []
     h["nada"] = None
@@ -102,6 +133,15 @@ def create_hash():
     h["chars", "string"] = "laber"
     h["vector", "complex"] = 1.0 + 1.0j
 
+    h["vector", "int8"] = np.arange(8, dtype=np.int8)
+    h["vector", "int16"] = np.arange(16, dtype=np.int16)
+    h["vector", "int32"] = np.arange(32, dtype=np.int32)
+    h["vector", "int64"] = np.arange(64, dtype=np.int64)
+    h["vector", "uint8"] = np.arange(8, dtype=np.uint8)
+    h["vector", "uint16"] = np.arange(16, dtype=np.uint16)
+    h["vector", "uint32"] = np.arange(32, dtype=np.uint32)
+    h["vector", "uint64"] = np.arange(64, dtype=np.uint64)
+
     sh = Hash()
     sh["a"] = Hash()
     sh["a", "nodeType"] = 0
@@ -114,34 +154,34 @@ def test_constructors():
     h = Hash()
     assert len(h) == 0
 
-    h = Hash('a', 1)
+    h = Hash("a", 1)
     assert len(h) == 1
-    assert h['a'] == 1
+    assert h["a"] == 1
 
-    h = Hash('a', 1, 'b', 2.0)
+    h = Hash("a", 1, "b", 2.0)
     assert len(h) == 2
-    assert h['a'] == 1
-    assert h['b'] == 2.0
+    assert h["a"] == 1
+    assert h["b"] == 2.0
 
     h = Hash("a.b.c", 1, "b.c", 2.0, "c", 3.7, "d.e", "4",
              "e.f.g.h", [5, 5, 5, 5, 5], "F.f.f.f.f", Hash("x.y.z", 99))
     assert len(h) == 6
-    assert h['a.b.c'] == 1
-    assert h['b.c'] == 2.0
-    assert h['c'] == 3.7
-    assert h['d.e'] == "4"
-    assert h['e.f.g.h'][0] == 5
-    assert len(h['e.f.g.h']) == 5
-    assert h['F.f.f.f.f']['x.y.z'] == 99
-    assert h['F.f.f.f.f.x.y.z'] == 99
-    assert h['F']['f']['f']['f']['f']['x']['y']['z'] == 99
+    assert h["a.b.c"] == 1
+    assert h["b.c"] == 2.0
+    assert h["c"] == 3.7
+    assert h["d.e"] == "4"
+    assert h["e.f.g.h"][0] == 5
+    assert len(h["e.f.g.h"]) == 5
+    assert h["F.f.f.f.f"]["x.y.z"] == 99
+    assert h["F.f.f.f.f.x.y.z"] == 99
+    assert h["F"]["f"]["f"]["f"]["f"]["x"]["y"]["z"] == 99
 
-    del h['a.b.c']
-    assert not ('a.b.c' in h)
+    del h["a.b.c"]
+    assert not ("a.b.c" in h)
 
-    h = Hash({'foo': 42, 'bar': np.pi})
-    assert h['foo'] == 42
-    assert h['bar'] == np.pi
+    h = Hash({"foo": 42, "bar": np.pi})
+    assert h["foo"] == 42
+    assert h["bar"] == np.pi
 
 
 def test_iteration():
@@ -223,20 +263,20 @@ def test_merge():
     b["foo"] = np.pi
 
     # Copy the attributes instead of updating them
-    a.merge(b, attribute_policy='overwrite')
+    a.merge(b, attribute_policy="overwrite")
 
     assert a["foo", ...] == b["foo", ...]
 
 
 def test_paths_and_keys():
-    paths = ['bool', 'int', 'string', 'stringlist', 'chars', 'vector',
-             'emptyvector', 'hash.a', 'hash.b', 'hash', 'hashlist',
-             'emptystringlist', 'nada', 'schema']
-
+    paths = ["bool", "int", "string", "stringlist", "char", "chars",
+             "vector", "emptyvector", "hash.a", "hash.b", "hash",
+             "emptyhashlist", "hashlist", "emptystringlist", "nada",
+             "schema"]
     h = create_hash()
     assert h.paths() == paths
 
 
 def test_schema_simple():
-    s = Schema('a_schema')
+    s = Schema("a_schema")
     assert len(s.hash) == 0
