@@ -399,8 +399,6 @@ fi
 
 if [ "$RUNTESTS" = "y" ]; then
     runUnitTests
-    # Temp. add C++ long tests (input/output channel disconnection)
-    runCppLongTests
 fi
 
 if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
