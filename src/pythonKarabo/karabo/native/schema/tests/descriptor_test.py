@@ -10,9 +10,9 @@ from karabo.native import (
     Configurable, Double, decodeBinary, encodeBinary, Float, Hash, Image,
     ImageData, Int16, Int8, KaraboError, LeafType, MetricPrefix, NDArray,
     NumpyVector, QuantityValue, RegexString, Schema, String, Timestamp, Type,
-    UInt8, UInt64, Unit, unit, VectorBool, VectorChar, VectorComplexFloat,
-    VectorFloat, VectorHash, VectorInt32, VectorInt8, VectorRegexString,
-    VectorString)
+    UInt8, UInt64, Unit, unit_registry as unit, VectorBool, VectorChar,
+    VectorComplexFloat, VectorFloat, VectorHash, VectorInt32, VectorInt8,
+    VectorRegexString, VectorString)
 
 
 class ArrayTestDevice(Configurable):
