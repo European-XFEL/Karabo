@@ -45,7 +45,7 @@ from karathon import (
     BYTEARRAY_ELEMENT, BinarySerializerHash, BinarySerializerSchema,
     Broker, CANDELA, CENTI, CHOICE_ELEMENT, CHOICE_OF_NODES, CMYK,
     COMMAND, COULOMB, COUNT, Category, Channel,
-    ClassInfo, Connection,
+    ClassInfo, Connection, ConnectionStatus,
     DAY, DECA, DECI, DEGREE, DEGREE_CELSIUS, DOUBLE_ELEMENT,
     DaqDataType, DateTimeString, DetectorGeometry, Dims,
     ELECTRONVOLT, EVERY_100MS, EVERY_10MIN, EVERY_10S, EVERY_1MIN,
