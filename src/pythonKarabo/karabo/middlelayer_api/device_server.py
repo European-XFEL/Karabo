@@ -334,6 +334,8 @@ class DeviceServerBase(SignalSlotable):
 
         # The fromstring function takes over proper type conversion
         params = Hash({k: get(k).fromstring(v) for k, v in params.items()})
+        # Servers have 20 seconds heartbeat interval
+        params["heartbeatInterval"] = 20
         server = cls(params)
         if server:
             server._device_initializer = _device_initializer
