@@ -4,14 +4,16 @@ from zlib import adler32
 import numpy
 from numpy.testing import assert_equal
 
-from karabo.bound import (BinarySerializerHash, TextSerializerHash,
-                          Hash as BoundHash, VectorHash, Schema as BoundSchema,
-                          NODE_ELEMENT, NodeType, setStdVectorDefaultConversion,
-                          isStdVectorDefaultConversion, Types)
-from karabo.middlelayer import (
-    Hash, NodeType, Int64, decodeBinary, decodeXML,
-    encodeBinary, encodeXML, HashList, Schema)
-from karabo.native import HashByte
+from karabo.bound import (
+    BinarySerializerHash, TextSerializerHash,
+    Hash as BoundHash, VectorHash as BoundVectorHash, Schema as BoundSchema,
+    NODE_ELEMENT, NodeType, setStdVectorDefaultConversion,
+    isStdVectorDefaultConversion, Types)
+from karabo.middlelayer import Configurable
+from karabo.native import (
+    AccessMode, Hash, HashByte, NodeType, decodeXML, decodeBinary,
+    encodeBinary, encodeXML, HashList, Int32, Int64, String, Schema,
+    VectorHash as VectorHash)
 
 
 class Hash_TestCase(unittest.TestCase):
@@ -162,7 +164,7 @@ class Hash_TestCase(unittest.TestCase):
             h["vectorbool"] = [True, False, True]
             h["hash"] = BoundHash("a", 3, "b", 7.1)
             h["hashlist"] = [BoundHash("a", 3), BoundHash()]
-            h["emptyhashlist"] = VectorHash()
+            h["emptyhashlist"] = BoundVectorHash()
             if restore_stdVector:
                 setStdVectorDefaultConversion(Types.NUMPY)
             # Bound uses setAttribute for setting attributes.
@@ -241,7 +243,7 @@ class Hash_TestCase(unittest.TestCase):
         assert_equal(h["vectorbool"], [True, False, True])
         self.assertEqual(h["emptystringlist"], [])
         self.assertEqual(len(h["emptyhashlist"]), 0)
-        self.assertIsInstance(h["emptyhashlist"], (HashList, VectorHash))
+        self.assertIsInstance(h["emptyhashlist"], (HashList, BoundVectorHash))
         self.assertEqual(h["char"], "c")
 
     def check_hash(self, h):
@@ -342,6 +344,39 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(len(h["array"]["data"]), arr.nbytes)
         bh = ser.load(encodeBinary(h))
         assert_equal(bh["array"], arr)
+
+    def test_mdl_xml_table(self):
+        """Tests that a xml for an MDL Hash with vector of hash and schema
+        attributes can be successfully loaded by the xml serializer.
+
+        Those kind of attributes appear in the serialization of schemas with
+        TableElements and support for them currently differ between Bound and
+        MDL.
+        """
+        class Row(Configurable):
+            anInt = Int32(defaultValue=33)
+            aString = String(defaultValue="Spaghetti")
+
+        class WithTable(Configurable):
+            """A Configurable with a Table Element."""
+            table = VectorHash(
+                rows=Row,
+                displayedName="Table",
+                accessMode=AccessMode.READONLY)
+
+        schema = WithTable.getClassSchema()
+        schema_xml = encodeXML(schema.hash)
+        schema_hash = decodeXML(schema_xml)
+        self.assertTrue(schema_hash.has('table'))
+        self.assertTrue(isinstance(schema_hash['table'], Hash))
+        self.assertEqual(schema_hash['table', 'accessMode'], 2)
+        self.assertTrue('rowSchema' in schema_hash.getAttributes('table'))
+        self.assertTrue(isinstance(schema_hash['table', 'rowSchema'], str))
+
+        # TODO: make encodeXML compatible with the Bound XML serializer from
+        #       Karabo version 2.6.0 and above. Once that is done, 'rowSchema'
+        #       should become an instance of Schema and 'table' should become an
+        #       instance of HashList.
 
 
 if __name__ == '__main__':
