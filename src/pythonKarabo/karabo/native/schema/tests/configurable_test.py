@@ -5,17 +5,17 @@ from zlib import adler32
 
 import numpy
 
-from karabo.middlelayer import (
+from karabo.common.states import State
+from karabo.native import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Bool, Configurable,
     ComplexDouble, ComplexFloat, DaqDataType, DaqPolicy, decodeBinary,
-    DeviceNode, Double, encodeBinary, Float, Hash, Image, ImageData, Int8,
+    Double, encodeBinary, Float, Hash, Image, ImageData, Int8,
     Int16, Int32, Int64, isSet, KaraboError, MetricPrefix, Node, Overwrite,
-    RegexString, Slot, State, String, UInt8, UInt16, UInt32, UInt64,
-    Unit, unit, VectorBool, VectorChar, VectorComplexDouble,
+    RegexString, Slot, String, UInt8, UInt16, UInt32, UInt64,
+    Unit, unit_registry as unit, VectorBool, VectorChar, VectorComplexDouble,
     VectorComplexFloat, VectorDouble, VectorHash, VectorFloat, VectorInt8,
     VectorInt16, VectorInt32, VectorInt64, VectorString, VectorRegexString,
     VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64)
-from ..injectable import InjectMixin
 
 
 class StoreChanges(Configurable):
@@ -812,76 +812,6 @@ class Tests(TestCase):
         self.assertIsNone(Mandy.state.options)
         self.assertEqual(Brian.state.options, [State.ON, State.OFF])
 
-    def test_overwrite_inject(self):
-        class Mandy(InjectMixin):
-            number = Int32(displayedName="whatever", minExc=7,
-                           accessMode=AccessMode.READONLY,
-                           allowedStates={State.ON}, tags=set(),
-                           unitSymbol=Unit.METER,
-                           metricPrefixSymbol=MetricPrefix.MILLI,
-                           options=[8, 9, 10])
-
-            numberEnum = Int32(displayedName="EnumAccess",
-                               defaultValue=AccessLevel.OPERATOR,
-                               enum=AccessLevel)
-
-            @Slot(displayedName="MandyRandy", allowedStates=[State.INIT])
-            def randyMandy(self):
-                pass
-
-            deviceId = None
-
-            def _register_slots(self):
-                pass
-
-            def _notifyNewSchema(self):
-                pass
-
-            def signalChanged(self, deviceId, hsh):
-                pass
-
-        mandy = Mandy()
-        setter_before_inject = mandy.__class__.number.setter
-        mandy.__class__.number = Overwrite(
-            minExc=3, allowedStates={State.OFF},
-            accessMode=AccessMode.INITONLY,
-            unitSymbol=Unit.SECOND, metricPrefixSymbol=MetricPrefix.MEGA,
-            tags={"naughty"}, options=[6, 4])
-
-        mandy.__class__.numberEnum = Overwrite(defaultValue=AccessLevel.ADMIN,
-                                               options=[AccessLevel.ADMIN])
-
-        mandy.__class__.randyMandy = Overwrite(
-            displayedName="NoMandy", allowedStates=[State.ON]
-        )
-        run_coro(mandy.publishInjectedParameters())
-        setter_after_inject = mandy.__class__.number.setter
-        self.assertEqual(mandy.number.descriptor.key, "number")
-        self.assertEqual(Mandy.number.minExc, 7)
-        self.assertEqual(mandy.number.descriptor.minExc, 3)
-        self.assertEqual(Mandy.number.displayedName, "whatever")
-        self.assertEqual(mandy.number.descriptor.displayedName, "whatever")
-        self.assertEqual(Mandy.number.allowedStates, {State.ON})
-        self.assertEqual(mandy.number.descriptor.allowedStates, {State.OFF})
-        self.assertEqual(Mandy.number.tags, set())
-        self.assertEqual(mandy.number.descriptor.tags, {"naughty"})
-        self.assertIs(Mandy.number.accessMode, AccessMode.READONLY)
-        self.assertIs(mandy.number.descriptor.accessMode, AccessMode.INITONLY)
-        self.assertIs(Mandy.number.unitSymbol, Unit.METER)
-        self.assertIs(mandy.number.descriptor.unitSymbol, Unit.SECOND)
-        self.assertEqual(Mandy.number.units, unit.millimeter)
-        self.assertEqual(mandy.number.descriptor.units, unit.megasecond)
-        self.assertEqual(Mandy.number.options, [8, 9, 10])
-        self.assertEqual(mandy.number.descriptor.options, [6, 4])
-        self.assertEqual(mandy.numberEnum.descriptor.options,
-                         [AccessLevel.ADMIN])
-        self.assertEqual(mandy.numberEnum.descriptor.defaultValue,
-                         AccessLevel.ADMIN)
-        self.assertIs(mandy.randyMandy.descriptor.displayedName, "NoMandy")
-        self.assertEqual(mandy.randyMandy.descriptor.allowedStates,
-                         {State.ON})
-        self.assertEqual(setter_before_inject, setter_after_inject)
-
     def test_slot(self):
         class A(Configurable):
             @Slot(requiredAccessLevel=AccessLevel.EXPERT)
@@ -1006,32 +936,6 @@ class Tests(TestCase):
         with self.assertRaises(AttributeError):
             print(conf.node.descriptor)
 
-    def test_deviceNode(self):
-        class A(Configurable):
-            node = DeviceNode()
-
-        a = A({"node": "remote"})
-        schema = a.getClassSchema()
-        self.assertEqual(schema.hash['node', 'accessMode'],
-                         AccessMode.INITONLY.value)
-        self.assertEqual(schema.hash['node', 'assignment'],
-                         Assignment.MANDATORY.value)
-
-    def test_deviceNode_default(self):
-        class A(Configurable):
-            node = DeviceNode(defaultValue="remote")
-
-        a = A()
-        schema = a.getClassSchema()
-        self.assertEqual(schema.hash['node', 'accessMode'],
-                         AccessMode.INITONLY.value)
-        self.assertEqual(schema.hash['node', 'assignment'],
-                         Assignment.MANDATORY.value)
-        self.assertEqual(schema.hash['node', 'defaultValue'],
-                         "remote")
-        # Becomes a node!
-        self.assertEqual(a.node, None)
-
     def test_regex_string(self):
 
         class A(Configurable):
@@ -1041,7 +945,7 @@ class Tests(TestCase):
 
         # Regex does not comply with the defaultValue
         with self.assertRaises(KaraboError):
-            a = A()
+            a = A()  # noqa
 
         class B(A):
             d = Overwrite(defaultValue="1")
@@ -1054,12 +958,12 @@ class Tests(TestCase):
 
         class A(Configurable):
             d = VectorRegexString(
-                defaultValue=["remote:output "], # add a whitespace
+                defaultValue=["remote:output "],  # add a whitespace
                 regex=r"^[A-Za-z0-9_-]{1,60}(:)[A-Za-z0-9_-]{1,60}$")
 
         # Regex does not comply with the defaultValue
         with self.assertRaises(KaraboError):
-            a = A()
+            a = A()  # noqa
 
         class B(A):
             d = Overwrite(defaultValue=["remote:output"])

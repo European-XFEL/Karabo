@@ -5,7 +5,8 @@ import numpy as np
 from karabo.common.states import State
 from karabo.native import (
     Bool, Configurable, Float, Int32, MetricPrefix, String, Timestamp, Unit,
-    unit, QuantityValue, StringValue, BoolValue, VectorDouble)
+    unit_registry as unit, QuantityValue, StringValue, BoolValue,
+    VectorDouble)
 
 from ..unitutil import minimum, maximum, removeQuantity, StateSignifier
 from ..utils import build_karabo_value
