@@ -1,3 +1,4 @@
+from unittest import TestCase
 from contextlib import contextmanager
 from functools import partial
 from io import StringIO
@@ -5,7 +6,6 @@ import os.path as op
 from tempfile import TemporaryDirectory
 from uuid import uuid4
 
-from pytest import raises as assert_raises
 from traits.api import HasTraits, Bool, Enum, Float, Int, Range, String
 
 from karabo.common.api import set_modified_flag, walk_traits_object
@@ -100,167 +100,159 @@ def _write_project(project, storage):
 # -----------------------------------------------------------------------------
 
 
-def test_simple_read():
-    model = MacroModel(code='print(42)', initialized=True)
-    xml = write_project_model(model)
-    rmodel = read_project_model(StringIO(xml), existing=None)
-    assert model.code == rmodel.code
+class ProjectTest(TestCase):
 
-
-def test_invalid_read():
-    with _project_storage() as storage:
-        # Try to read something which is NOT THERE
-        project = ProjectModel()
-        obj = read_lazy_object(TEST_DOMAIN, project.uuid, storage,
-                               read_project_model, existing=project)
-        assert obj is project
-        assert not obj.initialized
-
-
-def test_reading_incomplete():
-    from ..io import _wrap_child_element_xml
-
-    # Create XML which looks like a project but lacks certain data
-    hsh = Hash(PROJECT_DB_TYPE_PROJECT, Hash())
-    xml = encodeXML(hsh)
-    meta = {'item_type': PROJECT_DB_TYPE_PROJECT, 'uuid': str(uuid4())}
-    xml = _wrap_child_element_xml(xml, meta)
-    # Then make sure it can still be read
-    model = read_project_model(StringIO(xml), existing=None)
-    assert isinstance(model, ProjectModel)
-
-
-def test_save_project():
-    old_project = _get_old_project()
-    project = convert_old_project(old_project)
-
-    with _project_storage() as storage:
-        _write_project(project, storage)
-
-
-def test_project_convert():
-    old_project = _get_old_project()
-    project = convert_old_project(old_project)
-
-    for server in project.servers:
-        for dev_inst in server.devices:
-            assert not dev_inst.instance_id.endswith('.xml')
-
-
-def test_project_round_trip():
-    old_project = _get_old_project()
-    project = convert_old_project(old_project)
-
-    with _project_storage() as storage:
-        _write_project(project, storage)
-        rt_project = ProjectModel(uuid=project.uuid, is_trashed=True)
-        rt_project = read_lazy_object(TEST_DOMAIN, project.uuid, storage,
-                                      read_project_model, existing=rt_project)
-
-    _compare_projects(project, rt_project)
-
-
-def test_project_cache():
-    old_project = _get_old_project()
-    project = convert_old_project(old_project)
-
-    with _project_storage() as storage:
-        _write_project(project, storage)
-        proj_data = storage.get_available_project_data(TEST_DOMAIN, 'project')
-        assert proj_data[0]['uuid'] == project.uuid
-        assert proj_data[0]['simple_name'] == project.simple_name
-
-
-def test_inmemory_cache():
-    cache_data = {}
-    old_project = _get_old_project()
-    project = convert_old_project(old_project)
-    with _project_storage() as storage:
-        memcache = MemCacheWrapper(cache_data, storage)
-        _write_project(project, storage)
-        _write_project(project, memcache)
-
-        # remove one item (exercises more branches in MemCacheWrapper)
-        del cache_data[TEST_DOMAIN][project.scenes[0].uuid]
-
-        rt_project = ProjectModel(uuid=project.uuid)
-        read_lazy_object(TEST_DOMAIN, project.uuid, memcache,
-                         read_project_model, existing=rt_project)
-
-    _compare_projects(project, rt_project)
-
-
-def test_empty_inmemory_cache():
-    old_project = _get_old_project()
-    project = convert_old_project(old_project)
-    with _project_storage() as storage:
-        _write_project(project, storage)
-        memcache = MemCacheWrapper({}, storage)
-        rt_project = ProjectModel(uuid=project.uuid)
-        read_lazy_object(TEST_DOMAIN, project.uuid, memcache,
-                         read_project_model, existing=rt_project)
-
-    _compare_projects(project, rt_project)
-
-
-def test_uninitialized_save():
-    model = ProjectModel()
-    with assert_raises(AssertionError):
-        write_project_model(model)
-
-
-def test_wrong_existing_type():
-    model = MacroModel(code='print(42)', initialized=True)
-    xml = write_project_model(model)
-    with assert_raises(AssertionError):
-        read_project_model(StringIO(xml), existing=ProjectModel())
-
-
-def test_existing_obj_mismatch():
-    # `model` and `existing` have different UUIDs
-    model = MacroModel(code='print(42)', initialized=True)
-    existing = MacroModel()
-
-    xml = write_project_model(model)
-    with assert_raises(AssertionError):
-        read_project_model(StringIO(xml), existing=existing)
-
-
-def test_existing_returns_existing():
-    # DeviceConfigurationModel blows up without a class_id value...
-    dcm_klass = partial(DeviceConfigurationModel, class_id='Tester')
-    dcm_klass.__name__ = 'DeviceConfigurationModel'
-
-    model_classes = (dcm_klass, DeviceInstanceModel, DeviceServerModel,
-                     MacroModel, ProjectModel, SceneModel)
-    for klass in model_classes:
-        model = klass(initialized=True)
+    def test_simple_read(self):
+        model = MacroModel(code='print(42)', initialized=True)
         xml = write_project_model(model)
+        rmodel = read_project_model(StringIO(xml), existing=None)
+        assert model.code == rmodel.code
 
-        # If an object is passed with the `existing` keyword argument, the same
-        # object must be returned to the caller
-        existing = klass(uuid=model.uuid)
-        read_model = read_project_model(StringIO(xml), existing=existing)
-        msg = '{} reader is broken!'.format(klass.__name__)
-        assert read_model is existing, msg
+    def test_invalid_read(self):
+        with _project_storage() as storage:
+            # Try to read something which is NOT THERE
+            project = ProjectModel()
+            obj = read_lazy_object(TEST_DOMAIN, project.uuid, storage,
+                                   read_project_model, existing=project)
+            assert obj is project
+            assert not obj.initialized
 
+    def test_reading_incomplete(self):
+        from ..io import _wrap_child_element_xml
 
-def test_modified_after_read():
-    def _loaded_checker(model):
-        if isinstance(model, BaseProjectObjectModel):
-            assert model.initialized
-            assert not model.modified
+        # Create XML which looks like a project but lacks certain data
+        hsh = Hash(PROJECT_DB_TYPE_PROJECT, Hash())
+        xml = encodeXML(hsh)
+        meta = {'item_type': PROJECT_DB_TYPE_PROJECT, 'uuid': str(uuid4())}
+        xml = _wrap_child_element_xml(xml, meta)
+        # Then make sure it can still be read
+        model = read_project_model(StringIO(xml), existing=None)
+        assert isinstance(model, ProjectModel)
 
-    old_project = _get_old_project()
-    project = convert_old_project(old_project)
+    def test_save_project(self):
+        old_project = _get_old_project()
+        project = convert_old_project(old_project)
 
-    with _project_storage() as storage:
-        _write_project(project, storage)
-        rt_project = ProjectModel(uuid=project.uuid)
-        rt_project = read_lazy_object(TEST_DOMAIN, project.uuid, storage,
-                                      read_project_model, existing=rt_project)
+        with _project_storage() as storage:
+            _write_project(project, storage)
 
-    # Make sure the following is true of freshly loaded projects:
-    # - The `modified` flag is False on all objects
-    # - The `initialized` flag is True
-    walk_traits_object(rt_project, _loaded_checker)
+    def test_project_convert(self):
+        old_project = _get_old_project()
+        project = convert_old_project(old_project)
+
+        for server in project.servers:
+            for dev_inst in server.devices:
+                assert not dev_inst.instance_id.endswith('.xml')
+
+    def test_project_round_trip(self):
+        old_project = _get_old_project()
+        project = convert_old_project(old_project)
+
+        with _project_storage() as storage:
+            _write_project(project, storage)
+            rt_project = ProjectModel(uuid=project.uuid, is_trashed=True)
+            rt_project = read_lazy_object(
+                TEST_DOMAIN, project.uuid, storage,
+                read_project_model, existing=rt_project)
+
+        _compare_projects(project, rt_project)
+
+    def test_project_cache(self):
+        old_project = _get_old_project()
+        project = convert_old_project(old_project)
+
+        with _project_storage() as storage:
+            _write_project(project, storage)
+            proj_data = storage.get_available_project_data(
+                TEST_DOMAIN, 'project')
+            assert proj_data[0]['uuid'] == project.uuid
+            assert proj_data[0]['simple_name'] == project.simple_name
+
+    def test_inmemory_cache(self):
+        cache_data = {}
+        old_project = _get_old_project()
+        project = convert_old_project(old_project)
+        with _project_storage() as storage:
+            memcache = MemCacheWrapper(cache_data, storage)
+            _write_project(project, storage)
+            _write_project(project, memcache)
+
+            # remove one item (exercises more branches in MemCacheWrapper)
+            del cache_data[TEST_DOMAIN][project.scenes[0].uuid]
+
+            rt_project = ProjectModel(uuid=project.uuid)
+            read_lazy_object(TEST_DOMAIN, project.uuid, memcache,
+                             read_project_model, existing=rt_project)
+
+        _compare_projects(project, rt_project)
+
+    def test_empty_inmemory_cache(self):
+        old_project = _get_old_project()
+        project = convert_old_project(old_project)
+        with _project_storage() as storage:
+            _write_project(project, storage)
+            memcache = MemCacheWrapper({}, storage)
+            rt_project = ProjectModel(uuid=project.uuid)
+            read_lazy_object(TEST_DOMAIN, project.uuid, memcache,
+                             read_project_model, existing=rt_project)
+
+        _compare_projects(project, rt_project)
+
+    def test_uninitialized_save(self):
+        model = ProjectModel()
+        with self.assertRaises(AssertionError):
+            write_project_model(model)
+
+    def test_wrong_existing_type(self):
+        model = MacroModel(code='print(42)', initialized=True)
+        xml = write_project_model(model)
+        with self.assertRaises(AssertionError):
+            read_project_model(StringIO(xml), existing=ProjectModel())
+
+    def test_existing_obj_mismatch(self):
+        # `model` and `existing` have different UUIDs
+        model = MacroModel(code='print(42)', initialized=True)
+        existing = MacroModel()
+
+        xml = write_project_model(model)
+        with self.assertRaises(AssertionError):
+            read_project_model(StringIO(xml), existing=existing)
+
+    def test_existing_returns_existing(self):
+        # DeviceConfigurationModel blows up without a class_id value...
+        dcm_klass = partial(DeviceConfigurationModel, class_id='Tester')
+        dcm_klass.__name__ = 'DeviceConfigurationModel'
+
+        model_classes = (dcm_klass, DeviceInstanceModel, DeviceServerModel,
+                         MacroModel, ProjectModel, SceneModel)
+        for klass in model_classes:
+            model = klass(initialized=True)
+            xml = write_project_model(model)
+
+            # If an object is passed with the `existing` keyword argument,
+            # the same object must be returned to the caller
+            existing = klass(uuid=model.uuid)
+            read_model = read_project_model(StringIO(xml), existing=existing)
+            msg = '{} reader is broken!'.format(klass.__name__)
+            assert read_model is existing, msg
+
+    def test_modified_after_read(self):
+        def _loaded_checker(model):
+            if isinstance(model, BaseProjectObjectModel):
+                assert model.initialized
+                assert not model.modified
+
+        old_project = _get_old_project()
+        project = convert_old_project(old_project)
+
+        with _project_storage() as storage:
+            _write_project(project, storage)
+            rt_project = ProjectModel(uuid=project.uuid)
+            rt_project = read_lazy_object(
+                TEST_DOMAIN, project.uuid, storage,
+                read_project_model, existing=rt_project)
+
+        # Make sure the following is true of freshly loaded projects:
+        # - The `modified` flag is False on all objects
+        # - The `initialized` flag is True
+        walk_traits_object(rt_project, _loaded_checker)
