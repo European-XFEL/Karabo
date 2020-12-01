@@ -244,24 +244,33 @@ namespace karathon {
             }
         }
 
+        static void proxyChannelStatusTracker(const bp::object& handler, karabo::net::ConnectionStatus status) {
+            Wrapper::proxyHandler(handler, "channelStatusTracker", status);
+        }
 
         bool registerChannelMonitorPy(const std::string& channelName,
                                       const bp::object& dataHandler = bp::object(),
                                       const karabo::util::Hash& inputChannelCfg = karabo::util::Hash(),
                                       const bp::object& eosHandler = bp::object(),
-                                      const bp::object& inputHandler = bp::object()) {
+                                      const bp::object& inputHandler = bp::object(),
+                                      const bp::object& statusTracker = bp::object()) {
 
-            SignalSlotable::DataHandler _dataHandler = SignalSlotable::DataHandler();
-            SignalSlotable::InputHandler _inputHandler = SignalSlotable::InputHandler();
-            SignalSlotable::InputHandler _eosHandler = boost::bind(&InputChannelWrap::proxyEndOfStreamEventHandler, eosHandler, _1);
-            if (dataHandler != bp::object()) {
-                _dataHandler = boost::bind(&InputChannelWrap::proxyDataHandler, dataHandler, _1, _2);
+            InputChannelHandlers handlers;
+
+            if (!dataHandler.is_none()) {
+                handlers.dataHandler = boost::bind(&InputChannelWrap::proxyDataHandler, dataHandler, _1, _2);
             }
-            if (inputHandler != bp::object()) {
-                _inputHandler = boost::bind(&InputChannelWrap::proxyInputHandler, inputHandler, _1);
+            if (!eosHandler.is_none()) {
+                handlers.eosHandler = boost::bind(&InputChannelWrap::proxyEndOfStreamEventHandler, eosHandler, _1);
+            }
+            if (!inputHandler.is_none()) {
+                handlers.inputHandler = boost::bind(&InputChannelWrap::proxyInputHandler, inputHandler, _1);
+            }
+            if (!statusTracker.is_none()) {
+                handlers.statusTracker = boost::bind(&proxyChannelStatusTracker, statusTracker, _1);
             }
 
-            return this->DeviceClient::registerChannelMonitor(channelName, _dataHandler, inputChannelCfg, _eosHandler, _inputHandler);
+            return this->DeviceClient::registerChannelMonitor(channelName, handlers, inputChannelCfg);
         }
 
         bool unregisterChannelMonitorPy(const std::string& channelName) {
