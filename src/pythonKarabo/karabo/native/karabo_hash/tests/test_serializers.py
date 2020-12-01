@@ -1,6 +1,7 @@
 import os
 from tempfile import TemporaryDirectory
 from unittest import TestCase, main
+from zlib import adler32
 
 from ..hash import Hash, HashList, Schema
 from ..xml_reader import decodeXML, loadFromFile
@@ -206,8 +207,7 @@ class TestSerializers(TestCase):
             isinstance(sch_hash['table', 'rowSchema'], Schema)
         )
         self.assertTrue(
-            isinstance(sch_hash['table', 'defaultValue'], HashList)
-        )
+            isinstance(sch_hash['table', 'defaultValue'], HashList))
 
     def test_legacy_xml_BoundSchema_load(self):
         """Tests that a legacy xml for a Bound Schema with vector of hash and
@@ -226,6 +226,30 @@ class TestSerializers(TestCase):
             isinstance(sch_hash['table', 'defaultValue'], str)
         )
         self.assertTrue(sch_hash['table', 'defaultValue'].startswith("'e1'"))
+
+    def test_bin_serialization(self):
+        from .test_hash import create_hash, check_hash
+
+        h = create_hash()
+        check_hash(h)
+        encoded = encodeBinary(h)
+        self.assertEqual(adler32(encoded), 2182514772)
+        decoded = decodeBinary(encoded)
+        check_hash(decoded)
+
+        assert decoded.fullyEqual(h)
+
+    def test_xml_serialization(self):
+        from .test_hash import create_hash, check_hash
+
+        h = create_hash()
+        check_hash(h)
+        encoded = encodeXML(h)
+        self.assertEqual(adler32(encoded.encode('utf-8')), 2738625041)
+        decoded = decodeXML(encoded)
+        check_hash(decoded)
+
+        assert decoded.fullyEqual(h)
 
 
 if __name__ == "__main__":
