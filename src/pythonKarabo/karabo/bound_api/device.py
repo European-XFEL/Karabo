@@ -1275,6 +1275,8 @@ class PythonDevice(NoFsm):
         self._ss.registerSystemSignal("signalStateChanged", Hash, str)
         # schema, deviceid
         self._ss.registerSystemSignal("signalSchemaUpdated", Schema, str)
+        # To ensure that this signal is delivered before any reply to a slot
+        # triggering the signal, this has to be a SYSTEM_SIGNAL.
         self._ss.registerSystemSignal("signalAlarmUpdate", str, Hash)
 
         # Register intrinsic slots
