@@ -584,7 +584,7 @@ class DeviceClient(object):
 
     def registerChannelMonitor(self, channelName, dataHandler=None,
                                inputChannelCfg=None, eosHandler=None,
-                               inputHandler=None):
+                               inputHandler=None, statusTracker=None):
         """Register an asynchronous call-back to monitor defined output channel
 
         Internally, an InputChannel is created and configured.
@@ -597,26 +597,33 @@ class DeviceClient(object):
                         InputChannel.create(..) use default except you know
                         what your are doing.
                         For experts: "connectedOutputChannels" will be
-                                        overwritten,
-                                      "onSlowness" default is overwritten
-                                        to "drop"
+                                        overwritten.
         :param eosHandler called on end of stream, argument is the InputChannel
         :param inputHandler called when data arrives, argument is the InputChannel
-
+        :param statusTracker called with a 'ConnectionStatus' as argument when
+                             the connection status of the underlying
+                             InputChannel changes
         :returns False if channel is already registered
 
         Example:
 
         def handler(data, meta):
             print(data.getPaths())
+        def tracker(status):
+            if status is ConnectionStatus.CONNECTED:
+                print("Ready for data")
+            elif status is ConnectionStatus.DISCONNECTED:
+                print("Lost data connection")
         c = DeviceClient();
-        c.registerChannelMonitor("DEV/ID/1:output", handler)
+        c.registerChannelMonitor("DEV/ID/1:output", handler,
+                                 statusTracker=tracker)
         """
         if inputChannelCfg is None:
             inputChannelCfg = Hash()
         return self.__client.registerChannelMonitor(channelName, dataHandler,
                                                     inputChannelCfg,
-                                                    eosHandler, inputHandler)
+                                                    eosHandler, inputHandler,
+                                                    statusTracker)
 
     def unregisterChannelMonitor(self, channelName):
         """Unregister monitoring of output channel
