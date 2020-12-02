@@ -441,7 +441,6 @@ namespace karabo {
             /**
              * Create and register an InputChannel together with handlers
              *
-             * Note: Pass only onDataAvailableHandler OR onInputAvailableHandler!
              * @param channelName name of the channel, e.g. its path in the schema
              * @param config is a Hash with a Hash at 'channelName' which will be passed to InputChannel::create
              * @param onDataAvailableHandler is a DataHandler called for each data item coming through the pipeline
