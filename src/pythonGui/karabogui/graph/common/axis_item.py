@@ -1,9 +1,7 @@
-from datetime import datetime
-
 import numpy as np
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont, QPen
-from pyqtgraph import AxisItem as PgAxisItem
+from pyqtgraph import AxisItem as PgAxisItem, DateAxisItem
 
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, X_AXIS_HEIGHT, Y_AXIS_WIDTH, INTEGER_ALARM_MAP,
@@ -135,35 +133,35 @@ class AxisItem(PgAxisItem):
         return levels
 
 
-class TimeAxisItem(AxisItem):
-    format_string = "%Ss"
+class TimeAxisItem(DateAxisItem):
+    axisDoubleClicked = pyqtSignal()
 
-    def setRange(self, min_range, max_range):
-        """Set the range and decide which format string we should use"""
-        first = datetime.utcfromtimestamp(min_range)
-        last = datetime.utcfromtimestamp(max_range)
-        diff = (last - first).total_seconds()
+    axisStyle = {
+        "autoExpandTextSpace": False,
+        "tickTextWidth": 50,
+        "tickTextHeight": 24}
 
-        datetime_format = "%b %Y"
+    tickFontSize = 10
 
-        if last.year == first.year:
-            datetime_format = "%d %b"
-            if last.day == first.day:
-                datetime_format = "%H:%M"
-                if diff < 60 * 10:  # Difference is under 10 mins
-                    datetime_format = "%H:%M:%S"
-            elif diff < DAY_IN_SECONDS * 7:
-                datetime_format = "%d %b, %H:%M"
-        elif diff < YEAR_IN_SECONDS * 3:
-            datetime_format = "%d %b %Y"
+    def __init__(self, orientation):
+        super(TimeAxisItem, self).__init__(orientation)
+        self.enableAutoSIPrefix(False)
+        self.setStyle(**self.axisStyle)
+        font = QFont()
+        font.setPixelSize(self.tickFontSize)
+        self.setTickFont(font)
 
-        self.format_string = datetime_format
-        super(TimeAxisItem, self).setRange(min_range, max_range)
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.axisDoubleClicked.emit()
+            event.accept()
+            return
+        super(AxisItem, self).mouseDoubleClickEvent(event)
 
-    def tickStrings(self, values, scale, spacing):
-        values = [datetime.fromtimestamp(value).strftime(self.format_string)
-                  for value in values]
-        return values
+    def mouseDragEvent(self, event):
+        """Reimplemented function of PyQt
+        """
+        event.ignore()
 
 
 class StateAxisItem(AxisItem):
