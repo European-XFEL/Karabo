@@ -11,11 +11,50 @@ from karabo.native import (
     ComplexDouble, ComplexFloat, DaqDataType, DaqPolicy, decodeBinary,
     Double, encodeBinary, Float, Hash, Image, ImageData, Int8,
     Int16, Int32, Int64, isSet, KaraboError, MetricPrefix, Node, Overwrite,
-    RegexString, Slot, String, UInt8, UInt16, UInt32, UInt64,
-    Unit, unit_registry as unit, VectorBool, VectorChar, VectorComplexDouble,
-    VectorComplexFloat, VectorDouble, VectorHash, VectorFloat, VectorInt8,
-    VectorInt16, VectorInt32, VectorInt64, VectorString, VectorRegexString,
+    RegexString, Slot, String, TypeHash, TypeSchema, UInt8, UInt16,
+    UInt32, UInt64, Unit, unit_registry as unit, VectorBool,
+    VectorChar, VectorComplexDouble, VectorComplexFloat, VectorDouble,
+    VectorHash, VectorFloat, VectorInt8, VectorInt16, VectorInt32,
+    VectorInt64, VectorString, VectorRegexString,
     VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64)
+
+
+class RowSchema(Configurable):
+    string = String()
+
+
+class FullSchema(Configurable):
+    a = Bool()
+    b = Float()
+    c = VectorFloat()
+    d = Int8()
+    e = VectorInt8()
+    f = UInt8()
+    g = VectorUInt8()
+    h = Int16()
+    i = VectorInt16()
+    j = UInt16()
+    k = VectorUInt16()
+    l = Int32()
+    m = VectorInt32()
+    n = UInt32()
+    o = VectorUInt32()
+    p = Int64()
+    q = VectorInt64()
+    r = UInt64()
+    s = VectorUInt64()
+    t = Double()
+    u = VectorDouble()
+    v = ComplexFloat()
+    w = VectorComplexFloat()
+    x = ComplexDouble()
+    y = VectorComplexDouble()
+    z = String()
+    az = VectorString()
+    aa = VectorBool()
+    ab = TypeHash()
+    ac = TypeSchema()
+    ad = VectorHash(rows=RowSchema)
 
 
 class StoreChanges(Configurable):
@@ -1021,43 +1060,49 @@ class Tests(TestCase):
         self.assertEqual(
             schema.hash['image.pixels.isBigEndian', 'defaultValue'], False)
 
+    def test_class_schema(self):
+        schema = FullSchema.getClassSchema()
+        shash = schema.hash
+
+        self.assertEqual(shash["a", "valueType"], "BOOL")
+        self.assertEqual(shash["b", "valueType"], "FLOAT")
+        self.assertEqual(shash["c", "valueType"], "VECTOR_FLOAT")
+        self.assertEqual(shash["d", "valueType"], "INT8")
+        self.assertEqual(shash["e", "valueType"], "VECTOR_INT8")
+        self.assertEqual(shash["f", "valueType"], "UINT8")
+        self.assertEqual(shash["g", "valueType"], "VECTOR_UINT8")
+        self.assertEqual(shash["h", "valueType"], "INT16")
+        self.assertEqual(shash["i", "valueType"], "VECTOR_INT16")
+        self.assertEqual(shash["j", "valueType"], "UINT16")
+        self.assertEqual(shash["k", "valueType"], "VECTOR_UINT16")
+        self.assertEqual(shash["l", "valueType"], "INT32")
+        self.assertEqual(shash["m", "valueType"], "VECTOR_INT32")
+        self.assertEqual(shash["n", "valueType"], "UINT32")
+        self.assertEqual(shash["o", "valueType"], "VECTOR_UINT32")
+        self.assertEqual(shash["p", "valueType"], "INT64")
+        self.assertEqual(shash["q", "valueType"], "VECTOR_INT64")
+        self.assertEqual(shash["r", "valueType"], "UINT64")
+        self.assertEqual(shash["s", "valueType"], "VECTOR_UINT64")
+        self.assertEqual(shash["t", "valueType"], "DOUBLE")
+        self.assertEqual(shash["u", "valueType"], "VECTOR_DOUBLE")
+        self.assertEqual(shash["v", "valueType"], "COMPLEX_FLOAT")
+        self.assertEqual(shash["w", "valueType"], "VECTOR_COMPLEX_FLOAT")
+        self.assertEqual(shash["x", "valueType"], "COMPLEX_DOUBLE")
+        self.assertEqual(shash["y", "valueType"], "VECTOR_COMPLEX_DOUBLE")
+        self.assertEqual(shash["z", "valueType"], "STRING")
+        self.assertEqual(shash["az", "valueType"], "VECTOR_STRING")
+        self.assertEqual(shash["aa", "valueType"], "VECTOR_BOOL")
+        self.assertEqual(shash["ab", "valueType"], "HASH")
+        self.assertEqual(shash["ac", "valueType"], "SCHEMA")
+        self.assertEqual(shash["ad", "valueType"], "VECTOR_HASH")
+
     def test_archivePolicy(self):
 
-        keys = ['aa', 'az']
+        keys = ['aa', 'az', 'ab', 'ac', 'ad']
         for c in string.ascii_lowercase:
             keys.append(c)
 
-        class Default(Configurable):
-            a = Bool()
-            b = Float()
-            c = VectorFloat()
-            d = Int8()
-            e = VectorInt8()
-            f = UInt8()
-            g = VectorUInt8()
-            h = Int16()
-            i = VectorInt16()
-            j = UInt16()
-            k = VectorUInt16()
-            l = Int32()
-            m = VectorInt32()
-            n = UInt32()
-            o = VectorUInt32()
-            p = Int64()
-            q = VectorInt64()
-            r = UInt64()
-            s = VectorUInt64()
-            t = Double()
-            u = VectorDouble()
-            v = ComplexFloat()
-            w = VectorComplexFloat()
-            x = ComplexDouble()
-            y = VectorComplexDouble()
-            z = String()
-            az = VectorString()
-            aa = VectorBool()
-
-        class NoArchive(Default):
+        class NoArchive(FullSchema):
             a = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             b = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             c = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
@@ -1086,8 +1131,11 @@ class Tests(TestCase):
             z = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             az = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             aa = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            ab = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            ac = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            ad = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
 
-        a = Default()
+        a = FullSchema()
         b = NoArchive()
         schema_a = a.getClassSchema()
         schema_b = b.getClassSchema()
