@@ -18,7 +18,8 @@ def check_hash(h):
 
     keys = ["bool", "int", "string", "stringlist", "char", "chars",
             "vector", "emptyvector", "hash", "emptyhashlist",
-            "hashlist", "emptystringlist", "nada", "schema"]
+            "hashlist", "emptystringlist", "nada", "schema",
+            "element", "subelement"]
     assert list(h.keys()) == keys
     assert h["bool"] is True
     assert h["int"] == 4
@@ -99,6 +100,17 @@ def check_hash(h):
     assert not sh["a"].keys()
     assert sh["a", "nodeType"] == 0
 
+    assert h["element"] == 5
+    attrs = h["element", ...]
+    assert attrs["minInc"] == 5
+    assert attrs["alarmLow"] == -20
+
+    assert isinstance(h["subelement"], Hash)
+    assert isinstance(h["subelement.node"], Hash)
+    assert h["subelement.node.subnode"] == 15
+    attrs = h["subelement.node.subnode", ...]
+    assert attrs["minInc"] == 2
+
 
 def create_hash():
     h = Hash()
@@ -146,6 +158,9 @@ def create_hash():
     sh["a"] = Hash()
     sh["a", "nodeType"] = 0
     h["schema"] = Schema("blub", hash=sh)
+
+    h.setElement("element", 5, {"minInc": 5, "alarmLow": -20})
+    h.setElement("subelement.node.subnode", 15, {"minInc": 2})
 
     return h
 
@@ -272,7 +287,8 @@ def test_paths_and_keys():
     paths = ["bool", "int", "string", "stringlist", "char", "chars",
              "vector", "emptyvector", "hash.a", "hash.b", "hash",
              "emptyhashlist", "hashlist", "emptystringlist", "nada",
-             "schema"]
+             "schema", "element", "subelement.node.subnode",
+             "subelement.node", "subelement"]
     h = create_hash()
     assert h.paths() == paths
 
