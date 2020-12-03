@@ -106,6 +106,10 @@ def test_has_changes():
     assert not has_changes(binding, 2.0, 2.4)
     assert has_changes(binding, 2.0, 2.5)
 
+    binding = FloatBinding()
+    assert not has_changes(binding, 0, 0)
+    assert has_changes(binding, 0, 1e-9)
+
     binding = VectorInt32Binding()
     assert has_changes(binding, [1, 2, 3], [1, 2])
     assert has_changes(binding, [1, 2, 3], [1, 2, 4])
