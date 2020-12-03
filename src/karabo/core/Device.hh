@@ -1660,13 +1660,15 @@ namespace karabo {
             void initDeviceSlots() {
                 using namespace std;
 
-                KARABO_SIGNAL2("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
+                KARABO_SIGNAL("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
 
-                KARABO_SYSTEM_SIGNAL2("signalStateChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
+                KARABO_SYSTEM_SIGNAL("signalStateChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
 
-                KARABO_SYSTEM_SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
+                KARABO_SYSTEM_SIGNAL("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
 
-                KARABO_SIGNAL2("signalAlarmUpdate", std::string, karabo::util::Hash);
+                // To ensure that this signal is delivered before any reply to a slot triggering the signal,
+                // this has to be a SYSTEM_SIGNAL.
+                KARABO_SYSTEM_SIGNAL("signalAlarmUpdate", std::string, karabo::util::Hash);
 
                 KARABO_SLOT(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
 
