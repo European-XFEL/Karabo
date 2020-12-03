@@ -233,9 +233,9 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     output->initialize(); // needed due to int == 0 argument above
 
     std::vector<karabo::util::Hash> table;
-    boost::mutex tableMutex;
-    output->registerShowConnectionsHandler([&table, &tableMutex](const std::vector<karabo::util::Hash>& connections) {
-        boost::mutex::scoped_lock lock(tableMutex);
+    boost::mutex handlerDataMutex;
+    output->registerShowConnectionsHandler([&table, &handlerDataMutex](const std::vector<karabo::util::Hash>& connections) {
+        boost::mutex::scoped_lock lock(handlerDataMutex);
         table = connections;
     });
 
@@ -248,6 +248,14 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     input->registerDataHandler([&calls](const Hash& data, const InputChannel::MetaData & meta) {
         ++calls;
     });
+    std::vector<karabo::net::ConnectionStatus> trackedStatus;
+    input->registerConnectionTracker([&trackedStatus, &handlerDataMutex, outputChannelId](const std::string& outputId,
+                                                                                          karabo::net::ConnectionStatus status) {
+        if (outputId == outputChannelId) {
+            boost::mutex::scoped_lock lock(handlerDataMutex);
+            trackedStatus.push_back(status);
+        }
+    });
 
     // Write first data - nobody connected yet.
     output->write(Hash("key", 42));
@@ -255,7 +263,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     boost::this_thread::sleep(boost::posix_time::milliseconds(20)); // time for call back
     CPPUNIT_ASSERT_EQUAL(0u, calls);
     {
-        boost::mutex::scoped_lock lock(tableMutex);
+        boost::mutex::scoped_lock lock(handlerDataMutex);
         CPPUNIT_ASSERT_EQUAL(0uL, table.size());
     }
 
@@ -266,6 +274,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
     outputInfo.set("memoryLocation", "local");
     const size_t n = 50;
     for (size_t i = 0; i < n; ++i) {
+        trackedStatus.clear();
         calls = 0;
         // Setup connection handler
         std::promise<karabo::net::ErrorCode> connectErrorCode;
@@ -296,11 +305,23 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::util::toString(i),
                                      connectFuture.get(), karabo::net::ErrorCode()); // i.e. no error
 
+        // We are connected - check that the status tracker received all steps
+        // (rely on order of calls to connection tracker (first) and handler (second) at the end of InputChannel::onConnect
+        CPPUNIT_ASSERT(trackedStatus.size() > 0ul);
+        CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::net::ConnectionStatus::CONNECTING),
+                             static_cast<int> (trackedStatus[0]));
+        // Without waiting for tracker really being called, this test relies on order of calls to connection
+        // tracker and handler given to InputChannel::connect(..) (although might succeed most times even otherwise)
+        CPPUNIT_ASSERT(trackedStatus.size() > 1ul);
+        CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::net::ConnectionStatus::CONNECTED),
+                             static_cast<int> (trackedStatus[1]));
+        CPPUNIT_ASSERT_EQUAL(2ul, trackedStatus.size()); // i.e. nothing else (yet)!
+
         // Now ensure that output channel took note of input registration:
         int trials = 200;
         do {
             boost::this_thread::sleep(boost::posix_time::milliseconds(2));
-            boost::mutex::scoped_lock lock(tableMutex);
+            boost::mutex::scoped_lock lock(handlerDataMutex);
             if (!table.empty()) {
                 break;
             }
@@ -344,12 +365,17 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         trials = 1000; // failed with 200 in https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/131075/raw
         do {
             boost::this_thread::sleep(boost::posix_time::milliseconds(2));
-            boost::mutex::scoped_lock lock(tableMutex);
-            if (table.empty()) {
+            boost::mutex::scoped_lock lock(handlerDataMutex);
+            if (table.empty() && trackedStatus.size() > 2ul) {
                 break;
             }
         } while (--trials >= 0);
         CPPUNIT_ASSERT_EQUAL(0uL, table.size());
+        // Also the tracker got informed about disconnection:
+        CPPUNIT_ASSERT(trackedStatus.size() > 2ul);
+        CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::net::ConnectionStatus::DISCONNECTED),
+                             static_cast<int> (trackedStatus[2]));
+        CPPUNIT_ASSERT_EQUAL(3ul, trackedStatus.size()); // i.e. nothing else!
     }
 
     // Write data again - input does not anymore receive data.
@@ -448,10 +474,12 @@ void InputOutputChannel_Test::testConcurrentConnect() {
 
         input->disconnect(outputInfo);
 
+        // Ensure it is disconnected
+        CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::net::ConnectionStatus::DISCONNECTED),
+                             static_cast<int> (input->getConnectionStatus()[outputChannelId]));
         //
         // Now second scenario: disconnect in between two connect attempts:
         //
-        boost::this_thread::sleep(boost::posix_time::milliseconds(100)); // make sure all disconnection has finished
         // Setup more connection handlers
         std::promise<karabo::net::ErrorCode> connectPromise3;
         std::future<karabo::net::ErrorCode> connectFuture3 = connectPromise3.get_future();
@@ -473,8 +501,7 @@ void InputOutputChannel_Test::testConcurrentConnect() {
 
         // Now it is not exactly clear what to expect - depends on timing of threads:
         // - 1st fails as operation_canceled, 2nd succeeds, i.e. disconnect(..) clears from "being setup"
-        // - 1st succeeds and 2nd succeeds, i.e. disconnect(..) got called when 1st connect(..) already succeeded
-        // (a return value of disconnect(..) telling what state the connection was could help to differentiate...)
+        // - 1st succeeds and 2nd succeeds, i.e. disconnect(..) got called (and fully succeeded!) when 1st connect(..) already succeeded
         const karabo::net::ErrorCode ec1 = connectFuture3.get();
         const karabo::net::ErrorCode ec2 = connectFuture4.get();
 
