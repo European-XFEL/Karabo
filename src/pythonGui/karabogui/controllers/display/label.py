@@ -104,6 +104,9 @@ class DisplayLabel(BaseBindingController):
                 else:
                     fmt = "{:.0f}"
             elif isinstance(binding, FloatBinding):
+                # Yes, we dance with numpy types, hence, we have to do a str
+                # conversion first before we got for float casting!
+                value = float(str(value))
                 fmt = "{:.8g}"
             else:
                 fmt = "{}"
