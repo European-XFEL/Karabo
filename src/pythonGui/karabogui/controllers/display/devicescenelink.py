@@ -15,7 +15,7 @@ from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.dialogs.device_scenelink_dialog import DeviceSceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
-from karabogui.fonts import get_font_from_string, substitute_font
+from karabogui.fonts import get_qfont, substitute_font
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_topology
 from karabogui.util import handle_scene_from_server
@@ -42,7 +42,7 @@ class LinkWidget(QPushButton):
         self.model = model
         # Check and substitute the font with the application fonts
         substitute_font(model)
-        self.setFont(get_font_from_string(model.font))
+        self.setFont(get_qfont(model.font))
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.clicked.connect(self._handle_click)
         self.setCursor(Qt.PointingHandCursor)
@@ -90,7 +90,7 @@ class LinkWidget(QPushButton):
                              foreground=model.foreground)
 
         # Record the QFont on the widget
-        self.setFont(get_font_from_string(model.font))
+        self.setFont(get_qfont(model.font))
         self.update()
 
     def _set_tooltip(self):
