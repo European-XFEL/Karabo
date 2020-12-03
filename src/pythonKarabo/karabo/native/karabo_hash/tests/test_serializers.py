@@ -233,7 +233,7 @@ class TestSerializers(TestCase):
         h = create_hash()
         check_hash(h)
         encoded = encodeBinary(h)
-        self.assertEqual(adler32(encoded), 2182514772)
+        self.assertEqual(adler32(encoded), 752066742)
         decoded = decodeBinary(encoded)
         check_hash(decoded)
 
@@ -245,7 +245,7 @@ class TestSerializers(TestCase):
         h = create_hash()
         check_hash(h)
         encoded = encodeXML(h)
-        self.assertEqual(adler32(encoded.encode('utf-8')), 2738625041)
+        self.assertEqual(adler32(encoded.encode('utf-8')), 2927320376)
         decoded = decodeXML(encoded)
         check_hash(decoded)
 

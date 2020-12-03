@@ -23,8 +23,7 @@ def parseHash():
     try:
         while True:
             name, value, attrs = yield from parseOne()
-            ret[name] = value
-            ret[name, ...] = attrs
+            ret.setElement(name, value, attrs)
     except EndElement:
         return ret
 
