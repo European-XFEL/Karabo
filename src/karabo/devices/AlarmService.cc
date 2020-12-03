@@ -137,6 +137,8 @@ namespace karabo {
 
                 boost::mutex::scoped_lock lock(m_updateMutex);
                 if (!m_updateHash.empty()) {
+                    // For this use here, the signal does NOT have to be a system signal (i.e. it may be droppable), at least
+                    // what concerns the order of the signal and slot reply since not triggered by a slot call here.
                     emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), m_updateHash);
                     m_updateHash.clear();
                 }
@@ -154,7 +156,8 @@ namespace karabo {
         void AlarmService::setupSignalsAndSlots() {
 
             registerSlot<std::string, karabo::util::Hash > (boost::bind(&AlarmService::slotUpdateAlarms, this, _1, _2), "slotUpdateAlarms");
-            KARABO_SIGNAL("signalAlarmServiceUpdate", std::string, std::string, karabo::util::Hash)
+            // See comments where this signal is emitted to clarify why this is a SYSTEM_SIGNAL.
+            KARABO_SYSTEM_SIGNAL("signalAlarmServiceUpdate", std::string, std::string, karabo::util::Hash)
             registerSlot<karabo::util::Hash > (boost::bind(&AlarmService::slotAcknowledgeAlarm, this, _1), "slotAcknowledgeAlarm");
             registerSlot(boost::bind(&AlarmService::slotRequestAlarmDump, this), "slotRequestAlarmDump");
 
@@ -486,6 +489,8 @@ namespace karabo {
                     }
                 }
             }
+            // For this use here, the signal does NOT have to be a system signal (i.e. it may be droppable), at least
+            // what concerns the order of the signal and slot reply since not triggered by a slot call here.
             emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmInit"), rowInits);
         }
 
@@ -528,6 +533,8 @@ namespace karabo {
             if (!rowUpdates.empty()) {
                 boost::mutex::scoped_lock lock(m_updateMutex);
                 m_updateHash.merge(rowUpdates);
+                // To avoid any surprises with order of receival of this signal and the reply to the call to this
+                // "slotAcknowledgeAlarm", the signal has to be a KARABO_SYSTEM_SIGNAL.
                 emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), m_updateHash);
                 m_updateHash.clear();
             }
