@@ -7,6 +7,7 @@ from PyQt5.QtCore import pyqtSlot, QRect
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QAction, QDialog, QPlainTextEdit
 
+from karabogui.fonts import get_qfont
 from karabogui.dialogs.stickerdialog import GREY, StickerDialog
 from karabogui.widgets.hints import KaraboSceneWidget
 
@@ -75,8 +76,12 @@ class StickerWidget(KaraboSceneWidget, QPlainTextEdit):
     def set_widget_properties(self, model):
         """Set the new widget properties according to the model"""
         self.setPlainText(model.text)
+
+        # We have to use the effective font string to correct font size
+        font_string = get_qfont(model.font).toString()
+
         sheet = []
-        sheet.append('qproperty-font: "{}";'.format(model.font))
+        sheet.append('qproperty-font: "{}";'.format(font_string))
         sheet.append('color: "{}";'.format(model.foreground))
         sheet.append('background-color: "{}";'.format(model.background))
 
