@@ -62,7 +62,7 @@ def create_deep_hash(hash_factory):
     )
 
 
-def get_bound_funcs():
+def get_bound_funcs_bin():
     from karabo.bound import Hash, BinarySerializerHash
 
     serializer = BinarySerializerHash.create("Bin")
@@ -82,16 +82,36 @@ def get_bound_funcs():
     return (read_func, write_func, create_hash)
 
 
-def get_middlelayer_funcs():
+def get_bound_funcs_xml():
+    from karabo.bound import Hash, TextSerializerHash
+
+    serializer = TextSerializerHash.create("Xml")
+
+    def create_hash(*args):
+        h = Hash()
+        for k, v in zip(args[::2], args[1::2]):
+            h.set(k, v)
+        return h
+
+    def read_func(buffer):
+        return serializer.load(buffer)
+
+    def write_func(hsh):
+        return serializer.save(hsh)
+
+    return (read_func, write_func, create_hash)
+
+
+def get_middlelayer_funcs_bin():
     from karabo.native import decodeBinary, encodeBinary, Hash
 
     return (decodeBinary, encodeBinary, Hash)
 
 
-def get_refactor_funcs():
-    from karabo.native.karabo_hash import decodeBinary, encodeBinary, Hash
+def get_middlelayer_funcs_xml():
+    from karabo.native import decodeXML, encodeXML, Hash
 
-    return (decodeBinary, encodeBinary, Hash)
+    return (decodeXML, encodeXML, Hash)
 
 
 def get_hash_buffer(hash_create_func, write_func, hash_factory):
@@ -99,24 +119,25 @@ def get_hash_buffer(hash_create_func, write_func, hash_factory):
 
 
 def run_benchmark(args):
-    API_FUNC_GETTERS = [
-        get_bound_funcs, get_middlelayer_funcs, get_refactor_funcs
-    ]
+    BINARY_FUNCS = [get_bound_funcs_bin, get_middlelayer_funcs_bin]
+    XML_FUNCS = [get_bound_funcs_xml, get_middlelayer_funcs_xml]
+
     RUNS = [
         ('Array', create_array_hash),
         ('Flat', create_flat_hash),
         ('Deep', create_deep_hash),
     ]
-    API_NAMES = {1: 'Bound', 2: 'Middlelayer', 3: 'Refactor'}
-    MSG = '{}: API {} took {:.6f} s/call | {:.2f} calls/s ({} iterations)'
-
-    read_func, write_func, hash_factory = API_FUNC_GETTERS[args.api - 1]()
+    API_NAMES = {1: 'Bound', 2: 'Middlelayer'}
+    FACTORY_NAMES = {1: 'Binary', 2: 'XML'}
+    MSG = '{}: API {} {} took {:.6f} s/call | {:.2f} calls/s ({} iterations)'
+    FUNC_FACTORY = BINARY_FUNCS if args.mode == 1 else XML_FUNCS
+    read_func, write_func, hash_factory = FUNC_FACTORY[args.api - 1]()
     for name, create_func in RUNS:
         buffer = get_hash_buffer(create_func, write_func, hash_factory)
         f_args = (read_func, buffer)
         avg_time, iterations = benchmark_wrapper(benchmark_read_func, f_args)
-        print(MSG.format(name, API_NAMES[args.api], avg_time, 1 / avg_time,
-                         iterations))
+        print(MSG.format(name, API_NAMES[args.api], FACTORY_NAMES[args.mode],
+                         avg_time, 1 / avg_time, iterations))
 
 
 def main():
@@ -124,9 +145,11 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-a', '--api', default=1, type=int,
                         help='Which API to benchmark')
+    parser.add_argument('-m', '--mode', default=1, type=int,
+                        help='Which mode to use: 1 is binary, 2 is xml')
 
     args = parser.parse_args()
-    if 1 <= args.api <= 3:
+    if 1 <= args.api <= 2 and 1 <= args.mode <= 2:
         run_benchmark(args)
 
 
