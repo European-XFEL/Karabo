@@ -12,6 +12,7 @@
 #include "karabo/net/Broker.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/net/EventLoop.hh"
+#include "karabo/net/utils.hh"
 #include <boost/python.hpp>
 
 namespace bp = boost::python;
@@ -23,6 +24,15 @@ using namespace karathon;
 
 void exportp2p() {
     bp::docstring_options docs(true, true, false);
+
+    {
+        bp::enum_<ConnectionStatus>("ConnectionStatus")
+                .value("DISCONNECTED", ConnectionStatus::DISCONNECTED)
+                .value("CONNECTING", ConnectionStatus::CONNECTING)
+                .value("CONNECTED", ConnectionStatus::CONNECTED)
+                .value("DISCONNECTING", ConnectionStatus::DISCONNECTING)
+                ;
+    }
 
     {
         bp::class_<Broker, Broker::Pointer, boost::noncopyable>("Broker", bp::no_init)
