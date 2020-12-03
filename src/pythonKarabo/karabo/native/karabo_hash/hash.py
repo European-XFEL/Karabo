@@ -96,6 +96,22 @@ class Hash(OrderedDict):
         assert '.' not in key, "Can't set values in sub-hashes!"
         OrderedDict.__setitem__(self, key, value)
 
+    def setElement(self, key, value, attrs):
+        """This is a direct way of setting `value` and `attrs` in the `Hash`
+
+        Setting both `value  and `attrs` at the same time can provide a fairly
+        big speedup! The attributes `attrs` have to be a dictionary.
+        """
+        assert isinstance(attrs, dict)
+        element = HashElement(value, attrs)
+        # Note: The karabo Hash only handles string keys...
+        key = str(key)
+        if SEPARATOR not in key:
+            OrderedDict.__setitem__(self, key, element)
+        else:
+            sub_hash, path = self._path(key, True)
+            OrderedDict.__setitem__(sub_hash, path, element)
+
     def __setitem__(self, item, value):
         if isinstance(item, tuple):
             key, attr = item
