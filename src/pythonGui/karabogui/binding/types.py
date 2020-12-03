@@ -1,10 +1,10 @@
 import numpy as np
 from traits.api import (
-    Array, CArray, CBool, Complex, Dict, Either, Enum, Event, Float,
+    Array, CArray, CBool, Complex, Dict, Either, Enum, Event,
     HasStrictTraits, Instance, List, Property, String, Trait,
     TraitHandler, Undefined, cached_property)
 
-from .trait_types import NumpyRange
+from .trait_types import Float, NumpyRange
 from karabo.common import const
 from karabo.common.states import State
 from karabo.native import (
