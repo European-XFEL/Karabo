@@ -14,6 +14,7 @@ from karabo.native import AccessMode, Hash, HashList, Schema
 from . import types
 
 FLOAT_TOLERANCE = 1e-7
+ZERO_FLOAT_TOLERANCE = 1e-9
 
 
 def attr_fast_deepcopy(d, ref=None):
@@ -131,8 +132,12 @@ def has_changes(binding, old_value, new_value):
             elif rel_err is not None:
                 changes = (diff >= abs(old_value * rel_err))
             else:
-                # IEEE 754 compliance
-                changes = (diff >= abs(old_value * FLOAT_TOLERANCE))
+                if not old_value:
+                    # In case of a previous 0 value we ask differently
+                    changes = (diff >= ZERO_FLOAT_TOLERANCE)
+                else:
+                    # IEEE 754 compliance
+                    changes = (diff >= abs(old_value * FLOAT_TOLERANCE))
         elif isinstance(old_value, np.ndarray):
             changes = not array_equal(new_value, old_value)
         elif isinstance(old_value, HashList):
