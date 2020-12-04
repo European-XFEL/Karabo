@@ -1,12 +1,12 @@
 import argparse
 import sys
 
-from PyQt5.QtCore import QEventLoop
 from PyQt5.QtWidgets import QApplication
 
 from karabogui.panels.alarmpanel import AlarmPanel
 from karabogui.programs.base import create_gui_app, init_gui
 from karabogui.singletons.api import get_network, get_panel_wrangler
+from karabogui.util import process_qt_events
 
 
 def check_desktop_width():
@@ -25,7 +25,7 @@ def run_alarm_panel(ns):
     app = create_gui_app(sys.argv)
     init_gui(app, use_splash=not ns.nosplash)
     # Process events, let everything render, even on the slow machines!
-    QApplication.processEvents(QEventLoop.AllEvents, 10000)
+    process_qt_events(timeout=10000)
     # We might want to connect directly to the gui server
     if ns.host and ns.port:
         success = get_network().connectToServerDirectly(

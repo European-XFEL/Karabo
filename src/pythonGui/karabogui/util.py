@@ -12,7 +12,7 @@ import webbrowser
 import weakref
 
 from dateutil.tz import tzlocal, tzutc
-from PyQt5.QtCore import QEvent, QObject, Qt, QSize
+from PyQt5.QtCore import QEvent, QEventLoop, QObject, Qt, QSize
 from PyQt5.QtWidgets import (
     QApplication, QDialog, QFileDialog, QHeaderView, QLabel)
 from PyQt5.QtGui import QCursor, QMovie, QValidator
@@ -487,3 +487,11 @@ def move_to_cursor(widget):
     pos.setX(pos.x() + 10)
     pos.setY(pos.y() + 10)
     widget.move(pos)
+
+
+def process_qt_events(app=None, timeout=100):  # ms
+    if app is None:
+        app = QApplication
+
+    flags = QEventLoop.AllEvents | QEventLoop.WaitForMoreEvents
+    app.processEvents(flags, timeout)
