@@ -3,8 +3,7 @@
 # Created on February 16, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import pyqtSlot, QObject, QEventLoop
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import pyqtSlot, QObject
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
@@ -15,6 +14,7 @@ from karabogui.mainwindow import MainWindow, PanelAreaEnum
 from karabogui.panels.api import MacroPanel, ScenePanel
 from karabogui.singletons.api import get_config, get_project_model, get_db_conn
 from karabogui.wizard.wizard import Wizard
+from karabogui.util import process_qt_events
 
 
 class PanelWrangler(QObject):
@@ -205,8 +205,7 @@ class PanelWrangler(QObject):
         self.main_window.show()
         # Show the connection dialog after processing all pending events since
         # the main window needs to render and update its geometry first.
-        QApplication.processEvents(QEventLoop.AllEvents, 5000)
-        QApplication.processEvents(QEventLoop.AllEvents, 5000)
+        process_qt_events(timeout=5000)
 
         show_wizard = get_config()['wizard']
         if show_wizard:
