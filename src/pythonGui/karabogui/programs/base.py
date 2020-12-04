@@ -16,6 +16,7 @@ from karabogui.controllers.api import populate_controller_registry
 from karabogui.fonts import FONT_FILENAMES, get_font_size_from_dpi
 from karabogui.singletons.api import (
     get_manager, get_network, get_panel_wrangler)
+from karabogui.util import process_qt_events
 
 
 def excepthook(exc_type, value, traceback):
@@ -107,7 +108,7 @@ def init_gui(app, use_splash=True):
     soon after they launch the GUI.
     """
     # Do some event processing!
-    app.processEvents()
+    process_qt_events(app)
 
     if use_splash:
         splash_path = op.join(op.dirname(__file__), '..', "icons",
@@ -120,7 +121,7 @@ def init_gui(app, use_splash=True):
         splash.showMessage(" ")
 
     # Do some event processing!
-    app.processEvents()
+    process_qt_events(app)
 
     # Start some heavy importing!
     from karabogui import icons
@@ -153,7 +154,7 @@ def init_gui(app, use_splash=True):
     get_manager()
     # Initialize the PanelWrangler and attach the splash screen
     panel_wranger = get_panel_wrangler()
-    app.processEvents()
+    process_qt_events(app)
     if use_splash:
         panel_wranger.use_splash_screen(splash)
-        app.processEvents()
+        process_qt_events(app)
