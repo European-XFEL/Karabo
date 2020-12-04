@@ -3,7 +3,7 @@ import contextlib
 import sys
 import unittest
 
-from PyQt5.QtCore import QEventLoop, Qt
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtTest import QTest
 
@@ -18,6 +18,7 @@ from karabogui.binding.api import (
     build_binding)
 from karabogui.controllers.api import populate_controller_registry
 import karabogui.singletons.api as singletons_mod
+from karabogui.util import process_qt_events
 
 
 class GuiTestCase(unittest.TestCase):
@@ -43,7 +44,7 @@ class GuiTestCase(unittest.TestCase):
 
     def process_qt_events(self, ms=10):
         # Give the event loop 10ms to process its events
-        self.app.processEvents(QEventLoop.AllEvents, ms)
+        process_qt_events(self.app, timeout=ms)
 
     def click(self, button_widget, button=Qt.LeftButton):
         QTest.mouseClick(button_widget, button)
