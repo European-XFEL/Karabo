@@ -1985,103 +1985,54 @@ namespace karabo {
             const bool connectionWasKnown = removeStoredConnection(signalInstanceId, signalFunction,
                                                                    slotInstanceId, slotFunction);
 
+            // "fire-and-forget".  Compatibility considerations:
+            // Slot "slotUnsubscribeRemoteSignal" was introduced in karaboFramework 2.10.0
+            // The message resulted from this "call" will be ignored at best if receiving in
+            // older version of karabo.  In future, this 'call' can be replaced by 'request' 
+            call(slotInstanceId, "slotUnsubscribeRemoteSignal", signalInstanceId, signalFunction);
+
             // Prepare lambdas as handlers for async request to slotDisconnectFromSignal:
             const std::string instanceId(this->getInstanceId()); // copy for lambda since that should not copy a bare 'this'
             const std::string errorMsg(signalInstanceId + " failed to disconnect slot '" + slotInstanceId + "." + slotFunction
                                        + "' from signal '" + signalInstanceId + "." + signalFunction + "'");
-            auto innerSuccessHandler =
-                [ this, signalInstanceId, signalFunction, slotInstanceId, slotFunction, connectionWasKnown, instanceId,
-                  errorMsg, successHandler{std::move(successHandler)}, failureHandler{std::move(failureHandler)} ]
-                (bool disconnected) {
-                    if (disconnected) {
-                        m_connection->unsubscribeFromRemoteSignal(signalInstanceId, signalFunction);
-                        if (!connectionWasKnown) {
-                            KARABO_LOG_FRAMEWORK_WARN << instanceId << " disconnected slot '"
-                                    << slotInstanceId << "." << slotFunction << "' from signal '"
-                                    << signalInstanceId << "." << signalFunction << "', but did not connect them before. "
-                                    << "Whoever connected them will probably re-connect once '" << signalInstanceId
-                                    << "' or '" << slotInstanceId << "' come back.";
-                        }
-                        if (successHandler) {
-                            successHandler();
-                        } else if (connectionWasKnown) { // else already logged above
-                            KARABO_LOG_FRAMEWORK_DEBUG << instanceId << " successfully disconnected slot '"
-                                    << slotInstanceId << "." << slotFunction
-                                    << "' from signal '" << signalInstanceId << "." << signalFunction << "'.";
-                        }
-                    } else {
-                        callErrorHandler(failureHandler, errorMsg + " - was not connected!");
+            auto innerSuccessHandler = [ = ] (bool disconnected){// '[ = ]' to copy all stuff by value
+                if (disconnected) {
+                    if (!connectionWasKnown) {
+                        KARABO_LOG_FRAMEWORK_WARN << instanceId << " disconnected slot '"
+                                << slotInstanceId << "." << slotFunction << "' from signal '"
+                                << signalInstanceId << "." << signalFunction << "', but did not connect them before. "
+                                << "Whoever connected them will probably re-connect once '" << signalInstanceId
+                                << "' or '" << slotInstanceId << "' come back.";
                     }
-                };
-
-            auto successDisconnectSignalSlot =
-                [ this, signalInstanceId, signalFunction, slotInstanceId, slotFunction,
-                  timeout, innerSuccessHandler{std::move(innerSuccessHandler)},
-                  failureHandler{std::move(failureHandler)}, errorMsg ]
-                () {
-                // Now send the request,
-                // potentially giving a non-default timeout and adding a meaningful log message for failures without handler.
-                auto requestor = request(signalInstanceId, "slotDisconnectFromSignal",
-                                         signalFunction, slotInstanceId, slotFunction);
-                if (timeout > 0) requestor.timeout(timeout);
-
-                requestor.receiveAsync<bool>(
-                    innerSuccessHandler,
-                    failureHandler ? failureHandler : [errorMsg] () {
-                        try {
-                            throw;
-                        } catch (const std::exception& e) {
-                            KARABO_LOG_FRAMEWORK_WARN << errorMsg << " - " << e.what();
-                        }
+                    if (successHandler) {
+                        successHandler();
+                    } else { // else already logged above
+                        KARABO_LOG_FRAMEWORK_DEBUG << instanceId << " successfully disconnected slot '"
+                                << slotInstanceId << "." << slotFunction
+                                << "' from signal '" << signalInstanceId << "." << signalFunction << "'.";
                     }
-                );
+                } else {
+                    callErrorHandler(failureHandler, errorMsg + " -- was not connected");
+                }
             };
 
-            if (m_instanceId == slotInstanceId) {
-                auto onComplete =
-                    [ this, failureHandler{std::move(failureHandler)},
-                      successDisconnectSignalSlot{std::move(successDisconnectSignalSlot)} ]
-                    (const boost::system::error_code& ec) {
-                    if (ec) {
-                        std::ostringstream oss;
-                        oss << "Karabo disconnect failure: code #" << ec.value() << " -- " << ec.message();
-                        callErrorHandler(failureHandler, oss.str());
-                        return;
-                    }
-                    successDisconnectSignalSlot();
-                };
-
-                m_connection->unsubscribeFromRemoteSignalAsync(signalInstanceId, signalFunction, onComplete);
-            } else {
-                auto requestor = request(slotInstanceId, "slotUnsubscribeRemoteSignal",
-                                         signalInstanceId, signalFunction);
-                if (timeout > 0) requestor.timeout(timeout);
-
-                auto handler = [ this, slotInstanceId, failureHandler{std::move(failureHandler)},
-                                 successDisconnectSignalSlot{std::move(successDisconnectSignalSlot)} ]
-                               (const bool& ok) {
-                    if (ok) {
-                        successDisconnectSignalSlot();
-                    } else {
-                        std::ostringstream oss;
-                        oss << "Karabo disconnect failure on remote slot \"" << slotInstanceId << "\"";
-                        callErrorHandler(failureHandler, oss.str());
-                    }
-                };
-
-                requestor.receiveAsync<bool>(
-                        handler,
-                        (failureHandler ? failureHandler : [slotInstanceId] {
-                            KARABO_LOG_FRAMEWORK_ERROR << "Request '" << slotInstanceId
-                                << "'.slotUnsubscribeRemoteSignal  failed.";
-                        })
-                );
-
-            }
+            // Now send the request,
+            // potentially giving a non-default timeout and adding a meaningful log message for failures without handler.
+            auto requestor = request(signalInstanceId, "slotDisconnectFromSignal", signalFunction, slotInstanceId, slotFunction);
+            if (timeout > 0) requestor.timeout(timeout);
+            requestor.receiveAsync<bool>(innerSuccessHandler, failureHandler ? failureHandler : [errorMsg]() {
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    KARABO_LOG_FRAMEWORK_WARN << errorMsg << " - " << e.what();
+                }
+            });
         }
 
 
-    void SignalSlotable::slotDisconnectFromSignal(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction) {
+        void SignalSlotable::slotDisconnectFromSignal(const std::string& signalFunction,
+                                                      const std::string& slotInstanceId,
+                                                      const std::string& slotFunction) {
             if (signalFunction == "signalHeartbeat") {
                 // Never disconnect from heartbeats - why?
                 reply(true);
