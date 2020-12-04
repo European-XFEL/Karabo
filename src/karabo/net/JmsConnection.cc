@@ -131,6 +131,7 @@ namespace karabo {
             MQ_SAFE_CALL(MQSetBoolProperty(propertiesHandle, MQ_SSL_BROKER_IS_TRUSTED, trustBroker));
             MQ_SAFE_CALL(MQSetBoolProperty(propertiesHandle, MQ_ACK_ON_PRODUCE_PROPERTY, blockUntilAcknowledge));
             MQ_SAFE_CALL(MQSetInt32Property(propertiesHandle, MQ_ACK_TIMEOUT_PROPERTY, acknowledgeTimeout));
+            //MQ_SAFE_CALL(MQSetBoolProperty(propertiesHandle, MQ_ACK_ON_ACKNOWLEDGE_PROPERTY, false));
         }
 
 
