@@ -67,9 +67,7 @@ namespace karabo {
              */
             boost::system::error_code subscribeToRemoteSignal(
                     const std::string& signalInstanceId,
-                    const std::string& signalFunction,
-                    const consumer::MessageHandler& handler,
-                    const consumer::ErrorNotifier& errorNotifier) override;
+                    const std::string& signalFunction) override;
 
             /**
              * There is no need to un-subscribe in OpenMQBroker case.
@@ -96,9 +94,7 @@ namespace karabo {
             void subscribeToRemoteSignalAsync(
                     const std::string& signalInstanceId,
                     const std::string& signalFunction,
-                    const AsyncECHandler& completionHandler,
-                    const consumer::MessageHandler& handler = consumer::MessageHandler(),
-                    const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override {
+                    const AsyncECHandler& completionHandler) override {
                 EventLoop::getIOService().post(boost::bind(
                         completionHandler,
                         boost::system::errc::make_error_code(boost::system::errc::success)));
