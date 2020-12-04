@@ -2,9 +2,8 @@ from functools import partial
 from struct import calcsize, pack, unpack
 
 from PyQt5.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt5.QtCore import (
-    pyqtSignal, pyqtSlot, QByteArray, QEventLoop, QObject)
-from PyQt5.QtWidgets import QApplication, QDialog, QMessageBox, qApp
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QByteArray,  QObject
+from PyQt5.QtWidgets import QDialog, QMessageBox, qApp
 
 from karabo.common.api import KARABO_CONFIG_MANAGER
 from karabo.native import (
@@ -14,6 +13,7 @@ from karabogui.const import REQUEST_REPLY_TIMEOUT
 from karabogui.dialogs.logindialog import LoginDialog
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.singletons.api import get_config
+from karabogui.util import process_qt_events
 import karabogui.globals as krb_globals
 
 ACCESS_LEVEL_MAP = {
@@ -101,7 +101,7 @@ class Network(QObject):
         """Disconnect from server"""
         # All panels need to be reset and all projects closed
         self.signalServerConnectionChanged.emit(False)
-        QApplication.processEvents(QEventLoop.AllEvents, 5000)
+        process_qt_events(timeout=5000)
         self.endServerConnection()
 
     def startServerConnection(self):
