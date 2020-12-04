@@ -21,8 +21,6 @@ namespace karabo {
     namespace net {
 
 
-        using AsyncECHandler = std::function<void(const boost::system::error_code)>;
-
         namespace consumer {
 
             enum class Error {
@@ -124,14 +122,10 @@ namespace karabo {
              * is required by used protocol for registration
              * @param signalInstanceId device instance ID of a signal
              * @param signalFunction   signal name
-             * @param handler          callback function called after receiving message
-             * @param errorNotifier    error callback function
              */
             virtual boost::system::error_code subscribeToRemoteSignal(
                     const std::string& signalInstanceId,
-                    const std::string& signalFunction,
-                    const consumer::MessageHandler& handler = consumer::MessageHandler(),
-                    const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) = 0;
+                    const std::string& signalFunction) = 0;
 
             /**
              * Close logical signal-slot connection.  De-registration in broker
@@ -147,16 +141,12 @@ namespace karabo {
              * Establish signal-slot connection asynchronously 
              * @param signalInstanceId
              * @param signalFunction
-             * @param messageHhandler
-             * @param errorNotifier
              * @param completionHandler this callback is called when complete
              */
             virtual void subscribeToRemoteSignalAsync(
                     const std::string& signalInstanceId,
                     const std::string& signalFunction,
-                    const AsyncECHandler& completionHandler,
-                    const consumer::MessageHandler& messageHandler = consumer::MessageHandler(),
-                    const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) = 0;
+                    const AsyncECHandler& completionHandler) = 0;
 
             /**
              * Unsubscribe from (remote) signal asynchronously

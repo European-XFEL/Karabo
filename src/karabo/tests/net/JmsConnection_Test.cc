@@ -158,7 +158,7 @@ void JmsConnection_Test::testCommunication1() {
         if (m_messageCount >= 100) {
             break;
         }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(10));
     }
 
     EventLoop::stop();
@@ -259,7 +259,7 @@ void JmsConnection_Test::testPermanentRead() {
     // resume reading - no message should be lost!
     consumer->startReading(read);
 
-    int trials = 2000;
+    int trials = 3000;
     while (--trials >= 0) {
         if (m_messageCount == numMessages) {
             break;

@@ -4416,7 +4416,7 @@
       <item path="../../../src/karabo/core/DeviceClient.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DeviceClient.hh"
             ex="false"
@@ -4426,7 +4426,7 @@
       <item path="../../../src/karabo/core/DeviceServer.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DeviceServer.hh"
             ex="false"
@@ -4436,7 +4436,7 @@
       <item path="../../../src/karabo/core/FsmBaseState.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/core/FsmBaseState.hh"
             ex="false"
@@ -4458,7 +4458,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/Lock.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/core/Lock.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/Lock.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -4474,7 +4474,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/Runner.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/core/Runner.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/Runner.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -4493,7 +4493,7 @@
       <item path="../../../src/karabo/devices/AlarmService.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/AlarmService.hh"
             ex="false"
@@ -4503,7 +4503,7 @@
       <item path="../../../src/karabo/devices/DataLogReader.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/DataLogReader.hh"
             ex="false"
@@ -4513,7 +4513,7 @@
       <item path="../../../src/karabo/devices/DataLogger.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/DataLogger.hh"
             ex="false"
@@ -4523,7 +4523,7 @@
       <item path="../../../src/karabo/devices/DataLoggerManager.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/DataLoggerManager.hh"
             ex="false"
@@ -4553,7 +4553,7 @@
       <item path="../../../src/karabo/devices/GuiServerDevice.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/GuiServerDevice.hh"
             ex="false"
@@ -4583,7 +4583,7 @@
       <item path="../../../src/karabo/devices/PropertyTest.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/devices/PropertyTest.hh"
             ex="false"
@@ -4600,7 +4600,7 @@
       <item path="../../../src/karabo/io/BinaryFileInput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/BinaryFileInput.hh"
             ex="false"
@@ -4610,7 +4610,7 @@
       <item path="../../../src/karabo/io/BinaryFileOutput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/BinaryFileOutput.hh"
             ex="false"
@@ -4625,7 +4625,7 @@
       <item path="../../../src/karabo/io/BufferSet.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/BufferSet.hh"
             ex="false"
@@ -4635,7 +4635,7 @@
       <item path="../../../src/karabo/io/CppInputHandler.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/CppInputHandler.hh"
             ex="false"
@@ -4645,7 +4645,7 @@
       <item path="../../../src/karabo/io/FileTools.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/FileTools.hh"
             ex="false"
@@ -4655,17 +4655,17 @@
       <item path="../../../src/karabo/io/HashBinaryFileInput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashBinaryFileOutput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashBinarySerializer.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashBinarySerializer.hh"
             ex="false"
@@ -4675,7 +4675,7 @@
       <item path="../../../src/karabo/io/HashHdf5Serializer.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashHdf5Serializer.hh"
             ex="false"
@@ -4685,27 +4685,27 @@
       <item path="../../../src/karabo/io/HashInput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashOutput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashTextFileInput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashTextFileOutput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashXmlSerializer.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashXmlSerializer.hh"
             ex="false"
@@ -4715,7 +4715,7 @@
       <item path="../../../src/karabo/io/Hdf5FileInput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/Hdf5FileInput.hh"
             ex="false"
@@ -4725,7 +4725,7 @@
       <item path="../../../src/karabo/io/Hdf5FileOutput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/Hdf5FileOutput.hh"
             ex="false"
@@ -4759,17 +4759,17 @@
       <item path="../../../src/karabo/io/SchemaBinaryFileInput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaBinaryFileOutput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaBinarySerializer.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaBinarySerializer.hh"
             ex="false"
@@ -4779,27 +4779,27 @@
       <item path="../../../src/karabo/io/SchemaInput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaOutput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaTextFileInput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaTextFileOutput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaXmlSerializer.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaXmlSerializer.hh"
             ex="false"
@@ -4809,7 +4809,7 @@
       <item path="../../../src/karabo/io/TextFileInput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/TextFileInput.hh"
             ex="false"
@@ -4819,7 +4819,7 @@
       <item path="../../../src/karabo/io/TextFileOutput.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/TextFileOutput.hh"
             ex="false"
@@ -4834,7 +4834,7 @@
       <item path="../../../src/karabo/io/h5/Attribute.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Attribute.hh"
             ex="false"
@@ -4844,7 +4844,7 @@
       <item path="../../../src/karabo/io/h5/Complex.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Complex.hh"
             ex="false"
@@ -4854,7 +4854,7 @@
       <item path="../../../src/karabo/io/h5/Dataset.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Dataset.hh"
             ex="false"
@@ -4864,7 +4864,7 @@
       <item path="../../../src/karabo/io/h5/DatasetAttribute.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/DatasetAttribute.hh"
             ex="false"
@@ -4874,7 +4874,7 @@
       <item path="../../../src/karabo/io/h5/DatasetReader.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/DatasetReader.hh"
             ex="false"
@@ -4884,7 +4884,7 @@
       <item path="../../../src/karabo/io/h5/DatasetWriter.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/DatasetWriter.hh"
             ex="false"
@@ -4894,7 +4894,7 @@
       <item path="../../../src/karabo/io/h5/Element.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Element.hh"
             ex="false"
@@ -4904,21 +4904,21 @@
       <item path="../../../src/karabo/io/h5/ErrorHandler.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/ErrorHandler.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/io/h5/File.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/io/h5/File.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/File.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/FixedLengthArray.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/FixedLengthArray.hh"
             ex="false"
@@ -4928,7 +4928,7 @@
       <item path="../../../src/karabo/io/h5/FixedLengthArrayAttribute.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/FixedLengthArrayAttribute.hh"
             ex="false"
@@ -4938,7 +4938,7 @@
       <item path="../../../src/karabo/io/h5/FixedLengthArrayComplex.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/FixedLengthArrayComplex.hh"
             ex="false"
@@ -4948,7 +4948,7 @@
       <item path="../../../src/karabo/io/h5/Format.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Format.hh"
             ex="false"
@@ -4958,21 +4958,21 @@
       <item path="../../../src/karabo/io/h5/FormatDiscoveryPolicy.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/FormatDiscoveryPolicy.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/io/h5/Group.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/io/h5/Group.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Group.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/NDArrayH5.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/NDArrayH5.hh"
             ex="false"
@@ -4982,7 +4982,7 @@
       <item path="../../../src/karabo/io/h5/Scalar.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Scalar.hh"
             ex="false"
@@ -4992,21 +4992,21 @@
       <item path="../../../src/karabo/io/h5/ScalarAttribute.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/ScalarAttribute.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/io/h5/Table.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/io/h5/Table.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/Table.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/TypeTraits.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/TypeTraits.hh"
             ex="false"
@@ -5016,7 +5016,7 @@
       <item path="../../../src/karabo/io/h5/VLArray.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/h5/VLArray.hh"
             ex="false"
@@ -5032,14 +5032,14 @@
       </item>
       <item path="../../../src/karabo/log.hpp" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/log/Logger.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/log/Logger.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/log/Logger.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/log/NetworkAppender.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/log/NetworkAppender.hh"
             ex="false"
@@ -5049,7 +5049,7 @@
       <item path="../../../src/karabo/log/OstreamAppender.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/log/OstreamAppender.hh"
             ex="false"
@@ -5059,7 +5059,7 @@
       <item path="../../../src/karabo/log/RollingFileAppender.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/log/RollingFileAppender.hh"
             ex="false"
@@ -5077,7 +5077,7 @@
       <item path="../../../src/karabo/net/Connection.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Connection.hh"
             ex="false"
@@ -5087,7 +5087,7 @@
       <item path="../../../src/karabo/net/EventLoop.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/net/EventLoop.hh"
             ex="false"
@@ -5127,7 +5127,7 @@
       <item path="../../../src/karabo/net/JmsConnection.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
         <ccTool>
           <commandLine>-Wno-unused-variable</commandLine>
           <warningLevel>2</warningLevel>
@@ -5141,7 +5141,7 @@
       <item path="../../../src/karabo/net/JmsConsumer.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
         <ccTool>
           <commandLine>-Wno-unused-variable</commandLine>
           <warningLevel>2</warningLevel>
@@ -5155,7 +5155,7 @@
       <item path="../../../src/karabo/net/JmsProducer.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
         <ccTool>
           <commandLine>-Wno-unused-variable</commandLine>
           <warningLevel>2</warningLevel>
@@ -5168,14 +5168,14 @@
       </item>
       <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../../../src/karabo/net/Strand.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/net/Strand.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Strand.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/TcpChannel.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/net/TcpChannel.hh"
             ex="false"
@@ -5185,14 +5185,14 @@
       <item path="../../../src/karabo/net/TcpConnection.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/net/TcpConnection.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/net/utils.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/net/utils.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/utils.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -5701,7 +5701,7 @@
       <item path="../../../src/karabo/util/AlarmConditionElement.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/AlarmConditionElement.hh"
             ex="false"
@@ -5711,7 +5711,7 @@
       <item path="../../../src/karabo/util/AlarmConditions.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/AlarmConditions.hh"
             ex="false"
@@ -5723,7 +5723,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Base64.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/util/Base64.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Base64.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -5735,7 +5735,7 @@
       <item path="../../../src/karabo/util/ByteSwap.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ByteSwap.hh"
             ex="false"
@@ -5750,7 +5750,7 @@
       <item path="../../../src/karabo/util/ClassInfo.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/ClassInfo.hh"
             ex="false"
@@ -5770,7 +5770,7 @@
       <item path="../../../src/karabo/util/DataLogUtils.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/DataLogUtils.hh"
             ex="false"
@@ -5780,7 +5780,7 @@
       <item path="../../../src/karabo/util/DateTimeString.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/DateTimeString.hh"
             ex="false"
@@ -5802,7 +5802,7 @@
       <item path="../../../src/karabo/util/Epochstamp.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Epochstamp.hh"
             ex="false"
@@ -5812,7 +5812,7 @@
       <item path="../../../src/karabo/util/Exception.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Exception.hh"
             ex="false"
@@ -5827,7 +5827,7 @@
       <item path="../../../src/karabo/util/FromInt.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/FromInt.hh"
             ex="false"
@@ -5837,7 +5837,7 @@
       <item path="../../../src/karabo/util/FromLiteral.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/FromLiteral.hh"
             ex="false"
@@ -5852,7 +5852,7 @@
       <item path="../../../src/karabo/util/FromTypeInfo.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/FromTypeInfo.hh"
             ex="false"
@@ -5864,14 +5864,14 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Hash.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/util/Hash.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Hash.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/HashFilter.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/HashFilter.hh"
             ex="false"
@@ -5896,7 +5896,7 @@
       <item path="../../../src/karabo/util/NDArray.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/NDArray.hh"
             ex="false"
@@ -5916,7 +5916,7 @@
       <item path="../../../src/karabo/util/OverwriteElement.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/OverwriteElement.hh"
             ex="false"
@@ -5936,7 +5936,7 @@
       <item path="../../../src/karabo/util/PluginLoader.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/PluginLoader.hh"
             ex="false"
@@ -5946,14 +5946,14 @@
       <item path="../../../src/karabo/util/RollingWindowStatistics.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/RollingWindowStatistics.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Schema.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/util/Schema.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Schema.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -5965,21 +5965,21 @@
       <item path="../../../src/karabo/util/StackTrace.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/StackTrace.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/State.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/util/State.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/State.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/StateElement.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/StateElement.hh"
             ex="false"
@@ -5989,7 +5989,7 @@
       <item path="../../../src/karabo/util/StateSignifier.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/StateSignifier.hh"
             ex="false"
@@ -5999,7 +5999,7 @@
       <item path="../../../src/karabo/util/StringTools.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/StringTools.hh"
             ex="false"
@@ -6009,7 +6009,7 @@
       <item path="../../../src/karabo/util/TableElement.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/TableElement.hh"
             ex="false"
@@ -6019,7 +6019,7 @@
       <item path="../../../src/karabo/util/TimeDuration.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/TimeDuration.hh"
             ex="false"
@@ -6029,7 +6029,7 @@
       <item path="../../../src/karabo/util/TimePeriod.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/TimePeriod.hh"
             ex="false"
@@ -6039,7 +6039,7 @@
       <item path="../../../src/karabo/util/TimeProfiler.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/TimeProfiler.hh"
             ex="false"
@@ -6049,7 +6049,7 @@
       <item path="../../../src/karabo/util/Timestamp.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timestamp.hh"
             ex="false"
@@ -6073,7 +6073,7 @@
       <item path="../../../src/karabo/util/Trainstamp.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Trainstamp.hh"
             ex="false"
@@ -6087,7 +6087,7 @@
       <item path="../../../src/karabo/util/Validator.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Validator.hh"
             ex="false"
@@ -6102,7 +6102,7 @@
       <item path="../../../src/karabo/util/Version.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Version.hh"
             ex="false"
@@ -6124,7 +6124,7 @@
       <item path="../../../src/karabo/xms/ImageData.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/ImageData.hh"
             ex="false"
@@ -6134,42 +6134,42 @@
       <item path="../../../src/karabo/xms/InputChannel.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/InputChannel.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Memory.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/OutputChannel.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/OutputChannel.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xms/Signal.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/xms/Signal.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Signal.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/SignalSlotable.cc"
             ex="false"
             tool="1"
-            flavor2="8">
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/SignalSlotable.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xms/Slot.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/xms/Slot.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Slot.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -6178,7 +6178,7 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="8">
+      <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
       </item>

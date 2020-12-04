@@ -19,6 +19,8 @@
 namespace karabo {
     namespace net {
 
+        using AsyncECHandler = std::function<void(const boost::system::error_code)>;
+
         /**
          * Return the bare host name after stripping domain (exflxxx12345.desy.de => exflxxx12345)
          * @return
