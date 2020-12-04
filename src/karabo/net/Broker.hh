@@ -146,7 +146,7 @@ namespace karabo {
             virtual void subscribeToRemoteSignalAsync(
                     const std::string& signalInstanceId,
                     const std::string& signalFunction,
-                    const AsyncECHandler& completionHandler) = 0;
+                    const AsyncHandler& completionHandler) = 0;
 
             /**
              * Unsubscribe from (remote) signal asynchronously
@@ -157,7 +157,7 @@ namespace karabo {
             virtual void unsubscribeFromRemoteSignalAsync(
                     const std::string& signalInstanceId,
                     const std::string& signalFunction,
-                    const AsyncECHandler& completionHandler) = 0;
+                    const AsyncHandler& completionHandler) = 0;
 
             /**
              * Set up handlers for processing messages arriving via main communication path
