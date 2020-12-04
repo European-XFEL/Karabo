@@ -303,7 +303,7 @@ namespace karabo {
 
                 m_loggerConsumer = getConnection();
                 m_loggerConsumer->startReadingLogs(bind_weak(&karabo::devices::GuiServerDevice::logHandler, this, _1, _2),
-                        consumer::ErrorNotifier());
+                                                   consumer::ErrorNotifier());
 
                 m_guiDebugProducer = getConnection();
 

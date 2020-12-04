@@ -75,9 +75,7 @@ namespace karabo {
 
         boost::system::error_code JmsBroker::subscribeToRemoteSignal(
                 const std::string& signalInstanceId,
-                const std::string& signalFunction,
-                const consumer::MessageHandler& handler,
-                const consumer::ErrorNotifier& errorNotifier) {
+                const std::string& signalFunction) {
             return boost::system::errc::make_error_code(boost::system::errc::success);
         }
 
