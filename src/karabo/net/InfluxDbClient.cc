@@ -144,7 +144,7 @@ namespace karabo {
         }
 
 
-        void InfluxDbClient::connectDbIfDisconnected(const AsyncHandler& hook) {
+        void InfluxDbClient::connectDbIfDisconnected(const InfluxConnectedHandler& hook) {
             boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
             if (!m_dbChannel || !m_dbChannel->isOpen()) {
                 if (m_connectionRequested) return;
@@ -340,7 +340,7 @@ namespace karabo {
 
         void InfluxDbClient::onDbConnect(const karabo::net::ErrorCode& ec,
                                          const karabo::net::Channel::Pointer& channel,
-                                         const AsyncHandler& hook) {
+                                         const InfluxConnectedHandler& hook) {
             if (ec) {
                 std::ostringstream oss;
                 oss << "No connection to InfluxDb server at '"

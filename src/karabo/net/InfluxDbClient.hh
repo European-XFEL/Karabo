@@ -38,7 +38,7 @@ namespace karabo {
 
 
         using InfluxResponseHandler = boost::function<void(const HttpResponse &) >;
-        using AsyncHandler = boost::function<void(bool)>;
+        using InfluxConnectedHandler = boost::function<void(bool)>;
 
 
         /**
@@ -73,7 +73,7 @@ namespace karabo {
              * Check if connection is lost and try to re-establish connection to InfluxDB server
              * @param  hook function that will be called when connection is established
              */
-            void connectDbIfDisconnected(const AsyncHandler& hook = AsyncHandler());
+            void connectDbIfDisconnected(const InfluxConnectedHandler& hook = InfluxConnectedHandler());
 
             /**
              * Returns true if connection is established to InfluxDB server
@@ -149,7 +149,7 @@ namespace karabo {
             /**
              * Low-level callback called when connection to InfluxDB is established
              */
-            void onDbConnect(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const AsyncHandler& hook);
+            void onDbConnect(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel, const InfluxConnectedHandler& hook);
 
             /**
              * Low-level callback called when reading is done
