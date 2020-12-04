@@ -2,12 +2,14 @@ from unittest.mock import patch
 from unittest import skipIf
 from platform import system
 
+import numpy as np
+
 from karabo.common.states import State
 from karabo.common.scenemodel.api import (
     DoubleLineEditModel, EditableRegexModel)
 from karabo.common.scenemodel.widgets.simple import IntLineEditModel
 from karabo.native import (
-    Configurable, Double, Int32, String, UInt8, RegexString)
+    Configurable, Double, Float, Int32, String, UInt8, RegexString)
 from karabogui.binding.api import build_binding
 from karabogui.binding.util import get_editor_value
 from karabogui.testing import (
@@ -22,10 +24,15 @@ class IntObject(Configurable):
                  allowedStates=[State.INIT])
 
 
-class FloatObject(Configurable):
+class DoubleObject(Configurable):
     state = String(defaultValue=State.INIT)
     prop = Double(minInc=-1000, maxInc=1000,
                   allowedStates=[State.INIT])
+
+
+class FloatObject(Configurable):
+    state = String(defaultValue=State.INIT)
+    prop = Float(defaultValue=0.0001)
 
 
 class Uint8Object(Configurable):
@@ -98,12 +105,19 @@ class TestRegexEdit(GuiTestCase):
 class TestNumberLineEdit(GuiTestCase):
     def setUp(self):
         super(TestNumberLineEdit, self).setUp()
-        self.d_proxy = get_class_property_proxy(FloatObject.getClassSchema(),
+        self.d_proxy = get_class_property_proxy(DoubleObject.getClassSchema(),
                                                 'prop')
         self.d_controller = DoubleLineEdit(proxy=self.d_proxy,
                                            model=DoubleLineEditModel())
         self.d_controller.create(None)
         self.d_controller.set_read_only(False)
+
+        self.f_proxy = get_class_property_proxy(FloatObject.getClassSchema(),
+                                                'prop')
+        self.f_controller = DoubleLineEdit(proxy=self.f_proxy,
+                                           model=DoubleLineEditModel())
+        self.f_controller.create(None)
+        self.f_controller.set_read_only(False)
 
         self.i_proxy = get_class_property_proxy(IntObject.getClassSchema(),
                                                 'prop')
@@ -116,13 +130,23 @@ class TestNumberLineEdit(GuiTestCase):
         super(TestNumberLineEdit, self).tearDown()
         self.d_controller.destroy()
         self.assertIsNone(self.d_controller.widget)
+        self.f_controller.destroy()
+        self.assertIsNone(self.f_controller.widget)
         self.i_controller.destroy()
         self.assertIsNone(self.i_controller.widget)
 
     def test_set_value(self):
-
+        set_proxy_value(self.d_proxy, 'prop', np.float32(0.00123))
+        self.assertEqual(self.d_controller._internal_widget.text(), '0.00123')
         set_proxy_value(self.d_proxy, 'prop', 5.4)
         self.assertEqual(self.d_controller._internal_widget.text(), '5.4')
+        set_proxy_value(self.d_proxy, 'prop', np.float64(0.0088))
+        self.assertEqual(self.d_controller._internal_widget.text(), '0.0088')
+
+        set_proxy_value(self.f_proxy, 'prop', np.float32(0.00123))
+        self.assertEqual(self.f_controller._internal_widget.text(), '0.00123')
+        set_proxy_value(self.f_proxy, 'prop', np.float64(0.0088))
+        self.assertEqual(self.f_controller._internal_widget.text(), '0.0088')
 
         set_proxy_value(self.i_proxy, 'prop', 5)
         self.assertEqual(self.i_controller._internal_widget.text(), '5')
@@ -164,6 +188,8 @@ class TestNumberLineEdit(GuiTestCase):
         for i, test_string in enumerate(test_strings):
             self.d_controller._internal_widget.setText(test_string)
             self.assertEqual(self.d_proxy.edit_value, results[i])
+            self.f_controller._internal_widget.setText(test_string)
+            self.assertEqual(self.f_proxy.edit_value, results[i])
 
         last_accepted_value = '1.2'
         self.d_controller._internal_widget.setText(last_accepted_value)
