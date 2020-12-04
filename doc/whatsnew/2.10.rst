@@ -1,4 +1,35 @@
 ****************************
+What's New in Karabo 2.10.1
+****************************
+
+This patch release fixes some issues in the GUI and completes some
+features in the C++/bound framework:
+
+
+Graphical User Interface
+++++++++++++++++++++++++
+
+TODO
+
+C++/Bound Python Framework
++++++++++++++++++++++++++++
+
+- InputChannel connection status tracking: 
+  The `DeviceClient` method to register for pipeline data from an
+  OutputChannel (registerChannelMonitor) now offers a hook to track
+  the connection status that can be `DISCONNECTED`,`CONNECTING`,
+  `CONNECTED` and maybe `DISCONNECTING`.
+
+- End-of-stream handling in many-to-one scenario:
+  If an InputChannel receives data from several output channels,
+  a registered end-of-stream handler is now reliably called when all
+  output channels have sent their end-of-stream.
+  Note: This completes the 2.10.0 fix of a long standing bug that made
+  the many-to-one pipeline scenario pretty unreliable.
+  Now it can be safely used.
+
+
+****************************
 What's New in Karabo 2.10.0
 ****************************
 
