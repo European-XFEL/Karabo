@@ -88,13 +88,11 @@ namespace karabo {
              * @param signalInstanceId
              * @param signalFunction
              * @param completionHandler  called when subscribing is done
-             * @param handler            read message handler
-             * @param errorNotifier      read error handler
              */
             void subscribeToRemoteSignalAsync(
                     const std::string& signalInstanceId,
                     const std::string& signalFunction,
-                    const AsyncECHandler& completionHandler) override {
+                    const AsyncHandler& completionHandler) override {
                 EventLoop::getIOService().post(boost::bind(
                         completionHandler,
                         boost::system::errc::make_error_code(boost::system::errc::success)));
@@ -109,7 +107,7 @@ namespace karabo {
              */
             void unsubscribeFromRemoteSignalAsync(const std::string& signalInstanceId,
                                     const std::string& signalFunction,
-                                    const AsyncECHandler& completionHandler) override {
+                                    const AsyncHandler& completionHandler) override {
                 EventLoop::getIOService().post(boost::bind(
                         completionHandler,
                         boost::system::errc::make_error_code(boost::system::errc::success)));
