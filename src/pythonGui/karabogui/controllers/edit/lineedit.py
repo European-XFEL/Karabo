@@ -121,11 +121,14 @@ class DoubleLineEdit(BaseLineEdit):
         value = get_editor_value(proxy, '')
         self.widget.update_label(proxy)
         self._internal_value = str(value)
-
-        format_str = ('{}' if self.model.decimals == -1
-                      else '{{:.{}f}}'.format(self.model.decimals))
+        if value == '':
+            displayed = ''
+        else:
+            # Note: Avoid numpy to float casting here using the str value
+            format_str = ('{}' if self.model.decimals == -1
+                          else '{{:.{}f}}'.format(self.model.decimals))
+            displayed = format_str.format(float(self._internal_value))
         with SignalBlocker(self._internal_widget):
-            displayed = '' if value == '' else format_str.format(value)
             self._display_value = displayed
             self._internal_widget.setText(self._display_value)
         self._internal_widget.setCursorPosition(self._last_cursor_pos)
