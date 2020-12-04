@@ -4,8 +4,9 @@ import os.path as op
 import pdb
 from time import perf_counter
 
-from PyQt5.QtCore import pyqtRemoveInputHook, QEventLoop
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import pyqtRemoveInputHook
+
+from karabogui.util import process_qt_events
 
 
 def set_trace():
@@ -53,7 +54,7 @@ def timeit(process_events=True):
         def wrapper(*args, **kwargs):
             # Empty the eventloop stack before!
             if process_events:
-                QApplication.processEvents(QEventLoop.AllEvents, 10)
+                process_qt_events(timeout=10)
 
             t_start = perf_counter()
             ret = func(*args, **kwargs)
@@ -61,7 +62,7 @@ def timeit(process_events=True):
             # But process the generated eventloop stack for the performance
             # measurement!
             if process_events:
-                QApplication.processEvents()
+                process_qt_events()
 
             elapsed = perf_counter() - t_start
             print("{} took {}".format(func.__name__, elapsed))
