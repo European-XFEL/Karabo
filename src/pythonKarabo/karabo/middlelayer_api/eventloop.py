@@ -90,6 +90,7 @@ class Broker(ABC):
     def handleMessage(self, message, device):
         pass
 
+    @abstractmethod
     def register_slot(self, name, slot):
         pass
 
