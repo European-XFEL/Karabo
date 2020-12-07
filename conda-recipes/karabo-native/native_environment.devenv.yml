@@ -2,7 +2,7 @@
 name: karabo-native
 
 dependencies:
-  - traits=4.6.0
+  - traits=6.0.0
   - python-dateutil=2.8
   - lxml=4.4.1
   - flake8=3.3.0
