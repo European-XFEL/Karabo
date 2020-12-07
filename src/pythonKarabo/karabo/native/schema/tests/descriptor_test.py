@@ -7,12 +7,12 @@ from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Attribute, Bool, Char, ComplexFloat,
-    Configurable, Double, decodeBinary, encodeBinary, Float, Hash, Image,
-    ImageData, Int16, Int8, KaraboError, LeafType, MetricPrefix, NDArray,
-    NumpyVector, QuantityValue, RegexString, Schema, String, Timestamp, Type,
-    UInt8, UInt64, Unit, unit_registry as unit, VectorBool, VectorChar,
-    VectorComplexFloat, VectorFloat, VectorHash, VectorInt32, VectorInt8,
-    VectorRegexString, VectorString)
+    Configurable, Double, decodeBinary, encodeBinary, Float, Hash, HashList,
+    Image, ImageData, Int16, Int8, KaraboError, LeafType, MetricPrefix,
+    NDArray, NumpyVector, QuantityValue, RegexString, Schema, String,
+    Timestamp, Type, UInt8, UInt64, Unit, unit_registry as unit,
+    VectorBool, VectorChar, VectorComplexFloat, VectorFloat,
+    VectorHash, VectorInt32, VectorInt8, VectorRegexString, VectorString)
 
 
 class ArrayTestDevice(Configurable):
@@ -558,6 +558,7 @@ class Tests(TestCase):
         self.assertEqual(v.dtype.names, ("int", "string"))
         d.toKaraboValue(v)
         data, _ = d.toDataAndAttrs(v)
+        self.assertIsInstance(data, HashList)
         self.assertEqual(len(data), 2)
         self.assertIsNone(v.timestamp)
         v.timestamp = self.timestamp
@@ -580,6 +581,11 @@ class Tests(TestCase):
 
         with self.assertRaises(KaraboError):
             d = VectorHash(displayType="Another")
+
+        # Set an empty list as vector hash
+        v = d.toKaraboValue([])
+        data, _ = d.toDataAndAttrs(v)
+        self.assertIsInstance(data, HashList)
 
     def test_vector_hash(self):
         rowSchema = Hash("int", None, "string", None, "vector", None,
