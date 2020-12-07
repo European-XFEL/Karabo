@@ -17,7 +17,7 @@ jsonschema ecdsa tzlocal httplib2 traits pint nbformat
 notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml certifi
 chardet idna urllib3 requests ply psutil pycodestyle pyflakes mccabe flake8
 msgpack msgpack-numpy flaky pyyaml docker_pycreds websocket_client docker
-coverage matplotlib eulxml eulexist uvloop mqtt_python)
+coverage matplotlib eulxml eulexist uvloop mqtt_python peewee)
 
 ##############################################################################
 # Important constants
