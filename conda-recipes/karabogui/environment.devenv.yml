@@ -33,7 +33,7 @@ dependencies:
   - scipy=1.4
   # Other
   - cycler=0.10.0
-  - traits=4.6.0
+  - traits=6.0.0
   - lxml=4.4.1
   - requests=2.22
   - python-dateutil=2.8
