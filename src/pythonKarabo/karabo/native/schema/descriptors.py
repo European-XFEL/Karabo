@@ -1239,6 +1239,6 @@ class VectorHash(Vector):
         else:
             attrs = {}
 
-        data = [Hash((col, row[col]) for col in self.dtype.names)
-                for row in value.value]
+        data = HashList(Hash((col, row[col]) for col in self.dtype.names)
+                        for row in value.value)
         return data, attrs
