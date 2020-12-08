@@ -12,8 +12,7 @@ import re
 from karabo.native import (
     AccessLevel, Assignment, AccessMode,  Hash, DaqPolicy)
 from karabo.native import (
-    Descriptor, Int32, KaraboError, Slot, String, TypeHash)
-from karabo.native import Configurable
+    Configurable, Descriptor, Int32, KaraboError, Slot, String, TypeHash)
 
 from .synchronization import firstCompleted, FutureDict
 from .pipeline import NetworkOutput, OutputChannel
@@ -443,8 +442,7 @@ class SignalSlotable(Configurable):
             value, attrs = desc.toDataAndAttrs(v)
             tid = attrs.get('tid', 0)
             h = hash_dict[tid]
-            h[k] = value
-            h[k, ...].update(attrs)
+            h.setElement(k, value, attrs)
         # we have to send our changes in tid order for the DAQ!
         for tid in sorted(hash_dict.keys()):
             h = hash_dict[tid]
