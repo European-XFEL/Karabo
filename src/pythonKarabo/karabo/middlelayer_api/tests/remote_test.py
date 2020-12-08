@@ -14,7 +14,7 @@ from pint import DimensionalityError
 from karabo.middlelayer import (
     AlarmCondition, background, Bool, Configurable, connectDevice,
     decodeBinary, Device, DeviceNode, execute, filterByTags, Float, getDevice,
-    isAlive, isSet, Int32, KaraboError, lock, MetricPrefix, Node,
+    Hash, isAlive, isSet, Int32, KaraboError, lock, MetricPrefix, Node,
     Overwrite, Queue, setNoWait, setWait, Slot, slot, State,
     Timestamp, String, unit, Unit, VectorChar, VectorInt16,
     VectorString, VectorFloat, waitUntil, waitUntilNew)
@@ -1225,6 +1225,34 @@ class Tests(DeviceTest):
             with self.assertRaises(KaraboError):
                 new_archive = not d.archive.value
                 yield from setWait(d, archive=new_archive)
+
+    @async_tst
+    def test_config_handler(self):
+        h = Hash()
+        def updates(change):
+            h.merge(change)
+
+        with (yield from getDevice("remote")) as d:
+            d.counter = -1
+            #subscribe to changes
+            d.setConfigHandler(updates)
+            try:
+                yield from sleep(0.1)
+                task = ensure_future(d.count())
+                for _ in range(5):
+                    h.clear()
+                    yield from waitUntilNew(d)
+                    self.assertIn("counter", h)
+
+                #unsubscribe from changes
+                d.setConfigHandler(None)
+                h.clear()
+
+                yield from waitUntilNew(d)
+                self.assertNotIn("counter", h)
+            finally:
+                yield from task
+            d.counter = -1
 
 
 if __name__ == "__main__":
