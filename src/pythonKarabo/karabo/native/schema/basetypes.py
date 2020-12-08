@@ -354,7 +354,7 @@ class VectorStringValue(KaraboValue, list):
 
     @property
     def value(self):
-        return self
+        return list(self)
 
 
 class ImageData(KaraboValue):
