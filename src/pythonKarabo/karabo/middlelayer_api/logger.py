@@ -4,48 +4,11 @@ from datetime import datetime
 import logging
 import traceback
 
-from karabo.native import AccessMode, Hash
-from karabo.native import Configurable, ListOfNodes, String
+from karabo.native import (
+    AccessLevel, AccessMode, Configurable, Hash, String, VectorString)
 
 
-class _Filter(logging.Filter):
-    def __init__(self, parent):
-        super().__init__()
-        self.parent = parent
-
-    def filter(self, *args, **kwargs):
-        return self.parent.filter(*args, **kwargs)
-
-
-class Filter(Configurable):
-    def __init__(self, config):
-        super().__init__(config)
-        self.filter = _Filter(self)
-
-
-class Handler(Configurable):
-    filters = ListOfNodes(Filter,
-                          description="Filters for this handler",
-                          displayedName="Filters",
-                          defaultValue=[])
-
-    def __init__(self, config):
-        super().__init__(config)
-        self.handler = _Handler(self)
-        for f in self.filters:
-            self.handler.addFilter(f.filter)
-
-
-class _Handler(logging.Handler):
-    def __init__(self, parent):
-        super().__init__()
-        self.parent = parent
-
-    def emit(self, *args, **kwargs):
-        return self.parent.emit(*args, **kwargs)
-
-
-class NetworkHandler(Handler):
+class NetworkHandler(logging.Handler):
     def emit(self, record):
         hash = Hash(
             "timestamp", datetime.fromtimestamp(record.created).isoformat(),
@@ -69,7 +32,7 @@ class NetworkHandler(Handler):
         self.parent.broker.log(hash)
 
 
-class PrintHandler(Handler):
+class PrintHandler(logging.Handler):
     def emit(self, record):
         print("---------- Logger start -----------")
         # record.levelno is 10, 20, 30,... for "DEBUG", "INFO", "WARN",...
@@ -77,24 +40,23 @@ class PrintHandler(Handler):
                  )[bisect([20, 30, 40, 50], record.levelno)]
         print(datetime.fromtimestamp(record.created), level,
               self.parent.broker.deviceId)
-        print(self.handler.format(record))
+        print(self.format(record))
         print("---------- Logger end -----------")
+
+
+_LOGGER_HANDLER = {
+    "NetworkHandler": NetworkHandler,
+    "PrintHandler": PrintHandler
+}
 
 
 class Logger(Configurable):
     logger = None
 
-    handlers = ListOfNodes(
-        Handler,
-        description="Handlers for logging",
-        displayedName="Handlers",
+    handlers = VectorString(
         defaultValue=["NetworkHandler", "PrintHandler"],
+        requiredAccessLevel=AccessLevel.OPERATOR,
         accessMode=AccessMode.READONLY)
-
-    filters = ListOfNodes(
-        Filter,
-        description="Global filters for logging",
-        displayedName="Filters", defaultValue=[])
 
     @String(
         displayedName="Logging Level",
@@ -115,19 +77,15 @@ class Logger(Configurable):
         have a connection to the broker, and should stop once we loose it."""
         self.logger = logging.getLogger(broker.deviceId)
         self.logger.setLevel(self.level)
-        for h in self.handlers:
+        for handler in self.handlers.value:
+            h = _LOGGER_HANDLER[handler]()
             h.parent = self
-            self.logger.addHandler(h.handler)
-        for f in self.filters:
-            self.logger.addFilter(f.filter)
+            self.logger.addHandler(h)
         self.broker = broker
         try:
             yield
         finally:
-            for h in self.handlers:
-                self.logger.removeHandler(h.handler)
-            for f in self.filters:
-                self.logger.removeFilter(f.filter)
+            self.logger.handlers = []
 
     def INFO(self, what):
         """ legacy """
