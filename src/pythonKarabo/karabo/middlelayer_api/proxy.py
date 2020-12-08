@@ -1,6 +1,7 @@
 import asyncio
 from collections import defaultdict
 from contextlib import suppress
+from inspect import isfunction
 import time
 from weakref import WeakSet
 
@@ -347,15 +348,31 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._schemaUpdateConnected = False
             self._lock_count = 0
             self._remote_output_channel = WeakSet()
+            self._configurationHandler = None
 
         def _notifyChanged(self, descriptor, value):
             for q in self._queues[descriptor.longkey]:
                 q.put_nowait(value)
 
         def _onChanged(self, change):
+            if self._configurationHandler is not None:
+                self._configurationHandler(change)
             super()._onChanged(change)
             for q in self._queues[None]:
                 q.put_nowait(change)
+
+        def setConfigHandler(self, changeHandler):
+            """subscribe a configuration Change Handler
+
+            This feature is supposed to be used for test and is experimental.
+            Any feature built on it could break.
+            Pass a synchronous function to it. To unsubscribe from it,
+            pass a ``None``
+
+            :changeHandler: a function taking a hash in input or a None
+            """
+            assert changeHandler is None or isfunction(changeHandler)
+            self._configurationHandler = changeHandler
 
         def setValue(self, desc, value):
             """Set a value belonging to a descriptor on a proxy
