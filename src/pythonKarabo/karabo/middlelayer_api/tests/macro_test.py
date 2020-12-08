@@ -381,9 +381,6 @@ class Tests(DeviceTest):
         with getDevice("remote") as d:
             conf_proxy = getConfiguration(d)
 
-        # ListOfNodes is not supported yet, hence we remove
-        conf_deviceId.pop("log.filters")
-        conf_deviceId.pop("log.handlers")
         self.assertTrue(conf_deviceId.fullyEqual(conf_proxy))
         self.assertEqual(conf_deviceId.paths(), conf_proxy.paths())
 
