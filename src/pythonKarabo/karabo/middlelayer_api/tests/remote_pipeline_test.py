@@ -2,6 +2,7 @@ from asyncio import sleep
 from contextlib import contextmanager
 from unittest import main
 
+from karabo.middlelayer_api.compat import HAVE_UVLOOP
 from karabo.middlelayer import (
     Bool, call, Configurable, Device, getDevice, Hash, isAlive, InputChannel,
     Int32, Overwrite, OutputChannel, setWait, coslot, shutdown, Slot, State,
@@ -147,7 +148,7 @@ class RemotePipelineTest(DeviceTest):
             await waitUntil(lambda: charlie.received == 2)
             self.assertEqual(self.bob.received, 2)
             self.assertEqual(charlie.received, 2)
-            # Shutdown the shared channel. The queue gets removed and 
+            # Shutdown the shared channel. The queue gets removed and
             # we test that we are not blocked.
             await charlie.slotKillDevice()
 
@@ -313,6 +314,18 @@ class RemotePipelineTest(DeviceTest):
             self.assertEqual(pot_charlie + 2, new_pot_charlie)
 
         await charlie.slotKillDevice()
+
+    @async_tst
+    async def test_zero_sockets_output_close(self):
+        """This test must be executed last"""
+        self.assertIsNotNone(self.alice.output.server.sockets)
+        self.assertGreater(len(self.alice.output.active_channels), 0)
+        await self.alice.output.close()
+        if HAVE_UVLOOP:
+            self.assertEqual(self.alice.output.server.sockets, [])
+        else:
+            self.assertEqual(self.alice.output.server.sockets, None)
+        self.assertEqual(len(self.alice.output.active_channels), 0)
 
 
 if __name__ == "__main__":

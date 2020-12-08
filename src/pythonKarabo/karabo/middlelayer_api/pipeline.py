@@ -7,6 +7,7 @@ from contextlib import closing
 import os
 from struct import pack, unpack, calcsize
 import socket
+from weakref import WeakSet
 
 import numpy
 
@@ -664,7 +665,9 @@ class NetworkOutput(Configurable):
                We need to pass the instance in order to cancel all the tasks
                related to that instance once the instance dies.
             """
-            get_event_loop().create_task(self.serve(reader, writer), instance)
+            channel_task = get_event_loop().create_task(
+                self.serve(reader, writer), instance)
+            self.active_channels.add(channel_task)
 
         port = int(self.port) if isSet(self.port) else 0
         self.server = yield from start_server(serve, host=hostname,
@@ -683,6 +686,7 @@ class NetworkOutput(Configurable):
         self.copy_queues = []
         self.wait_queues = []
         self.copy_futures = []
+        self.active_channels = WeakSet()
         self.has_shared = 0
         self.shared_queue = CancelQueue(0 if self.noInputShared
                                         in ["queue", "queueDrop"] else 1)
@@ -850,8 +854,12 @@ class NetworkOutput(Configurable):
 
     @coroutine
     def close(self):
-        """ Close listening sockets
-        """
+        """ Cancel all channels and close the server sockets"""
+        for channel in self.active_channels:
+            if channel and not channel.done():
+                channel.cancel()
+        self.active_channels = WeakSet()
+        # Finally close the async server and the sockets
         if self.server is not None:
             self.server.close()
             yield from self.server.wait_closed()
