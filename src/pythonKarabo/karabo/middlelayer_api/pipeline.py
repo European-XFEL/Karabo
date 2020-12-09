@@ -202,7 +202,7 @@ class NetworkInput(Configurable):
         description="A list of output channels to receive data from, format: "
                     "<instance ID>:<channel name>",
         assignment=Assignment.OPTIONAL, accessMode=AccessMode.RECONFIGURABLE,
-        regex=r"^[a-zA-Z0-9\.\-\:\/]+$",
+        regex=r"^[a-zA-Z0-9\.\-\:\/\_]+$",
         defaultValue=[])
     @coroutine
     def connectedOutputChannels(self, value):
