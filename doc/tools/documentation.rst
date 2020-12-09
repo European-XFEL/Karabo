@@ -1,3 +1,5 @@
+.. _projects/howto_document:
+
 **************************************
 How to contibute to this documentation
 **************************************
@@ -9,11 +11,11 @@ How to contibute to this documentation
 
     .. code:: rst
 
-        .. _project/howto_document:
+        .. _projects/howto_document:
 
-        ***************
-        How To Document
-        ***************
+        **************************************
+        How to contibute to this documentation
+        **************************************
 
     In order to allow proper cross-referencing later,
     use one of the following pre-fixes:
