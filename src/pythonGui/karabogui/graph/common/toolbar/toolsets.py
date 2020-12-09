@@ -1,7 +1,7 @@
 from functools import partial
 
 from traits.api import (
-    Any, Callable, Constant, Dict, Enum, HasStrictTraits, List)
+    Any, Callable, Constant, Dict, Enum, Event, HasStrictTraits, List)
 
 from .factory import export_factory, mouse_mode_factory, roi_factory
 from ..enums import ExportTool, MouseMode, ROITool
@@ -25,7 +25,7 @@ class BaseToolsetController(HasStrictTraits):
                 buttons[tool] = button
 
         # If there's a default button, enable it
-        default_button = buttons.get(self.current_tool)
+        default_button = buttons.get(self.default_tool)
         if default_button:
             default_button.setChecked(True)
 
@@ -142,6 +142,9 @@ class ExportToolset(BaseToolsetController):
 
     tools = List([ExportTool.Image, ExportTool.Data])
     factory = Callable(export_factory)
+
+    # Current tool is not persistent, as this is a fire-and-forget toolset
+    current_tool = Event
 
 
 TOOLSET_MAP = {
