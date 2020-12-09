@@ -470,11 +470,6 @@ class DeviceClientProxyFactory(ProxyFactory):
             if not self._alive:
                 self._alive = True
 
-            # reconnect our channels
-            if self._remote_output_channel:
-                for channel in self._remote_output_channel:
-                    channel.connect()
-
         @asyncio.coroutine
         def _raise_on_death(self, coro):
             """execute *coro* but raise KaraboError if proxy is orphaned
