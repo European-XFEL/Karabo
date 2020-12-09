@@ -7,7 +7,7 @@ import numpy
 
 from karabo.native import (
     NoneValue, QuantityValue, isSet, StringValue, VectorCharValue, BoolValue,
-    EnumValue, ImageData, TableValue, VectorStringValue, wrap)
+    EnumValue, ImageData, KaraboValue, TableValue, VectorStringValue, wrap)
 from karabo.native import unit_registry as unit, Int32, Float, VectorFloat
 from karabo.native import EncodingType, Unit, MetricPrefix
 from karabo.native import encodeBinary, Hash, Timestamp
@@ -542,6 +542,29 @@ class Tests(TestCase):
                                                  dtype=numpy.uint64))
         self.assertEqual(image.roiOffsets.dtype, numpy.uint64)
         self.assertEqual(image.bitsPerPixel, 128)
+
+    def test_round_trip_karabo_value(self):
+        string = StringValue("abc", descriptor=5, timestamp=3)
+        vec_char = VectorCharValue(b"ase", descriptor=7, timestamp=2)
+        quantity = QuantityValue("3 m", timestamp=self.t1)
+        bool_value = BoolValue(True, descriptor=7, timestamp=22)
+        vector_string = VectorStringValue(["abc", "b", "c"],
+                                          descriptor=3, timestamp=self.t2)
+        none = NoneValue(descriptor=7, timestamp=22)
+        dtype = numpy.dtype([("integer", "i"), ("object", "O")])
+        table = TableValue(numpy.array([], dtype=dtype), units=None)
+
+        class E(Enum):
+            a = 3
+            b = 5
+
+        enum_value = EnumValue(E.a, descriptor=None, timestamp=self.t1)
+        image = ImageData(numpy.zeros(shape=(1000, 1000), dtype=numpy.uint32))
+
+        for value in (string, vec_char, quantity, bool_value,
+                      vector_string, none, table, image, enum_value):
+            value = value.value
+            self.assertNotIsInstance(value, KaraboValue)
 
 
 if __name__ == "__main__":
