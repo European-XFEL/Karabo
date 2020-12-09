@@ -289,22 +289,13 @@ class NetworkInput(Configurable):
                 self.parent.logger.exception("error in stream")
 
     @coroutine
-    def start_channel(self, output, tracking=True):
-        """Connect to the output channel with Id 'output'
-
-           :param tracking: Defines whether this channel is tracked via the
-                            the signal slotable. Only proxies don't use
-                            tracking via a signal slotable lookup.
-        """
+    def start_channel(self, output):
+        """Connect to the output channel with Id 'output' """
         try:
             instance, name = output.split(":")
             # success, configuration
             ok, info = yield from self.parent._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
-            # NOTE: Tracking is different for devices and proxies
-            if tracking:
-                self.parent._remote_output_channel[instance].add(
-                    (self, output))
             if not ok:
                 return
 
@@ -337,18 +328,38 @@ class NetworkInput(Configurable):
                 while (yield from self.readChunk(channel, cls)):
                     yield from sleep(self.delayOnInput)
                     channel.writeHash(cmd)
+                else:
+                    # We still inform when the connection has been closed!
+                    yield from self.safe_close_handler(output)
+                    # Start a new roundtrip, but don't create a new task!
+                    yield from sleep(2)
+                    yield from self.start_channel(output)
         except CancelledError:
-            # NOTE: Happens when we are destroyed
-            if tracking:
-                self.parent._remote_output_channel[instance].remove(
-                    (self, output))
+            # Note: Happens when we are destroyed or disconnected!
+            yield from self.safe_close_handler(output)
             self.connected.pop(output)
             self.connectedOutputChannels = list(self.connected)
-        finally:
-            # We still inform when the connection has been closed!
-            with (yield from self.handler_lock):
-                yield from shield(get_event_loop().run_coroutine_or_thread(
-                    self.close_handler, output))
+        except Exception as e:
+            # Provide a print log for developers! Don't use the logger
+            # for exceptions. This should not happen!
+            print(f"Experienced unexpected exception {e} in input channel "
+                  f"of device {self.parent.deviceId} for {output}")
+            yield from self.safe_close_handler(output)
+            # We might get cancelled during sleeping!
+            try:
+                yield from sleep(2)
+                yield from self.start_channel(output)
+            except CancelledError:
+                yield from self.safe_close_handler(output)
+                self.connected.pop(output)
+                self.connectedOutputChannels = list(self.connected)
+
+    @coroutine
+    def safe_close_handler(self, output):
+        """The close handler is called under the handler lock"""
+        with (yield from self.handler_lock):
+            yield from shield(get_event_loop().run_coroutine_or_thread(
+                self.close_handler, output))
 
     @coroutine
     def readChunk(self, channel, cls):
@@ -561,7 +572,7 @@ class OutputProxy(SubProxyBase):
             return
 
         output = ":".join((self._parent.deviceId, self.longkey))
-        # Add our channel to the proxy
+        # Add our channel to the proxy tracking
         self._parent._remote_output_channel.add(self)
         self.networkInput.parent = self._parent._device
         # Track task correctly according to the Eventloop
@@ -579,15 +590,16 @@ class OutputProxy(SubProxyBase):
                 yield from self.networkInput._run()
                 self.initialized = True
             self.networkInput.connected[output] = self.task
-            yield from self.networkInput.start_channel(output, tracking=False)
+            yield from self.networkInput.start_channel(output)
         finally:
             self.task = None
 
     def disconnect(self):
         """Disconnect from the output channel"""
-        if self.task is not None:
-            self.task.cancel()
+        if self in self._parent._remote_output_channel:
             self._parent._remote_output_channel.remove(self)
+        if self.task is not None and not self.task.done():
+            self.task.cancel()
 
 
 class ConnectionTable(Configurable):
@@ -757,7 +769,9 @@ class NetworkOutput(Configurable):
                     queues.remove(queue)
                     queue.cancel()
         except CancelledError:
-            # If we are destroyed, we should close ourselves
+            # If we are cancelled, we should close ourselves
+            # Note: This happens when the output channel is closed and
+            # when the device is destroyed.
             yield from self.close()
         except IncompleteReadError as e:
             if e.partial:  # if the input got properly closed, partial is empty
