@@ -65,8 +65,8 @@ class Receiver(Device):
         super().__init__(configuration)
 
     @coslot
-    async def connectInputChannel(self):
-        await self.input.connectChannel("alice:output")
+    async def connectInputChannel(self, output="alice"):
+        await self.input.connectChannel(f"{output}:output")
         return True
 
     @Slot()
@@ -192,8 +192,13 @@ class RemotePipelineTest(DeviceTest):
             await output_device.startInstance()
             await waitUntil(lambda: isAlive(proxy))
             self.assertEqual(received, True)
+
+            # Set the received to false!
             received = False
             self.assertEqual(received, False)
+            # Wait a few seconds because the reconnect will wait seconds
+            # as well before attempt
+            await sleep(2)
             for data in range(NUM_DATA):
                 await proxy.sendData()
             # Our reconnect was successful, we are receiving data via the
@@ -219,6 +224,48 @@ class RemotePipelineTest(DeviceTest):
             self.assertEqual(received, False)
 
         await output_device.slotKillDevice()
+
+    @async_tst
+    async def test_output_reconnect_device(self):
+        """Test the output reconnect of a device"""
+        output_device = Sender({"_deviceId_": "outputdevice"})
+        await output_device.startInstance()
+        receiver = Receiver({"_deviceId_": "receiverdevice"})
+        await receiver.startInstance()
+        await receiver.connectInputChannel("outputdevice")
+
+        NUM_DATA = 5
+        with (await getDevice("outputdevice")) as proxy:
+            self.assertTrue(isAlive(proxy))
+            self.assertEqual(receiver.received, 0)
+            for data in range(NUM_DATA):
+                await proxy.sendData()
+            self.assertGreater(receiver.received, 0)
+            # We received data and now kill the device
+            await output_device.slotKillDevice()
+            await waitUntil(lambda: not isAlive(proxy))
+            self.assertFalse(isAlive(proxy))
+            # The device is gone, now we instantiate the device with same
+            # deviceId to see if the output automatically reconnects
+            output_device = Sender({"_deviceId_": "outputdevice"})
+            await output_device.startInstance()
+            await waitUntil(lambda: isAlive(proxy))
+
+            # We set the counter to zero!
+            await receiver.resetCounter()
+            self.assertEqual(receiver.received, 0)
+            # Wait a few seconds because the reconnect will wait seconds
+            # as well before attempt
+            await sleep(2)
+            for data in range(NUM_DATA):
+                await proxy.sendData()
+            # Our reconnect was successful, we are receiving data via the
+            # output channel
+            self.assertGreater(receiver.received, 0)
+
+        del proxy
+        await output_device.slotKillDevice()
+        await receiver.slotKillDevice()
 
     @async_tst
     async def test_output_timestamp(self):
