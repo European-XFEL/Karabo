@@ -2,7 +2,7 @@ import numpy as np
 
 from ..hash import Hash, HashList
 from ..utils import (
-    dtype_from_number, dictToHash, get_image_data)
+    create_html_hash, dtype_from_number, dictToHash, get_image_data)
 
 
 def test_numpy_int32_dtype():
@@ -35,6 +35,15 @@ def test_get_image_data():
     image = get_image_data(h)
     np.testing.assert_array_equal(
         image, np.array([[2, 4, 6], [6, 8, 10]], np.int64))
+
+
+def test_create_hash_html():
+    h = Hash()
+    h["int"] = 2
+    h["hash"] = Hash("float", 5.2, "int", 6)
+    h["hashlist"] = HashList(Hash("float", 5.2, "int", 6))
+    html = create_html_hash(h)
+    assert html is not None
 
 
 def test_dict_hash():
