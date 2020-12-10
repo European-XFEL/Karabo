@@ -346,9 +346,9 @@ class LogQueryModel(QAbstractTableModel):
             return ("ID", "Date and time", "Message type", "Instance ID",
                     "Description", "Additional description")[section]
 
-    def setList(self, l):
+    def setList(self, list_):
         self.beginResetModel()
-        self.filtered = l
+        self.filtered = list_
         self.filtered.sort(key=self.key, reverse=self.reverse)
         self.endResetModel()
 
