@@ -2,7 +2,8 @@ import numpy as np
 
 from ..hash import Hash, HashList
 from ..utils import (
-    create_html_hash, dtype_from_number, dictToHash, get_image_data)
+    create_html_hash, dtype_from_number, dictToHash, hashToDict,
+    get_image_data)
 
 
 def test_numpy_int32_dtype():
@@ -47,7 +48,7 @@ def test_create_hash_html():
 
 
 def test_dict_hash():
-    """TEST THAT A DICT CAN BE MOVED TO A HASH"""
+    """Test that a dict can be moved to a Hash and vice versa"""
     b = {"b": 2}
     e = ["a", "b", "c"]
     f = [{"a": 1}, {"b": 2}]
@@ -63,3 +64,6 @@ def test_dict_hash():
     assert isinstance(node, HashList)
     assert node[0] == Hash("a", 1)
     assert node[1] == Hash("b", 2)
+
+    new_d = hashToDict(h)
+    assert new_d == d
