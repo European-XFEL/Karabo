@@ -283,9 +283,12 @@ class Hash(OrderedDict):
             return False
 
         for key, value, attr in Hash.flat_iterall(other, empty=True):
-            h_value = self[key]
-            if not is_equal(value, h_value):
-                return False
+            # We only have to compare values if we do not have a Hash. This
+            # is accounted in the paths. But we must compare attributes!
+            if not isinstance(value, Hash):
+                h_value = self[key]
+                if not is_equal(value, h_value):
+                    return False
 
             h_attr = self[key, ...]
             # We can check the attributes `keys` first!
@@ -304,7 +307,8 @@ class Hash(OrderedDict):
         """Recursively iterate over all parameters in a Hash object such that
         a simple iterator interface is exposed.
 
-        :param empty: Sets if empty Hashes should be returned (default: False)
+        :param empty: If set to `True` this will yield an empty Hash followed
+                      by all Hash properties. Default is `False`
         """
         assert isinstance(hsh, Hash)
 
@@ -312,11 +316,11 @@ class Hash(OrderedDict):
         for key, value, attrs in hsh.iterall():
             subkey = base + key
             if isinstance(value, Hash):
-                if empty and value.empty():
-                    yield subkey, value, attrs
-                else:
-                    yield from Hash.flat_iterall(
-                        value, base=subkey, empty=empty)
+                if empty:
+                    # Yield an empty Hash as base value
+                    yield subkey, Hash(), attrs
+                yield from Hash.flat_iterall(
+                    value, base=subkey, empty=empty)
             else:
                 yield subkey, value, attrs
 
