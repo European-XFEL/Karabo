@@ -74,9 +74,9 @@ from karabo.native import (
 # native hash serialisers
 from karabo.native import (
     daysAgo, decodeBinary, decodeXML, dictToHash, dtype_from_number,
-    encodeBinary, encodeXML, get_image_data, hoursAgo, Hash, HashType,
-    HashByte, HashList, is_equal, loadFromFile, minutesAgo, HashMergePolicy,
-    saveToFile, Timestamp, writeBinary, writeXML)
+    encodeBinary, encodeXML, get_image_data, hashToDict, Hash, HashType,
+    HashByte, HashList, hoursAgo, is_equal, loadFromFile, minutesAgo,
+    HashMergePolicy, saveToFile, Timestamp, writeBinary, writeXML)
 # native extra
 from karabo.native import (
     KaraboError, MetaRegistry, Registry, TimeMixin, get_timestamp, Weak)

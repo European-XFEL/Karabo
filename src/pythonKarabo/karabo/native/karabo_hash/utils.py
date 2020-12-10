@@ -5,7 +5,7 @@ from .typenums import HashType
 from .hash import Hash, HashList
 
 __all__ = ['create_html_hash', 'dictToHash', 'dtype_from_number',
-           'get_image_data', 'numpy_from_number']
+           'get_image_data', 'hashToDict', 'numpy_from_number']
 
 
 def dtype_from_number(number):
@@ -134,9 +134,31 @@ def dictToHash(d):
         elif isinstance(v, (list, tuple)):
             if len(v) > 0 and isinstance(v[0], dict):
                 # Note: This is a VectorHash
-                h[k] = HashList([dictToHash(vv) for vv in v])
+                h[k] = HashList(dictToHash(vv) for vv in v)
             else:
                 h[k] = v
         else:
             h[k] = v
     return h
+
+
+def hashToDict(h):
+    """Convert a nested Hash `h` into a `dict`
+
+    Convert a Hash h into a dict. If h is nested, the result will be as well.
+
+    Note: This is greedy as we lose all possible attributes of the Hash.
+    """
+    d = dict()
+    for k, v in h.items():
+        if isinstance(v, Hash):
+            d[k] = hashToDict(v)
+        elif isinstance(v, (list, tuple)):
+            if len(v) > 0 and isinstance(v[0], Hash):
+                # Note: This is a VectorHash
+                d[k] = [hashToDict(vv) for vv in v]
+            else:
+                d[k] = v
+        else:
+            d[k] = v
+    return d
