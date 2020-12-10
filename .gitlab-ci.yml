@@ -1,4 +1,10 @@
+stages:
+  - lint
+  - build
+  - test
+
 .build_template: &build
+  stage: test
   script:
     - source ci/prepare "$CI_BUILD_NAME"
     - source ci/build "$CI_BUILD_NAME"
@@ -28,6 +34,7 @@
     INFLUXDB_USER_PASSWORD: "usrpwd"
 
 .test_template: &test
+  stage: test
   <<: *services_template
   script:
     - source ci/prepare "$CI_BUILD_NAME"
@@ -42,7 +49,32 @@
     - branches
     - schedules
 
+
+# static source code analysis with cppcheck
+lint:
+  stage: lint
+  image: europeanxfel/karabo-ci:miniconda-3lint
+  script:
+    - source activate && conda activate
+    - cppcheck --error-exitcode=0 --output-file=cppcheck_performance_report.txt --enable=performance --force $CI_PROJECT_DIR/src/karabo # TODO fix c++ code quality checks
+    - cppcheck --error-exitcode=0 --output-file=cppcheck_style_report.txt --enable=style --force $CI_PROJECT_DIR/src/karabo
+    - cppcheck --error-exitcode=0 --output-file=cppcheck_warning_report.txt --enable=warning --force $CI_PROJECT_DIR/src/karabo
+    - flake8 --exclude=*tests* $CI_PROJECT_DIR/src/pythonGui/karabogui
+  only:
+    refs:
+      - merge_requests
+    changes:
+      - "src/**/*"
+  artifacts:
+    name: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
+    when: always
+    paths:
+      - cppcheck_*_report.txt
+
+
+
 .release_build_conda: &release-build-conda
+  stage: build
   script:
     - >
       python ci/miniconda pack karabogui 
@@ -60,6 +92,7 @@
     - schedules
 
 .prerelease_build_conda: &prerelease-build-conda
+  stage: build
   script:
     - >
       python ci/miniconda pack karabogui 
@@ -77,6 +110,7 @@
     - schedules
 
 .nightly_build_conda: &nightly-build-conda
+  stage: build
   script:
     - >
       python ci/miniconda pack karabogui 
@@ -107,17 +141,29 @@
 .integration_tests: &integration-tests
   <<: *test
   only:
-    - master
-    - /^(\d+\.)(\d+\.)(X-hotfix)$/
+    refs:
+      - master  # the changes check will default to true
+      - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
+      - merge_requests
+    changes:
+      - "src/karabo/devices/**/*"
+      - "src/integrationTests/**/*"
+      - "src/pythonKarabo/karabo/integration_tests/**/*"
+      - "src/pythonKarabo/karabo/bound_devices/**/*"
   except:
     - schedules
 
 .unit_tests: &unit-tests
   <<: *test
   only:
-    - branches
-  except:
-    - master
+    refs:
+      - merge_requests
+    changes:
+      - "build/netbeans/**/*"
+      - "src/karabo/**/*"
+      - "src/pythonKarabo/**/*"
+      - "src/karathon/**/*"
+      - "conda-recipes/karabo-cpp/**/*"
 
 .unit_tests_conda: &unit-tests-conda
   script:
@@ -127,9 +173,14 @@
       --ci --clean --test
       --skip-build
   only:
-    - branches
-  except:
-    - master
+    refs:
+      - merge_requests
+    changes:
+      - "src/pythonGui/**/*"
+      - "src/pythonKarabo/karabo/native/**/*"
+      - "src/pythonKarabo/common/**/*"
+      - "conda-recipes/karabo-native/**/*"
+      - "conda-recipes/karabogui/**/*"
   <<: *artifacts-spec
         
 .deps_build_tests: &deps-build-tests
@@ -139,43 +190,22 @@
     - source ci/build "$CI_BUILD_NAME"
     - source ci/test "$CI_BUILD_NAME"
   only:
-    - /^deps-mr-.+$/
-  except:
-    - master
-    - schedules
+    refs:
+      - merge_requests
+    changes:
+      - "extern/**/*"
 
 .long_tests: &long-tests
   <<: *test
   only:
-    - schedules
+    refs:
+      - schedules
+      - merge_requests
+    changes:
+      - "src/cppLongTests/**/*"
 
 
 ### Jobs
-
-# static source code analysis with cppcheck
-#cppcheck-analysis:
-#  before_script:
-#    - echo '*** Install cppcheck ***'
-#    # Pro tempore solution (Ubuntu-18-only): cppcheck could go to container
-#    - export http_proxy="http://exflwgs06.desy.de:3128/"
-#    - export https_proxy="http://exflwgs06.desy.de:3128/"
-#    - apt-get update
-#    - apt-get install -y cppcheck
-#    - unset http_proxy
-#    - unset https_proxy
-#  image: europeanxfel/karabo-ci:ubuntu-18
-#  allow_failure: true
-#  script:
-#    - cppcheck --error-exitcode=0 --output-file=cppcheck_performance_report.txt --enable=performance --force $CI_PROJECT_DIR/src/karabo
-#    - cppcheck --error-exitcode=0 --output-file=cppcheck_style_report.txt --enable=style --force $CI_PROJECT_DIR/src/karabo
-#    - cppcheck --error-exitcode=0 --output-file=cppcheck_warning_report.txt --enable=warning --force $CI_PROJECT_DIR/src/karabo
-#  only:
-#    - merge_requests
-#  artifacts:
-#    name: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
-#    when: always
-#    paths:
-#      - cppcheck_*_report.txt
 
 # release build
 
