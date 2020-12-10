@@ -55,7 +55,7 @@ class Parser(object):
     def z(self, relative):
         self.path.closeSubpath()
 
-    def l(self, relative):
+    def l(self, relative):  # noqa 
         for p in self.points(relative):
             self.path.lineTo(p)
 
