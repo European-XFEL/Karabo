@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from .. import Hash, HashByte, HashList, Schema
+from karabo.native import Hash, HashByte, HashList, Schema
 
 
 def check_array(array, expected):
@@ -9,11 +9,16 @@ def check_array(array, expected):
     assert array.dtype == expected.dtype
 
 
-def check_hash(h):
+def check_hash(h, special=True):
     """check that the hash *h* is the same as created by `create_hash`
 
-    This method does advanced checking only available for
-    Python-only hashes.
+    :param special: Special defines if special assertions are made.
+                    This is needed, as a few operations might lose a type.
+                    Default is `True`.
+
+        Special actions:
+
+            assert isinstance(h["emptyhashlist"], HashList)
     """
 
     keys = ["bool", "int", "string", "stringlist", "char", "chars",
@@ -38,7 +43,8 @@ def check_hash(h):
 
     # Hashlist
     assert h["emptyhashlist"] == []
-    assert isinstance(h["emptyhashlist"], HashList)
+    if special:
+        assert isinstance(h["emptyhashlist"], HashList)
     assert len(h["hashlist"]) == 2
     assert h["hashlist"][0]["a"] == 3
     assert len(h["hashlist"][1]) == 0
@@ -253,6 +259,77 @@ def test_copy():
     h = create_hash()
     c = Hash(h)
     check_hash(c)
+
+
+def test_deepcopy():
+    from copy import deepcopy
+    h = create_hash()
+
+    c = h.deepcopy()
+    # We lose type HashList in copy
+    check_hash(c, special=False)
+
+    d = deepcopy(h)
+    check_hash(d, special=False)
+    # Test equal values and attrs
+    assert h.fullyEqual(c)
+    assert h.fullyEqual(d)
+
+    # From here, start modifying
+    # Add empty Hash
+    h["emptyNewHash"] = Hash()
+    c = h.deepcopy()
+    d = deepcopy(h)
+    assert h.fullyEqual(c)
+    assert h.fullyEqual(d)
+    assert isinstance(c["emptyNewHash"], Hash)
+    assert isinstance(d["emptyNewHash"], Hash)
+    assert c["emptyNewHash"].empty()
+    assert d["emptyNewHash"].empty()
+    assert not c["emptyNewHash", ...]
+    assert not d["emptyNewHash", ...]
+
+    # Add empty Hash and attrs
+    h["emptyNewHash"] = Hash()
+    h["emptyNewHash", "minInc"] = 5
+    c = h.deepcopy()
+    d = deepcopy(h)
+    assert h.fullyEqual(c)
+    assert h.fullyEqual(d)
+    assert isinstance(c["emptyNewHash"], Hash)
+    assert isinstance(d["emptyNewHash"], Hash)
+    # Empty only counts for keys
+    assert c["emptyNewHash"].empty()
+    assert d["emptyNewHash"].empty()
+    assert c["emptyNewHash", "minInc"] == 5
+    assert d["emptyNewHash", "minInc"] == 5
+
+
+def test_hash_fully_equal():
+    # test empty Hash comparison
+    h = create_hash()
+    hh = create_hash()
+    assert h.fullyEqual(hh)
+    h["emptyNewHash"] = Hash()
+    assert not h.fullyEqual(hh)
+
+    # test empty Hash comparison other way
+    h = create_hash()
+    hh = create_hash()
+    assert h.fullyEqual(hh)
+    hh["emptyNewHash"] = Hash()
+    assert not h.fullyEqual(hh)
+
+    # test empty hash both sides
+    h = create_hash()
+    h["hca"] = Hash()
+    hh = create_hash()
+    hh["hca"] = Hash()
+    assert h.fullyEqual(hh)
+
+    # Now modify an attribute
+    hh["hca", "minInc"] = 5
+    assert not h.fullyEqual(hh)
 
 
 def test_merge():
