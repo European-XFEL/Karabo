@@ -11,7 +11,7 @@ from karabogui.programs.base import create_gui_app, init_gui
 from karabogui.singletons.api import get_network, get_topology
 from karabogui.util import get_scene_from_server
 
-DEVSCENE_PROG = re.compile("([0-9a-zA-Z/_\-]+)\|(.+)")
+DEVSCENE_PROG = re.compile(r"([0-9a-zA-Z/_\-]+)\|(.+)")
 CAPA = Capabilities.PROVIDES_SCENES
 
 
