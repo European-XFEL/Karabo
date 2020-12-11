@@ -8,6 +8,10 @@ import numbers
 _dll = None
 logger = logging.getLogger(__name__)
 
+OPEN_MQ_TIMEOUT = 2103
+OPEN_MQ_CONCURRENT_ACCESS = 1116
+OPEN_MQ_MSG_DROPPED = 3120
+
 TYPES = [c_bool, c_byte, c_short, c_int, c_longlong,
          c_float, c_double, c_char_p]
 TYPENAMES = ["Bool", "Int8", "Int16", "Int32", "Int64",
@@ -311,95 +315,6 @@ class Consumer(_Consumer):
         return Message._create(ret)
 
 
-class SharedConsumer(_Consumer):
-    def __init__(self, session, destination, subscription, selector):
-        super(SharedConsumer, self).__init__()
-        self.dll.MQCreateSharedMessageConsumer(
-            session.handle, destination.handle,
-            c_char_p(subscription.encode("utf8")),
-            c_char_p(selector.encode("utf8")), byref(self.handle))
-
-
-class _DurableConsumer(_Consumer):
-    def __init__(self, durableName=None):
-        super(_DurableConsumer, self).__init__()
-        self.durableName = c_char_p(durableName.encode("utf8"))
-
-    def unsubscribe(self):
-        self.dll.MQUnsubscribeDurableMessageConsumer(self.handle,
-                                                     self.durableName)
-
-
-class DurableConsumer(_DurableConsumer):
-    def __init__(self, session, destination, durableName, selector, noLocal):
-        super(DurableConsumer, self).__init__(durableName=durableName)
-        self.dll.MQCreateDurableMessageConsumer(
-            session.handle, destination.handle, self.durableName,
-            c_char_p(selector.encode("utf8")), c_bool(noLocal),
-            byref(self.handle))
-
-
-class SharedDurableConsumer(_DurableConsumer):
-    def __init__(self, session, destination, durableName, selector):
-        super(SharedDurableConsumer, self).__init__(durableName=durableName)
-        self.dll.MQCreateSharedDurableMessageConsumer(
-            session.handle, destination.handle, self.durableName,
-            c_char_p(selector.encode("utf8")),
-            byref(self.handle))
-
-
-class _AsyncConsumer(_Consumer):
-    Callback = CFUNCTYPE(c_int, c_int, c_int, c_int, c_void_p)
-
-    def __init__(self, **kwargs):
-        super(_AsyncConsumer, self).__init__()
-        self.callback = self.Callback(self.callback)
-
-    def callback(self, session, consumer, message, data):
-        assert self.handle.value == consumer.value
-        message = Message._create(message)
-        self.listen(message)
-        return 0
-
-
-class AsyncConsumer(_AsyncConsumer):
-    def __init__(self, session, destination, selector, noLocal):
-        super(AsyncConsumer, self).__init__()
-        self.dll.MQCreateAsyncMessageConsumer(
-            session.handle, destination.handle,
-            c_char_p(selector.encode("utf8")),
-            c_bool(noLocal), self.callback, c_void_p(), byref(self.handle))
-
-
-class AsyncSharedConsumer(_AsyncConsumer):
-    def __init__(self, session, destination, subscription, selector):
-        super(AsyncSharedConsumer, self).__init__()
-        self.dll.MQCreateAsyncSharedMessageConsumer(
-            session.handle, destination.handle,
-            c_char_p(subscription.encode("utf8")),
-            c_char_p(selector.encode("utf8")), self.callback, c_void_p(),
-            byref(self.handle))
-
-
-class AsyncDurableConsumer(_AsyncConsumer, _DurableConsumer):
-    def __init__(self, session, destination, durableName, selector, noLocal):
-        super(AsyncDurableConsumer, self).__init__(durableName=durableName)
-        self.dll.MQCreateAsyncDurableMessageConsumer(
-            session.handle, destination.handle, self.durableName,
-            c_char_p(selector.encode("utf8")), c_bool(noLocal), self.callback,
-            c_void_p(), byref(self.handle))
-
-
-class AsyncSharedDurableConsumer(_AsyncConsumer, _DurableConsumer):
-    def __init__(self, session, destination, durableName, selector, noLocal):
-        super(AsyncSharedDurableConsumer, self).__init__(
-            durableName=durableName)
-        self.dll.MQCreateAsyncSharedDurableMessageConsumer(
-            session.handle, destination.handle, self.durableName,
-            c_char_p(selector.encode("utf8")), self.callback, c_void_p(),
-            byref(self.handle))
-
-
 class Message(object):
     def __new__(cls, handle=None, dll=None):
         if dll is None:
@@ -504,8 +419,3 @@ class BytesMessage(Message):
         data = bytes(data)
         self.dll.MQSetBytesMessageBytes(self.handle, c_char_p(data),
                                         c_int(len(data)))
-
-
-OPEN_MQ_TIMEOUT = 2103
-OPEN_MQ_CONCURRENT_ACCESS = 1116
-OPEN_MQ_MSG_DROPPED = 3120
