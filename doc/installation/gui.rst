@@ -58,7 +58,10 @@ the following channel definitions::
     conda config --add channels http://localhost:8081/karabo/channel/mirror/conda-forge
 
 N.B. the two channel definitions are mutually exclusive. Remove the channels that
-are not reachable.
+are not reachable with the command::
+
+    conda config --remove channels http://channel_to_be_removed
+
 
 Installing KaraboGUI
 ====================
@@ -92,11 +95,21 @@ After successfully installing KaraboGUI, you will have access to the following e
         * ``conda activate <your_karabo_environment>``
         * ``karabo-gui``
 
+
+Upgrading
+=========
+
+When updating the KaraboGUI, it is recommended to install a clean environment.
+Different versions of the KaraboGUI will be built against different dependencies.
+For this reason, the safest way to upgrade is to either:
+* install a new environment with a different environment name, or
+* delete it with ``conda env remove -n <environment_name>``, and install as new.
+
 Uninstalling
 ============
 
 In order to uninstall KaraboGUI, always opt for removing the complete environment
-itself: ``conda remove -n <environment_name> --all``
+itself: ``conda env remove -n <environment_name>``
 
 Developing
 ==========
