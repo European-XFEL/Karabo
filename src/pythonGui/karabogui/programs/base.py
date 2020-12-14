@@ -45,7 +45,8 @@ def create_gui_app(args):
         # Create a preliminary QApplication to check system/screen properties.
         # This is needed as setting QApplication attributes should be done
         # before the instantiation (Qt bug as of 5.9).
-        dpi = app.primaryScreen().logicalDotsPerInch()
+        # Note: Must take the int of dpi!
+        dpi = int(app.primaryScreen().logicalDotsPerInch())
         app.quit()
         del app
 
