@@ -1,8 +1,6 @@
 *******************
  Conda GUI client
 *******************
-From version 2.6, the KaraboGUI installation for Windows and the karabo-gui
-executable shipped with the precompiled binaries for Ubuntu, is deprecated.
 
 KaraboGUI can now be installed in Windows, MacOS, and Ubuntu via ``conda``.
 Conda is a cross-platform package manager and dependency resolution tool which offers a very
@@ -45,13 +43,19 @@ From your terminal, add the needed channels executing the following commands::
     conda config --add channels http://exflserv05.desy.de/karabo/channel
     conda config --add channels http://exflserv05.desy.de/karabo/channel/mirror/conda-forge
 
-N.B. The channel ``http://exflserv05.desy.de/karabo/channel`` is not open to
-the public until Karabo will be released. For this reason if one is installing
-from a network outside the DESY internal network, one should create an SSH
-tunnel to the internal channel and configure that channel as a source.
+.. _framework/remote_installation:
 
-Assuming, e.g. that one has created an ssh tunnel using an ssh command like
-``ssh user@bastion.desy.de -L 8081:exflserv05.desy.de:80``, one should use
+Remote installations
+---------------------
+
+The channel ``http://exflserv05.desy.de/karabo/channel`` is not open to
+the public until Karabo will be released. For this reason if one is installing
+from a network outside the DESY internal network, some SSH tunneling is needed.
+Two options exist (but should not be mixed):
+
+The first option is to create the tunnel to ``exflserv05``
+(e.g. via ``ssh user@bastion.desy.de -L 8081:exflserv05.desy.de:80``),
+and then configure
 the following channel definitions::
 
     conda config --add channels http://localhost:8081/karabo/channel
@@ -62,6 +66,25 @@ are not reachable with the command::
 
     conda config --remove channels http://channel_to_be_removed
 
+The second option is to use a proxy and dynamic port forwarding, i.e.
+setup connection
+
+```
+ssh user@bastion.desy.de -D 9090
+```
+
+and tell ``conda`` to use a proxy server:
+
+```
+conda config --set proxy_servers.http socks5://localhost:9090
+```
+
+After everything is installed, you may want to remove the proxy definition
+again:
+
+```
+conda config --remove-key proxy_servers.http
+```
 
 Installing KaraboGUI
 ====================
@@ -123,33 +146,42 @@ After installing your miniconda3 distribution, install the package
 conda install conda-devenv -c conda-forge
 ```
 
-conda-devenv is a tool for creating a development environment that always
+``conda-devenv`` is a tool for creating a development environment that always
 follows the dependencies specified in your environment.devenv.yml, purging
 any other dependencies left behind.
 
-Now, on your ``pythonGui`` directory, run:
+If you are working outside the DESY network, use the second option
+(using ``conda config --set proxy_servers.http ...`` ) mentioned
+in :ref:`framework/remote_installation`.
+
+Now run:
 
 ```
-conda devenv
-```
-
-Or, if you're not in the directory:
-
-```
-conda devenv --file <pythonGUI dir>/environment.devenv.yml
+conda devenv --file conda-recipes/karabogui/environment.devenv.yml
 ```
 
 This will solve your environment dependencies and create an environment
 called ``karabogui``. Call ``conda activate karabogui`` to activate it.
+Still, the Karabo code has to be installed::
 
-Now all the code from ``karabogui``, `common`` and ``native`` will be on
-your ``PYTHONPATH``. No need to install using the setup.
+  cd src/pythonKarabo
+  pip install -e . --no-deps
+  cd ../../
+  cd src/pythonGui
+  pip install -e . --no-deps
 
-Now, generate the version file using
+Now all the code from ``karabogui``, ``common`` and ``native`` will be on
+your ``PYTHONPATH``.
+
+Finally, generate the version file using
 
 ```
 python setup.py develop
 ```
+
+inside the ``pythonGui`` directory. Repeat that step from time to time to keep
+the version number up-to-date.
+
 
 Configuring the environment in PyCharm
 --------------------------------------
