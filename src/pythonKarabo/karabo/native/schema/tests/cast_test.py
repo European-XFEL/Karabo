@@ -1,7 +1,12 @@
 from enum import Enum
 from unittest import TestCase, main
 
+from karabo.native import Configurable, Hash, HashList, Schema
 from karabo.native.schema import descriptors as hashmod
+
+
+class RowSchema(Configurable):
+    pass
 
 
 class Tests(TestCase):
@@ -138,6 +143,8 @@ class Tests(TestCase):
         self.assertTrue((d.cast([True, False]) == [True, False]).all())
         self.assertTrue((d.cast([1, 0]) == [True, False]).all())
         self.assertEqual(d.cast([1, 0]).dtype, "bool")
+        self.assertTrue((d.cast(["true", "false"]) == [True, False]).all())
+        self.assertTrue((d.cast(["1", "0"]) == [True, False]).all())
 
     def test_char(self):
         d = hashmod.Char()
@@ -154,10 +161,18 @@ class Tests(TestCase):
         with self.assertRaises(TypeError):
             d.cast(b"")
 
+    def test_bytearray(self):
+        d = hashmod.ByteArray()
+        self.assertEqual(d.cast(bytearray("ginger", 'utf-8')),
+                         bytearray(b'ginger'))
+        self.assertEqual(d.cast("ginger"), bytearray(b'ginger'))
+        self.assertEqual(d.cast(1), bytearray(b'\x00'))
+
     def test_vector_char(self):
         d = hashmod.VectorChar()
-
         self.assertEqual(d.cast(b"123"), b"123")
+        self.assertEqual(d.cast("123"), b"123")
+        self.assertEqual(d.cast(bytes("123", "utf-8")), b"123")
 
     def test_string(self):
         class A(Enum):
@@ -168,6 +183,7 @@ class Tests(TestCase):
         self.assertEqual(d.cast(A.a), A.a)
         d = hashmod.String()
         self.assertEqual(d.cast("bla"), "bla")
+        self.assertEqual(d.cast(1), "1")
 
     def test_vector_string(self):
         d = hashmod.VectorString()
@@ -175,6 +191,48 @@ class Tests(TestCase):
         with self.assertRaises(TypeError):
             d.cast([1, 2, 3])
         self.assertEqual(d.cast([]), [])
+
+    def test_hash(self):
+        d = hashmod.TypeHash()
+        h = Hash("success", True)
+        self.assertEqual(d.cast(h), h)
+        with self.assertRaises(TypeError):
+            d.cast({"sucess": True})
+
+    def test_vector_hash(self):
+        d = hashmod.VectorHash(rows=RowSchema)
+        hl = [Hash("success", True)]
+        self.assertEqual(d.cast(hl), hl)
+        # It is equal, but the type is hashlist
+        # No cast to the rowschema of a vector hash is done
+        # This is validated on value setting of the descriptor for each
+        # column, but not part of the generic vector hash cast.
+        self.assertIsInstance(d.cast(hl), HashList)
+
+        # Only the Hash type is validated
+        with self.assertRaises(TypeError):
+            hl = [{"success": True}]
+            self.assertEqual(d.cast(hl), hl)
+
+    def test_schema(self):
+        d = hashmod.TypeSchema()
+        s = Schema(name="success")
+        self.assertEqual(d.cast(s), s)
+        with self.assertRaises(TypeError):
+            d.cast(s.hash)
+
+    def test_none(self):
+        d = hashmod.None_()
+        self.assertEqual(d.cast(None), None)
+        with self.assertRaises(TypeError):
+            d.cast(1)
+        with self.assertRaises(TypeError):
+            d.cast("")
+
+    def test_slot(self):
+        d = hashmod.Slot()
+        self.assertEqual(d.cast("anything"), Hash())
+        self.assertEqual(d.cast(121313), Hash())
 
 
 if __name__ == "__main__":
