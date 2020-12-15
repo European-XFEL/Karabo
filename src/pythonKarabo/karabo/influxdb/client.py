@@ -11,7 +11,7 @@ from tornado.httpclient import AsyncHTTPClient, HTTPError
 from tornado.platform.asyncio import AsyncIOMainLoop, to_asyncio_future
 
 from karabo.native import (
-    convert_string_hashtype, get_hash_type_from_data, Hash,
+    string_from_hashtype, get_hash_type_from_data, Hash,
     HASH_TYPE_TO_XML_TYPE, encodeXML)
 
 from .dlutils import escape_tag_field_key
@@ -38,7 +38,7 @@ def get_key_value(key, value):
     elif isinstance(value, numbers.Real):
         return f'{key}={repr(value)}'.encode('utf-8')
     else:
-        data = convert_string_hashtype(value)
+        data = string_from_hashtype(value)
         return b''.join(
             [f'{key}=\"'.encode('utf-8'),
                 escape_tag_field_key(data).encode('utf-8'),
