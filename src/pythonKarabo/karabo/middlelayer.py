@@ -75,8 +75,9 @@ from karabo.native import (
 from karabo.native import (
     daysAgo, decodeBinary, decodeXML, dictToHash, dtype_from_number,
     encodeBinary, encodeXML, get_image_data, hashToDict, Hash, HashType,
-    HashByte, HashList, hoursAgo, is_equal, loadFromFile, minutesAgo,
-    HashMergePolicy, saveToFile, Timestamp, writeBinary, writeXML)
+    HashByte, HashList, hashtype_from_string, hoursAgo, is_equal,
+    loadFromFile, minutesAgo, HashMergePolicy, saveToFile, string_from_hashtype,
+    Timestamp, writeBinary, writeXML)
 # native extra
 from karabo.native import (
     KaraboError, MetaRegistry, Registry, TimeMixin, get_timestamp, Weak)
