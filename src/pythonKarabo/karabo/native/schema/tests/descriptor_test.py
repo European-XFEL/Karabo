@@ -8,11 +8,12 @@ from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Attribute, Bool, Char, ComplexFloat,
     Configurable, Double, decodeBinary, encodeBinary, Float, Hash, HashList,
-    Image, ImageData, Int16, Int8, KaraboError, LeafType, MetricPrefix,
-    NDArray, NumpyVector, QuantityValue, RegexString, Schema, String,
-    Timestamp, Type, UInt8, UInt64, Unit, unit_registry as unit,
-    VectorBool, VectorChar, VectorComplexFloat, VectorFloat,
-    VectorHash, VectorInt32, VectorInt8, VectorRegexString, VectorString)
+    Image, ImageData, Int8, Int16, Int32, Int64, KaraboError, LeafType,
+    MetricPrefix, NDArray, NumpyVector, QuantityValue, RegexString, Schema,
+    Slot, String, Timestamp, Type, UInt8, UInt16, UInt32, UInt64, Unit,
+    unit_registry as unit, VectorBool, VectorChar, VectorComplexFloat,
+    VectorFloat, VectorHash, VectorInt32, VectorInt8, VectorRegexString,
+    VectorString)
 
 
 class ArrayTestDevice(Configurable):
@@ -126,6 +127,8 @@ class Tests(TestCase):
         self.assertEqual(v, 51)
         with self.assertRaises(TypeError):
             d.toKaraboValue("123")
+        with self.assertRaises(ValueError):
+            d.toKaraboValue(5000)
 
     def test_vector_char(self):
         d = VectorChar()
@@ -758,6 +761,80 @@ class Tests(TestCase):
         # Check for Alarms
         schema, attrs = alarm.toSchemaAndAttrs(None, None)
         self.assertEqual(attrs["leafType"], LeafType.AlarmCondition)
+
+    def _min_max_desc(self, d, min_, max_):
+        minv, maxv = d.getMinMax()
+        self.assertEqual(minv, min_)
+        self.assertEqual(maxv, max_)
+        with self.assertRaises(ValueError):
+            d.check(minv - 1)
+        with self.assertRaises(ValueError):
+            d.check(maxv + 1)
+
+    def test_min_max_descriptors(self):
+        self._min_max_desc(UInt8(), 0, 255)
+        self._min_max_desc(UInt16(), 0, 65535)
+        self._min_max_desc(UInt32(), 0, 4294967295)
+        self._min_max_desc(UInt64(), 0, 18446744073709551615)
+
+        self._min_max_desc(Int8(), -128, 127)
+        self._min_max_desc(Int16(), -32768, 32767)
+        self._min_max_desc(Int32(), -2147483648, 2147483647)
+        self._min_max_desc(
+            Int64(), -9223372036854775808, 9223372036854775807)
+
+    def test_slot(self):
+        """Test the slot descriptor"""
+        d = Slot()
+        self.assertIsNotNone(d)
+        h, attrs = d.toSchemaAndAttrs(None, None)
+        self.assertEqual(attrs["classId"], "Slot")
+        self.assertEqual(attrs["displayType"], "Slot")
+        self.assertEqual(attrs["nodeType"], 1)
+
+    def test_alarms(self):
+        """Values always have to exceed the provided thresholds for alarms"""
+        for desc in [UInt8, UInt16, UInt32, UInt64]:
+            d = desc(alarmLow=5, warnLow=10, warnHigh=19, alarmHigh=20)
+            self.assertEqual(d.alarmCondition(None), AlarmCondition.NONE)
+            self.assertEqual(d.alarmCondition(15), AlarmCondition.NONE)
+            self.assertEqual(d.alarmCondition(10), AlarmCondition.NONE)
+            self.assertEqual(d.alarmCondition(5), AlarmCondition.WARN_LOW)
+            self.assertEqual(d.alarmCondition(4), AlarmCondition.ALARM_LOW)
+            self.assertEqual(d.alarmCondition(19), AlarmCondition.NONE)
+            self.assertEqual(d.alarmCondition(20), AlarmCondition.WARN_HIGH)
+            self.assertEqual(d.alarmCondition(21), AlarmCondition.ALARM_HIGH)
+
+        for desc in [Int8, Int16, Int32, Int64]:
+            d = desc(alarmLow=-10, warnLow=-5, warnHigh=5, alarmHigh=10)
+            self.assertEqual(d.alarmCondition(None), AlarmCondition.NONE)
+            self.assertEqual(d.alarmCondition(-5), AlarmCondition.NONE)
+            self.assertEqual(d.alarmCondition(-6), AlarmCondition.WARN_LOW)
+            self.assertEqual(d.alarmCondition(-11), AlarmCondition.ALARM_LOW)
+            self.assertEqual(d.alarmCondition(0), AlarmCondition.NONE)
+            self.assertEqual(d.alarmCondition(6), AlarmCondition.WARN_HIGH)
+            self.assertEqual(d.alarmCondition(11), AlarmCondition.ALARM_HIGH)
+
+        # Only simple values have alarmConditions, xxx
+        for desc in [VectorBool, VectorChar, VectorFloat, VectorInt32]:
+            d = desc()
+            self.assertEqual(d.alarmCondition("anything"), AlarmCondition.NONE)
+            self.assertEqual(d.alarmCondition(123), AlarmCondition.NONE)
+            self.assertEqual(d.alarmCondition(Hash()), AlarmCondition.NONE)
+
+    def test_initialize_wrong(self):
+        """Test the initialization of a descriptor with wrong input"""
+        # Allowed states must be states
+        with self.assertRaises(TypeError):
+            d = UInt16(allowedStates=["INIT", "MOVING"])
+        d = UInt16(allowedStates=[State.INIT, State.MOVING])
+        self.assertIsNotNone(d)
+
+        # Tags must be a list of strings
+        with self.assertRaises(TypeError):
+            d = UInt16(tags=[1, 2])
+        d = UInt8(tags=["1", "2"])
+        self.assertIsNotNone(d)
 
 
 if __name__ == "__main__":
