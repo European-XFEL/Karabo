@@ -5,9 +5,9 @@ import string
 import numpy
 
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Assignment, Configurable, DeviceNode, Int32,
-    MetricPrefix, Overwrite, Slot, State, unit, Unit)
-from ..injectable import InjectMixin
+    AccessLevel, AccessMode, Assignment, Configurable, DeviceNode, Double,
+    Float, Int32, MetricPrefix, Node, Overwrite, Slot, State, unit, Unit)
+from karabo.middlelayer_api.injectable import InjectMixin
 
 
 def run_coro(coro):
@@ -115,6 +115,98 @@ class Tests(TestCase):
         self.assertEqual(mandy.randyMandy.descriptor.allowedStates,
                          {State.ON})
         self.assertEqual(setter_before_inject, setter_after_inject)
+
+    def test_inject_parameter(self):
+        class Mandy(InjectMixin):
+            number = Int32(displayedName="whatever", minExc=7,
+                           accessMode=AccessMode.READONLY,
+                           allowedStates={State.ON}, tags=set(),
+                           unitSymbol=Unit.METER,
+                           metricPrefixSymbol=MetricPrefix.MILLI,
+                           options=[8, 9, 10])
+
+            numberEnum = Int32(displayedName="EnumAccess",
+                               defaultValue=AccessLevel.OPERATOR,
+                               enum=AccessLevel)
+
+            deviceId = None
+
+            def _register_slots(self):
+                pass
+
+            def _notifyNewSchema(self):
+                pass
+
+            def signalChanged(self, deviceId, hsh):
+                pass
+
+        mandy = Mandy()
+        mandy.__class__.newInt = Int32(displayedName="New Int")
+        run_coro(mandy.publishInjectedParameters(newInt=5))
+        self.assertEqual(mandy.newInt, 5)
+        # Run injectParameters new but no new injected descriptor
+        # and try to set a new value which will fail as expected
+        run_coro(mandy.publishInjectedParameters(newInt=15))
+        self.assertNotEqual(mandy.newInt, 15)
+        self.assertEqual(mandy.newInt, 5)
+        mandy.__class__.newDouble = Double(displayedName="New Double")
+        run_coro(mandy.publishInjectedParameters("newDouble", 15.12))
+        self.assertEqual(mandy.newDouble, 15.12)
+
+        # args will override kwargs!
+        mandy.__class__.newFloat = Float(displayedName="New Float")
+        run_coro(mandy.publishInjectedParameters(
+            "newFloat", 7.12, newFloat=3.43))
+        self.assertAlmostEqual(mandy.newFloat, 7.12, delta=0.001)
+
+    def test_inject_node(self):
+        class Mandy(InjectMixin):
+            integer = Int32(defaultValue=0)
+
+            deviceId = None
+
+            def _register_slots(self):
+                pass
+
+            def _notifyNewSchema(self):
+                pass
+
+            def signalChanged(self, deviceId, hsh):
+                pass
+
+        mandy = Mandy()
+        mandy.__class__.nested = Node(Mandy)
+        mandy.__class__.extraInteger = Int32(defaultValue=10)
+        run_coro(mandy.publishInjectedParameters("nested", {"integer": 5}))
+        self.assertEqual(mandy.integer, 0)
+        self.assertEqual(mandy.nested.integer, 5)
+
+    def test_inject_raise_parameter(self):
+        class Mandy(InjectMixin):
+            integer = Int32(defaultValue=0)
+
+            deviceId = None
+
+            def _register_slots(self):
+                pass
+
+            def _notifyNewSchema(self):
+                pass
+
+            def signalChanged(self, deviceId, hsh):
+                pass
+
+        mandy = Mandy()
+        mandy.__class__.extraInteger = Int32(defaultValue=10)
+        mandy.__class__.newInteger = Int32(defaultValue=2)
+        # Odd number of arguments must fail
+        with self.assertRaises(RuntimeError):
+            run_coro(mandy.publishInjectedParameters("extraInteger", 12, 12))
+
+        # Odd number of arguments must fail
+        with self.assertRaises(RuntimeError):
+            run_coro(mandy.publishInjectedParameters(
+                "extraInteger", 12, "newInteger"))
 
 
 if __name__ == "__main__":
