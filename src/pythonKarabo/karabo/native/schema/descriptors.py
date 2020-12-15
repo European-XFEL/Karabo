@@ -851,6 +851,8 @@ class VectorChar(Vector):
     def cast(self, other):
         if isinstance(other, bytes):
             return other
+        elif isinstance(other, str):
+            return bytes(other, 'utf-8')
         else:
             return bytes(other)
 
@@ -874,6 +876,8 @@ class ByteArray(Vector):
     def cast(self, other):
         if isinstance(other, bytearray):
             return other
+        elif isinstance(other, str):
+            return bytearray(other, 'utf-8')
         else:
             return bytearray(other)
 
