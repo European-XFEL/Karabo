@@ -118,7 +118,7 @@ class InjectMixin(Configurable):
         return added_attrs
 
     @coroutine
-    def publishInjectedParameters(self, **kwargs):
+    def publishInjectedParameters(self, *args, **kwargs):
         """Publish all changes in the parameters of this object
 
         This is also the time when the injected parameters get initialized.
@@ -127,7 +127,19 @@ class InjectMixin(Configurable):
 
             self.__class__.some_number = Int32()
             yield from self.publishInjectedParameters(some_number=3)
+
+        Parameter injection as arguments in pairs is possible as well::
+
+            self.__class__.some_number = Int32()
+            yield from self.publishInjectedParameters("some_number", 3)
+
+        Note: Arguments will overwrite eventual keyword arguments.
         """
+        if len(args) % 2 > 0:
+            raise RuntimeError("Arguments passed need to be pairs!")
+
+        kwargs.update(zip(args[::2], args[1::2]))
+
         initializers = []
         for k in self._collect_attrs():
             t = getattr(type(self), k)
