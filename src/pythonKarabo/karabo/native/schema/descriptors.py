@@ -2,7 +2,6 @@
 """
 from asyncio import (
     coroutine, ensure_future, get_event_loop, iscoroutinefunction)
-import base64
 from enum import Enum
 from functools import partial, wraps
 import logging
@@ -17,7 +16,7 @@ from karabo.native.karabo_hash import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqPolicy,
     LeafType, MetricPrefix, NodeType, Unit)
 from karabo.native.karabo_hash import (
-    decodeXML, Hash, HashByte, HashList, Schema)
+    Hash, HashByte, HashList, hashtype_from_string, Schema)
 from karabo.native import KaraboError
 
 from .basetypes import (
@@ -160,10 +159,6 @@ class Simple(object):
     warnLow = Attribute()
     alarmInfo_warnLow = Attribute("")
     alarmNeedsAck_warnLow = Attribute(False)
-
-    @classmethod
-    def fromstring(cls, s):
-        return cls.numpy(s)
 
     def cast(self, other):
         if self.enum is not None:
@@ -668,6 +663,10 @@ class Type(Descriptor, Registry):
                              .format(ret, self.options))
 
     @classmethod
+    def fromstring(cls, s):
+        return hashtype_from_string(cls.number, s)
+
+    @classmethod
     def hashname(cls):
         return cls._hashname
 
@@ -749,13 +748,6 @@ class NumpyVector(Vector):
         super(NumpyVector, cls).register(name, dict)
         cls.vstrs[cls.basetype.numpy().dtype.str] = cls
 
-    @classmethod
-    def fromstring(cls, s):
-        if s:
-            return np.fromstring(s, sep=",", dtype=cls.basetype.numpy)
-        else:
-            return np.array([], dtype=cls.basetype.numpy)
-
     def cast(self, other):
         if (isinstance(other, np.ndarray) and
                 other.dtype == self.basetype.numpy):
@@ -784,10 +776,6 @@ class Bool(Type):
     number = 0
     numpy = np.bool_
 
-    @staticmethod
-    def fromstring(s):
-        return bool(int(s))
-
     def cast(self, other):
         return bool(other)
 
@@ -808,10 +796,6 @@ class VectorBool(NumpyVector):
 class Char(Simple, Type):
     number = 2
     numpy = np.uint8  # actually not used, for convenience only
-
-    @classmethod
-    def fromstring(cls, s):
-        return s
 
     def cast(self, other):
         try:
@@ -844,10 +828,6 @@ class VectorChar(Vector):
     number = 3
     numpy = np.object_
 
-    @classmethod
-    def fromstring(cls, s):
-        return base64.b64decode(s)
-
     def cast(self, other):
         if isinstance(other, bytes):
             return other
@@ -867,11 +847,6 @@ class ByteArray(Vector):
     basetype = Char
     number = 37
     numpy = np.object_
-
-    @classmethod
-    def fromstring(cls, s):
-        # XXX: should return bytearray(base64.b64decode(s))
-        return base64.b64decode(s)
 
     def cast(self, other):
         if isinstance(other, bytearray):
@@ -991,10 +966,6 @@ class ComplexFloat(Number, Type):
     number = 24
     numpy = np.complex64
 
-    @classmethod
-    def fromstring(cls, s):
-        return complex(*[float(n) for n in s[1:-1].split(',')])
-
 
 class VectorComplexFloat(NumpyVector):
     basetype = ComplexFloat
@@ -1004,10 +975,6 @@ class VectorComplexFloat(NumpyVector):
 class ComplexDouble(Number, Type):
     number = 26
     numpy = np.complex128
-
-    @classmethod
-    def fromstring(cls, s):
-        return complex(*[float(n) for n in s[1:-1].split(',')])
 
 
 class VectorComplexDouble(NumpyVector):
@@ -1021,10 +988,6 @@ class String(Enumable, Type):
     everything except binary data."""
     number = 28
     numpy = np.object_  # strings better be stored as objects in numpy tables
-
-    @staticmethod
-    def fromstring(s):
-        return str(s)
 
     def cast(self, other):
         if self.enum is not None:
@@ -1075,12 +1038,6 @@ class VectorString(Vector):
 
     # NOTE: Vectorstring should be represented as python lists
     # the np.object is simply for the table element
-
-    @staticmethod
-    def fromstring(s):
-        if not s:
-            return []
-        return [ss.strip() for ss in s.split(',')]
 
     def cast(self, other):
         def check(s):
@@ -1159,11 +1116,6 @@ class TypeSchema(TypeHash):
         else:
             raise TypeError('cannot cast anything to Schema (was {})'.
                             format(type(other).__name__))
-
-    @classmethod
-    def fromstring(cls, s):
-        name, xml = s.split(":", 1)
-        return Schema(name, hash=decodeXML(xml))
 
     @classmethod
     def hashname(cls):
