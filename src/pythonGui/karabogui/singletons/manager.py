@@ -57,7 +57,7 @@ class Manager(QObject):
         self._alarm_model = get_alarm_model()
         # A dict which includes big networkData
         self._big_data = {}
-        # Handler callbacks for `handle_requestFromSlot`
+        # Handler callbacks for `handle_requestGeneric`
         self._request_handlers = {}
 
         self._show_big_data_proc = False
@@ -123,8 +123,8 @@ class Manager(QObject):
         get_network().onInitDevice(serverId, classId, deviceId, config,
                                    attrUpdates=attr_updates)
 
-    def callDeviceSlot(self, token, handler, device_id, slot_name, params):
-        """Call a device slot using the `requestFromSlot` mechanism.
+    def callDeviceSlot(self, token, handler, instance_id, slot_name, params):
+        """Call a device slot using the `requestGeneric` mechanism.
 
         See karabogui.request for more details.
         """
@@ -134,7 +134,7 @@ class Manager(QObject):
         self._request_handlers[token] = handler
 
         # Call the GUI server
-        get_network().onExecuteGeneric(token, device_id, slot_name, params)
+        get_network().onExecuteGeneric(instance_id, slot_name, params)
 
     def shutdownDevice(self, deviceId, showConfirm=True, parent=None):
         if showConfirm:
@@ -186,7 +186,9 @@ class Manager(QObject):
             # Any pending requests are effectively timed-out
             pending = list(self._request_handlers.keys())
             for token in pending:
-                self.handle_requestFromSlot(token, False, info=None)
+                self.handle_requestGeneric(
+                    False, request=Hash("args.token", token),
+                    reason="Karabo GUI Client disconnect. Erasing request.")
 
     def handle_reconfigureReply(self, **info):
         """Handle the reconfigure reply of the gui server"""
@@ -228,21 +230,26 @@ class Manager(QObject):
                 KaraboEvent.UpdateValueConfigurator,
                 {'proxy': device_proxy})
 
-    def handle_requestFromSlot(self, token, success, reply=None, info=None):
-        handler = self._request_handlers.pop(token, lambda s, r: None)
-        # If the request failed at the server level, `reply` is None and
-        # `info` is passed instead
-        info = info or {}
-        hsh = info if reply is None or not success else reply
+    def handle_requestGeneric(self, success, request=None, reply=None,
+                              reason=''):
+        """Handle the requestGeneric reply from the GUI server
 
+        Generic requests are supposed to have a `token` in the input arguments
+        Unfolding the `token` should provide a request handler
+
+        """
+        token = request["args.token"]
+        handler = self._request_handlers.pop(
+            token, lambda success, reply: None)
+        reply = reply if success is True else reason
         # Wrap the handler invocation in an exception swallower
         try:
-            handler(success, hsh)
+            handler(success, reply)
         except Exception as ex:
             # But at least show something when exceptions are being swallowed
             msg = ('Exception of type "{}" caught in callback handler "{}" '
                    'with reply:\n{}')
-            print(msg.format(type(ex).__name__, handler, hsh))
+            print(msg.format(type(ex).__name__, handler, reply))
 
     def handle_log(self, messages):
         broadcast_event(KaraboEvent.LogMessages, {'messages': messages})

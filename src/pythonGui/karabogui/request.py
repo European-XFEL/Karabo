@@ -11,7 +11,7 @@ from karabogui.binding.api import extract_sparse_configurations
 from karabogui.singletons.api import get_manager, get_network, get_topology
 
 
-def call_device_slot(handler, device_id, slot_name, **kwargs):
+def call_device_slot(handler, instance_id, slot_name, **kwargs):
     """Call a device slot via the GUI server. This works with slots which
     take a single `Hash` as an argument and reply with a `Hash`.
 
@@ -21,17 +21,22 @@ def call_device_slot(handler, device_id, slot_name, **kwargs):
                         reply - a Hash containing the slot reply
                     This handler can be called when the GUI server connection
                     is lost. In that case, `success` is False, and `reply`
-                    should be ignored.
+                    is the `reason` of failure (string).
                     In case the call fails or times out, `success` is also
-                    False and `reply` may or may not contain useful info.
-    :param device_id: Device ID of the device whose slot will be called
+                    False.
+
+    :param instance_id: Device ID of the device whose slot will be called
     :param slot_name: Name of the slot which will be called
-    :param **kwargs: The argument list of the slot being called
+    :param **kwargs: The argument list of the slot being called. `token` is
+                     allowed to be a key-word argument
+
     :returns token: A unique identifier for the call
 
     NOTE: You had better know what you are doing here. Misuse of this feature
     can seriously degrade performance of devices external to the GUI server.
     """
+    assert "token" not in kwargs, "No `token` in kwargs allowed"
+
     # Generate a unique token for the transaction
     token = uuid.uuid4().hex
 
@@ -45,8 +50,12 @@ def call_device_slot(handler, device_id, slot_name, **kwargs):
     for k, v in kwargs.items():
         params.set(k, v)
 
+    # Add token to parameters
+    params["token"] = token
+
     # Call the slot
-    get_manager().callDeviceSlot(token, handler, device_id, slot_name, params)
+    get_manager().callDeviceSlot(token, handler, instance_id,
+                                 slot_name, params)
 
     return token
 
