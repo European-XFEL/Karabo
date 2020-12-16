@@ -222,7 +222,7 @@ class Tests(TestCase):
             d.cast(s.hash)
 
     def test_none(self):
-        d = hashmod.None_()
+        d = hashmod.TypeNone()
         self.assertEqual(d.cast(None), None)
         with self.assertRaises(TypeError):
             d.cast(1)
