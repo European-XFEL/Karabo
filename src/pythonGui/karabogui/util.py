@@ -260,7 +260,7 @@ def handle_scene_from_server(dev_id, name, project, target_window, success,
                              reply):
     """Callback handler for a request to a device to load one of its scenes.
     """
-    if not (success and reply.get('payload.success', False)):
+    if not success or not reply.get('payload.success', False):
         msg = 'Scene "{}" from device "{}" was not retrieved!'
         messagebox.show_warning(msg.format(name, dev_id),
                                 title='Load Scene from Device Failed')
@@ -291,7 +291,7 @@ def handle_scene_from_server(dev_id, name, project, target_window, success,
 
 
 def handle_macro_from_server(dev_id, name, project, success, reply):
-    if not (success and reply.get('payload.success', False)):
+    if not success or not reply.get('payload.success', False):
         msg = 'Macro "{}" from device "{}" was not retrieved!'
         messagebox.show_warning(msg.format(name, dev_id),
                                 title='Load Macro from Device Failed')
@@ -338,7 +338,7 @@ def request_daemon_action(serverId, hostId, action):
 
 def handle_daemon_from_server(serverId, action, success, reply):
     """Callback handler for a request the daemon manager"""
-    if not (success and reply.get('payload.success', False)):
+    if not success or not reply.get('payload.success', False):
         msg = 'The command "{}" for the server "{}" was not successful!'
         messagebox.show_warning(msg.format(action, serverId),
                                 title='Daemon Service Failed')
