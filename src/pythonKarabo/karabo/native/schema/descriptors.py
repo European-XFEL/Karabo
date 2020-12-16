@@ -4,6 +4,7 @@ from asyncio import (
     coroutine, ensure_future, get_event_loop, iscoroutinefunction)
 from enum import Enum
 from functools import partial, wraps
+import numbers
 import logging
 import re
 import sys
@@ -27,10 +28,11 @@ from .registry import Registry
 __all__ = [
     'Attribute', 'Bool', 'ByteArray', 'Char',  'ComplexFloat',
     'ComplexDouble', 'Descriptor', 'Double', 'Enumable', 'Float',
-    'Integer', 'Int8', 'Int16', 'Int32', 'Int64', 'NumpyVector', 'Number',
-    'RegexString',  'Simple', 'Slot', 'String', 'Type', 'TypeHash',
-    'TypeSchema', 'UInt8', 'UInt16', 'UInt32',  'UInt64', 'Vector',
-    'VectorString', 'VectorFloat', 'VectorBool', 'VectorChar', 'VectorDouble',
+    'get_descriptor_from_data', 'Integer', 'Int8', 'Int16', 'Int32',
+    'Int64', 'NumpyVector', 'Number', 'RegexString', 'Simple',
+    'Slot', 'String', 'Type', 'TypeHash', 'TypeNone', 'TypeSchema',
+    'UInt8', 'UInt16', 'UInt32', 'UInt64', 'Vector', 'VectorString',
+    'VectorFloat', 'VectorBool', 'VectorChar', 'VectorDouble',
     'VectorRegexString', 'VectorComplexFloat', 'VectorComplexDouble',
     'VectorHash', 'VectorInt8', 'VectorUInt8', 'VectorInt16', 'VectorUInt16',
     'VectorInt32', 'VectorUInt32', 'VectorInt64', 'VectorUInt64']
@@ -1084,7 +1086,7 @@ class VectorRegexString(VectorString):
                                   f"comply with regex pattern {self.regex}!")
 
 
-class None_(Type):
+class TypeNone(Type):
     number = 35
 
     def cast(self, other):
@@ -1198,3 +1200,43 @@ class VectorHash(Vector):
         data = HashList(Hash((col, row[col]) for col in self.dtype.names)
                         for row in value.value)
         return data, attrs
+
+
+def get_descriptor_from_data(data):
+    """Derive and return an associated descriptor from `data`"""
+    try:
+        if data.ndim == 1 and isinstance(data, np.ndarray):
+            return NumpyVector.vstrs[data.dtype.str]
+        else:
+            return Type.strs[data.dtype.str]
+    except AttributeError:
+        if isinstance(data, Hash):
+            return TypeHash
+        elif isinstance(data, Schema):
+            return TypeSchema
+        elif isinstance(data, HashList):
+            return VectorHash
+        elif isinstance(data, (bool, BoolValue)):
+            return Bool
+        elif isinstance(data, (Enum, numbers.Integral)):
+            return Int32
+        elif isinstance(data, numbers.Real):
+            return Double
+        elif isinstance(data, numbers.Complex):
+            return ComplexDouble
+        elif isinstance(data, bytes):
+            return VectorChar
+        elif isinstance(data, str):
+            return String
+        elif isinstance(data, list):
+            if data:
+                return get_descriptor_from_data(data[0]).vectortype
+            else:
+                return VectorString
+        elif not isSet(data):
+            return TypeNone
+        try:
+            memoryview(data)
+            return ByteArray
+        except TypeError:
+            raise TypeError('unknown datatype {}'.format(data.__class__))

@@ -1,19 +1,22 @@
 from enum import Enum
-import numpy
-from pint import DimensionalityError
 from unittest import TestCase, main
+
+import numpy as np
+from pint import DimensionalityError
 
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Attribute, Bool, Char, ComplexFloat,
-    Configurable, Double, decodeBinary, encodeBinary, Float, Hash, HashList,
-    Image, ImageData, Int8, Int16, Int32, Int64, KaraboError, LeafType,
-    MetricPrefix, NDArray, NumpyVector, QuantityValue, RegexString, Schema,
-    Slot, String, Timestamp, Type, UInt8, UInt16, UInt32, UInt64, Unit,
-    unit_registry as unit, VectorBool, VectorChar, VectorComplexFloat,
-    VectorFloat, VectorHash, VectorInt32, VectorInt8, VectorRegexString,
-    VectorString)
+    AccessLevel, AccessMode, Assignment, Attribute, Bool, ByteArray,
+    Char, ComplexFloat, Configurable, Double, decodeBinary, encodeBinary,
+    Float, get_descriptor_from_data, Hash, HashList, Image, ImageData,
+    Int8, Int16, Int32, Int64, KaraboError, LeafType, MetricPrefix,
+    NDArray, NumpyVector, QuantityValue, RegexString, Schema,
+    Slot, String, Timestamp, Type, TypeHash, TypeNone, TypeSchema, UInt8,
+    UInt16, UInt32, UInt64, Unit, unit_registry as unit, VectorBool,
+    VectorChar, VectorDouble, VectorComplexFloat, VectorFloat, VectorHash,
+    VectorInt8, VectorInt16, VectorInt32,  VectorInt64, VectorRegexString,
+    VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64, VectorString)
 
 
 class ArrayTestDevice(Configurable):
@@ -346,7 +349,7 @@ class Tests(TestCase):
         d = NDArray(dtype=ComplexFloat, shape=(2, 3))
         v = d.toKaraboValue([[1, 2], [3, 4]])
         self.assertEqual(v[0, 1], 2)
-        self.assertEqual(v.dtype, numpy.dtype("c8"))
+        self.assertEqual(v.dtype, np.dtype("c8"))
         h, attrs = d.toDataAndAttrs(v)
         h = decodeBinary(encodeBinary(h))
         self.assertEqual(h["type"], 24)
@@ -356,7 +359,7 @@ class Tests(TestCase):
 
         d = NDArray(dtype=">i2", shape=(0, 3))
         v = d.toKaraboValue(v.real)
-        self.assertEqual(v.dtype, numpy.dtype(">i2"))
+        self.assertEqual(v.dtype, np.dtype(">i2"))
         self.assertEqual(v[1, 0], 3)
         schema, attrs = d.toSchemaAndAttrs(None, None)
         h = Hash("d", schema)
@@ -379,7 +382,7 @@ class Tests(TestCase):
         a = ArrayTestDevice()
         s = a.getClassSchema()
         attr = s.hash["array"].getAttributes("shape")
-        self.assertEqual(attr['defaultValue'].dtype, numpy.uint64)
+        self.assertEqual(attr['defaultValue'].dtype, np.uint64)
 
         conv = d.toKaraboValue(h)
         self.assertEqual(conv[1, 1], 4)
@@ -394,7 +397,7 @@ class Tests(TestCase):
         d = Image(dtype=UInt8, shape=(2, 2))
         v = d.toKaraboValue([[1, 2], [3, 4]])
         self.assertEqual(v.value[0, 1], 2)
-        self.assertEqual(v.dtype, numpy.uint8)
+        self.assertEqual(v.dtype, np.uint8)
         h, attrs = d.toDataAndAttrs(v)
         h = decodeBinary(encodeBinary(h))
         self.assertEqual(h["pixels.type"], 6)
@@ -403,20 +406,20 @@ class Tests(TestCase):
         self.assertEqual(len(h["pixels.data"]), 4)
 
         schema, attrs = d.toSchemaAndAttrs(None, None)
-        arrayEqual = numpy.testing.assert_array_equal
+        arrayEqual = np.testing.assert_array_equal
         arrayEqual(schema["pixels.shape", "defaultValue"],
-                   numpy.array([2, 2], dtype=numpy.uint64))
+                   np.array([2, 2], dtype=np.uint64))
         arrayEqual(schema["dims", "defaultValue"],
-                   numpy.array([2, 2], dtype=numpy.uint64))
+                   np.array([2, 2], dtype=np.uint64))
         arrayEqual(schema["dimTypes", "defaultValue"],
-                   numpy.array([], dtype=numpy.int32))
+                   np.array([], dtype=np.int32))
         self.assertEqual(schema["dimScales", "defaultValue"], "")
         self.assertEqual(schema["encoding", "defaultValue"], 0)
         self.assertEqual(schema["bitsPerPixel", "defaultValue"], 8)
         arrayEqual(schema["roiOffsets", "defaultValue"],
-                   numpy.array([0, 0], dtype=numpy.uint64))
+                   np.array([0, 0], dtype=np.uint64))
         arrayEqual(schema["binning", "defaultValue"],
-                   numpy.array([1, 1], dtype=numpy.uint64))
+                   np.array([1, 1], dtype=np.uint64))
         self.assertEqual(schema["rotation", "defaultValue"], 0)
         self.assertEqual(schema["flipX", "defaultValue"], False)
         self.assertEqual(schema["flipY", "defaultValue"], False)
@@ -430,25 +433,25 @@ class Tests(TestCase):
 
         # Test with image data initialization to check the different
         # Schema defaults!
-        d = Image(data=ImageData(numpy.zeros(shape=(2, 3, 4)), flipX=True,
+        d = Image(data=ImageData(np.zeros(shape=(2, 3, 4)), flipX=True,
                                  bitsPerPixel=32))
 
         schema, attrs = d.toSchemaAndAttrs(None, None)
-        arrayEqual = numpy.testing.assert_array_equal
+        arrayEqual = np.testing.assert_array_equal
         arrayEqual(schema["pixels.shape", "defaultValue"],
-                   numpy.array([2, 3, 4], dtype=numpy.uint64))
+                   np.array([2, 3, 4], dtype=np.uint64))
         arrayEqual(schema["dims", "defaultValue"],
-                   numpy.array([2, 3, 4], dtype=numpy.uint64))
+                   np.array([2, 3, 4], dtype=np.uint64))
 
         arrayEqual(schema["dimTypes", "defaultValue"],
-                   numpy.array([], dtype=numpy.int32))
+                   np.array([], dtype=np.int32))
         self.assertEqual(schema["dimScales", "defaultValue"], "")
         self.assertEqual(schema["encoding", "defaultValue"], 2)
         self.assertEqual(schema["bitsPerPixel", "defaultValue"], 32)
         arrayEqual(schema["roiOffsets", "defaultValue"],
-                   numpy.array([0, 0, 0], dtype=numpy.uint64))
+                   np.array([0, 0, 0], dtype=np.uint64))
         arrayEqual(schema["binning", "defaultValue"],
-                   numpy.array([1, 1, 1], dtype=numpy.uint64))
+                   np.array([1, 1, 1], dtype=np.uint64))
         self.assertEqual(schema["rotation", "defaultValue"], 0)
         self.assertEqual(schema["flipX", "defaultValue"], True)
         self.assertEqual(schema["flipY", "defaultValue"], False)
@@ -602,9 +605,9 @@ class Tests(TestCase):
         rowSchema["array", "valueType"] = "BYTE_ARRAY"
 
         d = VectorHash(rowSchema=Schema("rs", hash=rowSchema))
-        v = d.toKaraboValue([(3, "hallo", numpy.arange(5, dtype=float),
+        v = d.toKaraboValue([(3, "hallo", np.arange(5, dtype=float),
                               b"a", b"b"),
-                             (2.5, "bla", numpy.array([], dtype=float),
+                             (2.5, "bla", np.array([], dtype=float),
                               b"", b"")])
         self.assertEqual(len(v), 2)
         self.assertEqual(v[1]["int"], 2 * unit.millimeter)
@@ -835,6 +838,46 @@ class Tests(TestCase):
             d = UInt16(tags=[1, 2])
         d = UInt8(tags=["1", "2"])
         self.assertIsNotNone(d)
+
+    def test_descriptor_from_data(self):
+        data = [
+            ("5", String),
+            (np.int8(7), Int8),
+            (np.int16(15), Int16),
+            (np.int32(31), Int32),
+            (np.int64(63), Int64),
+            (np.uint8(8), UInt8),
+            (np.uint16(16), UInt16),
+            (np.uint32(32), UInt32),
+            (np.uint64(64), UInt64),
+            (np.array([1, 0, 1], dtype=np.bool_), VectorBool),
+            (np.array([1, 2, 3], dtype=np.int8), VectorInt8),
+            (np.array([1, 2, 3], dtype=np.int16), VectorInt16),
+            (np.array([1, 2, 3], dtype=np.int32), VectorInt32),
+            (np.array([1, 2, 3], dtype=np.int64), VectorInt64),
+            (np.array([1, 2, 3], dtype=np.uint8), VectorUInt8),
+            (np.array([1, 2, 3], dtype=np.uint16), VectorUInt16),
+            (np.array([1, 2, 3], dtype=np.uint32), VectorUInt32),
+            (np.array([1, 2, 3], dtype=np.uint64), VectorUInt64),
+            (np.array([1.21, 0.1, 1.22], dtype=np.float32), VectorFloat),
+            (np.array([1.22, 2.7, 3.55], dtype=np.float64), VectorDouble),
+            (HashList(), VectorHash),
+            ([Hash("position", 5), Hash("position", 5)], VectorHash),
+            (Schema(name="empty"), TypeSchema),
+            (Hash("position", 5.1), TypeHash),
+            (np.bool_(1), Bool),
+            (False, Bool),
+            (1.212, Double),
+            (1, Int32),
+            (np.float32(7), Float),
+            (np.float64(33), Double),
+            (None, TypeNone),
+            (np.array([1.22, 2.7, 3.55]).data, ByteArray),
+            (bytes((1, 2, 3, 4)), VectorChar)
+        ]
+
+        for d, desc in data:
+            self.assertEqual(desc, get_descriptor_from_data(d))
 
 
 if __name__ == "__main__":
