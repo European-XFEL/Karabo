@@ -98,10 +98,12 @@ class TestManager(GuiTestCase):
 
             assert 'token' in manager._request_handlers
             network.onExecuteGeneric.assert_called_with(
-                'token', 'dev', 'slot', params)
+                'dev', 'slot', params)
 
             # Pretend the reply arrived
-            manager.handle_requestFromSlot('token', True, reply=reply)
+            manager.handle_requestGeneric(success=True,
+                                          request=Hash("args.token", 'token'),
+                                          reply=reply)
             assert handler_args == (True, reply)
 
     def test_handle_system_topology(self):
@@ -275,10 +277,10 @@ class TestManager(GuiTestCase):
 
     def test_on_received_data(self):
         manager = Manager()
-        with patch.object(manager, 'handle_requestFromSlot'):
-            hsh = Hash('type', 'requestFromSlot', 'value', 'terror')
+        with patch.object(manager, 'handle_requestGeneric'):
+            hsh = Hash('type', 'requestGeneric', 'value', 'terror')
             manager.onReceivedData(hsh)
-            manager.handle_requestFromSlot.assert_called_with(value='terror')
+            manager.handle_requestGeneric.assert_called_with(value='terror')
 
     def test_on_server_connection_changed(self):
         network, topology = Mock(), Mock()
@@ -293,12 +295,12 @@ class TestManager(GuiTestCase):
                 )
 
             # Check that handlers are all called when network disconnects
-            with patch.object(manager, 'handle_requestFromSlot'):
+            with patch.object(manager, 'handle_requestGeneric'):
                 manager._request_handlers = {'bob': 'super_request'}
                 manager.onServerConnectionChanged(False)
-                manager.handle_requestFromSlot.assert_called_with(
-                    'bob', False, info=None
-                )
+                manager.handle_requestGeneric.assert_called_with(
+                    False, request=Hash('args.token', 'bob'),
+                    reason='Karabo GUI Client disconnect. Erasing request.')
             topology.clear.assert_called_with()
 
     def test_handle_device_configuration(self):
