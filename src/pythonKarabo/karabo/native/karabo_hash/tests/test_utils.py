@@ -1,9 +1,46 @@
 import numpy as np
 
+from html.parser import HTMLParser
+
 from ..hash import Hash, HashList
 from ..utils import (
     create_html_hash, dtype_from_number, dictToHash, hashToDict,
     get_image_data)
+
+
+class HashHtmlParser(HTMLParser):
+
+    def __init__(self):
+
+        super().__init__()
+
+        # The data in table cells.
+        # Keys and their corresponding values in the
+        # original Hash must be adjacent in this list.
+        self.cells_data = []
+
+        # A dictionary that will contain the frequencies
+        # of tags found. The key is the tag, like "table"
+        # and "td" and the value is the number of times
+        # each tag has been found in the html.
+        self.tags_count = {}
+
+    def handle_starttag(self, tag, attrs):
+        self.handle_tag(tag)
+
+    def handle_endtag(self, tag):
+        self.handle_tag(tag)
+
+    def handle_tag(self, tag):
+        if tag in self.tags_count:
+            self.tags_count[tag] += 1
+        else:
+            self.tags_count[tag] = 1
+
+    def handle_data(self, data):
+        # All the data in the Hash html is expected
+        # to be in table cells.
+        self.cells_data.append(data)
 
 
 def test_numpy_int32_dtype():
@@ -41,10 +78,46 @@ def test_get_image_data():
 def test_create_hash_html():
     h = Hash()
     h["int"] = 2
-    h["hash"] = Hash("float", 5.2, "int", 6)
+    h["hash"] = Hash("float", 6.4, "int", 8)
     h["hashlist"] = HashList(Hash("float", 5.2, "int", 6))
+
     html = create_html_hash(h)
-    assert html is not None
+
+    parser = HashHtmlParser()
+    parser.feed(html)
+
+    # The Hash html is expected to consist of a single table
+    # with adjancent cells for each of the Hash's key / value
+    # pairs. There may also be cells for Hash nodes.
+    assert "table" in parser.tags_count
+    assert "tr" in parser.tags_count
+    assert "td" in parser.tags_count
+    # One table for <table> and other for </table>
+    assert parser.tags_count["table"] == 2
+    # Each <tr> is matched by a </tr>
+    assert parser.tags_count["tr"] % 2 == 0
+    # Each <td> is matched by a </td>
+    assert parser.tags_count["td"] % 2 == 0
+
+    # The hash keys and their corresponding values should be
+    # adjacent.
+    int_key_idx = parser.cells_data.index('int')
+    int_val_idx = parser.cells_data.index('2')
+    assert int_val_idx == int_key_idx + 1
+
+    hash_node_idx = parser.cells_data.index('hash')
+    assert hash_node_idx > int_val_idx
+
+    float_key_idx = parser.cells_data.index('float')
+    float_val_idx = parser.cells_data.index('6.4')
+    assert float_val_idx == float_key_idx + 1
+
+    int_key_idx = parser.cells_data.index('int', float_val_idx+1)
+    int_val_idx = parser.cells_data.index('8', float_val_idx+1)
+    assert int_val_idx == int_key_idx + 1
+
+    # TODO: Handle vector of hash type in the utils.create_html_hash function.
+    #       The vector of hash doesn't make into the generated html.
 
 
 def test_dict_hash():
