@@ -107,6 +107,9 @@ class _BaseTableElement(BaseBindingController):
     def destroy_widget(self):
         if self._item_model is not None:
             self._item_model.setParent(None)
+        if self.widget:
+            self.widget.setParent(None)
+            self.widget = None
 
     def _set_column_hash(self, schema):
         """Configure the column schema hashes and keys
