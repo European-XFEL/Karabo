@@ -337,12 +337,13 @@ class Network(QObject):
             h["timeout"] = REQUEST_REPLY_TIMEOUT
         self._write_hash(h)
 
-    def onExecuteGeneric(self, token, device_id, slot_name, params):
-        h = Hash("type", "requestFromSlot")
-        h["deviceId"] = device_id
+    def onExecuteGeneric(self, instanceId, slot_name, params):
+        h = Hash("type", "requestGeneric")
+        h["instanceId"] = instanceId
         h["slot"] = slot_name
         h["args"] = params
-        h["token"] = token
+        h["timeout"] = REQUEST_REPLY_TIMEOUT
+        h["replyType"] = "requestGeneric"
         self._write_hash(h)
 
     def onStartMonitoringDevice(self, device_id):
