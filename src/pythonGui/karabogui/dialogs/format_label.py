@@ -1,17 +1,17 @@
-import os.path as op
-
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QDialog
 
 from karabo.common.scenemodel.const import SCENE_FONT_SIZES, SCENE_FONT_WEIGHTS
 
+from .utils import get_dialog_ui
+
 
 class FormatLabelDialog(QDialog):
 
     def __init__(self, font_size=10, font_weight="normal", parent=None):
         super(FormatLabelDialog, self).__init__(parent=parent)
-        uic.loadUi(op.join(op.dirname(__file__), "format_label.ui"), self)
+        uic.loadUi(get_dialog_ui("format_label.ui"), self)
 
         # Populate font size combobox and set current index
         sizes_string = [str(size) for size in SCENE_FONT_SIZES]
