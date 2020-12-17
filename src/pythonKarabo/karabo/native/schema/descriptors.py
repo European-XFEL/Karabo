@@ -50,7 +50,7 @@ def get_instance_parent(instance):
     return parent
 
 
-class Attribute(object):
+class Attribute:
     __slots__ = ["default", "dtype"]
 
     def __init__(self, default=None, dtype=None):
@@ -69,8 +69,15 @@ class Attribute(object):
     def check(self, value):
         if self.dtype is None or not isSet(value):
             return value
+        elif isinstance(value, Enum):
+            # Note: This happens when AccessLevel etc are set.
+            # No numpy casting is required.
+            return value
 
-        info = np.iinfo(self.dtype)
+        if issubclass(self.dtype, np.integer):
+            info = np.iinfo(self.dtype)
+        else:
+            info = np.finfo(self.dtype)
         if value < info.min or value > info.max:
             raise ValueError("Attribute {} not "
                              "in range of datatype".format(value))
@@ -873,10 +880,37 @@ class VectorInt8(NumpyVector):
     number = 5
 
 
-class UInt8(Integer, Type):
-    number = 6
-    format = "B"
-    numpy = np.uint8
+def _create_numpy_integer(name, number, numpy):
+
+    class NumpyInteger(Integer, Type):
+
+        defaultValue = Attribute(dtype=numpy)
+
+        minExc = Attribute(dtype=numpy)
+        maxExc = Attribute(dtype=numpy)
+        minInc = Attribute(dtype=numpy)
+        maxInc = Attribute(dtype=numpy)
+
+        alarmHigh = Attribute(dtype=numpy)
+        alarmLow = Attribute(dtype=numpy)
+        warnHigh = Attribute(dtype=numpy)
+        warnLow = Attribute(dtype=numpy)
+
+    return type(name, (NumpyInteger,), {"number": number,
+                                        "numpy": numpy})
+
+
+UInt8 = _create_numpy_integer("UInt8", 6, np.uint8)
+UInt16 = _create_numpy_integer("UInt16", 10, np.uint16)
+UInt32 = _create_numpy_integer("UInt32", 14, np.uint32)
+UInt64 = _create_numpy_integer("UInt64", 18, np.uint64)
+Int8 = _create_numpy_integer("Int8", 4, np.int8)
+Int16 = _create_numpy_integer("Int16", 8, np.int16)
+Int32 = _create_numpy_integer("Int32", 12, np.int32)
+Int64 = _create_numpy_integer("Int64", 16, np.int64)
+
+# Hide implementation
+del _create_numpy_integer
 
 
 class VectorUInt8(NumpyVector):
@@ -884,19 +918,9 @@ class VectorUInt8(NumpyVector):
     number = 7
 
 
-class Int16(Integer, Type):
-    number = 8
-    numpy = np.int16
-
-
 class VectorInt16(NumpyVector):
     basetype = Int16
     number = 9
-
-
-class UInt16(Integer, Type):
-    number = 10
-    numpy = np.uint16
 
 
 class VectorUInt16(NumpyVector):
@@ -904,19 +928,9 @@ class VectorUInt16(NumpyVector):
     number = 11
 
 
-class Int32(Integer, Type):
-    number = 12
-    numpy = np.int32
-
-
 class VectorInt32(NumpyVector):
     basetype = Int32
     number = 13
-
-
-class UInt32(Integer, Type):
-    number = 14
-    numpy = np.uint32
 
 
 class VectorUInt32(NumpyVector):
@@ -924,19 +938,9 @@ class VectorUInt32(NumpyVector):
     number = 15
 
 
-class Int64(Integer, Type):
-    number = 16
-    numpy = np.int64
-
-
 class VectorInt64(NumpyVector):
     basetype = Int64
     number = 17
-
-
-class UInt64(Integer, Type):
-    number = 18
-    numpy = np.uint64
 
 
 class VectorUInt64(NumpyVector):
@@ -944,9 +948,35 @@ class VectorUInt64(NumpyVector):
     number = 19
 
 
-class Float(Number, Type):
-    number = 20
-    numpy = np.float32
+def _create_numpy_floating(name, number, numpy):
+
+    class NumpyFloating(Number, Type):
+        defaultValue = Attribute(dtype=numpy)
+
+        minExc = Attribute(dtype=numpy)
+        maxExc = Attribute(dtype=numpy)
+        minInc = Attribute(dtype=numpy)
+        maxInc = Attribute(dtype=numpy)
+
+        alarmHigh = Attribute(dtype=numpy)
+        alarmLow = Attribute(dtype=numpy)
+        warnHigh = Attribute(dtype=numpy)
+        warnLow = Attribute(dtype=numpy)
+
+        absoluteError = Attribute(dtype=numpy)
+        relativeError = Attribute(dtype=numpy)
+
+    return type(name, (NumpyFloating,), {"number": number,
+                                         "numpy": numpy})
+
+
+Float = _create_numpy_floating("Float", 20, np.float32)
+Double = _create_numpy_floating("Double", 22, np.float64)
+ComplexFloat = _create_numpy_floating("ComplexFloat", 24, np.complex64)
+ComplexDouble = _create_numpy_floating("ComplexDouble", 26, np.complex128)
+
+# Hide implemenation
+del _create_numpy_floating
 
 
 class VectorFloat(NumpyVector):
@@ -954,29 +984,14 @@ class VectorFloat(NumpyVector):
     number = 21
 
 
-class Double(Number, Type):
-    number = 22
-    numpy = np.float64
-
-
 class VectorDouble(NumpyVector):
     basetype = Double
     number = 23
 
 
-class ComplexFloat(Number, Type):
-    number = 24
-    numpy = np.complex64
-
-
 class VectorComplexFloat(NumpyVector):
     basetype = ComplexFloat
     number = 25
-
-
-class ComplexDouble(Number, Type):
-    number = 26
-    numpy = np.complex128
 
 
 class VectorComplexDouble(NumpyVector):
