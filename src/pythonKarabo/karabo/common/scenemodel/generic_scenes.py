@@ -8,7 +8,7 @@ from .widgets.simple import DisplayLabelModel, LabelModel
 
 def _get_plot_scene(model, device_id, path):
     line = LineModel(
-        stroke='#000000', x1=15.0, x2=700.0, y1=75.0, y2=75.0)
+        stroke='#000000', x1=15.0, x2=700.0, y1=65.0, y2=65.0)
 
     plot = model(
         height=337.0,
