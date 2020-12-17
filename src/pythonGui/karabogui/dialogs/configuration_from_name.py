@@ -1,5 +1,4 @@
 from collections import namedtuple
-import os.path as op
 
 from PyQt5 import uic
 from PyQt5.QtCore import (
@@ -14,6 +13,8 @@ from karabogui import messagebox
 import karabogui.icons as icons
 from karabogui.singletons.api import get_network, get_topology
 from karabogui.validators import RegexValidator
+
+from .utils import get_dialog_ui
 
 NAME_FIELD = 0
 PRIORITY_FIELD = 2
@@ -33,7 +34,7 @@ class SaveConfigurationDialog(QDialog):
 
     def __init__(self, parent=None):
         super(SaveConfigurationDialog, self).__init__(parent)
-        uic.loadUi(op.join(op.dirname(__file__), "config_save.ui"), self)
+        uic.loadUi(get_dialog_ui("config_save.ui"), self)
         self.ui_priority.currentIndexChanged.connect(self._change_text)
         index = self.ui_priority.currentIndex()
         self.ui_priority_text.setText(PRIORITY_EXP[index])
@@ -94,7 +95,7 @@ class ConfigurationFromName(QDialog):
 
     def __init__(self, instance_id, parent=None):
         super(ConfigurationFromName, self).__init__(parent)
-        uic.loadUi(op.join(op.dirname(__file__), "config_handle.ui"), self)
+        uic.loadUi(get_dialog_ui("config_handle.ui"), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(False)
         self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint)
