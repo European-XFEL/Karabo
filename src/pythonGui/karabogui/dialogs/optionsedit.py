@@ -1,17 +1,16 @@
-import os.path as op
-
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot, QCoreApplication, Qt
 from PyQt5.QtGui import QFontMetrics
 from PyQt5.QtWidgets import QDialog, QInputDialog, QListWidgetItem
+
+from .utils import get_dialog_ui
 
 
 class OptionsEditDialog(QDialog):
     def __init__(self, options, parent=None):
         super(OptionsEditDialog, self).__init__(parent)
 
-        file_path = op.join(op.abspath(op.dirname(__file__)),
-                            'listedit.ui')
+        file_path = get_dialog_ui('listedit.ui')
         uic.loadUi(file_path, self)
 
         self._duplicates_ok = False
