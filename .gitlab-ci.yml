@@ -178,7 +178,7 @@ lint:
     changes:
       - "src/pythonGui/**/*"
       - "src/pythonKarabo/karabo/native/**/*"
-      - "src/pythonKarabo/common/**/*"
+      - "src/pythonKarabo/karabo/common/**/*"
       - "conda-recipes/karabo-native/**/*"
       - "conda-recipes/karabogui/**/*"
   <<: *artifacts-spec
