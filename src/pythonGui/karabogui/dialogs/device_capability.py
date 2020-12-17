@@ -3,14 +3,14 @@
 # Created on May 9, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import os.path as op
-
 from PyQt5 import uic
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox
 from traits.api import Undefined
 
 from karabo.common.api import Capabilities
 from karabogui.singletons.api import get_topology
+
+from .utils import get_dialog_ui
 
 
 class DeviceCapabilityDialog(QDialog):
@@ -22,8 +22,7 @@ class DeviceCapabilityDialog(QDialog):
         :param parent: The parent of the dialog
         """
         super(DeviceCapabilityDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'device_capability.ui')
+        filepath = get_dialog_ui('device_capability.ui')
         uic.loadUi(filepath, self)
 
         self.capability = capability

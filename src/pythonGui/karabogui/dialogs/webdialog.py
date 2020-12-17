@@ -1,4 +1,3 @@
-import os.path as op
 import re
 
 from PyQt5 import uic
@@ -6,6 +5,7 @@ from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QPalette, QValidator
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox
 
+from .utils import get_dialog_ui
 
 ul = '\u00a1-\uffff'  # unicode letters range (must not be a raw string)
 
@@ -76,8 +76,7 @@ class WebDialog(QDialog):
 
     def __init__(self, target='http://', title='Weblink', parent=None):
         super(WebDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'webdialog.ui')
+        filepath = get_dialog_ui('webdialog.ui')
         uic.loadUi(filepath, self)
         self.setModal(False)
         self._normal_palette = self.ui_target.palette()

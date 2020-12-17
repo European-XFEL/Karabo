@@ -3,7 +3,6 @@ from contextlib import contextmanager
 from functools import partial
 import importlib
 import os
-import os.path as op
 import re
 import requests
 from subprocess import check_output, STDOUT, CalledProcessError
@@ -17,6 +16,8 @@ from PyQt5.QtWidgets import QDialog
 
 from karabogui import icons
 from karabogui.controllers.util import load_extensions
+
+from .utils import get_dialog_ui
 
 _TIMEOUT = 0.5
 _TAG_REGEX = r'^\d+.\d+.\d+$'
@@ -152,7 +153,7 @@ class UpdateDialog(QDialog):
 
     def __init__(self, parent=None):
         super(UpdateDialog, self).__init__(parent)
-        uic.loadUi(op.join(op.dirname(__file__), 'update_dialog.ui'), self)
+        uic.loadUi(get_dialog_ui('update_dialog.ui'), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.lb_current.setText(UNDEFINED_VERSION)

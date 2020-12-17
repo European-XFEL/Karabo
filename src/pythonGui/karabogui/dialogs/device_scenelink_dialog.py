@@ -1,11 +1,12 @@
 from collections import namedtuple
-import os.path as op
 
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QDialog
 
 from karabo.common.scenemodel.api import SceneTargetWindow
+
+from .utils import get_dialog_ui
 
 LinkModel = namedtuple('LinkModel', ['target', 'target_window'])
 
@@ -19,8 +20,7 @@ class DeviceSceneLinkDialog(QDialog):
         :param parent: The parent of the dialog
         """
         super(DeviceSceneLinkDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'device_scenelink.ui')
+        filepath = get_dialog_ui('device_scenelink.ui')
         uic.loadUi(filepath, self)
         for scene in scene_list:
             self.cbScenes.addItem(scene)
