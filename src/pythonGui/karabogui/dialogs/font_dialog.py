@@ -1,5 +1,3 @@
-import os.path as op
-
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QFont, QFontDatabase
@@ -11,6 +9,8 @@ from karabogui.fonts import (
     FONT_ALIAS, get_alias_from_font, get_font_from_alias,
     get_font_size_from_dpi)
 
+from .utils import get_dialog_ui
+
 DEFAULT_STYLE = "Regular"
 
 
@@ -18,7 +18,7 @@ class FontDialog(QDialog):
 
     def __init__(self, qfont, parent=None):
         super(FontDialog, self).__init__(parent=parent)
-        uic.loadUi(op.join(op.dirname(__file__), "font_dialog.ui"), self)
+        uic.loadUi(get_dialog_ui("font_dialog.ui"), self)
 
         # Instantiate variables
         self.qfont = QFont(qfont)
