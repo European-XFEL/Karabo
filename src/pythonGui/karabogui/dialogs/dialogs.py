@@ -21,6 +21,8 @@ from karabogui import icons
 from karabogui.singletons.api import (
     get_manager, get_network, get_project_model)
 
+from .utils import get_dialog_ui
+
 
 class _PatternMatcher(object):
     """A tiny state machine which watches for a single pattern.
@@ -53,7 +55,7 @@ class AboutDialog(QDialog):
 
     def __init__(self, parent=None):
         super(AboutDialog, self).__init__(parent)
-        uic.loadUi(op.join(op.dirname(__file__), 'about.ui'), self)
+        uic.loadUi(get_dialog_ui('about.ui'), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
 
         image_path = op.join(op.dirname(icons.__file__), 'tunnel.png')
@@ -85,7 +87,7 @@ class LutRangeDialog(QDialog):
         :param parent: The parent of this dialog
         """
         super(LutRangeDialog, self).__init__(parent)
-        uic.loadUi(op.join(op.dirname(__file__), "lutrangedialog.ui"), self)
+        uic.loadUi(get_dialog_ui("lutrangedialog.ui"), self)
         self.leMin.setValidator(QDoubleValidator())
         self.leMin.textChanged.connect(self._update_button_box)
         self.leMax.setValidator(QDoubleValidator())
@@ -300,7 +302,7 @@ class PenStyleComboBox(QComboBox):
 class ReplaceDialog(QDialog):
     def __init__(self, devices, parent=None):
         super(ReplaceDialog, self).__init__(parent)
-        uic.loadUi(op.join(op.dirname(__file__), 'replacedialog.ui'), self)
+        uic.loadUi(get_dialog_ui('replacedialog.ui'), self)
 
         self.twTable.setRowCount(len(devices))
         for i, d in enumerate(devices):
@@ -335,7 +337,7 @@ class ReplaceDialog(QDialog):
 class SceneLinkDialog(QDialog):
     def __init__(self, model, parent=None):
         super(SceneLinkDialog, self).__init__(parent=parent)
-        uic.loadUi(op.join(op.dirname(__file__), 'scenelink.ui'), self)
+        uic.loadUi(get_dialog_ui('scenelink.ui'), self)
 
         self._selectedScene = 0
         self._sceneTargets = self._get_scenelink_targets()
@@ -411,8 +413,7 @@ class SceneItemDialog(QDialog):
     def __init__(self, x=0, y=0, title='SceneItem', max_x=1024, max_y=768,
                  parent=None):
         super(SceneItemDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'sceneitem_dialog.ui')
+        filepath = get_dialog_ui('sceneitem_dialog.ui')
         uic.loadUi(filepath, self)
         self.setModal(False)
         # Fill the dialog with start values!
@@ -445,8 +446,7 @@ TEN_MINUTES = "Ten Minutes"
 class ConfigurationFromPastDialog(QDialog):
     def __init__(self, instance_id, parent=None):
         super(ConfigurationFromPastDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'conftime.ui')
+        filepath = get_dialog_ui('conftime.ui')
         uic.loadUi(filepath, self)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.instance_id = instance_id
@@ -531,7 +531,7 @@ class ResizeSceneDialog(QDialog):
     def __init__(self, size=QSize(), parent=None):
         super(ResizeSceneDialog, self).__init__(parent)
         self.setModal(False)
-        ui_path = op.join(op.abspath(op.dirname(__file__)), 'resizedialog.ui')
+        ui_path = get_dialog_ui('resizedialog.ui')
         uic.loadUi(ui_path, self)
         self.width_spinbox.setValue(size.width())
         self.height_spinbox.setValue(size.height())
