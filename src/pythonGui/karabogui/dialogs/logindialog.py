@@ -3,19 +3,19 @@
 # Created on December 21, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import os.path as op
-
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QIntValidator
 from PyQt5.QtWidgets import QComboBox, QDialog
+
+from .utils import get_dialog_ui
 
 
 class LoginDialog(QDialog):
     def __init__(self, username="", password="", hostname="", port="",
                  gui_servers=[], parent=None):
         super(LoginDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)), "logindialog.ui")
+        filepath = get_dialog_ui("logindialog.ui")
         uic.loadUi(filepath, self)
         self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 

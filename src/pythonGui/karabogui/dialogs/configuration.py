@@ -1,5 +1,3 @@
-import os.path as op
-
 from PyQt5 import uic
 from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt
 from PyQt5.QtWidgets import QAbstractItemView, QDialog, QHeaderView
@@ -7,6 +5,8 @@ from traits.api import (
     Any, Bool, HasStrictTraits, Instance, List, Property, String)
 
 from karabogui.singletons.api import get_config
+
+from .utils import get_dialog_ui
 
 HEADER_LABELS = ['Name', 'Setting']
 NAME_COLUMN = 0
@@ -184,10 +184,9 @@ class ConfigurationDialog(QDialog):
     def __init__(self, parent=None):
         super(ConfigurationDialog, self).__init__(parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
-        filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'configuration.ui')
         # Don't block the event loop!
         self.setModal(False)
+        filepath = get_dialog_ui('configuration.ui')
         uic.loadUi(filepath, self)
 
         self.tree_view.setSelectionBehavior(QAbstractItemView.SelectRows)
