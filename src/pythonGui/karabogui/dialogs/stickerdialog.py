@@ -3,8 +3,6 @@
 # Created on April 28, 2020
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import os.path as op
-
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot, QSize, Qt
 from PyQt5.QtGui import QColor, QIcon, QPixmap, QTextFormat
@@ -14,6 +12,8 @@ from karabogui.fonts import (
     get_alias_from_font, get_qfont, substitute_font)
 from karabogui.dialogs.font_dialog import FontDialog
 
+from .utils import get_dialog_ui
+
 HIGHLIGHT_COLOR = QColor(Qt.yellow).lighter(180)
 GREY = "#d3d3d3"
 
@@ -22,7 +22,7 @@ class StickerDialog(QDialog):
 
     def __init__(self, model=None, parent=None):
         super(StickerDialog, self).__init__(parent)
-        uic.loadUi(op.join(op.dirname(__file__), 'stickerdialog.ui'), self)
+        uic.loadUi(get_dialog_ui('stickerdialog.ui'), self)
 
         self.model = model.clone_traits()
         substitute_font(self.model)
