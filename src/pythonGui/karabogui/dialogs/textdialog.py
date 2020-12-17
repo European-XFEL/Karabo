@@ -1,5 +1,3 @@
-import os.path as op
-
 from PyQt5 import uic
 from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QColor, QFont, QPixmap, QIcon
@@ -10,12 +8,14 @@ from karabo.common.scenemodel.api import LabelModel
 from karabogui.fonts import get_alias_from_font, get_qfont
 from karabogui.dialogs.font_dialog import FontDialog
 
+from .utils import get_dialog_ui
+
 
 class TextDialog(QDialog):
 
     def __init__(self, label_model=None, parent=None):
         super(TextDialog, self).__init__(parent)
-        uic.loadUi(op.join(op.dirname(__file__), 'textdialog.ui'), self)
+        uic.loadUi(get_dialog_ui('textdialog.ui'), self)
 
         if label_model is None:
             # NOTE: Fonts similar on all OS are Arial, Helvetica, sans-serif!
