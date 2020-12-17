@@ -41,7 +41,8 @@ class Tests(TestCase):
         self.assertEqual(cls.a.key, "a")
         self.assertEqual(cls.a.longkey, "a")
         self.assertIs(cls.a.unitSymbol, Unit.AMPERE)
-        self.assertEqual(cls.a.defaultValue, 22.5)
+        # The defaultValue in the schema is wrong, we have an int here!
+        self.assertEqual(cls.a.defaultValue, 22)
 
         self.assertIn("b", dir(cls.node.cls))
         self.assertEqual(cls.node.cls.b.key, "b")
