@@ -51,9 +51,19 @@ def get_instance_parent(instance):
 
 
 class Attribute:
+    """The base attribute class for Karabo descriptors
+
+    The attribute can validate and check for a provided `dtype`.
+
+    Note: A floating point dtype is always upgraded to have
+          at least 64 bits.
+    """
     __slots__ = ["default", "dtype"]
 
     def __init__(self, default=None, dtype=None):
+        if dtype is np.float32:
+            dtype = np.float64
+
         self.dtype = dtype
         self.default = self.check(default)
 
@@ -70,8 +80,8 @@ class Attribute:
         if self.dtype is None or not isSet(value):
             return value
         elif isinstance(value, Enum):
-            # Note: This happens when AccessLevel etc are set.
-            # No numpy casting is required.
+            # Note: This happens when Enums such as AccessLevel,
+            # AccessMode etc. are set. No numpy casting is required.
             return value
 
         if issubclass(self.dtype, np.integer):
@@ -79,8 +89,9 @@ class Attribute:
         else:
             info = np.finfo(self.dtype)
         if value < info.min or value > info.max:
-            raise ValueError("Attribute {} not "
-                             "in range of datatype".format(value))
+            raise ValueError(f"Attribute {value} not "
+                             f"in range of datatype {self.dtype}")
+
         return self.dtype(value)
 
 

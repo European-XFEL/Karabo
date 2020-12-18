@@ -235,6 +235,10 @@ class Tests(TestCase):
         self.assertEqual(v.magnitude, 5000)
         self.check_general(d, v)
 
+        v = d.toKaraboValue(3.1112345)
+        self.assertEqual(v.dtype, np.float32)
+        self.assertAlmostEqual(v.magnitude, 3.1112345, delta=0.0001)
+
         with self.assertRaises(ValueError):
             v = d.toKaraboValue(2)
         with self.assertRaises(ValueError):
@@ -886,7 +890,7 @@ class Tests(TestCase):
     def assert_numpy_attributes(self, descr_klass, minInc, maxInc,
                                 minExc, maxExc, alarmLow, warnLow,
                                 warnHigh, alarmHigh, defaultValue,
-                                tolerance=None):
+                                dtype=None):
 
         descriptor = descr_klass(
             defaultValue=defaultValue,
@@ -899,30 +903,29 @@ class Tests(TestCase):
             warnHigh=warnHigh,
             alarmHigh=alarmHigh)
 
-        self.assertAlmostEqual(descriptor.defaultValue, defaultValue,
-                               delta=tolerance)
-        self.assertEqual(descriptor.defaultValue.dtype, descriptor.numpy)
+        dtype = dtype or descriptor.numpy
+        self.assertEqual(descriptor.defaultValue, defaultValue)
+        self.assertEqual(descriptor.defaultValue.dtype, dtype)
 
         # Minimum and Maximum
-        self.assertAlmostEqual(descriptor.minInc, minInc, delta=tolerance)
-        self.assertEqual(descriptor.minInc.dtype, descriptor.numpy)
-        self.assertAlmostEqual(descriptor.maxInc, maxInc, delta=tolerance)
-        self.assertEqual(descriptor.maxInc.dtype, descriptor.numpy)
-        self.assertAlmostEqual(descriptor.minExc, minExc, delta=tolerance)
-        self.assertEqual(descriptor.minExc.dtype, descriptor.numpy)
-        self.assertAlmostEqual(descriptor.maxExc, maxExc, delta=tolerance)
-        self.assertEqual(descriptor.maxExc.dtype, descriptor.numpy)
+        self.assertEqual(descriptor.minInc, minInc)
+        self.assertEqual(descriptor.minInc.dtype, dtype)
+        self.assertEqual(descriptor.maxInc, maxInc)
+        self.assertEqual(descriptor.maxInc.dtype, dtype)
+        self.assertEqual(descriptor.minExc, minExc)
+        self.assertEqual(descriptor.minExc.dtype, dtype)
+        self.assertEqual(descriptor.maxExc, maxExc)
+        self.assertEqual(descriptor.maxExc.dtype, dtype)
 
         # Alarms
-        self.assertAlmostEqual(descriptor.alarmLow, alarmLow, delta=tolerance)
-        self.assertEqual(descriptor.alarmLow.dtype, descriptor.numpy)
-        self.assertAlmostEqual(descriptor.warnLow, warnLow, delta=tolerance)
-        self.assertEqual(descriptor.warnLow.dtype, descriptor.numpy)
-        self.assertAlmostEqual(descriptor.warnHigh, warnHigh, delta=tolerance)
-        self.assertEqual(descriptor.warnHigh.dtype, descriptor.numpy)
-        self.assertAlmostEqual(descriptor.alarmHigh,
-                               alarmHigh, delta=tolerance)
-        self.assertEqual(descriptor.alarmHigh.dtype, descriptor.numpy)
+        self.assertEqual(descriptor.alarmLow, alarmLow)
+        self.assertEqual(descriptor.alarmLow.dtype, dtype)
+        self.assertEqual(descriptor.warnLow, warnLow)
+        self.assertEqual(descriptor.warnLow.dtype, dtype)
+        self.assertEqual(descriptor.warnHigh, warnHigh)
+        self.assertEqual(descriptor.warnHigh.dtype, dtype)
+        self.assertEqual(descriptor.alarmHigh, alarmHigh)
+        self.assertEqual(descriptor.alarmHigh.dtype, dtype)
 
         # Assert type
         self.assertEqual(descriptor.__class__, Type.types[descriptor.number])
@@ -939,14 +942,14 @@ class Tests(TestCase):
                 2, 5, 8, 9, 3)  # alarmLow, warnLow, warnHigh, alarmHigh, value
 
         # We assert numpy attributes as well for Float and Double, they will
-        # be casted
+        # be casted, but all attribute for floating points have 64 bit!
         for desc in [Float, Double]:
             self.assert_numpy_attributes(
                 desc, 1.30, 10.02,  # Desc, minInc, maxInc,
                 0.12, 11.37,  # minExc, maxExc,
                 2.02, 5.02,  # alarmLow, warnLow,
                 8.012, 9.013,  # warnHigh, alarmHigh,
-                3.07, 0.00001)  # default value, tolerance
+                3.07, dtype=np.float64)  # default value, dtype
 
         # Attributes are casted to their numpy type
         d = Int8(defaultValue=8.2)
@@ -966,11 +969,10 @@ class Tests(TestCase):
         d = Float(
             absoluteError=0.123,
             relativeError=0.44)
-        # Float32 needs a `delta` for checking ...
-        self.assertAlmostEqual(d.absoluteError, 0.123, delta=0.0001)
-        self.assertAlmostEqual(d.relativeError, 0.44, delta=0.0001)
-        self.assertEqual(d.absoluteError.dtype, np.float32)
-        self.assertEqual(d.relativeError.dtype, np.float32)
+        self.assertEqual(d.absoluteError, 0.123)
+        self.assertEqual(d.relativeError, 0.44)
+        self.assertEqual(d.absoluteError.dtype, np.float64)
+        self.assertEqual(d.relativeError.dtype, np.float64)
 
         d = Double(
             absoluteError=0.01,
