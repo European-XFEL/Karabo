@@ -7,12 +7,12 @@ import numpy
 
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, ArchivePolicy, Assignment, Bool, Configurable,
-    ComplexDouble, ComplexFloat, DaqDataType, DaqPolicy, decodeBinary,
-    Double, encodeBinary, Float, Hash, Image, ImageData, Int8,
-    Int16, Int32, Int64, isSet, KaraboError, MetricPrefix, Node, Overwrite,
-    RegexString, Slot, String, TypeHash, TypeSchema, UInt8, UInt16,
-    UInt32, UInt64, Unit, unit_registry as unit, VectorBool,
+    AccessLevel, AccessMode, ArchivePolicy, Assignment, Bool, ChoiceOfNodes,
+    Configurable, ComplexDouble, ComplexFloat, DaqDataType, DaqPolicy,
+    decodeBinary, Double, encodeBinary, Float, Hash, Image, ImageData, Int8,
+    Int16, Int32, Int64, isSet, KaraboError, ListOfNodes, MetricPrefix,
+    Node, Overwrite, RegexString, Slot, String, TypeHash, TypeSchema,
+    UInt8, UInt16, UInt32, UInt64, Unit, unit_registry as unit, VectorBool,
     VectorChar, VectorComplexDouble, VectorComplexFloat, VectorDouble,
     VectorHash, VectorFloat, VectorInt8, VectorInt16, VectorInt32,
     VectorInt64, VectorString, VectorRegexString,
@@ -1157,6 +1157,163 @@ class Tests(TestCase):
                          ArchivePolicy.EVERY_1S)
         with self.assertRaises(ValueError):
             Int32(archivePolicy=42)
+
+    def test_runtime_updates(self):
+        """We cannot test and create overwrite schema injection in this test,
+        but we can test the acceptance of the input"""
+        class Nested(Configurable):
+            integer = Int32(defaultValue=50,
+                            warnHigh=100)
+
+        class Device(Configurable):
+            counter = Int32(
+                defaultValue=20,
+                alarmLow=0, alarmHigh=2000)
+
+            noDefault = Int32(
+                alarmLow=0, alarmHigh=2000)
+
+            nested = Node(Nested)
+
+        d = Device()
+        properties = dir(d)
+        self.assertEqual(properties, ["counter", "nested", "noDefault"])
+        nested_properties = dir(d.nested)
+        self.assertEqual(nested_properties, ["integer"])
+
+        # True - Successful alarm change
+        updates = [Hash('path', "counter",
+                        'attribute', "alarmHigh",
+                        'value', 100)]
+        reply = d.applyRuntimeUpdates(updates)
+        self.assertTrue(reply)
+
+        # False - Test wrong property key
+        updates = [Hash('path', "counterX",
+                        'attribute', "alarmHigh",
+                        'value', 100)]
+        reply = d.applyRuntimeUpdates(updates)
+        self.assertFalse(reply)
+
+        # False - We cannot change if there is no value
+        # This was a necessary design choice back then
+        # It won't be tackled due to cost and risk
+        updates = [Hash('path', "noDefault",
+                        'attribute', "alarmHigh",
+                        'value', 100)]
+        reply = d.applyRuntimeUpdates(updates)
+        self.assertFalse(reply)
+
+        # False - Unknown attribute
+        updates = [Hash('path', "counter",
+                        'attribute', "unknown",
+                        'value', 100)]
+        reply = d.applyRuntimeUpdates(updates)
+        self.assertFalse(reply)
+
+        # False - Node attributes cannot be changed
+        updates = [Hash('path', "nested.integer",
+                        'attribute', "warnHigh",
+                        'value', 100)]
+        reply = d.applyRuntimeUpdates(updates)
+        self.assertFalse(reply)
+
+    def test_node_schema_attrs(self):
+        class Nested(Configurable):
+            allowedActions = ["Zoom"]
+            daqDataType = DaqDataType.TRAIN
+            state = String(
+                displayType="State",
+                defaultValue=State.ON,
+                displayedName="State",
+                enum=State)
+            integer = Int32(
+                defaultValue=32,
+                displayedName="Int")
+            double = Double(
+                defaultValue=25.76,
+                displayedName="Double",
+                allowedStates=[State.ON])
+
+        node = Node(Nested, classId="KaraboNode")
+        h, attrs = node.toSchemaAndAttrs(None, None)
+        self.assertIsInstance(h, Hash)
+        self.assertIsInstance(attrs, dict)
+        self.assertEqual(attrs["classId"], "KaraboNode")
+        self.assertEqual(attrs["daqDataType"], DaqDataType.TRAIN)
+        self.assertEqual(attrs["allowedActions"], {"Zoom"})
+        self.assertIn("state", h)
+        self.assertIn("integer", h)
+        self.assertIn("double", h)
+
+        # State dependent node schema
+        h, _ = node.toSchemaAndAttrs(None, State.MOVING)
+        self.assertIn("state", h)
+        self.assertIn("integer", h)
+        self.assertNotIn("double", h)
+
+        instance_schema = Nested().getDeviceSchema()
+        class_schema = Nested.getClassSchema()
+        self.assertTrue(instance_schema.hash.fullyEqual(class_schema.hash))
+
+        instance_schema = Nested().getDeviceSchema(State.MOVING)
+        self.assertFalse(instance_schema.hash.fullyEqual(class_schema.hash))
+        class_schema = Nested.getClassSchema(None, State.MOVING)
+        self.assertTrue(instance_schema.hash.fullyEqual(class_schema.hash))
+
+    def test_node_data_attrs(self):
+        class Expert(Configurable):
+            gear = Int32(
+                defaultValue=25000,
+                displayedName="Gear")
+
+        class Motor(Configurable):
+            state = String(
+                displayType="State",
+                defaultValue=State.ON,
+                displayedName="State",
+                enum=State)
+            position = Double(
+                defaultValue=25.76,
+                displayedName="Position")
+            expert = Node(Expert)
+
+        # Trigger dataAndAttrs with configuration
+        motor = Motor()
+        data = motor.configurationAsHash()
+        self.assertEqual(data["state"], "ON")
+        # Attributes are the time information
+        self.assertIn("tid", data["state", ...])
+        self.assertIn("sec", data["state", ...])
+        self.assertIn("frac", data["state", ...])
+        self.assertEqual(data["position"], 25.76)
+        self.assertEqual(data["expert.gear"], 25000)
+
+    def test_recursive_nodes(self):
+        """These are place holder tests that we can get at least the schema
+        from the `evil` nodes
+
+        DO NOT USE THIS CODE SNIPPED AS EXAMPLE CODE. `ChoiceOfNodes` and
+        `ListOfNodes` are not recommended in the middlelayer api (and in
+        general)"""
+        class Multi(Configurable):
+            """`ChoiceOfNodes` and `ListOfNodes` are evil
+            """
+        class _NodeOne(Multi):
+            zero = String(defaultValue='First')
+
+        class _NodeTwo(Multi):
+            one = String(defaultValue='Second')
+
+        class Recursive(Configurable):
+            """A `Configurable` for testing recursive node types
+            """
+            con = ChoiceOfNodes(Multi, displayedName="Choice")
+            lon = ListOfNodes(Multi, displayedName="LoN")
+
+        schema = Recursive.getClassSchema()
+        self.assertEqual(schema.hash["con", "displayedName"], "Choice")
+        self.assertEqual(schema.hash["lon", "displayedName"], "LoN")
 
 
 if __name__ == "__main__":
