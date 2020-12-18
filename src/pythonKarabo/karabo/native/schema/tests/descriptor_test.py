@@ -833,6 +833,48 @@ class Tests(TestCase):
             self.assertEqual(d.alarmCondition(123), AlarmCondition.NONE)
             self.assertEqual(d.alarmCondition(Hash()), AlarmCondition.NONE)
 
+    def assert_alarm_schema(self, descriptor, value, alarm_type):
+        _, attrs = descriptor.toSchemaAndAttrs(None, None)
+        self.assertEqual(attrs[alarm_type], value)
+        self.assertIn(f"alarmInfo_{alarm_type}", attrs)
+        self.assertIn(f"alarmNeedsAck_{alarm_type}", attrs)
+
+        for other in ["alarmHigh", "warnHigh", "warnLow", "alarmLow"]:
+            if other == alarm_type:
+                continue
+            self.assertNotIn(other, attrs)
+            self.assertNotIn(f"alarmInfo_{other}", attrs)
+            self.assertNotIn(f"alarmNeedsAck_{other}", attrs)
+
+    def test_alarms_schema(self):
+        # Test alarmLow
+        descriptor = UInt8(alarmLow=5)
+        self.assert_alarm_schema(descriptor, 5, "alarmLow")
+
+        # Test that alarmNeedsAck can be set to `True`
+        # and info is not empty when set
+        descriptor = UInt8(alarmLow=15, alarmNeedsAck_alarmLow=True,
+                           alarmInfo_alarmLow="Info not empty")
+        _, attrs = descriptor.toSchemaAndAttrs(None, None)
+        self.assertEqual(attrs["alarmLow"], 15)
+        self.assertEqual(attrs["alarmInfo_alarmLow"], "Info not empty")
+        self.assertEqual(attrs["alarmNeedsAck_alarmLow"], True)
+
+        # Test all other alarm types generally
+        descriptor = UInt8(alarmHigh=15)
+        self.assert_alarm_schema(descriptor, 15, "alarmHigh")
+        descriptor = UInt8(warnHigh=35)
+        self.assert_alarm_schema(descriptor, 35, "warnHigh")
+        descriptor = UInt8(warnLow=95)
+        self.assert_alarm_schema(descriptor, 95, "warnLow")
+
+        empty = UInt8()
+        _, attrs = empty.toSchemaAndAttrs(None, None)
+        for other in ["alarmHigh", "warnHigh", "warnLow", "alarmHigh"]:
+            self.assertNotIn(other, attrs)
+            self.assertNotIn(f"alarmInfo_{other}", attrs)
+            self.assertNotIn(f"alarmNeedsAck_{other}", attrs)
+
     def test_initialize_wrong(self):
         """Test the initialization of a descriptor with wrong input"""
         # Allowed states must be states
