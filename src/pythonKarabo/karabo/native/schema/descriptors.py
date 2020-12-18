@@ -83,6 +83,10 @@ class Attribute:
             # Note: This happens when Enums such as AccessLevel,
             # AccessMode etc. are set. No numpy casting is required.
             return value
+        elif self.dtype is str:
+            return self.dtype(value)
+        elif self.dtype is bool:
+            return self.dtype(int(value))
 
         if issubclass(self.dtype, np.integer):
             info = np.iinfo(self.dtype)
@@ -150,7 +154,7 @@ class Enumable(object):
         return EnumValue(data, descriptor=self)
 
 
-class Simple(object):
+class Simple:
     """This is the base for all numeric types
 
     It features the minimum and maximum for its values given
@@ -161,24 +165,38 @@ class Simple(object):
     Do not use inclusive and exclusive for the same limit at the same
     time.
     """
-
     minExc = Attribute()
     maxExc = Attribute()
     minInc = Attribute()
     maxInc = Attribute()
 
     alarmHigh = Attribute()
-    alarmInfo_alarmHigh = Attribute("")
-    alarmNeedsAck_alarmHigh = Attribute(False)
     alarmLow = Attribute()
-    alarmInfo_alarmLow = Attribute("")
-    alarmNeedsAck_alarmLow = Attribute(False)
     warnHigh = Attribute()
-    alarmInfo_warnHigh = Attribute("")
-    alarmNeedsAck_warnHigh = Attribute(False)
     warnLow = Attribute()
-    alarmInfo_warnLow = Attribute("")
-    alarmNeedsAck_warnLow = Attribute(False)
+
+    alarmInfo_alarmHigh = Attribute(dtype=str)
+    alarmInfo_alarmLow = Attribute(dtype=str)
+    alarmInfo_warnHigh = Attribute(dtype=str)
+    alarmInfo_warnLow = Attribute(dtype=str)
+
+    alarmNeedsAck_alarmHigh = Attribute(dtype=bool)
+    alarmNeedsAck_alarmLow = Attribute(dtype=bool)
+    alarmNeedsAck_warnHigh = Attribute(dtype=bool)
+    alarmNeedsAck_warnLow = Attribute(dtype=bool)
+
+    def __init__(self, strict=True, **kwargs):
+        super().__init__(strict=strict, **kwargs)
+        # Note: Attribute information should only be filled lazily,
+        # e.g. when the Attribute is really set
+        for alarm in ["alarmHigh", "warnHigh", "warnLow", "alarmLow"]:
+            if alarm in kwargs:
+                info = f"alarmInfo_{alarm}"
+                if info not in kwargs:
+                    setattr(self, info, "")
+                ack = f"alarmNeedsAck_{alarm}"
+                if ack not in kwargs:
+                    setattr(self, ack, False)
 
     def cast(self, other):
         if self.enum is not None:
@@ -332,13 +350,13 @@ class Descriptor(object):
             count = Int32(displayedName="electron count", defaultValue=5)
     """
 
-    displayedName = Attribute()
+    displayedName = Attribute(dtype=str)
     alias = Attribute()
-    description = Attribute()
+    description = Attribute(dtype=str)
     defaultValue = Attribute()
     accessMode = Attribute(AccessMode.RECONFIGURABLE)
     assignment = Attribute(Assignment.OPTIONAL)
-    displayType = Attribute()
+    displayType = Attribute(dtype=str)
     requiredAccessLevel = Attribute()
     allowedStates = None
     tags = None
