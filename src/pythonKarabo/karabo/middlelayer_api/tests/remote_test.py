@@ -984,7 +984,6 @@ class Tests(DeviceTest):
         self.assertEqual(device, "remote")
         self.assertEqual(schema.name, "Remote")
         h = schema.hash
-        print(h["value", "requiredAccessLevel"], "!!!!")
         self.assertEqual(h["value", ...], {
             'requiredAccessLevel': 1,
             'daqPolicy': -1,
@@ -997,14 +996,6 @@ class Tests(DeviceTest):
             'defaultValue': 7,
             'valueType': 'INT32',
             'tags': ['whatever'],
-            'alarmInfo_alarmHigh': '',
-            'alarmInfo_alarmLow': '',
-            'alarmInfo_warnHigh': '',
-            'alarmInfo_warnLow': '',
-            'alarmNeedsAck_alarmHigh': False,
-            'alarmNeedsAck_alarmLow': False,
-            'alarmNeedsAck_warnHigh': False,
-            'alarmNeedsAck_warnLow': False,
         })
         self.assertEqual(h["nested", ...], {
             'requiredAccessLevel': 0,
@@ -1229,12 +1220,13 @@ class Tests(DeviceTest):
     @async_tst
     def test_config_handler(self):
         h = Hash()
+
         def updates(change):
             h.merge(change)
 
         with (yield from getDevice("remote")) as d:
             d.counter = -1
-            #subscribe to changes
+            # subscribe to changes
             d.setConfigHandler(updates)
             try:
                 yield from sleep(0.1)
@@ -1244,7 +1236,7 @@ class Tests(DeviceTest):
                     yield from waitUntilNew(d)
                     self.assertIn("counter", h)
 
-                #unsubscribe from changes
+                # unsubscribe from changes
                 d.setConfigHandler(None)
                 h.clear()
 
