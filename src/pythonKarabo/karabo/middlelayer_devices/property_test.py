@@ -205,9 +205,7 @@ class PropertyTestMDL(Device):
 
     @Int32(displayedName="Int32",
            description="An integer property (32 Bit)",
-           defaultValue=2,
-           minInc=-20,
-           maxInc=20)
+           defaultValue=32_000_000)
     def int32Property(self, newValue):
         self.int32Property = newValue
         self.int32PropertyReadOnly = newValue
@@ -215,7 +213,7 @@ class PropertyTestMDL(Device):
     int32PropertyReadOnly = Int32(
         displayedName="Int32 (RO)",
         description="An integer property",
-        defaultValue=0,
+        defaultValue=32_000_000,
         accessMode=AccessMode.READONLY,
         alarmLow=-32_000_000,
         alarmInfo_alarmLow="Too low",
@@ -226,7 +224,7 @@ class PropertyTestMDL(Device):
 
     @UInt32(displayedName="UInt32",
             description="An unsigned integer property (32 Bit)",
-            defaultValue=2)
+            defaultValue=32_000_000)
     def uint32Property(self, newValue):
         self.uint32Property = newValue
         self.uint32PropertyReadOnly = newValue
@@ -234,12 +232,18 @@ class PropertyTestMDL(Device):
     uint32PropertyReadOnly = UInt32(
         displayedName="UInt32 (RO)",
         description="A readonly integer property",
-        defaultValue=30,
+        defaultValue=32_000_000,
+        warnHigh=32_000_001,
+        alarmNeedsAck_warnHigh=False,
+        alarmInfo_warnHigh="Rather high",
+        alarmHigh=64_000_000,
+        alarmNeedsAck_alarmHigh=True,
+        alarmInfo_alarmHigh="Too high",
         accessMode=AccessMode.READONLY)
 
     @Int64(displayedName="Int64",
            description="An integer 64 Bit property",
-           defaultValue=10)
+           defaultValue=3_200_000_000)
     def int64Property(self, newValue):
         self.int64Property = newValue
         self.int64PropertyReadOnly = newValue
@@ -247,10 +251,9 @@ class PropertyTestMDL(Device):
     int64PropertyReadOnly = Int64(
         displayedName="Int64 (RO)",
         description="A readonly integer property",
-        defaultValue=0,
+        defaultValue=3_200_000_000,
         accessMode=AccessMode.READONLY,
-        # FIXME: values outside int32 (!) range lead to failures!
-        alarmLow=-2 ** 31,  # -3_200_000_000,
+        alarmLow=-3_200_000_000,
         alarmInfo_alarmLow="Too low",
         alarmNeedsAck_alarmLow=True,
         warnLow=-3200,
@@ -259,7 +262,7 @@ class PropertyTestMDL(Device):
 
     @UInt64(displayedName="UInt64",
             description="An unsigned integer property (64 Bit)",
-            defaultValue=30)
+            defaultValue=3_200_000_000)
     def uint64Property(self, newValue):
         self.uint64Property = newValue
         self.uint64PropertyReadOnly = newValue
@@ -267,8 +270,14 @@ class PropertyTestMDL(Device):
     uint64PropertyReadOnly = UInt64(
         displayedName="UInt64 (RO)",
         description="A readonly integer property (64 Bit)",
-        defaultValue=47,
-        accessMode=AccessMode.READONLY)
+        defaultValue=3_200_000_000,
+        accessMode=AccessMode.READONLY,
+        warnHigh=3_200_000_001,
+        alarmInfo_warnHigh="Rather High",
+        alarmNeedsAck_warnHigh=False,
+        alarmHigh=6_400_000_000,
+        alarmInfo_alarmHigh="Too high",
+        alarmNeedsAck_alarmHigh=True)
 
     @Float(displayedName="Float (Min / Max)",
            description="A float property",
