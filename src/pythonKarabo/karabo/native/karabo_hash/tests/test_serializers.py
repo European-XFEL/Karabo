@@ -5,9 +5,9 @@ from zlib import adler32
 
 from ..hash import Hash, HashList, Schema
 from ..xml_reader import decodeXML, loadFromFile
-from ..xml_writer import encodeXML, saveToFile
+from ..xml_writer import encodeXML, saveToFile, writeXML
 from ..bin_reader import decodeBinary
-from ..bin_writer import encodeBinary
+from ..bin_writer import encodeBinary, writeBinary
 
 # The following XML was generated using the C++ API `saveToFile`
 BOUND_HASH_XML = """<?xml version="1.0"?>
@@ -250,6 +250,36 @@ class TestSerializers(TestCase):
         check_hash(decoded)
 
         assert decoded.fullyEqual(h)
+
+    def test_write_binary(self):
+        from .test_hash import create_hash
+        FILENAME = 'test_hash_bin.bin'
+        h = create_hash()
+        with TemporaryDirectory() as tmpdirname:
+            FILENAME = os.path.join(tmpdirname, FILENAME)
+            with open(FILENAME, 'wb') as fp:
+                writeBinary(h, fp)
+
+            with open(FILENAME, 'rb') as fp:
+                decoded = decodeBinary(fp.read())
+                assert decoded.fullyEqual(h)
+
+        self.assertFalse(os.path.exists(FILENAME))
+
+    def test_write_xml(self):
+        from .test_hash import create_hash
+        FILENAME = 'test_hash_xml.xml'
+        h = create_hash()
+        with TemporaryDirectory() as tmpdirname:
+            FILENAME = os.path.join(tmpdirname, FILENAME)
+            with open(FILENAME, 'w') as fp:
+                writeXML(h, fp)
+
+            with open(FILENAME, 'r') as fp:
+                decoded = decodeXML(fp.read())
+                assert decoded.fullyEqual(h)
+
+        self.assertFalse(os.path.exists(FILENAME))
 
 
 if __name__ == "__main__":
