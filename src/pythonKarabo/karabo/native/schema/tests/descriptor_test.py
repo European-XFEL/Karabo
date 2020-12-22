@@ -7,10 +7,10 @@ from pint import DimensionalityError
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Attribute, Bool, ByteArray,
-    Char, ComplexFloat, Configurable, Double, decodeBinary, encodeBinary,
-    Float, get_descriptor_from_data, Hash, HashList, Image, ImageData,
-    Int8, Int16, Int32, Int64, KaraboError, LeafType, MetricPrefix,
+    AccessLevel, AccessMode, ArchivePolicy, Assignment, Attribute, Bool,
+    ByteArray, Char, ComplexFloat, Configurable, Double, decodeBinary,
+    encodeBinary, Float, get_descriptor_from_data, Hash, HashList, Image,
+    ImageData, Int8, Int16, Int32, Int64, KaraboError, LeafType, MetricPrefix,
     NDArray, NumpyVector, QuantityValue, RegexString, Schema,
     Slot, String, Timestamp, Type, TypeHash, TypeNone, TypeSchema, UInt8,
     UInt16, UInt32, UInt64, Unit, unit_registry as unit, VectorBool,
@@ -700,6 +700,24 @@ class Tests(TestCase):
         self.assertIsNone(d.options)
         self.check_serialization(d)
 
+    def test_alias_attribute(self):
+        """ An alias attribute can have multiple types, string, etc..."""
+        d = Double(
+            displayedName="Double",
+            alias="string")
+        self.assertEqual(d.alias, "string")
+
+        # But might be integers as well
+        d = Double(
+            displayedName="Double",
+            alias=0x2)
+        self.assertEqual(d.alias, 0x2)
+
+        d = Double(
+            displayedName="Double")
+        _, attrs = d.toSchemaAndAttrs(None, None)
+        self.assertNotIn("alias", attrs)
+
     def test_attributes_nodefault(self):
         d = Double(
             minExc=22, maxExc=33, minInc=11, maxInc=23,
@@ -888,6 +906,35 @@ class Tests(TestCase):
             d = UInt16(tags=[1, 2])
         d = UInt8(tags=["1", "2"])
         self.assertIsNotNone(d)
+
+        # Boolean attributes must be booleans, e.g. needsAck
+        with self.assertRaises(ValueError):
+            d = UInt16(defaultValue=2, alarmLow=0.2,
+                       alarmNeedsAck_alarmLow=1)
+        d = UInt16(defaultValue=2, alarmLow=0.2,
+                   alarmNeedsAck_alarmLow=True)
+        self.assertIsNotNone(d)
+
+        # Integers can have Enums and defaultValue of Enums, although
+        # their defaultValue dtype is integer
+        visiblity = Int32(defaultValue=AccessLevel.ADMIN, enum=AccessLevel,
+                          options=[level for level in AccessLevel])
+        self.assertIsNotNone(visiblity)
+
+        # Setting wrong Enum to enum type Attribute, descriptor validation
+        with self.assertRaises(TypeError):
+            d = Int16(defaultValue=2,
+                      requiredAccessLevel=AccessMode.RECONFIGURABLE)
+
+        with self.assertRaises(TypeError):
+            d = Int16(defaultValue=2, requiredAccessLevel=2)
+
+        # In non strict case we convert
+        d = Int16(strict=False, defaultValue=2, requiredAccessLevel=2)
+        self.assertEqual(d.requiredAccessLevel, AccessLevel.OPERATOR)
+
+        d = Int16(strict=False, defaultValue=2, archivePolicy=2)
+        self.assertEqual(d.archivePolicy, ArchivePolicy.EVERY_1S)
 
     def test_descriptor_from_data(self):
         data = [
