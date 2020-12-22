@@ -4,7 +4,7 @@
 # Packages that we know how to build
 
 DEPENDENCIES_BASE=( bzip2 libpng jpeg tiff python lapack cmake boost
-freetype hdf5 log4cpp cppunit openmq nss openmqc patchelf gmock libxml libxslt
+freetype hdf5 log4cpp cppunit openmq nss openmqc patchelf gmock libxml2 libxslt
 daemontools libzmq nlohmann_json pugixml mqtt)
 
 DEPENDENCIES_PYTHON=( setuptools setuptools_scm pip wheel cython numpy scipy six
@@ -16,8 +16,8 @@ jupyter_core jupyter_client ipykernel simplegeneric dill pkgconfig h5py pyusb pa
 jsonschema ecdsa tzlocal httplib2 traits pint nbformat
 notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml certifi
 chardet idna urllib3 requests ply psutil pycodestyle pyflakes mccabe flake8
-msgpack msgpack-numpy flaky pyyaml docker_pycreds websocket_client docker
-coverage matplotlib eulxml eulexist uvloop mqtt_python peewee)
+msgpack msgpack-numpy flaky pyyaml coverage matplotlib eulxml eulexist uvloop
+mqtt_python peewee)
 
 ##############################################################################
 # Important constants
