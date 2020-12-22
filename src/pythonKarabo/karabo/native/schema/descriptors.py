@@ -50,6 +50,10 @@ def get_instance_parent(instance):
     return parent
 
 
+# This is a variable used to identify a `None` dtype for the `Attribute` only!
+Undefined = None
+
+
 class Attribute:
     """The base attribute class for Karabo descriptors
 
@@ -58,12 +62,12 @@ class Attribute:
     Note: A floating point dtype is always upgraded to have
           at least 64 bits.
     """
-    __slots__ = ["default", "dtype"]
+    __slots__ = ["default", "dtype", "name"]
 
     def __init__(self, default=None, dtype=None):
         if dtype is np.float32:
             dtype = np.float64
-
+        self.name = None
         self.dtype = dtype
         self.default = self.check(default)
 
@@ -76,30 +80,43 @@ class Attribute:
     def __set__(self, instance, value):
         instance.__dict__[self] = self.check(value)
 
+    def __set_name__(self, owner, name):
+        self.name = name
+
     def check(self, value):
         if self.dtype is None or not isSet(value):
             return value
         elif isinstance(value, Enum):
-            # Note: This happens when Enums such as AccessLevel,
-            # AccessMode etc. are set. No numpy casting is required.
+            # This can be a defaultValue on an integer descriptor or
+            # the normal `Enum` Attribute values such as AccessLevel, etc.
+            # If our dtype is thus an `Enum`, we have to validate!
+            if issubclass(self.dtype, Enum) and value not in self.dtype:
+                raise ValueError(f"Attribute {self.name} with {value} not "
+                                 f"validated with Enum {self.dtype}")
             return value
         elif self.dtype is str:
             return self.dtype(value)
         elif self.dtype is bool:
-            return self.dtype(int(value))
+            if type(value) is not bool:
+                raise ValueError(f"A boolean is required for Attribute "
+                                 f"{self.name}, but got {value} instead")
+            return value
+        elif issubclass(self.dtype, Enum):
+            # Note: Unlikely case, but value must be casted to `Enum`.
+            return self.dtype(value)
 
         if issubclass(self.dtype, np.integer):
             info = np.iinfo(self.dtype)
         else:
             info = np.finfo(self.dtype)
         if value < info.min or value > info.max:
-            raise ValueError(f"Attribute {value} not "
+            raise ValueError(f"Attribute {self.name} with {value} not "
                              f"in range of datatype {self.dtype}")
 
         return self.dtype(value)
 
 
-class Enumable(object):
+class Enumable:
     """The base class for all descriptors which can be an enumeration"""
     known_classes = {"State": State,
                      "AlarmCondition": AlarmCondition}
@@ -165,15 +182,17 @@ class Simple:
     Do not use inclusive and exclusive for the same limit at the same
     time.
     """
-    minExc = Attribute()
-    maxExc = Attribute()
-    minInc = Attribute()
-    maxInc = Attribute()
 
-    alarmHigh = Attribute()
-    alarmLow = Attribute()
-    warnHigh = Attribute()
-    warnLow = Attribute()
+    # For the `Simple` classes, the `dtype` to be defined by subclasses
+    minExc = Attribute(dtype=Undefined)
+    maxExc = Attribute(dtype=Undefined)
+    minInc = Attribute(dtype=Undefined)
+    maxInc = Attribute(dtype=Undefined)
+
+    alarmHigh = Attribute(dtype=Undefined)
+    alarmLow = Attribute(dtype=Undefined)
+    warnHigh = Attribute(dtype=Undefined)
+    warnLow = Attribute(dtype=Undefined)
 
     alarmInfo_alarmHigh = Attribute(dtype=str)
     alarmInfo_alarmLow = Attribute(dtype=str)
@@ -351,21 +370,21 @@ class Descriptor(object):
     """
 
     displayedName = Attribute(dtype=str)
-    alias = Attribute()
+    alias = Attribute(dtype=Undefined)
     description = Attribute(dtype=str)
-    defaultValue = Attribute()
-    accessMode = Attribute(AccessMode.RECONFIGURABLE)
-    assignment = Attribute(Assignment.OPTIONAL)
+    defaultValue = Attribute(dtype=Undefined)
+    accessMode = Attribute(AccessMode.RECONFIGURABLE, dtype=AccessMode)
+    assignment = Attribute(Assignment.OPTIONAL, dtype=Assignment)
     displayType = Attribute(dtype=str)
-    requiredAccessLevel = Attribute()
+    requiredAccessLevel = Attribute(dtype=AccessLevel)
+    archivePolicy = Attribute(dtype=ArchivePolicy)
     allowedStates = None
     tags = None
-    archivePolicy = None
     classId = None
 
     def __init__(self, strict=True, key="(unknown key)",
-                 allowedStates=None, archivePolicy=None, tags=None,
-                 requiredAccessLevel=None, classId=None, **kwargs):
+                 allowedStates=None, tags=None, requiredAccessLevel=None,
+                 classId=None, **kwargs):
         """Create a new descriptor with appropriate attributes
 
         The attributes are given as keyword arguments. If we define
@@ -405,8 +424,6 @@ class Descriptor(object):
             if not all((isinstance(s, str) for s in self.tags)):
                 raise TypeError('tags must contain strings, not "{}"'.
                                 format(tags))
-        if archivePolicy is not None:
-            self.archivePolicy = ArchivePolicy(archivePolicy)
         if classId is not None:
             self.classId = classId
         if requiredAccessLevel is None:
@@ -568,7 +585,7 @@ class Slot(Descriptor):
                 # add some important code here
     '''
     method = None
-    requiredAccessLevel = Attribute(AccessLevel.USER)
+    requiredAccessLevel = Attribute(AccessLevel.USER, dtype=AccessLevel)
 
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super(Slot, self).toSchemaAndAttrs(device, state)
