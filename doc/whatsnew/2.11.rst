@@ -4,5 +4,8 @@ What's New in Karabo 2.11.0
 
 The **most relevant improvements**, fixes and changes are:
 
+- C++/Bound CHANGE: The properties `useTimeServer` and `timeServerId` were removed from the devices (latter was only present in bound).
 - MDL API CHANGE: The method `onInitialization` will not shutdown the instance anymore on exception. If this is a desired behavior, please validate
                   the instance with the new method `preInitialization`.
+- All API: The slot call ``slotGetTime`` takes an input argument now and provides the `timeServerId` and the last reference timestamp. It is also
+  available for device servers.
