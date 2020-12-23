@@ -23,7 +23,7 @@ class MetaMacro(Device):
         description="The UUID for this macro",
         accessMode=AccessMode.INITONLY)
     visibility = Overwrite(
-        options=[l for l in AccessLevel],
+        options=[level for level in AccessLevel],
         defaultValue=AccessLevel.ADMIN)
 
     def __init__(self, config):
