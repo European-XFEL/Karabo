@@ -8,7 +8,7 @@ from karabo.native import (
     AccessLevel, AccessMode, Assignment, DaqPolicy, Hash)
 from karabo.native import (
     Bool, get_timestamp, isSet, Int32, KaraboError, Node,
-    TypeHash, TypeSchema, Slot, String)
+    TimeMixin, TypeHash, TypeSchema, Slot, String)
 
 from karabo import __version__ as karaboVersion
 
@@ -148,6 +148,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
     signalSchemaUpdated = Signal(TypeSchema(), String())
 
     def __init__(self, configuration):
+        self.timeServerId = configuration.pop("timeServerId", "None")
         super(Device, self).__init__(configuration)
         if not isSet(self.serverId):
             self.serverId = self._serverId_
@@ -208,14 +209,22 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         return self.configurationAsHash(), self.deviceId
 
     @slot
-    def slotGetTime(self):
+    def slotGetTime(self, info=None):
         """Return the actual time information of this device
 
         This slot call return a Hash with key ``time`` and the attributes
         provide an actual timestamp with train Id information.
+
+        The slot call further provides a reference time information via key
+        ``reference`` and the attributes provide the train id.
+
+        This method has an empty input argument to allow a generic protocol.
         """
         h = Hash("time", True)
         h["time", ...] = get_timestamp().toDict()
+        h["timeServerId"] = self.timeServerId
+        h["reference"] = True
+        h["reference", ...] = TimeMixin.toDict()
 
         return h
 

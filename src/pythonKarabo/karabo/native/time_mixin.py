@@ -72,6 +72,16 @@ class TimeMixin(object):
         time_difference = new.toTimestamp() - reference.toTimestamp()
         return np.int64(time_difference * 1.0e6 // cls._period)
 
+    @classmethod
+    def toDict(cls):
+        """Return the reference information as dictionary"""
+        attrs = {}
+        attrs['tid'] = cls._tid
+        attrs['sec'] = cls._time_sec
+        attrs['frac'] = cls._time_frac
+
+        return attrs
+
 
 def get_timestamp(timestamp=None):
     """Global function to return a Karabo Timestamp

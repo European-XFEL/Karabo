@@ -13,7 +13,8 @@ from subprocess import PIPE
 import numpy
 
 from karabo.native import (
-    Bool, Descriptor, Int32, isSet, KaraboError, Node, String, TimeMixin, VectorString)
+    Bool, Descriptor, get_timestamp, Int32, isSet, KaraboError, Node, String,
+    TimeMixin, VectorString)
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, decodeBinary, encodeXML, Hash)
 
@@ -408,6 +409,26 @@ class MiddleLayerDeviceServer(DeviceServerBase):
         """
         TimeMixin.set_reference(train_id, sec, frac, period)
 
+    @slot
+    def slotGetTime(self, info=None):
+        """Return the actual time information of this server
+
+        This slot call return a Hash with key ``time`` and the attributes
+        provide an actual timestamp with train Id information.
+
+        The slot call further provides a reference time information via key
+        ``reference`` and the attributes provide the train id.
+
+        This method has an empty input argument to allow a generic protocol.
+        """
+        h = Hash("time", True)
+        h["time", ...] = get_timestamp().toDict()
+        h["timeServerId"] = self.timeServerId or "None"
+        h["reference"] = True
+        h["reference", ...] = TimeMixin.toDict()
+
+        return h
+
     @coroutine
     def scanPluginsOnce(self):
         changes = yield from super(
@@ -449,6 +470,8 @@ class MiddleLayerDeviceServer(DeviceServerBase):
                     .startDevice(classId, deviceId, config))
         if "log.level" not in config:
             config["log.level"] = self.log.level
+        if isSet(self.timeServerId):
+            config["timeServerId"] = self.timeServerId
         obj = cls(config)
         task = obj.startInstance(self, broadcast=False)
         yield from task
