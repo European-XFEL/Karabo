@@ -1,3 +1,4 @@
+# flake8: noqa: F401
 """This is the complete public API for middle layer devices. You are
 free to use everything defined here, try to avoid doing deep imports
 into the Karabo package, as the internals may change.
