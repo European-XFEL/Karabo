@@ -16,6 +16,11 @@ class TestTimeMixin(TestCase):
         first = Timestamp("2009-04-20T10:32:22 UTC")
         second = Timestamp("2009-04-20T10:32:22 UTC")
 
+        attrs = self.tmix.toDict()
+        self.assertEqual(attrs["tid"], 0)
+        self.assertEqual(attrs["sec"], 0)
+        self.assertEqual(attrs["frac"], 0)
+
         elapsed_tid = self.tmix.elapsed_tid(first, second)
         self.assertEqual(elapsed_tid, 0)
 
