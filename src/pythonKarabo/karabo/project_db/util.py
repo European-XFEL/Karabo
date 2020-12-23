@@ -38,7 +38,7 @@ def assure_running(db_settings):
             last_ex = None
             try:
                 return verify_db(db_settings)
-            except (TimeoutError, HTTPError, ExistDBException) as last_ex:
+            except (TimeoutError, HTTPError, ExistDBException) as last_ex:  # noqa: E501, F841
                 if count > maxTimeout//waitBetween:
                     raise TimeoutError("Starting project database timed"
                                        " out! Last exception: {}"
@@ -89,7 +89,7 @@ def verify_db(db_settings):
         init_db(db_settings, dbhandle)
     if not dbhandle.hasCollection(db_settings.root_collection):
         raise ProjectDBError("An eXistDB instance without karabo "
-                                "collections was found running on {}."
-                                .format(db_settings.server))
+                             "collections was found running on {}."
+                             .format(db_settings.server))
     if dbhandle.hasCollection('/system'):
         return dbhandle

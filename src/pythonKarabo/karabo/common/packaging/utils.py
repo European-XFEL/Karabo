@@ -1,8 +1,8 @@
 import re
 
-_BASE = '\d+\.\d+\.\d+'
-_RELEASE = '(a|b|rc)\d+'
-_DEV = '\.dev\d+'
+_BASE = r'\d+\.\d+\.\d+'
+_RELEASE = r'(a|b|rc)\d+'
+_DEV = r'\.dev\d+'
 
 _BASE_VERSION_REGEX = re.compile('^({})({})?'.format(_BASE, _RELEASE))
 _FULL_VERSION_REGEX = re.compile('^({})({}({})?)?'.format(

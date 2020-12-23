@@ -1,9 +1,9 @@
 from __future__ import absolute_import, unicode_literals
 
 from asyncio import (
-    CancelledError, coroutine, ensure_future, Future, get_child_watcher,
-    DefaultEventLoopPolicy, gather, get_event_loop, iscoroutinefunction,
-    Queue, set_event_loop, shield, sleep, Task, TimeoutError, wait_for)
+    CancelledError, coroutine, ensure_future, Future, DefaultEventLoopPolicy,
+    gather, get_event_loop, iscoroutinefunction, Queue, set_event_loop, shield,
+    sleep, Task, TimeoutError, wait_for)
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing, ExitStack
 from functools import wraps
@@ -483,8 +483,8 @@ class JmsBroker(Broker):
         for hp in hosts:
             protocol, host, port = hp.split(':')
             if protocol != 'tcp':
-                raise RuntimeError(f"All URIs in KARABO_BROKER must"
-                                   f" contain the same scheme (protocol)")
+                raise RuntimeError("All URIs in KARABO_BROKER must"
+                                   " contain the same scheme (protocol)")
             host = host[2:]
             p = openmq.Properties()
             p["MQBrokerHostName"] = host.strip()

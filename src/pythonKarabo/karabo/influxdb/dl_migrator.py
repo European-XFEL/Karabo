@@ -8,13 +8,11 @@ import os
 import re
 import time
 import shutil
-from urllib.parse import urlparse
 
 from karabo.influxdb import (
     DlRaw2Influx, DlSchema2Influx, PROCESSED_RAWS_FILE_NAME,
     PROCESSED_SCHEMAS_FILE_NAME
 )
-from karabo.influxdb.dlutils import device_id_from_path
 
 
 class DlMigrator():
@@ -50,7 +48,7 @@ class DlMigrator():
         prev_run_num = 0
         if os.path.exists(self.prev_run_file):
             with open(self.prev_run_file, 'r') as pr_file:
-                prev_run_num = int(pr_file.read())  # Invalid file should throw.
+                prev_run_num = int(pr_file.read())  # Invalid file should throw
         return prev_run_num
 
     def _backup_previous_run(self):
@@ -62,7 +60,8 @@ class DlMigrator():
         """
         proc_path = os.path.join(self.output_dir, 'processed')
         part_proc_path = os.path.join(self.output_dir, 'part_processed')
-        if not os.path.exists(proc_path) and not os.path.exists(part_proc_path):
+        if (not os.path.exists(proc_path)
+                and not os.path.exists(part_proc_path)):
             return  # there's nothing to back-up
 
         prev_run_num = self._get_prev_run_num()
@@ -90,16 +89,18 @@ class DlMigrator():
     def _load_processed_files(self):
         """Loads the list of processed property and schema files.
 
-        Each line in the files that store those lists has three fields separated
-        by a '|' (pipe character). The first field is the last modification time
-        (in Unix epoch format) for the processed file when it was processed. The
-        second field is the id of the workload to which the processed file
-        belonged. The third fiekd is the absolute path of the processed file.
+        Each line in the files that store those lists has three fields
+        separated by a '|' (pipe character). The first field is the last
+        modification time (in Unix epoch format) for the processed file when
+        it was processed. The second field is the id of the workload to which
+        the processed file belonged.
+        The third fiekd is the absolute path of the processed file.
 
         The loaded data is stored in dictionaries that have the processed file
         path as a key and the last modification time as the value.
         """
-        proc_raws_path = os.path.join(self.output_dir, PROCESSED_RAWS_FILE_NAME)
+        proc_raws_path = os.path.join(self.output_dir,
+                                      PROCESSED_RAWS_FILE_NAME)
         if os.path.exists(proc_raws_path):
             with open(proc_raws_path, 'r') as proc_raws_file:
                 for _, file_record in enumerate(proc_raws_file):
@@ -175,14 +176,14 @@ class DlMigrator():
     async def _migrate_workload(self, workload_id, workload):
         """Migrates a given workload of text log files to InfluxDb.
 
-        workload_id: identifier of workload to be migrated - used as part of the
-        migration progress info.
+        workload_id: identifier of workload to be migrated
+                     used as part of the migration progress info.
         workload: list of paths of files to be migrated.
         """
         for device_id, file_path, _ in workload:
             file_name = os.path.basename(file_path)
             success = False
-            print("[wk-{}] - Migrating '{}' ...".format(workload_id, file_path))
+            print(f"[wk-{workload_id}] - Migrating '{file_path}' ...")
             if file_name == 'archive_schema.txt':
                 success = await self.insert_schema(file_path, self.output_dir,
                                                    device_id, workload_id)
@@ -206,12 +207,13 @@ class DlMigrator():
     def _save_run_info(self, start_time, workloads_info, end_time=''):
         """Saves information about current run in a file.
 
-        The information is saved in json format and has one property for each of
-        the parameters described below.
+        The information is saved in json format and has one property for each
+        of the parameters described below.
 
         start_time: unix epoch of when the migration started.
         workloads_info: list of tuples with the 'workload_id' in its first
-        position and the number of files in the workload in its second position.
+                        position and the number of files in the workload in
+                        its second position.
         end_time: unix epoch of when the migration started - should not be
         provided if the migration is still on-going.
         """
@@ -243,7 +245,7 @@ class DlMigrator():
                 wk_futures.append(self._migrate_workload(wk_id, workload))
                 wk_id += 1
         self._save_run_info(start_time, workloads_info)
-        wk_results = await gather(*wk_futures)
+        await gather(*wk_futures)
         end_time = time.time()
         self._save_run_info(start_time, workloads_info, end_time)
 
@@ -299,8 +301,8 @@ def main():
                              "every 'raw' directory under this directory "
                              "will be assumed to be a container for "
                              "datalogger files. All the 'archive_*.txt' files "
-                             "in those directories will be processed. A common "
-                             "value for this argument would be "
+                             "in those directories will be processed. A common"
+                             " value for this argument would be "
                              "'var/data/karaboHistory'.")
     parser.add_argument("output_dir",
                         help="Root directory for the processed and partially "
@@ -342,8 +344,8 @@ def main():
     # during tests in the environment with a Telegraf access point for writing
     # to three Influx instances on the back.
     parser.set_defaults(write_timeout=40)
-    parser.add_argument("--concurrent-tasks", dest="concurrent_tasks", type=int,
-                        help="Number of concurrent migration tasks")
+    parser.add_argument("--concurrent-tasks", dest="concurrent_tasks",
+                        type=int, help="Number of concurrent migration tasks")
     parser.set_defaults(concurrent_tasks=4)
 
     def parse_date(s):
