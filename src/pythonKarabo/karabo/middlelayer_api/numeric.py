@@ -1,3 +1,4 @@
+# flake8: noqa: F401
 """
 Unit-aware replacements for :py:mod:`numpy` functions
 =====================================================

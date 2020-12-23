@@ -12,7 +12,7 @@ class MacroServer(MiddleLayerDeviceServer):
     visibility = Overwrite(
         # when overwriting a descriptor with an enum attribute
         # one must always specify the options
-        options=[l for l in AccessLevel],
+        options=[level for level in AccessLevel],
         defaultValue=AccessLevel.ADMIN)
 
     def _initInfo(self):

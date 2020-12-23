@@ -78,7 +78,7 @@ def main():
         try:
             device = entrypoint.load().create(name, config)
             device._finalizeInternalInitialization()
-        except:
+        except Exception:
             EventLoop.stop()
             raise
         finally:
