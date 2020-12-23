@@ -305,7 +305,9 @@ class DlRaw2Influx():
                        "INT64"):
             value = str(value) + "i"
         elif ktype == "UINT64":
-            sv = struct.unpack('l',struct.pack('P', int(f"{int(value):b}", 2)))[0]
+            # cast like a INT64
+            sv = struct.unpack('l',
+                               struct.pack('P', int(f"{int(value):b}", 2)))[0]
             value = str(sv) + "i"
         elif ktype == "STRING":
             escaped = value.replace('\\', '\\\\').replace('"', r'\"')

@@ -8,7 +8,6 @@ from karathon import TextSerializerHash
 
 from karabo._version import version as karaboVersion
 from karabo.bound import DeviceClient as BoundDeviceClient
-from karabo.middlelayer_api.deviceclientproject import DeviceClientProject
 
 import IPython
 import re
@@ -18,8 +17,6 @@ import datetime
 from dateutil import parser
 import tzlocal
 import pytz
-import os.path
-from sys import platform
 
 # ip = IPython.core.ipapi.get()
 ip = IPython.get_ipython()
@@ -46,7 +43,7 @@ def auto_complete_full(self, event):
             return ["\""]
         elif (re.match(r'.*\(\s*\"\w+$', event.line)
               or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
-                # These REs match correctly but completion does not work
+            # These REs match correctly but completion does not work
             return ["\""]
         elif (re.match(r'.*\(\s*\"$', event.line)):
             dev = cpp_client.getDevices()
@@ -64,7 +61,7 @@ def auto_complete_full(self, event):
                 return [""]
         else:
             return [""]
-    except:
+    except Exception:
         print("Distributed auto-completion failed")
 
 
@@ -83,7 +80,7 @@ def auto_complete_devid(self, event):
                 return ["NO_INSTANCES_AVAILABLE"]
         else:
             return [""]
-    except:
+    except Exception:
         print("Distributed auto-completion failed")
 
 
@@ -102,7 +99,7 @@ def auto_complete_serverid(self, event):
                 return ["NO_SERVERS_AVAILABLE"]
         else:
             return [""]
-    except:
+    except Exception:
         print("Distributed auto-completion failed")
 
 
@@ -113,7 +110,7 @@ def auto_complete_set(self, event):
             return ["\""]
         elif (re.match(r'.*\(\s*\"\w+$', event.line)
               or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
-                # These REs match correctly but completion does not work
+            # These REs match correctly but completion does not work
             return ["\""]
         elif (re.match(r'.*\(\s*\"$', event.line)):
             dev = cpp_client.getDevices()
@@ -131,7 +128,7 @@ def auto_complete_set(self, event):
                 return [""]
         else:
             return [""]
-    except:
+    except Exception:
         print("Distributed auto-completion failed")
 
 
@@ -142,7 +139,7 @@ def auto_complete_execute(self, event):
             return ["\""]
         elif (re.match(r'.*\(\s*\"\w+$', event.line)
               or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
-                # These REs match correctly but completion does not work
+            # These REs match correctly but completion does not work
             return ["\""]
         elif (re.match(r'.*\(\s*\"$', event.line)):
             dev = cpp_client.getDevices()
@@ -160,7 +157,7 @@ def auto_complete_execute(self, event):
                 return [""]
         else:
             return [""]
-    except:
+    except Exception:
         print("Distributed auto-completion failed")
 
 
@@ -171,7 +168,7 @@ def auto_complete_instantiate(self, event):
             return ["\""]
         elif (re.match(r'.*\(\s*\"\w+$', event.line)
               or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
-                # These REs match correctly but completion does not work
+            # These REs match correctly but completion does not work
             return ["\""]
         elif (re.match(r'.*\(\s*\"$', event.line)):
             dev = cpp_client.getServers()
@@ -194,7 +191,7 @@ def auto_complete_instantiate(self, event):
             return ["\""]
         else:
             return [""]
-    except:
+    except Exception:
         print("Distributed auto-completion failed")
 
 
@@ -535,7 +532,8 @@ class DeviceClient(object):
 
         Note:
         Currently, registering only a schema update monitor with an instance
-        of a DeviceClient is not enough to have the registered call-back activated.
+        of a DeviceClient is not enough to have the registered call-back
+        activated.
         A workaround for this is to also register a property monitor with the
         same instance of DeviceClient that has been used to register the schema
         update monitor.
@@ -598,11 +596,16 @@ class DeviceClient(object):
                         what your are doing.
                         For experts: "connectedOutputChannels" will be
                                         overwritten.
-        :param eosHandler called on end of stream, argument is the InputChannel
-        :param inputHandler called when data arrives, argument is the InputChannel
+                                      "onSlowness" default is overwritten
+                                        to "drop"
+        :param eosHandler called on end of stream,
+                        argument is the InputChannel
+        :param inputHandler called when data arrives,
+                        argument is the InputChannel
         :param statusTracker called with a 'ConnectionStatus' as argument when
                              the connection status of the underlying
-                             InputChannel changes
+                             InputChannel changes.
+
         :returns False if channel is already registered
 
         Example:
@@ -709,21 +712,6 @@ class DeviceClient(object):
             date = date.astimezone(pytz.utc)
         print(date.isoformat())
         return date.isoformat()
-
-    def loadProject(self, filename):
-        """Load project from file
-
-        Load a project via \filename and returns a project object.
-        """
-        project = DeviceClientProject(filename, self)
-        try:
-            project.unzip()
-        except Exception as e:
-            e.message = "While reading the project a <b>critical error</b> " \
-                        "occurred."
-            raise
-
-        return project
 
     def lock(self, deviceId, recursive=False):
         return self.__client.lock(deviceId, recursive)
