@@ -410,9 +410,6 @@ class DeviceServer(object):
         if not config.has("Logger.priority"):
             config["Logger.priority"] = Logger.getPriority()
 
-        # Add time server ID configured for device server
-        config['timeServerId'] = self.timeServerId
-
         # Before starting device process, validate config
         schema = Configurator(PythonDevice).getSchema(classid)
         validator = Validator()
@@ -427,6 +424,9 @@ class DeviceServer(object):
         # connecting to broker.  This was added AFTER 'validate' intentionally!
         config['_connection_'] = self.connectionParameters
 
+        # Add time server ID configured for device server. This was added AFTER
+        # 'validate' intentionally!
+        config['timeServerId'] = self.timeServerId
         try:
             if "_deviceId_" in config:
                 deviceid = config["_deviceId_"]

@@ -352,15 +352,6 @@ namespace karabo {
                         .assignmentOptional().defaultValue(true)
                         .commit();
 
-                BOOL_ELEMENT(expected).key("useTimeserver")
-                        .displayedName("Use Timeserver")
-                        .description("Unused - whether device connects to time server "
-                                     "is configured via 'timeServerId'")
-                        .init()
-                        .adminAccess()
-                        .assignmentOptional().defaultValue(true)
-                        .commit();
-
                 INT32_ELEMENT(expected).key("heartbeatInterval")
                         .displayedName("Heartbeat interval")
                         .description("The heartbeat interval")
