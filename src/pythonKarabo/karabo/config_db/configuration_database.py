@@ -246,11 +246,11 @@ class ConfigurationDatabase(object):
         """
         if not 1 <= priority <= 3:
             raise ConfigurationDBError(
-                f"Please provide a priority value between 1 and 3.")
+                "Please provide a priority value between 1 and 3.")
 
         if len(name) >= 80:  # 80 is the size of the underlying db field
             raise ConfigurationDBError(
-                f"Please provide a name with less than 80 characters.")
+                "Please provide a name with less than 80 characters.")
 
         reqKeys = [CONFIG_DB_DEVICE_ID, CONFIG_DB_DATA, CONFIG_DB_SCHEMA]
         for index, config in enumerate(configs):
@@ -376,7 +376,7 @@ class ConfigurationDatabase(object):
         # Starts the transaction and writes each of the configs,
         # committing at the end or rolling back if any error happens.
         db.execute(CMD_UPDATE_CONFIG_SET,
-                    (user, priority, description, set_id))
+                   (user, priority, description, set_id))
         for config in configs:
             self._update_config(db, set_id, config, timestamp)
 
@@ -404,8 +404,8 @@ class ConfigurationDatabase(object):
         # Starts the transaction and writes each of the configs,
         # committing at the end or rolling back if any error happens.
         db.execute(CMD_INSERT_CONFIG_SET,
-                    (set_digest, name, user, priority,
-                     description, overwritable))
+                   (set_digest, name, user, priority,
+                    description, overwritable))
         cursor = db.execute('SELECT last_insert_rowid()')
         set_id = int(cursor.fetchone()[0])
         for config in configs:

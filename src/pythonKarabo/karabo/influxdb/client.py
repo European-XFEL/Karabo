@@ -11,8 +11,7 @@ from tornado.httpclient import AsyncHTTPClient, HTTPError
 from tornado.platform.asyncio import AsyncIOMainLoop, to_asyncio_future
 
 from karabo.native import (
-    string_from_hashtype, get_hash_type_from_data, Hash,
-    HASH_TYPE_TO_XML_TYPE, encodeXML)
+    string_from_hashtype, get_hash_type_from_data, Hash, HASH_TYPE_TO_XML_TYPE)
 
 from .dlutils import escape_tag_field_key
 
@@ -226,8 +225,8 @@ class InfluxDbClient():
                                   method=method,
                                   request_timeout=self.request_timeout))
         elif method == "POST":
-            # For POST requests the user credentials must be URL parameters, not
-            # body data.
+            # For POST requests the user credentials must be URL parameters,
+            # not body data.
             query = urlencode(args)
             return to_asyncio_future(
                 self.client.fetch(uri,

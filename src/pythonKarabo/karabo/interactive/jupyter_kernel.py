@@ -34,8 +34,8 @@ class KaraboKernel(IPythonKernel):
             store_history = content.get('store_history', not silent)
             user_expressions = content.get('user_expressions', {})
             allow_stdin = content.get('allow_stdin', False)
-        except:
-            self.device.logger.exception("Got bad msg: %s", parent)
+        except Exception as e:
+            self.device.logger.exception(f"Got bad msg: {parent} - {e}")
             return
 
         stop_on_error = content.get('stop_on_error', True)

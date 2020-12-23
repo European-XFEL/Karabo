@@ -1,5 +1,5 @@
 from collections.abc import MutableMapping
-from ctypes import (CDLL, CFUNCTYPE, POINTER, byref, c_void_p, c_char,
+from ctypes import (CDLL, CFUNCTYPE, POINTER, byref, c_char,
                     c_char_p, c_bool, c_byte, c_short, c_int, c_longlong,
                     c_float, c_double, c_uint, string_at, Structure)
 import logging
@@ -410,9 +410,9 @@ class BytesMessage(Message):
     @property
     def data(self):
         m = POINTER(c_char)()
-        l = c_int()
-        self.dll.MQGetBytesMessageBytes(self.handle, byref(m), byref(l))
-        return string_at(m, l)
+        length = c_int()
+        self.dll.MQGetBytesMessageBytes(self.handle, byref(m), byref(length))
+        return string_at(m, length)
 
     @data.setter
     def data(self, data):

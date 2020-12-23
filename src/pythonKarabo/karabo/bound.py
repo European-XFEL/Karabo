@@ -1,3 +1,4 @@
+# flake8: noqa: F401
 """ This module provides all the bound API names which a Device might need.
 """
 

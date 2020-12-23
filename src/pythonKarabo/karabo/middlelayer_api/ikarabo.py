@@ -98,4 +98,4 @@ def start_ikarabo():
                        "getLastConfiguration|getSchema(FromPast)?|"
                        "compareDeviceWithPast|compareDeviceConfiguration)")
     ip.set_hook("complete_command", class_completer,
-                re_key=".*instantiate(NoWait)?\(")
+                re_key=r".*instantiate(NoWait)?\(")

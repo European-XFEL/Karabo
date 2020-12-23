@@ -284,7 +284,7 @@ class DeviceServerBase(SignalSlotable):
                             enum_value = attribute.defaultValue.value
                             print(f"           : {enum_value}")
                     if attribute.description is not None:
-                        print(f"    Description:")
+                        print("    Description:")
                         print(f"        {attribute.description}")
                     print()
 
@@ -553,7 +553,7 @@ class BoundDeviceServer(DeviceServerBase):
                 try:
                     schema = yield from process.stdout.read()
                     yield from process.wait()
-                except:
+                except Exception:
                     process.kill()
                     raise
                 self.bounds[ep.name] = decodeBinary(schema)[ep.name]
