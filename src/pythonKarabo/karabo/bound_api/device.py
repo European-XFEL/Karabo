@@ -59,6 +59,7 @@ class PythonDevice(NoFsm):
     instanceCountPerDeviceServer = dict()
     instanceCountLock = threading.Lock()
     connectionParams = Hash(Broker.brokerTypeFromEnv(), Hash())
+    timeServerId = None
 
     @staticmethod
     def expectedParameters(expected):
@@ -190,22 +191,6 @@ class PythonDevice(NoFsm):
             .assignmentOptional().defaultValue(True)
             .commit(),
 
-            BOOL_ELEMENT(expected).key("useTimeserver")
-            .displayedName("Use Timeserver")
-            .description("Unused - whether device connects to time server "
-                         "is configured via 'timeServerId'")
-            .init()
-            .adminAccess()
-            .assignmentOptional().defaultValue(True)
-            .commit(),
-
-            STRING_ELEMENT(expected).key("timeServerId")
-            .displayedName("TimeServer ID")
-            .description("The instance id uniquely identifies a TimeServer"
-                         " instance in the distributed system")
-            .assignmentOptional().defaultValue("")
-            .commit(),
-
             INT32_ELEMENT(expected).key("heartbeatInterval")
             .displayedName("Heartbeat interval")
             .description("The heartbeat interval")
@@ -311,7 +296,6 @@ class PythonDevice(NoFsm):
         """
         if configuration is None:
             raise ValueError("Configuration must be Hash object, not None")
-
         super(PythonDevice, self).__init__(configuration)
 
         self._parameters = configuration
@@ -345,7 +329,6 @@ class PythonDevice(NoFsm):
         self._timeSec = 0
         self._timeFrac = 0
         self._timePeriod = 0
-        self.timeServerId = self._parameters["timeServerId"]
 
         # Setup the validation classes
         self.validatorIntern = Validator()
@@ -1310,7 +1293,7 @@ class PythonDevice(NoFsm):
                         # Would best be INFO level, but without broadcasting:
                         self.log.DEBUG(f"Creating output channel '{key}'")
                         outputChannel = self._ss.createOutputChannel(
-                                                     key, self._parameters)
+                            key, self._parameters)
                         if not outputChannel:
                             self.log.ERROR(f"Failed to create output channel "
                                            f"'{key}'")
@@ -1490,7 +1473,7 @@ class PythonDevice(NoFsm):
         currentState = self["state"]
         whiteList = self._getStateDependentSchema(currentState)
         flag, error, validated = self.validatorExtern.validate(
-                whiteList, unvalidated, self.getActualTimestamp())
+            whiteList, unvalidated, self.getActualTimestamp())
         return (flag, error, validated)
 
     def _applyReconfiguration(self, reconfiguration):
@@ -1872,6 +1855,11 @@ def launchPythonDevice():
         PythonDevice.connectionParams = copy.copy(config['_connection_'])
         # Clean _connection_ to validate input configuration
         config.erase('_connection_')
+    if 'timeServerId' in config:
+        # Inject timeServerId from the server
+        PythonDevice.timeServerId = copy.copy(config['timeServerId'])
+        config.erase('timeServerId')
+
     # If log filename not specified, make use of device name to avoid
     # that different processes write to the same file.
     # TODO:
