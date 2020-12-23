@@ -120,13 +120,12 @@ class DlSchema2Influx():
                             )
                         )
                         if digest not in schema_digests:
-                            # the schema has not been included yet in this batch
-                            # of schemas to save; see if it is already in the
-                            # database.
+                            # the schema has not been included yet in this
+                            # batch of schemas to save; see if it is already
+                            # in the database.
                             qry = (
-                                "select count(*) from \"{m}__SCHEMAS\" "
-                                "where digest='\"{d}\"'".format(
-                                    m=safe_m, d=digest)
+                                f"select count(*) from \"{safe_m}__SCHEMAS\""
+                                f" where digest='\"{digest}\"'"
                             )
                             qry_args = {"db": self.db_name, "q": qry}
                             rs = await self.read_client.query(qry_args)
