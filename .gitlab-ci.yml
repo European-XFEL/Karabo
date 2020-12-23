@@ -60,6 +60,7 @@ lint:
     - cppcheck --error-exitcode=0 --output-file=cppcheck_style_report.txt --enable=style --force $CI_PROJECT_DIR/src/karabo
     - cppcheck --error-exitcode=0 --output-file=cppcheck_warning_report.txt --enable=warning --force $CI_PROJECT_DIR/src/karabo
     - flake8 --exclude=*tests* $CI_PROJECT_DIR/src/pythonGui/karabogui
+    - flake8 --exclude=*tests* $CI_PROJECT_DIR/src/pythonKarabo/karabo
   only:
     refs:
       - merge_requests

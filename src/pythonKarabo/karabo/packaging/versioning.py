@@ -106,7 +106,7 @@ def git_version(path):
     # The only required part of the regex is the NN.NN.NN. All others optional.
     expr = (
         r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<micro>\d+)(?P<abrc>(a|b|rc)\d+)?'
-        '(\-)?(?P<count>\d+)?(-g)?(?P<hash>[a-fA-F0-9]+)?'
+        r'(\-)?(?P<count>\d+)?(-g)?(?P<hash>[a-fA-F0-9]+)?'
     )
     match = re.match(expr, out)
     if match is None:
@@ -153,14 +153,14 @@ jsvn_version = partial(svn_version, svn_cmd='jsvn')
 
 class device_scm_version:
     """Adapt to Karabo Devices' unconventional tags"""
-    
+
     def __init__(self, root_path, file_path):
         self.root = root_path
         self.write_to = file_path
 
     def karabo_device_dirty(self, version):
         """Print the distance from the last tag
-        
+
         Device versions are tagged with the convention
         `device_tag-karabo_tag`.
         this class prevents a commit ahead of tag 0.0.1-2.9.2
@@ -187,7 +187,7 @@ class device_scm_version:
 
     def __call__(self):
         """setuptools_scm allows a callable to be specified
-        
+
         in the setup function"""
         return {
             'local_scheme': self.local_scheme,
