@@ -9,7 +9,7 @@ import sys
 
 from karabo.bound import PythonDevice
 
-BUILD_PACKAGE_FILE = """\
+BUILD_PACKAGE_FILE = r"""\
 #!/bin/bash
 
 if [ -z $KARABO ]; then
