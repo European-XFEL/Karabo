@@ -386,7 +386,7 @@ def adddeviceserver():
             fout.write(logger_template.format(target_dir=target_dir))
             os.chmod(fout.fileno(), 0o555)
         os.rename(tmpdir, abs_target)
-    except:
+    except Exception:
         shutil.rmtree(tmpdir)
         raise
 

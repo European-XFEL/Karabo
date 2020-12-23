@@ -1,3 +1,5 @@
+# flake8: noqa: E501
+# this file contains xquery code
 import os
 from contextlib import ContextDecorator
 from textwrap import dedent

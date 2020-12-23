@@ -1,6 +1,6 @@
 from asyncio import (
     CancelledError, coroutine, Future, gather, get_event_loop,
-    IncompleteReadError, Lock, open_connection, Queue, QueueFull, shield,
+    IncompleteReadError, Lock, open_connection, Queue, shield,
     start_server)
 from collections import deque
 from contextlib import closing

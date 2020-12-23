@@ -56,9 +56,9 @@ class DeviceClientProject(Project):
 
     def remove(self, object):
         """
-        The \object should be removed from this project.
+        The object should be removed from this project.
 
-        Returns \index of the object in the list.
+        Returns index of the object in the list.
         """
         if isinstance(object, ProjectDevice):
             index = self.devices.index(object)
@@ -67,7 +67,7 @@ class DeviceClientProject(Project):
 
     def instantiate(self, deviceIds):
         """
-        This function instantiates the list of \devices.
+        This function instantiates the list of devices.
         """
         devices = self.getDevices(deviceIds)
         if not devices:
@@ -104,7 +104,7 @@ class DeviceClientProject(Project):
 
     def shutdown(self, deviceIds):
         """
-        This function shuts down the list of \devices.
+        This function shuts down the list of devices.
         """
         devices = self.getDevices(deviceIds)
         if not devices:
@@ -192,7 +192,7 @@ class DeviceClientProject(Project):
 
 class MonitorTimer(object):
     """ This class represents a time which can call a \function in a given
-    \interval.
+    interval.
 
     Usage:
     mt = MonitorTimer(interval, self.timerEvent)
