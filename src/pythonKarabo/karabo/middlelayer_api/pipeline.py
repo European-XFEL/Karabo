@@ -1,5 +1,5 @@
 from asyncio import (
-    CancelledError, coroutine, Future, gather, get_event_loop,
+    CancelledError, Future, gather, get_event_loop,
     IncompleteReadError, Lock, open_connection, Queue, shield,
     start_server)
 from collections import deque
@@ -82,15 +82,13 @@ class Channel(object):
         self.drain_lock = Lock()
         self.channelName = channelName
 
-    @coroutine
-    def readBytes(self):
-        buf = (yield from self.reader.readexactly(calcsize(self.sizeCode)))
+    async def readBytes(self):
+        buf = (await self.reader.readexactly(calcsize(self.sizeCode)))
         size, = unpack(self.sizeCode, buf)
-        return (yield from self.reader.readexactly(size))
+        return (await self.reader.readexactly(size))
 
-    @coroutine
-    def readHash(self):
-        r = yield from self.readBytes()
+    async def readHash(self):
+        r = await self.readBytes()
         return decodeBinary(r)
 
     def writeHash(self, hsh):
@@ -101,10 +99,9 @@ class Channel(object):
     def writeSize(self, size):
         self.writer.write(pack(self.sizeCode, size))
 
-    @coroutine
-    def drain(self):
-        with (yield from self.drain_lock):
-            yield from self.writer.drain()
+    async def drain(self):
+        with (await self.drain_lock):
+            await self.writer.drain()
 
     def close(self):
         # WHY IS THE READER NOT CLOSEABLE??
@@ -119,8 +116,7 @@ class Channel(object):
         self.writeHash(h)
         self.writeSize(numpy.uint32(0))
 
-    @coroutine
-    def nextChunk(self, chunk_future):
+    async def nextChunk(self, chunk_future):
         """write a chunk once availabe and wait for next request
 
         Wait until the chunk_future becomes available, and write it to the
@@ -131,7 +127,7 @@ class Channel(object):
         IncompleteReadError is raised which has an empty partial data if the
         channel has been closed properly.
         """
-        done, pending, error = yield from firstCompleted(
+        done, pending, error = await firstCompleted(
             chunk=chunk_future, read=self.readHash(), cancel_pending=False)
         if error:
             for future in pending.values():
@@ -172,8 +168,8 @@ class Channel(object):
 
         if "read" in pending:
             # NOTE: We accept the fact that also ``read`` can be in ``done``!
-            # If ``read`` is still ``pending``, we yield from it here!
-            message = yield from pending["read"]
+            # If ``read`` is still ``pending``, we await it here!
+            message = await pending["read"]
             assert message["reason"] == "update"
         else:
             message = done["read"]
@@ -182,7 +178,7 @@ class Channel(object):
                     "future was retrieved before: {}".format(self.channelName,
                                                              "chunk" in done))
             print(text)
-            yield from sleep(0)
+            await sleep(0)
 
 
 class NetworkInput(Configurable):
@@ -204,18 +200,16 @@ class NetworkInput(Configurable):
         assignment=Assignment.OPTIONAL, accessMode=AccessMode.RECONFIGURABLE,
         regex=r"^[a-zA-Z0-9\.\-\:\/\_]+$",
         defaultValue=[])
-    @coroutine
-    def connectedOutputChannels(self, value):
+    async def connectedOutputChannels(self, value):
         # Basic name protection is implemented here, as it can cause hickups!
         outputs = set(output.strip() for output in value)
         close = self.connected.keys() - outputs
         for k in close:
             self.connected[k].cancel()
         for output in outputs:
-            yield from self.connectChannel(output)
+            await self.connectChannel(output)
 
-    @coroutine
-    def connectChannel(self, channel):
+    async def connectChannel(self, channel):
         """Connect to a single Outputchannel
         """
         if channel in self.connected and not self.connected[channel].done():
@@ -266,21 +260,18 @@ class NetworkInput(Configurable):
         self.connected = {}
         self.handler_lock = Lock()
 
-    @coroutine
-    def close_handler(self, output):
+    async def close_handler(self, output):
         # XXX: Please keep this for the time being.
         print("NetworkInput close handler called by {}!".format(output))
 
-    @coroutine
-    def end_of_stream_handler(self, cls):
+    async def end_of_stream_handler(self, cls):
         # XXX: Please keep this for the time being.
         print("EndOfStream handler called by {}!".format(cls))
 
-    @coroutine
-    def call_handler(self, data, meta):
-        with (yield from self.handler_lock):
+    async def call_handler(self, data, meta):
+        with (await self.handler_lock):
             try:
-                yield from get_event_loop().run_coroutine_or_thread(
+                await get_event_loop().run_coroutine_or_thread(
                     self.handler, data, meta)
             except CancelledError:
                 # Cancelled Error is handled in the `start_channel` method
@@ -288,13 +279,12 @@ class NetworkInput(Configurable):
             except Exception:
                 self.parent.logger.exception("error in stream")
 
-    @coroutine
-    def start_channel(self, output):
+    async def start_channel(self, output):
         """Connect to the output channel with Id 'output' """
         try:
             instance, name = output.split(":")
             # success, configuration
-            ok, info = yield from self.parent._call_once_alive(
+            ok, info = await self.parent._call_once_alive(
                 instance, "slotGetOutputChannelInformation", name, os.getpid())
             if not ok:
                 return
@@ -305,12 +295,12 @@ class NetworkInput(Configurable):
                 # schema from output channel we are talking with
                 schema = info.get("schema", None)
                 if schema is None:
-                    schema, _ = yield from self.parent.call(
+                    schema, _ = await self.parent.call(
                         instance, "slotGetSchema", False)
                 cls = ProxyFactory.createProxy(
                     Schema(name=name, hash=schema.hash[name]["schema"]))
 
-            reader, writer = yield from open_connection(
+            reader, writer = await open_connection(
                 info["hostname"], int(info["port"]))
             channel = Channel(reader, writer, channelName=output)
             with closing(channel):
@@ -325,18 +315,18 @@ class NetworkInput(Configurable):
                 channel.writeHash(cmd)
                 cmd = Hash("reason", "update",
                            "instanceId", instance_id)
-                while (yield from self.readChunk(channel, cls)):
-                    yield from sleep(self.delayOnInput)
+                while (await self.readChunk(channel, cls)):
+                    await sleep(self.delayOnInput)
                     channel.writeHash(cmd)
                 else:
                     # We still inform when the connection has been closed!
-                    yield from self.safe_close_handler(output)
+                    await self.safe_close_handler(output)
                     # Start a new roundtrip, but don't create a new task!
-                    yield from sleep(2)
-                    yield from self.start_channel(output)
+                    await sleep(2)
+                    await self.start_channel(output)
         except CancelledError:
             # Note: Happens when we are destroyed or disconnected!
-            yield from self.safe_close_handler(output)
+            await self.safe_close_handler(output)
             self.connected.pop(output)
             self.connectedOutputChannels = list(self.connected)
         except Exception as e:
@@ -344,27 +334,25 @@ class NetworkInput(Configurable):
             # for exceptions. This should not happen!
             print(f"Experienced unexpected exception {e} in input channel "
                   f"of device {self.parent.deviceId} for {output}")
-            yield from self.safe_close_handler(output)
+            await self.safe_close_handler(output)
             # We might get cancelled during sleeping!
             try:
-                yield from sleep(2)
-                yield from self.start_channel(output)
+                await sleep(2)
+                await self.start_channel(output)
             except CancelledError:
-                yield from self.safe_close_handler(output)
+                await self.safe_close_handler(output)
                 self.connected.pop(output)
                 self.connectedOutputChannels = list(self.connected)
 
-    @coroutine
-    def safe_close_handler(self, output):
+    async def safe_close_handler(self, output):
         """The close handler is called under the handler lock"""
-        with (yield from self.handler_lock):
-            yield from shield(get_event_loop().run_coroutine_or_thread(
+        with (await self.handler_lock):
+            await shield(get_event_loop().run_coroutine_or_thread(
                 self.close_handler, output))
 
-    @coroutine
-    def readChunk(self, channel, cls):
+    async def readChunk(self, channel, cls):
         try:
-            header = yield from channel.readHash()
+            header = await channel.readHash()
         except IncompleteReadError as e:
             if e.partial:
                 raise
@@ -372,9 +360,9 @@ class NetworkInput(Configurable):
                 self.parent.logger.info("stream %s finished",
                                         channel.channelName)
                 return False
-        data = yield from channel.readBytes()
+        data = await channel.readBytes()
         if "endOfStream" in header:
-            yield from shield(get_event_loop().run_coroutine_or_thread(
+            await shield(get_event_loop().run_coroutine_or_thread(
                 self.end_of_stream_handler, channel.channelName))
             return True
         pos = 0
@@ -384,11 +372,11 @@ class NetworkInput(Configurable):
             meta = PipelineMetaData()
             meta._onChanged(meta_hash)
             if self.raw:
-                yield from shield(self.call_handler(chunk, meta))
+                await shield(self.call_handler(chunk, meta))
             else:
                 proxy = cls()
                 proxy._onChanged(chunk)
-                yield from shield(self.call_handler(proxy, meta))
+                await shield(self.call_handler(proxy, meta))
             pos += length
         return True
 
@@ -521,14 +509,12 @@ class OutputProxy(SubProxyBase):
     schema = None
 
     def __init__(self):
-        self.networkInput = NetworkInput(dict(
-            dataDistribution="copy", onSlowness="drop"))
-        self.networkInput.raw = True
-        self.networkInput.handler = self.handler
         self.task = None
         self.initialized = False
         # Define if we apply meta data to the pipeline data on the proxy
         self.meta = True
+        self._data_handler = None
+        self._eos_handler = None
 
     def setDataHandler(self, handler):
         """Redirect the output of the pipelining proxy before connecting
@@ -538,7 +524,7 @@ class OutputProxy(SubProxyBase):
         if self.initialized:
             raise RuntimeError("Setting a data handler must happen before "
                                "connecting to the output channel!")
-        self.networkInput.handler = handler
+        self._data_handler = handler
 
     def setEndOfStreamHandler(self, handler):
         """Redirect the endOfStream of the pipelining proxy before connecting
@@ -548,10 +534,9 @@ class OutputProxy(SubProxyBase):
         if self.initialized:
             raise RuntimeError("Setting an endOfStream handler must happen "
                                "before connecting to the output channel!")
-        self.networkInput.end_of_stream_handler = handler
+        self._eos_handler = handler
 
-    @coroutine
-    def handler(self, data, meta):
+    async def handler(self, data, meta):
         # Only apply if we have a schema!
         if self.schema is not None:
             if self.meta and meta.timestamp:
@@ -571,6 +556,16 @@ class OutputProxy(SubProxyBase):
         if self.task is not None:
             return
 
+        self.networkInput = NetworkInput(dict(
+            dataDistribution="copy", onSlowness="drop"))
+        self.networkInput.raw = True
+        if self._data_handler is not None:
+            self.networkInput.handler = self._data_handler
+        else:
+            self.networkInput.handler = self.handler
+        if self._eos_handler is not None:
+            self.networkInput.end_of_stream_handler = self._eos_handler
+
         output = ":".join((self._parent.deviceId, self.longkey))
         # Add our channel to the proxy tracking
         self._parent._remote_output_channel.add(self)
@@ -583,14 +578,13 @@ class OutputProxy(SubProxyBase):
         else:
             self.task = background(self._connect(output))
 
-    @coroutine
-    def _connect(self, output):
+    async def _connect(self, output):
         try:
             if not self.initialized:
-                yield from self.networkInput._run()
+                await self.networkInput._run()
                 self.initialized = True
             self.networkInput.connected[output] = self.task
-            yield from self.networkInput.start_channel(output)
+            await self.networkInput.start_channel(output)
         finally:
             self.task = None
 
@@ -662,8 +656,7 @@ class NetworkOutput(Configurable):
         description="The hostname which connecting clients will be routed to",
         assignment=Assignment.OPTIONAL, defaultValue="default",
         accessMode=AccessMode.INITONLY)
-    @coroutine
-    def hostname(self, value):
+    async def hostname(self, value):
         if value == "default":
             hostname = socket.gethostname()
         else:
@@ -682,8 +675,8 @@ class NetworkOutput(Configurable):
             self.active_channels.add(channel_task)
 
         port = int(self.port) if isSet(self.port) else 0
-        self.server = yield from start_server(serve, host=hostname,
-                                              port=port)
+        self.server = await start_server(serve, host=hostname,
+                                         port=port)
         self.hostname = value
 
     connections = VectorHash(
@@ -703,23 +696,21 @@ class NetworkOutput(Configurable):
         self.shared_queue = CancelQueue(0 if self.noInputShared
                                         in ["queue", "queueDrop"] else 1)
 
-    @coroutine
-    def getInformation(self, channelName):
+    async def getInformation(self, channelName):
         self.channelName = channelName
         # We are called when we just started, hence we wait for our
         # server to come online!
         while self.server is None:
-            yield from sleep(0.05)
+            await sleep(0.05)
         host, port = self.server.sockets[0].getsockname()
         return Hash("connectionType", "tcp", "hostname", host,
                     "port", numpy.uint32(port))
 
-    @coroutine
-    def serve(self, reader, writer):
+    async def serve(self, reader, writer):
         channel = Channel(reader, writer, self.channelName)
         distribution = "unknown"
         try:
-            message = yield from channel.readHash()
+            message = await channel.readHash()
             assert message["reason"] == "hello"
 
             # Start parsing the hello message!
@@ -744,12 +735,12 @@ class NetworkOutput(Configurable):
             if distribution == "shared":
                 self.has_shared += 1
                 while True:
-                    yield from channel.nextChunk(self.shared_queue.get())
+                    await channel.nextChunk(self.shared_queue.get())
             elif slowness == "drop":
                 while True:
                     future = Future()
                     self.copy_futures.append(future)
-                    yield from channel.nextChunk(future)
+                    await channel.nextChunk(future)
             else:
                 if slowness == "queue":
                     queue = CancelQueue()
@@ -764,7 +755,7 @@ class NetworkOutput(Configurable):
                 queues.append(queue)
                 try:
                     while True:
-                        yield from channel.nextChunk(queue.get())
+                        await channel.nextChunk(queue.get())
                 finally:
                     queues.remove(queue)
                     queue.cancel()
@@ -772,7 +763,7 @@ class NetworkOutput(Configurable):
             # If we are cancelled, we should close ourselves
             # Note: This happens when the output channel is closed and
             # when the device is destroyed.
-            yield from self.close()
+            await self.close()
         except IncompleteReadError as e:
             if e.partial:  # if the input got properly closed, partial is empty
                 raise
@@ -801,8 +792,7 @@ class NetworkOutput(Configurable):
         for queue in self.copy_queues:
             queue.put_nowait(chunk)
 
-    @coroutine
-    def writeChunk(self, chunk):
+    async def writeChunk(self, chunk):
         tasks = [sleep(0)]
         try:
             self.writeChunkNoWait(chunk)
@@ -811,16 +801,14 @@ class NetworkOutput(Configurable):
             for queue in self.wait_queues:
                 tasks.append(queue.put(chunk))
         finally:
-            yield from gather(*tasks, return_exceptions=True)
+            await gather(*tasks, return_exceptions=True)
 
-    @coroutine
-    def writeEndOfStream(self):
+    async def writeEndOfStream(self):
         """Send an endOfStream to the clients"""
         timestamp = get_timestamp()
-        yield from self.writeChunk([(Hash("endOfStream", True), timestamp)])
+        await self.writeChunk([(Hash("endOfStream", True), timestamp)])
 
-    @coroutine
-    def writeData(self, timestamp=None):
+    async def writeData(self, timestamp=None):
         """Send the applied values with given output schema to the clients
 
         Requires an output channel with a schema
@@ -828,10 +816,9 @@ class NetworkOutput(Configurable):
         hsh = self.schema.configurationAsHash()
         if timestamp is None:
             timestamp = get_timestamp()
-        yield from self.writeChunk([(hsh, timestamp)])
+        await self.writeChunk([(hsh, timestamp)])
 
-    @coroutine
-    def writeRawData(self, hsh, timestamp=None):
+    async def writeRawData(self, hsh, timestamp=None):
         """Send raw hash data via the output channel to the clients
 
         This method can be used if the output channel is used in 'raw' mode,
@@ -841,7 +828,7 @@ class NetworkOutput(Configurable):
 
         if timestamp is None:
             timestamp = get_timestamp()
-        yield from self.writeChunk([(hsh, timestamp)])
+        await self.writeChunk([(hsh, timestamp)])
 
     def writeDataNoWait(self, timestamp=None):
         hsh = self.schema.configurationAsHash()
@@ -866,8 +853,7 @@ class NetworkOutput(Configurable):
             return
         super().setChildValue(key, value, descriptor)
 
-    @coroutine
-    def close(self):
+    async def close(self):
         """ Cancel all channels and close the server sockets"""
         for channel in self.active_channels:
             if channel and not channel.done():
@@ -876,7 +862,7 @@ class NetworkOutput(Configurable):
         # Finally close the async server and the sockets
         if self.server is not None:
             self.server.close()
-            yield from self.server.wait_closed()
+            await self.server.wait_closed()
 
 
 class SchemaNode(Node):
