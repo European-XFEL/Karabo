@@ -5,7 +5,7 @@ from unittest import main
 from karabo.middlelayer_api.compat import HAVE_UVLOOP
 from karabo.middlelayer import (
     Bool, call, Configurable, Device, getDevice, Hash, isAlive, InputChannel,
-    Int32, Overwrite, OutputChannel, setWait, coslot, shutdown, Slot, State,
+    Int32, Overwrite, OutputChannel, setWait, coslot, Slot, State,
     Timestamp, UInt32, waitUntil)
 from .eventloop import DeviceTest, async_tst
 
@@ -243,13 +243,13 @@ class RemotePipelineTest(DeviceTest):
             self.assertGreater(receiver.received, 0)
             # We received data and now kill the device
             await output_device.slotKillDevice()
-            await waitUntil(lambda: not isAlive(proxy))
+            await waitUntil(lambda: not isAlive(proxy))  # noqa
             self.assertFalse(isAlive(proxy))
             # The device is gone, now we instantiate the device with same
             # deviceId to see if the output automatically reconnects
             output_device = Sender({"_deviceId_": "outputdevice"})
             await output_device.startInstance()
-            await waitUntil(lambda: isAlive(proxy))
+            await waitUntil(lambda: isAlive(proxy))  # noqa
 
             # We set the counter to zero!
             await receiver.resetCounter()

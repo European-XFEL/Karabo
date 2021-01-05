@@ -1,4 +1,4 @@
-from asyncio import coroutine, get_event_loop
+from asyncio import get_event_loop
 import pkg_resources
 
 from karabo.native import Assignment, AccessLevel
@@ -12,9 +12,8 @@ class PluginLoader(Configurable):
         assignment=Assignment.OPTIONAL, defaultValue="plugins",
         displayType="directory", requiredAccessLevel=AccessLevel.EXPERT)
 
-    @coroutine
-    def update(self):
-        yield from get_event_loop().run_in_executor(
+    async def update(self):
+        await get_event_loop().run_in_executor(
             None, pkg_resources.working_set.add_entry, self.pluginDirectory)
 
     def list_plugins(self, namespace):

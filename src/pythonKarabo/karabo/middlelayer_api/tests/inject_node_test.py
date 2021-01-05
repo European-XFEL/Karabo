@@ -1,8 +1,5 @@
 import asyncio
 from unittest import TestCase, main
-import string
-
-import numpy
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Configurable, DeviceNode, Double,

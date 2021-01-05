@@ -1,4 +1,4 @@
-from asyncio import coroutine, gather
+from asyncio import gather
 from itertools import chain
 
 from karabo.native import Descriptor
@@ -36,21 +36,20 @@ class InjectMixin(Configurable):
     we do not want to modify the classes of all instances, we generate a
     fresh class for every object, which inherits from our class. This new
     class is completely empty, so we can modify it at will. Once we have done
-    that, yield from
+    that, await
     :meth:`~karabo.middlelayer.InjectMiXin.publishInjectedParameters`::
 
         class MyDevice(Device):
-            @coroutine
-            def onInitialization(self):
+
+            async def onInitialization(self):
                 # should it be needed to test that the node is there
                 self.my_node = None
 
-            @coroutine
-            def inject_something(self):
+            async def inject_something(self):
                 # inject a new property into our personal class:
                 self.__class__.injected_string = String()
                 self.__class__.my_node = Node(MyNode, displayedName="position")
-                yield from self.publishInjectedParameters()
+                await self.publishInjectedParameters()
 
                 # use the property as any other property:
                 self.injected_string = "whatever"
@@ -91,9 +90,8 @@ class InjectMixin(Configurable):
         ret.__module_orig__ = cls.__module__
         return ret
 
-    @coroutine
-    def _run(self, **kwargs):
-        yield from super()._run(**kwargs)
+    async def _run(self, **kwargs):
+        await super()._run(**kwargs)
 
     def _collect_attrs(self):
         cls = self.__class__
@@ -117,8 +115,7 @@ class InjectMixin(Configurable):
         self._added_attrs.clear()
         return added_attrs
 
-    @coroutine
-    def publishInjectedParameters(self, *args, **kwargs):
+    async def publishInjectedParameters(self, *args, **kwargs):
         """Publish all changes in the parameters of this object
 
         This is also the time when the injected parameters get initialized.
@@ -126,12 +123,12 @@ class InjectMixin(Configurable):
         injected parameters::
 
             self.__class__.some_number = Int32()
-            yield from self.publishInjectedParameters(some_number=3)
+            await self.publishInjectedParameters(some_number=3)
 
         Parameter injection as arguments in pairs is possible as well::
 
             self.__class__.some_number = Int32()
-            yield from self.publishInjectedParameters("some_number", 3)
+            await self.publishInjectedParameters("some_number", 3)
 
         Note: Arguments will overwrite eventual keyword arguments.
         """
@@ -146,7 +143,7 @@ class InjectMixin(Configurable):
             init = t.checkedInit(self, kwargs.get(k))
             initializers.extend(init)
 
-        yield from gather(*initializers)
+        await gather(*initializers)
 
         self._notifyNewSchema()
         self.signalChanged(self.configurationAsHash(), self.deviceId)

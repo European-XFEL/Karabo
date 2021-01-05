@@ -56,10 +56,9 @@ def coslot(f, passMessage=False):
     def outer(func, device, name, message, args):
         broker = device._ss
 
-        @coroutine
-        def inner():
+        async def inner():
             try:
-                broker.reply(message, (yield from func(*args)))
+                broker.reply(message, (await func(*args)))
             except Exception as e:
                 broker.replyException(message, e)
                 _log_exception(func, device, message)
@@ -190,8 +189,7 @@ class SignalSlotable(Configurable):
         self._sethash = {}
         return loop.create_task(self._run(server=server), self)
 
-    @coroutine
-    def _assert_name_unique(self):
+    async def _assert_name_unique(self):
         """check that our device Id is unique
 
         during startup, we ping possible other instances with our name,
@@ -203,7 +201,7 @@ class SignalSlotable(Configurable):
         """
         self.__randPing = random.randint(2, 0x7fffffff)
         try:
-            yield from wait_for(
+            await wait_for(
                 self.call(self.deviceId, "slotPing", self.deviceId,
                           self.__randPing, False), timeout=1)
             raise KaraboError('deviceId "{}" already in use'.
@@ -249,19 +247,19 @@ class SignalSlotable(Configurable):
         print('received stopTracking...', args)
 
     @coslot
-    def slotGetOutputChannelInformationFromHash(self, info):
+    async def slotGetOutputChannelInformationFromHash(self, info):
         """This is the hash implementation of the output channel information"""
         channelId = info['channelId']
-        success, info = yield from self.slotGetOutputChannelInformation(
+        success, info = await self.slotGetOutputChannelInformation(
             channelId, None)
 
         return Hash('success', success, 'info', info)
 
     @coslot
-    def slotGetOutputChannelInformation(self, ioChannelId, processId):
+    async def slotGetOutputChannelInformation(self, ioChannelId, processId):
         ch = getattr(self, ioChannelId, None)
         if isinstance(ch, NetworkOutput):
-            ret = yield from ch.getInformation("{}:{}".format(
+            ret = await ch.getInformation("{}:{}".format(
                 self.deviceId, ioChannelId))
             ret["memoryLocation"] = "remote"
             return True, ret
@@ -302,18 +300,17 @@ class SignalSlotable(Configurable):
                     if isinstance(slot, Slot):
                         self._ss.register_slot(name, slot)
 
-    @coroutine
-    def _run(self, server=None, **kwargs):
+    async def _run(self, server=None, **kwargs):
         try:
             self._register_slots()
             ensure_future(self._ss.main(self))
-            yield from self._assert_name_unique()
+            await self._assert_name_unique()
             self._ss.notify_network(self._initInfo())
             if server is not None:
                 # add deviceId to the instance map of the server
                 server.addChild(self.deviceId, self)
-            yield from super(SignalSlotable, self)._run(**kwargs)
-            yield from get_event_loop().run_coroutine_or_thread(
+            await super(SignalSlotable, self)._run(**kwargs)
+            await get_event_loop().run_coroutine_or_thread(
                 self.preInitialization)
             self.__initialized = True
         except CancelledError:
@@ -321,16 +318,15 @@ class SignalSlotable(Configurable):
             # NOTE: Initializers for device nodes might still be active and the
             # Cancellation is caught here.
         except Exception:
-            yield from self.slotKillDevice()
+            await self.slotKillDevice()
             raise
         else:
             ensure_future(self._initialize_instance())
 
-    @coroutine
-    def _initialize_instance(self):
+    async def _initialize_instance(self):
         """Method to execute the `onInitialization method"""
         try:
-            yield from get_event_loop().run_coroutine_or_thread(
+            await get_event_loop().run_coroutine_or_thread(
                 self.onInitialization)
         except CancelledError:
             raise
@@ -347,21 +343,20 @@ class SignalSlotable(Configurable):
                 pass
 
     @coslot
-    def slotKillDevice(self):
+    async def slotKillDevice(self):
         if self.__initialized:
             self.__initialized = False
-            yield from get_event_loop().run_coroutine_or_thread(
+            await get_event_loop().run_coroutine_or_thread(
                 self.onDestruction)
-        yield from self._ss.stop_tasks()
+        await self._ss.stop_tasks()
 
     def __del__(self):
         if self._ss is not None and self._ss.loop.is_running():
             self._ss.loop.call_soon_threadsafe(
                 self._ss.loop.create_task, self.slotKillDevice())
 
-    @coroutine
-    def call(self, device, target, *args):
-        return (yield from self._ss.request(device, target, *args))
+    async def call(self, device, target, *args):
+        return (await self._ss.request(device, target, *args))
 
     def callNoWait(self, device, target, *args):
         self._ss.emit("call", {device: [target]}, *args)
@@ -372,7 +367,8 @@ class SignalSlotable(Configurable):
         get_event_loop().stop()
 
     @coslot
-    def slotSubscribeRemoteSignal(self, signalInstanceId, signalFunction):
+    async def slotSubscribeRemoteSignal(self, signalInstanceId,
+                                        signalFunction):
         """Slot used to delegate a subscription to remote signal
         asynchronously if such subscription is required by used broker...
         """
@@ -380,11 +376,12 @@ class SignalSlotable(Configurable):
         subscriber = getattr(self._ss, 'subscribeToRemoteSignal', None)
         if subscriber is None:
             return False
-        yield from subscriber(signalInstanceId, signalFunction)
+        await subscriber(signalInstanceId, signalFunction)
         return True
 
     @coslot
-    def slotUnsubscribeRemoteSignal(self, signalInstanceId, signalFunction):
+    async def slotUnsubscribeRemoteSignal(self, signalInstanceId,
+                                          signalFunction):
         """Slot used to delegate an un-subscription from remote signal
         asynchronously if such un-subscription is required by used broker...
         """
@@ -392,7 +389,7 @@ class SignalSlotable(Configurable):
         subscriber = getattr(self._ss, 'unsubscribeFromRemoteSignal', None)
         if subscriber is None:
             return False
-        yield from subscriber(signalInstanceId, signalFunction)
+        await subscriber(signalInstanceId, signalFunction)
         return True
 
     @slot
@@ -467,7 +464,7 @@ class SignalSlotable(Configurable):
         get_event_loop().something_changed()
 
     @coslot
-    def slotInstanceNew(self, instanceId, info):
+    async def slotInstanceNew(self, instanceId, info):
         if info["type"] == "server":
             for proxy in self._proxies.values():
                 if proxy.serverId == instanceId and proxy._alive:
@@ -475,14 +472,13 @@ class SignalSlotable(Configurable):
         self._new_device_futures[instanceId] = info
         proxy = self._proxies.get(instanceId)
         if proxy is not None:
-            yield from proxy._notify_new()
+            await proxy._notify_new()
 
         get_event_loop().something_changed()
 
-    @coroutine
-    def _call_once_alive(self, deviceId, slot, *args):
+    async def _call_once_alive(self, deviceId, slot, *args):
         """try to call slot, wait until device becomes alive if needed"""
-        done, pending, error = yield from firstCompleted(
+        done, pending, error = await firstCompleted(
             newdevice=self._new_device_futures[deviceId],
             call=self.call(deviceId, slot, *args))
         if error:
@@ -490,7 +486,7 @@ class SignalSlotable(Configurable):
         elif "call" in done:
             return done["call"]
         elif "newdevice" in done:
-            return (yield from self.call(deviceId, slot, *args))
+            return (await self.call(deviceId, slot, *args))
         else:
             raise AssertionError("this should not happen")
 
@@ -505,28 +501,23 @@ class SignalSlotable(Configurable):
             proxy._notify_gone()
         get_event_loop().something_changed()
 
-    @coroutine
-    def preInitialization(self):
+    async def preInitialization(self):
         """This method is called directly after the instance is created
 
         Subclass this method to validate the `instance` behavior. Throwing
         an exception will shutdown the `instance`.
         """
 
-    @coroutine
-    def onInitialization(self):
+    async def onInitialization(self):
         """This method is called just after instance is running"""
 
-    @coroutine
-    def onDestruction(self):
+    async def onDestruction(self):
         """This method is called just before the device ceases existence"""
 
-    @coroutine
-    def onCancelled(self, slot):
+    async def onCancelled(self, slot):
         """This method is called if a slot gets cancelled"""
 
-    @coroutine
-    def onException(self, slot, exception, traceback):
+    async def onException(self, slot, exception, traceback):
         """This method is called if an exception in a slot is not caught"""
 
     def _onException(self, slot, exc, tb):
@@ -546,10 +537,9 @@ class SignalSlotable(Configurable):
                              slot.key, self.deviceId,
                              exc_info=(type(exc), exc, tb))
 
-        @coroutine
-        def logException(coro):
+        async def logException(coro):
             try:
-                yield from coro
+                await coro
             except Exception:
                 logger.exception("error in error handler")
 

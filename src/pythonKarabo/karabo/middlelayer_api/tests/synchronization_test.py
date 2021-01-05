@@ -1,5 +1,5 @@
 from asyncio import (
-    CancelledError, coroutine, ensure_future, Future, TimeoutError)
+    CancelledError, ensure_future, Future, TimeoutError)
 import logging
 from pint import DimensionalityError
 from unittest import main
@@ -17,8 +17,7 @@ class Tests(DeviceTest):
     def setUp(self):
         self.called = False
 
-    @coroutine
-    def coro(self, param):
+    async def coro(self, param):
         if not param:
             raise RuntimeError
         self.assertEqual(param, "whatever")
@@ -32,10 +31,9 @@ class Tests(DeviceTest):
         self.called = True
         return "func called"
 
-    @coroutine
-    def coro_sleep(self):
+    async def coro_sleep(self):
         try:
-            yield from sleep(1000)
+            await sleep(1000)
             self.fail()
         except CancelledError:
             self.called = True
@@ -50,24 +48,24 @@ class Tests(DeviceTest):
             raise
 
     @async_tst
-    def test_coro_coro_raise(self):
+    async def test_coro_coro_raise(self):
         with self.assertLogs(self.lead.deviceId, level=logging.ERROR) as log, \
                 self.assertRaises(RuntimeError):
-            yield from background(self.coro, False)
+            await background(self.coro, False)
         self.assertIs(log.records[0].exc_info[0], RuntimeError)
 
     @async_tst
-    def test_coro_coro_direct_raise(self):
+    async def test_coro_coro_direct_raise(self):
         with self.assertLogs(self.lead.deviceId, level=logging.ERROR) as log, \
                 self.assertRaises(RuntimeError):
-            yield from background(self.coro(False))
+            await background(self.coro(False))
         self.assertIs(log.records[0].exc_info[0], RuntimeError)
 
     @async_tst
-    def test_coro_func_raise(self):
+    async def test_coro_func_raise(self):
         with self.assertLogs(self.lead.deviceId, level=logging.ERROR) as log, \
                 self.assertRaises(RuntimeError):
-            yield from background(self.func, False)
+            await background(self.func, False)
         self.assertIs(log.records[0].exc_info[0], RuntimeError)
 
     @sync_tst
@@ -85,20 +83,20 @@ class Tests(DeviceTest):
         self.assertIs(log.records[0].exc_info[0], RuntimeError)
 
     @async_tst
-    def test_coro_coro(self):
-        r = yield from background(self.coro, "whatever")
+    async def test_coro_coro(self):
+        r = await background(self.coro, "whatever")
         self.assertEqual(r, "coro called")
         self.assertTrue(self.called)
 
     @async_tst
-    def test_coro_coro_direct(self):
-        r = yield from background(self.coro("whatever"))
+    async def test_coro_coro_direct(self):
+        r = await background(self.coro("whatever"))
         self.assertEqual(r, "coro called")
         self.assertTrue(self.called)
 
     @async_tst
-    def test_coro_func(self):
-        r = yield from background(self.func, "something")
+    async def test_coro_func(self):
+        r = await background(self.func, "something")
         self.assertEqual(r, "func called")
         self.assertTrue(self.called)
 
@@ -115,13 +113,13 @@ class Tests(DeviceTest):
         self.assertTrue(self.called)
 
     @async_tst
-    def test_coro_coro_cancel(self):
+    async def test_coro_coro_cancel(self):
         task = background(self.coro_sleep)
-        yield from sleep(0.01)
+        await sleep(0.01)
         self.assertFalse(self.called)
         task.cancel()
         with self.assertRaises(CancelledError):
-            yield from task
+            await task
         self.assertTrue(self.called)
 
     @sync_tst
@@ -135,14 +133,14 @@ class Tests(DeviceTest):
         self.assertTrue(self.called)
 
     @async_tst
-    def test_coro_func_cancel(self):
+    async def test_coro_func_cancel(self):
         task = background(self.func_sleep)
-        yield from sleep(0.01)
+        await sleep(0.01)
         self.assertFalse(self.called)
         task.cancel()
         with self.assertRaises(CancelledError):
-            yield from task
-        yield from sleep(0.01)
+            await task
+        await sleep(0.01)
         self.assertTrue(self.called)
 
     @sync_tst
@@ -228,7 +226,7 @@ class Tests(DeviceTest):
             gather(10, timeout=10 * unit.meter)
 
     @async_tst
-    def test_synchronous_async(self):
+    async def test_synchronous_async(self):
         @synchronous
         def f(arg):
             nonlocal done
@@ -236,9 +234,9 @@ class Tests(DeviceTest):
             done = True
         done = False
         yf = f(3)
-        yield from sleep(0.01)
+        await sleep(0.01)
         self.assertFalse(done)
-        yield from yf
+        await yf
         self.assertTrue(done)
 
     @sync_tst
@@ -268,24 +266,23 @@ class Tests(DeviceTest):
         self.assertIn("slow", pending)
 
     @async_tst
-    def test_firstCompleted_async(self):
-        done, pending, error = yield from firstCompleted(
+    async def test_firstCompleted_async(self):
+        done, pending, error = await firstCompleted(
             sleep(100), slow=sleep(1000), fast=sleep(0.001, "result"))
         self.assertEqual(done, {"fast": "result"})
         self.assertEqual(set(pending.keys()), {0, "slow"})
         self.assertFalse(error)
         try:
-            yield from pending["slow"]
+            await pending["slow"]
             self.fail()
         except CancelledError:
             pass
 
         exception = RuntimeError()
 
-        @coroutine
-        def raisor():
+        async def raisor():
             raise exception
-        done, pending, error = yield from firstCompleted(
+        done, pending, error = await firstCompleted(
             sleep(100), slow=sleep(1000), err=raisor())
 
         self.assertFalse(done)
@@ -293,16 +290,15 @@ class Tests(DeviceTest):
         self.assertEqual(error, {"err": exception})
 
     @async_tst
-    def test_allCompleted(self):
+    async def test_allCompleted(self):
         exception = RuntimeError()
 
-        @coroutine
-        def raisor():
+        async def raisor():
             raise exception
 
         timeout = QuantityValue(10, unit=Unit.SECOND,
                                 metricPrefix=MetricPrefix.MILLI)
-        done, pending, error = yield from allCompleted(
+        done, pending, error = await allCompleted(
             sleep(100), slow=sleep(1000), fast=sleep(0.001, "result"),
             err=raisor(), timeout=timeout)
 
@@ -311,21 +307,21 @@ class Tests(DeviceTest):
         self.assertEqual(set(pending.keys()), {0, "slow"})
 
     @async_tst
-    def test_allCompleted_cancelled(self):
+    async def test_allCompleted_cancelled(self):
         running = Future()
         done = Future()
         raises = Future()
         cancelled = Future()
 
         task = background(allCompleted(running, done, raises, cancelled))
-        yield from sleep(0)
+        await sleep(0)
         done.set_result(None)
         raises.set_exception(RuntimeError())
         cancelled.cancel()
-        yield from sleep(0)
+        await sleep(0)
         task.cancel()
         with self.assertRaises(CancelledError):
-            yield from task
+            await task
 
         self.assertTrue(running.cancelled())
         self.assertTrue(cancelled.cancelled())
@@ -333,14 +329,13 @@ class Tests(DeviceTest):
         self.assertFalse(raises.cancelled())
 
     @async_tst
-    def test_firstException(self):
+    async def test_firstException(self):
         exception = RuntimeError()
 
-        @coroutine
-        def raisor():
+        async def raisor():
             raise exception
 
-        done, pending, error = yield from firstException(
+        done, pending, error = await firstException(
             sleep(100), slow=sleep(1000), fast=sleep(0.001, "result"),
             err=raisor(), timeout=0.01)
 
@@ -353,7 +348,7 @@ class Tests(DeviceTest):
         self.assertEqual(set(pending.keys()), {0, "slow", "fast"})
 
     @async_tst
-    def test_futuredict(self):
+    async def test_futuredict(self):
         futuredict = FutureDict()
 
         task1 = ensure_future(futuredict["car"])
@@ -362,14 +357,25 @@ class Tests(DeviceTest):
         yield  # let the tasks start
         self.assertFalse(task1.done())
         futuredict["car"] = "DeLorean"
-        self.assertEqual((yield from task1), "DeLorean")
-        self.assertEqual((yield from task2), "DeLorean")
+        self.assertEqual((await task1), "DeLorean")
+        self.assertEqual((await task2), "DeLorean")
+        self.assertTrue(task1.done())
+        self.assertTrue(task2.done())
 
         self.assertFalse(task3.done())
         task3.cancel()
         futuredict["power"] = "lightning"
 
         futuredict["whatever"] = 3  # should be a no-op
+        self.assertEqual(futuredict["whatever"], 3)
+
+        async def find_marty():
+            await sleep(0.3)
+            futuredict["marty"] = 1955
+
+        ensure_future(find_marty)
+        timezone = await futuredict["marty"]
+        self.assertEqual(timezone, 1955)
 
 
 if __name__ == "__main__":
