@@ -1,4 +1,4 @@
-from asyncio import (coroutine, ensure_future, gather, get_event_loop,
+from asyncio import (ensure_future, gather, get_event_loop,
                      set_event_loop, TimeoutError, wait_for)
 import atexit
 from contextlib import closing
@@ -55,14 +55,17 @@ class EventThread(threading.Thread):
 
     def stop(self, weakref=None):
         self.loop.call_soon_threadsafe(self.loop.stop)
+        # Executor shutdown is available in 3.9.
+        # We have to shutdown gracefully to collect all threads in the
+        # executor
+        self.loop.call_later(1, self.loop._default_executor.shutdown)
 
     def start_device(self, device):
         lock = threading.Lock()
         lock.acquire()
 
-        @coroutine
-        def run_device():
-            yield from device.startInstance(broadcast=False)
+        async def run_device():
+            await device.startInstance(broadcast=False)
             lock.release()
         self.loop.call_soon_threadsafe(ensure_future, run_device())
         lock.acquire()
@@ -173,23 +176,21 @@ class Macro(Device):
         info["module"] = self.module
         return info
 
-    @coroutine
-    def _run(self, **kwargs):
+    async def _run(self, **kwargs):
         """ implement the RemoteDevice functionality, upon
         starting the device the devices are searched and then
         assigned to the object's properties """
 
-        yield from super(Macro, self)._run(**kwargs)
+        await super(Macro, self)._run(**kwargs)
 
         holders = []
 
-        @coroutine
-        def connect(key, remote):
+        async def connect(key, remote):
             coro = getDevice(remote.id)
             if remote.timeout > 0:
                 coro = wait_for(coro, remote.timeout)
             try:
-                d = yield from coro
+                d = await coro
             except TimeoutError:
                 self.logger.error('no remote device "{}" for macro "{}"'.
                                   format(remote.id, self.deviceId))
@@ -199,20 +200,20 @@ class Macro(Device):
 
         ts = type(self)
         attributes = ((k, getattr(ts, k)) for k in dir(ts))
-        yield from gather(*(connect(k, v) for k, v in attributes
-                            if isinstance(v, RemoteDevice)))
+        await gather(*(connect(k, v) for k, v in attributes
+                       if isinstance(v, RemoteDevice)))
         for h in holders:
             ensure_future(h)
         self.state = State.PASSIVE
 
-    def __holdDevice(self, d):
+    async def __holdDevice(self, d):
         """keep the connection to a remote device
 
         this method holds the connection to the RemoteDevice d, and calls
         all monitors upon changes in this device."""
         with d:
             while True:
-                yield from waitUntilNew(d)
+                await waitUntilNew(d)
                 for m in self.__monitors:
                     try:
                         setattr(self, m.key, m.monitor(self))
@@ -264,13 +265,12 @@ class Macro(Device):
 
         macro = cls(args)
 
-        @coroutine
-        def run():
+        async def run():
             # Starting a macro from command line should receive broadcasts!
-            yield from macro.startInstance()
+            await macro.startInstance()
             future = loop.run_coroutine_or_thread(slot.method, macro)
-            yield from loop.create_task(future, macro)
-            yield from macro.slotKillDevice()
+            await loop.create_task(future, macro)
+            await macro.slotKillDevice()
 
         with closing(loop):
             loop.run_until_complete(run())

@@ -1,3 +1,4 @@
+# flake8: noqa 
 from enum import Enum
 from textwrap import dedent
 from unittest import TestCase, main
