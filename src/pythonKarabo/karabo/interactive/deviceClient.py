@@ -35,164 +35,161 @@ print("You may query servers and devices and set/get properties or execute "
 print("Hint: use the TAB key for auto-completion.")
 
 
+def distributed_autocomplete(func):
+    def wrapper(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except BaseException:
+            print("Distributed auto-completion failed")
+    return wrapper
+
+
 # Auto complete function for methods like: f( deviceId, attribute )
+@distributed_autocomplete
 def auto_complete_full(self, event):
-    try:
-        if (re.match(r'.*\(\s*$', event.line)
-                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line)):
-            return ["\""]
-        elif (re.match(r'.*\(\s*\"\w+$', event.line)
-              or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
-            # These REs match correctly but completion does not work
-            return ["\""]
-        elif (re.match(r'.*\(\s*\"$', event.line)):
-            dev = cpp_client.getDevices()
-            if len(dev) > 0:
-                return dev
-            else:
-                return ["NO_INSTANCES_AVAILABLE"]
-        elif (re.match(r'.*\(.+,\s*\"$', event.line)):
-            r = re.compile(r'\"(.*?)\"')
-            m = r.search(event.line)
-            if m:
-                deviceId = m.group(1)
-                return cpp_client.getProperties(deviceId)
-            else:
-                return [""]
+    if (re.match(r'.*\(\s*$', event.line)
+            or re.match(r'.*\(\s*\"\w+\",\s*$', event.line)):
+        return ["\""]
+    elif (re.match(r'.*\(\s*\"\w+$', event.line)
+            or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
+        # These REs match correctly but completion does not work
+        return ["\""]
+    elif (re.match(r'.*\(\s*\"$', event.line)):
+        dev = cpp_client.getDevices()
+        if len(dev) > 0:
+            return dev
+        else:
+            return ["NO_INSTANCES_AVAILABLE"]
+    elif (re.match(r'.*\(.+,\s*\"$', event.line)):
+        r = re.compile(r'\"(.*?)\"')
+        m = r.search(event.line)
+        if m:
+            deviceId = m.group(1)
+            return cpp_client.getProperties(deviceId)
         else:
             return [""]
-    except Exception:
-        print("Distributed auto-completion failed")
+    else:
+        return [""]
 
 
+@distributed_autocomplete
 def auto_complete_devid(self, event):
-    try:
-        if (re.match(r'.*\(\s*$', event.line)):
-            return ["\""]
-        elif (re.match(r'.*\(\s*\"\w+$', event.line)):
-            # These REs match correctly but completion does not work
-            return ["\""]
-        elif (re.match(r'.*\(\s*\"$', event.line)):
-            dev = cpp_client.getDevices()
-            if len(dev) > 0:
-                return dev
-            else:
-                return ["NO_INSTANCES_AVAILABLE"]
+    if (re.match(r'.*\(\s*$', event.line)):
+        return ["\""]
+    elif (re.match(r'.*\(\s*\"\w+$', event.line)):
+        # These REs match correctly but completion does not work
+        return ["\""]
+    elif (re.match(r'.*\(\s*\"$', event.line)):
+        dev = cpp_client.getDevices()
+        if len(dev) > 0:
+            return dev
         else:
-            return [""]
-    except Exception:
-        print("Distributed auto-completion failed")
+            return ["NO_INSTANCES_AVAILABLE"]
+    else:
+        return [""]
 
 
+@distributed_autocomplete
 def auto_complete_serverid(self, event):
-    try:
-        if (re.match(r'.*\(\s*$', event.line)):
-            return ["\""]
-        elif (re.match(r'.*\(\s*\"\w+$', event.line)):
-            # These REs match correctly but completion does not work
-            return ["\""]
-        elif (re.match(r'.*\(\s*\"$', event.line)):
-            dev = cpp_client.getServers()
-            if len(dev) > 0:
-                return dev
-            else:
-                return ["NO_SERVERS_AVAILABLE"]
+    if (re.match(r'.*\(\s*$', event.line)):
+        return ["\""]
+    elif (re.match(r'.*\(\s*\"\w+$', event.line)):
+        # These REs match correctly but completion does not work
+        return ["\""]
+    elif (re.match(r'.*\(\s*\"$', event.line)):
+        dev = cpp_client.getServers()
+        if len(dev) > 0:
+            return dev
         else:
-            return [""]
-    except Exception:
-        print("Distributed auto-completion failed")
+            return ["NO_SERVERS_AVAILABLE"]
+    else:
+        return [""]
 
 
+@distributed_autocomplete
 def auto_complete_set(self, event):
-    try:
-        if (re.match(r'.*\(\s*$', event.line)
-                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line)):
-            return ["\""]
-        elif (re.match(r'.*\(\s*\"\w+$', event.line)
-              or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
-            # These REs match correctly but completion does not work
-            return ["\""]
-        elif (re.match(r'.*\(\s*\"$', event.line)):
-            dev = cpp_client.getDevices()
-            if len(dev) > 0:
-                return dev
-            else:
-                return ["NO_INSTANCES_AVAILABLE"]
-        elif (re.match(r'.*\(.+,\s*\"$', event.line)):
-            r = re.compile(r'\"(.*?)\"')
-            m = r.search(event.line)
-            if m:
-                deviceId = m.group(1)
-                return cpp_client.getCurrentlySettableProperties(deviceId)
-            else:
-                return [""]
+    if (re.match(r'.*\(\s*$', event.line)
+            or re.match(r'.*\(\s*\"\w+\",\s*$', event.line)):
+        return ["\""]
+    elif (re.match(r'.*\(\s*\"\w+$', event.line)
+            or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
+        # These REs match correctly but completion does not work
+        return ["\""]
+    elif (re.match(r'.*\(\s*\"$', event.line)):
+        dev = cpp_client.getDevices()
+        if len(dev) > 0:
+            return dev
+        else:
+            return ["NO_INSTANCES_AVAILABLE"]
+    elif (re.match(r'.*\(.+,\s*\"$', event.line)):
+        r = re.compile(r'\"(.*?)\"')
+        m = r.search(event.line)
+        if m:
+            deviceId = m.group(1)
+            return cpp_client.getCurrentlySettableProperties(deviceId)
         else:
             return [""]
-    except Exception:
-        print("Distributed auto-completion failed")
+    else:
+        return [""]
 
 
+@distributed_autocomplete
 def auto_complete_execute(self, event):
-    try:
-        if (re.match(r'.*\(\s*$', event.line)
-                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line)):
-            return ["\""]
-        elif (re.match(r'.*\(\s*\"\w+$', event.line)
-              or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
-            # These REs match correctly but completion does not work
-            return ["\""]
-        elif (re.match(r'.*\(\s*\"$', event.line)):
-            dev = cpp_client.getDevices()
-            if len(dev) > 0:
-                return dev
-            else:
-                return ["NO_INSTANCES_AVAILABLE"]
-        elif (re.match(r'.*\(.+,\s*\"$', event.line)):
-            r = re.compile(r'\"(.*?)\"')
-            m = r.search(event.line)
-            if m:
-                deviceId = m.group(1)
-                return cpp_client.getCurrentlyExecutableCommands(deviceId)
-            else:
-                return [""]
+    if (re.match(r'.*\(\s*$', event.line)
+            or re.match(r'.*\(\s*\"\w+\",\s*$', event.line)):
+        return ["\""]
+    elif (re.match(r'.*\(\s*\"\w+$', event.line)
+            or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
+        # These REs match correctly but completion does not work
+        return ["\""]
+    elif (re.match(r'.*\(\s*\"$', event.line)):
+        dev = cpp_client.getDevices()
+        if len(dev) > 0:
+            return dev
+        else:
+            return ["NO_INSTANCES_AVAILABLE"]
+    elif (re.match(r'.*\(.+,\s*\"$', event.line)):
+        r = re.compile(r'\"(.*?)\"')
+        m = r.search(event.line)
+        if m:
+            deviceId = m.group(1)
+            return cpp_client.getCurrentlyExecutableCommands(deviceId)
         else:
             return [""]
-    except Exception:
-        print("Distributed auto-completion failed")
+    else:
+        return [""]
 
 
+@distributed_autocomplete
 def auto_complete_instantiate(self, event):
-    try:
-        if (re.match(r'.*\(\s*$', event.line)
-                or re.match(r'.*\(\s*\"\w+\",\s*$', event.line)):
-            return ["\""]
-        elif (re.match(r'.*\(\s*\"\w+$', event.line)
-              or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
-            # These REs match correctly but completion does not work
-            return ["\""]
-        elif (re.match(r'.*\(\s*\"$', event.line)):
-            dev = cpp_client.getServers()
-            if len(dev) > 0:
-                return dev
-            else:
-                return ["NO_INSTANCES_AVAILABLE"]
-        elif (re.match(r'.*\(.+\,\s*$', event.line)):
-            return ["\""]
-        elif (re.match(r'.*\(.+,\s*\"$', event.line)):
-            r = re.compile(r'\"(.*?)\"')
-            m = r.search(event.line)
-            if m:
-                serverId = m.group(1)
-                return cpp_client.getClasses(serverId)
-            else:
-                return [""]
-        elif (re.match(r'.*\(.+,.+,\s*$', event.line)
-              or re.match(r'.*\(.+\,.+\,\s*\".*$', event.line)):
-            return ["\""]
+    if (re.match(r'.*\(\s*$', event.line)
+            or re.match(r'.*\(\s*\"\w+\",\s*$', event.line)):
+        return ["\""]
+    elif (re.match(r'.*\(\s*\"\w+$', event.line)
+            or re.match(r'.*\(\s*\"\w+\",\s*\"\w+$', event.line)):
+        # These REs match correctly but completion does not work
+        return ["\""]
+    elif (re.match(r'.*\(\s*\"$', event.line)):
+        dev = cpp_client.getServers()
+        if len(dev) > 0:
+            return dev
+        else:
+            return ["NO_INSTANCES_AVAILABLE"]
+    elif (re.match(r'.*\(.+\,\s*$', event.line)):
+        return ["\""]
+    elif (re.match(r'.*\(.+,\s*\"$', event.line)):
+        r = re.compile(r'\"(.*?)\"')
+        m = r.search(event.line)
+        if m:
+            serverId = m.group(1)
+            return cpp_client.getClasses(serverId)
         else:
             return [""]
-    except Exception:
-        print("Distributed auto-completion failed")
+    elif (re.match(r'.*\(.+,.+,\s*$', event.line)
+            or re.match(r'.*\(.+\,.+\,\s*\".*$', event.line)):
+        return ["\""]
+    else:
+        return [""]
 
 
 # Register hooks in IPython

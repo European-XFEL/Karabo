@@ -46,7 +46,7 @@ def _run_device(classid, config):
     try:
         device = Configurator(PythonDevice).create(classid, config)
         device._finalizeInternalInitialization()
-    except Exception:
+    except BaseException:
         EventLoop.stop()
         raise
     finally:
