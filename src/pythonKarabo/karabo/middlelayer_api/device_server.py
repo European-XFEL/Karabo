@@ -1,4 +1,4 @@
-from asyncio import (coroutine, create_subprocess_exec, ensure_future, gather,
+from asyncio import (create_subprocess_exec, ensure_future, gather,
                      get_event_loop, set_event_loop_policy, sleep,
                      TimeoutError, wait, wait_for)
 import copy
@@ -84,7 +84,6 @@ class DeviceServerBase(SignalSlotable):
                     "the plug-in folder and dynamically load found devices",
         assignment=Assignment.OPTIONAL, defaultValue=True,
         requiredAccessLevel=AccessLevel.EXPERT)
-    @coroutine
     def scanPlugins(self, value):
         if value and self.scanPluginsTask is None:
             self.scanPluginsTask = ensure_future(self.scanPluginsLoop())
@@ -136,14 +135,13 @@ class DeviceServerBase(SignalSlotable):
         info.merge(self.deviceClassesHash())
         return info
 
-    @coroutine
-    def _run(self, **kwargs):
-        yield from super(DeviceServerBase, self)._run(**kwargs)
+    async def _run(self, **kwargs):
+        await super(DeviceServerBase, self)._run(**kwargs)
         self._ss.enter_context(self.log.setBroker(self._ss))
         self.logger = self.log.logger
 
-        yield from self.pluginLoader.update()
-        yield from self.scanPluginsOnce()
+        await self.pluginLoader.update()
+        await self.scanPluginsOnce()
         self.updateInstanceInfo(self.deviceClassesHash())
 
         self.logger.info("Starting Karabo DeviceServer on host "
@@ -155,17 +153,15 @@ class DeviceServerBase(SignalSlotable):
     def _generateDefaultServerId(self):
         return self.hostName + "_Server_" + str(os.getpid())
 
-    @coroutine
-    def scanPluginsLoop(self):
+    async def scanPluginsLoop(self):
         """every 3 s, check whether there are new entry points"""
         while True:
-            yield from self.pluginLoader.update()
-            if (yield from self.scanPluginsOnce()):
+            await self.pluginLoader.update()
+            if (await self.scanPluginsOnce()):
                 self.updateInstanceInfo(self.deviceClassesHash())
-            yield from sleep(3)
+            await sleep(3)
 
-    @coroutine
-    def scanPluginsOnce(self):
+    async def scanPluginsOnce(self):
         """load all available entry points, return whether new plugin found
 
         This is an endpoint for multiple inheritance. Specializations should
@@ -177,17 +173,16 @@ class DeviceServerBase(SignalSlotable):
         return False
 
     @coslot
-    def slotStartDevice(self, hash):
+    async def slotStartDevice(self, hash):
         classId, deviceId, config = self.parse(hash)
         try:
-            return (yield from self.startDevice(classId, deviceId, config))
+            return (await self.startDevice(classId, deviceId, config))
         except Exception as e:
             e.logmessage = ('could not start device "%s" of class "%s"',
                             deviceId, classId)
             raise
 
-    @coroutine
-    def startDevice(self, classId, deviceId, config):
+    async def startDevice(self, classId, deviceId, config):
         """Start the device `deviceId`
 
         This is an endpoint of multiple inheritance. Every specialization
@@ -241,8 +236,8 @@ class DeviceServerBase(SignalSlotable):
         return {}
 
     @coslot
-    def slotKillServer(self):
-        yield from self.slotKillDevice()
+    async def slotKillServer(self):
+        await self.slotKillDevice()
         self.stopEventLoop()
 
     @slot
@@ -340,8 +335,12 @@ class DeviceServerBase(SignalSlotable):
         server = cls(params)
         if server:
             server._device_initializer = _device_initializer
-            loop.add_signal_handler(SIGTERM, ensure_future,
-                                    server.slotKillServer())
+
+            def sig_kill_handler():
+                """Kill the server on sigterm"""
+                ensure_future(server.slotKillServer())
+
+            loop.add_signal_handler(SIGTERM, sig_kill_handler)
             # NOTE: The server listens to broadcasts and we set a flag in the
             # signal slotable
             server.is_server = True
@@ -356,14 +355,13 @@ class DeviceServerBase(SignalSlotable):
             finally:
                 loop.close()
 
-    @coroutine
-    def onInitialization(self):
+    async def onInitialization(self):
         """Initialization coroutine of the server to start up devices
         """
         if not self._device_initializer:
             return
 
-        yield from self.scanPluginsOnce()
+        await self.scanPluginsOnce()
 
         for deviceId, initializer in self._device_initializer.items():
             configuration = Hash(initializer)
@@ -391,9 +389,8 @@ class MiddleLayerDeviceServer(DeviceServerBase):
     def __init__(self, configuration):
         super(MiddleLayerDeviceServer, self).__init__(configuration)
 
-    @coroutine
-    def _run(self, **kwargs):
-        yield from super(MiddleLayerDeviceServer, self)._run(**kwargs)
+    async def _run(self, **kwargs):
+        await super(MiddleLayerDeviceServer, self)._run(**kwargs)
         if isSet(self.timeServerId):
             self._ss.connect(self.timeServerId, "signalTimeTick",
                              self.slotTimeTick)
@@ -429,9 +426,8 @@ class MiddleLayerDeviceServer(DeviceServerBase):
 
         return h
 
-    @coroutine
-    def scanPluginsOnce(self):
-        changes = yield from super(
+    async def scanPluginsOnce(self):
+        changes = await super(
             MiddleLayerDeviceServer, self).scanPluginsOnce()
         if not self.pluginNamespace:
             return changes
@@ -441,7 +437,7 @@ class MiddleLayerDeviceServer(DeviceServerBase):
             if ep.name in self.plugins or (classes and ep.name not in classes):
                 continue
             try:
-                self.plugins[ep.name] = (yield from get_event_loop().
+                self.plugins[ep.name] = (await get_event_loop().
                                          run_in_executor(None, ep.load))
                 changes = True
             except Exception:
@@ -462,11 +458,10 @@ class MiddleLayerDeviceServer(DeviceServerBase):
             return cls.getClassSchema(), classId, self.serverId
         return super(MiddleLayerDeviceServer, self).slotGetClassSchema(classId)
 
-    @coroutine
-    def startDevice(self, classId, deviceId, config):
+    async def startDevice(self, classId, deviceId, config):
         cls = self.plugins.get(classId)
         if cls is None:
-            return (yield from super(MiddleLayerDeviceServer, self)
+            return (await super(MiddleLayerDeviceServer, self)
                     .startDevice(classId, deviceId, config))
         if "log.level" not in config:
             config["log.level"] = self.log.level
@@ -474,21 +469,21 @@ class MiddleLayerDeviceServer(DeviceServerBase):
             config["timeServerId"] = self.timeServerId
         obj = cls(config)
         task = obj.startInstance(self, broadcast=False)
-        yield from task
+        await task
         return True, deviceId
 
     @coslot
-    def slotKillServer(self):
+    async def slotKillServer(self):
         if self.deviceInstanceMap:
             # first check if there are device instances to be removed
-            done, pending = yield from wait(
+            done, pending = await wait(
                 [d.slotKillDevice() for d in self.deviceInstanceMap.values()],
                 timeout=10)
 
             if pending:
                 self.logger.warning("some devices could not be killed")
         # then kill the server
-        yield from super(MiddleLayerDeviceServer, self).slotKillServer()
+        await super(MiddleLayerDeviceServer, self).slotKillServer()
 
         return self.serverId
 
@@ -496,16 +491,16 @@ class MiddleLayerDeviceServer(DeviceServerBase):
         self.deviceInstanceMap[deviceId] = child
 
     @coslot
-    def slotInstanceNew(self, instanceId, info):
-        yield from super(MiddleLayerDeviceServer, self).slotInstanceNew(
+    async def slotInstanceNew(self, instanceId, info):
+        await super(MiddleLayerDeviceServer, self).slotInstanceNew(
             instanceId, info)
         if (info.get("classId") == "TimeServer" and
                 instanceId == self.timeServerId):
             self._ss.connect(self.timeServerId, "signalTimeTick",
                              self.slotTimeTick)
         # Forward the broadcast to the device instances!
-        yield from gather(*[dev.slotInstanceNew(instanceId, info)
-                            for dev in self.deviceInstanceMap.values()])
+        await gather(*[dev.slotInstanceNew(instanceId, info)
+                       for dev in self.deviceInstanceMap.values()])
 
     @slot
     def slotInstanceGone(self, instanceId, info):
@@ -530,9 +525,8 @@ class BoundDeviceServer(DeviceServerBase):
                     "as they made problems",
         defaultValue=[], requiredAccessLevel=AccessLevel.EXPERT)
 
-    @coroutine
-    def scanPluginsOnce(self):
-        changes = yield from super(BoundDeviceServer, self).scanPluginsOnce()
+    async def scanPluginsOnce(self):
+        changes = await super(BoundDeviceServer, self).scanPluginsOnce()
         if not self.boundNamespace:
             return changes
         classes = set(self.deviceClasses)
@@ -546,13 +540,13 @@ class BoundDeviceServer(DeviceServerBase):
             try:
                 env = dict(os.environ)
                 env["PYTHONPATH"] = self.pluginDirectory
-                process = yield from create_subprocess_exec(
+                process = await create_subprocess_exec(
                     sys.executable, "-m", "karabo.bound_api.launcher",
                     "schema", self.boundNamespace, ep.name,
                     env=env, stdout=PIPE)
                 try:
-                    schema = yield from process.stdout.read()
-                    yield from process.wait()
+                    schema = await process.stdout.read()
+                    await process.wait()
                 except Exception:
                     process.kill()
                     raise
@@ -584,14 +578,14 @@ class BoundDeviceServer(DeviceServerBase):
         self.deviceInstanceMap.pop(instanceId, None)
         self.processes.pop(instanceId, None)
 
-    def supervise(self, deviceId, process, info):
-        def supervisor():
+    async def supervise(self, deviceId, process, info):
+        async def supervisor():
             while True:
-                yield from sleep(100)
+                await sleep(100)
                 for i in range(5):
                     try:
                         nonlocal info
-                        info = yield from wait_for(
+                        info = await wait_for(
                             self.call(deviceId, "slotPing", deviceId,
                                       1, False),
                             timeout=5)
@@ -607,7 +601,7 @@ class BoundDeviceServer(DeviceServerBase):
                                      deviceId)
                     process.terminate()
                     try:
-                        yield from sleep(5)
+                        await sleep(5)
                         self.logger.warn('killing non-responding device "%s"',
                                          deviceId)
                         process.kill()
@@ -618,14 +612,13 @@ class BoundDeviceServer(DeviceServerBase):
 
         task = background(supervisor())
         try:
-            yield from process.wait()
+            await process.wait()
         finally:
             task.cancel()
 
-    @coroutine
-    def startDevice(self, classId, deviceId, config):
+    async def startDevice(self, classId, deviceId, config):
         if classId not in self.bounds:
-            return (yield from super(BoundDeviceServer, self)
+            return (await super(BoundDeviceServer, self)
                     .startDevice(classId, deviceId, config))
         if "Logger.priority" not in config:
             config["Logger.priority"] = self.log.level
@@ -639,13 +632,13 @@ class BoundDeviceServer(DeviceServerBase):
         future = self._new_device_futures[deviceId]
         # the device ID is a parameter on the commandline only such that
         # one can identify via ps which process corresponds to which device
-        process = yield from create_subprocess_exec(
+        process = await create_subprocess_exec(
             sys.executable, "-m", "karabo.bound_api.launcher",
             "run", self.boundNamespace, classId, deviceId,
             env=env, stdin=PIPE)
         process.stdin.write(encodeXML(config).encode('utf8'))
         process.stdin.close()
-        done, pending, error = yield from firstCompleted(
+        done, pending, error = await firstCompleted(
             ok=future, error=process.wait())
         if "ok" in done:
             self.processes[deviceId] = process
@@ -655,11 +648,11 @@ class BoundDeviceServer(DeviceServerBase):
             return False, deviceId
 
     @coslot
-    def slotKillServer(self):
+    async def slotKillServer(self):
         for device in self.processes:
             self._ss.emit("call", {device: ["slotKillDevice"]})
         try:
-            yield from wait_for(
+            await wait_for(
                 gather(*(p.wait() for p in self.processes.values())),
                 timeout=10)
         except TimeoutError:
@@ -667,7 +660,7 @@ class BoundDeviceServer(DeviceServerBase):
             for p in self.processes.values():
                 p.kill()
         self.processes.clear()
-        yield from super(BoundDeviceServer, self).slotKillServer()
+        await super(BoundDeviceServer, self).slotKillServer()
 
         return self.serverId
 

@@ -628,10 +628,7 @@ class Slot(Descriptor):
         for n in name.split("."):
             func = getattr(func, n)
 
-        coro = get_event_loop().run_coroutine_or_thread(func)
-
-        @coroutine
-        def wrapper():
+        async def wrapper():
             try:
                 if (self.allowedStates is not None and
                         device.state not in self.allowedStates):
@@ -640,13 +637,15 @@ class Slot(Descriptor):
                     device._ss.reply(message, msg, error=True)
                     device.logger.warning(msg)
                     return
+
+                coro = get_event_loop().run_coroutine_or_thread(func)
                 device.lastCommand = self.method.__name__
-                ret = yield from coro
+                ret = await coro
                 device.update()
                 device._ss.reply(message, ret)
             except Exception as e:
                 _, exc, tb = sys.exc_info()
-                yield from device._onException(self, exc, tb)
+                await device._onException(self, exc, tb)
                 device._ss.replyException(message, e)
 
         return ensure_future(wrapper())

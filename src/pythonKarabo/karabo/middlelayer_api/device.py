@@ -1,4 +1,3 @@
-from asyncio import coroutine
 import os
 import socket
 
@@ -116,8 +115,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
 
     @Slot(displayedName="Clear Lock", requiredAccessLevel=AccessLevel.EXPERT,
           description="Clear the lock on this device")
-    @coroutine
-    def slotClearLock(self):
+    async def slotClearLock(self):
         """ Clear the lock on this device """
         self.lockedBy = ""
 
@@ -199,10 +197,9 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
 
         return info
 
-    @coroutine
-    def _run(self, **kwargs):
+    async def _run(self, **kwargs):
         self._ss.enter_context(self.log.setBroker(self._ss))
-        yield from super(Device, self)._run(**kwargs)
+        await super(Device, self)._run(**kwargs)
 
     @slot
     def slotGetConfiguration(self):
@@ -238,12 +235,12 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
             return 'Device locked by "{}"'.format(self.lockedBy)
         return None
 
-    def slotReconfigure(self, reconfiguration, message):
+    async def slotReconfigure(self, reconfiguration, message):
         # This can only be called as a slot
         msg = self._checkLocked(message)
         if msg is not None:
             raise KaraboError(msg)
-        yield from super(Device, self).slotReconfigure(reconfiguration)
+        await super(Device, self).slotReconfigure(reconfiguration)
         self.update()
 
     slotReconfigure = coslot(slotReconfigure, passMessage=True)
@@ -267,7 +264,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         self.signalSchemaUpdated(self.getDeviceSchema(), self.deviceId)
 
     @coslot
-    def slotUpdateSchemaAttributes(self, updates):
+    async def slotUpdateSchemaAttributes(self, updates):
         """Apply runtime attribute updates to the device
 
         This method will apply all attributes to the device. If a single
@@ -279,7 +276,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
                         as keys
         """
         success = self.applyRuntimeUpdates(updates)
-        yield from self.publishInjectedParameters()
+        await self.publishInjectedParameters()
 
         ret = Hash()
         ret["success"] = success

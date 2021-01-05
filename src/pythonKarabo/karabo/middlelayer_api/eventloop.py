@@ -191,8 +191,7 @@ class JmsBroker(Broker):
         self.emit('call', {'*': ['slotInstanceNew']},
                   self.deviceId, self.info)
 
-        @coroutine
-        def heartbeat():
+        async def heartbeat():
             try:
                 first = True
                 while True:
@@ -206,7 +205,7 @@ class JmsBroker(Broker):
                         # '+1' protects against 0 if sleepInterval is 1
                         sleepInterval = sleepInterval // 2 + 1
                         first = False
-                    yield from sleep(sleepInterval)
+                    await sleep(sleepInterval)
                     self.heartbeat(interval)
             finally:
                 self.emit('call', {'*': ['slotInstanceGone']},
@@ -229,14 +228,13 @@ class JmsBroker(Broker):
         p['classId'] = self.classId
         self.send(p, args)
 
-    @coroutine
-    def request(self, device, target, *args):
+    async def request(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex()[4:-4])
         self.call("call", {device: [target]}, reply, args)
         future = Future(loop=self.loop)
         self.repliers[reply] = future
         future.add_done_callback(lambda _: self.repliers.pop(reply))
-        return (yield from future)
+        return (await future)
 
     def log(self, message):
         p = openmq.Properties()
@@ -286,8 +284,7 @@ class JmsBroker(Broker):
         self.emit("call", {deviceId: ["slotDisconnectFromSignal"]}, signal,
                   slot.__self__.deviceId, slot.__name__)
 
-    @coroutine
-    def consume(self, device):
+    async def consume(self, device):
         loop = get_event_loop()
         device = weakref.ref(device)
         running = True
@@ -300,6 +297,7 @@ class JmsBroker(Broker):
             m_mq = broadcast_mq if self.broadcast else device_mq
             consumer = openmq.Consumer(
                 self.session, self.destination, m_mq, False)
+
             with closing(consumer):
                 while running:
                     try:
@@ -335,14 +333,13 @@ class JmsBroker(Broker):
 
         task = loop.run_in_executor(None, receiver)
         try:
-            yield from shield(task)
+            await shield(task)
         except CancelledError:
             running = False
-            yield from task
+            await task
             raise
 
-    @coroutine
-    def handleMessage(self, message, device):
+    async def handleMessage(self, message, device):
         try:
             slots, params = self.decodeMessage(message)
         except Exception:
@@ -389,8 +386,7 @@ class JmsBroker(Broker):
         else:
             self.slots[name] = slot
 
-    @coroutine
-    def main(self, device):
+    async def main(self, device):
         """This is the main loop of a device
 
         A device is running if this coroutine is still running.
@@ -399,10 +395,9 @@ class JmsBroker(Broker):
             # this method should not keep a reference to the device
             # while yielding, otherwise the device cannot be collected
             device = weakref.ref(device)
-            yield from self.consume(device())
+            await self.consume(device())
 
-    @coroutine
-    def stop_tasks(self):
+    async def stop_tasks(self):
         """Stop all currently running task
 
         This marks the end of life of a device.
@@ -423,8 +418,8 @@ class JmsBroker(Broker):
         # the device is shutdown.
         # Hence, this makes sure the device gets killed and thus a server
         # can shutdown by closing the eventloop.
-        yield from wait_for(gather(*tasks, return_exceptions=True),
-                            timeout=5)
+        await wait_for(gather(*tasks, return_exceptions=True),
+                       timeout=5)
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
@@ -564,9 +559,9 @@ class KaraboFuture(object):
         self.future.add_done_callback(func)
 
     @synchronize
-    def wait(self):
+    async def wait(self):
         """Wait for the result to be available, and return the result"""
-        return (yield from self.future)
+        return (await self.future)
 
 
 for f in ["cancel", "cancelled", "done", "result", "exception"]:
@@ -683,7 +678,8 @@ class EventLoop(SelectorEventLoop):
                                f"'_beats'")
 
         self.changedFutures = set()  # call if some property changes
-        self.set_default_executor(ThreadPoolExecutor(_NUM_THREADS))
+        self._default_executor = ThreadPoolExecutor(_NUM_THREADS)
+        self.set_default_executor(self._default_executor)
         self.set_exception_handler(EventLoop.exceptionHandler)
 
     def exceptionHandler(self, context):
@@ -724,15 +720,14 @@ class EventLoop(SelectorEventLoop):
             pass
         return task
 
-    @coroutine
-    def run_coroutine_or_thread(self, f, *args, **kwargs):
+    async def run_coroutine_or_thread(self, f, *args, **kwargs):
         """run the function *f* correctly, as a coroutine or thread
 
         if *f* is a normal function, it is started in a thread and returns
         a future, if it is a coroutine function, it returns the coroutine
         object."""
         if iscoroutinefunction(f):
-            return (yield from f(*args, **kwargs))
+            return (await f(*args, **kwargs))
         else:
             loop = NoEventLoop(self.instance())
             exception = None
@@ -771,7 +766,7 @@ class EventLoop(SelectorEventLoop):
                 # instead, and continue. This "and continue" is the while loop
                 future = Future(loop=self)
                 try:
-                    return (yield from future)
+                    return (await future)
                 except CancelledError:
                     # Ignore cancelling from the outside, instead cancel the
                     # thread. Forward any resulting exception from the thread
@@ -786,12 +781,11 @@ class EventLoop(SelectorEventLoop):
         lock.acquire()
         task = None
 
-        @coroutine
-        def run_device():
+        async def run_device():
             nonlocal task
             task = Task.current_task()
             try:
-                yield from device.startInstance()
+                await device.startInstance()
             finally:
                 lock.release()
 
@@ -805,12 +799,11 @@ class EventLoop(SelectorEventLoop):
         except AttributeError:
             return None
 
-    @coroutine
-    def waitForChanges(self):
+    async def waitForChanges(self):
         f = Future(loop=self)
         self.changedFutures.add(f)
         try:
-            yield from f
+            await f
         finally:
             self.changedFutures.discard(f)
 
@@ -822,8 +815,7 @@ class EventLoop(SelectorEventLoop):
     def sync(self, coro, timeout, wait):
         return coro
 
-    @coroutine
-    def cancel_all_tasks(self):
+    async def cancel_all_tasks(self):
         """Cancel all running tasks except the current executing this"""
         me = Task.current_task()
         tasks = [t for t in Task.all_tasks(self) if t is not me]

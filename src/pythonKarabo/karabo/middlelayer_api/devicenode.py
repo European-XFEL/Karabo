@@ -1,11 +1,11 @@
 from asyncio import (
-    CancelledError, coroutine, ensure_future, TimeoutError, wait_for, Queue)
+    CancelledError, ensure_future, TimeoutError, wait_for, Queue)
 from itertools import chain
 
 from karabo.native import isSet, KaraboError, String
 from karabo.native import AccessMode, Assignment, NodeType, Hash
 
-from .device_client import getDevice, lock
+from .device_client import getDevice
 from .signalslot import coslot
 
 
@@ -33,9 +33,6 @@ class DeviceNode(String):
             motor = DeviceNode(properties=["position", "speed"],
                                commands=["start"])
 
-    If the other device should be locked by this device, set the attribute
-    ``lock=True``.
-
     A timeout in seconds can be specified via::
 
         class Stage(Device):
@@ -45,14 +42,12 @@ class DeviceNode(String):
     the connection could not be established, an error is raised.
     """
 
-    def __init__(self, properties=(), commands=(), timeout=None,
-                 lock=False, **kwargs):
+    def __init__(self, properties=(), commands=(), timeout=None, **kwargs):
         super().__init__(**kwargs)
 
         self.properties = properties
         self.commands = commands
         self.timeout = timeout
-        self.lock = lock
         if self.properties or self.commands:
             for default in ("deviceId", "state", "alarmCondition"):
                 if default not in self.properties:
@@ -82,24 +77,22 @@ class DeviceNode(String):
     def _setter(self, instance, data):
         proxy = instance.__dict__[self.key]
 
-        @coroutine
-        def setter():
-            yield from instance.call(proxy._deviceId,
-                                     "slotReconfigure", data)
+        async def setter():
+            await instance.call(proxy._deviceId,
+                                "slotReconfigure", data)
 
         return [setter]
 
-    @coroutine
-    def _main_loop(self, proxy, instance):
+    async def _main_loop(self, proxy, instance):
         """relay data coming from *proxy* on behalf of *instance*"""
         try:
             queue = Queue()
             proxy._queues[None].add(queue)
             proxy._current = Hash()
             with proxy:
-                yield from proxy
+                await proxy.update_proxy()
                 while True:
-                    data = yield from queue.get()
+                    data = await queue.get()
                     out = self._copy_properties(data)
                     if out.empty():
                         continue
@@ -122,42 +115,44 @@ class DeviceNode(String):
                 self.key))
         return self._initialize(instance, value)
 
-    @coroutine
-    def initialize(self, instance, value):
+    def _initialize(self, instance, value):
         # This should not happen as we are mandatory, but we never know
         if not isSet(value):
             instance.__dict__[self.key] = None
-            return
-        try:
-            proxy = yield from wait_for(getDevice(value),
-                                        timeout=self.timeout)
-        except TimeoutError:
-            # We can accept a connection attempt only for a limited time, after
-            # that, the device will go offline
-            raise KaraboError(
-                'The DeviceNode with key "{}" timed out and could not '
-                'establish a proxy to "{}"'.format(self.key, value))
+            return []
 
-        proxy._current = Hash()
-        instance.__dict__[self.key] = proxy
-        if self.commands or self.properties:
-            instance._notifyNewSchema()
+        async def inner():
+            try:
+                proxy = await wait_for(getDevice(value),
+                                       timeout=self.timeout)
+            except TimeoutError:
+                # We can accept a connection attempt only for a limited time,
+                # after that, the device will go offline
+                raise KaraboError(
+                    'The DeviceNode with key "{}" timed out and could not '
+                    'establish a proxy to "{}"'.format(self.key, value))
 
-        def register(command):
-            @coslot
-            def slot():
-                yield from instance._ss.request(proxy._deviceId, command)
+            proxy._current = Hash()
+            instance.__dict__[self.key] = proxy
+            if self.commands or self.properties:
+                instance._notifyNewSchema()
 
-            instance._ss.register_slot("{}.{}".format(self.key, command), slot)
+            def register(command):
+                @coslot
+                async def slot():
+                    await instance._ss.request(proxy._deviceId, command)
 
-        for command in self.commands:
-            register(command)
+                instance._ss.register_slot(
+                    "{}.{}".format(self.key, command), slot)
 
-        instance._ss.exitStack.enter_context((yield from proxy))
-        if self.lock:
-            instance._ss.exitStack.enter_context((yield from lock(proxy)))
-        if self.properties:
-            ensure_future(self._main_loop(proxy, instance))
+            for command in self.commands:
+                register(command)
+
+            instance._ss.exitStack.enter_context((await proxy.update_proxy()))
+            if self.properties:
+                ensure_future(self._main_loop(proxy, instance))
+
+        return [inner()]
 
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super().toSchemaAndAttrs(device, state)
