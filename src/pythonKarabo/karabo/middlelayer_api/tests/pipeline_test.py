@@ -1,5 +1,5 @@
 from asyncio import (
-    coroutine, Future, IncompleteReadError, QueueFull, sleep, StreamReader,
+    Future, IncompleteReadError, sleep, StreamReader,
     StreamWriter, WriteTransport)
 from unittest import main
 from unittest.mock import Mock
@@ -30,6 +30,7 @@ class FakeTimestamp:
     """as the order of a dictionary is not defined in Python 3.4, we cannot
     use normal timestamps, as their serialization depends on dictionary order.
     This fake timestamp always serializes the same way"""
+
     def toDict(self):
         return {"a": 3}
 
@@ -77,21 +78,20 @@ class TestChannel(DeviceTest):
             items.append(item)
         self.assertEqual(items, [1, 2, 3, 4, 5])
 
-    @coroutine
-    def sleep(self):
+    async def sleep(self):
         for _ in range(10):
-            yield from sleep(0)
+            await sleep(0)
 
     @async_tst
-    def test_readBytes(self):
+    async def test_readBytes(self):
         self.reader.feed_data(b"\04\00\00\00abcd")
-        data = yield from self.channel.readBytes()
+        data = await self.channel.readBytes()
         self.assertEqual(data, b"abcd")
 
     @async_tst
-    def test_readHash(self):
+    async def test_readHash(self):
         self.feedHash(Hash("a", 5))
-        data = yield from self.channel.readHash()
+        data = await self.channel.readHash()
         self.assertEqual(data["a"], 5)
 
     def test_writeHash(self):
@@ -104,54 +104,53 @@ class TestChannel(DeviceTest):
         self.assertChecksum(57409755)
 
     @async_tst
-    def test_nextChunk(self):
+    async def test_nextChunk(self):
         future = Future()
         task = background(self.channel.nextChunk(future))
-        yield from self.sleep()
+        await self.sleep()
         self.assertChecksum(1)
         future.set_result(self.sample_data)
-        yield from self.sleep()
+        await self.sleep()
         self.assertChecksum(3020956469)
         self.assertFalse(task.done())
         self.feedHash(Hash("reason", "update"))
-        yield from task
+        await task
 
     @async_tst
-    def test_nextChunk_eof(self):
+    async def test_nextChunk_eof(self):
         future = Future()
         task = background(self.channel.nextChunk(future))
-        yield from self.sleep()
+        await self.sleep()
         self.reader.feed_eof()
         try:
-            yield from task
+            await task
         except IncompleteReadError as error:
             self.assertFalse(error.partial)
         else:
             self.fail()
 
-    @coroutine
-    def handler(self, data, meta):
+    async def handler(self, data, meta):
         self.data.append(data)
         self.meta.append(meta)
 
-    @coroutine
-    def eos_handler(self, name):
+    async def eos_handler(self, name):
         self.eos_channel = name
 
     def feedTestData(self):
         encoded = encodeBinary(Hash("a", 7))
         meta = Hash("source", "a", "timestamp", False)
         self.feedHash(Hash("byteSizes", [len(encoded)] * 3,
-                      "sourceInfo", [meta] * 3))
+                           "sourceInfo", [meta] * 3))
         self.reader.feed_data(pack("<I", 3 * len(encoded)))
         for i in range(3):
             self.reader.feed_data(encoded)
 
     @async_tst
-    def test_readChunk(self):
+    async def test_readChunk(self):
         network = NetworkInput({})
         network.handler = self.handler
         network.raw = False
+        await network._run()
 
         class Test(Proxy):
             a = Int32()
@@ -160,7 +159,7 @@ class TestChannel(DeviceTest):
         self.feedTestData()
         self.data = []
         self.meta = []
-        self.assertTrue((yield from task))
+        self.assertTrue((await task))
         self.assertEqual(len(self.data), 3)
         self.assertEqual(self.data[1].a, 7)
         self.assertEqual(len(self.meta), 3)
@@ -168,15 +167,16 @@ class TestChannel(DeviceTest):
         self.assertFalse(self.meta[0].timestamp)
 
     @async_tst
-    def test_readChunk_raw(self):
+    async def test_readChunk_raw(self):
         network = NetworkInput({})
         network.raw = True
         network.handler = self.handler
+        await network._run()
         task = background(network.readChunk(self.channel, None))
         self.feedTestData()
         self.data = []
         self.meta = []
-        self.assertTrue((yield from task))
+        self.assertTrue((await task))
         self.assertEqual(len(self.data), 3)
         self.assertEqual(self.data[1]["a"], 7)
         self.assertEqual(len(self.meta), 3)
@@ -184,173 +184,182 @@ class TestChannel(DeviceTest):
         self.assertFalse(self.meta[0].timestamp)
 
     @async_tst
-    def test_readChunk_eos(self):
+    async def test_readChunk_eos(self):
         network = NetworkInput({})
         network.raw = True
         network.handler = self.handler
         network.end_of_stream_handler = self.eos_handler
+        await network._run()
         self.assertEqual(self.eos_channel, "")
         task = background(network.readChunk(self.channel, None))
         self.feedHash(Hash("endOfStream", True))
         self.reader.feed_data(b"\0\0\0\0")
         self.data = []
         self.meta = []
-        self.assertTrue((yield from task))
+        self.assertTrue((await task))
         self.assertEqual(self.data, [])
         self.assertEqual(self.eos_channel, "channelname")
         self.assertEqual(len(self.meta), 0)
 
     @async_tst
-    def test_readChunk_eof(self):
+    async def test_readChunk_eof(self):
         network = NetworkInput({})
         network.parent = Mock()
+        await network._run()
         self.reader.feed_eof()
-        self.assertFalse((yield from network.readChunk(self.channel, None)))
+        self.assertFalse((await network.readChunk(self.channel, None)))
 
-    @coroutine
-    def write_something(self, output, number=10):
+    async def write_something(self, output, number=10):
         output.channelName = "channelname"
         task = background(output.serve(self.reader, self.writer))
         for i in range(number):
             output.writeChunkNoWait(self.sample_data)
-            yield from self.sleep()
+            await self.sleep()
         return task
 
     @async_tst
-    def test_shared_queue(self):
+    async def test_shared_queue(self):
         output = NetworkOutput({"noInputShared": "queue"})
+        # Initialize
+        await output._run()
         self.feedHash(Hash("reason", "hello", "dataDistribution", "shared",
                            "onSlowness", "queue", "instanceId", "Test"))
-        task = yield from self.write_something(output)
+        task = await self.write_something(output)
         self.assertChecksum(3020956469)
         for checksum in [452019817, 881158557, 14388433, 2145693701]:
             self.feedRequest()
-            yield from self.sleep()
+            await self.sleep()
             self.assertChecksum(checksum)
         self.reader.feed_eof()
-        yield from task
+        await task
         self.assertTrue(self.writer.transport.closed)
 
     @async_tst
-    def test_shared_drop(self):
+    async def test_shared_drop(self):
         output = NetworkOutput({"noInputShared": "drop"})
+        await output._run()
         self.feedHash(Hash("reason", "hello", "dataDistribution", "shared",
                            "onSlowness", "drop", "instanceId", "Test"))
-        task = yield from self.write_something(output)
-        yield from self.sleep()
+        task = await self.write_something(output)
+        await self.sleep()
         self.assertChecksum(3020956469)
         self.feedRequest()
-        yield from self.sleep()
+        await self.sleep()
         self.feedRequest()
         for _ in range(100):
             self.assertChecksum(452019817)
-            yield from self.sleep()
+            await self.sleep()
         output.writeChunkNoWait(self.sample_data)
-        yield from self.sleep()
+        await self.sleep()
         self.assertChecksum(881158557)
         self.reader.feed_eof()
-        yield from task
+        await task
         self.assertTrue(self.writer.transport.closed)
 
     @async_tst
-    def test_shared_queue_drop(self):
+    async def test_shared_queue_drop(self):
         output = NetworkOutput({"noInputShared": "queueDrop"})
+        await output._run()
         self.feedHash(Hash("reason", "hello", "dataDistribution", "shared",
                            "onSlowness", "queueDrop", "instanceId", "Test"))
-        task = yield from self.write_something(output, 200)
-        yield from self.sleep()
+        task = await self.write_something(output, 200)
+        await self.sleep()
         self.assertChecksum(3020956469)
         self.feedRequest()
-        yield from self.sleep()
+        await self.sleep()
         self.feedRequest()
-        yield from self.sleep()
+        await self.sleep()
         for _ in range(100):
             self.assertChecksum(881158557)
-            yield from self.sleep()
+            await self.sleep()
         output.writeChunkNoWait(self.sample_data)
-        yield from self.sleep()
+        await self.sleep()
         self.assertChecksum(881158557)
         for i in range(200):
             output.writeChunkNoWait(self.sample_data)
-        yield from self.sleep()
+        await self.sleep()
         self.assertChecksum(881158557)
         self.reader.feed_eof()
-        yield from task
+        await task
         self.assertTrue(self.writer.transport.closed)
 
     @async_tst
     def test_shared_throw(self):
         with self.assertRaises(ValueError):
-            output = NetworkOutput({"noInputShared": "throw"})
+            output = NetworkOutput({"noInputShared": "throw"})  # noqa
 
     @async_tst
-    def test_shared_wait(self):
+    async def test_shared_wait(self):
         output = NetworkOutput({"noInputShared": "wait"})
         output.channelName = "channelname"
+        await output._run()
         task = background(output.serve(self.reader, self.writer))
         self.feedHash(Hash("reason", "hello", "dataDistribution", "shared",
                            "onSlowness", "wait", "instanceId", "Test"))
-        yield from self.sleep()
-        yield from output.writeChunk([(Hash("a", 5), FakeTimestamp())])
-        yield from self.sleep()
+        await self.sleep()
+        await output.writeChunk([(Hash("a", 5), FakeTimestamp())])
+        await self.sleep()
         self.feedRequest()
-        yield from self.sleep()
-        yield from output.writeChunk(self.sample_data)
-        yield from output.writeChunk(self.sample_data)
+        await self.sleep()
+        await output.writeChunk(self.sample_data)
+        await output.writeChunk(self.sample_data)
         waiter = background(output.writeChunk(self.sample_data))
-        yield from self.sleep()
+        await self.sleep()
         self.assertFalse(waiter.done())
         self.feedRequest()
-        yield from self.sleep()
+        await self.sleep()
         self.assertTrue(waiter.done())
         self.assertChecksum(2194103602)
         self.reader.feed_eof()
-        yield from task
+        await task
         self.assertTrue(self.writer.transport.closed)
 
     @async_tst
-    def test_copy_queue(self):
+    async def test_copy_queue(self):
         output = NetworkOutput({"noInputShared": "drop"})
+        await output._run()
         self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
                            "onSlowness", "queue", "instanceId", "Test"))
-        task = yield from self.write_something(output)
+        task = await self.write_something(output)
         self.assertChecksum(3020956469)
         for checksum in [452019817, 881158557, 14388433, 2145693701]:
             self.feedRequest()
-            yield from self.sleep()
+            await self.sleep()
             self.assertChecksum(checksum)
         self.reader.feed_eof()
-        yield from task
+        await task
         self.assertTrue(self.writer.transport.closed)
 
     @async_tst
-    def test_copy_drop(self):
+    async def test_copy_drop(self):
         output = NetworkOutput({"noInputShared": "drop"})
+        await output._run()
         self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
                            "onSlowness", "drop", "instanceId", "Test"))
-        task = yield from self.write_something(output)
-        yield from self.sleep()
+        task = await self.write_something(output)
+        await self.sleep()
         self.assertChecksum(3020956469)
         self.feedRequest()
-        yield from self.sleep()
+        await self.sleep()
         for _ in range(100):
             self.assertChecksum(3020956469)
-            yield from self.sleep()
+            await self.sleep()
         output.writeChunkNoWait(self.sample_data)
         self.feedRequest()
-        yield from self.sleep()
+        await self.sleep()
         self.assertChecksum(452019817)
         self.reader.feed_eof()
-        yield from task
+        await task
         self.assertTrue(self.writer.transport.closed)
 
     @async_tst
-    def test_copy_queue_drop(self):
+    async def test_copy_queue_drop(self):
         output = NetworkOutput({"noInputShared": "drop"})
+        await output._run()
         self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
                            "onSlowness", "queueDrop", "instanceId", "Test"))
-        task = yield from self.write_something(output, 200)
-        yield from self.sleep()
+        task = await self.write_something(output, 200)
+        await self.sleep()
         self.assertChecksum(3020956469)
         # Write like crazy, we do not have a request and roll!
         output.writeChunkNoWait(self.sample_data)
@@ -358,63 +367,65 @@ class TestChannel(DeviceTest):
         output.writeChunkNoWait(self.sample_data)
         self.assertChecksum(3020956469)
         self.feedRequest()
-        yield from self.sleep()
+        await self.sleep()
         for _ in range(100):
             self.assertChecksum(452019817)
-            yield from self.sleep()
+            await self.sleep()
         output.writeChunkNoWait(self.sample_data)
         self.feedRequest()
-        yield from self.sleep()
+        await self.sleep()
         self.assertChecksum(881158557)
         self.reader.feed_eof()
-        yield from task
+        await task
         self.assertTrue(self.writer.transport.closed)
 
     @async_tst
-    def test_copy_throw(self):
+    async def test_copy_throw(self):
         output = NetworkOutput({"noInputShared": "drop"})
+        await output._run()
         output.channelName = "channelname"
         self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
                            "onSlowness", "throw", "instanceId", "Test"))
-        task = yield from self.write_something(output)
-        yield from self.sleep()
+        task = await self.write_something(output)
+        await self.sleep()
         self.assertChecksum(3020956469)
         self.feedRequest()
-        yield from self.sleep()
+        await self.sleep()
         for _ in range(100):
             self.assertChecksum(3020956469)
-            yield from self.sleep()
+            await self.sleep()
         output.writeChunkNoWait(self.sample_data)
         self.feedRequest()
-        yield from self.sleep()
+        await self.sleep()
         self.assertChecksum(452019817)
         self.reader.feed_eof()
-        yield from task
+        await task
         self.assertTrue(self.writer.transport.closed)
 
     @async_tst
-    def test_copy_wait(self):
+    async def test_copy_wait(self):
         output = NetworkOutput({"noInputShared": "drop"})
+        await output._run()
         output.channelName = "channelname"
         task = background(output.serve(self.reader, self.writer))
         self.feedHash(Hash("reason", "hello", "dataDistribution", "copy",
                            "onSlowness", "wait", "instanceId", "Test"))
-        yield from output.writeChunk(self.sample_data)
-        yield from self.sleep()
-        yield from output.writeChunk(self.sample_data)
+        await output.writeChunk(self.sample_data)
+        await self.sleep()
+        await output.writeChunk(self.sample_data)
         self.feedRequest()
-        yield from self.sleep()
-        yield from output.writeChunk(self.sample_data)
-        yield from output.writeChunk(self.sample_data)
+        await self.sleep()
+        await output.writeChunk(self.sample_data)
+        await output.writeChunk(self.sample_data)
         waiter = background(output.writeChunk(self.sample_data))
-        yield from self.sleep()
+        await self.sleep()
         self.assertFalse(waiter.done())
         self.feedRequest()
-        yield from self.sleep()
+        await self.sleep()
         self.assertTrue(waiter.done())
         self.assertChecksum(881158557)
         self.reader.feed_eof()
-        yield from task
+        await task
         self.assertTrue(self.writer.transport.closed)
 
 

@@ -1,3 +1,4 @@
+# flake8: noqa
 import os.path as op
 
 from karabo.testing.import_checker import check_for_star_imports

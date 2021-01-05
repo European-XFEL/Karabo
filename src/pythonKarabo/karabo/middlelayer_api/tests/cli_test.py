@@ -1,5 +1,5 @@
 from asyncio import (
-    coroutine, ensure_future, get_event_loop, set_event_loop, sleep, wait_for)
+    ensure_future, get_event_loop, set_event_loop, sleep, wait_for)
 from contextlib import closing
 import gc
 from itertools import count
@@ -23,9 +23,8 @@ class Remote(Macro):
     counter = Int(defaultValue=-1)
 
     # avoid that test_main gets stuck. Raise a timeout error instead.
-    @coroutine
-    def _run(self, *args, **kwargs):
-        return (yield from wait_for(super()._run(*args, **kwargs), timeout=5))
+    async def _run(self, *args, **kwargs):
+        return (await wait_for(super()._run(*args, **kwargs), timeout=5))
 
     @Slot()
     def count(self):
@@ -45,27 +44,23 @@ class Other(Device):
     something = Int(defaultValue=333)
     counter = Int(defaultValue=-1)
 
-    @coroutine
-    def do_count(self):
+    async def do_count(self):
         for i in count():
             self.counter = i
-            yield from sleep(0.1)
+            await sleep(0.1)
 
     @Slot()
-    @coroutine
-    def count(self):
+    async def count(self):
         ensure_future(self.do_count())
 
-    @coroutine
-    def onInitialization(self):
-        self.myself = yield from getDevice("other")
+    async def onInitialization(self):
+        self.myself = await getDevice("other")
         self.myself.something = 222
 
-    @coroutine
-    def onDestruction(self):
+    async def onDestruction(self):
         with self.myself:
             self.myself.something = 111
-            yield from sleep(0.02)
+            await sleep(0.02)
 
 
 class Tests(TestCase):
@@ -97,10 +92,9 @@ class Tests(TestCase):
     def test_main(self):
         Remote.main(["", "count", "counter=7"])
 
-    @coroutine
-    def init_other(self):
+    async def init_other(self):
         self.other = Other(dict(_deviceId_="other", _serverId_="tserver"))
-        yield from self.other.startInstance()
+        await self.other.startInstance()
 
     def test_autodisconnect(self):
         """test the automatic disconnect after 15 s ATTENTION! LONG TEST!
@@ -142,14 +136,13 @@ class Tests(TestCase):
             self.assertFalse(thread.is_alive())
     test_autodisconnect.slow = 1
 
-    @coroutine
-    def init_topo(self, dc):
+    async def init_topo(self, dc):
         other = Other(dict(_deviceId_="other", _serverId_="tserver"))
         self.assertNotIn("other", getDevices())
         self.assertNotIn("other", getClients())
         self.assertNotIn("other", getDevices("tserver"))
-        yield from other.startInstance()
-        yield from sleep(0.1)
+        await other.startInstance()
+        await sleep(0.1)
         self.assertIn("other", getDevices())
         self.assertIn("other", getDevices("tserver"))
         self.assertNotIn("other", findDevices("beep"))
@@ -160,12 +153,12 @@ class Tests(TestCase):
 
         double = Other(dict(_deviceId_="other", _serverId_="bserver"))
         with self.assertRaises(KaraboError):
-            yield from double.startInstance()
+            await double.startInstance()
         self.assertIn("other", getDevices())
         self.assertIn("other", getDevices("tserver"))
         self.assertNotIn("other", getDevices("bserver"))
 
-        yield from shutdown("other")
+        await shutdown("other")
         self.assertNotIn("other", getDevices())
 
     def test_topology(self):

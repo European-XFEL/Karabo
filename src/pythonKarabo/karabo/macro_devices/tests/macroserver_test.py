@@ -1,4 +1,3 @@
-from asyncio import coroutine
 from contextlib import closing
 from unittest import TestCase, main
 import uuid
@@ -22,16 +21,15 @@ class Tests(TestCase):
                 self.s = "done"
     """
 
-    @coroutine
-    def init_macroserver(self, server):
+    async def init_macroserver(self, server):
         config = Hash("uuid", str(uuid.uuid4()), "module", "test",
                       "code", self.code)
         h = Hash("classId", "MetaMacro", "configuration", config,
                  "deviceId", "bla")
-        yield from server.call("Karabo_MacroServer", "slotStartDevice", h)
-        proxy = yield from getDevice("bla-TestMacro")
+        await server.call("Karabo_MacroServer", "slotStartDevice", h)
+        proxy = await getDevice("bla-TestMacro")
         with proxy:
-            yield from proxy.do()
+            await proxy.do()
             self.assertEqual(proxy.s.value, 'done')
         return proxy
 
