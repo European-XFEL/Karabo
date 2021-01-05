@@ -267,27 +267,27 @@ class Tests(DeviceTest):
         self.assertEqual(self.myDevice.slotHasSlot("doesNotExist"), False)
 
     @async_tst
-    def test_output_information(self):
+    async def test_output_information(self):
         device = self.myDevice
         # Second argument processId is not used in MDL
-        success, data = yield from device.slotGetOutputChannelInformation(
+        success, data = await device.slotGetOutputChannelInformation(
             "output", None)
         self.assertEqual(success, True)
         self.assertEqual(data["connectionType"], "tcp")
         self.assertEqual(data["memoryLocation"], "remote")
         self.assertIsInstance(data["port"], np.uint32)
 
-        success, data = yield from device.slotGetOutputChannelInformation(
+        success, data = await device.slotGetOutputChannelInformation(
             "doesNotExist", None)
         self.assertEqual(success, False)
         self.assertEqual(data, Hash())
 
     @async_tst
-    def test_output_information_hash_version(self):
+    async def test_output_information_hash_version(self):
         # tests the version that the GUI can generically call
         device = self.myDevice
         info = Hash('channelId', 'output')
-        h = yield from device.slotGetOutputChannelInformationFromHash(info)
+        h = await device.slotGetOutputChannelInformationFromHash(info)
         success, data = h["success"], h["info"]
         self.assertEqual(success, True)
         self.assertEqual(data["connectionType"], "tcp")
@@ -295,14 +295,14 @@ class Tests(DeviceTest):
         self.assertIsInstance(data["port"], np.uint32)
 
         info = Hash('channelId', 'doesNotExist')
-        h = yield from device.slotGetOutputChannelInformationFromHash(info)
+        h = await device.slotGetOutputChannelInformationFromHash(info)
         success, data = h["success"], h["info"]
         self.assertEqual(success, False)
         self.assertEqual(data, Hash())
 
         info = Hash('NoChannelId', 'NotImportant')
         with self.assertRaises(KeyError):
-            yield from device.slotGetOutputChannelInformationFromHash(info)
+            await device.slotGetOutputChannelInformationFromHash(info)
 
     @async_tst
     async def test_applyRunTimeUpdates(self):

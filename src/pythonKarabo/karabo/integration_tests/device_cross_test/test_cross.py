@@ -1,7 +1,7 @@
 """This tests the communication between bound API and middlelayer API"""
 
 from asyncio import (
-    coroutine, create_subprocess_exec, ensure_future, get_event_loop)
+    create_subprocess_exec, ensure_future, get_event_loop)
 from contextlib import contextmanager
 from datetime import datetime
 import os
@@ -54,20 +54,17 @@ class MiddlelayerDevice(DeviceClientBase):
         defaultValue=0)
 
     @Slot()
-    @coroutine
-    def slot(self):
+    async def slot(self):
         self.marker = True
 
     @InputChannel()
-    @coroutine
-    def channel(self, data, meta):
+    async def channel(self, data, meta):
         self.channelcount += 1
         self.channeldata = data
         self.channelmeta = meta
 
     @channel.close
-    @coroutine
-    def channel(self, output):
+    async def channel(self, output):
         self.channelclose = output
 
     @InputChannel(raw=True)
@@ -80,8 +77,7 @@ class MiddlelayerDevice(DeviceClientBase):
     rawoutput = OutputChannel()
 
     @Slot()
-    @coroutine
-    def retrieveInterfaces(self):
+    async def retrieveInterfaces(self):
         # Get the device topology
         device_topology = self.systemTopology["device"]
         capa = device_topology[self.boundDevice, "capabilities"]
@@ -92,9 +88,8 @@ class MiddlelayerDevice(DeviceClientBase):
         self.update()
 
     @Slot()
-    @coroutine
-    def sendOutputEOS(self):
-        yield from self.output.writeEndOfStream()
+    async def sendOutputEOS(self):
+        await self.output.writeEndOfStream()
 
 
 class Tests(DeviceTest):
@@ -143,10 +138,10 @@ class Tests(DeviceTest):
             self.fail("process didn't properly go down")
 
     @async_tst(timeout=90)
-    def test_cross(self):
-        yield from getDevice("middlelayerDevice")
+    async def test_cross(self):
+        await getDevice("middlelayerDevice")
         # it takes typically 2 s for the bound device to start
-        self.process = yield from create_subprocess_exec(
+        self.process = await create_subprocess_exec(
             sys.executable, "-m", "karabo.bound_api.launcher",
             "run", "karabo.bound_device_test", "TestDevice",
             stdin=PIPE, stderr=PIPE, stdout=PIPE)
@@ -166,7 +161,7 @@ class Tests(DeviceTest):
             </root>""")
         self.process.stdin.close()
 
-        proxy = yield from getDevice("boundDevice")
+        proxy = await getDevice("boundDevice")
         self.assertEqual(proxy.a, 22.5 * unit.milliampere,
                          "didn't receive inital value from bound device")
         self.assertEqual(proxy.readonly, 2,
@@ -174,12 +169,12 @@ class Tests(DeviceTest):
 
         # Basic Interfaces Check AFTER bound device is up
         # -----------------------------------------------
-        mdl_proxy = yield from getDevice("middlelayerDevice")
+        mdl_proxy = await getDevice("middlelayerDevice")
 
         with mdl_proxy:
-            yield from setWait(mdl_proxy, boundDevice="boundDevice")
+            await setWait(mdl_proxy, boundDevice="boundDevice")
             self.assertEqual(mdl_proxy.boundDevice, "boundDevice")
-            yield from mdl_proxy.retrieveInterfaces()
+            await mdl_proxy.retrieveInterfaces()
             capas = mdl_proxy.foundCapabilities.value
             interfaces = mdl_proxy.foundInterfaces.value
             self.assertEqual(capas, Capabilities.PROVIDES_INTERFACES)
@@ -222,10 +217,10 @@ class Tests(DeviceTest):
         with proxy:
             self.assertEqual(proxy.maxSizeSchema, 0)
             # Test the maxSize from a vector property!
-            yield from proxy.compareSchema()
+            await proxy.compareSchema()
             self.assertEqual(proxy.maxSizeSchema, 4)
 
-            yield from proxy.setA()
+            await proxy.setA()
             self.assertEqual(proxy.a, 22.7 * unit.milliampere,
                              "didn't receive change from bound device")
             self.assertEqual(repr(proxy.a.timestamp),
@@ -253,48 +248,48 @@ class Tests(DeviceTest):
             # with self.assertRaises(ValueError):  # or KaraboError?
             #    proxy.readonly = 1  # not allowed!
             with self.assertRaises(KaraboError):
-                yield from setWait("boundDevice", readonly=1)  # not allowed
+                await setWait("boundDevice", readonly=1)  # not allowed
             self.assertEqual(proxy.readonly, 2)  # unchanged
 
             def setter():
                 proxy.a = 22.3 * unit.milliampere
                 self.assertEqual(proxy.a, 22.3 * unit.milliampere)
 
-            yield from background(setter)
+            await background(setter)
 
             proxy.a = 0.0228 * unit.ampere
             self.assertNotEqual(proxy.a, 22.8 * unit.milliampere,
                                 "proxy should set device's, not own value")
-            yield from waitUntil(lambda: proxy.a == 22.8 * unit.milliampere)
+            await waitUntil(lambda: proxy.a == 22.8 * unit.milliampere)
             self.assertEqual(proxy.a, 22.8 * unit.milliampere,
                              "didn't receive change from bound device")
 
             proxy.table = [(3, "african"), (7, "european")]
             self.assertEqual(len(proxy.table), 1)
-            yield from waitUntilNew(proxy.table)
+            await waitUntilNew(proxy.table)
             self.assertEqual(len(proxy.table), 2)
             self.assertEqual(proxy.table[1]["d"], 7 * unit.kilometer)
             self.assertEqual(proxy.table[0]["s"], "african")
 
-            yield from proxy.injectSchema()
+            await proxy.injectSchema()
             self.assertEqual(proxy.word1, "Hello")
             self.assertEqual(proxy.word1.descriptor.description, "The word")
             self.assertEqual(proxy.injectedNode.number1, 1)
 
-        yield from proxy.injectSchema()
-        yield from proxy
+        await proxy.injectSchema()
+        await proxy.update_proxy()
         self.assertEqual(proxy.word2, "Hello")
         self.assertEqual(proxy.injectedNode.number2, 2)
 
-        yield from proxy.backfire()
-        yield from sleep(1)  # See FIXME in backfire slot of the bound device
+        await proxy.backfire()
+        await sleep(1)  # See FIXME in backfire slot of the bound device
         self.assertEqual(self.device.value, 99)
         self.assertTrue(self.device.marker)
 
         ####################################
         # check slotGetTime of bound device
         ####################################
-        hTime = yield from call("boundDevice", "slotGetTime")
+        hTime = await call("boundDevice", "slotGetTime")
         self.assertIsNotNone(hTime)
         self.assertTrue(hTime["time"])
         sec = hTime.getAttributes("time")["sec"]
@@ -304,11 +299,11 @@ class Tests(DeviceTest):
         self.assertGreater(t1, 0)
         self.assertEqual(hTime.getAttributes("time")["tid"], 0)
         # Now send tid info to device (1559600000 is June 3rd, 2019)
-        yield from call("boundDevice", "slotTimeTick",
-                        # id sec       frac periodInMicroSec
-                        100, 1559600000, 0, 100000)
+        await call("boundDevice", "slotTimeTick",
+                   # id sec       frac periodInMicroSec
+                   100, 1559600000, 0, 100000)
         # ask again, now non-zero tid and a later point in time
-        hTime = yield from call("boundDevice", "slotGetTime")
+        hTime = await call("boundDevice", "slotGetTime")
         sec = hTime.getAttributes("time")["sec"]
         frac = hTime.getAttributes("time")["frac"]
         t2 = sec + frac / 1.e18
@@ -318,7 +313,7 @@ class Tests(DeviceTest):
         ####################################
         # pipeline part
         ####################################
-        yield from proxy.send()
+        await proxy.send()
         self.assertEqual(self.device.channelcount, 1)
         self.assertFalse(isSet(self.device.channeldata.d))
         self.assertEqual(self.device.channeldata.s, "hallo")
@@ -340,17 +335,17 @@ class Tests(DeviceTest):
         self.assertEqual(len(image_hsh['pixels.data']), 50 * 50 * 2)
         self.assertTrue(self.device.rawchannelmeta.timestamp)
 
-        yield from proxy.send()
+        await proxy.send()
         self.assertEqual(self.device.channelcount, 2)
 
-        yield from proxy.end()
+        await proxy.end()
         # The end of stream is no longer setting the data to None
         self.assertEqual(self.device.channeldata.s, "hallo")
         self.assertEqual(self.device.channelmeta.source,
                          "boundDevice:output1")
         self.assertEqual(self.device.channelcount, 2)
 
-        yield from proxy.send()
+        await proxy.send()
         self.assertEqual(self.device.channeldata.s, "hallo")
         self.assertEqual(self.device.channelmeta.source, "boundDevice:output1")
         self.assertEqual(self.device.channelcount, 3)
@@ -359,40 +354,40 @@ class Tests(DeviceTest):
         task = background(waitUntilNew(proxy.output1.schema.s))
         while not task.done():
             # unfortunately, connecting takes time and nobody knows how much
-            yield from proxy.send()
-        yield from task
+            await proxy.send()
+        await task
         self.assertEqual(proxy.output1.schema.s, "hallo")
 
         with proxy:
-            # The yield below fixes a race condition in the context initialization
+            # The await below fixes a race condition in the context initialization
             # performed by with. As soon as the MR with the 'async with' implementation
-            # (MR !3210) is merged, the 'yield from proxy' can be removed.
-            yield from proxy
+            # (MR !3210) is merged, the 'await proxy.update_proxy' can be removed.
+            await proxy.update_proxy()
             self.device.output.schema.number = 23
             self.assertEqual(proxy.a, 22.8 * unit.milliampere)
-            yield from self.device.output.writeData()
-            yield from waitUntil(lambda: proxy.a == 23 * unit.mA)
+            await self.device.output.writeData()
+            await waitUntil(lambda: proxy.a == 23 * unit.mA)
 
         proxy.output1.connect()
         task = background(waitUntilNew(proxy.output1.schema.s))
         while not task.done():
             # unfortunately, connecting takes time and nobody knows how much
-            yield from proxy.send()
-        yield from task
+            await proxy.send()
+        await task
         self.assertEqual(proxy.output1.schema.s, "hallo")
 
         ####################################
         # clean up
         ####################################
-        yield from shutdown(proxy)
+        await shutdown(proxy)
         # it takes up to 5 s for the bound device to actually shut down
-        yield from self.process.wait()
+        await self.process.wait()
         # Wait a few seconds for the broker message
-        yield from sleep(2)
+        await sleep(2)
         self.assertEqual(self.device.channelclose, "boundDevice:output1")
 
     @async_tst(timeout=90)
-    def test_history(self):
+    async def test_history(self):
         before = datetime.now()
         # Wherever we run this test (by hands or in CI) we should
         # not depend on the exact location of 'historytest.xml' ...
@@ -427,15 +422,14 @@ class Tests(DeviceTest):
 
         # Use above configuration to start DataLoggerManager ...
         karabo = os.environ["KARABO"]
-        self.process = yield from create_subprocess_exec(
+        self.process = await create_subprocess_exec(
             os.path.join(karabo, "bin", "karabo-cppserver"),
             xml_path,
             stdin=PIPE, stderr=PIPE, stdout=PIPE)
 
-        @coroutine
-        def print_stdout():
+        async def print_stdout():
             while not self.process.stdout.at_eof():
-                line = yield from self.process.stdout.readline()
+                line = await self.process.stdout.readline()
                 print(line.decode("ascii"), end="")
 
         ensure_future(print_stdout())
@@ -443,18 +437,18 @@ class Tests(DeviceTest):
         try:
             # Wait until logger is ready for logging our middlelayer device,
             # i.e. published non-empty timestamp of any logged parameter
-            with (yield from getDevice(
+            with (await getDevice(
                     "DataLogger-{}".format(server))) as logger:
-                yield from logger
+                await logger.update_proxy()
                 while True:
                     found = False
                     for row in logger.lastUpdatesUtc:
                         if (row["deviceId"] == "middlelayerDevice"
-                            and row["lastUpdateUtc"]):
+                                and row["lastUpdateUtc"]):
                             found = True
                     if found:
                         break
-                    yield from waitUntilNew(logger.lastUpdatesUtc)
+                    await waitUntilNew(logger.lastUpdatesUtc)
         finally:
             os.remove(xml_path)
 
@@ -466,13 +460,13 @@ class Tests(DeviceTest):
         # Sometimes this test runs in an environment where these requests
         # are not the first ones, so cannot assertRaise.
         try:
-            yield from getHistory("middlelayerDevice.value",
-                                  before.isoformat(), after.isoformat())
+            await getHistory("middlelayerDevice.value",
+                             before.isoformat(), after.isoformat())
         except KaraboError as e:
             self.assertIn("first history request", str(e))
         try:
-            yield from getHistory("middlelayerDevice.child.number",
-                                  before.isoformat(), after.isoformat())
+            await getHistory("middlelayerDevice.child.number",
+                             before.isoformat(), after.isoformat())
         except KaraboError as e:
             self.assertIn("first history request", str(e))
 
@@ -482,17 +476,17 @@ class Tests(DeviceTest):
             self.device.child.number = -i
             self.device.update()
 
-        yield from logger.flush()
+        await logger.flush()
 
         after = datetime.now()
 
-        old_history = yield from getHistory(
+        old_history = await getHistory(
             "middlelayerDevice", before.isoformat(), after.isoformat()).value
-        str_history = yield from getHistory(
+        str_history = await getHistory(
             "middlelayerDevice.value", before.isoformat(), after.isoformat())
-        device = yield from getDevice("middlelayerDevice")
-        proxy_history = yield from getHistory(
-                device.value, before.isoformat(), after.isoformat())
+        device = await getDevice("middlelayerDevice")
+        proxy_history = await getHistory(
+            device.value, before.isoformat(), after.isoformat())
 
         for hist in old_history, str_history, proxy_history:
             # Sort according to timestamp - order is not guaranteed!
@@ -501,10 +495,10 @@ class Tests(DeviceTest):
             hist.sort(key=lambda x: x[0])
             self.assertEqual([v for _, _, _, v in hist[-5:]], list(range(5)))
 
-        node_history = yield from getHistory(
+        node_history = await getHistory(
             "middlelayerDevice.child.number", before.isoformat(),
             after.isoformat())
-        node_proxy_history = yield from getHistory(
+        node_proxy_history = await getHistory(
             device.child.number, before.isoformat(), after.isoformat())
 
         for hist in node_history, node_proxy_history:
@@ -512,9 +506,9 @@ class Tests(DeviceTest):
             hist.sort(key=lambda x: x[0])
             self.assertEqual([-v for _, _, _, v in hist[-5:]], list(range(5)))
 
-        yield from get_event_loop().instance()._ss.request(
+        await get_event_loop().instance()._ss.request(
             server, "slotKillServer")
-        yield from self.process.wait()
+        await self.process.wait()
 
     test_history.slow = True
 

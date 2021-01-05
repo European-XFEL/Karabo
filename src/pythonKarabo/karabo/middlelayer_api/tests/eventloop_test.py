@@ -14,12 +14,12 @@ class Barrier(object):
         self.error = False
 
     @synchronize
-    def block(self):
+    async def block(self):
         self.state = "unblocked"
         try:
-            yield from self.lock.acquire()
+            await self.lock.acquire()
             self.state = "blocked"
-            yield from self.lock.acquire()
+            await self.lock.acquire()
             self.state = "end"
             if self.error:
                 raise RuntimeError
