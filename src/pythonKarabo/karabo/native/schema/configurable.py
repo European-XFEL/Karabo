@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from asyncio import coroutine, gather
+from asyncio import gather
 from weakref import WeakKeyDictionary
 
 from karabo.common.alarm_conditions import AlarmCondition
@@ -169,15 +169,13 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             ret._parent = self
         return ret
 
-    @coroutine
-    def slotReconfigure(self, config):
+    async def slotReconfigure(self, config):
         props = ((getattr(self.__class__, k), v) for k, v in config.items())
         setters = sum((t.checkedSet(self, v) for t, v in props), [])
         setters = (s() for s in setters)
-        yield from gather(*[s for s in setters if s is not None])
+        await gather(*[s for s in setters if s is not None])
 
-    @coroutine
-    def _run(self):
+    async def _run(self):
         """ post-initialization of a Configurable
 
         As __init__ is not a coroutine, it cannot do anything that takes
@@ -187,9 +185,9 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         This method should only be overridden inside Karabo (thus
         the underscore).
 
-        Do not forget to ``yield from super()._run(**kwargs)``.
+        Do not forget to ``await super()._run(**kwargs)``.
         """
-        yield from gather(*self._initializers)
+        await gather(*self._initializers)
         del self._initializers
 
     def applyRuntimeUpdates(self, updates):

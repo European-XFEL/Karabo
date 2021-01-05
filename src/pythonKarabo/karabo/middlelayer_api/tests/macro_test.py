@@ -1,4 +1,4 @@
-from asyncio import coroutine, ensure_future, Future, TimeoutError
+from asyncio import ensure_future, Future, TimeoutError
 from contextlib import contextmanager
 from flaky import flaky
 import sys
@@ -27,8 +27,7 @@ FLAKY_MIN_PASSES = 3
 
 
 class Superslot(Slot):
-    @coroutine
-    def method(self, device):
+    async def method(self, device):
         device.value = 22
 
 
@@ -57,23 +56,19 @@ class Remote(Device):
         self.value = value
 
     @Slot()
-    @coroutine
-    def doit(self):
+    async def doit(self):
         self.done = True
 
     @Slot()
-    @coroutine
-    def changeit(self):
+    async def changeit(self):
         self.value -= 4
 
     @Slot()
-    @coroutine
-    def start(self):
+    async def start(self):
         self.status = "Started"
 
     @Slot()
-    @coroutine
-    def stop(self):
+    async def stop(self):
         self.status = "Stopped"
 
     @slot
@@ -85,19 +80,17 @@ class Remote(Device):
         return token
 
     @Slot()
-    @coroutine
-    def count(self):
+    async def count(self):
         self.state = State.INCREASING
         for i in range(30):
             self.counter = i
-            yield from sleep(0.02)
+            await sleep(0.02)
         self.state = State.UNKNOWN
 
     @Slot()
-    @coroutine
-    def call_local(self):
-        with (yield from getDevice("local")) as l:
-            yield from l.remotecalls()
+    async def call_local(self):
+        with (await getDevice("local")) as l:
+            await l.remotecalls()
 
     generic = Superslot()
 
@@ -159,9 +152,9 @@ class Tests(DeviceTest):
             yield
 
     @async_tst
-    def tearDown(self):
-        with (yield from getDevice("remote")) as d:
-            yield from waitUntil(lambda: d.state == State.UNKNOWN)
+    async def tearDown(self):
+        with (await getDevice("remote")) as d:
+            await waitUntil(lambda: d.state == State.UNKNOWN)
 
     @sync_tst
     def test_execute(self):
@@ -325,13 +318,13 @@ class Tests(DeviceTest):
                 self.assertEqual(i, d.counter)
 
     @async_tst
-    def test_print(self):
+    async def test_print(self):
         """test that macros can print via expected parameters"""
         sys.stdout = KaraboStream(sys.stdout)
         try:
             self.assertEqual(self.local.currentSlot, "")
             self.assertEqual(self.local.state, State.PASSIVE)
-            yield from self.remote.call_local()
+            await self.remote.call_local()
             self.assertEqual(self.local.nowslot, "remotecalls")
             self.assertEqual(self.local.nowstate, State.ACTIVE)
             self.assertEqual(self.local.currentSlot, "")
@@ -392,11 +385,11 @@ class Tests(DeviceTest):
         self.assertEqual(h, "Token")
 
     @async_tst
-    def test_call_param_nowait(self):
+    async def test_call_param_nowait(self):
         """test no wait calling a slot with a parameter"""
         fut = self.remote.get_future()
         callNoWait("remote", "setStatus", "NewToken")
-        yield from fut
+        await fut
         self.assertEqual(fut.result(), "NewToken")
 
     @sync_tst
@@ -412,13 +405,13 @@ class Tests(DeviceTest):
                 time.sleep(i * 0.002)
 
     @async_tst
-    def test_error(self):
+    async def test_error(self):
         """test that errors are properly logged and error functions called"""
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR"), \
-                (yield from getDevice("local")) as d, \
+                (await getDevice("local")) as d, \
                 self.assertRaises(KaraboError):
-            yield from d.error()
+            await d.error()
         self.assertTrue(self.remote.done)
         self.assertIs(self.local.exc_slot, Local.error)
         self.assertIsInstance(self.local.exception, RuntimeError)
@@ -428,13 +421,13 @@ class Tests(DeviceTest):
         del self.local.traceback
 
     @async_tst
-    def test_error_in_error(self):
+    async def test_error_in_error(self):
         """test that errors in error handlers are properly logged"""
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR") as logs, \
-                (yield from getDevice("local")) as d, \
+                (await getDevice("local")) as d, \
                 self.assertRaises(KaraboError):
-            yield from d.error_in_error()
+            await d.error_in_error()
         self.assertFalse(self.remote.done)
         self.assertEqual(logs.records[-1].msg, "error in error handler")
         self.assertIs(self.local.exc_slot, Local.error_in_error)
@@ -445,7 +438,7 @@ class Tests(DeviceTest):
         del self.local.traceback
 
     @async_tst
-    def test_cancel(self):
+    async def test_cancel(self):
         """test proper cancellation of slots
 
         when a slot is cancelled, test that
@@ -456,28 +449,28 @@ class Tests(DeviceTest):
         """
         # Rename sleep to make it clean which sleep is being used
         karabo_sleep = sleep
-        with (yield from getDevice("local")) as d:
+        with (await getDevice("local")) as d:
             # cancel during time.sleep
             self.local.cancelled_slot = None
             task = ensure_future(d.sleepalot())
             # wait for a short time so that the macro gets started
-            yield from waitUntil(lambda: d.state == State.ACTIVE)
+            await waitUntil(lambda: d.state == State.ACTIVE)
             # Cancel the macro, which is in a non-interruptable non-karabo
             # sleep.
             # (which is just a place-holder for any other type of
             #  non-interruptable code)
-            yield from d.cancel()
+            await d.cancel()
             # Finally, sleep for long enough that the macro runs in to the
             # karabo sleep which CAN be interrupted.
             counter = 100
             while counter > 0:
-                yield from karabo_sleep(0.01)
+                await karabo_sleep(0.01)
                 if self.local.slept_count == 1:
                     break
                 counter -= 1
             counter = 100
             while counter > 0:
-                yield from karabo_sleep(0.01)
+                await karabo_sleep(0.01)
                 if task.done():
                     break
                 counter -= 1
@@ -490,15 +483,15 @@ class Tests(DeviceTest):
             task = ensure_future(d.sleepalot())
             # Sleep for long enough for the macro to end up in the really long
             # sleep at the end
-            yield from karabo_sleep(0.13)
+            await karabo_sleep(0.13)
             # Then cancel, while the macro is in that interruptable sleep
-            yield from d.cancel()
+            await d.cancel()
             # Sleep a little while, so the task can finish. With a static
             # karabo_sleep of 0.06 this failed e.g. in
             # https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/141622
             counter = 100
             while counter > 0:
-                yield from karabo_sleep(0.01)
+                await karabo_sleep(0.01)
                 if self.local.slept_count == 2:
                     break
                 counter -= 1
@@ -513,7 +506,7 @@ class Tests(DeviceTest):
         try:
             self.assertEqual(d.value, 123)
             self.remote.value = 456
-            waitUntil(lambda: d.value == 456, timeout=0.1)
+            waitUntil(lambda: d.value == 456, timeout=0.1)  # noqa
         finally:
             # check that the proxy gets collected when not used anymore
             weak = weakref.ref(d)
@@ -522,12 +515,12 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_proxy_dead(self):
-        @coroutine
-        def starter():
+
+        async def starter():
             a = Remote({"_deviceId_": "moriturus"})
-            yield from a.startInstance()
-            proxy = yield from getDevice("moriturus")
-            yield from a.slotKillDevice()
+            await a.startInstance()
+            proxy = await getDevice("moriturus")
+            await a.slotKillDevice()
             return proxy
 
         proxy = background(starter()).wait()

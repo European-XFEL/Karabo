@@ -47,16 +47,15 @@ class DeviceClientBase(Device):
         self.loggerMap = Hash()
         super().__init__(configuration)
 
-    @asyncio.coroutine
-    def _run(self, **kwargs):
-        yield from super()._run(**kwargs)
+    async def _run(self, **kwargs):
+        await super()._run(**kwargs)
         self._ss.emit("call", {"*": ["slotPing"]}, self.deviceId, 0, False)
 
     @coslot
-    def slotInstanceNew(self, instanceId, info):
+    async def slotInstanceNew(self, instanceId, info):
         self.removeServerChildren(instanceId, info)
         self.updateSystemTopology(instanceId, info, "instanceNew")
-        yield from super().slotInstanceNew(instanceId, info)
+        await super().slotInstanceNew(instanceId, info)
 
     @slot
     def slotInstanceUpdated(self, instanceId, info):
@@ -103,7 +102,7 @@ class OneShotQueue(asyncio.Future):
 
 
 @synchronize
-def waitUntilNew(*props):
+async def waitUntilNew(*props):
     """Wait until new futures provide a result
 
     The futures can be provided as in::
@@ -132,7 +131,7 @@ def waitUntilNew(*props):
             future = OneShotQueue(loop=proxy._device._ss.loop)
             proxy._queues[prop.descriptor.longkey].add(future)
         futures.append(future)
-    yield from firstCompleted(*futures)
+    await firstCompleted(*futures)
 
 
 def _parse_date(date):
@@ -145,7 +144,7 @@ def _parse_date(date):
 
 
 @synchronize
-def call(device, target_slot, *args):
+async def call(device, target_slot, *args):
     """Call a target slot from a device
 
     :param device: deviceId or proxy
@@ -153,7 +152,7 @@ def call(device, target_slot, *args):
     """
     if isinstance(device, ProxyBase):
         device = device._deviceId
-    return (yield from get_instance().call(device, target_slot, *args))
+    return (await get_instance().call(device, target_slot, *args))
 
 
 def callNoWait(device, target_slot, *args):
@@ -168,7 +167,7 @@ def callNoWait(device, target_slot, *args):
 
 
 @synchronize
-def getSchema(device):
+async def getSchema(device):
     """Get a schema from a target device
 
     :param device: deviceId or proxy
@@ -178,13 +177,13 @@ def getSchema(device):
     if isinstance(device, ProxyBase):
         return Schema(name=device.classId, hash=device._schema_hash)
 
-    schema, _ = yield from get_instance().call(device, "slotGetSchema",
-                                               False)
+    schema, _ = await get_instance().call(device, "slotGetSchema",
+                                          False)
     return schema
 
 
 @synchronize
-def getConfiguration(device):
+async def getConfiguration(device):
     """Get a configuration from a target device
 
     :param device: deviceId or proxy
@@ -196,15 +195,15 @@ def getConfiguration(device):
     :returns: Configuration Hash
     """
     if isinstance(device, ProxyBase):
-        yield from device._update()
+        await device._update()
         return device.configurationAsHash()
 
-    hsh, _ = yield from get_instance().call(device, "slotGetConfiguration")
+    hsh, _ = await get_instance().call(device, "slotGetConfiguration")
     return hsh
 
 
 @synchronize
-def compareDeviceConfiguration(device_a, device_b):
+async def compareDeviceConfiguration(device_a, device_b):
     """Compare device configurations (key, values) of two devices
 
     The changes are provided in a list for comparison::
@@ -215,9 +214,9 @@ def compareDeviceConfiguration(device_a, device_b):
 
     :returns: changes Hash
     """
-    a_schema, b_schema = yield from gather(
+    a_schema, b_schema = await gather(
         getSchema(device_a), getSchema(device_b))
-    a_conf, b_conf = yield from gather(
+    a_conf, b_conf = await gather(
         getConfiguration(device_a), getConfiguration(device_b))
 
     # Take into account only reconfigurable and init parameters!
@@ -229,7 +228,7 @@ def compareDeviceConfiguration(device_a, device_b):
 
 
 @synchronize
-def compareDeviceWithPast(device, timepoint):
+async def compareDeviceWithPast(device, timepoint):
     """Compare device configuration (key, values) between present and past
 
     The changes are provided in a list for comparison::
@@ -245,9 +244,9 @@ def compareDeviceWithPast(device, timepoint):
     :returns: changes Hash
     """
     # Get the config and schema first!
-    a_conf, a_schema = yield from gather(
+    a_conf, a_schema = await gather(
         getConfiguration(device), getSchema(device))
-    b_conf, b_schema = yield from _get_configuration_from_past(
+    b_conf, b_schema = await _get_configuration_from_past(
         device, timepoint)
     # Take into account only reconfigurable and init parameters!
     a_san = sanitize_init_configuration(a_schema, a_conf)
@@ -258,11 +257,11 @@ def compareDeviceWithPast(device, timepoint):
 
 
 @synchronize
-def _getLogReaderId(deviceId):
+async def _getLogReaderId(deviceId):
     instance = get_instance()
     did = "DataLogger-{}".format(deviceId)
     if did not in instance.loggerMap:
-        instance.loggerMap = yield from instance.call(
+        instance.loggerMap = await instance.call(
             "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
         if did not in instance.loggerMap:
             raise KaraboError('no logger for device "{}"'.
@@ -285,7 +284,7 @@ class _getHistory_old:
         return self._synchronized_getattr(attr, timeout=self.timeout)
 
     @synchronize
-    def _synchronized_getattr(self, attr):
+    async def _synchronized_getattr(self, attr):
         # this method contains a lot of hard-coded strings. It follows
         # GuiServerDevice::onGetPropertyHistory. One day we should
         # de-hard-code both.
@@ -296,8 +295,8 @@ class _getHistory_old:
         else:
             deviceId = str(self.proxy)
 
-        reader = yield from _getLogReaderId(deviceId)
-        r_deviceId, r_attr, data = yield from get_instance().call(
+        reader = await _getLogReaderId(deviceId)
+        r_deviceId, r_attr, data = await get_instance().call(
             reader, "slotGetPropertyHistory", deviceId, attr,
             Hash("from", self.begin, "to", self.end,
                  "maxNumData", self.maxNumData))
@@ -308,7 +307,7 @@ class _getHistory_old:
 
 
 @synchronize
-def _getHistory_new(prop, begin, end, maxNumData):
+async def _getHistory_new(prop, begin, end, maxNumData):
     try:
         attr = prop.descriptor.longkey
         deviceId = prop._parent._deviceId
@@ -317,8 +316,8 @@ def _getHistory_new(prop, begin, end, maxNumData):
 
     begin = _parse_date(begin)
     end = _parse_date(end)
-    reader = yield from _getLogReaderId(deviceId)
-    r_deviceId, r_attr, data = yield from get_instance().call(
+    reader = await _getLogReaderId(deviceId)
+    r_deviceId, r_attr, data = await get_instance().call(
         reader, "slotGetPropertyHistory", deviceId, attr,
         Hash("from", begin, "to", end, "maxNumData", maxNumData))
     assert r_deviceId == deviceId and r_attr == attr
@@ -369,7 +368,7 @@ def getHistory(prop, begin, end, *, maxNumData=10000, timeout=-1, wait=True):
 
 
 @synchronize
-def _get_configuration_from_past(device, timepoint):
+async def _get_configuration_from_past(device, timepoint):
     """The configuration from past implementation to retrieve a configuration
     and schema from the archiving system
 
@@ -380,15 +379,15 @@ def _get_configuration_from_past(device, timepoint):
         device = device._deviceId
     timepoint = _parse_date(timepoint)
     instance = get_instance()
-    reader = yield from _getLogReaderId(device)
+    reader = await _getLogReaderId(device)
     slot = "slotGetConfigurationFromPast"
-    conf, schema, *_ = yield from instance.call(reader, slot,
-                                                device, timepoint)
+    conf, schema, *_ = await instance.call(reader, slot,
+                                           device, timepoint)
     return conf, schema
 
 
 @synchronize
-def getConfigurationFromPast(device, timepoint):
+async def getConfigurationFromPast(device, timepoint):
     """Get the configuration of a deviceId or proxy at a given time::
 
         getConfigurationFromPast(device, "12:30")
@@ -398,12 +397,12 @@ def getConfigurationFromPast(device, timepoint):
     The date of the time point is parsed using :func:`dateutil.parser.parse`,
     allowing many ways to write the date.
     """
-    conf, _ = yield from _get_configuration_from_past(device, timepoint)
+    conf, _ = await _get_configuration_from_past(device, timepoint)
     return conf
 
 
 @synchronize
-def getSchemaFromPast(device, timepoint):
+async def getSchemaFromPast(device, timepoint):
     """Get the schema of a deviceId or proxy at a given time::
 
         getSchemaFromPast(deviceId, "12:30")
@@ -413,12 +412,12 @@ def getSchemaFromPast(device, timepoint):
     The date of the time point is parsed using :func:`dateutil.parser.parse`,
     allowing many ways to write the date.
     """
-    _, schema = yield from _get_configuration_from_past(device, timepoint)
+    _, schema = await _get_configuration_from_past(device, timepoint)
     return schema
 
 
 @synchronize
-def getConfigurationFromName(device, name):
+async def getConfigurationFromName(device, name):
     """Get the configuration of a deviceId or proxy with a given `name`::
 
         getConfigurationFromName(device, "run2012")
@@ -430,14 +429,14 @@ def getConfigurationFromName(device, name):
     instance = get_instance()
     slot = "slotGetConfigurationFromName"
     h = Hash("deviceId", device, "name", name)
-    reply = yield from instance.call(KARABO_CONFIG_MANAGER, slot, h)
+    reply = await instance.call(KARABO_CONFIG_MANAGER, slot, h)
     config = reply["item.config"]
 
     return config
 
 
 @synchronize
-def getLastConfiguration(device, priority=3):
+async def getLastConfiguration(device, priority=3):
     """Get the last configuration of a deviceId with given `priority`::
 
         getLastConfiguration(device, 3)
@@ -449,14 +448,14 @@ def getLastConfiguration(device, priority=3):
     instance = get_instance()
     slot = "slotGetLastConfiguration"
     h = Hash("deviceId", device, "priority", priority)
-    reply = yield from instance.call(KARABO_CONFIG_MANAGER, slot, h)
+    reply = await instance.call(KARABO_CONFIG_MANAGER, slot, h)
     item = reply["item"]
 
     return item
 
 
 @synchronize
-def listConfigurationFromName(device, name_part=''):
+async def listConfigurationFromName(device, name_part=''):
     """List the list of configurations of a deviceId with given `name_part`::
 
         listConfigurationFromName(device, '')
@@ -477,14 +476,14 @@ def listConfigurationFromName(device, name_part=''):
     instance = get_instance()
     slot = "slotListConfigurationFromName"
     h = Hash("deviceId", device, "name", name_part)
-    reply = yield from instance.call(KARABO_CONFIG_MANAGER, slot, h)
+    reply = await instance.call(KARABO_CONFIG_MANAGER, slot, h)
     configs = reply["items"]
 
     return configs
 
 
 @synchronize
-def listDevicesWithConfiguration(priority=3):
+async def listDevicesWithConfiguration(priority=3):
     """Return the list of devices which have a configuration of `priority`::
 
         listDevicesWithConfiguration(priority=3)
@@ -494,14 +493,14 @@ def listDevicesWithConfiguration(priority=3):
     instance = get_instance()
     slot = "slotListDevices"
     h = Hash("priority", priority)
-    reply = yield from instance.call(KARABO_CONFIG_MANAGER, slot, h)
+    reply = await instance.call(KARABO_CONFIG_MANAGER, slot, h)
     deviceIds = reply["item"]
 
     return deviceIds
 
 
 @synchronize
-def instantiateFromName(device, name=None, classId=None, serverId=None):
+async def instantiateFromName(device, name=None, classId=None, serverId=None):
     """Instantiate a device from `name` via the ConfigurationManager::
 
         instantiateFromName(device, name='run2015')
@@ -524,14 +523,14 @@ def instantiateFromName(device, name=None, classId=None, serverId=None):
 
     instance = get_instance()
     slot = "slotInstantiateDevice"
-    reply = yield from instance.call(KARABO_CONFIG_MANAGER, slot, h)
+    reply = await instance.call(KARABO_CONFIG_MANAGER, slot, h)
     success = reply["success"]
 
     return success
 
 
 @synchronize
-def saveConfigurationFromName(devices, name, description='', priority=1):
+async def saveConfigurationFromName(devices, name, description='', priority=1):
     """Save configuration(s) in the KaraboConfigurationManager::
 
         - The parameter `devices` can be a Karabo `proxy`, a list of deviceIds,
@@ -560,7 +559,7 @@ def saveConfigurationFromName(devices, name, description='', priority=1):
     h = Hash("deviceIds", devices, "priority", priority,
              "name", name, "description", description)
 
-    yield from instance.call(KARABO_CONFIG_MANAGER, slot, h)
+    await instance.call(KARABO_CONFIG_MANAGER, slot, h)
 
 
 class Queue(object):
@@ -570,7 +569,7 @@ class Queue(object):
     An example of usage::
 
         q = Queue(motor.position)
-        new_position = yield from q.get()
+        new_position = await q.get()
     """
 
     def __init__(self, prop):
@@ -578,8 +577,8 @@ class Queue(object):
         prop._parent._queues[prop.descriptor.longkey].add(self.queue)
 
     @synchronize
-    def get(self):
-        return (yield from self.queue.get())
+    async def get(self):
+        return (await self.queue.get())
 
 
 def get_instance():
@@ -587,7 +586,7 @@ def get_instance():
 
 
 @synchronize
-def waitUntil(condition):
+async def waitUntil(condition):
     """Wait until the condition is True
 
     The condition is typically a lambda function, as in::
@@ -600,13 +599,13 @@ def waitUntil(condition):
     in a with statement)"""
     loop = get_event_loop()
     # suspend once to assure the event loop gets a chance to run
-    yield from sleep(0)
+    await sleep(0)
     while not condition():
-        yield from loop.waitForChanges()
+        await loop.waitForChanges()
 
 
 @synchronize
-def waitWhile(condition):
+async def waitWhile(condition):
     """Wait while the condition is True
 
     The condition is typically a lambda function, as in::
@@ -619,13 +618,13 @@ def waitWhile(condition):
     in a with statement)"""
     loop = get_event_loop()
     # suspend once to assure the event loop gets a chance to run
-    yield from sleep(0)
+    await sleep(0)
     while condition():
-        yield from loop.waitForChanges()
+        await loop.waitForChanges()
 
 
 @synchronize
-def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
+async def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
     instance = get_instance()
     proxy = instance._proxies.get(deviceId)
     if proxy is not None:
@@ -633,18 +632,17 @@ def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
             raise KaraboError(
                 "do not mix getDevice with connectDevice!\n"
                 '(deleting the old proxy with "del proxy" may help)')
-        yield from proxy
+        await proxy.update_proxy()
         return proxy
 
     futures = instance._proxy_futures
     future = futures.get(deviceId)
     if future is not None:
-        return (yield from asyncio.shield(future))
+        return (await asyncio.shield(future))
 
-    @asyncio.coroutine
-    def create():
+    async def create():
         try:
-            schema, _ = yield from instance._call_once_alive(
+            schema, _ = await instance._call_once_alive(
                 deviceId, "slotGetSchema", False)
 
             cls = factory.createProxy(schema)
@@ -699,12 +697,12 @@ def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
                     closure_proxy._disconnectSchemaUpdated()
 
         instance._ss.enter_context(connectSchemaUpdated())
-        yield from proxy
+        await proxy.update_proxy()
         return proxy
 
     future = asyncio.ensure_future(create())
     futures[deviceId] = future
-    return (yield from asyncio.shield(future))
+    return (await asyncio.shield(future))
 
 
 def getDevice(deviceId, *, sync=None, timeout=5):
@@ -730,7 +728,7 @@ def getDevice(deviceId, *, sync=None, timeout=5):
 
 
 @synchronize
-def connectDevice(device, *, autodisconnect=None, timeout=5):
+async def connectDevice(device, *, autodisconnect=None, timeout=5):
     """get and connect a device proxy for the device *deviceId*
 
     This connects a given device proxy to the real device such that the
@@ -749,19 +747,19 @@ def connectDevice(device, *, autodisconnect=None, timeout=5):
             factory = DeviceClientProxyFactory
         else:
             factory = AutoDisconnectProxyFactory
-        device = yield from _getDevice(device, sync=get_event_loop().sync_set,
-                                       timeout=timeout, factory=factory)
+        device = await _getDevice(device, sync=get_event_loop().sync_set,
+                                  timeout=timeout, factory=factory)
     if autodisconnect is None:
         ret = device.__enter__()
     else:
         device._interval = autodisconnect
         ret = device
-    yield from ret
+    await ret.update_proxy()
     return ret
 
 
 @synchronize
-def disconnectDevice(device):
+async def disconnectDevice(device):
     """disconnect the device proxy *device*
 
     Once you call this function, the device proxy's properties won't
@@ -770,12 +768,12 @@ def disconnectDevice(device):
 
 
 @synchronize
-def lock(proxy, wait_for_release=None):
+async def lock(proxy, wait_for_release=None):
     """return a context manager to lock a device
 
     This allows to lock another devices for exclusive use::
 
-        with (yield from lock(proxy)):
+        with (await lock(proxy)):
             #do stuff
 
     In a synchronous context, this function waits at the end of the block
@@ -787,11 +785,11 @@ def lock(proxy, wait_for_release=None):
     if proxy._lock_count == 0:
         if proxy.lockedBy == myId:
             # we just unlocked the device but didn't get a response yet
-            yield from proxy._update()
+            await proxy._update()
         while proxy.lockedBy != myId:
             if proxy.lockedBy == "":
                 proxy.lockedBy = myId
-            yield from waitUntilNew(proxy.lockedBy)
+            await waitUntilNew(proxy.lockedBy)
 
     @contextmanager
     def context():
@@ -900,7 +898,8 @@ def getClasses(serverId):
 
 
 @synchronize
-def instantiate(serverId, classId, deviceId="", configuration=None, **kwargs):
+async def instantiate(serverId, classId, deviceId="", configuration=None,
+                      **kwargs):
     """Instantiate and configure a device on a running server
 
     :param serverId: The serverId of the server on which the device should be
@@ -917,7 +916,7 @@ def instantiate(serverId, classId, deviceId="", configuration=None, **kwargs):
     configuration.update(kwargs)
     h = Hash("classId", classId, "deviceId", deviceId,
              "configuration", configuration)
-    ok, msg = yield from get_instance().call(serverId, "slotStartDevice", h)
+    ok, msg = await get_instance().call(serverId, "slotStartDevice", h)
     if not ok:
         raise KaraboError(msg)
     return msg
@@ -937,13 +936,13 @@ def instantiateNoWait(serverId, classId, deviceId="", configuration=None,
 
 
 @synchronize
-def shutdown(device):
+async def shutdown(device):
     """shut down the given device
 
     :param deviceId: may be a device proxy, or just the id of a device"""
     if isinstance(device, ProxyBase):
         device = device._deviceId
-    ok = yield from get_instance().call(device, "slotKillDevice")
+    ok = await get_instance().call(device, "slotKillDevice")
     return ok
 
 
@@ -957,7 +956,7 @@ def shutdownNoWait(device):
 
 
 @synchronize
-def setWait(device, *args, **kwargs):
+async def setWait(device, *args, **kwargs):
     """Set properties of a device
 
     device may either be a device proxy as returned by :func:`getDevice`, or
@@ -979,7 +978,7 @@ def setWait(device, *args, **kwargs):
         raise RuntimeError("Arguments passed need to be pairs!")
 
     if isinstance(device, ProxyBase):
-        yield from device._update()
+        await device._update()
         device = device._deviceId
 
     kwargs.update(zip(args[::2], args[1::2]))
@@ -990,7 +989,7 @@ def setWait(device, *args, **kwargs):
         else:
             h[k] = v
 
-    yield from get_instance().call(device, "slotReconfigure", h)
+    await get_instance().call(device, "slotReconfigure", h)
 
 
 def setNoWait(device, *args, **kwargs):
@@ -1032,21 +1031,21 @@ def executeNoWait(device, slot):
 
 
 @synchronize
-def execute(device, slot):
+async def execute(device, slot):
     """execute a slot and wait until it finishes"""
     if isinstance(device, ProxyBase):
         device = device._deviceId
     assert isinstance(slot, str)
-    return (yield from get_instance().call(device, slot))
+    return (await get_instance().call(device, slot))
 
 
 @synchronize
-def updateDevice(device):
+async def updateDevice(device):
     """wait for an update of a device
 
     request new properties and wait until they arrive. This is the only
     way to receive changes on a device while the device is not connected."""
-    yield from device
+    await device.update_proxy()
     return device
 
 
