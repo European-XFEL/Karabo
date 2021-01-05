@@ -385,6 +385,9 @@ class DeviceClientProxyFactory(ProxyFactory):
                 # immediately send out our changes
                 h = Hash()
                 h[desc.longkey], _ = desc.toDataAndAttrs(value)
+                if not self._alive:
+                    raise KaraboError(
+                        'device "{}" died'.format(self._deviceId))
                 loop.sync(self._raise_on_death(self._device.call(
                     self._deviceId, "slotReconfigure", h)),
                     timeout=-1, wait=True)
@@ -403,17 +406,18 @@ class DeviceClientProxyFactory(ProxyFactory):
                         self._update(self._last_update_task))
 
         def _callSlot(self, descriptor, timeout=-1, wait=True):
-            @asyncio.coroutine
-            def inner():
-                yield from self._update()
+            async def inner():
+                await self._update()
                 self._device._use()
-                return (yield from self._device.call(self._deviceId,
-                                                     descriptor.longkey))
+                return (await self._device.call(self._deviceId,
+                                                descriptor.longkey))
+            if not self._alive:
+                raise KaraboError('device "{}" died'.format(self._deviceId))
+
             return asyncio.get_event_loop().sync(
                 self._raise_on_death(inner()), timeout, wait)
 
-        @asyncio.coroutine
-        def _update(self, task=False):
+        async def _update(self, task=False):
             """assure all properties are properly set
 
             property settings are cached in self._sethash. This method
@@ -428,11 +432,11 @@ class DeviceClientProxyFactory(ProxyFactory):
                 self._last_update_task = None
             if task is not None:
                 # wait until task is finished
-                yield from task
+                await task
             if self._sethash:
                 # reconfigure the proxy and empty the bulk hash
                 sethash, self._sethash = self._sethash, Hash()
-                yield from self._device._ss.request(
+                await self._device._ss.request(
                     self._deviceId, "slotReconfigure", sethash)
 
         def _notify_gone(self):
@@ -446,8 +450,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             timestamp.toHashAttributes(h)
             self._onChanged(h)
 
-        @asyncio.coroutine
-        def _notify_new(self):
+        async def _notify_new(self):
             # probably we are talking to a brand-new device, which does not
             # know about any connection, so we have to re-establish all
             # connections that we think we have
@@ -460,32 +463,29 @@ class DeviceClientProxyFactory(ProxyFactory):
                                          self._device.slotChanged)
                 self._device._ss.connect(self._deviceId, "signalStateChanged",
                                          self._device.slotChanged)
-            schema, _ = yield from self._device.call(
+            schema, _ = await self._device.call(
                 self._deviceId, "slotGetSchema", False)
             DeviceClientProxyFactory.updateSchema(self, schema)
 
             # get configuration
-            yield from self
+            await self.update_proxy()
 
             if not self._alive:
                 self._alive = True
 
-        @asyncio.coroutine
-        def _raise_on_death(self, coro):
+        async def _raise_on_death(self, coro):
             """execute *coro* but raise KaraboError if proxy is orphaned
 
             This coroutine executes the coroutine *coro*. If the
             device connected to this proxy dies while the *coro* is
             executed, a KaraboError is raised.
             """
-            if not self._alive:
-                raise KaraboError('device "{}" died'.format(self._deviceId))
             task = asyncio.ensure_future(coro)
             self._running_tasks.add(task)
             task.add_done_callback(
                 lambda fut: self._running_tasks.discard(fut))
             try:
-                return (yield from task)
+                return (await task)
             except asyncio.CancelledError:
                 if self._alive:
                     raise
@@ -534,12 +534,12 @@ class DeviceClientProxyFactory(ProxyFactory):
                 self._used = 1
                 self.__exit__(None, None, None)
 
-        def __iter__(self):
+        async def update_proxy(self):
             """Send out cached changes and get current configuration
             """
-            yield from self._update()
-            conf, _ = yield from self._device.call(self._deviceId,
-                                                   "slotGetConfiguration")
+            await self._update()
+            conf, _ = await self._device.call(self._deviceId,
+                                              "slotGetConfiguration")
             self._onChanged(conf)
             return self
 
@@ -558,16 +558,15 @@ class AutoDisconnectProxyFactory(DeviceClientProxyFactory):
                 self._connect()
 
         @synchronize
-        def _connect(self):
+        async def _connect(self):
             if self._task.done():
-                yield from self
+                await self.update_proxy()
                 self._task = asyncio.ensure_future(self._connector())
 
-        @asyncio.coroutine
-        def _connector(self):
+        async def _connector(self):
             with self:
                 while True:
                     delta = self._interval - time.time() + self._lastused
                     if delta < 0:
                         return
-                    yield from asyncio.sleep(delta)
+                    await asyncio.sleep(delta)

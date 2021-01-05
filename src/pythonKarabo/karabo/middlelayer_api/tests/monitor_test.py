@@ -1,4 +1,4 @@
-from asyncio import coroutine, ensure_future, sleep
+from asyncio import ensure_future, sleep
 from contextlib import contextmanager
 import time
 from unittest import main
@@ -14,15 +14,13 @@ class Remote(Device):
     counter = Int(defaultValue=-1)
 
     @Slot()
-    @coroutine
-    def count(self):
+    async def count(self):
         ensure_future(self.do_count())
 
-    @coroutine
-    def do_count(self):
+    async def do_count(self):
         for i in range(1, 30):
             self.counter = i
-            yield from sleep(0.1)
+            await sleep(0.1)
 
 
 class Local(Macro):

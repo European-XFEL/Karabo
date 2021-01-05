@@ -1,7 +1,7 @@
 """This module contains some synchronization routines for users"""
 
 import asyncio
-from asyncio import (CancelledError, coroutine, ensure_future, Future,
+from asyncio import (CancelledError, ensure_future, Future,
                      get_event_loop, iscoroutine, iscoroutinefunction)
 from functools import wraps
 import logging
@@ -31,14 +31,14 @@ def background(task, *args, timeout=-1):
     """
 
     @synchronize
-    def inner(task, *args):
+    async def inner(task, *args):
         loop = get_event_loop()
         try:
             if iscoroutine(task):
                 assert not args
-                return (yield from task)
+                return (await task)
             else:
-                return (yield from loop.run_coroutine_or_thread(task, *args))
+                return (await loop.run_coroutine_or_thread(task, *args))
         except CancelledError:
             raise
         except Exception:
@@ -59,7 +59,7 @@ def background(task, *args, timeout=-1):
 
 
 @synchronize
-def gather(*args, return_exceptions=False):
+async def gather(*args, return_exceptions=False):
     """wait until all KaraboFutures given are done
 
     This function waits until all :class:`KaraboFuture`s passed as
@@ -72,15 +72,15 @@ def gather(*args, return_exceptions=False):
     """
     assert all(isinstance(f, KaraboFuture) for f in args), \
         "Arguments must be of type KaraboFuture"
-    return (yield from asyncio.gather(*[f.future for f in args],
-                                      return_exceptions=return_exceptions))
+    return (await asyncio.gather(*[f.future for f in args],
+                                 return_exceptions=return_exceptions))
 
 
 @synchronize
-def processEvents():
+async def processEvents():
     """Process the stacked events on the event loop
     """
-    yield from asyncio.sleep(0)
+    await asyncio.sleep(0)
 
 
 @synchronize_notimeout
@@ -97,8 +97,8 @@ def sleep(delay, result=None):
     return asyncio.sleep(delay, result)
 
 
-@coroutine
-def _wait(return_when, *args, timeout=None, cancel_pending=True, **kwargs):
+async def _wait(return_when, *args, timeout=None, cancel_pending=True,
+                **kwargs):
     kwargs.update(enumerate(args))
     futures = {k: f if isinstance(f, KaraboFuture) else ensure_future(f)
                for k, f in kwargs.items()}
@@ -110,8 +110,8 @@ def _wait(return_when, *args, timeout=None, cancel_pending=True, **kwargs):
     if timeout is not None and isinstance(timeout, KaraboValue):
         timeout /= unit.second
     try:
-        done, pending = yield from asyncio.wait(names, return_when=return_when,
-                                                timeout=timeout)
+        done, pending = await asyncio.wait(names, return_when=return_when,
+                                           timeout=timeout)
     except CancelledError:
         for fut in names:
             if fut.done() and not fut.cancelled():
@@ -133,7 +133,7 @@ def _wait(return_when, *args, timeout=None, cancel_pending=True, **kwargs):
 
 
 @synchronize_notimeout
-def firstCompleted(*args, **kwargs):
+async def firstCompleted(*args, **kwargs):
     """wait for the first of coroutines or futures to return
 
     Wait for the first future given as keyword argument to return. It returns
@@ -163,11 +163,11 @@ def firstCompleted(*args, **kwargs):
     Futures still pending will be cancelled before return, unless you
     set `cancel_pending` to `False`.
     """
-    return (yield from _wait(asyncio.FIRST_COMPLETED, *args, **kwargs))
+    return (await _wait(asyncio.FIRST_COMPLETED, *args, **kwargs))
 
 
 @synchronize_notimeout
-def allCompleted(*args, **kwargs):
+async def allCompleted(*args, **kwargs):
     """wait until all futures are done
 
     This function is an improved version of :func:`asyncio.gather`,
@@ -175,11 +175,11 @@ def allCompleted(*args, **kwargs):
 
     For the returned dicts, see :func:`firstCompleted`.
     """
-    return (yield from _wait(asyncio.ALL_COMPLETED, *args, **kwargs))
+    return (await _wait(asyncio.ALL_COMPLETED, *args, **kwargs))
 
 
 @synchronize_notimeout
-def firstException(*args, **kwargs):
+async def firstException(*args, **kwargs):
     """wait until a future raises an exception
 
     If no future raises an exception, this is the same as
@@ -190,13 +190,13 @@ def firstException(*args, **kwargs):
 
     For the returned dicts, see :func:`firstCompleted`.
     """
-    return (yield from _wait(asyncio.FIRST_EXCEPTION, *args, **kwargs))
+    return (await _wait(asyncio.FIRST_EXCEPTION, *args, **kwargs))
 
 
 def synchronous(func):
     """Decorate a function to declare it synchronous
 
-    If you do not want to use ``yield from`` in your code, decorate it with
+    If you do not want to use ``await`` in your code, decorate it with
     this. The code will be run in a separate thread.
 
     However, if this code is called from asynchronous code, it has to be
@@ -204,9 +204,8 @@ def synchronous(func):
     """
     @wraps(func)
     def wrapper(*args):
-        @coroutine
-        def inner():
-            return (yield from background(func, *args))
+        async def inner():
+            return (await background(func, *args))
         loop = get_event_loop()
         if loop is EventLoop.global_loop:
             return inner()
@@ -223,7 +222,7 @@ class FutureDict(object):
     If you want to wait for something that only becomes available in the
     future, use::
 
-        power = yield from futuredict["power"]
+        power = await futuredict["power"]
 
     If later the value is available, just write:
 
@@ -235,13 +234,12 @@ class FutureDict(object):
     def __init__(self):
         self.futures = {}
 
-    @coroutine
-    def __getitem__(self, item):
+    async def __getitem__(self, item):
         future = Future()
         futures = self.futures.setdefault(item, set())
         futures.add(future)
         try:
-            return (yield from future)
+            return (await future)
         except Exception:
             futures.discard(future)
             raise

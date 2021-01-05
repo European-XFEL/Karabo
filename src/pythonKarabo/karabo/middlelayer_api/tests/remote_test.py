@@ -1,5 +1,5 @@
 from asyncio import (
-    coroutine, ensure_future, Future, gather, get_event_loop, sleep, wait_for,
+    ensure_future, Future, gather, get_event_loop, sleep, wait_for,
     TimeoutError)
 from contextlib import contextmanager
 from datetime import datetime
@@ -19,7 +19,6 @@ from karabo.middlelayer import (
     Timestamp, String, unit, Unit, VectorChar, VectorInt16,
     VectorString, VectorFloat, waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
-from karabo.middlelayer_api.injectable import Injectable
 
 from .eventloop import DeviceTest, async_tst
 
@@ -29,13 +28,12 @@ FLAKY_MIN_PASSES = 3
 
 
 class Superslot(Slot):
-    @coroutine
-    def method(self, device):
+    async def method(self, device):
         device.value = 22
 
 
 class SuperInteger(Int32):
-    def setter(self, device, value):
+    async def setter(self, device, value):
         if isSet(value):
             device.value = 2 * value
 
@@ -49,8 +47,7 @@ class Nested(Configurable):
     nestnest = Node(NestNest)
 
     @Slot()
-    @coroutine
-    def nestedSlot(self):
+    async def nestedSlot(self):
         self.val *= 2
 
 
@@ -58,7 +55,7 @@ class ChannelNode(Configurable):
     data = Int32(defaultValue=0)
 
 
-class Remote(Injectable, Device):
+class Remote(Device):
 
     state = Overwrite(options=[State.ON])
 
@@ -105,19 +102,16 @@ class Remote(Injectable, Device):
         self.state = State.UNKNOWN
 
     @Slot(allowedStates=[State.UNKNOWN])
-    @coroutine
-    def allow(self):
+    async def allow(self):
         self.state = State.ON
         self.value = 777
 
     @Slot()
-    @coroutine
-    def doit(self):
+    async def doit(self):
         self.done = True
 
     @Slot(displayedName="Change")
-    @coroutine
-    def changeit(self):
+    async def changeit(self):
         self.value -= 4
 
     def __init__(self, configuration):
@@ -126,22 +120,20 @@ class Remote(Injectable, Device):
         self.once_value = None
 
     @Slot()
-    @coroutine
-    def count(self):
+    async def count(self):
         for i in range(30):
             self.counter = i
-            yield from sleep(0.02)
+            await sleep(0.02)
 
     generic = Superslot()
     generic_int = SuperInteger()
     logmessage = VectorChar()
 
     @Slot()
-    @coroutine
-    def read_log(self):
+    async def read_log(self):
         consumer = openmq.Consumer(self._ss.session, self._ss.destination,
                                    "target = 'log'", False)
-        message = yield from get_event_loop().run_in_executor(
+        message = await get_event_loop().run_in_executor(
             None, consumer.receiveMessage, 1000)
         self.logmessage = message.data
 
@@ -150,51 +142,44 @@ class Local(Device):
     alarmhash = None
 
     @Slot()
-    @coroutine
-    def error(self):
+    async def error(self):
         raise RuntimeError
 
     @Slot()
-    @coroutine
-    def error_in_error(self):
+    async def error_in_error(self):
         raise RuntimeError
 
-    @coroutine
-    def error_log_message(self):
+    async def error_log_message(self):
         raise RuntimeError
 
     @Slot()
-    @coroutine
-    def task_background_error_coro(self):
+    async def task_background_error_coro(self):
         background(self.error_log_message())
 
     @Slot()
-    def task_background_error_no_coro(self):
+    async def task_background_error_no_coro(self):
         background(self.error_log_message())
 
     @Slot()
-    @coroutine
-    def task_error(self):
+    async def task_error(self):
         ensure_future(self.error())
 
-    @coroutine
-    def onException(self, slot, exc, tb):
+    async def onException(self, slot, exc, tb):
         self.exc_slot = slot
         self.exception = exc
         self.traceback = tb
         if slot is Local.error_in_error:
             raise RuntimeError
         else:
-            with (yield from getDevice("remote")) as d:
-                yield from d.doit()
+            with (await getDevice("remote")) as d:
+                await d.doit()
 
     @slot
     def slotAlarmUpdate(self, deviceId, alarms):
         self.alarm_future.set_result(None)
         self.alarmhash = alarms
 
-    @coroutine
-    def onInitialization(self):
+    async def onInitialization(self):
         self.state = State.ON
 
 
@@ -217,30 +202,30 @@ class Tests(DeviceTest):
             yield
 
     @async_tst
-    def test_execute(self):
+    async def test_execute(self):
         """test the execution of remote slots"""
         self.remote.done = False
-        with (yield from getDevice("remote")) as d:
-            yield from d.doit()
+        with (await getDevice("remote")) as d:
+            await d.doit()
         self.assertTrue(self.remote.done)
 
     @async_tst
-    def test_execute_noproxy(self):
+    async def test_execute_noproxy(self):
         self.remote.done = False
-        yield from execute("remote", "doit")
+        await execute("remote", "doit")
         self.assertTrue(self.remote.done)
 
     @async_tst
-    def test_set_remote(self):
+    async def test_set_remote(self):
         """test setting of values"""
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             d.string = "bla"
             d.unit_int = 3 * unit.meter
             d.unit_float = 7.5 * unit.millisecond
             d.unit_vector_int = [3, 4, 5] * unit.meter / unit.second
             d.unit_vector_float = [1, 2, 3]
             d.string_list = ["a", "bla"]
-            yield from waitUntilNew(d.string_list)
+            await waitUntilNew(d.string_list)
 
             self.assertEqual(d.string, "bla")
             self.assertLess(abs(d.string.timestamp.toTimestamp() -
@@ -269,7 +254,7 @@ class Tests(DeviceTest):
         for a, b in zip(self.remote.string_list, ["a", "bla"]):
             self.assertEqual(a, b)
 
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             with self.assertRaises(DimensionalityError):
                 d.unit_int = 3 * unit.second
             with self.assertRaises(DimensionalityError):
@@ -286,7 +271,7 @@ class Tests(DeviceTest):
             d.unit_vector_int = [2, 3, 4] * unit.meter / unit.second
             d.unit_vector_float = [5, 7, 8] * unit.degree
             d.string_list = []
-            yield from waitUntilNew(d.string_list)
+            await waitUntilNew(d.string_list)
 
             self.assertEqual(d.unit_int, 5000 * unit.meter)
             self.assertEqual(d.unit_float, 2 * unit.millisecond)
@@ -308,7 +293,7 @@ class Tests(DeviceTest):
         self.assertEqual(self.remote.string_list, [])
 
     @async_tst
-    def test_set_local(self):
+    async def test_set_local(self):
         self.remote.unit_int = 3
         with self.assertRaises(DimensionalityError):
             self.remote.unit_int = 3 * unit.second / unit.second
@@ -333,7 +318,7 @@ class Tests(DeviceTest):
         self.remote.unit_vector_float = [1, 3, 3]
         self.remote.string_list = ["z", "bla"]
 
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             self.assertEqual(d.string, "blub")
             self.assertLess(abs(d.string.timestamp.toTimestamp() -
                                 time.time()), 1)
@@ -351,13 +336,13 @@ class Tests(DeviceTest):
         for a, b in zip(self.remote.string_list, ["z", "bla"]):
             self.assertEqual(a, b)
 
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             self.remote.unit_int = 5 * unit.kilometer
             self.remote.unit_float = 2 * unit.millisecond
             self.remote.unit_vector_int = [2, 3, 4] * unit.meter / unit.second
             self.remote.unit_vector_float = [5, 7, 8] * unit.degree
             self.remote.string_list = []
-            yield from d
+            await d.update_proxy()
 
             self.assertEqual(d.unit_int, 5000 * unit.meter)
             self.assertEqual(d.unit_float, 2 * unit.millisecond)
@@ -379,173 +364,174 @@ class Tests(DeviceTest):
         self.assertEqual(self.remote.string_list, [])
 
     @async_tst
-    def test_change(self):
+    async def test_change(self):
         """test changing a remote parameter"""
         self.remote.value = 7
-        with (yield from getDevice("remote")) as d:
-            yield from d.changeit()
+        with (await getDevice("remote")) as d:
+            await d.changeit()
         self.assertEqual(self.remote.value, 3)
 
     @async_tst
-    def test_state(self):
+    async def test_state(self):
         self.remote.state = State.UNKNOWN
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             self.assertEqual(d.state, State.UNKNOWN)
             self.assertEqual(d.alarmCondition, AlarmCondition.NONE)
 
     @async_tst
-    def test_remotetag_proxy(self):
-        with (yield from getDevice("remote")) as d:
+    async def test_remotetag_proxy(self):
+        with (await getDevice("remote")) as d:
             descriptors = filterByTags(d, "AString")
             paths = [k.longkey for k in descriptors]
             self.assertEqual(["string"], paths)
 
     @async_tst
-    def test_disconnect(self):
+    async def test_disconnect(self):
         """test values are not updating when disconnected"""
         self.remote.counter = -1
         # there are often still changes on the way that we don't want to see
-        yield from sleep(0.1)
-        d = yield from getDevice("remote")
+        await sleep(0.1)
+        d = await getDevice("remote")
         task = ensure_future(d.count())
-        yield from sleep(0.1)
+        await sleep(0.1)
         self.assertEqual(d.counter, -1,
                          "we're not connected still seeing changes")
-        yield from sleep(0.1)
-        with (yield from d):
-            yield from sleep(0.1)
+        await sleep(0.1)
+        with d:
+            await d.update_proxy()
+            await sleep(0.1)
             tmp = d.counter
             self.assertNotEqual(d.counter, -1,
                                 "not seeing changes although connected")
-        yield from sleep(0.1)
+        await sleep(0.1)
         # sanity check: the counter should still be running
         self.assertLess(tmp, 20)
         self.assertLess(d.counter - tmp, 2,
                         "to many messages arrived after disconnecting")
         with d:
-            yield from sleep(0.5)
+            await sleep(0.5)
             self.assertEqual(d.counter, 29)
-        yield from task
+        await task
 
     @async_tst
-    def test_set(self):
+    async def test_set(self):
         """test setting of remote values works"""
         self.remote.value = 7
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             self.assertEqual(d.value, 7)
             d.value = 10
-            yield from sleep(0.1)
+            await sleep(0.1)
             self.assertEqual(d.value, 10)
-            yield from d.changeit()
+            await d.changeit()
             self.assertEqual(d.value, 6)
 
     @async_tst
-    def test_generic(self):
+    async def test_generic(self):
         """test calling a generic slot"""
         self.remote.value = 7
-        d = yield from getDevice("remote")
-        yield from d.generic()
+        d = await getDevice("remote")
+        await d.generic()
         self.assertEqual(self.remote.value, 22)
 
     @async_tst
-    def test_generic_int(self):
+    async def test_generic_int(self):
         """test setting a generic property"""
         self.remote.value = 7
-        d = yield from getDevice("remote")
+        d = await getDevice("remote")
         d.generic_int = 33
-        yield from d
+        await d.update_proxy()
         self.assertEqual(self.remote.value, 66)
 
     @async_tst
-    def test_setter(self):
+    async def test_setter(self):
         """test setting a property with a setter method"""
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             d.other = 102
-        yield from sleep(0.5)
+        await sleep(0.5)
         self.assertEqual(self.remote.value, 102)
 
     @async_tst
-    def test_setwait(self):
+    async def test_setwait(self):
         """test the setWait coroutine"""
-        d = yield from getDevice("remote")
-        yield from setWait(d, value=200 * unit.mm, counter=300)
+        d = await getDevice("remote")
+        await setWait(d, value=200 * unit.mm, counter=300)
         self.assertEqual(self.remote.value, 200)
         self.assertEqual(self.remote.counter, 300)
 
     @async_tst
-    def test_setnowait(self):
+    async def test_setnowait(self):
         """test the setNoWait coroutine"""
         self.remote.value = 0
         self.remote.counter = 0
-        d = yield from getDevice("remote")
+        d = await getDevice("remote")
         setNoWait(d, value=200, counter=300 * unit.mm)
         self.assertEqual(self.remote.value, 0)
         self.assertEqual(self.remote.counter, 0)
-        yield from sleep(0.1)
+        await sleep(0.1)
         self.assertEqual(self.remote.value, 200)
         self.assertEqual(self.remote.counter, 300)
 
     @async_tst
-    def test_waituntil(self):
+    async def test_waituntil(self):
         """test the waitUntil coroutine"""
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             d.counter = 0
-            yield from waitUntil(lambda: d.counter == 0)
+            await waitUntil(lambda: d.counter == 0)
             self.assertEqual(d.counter, 0)
             task = ensure_future(d.count())
             try:
                 with self.assertRaises(TimeoutError):
-                    yield from wait_for(waitUntil(lambda: d.counter > 10),
-                                        timeout=0.1)
+                    await wait_for(waitUntil(lambda: d.counter > 10),
+                                   timeout=0.1)
 
-                yield from waitUntil(lambda: d.counter > 10)
+                await waitUntil(lambda: d.counter > 10)
                 self.assertEqual(d.counter, 11)
 
                 # there are many "while True:" busy loops out there.
                 # assure we don't get stuck if the condition is always true
-                # it is important to have no other yield from except the
+                # it is important to have no other await except the
                 # waitUntil in the loop to test that it actually gives the
                 # event loop a chance to run. This test, if succeeding, is
                 # fast, but if failing would kill the entire test suite,
                 # that's why there is an upper time limit for it.
                 t0 = time.time()
                 while d.counter < 15 and time.time() - t0 < 1:
-                    yield from waitUntil(lambda: True)
+                    await waitUntil(lambda: True)
                 self.assertLess(time.time() - t0, 1)
 
                 with self.assertRaises(TimeoutError):
-                    yield from wait_for(waitUntil(lambda: d.counter > 40),
-                                        timeout=0.01)
+                    await wait_for(waitUntil(lambda: d.counter > 40),
+                                   timeout=0.01)
             finally:
-                yield from task
+                await task
 
     @async_tst
-    def test_isAlive(self):
+    async def test_isAlive(self):
         moriturus = Local({"_deviceId_": "moriturus"})
-        yield from moriturus.startInstance()
-        proxy = yield from getDevice("moriturus")
+        await moriturus.startInstance()
+        proxy = await getDevice("moriturus")
         self.assertTrue(isAlive(proxy))
         background(moriturus.slotKillDevice())
-        yield from waitUntil(lambda: not isAlive(proxy))
+        await waitUntil(lambda: not isAlive(proxy))
         self.assertFalse(isAlive(proxy))
 
     @async_tst
-    def test_isAlive_state(self):
+    async def test_isAlive_state(self):
         moriturus = Local({"_deviceId_": "moriturus"})
-        yield from moriturus.startInstance()
-        proxy = yield from getDevice("moriturus")
-        yield from waitUntil(lambda: isAlive(proxy))
+        await moriturus.startInstance()
+        proxy = await getDevice("moriturus")
+        await waitUntil(lambda: isAlive(proxy))
         self.assertTrue(isAlive(proxy))
         self.assertEqual(moriturus.state, State.ON)
         self.assertEqual(proxy.state, State.ON)
         # We kill the device to see the desired state transition
-        yield from moriturus.slotKillDevice()
+        await moriturus.slotKillDevice()
         self.assertFalse(isAlive(proxy))
         self.assertEqual(proxy.state, State.UNKNOWN)
 
     @async_tst
     @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
-    def test_waituntilnew(self):
+    async def test_waituntilnew(self):
         """test the waitUntilNew coroutine for properties
 
         NOTE: This test is declared as flaky as the cycling is sometimes not
@@ -556,105 +542,105 @@ class Tests(DeviceTest):
         self.remote.nested.val = None
         # NOTE: Protect against a race condition in getDevice and cycle once!
         # Can be cured with async with which is not possible at the moment.
-        yield from sleep(0.1)
-        with (yield from getDevice("remote")) as d:
+        await sleep(0.1)
+        with (await getDevice("remote")) as d:
             d.counter = 0
             # we test that d.counter and d.nested.val are still None (it
-            # must be, no yield from since last line). This asserts that
+            # must be, no await since last line). This asserts that
             # waitUntilNew also works with uninitialized values, which
             # had been a bug before
             self.assertEqual(d.counter, None)
             self.assertEqual(d.nested.val, None)
-            yield from waitUntilNew(d.value, d.counter, d.nested.val)
+            await waitUntilNew(d.value, d.counter, d.nested.val)
             task = ensure_future(d.count())
             try:
                 for i in range(30):
-                    yield from waitUntilNew(d.counter, d.value)
+                    await waitUntilNew(d.counter, d.value)
                     self.assertEqual(i, d.counter)
             finally:
-                yield from task
+                await task
 
     @async_tst
     @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
-    def test_waituntildevice(self):
+    async def test_waituntildevice(self):
         """test the waitUntilNew coroutine for devices
 
         NOTE: This test is declared as flaky as the cycling is sometimes not
         working in the eventloop as it has to be.
         """
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             d.counter = 0
-            yield from sleep(0.1)
+            await sleep(0.1)
             task = ensure_future(d.count())
             try:
                 for i in range(30):
-                    yield from waitUntilNew(d)
+                    await waitUntilNew(d)
                     self.assertEqual(i, d.counter)
             finally:
-                yield from task
+                await task
 
     @async_tst
-    def test_collect(self):
+    async def test_collect(self):
         """test that multiple settings are gathered into one"""
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             d.once = 3
             d.once = 7
             d.once = 10
-        yield from sleep(0.1)
+        await sleep(0.1)
         self.assertEqual(self.remote.once_value, 10)
 
     @async_tst
-    def test_error_value(self):
-        d = yield from getDevice("remote")
+    async def test_error_value(self):
+        d = await getDevice("remote")
         d.error_value = 3
         with self.assertRaises(KaraboError):
-            yield from d.doit()
+            await d.doit()
 
     @async_tst
-    def test_disallow(self):
+    async def test_disallow(self):
         """test that values cannot be set if in wrong state"""
         self.assertEqual(self.remote.state, State.UNKNOWN)
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             d.value = 7
-            yield from waitUntil(lambda: d.value == 7)
+            await waitUntil(lambda: d.value == 7)
             # disallowed_int is normally not allowed
             with self.assertLogs(logger="remote", level="WARNING") as log:
                 # no error here as we need to wait for network round-trip
                 d.disallowed_int = 333
-                yield from sleep(0.02)
+                await sleep(0.02)
             with self.assertRaises(KaraboError):
                 # this raises the error from above
                 d.value = 8
             with self.assertLogs(logger="remote", level="WARNING") as log, \
                     self.assertRaises(KaraboError):
                 d.disallowed_int = 333
-                yield from d.allow()
+                await d.allow()
             self.assertEqual(len(log.records), 1)
             self.assertEqual(log.records[0].levelname, "WARNING")
             self.assertEqual(d.value, 7)
 
             # d.allow() sets d.value to 777 and is changing state such that
             # disallowed_int can be set ...
-            yield from d.allow()
+            await d.allow()
             self.assertEqual(d.value, 777)
             d.value = 4
             # ... but it cannot be called itself anymore ...
             with self.assertLogs(logger="remote", level="WARN") as logs, \
                     self.assertRaises(KaraboError):
-                yield from d.allow()
+                await d.allow()
             self.assertEqual(len(logs.records), 1)
             self.assertEqual(logs.records[0].levelname, "WARNING")
             self.assertEqual(d.value, 4)
             # ... but disallowed_int sets this back ...
             d.disallowed_int = 444
-            yield from waitUntil(lambda: d.value == 444)
+            await waitUntil(lambda: d.value == 444)
             self.assertEqual(d.value, 444)
             # ... so allow can be called again!
-            yield from d.allow()
+            await d.allow()
             self.assertEqual(d.value, 777)
 
     @async_tst
-    def test_log(self):
+    async def test_log(self):
         """test the logging of warnings and exceptions"""
 
         def _absolute_delta_to_now(isotimestr):
@@ -668,25 +654,25 @@ class Tests(DeviceTest):
             return (delta.days * 3600 * 24 + delta.seconds +
                     delta.microseconds * 1e-6)
 
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             t = ensure_future(d.read_log())
-            yield from sleep(0.1)
+            await sleep(0.1)
             self.local.logger.warning("this is an info")
-            yield from t
+            await t
         hash = decodeBinary(self.remote.logmessage)
         hash = hash["messages"][0]
         self.assertEqual(hash["message"], "this is an info")
         self.assertEqual(hash["type"], "WARN")
         self.assertEqual(hash["category"], "local")
         self.assertLessEqual(_absolute_delta_to_now(hash["timestamp"]), 10)
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             t = ensure_future(d.read_log())
-            yield from sleep(0.1)
+            await sleep(0.1)
             try:
                 raise RuntimeError
             except Exception:
                 self.local.logger.exception("expected exception")
-            yield from t
+            await t
         hash = decodeBinary(self.remote.logmessage)
         hash = hash["messages"][0]
         self.assertEqual(hash["message"], "expected exception")
@@ -699,41 +685,40 @@ class Tests(DeviceTest):
         self.assertEqual(type(hash["traceback"]), str)
 
     @async_tst
-    def test_earlylog(self):
+    async def test_earlylog(self):
         class A(Device):
             @Int32()
             def logint(self, value):
                 self.logger.info("log the int")
 
-            @coroutine
-            def onInitialization(self):
+            async def onInitialization(self):
                 self.logger.info("some test log message")
 
         with self.assertLogs("testearlylog", level="INFO") as cm:
             a = A({"_deviceId_": "testearlylog"})
         self.assertEqual(cm.records[0].msg, "log the int")
         with self.assertLogs("testearlylog", level="INFO") as cm:
-            yield from a.startInstance()
+            await a.startInstance()
         self.assertEqual(cm.records[0].msg, "some test log message")
-        yield from a.slotKillDevice()
+        await a.slotKillDevice()
 
     @async_tst
-    def test_queue(self):
+    async def test_queue(self):
         """test queues of properties"""
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             task = ensure_future(d.count())
-            yield from waitUntil(lambda: d.counter == 0)
+            await waitUntil(lambda: d.counter == 0)
             try:
                 q = Queue(d.counter)
                 for i in range(1, 30):
-                    j = yield from q.get()
+                    j = await q.get()
                     self.assertEqual(i, j)
-                    yield from sleep(i * 0.003)
+                    await sleep(i * 0.003)
             finally:
-                yield from task
+                await task
 
     @async_tst
-    def test_nested(self):
+    async def test_nested(self):
         """test accessing nested properties"""
         self.remote.nested.val = 3 * unit.second
         self.assertLess(
@@ -742,7 +727,7 @@ class Tests(DeviceTest):
         ts1 = self.remote.nested.val.timestamp
         self.remote.nested.nestnest.value = 7 * unit.meter
         ts2 = self.remote.nested.nestnest.value.timestamp
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             self.assertEqual(d.nested.val, 3 * unit.second)
             self.assertEqual(d.nested.val.timestamp, ts1)
             self.assertEqual(d.nested.nestnest.value, 7 * unit.meter)
@@ -751,19 +736,19 @@ class Tests(DeviceTest):
             self.assertEqual(d.nested.nestnest.value.timestamp, ts2)
             d.nested.val = 4 * unit.second
             d.nested.nestnest.value = 5 * unit.meter
-            yield from d.nested.nestedSlot()
+            await d.nested.nestedSlot()
             # nestedSlot doubles the nested.val
         self.assertEqual(self.remote.nested.val, 8 * unit.second)
         self.assertEqual(self.remote.nested.nestnest.value, 5 * unit.meter)
 
     @async_tst
-    def test_error(self):
+    async def test_error(self):
         """test error reporting and calling of error methods"""
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
-            with (yield from getDevice("local")) as d, \
+            with (await getDevice("local")) as d, \
                     self.assertRaises(KaraboError):
-                yield from d.error()
+                await d.error()
         self.assertTrue(self.remote.done)
         self.remote.done = False
         self.assertIs(self.local.exc_slot, Local.error)
@@ -774,13 +759,13 @@ class Tests(DeviceTest):
         del self.local.traceback
 
     @async_tst
-    def test_error_in_error(self):
+    async def test_error_in_error(self):
         """test what happens if an error happens in an error method"""
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR") as logs:
-            with (yield from getDevice("local")) as d, \
+            with (await getDevice("local")) as d, \
                     self.assertRaises(KaraboError):
-                yield from d.error_in_error()
+                await d.error_in_error()
         self.assertEqual(logs.records[-1].msg, "error in error handler")
         self.assertFalse(self.remote.done)
         self.assertIs(self.local.exc_slot, Local.error_in_error)
@@ -791,15 +776,15 @@ class Tests(DeviceTest):
         del self.local.traceback
 
     @async_tst
-    def test_task_error(self):
+    async def test_task_error(self):
         """test that errors of created tasks are properly reported"""
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
-            with (yield from getDevice("local")) as local, \
-                    (yield from getDevice("remote")) as remote:
-                yield from local.task_error()
+            with (await getDevice("local")) as local, \
+                    (await getDevice("remote")) as remote:
+                await local.task_error()
                 self.assertFalse(remote.done)
-                yield from waitUntil(lambda: remote.done)
+                await waitUntil(lambda: remote.done)
                 self.assertTrue(remote.done)
 
         self.assertIsNone(self.local.exc_slot)
@@ -809,14 +794,14 @@ class Tests(DeviceTest):
         del self.local.traceback
 
     @async_tst
-    def test_task_error_background_coro(self):
+    async def test_task_error_background_coro(self):
         """test that errors of background tasks are properly reported"""
-        with (yield from getDevice("local")) as local, \
-                (yield from getDevice("remote")) as remote:
+        with (await getDevice("local")) as local, \
+                (await getDevice("remote")) as remote:
             t = ensure_future(remote.read_log())
-            yield from sleep(0.1)
-            yield from local.task_background_error_coro()
-            yield from t
+            await sleep(0.1)
+            await local.task_background_error_coro()
+            await t
 
             # Read out the log message
             hash = decodeBinary(self.remote.logmessage)
@@ -831,14 +816,14 @@ class Tests(DeviceTest):
         del self.local.traceback
 
     @async_tst
-    def test_task_error_background_no_coro(self):
+    async def test_task_error_background_no_coro(self):
         """test that errors of background tasks are properly reported"""
-        with (yield from getDevice("local")) as local, \
-                (yield from getDevice("remote")) as remote:
+        with (await getDevice("local")) as local, \
+                (await getDevice("remote")) as remote:
             t = ensure_future(remote.read_log())
-            yield from sleep(0.1)
-            yield from local.task_background_error_no_coro()
-            yield from t
+            await sleep(0.1)
+            await local.task_background_error_no_coro()
+            await t
 
             # Read out the log message
             hash = decodeBinary(self.remote.logmessage)
@@ -853,12 +838,12 @@ class Tests(DeviceTest):
         del self.local.traceback
 
     @async_tst
-    def test_connectDevice(self):
-        d = yield from connectDevice("remote")
+    async def test_connectDevice(self):
+        d = await connectDevice("remote")
         try:
             self.assertNotEqual(d.value, 123)
             self.remote.value = 123
-            yield from sleep(0.5)
+            await sleep(0.5)
             self.assertEqual(d.value, 123)
         finally:
             # check the proxy gets collected when not used anymore
@@ -867,13 +852,13 @@ class Tests(DeviceTest):
             self.assertIsNone(weak())
 
     @async_tst
-    def test_getdoc(self):
+    async def test_getdoc(self):
         # this is usually done by iPython/iKarabo
-        d = yield from getDevice("remote")
+        d = await getDevice("remote")
         self.assertEqual(d.value.getdoc(), "The Value")
 
     @async_tst
-    def test_devicenode(self):
+    async def test_devicenode(self):
         class A(Device):
             dn = DeviceNode(properties=["value", "counter", "other"],
                             commands=["doit", "changeit"],
@@ -884,13 +869,13 @@ class Tests(DeviceTest):
         a = A({"_deviceId_": "devicenode", "dn": "remote",
                "dnEmpty": "remote"})
 
-        yield from a.startInstance()
+        await a.startInstance()
         try:
             a.dn.value = 5
-            yield from a.dn
+            await a.dn.update_proxy()
             self.assertEqual(self.remote.value, 5)
 
-            with (yield from getDevice("devicenode")) as d:
+            with (await getDevice("devicenode")) as d:
                 self.assertEqual(d.lockedBy, "")
                 self.assertEqual(d.dn.value, 5)
                 self.assertEqual(d.dn.counter, -1)
@@ -898,7 +883,7 @@ class Tests(DeviceTest):
                 d.dn.value = 8
                 d.dn.counter = 12
                 self.remote.done = False
-                yield from d.dn.doit()
+                await d.dn.doit()
                 self.assertEqual(d.dn.value, 8)
                 self.assertEqual(d.dn.counter, 12)
                 self.assertEqual(a.dn.value, 8)
@@ -916,70 +901,53 @@ class Tests(DeviceTest):
                 self.assertEqual(a.dn.alarmCondition, AlarmCondition.NONE)
                 self.assertTrue(self.remote.done)
                 d.dn.value = 22
-                yield from d.dn.changeit()
+                await d.dn.changeit()
                 self.assertEqual(d.dn.value, 18)
                 self.assertEqual(a.dn.value, 18)
 
                 d.dn.othr = 111
-                yield from d
+                await d.update_proxy()
                 self.assertFalse(isSet(d.dn.other))
         finally:
-            yield from a.slotKillDevice()
+            await a.slotKillDevice()
 
     @async_tst
-    def test_devicenode_timeout(self):
+    async def test_devicenode_timeout(self):
         class A(Device):
             dn = DeviceNode(timeout=0.0)
 
         a = A({"_deviceId_": "devicenode", "dn": "nodevice"})
         with self.assertRaises(KaraboError):
-            yield from a.startInstance()
+            await a.startInstance()
 
     @async_tst
-    def test_devicenode_nocopy_lock(self):
-        class A(Device):
-            dn = DeviceNode(lock=True)
-
-        a = A({"_deviceId_": "devicenode", "dn": "remote"})
-        yield from a.startInstance()
-        try:
-            self.assertEqual(a.dn.lockedBy, "devicenode")
-            a.dn.value = 5
-            yield from a.dn
-            self.assertEqual(self.remote.value, 5)
-        finally:
-            yield from a.slotKillDevice()
-        with (yield from getDevice("remote")) as proxy:
-            yield from waitUntil(lambda: proxy.lockedBy == "")
-
-    @async_tst
-    def test_devicenode_novalue(self):
+    async def test_devicenode_novalue(self):
         class A(Device):
             dn = DeviceNode()
 
         with self.assertRaises(KaraboError):
-            a = A({"_deviceId_": "devicenode"})
+            A({"_deviceId_": "devicenode"})
 
     @async_tst
-    def test_prenatal_proxy(self):
+    async def test_prenatal_proxy(self):
         task = ensure_future(getDevice("prenatal"))
         a = Remote({"_deviceId_": "prenatal"})
-        yield from a.startInstance()
-        proxy = yield from task
+        await a.startInstance()
+        proxy = await task
         self.assertEqual(proxy.deviceId, "prenatal")
 
     @async_tst
-    def test_proxy_dead(self):
+    async def test_proxy_dead(self):
         a = Remote({"_deviceId_": "moriturus"})
-        yield from a.startInstance()
-        proxy = yield from getDevice("moriturus")
-        yield from a.slotKillDevice()
+        await a.startInstance()
+        proxy = await getDevice("moriturus")
+        await a.slotKillDevice()
         with self.assertRaisesRegex(KaraboError, "died"):
-            yield from proxy.count()
+            await proxy.count()
 
     @async_tst
-    def test_device_schema(self):
-        schema, device = yield from self.local.call(
+    async def test_device_schema(self):
+        schema, device = await self.local.call(
             "remote", "slotGetSchema", False)
         self.assertEqual(device, "remote")
         self.assertEqual(schema.name, "Remote")
@@ -1012,7 +980,7 @@ class Tests(DeviceTest):
         self.assertIn("allow", h)
         self.assertIn("disallowed_int", h)
 
-        schema, device = yield from self.local.call(
+        schema, device = await self.local.call(
             "remote", "slotGetSchema", True)
         self.assertEqual(device, "remote")
         self.assertEqual(schema.name, "Remote")
@@ -1021,58 +989,58 @@ class Tests(DeviceTest):
         self.assertNotIn("disallowed_int", h)
 
     @async_tst
-    def test_lock(self):
-        with (yield from getDevice("remote")) as d:
-            with (yield from lock(d)):
+    async def test_lock(self):
+        with (await getDevice("remote")) as d:
+            with (await lock(d)):
                 self.assertEqual(d.lockedBy, "local")
-                with (yield from lock(d)):
+                with (await lock(d)):
                     self.assertEqual(d.lockedBy, "local")
                     d.value = 33
-                    yield from waitUntil(lambda: d.value == 33)
-                yield from d
+                    await waitUntil(lambda: d.value == 33)
+                await d.update_proxy()
                 self.assertEqual(d.lockedBy, "local")
-            yield from waitUntil(lambda: d.lockedBy == "")
+            await waitUntil(lambda: d.lockedBy == "")
 
     @async_tst
-    def test_lock_concurrence(self):
-        with (yield from getDevice("remote")) as d:
-            yield from setWait(d, value=40, lockedBy="NoDevice")
+    async def test_lock_concurrence(self):
+        with (await getDevice("remote")) as d:
+            await setWait(d, value=40, lockedBy="NoDevice")
             self.assertEqual(d.lockedBy, "NoDevice")
             self.assertEqual(d.value, 40)
             with self.assertRaises(KaraboError) as e:
-                yield from setWait(d, value=50)
+                await setWait(d, value=50)
                 self.assertEqual(e, "Device locked by NoDevice")
             self.assertEqual(d.value, 40)
-            yield from d.slotClearLock()
-            yield from setWait(d, value=50)
+            await d.slotClearLock()
+            await setWait(d, value=50)
             self.assertEqual(d.value, 50)
             self.assertEqual(d.lockedBy, "")
 
     @async_tst
-    def test_device_node_alive(self):
+    async def test_device_node_alive(self):
         class A(Device):
             dn = DeviceNode()
 
         node_device = A({"_deviceId_": "devicenode", "dn": "scratchy"})
         scratchy = Local({"_deviceId_": "scratchy"})
         try:
-            yield from scratchy.startInstance()
-            yield from node_device.startInstance()
-            yield from waitUntil(lambda: isAlive(node_device.dn))
+            await scratchy.startInstance()
+            await node_device.startInstance()
+            await waitUntil(lambda: isAlive(node_device.dn))
             self.assertTrue(isAlive(node_device.dn))
             background(scratchy.slotKillDevice())
-            yield from waitUntil(lambda: not isAlive(node_device.dn))
+            await waitUntil(lambda: not isAlive(node_device.dn))
             self.assertFalse(isAlive(node_device.dn))
         finally:
-            yield from node_device.slotKillDevice()
+            await node_device.slotKillDevice()
 
     @async_tst
-    def test_alarm(self):
+    async def test_alarm(self):
         self.remote.signalAlarmUpdate.connect("local", "slotAlarmUpdate")
         self.remote.alarm = 3
         self.remote.update()
         self.local.alarm_future = Future()
-        yield from self.local.alarm_future
+        await self.local.alarm_future
         ah = self.local.alarmhash
         self.assertFalse(ah["toClear"])
         self.assertEqual(ah["toAdd.alarm.warnLow.type"], "warnLow")
@@ -1082,7 +1050,7 @@ class Tests(DeviceTest):
         self.remote.alarm = 11
         self.remote.update()
         self.local.alarm_future = Future()
-        yield from self.local.alarm_future
+        await self.local.alarm_future
         ah = self.local.alarmhash
         self.assertFalse(ah["toAdd"])
         self.assertEqual(ah["toClear.alarm"], ["warnLow"])
@@ -1090,7 +1058,7 @@ class Tests(DeviceTest):
         self.local.alarm_future = Future()
         self.remote.globalAlarmCondition = AlarmCondition.ALARM
         self.remote.update()
-        yield from self.local.alarm_future
+        await self.local.alarm_future
         ah = self.local.alarmhash
         self.assertFalse(ah["toClear"])
         self.assertEqual(ah["toAdd.global.alarm.type"], "alarm")
@@ -1102,8 +1070,8 @@ class Tests(DeviceTest):
         self.remote.globalAlarmCondition = AlarmCondition.NONE
 
     @async_tst
-    def test_double_getDevice(self):
-        a, b = yield from gather(getDevice("remote"), getDevice("remote"))
+    async def test_double_getDevice(self):
+        a, b = await gather(getDevice("remote"), getDevice("remote"))
         self.assertIs(a, b)
 
         alive = ensure_future(getDevice("vivro"))
@@ -1111,24 +1079,23 @@ class Tests(DeviceTest):
         yield  # start the tasks
         cancelled.cancel()
         remote = Remote({"_deviceId_": "vivro"})
-        yield from remote.startInstance()
+        await remote.startInstance()
         try:
             # this used to raise a CancelledError, as we cross-cancelled
-            yield from alive
+            await alive
         finally:
-            yield from remote.slotKillDevice()
+            await remote.slotKillDevice()
 
     @async_tst
-    def test_inject(self):
-        with (yield from getDevice("remote")) as d:
+    async def test_inject(self):
+        with (await getDevice("remote")) as d:
             self.remote.__class__.injected = String()
             self.remote.__class__.injected_node = Node(Nested)
             self.remote.__class__.changeit = Overwrite(
                 displayedName="ChangeIt")
 
             @Int32()
-            @coroutine
-            def tobeinit(myself, value):
+            async def tobeinit(myself, value):
                 self.assertEqual(value, 100)
                 myself.tobeinit = 123
 
@@ -1143,107 +1110,105 @@ class Tests(DeviceTest):
             self.remote.__class__.injected_slot = slot
 
             with self.assertRaises(TimeoutError):
-                yield from wait_for(waitUntil(lambda: hasattr(d, "injected")),
-                                    timeout=0.1)
-            yield from self.remote.publishInjectedParameters(tobeinit=100)
+                await wait_for(waitUntil(lambda: hasattr(d, "injected")),
+                               timeout=0.1)
+            await self.remote.publishInjectedParameters(tobeinit=100)
             self.assertEqual(self.remote.changeit.descriptor.displayedName,
                              "ChangeIt")
             self.remote.injected = "smthng"
             self.remote.injected_node = Nested({})
-            yield from waitUntil(lambda: hasattr(d, "injected"))
-            yield from waitUntil(lambda: d.injected == "smthng")
+            await waitUntil(lambda: hasattr(d, "injected"))
+            await waitUntil(lambda: d.injected == "smthng")
             self.assertEqual(d.tobeinit, 123, "initializer was not called")
             self.remote.injected = "bla"
-            yield from waitUntil(lambda: d.injected == "bla")
-            yield from d.injected_slot()
+            await waitUntil(lambda: d.injected == "bla")
+            await d.injected_slot()
             self.assertEqual(
                 self.remote.injected_slot.descriptor.displayedName, "Injected")
             self.assertEqual(slotdata, 44)
 
             d.injected_node.val = 10
-            yield from d.injected_node.nestedSlot()
+            await d.injected_node.nestedSlot()
             self.assertEqual(d.injected_node.val, 20 * unit.millisecond)
 
             d.injected = "whatever"
-            yield from waitUntil(lambda: self.remote.injected == "whatever")
+            await waitUntil(lambda: self.remote.injected == "whatever")
 
     @async_tst
-    def test_earlyinject(self):
-        class A(Injectable, Device):
-            @coroutine
-            def onInitialization(self):
+    async def test_earlyinject(self):
+        class A(Device):
+            async def onInitialization(self):
                 self.__class__.number = Int32()
-                yield from self.publishInjectedParameters()
+                await self.publishInjectedParameters()
                 self.number = 3
 
         a = A({"_deviceId_": "testinject"})
-        yield from a.startInstance()
-        with (yield from getDevice("testinject")) as proxy:
+        await a.startInstance()
+        with (await getDevice("testinject")) as proxy:
             self.assertEqual(proxy.number, 3)
 
     @async_tst
-    def test_device_restart(self):
+    async def test_device_restart(self):
         proxy = None
         self.remote.done = False
 
         class A(Device):
-            @coroutine
-            def onInitialization(self):
+            async def onInitialization(self):
                 nonlocal future, proxy
-                proxy = yield from connectDevice("remote")
+                proxy = await connectDevice("remote")
                 future.set_result(None)
 
         future = Future()
         a = A({"_deviceId_": "testrestart"})
-        yield from a.startInstance()
-        yield from future
+        await a.startInstance()
+        await future
         firstproxy = proxy
-        yield from a.slotKillDevice()
+        await a.slotKillDevice()
 
         future = Future()
         a = A({"_deviceId_": "testrestart"})
-        yield from a.startInstance()
-        yield from future
+        await a.startInstance()
+        await future
         weakproxy = weakref.ref(firstproxy)
         del firstproxy
         self.assertIsNone(weakproxy())
-        yield from proxy.doit()
+        await proxy.doit()
         self.assertTrue(proxy.done)
 
     @async_tst
-    def test_set_archive_fails(self):
-        with (yield from getDevice("remote")) as d:
+    async def test_set_archive_fails(self):
+        with (await getDevice("remote")) as d:
             with self.assertRaises(KaraboError):
                 new_archive = not d.archive.value
-                yield from setWait(d, archive=new_archive)
+                await setWait(d, archive=new_archive)
 
     @async_tst
-    def test_config_handler(self):
+    async def test_config_handler(self):
         h = Hash()
 
         def updates(change):
             h.merge(change)
 
-        with (yield from getDevice("remote")) as d:
+        with (await getDevice("remote")) as d:
             d.counter = -1
             # subscribe to changes
             d.setConfigHandler(updates)
             try:
-                yield from sleep(0.1)
+                await sleep(0.1)
                 task = ensure_future(d.count())
                 for _ in range(5):
                     h.clear()
-                    yield from waitUntilNew(d)
+                    await waitUntilNew(d)
                     self.assertIn("counter", h)
 
                 # unsubscribe from changes
                 d.setConfigHandler(None)
                 h.clear()
 
-                yield from waitUntilNew(d)
+                await waitUntilNew(d)
                 self.assertNotIn("counter", h)
             finally:
-                yield from task
+                await task
             d.counter = -1
 
 
