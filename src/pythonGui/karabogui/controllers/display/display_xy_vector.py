@@ -83,8 +83,11 @@ class DisplayVectorXYGraph(BaseBindingController):
                     else:
                         c.setData([], [])
             else:
+                curve = self._curves.get(proxy, None)
+                if curve is None:
+                    # Note: This can happen on start up ...
+                    return
                 x_val = get_binding_value(self.proxy, [])
-                curve = self._curves[proxy]
                 if len(value) == len(x_val):
                     rect = get_view_range(curve)
                     x, y = generate_down_sample(value, x=x_val, rect=rect,
