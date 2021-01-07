@@ -1,9 +1,8 @@
-from random import randint
 from xml.etree.ElementTree import SubElement
 
-from traits.api import Any, Float, Instance, List, String
+from traits.api import Any, Dict, Float, Instance, List, Property, String
 
-from .bases import BaseSceneObjectData, BaseShapeObjectData
+from .bases import BaseSceneObjectData, BaseShapeObjectData, XMLElementModel
 from .const import ARROW_HEAD, NS_SVG
 from .io_utils import (
     convert_number_or_string, get_defs_id, get_numbers, is_empty, set_numbers)
@@ -24,6 +23,26 @@ class LineModel(BaseShapeObjectData):
     # The Y-coordinate of the second point
     y2 = Float
 
+    # Add x and y to follow the generic object interface
+    x = Property(Float)
+    y = Property(Float)
+
+    def _get_x(self):
+        return min([self.x1, self.x2])
+
+    def _set_x(self, x):
+        offset = x - self.x
+        self.x1 += offset
+        self.x2 += offset
+
+    def _get_y(self):
+        return min([self.y1, self.y2])
+
+    def _set_y(self, y):
+        offset = y - self.y
+        self.y1 += offset
+        self.y2 += offset
+
 
 class PathModel(BaseShapeObjectData):
     """ An arbitrary path object for scenes
@@ -32,8 +51,7 @@ class PathModel(BaseShapeObjectData):
     svg_data = String
 
 
-class MarkerModel(BaseShapeObjectData):
-    id = String(f"marker{randint(0, 10000)}")
+class MarkerModel(XMLElementModel):
     markerHeight = Float
     markerWidth = Float
     markerUnits = String("strokeWidth")
@@ -44,6 +62,9 @@ class MarkerModel(BaseShapeObjectData):
 
     children = List(BaseSceneObjectData)
 
+    def generate_id(self):
+        return self.randomize("marker")
+
 
 class ArrowModel(LineModel):
 
@@ -53,7 +74,6 @@ class ArrowModel(LineModel):
         arrow_path = PathModel(svg_data=ARROW_HEAD["path"],
                                fill=self.stroke)
         return MarkerModel(
-            id=f"arrow{randint(0, 10000)}",
             markerHeight=ARROW_HEAD["height"],
             markerWidth=ARROW_HEAD["width"],
             refX=ARROW_HEAD["ref_x"],
@@ -76,6 +96,14 @@ class RectangleModel(BaseShapeObjectData):
     height = Float
     # The width of the rect
     width = Float
+
+
+class XMLDefsModel(XMLElementModel):
+    """<defs>"""
+    # The element attributes aside from 'id'
+    attributes = Dict
+    # The element's children
+    children = List(Instance(XMLElementModel))
 
 
 def _convert_measurement(measure):
@@ -189,6 +217,10 @@ def __arrow_reader(element):
 def __arrow_writer(model, parent):
     """ A writer for LineModel objects
     """
+    # Write the defs model first, it's the same level as the arrow
+    defs_element = SubElement(parent, NS_SVG + 'defs')
+    write_defs_model(XMLDefsModel(children=[model.marker]), defs_element)
+
     element = SubElement(parent, NS_SVG + 'line')
     _write_base_shape_data(model, element)
     set_numbers(('x1', 'y1', 'x2', 'y2'), model, element)
@@ -279,4 +311,26 @@ def __rectangle_writer(model, parent):
     element = SubElement(parent, NS_SVG + 'rect')
     _write_base_shape_data(model, element)
     set_numbers(('x', 'y', 'width', 'height'), model, element)
+    return element
+
+
+@register_scene_reader('XML Defs', xmltag=NS_SVG + 'defs')
+def __xml_defs_reader(element):
+    return XMLDefsModel(
+        id=element.get('id', ''),
+        attributes={k: v for k, v in element.attrib.items() if k != 'id'},
+        children=[read_element(el) for el in element]
+    )
+
+
+# Writer is not registered as we write the defs on the shape writer
+def write_defs_model(model, element):
+    assert isinstance(model, XMLDefsModel)
+    if model.id:
+        element.set('id', model.id)
+    for name, value in model.attributes.items():
+        element.set(name, value)
+    for child in model.children:
+        write_element(model=child, parent=element)
+
     return element
