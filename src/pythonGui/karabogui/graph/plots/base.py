@@ -43,6 +43,7 @@ class KaraboPlotView(QWidget):
 
         # Main layout to organize
         layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
         # Initialize axis items
