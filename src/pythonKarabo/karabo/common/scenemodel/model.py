@@ -5,7 +5,7 @@ from traits.api import Constant, Dict, Float, Instance, Int, List, String
 from karabo.common.api import BaseSavableModel, walk_traits_object
 # avoid karabo.common.project.api due to circular imports...
 from karabo.common.project.bases import BaseProjectObjectModel
-from .bases import BaseSceneObjectData, BaseWidgetObjectData
+from .bases import BaseSceneObjectData, BaseWidgetObjectData, XMLElementModel
 from .const import (
     NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT, SCENE_FILE_VERSION,
     UNKNOWN_WIDGET_CLASS, WIDGET_ELEMENT_TAG)
@@ -31,16 +31,6 @@ class SceneModel(BaseProjectObjectModel):
     children = List(Instance(BaseSceneObjectData))
 
 
-class XMLDefsModel(BaseSceneObjectData):
-    """<defs>"""
-    # The id attribute
-    id = String
-    # The element attributes aside from 'id'
-    attributes = Dict
-    # The element's children
-    children = List(BaseSceneObjectData)
-
-
 class UnknownWidgetDataModel(BaseWidgetObjectData):
     """A model object for widgets from the future!
 
@@ -55,13 +45,11 @@ class UnknownWidgetDataModel(BaseWidgetObjectData):
     data = String
 
 
-class UnknownXMLDataModel(BaseSceneObjectData):
+class UnknownXMLDataModel(XMLElementModel):
     """ A model object to hold SVG data that we don't understand.
     """
     # The xml tag
     tag = String
-    # The id attribute
-    id = String
     # The element attributes aside from 'id'
     attributes = Dict
     # The element data
@@ -74,6 +62,9 @@ class UnknownXMLDataModel(BaseSceneObjectData):
     y = Constant(0.0)
     height = Constant(0.0)
     width = Constant(0.0)
+
+    def generate_id(self):
+        return self.randomize("unknown")
 
 
 def _read_extra_attributes(element):
@@ -109,9 +100,7 @@ def __scene_reader(element):
     for d in element.findall("./{}defs".format(NS_SVG)):
         defs.append(read_element(d))
         element.remove(d)
-
-    # Add it on scene model
-    scene.children.extend(defs)
+    # Record the defs on the reader registry
     add_temporary_defs(defs)
 
     # Now we iterate over the children elements
@@ -150,28 +139,6 @@ def __unknown_xml_data_reader(element):
         data=element.text or '',
         children=[read_element(el) for el in element]
     )
-
-
-@register_scene_reader('XML Defs', xmltag=NS_SVG + 'defs')
-def __xml_defs_reader(element):
-    return XMLDefsModel(
-        id=element.get('id', ''),
-        attributes={k: v for k, v in element.attrib.items() if k != 'id'},
-        children=[read_element(el) for el in element]
-    )
-
-
-@register_scene_writer(XMLDefsModel)
-def __xml_defs_writer(model, parent):
-    element = SubElement(parent, NS_SVG + 'defs')
-    if model.id:
-        element.set('id', model.id)
-    for name, value in model.attributes.items():
-        element.set(name, value)
-    for child in model.children:
-        write_element(model=child, parent=element)
-
-    return element
 
 
 @register_scene_writer(UnknownXMLDataModel)
