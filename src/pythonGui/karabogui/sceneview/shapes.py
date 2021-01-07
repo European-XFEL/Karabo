@@ -13,7 +13,7 @@ from traits.api import (
     ABCHasStrictTraits, cached_property, Bool, Constant, Float, Instance,
     List, on_trait_change, Property, Tuple)
 
-from karabo.common.scenemodel.api import BaseShapeObjectData
+from karabo.common.scenemodel.api import BaseShapeObjectData, XMLElementModel
 from karabogui.dialogs.dialogs import PenDialog
 from karabogui.pathparser import Parser
 from .const import (GRID_STEP, QT_PEN_CAP_STYLE_FROM_STR,
@@ -234,6 +234,8 @@ class LineShape(BaseShape):
 class MarkerShape(BaseShape):
     """This assumes that the child marker element is a path.
        Rects, circles, etc. are not yet supported."""
+
+    model = Instance(XMLElementModel)
 
     children = List
     _offset = Instance(QPoint, args=())
