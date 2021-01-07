@@ -196,7 +196,7 @@ class Manager(QObject):
         input_info = info['input']
         deviceId = input_info['deviceId']
         if not success:
-            reason = info['failureReason']
+            reason = info.get('failureReason') or info.get('reason')
             # clear the waiting queue
             device = self._waiting_devices.pop(deviceId, None)
             props = self._waiting_properties.pop(device, [])
@@ -433,7 +433,7 @@ class Manager(QObject):
         """Handle the execute reply of the gui server"""
         success = info['success']
         if not success:
-            reason = info['failureReason']
+            reason = info.get('failureReason') or info.get('reason')
             input_info = info['input']
             deviceId = input_info['deviceId']
             command = input_info['command']
@@ -447,7 +447,7 @@ class Manager(QObject):
             messagebox.show_error(text, details=reason)
 
     def handle_propertyHistory(self, deviceId, property, data, success=True,
-                               failureReason=""):
+                               failureReason="", reason=""):
         if success:
             device_proxy = self._topology.get_device(deviceId)
             device_proxy.publish_historic_data(property, data)
