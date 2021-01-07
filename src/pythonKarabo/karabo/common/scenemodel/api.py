@@ -1,7 +1,8 @@
 # flake8: noqa
 from .bases import (
     BaseDisplayEditableWidget, BaseLayoutData, BaseLayoutModel,
-    BaseSceneObjectData, BaseShapeObjectData, BaseWidgetObjectData)
+    BaseSceneObjectData, BaseShapeObjectData, BaseWidgetObjectData,
+    XMLElementModel)
 from .const import (
     ARROW_HEAD, DISPLAY_COMPONENT, EDITABLE_COMPONENT, NS_KARABO, NS_SVG,
     SCENE_DEFAULT_DPI, SCENE_FILE_VERSION, SCENE_FONT_FAMILY, SCENE_FONT_SIZE,
@@ -17,7 +18,7 @@ from .layouts import (
     BoxLayoutModel, FixedLayoutChildData, FixedLayoutModel,
     GridLayoutChildData, GridLayoutModel)
 from .model import (
-    SceneModel, UnknownWidgetDataModel, UnknownXMLDataModel, XMLDefsModel)
+    SceneModel, UnknownWidgetDataModel, UnknownXMLDataModel)
 from .registry import register_scene_reader, register_scene_writer
 from .shapes import (
     ArrowModel, LineModel, MarkerModel, PathModel, RectangleModel)

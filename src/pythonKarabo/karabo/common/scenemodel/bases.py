@@ -1,3 +1,5 @@
+from random import randint
+
 from traits.api import Enum, Instance, Int, Float, List, Range, String
 
 from karabo.common.api import BaseSavableModel
@@ -97,3 +99,23 @@ class BaseDisplayEditableWidget(BaseWidgetObjectData):
         if self.klass.startswith('Editable'):
             return EDITABLE_COMPONENT
         return DISPLAY_COMPONENT
+
+
+class XMLElementModel(BaseSceneObjectData):
+    """The base class for XML(SVG) items"""
+
+    # The id attribute
+    id = String
+
+    def _id_default(self):
+        return self.generate_id()
+
+    def reset_id(self):
+        self.id = self.generate_id()
+
+    def generate_id(self):
+        """Generate a random ID specified on the subclass"""
+        return ''
+
+    def randomize(self, text):
+        return f"{text}{randint(0, 1e6)}"
