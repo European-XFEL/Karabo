@@ -1,8 +1,7 @@
 from karabo.testing.utils import temp_xml_file
 from ..io import read_scene
-from ..model import UnknownXMLDataModel, XMLDefsModel
-from ..shapes import (
-    ArrowModel, LineModel, MarkerModel, PathModel, RectangleModel)
+from ..model import UnknownXMLDataModel
+from ..shapes import ArrowModel, LineModel, PathModel, RectangleModel
 from .utils import single_model_round_trip
 
 
@@ -118,9 +117,9 @@ def test_svg_arrow():
         scene_model = read_scene(fn)
 
         # Check if the scene model contains a defs model and an arrow model
-        assert len(scene_model.children) == 2
+        assert len(scene_model.children) == 1
         for child in scene_model.children:
-            assert isinstance(child, (XMLDefsModel, ArrowModel))
+            assert isinstance(child, ArrowModel)
 
         # Check arrow model
         arrow_model = _get_child_model(scene_model, ArrowModel)
@@ -132,10 +131,8 @@ def test_svg_arrow():
         assert arrow_model.stroke == "#000"
         assert arrow_model.stroke_width == 5
 
-        # Check marker model
-        defs = _get_child_model(scene_model, XMLDefsModel)
-        marker_model = _get_child_model(defs, MarkerModel)
-        assert arrow_model.marker == marker_model
+        marker_model = arrow_model.marker
+        assert marker_model is not None
         assert marker_model.id == "arrow"
         assert marker_model.markerWidth == 10
         assert marker_model.markerHeight == 10
@@ -159,21 +156,7 @@ def test_svg_defs():
     with temp_xml_file(SCENE_SVG) as fn:
         scene_model = read_scene(fn)
 
-    assert len(scene_model.children) == 1
-    defs_model = scene_model.children[0]
-    assert isinstance(defs_model, XMLDefsModel)
-    assert defs_model.id == "arrow"
-    assert defs_model.attributes == {"style": "foo"}
-    assert len(defs_model.children) == 1
-    child_model = defs_model.children[0]
-    assert isinstance(child_model, MarkerModel)
-
-    read_model = single_model_round_trip(defs_model)
-    assert read_model.id == defs_model.id
-    assert read_model.attributes == defs_model.attributes
-    assert len(defs_model.children) == 1
-    child_model = defs_model.children[0]
-    assert isinstance(child_model, MarkerModel)
+    assert len(scene_model.children) == 0
 
 
 def test_svg_unknowns():

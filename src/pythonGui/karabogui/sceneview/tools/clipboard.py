@@ -1,14 +1,16 @@
 from abc import abstractmethod
 from io import StringIO
+from operator import sub
 
 from PyQt5.QtCore import QMimeData, QPoint
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QApplication, QDialog, QMessageBox
 
 from karabo.common.scenemodel.api import (
-    BaseLayoutModel, BaseWidgetObjectData, SceneModel, read_scene, write_scene)
+    ArrowModel, BaseLayoutModel, BaseWidgetObjectData, SceneModel, read_scene,
+    write_scene)
 from karabogui.sceneview.bases import BaseSceneAction
-from karabogui.sceneview.utils import add_offset
+from karabogui.sceneview.utils import add_offset, calc_relative_pos
 from karabogui.dialogs.dialogs import ReplaceDialog
 
 MIME_TYPE = 'image/svg+xml'
@@ -84,6 +86,12 @@ class BaseScenePasteAction(BaseSceneAction):
         if len(pasted_models) == 0:
             return
 
+        # Reset the ID of the defs model. This is to avoid conflicts
+        # with the existing ones.
+        for model in pasted_models:
+            if isinstance(model, ArrowModel):
+                model.marker.reset_id()
+
         self.run_action(pasted_models, scene_view)
         scene_view.update()
 
@@ -93,22 +101,21 @@ class BaseScenePasteAction(BaseSceneAction):
         the copied ``models``.
         """
 
-    @staticmethod
-    def calc_offset(src, dest):
-        return dest[0] - src[0], dest[1] - src[1]
-
     def add_to_scene(self, models, scene_view):
         # Map cursor to widget
         pos = scene_view.mapFromGlobal(QCursor.pos())
         rect = scene_view.visibleRegion().boundingRect()
         if rect.contains(pos):
-            dest = (int(pos.x()), int(pos.y()))
+            new_origin = (int(pos.x()), int(pos.y()))
         else:
-            dest = (rect.x() + 10, rect.y() + 10)
+            # Get the relative
+            new_origin = (rect.x() + 10, rect.y() + 10)
+        old_origin = calc_relative_pos(models)
+        x_off, y_off = map(sub, new_origin, old_origin)
 
+        # Add offset on models
         for model in models:
-            x, y = self.calc_offset(src=(model.x, model.y), dest=dest)
-            add_offset(model, x=x, y=y)
+            add_offset(model, x=x_off, y=y_off)
 
         scene_view.add_models(*models)
         scene_view.select_models(*models)
