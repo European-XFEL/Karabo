@@ -194,11 +194,11 @@ class Builder:
 
         # Install pythonKarabo in the `recipe` environment
         # FIXME: install native without environment variable
-        os.environ['BUILD_KARABO_GUI'] = '1'
+        os.environ['BUILD_KARABO_SUBMODULE'] = 'NATIVE'
         conda_run(
             Commands.RUN, '-n', recipe, '--cwd', py_karabo_root,
             'python', 'setup.py', 'install')
-        os.environ.pop('BUILD_KARABO_GUI')
+        os.environ.pop('BUILD_KARABO_SUBMODULE')
         # Install pythonGui in the `recipe` environment
         conda_run(
             Commands.RUN, '-n', recipe, '--cwd', gui_root,

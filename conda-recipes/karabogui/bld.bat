@@ -1,4 +1,4 @@
-set BUILD_KARABO_GUI=1
+set BUILD_KARABO_SUBMODULE=NATIVE
 cd ./src/pythonKarabo
 python setup.py install
 
