@@ -2,27 +2,29 @@ import os
 import os.path as op
 import sys
 
-from jupyter_client.kernelspec import install_kernel_spec
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 
+CURRENT_FOLDER = os.path.dirname(os.path.realpath(__file__))
+VERSION_FILE_PATH = os.path.join(CURRENT_FOLDER, 'karabo', '_version.py')
+ROOT_FOLDER = os.path.dirname(os.path.dirname(CURRENT_FOLDER))
 
-class InstallWithJupyter(install):
-    def run(self):
-        super().run()
-        install_kernel_spec(
-            op.join(op.dirname(__file__), "karabo",
-                    "interactive", "jupyter_spec"),
-            kernel_name="Karabo", prefix=sys.prefix)
+install_args = {
+    'name': 'karabo',
+    'use_scm_version': {'root': ROOT_FOLDER, 'write_to': VERSION_FILE_PATH},
+    'author': 'Karabo Team',
+    'author_email': 'karabo@xfel.eu',
+    'description': 'This is the Python interface of the Karabo control system',
+    'url': 'http://karabo.eu',
+}
 
-
-if os.environ.get('BUILD_KARABO_GUI', '0') == '1':
+if os.environ.get('BUILD_KARABO_SUBMODULE', '') == 'NATIVE':
     # We're building the GUI, so we don't need to package everything
-    packages = find_packages(include=[
+    install_args['packages'] = find_packages(include=[
         'karabo', 'karabo.common*', 'karabo.native*', 'karabo.testing*'
     ])
 
-    package_data = {
+    install_args['package_data'] = {
         'karabo.common.scenemodel.tests': [
             'data/*.svg', 'data/inkscape/*.svg', 'data/legacy/*.svg',
             'data/legacy/icon_data/*.svg'
@@ -30,12 +32,37 @@ if os.environ.get('BUILD_KARABO_GUI', '0') == '1':
         'karabo.testing': ['resources/*.*'],
     }
 
-    entry_points = {}
+elif os.environ.get('BUILD_KARABO_SUBMODULE', '') == 'MDL':
+    install_args['packages'] = find_packages(include=[
+        'karabo', 'karabo.common*', 'karabo.native*', 'karabo.testing*',
+        'karabo.interactive*', 'karabo.middlelayer_api*',
+        'karabo.middlelayer_devices*',
+        'karabo.packaging*',
+    ])
+
+    install_args['package_data'] = {
+        'karabo.common.scenemodel.tests': [
+            'data/*.svg', 'data/inkscape/*.svg', 'data/legacy/*.svg',
+            'data/legacy/icon_data/*.svg'
+        ],
+        'karabo.middlelayer_api.tests': ['*.xml'],
+        'karabo.testing': ['resources/*.*'],
+    }
+
+    install_args['entry_points'] = {
+        'console_scripts': [
+            'karabo-middlelayerserver=karabo.middlelayer_api.device_server:DeviceServer.main',
+            'ikarabo=karabo.interactive.ikarabo:main',
+        ],
+        'karabo.middlelayer_device': [
+            'PropertyTestMDL=karabo.middlelayer_devices.property_test:PropertyTestMDL',
+        ],
+    }
 else:
     # When building karabo, everything gets included
-    packages = find_packages()
+    install_args['packages'] = find_packages()
 
-    package_data = {
+    install_args['package_data'] = {
         'karabo.bound_api.tests': ['resources/*.*'],
         'karabo.common.scenemodel.tests': [
             'data/*.svg', 'data/inkscape/*.svg', 'data/legacy/*.svg',
@@ -59,7 +86,7 @@ else:
         'karabo.influxdb.tests': ['sample_data/PropertyTestDevice/raw/*.txt'],
     }
 
-    entry_points = {
+    install_args['entry_points'] = {
         'console_scripts': [
             'karabo=karabo.interactive.karabo:main',
             'karabo-pythonserver=karabo.bound_api.device_server:main',
@@ -99,20 +126,18 @@ else:
         ],
     }
 
-CURRENT_FOLDER = os.path.dirname(os.path.realpath(__file__))
-VERSION_FILE_PATH = os.path.join(CURRENT_FOLDER, 'karabo', '_version.py')
-ROOT_FOLDER = os.path.dirname(os.path.dirname(CURRENT_FOLDER))
+    from jupyter_client.kernelspec import install_kernel_spec
+
+    class InstallWithJupyter(install):
+        def run(self):
+            super().run()
+            install_kernel_spec(
+                op.join(op.dirname(__file__), "karabo",
+                        "interactive", "jupyter_spec"),
+                kernel_name="Karabo", prefix=sys.prefix)
+
+    install_args['cmdclass'] = {'install': InstallWithJupyter}
+
 
 if __name__ == '__main__':
-    setup(
-        name='karabo',
-        use_scm_version={'root': ROOT_FOLDER, 'write_to': VERSION_FILE_PATH},
-        author='Karabo Team',
-        author_email='karabo@xfel.eu',
-        description='This is the Python interface of the Karabo control system',
-        url='http://karabo.eu',
-        packages=packages,
-        cmdclass={'install': InstallWithJupyter},
-        package_data=package_data,
-        entry_points=entry_points
-    )
+    setup(**install_args)
