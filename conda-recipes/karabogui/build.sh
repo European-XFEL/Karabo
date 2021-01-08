@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 # Install karaboCommon
-export BUILD_KARABO_GUI=1
+export BUILD_KARABO_SUBMODULE=NATIVE
 cd ./src/pythonKarabo
 python setup.py install
-unset BUILD_KARABO_GUI
+unset BUILD_KARABO_SUBMODULE
 # Install pythonGui
 cd ../pythonGui
 python setup.py install
