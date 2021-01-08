@@ -102,14 +102,38 @@ karaboCondaInstallGUIEnvironment() {
     # We are breaking the module integrity of pythonKarabo, from which we only need pythonKarabo/common and /native.
     # This flag is used in the setup.py to filter which modules to select. Ideally native and common should
     # be in their own package or at least their own conda recipe.
-    export BUILD_KARABO_GUI=1
     pushd ${SCRIPT_PATH}/src/pythonKarabo
+    export BUILD_KARABO_SUBMODULE=NATIVE
     safeRunCondaCommand python3 setup.py ${SETUP_FLAG} || return 1
+    unset BUILD_KARABO_SUBMODULE
     popd
     pushd ${SCRIPT_PATH}/src/pythonGui
     safeRunCondaCommand python3 setup.py ${SETUP_FLAG} || return 1
     popd
-    unset BUILD_KARABO_GUI
+}
+
+karaboCondaInstallMDLEnvironment() {
+    KARABO_ENV=karabo-mdl
+    # Clean environment if needed
+    karaboCondaCleanEnvironment ${KARABO_ENV} || return 1
+    if [ "$SETUP_FLAG" == false ]; then
+        # NOP
+        return 0
+    fi
+
+    _RECIPE_DIR=${SCRIPT_PATH}/conda-recipes/${KARABO_ENV}
+    safeRunCondaCommand conda activate ${KARABO_ENV} || return 1
+    if [[ "${SETUP_FLAG}" == develop ]]; then
+        pushd ${SCRIPT_PATH}/src/pythonKarabo
+        export BUILD_KARABO_SUBMODULE=MDL
+        safeRunCondaCommand python3 setup.py ${SETUP_FLAG} || return 1
+        unset BUILD_KARABO_SUBMODULE
+        popd
+    elif [[ "${SETUP_FLAG}" == install ]]; then
+        python -m cogapp -o ${_RECIPE_DIR}/meta.yaml ${_RECIPE_DIR}/meta_base.yaml || return 1
+        safeRunCondaCommand conda build ${_RECIPE_DIR} || return 1
+        safeRunCondaCommand conda install -c ${CONDA_LOCAL_CHANNEL} ${KARABO_ENV} || return 1
+    fi
 }
 
 karaboCondaInstallCPPEnvironment() {
@@ -200,7 +224,7 @@ while [ -n "$1" ]; do
             CLEAN=true
             shift
             ;;
-        karabogui|karabo-cpp)
+        karabogui|karabo-cpp|karabo-mdl)
             if [ "${SETUP_FLAG}" == false ]; then
                 displayHelp
                 return 1
@@ -245,6 +269,9 @@ for ENV_NAME in $ENVS; do
             ;;
         karabo-cpp)
             karaboCondaInstallCPPEnvironment || return 1
+            ;;
+        karabo-mdl)
+            karaboCondaInstallMDLEnvironment || return 1
             ;;
     esac
 done
