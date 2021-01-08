@@ -2,10 +2,8 @@ from asyncio import set_event_loop
 import atexit
 import functools
 import os
-import os.path as osp
 import re
 import socket
-import sys
 
 import IPython
 
@@ -13,6 +11,7 @@ from . import device_client
 from .device_client import DeviceClientBase, getDevice
 from .eventloop import NoEventLoop
 from .macro import EventThread, Macro
+from karabo._version import version
 
 
 class DeviceClient(Macro, DeviceClientBase):
@@ -79,9 +78,6 @@ def start_device_client():
 
 
 def start_ikarabo():
-    with open(osp.join(osp.dirname(sys.base_prefix), "VERSION"), "r") as fin:
-        version = fin.read()
-
     print("""IKarabo Version {}
     Type karabo? for help
     """.format(version))
