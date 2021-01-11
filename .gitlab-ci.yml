@@ -49,31 +49,6 @@ stages:
     - branches
     - schedules
 
-
-# static source code analysis with cppcheck
-lint:
-  stage: lint
-  image: europeanxfel/karabo-ci:miniconda-3lint
-  script:
-    - source activate && conda activate
-    - cppcheck --error-exitcode=0 --output-file=cppcheck_performance_report.txt --enable=performance --force $CI_PROJECT_DIR/src/karabo # TODO fix c++ code quality checks
-    - cppcheck --error-exitcode=0 --output-file=cppcheck_style_report.txt --enable=style --force $CI_PROJECT_DIR/src/karabo
-    - cppcheck --error-exitcode=0 --output-file=cppcheck_warning_report.txt --enable=warning --force $CI_PROJECT_DIR/src/karabo
-    - flake8 --exclude=*tests* $CI_PROJECT_DIR/src/pythonGui/karabogui
-    - flake8 --exclude=*tests* $CI_PROJECT_DIR/src/pythonKarabo/karabo
-  only:
-    refs:
-      - merge_requests
-    changes:
-      - "src/**/*"
-  artifacts:
-    name: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
-    when: always
-    paths:
-      - cppcheck_*_report.txt
-
-
-
 .release_build_conda: &release-build-conda
   stage: build
   script:
@@ -208,11 +183,19 @@ lint:
 
 ### Jobs
 
-# release build
+# static source code analysis
+lint:
+  stage: lint
+  image: europeanxfel/karabo-ci:miniconda-3lint
+  script:
+    - source ci/lint "$CI_BUILD_NAME"
+  only:
+    refs:
+      - merge_requests
+    changes:
+      - "src/**/*"
 
-release build centos8:
-  image: europeanxfel/karabo-ci:centos-8
-  <<: *release-build
+# release build
 
 release build centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
@@ -270,10 +253,6 @@ prerelease build miniconda-win64:
 
 # nightly release build
 
-nightly build centos8:
-  image: europeanxfel/karabo-ci:centos-8
-  <<: *nightly-build
-
 nightly build centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
   <<: *nightly-build
@@ -310,10 +289,6 @@ nightly build miniconda:
 
 # Dependencies build
 
-deps build centos8:
-  image: europeanxfel/karabo-ci:centos-8
-  <<: *deps-build
-
 deps build centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
   <<: *deps-build
@@ -332,10 +307,6 @@ deps build ubuntu16:
 
 # Dependencies build tests
 
-deps tests centos8:
-  image: europeanxfel/karabo-ci:centos-8
-  <<: *deps-build-tests
-
 deps tests centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
   <<: *deps-build-tests
@@ -353,10 +324,6 @@ deps tests ubuntu16:
   <<: *deps-build-tests
 
 # MR test builds
-
-#unit tests centos8:
-#  image: europeanxfel/karabo-ci:centos-8
-#  <<: *unit-tests
 
 unit tests centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
@@ -398,10 +365,6 @@ unit tests miniconda-cmake:
 
 # Post-merge integration test builds
 
-integration tests centos8:
-  image: europeanxfel/karabo-ci:centos-8
-  <<: *integration-tests
-
 integration tests centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
   <<: *integration-tests
@@ -427,10 +390,6 @@ coverage tests centos7:
     - schedules
 
 # Scheduled long tests
-
-long tests centos8:
-  image: europeanxfel/karabo-ci:centos-8
-  <<: *long-tests
 
 long tests centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
