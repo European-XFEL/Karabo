@@ -97,7 +97,7 @@ class Test2DImageItem(_BaseImageItemTest):
 
     def test_uint8_images(self):
         for dims, downsampling in zip(DIMENSIONS, MIN_DOWNSAMPLING):
-            image = np.random.randint(0, 256, dims, dtype=np.uint8)
+            image = np.random.randint(0, 255, dims, dtype=np.uint8)
             self.assert_indexed_image(image, downsampling)
 
     def test_unint32_images(self):

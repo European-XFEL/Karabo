@@ -142,11 +142,55 @@ def rescale(array, min_value, max_value, low=0.0, high=100.0):
     if max_value == min_value:
         return array
 
-    ratio = ((high-low) / (max_value-min_value))
-    rescaled = ratio * array
-    rescaled += high - ratio * max_value
+    max_value = float(max_value)
+    min_value = float(min_value)
+
+    scale = float(high - low) / (max_value - min_value)
+    rescaled = scale * array
+    rescaled += high - scale * max_value
+
+    rescaled = (array - min_value) * scale + low
 
     return rescaled
+
+
+def bytescale(data, cmin=None, cmax=None, low=0, high=255):
+    """ Byte scales an array (image).
+
+    Byte scaling means converting the input image to uint8 dtype and scaling
+    the range to ``(low, high)`` (default 0-255).
+    If the input data already has dtype uint8, no scaling is done.
+    """
+    high = round(high)
+    low = round(low)
+
+    if high > 255:
+        raise ValueError(f"high `{high}` should be less than or equal to 255.")
+    if low < 0:
+        raise ValueError(f"low `{low}` should be greater than or equal to 0.")
+    if high < low:
+        raise ValueError(f"high `{high}` should be greater than or equal to "
+                         f"low `{low}`.")
+
+    if cmin is None:
+        cmin = data.min()
+    else:
+        cmin = float(cmin)
+
+    if cmax is None:
+        cmax = data.max()
+    else:
+        cmax = float(cmax)
+
+    cscale = cmax - cmin
+    if cscale < 0:
+        raise ValueError(f"cmax {cmax} should be larger than cmin {cmin}.")
+    elif cscale == 0:
+        cscale = 1
+
+    scale = float(high - low) / cscale
+    bytedata = (data - cmin) * scale + low
+    return (bytedata.clip(low, high) + 0.5).astype(np.uint8)
 
 
 def correct_image_min(image_min, level_min=None):
