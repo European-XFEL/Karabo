@@ -5,8 +5,8 @@ from pyqtgraph import functions as fn, ImageItem, Point
 from scipy.ndimage import zoom
 
 from karabogui.graph.common.api import MouseMode
-from .utils import correct_image_min, map_rect_to_transform, rescale
-
+from .utils import (
+    bytescale, correct_image_min, map_rect_to_transform, rescale)
 
 DIMENSION_DOWNSAMPLE = [(500, 1.5), (1000, 2)]  # [(dimension, min downsample)]
 NULL_COLOR = QColor(255, 255, 255, 70)
@@ -16,7 +16,7 @@ class KaraboImageItem(ImageItem):
     clicked = pyqtSignal(float, float)
     hovered = pyqtSignal(object, object)
 
-    def __init__(self, image=np.zeros((50, 50), dtype=int)):
+    def __init__(self, image=np.zeros((50, 50), dtype=np.uint8)):
         super(KaraboImageItem, self).__init__()
         self.auto_levels = True
         self.setImage(image)
@@ -231,8 +231,8 @@ class KaraboImageItem(ImageItem):
 
         # 4. Rescale values to 0-255 relative to the image min/max
         # for the QImage
-        image = rescale(image, min_value=image_min, max_value=image_max,
-                        low=low, high=high).astype(np.uint8)
+        image = bytescale(image, cmin=image_min, cmax=image_max,
+                          low=low, high=high)
 
         # 6. Create QImage
         qimage = self._create_qimage(image, img_format=QImage.Format_Indexed8)
