@@ -1,0 +1,19 @@
+__lint_cpp() {
+    cppcheck --error-exitcode=0 --output-file=cppcheck_performance_report.txt --enable=performance --force $CI_PROJECT_DIR/src/karabo # TODO fix c++ code quality checks
+    cppcheck --error-exitcode=0 --output-file=cppcheck_style_report.txt --enable=style --force $CI_PROJECT_DIR/src/karabo
+    cppcheck --error-exitcode=0 --output-file=cppcheck_warning_report.txt --enable=warning --force $CI_PROJECT_DIR/src/karabo
+}
+
+__lint_python() {
+    flake8 --exclude=*tests* $CI_PROJECT_DIR/src/pythonGui/karabogui
+    flake8 --exclude=*tests* $CI_PROJECT_DIR/src/pythonKarabo/karabo
+}
+
+# if not run in the gitlab CI environment, one must set this env. variable.
+if [ "$CI_PROJECT_DIR" = "" ]; then
+    export CI_PROJECT_DIR=$(git rev-parse --show-toplevel)
+fi
+
+source activate && conda activate
+__lint_cpp
+__lint_python
