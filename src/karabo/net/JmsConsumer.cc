@@ -48,8 +48,11 @@ namespace karabo {
                 return;
             }
             m_reading = true;
-            // Set handlers on strand that uses them to circumvent mutex locks
-            m_handlerStrand->post(bind_weak(&JmsConsumer::setHandlers, this, handler, errorNotifier));
+            // Set handlers on strand that uses them to circumvent mutex locks.
+            // Do same "strand hops" that messages (and therefore handler resetting) do to guarantee that this handler
+            // setting here cannot overtake a resetting triggered by a previously called stopReading:
+            m_serializerStrand->post(bind_weak(&JmsConsumer::postSetHandlers, this, m_handlerStrand,
+                                               handler, errorNotifier));
 
             // If startReading is scheduled before the event-loop is started, corresponding writes
             // (that are also only scheduled) may be executed first once the event-loop is started.
