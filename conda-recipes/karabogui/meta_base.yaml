@@ -29,27 +29,39 @@ build:
     - karabo-update-extensions=karabogui.dialogs.update_dialog:main
   # This is needed to avoid removing egg files during packaging with setuptools
   preserve_egg_dir: True
+  pin_depends: strict
 
 requirements:
-  build:
-    - python=3.6.7
-    - jupyter_client=5.3.3
-    - setuptools=42.0.1
-    - setuptools_scm=3.3.3
-  run:
-    # [[[cog
-    # import cog
-    # import json
-    # import os
-    # import subprocess
-    # conda = os.environ.get('CONDA_EXE', 'conda')
-    # output = subprocess.check_output([conda, 'env', 'export', '-n', 'karabogui', '--json'])
-    # for dep in json.loads(output)['dependencies']:
-    #     if isinstance(dep, dict):
-    #         continue
-    #     cog.outl(f'- {dep}')
-    # ]]]
-    # [[[end]]]
+  # [[[cog
+  # import cog
+  # import json
+  # import os
+  # import subprocess
+  # conda = os.environ.get('CONDA_EXE', 'conda')
+  # output = subprocess.check_output([conda, 'env', 'export', '-n', 'karabogui', '--json'])
+  # dependencies = [dep for dep in json.loads(output)['dependencies'] if isinstance(dep, str)]
+  #
+  # # Format build
+  # cog.outl('build:')
+  # required_build_pkgs = {
+  #     'python': '3.6.7',
+  #     'jupyter_client': '5.3.3',
+  #     'setuptools': '42.0.1',
+  #     'setuptools_scm': '3.3.3'}
+  # for dep in dependencies:
+  #     name = dep.split('=')[0]
+  #     if name in required_build_pkgs:
+  #         required_build_pkgs.pop(name)
+  #     cog.outl(f'  - {dep}')
+  # for pkg, version in required_build_pkgs.items():
+  #     cog.outl(f'  - {pkg}={version}')
+  #
+  # # Format run
+  # cog.outl('run:')
+  # for dep in dependencies:
+  #     cog.outl(f'  - {dep}')
+  # ]]]
+  # [[[end]]]
 
 test:
   imports:
