@@ -308,10 +308,12 @@ class Builder:
             Commands.RUN,
             '-n', 'base',
             'conda', 'build', recipe_dir,
+            '-c', 'local',
             '-c', self.mirror_channel,
             '-c', self.mirror_conda_forge,
             '-c', 'conda-forge',
             '-c', 'defaults',
+            '--override-channels',
             '--no-anaconda-upload',
             '--quiet')
         print("Recipe build successful")
