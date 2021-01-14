@@ -23,7 +23,6 @@ from .tools.toolbar import AuxPlotsToolset
 from .utils import (
     create_colormap_menu, create_icon_from_colormap, levels_almost_equal)
 
-
 ROI_CANVAS_MAP = {
     ROITool.DrawRect: (RectCanvas, ROITool.Rect),
     ROITool.DrawCrosshair: (PointCanvas, ROITool.Crosshair)}
@@ -43,6 +42,7 @@ class KaraboImageView(QWidget):
 
         # Main layout to organize
         layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
         self.image_layout = GraphicsLayoutWidget()
@@ -200,7 +200,8 @@ class KaraboImageView(QWidget):
         if plot is not None:
             if self._aux_plots is None:
                 # Create an instance of the aux plots controller with the klass
-                self._aux_plots = AuxPlotsController(image_layout=self.image_layout)  # noqa
+                self._aux_plots = AuxPlotsController(
+                    image_layout=self.image_layout)  # noqa
 
                 self.plotItem.imageAxesChanged.connect(self._set_axes_to_aux)
 
@@ -401,6 +402,7 @@ class KaraboImageView(QWidget):
             toolset = self.toolbar.toolsets.get(AuxPlots)
             if toolset is not None and aux_plots_class is not None:
                 toolset.check(aux_plots_class)
+
     # -----------------------------------------------------------------------
     # Qt Slots
 
