@@ -38,12 +38,13 @@ class KaraboImagePlot(PlotItem):
 
     def __init__(self, parent=None):
         super(KaraboImagePlot, self).__init__(
-            viewBox=KaraboImageViewBox(),
+            viewBox=KaraboImageViewBox(parent=None),
             axisItems=create_axis_items(axes_with_ticks=self.MAJOR_AXES),
+            enableMenu=False,
             parent=parent)
 
         # Initialize widgets
-        self.imageItem = KaraboImageItem()
+        self.imageItem = KaraboImageItem(parent=None)
         self.imageItem.axisOrder = KaraboImagePlot.AXIS_ORDER
         self.addItem(self.imageItem)
 
@@ -220,8 +221,8 @@ class KaraboImagePlot(PlotItem):
     def flip_axis(self, axis):
         raise NotImplementedError()
 
-    def set_context_menu(self, menu):
-        self.setMenuEnabled(menu is not None)
+    def enable_viewbox_menu(self, enable=False):
+        self.vb.setMenuEnabled(enable)
 
     def set_range(self, x_range, y_range, padding=0):
         self.vb.setXRange(*x_range, padding=padding)
@@ -365,4 +366,15 @@ class KaraboImagePlot(PlotItem):
 
         for axis in AXIS_ITEMS:
             axis_item = self.getAxis(axis)
+            # XXX: tick axis went away ...
             axis_item.has_ticks = axis in major_axes
+
+    # ---------------------------------------------------------------------
+    # Reimplemented `PyQtGraph` methods
+
+    def setMenuEnabled(self, enableMenu=True, enableViewBoxMenu=None):
+        """Reimplemented function to circumvent behavior of pyqtgraph
+
+        Note: This patch is not required in pyqtgraph > 0.11.1
+        """
+        self._menuEnabled = enableMenu

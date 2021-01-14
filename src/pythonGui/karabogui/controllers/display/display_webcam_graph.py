@@ -25,8 +25,8 @@ class DisplayWebCamGraph(BaseBindingController):
 
         self._plot = widget.plot()
 
-        # Disable Context Menu!
-        self._plot.set_context_menu(None)
+        # Disable ViewBox Menu!
+        self._plot.enable_viewbox_menu(False)
 
         # Disable mouse and axis!
         self._plot.setMouseEnabled(False, False)
