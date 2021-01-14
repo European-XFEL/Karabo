@@ -1,7 +1,7 @@
 import sys
 from types import ModuleType
 
-from nose.tools import assert_raises
+from pytest import raises as assert_raises
 
 from karabo.common.api import create_module
 

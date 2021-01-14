@@ -5,7 +5,7 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
     ARROW_HEAD, ArrowModel, LineModel, RectangleModel, SceneLinkModel,
-    StickerModel, WebLinkModel, XMLDefsModel)
+    StickerModel, WebLinkModel)
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
@@ -115,10 +115,7 @@ class ArrowSceneTool(LineSceneTool):
             arrow_model = ArrowModel(x1=self.line.x1(), y1=self.line.y1(),
                                      x2=self.line.x2(), y2=self.line.y2(),
                                      stroke='#000000')
-            # Define an XML Defs model for the marker. The defs model has to
-            # be added on the scene view also for scene writing.
-            defs_model = XMLDefsModel(children=[arrow_model.marker])
-            scene_view.add_models(arrow_model, defs_model, initialize=True)
+            scene_view.add_models(arrow_model, initialize=True)
             scene_view.set_tool(None)
             scene_view.select_model(arrow_model)
 
