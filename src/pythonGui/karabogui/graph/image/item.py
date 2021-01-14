@@ -16,8 +16,8 @@ class KaraboImageItem(ImageItem):
     clicked = pyqtSignal(float, float)
     hovered = pyqtSignal(object, object)
 
-    def __init__(self, image=np.zeros((50, 50), dtype=np.uint8)):
-        super(KaraboImageItem, self).__init__()
+    def __init__(self, image=np.zeros((50, 50), dtype=np.uint8), parent=None):
+        super(KaraboImageItem, self).__init__(parent=parent)
         self.auto_levels = True
         self.setImage(image)
 
