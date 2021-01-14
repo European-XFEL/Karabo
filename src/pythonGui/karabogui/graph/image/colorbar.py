@@ -16,7 +16,7 @@ class ColorBarWidget(GraphicsWidget):
     levelsChanged = pyqtSignal(object)
 
     def __init__(self, imageItem, label=None, parent=None):
-        super(ColorBarWidget, self).__init__(parent)
+        super(ColorBarWidget, self).__init__(parent=parent)
 
         self.levels = min_level, max_level = [0, NUM_SAMPLES - 1]
         data = np.linspace(min_level, max_level, NUM_SAMPLES)[None, :]
@@ -26,10 +26,10 @@ class ColorBarWidget(GraphicsWidget):
         self.grid_layout.setVerticalSpacing(0)
         self.grid_layout.setContentsMargins(0, 40, 0, 0)
 
-        self.vb = ColorViewBox()
+        self.vb = ColorViewBox(parent=None)
         self.vb.menu = self._create_menu()
 
-        self.barItem = ImageItem()
+        self.barItem = ImageItem(parent=None)
         self.barItem.setImage(data)
         self.vb.addItem(self.barItem)
         self.grid_layout.addItem(self.vb, 0, 0)
@@ -127,18 +127,24 @@ class ColorBarWidget(GraphicsWidget):
 
 class ColorViewBox(ViewBox):
 
-    def __init__(self):
-        super(ColorViewBox, self).__init__()
+    def __init__(self, parent=None):
+        super(ColorViewBox, self).__init__(
+            parent=parent, enableMenu=False, enableMouse=False)
         self.setFixedWidth(15)
         self.setLimits(xMin=0, xMax=1)
         self.enableAutoRange(enable=False)
-        self.setMouseEnabled(x=False, y=False)
+
+        # Menu placeholder!
+        self.menu = None
 
     # ---------------------------------------------------------------------
     # PyQtGraph methods
 
+    def menuEnabled(self):
+        return self.menu is not None
+
     def raiseContextMenu(self, event):
-        if self.menu is None or not self.menuEnabled():
+        if self.menu is None:
             return
         pos = event.screenPos()
         self.menu.popup(QPoint(pos.x(), pos.y()))
