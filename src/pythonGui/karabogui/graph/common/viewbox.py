@@ -17,6 +17,8 @@ class KaraboViewBox(ViewBox):
         super(KaraboViewBox, self).__init__(parent, enableMenu=False)
         self.mouse_mode = MouseMode.Pointer
         self.setBackgroundColor('w')
+
+        # Build a menu!
         self.menu = QMenu(parent)
         self.menu.addAction("View all", self.enableAutoRange)
         self.autorange_enabled = True
@@ -98,14 +100,17 @@ class KaraboViewBox(ViewBox):
         self.menu.addAction(action)
 
     # ---------------------------------------------------------------------
-    # pyqtgraph methods
+    # Reimplemented `PyQtGraph` methods
 
     def removeItem(self, item):
         if item in self.allChildItems():
             super(KaraboViewBox, self).removeItem(item)
 
+    def menuEnabled(self):
+        return self.menu is not None
+
     def raiseContextMenu(self, event):
-        if self.menu is None or not self.menuEnabled():
+        if self.menu is None:
             return
         pos = event.screenPos()
         self.menu.popup(QPoint(pos.x(), pos.y()))
