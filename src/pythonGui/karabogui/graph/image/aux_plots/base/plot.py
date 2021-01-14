@@ -12,7 +12,6 @@ from karabogui.graph.common.const import (
 from karabogui.graph.common.api import create_axis_items
 from karabogui.graph.common.enums import AxisType
 
-
 LABEL_STYLE = {'color': '#000000', 'font-size': '12px'}
 
 SHOWN_AXES = {
@@ -27,31 +26,34 @@ SHOWN_AXES = {
 
 
 class AuxPlotViewBox(ViewBox):
-
     """ There is a need to subclass the viewbox to prevent the wheel scroll
     from destroying the plot range."""
 
-    def __init__(self):
-        super(AuxPlotViewBox, self).__init__()
+    def __init__(self, parent=None):
+        super(AuxPlotViewBox, self).__init__(parent=parent, enableMenu=False)
         self.setMouseEnabled(x=False, y=False)
-
-    def raiseContextMenu(self, event):
-        """Reimplemented function of PyQtGraph"""
-
-        if self.menu is None or not self.menuEnabled():
-            return
-        pos = event.screenPos()
-        self.menu.popup(QPoint(pos.x(), pos.y()))
+        self.menu = None
 
     def set_menu(self, menu):
         self.menu = menu
 
+    def menuEnabled(self):
+        return self.menu is not None
+
+    def raiseContextMenu(self, event):
+        """Reimplemented function of PyQtGraph"""
+        if self.menu is None:
+            return
+        pos = event.screenPos()
+        self.menu.popup(QPoint(pos.x(), pos.y()))
+
 
 class AuxPlotItem(PlotItem):
 
-    def __init__(self, orientation="top", axisItems=None):
-        super(AuxPlotItem, self).__init__(axisItems=axisItems,
-                                          viewBox=AuxPlotViewBox())
+    def __init__(self, orientation="top", axisItems=None, parent=None):
+        super(AuxPlotItem, self).__init__(
+            parent=parent, axisItems=axisItems, enableMenu=False,
+            viewBox=AuxPlotViewBox(parent=None))
 
         # Initialize plot item
         if orientation == "left":
@@ -75,12 +77,18 @@ class AuxPlotItem(PlotItem):
 
         self.hideButtons()
 
+    # ---------------------------------------------------------------------
+    # Reimplemented `PyQtGraph` methods
+
     def setLabel(self, axis, text=None, **kwargs):
         super(AuxPlotItem, self).setLabel(axis, text=text, **LABEL_STYLE)
 
+    def setMenuEnabled(self, enableMenu=True, enableViewBoxMenu=False):
+        """Reimplemented function to circumvent behavior of pyqtgraph"""
+        self._menuEnabled = enableMenu
+
 
 class BasePlot(ABCHasStrictTraits):
-
     plotItem = Instance(AuxPlotItem, clean_up=True)
     orientation = String
 
