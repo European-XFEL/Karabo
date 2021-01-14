@@ -116,6 +116,7 @@ class BaseSeriesGraph(BaseBindingController):
 
         layout = QVBoxLayout()
         layout.setSizeConstraint(QVBoxLayout.SetNoConstraint)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self._plot)
         widget.time_frame.setLayout(layout)
 
