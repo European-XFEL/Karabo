@@ -1,9 +1,20 @@
 .build_template: &build
+  stage: build
   script:
     - source ci/prepare "$CI_BUILD_NAME"
     - source ci/build "$CI_BUILD_NAME"
 
-.test_template: &test
+.artifact_template: &artifacts-spec
+  artifacts:
+    name: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
+    when: always
+    paths:
+      - junit*.xml
+    reports:
+      junit: 
+        - junit*.xml
+
+.services_template: &services_template
   services:
     - name: europeanxfel/existdb:2.2
       alias: existdb_host
@@ -16,13 +27,13 @@
     INFLUXDB_ADMIN_PASSWORD: "admpwd"
     INFLUXDB_USER: "infusr"
     INFLUXDB_USER_PASSWORD: "usrpwd"
+
+.test_template: &test
+  <<: *services_template
   script:
     - source ci/prepare "$CI_BUILD_NAME"
     - source ci/test "$CI_BUILD_NAME"
-  artifacts:
-    when: always
-    reports:
-      junit: junitoutput.xml
+  <<: *artifacts-spec
   
 .release_build: &release-build
   <<: *build
@@ -34,25 +45,50 @@
 
 .release_build_conda: &release-build-conda
   script:
-    - python ci/miniconda pack karabogui -D conda-recipes --clean --upload-env -E karaboEnvironments --upload-to-mirror -P $CONDA_CHANNEL_PATH -C $CONDA_CHANNEL_PATH/mirror --index-mirror
+    - >
+      python ci/miniconda pack karabogui 
+      -D conda-recipes 
+      --ci --clean --upload-env
+      -E karaboEnvironments
+      --upload-to-mirror
+      -P $CONDA_CHANNEL_PATH
+      -C $CONDA_CHANNEL_PATH/mirror
+      --index-mirror
   only:
-    - /^(\d+\.)(\d+\.)(\d+)((rc|\.)\d+)?$/
+    - /^(\d+\.)(\d+\.)(\d+)$/
   except:
     - branches
     - schedules
 
 .prerelease_build_conda: &prerelease-build-conda
   script:
-    - python ci/miniconda pack karabogui -D conda-recipes --clean --upload-env -E karaboEnvironments --upload-to-mirror -P $CONDA_CHANNEL_PATH/nightly -C $CONDA_CHANNEL_PATH/mirror --index-mirror
+    - >
+      python ci/miniconda pack karabogui 
+      -D conda-recipes 
+      --ci --clean --upload-env
+      -E karaboEnvironments
+      --upload-to-mirror
+      -P $CONDA_CHANNEL_PATH/nightly
+      -C $CONDA_CHANNEL_PATH/mirror
+      --index-mirror
   only:
-    - /^(\d+\.)(\d+\.)(\d+)(a|b)(\d+)$/
+    - /^(\d+\.)(\d+\.)(\d+)(a|b|rc)(\d+)$/
   except:
     - branches
     - schedules
 
 .nightly_build_conda: &nightly-build-conda
   script:
-    - python ci/miniconda pack karabogui -D conda-recipes --clean --upload-env -E karaboEnvironments --upload-to-mirror -P $CONDA_CHANNEL_PATH/nightly -C $CONDA_CHANNEL_PATH/mirror --index-mirror
+    - >
+      python ci/miniconda pack karabogui 
+      -D conda-recipes 
+      --ci --clean --upload-env
+      -E karaboEnvironments
+      --upload-to-mirror
+      --nightly
+      -P $CONDA_CHANNEL_PATH/nightly
+      -C $CONDA_CHANNEL_PATH/mirror
+      --index-mirror
   only:
     - schedules
 
@@ -83,18 +119,19 @@
     - branches
   except:
     - master
-    - schedules
-    - /^deps-mr-.+$/
 
 .unit_tests_conda: &unit-tests-conda
   script:
-    - python ci/miniconda pack karabogui -D conda-recipes --clean --test --skip-build
+    - >
+      python ci/miniconda pack karabogui 
+      -D conda-recipes 
+      --ci --clean --test
+      --skip-build
   only:
     - branches
   except:
     - master
-    - schedules
-    - /^deps-mr-.+$/
+  <<: *artifacts-spec
         
 .deps_build_tests: &deps-build-tests
   script:
