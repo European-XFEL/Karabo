@@ -12,8 +12,8 @@ import yaml
 
 from .mirrors import Mirrors
 from .utils import (
-    chdir, command_run, conda_run, connected_to_remote, get_conda_prefix, mkdir)
-
+    chdir, command_run, conda_run, connected_to_remote, get_conda_prefix,
+    mkdir)
 
 PLATFORMS = {
     "Windows": "win-64",
@@ -57,19 +57,35 @@ class Builder:
     # Main logic
 
     def run(self):
+        actions = {
+            self.args.clean,
+            self.args.index_mirror,
+            self.args.test,
+            self.args.upload_to_mirror,
+            not self.args.skip_build
+        }
+        if all([not action for action in actions]):
+            print("No action requested")
+
         for recipe in self.args.recipes.split(','):
-            self.recipes.add(recipe)
-        if len(self.recipes) == 0:
-            print("Nothing to do!")
-            return
+            if recipe:
+                self.recipes.add(recipe)
+
+        # A wrongly triggered nightly build
         if (self.args.nightly and
                 os.environ.get("SCHEDULED_JOB", "") != "nightly-build"):
             print("Not a nightly-build scheduled job!")
             return
 
+        if len(self.recipes) == 0:
+            print("Recipe list empty. Nothing to do!")
+            return
+
         if self.args.clean:
             self.clean()
-        self.adapt_platform()
+        if self.args.ci:
+            self.adapt_platform()
+        
 
         for recipe in self.recipes:
             # Proceed only if recipe supports testing
@@ -189,6 +205,9 @@ class Builder:
             'python', 'setup.py', 'install')
 
     def uninstall_karabo(self, recipe):
+        # no need to uninstall if we are not building an env pack
+        if self.args.skip_build:
+            return
         # Prepare env pack by uninstalling karabo and karabogui
         for excluded_pkgs in ["karabo", "karabogui"]:
             conda_run(Commands.RUN, '-n', recipe,
@@ -219,7 +238,9 @@ class Builder:
         errors = []
         for module in modules:
             cmd = [Commands.RUN, '-n', env,
-                   'nosetests', '-v', module]
+                   'python', '-m', 'pytest', '-v', '--disable-warnings',
+                   '--pyargs', # '-p no:warnings',
+                   f'--junitxml=junit.{module}.xml', module]
             try:
                 conda_run(*cmd)
             except RuntimeError as e:
@@ -287,10 +308,12 @@ class Builder:
             Commands.RUN,
             '-n', 'base',
             'conda', 'build', recipe_dir,
+            '-c', 'local',
             '-c', self.mirror_channel,
             '-c', self.mirror_conda_forge,
             '-c', 'conda-forge',
             '-c', 'defaults',
+            '--override-channels',
             '--no-anaconda-upload',
             '--quiet')
         print("Recipe build successful")
@@ -436,22 +459,12 @@ class Builder:
             print(line)
 
 
-def get_build_args(parser=None, description=None):
-    if parser is None:
-        parser = argparse.ArgumentParser(description=description)
+def append_build_args(parser):
+    parser.add_argument('recipes', type=str, nargs='?', default="")
 
-    recipes_kwargs = {
-        'type': str,
-        'nargs': '?',
-        'default': 'ON_FEATURE_BRANCH',
-        'help': 'Target Environment, The reserver keywords "ON_FEATURE_BRANCH"'
-        ' and "ON_MERGE" will detect from the git history what to do. '
-        'In case of ON_MERGE the reference commit is the previous commit, '
-        'in case of ON_FEATURE_BRANCH the reference commit is the earliest '
-        'common commit with the master branch.'
-    }
-
-    parser.add_argument('recipes', **recipes_kwargs)
+    parser.add_argument(
+        '--ci', action='store_true',
+        help='Run CI specific configurations')
 
     parser.add_argument(
         '-c', '--channel', type=str, default='exflserv05.desy.de',
@@ -500,6 +513,16 @@ def get_build_args(parser=None, description=None):
 
     return parser
 
+
+def get_build_args(sub_parser=None, description=None):
+    if sub_parser is not None:
+        # append this module as a sub parser of `parser`
+        parser = sub_parser.add_parser('build',
+                                       help=description)
+        parser.set_defaults(klass=Builder)
+    else:
+        parser = argparse.ArgumentParser(description=description)
+    return append_build_args(parser)
 
 
 def main(args):
