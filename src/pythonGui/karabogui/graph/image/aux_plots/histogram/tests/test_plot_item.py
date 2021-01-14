@@ -23,7 +23,7 @@ class TestHistogramPlot(GuiTestCase):
         np.testing.assert_array_equal(self._plot_item.levels, LEVELS)
         self.assertIsInstance(self._plot_item.gradient, QLinearGradient)
         self.assertIsInstance(self._plot_item._pen, QPen)
-        self.assertTrue(len(self._plot_item.plotItem.vb.menu.actions()), 1)
+        self.assertIsNone(self._plot_item.plotItem.vb.menu)
 
     def test_set_colormap(self):
         cmap = "magma"
