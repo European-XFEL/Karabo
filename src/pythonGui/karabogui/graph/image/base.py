@@ -61,6 +61,8 @@ class KaraboImageView(QWidget):
         self.image_layout.addItem(self.plotItem, 1, 1, 1, 1)
         self.image_layout.ci.layout.setRowStretchFactor(1, 3)
         self.image_layout.ci.layout.setColumnStretchFactor(1, 3)
+        # Note: Leave a little bottom margin for the color bar
+        self.image_layout.ci.layout.setContentsMargins(0, 0, 0, 5)
 
         # Our tooling instances
         self._aux_plots = None
