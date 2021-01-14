@@ -87,3 +87,26 @@ def calc_rotated_point(x, y, angle=0, scale=1):
     rotated_y = - x * sin + y * cos
 
     return QPoint(rotated_x * scale, rotated_y * scale)
+
+
+def add_offset(model, x=0, y=0):
+    # Check if the models has x or y, as there are some that do not follow
+    # the item interface. We do nothing instead.
+    trait_names = model.copyable_trait_names()
+    if "x" not in trait_names or "y" not in trait_names:
+        return
+
+    model.trait_setq(x=model.x + x, y=model.y + y)
+
+    # Recursively offset the children
+    if "children" in model.trait_names():
+        for child in model.children:
+            add_offset(child, x=x, y=y)
+
+
+def calc_relative_pos(models):
+    x, y = (SCREEN_MAX_VALUE, SCREEN_MAX_VALUE)
+    for model in models:
+        x = min(x, model.x)
+        y = min(y, model.y)
+    return x, y

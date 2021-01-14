@@ -1,3 +1,4 @@
+import argparse
 from contextlib import contextmanager
 from distutils.version import LooseVersion
 import os
@@ -11,7 +12,7 @@ from conda.cli.python_api import Commands
 from conda_pack import CondaEnv, File
 from conda_pack.compat import on_win
 
-from .build import Builder, get_build_args
+from .build import Builder, append_build_args
 from .compare import execute as compare_env
 from .utils import (
     command_run, conda_run, connected_to_remote, get_conda_prefix, mkdir, rmdir)
@@ -112,7 +113,9 @@ class Packer(Builder):
         errors = []
         for module in ['karabogui', 'karabo.native', 'karabo.common']:
             try:
-                command_run([python_path, '-m', 'nose', '-v', module])
+                cmd = [python_path, '-m', 'pytest', '-v', '--pyargs'
+                   f'--junitxml=junit.{module}.xml', module]
+                command_run(cmd)
             except RuntimeError as e:
                 errors.append(f'{module}:\n{str(e)}')
 
@@ -132,7 +135,6 @@ class Packer(Builder):
     @connected_to_remote
     def download_environment(self, ssh):
         # TODO: compare environments properly
-        # now forcing environment build
         return None
         with ssh.open_sftp() as sftp:
             latest_env = self.get_latest_env(sftp)
@@ -318,9 +320,16 @@ def get_filename(name, version, platform):
     return f"{name}-{version}-{COMPRESSED_EXTENSIONS[platform]}"
 
 
-def get_pack_args(parser=None, description=None):
-    if parser is None:
-        parser = get_build_args(description=description)
+def get_pack_args(sub_parser=None, description=None):
+    if sub_parser is not None:
+        # append this module as a sub parser of `parser`
+        parser = sub_parser.add_parser('pack',
+                                       help=description)
+        parser.set_defaults(klass=Packer)
+    else:
+        parser = argparse.ArgumentParser(description=description)
+
+    parser = append_build_args(parser)
 
     parser.add_argument(
         '-K', '--upload-env', action='store_true',
@@ -330,7 +339,6 @@ def get_pack_args(parser=None, description=None):
         '-E', '--remote-env-dir', type=str,
         default='karaboEnvironments',
         help='Directory of the packed environments on remote server')
-
 
     return parser
 
