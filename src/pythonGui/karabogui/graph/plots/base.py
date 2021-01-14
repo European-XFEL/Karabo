@@ -29,6 +29,16 @@ ROI_CANVAS_MAP = {
     ROITool.DrawCrosshair: (PointCanvas, ROITool.Crosshair)}
 
 
+class _PlotItem(PlotItem):
+
+    def setMenuEnabled(self, enableMenu=True, enableViewBoxMenu=None):
+        """Reimplemented function of PyQtGraph
+
+        Note: This patch is not required in pyqtgraph > 0.11.1
+        """
+        self._menuEnabled = enableMenu
+
+
 class KaraboPlotView(QWidget):
     """ The main KaraboPlotView widget for ImagePlots
 
@@ -50,11 +60,12 @@ class KaraboPlotView(QWidget):
         axis_items = create_axis_items(axis, axes_with_ticks=TICK_AXES)
 
         # Our viewbox with reset range addition!
-        viewbox = KaraboViewBox()
+        viewbox = KaraboViewBox(parent=None)
         viewbox.menu.addAction("Reset Range", self.reset_range)
 
         # Add our basic plotItem to this widget
-        self.plotItem = PlotItem(viewBox=viewbox, axisItems=axis_items)
+        self.plotItem = _PlotItem(viewBox=viewbox, axisItems=axis_items,
+                                  enableMenu=False, parent=None)
 
         # Improve axes rendering
         for axis in AXIS_ITEMS:
