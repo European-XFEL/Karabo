@@ -156,7 +156,7 @@ class TimeAxisItem(DateAxisItem):
             self.axisDoubleClicked.emit()
             event.accept()
             return
-        super(AxisItem, self).mouseDoubleClickEvent(event)
+        super(TimeAxisItem, self).mouseDoubleClickEvent(event)
 
     def mouseDragEvent(self, event):
         """Reimplemented function of PyQt
