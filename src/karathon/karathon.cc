@@ -64,10 +64,12 @@ void exportp2p();
 
 
 void *convert_to_cstring(PyObject *obj) {
-    char *ret = PyUnicode_AsUTF8(obj);
+
+    const void *ret = PyUnicode_AsUTF8(obj);
     if (!ret)
         PyErr_Clear();
-    return ret;
+    
+    return const_cast<void*>(ret);
 }
 
 
@@ -82,9 +84,8 @@ void *convertible_string(PyObject *obj) {
 void construct_string(PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data* data) {
     void* storage = ((boost::python::converter::rvalue_from_python_storage<std::string>*)data)->
             storage.bytes;
-    char *str;
     Py_ssize_t size;
-    str = PyUnicode_AsUTF8AndSize(obj, &size);
+    const char* str = PyUnicode_AsUTF8AndSize(obj, &size);
     new (storage) std::string(str, size);
     data->convertible = storage;
 }
