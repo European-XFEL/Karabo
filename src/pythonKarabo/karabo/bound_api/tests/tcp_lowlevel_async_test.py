@@ -18,7 +18,7 @@ class Server(object):
             self.port = self.connection.startAsync(self.onConnect)
 
             print("\nServer listening port : {}".format(self.port))
-        except:
+        except BaseException:
             print("*** Server __init__() unexpected error: "
                   "{}".format(sys.exc_info()[0]))
             self.connection = None
@@ -30,7 +30,7 @@ class Server(object):
                   % (ec.value(), ec.message(), id(channel)))
         try:
             channel.close()
-        except:
+        except BaseException:
             print("*** Server.onError (channel.close()) unexpected error: "
                   "{}".format(sys.exc_info()[0]))
         finally:
@@ -49,7 +49,7 @@ class Server(object):
             channel.readAsyncHashHash(self.onReadHashHash)
         except RuntimeError as e:
             print("*** Server.onConnect RuntimeError " + str(e))
-        except:
+        except BaseException:
             print("*** Server.onConnect unexpected error: "
                   "{}".format(sys.exc_info()[0]))
         finally:
@@ -67,7 +67,7 @@ class Server(object):
         except RuntimeError as e:
             print("TCP Async server onReadHashHash: " + str(e))
             raise
-        except:
+        except BaseException:
             print("*** Server.onReadHashHash unexpected error: "
                   "{}".format(sys.exc_info()[0]))
             raise
@@ -88,7 +88,7 @@ class Server(object):
         except KeyError as e:
             print("*** KeyError in Server.onWriteComplete: " + str(e))
             raise
-        except:
+        except BaseException:
             print("*** Server.onWriteComplete unexpected error: "
                   "{}".format(sys.exc_info()[0]))
             raise
