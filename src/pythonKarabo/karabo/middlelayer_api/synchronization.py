@@ -44,7 +44,7 @@ def background(task, *args, timeout=-1):
         except Exception:
             try:
                 logger = logging.getLogger(loop.instance().deviceId)
-            except Exception:
+            except BaseException:
                 # Make absolutely sure that this the log message is done!
                 logger = logging.getLogger()
             logger.exception("Error in background task ...")
@@ -240,7 +240,7 @@ class FutureDict(object):
         futures.add(future)
         try:
             return (await future)
-        except Exception:
+        except BaseException:
             futures.discard(future)
             raise
 

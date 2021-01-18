@@ -643,7 +643,8 @@ class Slot(Descriptor):
                 ret = await coro
                 device.update()
                 device._ss.reply(message, ret)
-            except Exception as e:
+            except BaseException as e:
+                # In Python 3.8 changed to BaseException
                 _, exc, tb = sys.exc_info()
                 await device._onException(self, exc, tb)
                 device._ss.replyException(message, e)

@@ -5,10 +5,11 @@ from pint import DimensionalityError
 from unittest import main
 import time
 
-from .eventloop import async_tst, DeviceTest, sync_tst
+from karabo.middlelayer_api.tests.eventloop import (
+    async_tst, DeviceTest, sync_tst)
 from karabo.middlelayer import (
     allCompleted, background, firstCompleted, firstException, gather,
-    HAVE_UVLOOP, MetricPrefix, QuantityValue, sleep, synchronous,
+    MetricPrefix, QuantityValue, sleep, synchronous,
     Unit, unit)
 from karabo.middlelayer_api.synchronization import FutureDict
 
@@ -218,11 +219,11 @@ class Tests(DeviceTest):
 
         t = time.time()
         f = sleep(1000, wait=False)
-        with self.assertRaises(TimeoutError):
+        with self.assertRaises((AttributeError, TimeoutError)):
             gather(f, timeout=10 * unit.ms)
         self.assertLess(time.time() - t, 1)
 
-        with self.assertRaises(DimensionalityError):
+        with self.assertRaises((TypeError, DimensionalityError)):
             gather(10, timeout=10 * unit.meter)
 
     @async_tst
@@ -339,11 +340,7 @@ class Tests(DeviceTest):
             sleep(100), slow=sleep(1000), fast=sleep(0.001, "result"),
             err=raisor(), timeout=0.01)
 
-        # UVLOOP provides a done of the fast.
-        if HAVE_UVLOOP:
-            self.assertEqual(done, {})
-        else:
-            self.assertFalse(done)
+        self.assertFalse(done)
         self.assertEqual(error, {"err": exception})
         self.assertEqual(set(pending.keys()), {0, "slow", "fast"})
 

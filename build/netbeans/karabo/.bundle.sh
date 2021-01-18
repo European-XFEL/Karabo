@@ -4,7 +4,7 @@
 #
 # Author: <burkhard.heisen@xfel.eu>
 #
-# 
+#
 # This script is intended to run in conjunction with the NetBeans build system.
 # It should be called from within the NetBeans Makefile and expects the following parameters:
 #
@@ -104,7 +104,7 @@ SITE_PACKAGES=`python3 -c "from distutils.sysconfig import get_python_lib; print
 cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $SITE_PACKAGES/ # <-- karathon.so
 ln -s $SITE_PACKAGES/karathon.so $PACKAGEDIR/lib/libkarathon.so
 
-[ -d $PACKAGEDIR/extern/include/python3.6m ]  && (cd $PACKAGEDIR/extern/include; rm -f python3.6; ln -s python3.6m python3.6)
+[ -d $PACKAGEDIR/extern/include/python3.8m ]  && (cd $PACKAGEDIR/extern/include; rm -f python3.8; ln -s python3.8m python3.8)
 
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
 
