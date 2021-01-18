@@ -129,20 +129,20 @@ def test_iteration_9():
     h = Hash("b", "bla-la-la", "a.b.c", 1, "abc.2", 2.2222222,
              "a.b.c1.d", "abc1d", "abc.1", 1.11111111)
 
-    l = []
-    h.getKeys(l)  # use top level keys
+    ll = []
+    h.getKeys(ll)  # use top level keys
 
-    assert len(l) == 3
-    i = iter(l)  # "canonical" order: on every level insertion order
+    assert len(ll) == 3
+    i = iter(ll)  # "canonical" order: on every level insertion order
     assert str(next(i)) == "b"
     assert str(next(i)) == "a"
     assert str(next(i)) == "abc"
 
-    l = []
-    h.getPaths(l)   # use full keys
+    ll = []
+    h.getPaths(ll)   # use full keys
 
-    assert len(l) == 5
-    i = iter(l)
+    assert len(ll) == 5
+    i = iter(ll)
     assert str(next(i)) == "b"
     assert str(next(i)) == "a.b.c"
     assert str(next(i)) == "a.b.c1.d"

@@ -224,7 +224,7 @@ class Hash_TestCase(unittest.TestCase):
             self.assertIsInstance(h['a.b.c'], list)
             try:
                 setStdVectorDefaultConversion(Types.VECTOR_INT32)
-            except RuntimeError as e:
+            except RuntimeError:
                 pass
             self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), True)
             setStdVectorDefaultConversion(Types.NUMPY)
@@ -579,18 +579,18 @@ class Hash_TestCase(unittest.TestCase):
             h = Hash("b", "bla-la-la", "a.b.c", 1, "abc.2", 2.2222222,
                      "a.b.c1.d", "abc1d", "abc.1", 1.11111111)
 
-            l = []
-            h.getKeys(l)  # use top level keys
-            self.assertEqual(len(l), 3)
-            i = iter(l)  # "canonical" order: on every level insertion order
+            ll = []
+            h.getKeys(ll)  # use top level keys
+            self.assertEqual(len(ll), 3)
+            i = iter(ll)  # "canonical" order: on every level insertion order
             self.assertEqual(str(next(i)), "b")
             self.assertEqual(str(next(i)), "a")
             self.assertEqual(str(next(i)), "abc")
 
-            l = []
-            h.getPaths(l)  # use full keys
-            self.assertEqual(len(l), 5)
-            i = iter(l)
+            ll = []
+            h.getPaths(ll)  # use full keys
+            self.assertEqual(len(ll), 5)
+            i = iter(ll)
             self.assertEqual(str(next(i)), "b")
             self.assertEqual(str(next(i)), "a.b.c")
             self.assertEqual(str(next(i)), "a.b.c1.d")
