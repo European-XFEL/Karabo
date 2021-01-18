@@ -81,12 +81,13 @@ class TestKaraboImageView(GuiTestCase):
         current_plot = self.aux_plots.current_plot
         self.assertIsNotNone(current_plot)
 
-        assert_method = self.assertTrue if has_data else self.assertFalse
+        assert_method = (self.assertFalse if has_data
+                         else self.assertTrue)
         aggregator = self.aux_plots._aggregators[current_plot]
         for controller in aggregator.controllers.values():
             data_item = controller.plot._data_item
-            assert_method(len(data_item.xData) != 0)
-            assert_method(len(data_item.yData) != 0)
+            assert_method(data_item.xData is None or len(data_item.xData) == 0)
+            assert_method(data_item.xData is None or len(data_item.xData) == 0)
 
     def test_axes_labels(self):
         # Restore config
