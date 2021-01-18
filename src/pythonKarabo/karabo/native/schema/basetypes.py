@@ -24,6 +24,7 @@ __all__ = ['BoolValue', 'EnumValue', 'ImageData', 'isSet', 'KaraboValue',
 
 
 def wrap(data):
+    """Return a `KaraboValue` related to `data`"""
     if isinstance(data, KaraboValue):
         return data
     elif isinstance(data, bool):
