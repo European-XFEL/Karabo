@@ -31,6 +31,9 @@ class KaraboImageItem(ImageItem):
         self._slice_rect = None
         self._view_rect = None
 
+        # This is a super class variable
+        self._cachedView = None
+
     # ---------------------------------------------------------------------
     # Public methods
 
@@ -295,6 +298,10 @@ class KaraboImageItem(ImageItem):
         # If not, get new image geometry from view coords
         x1, y1 = (0, 0)
         width, height = shape
+
+        # Get a fresh viewrect
+        self._cachedView = None
+        self._view_rect = self.viewRect()
         if not self._view_rect.contains(QRectF(x1, y1, width, height)):
             # Calculate image from view geometry
             x1, y1, x2, y2 = self._view_rect.getCoords()
@@ -390,6 +397,9 @@ class KaraboImageItem(ImageItem):
            exceeds the current slice rect."""
         self.qimage = None
         zoomed = True
+
+        # Note: Invalidate the cachedView before getting a new `viewRect`
+        self._cachedView = None
         view_rect = self.viewRect()
 
         # Check if image is zoomed. Checking with width is already sufficient.
