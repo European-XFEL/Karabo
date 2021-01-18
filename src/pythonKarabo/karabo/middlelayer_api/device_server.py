@@ -1,5 +1,5 @@
 from asyncio import (create_subprocess_exec, ensure_future, gather,
-                     get_event_loop, set_event_loop_policy, sleep,
+                     get_event_loop, set_event_loop, sleep,
                      TimeoutError, wait, wait_for)
 import copy
 from enum import Enum
@@ -18,8 +18,7 @@ from karabo.native import (
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, decodeBinary, encodeXML, Hash)
 
-from .compat import HAVE_UVLOOP
-from .eventloop import EventLoopPolicy
+from .eventloop import EventLoop
 from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
@@ -177,7 +176,7 @@ class DeviceServerBase(SignalSlotable):
         classId, deviceId, config = self.parse(hash)
         try:
             return (await self.startDevice(classId, deviceId, config))
-        except Exception as e:
+        except BaseException as e:
             e.logmessage = ('could not start device "%s" of class "%s"',
                             deviceId, classId)
             raise
@@ -307,8 +306,8 @@ class DeviceServerBase(SignalSlotable):
             cls.print_usage(argv)
             return
 
-        set_event_loop_policy(EventLoopPolicy())
-        loop = get_event_loop()
+        loop = EventLoop()
+        set_event_loop(loop)
 
         # This function parses a dict with potentially nested values
         # ('.' seperated) and adds them flat as attributes to the class
@@ -348,10 +347,7 @@ class DeviceServerBase(SignalSlotable):
             try:
                 loop.run_forever()
             except KeyboardInterrupt:
-                # XXX: Make sure that the instanceGone signal of the server
-                # is send. We cancel all tasks!
-                if HAVE_UVLOOP:
-                    loop.run_until_complete(loop.cancel_all_tasks())
+                pass
             finally:
                 loop.close()
 
@@ -440,7 +436,7 @@ class MiddleLayerDeviceServer(DeviceServerBase):
                 self.plugins[ep.name] = (await get_event_loop().
                                          run_in_executor(None, ep.load))
                 changes = True
-            except Exception:
+            except BaseException:
                 self.logger.exception('Cannot load middle layer plugin "%s"',
                                       ep.name)
         return changes
@@ -547,12 +543,12 @@ class BoundDeviceServer(DeviceServerBase):
                 try:
                     schema = await process.stdout.read()
                     await process.wait()
-                except Exception:
+                except BaseException:
                     process.kill()
                     raise
                 self.bounds[ep.name] = decodeBinary(schema)[ep.name]
                 changes = True
-            except Exception:
+            except BaseException:
                 class_ban.add(ep.name)
                 self.logger.exception('Cannot load bound plugin "%s"', ep.name)
         self.bannedClasses = list(class_ban)

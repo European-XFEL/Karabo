@@ -612,7 +612,7 @@ class PropertyTest(PythonDevice):
         # Always run at least once: write should start immediately
         shouldWrite = True
         while shouldWrite:
-            before = time.clock()
+            before = time.time()
             self.writeOutput()
 
             with self._writingMutex:
@@ -622,7 +622,7 @@ class PropertyTest(PythonDevice):
                 # Waits for an interval as close as possible to the interval
                 # defined by the nominal outputFrequency.
                 delay = 1.0 / self.get("outputFrequency")
-                delay = max(0., delay - (time.clock() - before))
+                delay = max(0., delay - (time.time() - before))
                 time.sleep(delay)
 
                 # "Refreshes" the shouldWrite flag before entering a new loop

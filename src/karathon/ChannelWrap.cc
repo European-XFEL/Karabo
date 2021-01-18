@@ -91,7 +91,7 @@ namespace karathon {
             return;
         } else if (PyUnicode_Check(obj.ptr())) {
             Py_ssize_t size;
-            char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
+            const char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
             ScopedGILRelease nogil;
             channel->write(data, size);
             return;

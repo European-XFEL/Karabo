@@ -521,11 +521,11 @@ class PropertyTestMDL(Device):
         self.state = State.STARTED
         while True:
             try:
-                before = time.clock()
+                before = time.time()
                 await self._send_data_action()
                 delay = 1 / self.outputFrequency.value
                 # Adjust the delay by what it took to send data
-                delay = max(0., delay - (time.clock() - before))
+                delay = max(0., delay - (time.time() - before))
                 await sleep(delay)
             except CancelledError:
                 self.state = State.NORMAL
