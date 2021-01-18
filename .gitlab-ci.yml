@@ -132,7 +132,6 @@ stages:
   except:
     refs:
       - schedules
-      - merge_requests # skip for dependency MR
     changes:
       - "extern/**/*"
 
@@ -150,7 +149,6 @@ stages:
   except:
     refs:
       - schedules
-      - merge_requests # skip for dependency MR
     changes:
       - "extern/**/*"
 
