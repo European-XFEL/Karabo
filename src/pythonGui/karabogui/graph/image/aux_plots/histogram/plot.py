@@ -75,7 +75,7 @@ class HistogramPlot(BasePlot):
     def _set_brush(self):
         # Get brush with the new levels and from existing data
         x_data = self._data_item.xData
-        if x_data.size:
+        if x_data is not None and x_data.size:
             brush = self._calc_brush(x_data)
             self._data_item.setBrush(brush)
 
