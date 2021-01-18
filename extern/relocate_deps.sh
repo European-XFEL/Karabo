@@ -18,7 +18,7 @@ get_abs_path() {
 relocate_python() {
     # Includes are in a symlinked directory which has a bad link
     pushd $INSTALL_PREFIX/include
-    rm python3.6 && ln -s python3.6m python3.6
+    rm python3.8 && ln -s python3.8m python3.8
     popd
 
     # Makefile has a 'prefix' which needs to be fixed
@@ -40,15 +40,15 @@ rewrite_python_shebangs() {
     local new_shebang_line="#!/usr/bin/env python3"
     local sed_program='1 s%^.*$%'$new_shebang_line'%g'
 
-    local entry_points=(2to3 2to3-3.6 cygdb cython
-	easy_install easy_install-3.6 f2py3 flake8 get_objgraph.py 
-    idle3 idle3.6 ipcluster ipcluster3 ipcluster_watcher
+    local entry_points=(2to3 2to3-3.8 cygdb cython
+	easy_install easy_install-3.8 f2py3 flake8 get_objgraph.py
+    idle3 idle3.8 ipcluster ipcluster3 ipcluster_watcher
 	ipcontroller ipcontroller3 ipengine ipengine3 iptest iptest3 ipython
 	ipython3 jupyter jupyter-kernelspec jupyter-migrate
 	jupyter-nbextension jupyter-notebook jupyter-qtconsole
-	jupyter-serverextension jupyter-trust nosetests nosetests-3.6 pip pip3
-	pip3.6 pnuke prsync pscp pslurp pydoc3 pydoc3.6
-	pygmentize pyvenv pyvenv-3.6 pyflakes py.test py.test-3.6 pybabel
+	jupyter-serverextension jupyter-trust nosetests nosetests-3.8 pip pip3
+	pip3.8 pnuke prsync pscp pslurp pydoc3 pydoc3.8
+	pygmentize pyvenv pyvenv-3.8 pyflakes py.test py.test-3.8 pybabel
 	pycodestyle rpath-fixer rpath-missing rpath-show rst2html.py
 	rst2latex.py rst2man.py rst2odt_prepstyles.py rst2odt.py
 	rst2pseudoxml.py rst2s5.py rst2xetex.py rst2xml.py rstpep2html.py sift

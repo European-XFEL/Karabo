@@ -1,5 +1,5 @@
 from asyncio import (
-    Future, IncompleteReadError, sleep, StreamReader,
+    Future, get_event_loop, IncompleteReadError, sleep, StreamReader,
     StreamWriter, WriteTransport)
 from unittest import main
 from unittest.mock import Mock
@@ -41,8 +41,9 @@ class TestChannel(DeviceTest):
     eos_channel = ""
 
     def setUp(self):
-        self.reader = StreamReader()
-        self.writer = StreamWriter(ChecksumTransport(), None, None, None)
+        loop = get_event_loop()
+        self.reader = StreamReader(loop=loop)
+        self.writer = StreamWriter(ChecksumTransport(), None, None, loop=loop)
         self.channel = Channel(self.reader, self.writer, "channelname")
 
     def assertChecksum(self, checksum):
