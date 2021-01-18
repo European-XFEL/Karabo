@@ -121,7 +121,7 @@ stages:
   <<: *test
   only:
     refs:
-      - master  # the changes check will default to true
+      - /^master$/  # the changes check will default to true
       - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
       - merge_requests
     changes:
