@@ -324,7 +324,9 @@ class Tests(TestCase):
         d = VectorComplexFloat(minSize=2)
         v = d.toKaraboValue([2 + 3j, 3 + 4j, 4])
         self.assertAlmostEqual(v[1].magnitude, 3 + 4j)
-        with self.assertRaises(TypeError):
+        # ValueError or TypeError depending on numpy version
+        # ValueError for numpy >~ 1.16
+        with self.assertRaises(Exception):
             v = d.toKaraboValue(['miau'])
         with self.assertRaises(ValueError):
             v = d.toKaraboValue([3 + 4j])

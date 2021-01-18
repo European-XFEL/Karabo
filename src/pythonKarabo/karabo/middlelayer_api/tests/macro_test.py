@@ -1,6 +1,5 @@
 from asyncio import ensure_future, Future, TimeoutError
 from contextlib import contextmanager
-from flaky import flaky
 import sys
 import time
 from unittest import main
@@ -20,10 +19,8 @@ from karabo.middlelayer_api.macro import Macro
 from karabo.middlelayer_api.signalslot import slot
 from karabo.middlelayer_api.synchronization import background, sleep
 
-from .eventloop import DeviceTest, sync_tst, async_tst
-
-FLAKY_MAX_RUNS = 7
-FLAKY_MIN_PASSES = 3
+from karabo.middlelayer_api.tests.eventloop import (
+    DeviceTest, sync_tst, async_tst)
 
 
 class Superslot(Slot):
@@ -84,13 +81,13 @@ class Remote(Device):
         self.state = State.INCREASING
         for i in range(30):
             self.counter = i
-            await sleep(0.02)
+            await sleep(0.05)
         self.state = State.UNKNOWN
 
     @Slot()
     async def call_local(self):
-        with (await getDevice("local")) as l:
-            await l.remotecalls()
+        with (await getDevice("local")) as leet:
+            await leet.remotecalls()
 
     generic = Superslot()
 
@@ -188,7 +185,7 @@ class Tests(DeviceTest):
         time.sleep(0.1)
         self.assertEqual(last, d.counter)
         with d:
-            time.sleep(0.4)
+            waitUntil(lambda: d.counter == 29)
             self.assertEqual(d.counter, 29)
 
     @sync_tst
@@ -302,17 +299,13 @@ class Tests(DeviceTest):
             self.assertGreaterEqual(d.counter, 10)
 
     @sync_tst
-    @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
     def test_waituntilnew(self):
-        """test the waitUntilNew function
-
-        NOTE: This test is declared as flaky as the cycling is sometimes not
-        working in the eventloop as it has to be.
-        """
+        """test the waitUntilNew function"""
         with getDevice("remote") as d:
             d.counter = 0
-            sleep(0.01)
             executeNoWait(d, "count")
+            # Note: This is the previous set to 0
+            waitUntil(lambda: d.counter == 0)
             for i in range(30):
                 waitUntilNew(d.counter)
                 self.assertEqual(i, d.counter)
@@ -449,7 +442,9 @@ class Tests(DeviceTest):
         """
         # Rename sleep to make it clean which sleep is being used
         karabo_sleep = sleep
-        with (await getDevice("local")) as d:
+        d = await getDevice("local")
+        with d:
+            await d.update_proxy()
             # cancel during time.sleep
             self.local.cancelled_slot = None
             task = ensure_future(d.sleepalot())

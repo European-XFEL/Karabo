@@ -1,9 +1,9 @@
 from __future__ import absolute_import, unicode_literals
-
+import asyncio
 from asyncio import (
-    CancelledError, coroutine, ensure_future, Future, DefaultEventLoopPolicy,
-    gather, get_event_loop, iscoroutinefunction, Queue, set_event_loop, shield,
-    sleep, Task, TimeoutError, wait_for)
+    AbstractEventLoop, CancelledError, coroutine, ensure_future, Future,
+    gather, get_event_loop, iscoroutinefunction, Queue, set_event_loop,
+    SelectorEventLoop, shield, sleep, TimeoutError, wait_for)
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing, ExitStack
 from functools import wraps
@@ -23,7 +23,6 @@ from abc import ABC, abstractmethod
 from karabo.native import KaraboValue, KaraboError, unit_registry as unit
 from karabo.native import decodeBinary, encodeBinary, Hash
 
-from .compat import HAVE_ASYNCIO, AbstractEventLoop, SelectorEventLoop
 from . import openmq
 
 # See C++ karabo/xms/Signal.hh for reasoning about the two minutes...
@@ -342,7 +341,7 @@ class JmsBroker(Broker):
     async def handleMessage(self, message, device):
         try:
             slots, params = self.decodeMessage(message)
-        except Exception:
+        except BaseException:
             self.logger.exception("Malformed message")
             return
         try:
@@ -358,7 +357,7 @@ class JmsBroker(Broker):
         try:
             for slot, name in callSlots:
                 slot.slot(slot, device, name, message, params)
-        except Exception:
+        except BaseException:
             # the slot.slot wrapper should already catch all exceptions
             # all exceptions raised additionally are a bug in Karabo
             self.logger.exception(
@@ -405,7 +404,7 @@ class JmsBroker(Broker):
         Note that the task this coroutine is called from, as an exception,
         is not cancelled. That's the chicken-egg-problem.
         """
-        me = Task.current_task()
+        me = asyncio.current_task(loop=None)
         tasks = [t for t in self.tasks if t is not me]
         for t in tasks:
             t.cancel()
@@ -494,7 +493,7 @@ class JmsBroker(Broker):
                 connection = openmq.Connection(p, "guest", "guest")
                 connection.start()
                 return connection
-            except Exception:
+            except BaseException:
                 connection = None
         raise RuntimeError(f"No connection can be established for {hosts}")
 
@@ -523,6 +522,7 @@ def synchronize(coro):
 
 def synchronize_notimeout(coro):
     """same as synchronize, but the timeout is handled by the coroutine"""
+
     coro = coroutine(coro)
 
     @wraps(coro)
@@ -554,7 +554,8 @@ class KaraboFuture(object):
         instance = loop.instance()
 
         def func(future):
-            loop.create_task(loop.run_coroutine_or_thread(fn, self), instance)
+            loop.create_task(loop.run_coroutine_or_thread(
+                fn, self), instance)
 
         self.future.add_done_callback(func)
 
@@ -646,15 +647,6 @@ class NoEventLoop(AbstractEventLoop):
         return self._instance
 
 
-class EventLoopPolicy(DefaultEventLoopPolicy):
-
-    def new_loop(self):
-        return EventLoop()
-
-    def _loop_factory(self):
-        return self.new_loop()
-
-
 class EventLoop(SelectorEventLoop):
     Queue = Queue
     sync_set = False
@@ -687,7 +679,7 @@ class EventLoop(SelectorEventLoop):
             instance = context["future"].instance()
             instance._onException(None, context["exception"],
                                   context.get("source_traceback"))
-        except Exception:
+        except BaseException:
             self.default_exception_handler(context)
 
     def getBroker(self, deviceId, classId, broadcast):
@@ -697,7 +689,7 @@ class EventLoop(SelectorEventLoop):
         self.connection, Cls = Broker.create_connection(hosts, self.connection)
         return Cls(self, deviceId, classId, broadcast)
 
-    def create_task(self, coro, instance=None):
+    def create_task(self, coro, instance=None, name=None):
         """Create a new task, running coroutine *coro*
 
         As an extension to the standard library method, in Karabo we track
@@ -707,7 +699,7 @@ class EventLoop(SelectorEventLoop):
         *instance* is the device this task should belong to, it defaults
         to the caller's device if existent. Note that a device first
         has to be started with ``startInstance`` before this will work."""
-        task = super().create_task(coro)
+        task = super().create_task(coro, name=name)
         try:
             if instance is None:
                 instance = get_event_loop().instance()
@@ -739,16 +731,13 @@ class EventLoop(SelectorEventLoop):
                     ret = f(*args, **kwargs)
                     # The lambda assures we are using the newest future
                     self.call_soon_threadsafe(lambda: future.set_result(ret))
-                except Exception as e:
+                except BaseException as e:
+                    # Since Python 3.8 we have to use BaseException here
                     exception = e
                     self.call_soon_threadsafe(
                         lambda: future.set_exception(exception))
                 finally:
-                    if not HAVE_ASYNCIO:
-                        # XXX: Loop started in a different thread should be
-                        # stopped and closed!
-                        loop.stop()
-                        loop.close()
+                    pass
                     # Previously we did set loop to `None`. However, since
                     # threads are complaining that no loop is found in
                     # current thread, we might deal with races.
@@ -783,7 +772,7 @@ class EventLoop(SelectorEventLoop):
 
         async def run_device():
             nonlocal task
-            task = Task.current_task()
+            task = asyncio.current_task(loop=None)
             try:
                 await device.startInstance()
             finally:
@@ -795,7 +784,7 @@ class EventLoop(SelectorEventLoop):
 
     def instance(self):
         try:
-            return Task.current_task(loop=self).instance()
+            return asyncio.current_task(loop=self).instance()
         except AttributeError:
             return None
 
@@ -817,19 +806,18 @@ class EventLoop(SelectorEventLoop):
 
     async def cancel_all_tasks(self):
         """Cancel all running tasks except the current executing this"""
-        me = Task.current_task()
-        tasks = [t for t in Task.all_tasks(self) if t is not me]
+        me = asyncio.current_task(loop=self)
+        tasks = [t for t in asyncio.all_tasks(loop=self) if t is not me]
         for t in tasks:
             t.cancel()
 
     def close(self):
-        for t in Task.all_tasks(self):
+        for t in asyncio.all_tasks(loop=self):
             t.cancel()
-        if HAVE_ASYNCIO:
-            self._ready.extend(self._scheduled)
-            self._scheduled.clear()
-            while self._ready:
-                self._run_once()
+        self._ready.extend(self._scheduled)
+        self._scheduled.clear()
+        while self._ready:
+            self._run_once()
         if self.connection is not None:
             self.connection.close()
         super().close()

@@ -2,7 +2,6 @@ from asyncio import sleep
 from contextlib import contextmanager
 from unittest import main
 
-from karabo.middlelayer_api.compat import HAVE_UVLOOP
 from karabo.middlelayer import (
     Bool, call, Configurable, Device, getDevice, Hash, isAlive, InputChannel,
     Int32, Overwrite, OutputChannel, setWait, coslot, Slot, State,
@@ -368,10 +367,7 @@ class RemotePipelineTest(DeviceTest):
         self.assertIsNotNone(self.alice.output.server.sockets)
         self.assertGreater(len(self.alice.output.active_channels), 0)
         await self.alice.output.close()
-        if HAVE_UVLOOP:
-            self.assertEqual(self.alice.output.server.sockets, [])
-        else:
-            self.assertEqual(self.alice.output.server.sockets, None)
+        self.assertEqual(self.alice.output.server.sockets, ())
         self.assertEqual(len(self.alice.output.active_channels), 0)
 
 
