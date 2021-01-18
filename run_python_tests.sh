@@ -99,7 +99,7 @@ setupCoverageTool() {
     COVER_FLAGS="--with-coverage $COVER_COVERED_PACKAGES"
 
     # Path to the sitecustomize.py file.
-    SITE_PACKAGES_DIR=$KARABO_PROJECT_ROOT_DIR/karabo/extern/lib/python3.6/site-packages
+    SITE_PACKAGES_DIR=$KARABO_PROJECT_ROOT_DIR/karabo/extern/bin/python -c 'import site; print(site.getsitepackages()[0])'
     SITE_CUSTOMIZE_FILE_PATH=$SITE_PACKAGES_DIR/sitecustomize.py
 
     SITE_CUSTOMIZE_FILE_CREATED=false
@@ -216,10 +216,6 @@ runPythonUnitTests() {
     safeRunTests "karabo.tests"
     safeRunTests "karabo.interactive"
     safeRunTests "karabo.macro_api"
-    export KARABO_UVLOOP=1
-    safeRunTests "karabo.middlelayer_api" "_uvloop"
-    safeRunTests "karabo.middlelayer_devices" "_uvloop"
-    unset KARABO_UVLOOP
 
     echo
     echo Karabo Python unit tests complete
