@@ -180,7 +180,6 @@ class Macro(Device):
         """ implement the RemoteDevice functionality, upon
         starting the device the devices are searched and then
         assigned to the object's properties """
-
         await super(Macro, self)._run(**kwargs)
 
         holders = []
@@ -217,7 +216,7 @@ class Macro(Device):
                 for m in self.__monitors:
                     try:
                         setattr(self, m.key, m.monitor(self))
-                    except Exception:
+                    except BaseException:
                         self.logger.exception(
                             'exception in monitor "{}" of device "{}"'.
                             format(m.key, self.deviceId))
