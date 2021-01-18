@@ -109,6 +109,7 @@ class P2p_asyncTestCase(unittest.TestCase):
     def tearDown(self):
         pass  # self.server.stop() # stop server io service
 
+    @unittest.skip(reason="Segfaulting on Python 3.8")
     def test_p2p_async(self):
 
         def onError(error_code, channel):

@@ -33,7 +33,6 @@ from .middlelayer_api.proxy import (
 from .middlelayer_api.configuration import (
     sanitize_init_configuration, sanitize_write_configuration,
     extract_modified_schema_attributes, config_changes)
-from .middlelayer_api.compat import HAVE_UVLOOP
 from .middlelayer_api.eventloop import KaraboFuture
 from .middlelayer_api.devicenode import DeviceNode
 from .middlelayer_api.device import Device

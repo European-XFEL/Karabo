@@ -463,6 +463,10 @@ class Tests(TestCase):
         m = numpy.mean([a, b])
         self.assertEqual(m, 2 * unit.m)
         self.assertEqual(m.timestamp, self.t1)
+
+    def test_numpy_std(self):
+        a = QuantityValue(3, "m", timestamp=self.t1)
+        b = QuantityValue(1000, "mm", timestamp=self.t2)
         m = numpy.std([a, b])
         self.assertEqual(m, 1 * unit.m)
         self.assertEqual(m.timestamp, self.t1)

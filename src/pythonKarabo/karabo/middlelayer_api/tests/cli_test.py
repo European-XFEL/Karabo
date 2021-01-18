@@ -16,7 +16,7 @@ from karabo.middlelayer_api.ikarabo import (
     connectDevice, DeviceClient, start_device_client)
 from karabo.middlelayer_api.macro import Macro, EventThread, RemoteDevice
 
-from .eventloop import setEventLoop
+from karabo.middlelayer_api.tests.eventloop import setEventLoop
 
 
 class Remote(Macro):
@@ -84,13 +84,13 @@ class Tests(TestCase):
             thread.join(0.1)
             self.assertFalse(thread.is_alive())
 
+    def test_main(self):
+        Remote.main(["", "count", "counter=7"])
+
     @skip
     def test_remote_timeout(self):
         with self.assertLogs("NoRemote"):
             NoRemote(_deviceId_="NoRemote")
-
-    def test_main(self):
-        Remote.main(["", "count", "counter=7"])
 
     async def init_other(self):
         self.other = Other(dict(_deviceId_="other", _serverId_="tserver"))
