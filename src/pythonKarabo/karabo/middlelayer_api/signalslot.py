@@ -41,7 +41,7 @@ def slot(f):
     def inner(func, device, name, message, args):
         try:
             device._ss.reply(message, func(*args))
-        except Exception as e:
+        except BaseException as e:
             device._ss.replyException(message, e)
             _log_exception(func, device, message)
     f.slot = inner
@@ -59,7 +59,7 @@ def coslot(f, passMessage=False):
         async def inner():
             try:
                 broker.reply(message, (await func(*args)))
-            except Exception as e:
+            except BaseException as e:
                 broker.replyException(message, e)
                 _log_exception(func, device, message)
         if passMessage:
@@ -333,13 +333,13 @@ class SignalSlotable(Configurable):
         except Exception as e:
             try:
                 logger = logging.getLogger(self.deviceId)
-            except Exception:
+            except BaseException:
                 # Make absolutely sure that this the log message is done!
                 logger = logging.getLogger()
             logger.exception("Error in onInitialization ...")
             try:
                 self.status = f"Error in onInitialization: {e}"
-            except Exception:
+            except BaseException:
                 pass
 
     @coslot
@@ -522,7 +522,6 @@ class SignalSlotable(Configurable):
 
     def _onException(self, slot, exc, tb):
         logger = logging.getLogger(self.deviceId)
-
         if isinstance(exc, CancelledError):
             m = self.onCancelled
             args = slot,
@@ -540,7 +539,7 @@ class SignalSlotable(Configurable):
         async def logException(coro):
             try:
                 await coro
-            except Exception:
+            except BaseException:
                 logger.exception("error in error handler")
 
         loop = get_event_loop()

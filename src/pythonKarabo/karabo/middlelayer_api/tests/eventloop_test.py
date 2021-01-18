@@ -56,12 +56,14 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_add_callback(self):
+        called = False
+
         def callback(future):
             nonlocal called
             sleep(0.001)  # test that we can properly call Karabo functions
             self.assertFalse(called)
             called = True
-        called = False
+
         barrier = Barrier(self.loop)
         fut = barrier.block(wait=False)
         fut.add_done_callback(callback)
