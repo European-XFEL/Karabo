@@ -21,6 +21,7 @@ using namespace karabo::xms;
 namespace karabo {
 
 
+    const Hash TcpAdapter::k_defaultLoginData("type", "login", "username", "mrusp", "password", "12345", "version", karabo::util::Version::getKaraboVersion().getVersion());
 
     TcpAdapter::TcpAdapter(const karabo::util::Hash& config) : 
             m_deadline(karabo::net::EventLoop::getIOService()),
@@ -122,7 +123,15 @@ namespace karabo {
         }
     }
     
-    
+
+    void TcpAdapter::login() {
+        QueuePtr messageQ = getNextMessages("systemTopology", 1, [&] {
+            sendMessage(k_defaultLoginData);
+        });
+        // Clean received message from internal cache.
+        Hash lastMessage;
+        messageQ->pop(lastMessage);
+    }
     
     
     std::vector<Hash> TcpAdapter::getAllMessages(const std::string& type) {
