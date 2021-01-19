@@ -269,7 +269,7 @@ class NetworkInput(Configurable):
         print("EndOfStream handler called by {}!".format(cls))
 
     async def call_handler(self, data, meta):
-        with (await self.handler_lock):
+        async with self.handler_lock:
             try:
                 await get_event_loop().run_coroutine_or_thread(
                     self.handler, data, meta)
@@ -346,7 +346,7 @@ class NetworkInput(Configurable):
 
     async def safe_close_handler(self, output):
         """The close handler is called under the handler lock"""
-        with (await self.handler_lock):
+        async with self.handler_lock:
             await shield(get_event_loop().run_coroutine_or_thread(
                 self.close_handler, output))
 
