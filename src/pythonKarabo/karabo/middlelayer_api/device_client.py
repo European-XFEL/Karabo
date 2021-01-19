@@ -24,7 +24,7 @@ from karabo.native import Hash, Schema, Timestamp
 
 from .device import Device
 from .configuration import config_changes, sanitize_init_configuration
-from .eventloop import EventLoop, synchronize
+from .eventloop import synchronize
 from .proxy import (AutoDisconnectProxyFactory, DeviceClientProxyFactory,
                     ProxyBase, ProxyNodeBase)
 from .signalslot import coslot, slot
@@ -573,7 +573,7 @@ class Queue(object):
     """
 
     def __init__(self, prop):
-        self.queue = asyncio.Queue(loop=EventLoop.global_loop)
+        self.queue = asyncio.Queue()
         prop._parent._queues[prop.descriptor.longkey].add(self.queue)
 
     @synchronize
