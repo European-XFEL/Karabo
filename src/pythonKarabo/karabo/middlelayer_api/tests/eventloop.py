@@ -1,21 +1,20 @@
 from asyncio import (
-    coroutine, gather, get_event_loop, iscoroutinefunction, set_event_loop,
-    wait_for)
+    gather, get_event_loop, iscoroutinefunction, set_event_loop, wait_for)
 from contextlib import contextmanager, ExitStack
 from functools import partial, wraps
 from unittest import TestCase
 from unittest.mock import Mock
 import uuid
 
-from karabo.middlelayer_api.eventloop import EventLoop
+from karabo.middlelayer_api.eventloop import ensure_coroutine, EventLoop
 
 
 def async_tst(f=None, *, timeout=None):
     if f is None:
         assert timeout is not None, 'timeout must be given!'
         return partial(async_tst, timeout=timeout)
-    if not iscoroutinefunction(f):
-        f = coroutine(f)
+
+    f = ensure_coroutine(f)
     return sync_tst(f, timeout=timeout)
 
 
