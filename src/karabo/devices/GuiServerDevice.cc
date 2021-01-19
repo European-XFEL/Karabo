@@ -36,6 +36,13 @@ namespace karabo {
             "acknowledgeAlarm", "projectUpdateAttribute", "reconfigure", "updateAttributes"}
             );
 
+
+        // configure here restrictions to the command type against client versions
+        const std::unordered_map <std::string, Version> GuiServerDevice::m_minVersionRestrictions {
+            {"projectSaveItems", Version("2.10.0")},
+            {"projectUpdateAttribute", Version("2.10.0")},
+        };
+
         void GuiServerDevice::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("state")
@@ -464,10 +471,7 @@ namespace karabo {
                 // priority 4 should be LOSSLESS
                 channel->setAsyncChannelPolicy(LOSSLESS, "LOSSLESS");
 
-                // Register channel before channel->readAsyncHash to be prepared immediately.
-                registerConnect(channel);
-
-                channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, WeakChannelPointer(channel), _2));
+                channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onLoginMessage, this, _1, channel, _2));
 
                 string const version = karabo::util::Version::getVersion();
                 Hash systemInfo("type", "brokerInformation");
@@ -490,12 +494,73 @@ namespace karabo {
             }
         }
 
-
-        void GuiServerDevice::registerConnect(const karabo::net::Channel::Pointer & channel) {
+        void GuiServerDevice::registerConnect(const karabo::util::Version& version, const karabo::net::Channel::Pointer & channel) {
             boost::mutex::scoped_lock lock(m_channelMutex);
-            m_channels[channel] = ChannelData(); // keeps channel information
+            m_channels[channel] = ChannelData(version); // keeps channel information
             // Update the number of clients connected
             set("connectedClientCount", static_cast<unsigned int>(m_channels.size()));
+        }
+
+
+        void GuiServerDevice::onLoginMessage(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer & channel, karabo::util::Hash& info) {
+            if (e) {
+                channel->close();
+                return;
+            }
+            try {
+                if (!info.has("type")) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Ignoring request that lacks type specification: " << info;
+                    return;
+                }
+                const string& type = info.get<string > ("type");
+                if (type == "login") {
+                    // onLogin will re-register the Hash reader.
+                    onLogin(channel, info);
+                    return;
+                } else {
+                    KARABO_LOG_FRAMEWORK_WARN << "Ignoring request from client not yet logged in: " << info;
+                    const std::string message("Action '" + type + "' refused before log in");
+                    const Hash h("type", "notification", "message", message);
+                    safeClientWrite(WeakChannelPointer(channel), h);
+                }
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLoginMessage(): " << e.what();
+            }
+            
+            // Read the next Hash from the client
+            channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onLoginMessage, this, _1, channel, _2));
+        }
+
+        void GuiServerDevice::onLogin(const karabo::net::Channel::Pointer & channel, const karabo::util::Hash& hash) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onLogin";
+                // Check valid login
+                const Version clientVersion(hash.get<string>("version"));
+                auto weakChannel = WeakChannelPointer(channel);
+                if (clientVersion >= Version(get<std::string>("minClientVersion"))) {
+                    KARABO_LOG_INFO << "Login request of user: " << hash.get<string > ("username")
+                            << " (version " << clientVersion.getString() << ")";
+                    registerConnect(clientVersion, channel);
+                    // TODO: Add user authentication and subscribe `onRead` on success
+                    channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onRead, this, _1, weakChannel, _2));
+                    sendSystemTopology(weakChannel);
+                    return;
+                }
+                const std::string message("Your GUI client has version '" + hash.get<string>("version")
+                                            + "', but the minimum required is: "
+                                            + get<std::string>("minClientVersion"));
+                const Hash h("type", "notification", "message", message);
+                safeClientWrite(weakChannel, h);
+                KARABO_LOG_FRAMEWORK_WARN << "Refused login request of user '" << hash.get<string > ("username")
+                        << "' using GUI client version " << clientVersion.getString()
+                        << " (from " << getChannelAddress(channel) << ")";
+                auto timer(boost::make_shared<boost::asio::deadline_timer>(karabo::net::EventLoop::getIOService()));
+                timer->expires_from_now(boost::posix_time::milliseconds(500));
+                timer->async_wait(bind_weak(&GuiServerDevice::deferredDisconnect, this,
+                                            boost::asio::placeholders::error, weakChannel, timer));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.userFriendlyMsg();
+            }
         }
 
 
@@ -509,15 +574,18 @@ namespace karabo {
                 // GUI communication scenarios
                 if (info.has("type")) {
                     const string& type = info.get<string > ("type");
-                    if (m_isReadOnly && violateReadOnly(type, info)) {
+                    if (m_isReadOnly && violatesReadOnly(type, info)) {
                         // not allowed, bail out and inform client
                         const std::string message("Action '" + type + "' is not allowed on GUI servers in readOnly mode!");
                         const Hash h("type", "notification", "message", message);
                         safeClientWrite(channel, h);
+                    } else if (violatesClientConfiguration(type, channel)) {
+                        // not allowed, bail out and inform client
+                        const std::string message("Action '" + type + "' is not allowed on this GUI client version. Please upgrade your GUI client");
+                        const Hash h("type", "notification", "message", message);
+                        safeClientWrite(channel, h);                    
                     } else if (type == "requestFromSlot") {
                         onRequestFromSlot(channel, info);
-                    } else if (type == "login") {
-                        onLogin(channel, info);
                     } else if (type == "reconfigure") {
                         onReconfigure(channel, info);
                     } else if (type == "execute") {
@@ -595,8 +663,8 @@ namespace karabo {
         }
 
 
-        bool GuiServerDevice::violateReadOnly(const std::string& type, const karabo::util::Hash& info) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "violateReadOnly " << info;
+        bool GuiServerDevice::violatesReadOnly(const std::string& type, const karabo::util::Hash& info) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "violatesReadOnly " << info;
             if (m_writeCommands.find(type) != m_writeCommands.end()) {
                 return true;
             } else if (type == "requestFromSlot" && info.has("slot") && info.get<string>("slot") != "requestScene" && info.get<string>("slot") != "slotGetScene") {
@@ -611,6 +679,28 @@ namespace karabo {
         }
 
 
+        bool GuiServerDevice::violatesClientConfiguration(const std::string& type, WeakChannelPointer channel) {
+            auto itTypeMinVersion = m_minVersionRestrictions.find(type);
+            if (itTypeMinVersion == m_minVersionRestrictions.end()) {
+                // `type` not in the restrictions map, so unrestricted.
+                return false;
+            } else {
+                auto chan = channel.lock();
+                if (chan) {
+                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    ConstChannelIterator itChannelData = m_channels.find(chan);
+                    if (itChannelData != m_channels.end()){
+                        return (itChannelData->second.clientVersion < itTypeMinVersion->second);
+                    } else {
+                        KARABO_LOG_FRAMEWORK_WARN << "Channel missing its ChannelData. It should never happen.";
+                        return true;
+                    }
+                }
+                // channel is null
+                return true;
+            }
+        }
+
         void GuiServerDevice::onGuiError(const karabo::util::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGuiError";
@@ -620,49 +710,6 @@ namespace karabo {
 
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGuiError(): " << e.userFriendlyMsg();
-            }
-        }
-
-
-        void GuiServerDevice::onLogin(WeakChannelPointer channel, const karabo::util::Hash& hash) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onLogin";
-                // Check valid login
-                Version clientVersion(hash.get<string>("version"));
-                Version minVersion(get<std::string>("minClientVersion"));
-                Version notificationVersion("2.4.0");
-                if (clientVersion >= minVersion) {
-                    KARABO_LOG_INFO << "Login request of user: " << hash.get<string > ("username")
-                            << " (version " << clientVersion.getString() << ")";
-                    if (clientVersion < Version("2.10.0rc4")) {
-                        std::ostringstream msg;
-                        msg << "You are using an outdated Karabo GUI client!\n\n"
-                                << "Due to bugs in the version you are using, you will cause unwanted changes to "
-                                << "project scenes if you save them in this session.\n\n"
-                                << "=> Please upgrade to the latest version!";
-                        const Hash h("type", "notification", "message", msg.str());
-                        safeClientWrite(channel, h);
-                    }
-                    sendSystemTopology(channel);
-                    return;
-                }
-                if (clientVersion >= notificationVersion) {
-                    const std::string message("Your GUI client has version '" + hash.get<string>("version")
-                                              + "', but the minimum required is: "
-                                              + get<std::string>("minClientVersion"));
-                    const Hash h("type", "notification", "message", message);
-                    safeClientWrite(channel, h);
-                }
-                KARABO_LOG_FRAMEWORK_WARN << "Refused login request of user '" << hash.get<string > ("username")
-                        << "' using GUI client version " << clientVersion.getString()
-                        << " (from " << getChannelAddress(channel.lock()) << ")";
-                auto timer(boost::make_shared<boost::asio::deadline_timer>(karabo::net::EventLoop::getIOService()));
-                timer->expires_from_now(boost::posix_time::milliseconds(500));
-                timer->async_wait(bind_weak(&GuiServerDevice::deferredDisconnect, this,
-                                            boost::asio::placeholders::error, channel, timer));
-                // TODO: check valid login.
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.userFriendlyMsg();
             }
         }
 
@@ -1719,7 +1766,8 @@ namespace karabo {
                                                       "monitoredDevices", monitoredDevices,
                                                       // Leave string and bool vectors for the pipeline connections to be filled in below
                                                       "pipelineConnections", std::vector<std::string>(),
-                                                      "pipelineConnectionsReadiness", std::vector<bool>()));
+                                                      "pipelineConnectionsReadiness", std::vector<bool>(),
+                                                      "clientVersion", it->second.clientVersion.getString()));
                         }
                     }
 
