@@ -51,6 +51,13 @@ namespace karabo {
                 std::set<std::string> requestedDeviceSchemas; // deviceIds
                 // key in map is the serverId, values in set are classIds
                 std::map<std::string, std::set<std::string>> requestedClassSchemas;
+                karabo::util::Version clientVersion;
+
+                ChannelData(): clientVersion("0.0.0") {
+                };
+
+                ChannelData(const karabo::util::Version& version): clientVersion(version) {
+                };
             };
 
             enum NewInstanceAttributeUpdateEvents {
@@ -84,6 +91,7 @@ namespace karabo {
             std::map<karabo::net::Channel::Pointer, ChannelData> m_channels;
             std::map<std::string, AttributeUpdates> m_pendingAttributeUpdates;
             std::queue<DeviceInstantiation> m_pendingDeviceInstantiations;
+
             mutable boost::mutex m_channelMutex;
             mutable boost::mutex m_monitoredDevicesMutex;
             mutable boost::mutex m_networkMutex;
@@ -120,13 +128,13 @@ namespace karabo {
 
             bool m_isReadOnly;
             static const std::unordered_set <std::string> m_writeCommands;
+            static const std::unordered_map <std::string, karabo::util::Version> m_minVersionRestrictions;
 
             // TODO: remove this once "fast slot reply policy" is enforced
             // list of devices that do not respect fast slot reply policy
             std::unordered_set <std::string> m_timingOutDevices;
 
             std::atomic<int> m_timeout; // might overwrite timeout from client if client is smaller
-
         public:
 
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "karabo-" + karabo::util::Version::getVersion())
@@ -209,7 +217,17 @@ namespace karabo {
              * @param info
              * @return bool whether the request violates read-only restrictions
              */
-            bool violateReadOnly(const std::string& type, const karabo::util::Hash& info);
+            bool violatesReadOnly(const std::string& type, const karabo::util::Hash& info);
+
+            /**
+             * validates the client configuration
+             *
+             * currently only validating the type versus the client version.
+             * @param type
+             * @param channel
+             * @return bool whether the request violates client validation
+             */
+            bool violatesClientConfiguration(const std::string& type, WeakChannelPointer channel);
 
             /**
              * an error further specified by hash occurred on a connection to a GUI
@@ -231,7 +249,31 @@ namespace karabo {
              */
             void onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel);
 
-            void registerConnect(const karabo::net::Channel::Pointer& channel);
+            /** Creates the internal ChannelData entry and update the device Configuration
+             */ 
+            void registerConnect(const karabo::util::Version& version, const karabo::net::Channel::Pointer& channel);
+
+            /** handles incoming data in the Hash  ``info`` from ``channel``
+             *
+             * When the client has connected, only the ``login`` ``type`` is
+             * allowed.
+             *
+             * Upon successful completion of the login request the ``onRead``
+             * function is bound to the channel, allowing normal operation.
+             * In case of failure the ```onLoginMessage` is bound again to the channel.
+             * @param e holds an error code if the eventloop cancel this task or the channel is closed
+             * @param channel
+             * @param info
+             */
+            void onLoginMessage(const karabo::net::ErrorCode& e, const karabo::net::Channel::Pointer& channel, karabo::util::Hash& info);
+
+            /**
+             * Handles a login request of a user on a gui client. If the login credentials
+             * are valid the current system topology is returned.
+             * @param channel
+             * @param info
+             */
+            void onLogin(const karabo::net::Channel::Pointer& channel, const karabo::util::Hash& info);
 
             /**
              * handles incoming data in the Hash  ``info`` from ``channel``.
@@ -247,7 +289,6 @@ namespace karabo {
              *      type                        resulting method call
              *      -----------------------     -------------------------
              *      requestFromSlot             onRequestFromSlot
-             *      login                       onLogin
              *      reconfigure                 onReconfigure
              *      execute                     onExecute
              *      getDeviceConfiguration      onGetDeviceConfiguration
@@ -280,13 +321,12 @@ namespace karabo {
              * \endverbatim
              *
              * Both upon successful completion of the request or in case of an exception
-             * the onRead function is bound to the channel again, maintaining the connection
+             * the ``onRead`` function is bound to the channel again, maintaining the connection
              * of the client to the gui-server.
-             * @param e holds an error code if any error occurs when calling this slot
+             * @param e holds an error code if the eventloop cancel this task or the channel is closed
              * @param channel
              * @param info
              */
-
             void onRead(const karabo::net::ErrorCode& e, WeakChannelPointer channel, karabo::util::Hash& info);
 
             /**
@@ -297,14 +337,6 @@ namespace karabo {
              */
             void setTimeout(karabo::xms::SignalSlotable::Requestor& requestor, const karabo::util::Hash& input,
                             const std::string& instanceKey);
-
-            /**
-             * Handles a login request of a user on a gui client. If the login credentials
-             * are valid the current system topology is returned.
-             * @param channel
-             * @param info
-             */
-            void onLogin(WeakChannelPointer channel, const karabo::util::Hash& info);
 
             /**
              * Callback helper for ``onReconfigure``

@@ -117,6 +117,11 @@ namespace karabo {
          */
         void disconnect();
 
+        /**
+         * Send the default login message and wait for reply
+         */
+        void login();
+
     private:
 
         void onConnect(const karabo::net::ErrorCode& ec, int timeout, int repetition, const karabo::net::Channel::Pointer& channel);
@@ -141,6 +146,7 @@ namespace karabo {
         boost::condition_variable m_writeCondition;
         std::atomic_size_t m_writeWaitForId;
         karabo::net::TcpChannel::Pointer m_channel;
+        static const karabo::util::Hash k_defaultLoginData;
 
     };
 }
