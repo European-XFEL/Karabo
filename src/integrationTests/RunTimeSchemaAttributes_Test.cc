@@ -54,6 +54,7 @@ void RunTimeSchemaAttributes_Test::appTestRunner() {
     m_tcpAdapter = boost::shared_ptr<karabo::TcpAdapter>(new karabo::TcpAdapter(Hash("port", 44447u/*, "debug", true*/)));
     boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
+    m_tcpAdapter->login();
 
 
     success = m_deviceClient->instantiate("testServerSchema", "AlarmTester", Hash("deviceId", "alarmTesterSchema"), KRB_TEST_MAX_TIMEOUT);
