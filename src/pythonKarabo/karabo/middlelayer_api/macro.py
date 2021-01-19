@@ -1,5 +1,6 @@
-from asyncio import (ensure_future, gather, get_event_loop,
-                     set_event_loop, TimeoutError, wait_for)
+from asyncio import (
+    CancelledError, current_task, ensure_future, gather, get_event_loop,
+    iscoroutinefunction, set_event_loop, TimeoutError, wait_for)
 import atexit
 from contextlib import closing
 from functools import wraps
@@ -76,23 +77,40 @@ def _wrapslot(slot, name):
         slot.allowedStates = {State.PASSIVE}
     themethod = slot.method
 
-    @wraps(themethod)
-    def wrapper(device):
-        device._lastloop = get_event_loop()
-        device.currentSlot = name
-        device.state = State.ACTIVE
-        try:
-            return themethod(device)
-        finally:
-            device.currentSlot = ""
-            device.state = State.PASSIVE
+    if iscoroutinefunction(themethod):
+        @wraps(themethod)
+        async def wrapper(device):
+            device._last_action = current_task()
+            device.currentSlot = name
+            device.state = State.ACTIVE
+            try:
+                return (await themethod(device))
+            except CancelledError:
+                # No need to raise an exception, we got cancelled
+                # on operator input
+                pass
+            finally:
+                device.currentSlot = ""
+                device.state = State.PASSIVE
+    else:
+        @wraps(themethod)
+        def wrapper(device):
+            device._last_action = get_event_loop()
+            device.currentSlot = name
+            device.state = State.ACTIVE
+            try:
+                return themethod(device)
+            finally:
+                device.currentSlot = ""
+                device.state = State.PASSIVE
+
     slot.method = wrapper
 
 
 class Macro(Device):
     abstract = True
     subclasses = []
-    _lastloop = None
+    _last_action = None
 
     project = String(
         displayedName="Project",
@@ -135,8 +153,8 @@ class Macro(Device):
 
     @Slot(displayedName="Cancel")
     def cancel(self):
-        if self._lastloop is not None:
-            self._lastloop.cancel()
+        if self._last_action is not None:
+            self._last_action.cancel()
 
     @classmethod
     def register(cls, name, dict):
