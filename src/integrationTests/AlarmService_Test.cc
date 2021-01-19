@@ -105,6 +105,7 @@ void AlarmService_Test::appTestRunner() {
         return m_tcpAdapter->connected();
     }, 3000u);
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
+    m_tcpAdapter->login();
 
     // the actual tests
     testDeviceRegistration();
