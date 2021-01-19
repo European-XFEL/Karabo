@@ -84,7 +84,7 @@ async def processEvents():
 
 
 @synchronize_notimeout
-def sleep(delay, result=None):
+async def sleep(delay, result=None):
     """do nothing for *delay* seconds
 
     if *delay* is a :cls:`~karabo.middlelayer.KaraboValue`, its unit is
@@ -94,7 +94,7 @@ def sleep(delay, result=None):
     interruptable."""
     if isinstance(delay, KaraboValue):
         delay /= unit.second
-    return asyncio.sleep(delay, result)
+    return (await asyncio.sleep(delay, result))
 
 
 async def _wait(return_when, *args, timeout=None, cancel_pending=True,
