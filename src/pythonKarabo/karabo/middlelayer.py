@@ -53,8 +53,8 @@ from .middlelayer_api.unitutil import (
 from .middlelayer_api.utils import build_karabo_value, get_property
 # native basetypes
 from karabo.native import (
-    BoolValue, EnumValue, ImageData, isSet, KaraboValue, NoneValue,
-    QuantityValue, StringValue, TableValue, unit_registry as unit,
+    BoolValue, EnumValue, ImageData, isSet, KaraboValue, newest_timestamp,
+    NoneValue, QuantityValue, StringValue, TableValue, unit_registry as unit,
     VectorStringValue, VectorCharValue)
 # native enums
 from karabo.native import (
