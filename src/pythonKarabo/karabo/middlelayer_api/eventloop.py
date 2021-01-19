@@ -659,6 +659,9 @@ class NoEventLoop(AbstractEventLoop):
             return KaraboFuture(loop.create_task(future,
                                                  instance=self._instance))
 
+    def create_future(self):
+        return Future(loop=self._instance._ss.loop)
+
     def instance(self):
         return self._instance
 
