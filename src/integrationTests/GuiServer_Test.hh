@@ -32,14 +32,18 @@ public:
 private:
     void appTestRunner();
     void testVersionControl();
+    void resetTcpConnection();
     void resetClientConnection();
+    void resetClientConnection(const karabo::util::Hash& loginData);
     void testNotification();
+    void testExecuteBeforeLogin();
     void testExecute();
     void testSlowSlots();
     void testReconfigure();
     void testReadOnly();
     void testRequestGeneric();
     void testRequestFailProtocol();
+    void testRequestFailOldVersion();
 
     /**
      * Checks that messages of type 'deviceConfigurations' sent by
@@ -55,6 +59,7 @@ private:
 
     karabo::core::DeviceClient::Pointer m_deviceClient;
     boost::shared_ptr<karabo::TcpAdapter> m_tcpAdapter;
+    static const karabo::util::Hash k_defaultLoginData;
 };
 
 #endif	/* GuiVersion_Test_HH */
