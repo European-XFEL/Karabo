@@ -137,6 +137,12 @@ class Local(Macro):
         karabo_sleep(10)
         self.slept_count = 3
 
+    @Slot()
+    async def asyncSleep(self):
+        """This is an async Slot. We will test that macros can have async
+        slots and that they can be cancelled"""
+        await sleep(1)
+
 
 class Tests(DeviceTest):
     @classmethod
@@ -559,6 +565,28 @@ class Tests(DeviceTest):
                 self.assertEqual(d.value, 33)
             self.assertEqual(d.lockedBy, "local")
             waitUntil(lambda: d.lockedBy == "")
+
+    @async_tst
+    async def test_async_slot_macro(self):
+        d = await getDevice("local")
+        with d:
+            await d.update_proxy()
+            self.assertEqual(d.state, State.PASSIVE)
+            await d.asyncSleep()
+            # Macro slot is blocking with a sleep
+            self.assertEqual(d.state, State.PASSIVE)
+
+            # Normal round trip non blocking
+            ensure_future(self.local.asyncSleep())
+            await waitUntil(lambda: d.state == State.ACTIVE)
+            self.assertEqual(d.state, State.ACTIVE)
+            await waitUntil(lambda: d.state == State.PASSIVE)
+            self.assertEqual(d.state, State.PASSIVE)
+
+            # We can cancel our tasks
+            ensure_future(self.local.asyncSleep())
+            await d.cancel()
+            self.assertEqual(d.state, State.PASSIVE)
 
 
 if __name__ == "__main__":
