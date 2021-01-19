@@ -29,6 +29,7 @@ bool waitForCondition(boost::function<bool() > checker, unsigned int timeoutMill
     return (numOfWaits < maxNumOfWaits);
 }
 
+
 GuiVersion_Test::GuiVersion_Test() {
 }
 
@@ -76,7 +77,7 @@ void GuiVersion_Test::appTestRunner() {
     }, KRB_TEST_MAX_TIMEOUT * 1000);
 
     testVersionControl();
-    testNotification();
+    testExecuteBeforeLogin();
     testExecute();
     testSlowSlots();
     testReconfigure();
@@ -84,6 +85,7 @@ void GuiVersion_Test::appTestRunner() {
     testDisconnect();
     testRequestGeneric();
     testRequestFailProtocol();
+    testRequestFailOldVersion();
 
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
@@ -114,7 +116,7 @@ void GuiVersion_Test::appTestRunner() {
 }
 
 
-void GuiVersion_Test::resetClientConnection() {
+void GuiVersion_Test::resetTcpConnection() {
     int timeout = 5000;
     if (m_tcpAdapter) {
         if (m_tcpAdapter->connected()) {
@@ -135,75 +137,65 @@ void GuiVersion_Test::resetClientConnection() {
 }
 
 
+void GuiVersion_Test::resetClientConnection(const karabo::util::Hash& loginData) {
+    resetTcpConnection();
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("systemTopology", 1, [&] {
+        m_tcpAdapter->sendMessage(loginData);
+    });
+    Hash lastMessage;
+    messageQ->pop(lastMessage);
+    CPPUNIT_ASSERT(lastMessage.has("systemTopology"));
+}
+
+
+void GuiVersion_Test::resetClientConnection() {
+    resetTcpConnection();
+    m_tcpAdapter->login();
+}
+
+
 void GuiVersion_Test::testVersionControl() {
     Hash loginInfo("type", "login", "username", "mrusp", "password", "12345", "version", "100.1.0");
-    std::vector < std::tuple < std::string, std::string, bool>> tests;
-    tests.push_back(std::tuple < std::string, std::string, bool>(
-                                                                 "version control supported", "100.1.0", true));
-    tests.push_back(std::tuple < std::string, std::string, bool>(
-                                                                 "version control unsupported", "0.1.0", false));
-    // Tests if the instance info correctly reports scene availability
+    // description , client version, server version, should connect
+    typedef std::tuple < std::string, std::string, std::string, bool> TestData;
+    std::vector <TestData> tests;
+    tests.push_back(TestData("version control supported", "100.1.0", "2.11.0", true));
+    tests.push_back(TestData("version control unsupported", "0.1.0", "2.11.0", false));
+    tests.push_back(TestData("version control disabled", "0.1.0", "", true));
     for (const auto &test : tests) {
         const std::string& testName = std::get<0>(test);
         const std::string& version = std::get<1>(test);
-        const bool connected = std::get<2>(test);
-        resetClientConnection();
-        int timeout = 5000;
+        const std::string& serverMinVersion = std::get<2>(test);
+        const bool connected = std::get<3>(test);
+        // set server minimum version
+        m_deviceClient->set<std::string>("testGuiServerDevice", "minClientVersion", serverMinVersion);
+        resetTcpConnection();
         loginInfo.set("version", version);
-        m_tcpAdapter->sendMessage(loginInfo);
-        while (m_tcpAdapter->connected() && timeout > 0) {
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-            timeout -= 5;
+        Hash lastMessage;
+        if (connected) {
+            karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("systemTopology", 1, [&] {
+                m_tcpAdapter->sendMessage(loginInfo);
+            });
+            messageQ->pop(lastMessage);
+            CPPUNIT_ASSERT(lastMessage.has("systemTopology"));
+        } else {
+            karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
+                m_tcpAdapter->sendMessage(loginInfo);
+            });
+            messageQ->pop(lastMessage);
+            const std::string& message = lastMessage.get<std::string>("message");
+            CPPUNIT_ASSERT_MESSAGE(message, message.rfind("Your GUI client has version '" + version + "', but the minimum required is:", 0u) == 0u);
+            int timeout = 1500;
+            // wait for the GUI server to log us out
+            while (m_tcpAdapter->connected() && timeout > 0) {
+                boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+                timeout -= 5;
+            }
         }
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Failed :" + testName, connected, m_tcpAdapter->connected());
     }
 
-    // change the minVersion
-    m_deviceClient->set<std::string>("testGuiServerDevice", "minClientVersion", "");
-    // connect again
-    resetClientConnection();
-
-    // check if still connected
-    CPPUNIT_ASSERT(m_tcpAdapter->connected());
-    // send overspecified development versions
-    loginInfo.set("version", "1.5.4");
-    m_tcpAdapter->sendMessage(loginInfo);
-    int timeout = 500;
-    while (m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-        timeout -= 5;
-    }
-    // the GUI server will not log us out
-    CPPUNIT_ASSERT_MESSAGE("GUIServer disconnects client if no version control is enabled", m_tcpAdapter->connected());
     std::clog << "testVersionControl: Ok" << std::endl;
-}
-
-
-void GuiVersion_Test::testNotification() {
-    m_deviceClient->set<std::string>("testGuiServerDevice", "minClientVersion", "2.4.1");
-    // connect again
-    resetClientConnection();
-
-    // check if we are connected
-    CPPUNIT_ASSERT(m_tcpAdapter->connected());
-    Hash loginInfo("type", "login", "username", "mrusp", "password", "12345", "version", "2.4.0");
-    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
-        m_tcpAdapter->sendMessage(loginInfo);
-    });
-
-    Hash lastMessage;
-    messageQ->pop(lastMessage);
-    const std::string& message = lastMessage.get<std::string>("message");
-    CPPUNIT_ASSERT(std::string("Your GUI client has version '2.4.0', but the minimum required is: 2.4.1") == message);
-
-    int timeout = 1500;
-    while (m_tcpAdapter->connected() && timeout > 0) {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-        timeout -= 5;
-    }
-    // the GUI server will log us out
-    CPPUNIT_ASSERT(!m_tcpAdapter->connected());
-    std::clog << "testNotification: OK" << std::endl;
 }
 
 
@@ -259,6 +251,64 @@ void GuiVersion_Test::testReadOnly() {
     std::clog << "testReadOnly: OK for requestFromSlot with slotGetScene" << std::endl;
 }
 
+void GuiVersion_Test::testExecuteBeforeLogin() {
+    std::clog << "testExecuteBeforeLogin: ";
+
+    resetTcpConnection();
+    // check if we are connected
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+
+    //
+    // Request of any type other than login, will fail.
+    //
+    std::vector<std::string> blockedTypes = {
+        "execute",
+        "requestFromSlot",
+        "reconfigure",
+        "getDeviceConfiguration",
+        "getDeviceSchema",
+        "getClassSchema",
+        "initDevice",
+        "killServer",
+        "killDevice",
+        "startMonitoringDevice",
+        "stopMonitoringDevice",
+        "getPropertyHistory",
+        "getConfigurationFromPast",
+        "subscribeNetwork",
+        "requestNetwork",
+        "error",
+        "acknowledgeAlarm",
+        "requestAlarms",
+        "updateAttributes",
+        "projectBeginUserSession",
+        "projectEndUserSession",
+        "projectSaveItems",
+        "projectLoadItems",
+        "projectListProjectManagers",
+        "projectListItems",
+        "projectListDomains",
+        "projectUpdateAttribute",
+        "requestGeneric"
+    };
+    for (const std::string& type : blockedTypes) {
+        const Hash h("type", type);
+        // no other argument should be needed, since the requests are rejected before
+        // the arguments are parsed.
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        });
+        Hash replyMessage;
+        messageQ->pop(replyMessage);
+        const std::string& message = replyMessage.get<std::string>("message");
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Received Hash: " + toString(replyMessage),
+                                     std::string("Action '" + type + "' refused before log in"),
+                                     message);
+    }
+    // The `login` type is implicitly tested by `resetClientConnection()`
+    m_tcpAdapter->disconnect();
+    std::clog << "OK" << std::endl;
+}
 
 void GuiVersion_Test::testExecute() {
     resetClientConnection();
@@ -387,6 +437,36 @@ void GuiVersion_Test::testRequestFailProtocol() {
         CPPUNIT_ASSERT_EQUAL(assert_message, replyMessage.get<std::string>("message"));
 
         std::clog << "testRequestFailProtocol: OK" << std::endl;
+    }
+}
+
+
+void GuiVersion_Test::testRequestFailOldVersion() {
+    // independently from the minimum Client version configured,
+    // we want to block certain actions to be performed.
+    // for example: `projectSaveItems` can be poisonous for the database.
+    m_deviceClient->set<std::string>("testGuiServerDevice", "minClientVersion", "2.9.1");
+    std::clog << "testRequestFailOldVersion: " ;
+    // connect again
+    resetClientConnection(Hash("type", "login", "username", "mrusp", "password", "12345", "version", "2.9.1"));
+
+    // check if we are connected
+    CPPUNIT_ASSERT(m_tcpAdapter->connected());
+
+    const unsigned int messageTimeout = 2000u;
+    {
+        const std::string type = "projectSaveItems";
+        Hash h("type", type);  // no other arguments are needed.
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        }, messageTimeout);
+        Hash replyMessage;
+        messageQ->pop(replyMessage);
+
+        std::string assert_message = "Action '" + type + "' is not allowed on this GUI client version. Please upgrade your GUI client";
+        CPPUNIT_ASSERT_EQUAL(assert_message, replyMessage.get<std::string>("message"));
+
+        std::clog << "OK" << std::endl;
     }
 }
 
