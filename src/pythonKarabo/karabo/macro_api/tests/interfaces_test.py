@@ -1,4 +1,3 @@
-from asyncio import coroutine
 from contextlib import contextmanager
 from unittest import main
 
@@ -20,8 +19,7 @@ class MyDevice(DeviceClientBase):
     interfaces = VectorString(
         defaultValue=["Motor", "Camera", "Processor"])
 
-    @coroutine
-    def onInitialization(self):
+    async def onInitialization(self):
         self.state = State.ON
 
 
@@ -34,8 +32,8 @@ class Tests(DeviceTest):
             yield
 
     @async_tst
-    def test_find_interfaces(self):
-        with (yield from getDevice("MyDevice")) as proxy:
+    async def test_find_interfaces(self):
+        with (await getDevice("MyDevice")) as proxy:
             self.assertEqual(proxy.interfaces,
                              ["Motor", "Camera", "Processor"])
 
