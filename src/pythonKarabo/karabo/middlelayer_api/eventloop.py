@@ -1,7 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 import asyncio
 from asyncio import (
-    AbstractEventLoop, CancelledError, coroutine, ensure_future, Future,
+    AbstractEventLoop, CancelledError, ensure_future, Future,
     gather, get_event_loop, iscoroutinefunction, Queue, set_event_loop,
     SelectorEventLoop, shield, sleep, TimeoutError, wait_for)
 from concurrent.futures import ThreadPoolExecutor
@@ -498,6 +498,22 @@ class JmsBroker(Broker):
         raise RuntimeError(f"No connection can be established for {hosts}")
 
 
+def ensure_coroutine(coro):
+    """Ensure that a function `coro` is a coroutine to play well
+    in our eventloops"""
+    if iscoroutinefunction(coro):
+        return coro
+
+    def create_coroutine(func):
+        """Create a coroutine wrapper around the sync function `func`"""
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+
+    return create_coroutine(coro)
+
+
 def synchronize(coro):
     """Decorate coroutine to play well in threads
 
@@ -507,7 +523,7 @@ def synchronize(coro):
 
     If we are already in the main thread, the coroutine is simply returned.
     """
-    coro = coroutine(coro)
+    coro = ensure_coroutine(coro)
 
     @wraps(coro)
     def wrapper(*args, timeout=-1, wait=True, **kwargs):
@@ -523,7 +539,7 @@ def synchronize(coro):
 def synchronize_notimeout(coro):
     """same as synchronize, but the timeout is handled by the coroutine"""
 
-    coro = coroutine(coro)
+    coro = ensure_coroutine(coro)
 
     @wraps(coro)
     def wrapper(*args, wait=True, **kwargs):
