@@ -1,4 +1,4 @@
-from asyncio import CancelledError, coroutine, Lock
+from asyncio import CancelledError, Lock
 from unittest import main
 
 from karabo.middlelayer_api.eventloop import synchronize
@@ -8,8 +8,8 @@ from .eventloop import DeviceTest, sync_tst
 
 
 class Barrier(object):
-    def __init__(self, loop):
-        self.lock = Lock(loop=loop)
+    def __init__(self):
+        self.lock = Lock()
         self.state = "init"
         self.error = False
 
@@ -37,8 +37,7 @@ class Barrier(object):
 
 
 class Tests(DeviceTest):
-    @coroutine
-    def coro(self, s, t):
+    async def coro(self, s, t):
         return "this was the coroutine" + s + t
 
     def test_coroutine(self):
@@ -64,7 +63,7 @@ class Tests(DeviceTest):
             self.assertFalse(called)
             called = True
 
-        barrier = Barrier(self.loop)
+        barrier = Barrier()
         fut = barrier.block(wait=False)
         fut.add_done_callback(callback)
         self.assertFalse(called)
@@ -82,7 +81,7 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_cancel(self):
-        barrier = Barrier(self.loop)
+        barrier = Barrier()
         fut = barrier.block(wait=False)
         self.assertFalse(fut.cancelled())
         self.assertFalse(fut.done())
@@ -94,7 +93,7 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_result(self):
-        barrier = Barrier(self.loop)
+        barrier = Barrier()
         fut = barrier.block(wait=False)
         barrier.free()
         self.assertEqual(fut.wait(), "something")
@@ -102,7 +101,7 @@ class Tests(DeviceTest):
 
     @sync_tst
     def test_error(self):
-        barrier = Barrier(self.loop)
+        barrier = Barrier()
         barrier.error = True
         fut = barrier.block(wait=False)
         barrier.free()
