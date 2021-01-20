@@ -5,11 +5,11 @@ What's New in Karabo 2.11.0
 The **most relevant improvements**, fixes and changes are:
 
 - C++/Bound CHANGE: The properties `useTimeServer` and `timeServerId` were removed from the devices (latter was only present in bound).
-- MDL API CHANGE: The method `onInitialization` will not shutdown the instance anymore on exception. If this is a desired behavior, please validate
-                  the instance with the new method `preInitialization`.
+- MDL API CHANGE: The method `onInitialization` will not shutdown the instance anymore on exception.
 - All API: The slot call ``slotGetTime`` takes an input argument now and provides the `timeServerId` and the last reference timestamp. It is also
   available for device servers.
 
+- MDL API: New functions **hashToDict** and **dictToHash** are available. These function converts either nested dictionaries or hashes to their counterpart.
 
 - MAJOR: **Python** was upgraded to version **3.8**. In this process more dependencies were added or upgraded, please have a look:
 
