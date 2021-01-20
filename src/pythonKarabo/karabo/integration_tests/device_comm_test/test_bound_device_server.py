@@ -26,7 +26,7 @@ class TestDeviceServer(BoundDeviceTestCase):
         ok, msg = sigSlot.request(serverId, "slotStartDevice",
                                   cfg).waitForReply(self._max_timeoutMs)
         self.assertTrue(ok, msg)  # msg is failure reason
-        self.assertEquals(msg, deviceId)  # msg is deviceId
+        self.assertEqual(msg, deviceId)  # msg is deviceId
 
         # Cannot instantiate with invalid config
         cfg2 = copy.copy(cfg)
@@ -35,8 +35,8 @@ class TestDeviceServer(BoundDeviceTestCase):
         ok, msg = sigSlot.request(serverId, "slotStartDevice",
                                   cfg2).waitForReply(self._max_timeoutMs)
         self.assertFalse(ok, msg)
-        self.assertEquals(msg, "Encountered unexpected configuration parameter"
-                          ": \"int32Property_y\"")
+        self.assertEqual(msg, "Encountered unexpected configuration parameter"
+                         ": \"int32Property_y\"")
 
         # Cannot instantiate with first deviceId again
         # Caveat:
@@ -50,7 +50,7 @@ class TestDeviceServer(BoundDeviceTestCase):
         ok, msg = sigSlot.request(serverId, "slotStartDevice",
                                   cfg).waitForReply(self._max_timeoutMs)
         self.assertFalse(ok, msg)
-        self.assertEquals(msg, f"{deviceId} already instantiated and alive")
+        self.assertEqual(msg, f"{deviceId} already instantiated and alive")
 
     def waitUntilDevice(self, devId, maxTries):
         """
