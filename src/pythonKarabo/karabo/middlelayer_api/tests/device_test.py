@@ -48,10 +48,6 @@ class ChannelNode(Configurable):
 class MyDevice(Device):
     __version__ = "1.2.3"
 
-    goDown = Bool(
-        defaultValue=False,
-        description="Decide if this device should go down")
-
     initError = Bool(
         defaultValue=False,
         description="Decide if this device should throw an error in "
@@ -106,10 +102,6 @@ class MyDevice(Device):
     @Slot(displayedName="start")
     async def start(self):
         return 5
-
-    async def preInitialization(self):
-        if self.goDown:
-            raise RuntimeError("I am going down")
 
     async def onInitialization(self):
         self.state = State.ON
@@ -363,14 +355,6 @@ class Tests(DeviceTest):
             self.assertEqual(alice.state, State.ON)
             await alice.slotKillDevice()
             self.assertTrue(alice.isDown)
-
-        bob = MyDevice({"_deviceId_": "bob", "goDown": True})
-        try:
-            await bob.startInstance()
-        except RuntimeError as e:
-            self.assertIn("I am going down", str(e))
-        finally:
-            self.assertTrue(bob.isDown)
 
 
 if __name__ == '__main__':

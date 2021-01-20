@@ -310,8 +310,6 @@ class SignalSlotable(Configurable):
                 # add deviceId to the instance map of the server
                 server.addChild(self.deviceId, self)
             await super(SignalSlotable, self)._run(**kwargs)
-            await get_event_loop().run_coroutine_or_thread(
-                self.preInitialization)
             self.__initialized = True
         except CancelledError:
             pass
@@ -334,7 +332,7 @@ class SignalSlotable(Configurable):
             try:
                 logger = logging.getLogger(self.deviceId)
             except BaseException:
-                # Make absolutely sure that this the log message is done!
+                # Make absolutely sure that this log message is done!
                 logger = logging.getLogger()
             logger.exception("Error in onInitialization ...")
             try:
@@ -500,13 +498,6 @@ class SignalSlotable(Configurable):
         if proxy is not None:
             proxy._notify_gone()
         get_event_loop().something_changed()
-
-    async def preInitialization(self):
-        """This method is called directly after the instance is created
-
-        Subclass this method to validate the `instance` behavior. Throwing
-        an exception will shutdown the `instance`.
-        """
 
     async def onInitialization(self):
         """This method is called just after instance is running"""
