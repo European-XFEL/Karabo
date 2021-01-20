@@ -29,20 +29,20 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
         with self.subTest(msg="Test base device properties"):
             props = self.dc.get(deviceId)
-            self.assertEquals(props.get("deviceId"), deviceId)
-            self.assertEquals(props.get("classId"), "PropertyTest")
-            self.assertEquals(props.get("classVersion"),
-                              "karabo-" + karaboVersion)
-            self.assertEquals(props.get("karaboVersion"), karaboVersion)
-            self.assertEquals(props.get("visibility"), AccessLevel.ADMIN)
-            self.assertEquals(props.get("serverId"), SERVER_ID)
+            self.assertEqual(props.get("deviceId"), deviceId)
+            self.assertEqual(props.get("classId"), "PropertyTest")
+            self.assertEqual(props.get("classVersion"),
+                             "karabo-" + karaboVersion)
+            self.assertEqual(props.get("karaboVersion"), karaboVersion)
+            self.assertEqual(props.get("visibility"), AccessLevel.ADMIN)
+            self.assertEqual(props.get("serverId"), SERVER_ID)
             # Cannot know the pid - but it is non-zero and different from ours
             self.assertNotEquals(props.get("pid"), 0)
             self.assertNotEquals(props.get("pid"), os.getpid())
 
         with self.subTest(msg="Test readOnly table"):
             tbl = self.dc.get(deviceId, "tableReadOnly")
-            self.assertEquals(len(tbl), 2)  # tableReadOnly has 2 rows.
+            self.assertEqual(len(tbl), 2)  # tableReadOnly has 2 rows.
 
             tblValue = [
                 Hash("e1", "gfh", "e2", False,
@@ -56,8 +56,8 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             # to tableReadOnly
             self.dc.set(deviceId, "table", tblValue)
             tbl = self.dc.get(deviceId, "tableReadOnly")
-            self.assertEquals(len(tbl), 1)  # tableReadOnly now has 1 row.
-            self.assertEquals(tbl[0]["e3"], 14)
+            self.assertEqual(len(tbl), 1)  # tableReadOnly now has 1 row.
+            self.assertEqual(tbl[0]["e3"], 14)
 
         ok, msg = self.dc.killDevice(deviceId, 30)
         self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
@@ -98,7 +98,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
     def test_in_sequence(self):
         SERVER_ID = "testServer"
         own_dir = op.dirname(op.abspath(__file__))
-        class_ids = ['CommTestDevice','UnstoppedThreadDevice']
+        class_ids = ['CommTestDevice', 'UnstoppedThreadDevice']
         self.start_server("bound", SERVER_ID, class_ids, plugin_dir=own_dir)
         # Complete setup - do not do it in setup to ensure that even in case of
         # exceptions 'tearDown' is called and stops Python processes.
@@ -333,7 +333,6 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             #    produce an error
             ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
             self.assertTrue(ok, msg)
-
 
     def waitUntilEqual(self, devId, propertyName, whatItShouldBe, maxTries):
         """
