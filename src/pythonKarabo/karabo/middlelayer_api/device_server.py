@@ -19,6 +19,7 @@ from karabo.native import (
     AccessLevel, AccessMode, Assignment, decodeBinary, encodeXML, Hash)
 
 from .eventloop import EventLoop
+from .heartbeat_mixin import HeartBeatMixin
 from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
@@ -370,7 +371,7 @@ class DeviceServerBase(SignalSlotable):
         del self._device_initializer
 
 
-class MiddleLayerDeviceServer(DeviceServerBase):
+class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
     pluginNamespace = String(
         displayedName="Plugin Namespace",
         description="Namespace to search for middle layer plugins",
