@@ -1,5 +1,6 @@
 from platform import system
 from unittest import mock, skipIf
+import warnings
 
 import numpy as np
 
@@ -87,8 +88,12 @@ class TestVectorGraph(GuiTestCase):
         self.assertEqual(len(curve.yData), 0)
 
         value = [np.NaN, np.NaN, np.NaN]
-        set_proxy_value(self.proxy, 'prop', value)
-        np.testing.assert_almost_equal(list(curve.yData), value)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            set_proxy_value(self.proxy, 'prop', value)
+            # Verify the runtime warning at last
+            assert issubclass(w[-1].category, RuntimeWarning)
+            np.testing.assert_almost_equal(list(curve.yData), value)
 
     def test_visualize_prop(self):
         self.controller.visualize_additional_property(self.value)
