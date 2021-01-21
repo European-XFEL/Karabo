@@ -1,7 +1,7 @@
 """ This module contains the type hierarchy implied by the Karabo hash.
 """
 from asyncio import (
-    coroutine, ensure_future, get_event_loop, iscoroutinefunction)
+    ensure_future, get_event_loop, iscoroutinefunction)
 from enum import Enum
 from functools import partial, wraps
 import numbers
@@ -606,16 +606,19 @@ class Slot(Descriptor):
         if instance is None:
             return self
 
-        @wraps(self.method)
-        def wrapper(device):
-            # device is self [configurable]
-            return self.method(device)
+        # device is self [configurable]
+        if iscoroutinefunction(self.method):
+            @wraps(self.method)
+            async def wrapper(device):
+                return await self.method(device)
+        else:
+            @wraps(self.method)
+            def wrapper(device):
+                return self.method(device)
 
         wrapper.slot = self.slot
         wrapper.descriptor = self
-        if iscoroutinefunction(self.method):
-            wrapper = coroutine(wrapper)
-        # NOTE: wraps loses the coroutine declaration in case async def is used
+
         return wrapper.__get__(instance, owner)
 
     def slot(self, func, device, name, message, args):
