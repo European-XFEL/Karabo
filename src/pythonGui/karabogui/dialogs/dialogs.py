@@ -7,7 +7,7 @@ import os.path as op
 
 from PyQt5 import uic
 from PyQt5.QtCore import QDateTime, pyqtSlot, QPoint, QSize, Qt
-from PyQt5.QtGui import QPixmap, QPen, QPainter, QIcon, QDoubleValidator
+from PyQt5.QtGui import QPixmap, QPen, QPainter, QIcon
 from PyQt5.QtWidgets import (
     QColorDialog, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
     QTableWidgetItem)
@@ -78,56 +78,6 @@ class AboutDialog(QDialog):
         return super(AboutDialog, self).keyPressEvent(event)
 
 
-class LutRangeDialog(QDialog):
-    def __init__(self, lut_range, lut_range_full=None, parent=None):
-        """A dialog to set the min and max range
-
-        :param lut_range: The range which should be shown
-        :parem lut_range_full: The full range according to the data range
-        :param parent: The parent of this dialog
-        """
-        super(LutRangeDialog, self).__init__(parent)
-        uic.loadUi(get_dialog_ui("lutrangedialog.ui"), self)
-        self.leMin.setValidator(QDoubleValidator())
-        self.leMin.textChanged.connect(self._update_button_box)
-        self.leMax.setValidator(QDoubleValidator())
-        self.leMax.textChanged.connect(self._update_button_box)
-
-        self._update_min_max(lut_range)
-
-        self.lut_range_full = lut_range_full
-        self.pbFullRange.setEnabled(self.lut_range_full is not None)
-        self.pbFullRange.pressed.connect(self._on_lut_range_full_pressed)
-
-    def _update_min_max(self, min_max_range):
-        """The given tuple (min, max) is put into the text fields
-        """
-        _min, _max = min_max_range
-        self.leMin.setText(str(_min))
-        self.leMax.setText(str(_max))
-
-    def _update_button_box(self):
-        """Only enable Ok button, if title and configuration is set
-        """
-        _min = self.leMin.text()
-        _max = self.leMax.text()
-        enabled = (len(_min) > 0 and len(_max) > 0 and
-                   float(_min) < float(_max))
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
-
-    @pyqtSlot()
-    def _on_lut_range_full_pressed(self):
-        """The full range should be shown now
-        """
-        self._update_min_max(self.lut_range_full)
-
-    @property
-    def lut_range(self):
-        """Return the LUT transform range tuple: (min, max)
-        """
-        return (float(self.leMin.text()), float(self.leMax.text()))
-
-
 class PenDialog(QDialog):
     linecaps = {Qt.FlatCap: "butt", Qt.SquareCap: "square",
                 Qt.RoundCap: "round"}
@@ -138,7 +88,7 @@ class PenDialog(QDialog):
 
     def __init__(self, pen, brush=None, parent=None):
         super(PenDialog, self).__init__(parent)
-        uic.loadUi(op.join(op.dirname(__file__), 'pendialog.ui'), self)
+        uic.loadUi(get_dialog_ui('pendialog.ui'), self)
         self.pen = pen
         self.brush = brush
 
