@@ -53,7 +53,7 @@ def test_all_empty_widgets():
     model_classes = (
         api.DisplayLabelModel, api.PopUpModel, api.WidgetNodeModel)
     for klass in model_classes:
-        yield _check_empty_widget, klass
+        _check_empty_widget(klass)
 
 
 def test_display_editable_widgets():
@@ -63,7 +63,7 @@ def test_display_editable_widgets():
         api.LineEditModel
     )
     for klass in model_classes:
-        yield _check_display_editable_widget, klass
+        _check_display_editable_widget(klass)
 
 
 def test_editable_simple_model():
@@ -74,7 +74,7 @@ def test_editable_simple_model():
         api.EditableRegexModel,
     )
     for klass in model_classes:
-        yield _check_editable_empty_widget, klass
+        _check_editable_empty_widget(klass)
 
 
 def test_missing_parent_component():
