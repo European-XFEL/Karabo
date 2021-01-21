@@ -73,7 +73,7 @@ def test_icon_widgets():
     model_classes = (api.DigitIconsModel, api.SelectionIconsModel,
                      api.TextIconsModel)
     for klass in model_classes:
-        yield _check_icon_widget, klass
+        _check_icon_widget(klass)
 
 
 def test_display_iconset_widget_version_1():
