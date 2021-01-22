@@ -385,11 +385,8 @@ class DeviceClientProxyFactory(ProxyFactory):
                 # immediately send out our changes
                 h = Hash()
                 h[desc.longkey], _ = desc.toDataAndAttrs(value)
-                if not self._alive:
-                    raise KaraboError(
-                        'device "{}" died'.format(self._deviceId))
-                loop.sync(self._raise_on_death(self._device.call(
-                    self._deviceId, "slotReconfigure", h)),
+                loop.sync(self._raise_on_death(
+                    self._device.call, self._deviceId, "slotReconfigure", h),
                     timeout=-1, wait=True)
             elif (self._last_update_task is not None and
                   self._last_update_task.done() and
@@ -411,11 +408,9 @@ class DeviceClientProxyFactory(ProxyFactory):
                 self._device._use()
                 return (await self._device.call(self._deviceId,
                                                 descriptor.longkey))
-            if not self._alive:
-                raise KaraboError('device "{}" died'.format(self._deviceId))
 
             return asyncio.get_event_loop().sync(
-                self._raise_on_death(inner()), timeout, wait)
+                self._raise_on_death(inner), timeout, wait)
 
         async def _update(self, task=False):
             """assure all properties are properly set
@@ -473,13 +468,17 @@ class DeviceClientProxyFactory(ProxyFactory):
             if not self._alive:
                 self._alive = True
 
-        async def _raise_on_death(self, coro):
-            """execute *coro* but raise KaraboError if proxy is orphaned
+        async def _raise_on_death(self, func, *args):
+            """exec function *func* but raise KaraboError if proxy is orphaned
 
-            This coroutine executes the coroutine *coro*. If the
-            device connected to this proxy dies while the *coro* is
+            This coroutine creates a coroutine from *func*. If the
+            device connected to this proxy dies while the coroutine is
             executed, a KaraboError is raised.
             """
+            if not self._alive:
+                raise KaraboError(
+                    'device "{}" died'.format(self._deviceId))
+            coro = func(*args)
             task = asyncio.ensure_future(coro)
             self._running_tasks.add(task)
             task.add_done_callback(
