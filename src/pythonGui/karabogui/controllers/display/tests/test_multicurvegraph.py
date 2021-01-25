@@ -52,13 +52,19 @@ class TestMultiCurveGraph(GuiTestCase):
         set_proxy_value(self.reset, 'reset', True)
         curve = self.controller._curves.get(self.value)
         self.assertIsNotNone(curve)
-        self.assertEqual(list(curve.xData), [])
-        self.assertEqual(list(curve.yData), [])
+
+        # None curve in PyQtGraph >= 0.11.1
+        empty_x = curve.xData is None or list(curve.xData) == []
+        empty_y = curve.yData is None or list(curve.yData) == []
+        self.assertTrue(empty_x)
+        self.assertTrue(empty_y)
 
         # Slightly refill the curve
         set_proxy_value(self.value, 'value', 42)
         curve = self.controller._curves.get(self.value)
-        self.assertEqual(list(curve.yData), [])
+
+        empty = curve.yData is None or list(curve.yData) == []
+        self.assertTrue(empty)
         # No data, we have to list the synchronizer first
         set_proxy_value(self.index, 'index', 1)
         self.assertEqual(list(curve.yData), [42.0])
