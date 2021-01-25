@@ -450,7 +450,7 @@ class Tests(DeviceTest):
         karabo_sleep = sleep
         d = await getDevice("local")
         with d:
-            await d.update_proxy()
+            await updateDevice(d)
             # cancel during time.sleep
             self.local.cancelled_slot = None
             task = ensure_future(d.sleepalot())
@@ -570,7 +570,7 @@ class Tests(DeviceTest):
     async def test_async_slot_macro(self):
         d = await getDevice("local")
         with d:
-            await d.update_proxy()
+            await updateDevice(d)
             self.assertEqual(d.state, State.PASSIVE)
             await d.asyncSleep()
             # Macro slot is blocking with a sleep

@@ -16,7 +16,7 @@ from karabo.middlelayer import (
     DeviceClientBase, getDevice, getHistory, isSet, InputChannel,
     Int32, KaraboError, MetricPrefix, NDArray, Node,
     OutputChannel, setWait, shutdown, sleep, Slot, State, String,
-    unit, Unit, UInt32, VectorDouble, waitUntil, waitUntilNew)
+    unit, Unit, UInt32, updateDevice, VectorDouble, waitUntil, waitUntilNew)
 
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
@@ -277,7 +277,7 @@ class Tests(DeviceTest):
             self.assertEqual(proxy.injectedNode.number1, 1)
 
         await proxy.injectSchema()
-        await proxy.update_proxy()
+        await updateDevice(proxy)
         self.assertEqual(proxy.word2, "Hello")
         self.assertEqual(proxy.injectedNode.number2, 2)
 
@@ -361,8 +361,8 @@ class Tests(DeviceTest):
         with proxy:
             # The await below fixes a race condition in the context initialization
             # performed by with. As soon as the MR with the 'async with' implementation
-            # (MR !3210) is merged, the 'await proxy.update_proxy' can be removed.
-            await proxy.update_proxy()
+            # (MR !3210) is merged, the 'await updateDevice(proxy)' can be removed.
+            await updateDevice(proxy)
             self.device.output.schema.number = 23
             self.assertEqual(proxy.a, 22.8 * unit.milliampere)
             await self.device.output.writeData()
@@ -439,7 +439,7 @@ class Tests(DeviceTest):
             # i.e. published non-empty timestamp of any logged parameter
             with (await getDevice(
                     "DataLogger-{}".format(server))) as logger:
-                await logger.update_proxy()
+                await updateDevice(logger)
                 while True:
                     found = False
                     for row in logger.lastUpdatesUtc:
