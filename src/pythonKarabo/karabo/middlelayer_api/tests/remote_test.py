@@ -16,7 +16,7 @@ from karabo.middlelayer import (
     decodeBinary, Device, DeviceNode, execute, filterByTags, Float, getDevice,
     Hash, isAlive, isSet, Int32, KaraboError, lock, MetricPrefix, Node,
     Overwrite, Queue, setNoWait, setWait, Slot, slot, State,
-    Timestamp, String, unit, Unit, VectorChar, VectorInt16,
+    Timestamp, String, unit, Unit, updateDevice, VectorChar, VectorInt16,
     VectorString, VectorFloat, waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
 
@@ -342,7 +342,7 @@ class Tests(DeviceTest):
             self.remote.unit_vector_int = [2, 3, 4] * unit.meter / unit.second
             self.remote.unit_vector_float = [5, 7, 8] * unit.degree
             self.remote.string_list = []
-            await d.update_proxy()
+            await updateDevice(d)
 
             self.assertEqual(d.unit_int, 5000 * unit.meter)
             self.assertEqual(d.unit_float, 2 * unit.millisecond)
@@ -398,7 +398,7 @@ class Tests(DeviceTest):
                          "we're not connected still seeing changes")
         await sleep(0.1)
         with d:
-            await d.update_proxy()
+            await updateDevice(d)
             await sleep(0.1)
             tmp = d.counter
             self.assertNotEqual(d.counter, -1,
@@ -439,7 +439,7 @@ class Tests(DeviceTest):
         self.remote.value = 7
         d = await getDevice("remote")
         d.generic_int = 33
-        await d.update_proxy()
+        await updateDevice(d)
         self.assertEqual(self.remote.value, 66)
 
     @async_tst
@@ -872,7 +872,7 @@ class Tests(DeviceTest):
         await a.startInstance()
         try:
             a.dn.value = 5
-            await a.dn.update_proxy()
+            await updateDevice(a.dn)
             self.assertEqual(self.remote.value, 5)
 
             with (await getDevice("devicenode")) as d:
@@ -906,7 +906,7 @@ class Tests(DeviceTest):
                 self.assertEqual(a.dn.value, 18)
 
                 d.dn.othr = 111
-                await d.update_proxy()
+                await updateDevice(d)
                 self.assertFalse(isSet(d.dn.other))
         finally:
             await a.slotKillDevice()
@@ -997,7 +997,7 @@ class Tests(DeviceTest):
                     self.assertEqual(d.lockedBy, "local")
                     d.value = 33
                     await waitUntil(lambda: d.value == 33)
-                await d.update_proxy()
+                await updateDevice(d)
                 self.assertEqual(d.lockedBy, "local")
             await waitUntil(lambda: d.lockedBy == "")
 
