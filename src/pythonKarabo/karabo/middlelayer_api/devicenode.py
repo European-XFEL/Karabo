@@ -5,7 +5,7 @@ from itertools import chain
 from karabo.native import isSet, KaraboError, String
 from karabo.native import AccessMode, Assignment, NodeType, Hash
 
-from .device_client import getDevice
+from .device_client import getDevice, updateDevice
 from .signalslot import coslot
 
 
@@ -90,7 +90,7 @@ class DeviceNode(String):
             proxy._queues[None].add(queue)
             proxy._current = Hash()
             with proxy:
-                await proxy.update_proxy()
+                await updateDevice(proxy)
                 while True:
                     data = await queue.get()
                     out = self._copy_properties(data)
@@ -148,7 +148,7 @@ class DeviceNode(String):
             for command in self.commands:
                 register(command)
 
-            instance._ss.exitStack.enter_context((await proxy.update_proxy()))
+            instance._ss.exitStack.enter_context((await updateDevice(proxy)))
             if self.properties:
                 ensure_future(self._main_loop(proxy, instance))
 
