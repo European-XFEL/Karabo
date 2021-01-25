@@ -632,7 +632,7 @@ async def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
             raise KaraboError(
                 "do not mix getDevice with connectDevice!\n"
                 '(deleting the old proxy with "del proxy" may help)')
-        await proxy.update_proxy()
+        await updateDevice(proxy)
         return proxy
 
     futures = instance._proxy_futures
@@ -697,7 +697,7 @@ async def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
                     closure_proxy._disconnectSchemaUpdated()
 
         instance._ss.enter_context(connectSchemaUpdated())
-        await proxy.update_proxy()
+        await updateDevice(proxy)
         return proxy
 
     future = asyncio.ensure_future(create())
@@ -754,7 +754,7 @@ async def connectDevice(device, *, autodisconnect=None, timeout=5):
     else:
         device._interval = autodisconnect
         ret = device
-    await ret.update_proxy()
+    await updateDevice(ret)
     return ret
 
 
