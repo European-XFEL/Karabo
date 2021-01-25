@@ -84,15 +84,18 @@ class TestVectorGraph(GuiTestCase):
 
         value = [np.inf, np.inf, np.inf]
         set_proxy_value(self.proxy, 'prop', value)
-        # Empty curve on inf values!
-        self.assertEqual(len(curve.yData), 0)
+
+        # None curve in PyQtGraph >= 0.11.1
+        empty = curve.yData is None or not len(curve.yData)
+        # None curve on inf values!
+        self.assertTrue(empty)
 
         value = [np.NaN, np.NaN, np.NaN]
-        with warnings.catch_warnings(record=True) as w:
+        with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
             set_proxy_value(self.proxy, 'prop', value)
-            # Verify the runtime warning at last
-            assert issubclass(w[-1].category, RuntimeWarning)
+            # Note: Older PyQtGraph version <= 0.11.0 are not catching all
+            # NaN values.
             np.testing.assert_almost_equal(list(curve.yData), value)
 
     def test_visualize_prop(self):
