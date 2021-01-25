@@ -196,32 +196,32 @@ class ScatterGraphPlot(ScatterPlotItem):
 
     NOTE: The most recent value has a ``firebrick`` brush!
     """
-    _brushes = {
-        0: make_brush('r'),  # last value brush
-        1: make_brush('b'),  # all other points
-    }
+    last_value_brush = make_brush('r', 200)
+    points_brush = make_brush('b', 200)
 
     def __init__(self, pen, cycle, **kwargs):
         self._cycle = cycle
-        X_DEFAULT, Y_DEFAULT = [], []
-        super(ScatterGraphPlot, self).__init__(x=X_DEFAULT, y=Y_DEFAULT,
-                                               pen=pen, **kwargs)
+        default_x, default_y = [], []
+        super(ScatterGraphPlot, self).__init__(
+            x=default_x, y=default_y, pxMode=True, pen=pen, **kwargs)
 
     def setData(self, x, y, *args, **kwargs):
         """Set the data of the scatter plot"""
-        if not len(x) == len(y):
+        if len(x) != len(y):
             return
 
         if self._cycle:
-            num_data = len(x)
-            if not num_data:
+            size = len(x)
+            if not size:
+                super(ScatterGraphPlot, self).setData(
+                    x, y, brush=self.points_brush, **kwargs)
                 return
 
             brush = []
-            if num_data > 1:
-                brush.extend([self._brushes[1]] * (num_data - 1))
-            brush.append(self._brushes[0])
+            if size > 1:
+                brush.extend([self.points_brush] * (size - 1))
+            brush.append(self.last_value_brush)
         else:
-            brush = self._brushes[1]
+            brush = self.points_brush
 
-        super(ScatterGraphPlot, self).setData(x, y, brush=brush)
+        super(ScatterGraphPlot, self).setData(x, y, brush=brush, **kwargs)
