@@ -3,16 +3,22 @@ from contextlib import contextmanager
 from unittest import main
 
 from karabo.middlelayer import (
-    Bool, call, Configurable, Device, getDevice, Hash, isAlive, InputChannel,
-    Int32, Overwrite, OutputChannel, setWait, coslot, Slot, State,
-    Timestamp, UInt32, waitUntil)
+    AccessMode, AccessLevel, Assignment,  Bool, call, Configurable, coslot,
+    Device, getDevice, Hash, isAlive, InputChannel, Int32, Overwrite,
+    OutputChannel, setWait, shutdown, Slot, State, Timestamp, UInt32,
+    waitUntil)
 from .eventloop import DeviceTest, async_tst
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 
 
-class ChannelNode(Configurable):
-    data = Int32(defaultValue=0)
+def get_channel_node(displayed_name=""):
+    class ChannelNode(Configurable):
+        data = Int32(
+            displayedName=displayed_name,
+            defaultValue=0)
+
+    return ChannelNode
 
 
 class Sender(Device):
@@ -24,7 +30,11 @@ class Sender(Device):
     useTimestamp = Bool(
         defaultValue=False)
 
-    output = OutputChannel(ChannelNode)
+    output = OutputChannel(
+        get_channel_node(),
+        assignment=Assignment.OPTIONAL,
+        requiredAccessLevel=AccessLevel.OPERATOR,
+        accessMode=AccessMode.READONLY)
 
     outputCounter = UInt32(
         defaultValue=0,
@@ -44,6 +54,10 @@ class Sender(Device):
     @Slot()
     async def resetCounter(self):
         self.outputCounter = 0
+
+    async def changeSchema(self, displayed):
+        schema = get_channel_node(displayed)
+        await self.setOutputSchema("output", schema)
 
     def __init__(self, configuration):
         super().__init__(configuration)
@@ -256,6 +270,45 @@ class RemotePipelineTest(DeviceTest):
             # Wait a few seconds because the reconnect will wait seconds
             # as well before attempt
             await sleep(2)
+            for data in range(NUM_DATA):
+                await proxy.sendData()
+            # Our reconnect was successful, we are receiving data via the
+            # output channel
+            self.assertGreater(receiver.received, 0)
+
+        del proxy
+        await output_device.slotKillDevice()
+        await receiver.slotKillDevice()
+
+    @async_tst
+    async def test_output_change_schema(self):
+        """Test the output schema change of a device"""
+        output_device = Sender({"_deviceId_": "outputdevice"})
+        await output_device.startInstance()
+        receiver = Receiver({"_deviceId_": "receiverdevice"})
+        await receiver.startInstance()
+        await receiver.connectInputChannel("outputdevice")
+
+        NUM_DATA = 5
+        with (await getDevice("outputdevice")) as proxy:
+            self.assertTrue(isAlive(proxy))
+            self.assertEqual(receiver.received, 0)
+            for data in range(NUM_DATA):
+                await proxy.sendData()
+            self.assertGreater(receiver.received, 0)
+            # We received data and now change the schema
+            data_desc = output_device.output.schema.data.descriptor
+            self.assertEqual(data_desc.displayedName, "")
+            await output_device.changeSchema("TestDisplayed")
+            # We set the counter to zero!
+            await receiver.resetCounter()
+            # Changing schema closes output channel, hence we wait
+            # a few seconds because the reconnect will wait seconds
+            # as well before attempt
+            await sleep(2)
+            data_desc = output_device.output.schema.data.descriptor
+            self.assertEqual(data_desc.displayedName, "TestDisplayed")
+            self.assertEqual(receiver.received, 0)
             for data in range(NUM_DATA):
                 await proxy.sendData()
             # Our reconnect was successful, we are receiving data via the
