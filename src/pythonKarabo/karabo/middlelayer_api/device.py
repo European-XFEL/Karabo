@@ -14,6 +14,7 @@ from karabo import __version__ as karaboVersion
 from .alarm import AlarmMixin
 from .injectable import InjectMixin
 from .logger import Logger
+from .pipeline import OutputChannel
 from .signalslot import SignalSlotable, Signal, slot, coslot
 
 
@@ -253,6 +254,51 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
             self.updateInstanceInfo(Hash("status", statusInfo))
             self._statusInfo = statusInfo
         super(Device, self).update()
+
+    async def setOutputSchema(self, *args):
+        """This is a wrapper function to change the schema of existing output
+        channels.
+
+        For each output channel that is to be changed its key name and the
+        new Schema have to be provided, e.g.
+
+            await self.setOutputSchema("output1", schema1,
+                                       "output2", schema2,
+                                       ...)
+
+        Note: The existing output channel is closed while changing the schema.
+        """
+        if len(args) % 2 > 0:
+            raise RuntimeError("Arguments passed in setOutputSchema "
+                               "need to be pairs")
+
+        async def _build_output(key, schema):
+            """Rebuild a single output channel for `key` and `schema`"""
+            assert "." not in key, "Nested output channels are not allowed!"
+
+            channel_desc = getattr(type(self), key, None)
+            assert type(channel_desc) is OutputChannel
+            _, attrs = channel_desc.toSchemaAndAttrs(None, None)
+            # Obtain previous configuration. This is safe
+            # since output channel schema nodes do not have a configuration
+            channel = getattr(self, key)
+            config_hash = channel.configurationAsHash()
+            config = {k: v for k, v in config_hash.items()}
+            # Note: We have to close the output channel and all related socket
+            # connections! This will lead to all input channels closing
+            # and asking for a new schema!
+            await channel.close()
+            output_channel = OutputChannel(schema, strict=False, **attrs)
+            setattr(self.__class__, key, output_channel)
+
+            return config
+
+        configurations = []
+        for key, schema in zip(args[::2], args[1::2]):
+            config = await _build_output(key, schema)
+            configurations.extend([key, config])
+
+        await self.publishInjectedParameters(*configurations)
 
     @slot
     def slotGetSchema(self, onlyCurrentState):
