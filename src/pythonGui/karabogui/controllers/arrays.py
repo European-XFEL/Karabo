@@ -94,20 +94,33 @@ def get_dimensions_and_encoding(image_node):
 
 
 def get_array_data(proxy):
-    """Retrieve the NDArray from a property proxy belonging an NDArray binding
+    """Retrieve the array and timestamp data from a property proxy belonging
+    to an array binding
 
-    Check for `Undefined` on the proxy value and `None` data.
+    Note: Checks for `Undefined` on the proxy value and `None` data.
     """
-    node = proxy.value
+    binding = proxy.binding
+    if binding.__class__.__name__.startswith('Vector'):
+        value = binding.value
+        if value is None or value is Undefined:
+            return None, None
+
+        return value, binding.timestamp
+
+    # We now have an `NDArray`
+    node = binding.value
     if node is Undefined:
-        return None
+        return None, None
+
     pixels = node.data.value
     if pixels is None:
-        return None
+        return None, None
 
     arr_type = REFERENCE_TYPENUM_TO_DTYPE[node.type.value]
     value = np.frombuffer(pixels, dtype=arr_type)
+    timestamp = node.data.timestamp
+    # Note: Current traits always casts to 1dim
     if value.ndim == 1:
-        return value
+        return value, timestamp
 
-    return None
+    return None, None
