@@ -72,11 +72,23 @@ class EventThread(threading.Thread):
         lock.acquire()
 
 
+async def suppress_exception(coro):
+    """Supress any kind of exception in an executed coroutine on an eventloop
+    """
+    try:
+        await coro
+    except BaseException:
+        pass
+
+
 def _wrapslot(slot, name):
     if slot.allowedStates is None:
         slot.allowedStates = {State.PASSIVE}
     themethod = slot.method
 
+    # Note: No need to re-raise CancelledErrors, we got cancelled
+    # on operator input. However, we must forward the cancellation
+    # to the macro!
     if iscoroutinefunction(themethod):
         @wraps(themethod)
         async def wrapper(device):
@@ -86,9 +98,10 @@ def _wrapslot(slot, name):
             try:
                 return (await themethod(device))
             except CancelledError:
-                # No need to raise an exception, we got cancelled
-                # on operator input
-                pass
+                loop = get_event_loop()
+                coro = suppress_exception(loop.run_coroutine_or_thread(
+                    device.onCancelled, slot))
+                loop.create_task(coro, instance=device)
             finally:
                 device.currentSlot = ""
                 device.state = State.PASSIVE
@@ -100,6 +113,11 @@ def _wrapslot(slot, name):
             device.state = State.ACTIVE
             try:
                 return themethod(device)
+            except CancelledError:
+                loop = device._ss.loop
+                coro = suppress_exception(loop.run_coroutine_or_thread(
+                    device.onCancelled, slot))
+                loop.create_task(coro, instance=device)
             finally:
                 device.currentSlot = ""
                 device.state = State.PASSIVE
