@@ -47,10 +47,7 @@ class ArrayBarGraph(BaseBindingController):
         return widget
 
     def value_update(self, proxy):
-        if isinstance(proxy.binding, NDArrayBinding):
-            value = get_array_data(proxy)
-        else:
-            value = proxy.value
+        value, _ = get_array_data(proxy)
         if value is None or not len(value):
             self._plot.setData([], [])
             return
