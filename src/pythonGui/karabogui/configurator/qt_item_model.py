@@ -500,7 +500,8 @@ class ConfigurationTreeModel(QAbstractItemModel):
             old_value = None if proxy.edit_value is None else proxy.value
             if isinstance(binding, ChoiceOfNodesBinding):
                 old_value = binding.choice  # ChoiceOfNodes is "special"
-            changes = has_changes(binding, old_value, value)
+            changes = has_changes(binding, old_value, value,
+                                  init=not online_device)
             allowed = binding.is_allowed(state) or not online_device
             if allowed and changes:
                 if online_device:
