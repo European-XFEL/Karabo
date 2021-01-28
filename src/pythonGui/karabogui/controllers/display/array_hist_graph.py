@@ -9,8 +9,7 @@ from traits.api import Instance, WeakRef
 
 from karabo.common.scenemodel.api import (
     build_model_config, VectorHistGraphModel)
-from karabogui.binding.api import (
-    get_binding_value, NDArrayBinding, VectorNumberBinding)
+from karabogui.binding.api import NDArrayBinding, VectorNumberBinding
 from karabogui.controllers.api import (
     BaseBindingController, get_array_data, register_binding_controller)
 from karabogui.graph.plots.api import HistogramDialog, KaraboPlotView
@@ -82,10 +81,7 @@ class VectorHistogramGraph(BaseBindingController):
                                stepMode=True)
 
     def value_update(self, proxy):
-        if isinstance(proxy.binding, NDArrayBinding):
-            value = get_array_data(proxy)
-        else:
-            value = get_binding_value(proxy)
+        value, _ = get_array_data(proxy)
         if value is None or not len(value):
             self._plot.setData([], stepMode=None)
             return
