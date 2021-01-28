@@ -30,7 +30,7 @@ def test_array():
                       'data', value.tobytes())
     h = Hash('prop', array_hash)
     set_proxy_hash(proxy, h)
-    property_value = get_array_data(proxy)
+    property_value, _ = get_array_data(proxy)
     np.testing.assert_almost_equal(property_value, value)
 
     schema = TwoObject.getClassSchema()
@@ -41,6 +41,6 @@ def test_array():
                       'data', value.tobytes())
     h = Hash('prop', array_hash)
     set_proxy_hash(proxy, h)
-    property_value = get_array_data(proxy)
+    property_value, _ = get_array_data(proxy)
     # XXX: Traits does casting to a different 1 dimensional shape!
     assert property_value is not None
