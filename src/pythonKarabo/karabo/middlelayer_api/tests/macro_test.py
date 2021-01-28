@@ -576,6 +576,7 @@ class Tests(DeviceTest):
             # Macro slot is blocking with a sleep
             self.assertEqual(d.state, State.PASSIVE)
 
+            self.local.cancelled_slot = None
             # Normal round trip non blocking
             ensure_future(self.local.asyncSleep())
             await waitUntil(lambda: d.state == State.ACTIVE)
@@ -586,6 +587,7 @@ class Tests(DeviceTest):
             # We can cancel our tasks
             ensure_future(self.local.asyncSleep())
             await d.cancel()
+            self.assertEqual(self.local.cancelled_slot, Local.asyncSleep)
             self.assertEqual(d.state, State.PASSIVE)
 
 
