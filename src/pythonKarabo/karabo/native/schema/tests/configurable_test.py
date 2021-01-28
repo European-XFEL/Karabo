@@ -35,7 +35,7 @@ class FullSchema(Configurable):
     i = VectorInt16()
     j = UInt16()
     k = VectorUInt16()
-    l = Int32()
+    l = Int32()  # noqa
     m = VectorInt32()
     n = UInt32()
     o = VectorUInt32()
@@ -489,17 +489,15 @@ class Tests(TestCase):
         setter_value = init_value = 0
 
         class Setter(Int32):
-            @asyncio.coroutine
-            def setter(self, instance, value):
+            async def setter(self, instance, value):
                 nonlocal setter_value
                 setter_value += value
                 super().setter(instance, value + 1 * unit.meter)
 
-            @asyncio.coroutine
-            def initialize(self, instance, value):
+            async def initialize(self, instance, value):
                 nonlocal init_value
                 init_value += value
-                yield from super().initialize(instance, value + 2 * unit.meter)
+                await super().initialize(instance, value + 2 * unit.meter)
 
         class A(Configurable):
             value = Setter(unitSymbol=Unit.METER)
@@ -519,17 +517,15 @@ class Tests(TestCase):
         setter_value = init_value = 0
 
         class Setter(Int32):
-            @asyncio.coroutine
-            def setter(self, instance, value):
+            async def setter(self, instance, value):
                 nonlocal setter_value
                 setter_value += value
                 super().setter(instance, value + 1 * unit.meter)
 
-            @asyncio.coroutine
-            def initialize(self, instance, value):
+            async def initialize(self, instance, value):
                 nonlocal init_value
                 init_value += value
-                yield from super().initialize(instance, value + 2 * unit.meter)
+                await super().initialize(instance, value + 2 * unit.meter)
 
         class B(Configurable):
             value = Setter(unitSymbol=Unit.METER)
@@ -859,8 +855,7 @@ class Tests(TestCase):
                 return 7
 
             @Slot()
-            @asyncio.coroutine
-            def c(self):
+            async def c(self):
                 """another comment"""
                 return 8
 
@@ -912,7 +907,7 @@ class Tests(TestCase):
             i = VectorInt16()
             j = UInt16()
             k = VectorUInt16()
-            l = Int32()
+            l = Int32()  # noqa
             m = VectorInt32()
             n = UInt32()
             o = VectorUInt32()
@@ -1114,7 +1109,7 @@ class Tests(TestCase):
             i = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             j = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             k = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
-            l = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
+            l = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)  # noqa
             m = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             n = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
             o = Overwrite(archivePolicy=ArchivePolicy.NO_ARCHIVING)
