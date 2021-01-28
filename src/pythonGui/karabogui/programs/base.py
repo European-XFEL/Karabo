@@ -16,6 +16,7 @@ from karabogui.controllers.api import populate_controller_registry
 from karabogui.fonts import FONT_FILENAMES, get_font_size_from_dpi
 from karabogui.singletons.api import (
     get_manager, get_network, get_panel_wrangler)
+from karabogui.programs.register_protocol import register_protocol
 from karabogui.util import process_qt_events
 
 
@@ -150,6 +151,8 @@ def init_gui(app, use_splash=True):
     icons.init()
     # Load the sceneview widget controllers
     populate_controller_registry()
+    # Register karabo:// URL protocol
+    register_protocol()
 
     # Initialize the Manager singleton
     get_manager()
