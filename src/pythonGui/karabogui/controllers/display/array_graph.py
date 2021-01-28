@@ -85,25 +85,12 @@ class BaseArrayGraph(BaseBindingController):
                 self.value_update(proxy)
 
     def value_update(self, proxy):
-        raise NotImplementedError
-
-
-@register_binding_controller(ui_name='Vector Graph', klassname='VectorGraph',
-                             binding_type=VectorNumberBinding,
-                             priority=90,
-                             can_show_nothing=False)
-class DisplayVectorGraph(BaseArrayGraph):
-    """The VectorGraph controller for display basic vector data
-    """
-    model = Instance(VectorGraphModel, args=())
-
-    def value_update(self, proxy):
         if proxy not in self._curves:
             return
 
         plot = self._curves[proxy]
         # NOTE: With empty data or only inf we clear as NaN will clear as well!
-        y = proxy.value
+        y, _ = get_array_data(proxy)
         if not len(y) or np.isinf(y).all():
             plot.setData([], [])
             return
@@ -121,6 +108,16 @@ class DisplayVectorGraph(BaseArrayGraph):
         plot.setData(x, y)
 
 
+@register_binding_controller(ui_name='Vector Graph', klassname='VectorGraph',
+                             binding_type=VectorNumberBinding,
+                             priority=90,
+                             can_show_nothing=False)
+class DisplayVectorGraph(BaseArrayGraph):
+    """The VectorGraph controller for display basic vector data
+    """
+    model = Instance(VectorGraphModel, args=())
+
+
 @register_binding_controller(ui_name='NDArray Graph',
                              klassname='NDArrayGraph',
                              binding_type=NDArrayBinding,
@@ -128,21 +125,3 @@ class DisplayVectorGraph(BaseArrayGraph):
 class DisplayNDArrayGraph(BaseArrayGraph):
     """The NDArray controller for display of pulse data"""
     model = Instance(NDArrayGraphModel, args=())
-
-    def value_update(self, proxy):
-        if proxy not in self._curves:
-            return
-
-        plot = self._curves[proxy]
-        value = get_array_data(proxy)
-        if value is None or not len(value):
-            plot.setData([], [])
-            return
-
-        model = self.model
-        # Generate the baseline for the x-axis
-        x = generate_baseline(value, offset=model.offset,
-                              step=model.step)
-        rect = get_view_range(plot)
-        x, y = generate_down_sample(value, rect=rect, x=x, deviation=True)
-        plot.setData(x, y)
