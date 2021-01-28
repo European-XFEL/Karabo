@@ -11,8 +11,7 @@ from karabo.native import Timestamp
 from karabogui.graph.common.api import AuxPlots, create_button
 from karabogui.graph.image.api import (
     KaraboImagePlot, KaraboImageView, RollImage)
-from karabogui.binding.api import (
-    get_binding_value, NDArrayBinding, VectorNumberBinding)
+from karabogui.binding.api import NDArrayBinding, VectorNumberBinding
 from karabogui.controllers.api import (
     BaseBindingController, get_array_data, register_binding_controller)
 from karabogui import icons
@@ -96,16 +95,9 @@ class ArrayRollGraph(BaseBindingController):
     # -----------------------------------------------------------------------
 
     def value_update(self, proxy):
-        if isinstance(proxy.binding, NDArrayBinding):
-            value = get_array_data(proxy)
-            if value is None:
-                return
-            timestamp = proxy.binding.value.data.timestamp
-        else:
-            value = get_binding_value(proxy.binding)
-            if value is None:
-                return
-            timestamp = proxy.binding.timestamp
+        value, timestamp = get_array_data(proxy)
+        if value is None:
+            return
 
         if timestamp != self._timestamp:
             # Get new timestamp reference!
