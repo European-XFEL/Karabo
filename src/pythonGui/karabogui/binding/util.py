@@ -111,9 +111,12 @@ def get_min_max_size(binding):
     return None, None
 
 
-def has_changes(binding, old_value, new_value):
+def has_changes(binding, old_value, new_value, init=False):
     """Compare old/new values assigned to a binding to determine if there is
     a real difference.
+
+    :param init: Check if init only parameter are considered. This is used
+                 only for binding of a table element
     """
     # Check if changes were made
     try:
@@ -136,7 +139,8 @@ def has_changes(binding, old_value, new_value):
         elif isinstance(old_value, np.ndarray):
             changes = not array_equal(new_value, old_value)
         elif isinstance(old_value, HashList):
-            changes = has_vector_hash_changes(binding, old_value, new_value)
+            changes = has_vector_hash_changes(binding, old_value, new_value,
+                                              init=init)
         elif isinstance(old_value, list):
             if len(old_value) != len(new_value):
                 changes = True
