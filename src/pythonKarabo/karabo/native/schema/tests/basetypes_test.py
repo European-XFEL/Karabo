@@ -74,9 +74,9 @@ class Tests(TestCase):
         self.assertEqual(tail.timestamp, self.t1)
         self.assertEqual("{:5}".format(s), "a,b  ")
 
-        l = s.split(sep)
-        self.assertEqual(l.timestamp, self.t1)
-        self.assertIsInstance(l, VectorStringValue)
+        ll = s.split(sep)
+        self.assertEqual(ll.timestamp, self.t1)
+        self.assertIsInstance(ll, VectorStringValue)
 
     def test_bool(self):
         t = BoolValue(True, descriptor=7, timestamp=22)
@@ -214,29 +214,29 @@ class Tests(TestCase):
         self.assertEqual(a[e], 4)
 
     def test_stringlist(self):
-        l = VectorStringValue(["abc", "b", "c"],
-                              descriptor=3, timestamp=self.t2)
-        self.assertEqual(l, ["abc", "b", "c"])
-        self.assertEqual(l[1], "b")
-        self.assertEqual(l[1].timestamp, self.t2)
-        self.assertEqual(l.descriptor, 3)
-        self.assertEqual(l.timestamp, self.t2)
-        self.assertEqual(next(iter(l)), "abc")
-        self.assertIs(next(iter(l)).timestamp, self.t2)
-        self.assertIn("b", set(l))
-        self.assertNotIn("k", set(l))
+        vecs = VectorStringValue(["abc", "b", "c"],
+                                 descriptor=3, timestamp=self.t2)
+        self.assertEqual(vecs, ["abc", "b", "c"])
+        self.assertEqual(vecs[1], "b")
+        self.assertEqual(vecs[1].timestamp, self.t2)
+        self.assertEqual(vecs.descriptor, 3)
+        self.assertEqual(vecs.timestamp, self.t2)
+        self.assertEqual(next(iter(vecs)), "abc")
+        self.assertIs(next(iter(vecs)).timestamp, self.t2)
+        self.assertIn("b", set(vecs))
+        self.assertNotIn("k", set(vecs))
 
-        for s in l:
+        for s in vecs:
             self.assertEqual(s.timestamp, self.t2)
 
-        self.assertEqual((3 * l).timestamp, self.t2)
+        self.assertEqual((3 * vecs).timestamp, self.t2)
 
-        c = VectorStringValue(l)
-        self.assertEqual(c, l)
+        c = VectorStringValue(vecs)
+        self.assertEqual(c, vecs)
         self.assertEqual(c.timestamp, self.t2)
 
-        c = VectorStringValue(s for s in l)
-        self.assertEqual(c, l)
+        c = VectorStringValue(s for s in vecs)
+        self.assertEqual(c, vecs)
 
     def test_table(self):
         dtype = numpy.dtype([("integer", "i"), ("object", "O")])
