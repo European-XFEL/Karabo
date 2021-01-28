@@ -1,8 +1,8 @@
 import numpy as np
-from traits.api import BaseFloat, Range
+from traits.api import BaseFloat, BaseRange
 
 
-class NumpyRange(Range):
+class NumpyRange(BaseRange):
     """A fast-validating trait type who casts to a `numpy` dtype on validate
     """
 
@@ -12,39 +12,27 @@ class NumpyRange(Range):
 
     def validate(self, object, name, value):
         """ Validate that the value is in the specified range.
-
-        Note: Once the value is validated we cast to the numpy dtype. This is
-        safe!
         """
-        ret = super().validate(object, name, value)
-        return self._dtype(ret)
+        if type(value) is str:
+            try:
+                return self._dtype(value)
+            except ValueError:
+                self.error(object, name, value)
 
-
-def _validate_float(value):
-    """ Convert a Python object to a float, or raise TypeError.
-
-    Note: This validator preserves the numpy `dtype` if present
-    """
-    value_type = type(value)
-    if value_type in (float, np.float32, np.float64):
-        return value
-    else:
-        try:
-            nb_float = value_type.__float__
-        except AttributeError:
-            raise TypeError(
-                "Object of type {!r} not convertible to float".format(
-                    type(value)))
-        return nb_float(value)
+        return self._dtype(super().validate(object, name, value))
 
 
 class Float(BaseFloat):
-    """ A fast-validating trait type who can handle numpy dtypes
+    """ A fast-validating trait type who can handle numpy dtypes and coerce
     """
 
     def validate(self, object, name, value):
         """ Validates that a specified value is valid for this trait."""
-        try:
-            return _validate_float(value)
-        except TypeError:
-            self.error(object, name, value)
+        value_type = type(value)
+        if value_type in (float, np.float32, np.float64):
+            return value
+        else:
+            try:
+                return float(value)
+            except Exception:
+                self.error(object, name, value)
