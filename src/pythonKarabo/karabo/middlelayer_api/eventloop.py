@@ -494,6 +494,7 @@ class JmsBroker(Broker):
             p["MQPingInterval"] = 20
             p["MQSSLIsHostTrusted"] = True
             p["MQAckOnProduce"] = False
+            p["MQAckOnAcknowledge"] = False
             p["MQAckTimeout"] = 0
             try:
                 connection = openmq.Connection(p, "guest", "guest")
