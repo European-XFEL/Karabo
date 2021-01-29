@@ -104,7 +104,7 @@ BROKER_OPTIONS="-silent"
 
 #
 # ETC HOME
-IMQ_ETCHOME="$KARABO/extern/MessageQueue/etc/mq"
+IMQ_ETCHOME="$KARABO/extern/MessageQueue/mq/etc"
 #
 # imqbrokerd.conf
 CONF_FILE=$IMQ_ETCHOME/imqbrokerd.conf
