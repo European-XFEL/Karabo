@@ -1,9 +1,6 @@
---- MessageQueue5.0.1/mq/lib/props/broker/install.properties
-+++ MessageQueue5.0.1/mq/lib/props/broker/install.properties
-@@ -49,3 +49,7 @@
- # Any properties changed at installation will be lost when the
- # product is installed or upgraded
- # 
+--- MessageQueue5.1.3/mq/lib/props/broker/install.properties
++++ MessageQueue5.1.3/mq/lib/props/broker/install.properties
+@@ -28,0 +28,4 @@
 +imq.autocreate.destination.maxTotalMsgBytes=-1
 +imq.autocreate.destination.maxNumMsgs=-1
 +imq.autocreate.destination.maxNumProducers=-1
