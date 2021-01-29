@@ -8,8 +8,9 @@ from karabo.middlelayer import (
     slot, Slot, String, TypeHash, UInt32, VectorString)
 from karabo.middlelayer_api.signalslot import Signal
 from karabo.native import read_project_model
-from karabo.project_db.project_database import ProjectDatabase
-from karabo.project_db.util import get_db_credentials, ProjectDBError
+from karabo.project_db.exist_db.database import ProjectDatabase
+from karabo.project_db.exist_db.util import get_db_credentials
+from karabo.project_db.util import ProjectDBError
 
 
 class ProjectManager(Device):
@@ -29,6 +30,8 @@ class ProjectManager(Device):
         displayedName="Database host",
         requiredAccessLevel=AccessLevel.EXPERT)
 
+    # NOTE: the default port is set to 8080 although the port used by the
+    #       local project run in the docker container is 8181
     port = UInt32(
         displayedName="Port",
         defaultValue=8080,
@@ -87,7 +90,7 @@ class ProjectManager(Device):
         as tuple
         :return: at tuple of host, port
         """
-        return self.host.value, int(self.port.value)
+        return self.host.value, self.port.value
 
     @slot
     def slotGetScene(self, params):
