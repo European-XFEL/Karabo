@@ -1,3 +1,7 @@
+from ..const import (
+    ROOT_COLLECTION, ROOT_COLLECTION_BACKUP, ROOT_COLLECTION_TEST)
+
+
 class DbSettings:
     def __init__(self, user, password, server, port=8080, init_db=False):
         self.user = user
@@ -9,9 +13,9 @@ class DbSettings:
         self.server_url = make_server_url(self.user,
                                           self.password,
                                           self.server_uri)
-        self.root_collection = "/krb_config"
-        self.root_collection_test = "/krb_test"
-        self.root_collection_backup = "/krb_backup"
+        self.root_collection = f"/{ROOT_COLLECTION}"
+        self.root_collection_test = f"/{ROOT_COLLECTION_TEST}"
+        self.root_collection_backup = f"/{ROOT_COLLECTION_BACKUP}"
 
 
 def make_server_uri(server, port):
