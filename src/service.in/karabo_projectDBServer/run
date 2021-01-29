@@ -2,4 +2,4 @@
 # This file is part of the initial configuration of Karabo
 cd $KARABO/var/data
 PROJECT_DB_SERVER=exflst105
-exec envdir $KARABO/var/environment karabo-middlelayerserver serverId=karabo/projectDBServer 'deviceClasses=ProjectManager' init='{"KaraboProjectDB":{"classId":"ProjectManager", "host": "'$PROJECT_DB_SERVER'"}}' 'visibility=4' 2>&1
+exec envdir $KARABO/var/environment karabo-middlelayerserver serverId=karabo/projectDBServer 'deviceClasses=ProjectManager' init='{"KaraboProjectDB":{"classId":"ProjectManager", "host": "'$PROJECT_DB_SERVER'", "port": 8080}}' 'visibility=4' 2>&1
