@@ -1,25 +1,26 @@
 import numpy as np
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF, QRectF, Qt
 from PyQt5.QtGui import QColor, QImage, qRgb, QTransform
-from pyqtgraph import functions as fn, ImageItem, Point
+from pyqtgraph import (
+    functions as fn, GraphicsObject, getConfigOption, Point)
 from scipy.ndimage import zoom
 
 from karabogui.graph.common.api import MouseMode
-from .utils import (
-    bytescale, correct_image_min, map_rect_to_transform, rescale)
+from .utils import bytescale, map_rect_to_transform, rescale
 
 DIMENSION_DOWNSAMPLE = [(500, 1.5), (1000, 2)]  # [(dimension, min downsample)]
 NULL_COLOR = QColor(255, 255, 255, 70)
 
 
-class KaraboImageItem(ImageItem):
+class KaraboImageItem(GraphicsObject):
     clicked = pyqtSignal(float, float)
     hovered = pyqtSignal(object, object)
 
+    sigImageChanged = pyqtSignal()
+
     def __init__(self, image=np.zeros((50, 50), dtype=np.uint8), parent=None):
-        super(KaraboImageItem, self).__init__(parent=parent)
+        GraphicsObject.__init__(self)
         self.auto_levels = True
-        self.setImage(image)
 
         self._origin = np.array([0, 0])
         self._rect = None
@@ -30,9 +31,13 @@ class KaraboImageItem(ImageItem):
         self._lastDownsample = None
         self._slice_rect = None
         self._view_rect = None
+        self.lut = None
+        self.image = None
+        self.qimage = None
 
-        # This is a super class variable
-        self._cachedView = None
+        self.levels = None
+        self.axisOrder = getConfigOption('imageAxisOrder')
+        self.setImage(image)
 
     # ---------------------------------------------------------------------
     # Public methods
@@ -56,12 +61,49 @@ class KaraboImageItem(ImageItem):
 
     def set_lookup_table(self, lut, update=True):
         self.lut = lut
-        self._effectiveLut = None
-        stride = self.lut.shape[0] // 256
+        stride = lut.shape[0] // 256
         self._qlut = [qRgb(*v) for v in lut[::stride, :]]
-
         if update:
             self.updateImage()
+
+    def setOpts(self, update=True, **kwargs):
+        if 'axisOrder' in kwargs:
+            value = kwargs['axisOrder']
+            if value not in ('row-major', 'col-major'):
+                raise ValueError('axisOrder must be either "row-major" '
+                                 'or "col-major"')
+            self.axisOrder = value
+        if 'lut' in kwargs:
+            self.set_lookup_table(kwargs['lut'], update=update)
+        if 'levels' in kwargs:
+            self.setLevels(kwargs['levels'], update=update)
+        if update:
+            self.update()
+
+    def updateImage(self, **kwargs):
+        """Update the Image"""
+        defaults = {
+            'autoLevels': False,
+        }
+        defaults.update(kwargs)
+        return self.setImage(**defaults)
+
+    def width(self):
+        if self.image is None:
+            return None
+        axis = 0 if self.axisOrder == 'col-major' else 1
+        return self.image.shape[axis]
+
+    def height(self):
+        if self.image is None:
+            return None
+        axis = 1 if self.axisOrder == 'col-major' else 0
+        return self.image.shape[axis]
+
+    def boundingRect(self):
+        if self.image is None:
+            return QRectF(0, 0, 0, 0)
+        return QRectF(0, 0, self.width(), self.height())
 
     def get_color(self, x, y):
         """Get color of selected pixel. Return NULL color if there's
@@ -100,16 +142,19 @@ class KaraboImageItem(ImageItem):
     # Events
 
     def mouseClickEvent(self, event):
-        if (self._viewBox().mouse_mode is MouseMode.Picker
+        if (self.getViewBox().mouse_mode is MouseMode.Picker
                 and event.button() == Qt.LeftButton):
             image_pos, view_pos = self._get_mouse_positions(event.pos())
             self.clicked.emit(image_pos.x(), image_pos.y())
-        super(KaraboImageItem, self).mouseClickEvent(event)
 
     def hoverEvent(self, event):
-        if self._viewBox().mouse_mode is MouseMode.Picker:
+        if self.getViewBox().mouse_mode is MouseMode.Picker:
             self._hover_pointer_mode(event)
-        super(KaraboImageItem, self).hoverEvent(event)
+
+    def mouseDragEvent(self, event):
+        if event.button() != Qt.LeftButton:
+            event.ignore()
+            return
 
     # ---------------------------------------------------------------------
     # Private methods
@@ -138,7 +183,48 @@ class KaraboImageItem(ImageItem):
     # ---------------------------------------------------------------------
     # Render patches
 
-    def setImage(self, image=None, autoLevels=False, **kwargs):
+    def set_qimage(self, image=None, autoLevels=True, **kwargs):
+        """Update the image displayed by this item."""
+        new_data = False
+        if image is None:
+            if self.image is None:
+                return
+        else:
+            new_data = True
+            shapeChanged = (self.image is None
+                            or image.shape != self.image.shape)
+            image = image.view(np.ndarray)
+            self.image = image
+            if shapeChanged:
+                self.prepareGeometryChange()
+                self.informViewBoundsChanged()
+
+        if autoLevels is None:
+            if 'levels' in kwargs:
+                autoLevels = False
+            else:
+                autoLevels = True
+
+        if autoLevels:
+            image = self.image
+            while image.size > 2 ** 16:
+                image = image[::2, ::2]
+            mn, mx = np.nanmin(image), np.nanmax(image)
+            # Note: mn and mx can still be NaN if the data is all-NaN
+            if mn == mx or np.isnan(mn) or np.isnan(mx):
+                mn = 0
+                mx = 255
+            kwargs['levels'] = [mn, mx]
+
+        # Apply levels here!
+        self.setOpts(update=False, **kwargs)
+        self.qimage = None
+        self.update()
+
+        if new_data:
+            self.sigImageChanged.emit()
+
+    def setImage(self, image=None, **kwargs):
         """There could be cases that all image pixels have the same value.
         Since pyqtgraph defaults the levels to (0, 255) for such, we
         calculate the levels for our own sanity."""
@@ -155,15 +241,12 @@ class KaraboImageItem(ImageItem):
             # Calculate levels only on pseudocolor images
             # (single channel or 2D images)
             image_min, image_max = image.min(), image.max()
-            if image_min == image_max:
-                image_min = correct_image_min(image_min)
             levels = [image_min, image_max]
-            super(KaraboImageItem, self).setImage(image=image, levels=levels)
+            self.set_qimage(image=image, levels=levels, **kwargs)
         else:
             # No levels calculation needed for pseudocolor images with preset
             # levels and for RGB images
-            super(KaraboImageItem, self).setImage(image=image,
-                                                  autoLevels=False)
+            self.set_qimage(image=image, autoLevels=False, **kwargs)
 
     def render(self):
         """Reimplementing for performance improvements patches"""
@@ -216,16 +299,10 @@ class KaraboImageItem(ImageItem):
         low, high = (0.0, 255.0)  # default color range
         if self.levels is None:
             image_min, image_max = image.min(), image.max()
-            if image_min == image_max:
-                image_min = correct_image_min(image_min)
         else:
             level_min, level_max = self.levels
             image = np.clip(image, level_min, level_max)
             image_min, image_max = image.min(), image.max()
-
-            if image_min == image_max:
-                image_min = correct_image_min(image_min, level_min)
-
             # Calculate new color ranges with the ratio of the image extrema
             # and the preset levels.
             low, high = rescale(np.array([image_min, image_max]),
@@ -269,13 +346,8 @@ class KaraboImageItem(ImageItem):
             self.render()
             if self.qimage is None:
                 return
-        if self.paintMode is not None:
-            p.setCompositionMode(self.paintMode)
 
         p.drawImage(self._slice_rect, self.qimage)
-        if self.border is not None:
-            p.setPen(self.border)
-            p.drawRect(self.boundingRect())
 
     def _slice(self, image):
         """Slice the image to be rendered wrt to the view. There's no need to
@@ -384,7 +456,6 @@ class KaraboImageItem(ImageItem):
             levels = np.asarray(levels)
         if not fn.eq(levels, self.levels):
             self.levels = levels
-            self._effectiveLut = None
             if update:
                 self.updateImage()
 
@@ -395,13 +466,13 @@ class KaraboImageItem(ImageItem):
            new view ranges and the downsampling of the image. If panned, we
            only consider calculating the image slice by checking if the view
            exceeds the current slice rect."""
+        super().viewTransformChanged()
+
         self.qimage = None
         zoomed = True
 
         # Note: Invalidate the cachedView before getting a new `viewRect`
-        self._cachedView = None
         view_rect = self.viewRect()
-
         # Check if image is zoomed. Checking with width is already sufficient.
         if self._view_rect is not None:
             diff = abs(view_rect.width() - self._view_rect.width())
@@ -447,6 +518,12 @@ class KaraboImageItem(ImageItem):
         super(KaraboImageItem, self).informViewBoundsChanged()
         self.reset_downsampling(update=False)
         self._slice_rect = None
+
+    def clear(self):
+        self.image = None
+        self.prepareGeometryChange()
+        self.informViewBoundsChanged()
+        self.update()
 
 
 def is_image_invalid(image):
