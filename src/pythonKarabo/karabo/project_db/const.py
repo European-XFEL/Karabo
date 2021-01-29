@@ -1,7 +1,3 @@
-# The default password of the docker image:
-# https://git.xfel.eu/gitlab/ITDM/docker_existdb
-TESTDB_ADMIN_PASSWORD = "change_me_please"
-
 LIST_DOMAINS_QUERY = """
     xquery version "3.0";
     <collections>{{
@@ -9,3 +5,9 @@ LIST_DOMAINS_QUERY = """
     return <item>{{$c}}</item>}}
     </collections>
     """
+
+ROOT_COLLECTION = "krb_config"
+ROOT_COLLECTION_TEST = "krb_test"
+ROOT_COLLECTION_BACKUP = "krb_backup"
+
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
