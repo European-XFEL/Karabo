@@ -6,10 +6,11 @@ from uuid import uuid4
 from karabo.middlelayer import (
     call, connectDevice, coslot, Device, Hash, slot, String, updateDevice)
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
-from karabo.project_db.project_database import ProjectDatabase
 from karabo.middlelayer_devices.project_manager import ProjectManager
-from karabo.project_db.const import TESTDB_ADMIN_PASSWORD
-from karabo.project_db.tests.util import create_hierarchy, stop_local_database
+from karabo.project_db.exist_db.database import ProjectDatabase
+from karabo.project_db.exist_db.util import TESTDB_ADMIN_PASSWORD
+from karabo.project_db.tests.util import create_hierarchy
+from karabo.project_db.exist_db.tests.util import stop_local_database
 
 
 UUIDS = [str(uuid4()) for i in range(5)]
@@ -112,7 +113,7 @@ class TestProjectManager(DeviceTest):
     @contextmanager
     def lifetimeManager(cls):
         host = os.getenv('KARABO_TEST_PROJECT_DB', 'localhost')
-        port = int(os.getenv('KARABO_TEST_PROJECT_DB_PORT', '8080'))
+        port = int(os.getenv('KARABO_TEST_PROJECT_DB_PORT', '8181'))
         cls.local = ProjectManager({"_deviceId_": "projManTest",
                                     "host": host,
                                     "port": port,
