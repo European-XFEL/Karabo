@@ -3,10 +3,10 @@ from unittest import TestCase
 
 from lxml import etree
 
-from ..const import TESTDB_ADMIN_PASSWORD
-from ..project_database import ProjectDatabase
-from ..util import ProjectDBError
-from .util import (create_hierarchy, stop_local_database, _gen_uuid)
+from ..database import ProjectDatabase
+from ..util import TESTDB_ADMIN_PASSWORD, ProjectDBError
+from .util import stop_local_database
+from karabo.project_db.tests.util import create_hierarchy, _gen_uuid
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 
@@ -220,7 +220,7 @@ class TestProjectDatabase(TestCase):
                 success = True
                 try:
                     meta = db.save_item('LOCAL', proj_uuid, xml_rep)
-                except ProjectDBError as e:
+                except ProjectDBError:
                     success = False
 
                 self.assertTrue(success)
