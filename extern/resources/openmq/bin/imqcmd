@@ -15,6 +15,6 @@ else
     broker=${KARABO_BROKER##tcp://}
 fi
 user=admin
-pass=$KARABO/extern/MessageQueue/etc/mq/passfile.sample
+pass=$KARABO/extern/MessageQueue/mq/etc/passfile.sample
 
 $KARABO/extern/MessageQueue/mq/bin/imqcmd -b $broker -u $user -passfile $pass $@
