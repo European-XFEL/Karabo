@@ -52,6 +52,10 @@ class StdInChannel(ChannelMixin):
         self.device.stdin = msg
 
 
+class ControlChannel(ZMQSocketChannel, ChannelABC):
+    pass
+
+
 class HBChannelReal(HBChannel, HBChannelABC):
     pass
 
@@ -61,6 +65,7 @@ class Client(KernelClient):
         super().__init__(shell_channel_class=ShellChannel,
                          iopub_channel_class=IOPubChannel,
                          stdin_channel_class=StdInChannel,
+                         control_channel_class=ControlChannel,
                          hb_channel_class=HBChannelReal,
                          **kwargs)
 
