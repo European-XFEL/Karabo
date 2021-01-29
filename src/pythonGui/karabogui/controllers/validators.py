@@ -5,11 +5,11 @@ import numpy as np
 from PyQt5.QtGui import QValidator
 
 from karabogui.binding.api import (
-    VectorBoolBinding, VectorComplexDoubleBinding, VectorComplexFloatBinding,
-    VectorDoubleBinding, VectorFloatBinding, VectorInt8Binding,
-    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
-    VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding)
+    validate_value, VectorBoolBinding, VectorComplexDoubleBinding,
+    VectorComplexFloatBinding, VectorDoubleBinding, VectorFloatBinding,
+    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
+    VectorInt64Binding, VectorStringBinding, VectorUint8Binding,
+    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding)
 
 INT_REGEX = r"^[-+]?\d+$"
 UINT_REGEX = r"^[+]?\d+$"
@@ -114,5 +114,25 @@ class ListValidator(QValidator):
                 assert self.literal(value) == self.cast(value)
             except (ValueError, SyntaxError, AssertionError):
                 return self.Intermediate, input, pos
+
+        return self.Acceptable, input, pos
+
+
+class BindingValidator(QValidator):
+    """This is a soft generic binding validator
+
+    Returns `Intermediate` if the binding cannot be validated by the trait. If
+    the value can be validated by the binding trait it returns `Acceptable`.
+    """
+
+    def __init__(self, binding, parent=None):
+        super(BindingValidator, self).__init__(parent)
+        self.binding = binding
+
+    def validate(self, input, pos):
+        """The main validate function using binding validate"""
+        valid = validate_value(self.binding, input)
+        if valid is None:
+            return self.Intermediate, input, pos
 
         return self.Acceptable, input, pos
