@@ -451,6 +451,6 @@ def get_default_value(binding):
 def convert_string(value):
     try:
         return literal_eval(value)
-    except ValueError:
+    except (SyntaxError, ValueError):
         # Conversion of string to a literal failed, we return the value as is.
         return value
