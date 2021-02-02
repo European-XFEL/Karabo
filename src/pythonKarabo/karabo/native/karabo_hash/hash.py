@@ -231,13 +231,31 @@ class Hash(OrderedDict):
     def erase(self, key):
         del self[key]
 
-    def paths(self):
-        ret = []
-        for k, v in self.items():
-            if isinstance(v, Hash):
-                ret.extend(k + '.' + kk for kk in v.paths())
-            ret.append(k)
-        return ret
+    def paths(self, *, intermediate=True):
+        """Returns all root-to-leaves paths
+
+        :param intermediate: If `True` include all intermediate path from
+        roots to leafs, i.e. ['a.b.c', 'a.b', 'a'] instead of ['a.b.c']
+        """
+
+        def full_paths(hsh):
+            ret = []
+            for k, v in hsh.items():
+                if isinstance(v, Hash):
+                    ret.extend(k + '.' + kk for kk in full_paths(v))
+                ret.append(k)
+            return ret
+
+        def leaf_paths(hsh, keys=[]):
+            ret = []
+            for k, v in hsh.items():
+                if isinstance(v, Hash) and v:
+                    ret.extend(leaf_paths(v, keys=keys + [k]))
+                else:
+                    ret.append('.'.join(keys + [k]))
+            return ret
+
+        return full_paths(self) if intermediate else leaf_paths(self)
 
     def empty(self):
         return len(self) == 0
@@ -277,8 +295,8 @@ class Hash(OrderedDict):
         assert isinstance(other, Hash)
 
         # Do the fast path check first!
-        h_paths = sorted(self.paths())
-        other_paths = sorted(other.paths())
+        h_paths = sorted(self.paths(intermediate=True))
+        other_paths = sorted(other.paths(intermediate=True))
         if h_paths != other_paths:
             return False
 
@@ -371,7 +389,7 @@ class Schema:
             return self.hash[key, "alias"]
 
     def getKeyFromAlias(self, alias):
-        for k in self.hash.paths():
+        for k in self.hash.paths(intermediate=True):
             if alias == self.hash[k, ...].get("alias", None):
                 return k
 
@@ -381,7 +399,7 @@ class Schema:
     def filterByTags(self, *args):
         args = set(args)
         h = Hash()
-        for k in self.hash.paths():
+        for k in self.hash.paths(intermediate=True):
             tags = self.hash[k, ...].get("tags", ())
             if not args.isdisjoint(tags):
                 h[k] = self.hash[k]
