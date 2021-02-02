@@ -48,7 +48,7 @@ def yield_binary_hash(data):
 
 
 def yield_binary_schema(data):
-    for p in data.hash.paths():
+    for p in data.hash.paths(intermediate=True):
         nodeType = NodeType(data.hash[p, "nodeType"])
         if nodeType is NodeType.Leaf:
             assert not data.hash[p], "no proper leaf: {}".format(p)
