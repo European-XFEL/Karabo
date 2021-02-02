@@ -7,7 +7,7 @@ from numpy.testing import assert_equal
 from karabo.bound import (
     BinarySerializerHash, TextSerializerHash,
     Hash as BoundHash, VectorHash as BoundVectorHash, Schema as BoundSchema,
-    NODE_ELEMENT, NodeType, setStdVectorDefaultConversion,
+    NODE_ELEMENT, setStdVectorDefaultConversion,
     isStdVectorDefaultConversion, Types)
 from karabo.middlelayer import Configurable
 from karabo.native import (
@@ -168,7 +168,8 @@ class Hash_TestCase(unittest.TestCase):
             if restore_stdVector:
                 setStdVectorDefaultConversion(Types.NUMPY)
             # Bound uses setAttribute for setting attributes.
-            # TODO: Add one attribute of type VectorHash and one of type Schema.
+            # TODO: Add one attribute of type VectorHash and
+            # one of type Schema.
             h.setAttribute("bool", "bool", False)
             h.setAttribute("int", "float", 7.3)
             h.setAttribute("hash", "int", 3)
@@ -375,8 +376,24 @@ class Hash_TestCase(unittest.TestCase):
 
         # TODO: make encodeXML compatible with the Bound XML serializer from
         #       Karabo version 2.6.0 and above. Once that is done, 'rowSchema'
-        #       should become an instance of Schema and 'table' should become an
-        #       instance of HashList.
+        #       should become an instance of Schema and 'table' should become
+        #       an instance of HashList.
+
+    def test_paths(self):
+        h = self.create_hash()
+        paths = h.paths(intermediate=False)
+        self.assertEquals(len(paths), 16)
+        self.assertIn('bool', paths)
+        self.assertIn('hash.a', paths)
+        self.assertNotIn('hash', paths)
+        self.assertNotIn('hashlist.a', paths)
+        self.assertIn('emptyhashlist', paths)
+        self.assertIn('schema', paths)
+        self.assertNotIn('schema.blub', paths)
+
+        all_paths = h.paths(intermediate=True)
+        self.assertEquals(len(all_paths), 17)
+        self.assertIn('hash', all_paths)
 
 
 if __name__ == '__main__':
