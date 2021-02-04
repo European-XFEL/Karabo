@@ -577,6 +577,25 @@ class DeviceClient(object):
     def unregisterDeviceMonitor(self, instanceId):
         self.__client.unregisterDeviceMonitor(instanceId)
 
+    def getDataSourceSchemaAsHash(self, dataSourceId, accessType=None):
+        """
+        Get all properties with the suitable accesType exposed by dataSourceId
+
+        Args:
+        :param dataSourceId   data source containing properties (deviceId or
+                              deviceId:outputChannelKey)
+        :param accessMode     criteria used for filtering the data source's
+                              properties, default (None) means all,
+                              i.e. READ, WRITE and INIT.
+        :returns              properties that satisfy criteria
+        """
+
+        if accessType is None:
+            return self.__client.getDataSourceSchemaAsHash(dataSourceId)
+        else:
+            return self.__client.getDataSourceSchemaAsHash(dataSourceId,
+                                                           accessType)
+
     def registerChannelMonitor(self, channelName, dataHandler=None,
                                inputChannelCfg=None, eosHandler=None,
                                inputHandler=None, statusTracker=None):
