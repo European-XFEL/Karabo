@@ -380,11 +380,11 @@ namespace karathon {
             return this->DeviceClient::getOutputChannelNames(deviceId);
         }
 
-        bp::object getDataSourceSchemaAsHashPy(const std::string& dataSourceId, int access) {
+        karabo::util::Hash::Pointer getDataSourceSchemaAsHashPy(const std::string& dataSourceId, int access) {
             ScopedGILRelease nogil;
-            karabo::util::Hash properties;
-            getDataSourceSchemaAsHash(dataSourceId, properties, access);
-            return bp::object(properties);
+            karabo::util::Hash::Pointer properties(new karabo::util::Hash());
+            getDataSourceSchemaAsHash(dataSourceId, *properties, access);
+            return properties;
         }
 
         boost::shared_ptr<karathon::LockWrap> lockPy(const std::string& deviceId, bool recursive, int timeout) {
