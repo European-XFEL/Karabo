@@ -14,6 +14,7 @@ from karabo.native import get_timestamp
 from karabo.native import Weak
 
 from .eventloop import synchronize
+from .openmq import Error as OMQError
 
 
 class _ProxyBase(object):
@@ -520,18 +521,19 @@ class DeviceClientProxyFactory(ProxyFactory):
             self._schemaUpdateConnected = False
 
         def __del__(self):
+            # Note: In rare cases, e.g. command line, the broker connection
+            # is already gone when we are collected, hence we do not throw
+            # exceptions from here!
             outputs = list(self._remote_output_channel)
             for channel in outputs:
                 channel.disconnect()
-            # NOTE: In rare cases, e.g. command line, the broker connection
-            # is already gone when we are collected, hence we do not throw
-            # an exception!
-            with suppress(Exception):
+            with suppress(OMQError):
                 self._disconnectSchemaUpdated()
             if self._used > 0:
                 # set the used variable to 1 for a clean disconnect in exit
                 self._used = 1
-                self.__exit__(None, None, None)
+                with suppress(OMQError):
+                    self.__exit__(None, None, None)
 
         async def update_proxy(self):
             """Send out cached changes and get current configuration
