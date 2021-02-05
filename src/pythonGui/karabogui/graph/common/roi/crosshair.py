@@ -133,19 +133,44 @@ class CrosshairROI(KaraboROI):
     def _create_path(self):
         # Factor is the desired width/height wrt viewbox divided by 2
         factor = 0.1 if self.selected else 0.05
-
-        # Calculate the crosshair dimensions. We it from the minimum of the
-        # viewbox's width and hight to make a symmetrical crosshair
-        rect = self.mapRectFromView(self._viewBox().viewRect())
-        rect_dim = min(rect.width(), rect.height())
-        half_dim = rect_dim * factor
+        width, height = self._get_effective_dimensions()
 
         # Create the path from the half dimension
         path = QPainterPath()
-        path.moveTo(Point(0, -half_dim))
-        path.lineTo(Point(0, half_dim))
-
-        path.moveTo(Point(-half_dim, 0))
-        path.lineTo(Point(half_dim, 0))
+        # paint x-axis
+        half_width = width * factor
+        path.moveTo(Point(-half_width, 0))
+        path.lineTo(Point(half_width, 0))
+        # paint y-axis
+        half_height = height * factor
+        path.moveTo(Point(0, -half_height))
+        path.lineTo(Point(0, half_height))
 
         return path
+
+    def _get_effective_dimensions(self):
+        viewbox = self.getViewBox()
+        rect = self.mapRectFromView(viewbox.viewRect())
+        width, height = rect.width(), rect.height()
+
+        # Get factor that generates least common multiple from the width/height
+        min_dim, max_dim = width, height
+        if min_dim > max_dim:
+            min_dim, max_dim = max_dim, min_dim
+        factor = max_dim // min_dim
+
+        # Get effective dimension from the multiple factor
+        if width < height:
+            height = width * factor
+        else:
+            width = height * factor
+
+        # Correct dimension with the screen geometry ratio (rect of the plot)
+        geom = viewbox.screenGeometry()
+        ratio = geom.height() / geom.width()
+        if ratio > 1:
+            height /= ratio
+        else:
+            width *= ratio
+
+        return width, height
