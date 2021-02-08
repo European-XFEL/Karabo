@@ -1,7 +1,5 @@
 __lint_cpp() {
-    cppcheck --error-exitcode=0 --output-file=cppcheck_performance_report.txt --enable=performance --force $CI_PROJECT_DIR/src/karabo # TODO fix c++ code quality checks
-    cppcheck --error-exitcode=0 --output-file=cppcheck_style_report.txt --enable=style --force $CI_PROJECT_DIR/src/karabo
-    cppcheck --error-exitcode=0 --output-file=cppcheck_warning_report.txt --enable=warning --force $CI_PROJECT_DIR/src/karabo
+    cppcheck --error-exitcode=0 --output-file=cppcheck_all_report.txt --enable=all --force $CI_PROJECT_DIR/src/karabo # TODO fix c++ code quality checks
 }
 
 __lint_python() {
