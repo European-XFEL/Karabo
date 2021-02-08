@@ -1,5 +1,6 @@
 __lint_cpp() {
-    cppcheck --error-exitcode=0 --inconclusive --output-file=cppcheck_all_report.txt --enable=all --force $CI_PROJECT_DIR/src/karabo # TODO fix c++ code quality checks
+    CUSTOMDEFINES="-DKARABO_CLASSINFO -DKARABO_REGISTER_FOR_CONFIGURATION"
+    cppcheck $CUSTOMDEFINES --error-exitcode=0 --inconclusive --output-file=cppcheck_all_report.txt --enable=all --force $CI_PROJECT_DIR/src/karabo # TODO fix c++ code quality checks
 }
 
 __lint_python() {
