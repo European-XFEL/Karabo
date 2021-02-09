@@ -7,13 +7,8 @@ from eulexistdb.db import ExistDB
 from eulexistdb.exceptions import ExistDBException
 from requests.packages.urllib3.exceptions import HTTPError
 
-from ..bases import HandleABC
+from karabo.project_db.bases import HandleABC
 from ..util import ProjectDBError
-
-
-# The default password of the docker image:
-# https://git.xfel.eu/gitlab/ITDM/docker_existdb
-TESTDB_ADMIN_PASSWORD = "change_me_please"
 
 
 LIST_DOMAINS_QUERY = """
@@ -23,6 +18,10 @@ LIST_DOMAINS_QUERY = """
     return <item>{{$c}}</item>}}
     </collections>
     """
+
+# The default password of the docker image:
+# https://git.xfel.eu/gitlab/ITDM/docker_existdb
+TESTDB_ADMIN_PASSWORD = "change_me_please"
 
 
 def convert_exception(f):
