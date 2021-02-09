@@ -93,14 +93,10 @@ case $SCANTYPE in
     "FLAKE8")
         __lint_python
         ;;
-    "DEFAULTSCAN")
+    *)
         echo "Running a scan with default settings.."
         __lint_cpp_fast && \
         __lint_python
-        ;;
-    *)
-        echo "Unknown type of scan.."
-        exit 1
         ;;
 esac
 echo "Linter scan complete"
