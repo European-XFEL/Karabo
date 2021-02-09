@@ -1,71 +1,125 @@
+# The project that builds the Karabo Framework Library (libkarabo.so)
+#
+# Variables that influence the configuration/generation behavior of this project:
+#
+# KARABO_LIB_TARGET_NAME: this is the name of the target that is the Karabo
+#                         Framework C++ shared library. If set by a parent
+#                         project, that value is kept.
+#
+# CMAKE_PREFIX_PATH: this variable is expected to have the root directory of
+#                    the external build (and run) time dependencies of the
+#                    karabo shared library (the main target of this project).
+#                    A warning is emited at configuration time if the variable
+#                    does not pass a minimal sanity test of being defined and
+#                    point to an existing directory.
+#                    Currently this should point to the root directory of a
+#                    Miniconda environment that has all the build and runtime
+#                    dependecies installed. The definition of such an
+#                    environment in this repository at the path
+#                    "../../conda-recipes/karabo-cpp/environment.devenv.yml".
+
 cmake_minimum_required(VERSION 3.12)
 
-project(
-        "karabo"
-        VERSION 2
-        LANGUAGES C CXX
-)
-include(CTest)
-cmake_policy(SET CMP0074 NEW)
+include("../../cmake/cxx-options.cmake")
+include("../../cmake/karabo-lib-target-name.cmake")
 
-# finding dependencies
-set(EXTERN_DEPS_INCLUDE "" )
-set(EXTERN_DEPS_LIBS "" )
-
-find_package(HDF5 REQUIRED)
-list(APPEND EXTERN_DEPS_LIBS ${HDF5_LIBRARIES})
-
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-
-message(STATUS "Resolving GIT Version")
- 
+# Extracts KARABO_VERSION from the appropriate Git tag, writes to
+# a file to be used by the Karabo Framework at build time.
+message(STATUS "Resolving Karabo Version from Git repository")
 set(KARABO_VERSION "unknown")
- 
+set(KARABO_VERSION_MAJOR "0")
+set(KARABO_VERSION_MINOR "0")
+set(KARABO_VERSION_PATCH "0")
 find_package(Git)
 if(GIT_FOUND)
   execute_process(
-    COMMAND ${GIT_EXECUTABLE} describe --tags --match "*.*.*" --dirty --always 
-    WORKING_DIRECTORY "${karabo_SOURCE_DIR}/../.."
+    COMMAND ${GIT_EXECUTABLE} describe --tags --match "*.*.*" --dirty --always
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../.."
+    RESULT_VARIABLE result
     OUTPUT_VARIABLE KARABO_VERSION
     ERROR_QUIET
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
-  message( STATUS "GIT VERSION: ${KARABO_VERSION}")
+  if (result)
+      message(
+          FATAL_ERROR
+          "Error resolving Karabo Version from Git: ${result}"
+      )
+  endif()
+  message(STATUS "Karabo Version: ${KARABO_VERSION}")
+  # Extracts Major, Minor and Patch version parts to feed into the project -
+  # relies on matching format passed to the git command line.
+  string(FIND ${KARABO_VERSION} "." ST_PERIOD_POS)
+  math(EXPR MINOR_VERSION_START "${ST_PERIOD_POS} + 1")
+  string(SUBSTRING ${KARABO_VERSION} ${MINOR_VERSION_START} -1 VERSION_NO_MAJOR)
+  string(FIND ${VERSION_NO_MAJOR} "." ND_PERIOD_POS)
+  string(SUBSTRING ${KARABO_VERSION} 0 ${ST_PERIOD_POS} KARABO_VERSION_MAJOR)
+  string(SUBSTRING ${VERSION_NO_MAJOR} 0 ${ND_PERIOD_POS} KARABO_VERSION_MINOR)
+  # The Patch version number is assumed to be everything after the minor version
+  # From the match used to match the Git tag it is safe to assume that there is
+  # content after the minor version.
+  math(EXPR PATCH_VERSION_START "${ND_PERIOD_POS} + 1")
+  string(SUBSTRING ${VERSION_NO_MAJOR} ${PATCH_VERSION_START} -1 VERSION_NO_MINOR)
+  # Gets just the initial sequence of digits for the patch version. CMake does
+  # not accept non-digits as parts of a project version.
+  string(REGEX MATCH "^[0-9]+" PATCH_VERSION ${VERSION_NO_MINOR})
+  if (PATCH_VERSION)
+    set(KARABO_VERSION_PATCH ${PATCH_VERSION})
+  endif()
+  message(STATUS "Karabo Version Major: ${KARABO_VERSION_MAJOR}")
+  message(STATUS "Karabo Version Minor: ${KARABO_VERSION_MINOR}")
+  message(STATUS "Karabo Version Patch: ${KARABO_VERSION_PATCH}")
 else()
-  message(STATUS "GIT not found")
+  message(FATAL_ERROR
+          "Git package not found"
+  )
 endif()
- 
-configure_file(${karabo_SOURCE_DIR}/util/repositoryVersion.in ${karabo_SOURCE_DIR}/util/repositoryVersion @ONLY)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/util/repositoryVersion.in
+               ${CMAKE_CURRENT_SOURCE_DIR}/util/repositoryVersion
+               @ONLY
+)
+
+project(
+    "KaraboLib"
+    VERSION ${KARABO_VERSION_MAJOR}.${KARABO_VERSION_MINOR}.${KARABO_VERSION_PATCH}
+    LANGUAGES C CXX
+)
+
+# finding dependencies
+set(EXTERN_DEPS_INCLUDE "" )
+
+# To find the external dependencies a sensible value should be set for
+# CMAKE_PREFIX_PATH.
+if (NOT DEFINED CMAKE_PREFIX_PATH OR NOT EXISTS ${CMAKE_PREFIX_PATH})
+    message(WARNING
+            "-- WARNING --\n"
+            "No sensible value specified for CMAKE_PREFIX_PATH. "
+            "Dependency resolution depends on that setting.\n"
+            "--------------"
+    )
+endif()
+
+find_package(HDF5 REQUIRED)
 
 # Karabo currently expect to find the hdf5 libraries in an `hdf5` folder
 # here we trick the system by creating a link.
-# TODO: fix this once the legacy dependencies are gone.
 list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${HDF5_INCLUDE_DIRS})
 set(HDF5_SPOOF_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include")
 file(MAKE_DIRECTORY "${HDF5_SPOOF_INCLUDE_DIR}")
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${HDF5_INCLUDE_DIRS} ${CMAKE_BINARY_DIR}/include/hdf5 )
-
-list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${HDF5_SPOOF_INCLUDE_DIR})
-
-list(APPEND EXTERN_DEPS_INCLUDE_DIRS "${CMAKE_BINARY_DIR}/include/hdf5")
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${HDF5_INCLUDE_DIRS} ${CMAKE_BINARY_DIR}/include/hdf5)
 
 find_package(OpenSSL REQUIRED)
-list(APPEND EXTERN_DEPS_LIBS ${OpenSSL_LIBRARIES})
 list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${OpenSSL_INCLUDE_DIRS})
 
 find_package(Boost 1.66 REQUIRED
              COMPONENTS chrono date_time filesystem regex signals system thread)
-list(APPEND EXTERN_DEPS_LIBS ${Boost_LIBRARIES})
 list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${Boost_INCLUDE_DIRS})
 
 function(add_dep LIBNAME INCLUDE_PATH)
     find_library(${LIBNAME}_LIB ${LIBNAME})
     find_path(${LIBNAME}_INC_PATH ${INCLUDE_PATH})
     list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${${LIBNAME}_INC_PATH})
-    list(APPEND EXTERN_DEPS_LIBS ${${LIBNAME}_LIB})
     message(STATUS "${LIBNAME}_INC_PATH = ${${LIBNAME}_INC_PATH}")
     message(STATUS "${LIBNAME}_LIB = ${${LIBNAME}_LIB}")
 endfunction()
@@ -83,13 +137,10 @@ set(EXCLUDE_DIR "/tests/")
 
 # collect the source files excluding the ones in the `tests` folder
 file(GLOB_RECURSE SOURCE_FILES "*.cc")
-# store test sources in TEST_SOURCE_FILES will be useful later
-set(TEST_SOURCE_FILES "")
 foreach (TMP_PATH ${SOURCE_FILES})
     string (FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
     if (NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
         list (REMOVE_ITEM SOURCE_FILES ${TMP_PATH})
-        list (APPEND TEST_SOURCE_FILES ${TMP_PATH})
     endif ()
 endforeach()
 
@@ -103,29 +154,60 @@ foreach (TMP_PATH ${HDR_FILES})
 endforeach()
 
 add_library(
-        ${PROJECT_NAME} SHARED
+        ${KARABO_LIB_TARGET_NAME} SHARED
         ${SOURCE_FILES}
 )
 
-target_compile_options(${PROJECT_NAME} PUBLIC -Wfatal-errors -Wno-unused-local-typedefs -Wno-deprecated-declarations -Wall -D__SO__)
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_11)
-include_directories(
-    SYSTEM "${EXTERN_DEPS_INCLUDE_DIRS}"
-)
-include_directories(
-    "${karabo_SOURCE_DIR}/.."    
+set_target_properties(
+        ${KARABO_LIB_TARGET_NAME} PROPERTIES
+        VERSION ${KARABO_VERSION_MAJOR}.${KARABO_VERSION_MINOR}.${KARABO_VERSION_PATCH}
+        SOVERSION ${KARABO_VERSION_MAJOR}
 )
 
-source_group(TREE "${PROJECT_SOURCE_DIR}/include" PREFIX "Header Files" FILES ${HEADER_LIST})
+target_compile_definitions(
+    ${KARABO_LIB_TARGET_NAME}
+    PUBLIC __SO__
+)
 
+target_compile_options(
+    ${KARABO_LIB_TARGET_NAME}
+    PUBLIC -Wfatal-errors -Wno-unused-local-typedefs -Wno-deprecated-declarations -Wall)
+
+target_include_directories(
+     ${KARABO_LIB_TARGET_NAME}
+     PUBLIC $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/..> $<INSTALL_INTERFACE:include/karabo>
+)
+
+target_include_directories(
+    ${KARABO_LIB_TARGET_NAME}
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>  $<INSTALL_INTERFACE:include>
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include/hdf5> $<INSTALL_INTERFACE:include/hdf5>
+)
+
+target_include_directories(
+    ${KARABO_LIB_TARGET_NAME} SYSTEM
+    PUBLIC "${EXTERN_DEPS_INCLUDE_DIRS}"
+)
 
 # Adding flags to the compiler regarding the RPATH
-set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,${CMAKE_LIBRARY_PATH}")
-set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "${CMAKE_LIBRARY_PATH}" INSTALL_RPATH_USE_LINK_PATH TRUE)
+set_target_properties(
+    ${KARABO_LIB_TARGET_NAME}
+    PROPERTIES
+    LINK_FLAGS "-Wl,-rpath,${CMAKE_LIBRARY_PATH}"
+)
+# TODO: The command below is not making any difference - troubleshoot the RPATH for installed targets. For build targets, CMake handles
+#       the RPATH automatically and they point to the proper directories that contain linked libraries. Further reference:
+#       https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling.
+#       To list the embedded RPATHS: objdump ${exe_or_lib_name} | grep RPATH
+set_target_properties(
+    ${KARABO_LIB_TARGET_NAME}
+    PROPERTIES
+    INSTALL_RPATH "${CMAKE_LIBRARY_PATH}" INSTALL_RPATH_USE_LINK_PATH TRUE
+)
 
 # Adding dependecy libraries into the karabo project
 target_link_libraries(
-        ${PROJECT_NAME}
+        ${KARABO_LIB_TARGET_NAME}
         ${Boost_FILESYSTEM_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}
         ${Boost_CHRONO_LIBRARY}
@@ -143,52 +225,55 @@ target_link_libraries(
 # Headers to be installed
 file(GLOB INCLUDE_FILES "*.hpp")
 
-# append all header files. TODO: implement a cleaner interface
+# append all header files.
 foreach (TMP_PATH ${HDR_FILES})
    list (APPEND INCLUDE_FILES ${TMP_PATH})
 endforeach()
 
 # Creating karabo folder in include and lib folders
 install(DIRECTORY DESTINATION "lib")
-install(DIRECTORY DESTINATION "include/${PROJECT_NAME}")
+install(DIRECTORY DESTINATION "include/karabo")
 
-# adding headers with the same tree directory of the project
-foreach (file ${INCLUDE_FILES})
-    get_filename_component(dir ${file} DIRECTORY)
-    install(FILES ${file} DESTINATION "include/${PROJECT_NAME}/${dir}")
+# Creates a symlink for the hdf5 include path expected by Karabo in the install target.
+# This is the equivalent of what is done above to support building the library itself and
+# is a requirement for building tests and any other device or application that deals with
+# HDF5.
+set(HDF5_SYMLINK_PATH "${CMAKE_INSTALL_PREFIX}/include/hdf5")
+set(HDF5_SYMLINK_DEST "${CMAKE_INSTALL_PREFIX}/include")
+install(
+    CODE
+    "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${HDF5_SYMLINK_DEST} ${HDF5_SYMLINK_PATH})"
+)
+install(CODE "message(STATUS \"Created symlink: ${HDF5_SYMLINK_PATH} -> ${HDF5_SYMLINK_DEST}\")")
+
+# Adding headers with the same tree directory of the project.
+foreach (FILE_PATH ${INCLUDE_FILES})
+    get_filename_component(DIR_PART ${FILE_PATH} DIRECTORY)
+    get_filename_component(NAME_PART ${FILE_PATH} NAME)
+    # the directory for the installed header should keep the relative path of the source tree
+    # e.g ".../karabo/core/Device.hh" should go to "include/karabo/core/Device.hh".
+    string(FIND ${DIR_PART} "/karabo/" COMMON_BASE_DIR_POS)
+    if (${COMMON_BASE_DIR_POS} EQUAL -1)
+        # No intermediary "karabo" directory in the path; no subdir to be added to install path.
+        install(FILES ${FILE_PATH} DESTINATION "include/karabo")
+    else ()
+        math(EXPR INCLUDE_SUBDIR_POS "${COMMON_BASE_DIR_POS} + 8")  # 8 is the length of "/karabo/"
+        string(LENGTH ${DIR_PART} DIR_PART_LENGTH)
+        string(SUBSTRING ${DIR_PART} ${INCLUDE_SUBDIR_POS} ${DIR_PART_LENGTH} INCLUDE_SUBDIR)
+        install(FILES ${FILE_PATH} DESTINATION "include/karabo/${INCLUDE_SUBDIR}")
+    endif()
 endforeach()
 
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${KARABO_LIB_TARGET_NAME}
+        EXPORT "karaboLib"
         LIBRARY DESTINATION "lib"
-        PUBLIC_HEADER DESTINATION "include/${PROJECT_NAME}"
-        RUNTIME DESTINATION bin)
+        PUBLIC_HEADER DESTINATION "include/karabo"
+        RUNTIME DESTINATION bin
+)
 
-file(WRITE "${CMAKE_BINARY_DIR}/VERSION" ${KARABO_GIT_VERSION})
-file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/testresults")
+install(EXPORT "karaboLib"
+        DESTINATION "lib/cmake"
+        FILE "karaboLibConfig.cmake"
+)
 
-# Adding unit test
-if (BUILD_TESTING)
-    find_library(CPPUNIT cppunit)
-    file(GLOB TEST_DIR "${karabo_SOURCE_DIR}/tests/*")
-    foreach(TEST_DIR ${TEST_DIR})
-        file(GLOB TEST_SRCS "${TEST_DIR}/*.cc")
-        foreach (TMP_PATH ${TEST_SRCS})
-            string (FIND ${TMP_PATH} "TestRunner" NAME_FOUND)
-            if (NOT ${NAME_FOUND} EQUAL -1)
-                GET_FILENAME_COMPONENT(RUNNER_NAME ${TMP_PATH} NAME_WE)
-                break()
-            endif ()
-        endforeach()
-        ADD_EXECUTABLE("${RUNNER_NAME}" ${TEST_SRCS})
-        target_compile_options("${RUNNER_NAME}" PRIVATE -DKARABO_TESTPATH=\"${karabo_SOURCE_DIR}/tests/\")
-        target_compile_features("${RUNNER_NAME}" PUBLIC cxx_std_11)
-        target_link_libraries(
-                ${RUNNER_NAME}
-                ${PROJECT_NAME}
-                ${CPPUNIT}
-        )
-        ADD_TEST(NAME ${RUNNER_NAME} COMMAND ${RUNNER_NAME})
-        set_tests_properties(${RUNNER_NAME} PROPERTIES
-            ENVIRONMENT KARABO=${CMAKE_BINARY_DIR})
-    endforeach()
-endif()
+file(WRITE "${CMAKE_BINARY_DIR}/VERSION" ${KARABO_VERSION})
