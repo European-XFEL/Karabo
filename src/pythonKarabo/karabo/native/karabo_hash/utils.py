@@ -5,7 +5,8 @@ from .typenums import HashType
 from .hash import Hash, HashList
 
 __all__ = ['create_html_hash', 'dictToHash', 'dtype_from_number',
-           'get_image_data', 'hashToDict', 'numpy_from_number']
+           'get_array_data', 'get_image_data', 'hashToDict',
+           'numpy_from_number']
 
 
 def dtype_from_number(number):
@@ -63,6 +64,46 @@ def numpy_from_number(number, default=np.object_):
     return _TYPE.get(h_type, default)
 
 
+def get_array_data(data, path=None, squeeze=True):
+    """Method to extract an ``ndarray`` from a raw Hash
+
+    :param data: A hash containing the data hash
+    :param path: The path of the NDArray. If `None` (default) the
+                 input Hash is taken.
+    :param squeeze: If the array should be squeezed if the
+                    latest dimension is 1. Default is `True`.
+
+    :returns : A numpy array containing the extracted data
+    """
+    text = "Expected a Hash, but got type %s instead!" % type(data)
+    assert isinstance(data, Hash), text
+    array = _build_ndarray(data, path=path, squeeze=squeeze)
+
+    return array
+
+
+def _build_ndarray(data, path=None, squeeze=False):
+    """Internal method to extract an ``ndarray`` from a raw Hash
+
+    :param data: A hash containing the hash
+    :param path: The path of the NDArray. If `None` (default) the
+                 input Hash is taken.
+    :param squeeze: If the array should be squeezed if the
+                    latest dimension is 1. Default is `False`.
+    """
+    if path is not None:
+        data = data[path]
+    dtype = dtype_from_number(data["type"])
+    dtype = dtype.newbyteorder(">" if data["isBigEndian"] else "<")
+    array = np.frombuffer(data["data"], count=data["shape"].prod(),
+                          dtype=dtype)
+    array.shape = data["shape"]
+    if squeeze and array.shape[-1] == 1:
+        array = np.squeeze(array)
+
+    return array
+
+
 def get_image_data(data):
     """Method to extract an ``image`` from a Hash into a numpy array
 
@@ -75,20 +116,11 @@ def get_image_data(data):
     text = "Expected a Hash, but got type %s instead!" % type(data)
     assert isinstance(data, Hash), text
 
-    def extract_data(hsh):
-        hsh = hsh["pixels"]
-        dtype = dtype_from_number(hsh["type"])
-        dtype = dtype.newbyteorder(">" if hsh["isBigEndian"] else "<")
-        array = np.frombuffer(hsh["data"], count=hsh["shape"].prod(),
-                              dtype=dtype)
-        array.shape = hsh["shape"]
-        return array
-
     if "data.image" in data:
-        return extract_data(data["data.image"])
+        return _build_ndarray(data["data.image"], path="pixels")
 
     elif "image" in data:
-        return extract_data(data["image"])
+        return _build_ndarray(data["image"], path="pixels")
 
 
 def create_html_hash(hsh):
