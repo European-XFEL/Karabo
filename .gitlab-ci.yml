@@ -41,6 +41,14 @@ stages:
     - source ci/test "$CI_BUILD_NAME"
   <<: *artifacts-spec
 
+# TODO: remove this after reporting support for ctest is working
+.test_template_miniconda_cmake: &test-miniconda-cmake
+  stage: test
+  <<: *services_template
+  script:
+    - source ci/prepare "$CI_BUILD_NAME"
+    - source ci/test "$CI_BUILD_NAME"
+
 .release_build: &release-build
   <<: *build
   only:
@@ -141,6 +149,24 @@ stages:
       - "build/netbeans/**/*"
       - "src/karabo/**/*"
       - "src/pythonKarabo/**/*"
+      - "src/karathon/**/*"
+      - "conda-recipes/karabo-cpp/**/*"
+  except:
+    refs:
+      - /^(master)$/  # the changes check will default to true
+      - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
+      - schedules
+    changes:
+      - "extern/**/*"
+
+# TODO: remove this after reporting support for ctest is working
+.unit_tests_miniconda_cmake: &unit-tests-miniconda-cmake
+  <<: *test-miniconda-cmake
+  only:
+    refs:
+      - merge_requests
+    changes:
+      - "src/karabo/**/*"
       - "src/karathon/**/*"
       - "conda-recipes/karabo-cpp/**/*"
   except:
@@ -365,9 +391,10 @@ unit tests miniconda-win64:
     - Win10
   <<: *unit-tests-conda
 
+# TODO: restore this to use the anchor "unit-tests" once ctest reporting is supported.
 unit tests miniconda-cmake:
   image: europeanxfel/karabo-ci:miniconda-3
-  <<: *unit-tests
+  <<: *unit-tests-miniconda-cmake
 
 # Post-merge integration test builds
 
