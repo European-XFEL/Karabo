@@ -98,7 +98,7 @@ runIntegrationTests() {
 runCppLongTests() {
     activateKarabo
 
-    local testNames=$(ls $scriptDir/src/cppLongTests)
+    local testNames=$(ls $scriptDir/src/cppLongTests --ignore=CMakeLists.txt)
     local testDir=$scriptDir/build/netbeans/cppLongTests
 
     echo
@@ -116,7 +116,7 @@ runCppLongTests() {
 
 runUnitTests() {
     activateKarabo
-    local testNames=$(ls $scriptDir/src/karabo/tests)
+    local testNames=$(ls $scriptDir/src/karabo/tests --ignore=CMakeLists.txt)
     local testDir=$scriptDir/build/netbeans/karabo
 
     echo
