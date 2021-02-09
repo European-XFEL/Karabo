@@ -102,6 +102,7 @@ _PANELS = {
     PROJECT_TITLE: (ProjectPanel, PanelAreaEnum.Left),
 }
 
+SETTINGS_TITLE = '&Settings'
 VIEW_MENU_TITLE = '&View'
 GRAFANA_LINK = "https://ctrend.xfel.eu/"
 
@@ -393,7 +394,17 @@ class MainWindow(QMainWindow):
         mViewMenu.addAction(panelAction)
         mViewMenu.addSeparator()
 
-        mHelpMenu = menuBar.addMenu("&Tools")
+        mSettingsMenu = menuBar.addMenu(SETTINGS_TITLE)
+        self.settingsMenus = {SETTINGS_TITLE: mSettingsMenu}
+
+        self.acEnableHighDPI = QAction('Enable HighDPI', self)
+        self.acEnableHighDPI.setCheckable(True)
+        enable = get_config()["highDPI"]
+        self.acEnableHighDPI.setChecked(enable)
+        self.acEnableHighDPI.triggered.connect(self._store_dpi_setting)
+        mSettingsMenu.addAction(self.acEnableHighDPI)
+
+        mHelpMenu = menuBar.addMenu("&Panels")
         mHelpMenu.addAction(self.acGrafana)
 
         mHelpMenu = menuBar.addMenu("&Help")
@@ -563,6 +574,15 @@ class MainWindow(QMainWindow):
 
     # --------------------------------------
     # Qt slots
+
+    @pyqtSlot()
+    def _store_dpi_setting(self):
+        enabled = get_config()['highDPI']
+        get_config()['highDPI'] = not enabled
+        self.acEnableHighDPI.setChecked(not enabled)
+        text = ("Changing the high dpi settings requires a restart of the "
+                "client application of the setting to become active.")
+        messagebox.show_information(text)
 
     @pyqtSlot()
     def _store_panel_configuration(self):
