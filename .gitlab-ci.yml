@@ -44,6 +44,7 @@
     - schedules
 
 .release_build_conda: &release-build-conda
+  stage: build
   script:
     - >
       python ci/miniconda pack karabogui 
@@ -61,6 +62,7 @@
     - schedules
 
 .prerelease_build_conda: &prerelease-build-conda
+  stage: build
   script:
     - >
       python ci/miniconda pack karabogui 
