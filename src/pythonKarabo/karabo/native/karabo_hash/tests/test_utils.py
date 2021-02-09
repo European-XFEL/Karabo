@@ -5,7 +5,7 @@ from html.parser import HTMLParser
 from ..hash import Hash, HashList
 from ..utils import (
     create_html_hash, dtype_from_number, dictToHash, hashToDict,
-    get_image_data)
+    get_array_data, get_image_data)
 
 
 class HashHtmlParser(HTMLParser):
@@ -73,6 +73,42 @@ def test_get_image_data():
     image = get_image_data(h)
     np.testing.assert_array_equal(
         image, np.array([[2, 4, 6], [6, 8, 10]], np.int64))
+
+
+def test_get_array_data():
+    h = Hash()
+    h['data'] = Hash()
+    h['data.data'] = np.array([[2, 4, 6], [6, 8, 10]],
+                              dtype=np.int64)
+    h['data.type'] = 16
+    h['data.shape'] = np.array([2, 3], dtype=np.uint64)
+    h['data.isBigEndian'] = False
+    array = get_array_data(h, 'data')
+    np.testing.assert_array_equal(
+        array, np.array([[2, 4, 6], [6, 8, 10]], dtype=np.int64))
+    assert array.shape == (2, 3)
+
+    # Squeeze happens for single dimensions default
+    h['data'] = Hash()
+    h['data.data'] = np.array([2, 4, 6], dtype=np.int64)
+    h['data.type'] = 16
+    h['data.shape'] = np.array([3, 1], dtype=np.uint64)
+    h['data.isBigEndian'] = False
+    array = get_array_data(h, 'data')
+    np.testing.assert_array_equal(
+        array, np.array([2, 4, 6], dtype=np.int64))
+    assert array.shape == (3,)
+
+    # Squeeze deactivated
+    h['data'] = Hash()
+    h['data.data'] = np.array([2, 4, 6], np.int64)
+    h['data.type'] = 16
+    h['data.shape'] = np.array([3, 1], np.uint64)
+    h['data.isBigEndian'] = False
+    array = get_array_data(h, 'data', squeeze=False)
+    np.testing.assert_array_equal(
+        array, np.array([[2], [4], [6]], dtype=np.int64))
+    assert array.shape == (3, 1)
 
 
 def test_create_hash_html():
