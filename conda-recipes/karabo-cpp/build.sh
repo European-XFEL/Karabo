@@ -6,15 +6,21 @@ rm -fr ${SRC_DIR}/cmake-${PKG_NAME}/*
 mkdir -p ${SRC_DIR}/cmake-${PKG_NAME}
 cd ${SRC_DIR}/cmake-${PKG_NAME}
 CXXFLAGS="" \
+echo "> conda-recipes/karabo-cpp/build.sh: cmake command: cmake -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} -DCMAKE_INSTALL_PREFIX=${PREFIX} [TEST_BUILDING FLAGS] ${SRC_DIR}"
 cmake \
   -DCMAKE_PREFIX_PATH=${CONDA_PREFIX}\
   -DCMAKE_INSTALL_PREFIX=${PREFIX}\
-  ${SRC_DIR}/src/karabo
+  -DBUILD_UNIT_TESTING=1\
+  -DBUILD_INTEGRATION_TESTING=1\
+  ${SRC_DIR}
 
 make -j${CPU_COUNT} || exit $?
-# run tests
-ctest -V 
 make install || exit $?
+# run tests
+# TODO: the dataLoggingIntegrTest depends on the karabo-cppserver and karabo-idxbuild being
+#       built (which currently aren't yet). As soon as those utilities are built from their
+#       CMake projects, remove the -E option from the ctest command.
+ctest -VV -E dataLoggingIntegrTest
 
 ACTIVATE_DIR=${PREFIX}/etc/conda/activate.d
 DEACTIVATE_DIR=${PREFIX}/etc/conda/deactivate.d
