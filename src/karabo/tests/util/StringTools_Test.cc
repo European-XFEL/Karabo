@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   StringTools_Test.cc
  * Author: parenti
- * 
+ *
  * Created on December 15, 2014, 12:16 PM
  */
 
@@ -210,11 +210,11 @@ void StringTools_Test::testToString() {
     CPPUNIT_ASSERT(toString(0.000000099999987f) == "9.999999e-08");
     CPPUNIT_ASSERT(toString(-99999987198.0f) == "-9.999999e+10");
     CPPUNIT_ASSERT(toString(3333332187236.0f) == "3.333332e+12");
-    
+
     CPPUNIT_ASSERT(toString(1.234567890123456) == "1.23456789012346");
     CPPUNIT_ASSERT(toString(0.123456789012345) == "0.123456789012345");
     CPPUNIT_ASSERT(toString(0.01234567890123456) == "0.0123456789012346");
-    
+
     // Border(?) cases ...
     CPPUNIT_ASSERT(toString(0.0001f) == "0.0001");
     CPPUNIT_ASSERT(toString(0.00001f) == "1e-05");
