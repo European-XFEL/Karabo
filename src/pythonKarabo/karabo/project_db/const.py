@@ -5,7 +5,6 @@ LIST_DOMAINS_QUERY = """
     return <item>{{$c}}</item>}}
     </collections>
     """
-
 ROOT_COLLECTION = "krb_config"
 ROOT_COLLECTION_TEST = "krb_test"
 ROOT_COLLECTION_BACKUP = "krb_backup"
