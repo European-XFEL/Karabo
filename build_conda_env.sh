@@ -68,20 +68,23 @@ karaboCondaCleanEnvironment() {
         safeRunCondaCommand conda activate || safeRunCondaCommand source activate || return 1
         safeRunCondaCommand conda devenv --file ${_RECIPE_DIR}/environment.devenv.yml || return 1
         unset _RECIPE_DIR
-    fi   
+    fi
 }
 
 karaboCondaCheckBaseEnvironment() {
+    echo "> build_conda_env.sh::karaboCondaCheckBaseEnvironment: CONDA_DEFAULT_ENV = $CONDA_DEFAULT_ENV"
     # make sure we are in the default environment
     if [ -z "${CONDA_DEFAULT_ENV}" ]; then
         safeRunCondaCommand conda activate || safeRunCondaCommand source activate || safeRunCondaCommand activate base || return 1
     elif [ "${CONDA_DEFAULT_ENV}" != "base" ]; then
+        echo "> build_conda_env.sh::karaboCondaCheckBaseEnvironment: will activate base environment"
         safeRunCondaCommand conda activate || return 1
     fi
 
     # check if the base environment is sufficient to setup the recipes
-    BUILD_PKGS="conda-build conda-devenv cogapp setuptools_scm"
-    for pkg in $BUILD_PKGS; do
+    BUILD_PKGS=("conda-build" "conda-devenv" "cogapp" "setuptools_scm")
+    for pkg in "${BUILD_PKGS[@]}"; do
+        echo "> build_conda_env.sh::karaboCondaCheckBaseEnvironment: checking for pkg = $pkg"
         if [ -z "$(conda list ${pkg} | grep -v '#')" ]; then
             echo "Conda environment missing package from needed packages ${BUILD_PKGS}"
             return 1
@@ -137,6 +140,7 @@ karaboCondaInstallMDLEnvironment() {
 }
 
 karaboCondaInstallCPPEnvironment() {
+    echo "> build_conda_env.sh::karaboCondaInstallCPPEnvironment: Running karaboCondaInstallCPPEnvironment"
     KARABO_ENV=karabo-cpp
     # Clean environment if asked
     karaboCondaCleanEnvironment ${KARABO_ENV} || return 1
@@ -152,8 +156,13 @@ karaboCondaInstallCPPEnvironment() {
         bash ${_RECIPE_DIR}/build.sh || return 1
     elif [[ "${SETUP_FLAG}" == install ]]; then
         python -m cogapp -o ${_RECIPE_DIR}/meta.yaml ${_RECIPE_DIR}/meta_base.yaml || return 1
+        echo "> build_conda_env.sh::karaboCondaInstallCPPEnvironment: will conda build with recipe dir ${_RECIPE_DIR}."
         safeRunCondaCommand conda build ${_RECIPE_DIR} || return 1
-        safeRunCondaCommand conda install -c ${CONDA_LOCAL_CHANNEL} ${KARABO_ENV} || return 1
+        echo "> build_conda_env.sh::karaboCondaInstallCPPEnvironment: will conda install in channel ${CONDA_LOCAL_CHANNEL} in env ${KARABO_ENV}."
+        safeRunCondaCommand conda install -y -c ${CONDA_LOCAL_CHANNEL} ${KARABO_ENV} || return 1
+        # TODO: configure the generated environment to have the KARABO env var pointing to its $PREFIX upon startup. That's is needed to play along
+        #       well with karabo::util::Version::getPathToKaraboInstallation(), which is called in multiple places in the framework core - instantiation
+        #       of Cpp Device Servers, PluginLoader::defaultPluginPath(), ...
     fi
     unset _RECIPE_DIR
 }
@@ -201,7 +210,7 @@ Note: The environment variable XFEL_CONDA_CHANNEL can optionally be used to poin
       This is useful, e.g. if one needs to tunnel into a private network.
       If one follows the instructions in doc/installation/gui.rst, this script
       should be called as:
-      
+
       XFEL_CONDA_CHANNEL=localhost:8081 source build_conda_env.sh clean develop"
 }
 
@@ -225,6 +234,7 @@ while [ -n "$1" ]; do
             shift
             ;;
         karabogui|karabo-cpp|karabo-mdl)
+            echo "> build_conda_env.sh: arg[1] = $1"
             if [ "${SETUP_FLAG}" == false ]; then
                 displayHelp
                 return 1
@@ -259,6 +269,7 @@ CONDA_LOCAL_CHANNEL="file://${CONDA_ROOT}/conda-bld"
 CONDA_LOCAL_CHANNEL_ENV="  - ${CONDA_LOCAL_CHANNEL}"
 # functions are not exported to subshells.
 source ${CONDA_ROOT}/etc/profile.d/conda.sh
+echo "> build_conda_env.sh: will check conda base environment"
 karaboCondaCheckBaseEnvironment || return 1
 karaboCondaGetScriptPath
 
