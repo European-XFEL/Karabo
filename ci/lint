@@ -1,18 +1,106 @@
-__lint_cpp() {
-    CUSTOMDEFINES="-DKARABO_CLASSINFO -DKARABO_REGISTER_FOR_CONFIGURATION"
-    cppcheck $CUSTOMDEFINES --error-exitcode=0 --inconclusive --output-file=cppcheck_all_report.txt --enable=all --force $CI_PROJECT_DIR/src/karabo # TODO fix c++ code quality checks
+# -- variables definitions for cppcheck
+CPPBASEOPTIONS="--error-exitcode=0 --inconclusive --enable=all --force"
+
+# don't undef: -U_WIN32 -U__MACH__ -U__linux__
+CPPUNDEFINES="-UKARABO_ENABLE_TRACE_LOG -UKARABO_IO_TRACE -UKARABO_USE_PROFILER_SCALARFILTERBUFFER1 "
+CPPUNDEFINES+="-U_MSC_VER -U__DLL__ -U__CYGWIN__ -U__sun -Usun "
+CPPUNDEFINES+="-U__DragonFly__ -U__FreeBSD__ -U__NetBSD__ -U__OpenBSD__ "
+CPPUNDEFINES+="-U__MACOSX__ -UBSD -U__APPLE__ -U__unix -U__unix__ -Uunix "
+CPPUNDEFINES+="-U__SO__ -U__sgi -Usgi -U__GNUC__ -U__GLIBC__ -U__linux -Ulinux "
+
+# -- functions definitions
+
+__run_lint_command() {
+    command="time $1"
+    echo $command
+    eval $command
+    local status=$?
+    if [[ $status != 0 ]]; then
+        echo "Exited with error:$status"
+        exit $status
+    fi
+}
+
+__lint_cpp_full() {
+    CPPINCLUDES="-I$CI_PROJECT_DIR/src"
+
+    CPPIGNOREDIRS="-i$CI_PROJECT_DIR/build -i$CI_PROJECT_DIR/ci -i$CI_PROJECT_DIR/doc "
+    CPPIGNOREDIRS+="-i$CI_PROJECT_DIR/extern -i$CI_PROJECT_DIR/report "
+
+    OUTPUT="--output-file=${FUNCNAME[0]}_report.txt"
+    SCANNEDFOLDER="$CI_PROJECT_DIR/src/karabo"
+    CPPCHECKOPTIONS="$CPPINCLUDES $CPPUNDEFINES $OUTPUT $CPPBASEOPTIONS $CPPIGNOREDIRS"
+
+    __run_lint_command "cppcheck $CPPCHECKOPTIONS $SCANNEDFOLDER" # TODO fix c++ code quality checks
+}
+
+__lint_cpp_fast() {
+    CPPDEFINES="-DKARABO_CLASSINFO -DKARABO_REGISTER_FOR_CONFIGURATION"
+
+    OUTPUT="--output-file=${FUNCNAME[0]}_report.txt"
+    SCANNEDFOLDER="$CI_PROJECT_DIR/src/karabo"
+    CPPCHECKOPTIONS="$CPPUNDEFINES $CPPDEFINES $OUTPUT $CPPBASEOPTIONS "
+
+    # TODO: set --error-exitcode=1 to make it blocking
+    __run_lint_command "cppcheck $CPPCHECKOPTIONS $SCANNEDFOLDER"
+}
+
+__lint_python_gui() {
+    KARABOGUIPATH="src/pythonGui/karabogui"
+    OUTPUT="--output-file=${FUNCNAME[0]}_report.txt"
+
+    echo "Flake8 for $KARABOGUIPATH.."
+    __run_lint_command "flake8 $FLAKE8OPTIONS $OUTPUT $CI_PROJECT_DIR/$KARABOGUIPATH"
+}
+
+__lint_python_karabo() {
+    PYTHONKARABOPATH="src/pythonKarabo/karabo"
+    OUTPUT="--output-file=${FUNCNAME[0]}_report.txt"
+
+    echo "Flake8 for $PYTHONKARABOPATH.."
+    __run_lint_command "flake8 $FLAKE8OPTIONS $OUTPUT $CI_PROJECT_DIR/$PYTHONKARABOPATH"
 }
 
 __lint_python() {
-    flake8 --exclude=*tests* $CI_PROJECT_DIR/src/pythonGui/karabogui
-    flake8 --exclude=*tests* $CI_PROJECT_DIR/src/pythonKarabo/karabo
+    FLAKE8OPTIONS="--exclude=*tests* --tee"
+    __lint_python_gui && \
+    __lint_python_karabo
 }
 
+# -- main
 # if not run in the gitlab CI environment, one must set this env. variable.
 if [ "$CI_PROJECT_DIR" = "" ]; then
-    export CI_PROJECT_DIR=$(git rev-parse --show-toplevel)
+    export CI_PROJECT_DIR=$(echo $(git rev-parse --show-toplevel))
+else
+    # call manually if not CI:
+    # if non-CI it causes a warning: Could not find conda environment
+    source activate && conda activate
 fi
 
-source activate && conda activate
-__lint_cpp
-__lint_python
+SCANTYPE=$1
+# a variable is unset or set to the empty string
+if [[ -z "${SCANTYPE}" ]]; then
+  SCANTYPE="DEFAULTSCAN"
+fi
+
+case $SCANTYPE in
+    "FULLCPPCHECK") # name or value
+        __lint_cpp_full
+        ;;
+    "FASTCPPCHECK")
+        __lint_cpp_fast
+        ;;
+    "FLAKE8")
+        __lint_python
+        ;;
+    "DEFAULTSCAN")
+        echo "Running a scan with default settings.."
+        __lint_cpp_fast && \
+        __lint_python
+        ;;
+    *)
+        echo "Unknown type of scan.."
+        exit 1
+        ;;
+esac
+echo "Linter scan complete"
