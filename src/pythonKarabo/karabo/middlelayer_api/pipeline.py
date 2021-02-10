@@ -515,6 +515,8 @@ class OutputProxy(SubProxyBase):
         self.meta = True
         self._data_handler = None
         self._eos_handler = None
+        self._close_handler = None
+        self.networkInput = None
 
     def setDataHandler(self, handler):
         """Redirect the output of the pipelining proxy before connecting
@@ -535,6 +537,16 @@ class OutputProxy(SubProxyBase):
             raise RuntimeError("Setting an endOfStream handler must happen "
                                "before connecting to the output channel!")
         self._eos_handler = handler
+
+    def setCloseHandler(self, handler):
+        """Redirect the closing signal of the pipelining proxy
+
+        NOTE: The handler must take one argument ``channelname``.
+        """
+        if self.initialized:
+            raise RuntimeError("Setting a close handler must happen "
+                               "before connecting to the output channel!")
+        self._close_handler = handler
 
     async def handler(self, data, meta):
         # Only apply if we have a schema!
@@ -565,7 +577,8 @@ class OutputProxy(SubProxyBase):
             self.networkInput.handler = self.handler
         if self._eos_handler is not None:
             self.networkInput.end_of_stream_handler = self._eos_handler
-
+        if self._close_handler is not None:
+            self.networkInput.close_handler = self._close_handler
         output = ":".join((self._parent.deviceId, self.longkey))
         # Add our channel to the proxy tracking
         self._parent._remote_output_channel.add(self)
