@@ -27,7 +27,7 @@ __lint_cpp_full() {
     CPPIGNOREDIRS="-i$CI_PROJECT_DIR/build -i$CI_PROJECT_DIR/ci -i$CI_PROJECT_DIR/doc "
     CPPIGNOREDIRS+="-i$CI_PROJECT_DIR/extern -i$CI_PROJECT_DIR/report "
 
-    OUTPUT="--output-file=${FUNCNAME[0]}_report.txt"
+    OUTPUT="--output-file=${FUNCNAME[0]}_report_$SCANNAME.txt"
     SCANNEDFOLDER="$CI_PROJECT_DIR/src/karabo"
     CPPCHECKOPTIONS="$CPPINCLUDES $CPPUNDEFINES $OUTPUT $CPPBASEOPTIONS $CPPIGNOREDIRS"
 
@@ -37,7 +37,7 @@ __lint_cpp_full() {
 __lint_cpp_fast() {
     CPPDEFINES="-DKARABO_CLASSINFO -DKARABO_REGISTER_FOR_CONFIGURATION"
 
-    OUTPUT="--output-file=${FUNCNAME[0]}_report.txt"
+    OUTPUT="--output-file=${FUNCNAME[0]}_report_$SCANNAME.txt"
     SCANNEDFOLDER="$CI_PROJECT_DIR/src/karabo"
     CPPCHECKOPTIONS="$CPPUNDEFINES $CPPDEFINES $OUTPUT $CPPBASEOPTIONS "
 
@@ -47,7 +47,7 @@ __lint_cpp_fast() {
 
 __lint_python_gui() {
     KARABOGUIPATH="src/pythonGui/karabogui"
-    OUTPUT="--output-file=${FUNCNAME[0]}_report.txt"
+    OUTPUT="--output-file=${FUNCNAME[0]}_report_$SCANNAME.txt"
 
     echo "Flake8 for $KARABOGUIPATH.."
     __run_lint_command "flake8 $FLAKE8OPTIONS $OUTPUT $CI_PROJECT_DIR/$KARABOGUIPATH"
@@ -55,7 +55,7 @@ __lint_python_gui() {
 
 __lint_python_karabo() {
     PYTHONKARABOPATH="src/pythonKarabo/karabo"
-    OUTPUT="--output-file=${FUNCNAME[0]}_report.txt"
+    OUTPUT="--output-file=${FUNCNAME[0]}_report_$SCANNAME.txt"
 
     echo "Flake8 for $PYTHONKARABOPATH.."
     __run_lint_command "flake8 $FLAKE8OPTIONS $OUTPUT $CI_PROJECT_DIR/$PYTHONKARABOPATH"
@@ -77,14 +77,21 @@ else
     source activate && conda activate
 fi
 
-SCANTYPE=$1
+# -- usage
+# lint <SCANNAME>
+# where <SCANNAME> is FULLCPPCHECK FASTCPPCHECK FLAKE8
+# or a user-defined name.
+# if no name provided, SCANNAME will be set to "DEFAULTSCAN"
+# and default settings will be applied
+
+SCANNAME=$1
 # a variable is unset or set to the empty string
-if [[ -z "${SCANTYPE}" ]]; then
-  SCANTYPE="DEFAULTSCAN"
+if [[ -z "${SCANNAME}" ]]; then
+  SCANNAME="DEFAULTSCAN"
 fi
 
-case $SCANTYPE in
-    "FULLCPPCHECK") # name or value
+case $SCANNAME in
+    "FULLCPPCHECK")
         __lint_cpp_full
         ;;
     "FASTCPPCHECK")
