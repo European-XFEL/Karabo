@@ -519,6 +519,65 @@ namespace karabo {
                 set(key, condition, getActualTimestamp());
             }
 
+            enum class VectorUpdate {
+
+                removeOne = -2, // only first occurrence
+                removeAll = -1, // all occurrences
+                add = 1,
+                addIfNotIn = 2
+            };
+
+            /**
+             * Concurrency safe update of vector property
+             *
+             * Does not work for Hash (i.e. table element) due to Hash equality just checking similarity.
+             * Removing might be unreliable for VECTOR_FLOAT or VECTOR_DOUBLE due to floating point equality issues.
+             *
+             * @param key of the vector property to update
+             * @param updates: items to remove from property vector (starting at the front) or to add (at the end)
+             * @param updateType: indicates update type - applied individually to all items in 'updates'
+             * @param timestamp: timestamp to assign to updated vector property (e.g. getTimestamp())
+             */
+            template <class ItemType>
+            void setVectorUpdate(const std::string& key, const std::vector<ItemType>& updates, VectorUpdate updateType,
+                                 const karabo::util::Timestamp& timestamp) {
+
+                // Get current value and update as requested
+                boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                std::vector<ItemType> vec(m_parameters.get<std::vector < ItemType >> (key));
+                switch (updateType) {
+                    case VectorUpdate::add:
+                        vec.insert(vec.end(), updates.begin(), updates.end());
+                        break;
+                    case VectorUpdate::addIfNotIn:
+                        for (const ItemType& update : updates) {
+                            auto it = std::find(vec.begin(), vec.end(), update);
+                            if (it == vec.end()) vec.push_back(update);
+                        }
+                        break;
+                    case VectorUpdate::removeOne:
+                        for (auto itUpdate = updates.begin(); itUpdate != updates.end(); ++itUpdate) {
+                            auto itInVec = std::find(vec.begin(), vec.end(), *itUpdate);
+                            if (itInVec != vec.end()) {
+                                vec.erase(itInVec);
+                            }
+                        }
+                        break;
+                    case VectorUpdate::removeAll:
+                        auto itNewEnd = std::remove_if(vec.begin(), vec.end(), [&updates](const ItemType & item) {
+                            return (std::find(updates.begin(), updates.end(), item) != updates.end());
+                        });
+                        vec.resize(itNewEnd - vec.begin()); // remove_if does not yet shrink
+                        break;
+                }
+
+                // Now publish the new value
+                karabo::util::Hash h;
+                std::vector<ItemType>& vecInHash = h.bindReference < std::vector < ItemType >> (key);
+                vecInHash.swap(vec);
+                setNoLock(h, timestamp);
+            }
+
             /**
              * Updates the state of the device. This function automatically notifies any observers in the distributed system.
              *
