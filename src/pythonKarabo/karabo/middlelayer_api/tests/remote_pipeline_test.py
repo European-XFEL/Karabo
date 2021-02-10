@@ -350,6 +350,41 @@ class RemotePipelineTest(DeviceTest):
         await output_device.slotKillDevice()
 
     @async_tst
+    async def test_output_proxy_close_handler(self):
+        """Test the output close handler of a proxy"""
+        NUM_DATA = 5
+        output_device = Sender({"_deviceId_": "outputdevice"})
+        await output_device.startInstance()
+
+        closed = False
+        name = ""
+
+        def close_handler(channel_name):
+            nonlocal closed, name
+            closed = True
+            name = channel_name
+
+        with (await getDevice("outputdevice")) as proxy:
+            self.assertTrue(isAlive(proxy))
+            proxy.output.setCloseHandler(close_handler)
+            proxy.output.connect()
+            # Check that we are sending data with timestamps
+            for data in range(NUM_DATA):
+                await proxy.sendData()
+                ts1 = proxy.output.schema.data.timestamp
+            for data in range(NUM_DATA):
+                await proxy.sendData()
+                ts2 = proxy.output.schema.data.timestamp
+
+            self.assertGreater(ts2, ts1)
+            # No we kill the sender and verify our closed handler is called
+            await output_device.slotKillDevice()
+            self.assertEqual(closed, True)
+            self.assertEqual(name, "outputdevice:output")
+
+        del proxy
+
+    @async_tst
     async def test_multi_shared_pipelines(self):
         """Test the shared queue for multiple shared consumers"""
         # Check that we are connected
