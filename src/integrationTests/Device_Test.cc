@@ -13,6 +13,7 @@
 #include <karabo/xms/SignalSlotable.hh>
 #include <karabo/xms/InputChannel.hh>
 #include <karabo/xms/OutputChannel.hh>
+#include <karabo/util/Exception.hh>
 #include <karabo/util/Epochstamp.hh>
 #include <karabo/util/OverwriteElement.hh>
 #include <karabo/util/Schema.hh>
@@ -39,6 +40,7 @@ using karabo::util::STRING_ELEMENT;
 using karabo::util::TABLE_ELEMENT;
 using karabo::util::UINT32_ELEMENT;
 using karabo::util::VECTOR_FLOAT_ELEMENT;
+using karabo::util::VECTOR_STRING_ELEMENT;
 using karabo::core::DeviceServer;
 using karabo::core::DeviceClient;
 using karabo::xms::SignalSlotable;
@@ -97,6 +99,11 @@ public:
                 .readOnly().initialValue(0u)
                 .commit();
 
+        VECTOR_STRING_ELEMENT(expected).key("vecString")
+                .readOnly()
+                .initialValue({"one", "two", "three"})
+                .commit();
+
         NODE_ELEMENT(expected).key("node")
                 .displayedName("Node")
                 .commit();
@@ -149,6 +156,8 @@ public:
 
         KARABO_SLOT(slotGetCurrentConfiguration, const std::string /*tags*/);
 
+        KARABO_SLOT(slotUpdateVecString, std::vector<std::string>, int);
+
         KARABO_SIGNAL("signalA");
 
         KARABO_SLOT(slotEmitSignalA);
@@ -198,6 +207,25 @@ public:
 
     void slotGetCurrentConfiguration(const std::string& tags) {
         reply(getCurrentConfiguration(tags));
+    }
+
+
+    void slotUpdateVecString(const std::vector<std::string>& updates, int updateType) {
+        VectorUpdate type = VectorUpdate::add;
+        if (updateType == static_cast<int> (VectorUpdate::addIfNotIn)) {
+            type = VectorUpdate::addIfNotIn;
+        } else if (updateType == static_cast<int> (VectorUpdate::removeOne)) {
+            type = VectorUpdate::removeOne;
+        } else if (updateType == static_cast<int> (VectorUpdate::removeAll)) {
+            type = VectorUpdate::removeAll;
+        } else if (updateType != static_cast<int> (type)) {
+            std::ostringstream msg;
+            msg << "Invalid updateType: " << updateType
+                    << ". Expect values equivalent to values of the enum VectorUpdate.";
+            throw KARABO_PARAMETER_EXCEPTION(msg.str());
+        }
+
+        setVectorUpdate("vecString", updates, type, getActualTimestamp());
     }
 
 
@@ -272,6 +300,22 @@ public:
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, TestDeviceBadInit)
 
+// Enable CPPUNIT_ASSERT_EQUAL for vectors (copied from BaseLogging_Test)
+namespace CppUnit {
+    template <typename T>
+    struct assertion_traits<std::vector<T>>
+    {
+
+        static bool equal(const std::vector<T>& a, const std::vector<T>& b) {
+            return a == b;
+        }
+
+
+        static std::string toString(const std::vector<T>& p) {
+            return karabo::util::toString(p);
+        }
+    };
+}
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Device_Test);
 
@@ -330,6 +374,7 @@ void Device_Test::appTestRunner() {
     testNodedSlot();
     testGetSet();
     testUpdateState();
+    testSetVectorUpdate();
     testSignal();
     // Last tests needs its own device, so clean-up before
     m_deviceClient->killDeviceNoWait("TestDevice");
@@ -1099,6 +1144,68 @@ void Device_Test::testUpdateState() {
 
 
 
+}
+
+
+void Device_Test::testSetVectorUpdate() {
+    std::clog << "Start testSetVectorUpdate: " << std::flush;
+    const int timeoutInMs = 10000;
+    const std::string deviceId("TestDevice");
+
+    using VectorUpdate = karabo::core::Device<karabo::core::NoFsm>::VectorUpdate;
+
+    Hash hash;
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"one", "two", "three"}),
+                         hash.get<std::vector < std::string >> ("vecString"));
+
+    // Test adding
+    // The "three"s will all added times (although it is already in)!
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotUpdateVecString",
+                                                    std::vector<std::string>({"three", "three", "one"}),
+                                                    static_cast<int> (VectorUpdate::add))
+                            .timeout(timeoutInMs).receive());
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"one", "two", "three", "three", "three", "one"}),
+                         hash.get<std::vector < std::string >> ("vecString"));
+
+    // Test addIfNotIn
+    // Since "one" is already in, it will not be added again
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotUpdateVecString",
+                                                    std::vector<std::string>({"one", "seven"}),
+                                                    static_cast<int> (VectorUpdate::addIfNotIn))
+                            .timeout(timeoutInMs).receive());
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"one", "two", "three", "three", "three", "one", "seven"}),
+                         hash.get<std::vector < std::string >> ("vecString"));
+
+    // Test removeOne
+    // Only first "one" and first "three" will be removed, "notIn" is ignored
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotUpdateVecString",
+                                                    std::vector<std::string>({"three", "one", "notIn"}),
+                                                    static_cast<int> (VectorUpdate::removeOne))
+                            .timeout(timeoutInMs).receive());
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"two", "three", "three", "one", "seven"}),
+                         hash.get<std::vector < std::string >> ("vecString"));
+
+    // Test removeAll
+    // all "three"s and the "two" will be removed, "notIn" is ignored
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotUpdateVecString",
+                                                    std::vector<std::string>({"two", "notIn", "three"}),
+                                                    static_cast<int> (VectorUpdate::removeAll))
+                            .timeout(timeoutInMs).receive());
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({"one", "seven"}),
+                         hash.get<std::vector < std::string >> ("vecString"));
+
+    // Finally test invalid updateType
+    CPPUNIT_ASSERT_THROW(m_deviceServer->request(deviceId, "slotUpdateVecString",
+                                                 std::vector<std::string>(), 0)
+                         .timeout(timeoutInMs).receive(),
+                         karabo::util::RemoteException);
+
+    std::clog << "OK." << std::endl;
 }
 
 

@@ -38,6 +38,7 @@ private:
     void testSchemaInjection();
     void testGetSet();
     void testUpdateState();
+    void testSetVectorUpdate();
     void testSignal();
     void testBadInit();
 
