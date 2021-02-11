@@ -120,7 +120,7 @@ class ConfigurationFromName(QDialog):
 
         self.ui_table_widget.setModel(self.model)
         header = self.ui_table_widget.horizontalHeader()
-        header.setResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
         header.setStretchLastSection(True)
         self.ui_table_widget.selectionModel().selectionChanged.connect(
             self._selectionChanged)
