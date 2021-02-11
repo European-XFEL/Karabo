@@ -61,7 +61,7 @@ class DatabaseBase(ContextDecorator):
         self._dbhandle = value
 
     def onEnter(self):
-        """"To Be implemented by subclasses
+        """ To Be implemented by subclasses
 
         returns an object subclass of `HandleABC` which is set to the
         `self.dbhandle` object attribute in the `__enter__` conte
