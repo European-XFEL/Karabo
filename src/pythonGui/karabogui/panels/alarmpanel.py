@@ -55,7 +55,7 @@ class AlarmPanel(BasePanelWidget):
         self.table_view.doubleClicked.connect(self.onRowDoubleClicked)
 
         header = self.table_view.horizontalHeader()
-        header.setResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
         header.setStretchLastSection(True)
 
         self.model = AlarmFilterModel(get_alarm_model(), self.table_view)

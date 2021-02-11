@@ -383,10 +383,9 @@ def set_treeview_header(header):
     # additional columns are moved to the front
     header.moveSection(1, 0)
     header.moveSection(2, 0)
-
-    header.setResizeMode(0, QHeaderView.Stretch)
-    header.setResizeMode(1, QHeaderView.Fixed)
-    header.setResizeMode(2, QHeaderView.Fixed)
+    header.setSectionResizeMode(0, QHeaderView.Stretch)
+    header.setSectionResizeMode(1, QHeaderView.Fixed)
+    header.setSectionResizeMode(2, QHeaderView.Fixed)
     header.setStretchLastSection(False)
     header.setMaximumSectionSize(PANEL_ICON_SIZE)
     header.resizeSection(1, PANEL_ICON_SIZE)
