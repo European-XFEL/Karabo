@@ -8,7 +8,7 @@ from eulexistdb.exceptions import ExistDBException
 from requests.packages.urllib3.exceptions import HTTPError
 
 from karabo.project_db.bases import HandleABC
-from ..util import ProjectDBError
+from karabo.project_db.util import ProjectDBError
 
 
 LIST_DOMAINS_QUERY = """
@@ -57,18 +57,18 @@ def assure_running(db_settings):
                                    'karabo-startprojectdb')
         check_call([script_path])
         # wait until the database is actually up
-        maxTimeout = 60
-        waitBetween = 5
+        max_timeout = 60
+        wait_between = 5
         count = 0
         while True:
             try:
                 return verify_db(db_settings)
             except (TimeoutError, HTTPError, ExistDBException) as last_ex:
-                if count > maxTimeout//waitBetween:
+                if count > max_timeout//wait_between:
                     raise TimeoutError("Starting project database timed"
                                        " out! Last exception: {}"
                                        .format(last_ex))
-            sleep(waitBetween)
+            sleep(wait_between)
             count += 1
     else:
         try:
