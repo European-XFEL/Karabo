@@ -124,6 +124,10 @@ else:
         'karabo.bound_device_test': [
             'TestDevice=karabo.bound_api.tests.boundDevice:TestDevice'
         ],
+        'karabo.project_db': [
+            'exist_db=karabo.project_db.exist_db.node:DbConnectionNode',
+            'file_db=karabo.project_db.file_db.node:DbConnectionNode',
+        ],
     }
 
     from jupyter_client.kernelspec import install_kernel_spec

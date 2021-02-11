@@ -10,10 +10,9 @@ from .util import create_hierarchy, _gen_uuid
 
 def create_trashed_project(db, is_trashed=True):
     uuid = _gen_uuid()
-    xml = ('<xml item_type="project" uuid="{uuid}" '
-           'simple_name="{name}" is_trashed="{is_trashed}"></xml>').format(
-        uuid=uuid, name=uuid, is_trashed=str(is_trashed).lower())
-
+    xml = (f'<xml item_type="project" uuid="{uuid}"'
+           f' simple_name="{uuid}" is_trashed="{str(is_trashed).lower()}">'
+           '</xml>')
     db.save_item("LOCAL", uuid, xml)
     return uuid
 
