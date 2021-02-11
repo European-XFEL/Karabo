@@ -51,6 +51,9 @@ namespace karabo {
             karabo::util::Epochstamp to;
             int maxDataPoints;
             karabo::xms::SignalSlotable::AsyncReply aReply;
+
+            // return sampling interval in microsecond
+            double getInterval() const;
         };
 
 
@@ -125,9 +128,20 @@ namespace karabo {
             void asyncGetPropertyValues(const boost::shared_ptr<PropertyHistoryContext> &ctxt);
 
             /**
+             * Triggers the retrieval of the property values mean in an ongoing GetPropertyHistory process.
+             * This is used when the number of available data points for the property is larger than the
+             * maximum requested by the slot caller and all values are scalar numbers.
+             * The UINT64 properties are included in this despite being reinterpreted as INT64 on the backend
+             * and possibly returning incorrect data.
+             *
+             * @param context
+             */
+            void asyncGetPropertyValuesMean(const boost::shared_ptr<PropertyHistoryContext> &ctxt);
+
+            /**
              * Triggers the retrieval of the property values samples in an ongoing GetPropertyHistory process.
              * This is used when the number of available data points for the property is larger than the
-             * maximum allowed be the slot caller.
+             * maximum requested by the slot caller.
              *
              * @param context
              */
@@ -146,6 +160,20 @@ namespace karabo {
             void onPropertyValues(const karabo::net::HttpResponse &valuesResp,
                                   const std::string &columnPrefixToRemove,
                                   const boost::shared_ptr<PropertyHistoryContext> &ctxt);
+            /**
+             * Handles the retrieval of the values of a property in an ongoing GetPropertyHistory
+             * process. Responsible for transforming the json formatted values received from
+             * InfluxDbClient into a vector of hashes suitable to be returned to the slot caller.
+             * This function extends the functionality of `onPropertyValues` while keeping the
+             * property history protocol.
+             *
+             * Also responsible for replying to the slot caller.
+             *
+             * @param valuesResp
+             * @param context
+             */
+            void onMeanPropertyValues(const karabo::net::HttpResponse &valuesResp,
+                                      const boost::shared_ptr<PropertyHistoryContext> &ctxt);
 
             void asyncLastLogoutBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
             void onLastLogoutBeforeTime(const karabo::net::HttpResponse &valueResp,
@@ -221,6 +249,7 @@ namespace karabo {
             static const unsigned long kSecConversionFactor;
             static const unsigned long kFracConversionFactor;
             static const int kMaxHistorySize;
+            const std::unordered_set<std::string> kNumberTypes;
         };
 
 
