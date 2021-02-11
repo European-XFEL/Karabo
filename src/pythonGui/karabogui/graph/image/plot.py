@@ -366,8 +366,8 @@ class KaraboImagePlot(PlotItem):
 
         for axis in AXIS_ITEMS:
             axis_item = self.getAxis(axis)
-            # XXX: tick axis went away ...
-            axis_item.has_ticks = axis in major_axes
+            show_values = axis in major_axes
+            axis_item.setStyle(**{"showValues": show_values})
 
     # ---------------------------------------------------------------------
     # Reimplemented `PyQtGraph` methods
