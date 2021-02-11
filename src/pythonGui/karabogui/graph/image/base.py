@@ -128,18 +128,20 @@ class KaraboImageView(QWidget):
     def add_colorbar(self):
         """Enable the standard colorbar of this widget"""
         if self._colorbar is None:
-            image = self.plotItem.imageItem
+            plotItem = self.plotItem
+
+            image = plotItem.imageItem
             self._colorbar = ColorBarWidget(image)
 
-            top_axis_checked = self.plotItem.getAxis("top").has_ticks
+            top_axis_checked = plotItem.getAxis("top").style["showValues"]
             top_margin = X_AXIS_HEIGHT * top_axis_checked
 
-            bottom_axis_checked = self.plotItem.getAxis("bottom").has_ticks
-            bottom_margin = X_AXIS_HEIGHT * bottom_axis_checked
+            bot_axis_checked = plotItem.getAxis("bottom").style["showValues"]
+            bottom_margin = X_AXIS_HEIGHT * bot_axis_checked
 
             self._colorbar.set_margins(top=top_margin, bottom=bottom_margin)
             self._colorbar.levelsChanged.connect(
-                self.plotItem.set_image_levels)
+                plotItem.set_image_levels)
 
             self.image_layout.addItem(self._colorbar, row=1, col=2)
             self.image_layout.ci.layout.setColumnStretchFactor(2, 1)
