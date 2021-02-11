@@ -267,7 +267,7 @@ class DisplayDaemonService(BaseBindingController):
 
         header = table_view.horizontalHeader()
         header.setDefaultSectionSize(50)
-        header.setResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
         header.setSectionResizeMode(0, QHeaderView.Stretch)
         header.setSectionResizeMode(5, QHeaderView.Fixed)
         header.setSectionResizeMode(6, QHeaderView.Fixed)
