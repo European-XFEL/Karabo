@@ -15,14 +15,14 @@ MimeType=x-scheme-handler/{scheme};
 def create_linux_desktop_file(name, command, icon, scheme):
     # Resolve path
     path = Path.home() / ".local" / "share" / "applications"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path /= get_valid_filename(name).lower() + ".desktop"
+    path.mkdir(parents=True, exist_ok=True)
 
+    path /= get_valid_filename(name).lower() + ".desktop"
     # Write desktop file
-    with open(path, "w") as file:
+    with path.open("w") as f:
         contents = LINUX_DESKTOP_FILE_TEMPLATE.format(
             name=name, command=command, icon=icon, scheme=scheme)
-        file.write(contents)
+        f.write(contents)
 
     return path
 
