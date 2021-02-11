@@ -199,5 +199,5 @@ class ConfigurationDialog(QDialog):
         """Configure the treeview header to automatically resize its contents
         """
         header = self.tree_view.header()
-        header.setResizeMode(0, QHeaderView.ResizeToContents)
-        header.setResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
