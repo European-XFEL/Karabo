@@ -40,7 +40,7 @@ class RunConfiguratorEdit(BaseBindingController):
         item_model.itemChanged.connect(self._item_edited)
 
         header = widget.header()
-        header.setResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
         header.sectionDoubleClicked.connect(self.onDoubleClickHeader)
 
         widget.setSelectionBehavior(QAbstractItemView.SelectRows)

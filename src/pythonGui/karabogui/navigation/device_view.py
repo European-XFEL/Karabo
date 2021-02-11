@@ -36,7 +36,7 @@ class DeviceTreeView(QTreeView):
         model.signalItemChanged.connect(self.onSelectionChanged)
         model.modelReset.connect(self.resetExpand)
         header = self.header()
-        header.setResizeMode(QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
         # Prevent drag reorder of the header
         header.setSectionsMovable(False)
 
