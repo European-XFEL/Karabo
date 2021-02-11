@@ -454,6 +454,8 @@ class TestManager(GuiTestCase):
             topology.get_device.return_value = device_proxy
             manager = Manager()
 
-            manager.handle_propertyHistory('bob', 'answer', [42])
+            info = {'deviceId': 'bob', 'property': 'answer', 'data': [42],
+                    'success': True}
+            manager.handle_propertyHistory(**info)
             expected_call = call.publish_historic_data('answer', [42])
             assert device_proxy.method_calls[0] == expected_call
