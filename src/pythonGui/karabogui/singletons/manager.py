@@ -446,11 +446,27 @@ class Manager(QObject):
                     f'Click "Show Details..." for more information.')
             messagebox.show_error(text, details=reason)
 
-    def handle_propertyHistory(self, deviceId, property, data, success=True,
-                               failureReason="", reason=""):
+    def handle_propertyHistory(self, **info):
+        """The handler of the property history.
+
+        The`info` dictionary contains:
+
+            deviceId (str): the deviceId of the property
+            property (str): the key of the property
+            success (bool): success boolean of the request
+            data (HashList): the data returned by the historic data request.
+
+            failureReason (str): With Karabo <= 2.11, the failure reason is
+                                 provided here.
+            reason: Forward compatibility for future releases
+        """
+        success = info["success"]
         if success:
+            deviceId = info["deviceId"]
+            key = info["property"]
+            data = info["data"]
             device_proxy = self._topology.get_device(deviceId)
-            device_proxy.publish_historic_data(property, data)
+            device_proxy.publish_historic_data(key, data)
         else:
             # XXX: Forward compatibility!
             # The GUI server of future Karabo versions (> 2.6.X) will report
