@@ -1,7 +1,6 @@
 from functools import partial
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QEvent, QSize, Qt
-from PyQt5.QtGui import QPalette
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QEvent, QSize
 from PyQt5.QtWidgets import QAction, QGridLayout, QWidget
 from pyqtgraph import GraphicsLayoutWidget
 
@@ -46,10 +45,6 @@ class KaraboImageView(QWidget):
         self.setLayout(layout)
 
         self.image_layout = GraphicsLayoutWidget()
-        palette = self.image_layout.palette()
-        palette.setColor(QPalette.Background, Qt.transparent)
-        self.image_layout.setPalette(palette)
-
         self.layout().addWidget(self.image_layout, 0, 0, 1, 1)
 
         # Add our basic plotItem to this widget
