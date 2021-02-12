@@ -53,10 +53,16 @@ class BaseArrayGraph(BaseBindingController):
     # ----------------------------------------------------------------
 
     def add_proxy(self, proxy):
-        if proxy.binding is not None:
-            self._add_curve(proxy)
-            if len(self._curves) > 1:
-                self.widget.set_legend(True)
+        """Add a proxy curve to the plot widget
+
+        We only rely here on the `key` information of the binding, which is
+        always available. This is required for the plot item `name`.
+        We are protected by the base binding controller that a proxy is not
+        added multiple times.
+        """
+        self._add_curve(proxy)
+        if len(self._curves) > 1:
+            self.widget.set_legend(True)
         return True
 
     def _add_curve(self, proxy, widget=None):
