@@ -4,13 +4,11 @@ from lxml import etree
 from karabo.common.scenemodel.api import write_scene
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Bool, Device, dictToHash, Hash, Overwrite,
-    slot, Slot, String, TypeHash, UInt32, VectorString)
+    AccessLevel, AccessMode, Device, dictToHash, Hash, Overwrite,
+    slot, Slot, String, TypeHash, VectorString)
 from karabo.middlelayer_api.signalslot import Signal
 from karabo.native import read_project_model
-from karabo.project_db.exist_db.database import ProjectDatabase
-from karabo.project_db.exist_db.util import get_db_credentials
-from karabo.project_db.util import ProjectDBError
+from karabo.project_db.util import get_node, get_project, ProjectDBError
 
 
 class ProjectManager(Device):
@@ -25,28 +23,14 @@ class ProjectManager(Device):
         defaultValue=AccessLevel.ADMIN,
         options=[AccessLevel.ADMIN])
 
-    host = String(
-        defaultValue="localhost",
-        displayedName="Database host",
-        requiredAccessLevel=AccessLevel.EXPERT)
-
-    # NOTE: the default port is set to 8080 although the port used by the
-    #       local project run in the docker container is 8181
-    port = UInt32(
-        displayedName="Port",
-        defaultValue=8080,
-        requiredAccessLevel=AccessLevel.EXPERT)
-
-    testMode = Bool(
-        displayedName="Test Mode",
-        defaultValue=False,
-        requiredAccessLevel=AccessLevel.ADMIN)
+    # node containing Database connection details.
+    projectDB = get_node()
 
     domainList = VectorString(
         displayedName="Domain List",
         defaultValue=[],
-        description="List of allowed project DB domains. Empty list means no "
-                    "restrictions.",
+        description="List of allowed project DB domains. "
+                    "Empty list means no restrictions.",
         accessMode=AccessMode.INITONLY)
 
     signalProjectUpdate = Signal(TypeHash(), String())
@@ -64,13 +48,7 @@ class ProjectManager(Device):
         otherwise brings the device into ERROR
         """
         try:
-            # check if we can connect to the database
-            host, port = self._getCurrentConfig()
-            user, password = get_db_credentials(self.testMode.value)
-            with ProjectDatabase(user, password,
-                                 server=host, port=port,
-                                 test_mode=self.testMode.value,
-                                 init_db=True):
+            with get_project(self.projectDB, init_db=True):
                 self.state = State.ON
         except ProjectDBError as e:
             self.logger.error("ProjectDBError : {}".format(str(e)))
@@ -144,15 +122,7 @@ class ProjectManager(Device):
         Initialize a DB connection for a user
         :param token: database user token
         """
-        # XXX: Leave these hardcoded until session tokens are working
-        host, port = self._getCurrentConfig()
-        user, password = get_db_credentials(self.testMode.value)
-        db = ProjectDatabase(user, password,
-                             server=host,
-                             port=port,
-                             test_mode=self.testMode.value)
-        self.user_db_sessions[token] = db
-
+        self.user_db_sessions[token] = get_project(self.projectDB)
         self.logger.debug("Initialized user session")
         return Hash("success", True)
 
