@@ -1,4 +1,4 @@
-# Project that builds the Karabo C++ Device Server.
+# Project that builds the Karabo Idx Utilities for file based data logging.
 #
 # Variables that influence the configuration behavior and that should be
 # explicitly set at project configuration and generation time:
@@ -17,19 +17,19 @@
 # an activated Conda environment with the Karabo Framework lib package (and its dependencies)
 # installed:
 #
-# cmake -DCMAKE_PREFIX_PATH=$CONDA_PREFIX {{Karabo Framework Repository local working dir}}/src/deviceServer
+# cmake -DCMAKE_PREFIX_PATH=$CONDA_PREFIX {{Karabo Framework Repository local working dir}}/src/tools/dataLoggerIndex
 #
 
 cmake_minimum_required(VERSION 3.12)
 
 project(
-    "karabo-cpp-device-server"
+    "karabo-data-logger-index"
     LANGUAGES C CXX
 )
 
-include("../../cmake/cxx-options.cmake")
-include("../../cmake/karabo-lib-target-name.cmake")
-include("../../cmake/resolve-karabo-lib-target.cmake")
+include("../../../cmake/cxx-options.cmake")
+include("../../../cmake/karabo-lib-target-name.cmake")
+include("../../../cmake/resolve-karabo-lib-target.cmake")
 
 resolveKaraboLibTarget()
 
@@ -38,13 +38,25 @@ resolveKaraboLibTarget()
 # It is safe to go ahead and use the Karabo Lib target as a
 # dependency of the cppserver executable.
 
-set(DEVICE_SERVER_EXECUTABLE "karabo-cppserver")
+set(IDX_VIEW_EXECUTABLE "karabo-idxview")
 
-add_executable(${DEVICE_SERVER_EXECUTABLE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/deviceServer.cc)
+add_executable(${IDX_VIEW_EXECUTABLE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/idxView.cc
+)
 
 target_link_libraries(
-    ${DEVICE_SERVER_EXECUTABLE}
+    ${IDX_VIEW_EXECUTABLE}
+    ${KARABO_LIB_TARGET_NAME}
+)
+
+set(IDX_BUILD_EXECUTABLE "karabo-idxbuild")
+
+add_executable(${IDX_BUILD_EXECUTABLE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/idxBuild.cc
+)
+
+target_link_libraries(
+    ${IDX_BUILD_EXECUTABLE}
     ${KARABO_LIB_TARGET_NAME}
 )
 
@@ -58,10 +70,19 @@ target_link_libraries(
 # the libkarabo dependencies installed without having the
 # Framework as an installed package.
 set_target_properties(
-    ${DEVICE_SERVER_EXECUTABLE} PROPERTIES
+    ${IDX_VIEW_EXECUTABLE} PROPERTIES
     INSTALL_RPATH "$ORIGIN/../lib;${CMAKE_PREFIX_PATH}/lib"
 )
 
-install(TARGETS ${DEVICE_SERVER_EXECUTABLE}
+install(TARGETS ${IDX_VIEW_EXECUTABLE}
+        RUNTIME DESTINATION bin
+)
+
+set_target_properties(
+    ${IDX_BUILD_EXECUTABLE} PROPERTIES
+    INSTALL_RPATH "$ORIGIN/../lib;${CMAKE_PREFIX_PATH}/lib"
+)
+
+install(TARGETS ${IDX_BUILD_EXECUTABLE}
         RUNTIME DESTINATION bin
 )

@@ -154,7 +154,22 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
 
     testMaxNumDataRange();
 
-    testMigrateFileLoggerData();
+    // NOTE: The testMigrateFileLoggerData test assumes it is running from a directory inside the
+    //       Framework source tree, which is not true when the tests are run in a Conda
+    //       environment with the Framework installed as a package. As a temporary workaround,
+    //       we skip the test if we are not inside the source tree.
+    // TODO: Provide a more robust and Conda/CI friendly solution and get rid of this klundge.
+    //       One possible approach: separate the file logger from the influx logger tests. The file logger
+    //       test can be run on a job that belongs to a pipeline stage prior to the one that contains
+    //       the influx logger test. The generated file logging tests would them be temporary
+    //       CI artifacts passed from one stage to the other.
+    const boost::filesystem::path migratorPackageBase("../../../src/pythonKarabo");
+    boost::system::error_code ec;
+    if (boost::filesystem::exists(migratorPackageBase, ec)) {
+        testMigrateFileLoggerData();
+    } else {
+        std::clog << "Migrator script not available - skipping migration test." << std::endl;
+    }
 
     testMaxNumDataHistory();
     testNans();
