@@ -199,13 +199,19 @@ class PanelWrangler(QObject):
             return
 
         self.main_window = MainWindow()
+        process_qt_events(timeout=1000)
+
         if self.splash is not None:
             self.splash.finish(self.main_window)
+            # Finish splash
+            process_qt_events(timeout=1000)
 
         self.main_window.show()
         # Show the connection dialog after processing all pending events since
         # the main window needs to render and update its geometry first.
-        process_qt_events(timeout=5000)
+        # Gently give the main window some render cycles
+        for _ in range(10):
+            process_qt_events(timeout=1000)
 
         show_wizard = get_config()['wizard']
         if show_wizard:
