@@ -6,7 +6,7 @@
 
 namespace karabo {
     namespace devices {
-        
+
         using namespace krb_log4cpp;
         using namespace std;
         using namespace karabo::util;
@@ -208,7 +208,7 @@ namespace karabo {
 
             for (size_t i = 0; i < paths.size(); ++i) {
                 const string& path = paths[i];
-                
+
                 // Skip those elements which should not be archived
                 const bool noArchive = (!m_currentSchema.has(path)
                                         || (m_currentSchema.hasArchivePolicy(path)
