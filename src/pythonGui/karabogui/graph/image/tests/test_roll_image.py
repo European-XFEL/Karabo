@@ -71,3 +71,22 @@ class TestRollImage(unittest.TestCase):
         image.add(value)
         image.add(empty)
         self.assertIsNone(image.data)
+
+    def test_stack_change_reset(self):
+        image = RollImage()
+        size = 20
+        arange_value = np.arange(size)
+        for i in range(image.stack + 1):
+            image.add(arange_value)
+        self.assertIsNotNone(image.data)
+        # Stack is 100 by default
+        image.stack = 100
+        self.assertIsNotNone(image.data)
+        image.stack = 20
+        self.assertIsNone(image.data)
+        arange_value = np.arange(size)
+        for i in range(image.stack + 1):
+            image.add(arange_value)
+        self.assertIsNotNone(image.data)
+        image.reset()
+        self.assertIsNone(image.data)
