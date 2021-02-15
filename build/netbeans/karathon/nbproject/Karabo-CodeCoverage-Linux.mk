@@ -81,8 +81,8 @@ TESTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-Wfatal-errors -Wno-unused-local-typedefs -std=c++14
-CXXFLAGS=-Wfatal-errors -Wno-unused-local-typedefs -std=c++14
+CCFLAGS=-Wfatal-errors -Wno-unused-local-typedefs -Wno-noexcept-type -std=c++14
+CXXFLAGS=-Wfatal-errors -Wno-unused-local-typedefs -Wno-noexcept-type -std=c++14
 
 # Fortran Compiler Flags
 FFLAGS=
