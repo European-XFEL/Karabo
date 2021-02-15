@@ -112,7 +112,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${HDF5_INCLUDE_DIRS} 
 find_package(OpenSSL REQUIRED)
 list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${OpenSSL_INCLUDE_DIRS})
 
-find_package(Boost 1.66 REQUIRED
+find_package(Boost 1.67 REQUIRED
              COMPONENTS chrono date_time filesystem regex signals system thread)
 list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${Boost_INCLUDE_DIRS})
 
