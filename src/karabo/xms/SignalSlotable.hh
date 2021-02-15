@@ -971,19 +971,21 @@ namespace karabo {
              * Register a new slot *instance* under name *funcName*.
              * This will raise an error if the slot already exists.
              */
-            void registerNewSlot(const std::string &funcName, SlotInstancePointer instance);
+            void registerNewSlot(const std::string &funcName,
+                                 SlotInstancePointer instance);
 
             /// Register signal-slot connection on signal side
-            void slotConnectToSignal(const std::string& signalFunction, const std::string& slotInstanceId,
+            void slotConnectToSignal(const std::string& signalFunction,
+                                     const std::string& slotInstanceId,
                                      const std::string& slotFunction);
 
             /// Slot to subscribe to remote signal
             void slotSubscribeRemoteSignal(const std::string& signalInstanceId,
-                                                const std::string& signalFunction);
+                                           const std::string& signalFunction);
 
             /// Slot to un-subscribe from remote signal
             void slotUnsubscribeRemoteSignal(const std::string& signalInstanceId,
-                                                  const std::string& signalFunction);
+                                             const std::string& signalFunction);
 
             /// True if instance with ID 'slotInstanceId' has slot 'slotFunction'.
             /// Internally uses "slotHasSlot" for remote instances, but shortcuts if ID is the own one.
