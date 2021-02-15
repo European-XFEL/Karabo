@@ -120,7 +120,7 @@
             <pElem>${NUMPY_HEADER_DIR}</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
-          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs -std=c++14</commandLine>
+          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs -Wno-noexcept-type -std=c++14</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
@@ -558,7 +558,7 @@
             <pElem>${NUMPY_HEADER_DIR}</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
-          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs -std=c++14</commandLine>
+          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs -Wno-noexcept-type -std=c++14</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
@@ -994,7 +994,7 @@
             <pElem>${NUMPY_HEADER_DIR}</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
-          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs -std=c++14</commandLine>
+          <commandLine>-Wfatal-errors -Wno-unused-local-typedefs -Wno-noexcept-type -std=c++14</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
