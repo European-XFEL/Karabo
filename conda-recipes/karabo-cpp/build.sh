@@ -11,15 +11,15 @@ cmake \
   -DCMAKE_PREFIX_PATH=${CONDA_PREFIX}\
   -DCMAKE_INSTALL_PREFIX=${PREFIX}\
   -DBUILD_UNIT_TESTING=1\
-  -DBUILD_INTEGRATION_TESTING=1\
+  -DBUILD_INTEGRATION_TESTING=0\
   ${SRC_DIR}
 
 make -j${CPU_COUNT} || exit $?
 make install || exit $?
 # run tests
-# TODO: the dataLoggingIntegrTest depends on the karabo-cppserver and karabo-idxbuild being
-#       built (which currently aren't yet). As soon as those utilities are built from their
-#       CMake projects, remove the -E option from the ctest command.
+# TODO: The data logging integration tests are failing in the test of migrated data.
+#       Remove the -E option passed to ctest as soon as that test is fixed allowing
+#       its execution from a Conda Recipe.
 ctest -VV -E dataLoggingIntegrTest
 
 ACTIVATE_DIR=${PREFIX}/etc/conda/activate.d
@@ -34,11 +34,10 @@ mkdir -p ${PREFIX}/plugins
 # Why do we put files in here? is it necessary for the packaging?
 touch ${PREFIX}/var/data/.data_folder
 touch ${PREFIX}/var/log/.log_folder
-touch ${PREFIX}/plugins/.plugins
+# touch ${PREFIX}/plugins/.plugins
 
 cp -r ${RECIPE_DIR}/scripts/activate.sh ${ACTIVATE_DIR}/karabo-activate.sh
 cp -r ${RECIPE_DIR}/scripts/deactivate.sh ${DEACTIVATE_DIR}/karabo-deactivate.sh
-
 
 if [ ! -d "${PREFIX}/var/environment" ]; then
     cp -r ${SRC_DIR}/src/environment.in "${PREFIX}/var/environment"

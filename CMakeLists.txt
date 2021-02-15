@@ -68,7 +68,16 @@ endif()
 add_subdirectory(src/karabo ${CMAKE_BINARY_DIR}/karabo)
 
 # The build of the Karabo C++ Device Server (karabo-cppserver).
-# add_subdirectory(src/deviceServer ${CMAKE_BINARY_DIR}/karabo)
+add_subdirectory(src/deviceServer ${CMAKE_BINARY_DIR}/karabo/deviceServer)
+
+# The build of the Karabo Broker Message Logger utility (karabo-brokermessagelogger)
+add_subdirectory(src/brokerMessageLogger ${CMAKE_BINARY_DIR}/karabo/brokerMessageLogger)
+
+# The build of the Karabo Broker Rates utility (karabo-brokerrates)
+add_subdirectory(src/tools/brokerRates ${CMAKE_BINARY_DIR}/karabo/brokerRates)
+
+# The build of the Karabo Idx Utilities for file based data logging (karabo-idxbuild and karabo-idxview)
+add_subdirectory(src/tools/dataLoggerIndex ${CMAKE_BINARY_DIR}/karabo/dataLoggerIndex)
 
 if (BUILD_UNIT_TESTING)
     add_subdirectory(src/karabo/tests ${CMAKE_BINARY_DIR}/karabo/tests)
