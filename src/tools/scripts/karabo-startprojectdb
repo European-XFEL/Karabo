@@ -43,7 +43,7 @@ fi
 if [[ $? -eq 0 ]]; then
     echo "------------------------------------------"
     echo "Configuration DB was started."
-    echo "You can access the backend at: http://localhost:8080/exist/"
+    echo "You can access the backend at: http://localhost:8181/exist/"
     exit 0
 else
     echo "------------------------------------------"
