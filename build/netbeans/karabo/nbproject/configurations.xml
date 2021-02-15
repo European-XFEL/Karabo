@@ -187,6 +187,10 @@
         <itemPath>../../../src/karabo/net/JmsConsumer.hh</itemPath>
         <itemPath>../../../src/karabo/net/JmsProducer.cc</itemPath>
         <itemPath>../../../src/karabo/net/JmsProducer.hh</itemPath>
+        <itemPath>../../../src/karabo/net/MqttClient.cc</itemPath>
+        <itemPath>../../../src/karabo/net/MqttClient.hh</itemPath>
+        <itemPath>../../../src/karabo/net/MqttCppClient.cc</itemPath>
+        <itemPath>../../../src/karabo/net/MqttCppClient.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="Point-2-Point" projectFiles="true">
         <logicalFolder name="f3" displayName="Channel" projectFiles="true">
@@ -391,6 +395,8 @@
         <itemPath>../../../src/karabo/tests/net/JmsConnection_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/net/MQTcpNetworking.cc</itemPath>
         <itemPath>../../../src/karabo/tests/net/MQTcpNetworking.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/net/MqttClient_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/net/MqttClient_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/net/ReadAsyncStringUntil_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/net/ReadAsyncStringUntil_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/net/Strand_Test.cc</itemPath>
@@ -1296,6 +1302,29 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/net/MqttClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/MqttClient.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/MqttCppClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <commandLine>-Wno-noexcept-type</commandLine>
+        </ccTool>
+      </item>
+      <item path="../../../src/karabo/net/MqttCppClient.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Strand.cc" ex="false" tool="1" flavor2="0">
@@ -1492,6 +1521,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/net/MQTcpNetworking.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/MqttClient_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/MqttClient_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3236,6 +3275,29 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/net/MqttClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/MqttClient.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/MqttCppClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <commandLine>-Wno-noexcept-type</commandLine>
+        </ccTool>
+      </item>
+      <item path="../../../src/karabo/net/MqttCppClient.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Strand.cc" ex="false" tool="1" flavor2="0">
@@ -3432,6 +3494,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/net/MQTcpNetworking.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/MqttClient_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/MqttClient_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4706,6 +4778,9 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <stripSymbols>false</stripSymbols>
+        </ccTool>
       </item>
       <item path="../../../src/karabo/io/HashXmlSerializer.hh"
             ex="false"
@@ -5166,6 +5241,29 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/net/MqttClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/MqttClient.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/MqttCppClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <commandLine>-Wno-noexcept-type</commandLine>
+        </ccTool>
+      </item>
+      <item path="../../../src/karabo/net/MqttCppClient.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Strand.cc" ex="false" tool="1" flavor2="0">
@@ -5362,6 +5460,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/net/MQTcpNetworking.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/MqttClient_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/net/MqttClient_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -5736,6 +5844,9 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <stripSymbols>false</stripSymbols>
+        </ccTool>
       </item>
       <item path="../../../src/karabo/util/ByteSwap.hh"
             ex="false"
