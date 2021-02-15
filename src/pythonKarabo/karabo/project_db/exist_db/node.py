@@ -11,6 +11,8 @@ class DbConnectionNode(DbConnectionNodeBase):
         displayedName="Database host",
         requiredAccessLevel=AccessLevel.EXPERT)
 
+    # NOTE: the default port is set to 8080 although the port used by the
+    #       local project run in the docker container is 8181
     port = UInt32(
         displayedName="Port",
         defaultValue=8080,
