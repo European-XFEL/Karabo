@@ -1,28 +1,54 @@
 import numpy as np
-from traits.api import ArrayOrNone, HasStrictTraits, Int, Property
+from traits.api import (
+    ArrayOrNone, HasStrictTraits, Int, on_trait_change, Property)
 
 DEFAULT_STACK = 100
 
 
 class RollImage(HasStrictTraits):
+    """Class to construct a waterfall image from an array
+
+    This class will build a rolling image from the input arrays up to a limit
+    of `stack` size. The default stack size is `100`.
+
+    Arrays can be added via:
+
+    image = RollImage()
+    image.add(...)
+
+    The internal data is automatically reset if the `stack` size changes or
+    the array input changes in `shape` or `dtype`.
+
+    The rolling image can then be derived via the `data` property:
+
+        data = image.data
+    """
+
     data = Property
-    _data = ArrayOrNone
     stack = Int
-    sliceCounter = Int
+
+    # Internal traits
+    _slice_counter = Int
+    _data = ArrayOrNone
 
     def _stack_default(self):
         return DEFAULT_STACK
 
     def _get_data(self):
         if self._data is None:
-            return
-        return self._data[0:self.sliceCounter + 1]
+            return None
 
-    def _stack_changed(self):
+        return self._data[0:self._slice_counter + 1]
+
+    @on_trait_change('stack')
+    def invalidate(self):
         self._data = None
+
+    # Public interface
+    # -----------------------------------------------------------------------
 
     def reset(self):
-        self._data = None
+        self.invalidate()
 
     def add(self, value):
         if value.size == 0:
@@ -37,10 +63,10 @@ class RollImage(HasStrictTraits):
                        or (value.shape[0] != self._data.shape[1])
                        or (value.dtype != self._data.dtype))
         if needs_reset:
-            self._data = np.vstack(value for _ in range(self.stack))
-            self.sliceCounter = 0
+            self._data = np.vstack([value for _ in range(self.stack)])
+            self._slice_counter = 0
 
-        elif self.sliceCounter < self.stack:
-            self.sliceCounter += 1
+        elif self._slice_counter < self.stack:
+            self._slice_counter += 1
         self._data = np.roll(self._data, 1, axis=0)
         self._data[0] = value
