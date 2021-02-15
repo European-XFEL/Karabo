@@ -27,7 +27,7 @@ requirements:
     - make
     - cmake>3.12
     - log4cpp=1.1.3=xfel
-    - boost=1.66=xfel
+    - boost=1.67=xfel
     - openssl
     - openmqc
     - openmq
@@ -42,7 +42,7 @@ requirements:
   run:
     - numpy=1.13.3
     - log4cpp=1.1.3=xfel
-    - boost=1.66=xfel
+    - boost=1.67=xfel
     - openssl
     - openmqc
     - openmq
@@ -54,11 +54,14 @@ requirements:
     - libtiff
     - pugixml=1.2=xfel
 
-#test:
-#  commands:
-#    - karabo-cppserver --help
-#  imports:
-#    - karathon-about:
+test:
+  commands:
+    - karabo-cppserver --help
+    - karabo-brokermessagelogger --help
+    - karabo-brokerrates --help
+  files:
+    - karabo-idxbuild
+    - karabo-idxview
 
 about:
   home: https://in.xfel.eu/readthedocs/docs/karabo/en/latest/index.html
