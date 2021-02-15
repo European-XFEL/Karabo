@@ -1,4 +1,4 @@
-# Project that builds the Karabo C++ Device Server.
+# Project that builds the Karabo Broker Rates Utility.
 #
 # Variables that influence the configuration behavior and that should be
 # explicitly set at project configuration and generation time:
@@ -17,19 +17,19 @@
 # an activated Conda environment with the Karabo Framework lib package (and its dependencies)
 # installed:
 #
-# cmake -DCMAKE_PREFIX_PATH=$CONDA_PREFIX {{Karabo Framework Repository local working dir}}/src/deviceServer
+# cmake -DCMAKE_PREFIX_PATH=$CONDA_PREFIX {{Karabo Framework Repository local working dir}}/src/tools/brokerRates
 #
 
 cmake_minimum_required(VERSION 3.12)
 
 project(
-    "karabo-cpp-device-server"
+    "karabo-broker-rates"
     LANGUAGES C CXX
 )
 
-include("../../cmake/cxx-options.cmake")
-include("../../cmake/karabo-lib-target-name.cmake")
-include("../../cmake/resolve-karabo-lib-target.cmake")
+include("../../../cmake/cxx-options.cmake")
+include("../../../cmake/karabo-lib-target-name.cmake")
+include("../../../cmake/resolve-karabo-lib-target.cmake")
 
 resolveKaraboLibTarget()
 
@@ -38,13 +38,14 @@ resolveKaraboLibTarget()
 # It is safe to go ahead and use the Karabo Lib target as a
 # dependency of the cppserver executable.
 
-set(DEVICE_SERVER_EXECUTABLE "karabo-cppserver")
+set(BROKER_RATES_EXECUTABLE "karabo-brokerrates")
 
-add_executable(${DEVICE_SERVER_EXECUTABLE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/deviceServer.cc)
+add_executable(${BROKER_RATES_EXECUTABLE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/brokerRates.cpp
+)
 
 target_link_libraries(
-    ${DEVICE_SERVER_EXECUTABLE}
+    ${BROKER_RATES_EXECUTABLE}
     ${KARABO_LIB_TARGET_NAME}
 )
 
@@ -58,10 +59,10 @@ target_link_libraries(
 # the libkarabo dependencies installed without having the
 # Framework as an installed package.
 set_target_properties(
-    ${DEVICE_SERVER_EXECUTABLE} PROPERTIES
+    ${BROKER_RATES_EXECUTABLE} PROPERTIES
     INSTALL_RPATH "$ORIGIN/../lib;${CMAKE_PREFIX_PATH}/lib"
 )
 
-install(TARGETS ${DEVICE_SERVER_EXECUTABLE}
+install(TARGETS ${BROKER_RATES_EXECUTABLE}
         RUNTIME DESTINATION bin
 )

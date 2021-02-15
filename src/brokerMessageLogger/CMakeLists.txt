@@ -1,4 +1,4 @@
-# Project that builds the Karabo C++ Device Server.
+# Project that builds the Karabo Message Logger Utility.
 #
 # Variables that influence the configuration behavior and that should be
 # explicitly set at project configuration and generation time:
@@ -17,13 +17,13 @@
 # an activated Conda environment with the Karabo Framework lib package (and its dependencies)
 # installed:
 #
-# cmake -DCMAKE_PREFIX_PATH=$CONDA_PREFIX {{Karabo Framework Repository local working dir}}/src/deviceServer
+# cmake -DCMAKE_PREFIX_PATH=$CONDA_PREFIX {{Karabo Framework Repository local working dir}}/src/brokerMessageLogger
 #
 
 cmake_minimum_required(VERSION 3.12)
 
 project(
-    "karabo-cpp-device-server"
+    "karabo-broker-message-logger"
     LANGUAGES C CXX
 )
 
@@ -38,13 +38,13 @@ resolveKaraboLibTarget()
 # It is safe to go ahead and use the Karabo Lib target as a
 # dependency of the cppserver executable.
 
-set(DEVICE_SERVER_EXECUTABLE "karabo-cppserver")
+set(BROKER_LOGGER_EXECUTABLE "karabo-brokermessagelogger")
 
-add_executable(${DEVICE_SERVER_EXECUTABLE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/deviceServer.cc)
+add_executable(${BROKER_LOGGER_EXECUTABLE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/brokerMessageLogger.cc)
 
 target_link_libraries(
-    ${DEVICE_SERVER_EXECUTABLE}
+    ${BROKER_LOGGER_EXECUTABLE}
     ${KARABO_LIB_TARGET_NAME}
 )
 
@@ -58,10 +58,10 @@ target_link_libraries(
 # the libkarabo dependencies installed without having the
 # Framework as an installed package.
 set_target_properties(
-    ${DEVICE_SERVER_EXECUTABLE} PROPERTIES
+    ${BROKER_LOGGER_EXECUTABLE} PROPERTIES
     INSTALL_RPATH "$ORIGIN/../lib;${CMAKE_PREFIX_PATH}/lib"
 )
 
-install(TARGETS ${DEVICE_SERVER_EXECUTABLE}
+install(TARGETS ${BROKER_LOGGER_EXECUTABLE}
         RUNTIME DESTINATION bin
 )
