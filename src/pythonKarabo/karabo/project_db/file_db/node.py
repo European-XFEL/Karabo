@@ -5,7 +5,9 @@ from .database import ProjectDatabase
 
 
 class DbConnectionNode(DbConnectionNodeBase):
-    dir = String(defaultValue="projectDB")
+    dir = String(defaultValue="projectDB",
+                 description="directory where files are saved relative to"
+                             " $KARABO/var/data")
 
     def get_db(self, test_mode=False, init_db=False):
         return ProjectDatabase(
