@@ -160,22 +160,22 @@ stages:
       - "extern/**/*"
 
 # TODO: remove this after reporting support for ctest is working
-.unit_tests_miniconda_cmake: &unit-tests-miniconda-cmake
-  <<: *test-miniconda-cmake
-  only:
-    refs:
-      - merge_requests
-    changes:
-      - "src/karabo/**/*"
-      - "src/karathon/**/*"
-      - "conda-recipes/karabo-cpp/**/*"
-  except:
-    refs:
-      - /^(master)$/  # the changes check will default to true
-      - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
-      - schedules
-    changes:
-      - "extern/**/*"
+#.unit_tests_miniconda_cmake: &unit-tests-miniconda-cmake
+#  <<: *test-miniconda-cmake
+#  only:
+#    refs:
+#      - merge_requests
+#    changes:
+#      - "src/karabo/**/*"
+#      - "src/karathon/**/*"
+#      - "conda-recipes/karabo-cpp/**/*"
+#  except:
+#    refs:
+#      - /^(master)$/  # the changes check will default to true
+#      - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
+#      - schedules
+#    changes:
+#      - "extern/**/*"
 
 .unit_tests_conda: &unit-tests-conda
   script:
@@ -242,7 +242,7 @@ release build ubuntu18:
   <<: *release-build
 
 release build ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16
+  image: europeanxfel/karabo-ci:ubuntu-16gcc7
   <<: *release-build
 
 release build miniconda:
@@ -298,7 +298,7 @@ nightly build ubuntu18:
   <<: *nightly-build
 
 nightly build ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16
+  image: europeanxfel/karabo-ci:ubuntu-16gcc7
   <<: *nightly-build
 
 nightly build miniconda-osx64:
@@ -334,7 +334,7 @@ deps build ubuntu18:
   <<: *deps-build
 
 deps build ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16
+  image: europeanxfel/karabo-ci:ubuntu-16gcc7
   <<: *deps-build
 
 # Dependencies build tests
@@ -370,7 +370,7 @@ unit tests ubuntu18:
   <<: *unit-tests
 
 unit tests ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16
+  image: europeanxfel/karabo-ci:ubuntu-16gcc7
   <<: *unit-tests
 
 unit tests miniconda:
@@ -391,10 +391,9 @@ unit tests miniconda-win64:
     - Win10
   <<: *unit-tests-conda
 
-# TODO: restore this to use the anchor "unit-tests" once ctest reporting is supported.
 unit tests miniconda-cmake:
   image: europeanxfel/karabo-ci:miniconda-3
-  <<: *unit-tests-miniconda-cmake
+  <<: *unit-tests
 
 # Post-merge integration test builds
 
@@ -411,7 +410,7 @@ integration tests ubuntu18:
   <<: *integration-tests
 
 integration tests ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16
+  image: europeanxfel/karabo-ci:ubuntu-16gcc7
   <<: *integration-tests
 
 # Scheduled coverage tests
@@ -437,5 +436,5 @@ long tests ubuntu18:
   <<: *long-tests
 
 long tests ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16
+  image: europeanxfel/karabo-ci:ubuntu-16gcc7
   <<: *long-tests
