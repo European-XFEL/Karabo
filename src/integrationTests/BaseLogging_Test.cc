@@ -5,6 +5,11 @@
  */
 
 #include "BaseLogging_Test.hh"
+#define NO_VECTOR_HASH_ASSERTION_TRAITS
+// Various CppUnit test helpers, but no special treatment for vector<Hash>.
+// That needs even more special treatment below
+#include "CppUnitMacroExtension.hh"
+#undef NO_VECTOR_HASH_ASSERTION_TRAITS
 
 #include <karabo/net/EventLoop.hh>
 #include <karabo/util/Hash.hh>
@@ -99,45 +104,28 @@ private:
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogTestDevice)
 
 
-// adding vector<Hash>, Hash, and vector<string> helpers for CppUnit
-namespace CppUnit{
-    template <>
-    struct assertion_traits<karabo::util::Hash>{
-        static bool equal(const karabo::util::Hash &a, const karabo::util::Hash &b){
-            if (b.size() != a.size()){
-                return false;
-            }
-            std::vector<std::string> paths;
-            a.getPaths(paths);
-            for (const std::string & path : paths) {
-                // most of the saving is serialized into text, this is why this helper
-                // checks the equality between values only passed as strings.
-
-                if (a.getAs<string>(path) != b.getAs<string>(path)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        static std::string toString(const karabo::util::Hash &p){
-            std::ostringstream o;
-            o << p << std::endl;
-            return o.str();
-        }
-    };
+// Very special vector<Hash> treatment for CppUnit, ignoring differences in attributes.
+// Add here what has been excluded from CppUnitMacroExtension.hh by '#define NO_VECTOR_HASH_ASSERTION_TRAITS' above.
+// Note: Removing this code here would still compile, but then vector<Hash> comparison would fall back to the
+//       vector<T> template in CppUnitMacroExtension.hh, i.e. using Hash::operator==(Hash) which unfortunately only
+//       checks similarity (i.e. checks only for same paths).
+namespace CppUnit {
 
     template <>
-    struct assertion_traits<std::vector< karabo::util::Hash>>{
-        static bool equal(const std::vector< karabo::util::Hash> &a, const std::vector< karabo::util::Hash> &b){
+    struct assertion_traits<std::vector< karabo::util::Hash>>
+    {
+
+
+        static bool equal(const std::vector< karabo::util::Hash> &a, const std::vector< karabo::util::Hash> &b) {
             // using karabo::util::similar() here is not OK. the attributes of the hashes are dropped in one
             // of the serialization steps
-            if (a.size() != b.size()){
+            if (a.size() != b.size()) {
                 return false;
             }
-            for (size_t i = 0; i < a.size(); i++){
+            for (size_t i = 0; i < a.size(); i++) {
                 const karabo::util::Hash& a_i = a[i];
                 const karabo::util::Hash& b_i = b[i];
-                if (b_i.size() != a_i.size()){
+                if (b_i.size() != a_i.size()) {
                     return false;
                 }
                 std::vector<std::string> paths;
@@ -153,52 +141,15 @@ namespace CppUnit{
             return true;
         }
 
-        static std::string toString(const std::vector< karabo::util::Hash> &p){
+
+        static std::string toString(const std::vector< karabo::util::Hash> &p) {
             std::ostringstream o;
             o << "(" << std::endl;
-            for (const karabo::util::Hash& e : p){
+            for (const karabo::util::Hash& e : p) {
                 o << e << "," << std::endl;
             }
             o << ")";
             return o.str();
-        }
-    };
-
-
-    template <>
-    struct assertion_traits<std::vector<unsigned char>>
-    {
-
-
-        static bool equal(const std::vector<unsigned char> &a, const std::vector<unsigned char> &b) {
-            return a == b;
-        }
-
-
-        static std::string toString(const std::vector<unsigned char> &p) {
-            // Cannot use 'return karabo::util::toString(p)' since that uses base64 encoding
-            std::ostringstream o;
-            o << "'";
-            for (const unsigned char& e : p) {
-                o << static_cast<unsigned int> (e) << ',';
-            }
-            o << "'";
-            return o.str();
-        }
-    };
-
-    template < typename T>
-    struct assertion_traits<std::vector<T>>
-    {
-
-
-        static bool equal(const std::vector<T>& a, const std::vector<T>& b) {
-            return a == b;
-        }
-
-
-        static std::string toString(const std::vector<T>& p) {
-            return karabo::util::toString(p);
         }
     };
 }

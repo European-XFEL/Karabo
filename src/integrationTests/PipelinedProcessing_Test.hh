@@ -40,6 +40,7 @@ private:
 
     void appTestRunner();
 
+    void testInputConnectionTracking();
     void testGetOutputChannelSchema();
     void testPipeWait();
     void testPipeDrop();
@@ -198,8 +199,8 @@ private:
     const std::string m_receiver1 = "pipeTestReceiver1";
     const std::string m_receiver2 = "pipeTestReceiver2";
     const std::string m_sender = "p2pTestSender"; // sender instance ID
-    const std::string m_senderOutput1 = "p2pTestSender:output1"; // sender output channel 1
-    const std::string m_senderOutput2 = "p2pTestSender:output2"; // sender output channel 2
+    const std::vector<std::string> m_senderOutput1 = {"p2pTestSender:output1"}; // sender output channel 1
+    const std::vector<std::string> m_senderOutput2 = {"p2pTestSender:output2"}; // sender output channel 2
 
     const karabo::util::Hash m_receiverBaseConfig{"input.connectedOutputChannels", m_senderOutput1,
                                                   "input2.connectedOutputChannels", m_senderOutput2};
