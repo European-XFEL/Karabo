@@ -7,6 +7,7 @@
  */
 
 #include "Device_Test.hh"
+#include "CppUnitMacroExtension.hh"
 
 #include <karabo/core/Device.hh>
 #include <karabo/net/EventLoop.hh>
@@ -299,23 +300,6 @@ public:
 };
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, TestDeviceBadInit)
-
-// Enable CPPUNIT_ASSERT_EQUAL for vectors (copied from BaseLogging_Test)
-namespace CppUnit {
-    template <typename T>
-    struct assertion_traits<std::vector<T>>
-    {
-
-        static bool equal(const std::vector<T>& a, const std::vector<T>& b) {
-            return a == b;
-        }
-
-
-        static std::string toString(const std::vector<T>& p) {
-            return karabo::util::toString(p);
-        }
-    };
-}
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Device_Test);
 
