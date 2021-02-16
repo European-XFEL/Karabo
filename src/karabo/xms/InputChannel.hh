@@ -368,10 +368,7 @@ namespace karabo {
                 return *this;
             }
 
-            void commit() {
-                m_inputChannel.commit();
-                m_dataSchema.commit();
-            }
+            void commit();
 
         };
 

@@ -8,6 +8,8 @@
  */
 
 #include "PipelinedProcessing_Test.hh"
+#include "CppUnitMacroExtension.hh"
+
 #include <karabo/net/EventLoop.hh>
 #include <karabo/log/Logger.hh>
 
@@ -55,6 +57,8 @@ void PipelinedProcessing_Test::tearDown() {
 
 
 void PipelinedProcessing_Test::appTestRunner() {
+
+    testInputConnectionTracking();
     // in order to avoid recurring setup and tear down calls, all tests are run in a single runner
     instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender));
     m_nDataPerRun = m_deviceClient->get<unsigned int>(m_sender, "nData");
@@ -94,6 +98,36 @@ void PipelinedProcessing_Test::appTestRunner() {
     testProfileTransferTimes();
 
     killDeviceWithAssert(m_sender);
+}
+
+
+void PipelinedProcessing_Test::testInputConnectionTracking() {
+    std::clog << "---\ntestInputConnectionTracking\n" << std::flush;
+
+    Hash config(m_receiverBaseConfig);
+    config.set("deviceId", m_receiver);
+    instantiateDeviceWithAssert("PipeReceiverDevice", config);
+
+    const auto& desiredConnections = config.get<std::vector < std::string >> ("input.connectedOutputChannels");
+    // Empty default would render this test useless, so ensure that it is not empty:
+    CPPUNIT_ASSERT(!desiredConnections.empty());
+
+    // In the beginning, there is no connection (sender not yet up), so all is missing:
+    CPPUNIT_ASSERT_EQUAL(desiredConnections,
+                         m_deviceClient->get<std::vector < std::string >> (m_receiver, "input.missingConnections"));
+
+    // After instantiation of sender, receiver connects and "documents" that no connection is missing anymore:
+    instantiateDeviceWithAssert("P2PSenderDevice", Hash("deviceId", m_sender));
+    CPPUNIT_ASSERT(pollDeviceProperty(m_receiver, "input.missingConnections", std::vector<std::string>()));
+
+    // After killing the sender again, receiver's input channel misses it again:
+    killDeviceWithAssert(m_sender);
+    CPPUNIT_ASSERT(pollDeviceProperty(m_receiver, "input.missingConnections", desiredConnections));
+
+    // Leave a clean state
+    killDeviceWithAssert(m_receiver);
+
+    std::clog << "Passed!" << std::endl;
 }
 
 
@@ -247,13 +281,13 @@ void PipelinedProcessing_Test::testPipeWait(unsigned int processingTime, unsigne
         // Test if data source was correctly passed
         auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources.size());
-        CPPUNIT_ASSERT_EQUAL(m_senderOutput1, sources[0]);
+        CPPUNIT_ASSERT_EQUAL(m_senderOutput1[0], sources[0]);
         // Check that receiver did not post any problem on status:
         CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver, "status"));
         // This only can be tested if we used an input handler and not onData
         if (!m_deviceClient->get<bool>(m_receiver, "onData")) {
             auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSourcesFromIndex");
-            CPPUNIT_ASSERT_EQUAL(m_senderOutput1, sources[0]);
+            CPPUNIT_ASSERT_EQUAL(m_senderOutput1[0], sources[0]);
         }
     }
 
@@ -420,7 +454,7 @@ void PipelinedProcessing_Test::testPipeDrop(unsigned int processingTime, unsigne
         // Test if data source was correctly passed
         auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources.size());
-        CPPUNIT_ASSERT_EQUAL(m_senderOutput1, sources[0]);
+        CPPUNIT_ASSERT_EQUAL(m_senderOutput1[0], sources[0]);
     }
 
     unsigned int dataItemSize = m_deviceClient->get<unsigned int>(m_receiver, "dataItemSize");
@@ -523,13 +557,13 @@ void PipelinedProcessing_Test::testPipeQueue(unsigned int processingTime, unsign
         // Test if data source was correctly passed
         auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSources");
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources.size());
-        CPPUNIT_ASSERT_EQUAL(m_senderOutput1, sources[0]);
+        CPPUNIT_ASSERT_EQUAL(m_senderOutput1[0], sources[0]);
         // Check that receiver did not post any problem on status:
         CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver, "status"));
         // This only can be tested if we used an input handler and not onData
         if (!m_deviceClient->get<bool>(m_receiver, "onData")) {
             auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSourcesFromIndex");
-            CPPUNIT_ASSERT_EQUAL(m_senderOutput1, sources[0]);
+            CPPUNIT_ASSERT_EQUAL(m_senderOutput1[0], sources[0]);
         }
     }
 
@@ -707,7 +741,7 @@ void PipelinedProcessing_Test::testPipeMinData() {
     // here we test only the last call of onInput - if minData is not a divisor of m_nDataPerRun, the check fails
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t>(minData), sources.size());
     for (auto& src : sources) {
-        CPPUNIT_ASSERT_EQUAL(m_senderOutput1, src);
+        CPPUNIT_ASSERT_EQUAL(m_senderOutput1[0], src);
     }
 
     CPPUNIT_ASSERT_EQUAL(m_nDataPerRun, m_deviceClient->get<unsigned int>(m_receiver, "nTotalData"));
@@ -736,7 +770,7 @@ void PipelinedProcessing_Test::testPipeMinData() {
     sources = m_deviceClient->get<std::vector<std::string> >(m_receiver, "dataSourcesFromIndex");
     CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (m_nDataPerRun), sources.size());
     for (auto& src : sources) {
-        CPPUNIT_ASSERT_EQUAL(m_senderOutput1, src);
+        CPPUNIT_ASSERT_EQUAL(m_senderOutput1[0], src);
     }
 
     killDeviceWithAssert(m_receiver);
@@ -1051,10 +1085,10 @@ void PipelinedProcessing_Test::testPipeTwoSharedReceivers(unsigned int processin
         // test if data source was correctly passed
         auto sources = m_deviceClient->get<std::vector<std::string> >(m_receiver1, "dataSources");
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources.size());
-        CPPUNIT_ASSERT_EQUAL(m_senderOutput1, sources[0]);
+        CPPUNIT_ASSERT_EQUAL(m_senderOutput1[0], sources[0]);
         auto sources2 = m_deviceClient->get<std::vector<std::string> >(m_receiver2, "dataSources");
         CPPUNIT_ASSERT_EQUAL(static_cast<size_t> (1u), sources2.size());
-        CPPUNIT_ASSERT_EQUAL(m_senderOutput1, sources2[0]);
+        CPPUNIT_ASSERT_EQUAL(m_senderOutput1[0], sources2[0]);
 
         // check that receiver did not post any problem on status:
         CPPUNIT_ASSERT_EQUAL(std::string(), m_deviceClient->get<std::string>(m_receiver1, "status"));
