@@ -334,14 +334,14 @@ def extract_sparse_configurations(proxies, devices=None):
 
 def validate_value(binding, value):
     if type(value) is str:
-        # There are cases that values are saved as strings.
-        # We try to convert it back to a literal.
+        # There might be cases that values are saved as strings. This typically
+        # occurs for table elements.
         if not isinstance(binding, (StringBinding, CharBinding)):
             value = convert_string(value)
     try:
         if isinstance(binding, VectorNumberBinding):
             # Check if binding is a vector, then test array against its
-            # expected dtype.
+            # expected `dtype`.
             casted_value = binding.validate_trait("value", value)
             if isinstance(binding, VECTOR_FLOAT_BINDINGS):
                 value = np.array(value, dtype=casted_value.dtype)
@@ -364,80 +364,74 @@ def validate_value(binding, value):
     return value
 
 
-def validate_vector_hash(binding, hash_list, init=False, drop_none=False):
-    """Validate a HashList against existing binding.
+def validate_vector_hash(binding, value, init=False, drop_none=False):
+    """Validate a hash list `value` against existing vectorhash binding
 
-    :param binding: (VectorHashBinding) the binding which contains
-        the current value and the row schema
-    :param hash_list: (HashList) the value to be validated
-    :param init: (bool) Denote if init_only properties are also valid
-    :param drop_none: (bool) Drop None values if specified
+    :param binding: The existing `VectorHashBinding`
+    :param value: the value to be validated (`HashList`)
+    :param init: Boolean to indicate if `init_only` properties are considered
+    :param drop_none: Boolean to drop `None` values if specified
+
     :return valid, invalid: (HashList) The values could contain [None, Hash()]
     """
+    def _validate_row(row_bindings, row_hash, init=False):
+        """Validate a single row of the table
+
+        :param row_bindings: The `rowSchema` attribute binding
+        :param new: The hash to be validated, either `Hash` or `None`
+        :param init: Boolean to indicate if `init_only` properties are
+                     considered
+
+        :returns:
+
+            - valid: Either a `Hash` or `None`. `None` if validation failed.
+            - invalid: Either a `Hash` or `None`
+        """
+        if row_hash is None:
+            # If `row_hash` Hash is `None`, we report as invalid value
+            return None, Hash()
+
+        valid = Hash()
+        # Check if order of the keys are respected...
+        if list(row_bindings.keys()) != list(row_hash.keys()):
+            row_hash = realign_hash(row_hash, keys=row_bindings.keys())
+
+        for path, value in row_hash.items():
+            binding = row_bindings.get(path, None)
+            if binding is None:
+                # Tables might lose a property in a row schema. This is fine
+                # as we can simply ignore this case. We don't report this as
+                # invalid but continue gracefully ...
+                continue
+
+            if not is_writable(binding, init) or value is None:
+                # The property is not writable or the value doesn't exist
+                # (from `realign_hash`).
+                # Use the default value from the binding!
+                validated_value = get_default_value(binding)
+            else:
+                validated_value = validate_value(binding, value)
+
+            if validated_value is None:
+                # We report the invalid property
+                return None, row_hash
+
+            valid[path] = validated_value
+
+        return valid, None
+
     # Set default values
     valid, invalid = HashList(), HashList()
+    for row_hash in value:
+        valid_row, invalid_row = _validate_row(
+            binding.bindings, row_hash, init)
+        if (valid_row is not None and drop_none) or not drop_none:
+            valid.append(valid_row)
 
-    for new_hash in hash_list:
-        valid_hash, invalid_hash = validate_hash(binding, new_hash, init)
-        if (valid_hash is not None and drop_none) or not drop_none:
-            valid.append(valid_hash)
-
-        if (invalid_hash is not None and drop_none) or not drop_none:
-            invalid.append(invalid_hash)
+        if (invalid_row is not None and drop_none) or not drop_none:
+            invalid.append(invalid_row)
 
     return valid, invalid
-
-
-def validate_hash(binding, new, init=False):
-    """Returns the diff of the old hash and the new hash by iterating over the
-    properties.
-    - We ignore properties with nonexistent bindings and are not reported
-    as invalid.
-    - If access mode is invalid or the value is None, we use the default value,
-    if existing.
-    - If validation fails, we report the value as invalid and we also use the
-    default value, if existing.
-
-    :param binding: (VectorHashBinding) the binding which contains
-        the current value and the row schema
-    :param new: (Hash or None) the hash to be validated
-    :param init: (bool) Denote if init_only properties are also valid
-    :return valid, invalid (Hash or None):
-        returns validated hash, or None if validation fails
-        return invalid hash that contains invalid properties, if any
-    """
-    # If hash is None: report as invalid value
-    if new is None:
-        return None, Hash()
-
-    valid = Hash()
-    column_bindings = binding.bindings
-
-    # Check if order of the keys are respected
-    if list(column_bindings.keys()) != list(new.keys()):
-        new = realign_hash(new, keys=column_bindings.keys())
-
-    for path, value in new.items():
-        column_binding = column_bindings.get(path)
-        if column_binding is None:
-            # We ignore properties with nonexistent bindings.
-            # This is not reported as invalid.
-            continue
-
-        if not is_writable(column_binding, init) or value is None:
-            # The property is not writable or the value doesn't exist
-            # (from realign_hash`). Use the default value from the binding.
-            validated_value = get_default_value(column_bindings.get(path))
-        else:
-            validated_value = validate_value(column_binding, value)
-
-        if validated_value is None:
-            # We report the invalid property
-            return None, new
-
-        valid[path] = validated_value
-
-    return valid, None
 
 
 def get_default_value(binding):
