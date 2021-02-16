@@ -1,4 +1,4 @@
-from asyncio import coroutine, get_event_loop, set_event_loop
+from asyncio import get_event_loop, set_event_loop
 import os
 import socket
 import sys
@@ -48,9 +48,8 @@ class KaraboKernel(IPythonKernel):
             self.execution_count += 1
             self._publish_execute_input(code, parent, self.execution_count)
 
-        @coroutine
-        def execute():
-            reply_content = yield from background(
+        async def execute():
+            reply_future = await background(
                 self.do_execute, code, silent, store_history, user_expressions,
                 allow_stdin)
 
@@ -59,7 +58,7 @@ class KaraboKernel(IPythonKernel):
             sys.stderr.flush()
 
             # Send the reply.
-            reply_content = json_clean(reply_content)
+            reply_content = json_clean(reply_future.result())
             finished = self.finish_metadata(parent, metadata, reply_content)
 
             reply_msg = self.session.send(
@@ -69,7 +68,6 @@ class KaraboKernel(IPythonKernel):
             if (not silent and reply_msg['content']['status'] == 'error'
                     and stop_on_error):
                 self._abort_queues()
-
         get_event_loop().create_task(execute(), self.device)
 
 
