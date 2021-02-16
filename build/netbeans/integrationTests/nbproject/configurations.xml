@@ -65,6 +65,7 @@
                      displayName="PipelinedProcessing_Test"
                      projectFiles="true"
                      kind="TEST">
+        <itemPath>../../../src/integrationTests/CppUnitMacroExtension.hh</itemPath>
         <itemPath>../../../src/integrationTests/P2PSenderDevice.cc</itemPath>
         <itemPath>../../../src/integrationTests/P2PSenderDevice.hh</itemPath>
         <itemPath>../../../src/integrationTests/PipeReceiverDevice.cc</itemPath>
@@ -197,6 +198,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/integrationTests/BaseLogging_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/CppUnitMacroExtension.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -705,6 +711,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/integrationTests/CppUnitMacroExtension.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/integrationTests/DataLogging_Test.cc"
             ex="false"
             tool="1"
@@ -1198,6 +1209,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/integrationTests/BaseLogging_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/integrationTests/CppUnitMacroExtension.hh"
             ex="false"
             tool="3"
             flavor2="0">
