@@ -32,10 +32,16 @@ namespace karabo {
         void InputChannel::expectedParameters(karabo::util::Schema& expected) {
             using namespace karabo::util;
 
+            VECTOR_STRING_ELEMENT(expected).key("missingConnections")
+                    .displayedName("Missing Connections")
+                    .description("Output channels from 'Configured Connections' that are not connected")
+                    .readOnly()
+                    // no initial value: Cannot be set in static method here, Device will do so
+                    .commit();
 
             VECTOR_STRING_ELEMENT(expected).key("connectedOutputChannels")
-                    .displayedName("Connected Output Channels")
-                    .description("Defines the inter-device connectivity for pipeline data transfer (use format: <instanceId>:<channelName>)")
+                    .displayedName("Configured Connections")
+                    .description("Defines which output channels to connect to (use format: <instanceId>:<channelName>)")
                     .assignmentOptional().defaultValue(std::vector<std::string>())
                     .init()
                     .commit();
@@ -803,6 +809,12 @@ namespace karabo {
         void InputChannel::updateOutputChannelConfiguration(const std::string& outputChannelString, const karabo::util::Hash& config) {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             m_configuredOutputChannels[outputChannelString] = config;
+        }
+
+
+        void InputChannelElement::commit() {
+            m_inputChannel.commit();
+            m_dataSchema.commit();
         }
 
     }
