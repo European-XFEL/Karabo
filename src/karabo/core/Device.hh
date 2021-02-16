@@ -1787,7 +1787,17 @@ namespace karabo {
                             }
                         } else if (displayType == "InputChannel") {
                             KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates input channel '" << key << "'";
-                            createInputChannel(key, m_parameters);
+                            karabo::xms::InputChannel::Pointer channel = createInputChannel(key, m_parameters);
+                            if (!channel) {
+                                KARABO_LOG_FRAMEWORK_ERROR << "*** 'createInputChannel' for channel name '" << key << "' failed to create input channel";
+                            } else {
+                                // Set configured connections as missing for now
+                                const util::Hash h(key + ".missingConnections",
+                                                   m_parameters.get<std::vector<std::string>>(key + ".connectedOutputChannels"));
+                                setNoLock(h, getActualTimestamp());
+                                channel->registerConnectionTracker(util::bind_weak(&Device<FSM>::trackInputChannelConnections,
+                                                                                   this, key, _1, _2));
+                            }
                         } else {
                             KARABO_LOG_FRAMEWORK_DEBUG << "'" << this->getInstanceId() << "' does not create in-/output "
                                     << "channel for '" << key << "' since it's a '" << displayType << "'";
@@ -1799,6 +1809,23 @@ namespace karabo {
                         initChannels(schema, key);
                     }
                 }
+            }
+
+            void trackInputChannelConnections(const std::string& inputChannel, const std::string& outputChannel,
+                                              karabo::net::ConnectionStatus status) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Input channel '" << inputChannel
+                        << "': connection status for '" << outputChannel << "' changed: " << static_cast<int> (status);
+                if (status == karabo::net::ConnectionStatus::CONNECTING
+                    || status == karabo::net::ConnectionStatus::DISCONNECTING) {
+                    // Ignore any intermediate connection status
+                    return;
+                }
+
+                const VectorUpdate type = (status == karabo::net::ConnectionStatus::DISCONNECTED
+                                           ? VectorUpdate::addIfNotIn
+                                           : VectorUpdate::removeOne);
+                setVectorUpdate(inputChannel + ".missingConnections", std::vector<std::string>({outputChannel}), type,
+                                getActualTimestamp());
             }
 
             /**
