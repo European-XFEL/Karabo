@@ -55,10 +55,16 @@
      </property>
      <item>
       <widget class="QDateTimeEdit" name="dt_start">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>20</height>
+        </size>
+       </property>
        <property name="maximumSize">
         <size>
          <width>16777215</width>
-         <height>17</height>
+         <height>20</height>
         </size>
        </property>
        <property name="font">
@@ -68,6 +74,9 @@
        </property>
        <property name="styleSheet">
         <string notr="true"/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
        </property>
        <property name="readOnly">
         <bool>true</bool>
@@ -95,10 +104,16 @@
      </item>
      <item>
       <widget class="QDateTimeEdit" name="dt_end">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>20</height>
+        </size>
+       </property>
        <property name="maximumSize">
         <size>
          <width>16777215</width>
-         <height>17</height>
+         <height>20</height>
         </size>
        </property>
        <property name="font">
@@ -108,6 +123,9 @@
        </property>
        <property name="styleSheet">
         <string notr="true"/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
        </property>
        <property name="readOnly">
         <bool>true</bool>
