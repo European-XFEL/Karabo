@@ -12,15 +12,13 @@ cmake \
   -DCMAKE_INSTALL_PREFIX=${PREFIX}\
   -DBUILD_UNIT_TESTING=1\
   -DBUILD_INTEGRATION_TESTING=0\
+  -DCMAKE_BUILD_TYPE=Release\
   ${SRC_DIR}
 
 make -j${CPU_COUNT} || exit $?
 make install || exit $?
 # run tests
-# TODO: The data logging integration tests are failing in the test of migrated data.
-#       Remove the -E option passed to ctest as soon as that test is fixed allowing
-#       its execution from a Conda Recipe.
-ctest -VV -E dataLoggingIntegrTest
+ctest -VV
 
 ACTIVATE_DIR=${PREFIX}/etc/conda/activate.d
 DEACTIVATE_DIR=${PREFIX}/etc/conda/deactivate.d
