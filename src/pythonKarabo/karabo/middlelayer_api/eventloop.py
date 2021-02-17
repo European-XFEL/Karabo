@@ -19,6 +19,9 @@ import threading
 import traceback
 import weakref
 from abc import ABC, abstractmethod
+import uuid
+import struct
+import paho.mqtt.client as mqtt
 
 from karabo.native import KaraboValue, KaraboError, unit_registry as unit
 from karabo.native import decodeBinary, encodeBinary, Hash
@@ -117,6 +120,10 @@ class Broker(ABC):
     def get_property(self, message, prop):
         return None
 
+    @abstractmethod
+    def check_connection(self):
+        pass
+
     @staticmethod
     def create_connection(hosts, connection):
         # Get scheme (protocol) of first URI...
@@ -124,8 +131,9 @@ class Broker(ABC):
         if scheme == 'tcp':
             return (JmsBroker.create_connection(hosts, connection),
                     JmsBroker)
-        # elif scheme == 'mqtt':
-        #    return None, MqttBroker
+        elif scheme == 'mqtt':
+            return (MqttBroker.create_connection(hosts, connection),
+                    MqttBroker)
         else:
             raise RuntimeError(f"Unsupported protocol {scheme}")
 
@@ -470,6 +478,9 @@ class JmsBroker(Broker):
     def get_property(self, message, prop):
         return message.properties[prop].decode('ascii')
 
+    async def check_connection(self):
+        pass
+
     @staticmethod
     def create_connection(hosts, connection):
         if connection is not None:
@@ -496,6 +507,639 @@ class JmsBroker(Broker):
             except BaseException:
                 connection = None
         raise RuntimeError(f"No connection can be established for {hosts}")
+
+
+class AsyncioMqttHelper:
+    def __init__(self, loop, client):
+        self.loop = loop
+        self.client = client
+        self.client.on_socket_open = self.on_sock_open
+        self.client.on_socket_close = self.on_sock_close
+        self.client.on_socket_register_write = self.on_sock_register_write
+        self.client.on_socket_unregister_write = self.on_sock_unregister_write
+
+    def on_sock_open(self, client, userdata, sock):
+        def cb():
+            client.loop_read()
+        self.loop.add_reader(sock, cb)
+        self.misc = self.loop.create_task(self.misc_loop())
+
+    def on_sock_close(self, client, userdata, sock):
+        self.loop.remove_reader(sock)
+        self.misc.cancel()
+
+    def on_sock_register_write(self, client, userdata, sock):
+        def cb():
+            client.loop_write()
+        self.loop.add_writer(sock, cb)
+
+    def on_sock_unregister_write(self, client, userdata, sock):
+        self.loop.remove_writer(sock)
+
+    async def misc_loop(self):
+        while self.client.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
+            try:
+                await asyncio.sleep(1)
+            except asyncio.CancelledError:
+                break
+
+
+class MqttBroker(Broker):
+    """MQTT protocol does NOT guarantee that the messages sent from
+    producer (client) via different topics will come to consumer (client)
+    in the same order.  To know the right order all clients (consumers
+    and producers) should keep track of last message number (order number)
+    "produced" or "consumed" for others clients. Every client can be both
+    consumer and producer so it has 2 maps: conmap (consumer map) and promap
+    (producer map). The key of map (dict) is deviceId (instanceId) of remote
+    party and the value is last order number received from (conmap) or sent to
+    (promap) this party. There is one additional 'store' dictinary for keeping
+    list of "pending" (out-of-order) messages awaiting for reordering.
+
+    Alice to Bob communication example:
+    Alice sends the message to Bob.  Before message is sent, Alice increments
+    local promap['Bob'] += 1 and put promap['Bob'] value into message header
+    order array ( in parallel with 'slotInstanceIds' list) and, then, send it.
+    Of course, if the Bob is the only subscriber then array size = 1.
+    Bob receives the message from Alice and put it in the list store['Alice'],
+    then sorts this list and checks first message's order number in the
+    header if it is equal Bob's local conmap['Alice']+1.  If not, Bob does
+    nothing.  If so, Bob increments conmap['Alice']+=1 and process the message
+    and checks the next message in the store['Alice'] list until list is not
+    empty or the equality conmap['Alice'] + 1 == store['Alice'][0] is true.
+
+    Notes:
+        1. All these makes sense for messages with QoS = 1 or 2.
+           The QoS = 0 messages may be dropped by broker so they do not have
+           order numbers in message header
+        2. Producer should know all consumers and in case of multicasting the
+           header contains vector of order numbers for every consumer.
+           Fortunately, this is the case in karabo: see 'slotInstanceIds'
+        3. If for some reasons the message comes without order number or with
+           order number less or equal conmap['Alice'] (i.e. obsolete) it is
+           processed immediately (out of order).
+
+    """
+    def __init__(self, loop, deviceId, classId, broadcast=True):
+        super(MqttBroker, self).__init__(False)
+        self.domain = loop.topic
+        self.loop = loop
+        self.clientId = str(uuid.uuid4())
+        self.deviceId = deviceId
+        self.classId = classId
+        self.broadcast = broadcast
+        self.repliers = {}
+        self.tasks = set()
+        self.logger = logging.getLogger(deviceId)
+        self.info = None
+        self.slots = {}
+        self.exitStack = ExitStack()
+        self.subscriptions = set()
+        self._misc = None
+        self.client = mqtt.Client(client_id=self.clientId,
+                                  userdata=self.clientId)
+        self.heartbeatTask = None
+        # Assign callbacks
+        self.client.on_connect = self.on_broker_connect
+        self.brokerConnected = None
+        self.client.on_disconnect = self.on_broker_disconnect
+        self._disconnected_future = None
+        self._published_future = None
+        self.client.on_publish = self._on_publish
+        # Every MqttBroker instance has the follwong 3 disctionaries...
+        self.conmap = {}
+        self.promap = {}
+        self.store = {}
+        # Start paho.mqtt engine ...
+        self.engine = AsyncioMqttHelper(self.loop, self.client)
+
+    def broker_connect(self, host, port):
+        self.brokerConnected = self.loop.create_future()
+        self.client.connect(host, port, 60)
+        self.client.socket().setsockopt(socket.SOL_SOCKET,
+                                        socket.SO_SNDBUF, 2048)
+
+    def on_broker_connect(self, client, userdata, flags, rc):
+        if rc == 0:
+            self.subscribe_default()
+        self.brokerConnected.set_result(rc)
+
+    def broker_disconnect(self):
+        self._disconnected_future = self.loop.create_future()
+        self.client.disconnect()
+
+    def on_broker_disconnect(self, client, userdata, rc):
+        self._disconnected_future.set_result(rc)
+
+    async def subscribe(self, topic, qos=1):
+        topics = []
+        if isinstance(topic, str):
+            topics.append((topic, qos))
+        elif isinstance(topic, list):
+            topics = topic
+        future = self.loop.create_future()
+
+        def cb(client, userdata, mid, qos):
+            future.set_result(mid)
+
+        self.client.on_subscribe = cb
+        self.client.subscribe(topics)
+        return future
+
+    async def unsubscribe(self, topic):
+        topics = []
+        if isinstance(topic, str):
+            topics.append(topic)
+        elif isinstance(topic, list):
+            topics = topic
+        future = self.loop.create_future()
+
+        def cb(client, userdata, mid):
+            future.set_result(mid)
+
+        self.client.on_unsubscribe = cb
+        self.client.unsubscribe(topics)
+        return future
+
+    def subscribe_default(self):
+        """Subscribe to 'default' topics to allow a communication
+        through the broker:
+            <domain>/global_slots/+
+            <domain>/slots/<deviceId>
+        """
+        topics = None
+        # subscribe to all slots of instance
+        topic = self.domain + "/slots/" + self.deviceId.replace('/', '|')
+        if topic not in self.subscriptions:
+            self.subscriptions.add(topic)
+            topics = [(topic, 1)]
+        # subscribe to all global slots
+        if self.broadcast:
+            topic_broadcast = self.domain + "/global_slots/+"
+            if topic_broadcast not in self.subscriptions:
+                self.subscriptions.add(topic_broadcast)
+                topics.append((topic_broadcast, 1))
+        if topics is None:
+            return
+        self.client.subscribe(topics)
+
+    def _on_publish(self, client, userdata, mid):
+        if self._published_future is not None:
+            self._published_future.set_result(mid)
+
+    async def publish(self, topic, payload=None, qos=0, retain=False):
+        self._published_future = Future(loop=self.loop)
+        self.client.publish(topic, payload, qos, retain)
+        return self._published_future
+
+    def send(self, topic, header, args, qos=1):
+        body = Hash()
+        for i, a in enumerate(args):
+            body['a{}'.format(i + 1)] = a
+        header['signalInstanceId'] = self.deviceId
+        header['__format'] = 'Bin'
+        data = Hash('header', header, 'body', body)
+        m = encodeBinary(data)
+        self.client.publish(topic, payload=m, qos=qos)
+
+    def heartbeat(self, interval):
+        topic = (self.domain + "/signals/" + self.deviceId.replace('/', '|')
+                 + "/signalHeartbeat")
+        header = Hash("signalFunction", "signalHeartbeat")
+        # Note: C++ adds
+        # header["signalInstanceId"] = self.deviceId # redundant and unused
+        # header["slotInstanceIds"] = "__none__" # unused
+        # header["slotFunctions"] = "__none__" # unused
+        header["__format"] = "Bin"
+        body = Hash()
+        body["a1"] = self.deviceId
+        body["a2"] = interval
+        body["a3"] = self.info
+        data = Hash("header", header, "body", body)
+        m = encodeBinary(data)
+        self.client.publish(topic, payload=m, qos=0)
+
+    def notify_network(self, info):
+        """notify the network that we are alive
+
+        we send out an instance new and gone, and the heartbeats in between.
+
+        :param info: the info Hash that should be published regularly.
+        """
+        self.info = info
+        self.emit('call', {'*': ['slotInstanceNew']},
+                  self.deviceId, self.info)
+
+        async def heartbeat():
+            try:
+                first = True
+                while True:
+                    # Permanently send heartbeats, but first one not
+                    # immediately: Those interested in us just got informed.
+                    interval = self.info["heartbeatInterval"]
+                    # Protect against any bad interval that causes spinning
+                    sleepInterval = abs(interval) if interval != 0 else 10
+                    if first:
+                        # '//2' protects change of 'tracking factor' close to 1
+                        # '+1' protects against 0 if sleepInterval is 1
+                        sleepInterval = sleepInterval // 2 + 1
+                        first = False
+                    await sleep(sleepInterval)
+                    self.heartbeat(interval)
+            finally:
+                self.emit('call', {'*': ['slotInstanceGone']},
+                          self.deviceId, self.info)
+
+        self.heartbeatTask = ensure_future(heartbeat())
+
+    def call(self, signal, targets, reply, args):
+        if not targets:
+            return
+        p = Hash()
+        p['signalFunction'] = signal
+        slotInstanceIds = (
+            '|' + '||'.join(t for t in targets) + '|')
+        p['slotInstanceIds'] = slotInstanceIds
+        funcs = ("{}:{}".format(k, ",".join(v)) for k, v in targets.items())
+        p['slotFunctions'] = ('|' + '||'.join(funcs) + '|')
+        tmpmap = {}
+        for t in targets:
+            if t in self.promap:
+                self.promap[t] += 1
+            else:
+                self.promap[t] = 1
+            tmpmap[t] = self.promap[t]
+        nums = [v for _, v in tmpmap.items()]
+        p['orderNumbers'] = struct.pack('<' + str(len(nums)) + 'Q', *nums)
+        del tmpmap
+        if reply is not None:
+            p['replyTo'] = reply
+        p['hostname'] = socket.gethostname()
+        p['classId'] = self.classId
+        signal_id = self.deviceId.replace('/', '|')
+        slot_id = slotInstanceIds.strip('|').replace('/', '|')
+        if (signal == "__request__" or signal == "__replyNoWait__"
+                or signal == "__reply__" or signal == "__replyNoWait"):
+            topic = self.domain + "/slots/" + slot_id
+        elif signal == "call" or signal == "__call__":
+            if slot_id == '*':
+                slot_func = p['slotFunctions'].strip('|')[2:]
+                topic = self.domain + "/global_slots/" + slot_func
+            else:
+                topic = self.domain + "/slots/" + slot_id
+        else:
+            topic = self.domain + "/signals/" + signal_id + '/' + signal
+        self.send(topic, p, args)
+
+    async def request(self, device, target, *args):
+        reply = "{}-{}".format(self.deviceId, time.monotonic().hex()[4:-4])
+        self.call("call", {device: [target]}, reply, args)
+        future = Future(loop=self.loop)
+        self.repliers[reply] = future
+        future.add_done_callback(lambda _: self.repliers.pop(reply))
+        return (await future)
+
+    def log(self, message):
+        topic = self.domain + "/log"
+        data = Hash("header", Hash("target", "log"),
+                    "body", Hash("messages", [message]))
+        m = encodeBinary(data)
+        self.client.publish(topic, m,  qos=0)
+
+    def emit(self, signal, targets, *args):
+        self.call(signal, targets, None, args)
+
+    def reply(self, message, reply, error=False):
+        header = message.get('header')
+        sender = header['signalInstanceId']
+
+        if not isinstance(reply, tuple):
+            reply = reply,
+
+        if 'replyTo' in header:
+            replyTo = header['replyTo']
+            p = Hash()
+            p['replyFrom'] = replyTo
+            p['signalFunction'] = "__reply__"
+            p['slotInstanceIds'] = '|' + sender + '|'
+            if sender in self.promap:
+                self.promap[sender] += 1
+            else:
+                self.promap[sender] = 1
+            nums = [self.promap[sender]]
+            p['orderNumbers'] = struct.pack('<Q', *nums)
+            p['error'] = error
+            topic = self.domain + "/slots/" + sender.replace('/', '|')
+            self.send(topic, p, reply)
+
+        if 'replyInstanceIds' in header:
+            replyId = header['replyInstanceIds']
+            p = Hash()
+            p['signalFunction'] = "__replyNoWait__"
+            p['slotInstanceIds'] = replyId
+            p['slotFunctions'] = header['replyFunctions']
+            p['error'] = error
+            dest = replyId.strip('|')
+            if dest in self.promap:
+                self.promap[dest] += 1
+            else:
+                self.promap[dest] = 1
+            nums = [self.promap[dest]]
+            # The order numbers array is binary 64 bits array
+            p['orderNumbers'] = struct.pack('<Q', *nums)
+            topic = self.domain + "/slots/" + dest.replace('/', '|')
+            self.send(topic, p, reply)
+
+    def replyException(self, message, exception):
+        trace = ''.join(traceback.format_exception(
+            type(exception), exception, exception.__traceback__))
+        self.reply(message, trace, error=True)
+
+    async def subscribeToRemoteSignal(self, source, signal):
+        topic = (self.domain + "/signals/" + source.replace('/', '|')
+                 + "/" + signal)
+        if topic not in self.subscriptions:
+            await self.subscribe(topic, qos=1)
+            self.subscriptions.add(topic)
+        return True
+
+    async def unsubscribeFromRemoteSignal(self, source, signal):
+        topic = (self.domain + "/signals/" + source.replace('/', '|')
+                 + "/" + signal)
+        if topic in self.subscriptions:
+            await self.unsubscribe(topic)
+            self.subscriptions.remove(topic)
+        return True
+
+    def connect(self, deviceId, signal, slot):
+        topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
+                 + "/" + signal)
+        if topic not in self.subscriptions:
+            self.client.subscribe(topic, qos=1)
+            self.subscriptions.add(topic)
+        self.emit("call", {deviceId: ["slotConnectToSignal"]}, signal,
+                  slot.__self__.deviceId, slot.__name__)
+
+    def disconnect(self, deviceId, signal, slot):
+        topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
+                 + "/" + signal)
+        if topic in self.subscriptions:
+            self.client.unsubscribe(topic)
+            self.subscriptions.remove(topic)
+        self.emit("call", {deviceId: ["slotDisconnectFromSignal"]}, signal,
+                  slot.__self__.deviceId, slot.__name__)
+
+    async def handleMessage(self, message, device):
+        """Check message order first if the header
+        has valid information to do so...  Otherwise
+        simply call handle the message as usual...
+        """
+        try:
+            hash = decodeBinary(message.payload)
+        except BaseException:
+            self.logger.exception("Malformed message")
+            return
+        header = hash.get('header')
+        if (not header
+                or 'signalInstanceId' not in header
+                or 'slotinstanceIds' not in header
+                or 'orderNumbers' not in header
+                or header['slotInstanceId'] == '|*|'):
+            self._handleMessage(hash, device)
+            return
+        src = header.get('signalInstanceId')
+        if src not in self.store:
+            self.store[src] = []
+        if src not in self.conmap:
+            self.conmap[src] = 0
+        if 'slotInstanceIds' not in header or 'orderNumbers' not in header:
+            self._handleMessage(hash, device)
+            return
+        slots = (header['slotInstanceIds'][1:-1]).split('||')
+        buf = header['orderNumbers']
+        sz = len(buf)//8
+        if sz == 0:
+            nums = []
+        elif sz == 1:
+            nums = struct.unpack('<Q', buf)
+        else:
+            nums = struct.unpack('<' + str(sz) + 'Q', buf)
+        nums = list(nums)
+        # Find deviceId in the list of targets (slotInstanceIds) ...
+        lastnum = None
+        for idx, name in enumerate(slots):
+            if self.deviceId == name:
+                lastnum = nums[idx]
+                break
+        # If deviceId is not in the target's list...
+        if lastnum is None:
+            self._handleMessage(hash, device)
+            return
+        # if message is obsolete or duplicated ... handle it
+        # In C++ such messages may appear and filtering them out
+        # results in wrong behavior
+        if self.conmap[src] >= lastnum:
+            self._handleMessage(hash, device)
+            return
+        # if there was no previous "history" ... first message from "src"
+        if self.conmap[src] == 0:
+            self.conmap[src] = lastnum   # sync with sender
+            self._handleMessage(hash, device)
+            return
+        # Always store the message into sorted store...
+        self.store[src].append((lastnum, hash))
+        self.store[src] = sorted(self.store[src])
+        while self.store[src]:
+            num, msg = self.store[src][0]
+            if num != (self.conmap[src] + 1):
+                break
+            del self.store[src][0]
+            # synchronize with sender
+            self.conmap[src] = num
+            self._handleMessage(msg, device)
+
+    def _handleMessage(self, decoded, device):
+        try:
+            slots, params = self.decodeMessage(decoded)
+        except BaseException:
+            self.logger.exception("Malformed message")
+            return
+        try:
+            callSlots = [(self.slots[s], s)
+                         for s in slots.get(self.deviceId, [])]
+            if self.broadcast:
+                callSlots.extend(
+                    [(self.slots[s], s)
+                     for s in slots.get("*", []) if s in self.slots])
+        except KeyError:
+            self.logger.exception("Slot does not exist")
+            return
+        try:
+            for slot, name in callSlots:
+                slot.slot(slot, device, name, decoded, params)
+        except Exception:
+            # the slot.slot wrapper should already catch all exceptions
+            # all exceptions raised additionally are a bug in Karabo
+            self.logger.exception(
+                "Internal error while executing slot")
+
+    def register_slot(self, name, slot):
+        """register a slot on the device
+
+        :param name: the name of the slot
+        :param slot: the slot to be called. If this is a bound method, it is
+            assured that no reference to the object holding the method is kept.
+        """
+        if inspect.ismethod(slot):
+            def delete(ref):
+                del self.slots[name]
+
+            weakself = weakref.ref(slot.__self__, delete)
+            func = slot.__func__
+
+            @wraps(func)
+            def wrapper(*args):
+                return func(weakself(), *args)
+
+            self.slots[name] = wrapper
+        else:
+            self.slots[name] = slot
+
+    async def consume(self, device):
+        running = True
+        while(running):
+            try:
+                await shield(self.engine.misc)
+            except CancelledError:
+                running = False
+                self.client.loop()
+                self.client.on_message = None
+                raise
+
+    async def main(self, device):
+        """This is the main loop of a device (SignalSlotable instance)
+
+        A device is running if this coroutine is still running.
+        Use `stop_tasks` to stop this main loop."""
+        with self.exitStack:
+            device = weakref.ref(device)
+
+            def on_message(client, userdata, msg):
+                if userdata != self.clientId:
+                    return
+                d = device()
+                if d is None:
+                    return
+                self.loop.call_soon_threadsafe(
+                    self.loop.create_task, self.handleMessage(msg, d), d)
+                d = None
+
+            self.client.on_message = on_message
+            await self.consume(device())
+
+    async def stop_tasks(self):
+        """Stop all currently running task
+
+        This marks the end of life of a device.
+
+        Note that the task this coroutine is called from, as an exception,
+        is not cancelled. That's the chicken-egg-problem.
+        """
+        if not self.loop.is_closed() and self.heartbeatTask is not None:
+            self.heartbeatTask.cancel()
+        await sleep(0.1)
+        # self.client.disconnect()
+        me = asyncio.current_task(loop=None)
+        tasks = [t for t in self.tasks if t is not me]
+        for t in tasks:
+            t.cancel()
+        await wait_for(gather(*tasks, return_exceptions=True),
+                       timeout=5)
+
+    def enter_context(self, context):
+        return self.exitStack.enter_context(context)
+
+    def updateInstanceInfo(self, info):
+        """update the short information about this instance
+
+        the instance info hash contains a very brief summary of the device.
+        It is regularly published, and even lives longer than a device,
+        as it is published with the message that the device died."""
+        self.info.merge(info)
+        self.emit("call", {"*": ["slotInstanceUpdated"]},
+                  self.deviceId, self.info)
+
+    def decodeMessage(self, hash):
+        """Decode a Karabo message
+
+        reply messages are dispatched directly.
+
+        :returns: a dictionary that maps the device id of slots to be called
+            to a list of slots to be called on that device
+        """
+        header = hash.get('header')
+        body = hash.get('body')
+        params = []
+        for i in count(1):
+            try:
+                params.append(body['a{}'.format(i)])
+            except KeyError:
+                break
+        replyFrom = header.get('replyFrom')
+        if replyFrom is not None:
+            f = self.repliers.get(replyFrom)
+            if f is not None and not f.done():
+                if header.get('error', False):
+                    f.set_exception(KaraboError(params[0]))
+                else:
+                    if len(params) == 1:
+                        params = params[0]
+                    else:
+                        params = tuple(params)
+                    f.set_result(params)
+            return {}, None
+
+        slots = (header['slotFunctions'][1:-1]).split('||')
+        return ({k: v.split(",") for k, v in (s.split(":") for s in slots)},
+                params)
+
+    def get_property(self, message, prop):
+        header = message.get('header')
+        if header is None:
+            return None
+        return header.get(prop)
+
+    async def connectMqttBroker(self):
+        urls = os.environ.get("KARABO_BROKER",
+                              "mqtt://exfldl02n0:1883").split(',')
+        self.url = None
+        for url in urls:
+            protocol, host, port = url.split(':')
+            host = host[2:]
+            port = int(port)
+            try:
+                self.broker_connect(host, port)
+                rc = await self.brokerConnected
+                if rc == 0:
+                    self.url = url
+                    break
+                else:
+                    self.brokerConnected = None
+            except OSError as e:
+                print(e)
+
+        if self.url is None:
+            raise RuntimeError(
+                f"Failed to connect to any of KARABO_BROKER={urls}")
+        # print(f"Device '{self.deviceId}' connected to broker \"{self.url}\"")
+
+    async def check_connection(self):
+        if not self.client.is_connected():
+            await self.connectMqttBroker()
+
+    @staticmethod
+    def create_connection(hosts, connection):
+        return None
 
 
 def ensure_coroutine(coro):
