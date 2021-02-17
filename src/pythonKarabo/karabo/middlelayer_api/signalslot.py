@@ -302,6 +302,7 @@ class SignalSlotable(Configurable):
 
     async def _run(self, server=None, **kwargs):
         try:
+            await self._ss.check_connection()
             self._register_slots()
             ensure_future(self._ss.main(self))
             await self._assert_name_unique()
