@@ -56,14 +56,6 @@ namespace karabo {
                        const int priority = 4,
                        const int timeToLive = 0);
 
-            // Helper function with old signature (Hash instead of Hash::Pointer)
-            // TODO Remove once refactoring is completed
-            void write(const std::string& topic,
-                       const karabo::util::Hash& header,
-                       const karabo::util::Hash& body,
-                       const int priority = 4,
-                       const int timeToLive = 0);
-
             virtual ~JmsProducer();
 
         private:
