@@ -73,7 +73,7 @@ def parse_commandline():
                                  'existing')
 
     parser_chk = sps.add_parser('checkout',
-                                help='Checks out a device (sources) from the'
+                                help='Checks out a device (sources) from the '
                                      'repository')
     parser_chk.set_defaults(command=checkout)
 
@@ -119,9 +119,12 @@ def parse_commandline():
 
     parser_uins = sps.add_parser('uninstall',
                                  help='Uninstalls an existing device. '
-                                 'Dependencies will not be uninstalled.'
+                                 'Dependencies will not be uninstalled. '
                                  'NOTE: Not guaranteed to work for non '
-                                 'standard device packages nor dependencies')
+                                 'standard device packages nor dependencies, '
+                                 'or if installed with mismatch between upper'
+                                 '/lower character cases wrt. package '
+                                 'expectation.')
     parser_uins.set_defaults(command=uninstall)
 
     parser_uins.add_argument('device',
@@ -156,7 +159,7 @@ def parse_commandline():
                             'dependencies (overrides a -f option)')
 
     parser_udev = sps.add_parser('undevelop',
-                                 help='Deactivates develop mode for a given'
+                                 help='Deactivates develop mode for a given '
                                       'device. '
                                       'NOTE: Not guaranteed to work for non '
                                       'standard device packages nor '
@@ -507,14 +510,21 @@ def uninstall(args):
     so_path = 'plugins/lib{}.so'.format(args.device)
     if os.path.isfile(so_path):
         if not os.path.islink(so_path):
-            run_cmd('rm -f {}'.format(so_path))
+            ret = run_cmd('rm {}'.format(so_path))
         else:
             print('Failed to uninstall {}. {} is not a regular file.'.
                   format(args.device, so_path))
             sys.exit(1)
     else:
-        run_cmd('pip uninstall -y {}'.format(args.device))
-    print('{} was successfully uninstalled'.format(args.device))
+        ret = run_cmd('pip uninstall -y {}'.format(args.device))
+
+    # run_cmd returns output - empty output means success for 'rm' and 'pip'
+    if not ret:
+        print('{} was successfully uninstalled'.format(args.device))
+    else:
+        print('Problems uninstalling {}, see "karabo -h" for potential '
+              'reasons.'.format(args.device))
+        sys.exit(1)
 
 
 def develop(args):
