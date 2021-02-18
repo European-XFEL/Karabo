@@ -97,7 +97,7 @@ namespace karabo {
 
             if (!m_producerChannel) m_producerChannel = m_connection->createProducer();
 
-            m_producerChannel->write(target, *header, *body, priority, timeToLive);
+            m_producerChannel->write(target, header, body, priority, timeToLive);
         }
 
 
