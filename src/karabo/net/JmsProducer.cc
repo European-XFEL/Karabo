@@ -43,16 +43,6 @@ namespace karabo {
         }
 
 
-        void JmsProducer::write(const std::string& topic, const karabo::util::Hash& header,
-                                const karabo::util::Hash& body, const int priority, const int timeToLive) {
-
-            auto headerPointer = boost::make_shared<Hash>(header);
-            auto bodyPointer = boost::make_shared<Hash>(body);
-
-            write(topic, headerPointer, bodyPointer, priority, timeToLive);
-        }
-
-
         void JmsProducer::asyncWrite(const std::string& topic,
                                      const Hash::Pointer& header,
                                      const Hash::Pointer& body,
