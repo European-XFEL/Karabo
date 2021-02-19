@@ -15,7 +15,7 @@ from karabo.common.scenemodel.api import (
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.fonts import FONT_FILENAMES, get_font_size_from_dpi
 from karabogui.singletons.api import (
-    get_manager, get_network, get_panel_wrangler)
+    get_config, get_manager, get_network, get_panel_wrangler)
 from karabogui.programs.register_protocol import register_protocol
 from karabogui.util import process_qt_events
 
@@ -41,8 +41,12 @@ def excepthook(exc_type, value, traceback):
 def create_gui_app(args):
     """Create the QApplication with all necessary fonts and settings"""
     app = QApplication(args)
+    # Set directly the QSettings environment to have access
+    app.setOrganizationName('XFEL')
+    app.setOrganizationDomain('xfel.eu')
+    app.setApplicationName('KaraboGUI')
     # We check our `KARABO_TEST_GUI` variable before due to Squish cracks!
-    if not os.environ.get("KARABO_TEST_GUI"):
+    if get_config()['highDPI'] and not os.environ.get("KARABO_TEST_GUI"):
         # Create a preliminary QApplication to check system/screen properties.
         # This is needed as setting QApplication attributes should be done
         # before the instantiation (Qt bug as of 5.9).
@@ -50,7 +54,6 @@ def create_gui_app(args):
         dpi = int(app.primaryScreen().logicalDotsPerInch())
         app.quit()
         del app
-
         # Set the QApplication attributes before its instantiation.
         # Only apply high DPI scaling when the logical DPI is greater than
         # the default DPI (96). This is usually observed on scaled desktops
@@ -58,7 +61,12 @@ def create_gui_app(args):
         if dpi > SCENE_DEFAULT_DPI:
             QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
             QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+
         app = QApplication(args)
+        # Again set the QSettings environment
+        app.setOrganizationName('XFEL')
+        app.setOrganizationDomain('xfel.eu')
+        app.setApplicationName('KaraboGUI')
 
     # Set the style among all operating systems
     style = QStyleFactory.create("Fusion")
@@ -91,11 +99,6 @@ def create_gui_app(args):
     # set a nice app logo
     logo_path = op.join(op.dirname(__file__), '..', "icons", "app_logo.png")
     app.setWindowIcon(QIcon(logo_path))
-
-    # These should be set to simplify QSettings usage
-    app.setOrganizationName('XFEL')
-    app.setOrganizationDomain('xfel.eu')
-    app.setApplicationName('KaraboGUI')
 
     QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
 
