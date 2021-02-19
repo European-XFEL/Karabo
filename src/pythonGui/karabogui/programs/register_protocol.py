@@ -27,6 +27,7 @@ ICON_PATH = str(Path(icons.__file__).parent / "splash.png")
 def write_protocol_handler(src, dest):
     # Copy the protocol handler. We use shebangs on Unix systems to easily
     # execute the application
+    Path(dest).parent.mkdir(parents=True, exist_ok=True)
     if ON_WINDOWS:
         # Copy the file directly
         shutil.copy(src, dest)
@@ -76,7 +77,7 @@ def _register_protocol_linux(scheme, handler):
     for cmd in (gio_cmd, xdg_cmd):
         try:
             subprocess.call(cmd)
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, FileNotFoundError):
             # We are ignoring errors in case one of the two url management
             # is missing.
             RuntimeWarning(f"Scheme registration with {cmd[0]} has failed.")
