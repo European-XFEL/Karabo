@@ -145,7 +145,7 @@ void InputOutputChannel_Test::testManyToOne() {
         input->connect(outputInfo, connectHandler);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + outputIds[i],
                                      std::future_status::ready,
-                                     connectFuture.wait_for(std::chrono::milliseconds(500)));
+                                     connectFuture.wait_for(std::chrono::milliseconds(5000)));
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt for " + outputIds[i],
                                      karabo::net::ErrorCode(), // i.e. no error
                                      connectFuture.get());
@@ -301,7 +301,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
                                || connectStatusMap[outputChannelId] == karabo::net::ConnectionStatus::CONNECTED);
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::util::toString(i),
-                                     std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(500)));
+                                     std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(5000)));
         CPPUNIT_ASSERT_EQUAL_MESSAGE("attempt number " + karabo::util::toString(i),
                                      connectFuture.get(), karabo::net::ErrorCode()); // i.e. no error
 
@@ -415,7 +415,7 @@ void InputOutputChannel_Test::testConnectDisconnect() {
         };
         input->connect(badOutputInfo, connectHandler);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Connection handler not called in time for " + toString(badOutputInfo),
-                                     std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(1000)));
+                                     std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(5000)));
         CPPUNIT_ASSERT_MESSAGE("Connection did not fail for " + toString(badOutputInfo),
                                connectFuture.get() != karabo::net::ErrorCode()); // not all OK (do not care which problem)
     }
@@ -462,9 +462,8 @@ void InputOutputChannel_Test::testConcurrentConnect() {
         // Subsequent connect(..): first succeeds, second fails since already connected (less likely) or connecting
         input->connect(outputInfo, connectHandler1);
         input->connect(outputInfo, connectHandler2);
-
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture1.wait_for(std::chrono::milliseconds(2000)));
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture2.wait_for(std::chrono::milliseconds(2000)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture1.wait_for(std::chrono::milliseconds(5000)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture2.wait_for(std::chrono::milliseconds(5000)));
 
         CPPUNIT_ASSERT_EQUAL(karabo::net::ErrorCode(), connectFuture1.get());
         const karabo::net::ErrorCode ec = connectFuture2.get();
@@ -496,8 +495,8 @@ void InputOutputChannel_Test::testConcurrentConnect() {
         input->disconnect(outputInfo);
         input->connect(outputInfo, connectHandler4);
 
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture3.wait_for(std::chrono::milliseconds(2000)));
-        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture4.wait_for(std::chrono::milliseconds(2000)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture3.wait_for(std::chrono::milliseconds(5000)));
+        CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture4.wait_for(std::chrono::milliseconds(5000)));
 
         // Now it is not exactly clear what to expect - depends on timing of threads:
         // - 1st fails as operation_canceled, 2nd succeeds, i.e. disconnect(..) clears from "being setup"
