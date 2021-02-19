@@ -7,6 +7,7 @@ from collections import OrderedDict
 from enum import Enum
 from functools import partial
 import os.path
+import webbrowser
 
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import (
@@ -24,6 +25,7 @@ from karabogui.indicators import get_processing_color
 from karabogui.enums import AccessRole
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
+from karabogui import messagebox
 from karabogui.panels.api import (
     AlarmPanel, ConfigurationPanel, DevicePanel, PanelContainer, LoggingPanel,
     ProjectPanel, ScriptingPanel, TopologyPanel)
@@ -100,7 +102,9 @@ _PANELS = {
     PROJECT_TITLE: (ProjectPanel, PanelAreaEnum.Left),
 }
 
+SETTINGS_TITLE = '&Settings'
 VIEW_MENU_TITLE = '&View'
+GRAFANA_LINK = "https://ctrend.xfel.eu/"
 
 
 class MainWindow(QMainWindow):
@@ -370,6 +374,9 @@ class MainWindow(QMainWindow):
         self.acCheckUpdates = QAction("Check for Updates", self)
         self.acCheckUpdates.triggered.connect(self.onCheckUpdates)
 
+        self.acGrafana = QAction(icons.weblink, "Grafana", self)
+        self.acGrafana.triggered.connect(self.onGrafana)
+
     def _setupMenuBar(self):
         menuBar = self.menuBar()
 
@@ -386,6 +393,19 @@ class MainWindow(QMainWindow):
         panelAction.triggered.connect(self._store_panel_configuration)
         mViewMenu.addAction(panelAction)
         mViewMenu.addSeparator()
+
+        mSettingsMenu = menuBar.addMenu(SETTINGS_TITLE)
+        self.settingsMenus = {SETTINGS_TITLE: mSettingsMenu}
+
+        self.acEnableHighDPI = QAction('Enable HighDPI', self)
+        self.acEnableHighDPI.setCheckable(True)
+        enable = get_config()["highDPI"]
+        self.acEnableHighDPI.setChecked(enable)
+        self.acEnableHighDPI.triggered.connect(self._store_dpi_setting)
+        mSettingsMenu.addAction(self.acEnableHighDPI)
+
+        mHelpMenu = menuBar.addMenu("&Panels")
+        mHelpMenu.addAction(self.acGrafana)
 
         mHelpMenu = menuBar.addMenu("&Help")
         mHelpMenu.addAction(self.acHelpAbout)
@@ -556,6 +576,15 @@ class MainWindow(QMainWindow):
     # Qt slots
 
     @pyqtSlot()
+    def _store_dpi_setting(self):
+        enabled = get_config()['highDPI']
+        get_config()['highDPI'] = not enabled
+        self.acEnableHighDPI.setChecked(not enabled)
+        text = ("Changing the high dpi settings requires a restart of the "
+                "client application of the setting to become active.")
+        messagebox.show_information(text)
+
+    @pyqtSlot()
     def _store_panel_configuration(self):
         for name in _CLOSABLE_PANELS:
             visible = name in self._active_closable_panels
@@ -573,6 +602,13 @@ class MainWindow(QMainWindow):
     def onCheckUpdates(self):
         dialog = UpdateDialog(parent=self)
         dialog.open()
+
+    @pyqtSlot()
+    def onGrafana(self):
+        try:
+            webbrowser.open_new(GRAFANA_LINK)
+        except webbrowser.Error:
+            messagebox.show_error("No web browser available!", parent=self)
 
     @pyqtSlot()
     def onWizard(self):
