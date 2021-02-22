@@ -7,7 +7,8 @@ SSH_USER_HOST=xkarabo@exflserv05
 SSH_KARABO_DIR=/var/www/html/karabo
 SSH_PREFIX=$SSH_USER_HOST:$SSH_KARABO_DIR
 CURL_PREFIX=http://exflserv05.desy.de/karabo
-LATEST_TAG=latest_build
+LATEST_RELEASE_TAG=latest_build
+LATEST_PRERELEASE_TAG=latest_prerelease_build
 NIGHTLY_TAG=Nightly
 
 __check_existence() {
@@ -42,7 +43,15 @@ __release_build() {
         release)
             export REL_TAG=$CI_COMMIT_REF_NAME
             export FRAMEWORK_DEST_DIR=karaboFramework/tags/$REL_TAG
-            export FRAMEWORK_LATEST_DIR=karaboFramework/tags/$LATEST_TAG
+            export FRAMEWORK_LATEST_DIR=karaboFramework/tags/$LATEST_RELEASE_TAG
+            export LATEST_TAG=$LATEST_RELEASE_TAG
+            export GUI_DEST_DIR=karaboGui
+            ;;
+        prerelease)
+            export REL_TAG=$CI_COMMIT_REF_NAME
+            export FRAMEWORK_DEST_DIR=karaboFramework/tags/$REL_TAG
+            export FRAMEWORK_LATEST_DIR=karaboFramework/tags/$LATEST_PRERELEASE_TAG
+            export LATEST_TAG=$LATEST_PRERELEASE_TAG
             export GUI_DEST_DIR=karaboGui
             ;;
         *) echo "unknown job type: $2" ;;
@@ -66,7 +75,7 @@ __release_build() {
     esac
 
     if [ "$REL_TAG" != "$NIGHTLY_TAG" ]; then
-        sshpass -p "$XKARABO_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "ln -fs $SSH_KARABO_DIR/$REL_ARTIFACT_DEST_PATH $SSH_KARABO_DIR/$REL_ARTIFACT_LATEST_PATH "
+        sshpass -p "$XKARABO_PWD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER_HOST "ln -fs $SSH_KARABO_DIR/$REL_ARTIFACT_DEST_PATH $SSH_KARABO_DIR/$REL_ARTIFACT_LATEST_PATH"
     fi
 }
 
@@ -99,6 +108,7 @@ TARGET_OS=$(echo $1 | cut -f3 -d' ')
 
 case "$JOB_SCOPE" in
     release) __release_build $TARGET_OS $JOB_SCOPE ;;
+    prerelease) __release_build $TARGET_OS $JOB_SCOPE ;;
     nightly) __release_build $TARGET_OS $JOB_SCOPE ;;
     deps) __deps_build $JOB_TYPE ;;
     *) echo "unknow job scope: $JOB_SCOPE" ;;
