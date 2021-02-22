@@ -155,7 +155,11 @@ def init_gui(app, use_splash=True):
     # Load the sceneview widget controllers
     populate_controller_registry()
     # Register karabo:// URL protocol
-    register_protocol()
+    try:
+        register_protocol()
+    except Exception as e:
+        # do not allow failed protocol registration to block the execution
+        RuntimeWarning(f"Scheme registration failed: {str(e)}")
 
     # Initialize the Manager singleton
     get_manager()
