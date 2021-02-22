@@ -17,12 +17,17 @@ macro (resolveKaraboLibTarget)
             # temporary conda-bld work environment, not the paths for the Conda environment where the
             # package has been installed).
             add_library(${KARABO_LIB_TARGET_NAME} SHARED IMPORTED)
-            # TODO: replace the hardcoded target properties with programatical generation from the Karabo Lib CMake project.
+            # Note: the Include Directories properties are fixed and expressed in terms of
+            #       CMAKE_PREFIX_PATH. This is intentional as those directories are "stable"
+            #       (header files of library dependencies will "converge" to them and this
+            #       relocatable form based on CMAKE_PREFIX_PATH is more generic than the
+            #       one generated dynamically, which would depend on the installation path
+            #       resolved by CMake at configuration time.
             set_target_properties(${KARABO_LIB_TARGET_NAME} PROPERTIES
-                INTERFACE_COMPILE_DEFINITIONS "__SO__"
-                INTERFACE_COMPILE_OPTIONS "-Wno-unused-local-typedefs;-Wno-deprecated-declarations;-Wall" # "-Wfatal-errors;-Wno-unused-local-typedefs;-Wno-deprecated-declarations;-Wall"
+                INTERFACE_COMPILE_DEFINITIONS "@KARABO_LIB_COMPILE_DEFINITIONS@"
+                INTERFACE_COMPILE_OPTIONS "@KARABO_LIB_COMPILE_OPTIONS@"
                 INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_PREFIX_PATH}/include/karabo;${CMAKE_PREFIX_PATH}/include;${CMAKE_PREFIX_PATH}/include/hdf5"
-                INTERFACE_LINK_LIBRARIES "${CMAKE_PREFIX_PATH}/lib/libboost_filesystem.so;${CMAKE_PREFIX_PATH}/lib/libboost_system.so;${CMAKE_PREFIX_PATH}/lib/libboost_chrono.so;${CMAKE_PREFIX_PATH}/lib/libboost_date_time.so;${CMAKE_PREFIX_PATH}/lib/libboost_regex.so;${CMAKE_PREFIX_PATH}/lib/libboost_signals.so;${CMAKE_PREFIX_PATH}/lib/libboost_thread.so;${CMAKE_PREFIX_PATH}/lib/libhdf5.so;${CMAKE_PREFIX_PATH}/lib/libssl.so;${CMAKE_PREFIX_PATH}/lib/libcrypto.so;${CMAKE_PREFIX_PATH}/lib/libopenmqc.so;${CMAKE_PREFIX_PATH}/lib/liblog4cpp.so;${CMAKE_PREFIX_PATH}/lib/libpugixml.so"
+                INTERFACE_LINK_LIBRARIES "@KARABO_LIB_LINK_LIBRARIES@"
                 INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${CMAKE_PREFIX_PATH}/include"
             )
             set_target_properties(${KARABO_LIB_TARGET_NAME} PROPERTIES
