@@ -25,7 +25,7 @@
 #include <karabo/util/Timestamp.hh>
 #include <karabo/util/TimeDuration.hh>
 
-#define KRB_TEST_MAX_TIMEOUT 5
+#define KRB_TEST_MAX_TIMEOUT 7  // larger than the 5 s input channel reconnect interval, for testOutputRecreatesOnSchemaChange
 
 using karabo::net::EventLoop;
 using karabo::util::Hash;
@@ -138,6 +138,9 @@ public:
                 .dataSchema(dataSchema)
                 .commit();
 
+        // Schema less input channel...
+        INPUT_CHANNEL(expected).key("input")
+                .commit();
     }
 
 
@@ -351,8 +354,13 @@ void Device_Test::appTestRunner() {
     testSchemaInjection();
     testSchemaWithAttrUpdate();
     testSchemaWithAttrAppend();
+    // Change (i.e. update) schema of existing output channel
     testChangeSchemaOutputChannel("slotUpdateSchema");
     testChangeSchemaOutputChannel("slotAppendSchema");
+    // Changing schema of an output channel - it should trigger a reconnection
+    testOutputRecreatesOnSchemaChange("slotUpdateSchema");
+    testOutputRecreatesOnSchemaChange("slotAppendSchema");
+    // Inject new channels
     testInputOutputChannelInjection("slotUpdateSchema");
     testInputOutputChannelInjection("slotAppendSchema");
     testNodedSlot();
@@ -947,6 +955,118 @@ void Device_Test::testChangeSchemaOutputChannel(const std::string& updateSlot) {
     std::clog << "OK." << std::endl;
 }
 
+
+void Device_Test::testOutputRecreatesOnSchemaChange(const std::string& updateSlot) {
+    std::clog << "Start testOutputRecreatesOnSchemaChange for " << updateSlot << ": " << std::flush;
+
+    const std::string& senderId("TestDevice");
+    const std::string& receiverId("receiver");
+
+    // Setup receiver device that should connect.
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testServerDevice", "TestDevice",
+                                                                       Hash("deviceId", receiverId,
+                                                                            "input.connectedOutputChannels",
+                                                                            std::vector<std::string>({senderId + ":output"})),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    // Test connection is setup
+    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get(receiverId)),
+                           waitForCondition([this, receiverId] () {
+                               return m_deviceClient->get<std::vector < std::string >> (receiverId, "input.missingConnections").empty();
+                           }, KRB_TEST_MAX_TIMEOUT * 1000));
+
+    // Tell server (as helper) to listen for updates of "input.missingConnections"
+    // Note: Since we cannot remove the slot from the server again, we choose a test run dependent slot name
+    //       and disconnect at the end. So the slot lambda (that takes variables that are local to the test by reference)
+    //       cannot be called later - it would likely crash.
+    boost::mutex connectionChangesMutex;
+    std::vector<std::vector<std::string>> connectionChanges;
+    auto changedHandler = [&connectionChanges, &connectionChangesMutex, receiverId]
+            (const karabo::util::Hash& h, const std::string& id) {
+        if (id == receiverId && h.has("input.missingConnections")) {
+            boost::mutex::scoped_lock lock(connectionChangesMutex);
+            connectionChanges.push_back(h.get<std::vector<std::string>>("input.missingConnections"));
+        }
+    };
+    const std::string slotConnectionChanged("slotConnectionChanged_" + updateSlot);
+    m_deviceServer->registerSlot<karabo::util::Hash, std::string>(changedHandler, slotConnectionChanged);
+    const bool connected = m_deviceServer->connect(receiverId, "signalChanged", "", slotConnectionChanged);
+    CPPUNIT_ASSERT(connected);
+
+    // Create several schema injections that should trigger output channel reconnection (or not).
+    // The Boolean tells whether "output" channel is recreated (and thus reconnection happens)
+    // when injected and when injection is removed by updating with an empty Schema.
+    std::vector<std::tuple<Schema, bool>> schemasToInject;
+    // Schema where OUTPUT_CHANNEL is explicitly changed
+    Schema schema1;
+    Schema dataSchema;
+    INT32_ELEMENT(dataSchema).key("injectedInt32").readOnly().commit();
+    OUTPUT_CHANNEL(schema1).key("output").dataSchema(dataSchema).commit();
+    schemasToInject.push_back(std::make_tuple(std::move(schema1), true));
+    // Schema where output schema is changed silently, i.e. w/o mentioning OUTPUT_CHANNEL
+    Schema schema2;
+    NODE_ELEMENT(schema2).key("output").commit();
+    NODE_ELEMENT(schema2).key("output.schema").commit();
+    INT32_ELEMENT(schema2).key("output.schema.injectedInt32").readOnly().commit();
+    schemasToInject.push_back(std::make_tuple(std::move(schema2), true));
+    // Schema where something else changed - channel is untouched
+    Schema schema3;
+    INT32_ELEMENT(schema3).key("injectedUnrelated").assignmentOptional().defaultValue(1).reconfigurable().commit();
+    schemasToInject.push_back(std::make_tuple(std::move(schema3), false));
+
+    for (const std::tuple < Schema, bool>& schemaAndDisconnect : schemasToInject) {
+        const Schema& schemaToInject = std::get<0>(schemaAndDisconnect);
+        const bool triggerReconnect = std::get<1>(schemaAndDisconnect);
+        CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(senderId, updateSlot, schemaToInject)
+                                .timeout(KRB_TEST_MAX_TIMEOUT * 1000)
+                                .receive());
+
+        // If output channel schema changed, we expect that the channel was recreated and and thus the
+        // InputChannel of the receiver was disconnected and reconnected. Both should trigger a change of the
+        // input channel's missingConnections property which should trigger a call to our "injected" slot
+        // that is connected to 'signalChanged'.
+        // If triggerReconnect is false, nothing such happens and we run into the timeout :-(.
+        const bool changed = waitForCondition([this, &connectionChanges, &connectionChangesMutex] () {
+            boost::mutex::scoped_lock lock(connectionChangesMutex);
+                                              return connectionChanges.size() >= 2ul;
+        }, KRB_TEST_MAX_TIMEOUT * 1000);
+        {
+            boost::mutex::scoped_lock lock(connectionChangesMutex);
+            CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::util::toString(connectionChanges), triggerReconnect, changed);
+            if (triggerReconnect) {
+                CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::util::toString(connectionChanges), 2ul, connectionChanges.size());
+                CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({senderId + ":output"}), connectionChanges[0]);
+                CPPUNIT_ASSERT_EQUAL(std::vector<std::string>(), connectionChanges[1]);
+            }
+        }
+        // Remove schema changes again:
+        CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(senderId, "slotUpdateSchema", Schema())
+                                .timeout(KRB_TEST_MAX_TIMEOUT * 1000)
+                                .receive());
+        if (triggerReconnect) {
+            // If schema changed in the first place, it changes back now and thus has to reconnect
+            const bool changed = waitForCondition([this, &connectionChanges, &connectionChangesMutex] () {
+                boost::mutex::scoped_lock lock(connectionChangesMutex);
+                                                  return connectionChanges.size() >= 4ul; // two more than before
+            }, KRB_TEST_MAX_TIMEOUT * 1000);
+            boost::mutex::scoped_lock lock(connectionChangesMutex);
+            CPPUNIT_ASSERT_MESSAGE(karabo::util::toString(connectionChanges), changed);
+            CPPUNIT_ASSERT_EQUAL_MESSAGE(karabo::util::toString(connectionChanges), 4ul, connectionChanges.size());
+            CPPUNIT_ASSERT_EQUAL(std::vector<std::string>({senderId + ":output"}), connectionChanges[2]);
+            CPPUNIT_ASSERT_EQUAL(std::vector<std::string>(), connectionChanges[3]);
+        }
+        // Clean-up for next round
+        boost::mutex::scoped_lock lock(connectionChangesMutex);
+        connectionChanges.clear();
+    }
+
+    // Clean up
+    m_deviceServer->disconnect(receiverId, "signalChanged", "", slotConnectionChanged);
+    // Cannot remove slotConnectionChanged...
+    success = m_deviceClient->killDevice(receiverId, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    std::clog << "OK." << std::endl;
+}
 
 void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot) {
     std::clog << "Start testInputOutputChannelInjection for " << updateSlot << ": " << std::flush;

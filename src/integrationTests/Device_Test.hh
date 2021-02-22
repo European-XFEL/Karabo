@@ -54,6 +54,12 @@ private:
      */
     void testChangeSchemaOutputChannel(const std::string& updateSlot);
 
+    /** Tests that updateSchema/appendSchema that change schema of output channel will trigger a reconnection
+     *
+     * @param updateSlot which TestDevice slot to change the schema: "slotUpdateSchema" or "slotAppendSchema"
+     */
+    void testOutputRecreatesOnSchemaChange(const std::string& updateSlot);
+
     /** Test that updateSchema/appendSchema properly creates (and destroys) input/output channels
      *
      * @param updateSlot which TestDevice slot to change the schema: "slotUpdateSchema" or "slotAppendSchema"
