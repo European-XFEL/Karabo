@@ -20,6 +20,23 @@
 
 cmake_minimum_required(VERSION 3.12)
 
+# Returns a list with all the paths in the input list modified so
+# the current value of CMAKE_PREFIX_PATH in the input path is replaced
+# with the string "${CMAKE_PREFIX_PATH}".
+function(make_relative_to_cmake_prefix_path INPUT_LIST OUTPUT_LIST)
+    set(${AUX_LIST} "")
+    foreach (INPUT_PATH ${INPUT_LIST})
+        string(REPLACE
+            ${CMAKE_PREFIX_PATH}
+            "\${CMAKE_PREFIX_PATH}"
+            OUTPUT_PATH
+            ${INPUT_PATH}
+        )
+        list(APPEND AUX_LIST ${OUTPUT_PATH})
+    endforeach()
+    set(${OUTPUT_LIST} "${AUX_LIST}" PARENT_SCOPE)
+endfunction()
+
 include("../../cmake/cxx-options.cmake")
 include("../../cmake/karabo-lib-target-name.cmake")
 
@@ -195,15 +212,6 @@ set_target_properties(
     PROPERTIES
     LINK_FLAGS "-Wl,-rpath,${CMAKE_LIBRARY_PATH}"
 )
-# TODO: The command below is not making any difference - troubleshoot the RPATH for installed targets. For build targets, CMake handles
-#       the RPATH automatically and they point to the proper directories that contain linked libraries. Further reference:
-#       https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling.
-#       To list the embedded RPATHS: objdump ${exe_or_lib_name} | grep RPATH
-set_target_properties(
-    ${KARABO_LIB_TARGET_NAME}
-    PROPERTIES
-    INSTALL_RPATH "${CMAKE_LIBRARY_PATH}" INSTALL_RPATH_USE_LINK_PATH TRUE
-)
 
 # Adding dependecy libraries into the karabo project
 target_link_libraries(
@@ -229,6 +237,44 @@ file(GLOB INCLUDE_FILES "*.hpp")
 foreach (TMP_PATH ${HDR_FILES})
    list (APPEND INCLUDE_FILES ${TMP_PATH})
 endforeach()
+
+# Generate resolve-karabo-lib-target.cmake from the current
+# Karabo Lib target configured dependencies. That file contains
+# a macro that will allow isolated builds of Karabo Lib dependent
+# targets (builds where the ${KARABO_LIB_TARGET} in this project
+# is not a known target).
+message(CHECK_START "Generating \"resolve-karabo-lib-target.cmake\"")
+get_target_property(
+    KARABO_LIB_COMPILE_DEFINITIONS
+    ${KARABO_LIB_TARGET_NAME}
+    INTERFACE_COMPILE_DEFINITIONS
+)
+get_target_property(
+    KARABO_LIB_COMPILE_OPTIONS
+    ${KARABO_LIB_TARGET_NAME}
+    INTERFACE_COMPILE_OPTIONS
+)
+get_target_property(
+    KARABO_LIB_LINK_LIBRARIES
+    ${KARABO_LIB_TARGET_NAME}
+    INTERFACE_LINK_LIBRARIES
+)
+make_relative_to_cmake_prefix_path("${KARABO_LIB_LINK_LIBRARIES}" RELATIVE_LINK_LIBRARIES)
+set(KARABO_LIB_LINK_LIBRARIES "${RELATIVE_LINK_LIBRARIES}")
+list(APPEND CMAKE_MESSAGE_INDENT "  ")
+message(STATUS "COMPILE_DEFINITIONS for libkarabo:")
+message(STATUS "${KARABO_LIB_COMPILE_DEFINITIONS}")
+message(STATUS "COMPILE_OPTIONS for libkarabo:")
+message(STATUS "${KARABO_LIB_COMPILE_OPTIONS}")
+message(STATUS "LINK_LIBRARIES for libkarabo:")
+message(STATUS "${KARABO_LIB_LINK_LIBRARIES}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/resolve-karabo-lib-target.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/resolve-karabo-lib-target.cmake"
+    @ONLY
+)
+list(POP_BACK CMAKE_MESSAGE_INDENT)
+message(CHECK_PASS "done")
 
 # Creating karabo folder in include and lib folders
 install(DIRECTORY DESTINATION "lib")
