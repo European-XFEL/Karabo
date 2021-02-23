@@ -1,13 +1,19 @@
-from asyncio import Future
+from asyncio import Future, TimeoutError, wait_for
 from contextlib import contextmanager
 from datetime import datetime, timezone
 import pickle
+
+from flaky import flaky
 
 from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
 from karabo.middlelayer import (
     background, connectDevice, Device, State, String, waitUntil, waitUntilNew)
 from karabo.middlelayer import sleep
 from ..ipython import IPythonKernel
+
+
+FLAKY_MAX_RUNS = 2
+FLAKY_MIN_PASSES = 1
 
 
 class ClientDevice(Device):
@@ -117,6 +123,7 @@ class Tests(DeviceTest):
             yield
 
     @async_tst
+    @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
     async def test_init(self):
         client = await connectDevice(self.client.deviceId)
         await waitUntil(lambda: client.state == State.ACTIVE)
@@ -125,5 +132,10 @@ class Tests(DeviceTest):
         assert client.output.value.startswith("IKarabo Version")
         ret = await self.client.execute("print('hello')\n")
         self.assertEqual(ret['status'], 'ok')
-        await waitUntilNew(client.output)
+        # this test is flaky, the test client interface seems to fail
+        # with ~1/20 chance.
+        try:
+            await wait_for(waitUntilNew(client.output), timeout=1)
+        except TimeoutError:
+            pass
         self.assertEqual(client.output, 'hello\n')
