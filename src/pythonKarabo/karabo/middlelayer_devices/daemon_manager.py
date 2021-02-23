@@ -182,7 +182,10 @@ class DaemonManager(Device):
             else:
                 if self.state != State.ON:
                     self.state = State.ON
-                    self.status = "Fetched server information"
+                # Synchronize to error status outside of the normal polling.
+                status = "Fetched server information"
+                if self.status != status:
+                    self.status = status
 
                 reply = json.loads(response.body)
                 servers = reply['servers']
