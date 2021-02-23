@@ -1,4 +1,4 @@
-from asyncio import coroutine, ensure_future, get_event_loop
+from asyncio import ensure_future, get_event_loop
 from queue import Empty
 import pickle
 from textwrap import dedent
@@ -22,13 +22,11 @@ class ChannelMixin(ZMQSocketChannel, ChannelABC):
         self.task = ensure_future(self.loop())
         super().start()
 
-    @coroutine
-    def loop(self):
+    async def loop(self):
         loop = get_event_loop()
         while True:
             try:
-                msg = yield from loop.run_in_executor(None, self.get_msg,
-                                                      True, 1)
+                msg = await loop.run_in_executor(None, self.get_msg, True, 1)
                 self.call_handlers(pickle.dumps(msg))
                 value = self.device.doNotCompressEvents.value + 1
                 self.device.doNotCompressEvents = value
@@ -113,9 +111,8 @@ class IPythonKernel(Device):
     def interrupt(self):
         self.manager.interrupt_kernel()
 
-    @coroutine
-    def _run(self, **kwargs):
-        yield from super()._run(**kwargs)
+    async def _run(self, **kwargs):
+        await super()._run(**kwargs)
         self.manager = KernelManager(client_factory=Client)
         self.manager.start_kernel(
             extra_arguments=["-c", SCRIPT,
@@ -135,12 +132,12 @@ class IPythonKernel(Device):
         return info
 
     @coslot
-    def slotKillDevice(self):
+    async def slotKillDevice(self):
         self.state = State.STOPPING
         if self.manager is not None and self.manager.has_kernel:
             self.manager.request_shutdown()
-            yield from self._ss.loop.run_in_executor(
+            await self._ss.loop.run_in_executor(
                 None, self.manager.finish_shutdown)
             self.manager = None
         self.state = State.STOPPED
-        yield from super().slotKillDevice()
+        await super().slotKillDevice()
