@@ -449,7 +449,7 @@ class Manager(QObject):
     def handle_propertyHistory(self, **info):
         """The handler of the property history.
 
-        The`info` dictionary contains:
+        The `info` dictionary contains:
 
             deviceId (str): the deviceId of the property
             property (str): the key of the property
@@ -464,9 +464,10 @@ class Manager(QObject):
         if success:
             deviceId = info["deviceId"]
             key = info["property"]
-            data = info["data"]
-            device_proxy = self._topology.get_device(deviceId)
-            device_proxy.publish_historic_data(key, data)
+            data = info.get("data", None)
+            if data is not None:
+                device_proxy = self._topology.get_device(deviceId)
+                device_proxy.publish_historic_data(key, data)
         else:
             # XXX: Forward compatibility!
             # The GUI server of future Karabo versions (> 2.6.X) will report
