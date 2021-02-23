@@ -215,7 +215,6 @@ runPythonUnitTests() {
     safeRunTests "karabo.config_db"
     safeRunTests "karabo.tests"
     safeRunTests "karabo.interactive"
-    safeRunTests "karabo.macro_api"
 
     echo
     echo Karabo Python unit tests complete
