@@ -285,7 +285,8 @@ class BaseSeriesGraph(BaseBindingController):
         if not timestamps:
             return QDateTime.currentDateTime()
         else:
-            return QDateTime.fromTime_t(max(timestamps))
+            # Cast numpy value to float
+            return QDateTime.fromTime_t(float(max(timestamps)))
 
     def _draw_start_time(self, proxy, value, timestamp):
         if proxy in self._curves_start:
