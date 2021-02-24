@@ -14,12 +14,12 @@ from .utils import set_roi_html
 class KaraboROI(ROI):
 
     def __init__(self, pos=(0, 0), size=Point(1, 1), name='',
-                 scale_snap=False, translate_snap=False, pen=None):
+                 scale_snap=False, translate_snap=False, pen=None,
+                 parent=None):
         super(KaraboROI, self).__init__(pos, size,
                                         scaleSnap=scale_snap,
                                         translateSnap=translate_snap,
-                                        pen=pen,
-                                        removable=True)
+                                        pen=pen, removable=True, parent=parent)
         self.name = name
         self.setZValue(100)
         self._selected = False
@@ -147,7 +147,8 @@ class KaraboROI(ROI):
         if self.menu is not None:
             self.menu.destroy()
 
-        self.menu = menu = QMenu()
+        parent = self.parent()
+        self.menu = menu = QMenu(parent)
         menu.setTitle("ROI")
         # Label action
         label = QLabel(self.name or "Region of Interest")
@@ -167,6 +168,7 @@ class KaraboROI(ROI):
         configure_action.triggered.connect(self._configure_roi)
         configure_action.setIcon(icons.edit)
         menu.addAction(configure_action)
+
         return menu
 
     def mouseDragEvent(self, ev):
@@ -348,58 +350,6 @@ class KaraboROI(ROI):
             self.setState(newState, update=False)
 
         self.stateChanged(finish=finish)
-
-    def getArraySlice(self, data, img, axes=(0, 1), returnSlice=True):
-        """ Patching to fix bug in rounded off bounds """
-
-        # Determine shape of array along ROI axes
-        dShape = (data.shape[axes[0]], data.shape[axes[1]])
-
-        # Determine transform that maps ROI bounding box to image coordinates
-        try:
-            tr = (self.sceneTransform()
-                  * fn.invertQTransform(img.sceneTransform()))
-        except np.linalg.linalg.LinAlgError:
-            return None
-
-        # Modify transform to scale from image coords to data coords
-        axisOrder = img.axisOrder
-        if axisOrder == 'row-major':
-            tr.scale(float(dShape[1]) / img.width(),
-                     float(dShape[0]) / img.height())
-        else:
-            tr.scale(float(dShape[0]) / img.width(),
-                     float(dShape[1]) / img.height())
-
-        # Transform ROI bounds into data bounds
-        dataBounds = tr.mapRect(self.boundingRect())
-
-        # Intersect transformed ROI bounds with data bounds
-        if axisOrder == 'row-major':
-            intBounds = dataBounds.intersected(
-                QRectF(0, 0, dShape[1], dShape[0]))
-        else:
-            intBounds = dataBounds.intersected(
-                QRectF(0, 0, dShape[0], dShape[1]))
-
-        # Determine index values to use when referencing the array.
-        bounds = (
-            (round(min(intBounds.left(), intBounds.right())),
-             round(1 + max(intBounds.left(), intBounds.right()))),
-            (round(min(intBounds.bottom(), intBounds.top())),
-             round(1 + max(intBounds.bottom(), intBounds.top())))
-        )
-        if axisOrder == 'row-major':
-            bounds = bounds[::-1]
-
-        if returnSlice:
-            # Create slice objects
-            sl = [slice(None)] * data.ndim
-            sl[axes[0]] = slice(*bounds[0])
-            sl[axes[1]] = slice(*bounds[1])
-            return tuple(sl), tr
-        else:
-            return bounds, tr
 
     # ---------------------------------------------------------------------
     # Private methods
