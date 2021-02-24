@@ -25,6 +25,7 @@ from karabogui.indicators import get_processing_color
 from karabogui.enums import AccessRole
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
+from karabogui.logger import get_logger, StatusBarHandler
 from karabogui import messagebox
 from karabogui.panels.api import (
     AlarmPanel, ConfigurationPanel, DevicePanel, PanelContainer, LoggingPanel,
@@ -49,7 +50,6 @@ CONFIGURATOR_TITLE = 'Configuration Editor'
 SYSTEM_TOPOLOGY_TITLE = 'System Topology'
 DEVICE_TOPOLOGY_TITLE = 'Device Topology'
 PROJECT_TITLE = 'Projects'
-
 
 _PANEL_TITLE_CONFIG = {
     CONSOLE_TITLE: 'console_panel',
@@ -259,19 +259,17 @@ class MainWindow(QMainWindow):
         """
         if data is not None:
             info = 'KARABO TOPIC: <b>{}</b>'.format(data['topic'])
-            self.brokerInformation.setText(info)
+            self.brokerInfo.setText(info)
             # Store this information in the config singleton!
             get_config()["broker_topic"] = data['topic']
 
-            # Don't show for older GUI servers
-            hostname = data.get('hostname', None)
-            hostport = data.get('hostport', None)
-            if hostname is not None and hostport is not None:
-                info = 'GUI SERVER: <b>{}:{}</b>'.format(hostname, hostport)
-                self.guiServerHost.setText(info)
+            hostname = data['hostname']
+            hostport = data['hostport']
+            info = 'GUI SERVER: <b>{}:{}</b>'.format(hostname, hostport)
+            self.serverInfo.setText(info)
         else:
-            self.brokerInformation.setText("")
-            self.guiServerHost.setText("")
+            self.brokerInfo.setText("")
+            self.serverInfo.setText("")
 
     # --------------------------------------
     # Qt virtual methods
@@ -439,14 +437,19 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.ui_lamp)
 
     def _setupStatusBar(self):
-        self.statusBar().showMessage('Ready...')
-        self.guiServerHost = QLabel()
-        self.statusBar().addPermanentWidget(self.guiServerHost)
-        expander = QWidget()
-        expander.setFixedWidth(25)
-        self.statusBar().addPermanentWidget(expander)
-        self.brokerInformation = QLabel()
-        self.statusBar().addPermanentWidget(self.brokerInformation)
+        widget_handler = StatusBarHandler()
+        get_logger().addHandler(widget_handler)
+        self.log_widget = widget_handler.get_widget()
+        self.log_widget.setParent(self)
+        self.statusBar().addPermanentWidget(self.log_widget, 1)
+
+        # More information ...
+        self.serverInfo = QLabel()
+        self.statusBar().addPermanentWidget(self.serverInfo)
+        self.brokerInfo = QLabel()
+        self.statusBar().addPermanentWidget(self.brokerInfo)
+
+        get_logger().info("Ready ...")
 
     def _setupPanelAreas(self):
         """Build the main splitter structure of the main window
