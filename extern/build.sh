@@ -10,8 +10,7 @@ daemontools libzmq nlohmann_json pugixml mqtt)
 DEPENDENCIES_PYTHON=( setuptools setuptools_scm pip wheel cython pybind numpy scipy
 six nose py pyparsing packaging toml more-itertools zipp importlib-metadata pluggy
 attrs colorama iniconfig atomicwrites pytest pytest_runner pillow sip backports
-backports_abc tornado dateutil ptyprocess pytz pexpect pyzmq markupsafe jinja2 pygments
-docutils alabaster babel snowballstemmer sphinx_rtd_theme imagesize sphinx decorator
+backports_abc tornado dateutil ptyprocess pytz pexpect pyzmq markupsafe jinja2 pygments decorator
 traitlets parso ipython_genutils jedi pickleshare wcwidth backcall prompt_toolkit ipython
 jupyter_core jupyter_client ipykernel simplegeneric dill pkgconfig h5py pyusb parse
 jsonschema ecdsa tzlocal httplib2 traits pint nbformat
