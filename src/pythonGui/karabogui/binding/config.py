@@ -9,8 +9,9 @@ from karabo.native import (
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
-    BindingNamespace, BindingRoot, CharBinding, NodeBinding,
-    SlotBinding, StringBinding, VectorDoubleBinding, VectorFloatBinding,
+    BindingNamespace, BindingRoot, BoolBinding, ByteArrayBinding, CharBinding,
+    ComplexBinding, FloatBinding, IntBinding, NodeBinding, SlotBinding,
+    StringBinding, VectorBinding, VectorDoubleBinding, VectorFloatBinding,
     VectorHashBinding, VectorNumberBinding)
 from .util import (
     array_equal, attr_fast_deepcopy, is_equal, is_writable, realign_hash)
@@ -364,7 +365,7 @@ def validate_value(binding, value):
     return value
 
 
-def validate_vector_hash(binding, value, init=False, drop_none=False):
+def validate_table_value(binding, value, init=False, drop_none=False):
     """Validate a hash list `value` against existing vectorhash binding
 
     :param binding: The existing `VectorHashBinding`
@@ -434,11 +435,35 @@ def validate_vector_hash(binding, value, init=False, drop_none=False):
     return valid, invalid
 
 
-def get_default_value(binding):
-    value = None
-    if binding is not None:
-        attrs = binding.attributes
-        value = attrs.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
+def get_default_value(binding, force=False):
+    """Get the default value from a binding"""
+
+    def _get_binding_default(binding):
+        # Provide a default value for all leafType bindings of `binding`
+        if isinstance(binding, (CharBinding, StringBinding)):
+            return ""
+        if isinstance(binding, IntBinding):
+            # XXX: No min and max taken into account for now
+            return 0
+        elif isinstance(binding, FloatBinding):
+            return 0.0
+        elif isinstance(binding, VectorBinding):
+            # All vectors including table!
+            return []
+        elif isinstance(binding, ComplexBinding):
+            return 0.0
+        elif isinstance(binding, BoolBinding):
+            return False
+        elif isinstance(binding, ByteArrayBinding):
+            return bytearray([])
+
+        return None
+
+    attrs = binding.attributes
+    value = attrs.get(const.KARABO_SCHEMA_DEFAULT_VALUE, None)
+    if value is None and force:
+        value = _get_binding_default(binding)
+        assert value is not None, f"No default value for {type(binding)} ..."
     return value
 
 
