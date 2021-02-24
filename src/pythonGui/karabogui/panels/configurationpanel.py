@@ -16,7 +16,7 @@ from karabogui.binding.api import (
     ProjectDeviceProxy, VectorHashBinding, attr_fast_deepcopy,
     apply_configuration, extract_configuration, flat_iter_hash,
     get_binding_value, has_changes, has_vector_hash_changes,
-    validate_vector_hash, validate_value)
+    validate_table_value, validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.enums import AccessRole
 from karabogui.events import KaraboEvent, register_for_broadcasts
@@ -360,7 +360,7 @@ class ConfigurationPanel(BasePanelWidget):
             if (prop_binding.required_access_level <= access_level
                     and prop_binding.is_allowed(state)):
                 if isinstance(prop_binding, VectorHashBinding):
-                    valid, invalid = validate_vector_hash(prop_binding, value,
+                    valid, invalid = validate_table_value(prop_binding, value,
                                                           drop_none=True)
                     if (len(valid)
                             and has_vector_hash_changes(prop_binding,
@@ -431,7 +431,7 @@ class ConfigurationPanel(BasePanelWidget):
             if not writable:
                 continue
             if isinstance(binding, VectorHashBinding):
-                valid_vhash, invalid_vhash = validate_vector_hash(
+                valid_vhash, invalid_vhash = validate_table_value(
                     binding, value, init=True, drop_none=True)
                 if invalid_vhash:
                     invalid[path] = invalid_vhash
