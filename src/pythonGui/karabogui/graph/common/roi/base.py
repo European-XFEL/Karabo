@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt5.QtCore import Qt, QRectF, pyqtSlot, QPoint
+from PyQt5.QtCore import Qt, pyqtSlot, QPoint
 from PyQt5.QtGui import QTransform
 from PyQt5.QtWidgets import (
     QAction, QInputDialog, QLabel, QMenu, QWidgetAction)
