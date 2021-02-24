@@ -12,6 +12,7 @@ from karabogui import background
 from karabogui.const import REQUEST_REPLY_TIMEOUT
 from karabogui.dialogs.logindialog import LoginDialog
 from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.logger import get_logger
 from karabogui.singletons.api import get_config
 from karabogui.util import process_qt_events
 import karabogui.globals as krb_globals
@@ -329,6 +330,9 @@ class Network(QObject):
         self._write_hash(h)
 
     def onExecute(self, device_id, slot_name, ignore_timeouts):
+        logger = get_logger()
+        logger.info(f"Executing slot <b>{slot_name}</b> "
+                    f"of device <b>{device_id}</b>")
         h = Hash("type", "execute")
         h["deviceId"] = device_id
         h["command"] = slot_name
@@ -380,12 +384,18 @@ class Network(QObject):
     # Current Configuration Interface
 
     def onGetConfigurationFromPast(self, device_id, time):
+        logger = get_logger()
+        logger.info(f"Requesting configuration for device "
+                    f"<b>{device_id}</b> at time point {time}")
         h = Hash("type", "getConfigurationFromPast")
         h["deviceId"] = device_id
         h["time"] = time
         self._write_hash(h)
 
     def onGetConfigurationFromName(self, device_id, name):
+        logger = get_logger()
+        logger.info(f"Requesting named configuration {name} "
+                    f"for device <b>{device_id}</b>")
         h = Hash("type", "requestGeneric")
         args = Hash(
             "deviceId", device_id,
@@ -411,6 +421,9 @@ class Network(QObject):
 
     def onSaveConfigurationFromName(self, name, deviceIds, description='',
                                     priority=1, update=False):
+        logger = get_logger()
+        logger.info(f"Saving configuration by name {name} for devices "
+                    f"<b>{deviceIds}</b> with priority {priority}")
         h = Hash("type", "requestGeneric")
         args = Hash(
             "name", name,
