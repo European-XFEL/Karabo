@@ -10,7 +10,7 @@ from karabo.native import (
 
 from karabogui.binding.api import (
     apply_configuration, build_binding, DeviceProxy, ProjectDeviceProxy,
-    validate_value, validate_vector_hash, VectorHashBinding)
+    validate_value, validate_table_value, VectorHashBinding)
 from karabogui.testing import GuiTestCase
 
 from ..configurationpanel import ConfigurationPanel, CONFIGURATION_PAGE
@@ -398,7 +398,7 @@ class TestSetProxyConfiguration(GuiTestCase):
                 continue
             value = config[path]
             if isinstance(binding, VectorHashBinding):
-                valid, invalid = validate_vector_hash(binding, value)
+                valid, invalid = validate_table_value(binding, value)
                 config[path] = valid
                 invalid_config[path] = invalid
             elif validate_value(binding, value) is None:
@@ -442,7 +442,7 @@ class TestSetProxyConfiguration(GuiTestCase):
                 continue
             value = config[path]
             if isinstance(binding, VectorHashBinding):
-                valid, invalid = validate_vector_hash(
+                valid, invalid = validate_table_value(
                     binding, value, init=True, drop_none=True)
                 config[path] = valid
                 invalid_config[path] = invalid
