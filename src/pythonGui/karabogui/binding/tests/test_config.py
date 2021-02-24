@@ -1,15 +1,13 @@
 import numpy as np
 from numpy.testing import assert_array_equal
 
+from karabo.common.const import KARABO_SCHEMA_DEFAULT_VALUE
 from karabo.native import (
     Bool, Configurable, Hash, HashList, String, UInt8, VectorHash)
 
-from ..config import validate_value, validate_vector_hash
-from ..types import (
-    BoolBinding, FloatBinding, Int8Binding, Uint8Binding, StringBinding,
-    VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
-    VectorInt8Binding, VectorUint8Binding, Int16Binding, Uint16Binding,
-    Int32Binding, Uint32Binding, Int64Binding, Uint64Binding)
+from karabogui.binding.config import (
+    validate_value, validate_table_value, get_default_value)
+import karabogui.binding.types as types
 
 
 class TableRow(Configurable):
@@ -27,7 +25,7 @@ class TableRowEmpty(Configurable):
 def test_validate_value_float():
     """Test float binding validation"""
     # Check valid values
-    binding = FloatBinding()
+    binding = types.FloatBinding()
     assert_binding(binding, 1.3)
     assert_binding(binding, np.float32(1.3), expected=np.float32(1.3))
     assert_binding(binding, np.float64(1.3), expected=np.float64(1.3))
@@ -58,7 +56,7 @@ def assert_binding(binding, value, expected=None, valid=True):
 
 def test_validate_value_uint8():
     """Test uint8 binding validation."""
-    binding = Uint8Binding()
+    binding = types.Uint8Binding()
 
     # Check valid values
     assert_binding(binding, 0, expected=np.uint8(0))
@@ -77,7 +75,7 @@ def test_validate_value_uint8():
 
 def test_validate_value_int8():
     """Test int8 binding validation."""
-    binding = Int8Binding()
+    binding = types.Int8Binding()
 
     # Check valid values
     assert_binding(binding, -128, expected=np.int8(-128))
@@ -97,7 +95,7 @@ def test_validate_value_int8():
 
 def test_validate_value_int16():
     """Test the int16 binding validation."""
-    binding = Int16Binding()
+    binding = types.Int16Binding()
 
     # Check valid values
     assert_binding(binding, 0, expected=np.int16(0))
@@ -115,7 +113,7 @@ def test_validate_value_int16():
 
 def test_validate_value_uint16():
     """Test uint16 binding validation."""
-    binding = Uint16Binding()
+    binding = types.Uint16Binding()
 
     # Check valid values
     assert_binding(binding, 0, expected=np.uint16(0))
@@ -134,7 +132,7 @@ def test_validate_value_uint16():
 
 def test_validate_value_int32():
     """Test int32 binding validation."""
-    binding = Int32Binding()
+    binding = types.Int32Binding()
 
     # Check valid values
     assert_binding(binding, -(2 ** 31), expected=np.int32(-(2 ** 31)))
@@ -154,7 +152,7 @@ def test_validate_value_int32():
 
 def test_validate_value_uint32():
     """Test uint32 binding validation."""
-    binding = Uint32Binding()
+    binding = types.Uint32Binding()
 
     # Check valid values
     assert_binding(binding, 1, expected=np.uint32(1))
@@ -174,7 +172,7 @@ def test_validate_value_uint32():
 
 def test_validate_value_int64():
     """Test int64 binding validation."""
-    binding = Int64Binding()
+    binding = types.Int64Binding()
 
     # Check valid values
     assert_binding(binding, -(2 ** 63), expected=np.int64(-(2 ** 63)))
@@ -194,7 +192,7 @@ def test_validate_value_int64():
 
 def test_validate_value_uint64():
     """Test uint64 binding validation."""
-    binding = Uint64Binding()
+    binding = types.Uint64Binding()
 
     # Check valid values
     assert_binding(binding, 1, expected=np.uint64(1))
@@ -215,7 +213,7 @@ def test_validate_value_uint64():
 def test_validate_value_string():
     """Test string binding validation.
     If valid, it should return the casted value"""
-    binding = StringBinding()
+    binding = types.StringBinding()
 
     # Check valid values
     assert validate_value(binding, "1") == "1"
@@ -232,7 +230,7 @@ def test_validate_value_bool():
     If valid, it should return the casted value. The casting considers the
     the __bool__ of the object (the conventional way), not sure if it's what
     we want in Karabo."""
-    binding = BoolBinding()
+    binding = types.BoolBinding()
 
     # Check valid values
     assert validate_value(binding, 1) is True
@@ -251,7 +249,7 @@ def test_validate_value_bool():
 
 
 def test_validate_value_vectoruint8():
-    binding = VectorUint8Binding()
+    binding = types.VectorUint8Binding()
 
     array = np.array([0, 10, 255])
     # Check valid values
@@ -270,7 +268,7 @@ def test_validate_value_vectoruint8():
 
 
 def test_validate_value_vectorint8():
-    binding = VectorInt8Binding()
+    binding = types.VectorInt8Binding()
 
     # Check valid values
     _assert_array(binding, [-1, 0, 1], dtype=np.int8)
@@ -288,7 +286,7 @@ def test_validate_value_vectorint8():
 
 
 def test_validate_value_vectorfloat():
-    binding = VectorFloatBinding()
+    binding = types.VectorFloatBinding()
     array = np.array([-1, 0, 1])
 
     # Check valid values
@@ -305,7 +303,7 @@ def test_validate_value_vectorfloat():
 
 
 def test_validate_value_vectordouble():
-    binding = VectorDoubleBinding()
+    binding = types.VectorDoubleBinding()
     array = np.array([-1, 0, 1])
 
     # Check valid values
@@ -325,8 +323,9 @@ def test_validate_vector_hash():
     """Test vector hash binding validation.
     It returns both valid and invalid values in the form of a HashList([]) for
     each row."""
-    binding = VectorHashBinding(row_schema=VectorHash(TableRow).rowSchema.hash)
-    empty_binding = VectorHashBinding(
+    binding = types.VectorHashBinding(
+        row_schema=VectorHash(TableRow).rowSchema.hash)
+    empty_binding = types.VectorHashBinding(
         row_schema=VectorHash(TableRowEmpty).rowSchema.hash)
 
     # Check with one valid hash
@@ -334,7 +333,7 @@ def test_validate_vector_hash():
                       "uintProperty", 1,
                       "boolProperty", True)
     valid_hashlist = HashList([valid_hash])
-    valid, invalid = validate_vector_hash(binding, valid_hashlist)
+    valid, invalid = validate_table_value(binding, valid_hashlist)
     assert valid == valid_hashlist
     assert invalid == HashList([None])
 
@@ -343,7 +342,7 @@ def test_validate_vector_hash():
                       "uintProperty", 1,
                       "boolProperty", True)
     valid_hashlist = HashList([valid_hash, valid_hash])
-    valid, invalid = validate_vector_hash(binding, valid_hashlist)
+    valid, invalid = validate_table_value(binding, valid_hashlist)
     assert valid == valid_hashlist
     assert invalid == HashList([None, None])
 
@@ -351,7 +350,7 @@ def test_validate_vector_hash():
     invalid_hash = Hash("stringProperty", "foo",
                         "uintProperty", -1,  # invalid for a uintProperty
                         "boolProperty", True)
-    valid, invalid = validate_vector_hash(binding, HashList([invalid_hash]))
+    valid, invalid = validate_table_value(binding, HashList([invalid_hash]))
     assert valid == HashList([None])
     assert invalid == HashList([invalid_hash])
 
@@ -363,7 +362,7 @@ def test_validate_vector_hash():
                         "uintProperty", -1,  # invalid for a uintProperty
                         "boolProperty", True)
     hash_list = HashList([valid_hash, invalid_hash])
-    valid, invalid = validate_vector_hash(binding, hash_list)
+    valid, invalid = validate_table_value(binding, hash_list)
     assert valid == HashList([valid_hash, None])  # drop the row with invalids
     assert invalid == HashList([None, invalid_hash])
 
@@ -375,14 +374,14 @@ def test_validate_vector_hash():
                         "uintProperty", -1,  # invalid for a uintProperty
                         "boolProperty", True)
     hash_list = HashList([valid_hash, invalid_hash])
-    valid, invalid = validate_vector_hash(binding, hash_list)
+    valid, invalid = validate_table_value(binding, hash_list)
     assert valid == HashList([None, None])  # drop the row with invalids
     assert invalid == HashList([valid_hash, invalid_hash])
 
     # Check with a hash that contains an invalid property and default value
     invalid_hash = Hash("stringProperty", "foo",
                         "boolProperty", True)
-    valid, invalid = validate_vector_hash(binding, HashList([invalid_hash]))
+    valid, invalid = validate_table_value(binding, HashList([invalid_hash]))
     assert valid == HashList([Hash("stringProperty", "foo",
                                    "uintProperty", 1,  # default value
                                    "boolProperty", True)])
@@ -392,7 +391,7 @@ def test_validate_vector_hash():
     # and without default value
     invalid_hash = Hash("stringProperty", "foo",
                         "boolProperty", True)
-    valid, invalid = validate_vector_hash(empty_binding,
+    valid, invalid = validate_table_value(empty_binding,
                                           HashList([invalid_hash]))
     assert valid == HashList([None])
     assert invalid == HashList([Hash("stringProperty", "foo",
@@ -404,3 +403,94 @@ def _assert_array(binding, value, dtype):
     array = validate_value(binding, value)
     assert_array_equal(array, value)
     assert array.dtype == dtype
+
+
+def test_default_value():
+    """Test the default value generation of a binding"""
+    binding = types.FloatBinding()
+    # No default value provided, no `force` as default (False), value must
+    # be `None` if not present
+    value = get_default_value(binding)
+    assert value is None
+    # Force a default value for a float binding
+    value = get_default_value(binding, force=True)
+    assert value == 0.0
+    # Apply a default value and retrieve default value
+    binding.attributes[KARABO_SCHEMA_DEFAULT_VALUE] = 5.1
+    value = get_default_value(binding, force=True)
+    assert value == 5.1
+
+    # Go through all other bindings
+    binding = types.Int8Binding()
+    value = get_default_value(binding, force=True)
+    assert value == 0
+    binding = types.Int16Binding()
+    value = get_default_value(binding, force=True)
+    assert value == 0
+    binding = types.Int32Binding()
+    value = get_default_value(binding, force=True)
+    assert value == 0
+    binding = types.Int64Binding()
+    value = get_default_value(binding, force=True)
+    assert value == 0
+    binding = types.Uint8Binding()
+    value = get_default_value(binding, force=True)
+    assert value == 0
+    binding = types.Uint16Binding()
+    value = get_default_value(binding, force=True)
+    assert value == 0
+    binding = types.Uint32Binding()
+    value = get_default_value(binding, force=True)
+    assert value == 0
+    binding = types.Uint64Binding()
+    value = get_default_value(binding, force=True)
+    assert value == 0
+
+    binding = types.VectorHashBinding()
+    value = get_default_value(binding, force=True)
+    assert value == []
+
+    binding = types.VectorInt8Binding()
+    value = get_default_value(binding, force=True)
+    assert value == []
+    binding = types.VectorInt16Binding()
+    value = get_default_value(binding, force=True)
+    assert value == []
+    binding = types.VectorInt32Binding()
+    value = get_default_value(binding, force=True)
+    assert value == []
+    binding = types.VectorInt64Binding()
+    value = get_default_value(binding, force=True)
+    assert value == []
+    binding = types.VectorUint8Binding()
+    value = get_default_value(binding, force=True)
+    assert value == []
+    binding = types.VectorUint16Binding()
+    value = get_default_value(binding, force=True)
+    assert value == []
+    binding = types.VectorUint32Binding()
+    value = get_default_value(binding, force=True)
+    assert value == []
+    binding = types.VectorUint64Binding()
+    value = get_default_value(binding, force=True)
+    assert value == []
+
+    binding = types.StringBinding()
+    value = get_default_value(binding, force=True)
+    assert value == ""
+
+    binding = types.BoolBinding()
+    value = get_default_value(binding, force=True)
+    assert value is False
+
+    binding = types.CharBinding()
+    value = get_default_value(binding, force=True)
+    assert value == ""
+
+    binding = types.ByteArrayBinding()
+    value = get_default_value(binding, force=True)
+    assert value == bytearray([])
+
+    binding = types.ComplexBinding()
+    value = get_default_value(binding, force=True)
+    assert value == 0.0
