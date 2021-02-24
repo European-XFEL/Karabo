@@ -33,9 +33,11 @@ An extensive documentation is available in the `doc` folder.
 Build the documentation using
 
     cd doc
+    pip install -r requirements.txt
     make html
 
-Or use the documentation available at this [link](https://in.xfel.eu/readthedocs/docs/karabo/en/latest/)
+Or use the documentation available at this [link](https://rtd.xfel.eu/docs/karabo/en/latest/)
+or the old [link](https://in.xfel.eu/readthedocs/docs/karabo/en/latest/)
 
 Thank you for using Karabo!
 
