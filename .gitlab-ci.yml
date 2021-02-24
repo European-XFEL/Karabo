@@ -376,7 +376,7 @@ deps tests ubuntu18:
   <<: *deps-tests
 
 deps tests ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16
+  image: europeanxfel/karabo-ci:ubuntu-16gcc7
   <<: *deps-tests
 
 # MR test builds
