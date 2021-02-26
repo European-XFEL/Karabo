@@ -43,7 +43,8 @@ if __name__ == '__main__':
                 'panel-runner=karabogui.programs.panel_runner:main',
                 'karabo-cinema=karabogui.programs.cinema:main',
                 'karabo-theatre=karabogui.programs.theatre:main',
-                'karabo-update-extensions=karabogui.dialogs.update_dialog:main'
+                'karabo-update-extensions=karabogui.dialogs.update_dialog:main',
+                'karabo-register-protocol=karabogui.programs.register_protocol:register_protocol',
             ]
         },
         # Add an alias for 'build' so we can prepare data for Windows
