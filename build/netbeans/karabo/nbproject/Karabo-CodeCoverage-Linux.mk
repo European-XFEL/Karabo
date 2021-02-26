@@ -111,6 +111,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/JmsConnection.o \
 	${OBJECTDIR}/_ext/1103112890/JmsConsumer.o \
 	${OBJECTDIR}/_ext/1103112890/JmsProducer.o \
+	${OBJECTDIR}/_ext/1103112890/MqttBroker.o \
 	${OBJECTDIR}/_ext/1103112890/MqttClient.o \
 	${OBJECTDIR}/_ext/1103112890/MqttCppClient.o \
 	${OBJECTDIR}/_ext/1103112890/Strand.o \
@@ -574,6 +575,11 @@ ${OBJECTDIR}/_ext/1103112890/JmsProducer.o: ../../../src/karabo/net/JmsProducer.
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -Wno-unused-variable -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsProducer.o ../../../src/karabo/net/JmsProducer.cc
 
+${OBJECTDIR}/_ext/1103112890/MqttBroker.o: ../../../src/karabo/net/MqttBroker.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/MqttBroker.o ../../../src/karabo/net/MqttBroker.cc
+
 ${OBJECTDIR}/_ext/1103112890/MqttClient.o: ../../../src/karabo/net/MqttClient.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
@@ -821,7 +827,7 @@ ${TESTDIR}/TestFiles/f3: ${TESTDIR}/_ext/936496563/Logger_Test.o ${TESTDIR}/_ext
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f3 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
-${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/EventLoop_Test.o ${TESTDIR}/_ext/936498188/JmsConnection_Test.o ${TESTDIR}/_ext/936498188/MQTcpNetworking.o ${TESTDIR}/_ext/936498188/MqttClient_Test.o ${TESTDIR}/_ext/936498188/ReadAsyncStringUntil_Test.o ${TESTDIR}/_ext/936498188/Strand_Test.o ${TESTDIR}/_ext/936498188/TcpNetworking_Test.o ${TESTDIR}/_ext/936498188/netTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/Broker_Test.o ${TESTDIR}/_ext/936498188/EventLoop_Test.o ${TESTDIR}/_ext/936498188/JmsConnection_Test.o ${TESTDIR}/_ext/936498188/MQTcpNetworking.o ${TESTDIR}/_ext/936498188/MqttClient_Test.o ${TESTDIR}/_ext/936498188/ReadAsyncStringUntil_Test.o ${TESTDIR}/_ext/936498188/Strand_Test.o ${TESTDIR}/_ext/936498188/TcpNetworking_Test.o ${TESTDIR}/_ext/936498188/netTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `pkg-config cppunit --libs`   
 
@@ -922,6 +928,12 @@ ${TESTDIR}/_ext/936496563/logTestRunner.o: ../../../src/karabo/tests/log/logTest
 	${MKDIR} -p ${TESTDIR}/_ext/936496563
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936496563/logTestRunner.o ../../../src/karabo/tests/log/logTestRunner.cc
+
+
+${TESTDIR}/_ext/936498188/Broker_Test.o: ../../../src/karabo/tests/net/Broker_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/936498188
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `pkg-config cppunit --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/Broker_Test.o ../../../src/karabo/tests/net/Broker_Test.cc
 
 
 ${TESTDIR}/_ext/936498188/EventLoop_Test.o: ../../../src/karabo/tests/net/EventLoop_Test.cc 
@@ -2138,6 +2150,19 @@ ${OBJECTDIR}/_ext/1103112890/JmsProducer_nomain.o: ${OBJECTDIR}/_ext/1103112890/
 	    $(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -Wno-unused-variable -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/JmsProducer_nomain.o ../../../src/karabo/net/JmsProducer.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/JmsProducer.o ${OBJECTDIR}/_ext/1103112890/JmsProducer_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/MqttBroker_nomain.o: ${OBJECTDIR}/_ext/1103112890/MqttBroker.o ../../../src/karabo/net/MqttBroker.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/MqttBroker.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/MqttBroker_nomain.o ../../../src/karabo/net/MqttBroker.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/MqttBroker.o ${OBJECTDIR}/_ext/1103112890/MqttBroker_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/MqttClient_nomain.o: ${OBJECTDIR}/_ext/1103112890/MqttClient.o ../../../src/karabo/net/MqttClient.cc 
