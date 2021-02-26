@@ -46,10 +46,13 @@ namespace karabo {
         }
 
 
-        Broker::Broker(const Broker& o)
+        Broker::Broker(const Broker& o, const std::string& newInstanceId)
                 : m_availableBrokerUrls(o.m_availableBrokerUrls)
                 , m_topic(o.m_topic)
-                , m_consumeBroadcasts(true) {
+                , m_instanceId(newInstanceId)
+                , m_consumeBroadcasts(true)
+                , m_messageHandler()
+                , m_errorNotifier() {
         }
 
 

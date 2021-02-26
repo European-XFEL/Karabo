@@ -46,8 +46,6 @@ namespace karabo {
 
             Broker(const karabo::util::Hash& configuration);
 
-            Broker(const Broker& o);
-
             virtual ~Broker();
 
             /**
@@ -185,11 +183,6 @@ namespace karabo {
                                         const consumer::ErrorNotifier& errorNotifier) = 0;
 
             /**
-             * Stop processing heartbeat messages
-             */
-            virtual void stopReadingHeartbeats() = 0;
-
-            /**
              * Set up handlers for processing log messages using special path.
              *
              * @param handler       - read message handler
@@ -197,11 +190,6 @@ namespace karabo {
              */
             virtual void startReadingLogs(const consumer::MessageHandler& handler,
                                   const consumer::ErrorNotifier& errorNotifier) = 0;
-
-            /**
-             * Stop processing of log messages
-             */
-            virtual void stopReadingLogs() = 0;
 
             /**
              * Send message to broker
@@ -241,14 +229,25 @@ namespace karabo {
             static std::string brokerTypeFromEnv();
 
             /**
-             * Specify broker domain (i.e. topic for OpenMQBroker) from environment variables.
+             * Specify broker domain (i.e. topic for JmsBroker) from environment variables.
              *
              * First source is KARABO_BROKER_TOPIC, as a fall back the environment variables
              * LOGNAME, USER, LNAME and USERNAME are checked in that order.
              */
             static std::string brokerDomainFromEnv();
 
+            /**
+             * Check that message should be handled as global call by testing 'id' and 'header'
+             * @param id      instanceId of target
+             * @param header  header of message
+             * @return true if this is a global call
+             */
+            virtual bool checkForGlobalCalls(const std::string& id, const karabo::util::Hash::Pointer& header) = 0;
+
         protected:
+
+            Broker(const Broker& o) = delete;
+            Broker(const Broker& o, const std::string& newInstanceId);
 
             std::vector<std::string> m_availableBrokerUrls;
             const std::string m_topic;
