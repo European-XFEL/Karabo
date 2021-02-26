@@ -2,7 +2,8 @@ import os
 from unittest.mock import patch
 
 import numpy as np
-from numpy.testing import assert_allclose, assert_array_equal
+from numpy.testing import (
+    assert_allclose, assert_array_equal, assert_almost_equal)
 
 from karabogui.graph.common.api import CrosshairROI, ROITool, safe_log10
 from karabogui.testing import GuiTestCase
@@ -169,10 +170,14 @@ class _BasePlotTest(GuiTestCase):
         x_data, y_data = self._plot.getData()
         if log_x:
             x_expected = safe_log10(x_expected)
+            assert_almost_equal(x_data, x_expected)
+        else:
+            assert_array_equal(x_data, x_expected)
         if log_y:
             y_expected = safe_log10(y_expected)
-        assert_array_equal(x_data, x_expected)
-        assert_array_equal(y_data, y_expected)
+            assert_almost_equal(y_data, y_expected)
+        else:
+            assert_array_equal(y_data, y_expected)
 
     def assert_range(self, x_expected, y_expected, log_x=False, log_y=False):
         self.assert_range_x(x_expected, log_x)
