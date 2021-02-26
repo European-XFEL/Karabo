@@ -17,7 +17,7 @@
 namespace karabo {
     namespace net {
 
-        using TcpEndPoint = MQTT_NS::tcp_endpoint<boost::asio::ip::tcp::socket, mqtt::null_strand>;
+        using TcpEndPoint = MQTT_NS::tcp_endpoint<boost::asio::ip::tcp::socket, boost::asio::io_context::strand>;
         //using TcpEndPoint = MQTT_NS::tcp_endpoint<boost::asio::ip::tcp::socket, boost::asio::io_service::strand>;
         using MqttNsAsyncClient = MQTT_NS::callable_overlay<MQTT_NS::async_client<TcpEndPoint>>;
         using MqttNsClient = MQTT_NS::callable_overlay<MQTT_NS::client<TcpEndPoint>>;
@@ -143,13 +143,13 @@ namespace karabo {
             template <typename Operation, typename Handler>
             void performAsyncOperation(const Operation& op, const Handler& handler) {
                 if (isConnected()) {
-                    std::lock_guard<std::mutex> lock(m_pendingRequestsMutex);
                     // Call the MQTT operation 
                     uint16_t packetId = op();
 
                     // Adds the request to the global (static) pending requests map
                     // When the request finishes, posts the handler function call on the main event loop
 
+                    std::lock_guard<std::mutex> lock(m_pendingRequestsMutex);
                     m_pendingRequestsMap.emplace(packetId, std::make_pair(karabo::util::Epochstamp(),
                         [this, h {std::move(handler)}] (const boost::system::error_code ec) {
                             // Direct call looking more reasonable fails to work so ...

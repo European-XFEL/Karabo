@@ -33,19 +33,17 @@ namespace karabo {
         }
 
 
-        JmsBroker::JmsBroker(const JmsBroker& o) : Broker(o) {
-            m_connection = o.m_connection;
-            m_producerChannel.reset();
-            m_consumerChannel.reset();
-            m_heartbeatConsumerChannel.reset();
-            m_logConsumerChannel.reset();
+        JmsBroker::JmsBroker(const JmsBroker& o, const std::string& newInstanceId) : Broker(o, newInstanceId),
+            m_connection(o.m_connection),
+            m_producerChannel(),
+            m_consumerChannel(),
+            m_heartbeatConsumerChannel(),
+            m_logConsumerChannel() {
         }
 
 
         Broker::Pointer JmsBroker::clone(const std::string& instanceId) {
-            auto o = boost::make_shared<JmsBroker>(*this);
-            o->m_instanceId = instanceId;
-            return boost::static_pointer_cast<Broker>(o);
+            return Broker::Pointer(new JmsBroker(*this, instanceId));
         }
 
 
@@ -128,6 +126,8 @@ namespace karabo {
 
         void JmsBroker::stopReading() {
             if (m_consumerChannel) m_consumerChannel->stopReading();
+            if (m_heartbeatConsumerChannel) m_heartbeatConsumerChannel->stopReading();
+            if (m_logConsumerChannel) m_logConsumerChannel->stopReading();
         }
 
 
@@ -158,11 +158,6 @@ namespace karabo {
         }
 
 
-        void JmsBroker::stopReadingHeartbeats() {
-            if (m_heartbeatConsumerChannel) m_heartbeatConsumerChannel->stopReading();
-        }
-
-
 /**
          * JMS subscription.
          * 'selector' is SQL-like expression on properties (in header)
@@ -176,11 +171,6 @@ namespace karabo {
                 m_logConsumerChannel = m_connection->createConsumer(m_topic, "target = 'log'");
             }
             m_logConsumerChannel->startReading(handler, errorNotifier);
-        }
-
-
-        void JmsBroker::stopReadingLogs() {
-            if (m_logConsumerChannel) m_logConsumerChannel->stopReading();
         }
 
     }
