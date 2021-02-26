@@ -1,6 +1,6 @@
 from enum import Enum
 from itertools import product
-from unittest import TestCase, main
+from unittest import TestCase, main, skipIf
 
 import pint
 import numpy
@@ -11,6 +11,8 @@ from karabo.native import (
 from karabo.native import unit_registry as unit, Int32, Float, VectorFloat
 from karabo.native import EncodingType, Unit, MetricPrefix
 from karabo.native import encodeBinary, Hash, Timestamp
+
+from karabo.native.schema.tests.compat import PINT_INCOMPATIBLE, PINT_REASON
 
 
 class Tests(TestCase):
@@ -334,6 +336,7 @@ class Tests(TestCase):
         descriptor.displayType = "bin|0:a,1:b,2:c,3:d"
         self.assertEqual(str(a), "{a|b|d}")
 
+    @skipIf(PINT_INCOMPATIBLE, reason=PINT_REASON)
     def test_special(self):
         vps = QuantityValue(1, Unit.VOLT_PER_SECOND)
         aps = QuantityValue(1, Unit.AMPERE_PER_SECOND)
@@ -390,6 +393,7 @@ class Tests(TestCase):
         self.assertEqual(w, ["bla"])
         self.assertEqual(w.descriptor, None)
 
+    @skipIf(PINT_INCOMPATIBLE, reason=PINT_REASON)
     def test_timestamp(self):
         a = QuantityValue("1 m", timestamp=self.t1)
         b = QuantityValue("2 m", timestamp=self.t2)
@@ -464,6 +468,7 @@ class Tests(TestCase):
         self.assertEqual(m, 2 * unit.m)
         self.assertEqual(m.timestamp, self.t1)
 
+    @skipIf(PINT_INCOMPATIBLE, reason=PINT_REASON)
     def test_numpy_std(self):
         a = QuantityValue(3, "m", timestamp=self.t1)
         b = QuantityValue(1000, "mm", timestamp=self.t2)
