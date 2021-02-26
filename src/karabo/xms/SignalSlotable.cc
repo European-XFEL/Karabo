@@ -49,8 +49,8 @@ namespace karabo {
                                                const karabo::util::Hash::Pointer& header,
                                                const karabo::util::Hash::Pointer& body) const {
 
-            // Global signals must go via the broker
-            if (instanceId == "*") return false;
+            // Global calls must go via the broker
+            if (m_connection->checkForGlobalCalls(instanceId, header)) return false;
             SignalSlotable::Pointer ptr;
             {
                 boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
@@ -113,7 +113,6 @@ namespace karabo {
         void SignalSlotable::doSendMessage(const std::string& instanceId, const karabo::util::Hash::Pointer& header,
                                            const karabo::util::Hash::Pointer& body, int prio, int timeToLive,
                                            const std::string& topic, bool forceViaBroker) const {
-
             if (!forceViaBroker) {
                 if (tryToCallDirectly(instanceId, header, body)) return;
             }
@@ -1371,35 +1370,39 @@ namespace karabo {
             bool signalExists = false;
 
             if (slotInstanceId == m_instanceId) {
-                boost::system::error_code ec;
-                ec = m_connection->subscribeToRemoteSignal(signalInstanceId, signalFunction);
-                if (ec) {
-                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId
-                            << " : Failed to subscribe to remote signal \""
-                            << signalInstanceId << ":" << signalFunction << "\": #"
-                            << ec.value() << " -- " << ec.message();
-                    return signalExists;
+                boost::system::error_code ec = boost::system::errc::make_error_code(boost::system::errc::success);
+                if (signalInstanceId != slotInstanceId) {
+                    ec = m_connection->subscribeToRemoteSignal(signalInstanceId, signalFunction);
+                    if (ec) {
+                        KARABO_LOG_FRAMEWORK_WARN << m_instanceId
+                                << " : Failed to subscribe to remote signal \""
+                                << signalInstanceId << ":" << signalFunction << "\": #"
+                                << ec.value() << " -- " << ec.message();
+                        return signalExists;
+                    }
                 }
             } else {
-                bool subscribed = false;
-                try {
-                    request(slotInstanceId, "slotSubscribeRemoteSignal",
-                            signalInstanceId, signalFunction)
-                            .timeout(1000).receive(subscribed);
-                    if (!subscribed) {
+                bool subscribed = true;
+                if (signalInstanceId != slotInstanceId) {
+                    try {
+                        request(slotInstanceId, "slotSubscribeRemoteSignal",
+                                signalInstanceId, signalFunction)
+                                .timeout(1000).receive(subscribed);
+                        if (!subscribed) {
+                            KARABO_LOG_FRAMEWORK_WARN << m_instanceId
+                                    << " : Failed to subscribe to signal \""
+                                    << signalInstanceId << ":" << signalFunction
+                                    << "\" while delegating to \"" << slotInstanceId << ":slotSubscribeRemoteSignal\"";
+                            return signalExists;
+                        }
+                    } catch (const karabo::util::TimeoutException&) {
+                        karabo::util::Exception::clearTrace();
                         KARABO_LOG_FRAMEWORK_WARN << m_instanceId
-                                << " : Failed to subscribe to signal \""
+                                << " : Timeout during subscription to signal \""
                                 << signalInstanceId << ":" << signalFunction
                                 << "\" while delegating to \"" << slotInstanceId << ":slotSubscribeRemoteSignal\"";
                         return signalExists;
                     }
-                } catch (const karabo::util::TimeoutException&) {
-                    karabo::util::Exception::clearTrace();
-                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId
-                            << " : Timeout during subscription to signal \""
-                            << signalInstanceId << ":" << signalFunction
-                            << "\" while delegating to \"" << slotInstanceId << ":slotSubscribeRemoteSignal\"";
-                    return signalExists;
                 }
             }
 
