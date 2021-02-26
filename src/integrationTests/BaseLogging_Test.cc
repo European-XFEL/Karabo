@@ -184,18 +184,6 @@ void BaseLogging_Test::setUp() {
 
     // Uncomment to run with a local broker:
     //setenv("KARABO_BROKER", "tcp://localhost:7777", true);
-    if (!getenv("KARABO")) {
-        // We are likely running this test from inside NetBeans without an activated Karabo.
-        // So we extend PATH such that "karabo-idxbuild", triggered by the DataLogReader, is found:
-        std::string newPath(karabo::util::Version::getPathToKaraboInstallation() + "/bin");
-        const char* oldPath = getenv("PATH");
-        if (oldPath) {
-            m_oldPath = oldPath;
-            (newPath += ":") += oldPath;
-        }
-        setenv("PATH", newPath.data(), 1);
-        m_changedPath = true;
-    }
 
     // Start central event-loop
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
