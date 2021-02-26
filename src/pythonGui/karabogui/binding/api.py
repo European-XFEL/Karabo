@@ -28,5 +28,5 @@ from .types import (
 )
 from .util import (
     attr_fast_deepcopy, flat_iter_hash, get_binding_value, get_editor_value,
-    get_vector_hash_changes, get_min_max, get_min_max_size, has_changes,
-    has_min_max_attributes, has_vector_hash_changes, is_equal)
+    get_table_changes, get_min_max, get_min_max_size, has_changes,
+    has_min_max_attributes, has_table_changes, is_equal)
