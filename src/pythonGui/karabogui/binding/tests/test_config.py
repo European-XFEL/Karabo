@@ -335,7 +335,7 @@ def test_validate_vector_hash():
     valid_hashlist = HashList([valid_hash])
     valid, invalid = validate_table_value(binding, valid_hashlist)
     assert valid == valid_hashlist
-    assert invalid == HashList([None])
+    assert invalid == HashList([])
 
     # Check two valid hashes
     valid_hash = Hash("stringProperty", "foo",
@@ -344,14 +344,14 @@ def test_validate_vector_hash():
     valid_hashlist = HashList([valid_hash, valid_hash])
     valid, invalid = validate_table_value(binding, valid_hashlist)
     assert valid == valid_hashlist
-    assert invalid == HashList([None, None])
+    assert invalid == HashList([])
 
     # Check with one hash that contains an invalid property
     invalid_hash = Hash("stringProperty", "foo",
                         "uintProperty", -1,  # invalid for a uintProperty
                         "boolProperty", True)
     valid, invalid = validate_table_value(binding, HashList([invalid_hash]))
-    assert valid == HashList([None])
+    assert valid == HashList([])
     assert invalid == HashList([invalid_hash])
 
     # Check with two hashes which one hash contains invalid properties
@@ -363,8 +363,8 @@ def test_validate_vector_hash():
                         "boolProperty", True)
     hash_list = HashList([valid_hash, invalid_hash])
     valid, invalid = validate_table_value(binding, hash_list)
-    assert valid == HashList([valid_hash, None])  # drop the row with invalids
-    assert invalid == HashList([None, invalid_hash])
+    assert valid == HashList([valid_hash])  # drop the row with invalids
+    assert invalid == HashList([invalid_hash])
 
     # Check with two hashes which both contains invalid properties
     valid_hash = Hash("stringProperty", [1, 2],  # invalid for a uintProperty
@@ -375,7 +375,7 @@ def test_validate_vector_hash():
                         "boolProperty", True)
     hash_list = HashList([valid_hash, invalid_hash])
     valid, invalid = validate_table_value(binding, hash_list)
-    assert valid == HashList([None, None])  # drop the row with invalids
+    assert valid == HashList([])  # drop the row with invalids
     assert invalid == HashList([valid_hash, invalid_hash])
 
     # Check with a hash that contains an invalid property and default value
@@ -385,7 +385,7 @@ def test_validate_vector_hash():
     assert valid == HashList([Hash("stringProperty", "foo",
                                    "uintProperty", 1,  # default value
                                    "boolProperty", True)])
-    assert invalid == HashList([None])
+    assert invalid == HashList([])
 
     # Check with a hash that contains an invalid property
     # and without default value
@@ -393,7 +393,7 @@ def test_validate_vector_hash():
                         "boolProperty", True)
     valid, invalid = validate_table_value(empty_binding,
                                           HashList([invalid_hash]))
-    assert valid == HashList([None])
+    assert valid == HashList([])
     assert invalid == HashList([Hash("stringProperty", "foo",
                                      "uintProperty", None,  # dropped value
                                      "boolProperty", True)])
