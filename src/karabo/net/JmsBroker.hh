@@ -37,9 +37,7 @@ namespace karabo {
             
             static void expectedParameters(karabo::util::Schema& s);
 
-            JmsBroker(const karabo::util::Hash& configuration);
-
-            JmsBroker(const JmsBroker& o);
+            explicit JmsBroker(const karabo::util::Hash& configuration);
 
             virtual ~JmsBroker();
 
@@ -140,8 +138,6 @@ namespace karabo {
             void startReadingHeartbeats(const consumer::MessageHandler& handler,
                                 const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
 
-            void stopReadingHeartbeats() override;
-
             /**
              * JMS subscription.
              * 'selector' is SQL-like expression on properties (in header)
@@ -153,8 +149,6 @@ namespace karabo {
             void startReadingLogs(const consumer::MessageHandler& messageHandler,
                           const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
 
-            void stopReadingLogs() override;
-
             void write(const std::string& topic,
                        const karabo::util::Hash::Pointer& header,
                        const karabo::util::Hash::Pointer& body,
@@ -165,7 +159,14 @@ namespace karabo {
                             const karabo::util::Hash::Pointer& header,
                             const karabo::util::Hash::Pointer& body) override;
 
+            bool checkForGlobalCalls(const std::string& id, const karabo::util::Hash::Pointer& header) override {
+                return (id == "*");
+            }
+
         private:
+
+            JmsBroker(const JmsBroker& o) = delete;
+            JmsBroker(const JmsBroker& o, const std::string& newInstanceId);
 
             karabo::net::JmsConnection::Pointer m_connection;
             karabo::net::JmsProducer::Pointer m_producerChannel;
