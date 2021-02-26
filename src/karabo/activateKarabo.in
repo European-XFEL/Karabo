@@ -1,0 +1,38 @@
+# Activates / deactivates a Karabo environment suitable for running the
+# artifacts produced by the CMake based build of the Karabo Framework
+# from the CMake build tree. This is not needed for running Karabo
+# artifacts from the install tree.
+#
+# To activate the environment, issue the command "source activateKarabo".
+# To deactivate, issue the command "deactivateKarabo".
+
+deactivateKarabo() {
+	if [ -n "$_OLD_PATH" ] ; then
+		PATH="$_OLD_PATH"
+		export PATH
+		unset _OLD_PATH
+	fi
+
+	if [ -n "$BASH" -o -n "$ZSH_VERSION" ] ; then
+		hash -r
+	fi
+	unset KARABO
+	unset -f deactivateKarabo
+	echo "Karabo environment at CMake build tree deactivated."
+}
+
+if [ ! -z $KARABO ] ; then
+	echo "There's already an active Karabo environment at $KARABO."
+	echo "Nothing will be done."
+else
+	_OLD_PATH="$PATH"
+	export KARABO=@KARABO_PATH@
+	export PATH="@KARABO_EXECUTABLES_ARTIFACTS_PATHS@:$PATH"
+
+	echo "Karabo environment at the CMake build tree activated:"
+	echo ""
+	echo "KARABO set to $KARABO"
+	echo "PATH set to $PATH"
+	echo ""
+	echo "To deactivate the environment at the CMake build tree, type 'deactivateKarabo' at the command prompt."
+fi
