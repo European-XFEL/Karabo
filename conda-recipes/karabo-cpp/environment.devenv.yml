@@ -9,6 +9,7 @@ channels:
 {{ conda_local_channel }}
 
 dependencies:
+  - python=3.8
   - gxx_linux-64  # [linux]
   - libstdcxx-ng  # [linux]
   - clangxx       # [osx]
@@ -17,7 +18,7 @@ dependencies:
   - setuptools-scm
   - cogapp
   - log4cpp=1.1.3=xfel
-  - boost=1.66=xfel
+  - boost=1.68=xfel
   - openssl
   - openmqc
   - nss
