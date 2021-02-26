@@ -79,6 +79,24 @@ add_subdirectory(src/tools/brokerRates ${CMAKE_BINARY_DIR}/karabo/brokerRates)
 # The build of the Karabo Idx Utilities for file based data logging (karabo-idxbuild and karabo-idxview)
 add_subdirectory(src/tools/dataLoggerIndex ${CMAKE_BINARY_DIR}/karabo/dataLoggerIndex)
 
+# Generates the script to activate an environment for running resulting Karabo artifacts
+# in the project build tree.
+set(KARABO_PATH ${CMAKE_BINARY_DIR}/karabo)
+set(KARABO_EXECUTABLES_ARTIFACTS_PATHS
+"\
+${KARABO_PATH}/brokerMessageLogger:\
+${KARABO_PATH}/brokerRates:\
+${KARABO_PATH}/dataLoggerIndex:\
+${KARABO_PATH}/deviceServer:\
+${KARABO_PATH}/tests:\
+${KARABO_PATH}/integrationTests\
+")
+configure_file(
+    "${CMAKE_SOURCE_DIR}/src/karabo/activateKarabo.in"
+    "${CMAKE_BINARY_DIR}/activateKarabo.sh"
+    @ONLY
+)
+
 if (BUILD_UNIT_TESTING)
     add_subdirectory(src/karabo/tests ${CMAKE_BINARY_DIR}/karabo/tests)
 endif()

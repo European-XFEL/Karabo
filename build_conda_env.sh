@@ -160,9 +160,6 @@ karaboCondaInstallCPPEnvironment() {
         safeRunCondaCommand conda build ${_RECIPE_DIR} || return 1
         echo "> build_conda_env.sh::karaboCondaInstallCPPEnvironment: will conda install in channel ${CONDA_LOCAL_CHANNEL} in env ${KARABO_ENV}."
         safeRunCondaCommand conda install -y -c ${CONDA_LOCAL_CHANNEL} ${KARABO_ENV} || return 1
-        # TODO: configure the generated environment to have the KARABO env var pointing to its $PREFIX upon startup. That's is needed to play along
-        #       well with karabo::util::Version::getPathToKaraboInstallation(), which is called in multiple places in the framework core - instantiation
-        #       of Cpp Device Servers, PluginLoader::defaultPluginPath(), ...
     fi
     unset _RECIPE_DIR
 }
@@ -286,4 +283,3 @@ for ENV_NAME in $ENVS; do
             ;;
     esac
 done
-
