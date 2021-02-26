@@ -9,37 +9,40 @@ channels:
   - defaults
 {{ conda_local_channel }}
 
-includes:
-  - {{ root }}/../karabo-native/native_environment.devenv.yml
-
 dependencies:
-  - python=3.6.7=he025d50_1005 # [win]
-  - python=3.6.* # [linux]
-  - python=3.6.* # [osx]
+  - python=3.8.* # [win]
+  - python=3.8.* # [linux]
+  - python=3.8.* # [osx]
   # for tests and building
-  - flake8=3.3.0
-  - pytest=6.1.1
-  - setuptools=42.0.1
-  - setuptools_scm=3.3.3
+  - flake8=3.8.4
+  - pytest=6.2.2
+  - setuptools=49.6.0
+  - setuptools_scm=4.1.2
   # GUI
-  - qt=5.9.7
-  - pyqt=5.9.2
-  - pyqtgraph=0.11.0=exfl
-  - qtconsole=4.6.0
-  - ipython=7.13
-  - ipykernel=5.2.0
+  - qt=5.12.9
+  - pyqt=5.12.3
+  - pyqtgraph=0.11.1
+  - qtconsole=5.0.2
+  - ipython=7.20.0
+  - ipykernel=5.4.3
   # Plotting and utils
-  - numpy=1.15
-  - scipy=1.4
+  - numpy=1.19.5
+  - scipy=1.6.0
+  - lttbc=0.2.0
   # Other
   - cycler=0.10.0
   - traits=6.0.0
-  - lxml=4.4.1
-  - requests=2.22
-  - python-dateutil=2.8
-  - lttbc=0.1.9
-  - jupyter_client=5.3.4
-  - conda=4.8.4
+  - lxml=4.6.2
+  - requests=2.25.1
+  - python-dateutil=2.8.1
+  - jupyter_client=6.0.0
+  - conda=4.9.2
+  # Pint should come from native, but we require a higher pint version due
+  # to a numpy upgrade. Since, we cannot upgrade pint for native, we
+  # run with a different defined pint version here. The GUI does not rely
+  # on KaraboValues from native.
+  - pint=0.16.1
+
 environment:
   PYTHONPATH:
     - {{ root }}
