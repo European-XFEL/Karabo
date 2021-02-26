@@ -185,8 +185,8 @@ void SignalSlotable_Test::testUniqueInstanceId() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testUniqueInstanceId();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testUniqueInstanceId("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testUniqueInstanceId();
 }
 
 
@@ -215,8 +215,8 @@ void SignalSlotable_Test::testValidInstanceId() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testValidInstanceId();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testValidInstanceId("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testValidInstanceId();
 }
 
 
@@ -245,8 +245,8 @@ void SignalSlotable_Test::testReceiveAsync() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testReceiveAsync();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testReceiveAsync("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testReceiveAsync();
 }
 
 
@@ -295,8 +295,8 @@ void SignalSlotable_Test::testReceiveAsyncError() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testReceiveAsyncError();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testReceiveAsyncError("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testReceiveAsyncError();
 }
 
 
@@ -417,8 +417,8 @@ void SignalSlotable_Test::testReceiveAsyncNoReply() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testReceiveAsyncNoReply();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testReceiveAsyncNoReply("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testReceiveAsyncNoReply();
 }
 
 
@@ -488,8 +488,8 @@ void SignalSlotable_Test::testReceiveExceptions() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testReceiveExceptions();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testReceiveExceptions("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testReceiveExceptions();
 }
 
 
@@ -550,8 +550,8 @@ void SignalSlotable_Test::testConnectAsync() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testConnectAsync();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testConnectAsync("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testConnectAsync();
 }
 
 
@@ -678,8 +678,8 @@ void SignalSlotable_Test::testConnectAsyncMulti() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testConnectAsyncMulti();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testConnectAsyncMulti("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testConnectAsyncMulti();
 }
 
 
@@ -871,8 +871,8 @@ void SignalSlotable_Test::testDisconnectAsync() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testDisconnectAsync();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testDisconnectAsync("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testDisconnectAsync();
 }
 
 
@@ -996,8 +996,8 @@ void SignalSlotable_Test::testMethod() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testMethod();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testMethod("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testMethod();
 }
 
 
@@ -1063,8 +1063,8 @@ void SignalSlotable_Test::testAsyncReply() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testAsyncReply();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testAsyncReply("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testAsyncReply();
 }
 
 
@@ -1243,8 +1243,8 @@ void SignalSlotable_Test::testAutoConnectSignal() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testAutoConnectSignal();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testAutoConnectSignal("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testAutoConnectSignal();
 }
 
 
@@ -1282,8 +1282,8 @@ void SignalSlotable_Test::testAutoConnectSlot() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testAutoConnectSlot();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testAutoConnectSlot("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testAutoConnectSlot();
 }
 
 
@@ -1323,8 +1323,8 @@ void SignalSlotable_Test::testRegisterSlotTwice() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testRegisterSlotTwice();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testRegisterSlotTwice("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testRegisterSlotTwice();
 }
 
 
@@ -1368,8 +1368,8 @@ void SignalSlotable_Test::testAsyncConnectInputChannel() {
     setenv("KARABO_BROKER", OPENMQ_BROKER, true);
     _testAsyncConnectInputChannel();
 
-//    setenv("KARABO_BROKER", MQTT_BROKER, true);
-//    _testAsyncConnectInputChannel("MqttBroker");
+    setenv("KARABO_BROKER", MQTT_BROKER, true);
+    _testAsyncConnectInputChannel();
 }
 
 
