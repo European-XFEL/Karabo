@@ -1,8 +1,8 @@
-/* 
+/*
  * Author: <burkhard.heisen@xfel.eu>
  *
  * Created on February 10, 2014, 3:58 PM
- * 
+ *
  * Copyright (c) 2010-2015 European XFEL GmbH Hamburg. All rights reserved.
  */
 
@@ -25,7 +25,7 @@ namespace karabo {
             processString(KARABO_VERSION); // from repositoryVersion
         }
 
-        Version::Version(const std::string &version) : m_major(-1), m_minor(-1), m_patch(-1), 
+        Version::Version(const std::string &version) : m_major(-1), m_minor(-1), m_patch(-1),
             m_postType(PostfixType::NONE), m_post(-1), m_dev(-1) {
             processString(version);
         }
@@ -52,7 +52,7 @@ namespace karabo {
                     m_postType = PostfixType::ALPHA;
                     m_post = fromString<unsigned int>(postVersion);
                 } else if (separator ==  "b" && postVersion.size() > 0) {
-                    m_postType = PostfixType::BETA; 
+                    m_postType = PostfixType::BETA;
                     m_post = fromString<unsigned int>(postVersion);
                 } else if (separator ==  "rc" && postVersion.size() > 0) {
                     m_postType = PostfixType::RC;
@@ -77,20 +77,28 @@ namespace karabo {
 
 
         std::string Version::getPathToKaraboInstallation() {
-            std::string karabo;
-            const char* tmp = getenv("KARABO");
-            if (tmp) karabo = tmp;
-            if (karabo.empty()) {
-                // Check whether we are acting as framework developers
-                // In this case the path to the installed framework is like that 
-                // (as we are sitting in build/netbeans/karabo)
-                karabo = "../../../karabo";
-                if (boost::filesystem::exists(karabo)) {
-                    return karabo;
-                }
-                throw KARABO_INIT_EXCEPTION("$KARABO environment variable is not defined but needed to get the path to the Karabo installation.");
+            const char* envKarabo = getenv("KARABO");
+            if (envKarabo) {
+                // The KARABO env var is defined; we're done.
+                return std::string(envKarabo);
             }
-            return karabo;
+
+            // Check whether we are acting as framework developers with the build
+            // directory located inside the source tree (at build/netbeans/karabo).
+            // This is the directory structure used by the Netbeans based build
+            // system and is checked before all the others known possibilities for
+            // backward compatibility reasons.
+            const std::string karaboParentDir("../../../karabo");
+            boost::system::error_code ec;
+            bool karaboParentDirFound = boost::filesystem::exists(karaboParentDir, ec);
+            if (!ec && karaboParentDirFound) {
+                // Yes, we are using the in source build tree of
+                // the Netbeans based build environment.
+                return karaboParentDir;
+            }
+
+            // All the attempts to obtain a path for the Karabo installation failed.
+            throw KARABO_INIT_EXCEPTION("$KARABO environment variable is not defined but needed to get the path to the Karabo installation.");
         }
 
 
@@ -131,7 +139,7 @@ namespace karabo {
         bool Version::isPostRelease() const {
             return m_postType == PostfixType::POST;
         }
-        
+
         bool operator== (const karabo::util::Version &v1, const karabo::util::Version &v2){
             if ( v1.m_major == v2.m_major && v1.m_minor == v2.m_minor && \
                 v1.m_patch == v2.m_patch && v1.m_postType == v2.m_postType && \

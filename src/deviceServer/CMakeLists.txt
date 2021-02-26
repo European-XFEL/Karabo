@@ -62,6 +62,21 @@ set_target_properties(
     INSTALL_RPATH "$ORIGIN/../lib;${CMAKE_PREFIX_PATH}/lib"
 )
 
+# karabo-cppserver requires $KARABO/var/data to run. In here, we create
+# that directory in the location the $KARABO installation dir will be resolved
+# to in the CMake build tree. This is required to run karabo-deviceServer from
+# the device tree.
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../var/data)
+# Also makes sure that the folder exists in the install location
+install(DIRECTORY DESTINATION "var/data")
+
+# karabo-cppserver requires a path to load device libraries from. This path
+# defaults to $KARABO/plugins and, as this path is usually not explicitly
+# set, in here we create that default path in both the build and the installation
+# trees.
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../plugins)
+install(DIRECTORY DESTINATION "plugins")
+
 install(TARGETS ${DEVICE_SERVER_EXECUTABLE}
         RUNTIME DESTINATION bin
 )
