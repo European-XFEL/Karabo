@@ -924,6 +924,18 @@ namespace karabo {
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
+                    // Take care of OutputChannels schema changes - have to recreate to make other end aware
+                    std::unordered_set<std::string> outChannelsToRecreate;
+                    for (const auto& path : getOutputChannelNames()) {
+                        if (m_fullSchema.has(path) && schema.has(path)
+                            && (!schema.hasDisplayType(path) || schema.getDisplayType(path) != "OutputChannel")) {
+                            // potential output schema change without using OUTPUT_CHANNEL
+                            outChannelsToRecreate.insert(path);
+                        }
+                        // else if (schema.getDisplayType(path) == "OutputChannel"):
+                        //    will be recreated by initChannels(schema) below
+                    }
+
                     // Clear cache
                     m_stateDependentSchema.clear();
 
@@ -935,7 +947,6 @@ namespace karabo {
 
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
-                    m_fullSchema.updateAliasMap();
 
                     // Notify the distributed system
                     emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
@@ -946,11 +957,15 @@ namespace karabo {
                     }
 
                     setNoLock(validated, stamp);
-                    // Just init any freshly injected channels,
-                    // Input- and OutputChannels will be recreated (and need reconnection)
-                    initChannels(schema);
-                }
 
+                    // Init any freshly injected channels
+                    initChannels(schema);
+                    // ... and those output channels with potential Schema change
+                    for (const std::string& outToCreate : outChannelsToRecreate) {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "appendSchema triggers creation of output channel '" << outToCreate << "'";
+                        prepareOutputChannel(outToCreate);
+                    }
+                }
 
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Schema appended";
             }
@@ -991,9 +1006,9 @@ namespace karabo {
                     // Clear cache
                     m_stateDependentSchema.clear();
 
-                    const std::vector<std::string>prevFullSchemaPaths = m_fullSchema.getPaths();
+                    const std::vector<std::string> prevFullSchemaPaths = m_fullSchema.getPaths();
 
-                    // Erase any previously injected Input-/OutputChannels
+                    // Erase any previously injected InputChannels
                     for (const auto& inputNameChannel : getInputChannels()) {
                         const std::string& path = inputNameChannel.first;
                         // Do not touch static InputChannel (even if injected again to change some properties)
@@ -1002,13 +1017,28 @@ namespace karabo {
                             removeInputChannel(path);
                         }
                     }
-                    for (const auto& outputNameChannel : getOutputChannels()) {
-                        const std::string& path = outputNameChannel.first;
-                        // Do not touch static OutputChannel (even if injected again to change some properties)
-                        if (m_staticSchema.has(path)) continue;
+
+                    // Take care of OutputChannels:
+                    // Remove or take care of schema changes - in latter case, have to recreate to make other end aware
+                    std::unordered_set<std::string> outChannelsToRecreate;
+                    for (const auto& path : getOutputChannelNames()) {
                         if (m_injectedSchema.has(path)) {
-                            removeOutputChannel(path);
+                            if (m_staticSchema.has(path)) {
+                                // Channel changes its schema back to its default
+                                outChannelsToRecreate.insert(path);
+                            } else {
+                                // Previously injected channel has to be removed
+                                KARABO_LOG_FRAMEWORK_INFO << "updateSchema: Remove output channel '" << path << "'";
+                                removeOutputChannel(path);
+                            }
                         }
+                        if (m_staticSchema.has(path) && schema.has(path)
+                            && (!schema.hasDisplayType(path) || schema.getDisplayType(path) != "OutputChannel")) {
+                            // potential output schema change without using OUTPUT_CHANNEL
+                            outChannelsToRecreate.insert(path);
+                        }
+                        // else if (schema.getDisplayType(path) == "OutputChannel"):
+                        //    will be recreated by initChannels(m_injectedSchema) below
                     }
 
                     // Resets fullSchema
@@ -1019,7 +1049,6 @@ namespace karabo {
 
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
-                    m_fullSchema.updateAliasMap();
 
                     // Notify the distributed system
                     emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
@@ -1030,11 +1059,15 @@ namespace karabo {
                         validated.erasePath(p);
                     }
                     setNoLock(validated, stamp);
-                    // Init any freshly injected channels,
-                    // Input- and OutputChannels will be recreated (and need reconnection)
-                    initChannels(m_injectedSchema);
-                }
 
+                    // Init any freshly injected channels
+                    initChannels(m_injectedSchema);
+                    // ... and those with potential Schema change
+                    for (const std::string& outToCreate : outChannelsToRecreate) {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "updateSchema triggers creation of output channel '" << outToCreate << "'";
+                        prepareOutputChannel(outToCreate);
+                    }
+                }
 
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Schema updated";
             }
@@ -1759,55 +1792,71 @@ namespace karabo {
                     if (schema.hasDisplayType(key)) {
                         const std::string& displayType = schema.getDisplayType(key);
                         if (displayType == "OutputChannel") {
-                            KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates output channel '" << key << "'";
-                            try {
-                                karabo::xms::OutputChannel::Pointer channel = createOutputChannel(key, m_parameters);
-                                if (!channel) {
-                                    KARABO_LOG_FRAMEWORK_ERROR << "*** \"createOutputChannel\" for channel name \"" << key << "\" failed to create output channel";
-                                } else {
-                                    Device::WeakPointer weakThis(boost::dynamic_pointer_cast<Device>(shared_from_this()));
-                                    channel->registerShowConnectionsHandler([weakThis, key](const std::vector<karabo::util::Hash>& connections) {
-                                        Device::Pointer self(weakThis.lock());
-                                        if (self) self->set(key + ".connections", connections);
-                                    });
-                                    channel->registerShowStatisticsHandler(
-                                        [weakThis, key](const std::vector<unsigned long long>& rb, const std::vector<unsigned long long>& wb) {
-                                            Device::Pointer self(weakThis.lock());
-                                            if (self) {
-                                                karabo::util::Hash h;
-                                                h.set(key + ".bytesRead", rb);
-                                                h.set(key + ".bytesWritten", wb);
-                                                self->set(h);
-                                            }
-                                        }
-                                    );
-                                }
-                            } catch (const karabo::util::NetworkException& e) {
-                                KARABO_LOG_ERROR << e.userFriendlyMsg();
-                            }
+                            prepareOutputChannel(key);
                         } else if (displayType == "InputChannel") {
-                            KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates input channel '" << key << "'";
-                            karabo::xms::InputChannel::Pointer channel = createInputChannel(key, m_parameters);
-                            if (!channel) {
-                                KARABO_LOG_FRAMEWORK_ERROR << "*** 'createInputChannel' for channel name '" << key << "' failed to create input channel";
-                            } else {
-                                // Set configured connections as missing for now
-                                const util::Hash h(key + ".missingConnections",
-                                                   m_parameters.get<std::vector<std::string>>(key + ".connectedOutputChannels"));
-                                setNoLock(h, getActualTimestamp());
-                                channel->registerConnectionTracker(util::bind_weak(&Device<FSM>::trackInputChannelConnections,
-                                                                                   this, key, _1, _2));
-                            }
+                            prepareInputChannel(key);
                         } else {
-                            KARABO_LOG_FRAMEWORK_DEBUG << "'" << this->getInstanceId() << "' does not create in-/output "
+                            KARABO_LOG_FRAMEWORK_TRACE << "'" << this->getInstanceId() << "' does not create in-/output "
                                     << "channel for '" << key << "' since it's a '" << displayType << "'";
                         }
                     } else if (schema.isNode(key)) {
                         // Recursive call going down the tree for channels within nodes
-                        KARABO_LOG_FRAMEWORK_DEBUG << "'" << this->getInstanceId() << "' looks for input/output channels "
+                        KARABO_LOG_FRAMEWORK_TRACE << "'" << this->getInstanceId() << "' looks for input/output channels "
                                 << "under node \"" << key << "\"";
                         initChannels(schema, key);
                     }
+                }
+            }
+
+            /**
+             * Create OutputChannel for given path and take care to set handlers needed
+             * Needs to be called with m_objectStateChangeMutex being locked.
+             * @param path
+             */
+            void prepareOutputChannel(const std::string& path) {
+
+                KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates output channel '" << path << "'";
+                try {
+                    karabo::xms::OutputChannel::Pointer channel = createOutputChannel(path, m_parameters);
+                    if (!channel) {
+                        KARABO_LOG_FRAMEWORK_ERROR << "*** 'createOutputChannel' for channel name '" << path << "' failed to create output channel";
+                    } else {
+                        Device::WeakPointer weakThis(boost::dynamic_pointer_cast<Device>(shared_from_this()));
+                        channel->registerShowConnectionsHandler([weakThis, path](const std::vector<karabo::util::Hash>& connections) {
+                            Device::Pointer self(weakThis.lock());
+                                                                if (self) self->set(path + ".connections", connections);
+                            });
+                        channel->registerShowStatisticsHandler(
+                                                               [weakThis, path](const std::vector<unsigned long long>& rb, const std::vector<unsigned long long>& wb) {
+                                                                   Device::Pointer self(weakThis.lock());
+                                                               if (self) {
+                                                               karabo::util::Hash h(path + ".bytesRead", rb, path + ".bytesWritten", wb);
+                                                               self->set(h);
+                                                                   }
+                                                               });
+                    }
+                } catch (const karabo::util::NetworkException& e) {
+                    KARABO_LOG_ERROR << e.userFriendlyMsg();
+                }
+            }
+
+            /**
+             * Create InputChannel for given path and take care to set handlers needed
+             * Needs to be called with m_objectStateChangeMutex being locked.
+             * @param path
+             */
+            void prepareInputChannel(const std::string& path) {
+                KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates input channel '" << path << "'";
+                karabo::xms::InputChannel::Pointer channel = createInputChannel(path, m_parameters);
+                if (!channel) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "*** 'createInputChannel' for channel name '" << path << "' failed to create input channel";
+                } else {
+                    // Set configured connections as missing for now
+                    const util::Hash h(path + ".missingConnections",
+                                       m_parameters.get<std::vector < std::string >> (path + ".connectedOutputChannels"));
+                    setNoLock(h, getActualTimestamp());
+                    channel->registerConnectionTracker(util::bind_weak(&Device<FSM>::trackInputChannelConnections,
+                                                                       this, path, _1, _2));
                 }
             }
 
