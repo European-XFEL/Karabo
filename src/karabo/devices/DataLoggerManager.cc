@@ -725,9 +725,10 @@ namespace karabo {
                         config.set("dbname", get<string>("logger.InfluxDataLogger.dbname"));
                     }
                     hash.set("configuration", config);
+                    const std::string& xLogReader = hash.get<std::string>("classId");
                     KARABO_LOG_FRAMEWORK_INFO
                             << "Trying to instantiate '" << readerId << "' "
-                            << "of type '" << m_logger << "' on server '" << serverId << "'";
+                            << "of type '" << xLogReader << "' on server '" << serverId << "'";
 
                     remote().instantiateNoWait(serverId, hash);
                 }
@@ -954,7 +955,8 @@ namespace karabo {
                             "deviceId", loggerId,
                             "configuration", config);
 
-            KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' on server '" << serverId << "'";
+            KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' of type '"
+                    << m_logger << "' on server '" << serverId << "'";
             remote().instantiateNoWait(serverId, hash);
         }
 
