@@ -7,9 +7,11 @@ from urllib.parse import parse_qs, urlparse
 
 GUI = "gui"
 CINEMA = "cinema"
+THEATRE = "theatre"
 
 KARABO_GUI = "karabogui.programs.gui_runner"
 KARABO_CINEMA = "karabogui.programs.cinema"
+KARABO_THEATRE = "karabogui.programs.theatre"
 
 KEEP_BLANK_VALUES = True
 
@@ -29,8 +31,35 @@ def get_cinema_args(queries):
     _check_args(queries, required)
 
     domain = queries["domain"][-1].upper()
+    # NOTE: `scene_uuid` maps to the `scene_uuids` option in the
+    # karabo-cinema executable. This is because the standard way of passing
+    # a list of the same option in a url is `something?id=1&id=2`
+    # to pass 1 and 2 to the id in the same query.
     scene_uuid = [uuid.lower() for uuid in queries["scene_uuid"]]
     args = [domain, *scene_uuid]
+
+    # Check optional arguments:
+    if queries.get("nosplash", False):
+        args.append("--nosplash")
+    if "username" in queries:
+        args.extend(["--username", queries["username"][-1]])
+    # Check if host and port is both supplied
+    if "host" in queries and "port" in queries:
+        args.extend(["--host", queries["host"][-1],
+                     "--port", queries["port"][-1]])
+    return args
+
+
+def get_theatre_args(queries):
+    # Check required arguments:
+    required = {"scene_id": lambda x: operator.ge(x, 1)}
+    assert _check_args(queries, required)
+
+    # NOTE: `scene_id` maps to the `scene_ids` option in the
+    # karabo-theatre executable. This is because the standard way of passing
+    # a list of the same option in a url is `something?id=1&id=2`
+    # to pass 1 and 2 to the id in the same query.
+    args = queries["scene_id"]
 
     # Check optional arguments:
     if queries.get("nosplash", False):
@@ -79,6 +108,9 @@ def main(url):
     elif host == CINEMA:
         # Run Cinema
         cmd = [PYTHON, "-m", KARABO_CINEMA, *get_cinema_args(queries)]
+    elif host == THEATRE:
+        # Run Theatre
+        cmd = [PYTHON, "-m", KARABO_THEATRE, *get_theatre_args(queries)]
     else:
         # Nothing to do here!
         return
