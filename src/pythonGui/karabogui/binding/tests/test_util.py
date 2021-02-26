@@ -15,10 +15,10 @@ from karabogui.binding.api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
     Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
     VectorBoolBinding, VectorInt32Binding, VectorFloatBinding,
-    VectorHashBinding, attr_fast_deepcopy, get_vector_hash_changes,
+    VectorHashBinding, attr_fast_deepcopy, get_table_changes,
     get_min_max, get_min_max_size, has_changes, has_min_max_attributes,
     is_equal)
-from ..util import get_vector_hash_element_changes, realign_hash
+from ..util import table_row_changes, realign_hash
 
 
 def test_simple_int_min_max():
@@ -181,34 +181,34 @@ def test_get_vector_hash_changes():
 
     # Verify that there are no changes
     old_list = HashList([foo_hash])
-    assert get_vector_hash_changes(binding, old_list, new=old_list) is None
+    assert get_table_changes(binding, old_list, new=old_list) is None
 
     # Check changes for one hash
     new_list = HashList([bar_hash])
-    changes = get_vector_hash_changes(binding, old_list, new_list)
+    changes = get_table_changes(binding, old_list, new_list)
     assert changes == new_list
 
     # Check changes for two hashes
     old_list = HashList([foo_hash, foo_hash])
     new_list = HashList([foo_hash, bar_hash])  # second row contains changes
-    changes = get_vector_hash_changes(binding, old_list, new_list)
+    changes = get_table_changes(binding, old_list, new_list)
     # First row doesn't have changes, second row has "stringProperty" change
     assert changes == HashList([None, bar_hash])
 
     # Check deleted hash change on first row
     old_list = HashList([foo_hash, bar_hash])
     new_list = HashList([foo_hash])  # second hash is deleted
-    changes = get_vector_hash_changes(binding, old_list, new_list)
+    changes = get_table_changes(binding, old_list, new_list)
     assert changes == new_list
 
     # Check deleted hash change on second row
     old_list = HashList([foo_hash, bar_hash])
     new_list = HashList([bar_hash])  # first hash is deleted
-    changes = get_vector_hash_changes(binding, old_list, new_list)
+    changes = get_table_changes(binding, old_list, new_list)
     assert changes == new_list
 
 
-def test_get_vector_hash_element_changes():
+def test_table_row_changes():
     binding = VectorHashBinding(row_schema=VectorHash(TableRow).rowSchema.hash)
     foo_hash = Hash("stringProperty", "foo",
                     "uintProperty", 1,
@@ -218,17 +218,17 @@ def test_get_vector_hash_element_changes():
                     "boolProperty", 2)
 
     # Check if there's no changes
-    assert get_vector_hash_element_changes(binding, foo_hash, foo_hash) is None
+    assert table_row_changes(binding, foo_hash, foo_hash) is None
 
     # Check if there's a changed property
-    changes = get_vector_hash_element_changes(binding, foo_hash, bar_hash)
+    changes = table_row_changes(binding, foo_hash, bar_hash)
     assert changes == bar_hash
 
     # Check if there's no change for reordered hash
     expected = Hash("uintProperty", 1,
                     "stringProperty", "foo",
                     "boolProperty", 2)
-    changes = get_vector_hash_element_changes(binding, foo_hash, expected)
+    changes = table_row_changes(binding, foo_hash, expected)
     assert changes is None
 
     # Check if there's a new property added
@@ -236,13 +236,13 @@ def test_get_vector_hash_element_changes():
                     "uintProperty", 1,
                     "intProperty", 1,  # new property
                     "boolProperty", 2)
-    changes = get_vector_hash_element_changes(binding, foo_hash, new_hash)
+    changes = table_row_changes(binding, foo_hash, new_hash)
     assert changes is None  # `intProperty` is not applied
 
     # Check if there's a property removed
     new_hash = Hash("stringProperty", "foo",
                     "uintProperty", 1)
-    changes = get_vector_hash_element_changes(binding, foo_hash, new_hash)
+    changes = table_row_changes(binding, foo_hash, new_hash)
     assert changes == Hash("stringProperty", "foo",
                            "uintProperty", 1,
                            "boolProperty", None)

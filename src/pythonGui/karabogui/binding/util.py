@@ -112,7 +112,7 @@ def get_min_max_size(binding):
     return None, None
 
 
-def has_changes(binding, old_value, new_value, init=False):
+def has_changes(binding, old_value, new_value):
     """Compare old/new values assigned to a binding to determine if there is
     a real difference.
 
@@ -144,8 +144,7 @@ def has_changes(binding, old_value, new_value, init=False):
         elif isinstance(old_value, np.ndarray):
             changes = not array_equal(new_value, old_value)
         elif isinstance(old_value, HashList):
-            changes = has_vector_hash_changes(binding, old_value, new_value,
-                                              init=init)
+            changes = has_table_changes(binding, old_value, new_value)
         elif isinstance(old_value, list):
             if len(old_value) != len(new_value):
                 changes = True
@@ -285,42 +284,39 @@ def array_equal(actual, expected):
     return np.allclose(actual, expected, atol=FLOAT_TOLERANCE)
 
 
-def has_vector_hash_changes(binding, old, new, init=False):
+def has_table_changes(binding, old, new):
     """Check if a table element has changes
 
     :param binding: The VectorHash binding
-    :param old, new: The vector hashes to be compared
-    :param init: (bool) Denote if `INITONLY` properties are also valid
+    :param old, new: The `HashLists` to be compared
     """
-    hash_list = get_vector_hash_changes(binding, old, new, init)
+    hash_list = get_table_changes(binding, old, new)
     return hash_list is not None
 
 
-def get_vector_hash_changes(binding, old, new, init=False):
+def get_table_changes(binding, old, new):
     """Returns the diff of the old hash and the new hash.
 
     :param binding: (VectorHashBinding) the binding which contains
         the current value and the row schema
-    :param old, new: (Hash or None) the hashes to be compared
-    :param init: (bool) Denote if `INITONLY` properties are also valid
+    :param old, new: (HashList or None) the HashLists to be compared
 
     :return changes: (HashList or None)
 
             Returns HashList if there are changes, None otherwise.
             The values could contain [None, Hash()]
     """
+
     changes = HashList()
     if old is None:
         return new
 
     iter_hashes = zip_longest(old, new)
-    for old_hash, new_hash in iter_hashes:
+    for old_row, new_row in iter_hashes:
         # The hash is deleted, we don't record
-        if new_hash is None:
+        if new_row is None:
             continue
-        change = get_vector_hash_element_changes(binding, old_hash, new_hash,
-                                                 init)
-        changes.append(change)
+        changes.append(table_row_changes(binding, old_row, new_row))
 
     if changes.count(None) == len(changes):
         # No changes if all of the values are Nones and the number of rows is
@@ -330,58 +326,43 @@ def get_vector_hash_changes(binding, old, new, init=False):
     return changes
 
 
-def get_vector_hash_element_changes(binding, old, new, init=False):
-    """Returns the diff of the old hash and the new hash.
+def table_row_changes(binding, old_row, new_row):
+    """Returns the changes of old row and new row hash
 
-    :param binding: (VectorHashBinding) the binding which contains
-                     the current value and the row schema
-    :param old, new: (Hash or None) the hashes to be compared
+    :param binding: The vector hash binding
+    :param old_row, new_row: (Hash or None) the row hashes to be compared
 
-    :return (Hash or None): returns hash if there's changes, or None otherwise
+    :return `Hash` or `None`: Hash if there are changes, None otherwise
     """
-    if old is None:
-        # There's no prior value, we return the new hash immediately
-        return new
-
-    if new is None:
+    if old_row is None:
+        # There's no prior value, we return the new row hash immediately
+        return new_row
+    elif new_row is None:
         # The hash is deleted, we return an empty hash
         return Hash()
 
     # Check if order of the keys are respected
-    if list(old.keys()) != list(new.keys()):
-        new = realign_hash(new, keys=old.keys())
+    if list(old_row.keys()) != list(new_row.keys()):
+        new_row = realign_hash(new_row, keys=old_row.keys())
 
     # Check over if there are changes by iterating and comparing the hashes
-    column_bindings = binding.bindings
-    iter_prop = zip_longest(old.items(), new.items(),
-                            fillvalue=(None, None))
-    for (old_name, old_value), (new_name, new_value) in iter_prop:
-        prop_binding = column_bindings.get(new_name)
-        if new_name is None or not is_writable(prop_binding, init):
+    row_schema = binding.bindings
+    iter_column = zip_longest(old_row.items(), new_row.items(),
+                              fillvalue=(None, None))
+    for (old_key, old_value), (new_key, new_value) in iter_column:
+        prop_binding = row_schema.get(new_key)
+        # XXX: A binding that is not available is neglected ...
+        if (new_key is None or prop_binding is None
+                or prop_binding.access_mode is AccessMode.READONLY):
             continue
-        if (old_name is None or has_changes(
+        if (old_key is None or has_changes(
                 prop_binding, old_value, new_value)):
             # There are changes and it can be written!
-            # Hence, we now return the whole hash.
-            return new
+            # Hence, we now return the whole row hash.
+            return new_row
 
     # No changes detected, we return None
     return None
-
-
-def is_writable(binding, init=False):
-    """Check if a binding is reconfigurable with the attributes
-
-    :param init: boolean to consider `INITONLY` properties. Default is `False`.
-    """
-    if binding is None:
-        return False
-
-    # Allow init only values when merging
-    access_modes = (AccessMode.RECONFIGURABLE,)
-    if init:
-        access_modes += (AccessMode.INITONLY,)
-    return binding.access_mode in access_modes
 
 
 def realign_hash(hsh, keys):

@@ -15,7 +15,7 @@ from karabogui.binding.api import (
     ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy, ListOfNodesBinding,
     ProjectDeviceProxy, VectorHashBinding, attr_fast_deepcopy,
     apply_configuration, extract_configuration, flat_iter_hash,
-    get_binding_value, has_changes, has_vector_hash_changes,
+    get_binding_value, has_changes, has_table_changes,
     validate_table_value, validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.enums import AccessRole
@@ -360,11 +360,9 @@ class ConfigurationPanel(BasePanelWidget):
             if (prop_binding.required_access_level <= access_level
                     and prop_binding.is_allowed(state)):
                 if isinstance(prop_binding, VectorHashBinding):
-                    valid, invalid = validate_table_value(prop_binding, value,
-                                                          drop_none=True)
-                    if (len(valid)
-                            and has_vector_hash_changes(prop_binding,
-                                                        prop_value, valid)):
+                    valid, invalid = validate_table_value(prop_binding, value)
+                    if (valid and has_table_changes(
+                            prop_binding, prop_value, valid)):
                         edit_value = valid
                     if invalid:
                         invalid_prop[path] = invalid
@@ -432,13 +430,13 @@ class ConfigurationPanel(BasePanelWidget):
                 continue
             if isinstance(binding, VectorHashBinding):
                 valid_vhash, invalid_vhash = validate_table_value(
-                    binding, value, init=True, drop_none=True)
+                    binding, value)
                 if invalid_vhash:
                     invalid[path] = invalid_vhash
                 if valid_vhash:
                     old_value = get_binding_value(binding)
-                    if has_vector_hash_changes(binding, old_value,
-                                               valid_vhash, init=True):
+                    if has_table_changes(
+                            binding, old_value, valid_vhash):
                         valid[path] = valid_vhash
             else:
                 validated_value = validate_value(binding, value)

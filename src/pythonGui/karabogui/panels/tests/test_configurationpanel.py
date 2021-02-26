@@ -15,7 +15,6 @@ from karabogui.testing import GuiTestCase
 
 from ..configurationpanel import ConfigurationPanel, CONFIGURATION_PAGE
 
-
 CONFIG_PANEL_PATH = "karabogui.panels.configurationpanel.ConfigurationPanel"
 SHOW_NOT_LOADED_PROPERTIES_PATH = (CONFIG_PANEL_PATH
                                    + "._show_not_loaded_properties")
@@ -443,7 +442,7 @@ class TestSetProxyConfiguration(GuiTestCase):
             value = config[path]
             if isinstance(binding, VectorHashBinding):
                 valid, invalid = validate_table_value(
-                    binding, value, init=True, drop_none=True)
+                    binding, value)
                 config[path] = valid
                 invalid_config[path] = invalid
             elif validate_value(binding, value) is None:
