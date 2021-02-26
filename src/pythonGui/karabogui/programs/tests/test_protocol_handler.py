@@ -1,6 +1,7 @@
 import pytest
 
-from karabogui.programs.protocol_handler import get_cinema_args, parse_url
+from karabogui.programs.protocol_handler import (
+    get_cinema_args, get_theatre_args, parse_url)
 
 
 def test_parse_url():
@@ -36,6 +37,36 @@ def test_parse_url():
                        "username": ["operator"],
                        "host": ["localhost"],
                        "port": ["44444"]}
+
+    url = ("karabo://theatre?scene_id=COMPONENT%2FTYPE%2FMEMBER%7CSCENEname"
+           "&username=operator&host=localhost&port=44444")
+    host, queries = parse_url(url)
+    assert host == "theatre"
+    assert queries == {"scene_id": ["COMPONENT/TYPE/MEMBER|SCENEname"],
+                       "username": ["operator"],
+                       "host": ["localhost"],
+                       "port": ["44444"]}
+
+    url = ("karabo://theatre?scene_id=COMPONENT%2FTYPE%2FMEMBER%7CSCENEname")
+    host, queries = parse_url(url)
+    assert host == "theatre"
+    assert queries == {"scene_id": ["COMPONENT/TYPE/MEMBER|SCENEname"]}
+
+    url = ("karabo://theatre?scene_id=COMPONENT%2FTYPE%2FMEMBER%7CSCENEname"
+           "&scene_id=COMPONENT%2FTYPE%2FMEMBER%7CSCENEname"
+           "&username=operator&host=localhost&port=44444")
+    host, queries = parse_url(url)
+    assert host == "theatre"
+    assert queries == {"scene_id": ["COMPONENT/TYPE/MEMBER|SCENEname",
+                                    "COMPONENT/TYPE/MEMBER|SCENEname"],
+                       "username": ["operator"],
+                       "host": ["localhost"],
+                       "port": ["44444"]}
+
+    url = ("karabo://theatre?scene_id=COMPONENT%2FTYPE%2FMEMBER%7CSCENEname")
+    host, queries = parse_url(url)
+    assert host == "theatre"
+    assert queries == {"scene_id": ["COMPONENT/TYPE/MEMBER|SCENEname"]}
 
 
 def test_get_cinema_args():
@@ -94,3 +125,29 @@ def test_get_cinema_args():
                "scene_uuid": ["xxx-xxx"],
                "port": ["44444"]}
     assert get_cinema_args(queries) == ["SQS", "xxx-xxx"]
+
+
+def test_get_theatre_args():
+    queries = {"scene_id": ["COMPONENT/TYPE/MEMBER|SCENEname"],
+               "username": ["operator"],
+               "host": ["localhost"],
+               "port": ["44444"]}
+
+    assert get_theatre_args(queries) == ["COMPONENT/TYPE/MEMBER|SCENEname",
+                                         "--username", "operator",
+                                         "--host", "localhost",
+                                         "--port", "44444"]
+
+    queries = {"scene_id": ["COMPONENT/TYPE/MEMBER|SCENEname"]}
+
+    assert get_theatre_args(queries) == ["COMPONENT/TYPE/MEMBER|SCENEname"]
+
+    queries = {"scene_id": ["bla", "bli"],
+               "username": ["operator"],
+               "host": ["localhost"],
+               "port": ["44444"]}
+
+    assert get_theatre_args(queries) == ["bla", "bli",
+                                         "--username", "operator",
+                                         "--host", "localhost",
+                                         "--port", "44444"]
