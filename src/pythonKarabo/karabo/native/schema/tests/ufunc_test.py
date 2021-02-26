@@ -10,9 +10,15 @@ from karabo.native.schema import (
     VectorInt32, QuantityValue as QV)
 from karabo.native.karabo_hash import MetricPrefix, Timestamp, Unit
 
+from karabo.native.schema.tests.compat import (
+    PINT_INCOMPATIBLE, PINT_REASON)
+
 
 class Tests(TestCase):
     def setUp(self):
+        if PINT_INCOMPATIBLE:
+            self.skipTest(reason=PINT_REASON)
+
         self.N = 4
         self.mm_10 = QV(1, unit='mm', timestamp=10)
         self.m_100 = QV(1, unit='m', timestamp=100)
