@@ -14,7 +14,7 @@ from .types import (
     StringBinding, VectorBinding, VectorDoubleBinding, VectorFloatBinding,
     VectorHashBinding, VectorNumberBinding)
 from .util import (
-    array_equal, attr_fast_deepcopy, is_equal, is_writable, realign_hash)
+    array_equal, attr_fast_deepcopy, is_equal, realign_hash)
 
 VECTOR_FLOAT_BINDINGS = (VectorFloatBinding, VectorDoubleBinding)
 RECURSIVE_BINDINGS = (NodeBinding, ListOfNodesBinding,
@@ -365,23 +365,19 @@ def validate_value(binding, value):
     return value
 
 
-def validate_table_value(binding, value, init=False, drop_none=False):
+def validate_table_value(binding, value):
     """Validate a hash list `value` against existing vectorhash binding
 
     :param binding: The existing `VectorHashBinding`
     :param value: the value to be validated (`HashList`)
-    :param init: Boolean to indicate if `init_only` properties are considered
-    :param drop_none: Boolean to drop `None` values if specified
 
     :return valid, invalid: (HashList) The values could contain [None, Hash()]
     """
-    def _validate_row(row_bindings, row_hash, init=False):
+    def _validate_row(row_bindings, row_hash):
         """Validate a single row of the table
 
         :param row_bindings: The `rowSchema` attribute binding
         :param new: The hash to be validated, either `Hash` or `None`
-        :param init: Boolean to indicate if `init_only` properties are
-                     considered
 
         :returns:
 
@@ -405,10 +401,10 @@ def validate_table_value(binding, value, init=False, drop_none=False):
                 # invalid but continue gracefully ...
                 continue
 
-            if not is_writable(binding, init) or value is None:
-                # The property is not writable or the value doesn't exist
-                # (from `realign_hash`).
-                # Use the default value from the binding!
+            if binding.access_mode is AccessMode.READONLY or value is None:
+                # The binding is not writable or property value is `None`
+                # or the value doesn't exist (from `realign_hash`).
+                # Try to use the default value from the binding!
                 validated_value = get_default_value(binding)
             else:
                 validated_value = validate_value(binding, value)
@@ -424,12 +420,10 @@ def validate_table_value(binding, value, init=False, drop_none=False):
     # Set default values
     valid, invalid = HashList(), HashList()
     for row_hash in value:
-        valid_row, invalid_row = _validate_row(
-            binding.bindings, row_hash, init)
-        if (valid_row is not None and drop_none) or not drop_none:
+        valid_row, invalid_row = _validate_row(binding.bindings, row_hash)
+        if valid_row is not None:
             valid.append(valid_row)
-
-        if (invalid_row is not None and drop_none) or not drop_none:
+        if invalid_row is not None:
             invalid.append(invalid_row)
 
     return valid, invalid
