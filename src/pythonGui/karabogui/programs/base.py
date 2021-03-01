@@ -3,8 +3,8 @@ import os.path as op
 from traceback import print_exception, format_exception
 import warnings
 
-from PyQt5.QtCore import QLocale, Qt
-from PyQt5.QtGui import QFont, QFontDatabase, QIcon, QPixmap
+from PyQt5.QtCore import pyqtSlot, QLocale, Qt
+from PyQt5.QtGui import QFont, QFontDatabase, QIcon, QPalette, QPixmap
 from PyQt5.QtWidgets import (
     QApplication, QMessageBox, QSplashScreen, QStyleFactory)
 from pyqtgraph import setConfigOptions
@@ -38,6 +38,15 @@ def excepthook(exc_type, value, traceback):
         print("could not send exception to network")
 
 
+@pyqtSlot()
+def updatePalette(palette):
+    """Configure the pyqtgraph widgets on runtime automatically to `QPalette`
+    changes"""
+    bg = palette.color(QPalette.Background).name()
+    fg = palette.color(QPalette.Foreground).name()
+    setConfigOptions(background=bg, foreground=fg)
+
+
 def create_gui_app(args):
     """Create the QApplication with all necessary fonts and settings"""
     app = QApplication(args)
@@ -68,10 +77,12 @@ def create_gui_app(args):
         app.setOrganizationDomain('xfel.eu')
         app.setApplicationName('KaraboGUI')
 
+    app.paletteChanged.connect(updatePalette)
     # Set the style among all operating systems
     style = QStyleFactory.create("Fusion")
+    palette = style.standardPalette()
     app.setStyle(style)
-    app.setPalette(QApplication.style().standardPalette())
+    app.setPalette(palette)
 
     # Add fonts
     for font_file in FONT_FILENAMES:
