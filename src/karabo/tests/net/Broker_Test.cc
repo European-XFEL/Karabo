@@ -271,7 +271,6 @@ void Broker_Test::_testPublishSubscribeAsync() {
         for (int i = 0; i < maxLoop; ++i) {
             data->set<int>("c", i + 1);
             CPPUNIT_ASSERT_NO_THROW(bob->write(bob->getDomain(), header, data, 4, 0));
-            std::this_thread::sleep_for(50ms);
         }
 
         CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
@@ -462,7 +461,6 @@ void Broker_Test::_testReadingHeartbeatsAndLogs() {
             auto h1 = boost::make_shared<Hash>("target","log");
             auto d1 = boost::make_shared<Hash>("message", oss.str());
             CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, h1, d1, 0, 0));
-            std::this_thread::sleep_for(100ms);
         }
 
         Hash::Pointer h2 = boost::make_shared<Hash>(
@@ -485,4 +483,121 @@ void Broker_Test::_testReadingHeartbeatsAndLogs() {
 
     CPPUNIT_ASSERT_NO_THROW(alice->stopReading()); // unsubscribeAll
     CPPUNIT_ASSERT_NO_THROW(alice->disconnect());
+}
+
+
+void Broker_Test::testReadingGlobalCalls() {
+
+    // TODO: JmsConnection gives precedence to environment variable, even if something else is configured!
+    unsetenv("KARABO_BROKER");
+
+    _testReadingGlobalCalls(JMS_BROKER);
+    _testReadingGlobalCalls(MQTT_BROKER);
+}
+
+
+void Broker_Test::_testReadingGlobalCalls(const std::string& brokerAddress) {
+
+    const size_t endProtocol = brokerAddress.find(':');
+    std::string type = brokerAddress.substr(0, endProtocol);
+    if (type == "tcp") {// tcp address means jms protocol
+        type = "jms";
+    }
+    std::clog << "_testReadingGlobalCalls " << type << " (" << brokerAddress << "): " << std::flush;
+
+    Hash cfg("brokers", std::vector<std::string>({brokerAddress}),
+             "domain", m_domain,
+             "instanceId", "listenGlobal");
+    Broker::Pointer listenGlobal = Configurator<Broker>::create(type, cfg);
+
+    cfg.set("instanceId", "notListenGlobal");
+    Broker::Pointer notListenGlobal = Configurator<Broker>::create(type, cfg);
+    notListenGlobal->setConsumeBroadcasts(false);
+
+    cfg.set("instanceId", "sender");
+    Broker::Pointer sender = Configurator<Broker>::create(type, cfg);
+
+    CPPUNIT_ASSERT_NO_THROW(listenGlobal->connect());
+    CPPUNIT_ASSERT_NO_THROW(notListenGlobal->connect());
+    CPPUNIT_ASSERT_NO_THROW(sender->connect());
+
+    auto promGlobal1 = std::make_shared<std::promise < std::string >> ();
+    auto futGlobal1 = promGlobal1->get_future();
+    auto promNonGlobal1 = std::make_shared<std::promise < std::string >> ();
+    auto futNonGlobal1 = promNonGlobal1->get_future();
+
+    auto readHandlerBoth1 = [promGlobal1, promNonGlobal1](Hash::Pointer hdr, Hash::Pointer body) {
+        if (body->has("msg") && body->is<std::string>("msg")) {
+            promNonGlobal1->set_value(body->get<std::string>("msg"));
+        } else if (body->has("msgToAll") && body->is<std::string>("msgToAll")) {
+            promGlobal1->set_value(body->get<std::string>("msgToAll"));
+        } else {
+            // unexpected - "invalidate" both
+            promGlobal1->set_value(toString(body));
+            promNonGlobal1->set_value(toString(body));
+        }
+    };
+    auto errorHandlerBoth1 = [promGlobal1, promNonGlobal1] (consumer::Error err, const std::string & msg) {
+        // unexpected - invalidate both
+        promGlobal1->set_value(msg);
+        promNonGlobal1->set_value(msg);
+    };
+
+    auto promGlobal2 = std::make_shared<std::promise<std::string> >();
+    auto futGlobal2 = promGlobal2->get_future();
+    auto promNonGlobal2 = std::make_shared<std::promise<std::string> >();
+    auto futNonGlobal2 = promNonGlobal2->get_future();
+
+    auto readHandlerBoth2 = [promGlobal2, promNonGlobal2](Hash::Pointer hdr, Hash::Pointer body) {
+        if (body->has("msg") && body->is<std::string>("msg")) {
+            promNonGlobal2->set_value(body->get<std::string>("msg"));
+        } else if (body->has("msgToAll") && body->is<std::string>("msgToAll")) {
+            promGlobal2->set_value(body->get<std::string>("msgToAll"));
+        } else {
+            // unexpected - "invalidate" both
+            promGlobal2->set_value(toString(body));
+            promNonGlobal2->set_value(toString(body));
+        }
+    };
+    auto errorHandlerBoth2 = [promGlobal2, promNonGlobal2] (consumer::Error err, const std::string & msg) {
+        // unexpected - "invalidate" both
+        promGlobal2->set_value(msg);
+        promNonGlobal2->set_value(msg);
+    };
+
+
+    listenGlobal->startReading(readHandlerBoth1, errorHandlerBoth1);
+    notListenGlobal->startReading(readHandlerBoth2, errorHandlerBoth2);
+
+    // Prepare and send global message
+    auto hdr = boost::make_shared<Hash>("signalInstanceId", sender->getInstanceId(),
+                                        "signalFunction", "__call__",
+                                        "slotInstanceIds", "|*|",
+                                        "slotFunctions", "|*:aSlot|"); // MQTT global message needs to know the slot
+    auto bodyGlobal = boost::make_shared<Hash>("msgToAll", "A global message");
+    sender->write(m_domain, hdr, bodyGlobal, 4, 0);
+
+    // Prepare and send specific messages
+    hdr->erase("slotFunctions"); // Specific slot calls do not need their slot for routing, ...
+    hdr->set("slotInstanceIds", "|" + listenGlobal->getInstanceId() + "|"); // ... but a specific instanceId
+    auto bodyNonGlobal = boost::make_shared<Hash>("msg", "A specific message");
+    sender->write(m_domain, hdr, bodyNonGlobal, 4, 0);
+    hdr->set("slotInstanceIds", "|" + notListenGlobal->getInstanceId() + "|");
+    sender->write(m_domain, hdr, bodyNonGlobal, 4, 0);
+
+    // Assert that both messages arrived at listenGlobal
+    const std::string msg = futGlobal1.get();
+    CPPUNIT_ASSERT_EQUAL(std::string("A global message"), msg);
+
+    const std::string msg2 = futNonGlobal1.get();
+    CPPUNIT_ASSERT_EQUAL(std::string("A specific message"), msg2);
+
+    // At listNonGlobal, only the non-global message arrives
+    const std::string msg3 = futNonGlobal2.get();
+    CPPUNIT_ASSERT_EQUAL(std::string("A specific message"), msg3);
+
+    auto status = futGlobal2.wait_for(std::chrono::milliseconds(50));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::timeout, status);
+
+    std::clog << "OK." << std::endl;
 }

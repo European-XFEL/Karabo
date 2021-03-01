@@ -50,7 +50,7 @@ namespace karabo {
                                                const karabo::util::Hash::Pointer& body) const {
 
             // Global calls must go via the broker
-            if (m_connection->checkForGlobalCalls(instanceId, header)) return false;
+            if (instanceId == "*") return false;
             SignalSlotable::Pointer ptr;
             {
                 boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
