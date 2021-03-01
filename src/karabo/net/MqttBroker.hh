@@ -146,17 +146,6 @@ namespace karabo {
                             const karabo::util::Hash::Pointer& header,
                             const karabo::util::Hash::Pointer& body) override;
 
-            bool checkForGlobalCalls(const std::string& id, const karabo::util::Hash::Pointer& header) override {
-                if (id == "*") return true;
-                if (header->has("slotInstanceIds")) {
-                    const std::string& slotInstanceIds = header->get<std::string>("slotInstanceIds");
-                    // special case (broadcast): send via broker's "global slots"
-                    // id != "*" and slotInstanceIds == "|*|" comes from DeviceServer::onBroadcastMessage
-                    if (slotInstanceIds == "|*|") return true;
-                }
-                return false;
-            }
-
         private:
 
             MqttBroker(const MqttBroker& o) = delete;

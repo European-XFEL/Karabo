@@ -19,6 +19,7 @@ class Broker_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testPublishSubscribe);
     CPPUNIT_TEST(testPublishSubscribeAsync);
     CPPUNIT_TEST(testReadingHeartbeatsAndLogs);
+    CPPUNIT_TEST(testReadingGlobalCalls);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -38,6 +39,8 @@ private:
     void _testPublishSubscribeAsync();
     void testReadingHeartbeatsAndLogs();
     void _testReadingHeartbeatsAndLogs();
+    void testReadingGlobalCalls();
+    void _testReadingGlobalCalls(const std::string& brokerAddress);
 
 private:
 
