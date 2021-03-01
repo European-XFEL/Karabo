@@ -1,5 +1,6 @@
 import os
 import os.path as op
+from platform import system
 from traceback import print_exception, format_exception
 import warnings
 
@@ -49,6 +50,10 @@ def updatePalette(palette):
 
 def create_gui_app(args):
     """Create the QApplication with all necessary fonts and settings"""
+    if system() == 'Darwin' and 'QT_MAC_WANTS_LAYER' not in os.environ:
+        os.environ['QT_MAC_WANTS_LAYER'] = '1'
+        # PyQt 5.12 onwards provides problems for MacOS11.
+        # https://github.com/conda-forge/pyqt-feedstock/issues/98
     app = QApplication(args)
     # Set directly the QSettings environment to have access
     app.setOrganizationName('XFEL')
@@ -59,7 +64,8 @@ def create_gui_app(args):
         # Create a preliminary QApplication to check system/screen properties.
         # This is needed as setting QApplication attributes should be done
         # before the instantiation (Qt bug as of 5.9).
-        # Note: Must take the int of dpi!
+        # Note: Must take the int of dpi! This is fixed in Qt 5.15 and always
+        # active in Qt 6!
         dpi = int(app.primaryScreen().logicalDotsPerInch())
         app.quit()
         del app
