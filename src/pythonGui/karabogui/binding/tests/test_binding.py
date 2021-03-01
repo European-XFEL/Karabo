@@ -10,13 +10,13 @@ from karabo.common.api import (
     KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL, KARABO_ALARM_LOW, State
 )
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, decodeBinary, Hash, MetricPrefix,
-    Schema, Timestamp, Unit
+    AccessLevel, AccessMode, Assignment, decodeBinary, Hash, HashList,
+    MetricPrefix, Schema, Timestamp, Unit
 )
 from ..api import (
     Int8Binding, Int16Binding, Int32Binding, Int64Binding, Uint8Binding,
     Uint16Binding, Uint32Binding, Uint64Binding, apply_configuration,
-    apply_default_configuration, apply_fast_data,
+    apply_project_configuration, apply_default_configuration, apply_fast_data,
     build_binding, extract_attribute_modifications, extract_configuration,
     extract_edits, flat_iter_hash)
 from .schema import (
@@ -156,6 +156,47 @@ def test_apply_configuration():
     # bytes type value is converted to bytearray by traits handler
     apply_configuration(config, binding)
     assert binding.value.mm.value == bytearray(b'foo')
+
+
+def test_apply_project_configuration():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+
+    config = Hash('a', False)
+    with watch_config_update_notification(binding, expected=True):
+        apply_project_configuration(config, binding)
+    assert not binding.value.a.value
+
+    config = Hash('a', True)
+    # configuration is applied but no notification fired
+    with watch_config_update_notification(binding, expected=False):
+        apply_project_configuration(config, binding, notify=False)
+    assert binding.value.a.value
+
+    config = Hash('e', 0.5)
+    # change one item in attributes and add a new item
+    attr = {KARABO_SCHEMA_UNIT_SYMBOL: 'g', KARABO_ALARM_LOW: 0.0}
+    config['e', ...] = attr
+    old_attrs = {k: v for k, v in binding.value.e.attributes.items()}
+    apply_project_configuration(config, binding)
+    new_attrs = {k: v for k, v in binding.value.e.attributes.items()}
+    assert _dict_diff(old_attrs, new_attrs) == attr
+
+    config = Hash('not', 'exist')
+    apply_project_configuration(config, binding)
+    # Non exist property is ignored
+    assert 'not' not in binding.value
+
+    config = Hash('mm', b'foo')
+    # bytes type value is converted to bytearray by traits handler
+    apply_project_configuration(config, binding)
+    assert binding.value.mm.value == bytearray(b'foo')
+
+    # try to apply a wrong table value from a project device
+    config = Hash('x', HashList([Hash('start', 'not a string', 'stop', 10)]))
+    apply_project_configuration(config, binding)
+    assert binding.value.x.value == HashList(
+        [Hash('start', 0.0, 'stop', 10.0)])
 
 
 def test_apply_fast_data():

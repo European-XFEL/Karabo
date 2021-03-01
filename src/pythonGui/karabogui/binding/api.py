@@ -2,8 +2,9 @@
 from .builder import build_binding
 from .config import (
     apply_configuration, apply_default_configuration, apply_fast_data,
-    extract_attribute_modifications, extract_configuration, extract_edits,
-    extract_sparse_configurations, validate_table_value, validate_value
+    apply_project_configuration, extract_attribute_modifications,
+    extract_configuration, extract_edits, extract_sparse_configurations,
+    validate_table_value, validate_value
 )
 from .proxy import (
     BaseDeviceProxy, DeviceProxy, DeviceClassProxy, ProjectDeviceProxy,
