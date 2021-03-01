@@ -108,7 +108,7 @@ namespace karabo {
 
             /**
              * Set flag defining the way how to handle broadcast messages.
-             * It influences on subscription to such messages
+             * It influences on subscription to such messages, i.e. has to be called before startReading(..)
              * @param consumeBroadcasts true means subscription
              */
             void setConsumeBroadcasts(bool consumeBroadcasts) {
@@ -235,14 +235,6 @@ namespace karabo {
              * LOGNAME, USER, LNAME and USERNAME are checked in that order.
              */
             static std::string brokerDomainFromEnv();
-
-            /**
-             * Check that message should be handled as global call by testing 'id' and 'header'
-             * @param id      instanceId of target
-             * @param header  header of message
-             * @return true if this is a global call
-             */
-            virtual bool checkForGlobalCalls(const std::string& id, const karabo::util::Hash::Pointer& header) = 0;
 
         protected:
 
