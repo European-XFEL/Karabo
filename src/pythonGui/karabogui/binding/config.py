@@ -126,6 +126,98 @@ def apply_default_configuration(binding):
                 node.value = Undefined
 
 
+def sanitize_table_value(binding, value):
+    """Sanitize a hash list `value` against existing vector hash `binding`
+
+    :param binding: The existing `VectorHashBinding`
+    :param value: the table value (`HashList`)
+
+    :return sanitized value of type `HashList`
+    """
+    msg = "Expected a value of type `HashList`, got %s instead" % type(value)
+    assert isinstance(value, HashList), msg
+
+    def _sanitize_row(row_bindings, row_hash):
+        """Validate a single row of the table"""
+        ret = Hash()
+        if list(row_bindings.keys()) != list(row_hash.keys()):
+            row_hash = realign_hash(row_hash, keys=row_bindings.keys())
+
+        for path, value in row_hash.items():
+            binding = row_bindings.get(path, None)
+            if binding is None:
+                # Tables might lose a property in a row schema. This is fine
+                # as we can simply ignore this case. We don't report this as
+                # invalid but continue gracefully ...
+                continue
+
+            if value is None:
+                # The property is a `None` value or is not existent, e.g.
+                # a column can have been added.
+                # Use the default value from the binding, if necessary force!
+                value = get_default_value(binding, force=True)
+            else:
+                value = validate_value(binding, value)
+                # XXX: This is of course critical, if an apple becomes an
+                # orange, we should have at least an orange default value.
+                if value is None:
+                    value = get_default_value(binding, force=True)
+
+            ret[path] = value
+
+        return ret
+
+    ret = HashList()
+    for row_hash in value:
+        ret.append(_sanitize_row(binding.bindings, row_hash))
+
+    return ret
+
+
+def apply_project_configuration(config, binding, notify=True):
+    """Recursively set values from a configuration Hash object to a binding
+    object of a project device
+
+    A project configuration consists of `values` and `attributes` and is
+    in certain cases sanitized if necessary (table element).
+
+    If `notify` is False, trait change notifications of binding
+    nodes won't be triggered.
+    """
+    namespace = binding.value
+    assert isinstance(namespace, BindingNamespace)
+
+    for key, value, attrs in config.iterall():
+        if key not in namespace:
+            continue
+
+        node = getattr(namespace, key)
+        if isinstance(value, Hash) and isinstance(node, NodeBinding):
+            apply_project_configuration(value, node, notify=notify)
+        else:
+            if isinstance(node, VectorHashBinding):
+                value = sanitize_table_value(node, value)
+
+            traits = {'value': value}
+            # Set the timestamp no matter what
+            ts = Timestamp.fromHashAttributes(attrs)
+            traits['timestamp'] = ts or Timestamp()
+            # Set everything at once and notify via the config_update event
+            try:
+                node.trait_set(trait_change_notify=False, **traits)
+                # XXX: pass an empty dictionary to get only editable attributes
+                node.update_attributes(attr_fast_deepcopy(attrs, {}))
+            except TraitError:
+                # value in the configuration is not compatible to schema
+                continue
+            if notify:
+                node.config_update = True
+
+    # Notify listeners
+    if notify:
+        binding.config_update = True
+
+
 def extract_attribute_modifications(schema, binding):
     """Extract modified attributes from a binding relative to some schema
     object.
@@ -377,7 +469,7 @@ def validate_table_value(binding, value):
         """Validate a single row of the table
 
         :param row_bindings: The `rowSchema` attribute binding
-        :param new: The hash to be validated, either `Hash` or `None`
+        :param row_hash: The hash to be validated, either `Hash` or `None`
 
         :returns:
 
