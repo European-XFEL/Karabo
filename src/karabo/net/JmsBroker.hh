@@ -159,10 +159,6 @@ namespace karabo {
                             const karabo::util::Hash::Pointer& header,
                             const karabo::util::Hash::Pointer& body) override;
 
-            bool checkForGlobalCalls(const std::string& id, const karabo::util::Hash::Pointer& header) override {
-                return (id == "*");
-            }
-
         private:
 
             JmsBroker(const JmsBroker& o) = delete;
