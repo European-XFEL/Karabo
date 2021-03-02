@@ -385,7 +385,7 @@ namespace karabo {
             }
             auto readHandler = bind_weak(&MqttBroker::mqttReadHashHandler, this, _1, _2, _3, handler, errorNotifier);
             TopicSubOptions params;
-            for (int i = 0; i < topics.size(); i++) {
+            for (size_t i = 0; i < topics.size(); i++) {
                 params.push_back(std::make_tuple(topics[i], options[i], readHandler));
             }
             boost::system::error_code ec = m_client->subscribe(params);
@@ -419,8 +419,10 @@ namespace karabo {
             std::vector<SubOpts> options;
             topics.push_back(m_topic + "/slots/" + id);
             options.push_back(SubQos::AtLeastOnce);
-            topics.push_back(m_topic + "/global_slots/+");
-            options.push_back(SubQos::AtLeastOnce);
+            if (m_consumeBroadcasts) {
+                topics.push_back(m_topic + "/global_slots/+");
+                options.push_back(SubQos::AtLeastOnce);
+            }
             registerMqttTopics(topics, options,
                                bind_weak(&MqttBroker::checkOrder, this,
                                          handler, _1, _2, false), errorNotifier);
