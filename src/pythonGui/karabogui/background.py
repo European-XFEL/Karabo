@@ -2,7 +2,7 @@ from enum import Enum
 from functools import total_ordering
 from heapq import heappush, heappop
 
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import pyqtSlot, QTimer
 
 
 @total_ordering
@@ -27,8 +27,12 @@ def executeLater(task, priority):
 
 
 MAX_ITEM_PROCESSING = 5
+queue = []
+counter = 0
+timer = None
 
 
+@pyqtSlot()
 def timeout():
     """execute up to ``MAX_ITEM_PROCESSING`` tasks if existing
 
@@ -47,8 +51,10 @@ def timeout():
         timer.stop()
 
 
-queue = []
-counter = 0
-timer = QTimer()
-timer.setInterval(0)
-timer.timeout.connect(timeout)
+def create_background_timer():
+    """Manually create the background `timer` after a QApplication has
+    been created"""
+    global timer
+    timer = QTimer()
+    timer.setInterval(0)
+    timer.timeout.connect(timeout)
