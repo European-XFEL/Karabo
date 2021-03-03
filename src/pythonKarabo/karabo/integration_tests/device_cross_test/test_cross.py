@@ -480,15 +480,13 @@ class Tests(DeviceTest):
 
         after = datetime.now()
 
-        old_history = await getHistory(
-            "middlelayerDevice", before.isoformat(), after.isoformat()).value
         str_history = await getHistory(
             "middlelayerDevice.value", before.isoformat(), after.isoformat())
         device = await getDevice("middlelayerDevice")
         proxy_history = await getHistory(
             device.value, before.isoformat(), after.isoformat())
 
-        for hist in old_history, str_history, proxy_history:
+        for hist in str_history, proxy_history:
             # Sort according to timestamp - order is not guaranteed!
             # (E.g. if shortcut communication between logged device and
             #  logger is switched on...)
