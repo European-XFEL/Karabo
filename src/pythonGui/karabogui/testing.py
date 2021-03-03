@@ -13,6 +13,7 @@ from karabogui.alarms.api import (
     ACKNOWLEDGEABLE, ALARM_HIGH, ALARM_ID, ALARM_NONE, ALARM_TYPE, DESCRIPTION,
     DEVICE_ID, NEEDS_ACKNOWLEDGING, PROPERTY, TIME_OF_FIRST_OCCURENCE,
     TIME_OF_OCCURENCE)
+from karabogui.background import create_background_timer
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, PropertyProxy, apply_configuration,
     build_binding)
@@ -30,7 +31,7 @@ class GuiTestCase(unittest.TestCase):
         if app is None:
             app = QApplication(sys.argv)
         self.app = app
-
+        create_background_timer()
         # AFTER the QApplication is created!
         from karabogui import globals
         globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OPERATOR
