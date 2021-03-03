@@ -12,14 +12,14 @@ import asyncio
 from asyncio import gather, get_event_loop, sleep
 from contextlib import contextmanager
 from copy import copy
-from decimal import Decimal
 from weakref import ref
+from time import time
 
 import dateutil.parser
 import dateutil.tz
 
 from karabo.common.services import KARABO_CONFIG_MANAGER
-from karabo.native import KaraboError, KaraboValue, Type
+from karabo.native import KaraboError, KaraboValue
 from karabo.native import Hash, Schema, Timestamp
 
 from .device import Device
@@ -258,6 +258,9 @@ async def compareDeviceWithPast(device, timepoint):
 
 @synchronize
 async def _getLogReaderId(deviceId):
+    # this method contains a lot of hard-coded strings. It follows
+    # GuiServerDevice::onGetPropertyHistory. One day we should
+    # de-hard-code both.
     instance = get_instance()
     did = "DataLogger-{}".format(deviceId)
     if did not in instance.loggerMap:
@@ -266,48 +269,14 @@ async def _getLogReaderId(deviceId):
         if did not in instance.loggerMap:
             raise KaraboError('no logger for device "{}"'.
                               format(deviceId))
-    return "DataLogReader0-{}".format(instance.loggerMap[did])
-
-
-class _getHistory_old:
-    def __init__(self, proxy, begin, end, maxNumData, timeout):
-        self.proxy = proxy
-        self.begin = _parse_date(begin)
-        self.end = _parse_date(end)
-        self.maxNumData = maxNumData
-        self.timeout = timeout
-
-    def __dir__(self):
-        return dir(self.proxy)
-
-    def __getattr__(self, attr):
-        return self._synchronized_getattr(attr, timeout=self.timeout)
-
-    @synchronize
-    async def _synchronized_getattr(self, attr):
-        # this method contains a lot of hard-coded strings. It follows
-        # GuiServerDevice::onGetPropertyHistory. One day we should
-        # de-hard-code both.
-        if isinstance(self.proxy, ProxyBase):
-            # does the attribute actually exist?
-            assert isinstance(getattr(type(self.proxy), attr), Type)
-            deviceId = self.proxy._deviceId
-        else:
-            deviceId = str(self.proxy)
-
-        reader = await _getLogReaderId(deviceId)
-        r_deviceId, r_attr, data = await get_instance().call(
-            reader, "slotGetPropertyHistory", deviceId, attr,
-            Hash("from", self.begin, "to", self.end,
-                 "maxNumData", self.maxNumData))
-        assert r_deviceId == deviceId and r_attr == attr
-        return [(Decimal(int(d["v", "frac"])) / 10 ** 18 +
-                 Decimal(int(d["v", "sec"])), d["v", "tid"],
-                 "isLast" in d["v", ...], d["v"]) for d in data]
+    # randomly select the logReader
+    # the modulo of the last millisecond is sufficient for this application
+    log_reader_number = int(1000 * time()) % 2
+    return f"DataLogReader{log_reader_number}-{instance.loggerMap[did]}"
 
 
 @synchronize
-async def _getHistory_new(prop, begin, end, maxNumData):
+async def _getHistory(prop, begin, end, maxNumData, verbose=False):
     try:
         attr = prop.descriptor.longkey
         deviceId = prop._parent._deviceId
@@ -317,6 +286,13 @@ async def _getHistory_new(prop, begin, end, maxNumData):
     begin = _parse_date(begin)
     end = _parse_date(end)
     reader = await _getLogReaderId(deviceId)
+    if verbose:
+        message = f"""Requesting history of property '{attr}'
+        of device '{deviceId}'
+        between {begin} and {end}
+        from the DataLogReader device '{reader}'
+        """
+        print(message)
     r_deviceId, r_attr, data = await get_instance().call(
         reader, "slotGetPropertyHistory", deviceId, attr,
         Hash("from", begin, "to", end, "maxNumData", maxNumData))
@@ -325,7 +301,8 @@ async def _getHistory_new(prop, begin, end, maxNumData):
              d["v", "tid"], "isLast" in d["v", ...], d["v"]) for d in data]
 
 
-def getHistory(prop, begin, end, *, maxNumData=10000, timeout=-1, wait=True):
+def getHistory(prop, begin,
+               end=None, maxNumData=10000, timeout=-1, verbose=False):
     """get the history of device properties
 
     with this function one can get all values of a property in a given
@@ -353,18 +330,24 @@ def getHistory(prop, begin, end, *, maxNumData=10000, timeout=-1, wait=True):
 
     Another parameter, *maxNumData*, may be given, which gives the maximum
     number of data points to be returned. It defaults to 10000. The returned
-    data will be reduced appropriately to still span the full timespan."""
-    # this method contains a lot of hard-coded strings. It follows
-    # GuiServerDevice::onGetPropertyHistory. One day we should
-    # de-hard-code both.
+    data will be reduced appropriately to still span the full timespan.
 
+    An shorthand syntax can be used with the `minutesAgo` and `hourseAgo`
+    helper functions:
+
+        getHistory(device.someProperty, hoursAgo(10), hoursAgo(5))
+        getHistory(device.someProperty, minutesAgo(10))
+
+    will return the history of `device.someProperty` between 10 and 5 hours ago
+    and of the last 10 minutes respectively. The shorthand can be with string
+    property parameters as well.
+    """
     if (isinstance(prop, ProxyBase) or isinstance(prop, str) and
             "." not in prop):
-        assert wait
-        return _getHistory_old(prop, begin, end, maxNumData, timeout)
-    else:
-        return _getHistory_new(prop, begin, end, maxNumData,
-                               timeout=timeout, wait=wait)
+        raise RuntimeError("Parameter Input malformatted")
+
+    return _getHistory(prop, begin, end, maxNumData,
+                       timeout=timeout, verbose=verbose)
 
 
 @synchronize
