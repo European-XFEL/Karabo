@@ -12,7 +12,7 @@ from pyqtgraph import setConfigOptions
 
 from karabo.common.scenemodel.api import (
     SCENE_DEFAULT_DPI, SCENE_FONT_FAMILY, SCENE_FONT_SIZE)
-
+from karabogui.background import create_background_timer
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.fonts import FONT_FILENAMES, get_font_size_from_dpi
 from karabogui.singletons.api import (
@@ -83,8 +83,9 @@ def create_gui_app(args):
         app.setOrganizationDomain('xfel.eu')
         app.setApplicationName('KaraboGUI')
 
-    app.paletteChanged.connect(updatePalette)
+    create_background_timer()
     # Set the style among all operating systems
+    app.paletteChanged.connect(updatePalette)
     style = QStyleFactory.create("Fusion")
     palette = style.standardPalette()
     app.setStyle(style)
