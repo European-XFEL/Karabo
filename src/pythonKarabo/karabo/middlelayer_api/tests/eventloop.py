@@ -1,5 +1,5 @@
 from asyncio import (
-    gather, get_event_loop, iscoroutinefunction, set_event_loop, wait_for)
+    gather, get_event_loop, set_event_loop, wait_for)
 from contextlib import contextmanager, ExitStack
 from functools import partial, wraps
 from unittest import TestCase
