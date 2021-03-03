@@ -5,7 +5,7 @@ from unittest import main
 from karabo.middlelayer import (
     AccessMode, AccessLevel, Assignment,  Bool, call, Configurable, coslot,
     Device, getDevice, Hash, isAlive, InputChannel, Int32, Overwrite,
-    OutputChannel, setWait, shutdown, Slot, State, Timestamp, UInt32,
+    OutputChannel, setWait, Slot, State, Timestamp, UInt32,
     waitUntil)
 from .eventloop import DeviceTest, async_tst
 
