@@ -3,7 +3,6 @@ import os.path as op
 import sys
 
 from setuptools import setup, find_packages
-from setuptools.command.install import install
 
 CURRENT_FOLDER = os.path.dirname(os.path.realpath(__file__))
 VERSION_FILE_PATH = os.path.join(CURRENT_FOLDER, 'karabo', '_version.py')
@@ -130,9 +129,12 @@ else:
         ],
     }
 
+    from setuptools.command.install import install
+    from setuptools.command.develop import develop
+
     from jupyter_client.kernelspec import install_kernel_spec
 
-    class InstallWithJupyter(install):
+    class WithJupyter():
         def run(self):
             super().run()
             install_kernel_spec(
@@ -140,7 +142,16 @@ else:
                         "interactive", "jupyter_spec"),
                 kernel_name="Karabo", prefix=sys.prefix)
 
-    install_args['cmdclass'] = {'install': InstallWithJupyter}
+    class InstallWithJupyter(WithJupyter, install):
+        pass
+
+    class DevelopWithJupyter(WithJupyter, develop):
+        pass
+
+    install_args['cmdclass'] = {
+        'install': InstallWithJupyter,
+        'develop': DevelopWithJupyter
+    }
 
 
 if __name__ == '__main__':
