@@ -29,8 +29,45 @@ To stop the broker simply type::
 
   karabo-stopbroker
 
+Step 2: Edit the run file of the ProjectManager
+===============================================
 
-Step 2: Local Project Database
+Starting with Karabo 2.11, you can use a Local Project Database backed by the
+local filesystem, dropping the requirement for an existDB server.
+
+To use the new filesystem backed Project Database, open the ``run`` file in
+``var/service/karabo_projectDBServer``, here
+remove or comment out the lines referring to ``existDB`` and uncomment
+the line after ``a file-based backend ... below:``.
+
+If you wish to use a local existDB server or are using a karabo version
+earlier than 2.11, follow the instructions listed
+:ref:`here. <run/existdb_local>`
+
+Step 3: Edit the environment files
+==================================
+
+In the karabo folder navigate to ``var/environment`` and set the content file
+named ``KARABO_BROKER`` to ``tcp://localhost:7777``
+and the content of the file named ``KARABO_PROJECT_DB`` to ``localhost``
+
+Step 4: Start the karabo backbone
+=================================
+
+Now you can start an "empty" Karabo by typing::
+
+  karabo-start
+
+and stop it with::
+
+  karabo-stop
+
+If you succeeded up to now you are ready to start additional servers, develop
+you own device plugins etc.
+
+.. _run/existdb_local:
+
+Local ExistDB Project Database
 ==============================
 
 Since version 2.6 the Karabo binaries are not shipped with the code necessary
@@ -76,24 +113,3 @@ one should follow the instructions in the `README.md` of the
 `source <https://git.xfel.eu/gitlab/ITDM/docker_existdb>`_ of the image, and
 update the content of the `KARABO_PROJECT_DB_USER` and
 `KARABO_PROJECT_DB_PASSWORD` accordingly.
-
-Step 3: Edit the environment files
-==================================
-
-In the karabo folder navigate to ``var/environment`` and set the content file
-named ``KARABO_BROKER`` to ``tcp://localhost:7777``
-and the content of the file named ``KARABO_PROJECT_DB`` to ``localhost``
-
-Step 4: Start the karabo backbone
-=================================
-
-Now you can start an "empty" Karabo by typing::
-
-  karabo-start
-
-and stop it with::
-
-  karabo-stop
-
-If you succeeded up to now you are ready to start additional servers, develop
-you own device plugins etc.
