@@ -1,3 +1,5 @@
+.. _installation/dependency_management:
+
 External Dependency Management in Karabo
 ========================================
 
