@@ -22,5 +22,4 @@ bindings, the native Python package and the pyQt-based GUI.
    gui_scene_development
    device_version
    performances
-
-
+   ciAtXFEL
