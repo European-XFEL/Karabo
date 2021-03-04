@@ -12,7 +12,17 @@ The **most relevant improvements**, fixes and changes are:
 
 - MDL API: New functions **hashToDict** and **dictToHash** are available. These function converts either nested dictionaries or hashes to their counterpart.
 
-- MAJOR: **Python** was upgraded to version **3.8**. In this process more dependencies were added or upgraded, please have a look:
+- The `ProjectManager` device is now compatible with a file backend. See :ref:`below <211_projectmanager>`.
+
+- MAJOR: **Python** was upgraded to version **3.8**. In this process more dependencies were added or upgraded, see :ref:`below <211_deps>`.
+
+
+.. _211_deps:
+
+Table of changed dependencies
++++++++++++++++++++++++++++++
+
+Please take note of the changed dependencies::
 
 +--------------------+------------------+-----------+
 | **library**        | **Old**          | **New**   |
@@ -87,3 +97,29 @@ The **most relevant improvements**, fixes and changes are:
 +--------------------+------------------+-----------+
 | zipp               | NEW              | 1.1.0     |
 +--------------------+------------------+-----------+
+
+.. _211_projectmanager:
+
+Project Manager Updates
++++++++++++++++++++++++
+
+In Karabo 2.11, the project manager is now able to use the filesystem as a backend.
+This restores the possibility to run a fully featured karabo installation in
+user space without needing an ExistDB server instance either through network or
+inside a docker container.
+
+This solution will force to adapt the ``run`` file of the project database manager.
+The initial configuration of the ``ProjectManager`` has to change from:
+
+.. code-block::
+
+init='{"KaraboProjectDB":{"classId":"ProjectManager", "host": "thehostname", "port": 8080}}'
+
+to:
+
+.. code-block::
+
+init='{"KaraboProjectDB":{"classId":"ProjectManager","projectDB":{"protocol": "exist_db", "exist_db":{"host": "thehostname", "port": 8080}}}}'
+
+The default run file contains instructions on how to use the filesystem as a
+projectDB backend. More info is available :ref:`here <run/all_local>`.
