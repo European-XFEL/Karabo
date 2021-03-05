@@ -128,24 +128,10 @@ def test_apply_configuration():
     binding = build_binding(schema)
 
     config = Hash('a', False)
+    # Applying a configuration always notifies listeners
     with watch_config_update_notification(binding, expected=True):
         apply_configuration(config, binding)
     assert not binding.value.a.value
-
-    config = Hash('a', True)
-    # configuration is applied but no notification fired
-    with watch_config_update_notification(binding, expected=False):
-        apply_configuration(config, binding, notify=False)
-    assert binding.value.a.value
-
-    config = Hash('e', 0.5)
-    # change one item in attributes and add a new item
-    attr = {KARABO_SCHEMA_UNIT_SYMBOL: 'g', KARABO_ALARM_LOW: 0.0}
-    config['e', ...] = attr
-    old_attrs = {k: v for k, v in binding.value.e.attributes.items()}
-    apply_configuration(config, binding, include_attributes=True)
-    new_attrs = {k: v for k, v in binding.value.e.attributes.items()}
-    assert _dict_diff(old_attrs, new_attrs) == attr
 
     config = Hash('not', 'exist')
     apply_configuration(config, binding)
@@ -163,15 +149,10 @@ def test_apply_project_configuration():
     binding = build_binding(schema)
 
     config = Hash('a', False)
-    with watch_config_update_notification(binding, expected=True):
+    # Applying a project configuration always does not notify listeners
+    with watch_config_update_notification(binding, expected=False):
         apply_project_configuration(config, binding)
     assert not binding.value.a.value
-
-    config = Hash('a', True)
-    # configuration is applied but no notification fired
-    with watch_config_update_notification(binding, expected=False):
-        apply_project_configuration(config, binding, notify=False)
-    assert binding.value.a.value
 
     config = Hash('e', 0.5)
     # change one item in attributes and add a new item
@@ -228,7 +209,7 @@ def test_extract_edit():
     # XXX: j1 will always be extracted
     config = Hash('a', False, 'e', 0.0, 'j1', [])
     config['e', ...] = {KARABO_ALARM_LOW: 42.0}
-    apply_configuration(config, binding, include_attributes=True)
+    apply_project_configuration(config, binding)
 
     extracted = extract_edits(schema, binding)
     assert extracted == config
