@@ -113,6 +113,11 @@ class Tests(TestCase):
         self.assertEqual(a[f], 2)
         self.assertEqual(a[t], 3)
 
+        with self.assertRaises(TypeError) as exc:
+            for _ in t:
+                pass
+            self.assertIn('BoolValue is not iterable', exc.value)
+
     def test_none(self):
         n = NoneValue(descriptor=7, timestamp=22)
         self.assertFalse(n)
@@ -132,6 +137,11 @@ class Tests(TestCase):
         self.assertEqual(a[None], 3)
         a = {None: 2}
         self.assertEqual(a[n], 2)
+
+        with self.assertRaises(TypeError) as exc:
+            for _ in n:
+                pass
+            self.assertIn('NoneValue is not iterable', exc.value)
 
     def test_isset(self):
         self.assertTrue(isSet(3))
