@@ -224,7 +224,9 @@ void DeviceClient_Test::testMonitorChannel() {
     float ndArrayEntry = -1.f;
     Dims imageDims;
     unsigned short imageEntry = 0;
-    auto dataHandler = [&] (const Hash& data, const InputChannel::MetaData& metaData) {
+    auto dataHandler = [&int32inChannel, &strInChannel, &vecInt64inChannel,
+            &ndArrayDims, &ndArrayEntry, &imageDims, &imageEntry]
+            (const Hash& data, const InputChannel::MetaData & metaData) {
         data.get("node.int32", int32inChannel);
         data.get("node.string", strInChannel);
         data.get("node.vecInt64", vecInt64inChannel);
@@ -255,7 +257,7 @@ void DeviceClient_Test::testMonitorChannel() {
     CPPUNIT_ASSERT(!m_deviceClient->registerChannelMonitor("TestedDevice2:output", dataHandler));
 
     // Check that we are connected:
-    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, trackerFuture.wait_for(std::chrono::milliseconds(500)));
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
     CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::net::ConnectionStatus::CONNECTED), static_cast<int> (trackerFuture.get()));
 
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
@@ -285,8 +287,16 @@ void DeviceClient_Test::testMonitorChannel() {
     CPPUNIT_ASSERT_EQUAL(1, int32inChannel);
 
     // Register again and trigger channel once more
-    CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor("TestedDevice2", "output", dataHandler));
-    boost::this_thread::sleep(boost::posix_time::milliseconds(50)); // TODO: How to make dynamic?
+    // To be sure to go on when connection established, first reset promise/future of connectionTracker
+    // (which is a member of 'handlers')
+    trackerPromise = std::promise <karabo::net::ConnectionStatus>();
+    trackerFuture = trackerPromise.get_future();
+    CPPUNIT_ASSERT(m_deviceClient->registerChannelMonitor("TestedDevice2:output", handlers));
+    // Check that we are connected:
+    // With just sleep 50ms  failed in https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/171924
+    CPPUNIT_ASSERT_EQUAL(std::future_status::ready, trackerFuture.wait_for(std::chrono::seconds(KRB_TEST_MAX_TIMEOUT)));
+    CPPUNIT_ASSERT_EQUAL(static_cast<int> (karabo::net::ConnectionStatus::CONNECTED), static_cast<int> (trackerFuture.get()));
+
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestedDevice2", "writeOutput", KRB_TEST_MAX_TIMEOUT));
 
     // Now should get the next number, i.e. 3
