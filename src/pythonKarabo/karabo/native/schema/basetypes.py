@@ -189,6 +189,10 @@ class _Singleton(KaraboValue):
     def __hash__(self):
         return hash(self.value)
 
+    def __iter__(self):
+        raise TypeError(f"A singleton class like {self.__class__.__name__} "
+                        f"is not iterable.")
+
 
 @wrap_methods
 class BoolValue(_Singleton):
