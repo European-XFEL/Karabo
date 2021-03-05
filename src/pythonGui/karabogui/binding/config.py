@@ -49,13 +49,12 @@ def apply_fast_data(config, binding, timestamp):
     binding.config_update = True
 
 
-def apply_configuration(config, binding, notify=True,
-                        include_attributes=False):
+def apply_configuration(config, binding):
     """Recursively set values from a configuration Hash object to a binding
     object.
 
-    If `notify` is False, trait change notifications of binding
-    nodes won't be triggered.
+    This method sets an `online` (network) configuration Hash to a proxy
+    binding and thus always notifies and does not include attributes!
     """
     namespace = binding.value
     assert isinstance(namespace, BindingNamespace)
@@ -66,8 +65,7 @@ def apply_configuration(config, binding, notify=True,
 
         node = getattr(namespace, key)
         if isinstance(value, Hash) and isinstance(node, NodeBinding):
-            apply_configuration(value, node, notify=notify,
-                                include_attributes=include_attributes)
+            apply_configuration(value, node)
         else:
             traits = {'value': value}
             # Set the timestamp no matter what
@@ -76,18 +74,13 @@ def apply_configuration(config, binding, notify=True,
             # Set everything at once and notify via the config_update event
             try:
                 node.trait_set(trait_change_notify=False, **traits)
-                if include_attributes:
-                    # pass an empty dictionary to get only editable attributes
-                    node.update_attributes(attr_fast_deepcopy(attrs, {}))
             except TraitError:
                 # value in the configuration is not compatible to schema
                 continue
-            if notify:
-                node.config_update = True
+            node.config_update = True
 
     # Notify listeners
-    if notify:
-        binding.config_update = True
+    binding.config_update = True
 
 
 def apply_default_configuration(binding):
@@ -135,7 +128,7 @@ def sanitize_table_value(binding, value):
     :return sanitized value of type `HashList`
     """
     msg = "Expected a value of type `HashList`, got %s instead" % type(value)
-    assert isinstance(value, HashList), msg
+    assert isinstance(value, (list, HashList)), msg
 
     def _sanitize_row(row_bindings, row_hash):
         """Validate a single row of the table"""
@@ -174,15 +167,15 @@ def sanitize_table_value(binding, value):
     return ret
 
 
-def apply_project_configuration(config, binding, notify=True):
+def apply_project_configuration(config, binding):
     """Recursively set values from a configuration Hash object to a binding
-    object of a project device
+    object of a project device.
 
     A project configuration consists of `values` and `attributes` and is
     in certain cases sanitized if necessary (table element).
 
-    If `notify` is False, trait change notifications of binding
-    nodes won't be triggered.
+    Setting a project configuration sets the value directly and does not
+    notify!
     """
     namespace = binding.value
     assert isinstance(namespace, BindingNamespace)
@@ -193,7 +186,7 @@ def apply_project_configuration(config, binding, notify=True):
 
         node = getattr(namespace, key)
         if isinstance(value, Hash) and isinstance(node, NodeBinding):
-            apply_project_configuration(value, node, notify=notify)
+            apply_project_configuration(value, node)
         else:
             if isinstance(node, VectorHashBinding):
                 value = sanitize_table_value(node, value)
@@ -202,7 +195,6 @@ def apply_project_configuration(config, binding, notify=True):
             # Set the timestamp no matter what
             ts = Timestamp.fromHashAttributes(attrs)
             traits['timestamp'] = ts or Timestamp()
-            # Set everything at once and notify via the config_update event
             try:
                 node.trait_set(trait_change_notify=False, **traits)
                 # XXX: pass an empty dictionary to get only editable attributes
@@ -210,12 +202,6 @@ def apply_project_configuration(config, binding, notify=True):
             except TraitError:
                 # value in the configuration is not compatible to schema
                 continue
-            if notify:
-                node.config_update = True
-
-    # Notify listeners
-    if notify:
-        binding.config_update = True
 
 
 def extract_attribute_modifications(schema, binding):

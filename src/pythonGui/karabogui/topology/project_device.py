@@ -12,8 +12,7 @@ from karabo.common.api import ProxyStatus, KARABO_SCHEMA_DEFAULT_VALUE
 from karabo.native import Hash
 from karabogui.binding.api import (
     BaseDeviceProxy, DeviceProxy, ProjectDeviceProxy,
-    apply_configuration, apply_default_configuration, extract_edits
-)
+    apply_default_configuration, apply_project_configuration, extract_edits)
 from karabogui.singletons.api import get_topology
 
 
@@ -124,8 +123,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         # and we have schema
         if not self.online and len(self._offline_proxy.binding.value) > 0:
             apply_default_configuration(self._offline_proxy.binding)
-            apply_configuration(config, self._offline_proxy.binding,
-                                notify=False, include_attributes=True)
+            apply_project_configuration(config, self._offline_proxy.binding)
 
     def start_monitoring(self):
         """Enable monitoring of the online device (when it is online).
@@ -182,9 +180,8 @@ class ProjectDeviceInstance(HasStrictTraits):
                 print("Ignoring corrupted project configuration for "
                       "device {}!".format(self._offline_proxy.device_id))
                 return
-            apply_configuration(self._offline_config,
-                                self._offline_proxy.binding,
-                                notify=False, include_attributes=True)
+            apply_project_configuration(self._offline_config,
+                                        self._offline_proxy.binding)
 
     @on_trait_change('_offline_proxy.status', post_init=True)
     def _status_changed(self, old, new):
