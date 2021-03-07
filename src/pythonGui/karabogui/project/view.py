@@ -57,6 +57,8 @@ class ProjectView(QTreeView):
         self.expanded = False
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
 
+        self.setUniformRowHeights(True)
+
     # ----------------------------
     # Public methods
 

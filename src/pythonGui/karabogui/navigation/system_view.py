@@ -51,6 +51,7 @@ class SystemTreeView(QTreeView):
         self.expanded = False
         self.popupWidget = None
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
+        self.setUniformRowHeights(True)
 
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
