@@ -71,6 +71,7 @@ class ConfigurationTreeView(QTreeView):
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
+        self.setUniformRowHeights(True)
 
         self.event_map = {
             KaraboEvent.AccessLevelChanged: self._event_access_level
