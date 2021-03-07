@@ -52,6 +52,7 @@ class DeviceTreeView(QTreeView):
         self._setup_context_menu()
         self.customContextMenuRequested.connect(
             self.onCustomContextMenuRequested)
+        self.setUniformRowHeights(True)
 
     def _setup_context_menu(self):
         """Setup the context menu for the device topology"""
