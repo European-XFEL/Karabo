@@ -17,14 +17,13 @@
 
 // Compiling packages depending on Karabo using C++11 only
 // and link them against the C++14 compiled framework seems to work.
-// If these packages are compiled with a gcc versions lower than 5
-// (which BTW do not support C++14), segmentation violations
-// happen in some corner cases.
+// If these packages are compiled with a gcc versions lower than 7,
+// linking problems with libstdc are seen.
 // Here we bail out if such a compiler version is detected.
 
 #ifdef __GNUC__
-#if __GNUC__ < 5
-#error Compiling Karabo with gcc requires at least gcc version 5.
+#if __GNUC__ < 7
+#error Compiling Karabo with gcc requires at least gcc version 7.
 #endif
 #endif
 
