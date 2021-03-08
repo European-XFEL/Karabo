@@ -441,6 +441,26 @@ class Descriptor(object):
 
         self.__doc__ = self.description
 
+    @property
+    def attributes(self):
+        """Return the attributes of this descriptor in a dictionary form
+
+        This method preserves the `Enum` values of the common attributes.
+        """
+        attrs = ((name, getattr(self, name)) for name in dir(type(self))
+                 if isinstance(getattr(type(self), name), Attribute))
+        attrs = {name: attr for name, attr in attrs if attr is not None}
+        if self.allowedStates is not None:
+            attrs["allowedStates"] = [s.value for s in self.allowedStates]
+        if self.tags is not None:
+            attrs["tags"] = list(self.tags)
+        if self.archivePolicy is not None:
+            attrs["archivePolicy"] = self.archivePolicy
+        if self.classId is not None:
+            attrs["classId"] = self.classId
+
+        return attrs
+
     def toSchemaAndAttrs(self, device, state):
         """return schema for device in state
 
@@ -451,19 +471,9 @@ class Descriptor(object):
         device's. If state is not None, only the parts of the schema available
         in the given state are returned.
         """
-        attrs = ((name, getattr(self, name)) for name in dir(type(self))
-                 if isinstance(getattr(type(self), name), Attribute))
-        attrs = ((name, value.value if isinstance(value, Enum) else value)
-                 for name, value in attrs)
-        attrs = {name: attr for name, attr in attrs if attr is not None}
-        if self.allowedStates is not None:
-            attrs["allowedStates"] = [s.value for s in self.allowedStates]
-        if self.tags is not None:
-            attrs["tags"] = list(self.tags)
-        if self.archivePolicy is not None:
-            attrs["archivePolicy"] = self.archivePolicy.value
-        if self.classId is not None:
-            attrs["classId"] = self.classId
+        attrs = self.attributes
+        attrs.update((name, value.value) for name, value in attrs.items()
+                     if isinstance(value, Enum))
 
         return Hash(), attrs
 
