@@ -24,7 +24,7 @@ using namespace karabo::xms;
 
 
 #define MQTT_BROKER "mqtt://exfldl02n0:1883"
-#define OPENMQ_BROKER "tcp://exflbkr02n0:7777"
+#define JMS_BROKER "tcp://exflbkr02n0:7777"
 
 const int numWaitIterations = 1000;
 const int sleepPerWaitIterationMs = 5;
@@ -173,7 +173,7 @@ void SignalSlotable_Test::setUp() {
     //Logger::configure(Hash("priority", "ERROR"));
     //Logger::useOstream();
     // Event loop is started in xmsTestRunner.cc's main()
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
 }
 
 
@@ -182,10 +182,12 @@ void SignalSlotable_Test::tearDown() {
 
 
 void SignalSlotable_Test::testUniqueInstanceId() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testUniqueInstanceId " << getenv("KARABO_BROKER") << std::endl;
     _testUniqueInstanceId();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testUniqueInstanceId " << getenv("KARABO_BROKER") << std::endl;
     _testUniqueInstanceId();
 }
 
@@ -212,10 +214,12 @@ void SignalSlotable_Test::_testUniqueInstanceId() {
 
 
 void SignalSlotable_Test::testValidInstanceId() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testValidInstanceId " << getenv("KARABO_BROKER") << std::endl;
     _testValidInstanceId();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testValidInstanceId " << getenv("KARABO_BROKER") << std::endl;
     _testValidInstanceId();
 }
 
@@ -242,10 +246,12 @@ void SignalSlotable_Test::_testValidInstanceId() {
 
 
 void SignalSlotable_Test::testReceiveAsync() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testReceiveAsync " << getenv("KARABO_BROKER") << std::endl;
     _testReceiveAsync();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testReceiveAsync " << getenv("KARABO_BROKER") << std::endl;
     _testReceiveAsync();
 }
 
@@ -292,10 +298,12 @@ void SignalSlotable_Test::_testReceiveAsync() {
 
 
 void SignalSlotable_Test::testReceiveAsyncError() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testReceiveAsyncError " << getenv("KARABO_BROKER") << std::endl;
     _testReceiveAsyncError();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testReceiveAsyncError " << getenv("KARABO_BROKER") << std::endl;
     _testReceiveAsyncError();
 }
 
@@ -414,10 +422,12 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
 
 
 void SignalSlotable_Test::testReceiveAsyncNoReply() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testReceiveAsyncNoReply " << getenv("KARABO_BROKER") << std::endl;
     _testReceiveAsyncNoReply();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testReceiveAsyncNoReply " << getenv("KARABO_BROKER") << std::endl;
     _testReceiveAsyncNoReply();
 }
 
@@ -485,10 +495,12 @@ void SignalSlotable_Test::_testReceiveAsyncNoReply() {
 
 
 void SignalSlotable_Test::testReceiveExceptions() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testReceiveExceptions " << getenv("KARABO_BROKER") << std::endl;
     _testReceiveExceptions();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testReceiveExceptions " << getenv("KARABO_BROKER") << std::endl;
     _testReceiveExceptions();
 }
 
@@ -547,10 +559,12 @@ void SignalSlotable_Test::_testReceiveExceptions() {
 
 
 void SignalSlotable_Test::testConnectAsync() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testConnectAsync " << getenv("KARABO_BROKER") << std::endl;
     _testConnectAsync();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testConnectAsync " << getenv("KARABO_BROKER") << std::endl;
     _testConnectAsync();
 }
 
@@ -675,10 +689,12 @@ void SignalSlotable_Test::_testConnectAsync() {
 
 
 void SignalSlotable_Test::testConnectAsyncMulti() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testConnectAsyncMulti " << getenv("KARABO_BROKER") << std::endl;
     _testConnectAsyncMulti();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testConnectAsyncMulti " << getenv("KARABO_BROKER") << std::endl;
     _testConnectAsyncMulti();
 }
 
@@ -868,10 +884,12 @@ void SignalSlotable_Test::_testConnectAsyncMulti() {
 
 
 void SignalSlotable_Test::testDisconnectAsync() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testDisconnectAsync " << getenv("KARABO_BROKER") << std::endl;
     _testDisconnectAsync();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testDisconnectAsync " << getenv("KARABO_BROKER") << std::endl;
     _testDisconnectAsync();
 }
 
@@ -993,10 +1011,12 @@ void SignalSlotable_Test::_testDisconnectAsync() {
 }
 
 void SignalSlotable_Test::testMethod() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testMethod " << getenv("KARABO_BROKER") << std::endl;
     _testMethod();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testMethod " << getenv("KARABO_BROKER") << std::endl;
     _testMethod();
 }
 
@@ -1060,10 +1080,12 @@ void SignalSlotable_Test::_testMethod() {
 
 
 void SignalSlotable_Test::testAsyncReply() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testAsyncReply " << getenv("KARABO_BROKER") << std::endl;
     _testAsyncReply();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testAsyncReply " << getenv("KARABO_BROKER") << std::endl;
     _testAsyncReply();
 }
 
@@ -1240,10 +1262,12 @@ void SignalSlotable_Test::_testAsyncReply() {
 
 
 void SignalSlotable_Test::testAutoConnectSignal() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testAutoConnectSignal " << getenv("KARABO_BROKER") << std::endl;
     _testAutoConnectSignal();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testAutoConnectSignal " << getenv("KARABO_BROKER") << std::endl;
     _testAutoConnectSignal();
 }
 
@@ -1279,10 +1303,12 @@ void SignalSlotable_Test::_testAutoConnectSignal() {
 
 
 void SignalSlotable_Test::testAutoConnectSlot() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testAutoConnectSlot " << getenv("KARABO_BROKER") << std::endl;
     _testAutoConnectSlot();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testAutoConnectSlot " << getenv("KARABO_BROKER") << std::endl;
     _testAutoConnectSlot();
 }
 
@@ -1320,10 +1346,12 @@ void SignalSlotable_Test::_testAutoConnectSlot() {
 
 
 void SignalSlotable_Test::testRegisterSlotTwice() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testRegisterSlotTwice " << getenv("KARABO_BROKER") << std::endl;
     _testRegisterSlotTwice();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testRegisterSlotTwice " << getenv("KARABO_BROKER") << std::endl;
     _testRegisterSlotTwice();
 }
 
@@ -1365,10 +1393,12 @@ void SignalSlotable_Test::_testRegisterSlotTwice() {
 
 
 void SignalSlotable_Test::testAsyncConnectInputChannel() {
-    setenv("KARABO_BROKER", OPENMQ_BROKER, true);
+    setenv("KARABO_BROKER", JMS_BROKER, true);
+    std::clog << "testAsyncConnectInputChannel " << getenv("KARABO_BROKER") << std::endl;
     _testAsyncConnectInputChannel();
 
     setenv("KARABO_BROKER", MQTT_BROKER, true);
+    std::clog << "testAsyncConnectInputChannel " << getenv("KARABO_BROKER") << std::endl;
     _testAsyncConnectInputChannel();
 }
 
