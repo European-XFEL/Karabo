@@ -15,7 +15,7 @@ from karabo.native import (
     Slot, String, Timestamp, Type, TypeHash, TypeNone, TypeSchema, UInt8,
     UInt16, UInt32, UInt64, Unit, unit_registry as unit, VectorBool,
     VectorChar, VectorDouble, VectorComplexFloat, VectorFloat, VectorHash,
-    VectorInt8, VectorInt16, VectorInt32,  VectorInt64, VectorRegexString,
+    VectorInt8, VectorInt16, VectorInt32, VectorInt64, VectorRegexString,
     VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64, VectorString)
 
 
@@ -602,6 +602,19 @@ class Tests(TestCase):
         v = d.toKaraboValue([])
         data, _ = d.toDataAndAttrs(v)
         self.assertIsInstance(data, HashList)
+
+        bindings = d.bindings
+        integerBinding = bindings["int"]
+        stringBinding = bindings["string"]
+        self.assertIsInstance(integerBinding, Int32)
+        attrs = integerBinding.attributes
+        self.assertIs(attrs["unitSymbol"], Unit.METER)
+        self.assertIs(attrs["metricPrefixSymbol"], MetricPrefix.MILLI)
+
+        # Another one without units
+        self.assertIsInstance(stringBinding, String)
+        attrs = stringBinding.attributes
+        self.assertIs(attrs["metricPrefixSymbol"], MetricPrefix.NONE)
 
     def test_vector_hash(self):
         rowSchema = Hash("int", None, "string", None, "vector", None,
