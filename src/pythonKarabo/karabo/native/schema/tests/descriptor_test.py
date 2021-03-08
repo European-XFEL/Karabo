@@ -700,6 +700,29 @@ class Tests(TestCase):
         self.assertIs(d.unitSymbol, Unit.NUMBER)
         self.assertIs(d.metricPrefixSymbol, MetricPrefix.NONE)
         self.assertIsNone(d.options)
+
+        attributes = d.attributes
+        self.assertIsNone(attributes.get('minExc'))
+        self.assertIsNone(attributes.get('minInc'))
+        self.assertIsNone(attributes.get('maxExc'))
+        self.assertIsNone(attributes.get('maxInc'))
+        self.assertIsNone(attributes.get('displayType'))
+        self.assertIsNone(attributes.get('defaultValue'))
+        self.assertIsNone(attributes.get('allowedStates'))
+        self.assertIsNone(attributes.get('classId'))
+        self.assertIsNone(attributes.get('description'))
+        self.assertIsNone(attributes.get('alias'))
+        self.assertIsNone(attributes.get('relativeError'))
+        self.assertIsNone(attributes.get('absoluteError'))
+        self.assertIs(attributes['accessMode'],
+                      AccessMode.RECONFIGURABLE)
+        self.assertIs(attributes['assignment'],
+                      Assignment.OPTIONAL)
+        self.assertIs(attributes['requiredAccessLevel'],
+                      AccessLevel.USER)
+        self.assertIs(attributes['unitSymbol'], Unit.NUMBER)
+        self.assertIs(attributes['metricPrefixSymbol'], MetricPrefix.NONE)
+
         self.check_serialization(d)
 
     def test_alias_attribute(self):
@@ -714,11 +737,13 @@ class Tests(TestCase):
             displayedName="Double",
             alias=0x2)
         self.assertEqual(d.alias, 0x2)
+        self.assertEqual(d.attributes['alias'], 0x2)
 
         d = Double(
             displayedName="Double")
         _, attrs = d.toSchemaAndAttrs(None, None)
         self.assertNotIn("alias", attrs)
+        self.assertIsNone(d.attributes.get('alias'))
 
     def test_attributes_nodefault(self):
         d = Double(
@@ -750,6 +775,29 @@ class Tests(TestCase):
         self.assertIs(d.unitSymbol, Unit.METER)
         self.assertIs(d.metricPrefixSymbol, MetricPrefix.MILLI)
         self.assertEqual(d.options, [22.3, 22.7, 22.8])
+
+        attributes = d.attributes
+        self.assertEqual(attributes['minExc'], 22)
+        self.assertEqual(attributes['maxExc'], 33)
+        self.assertEqual(attributes['minInc'], 11)
+        self.assertEqual(attributes['maxInc'], 23)
+        self.assertEqual(attributes['absoluteError'], 0.2)
+        self.assertEqual(attributes['relativeError'], 0.3)
+        self.assertEqual(attributes['displayedName'], "hallo")
+        self.assertEqual(attributes['alias'], "something")
+        self.assertEqual(attributes['description'], "whatever")
+        self.assertEqual(len(attributes['allowedStates']), 2)
+        self.assertIn('INIT', attributes['allowedStates'])
+        self.assertIn('KNOWN', attributes['allowedStates'])
+        self.assertEqual(attributes['defaultValue'], 22.5)
+        self.assertIs(attributes['accessMode'], AccessMode.READONLY)
+        self.assertIs(attributes['assignment'], Assignment.MANDATORY)
+        self.assertIs(attributes['requiredAccessLevel'], AccessLevel.EXPERT)
+        self.assertEqual(attributes['displayType'], "nothing")
+        self.assertIs(attributes['unitSymbol'], Unit.METER)
+        self.assertIs(attributes['metricPrefixSymbol'], MetricPrefix.MILLI)
+        self.assertEqual(attributes['options'], [22.3, 22.7, 22.8])
+
         self.check_serialization(d)
 
     def test_attributes_nonstrict(self):
