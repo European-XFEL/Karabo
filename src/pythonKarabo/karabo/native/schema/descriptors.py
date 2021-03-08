@@ -1225,7 +1225,7 @@ class VectorHash(Vector):
 
         self.dtype = np.dtype([(k, Type.fromname[a["valueType"]].numpy)
                                for k, v, a in self.rowSchema.hash.iterall()])
-        self.coltypes = {k: Type.fromname[a["valueType"]](strict=False, **a)
+        self.bindings = {k: Type.fromname[a["valueType"]](strict=False, **a)
                          for k, v, a in self.rowSchema.hash.iterall()}
         self.units = {k: (a.get("unitSymbol", None),
                           a.get("metricPrefixSymbol", MetricPrefix.NONE))
@@ -1234,6 +1234,15 @@ class VectorHash(Vector):
     def cast(self, other):
         ht = TypeHash()
         return HashList(ht.cast(o) for o in other)
+
+    @property
+    def coltypes(self):
+        import warnings
+        warnings.warn(
+            "'coltypes' is deprecated and will be removed in 2.12, "
+            "please use the property `bindings` in the future",
+            DeprecationWarning, stacklevel=2)
+        return self.bindings
 
     def toKaraboValue(self, data, strict=True):
         timestamp = None
@@ -1252,7 +1261,7 @@ class VectorHash(Vector):
             for datarow in data:
                 tablerow = ()
                 for name in self.dtype.names:
-                    desc = self.coltypes[name]
+                    desc = self.bindings[name]
                     # NOTE: This is in principle not an MDL problem, but a GUI
                     # one who lost all its casting since a year for the table
                     # element. We protect here for the time being.
