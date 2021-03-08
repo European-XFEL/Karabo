@@ -16,6 +16,9 @@ The **most relevant improvements**, fixes and changes are:
 
 - MAJOR: **Python** was upgraded to version **3.8**. In this process more dependencies were added or upgraded, see :ref:`below <211_deps>`.
 
+- Karabo use on the Ubuntu16 platform is deprecated since that is not anymore maintained beyond April 2021.
+
+- Compilation of device packages requires at least gcc version 7. Note that the default compiler on all supported platforms except Ubuntu16 fulfils that.
 
 .. _211_deps:
 
