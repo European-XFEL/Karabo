@@ -516,7 +516,8 @@ def uninstall(args):
                   format(args.device, so_path))
             sys.exit(1)
     else:
-        ret = run_cmd('pip uninstall -y {}'.format(args.device))
+        # -q (quiet) to suppress sucess output - that is returned by run_cmd
+        ret = run_cmd('pip uninstall -q -y {}'.format(args.device))
 
     # run_cmd returns output - empty output means success for 'rm' and 'pip'
     if not ret:
