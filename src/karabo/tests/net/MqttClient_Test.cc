@@ -2,6 +2,7 @@
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/MqttClient.hh"
 #include "karabo/log/Logger.hh"
+#include "karabo/net/Broker.hh"
 
 #include <unordered_set>
 #include <chrono>
@@ -15,7 +16,6 @@
 
 // These default settings are effective only if corresponding env. vars not defined...
 #define MQTT_BROKERS "mqtt://exfldl02n0:1883"
-#define MQTT_DOMAIN  "test"
 
 using namespace karabo::util;
 using namespace karabo::net;
@@ -38,9 +38,8 @@ public:
     , m_topic(topic) 
     , m_future(m_promise.get_future())
     , m_brokers(MQTT_BROKERS)
-    , m_domain(MQTT_DOMAIN) {
+        , m_domain(Broker::brokerDomainFromEnv()) {
         if (getenv("KARABO_BROKER_MQTT")) m_brokers = getenv("KARABO_BROKER_MQTT");
-        if (getenv("KARABO_BROKER_TOPIC")) m_domain = getenv("KARABO_BROKER_TOPIC");
     }
 
     void start(const std::string& classId) {
@@ -98,9 +97,8 @@ public:
             , m_future(m_promise.get_future())
             , m_subFuture(m_subPromise.get_future())
             , m_brokers(MQTT_BROKERS)
-            , m_domain(MQTT_DOMAIN) {
+        , m_domain(Broker::brokerDomainFromEnv()) {
         if (getenv("KARABO_BROKER_MQTT")) m_brokers = getenv("KARABO_BROKER_MQTT");
-        if (getenv("KARABO_BROKER_TOPIC")) m_domain = getenv("KARABO_BROKER_TOPIC");
     }
 
     void start(const std::string& classId) {
@@ -157,12 +155,11 @@ private:
 };
 
 
-MqttClient_Test::MqttClient_Test() : m_brokers(MQTT_BROKERS), m_domain(MQTT_DOMAIN) {
+MqttClient_Test::MqttClient_Test() : m_brokers(MQTT_BROKERS), m_domain(Broker::brokerDomainFromEnv()) {
     //Logger::configure(Hash("priority","ERROR"));
     //Logger::useOstream();
     std::clog << std::flush;
     if (getenv("KARABO_BROKER_MQTT")) m_brokers = getenv("KARABO_BROKER_MQTT");
-    if (getenv("KARABO_BROKER_TOPIC")) m_domain = getenv("KARABO_BROKER_TOPIC");
 }
 
 
@@ -1156,9 +1153,8 @@ void MqttClient_Test::testMultipleSubscriptionsToTopicWithWildcardsAndSubtopics_
             : m_instanceId(instanceId)
             , m_future(m_promise.get_future())
             , m_brokers(MQTT_BROKERS)
-            , m_domain(MQTT_DOMAIN) {
+            , m_domain(Broker::brokerDomainFromEnv()) {
             if (getenv("KARABO_BROKER_MQTT")) m_brokers = getenv("KARABO_BROKER_MQTT");
-            if (getenv("KARABO_BROKER_TOPIC")) m_domain = getenv("KARABO_BROKER_TOPIC");
         }
 
         void start(const std::string& classId) {
@@ -1322,9 +1318,8 @@ void MqttClient_Test::testTopicsSubscriptionsInArbitraryOrder_(const std::string
             , m_n2(0)
             , m_future2(m_promise2.get_future())
             , m_brokers(MQTT_BROKERS)
-            , m_domain(MQTT_DOMAIN) {
+            , m_domain(Broker::brokerDomainFromEnv()) {
             if (getenv("KARABO_BROKER_MQTT")) m_brokers = getenv("KARABO_BROKER_MQTT");
-            if (getenv("KARABO_BROKER_TOPIC")) m_domain = getenv("KARABO_BROKER_TOPIC");
         }
 
         void start(const std::string& classId) {
