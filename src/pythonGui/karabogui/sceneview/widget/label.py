@@ -3,9 +3,9 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import QMargins, pyqtSlot, QSize, Qt
-from PyQt5.QtGui import QColor, QFontMetrics, QPainter, QPen
-from PyQt5.QtWidgets import QAction, QDialog, QLabel
+from PyQt5.QtCore import pyqtSlot, QSize, Qt
+from PyQt5.QtGui import QFontMetrics
+from PyQt5.QtWidgets import QAction, QDialog, QFrame, QLabel
 
 from karabogui.fonts import get_qfont
 from karabogui.dialogs.textdialog import TextDialog
@@ -23,7 +23,11 @@ class LabelWidget(KaraboSceneWidget, QLabel):
     def __init__(self, model, parent=None):
         super(LabelWidget, self).__init__(model.text,
                                           model=model, parent=parent)
+        self.setFrameShape(QFrame.Box)
+        self.fm = None
         self.set_model(model)
+
+        # Base edit action
         edit_action = QAction("Edit Label", self)
         edit_action.triggered.connect(self.edit_colors_text)
         self.addAction(edit_action)
@@ -34,10 +38,30 @@ class LabelWidget(KaraboSceneWidget, QLabel):
         self.model.trait_set(text=model.text, frame_width=model.frame_width,
                              font=model.font, background=model.background,
                              foreground=model.foreground)
-
-        self.setFont(get_qfont(model.font))
+        font = get_qfont(model.font)
+        self.setFont(font)
+        self.fm = QFontMetrics(font)
+        self.setLineWidth(model.frame_width)
         self.setToolTip(model.text)
+        self.create_display_text()
+
+        # Set the stylesheet for background and foreground color
+        sheet = []
+        sheet.append('color: "{}";'.format(model.foreground))
+        if model.background:
+            sheet.append('background-color: "{}";'.format(
+                model.background))
+        self.setStyleSheet("QLabel {{ {} }}".format("".join(sheet)))
         self.setGeometry(model.x, model.y, model.width, model.height)
+
+    def minimumSizeHint(self):
+        """Reimplemented `sizeHint` of KaraboSceneWidget"""
+        fm = QFontMetrics(self.font())
+        width = fm.width(self.model.text)
+        height = fm.height() + self.model.frame_width
+        size = QSize(width + WIDTH_MARGIN, max(height, 20) + HEIGHT_MARGIN)
+
+        return size
 
     def sizeHint(self):
         """Reimplemented `sizeHint` of KaraboSceneWidget since we want to get
@@ -56,43 +80,29 @@ class LabelWidget(KaraboSceneWidget, QLabel):
             size = QSize(width + WIDTH_MARGIN, max(height, 20) + HEIGHT_MARGIN)
         return size
 
-    def paintEvent(self, event):
-        with QPainter(self) as painter:
-            # Calculate the effective rectangle which considers the
-            # frame width as it is expands inwards. The bottom and the right
-            # edge needs to have another pixel offset.
-            eff_rect = self.model.frame_width / 2
-            boundary = self.rect()
-            painter.fillRect(boundary, QColor(self.model.background))
-            fore_color = QColor(self.model.foreground)
-            # Draw the boundary and adjust the rect
-            if self.model.frame_width:
-                boundary = boundary.adjusted(eff_rect, eff_rect,
-                                             -eff_rect - 1, -eff_rect - 1)
-                pen = QPen(fore_color)
-                pen.setWidth(self.model.frame_width)
-                painter.setPen(pen)
-                painter.drawRect(boundary)
-
-            # Draw text
-            pen = QPen(fore_color)
-            painter.setPen(pen)
-            painter.setFont(self.font())
-            painter.drawText(boundary.marginsRemoved(QMargins(*MARGINS)),
-                             self.alignment(), self._get_elided_text())
+    def resizeEvent(self, event):
+        """Reimplemented function of PyQt for adjust the display text"""
+        super(LabelWidget, self).resizeEvent(event)
+        self.create_display_text()
 
     @property
     def text_width(self):
         return self.width() - WIDTH_MARGIN
 
-    def _get_elided_text(self):
-        fm = QFontMetrics(self.font())
+    def create_display_text(self):
+        """Calculate the effective display text
+
+        Use the font metric to calculate the width of the text. Is the width
+        is larger than the widget size, the text is returned as elided.
+        For synchronization, this method is invoked on resizeEvents as well.
+        """
+        display = self.text()
         text = self.model.text
         text_width = self.text_width
-        if fm.width(text) > text_width:
-            text = fm.elidedText(text, Qt.ElideRight, text_width)
-
-        return text
+        if self.fm.width(text) > text_width:
+            text = self.fm.elidedText(text, Qt.ElideRight, text_width)
+        if display != text:
+            self.setText(text)
 
     def add_proxies(self, proxies):
         """Satisfy the informal widget interface."""
