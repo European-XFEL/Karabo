@@ -898,7 +898,7 @@ namespace karabo {
 
             std::string fill(depth * 2, ' ');
 
-            for (Hash::const_iterator hit = hash.begin(); hit != hash.end(); hit++) {
+            for (Hash::const_iterator hit = hash.begin(); hit != hash.end(); ++hit) {
                 os << fill << "'" << hit->getKey() << "'";
 
                 const Hash::Attributes& attrs = hit->getAttributes();

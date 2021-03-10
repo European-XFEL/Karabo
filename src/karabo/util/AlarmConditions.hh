@@ -136,9 +136,9 @@ namespace karabo {
 
             AlarmCondition() = delete;
 
-            AlarmCondition(std::string cs, unsigned int r);
+            AlarmCondition(const std::string& cs, unsigned int r);
 
-            AlarmCondition(std::string cs, const AlarmCondition & b);
+            AlarmCondition(const std::string& cs, const AlarmCondition & b);
 
             boost::shared_ptr<const AlarmCondition> getBase() const;
 
