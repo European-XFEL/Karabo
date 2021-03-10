@@ -27,28 +27,29 @@ namespace karabo {
             public:
 
             DetectorGeometry() : m_offsets(std::vector<double>(3, 0.)), m_rotations(std::vector<double>(3, 0.)),
-                m_tileId(-2), m_managedTiles(0), m_pixelRegion(std::vector<int>(4, -1)) {
+                m_tileId(-2), m_managedTiles(0), m_pixelRegion(std::vector<int>(4, -1)), m_parent(NULL) {
 
             }
 
-            DetectorGeometry(DetectorGeometry* parent) : m_offsets(std::vector<double>(3, 0.)),
-                m_rotations(std::vector<double>(3, 0.)), m_managedTiles(0), m_pixelRegion(std::vector<int>(4, -1)) {
+            DetectorGeometry(DetectorGeometry* parent) : m_offsets(std::vector<double>(3, 0.))
+            , m_rotations(std::vector<double>(3, 0.))
+            , m_managedTiles(0)
+            , m_pixelRegion(std::vector<int>(4, -1)) {
                 m_tileId = parent->assignTileId();
-                ;
                 m_parent = parent;
             }
 
-            DetectorGeometry(const karabo::util::Hash & h) {
-                m_offsets = h.get<std::vector<double> >("alignment.offsets");
-                m_rotations = h.get<std::vector<double> >("alignment.rotations");
+            DetectorGeometry(const karabo::util::Hash & h) : m_offsets(h.get<std::vector<double> >("alignment.offsets"))
+            , m_rotations(h.get<std::vector<double> >("alignment.rotations"))
+            , m_tileId(h.get<int>("tileId"))
+            , m_managedTiles(0)
+            , m_parent(NULL)
+            {
                 if (h.has("pixelRegion")) {
                     m_pixelRegion = h.get<std::vector<int> >("pixelRegion");
                 } else {
                     m_pixelRegion = std::vector<int>(4, -1);
                 }
-                m_tileId = h.get<int>("tileId");
-                m_managedTiles = 0;
-
 
                 std::vector<karabo::util::Hash> s;
                 if (h.has("subAssemblies")) {

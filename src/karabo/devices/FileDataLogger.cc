@@ -70,7 +70,7 @@ namespace karabo {
                                 << m_lastIndex << "': skipped writing index entry for " << deviceId;
                     }
 
-                    for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); it++) {
+                    for (map<string, MetaData::Pointer>::iterator it = m_idxMap.begin(); it != m_idxMap.end(); ++it) {
                         MetaData::Pointer mdp = it->second;
                         if (mdp && mdp->idxStream.is_open()) mdp->idxStream.close();
                     }

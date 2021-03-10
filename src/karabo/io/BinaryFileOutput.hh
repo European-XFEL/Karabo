@@ -73,8 +73,8 @@ namespace karabo {
                         .commit();
             }
 
-            BinaryFileOutput(const karabo::util::Hash& config) : Output<T>(config) {
-                m_filename = config.get<std::string > ("filename");
+            BinaryFileOutput(const karabo::util::Hash& config) : Output<T>(config)
+            , m_filename(config.get<std::string>("filename")) {
                 config.get("writeMode", m_writeMode);
                 if (config.has("format")) {
                     m_serializer = BinarySerializer<T>::createChoice("format", config);
