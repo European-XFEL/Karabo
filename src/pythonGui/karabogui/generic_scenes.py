@@ -5,8 +5,8 @@ from karabo.common.scenemodel.api import (
     get_alarm_graph_scene, get_image_scene, get_state_graph_scene,
     get_trendline_scene, get_vector_scene)
 from karabogui.binding.types import (
-    BoolBinding, FloatBinding, ImageBinding, IntBinding, NodeBinding,
-    PipelineOutputBinding, VectorNumberBinding)
+    BoolBinding, FloatBinding, ImageBinding, IntBinding, NDArrayBinding,
+    NodeBinding, PipelineOutputBinding, VectorNumberBinding)
 
 
 def get_generic_scene(proxy):
@@ -31,7 +31,7 @@ def get_generic_scene(proxy):
         path = proxy.path
         return get_trendline_scene(instance_id, path)
 
-    elif isinstance(binding, VectorNumberBinding):
+    elif isinstance(binding, (NDArrayBinding, VectorNumberBinding)):
         path = proxy.path
         return get_vector_scene(instance_id, path)
 
