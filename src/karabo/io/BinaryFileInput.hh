@@ -71,8 +71,8 @@ namespace karabo {
                         .commit();
             }
 
-            BinaryFileInput(const karabo::util::Hash& config) : Input<T>(config) {
-                m_filename = config.get<std::string > ("filename");
+            BinaryFileInput(const karabo::util::Hash& config) : Input<T>(config)
+            , m_filename(config.get<std::string > ("filename")){
                 if (config.has("format")) {
                     m_serializer = BinarySerializer<T>::createChoice("format", config);
                 } else {

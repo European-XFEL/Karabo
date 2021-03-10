@@ -42,8 +42,8 @@ namespace karabo {
         size_t StateSignifier::rankedAt(const State& s) {
             vector<string> allnames;
             fillAncestorNames(s, allnames); // fill array of state name and all its parent names
-            for (vector<string>::const_iterator ii = allnames.begin(); ii != allnames.end(); ii++) {
-                for (size_t i = 0; i < m_trumpList.size(); i++) {
+            for (vector<string>::const_iterator ii = allnames.begin(); ii != allnames.end(); ++ii) {
+                for (size_t i = 0; i < m_trumpList.size(); ++i) {
                     if (*ii == m_trumpList[i].name()) return i + 1;
                 }
             }
