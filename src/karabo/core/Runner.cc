@@ -305,8 +305,7 @@ namespace karabo {
                     } else {
                         throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line \n" + token);
                     }
-                }
-                if ((*value.begin()) == '{') {
+                } else if (value[0] == '{') {
                     int countOpen = boost::count(value, '{');
                     int countClosed = boost::count(value, '}');
                     if (countOpen != countClosed) {
@@ -314,7 +313,6 @@ namespace karabo {
                             token += " ";
                             start = buildToken(args, start, token);
                         } else {
-
                             throw KARABO_PARAMETER_EXCEPTION("Syntax error in command line. Check curly brackets.\n" + token);
                         }
                     }

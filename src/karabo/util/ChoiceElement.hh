@@ -47,8 +47,8 @@ namespace karabo {
             DefaultValue<ChoiceElement, std::string> m_defaultValue;
         public:
 
-            ChoiceElement(Schema& expected) : GenericElement<ChoiceElement>(expected) {
-                m_parentSchemaAssemblyRules = expected.getAssemblyRules();
+            ChoiceElement(Schema& expected) : GenericElement<ChoiceElement>(expected)
+            , m_parentSchemaAssemblyRules(expected.getAssemblyRules()) {
                 m_defaultValue.setElement(this);
             }
 
