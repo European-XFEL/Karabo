@@ -280,7 +280,7 @@ namespace karabo {
 
                 // add together the number of data points in all files
                 size_t ndata = 0;
-                for (vector<size_t>::iterator it = msr.nrecList.begin(); it != msr.nrecList.end(); it++) ndata += *it;
+                for (vector<size_t>::iterator it = msr.nrecList.begin(); it != msr.nrecList.end(); ++it) ndata += *it;
                 // reduction factor to skip data points - nothing skipped if zero
                 const size_t reductionFactor = (maxNumData ? (ndata + maxNumData - 1) / maxNumData : 0);
 

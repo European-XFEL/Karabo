@@ -175,7 +175,7 @@ namespace karabo {
 
         void JmsProducer::setProperties(const karabo::util::Hash& properties, const MQPropertiesHandle & propertiesHandle) const {
             try {
-                for (Hash::const_iterator it = properties.begin(); it != properties.end(); it++) {
+                for (Hash::const_iterator it = properties.begin(); it != properties.end(); ++it) {
                     Types::ReferenceType type = it->getType();
                     switch (type) {
                         case Types::STRING:
