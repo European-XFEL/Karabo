@@ -34,8 +34,8 @@ namespace karabo {
 
         public:
 
-            InputElement(karabo::util::Schema& expected) : karabo::util::GenericElement<InputElement>(expected) {
-                m_parentSchemaAssemblyRules = expected.getAssemblyRules();
+            InputElement(karabo::util::Schema& expected) : karabo::util::GenericElement<InputElement>(expected)
+            , m_parentSchemaAssemblyRules(expected.getAssemblyRules()) {
                 this->m_node->setValue(karabo::util::Hash());
             }
 
