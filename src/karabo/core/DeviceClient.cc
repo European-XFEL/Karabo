@@ -2490,7 +2490,7 @@ if (nodeData) {\
                         || attrKey == KARABO_SCHEMA_ACCESS_MODE
                         || attrKey == KARABO_SCHEMA_DISPLAYED_NAME
                         || attrKey == KARABO_SCHEMA_DESCRIPTION
-                        || attrKey.find("alarm") == 0
+                        || attrKey.rfind("alarm", 0u) == 0u
                         || attrKey == KARABO_SCHEMA_UNIT_ENUM
                         || attrKey == KARABO_SCHEMA_UNIT_NAME
                         || attrKey == KARABO_SCHEMA_UNIT_SYMBOL

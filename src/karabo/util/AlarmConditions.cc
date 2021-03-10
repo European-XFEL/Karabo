@@ -6,12 +6,12 @@ namespace karabo {
     namespace util {
 
 
-        AlarmCondition::AlarmCondition(std::string cs, unsigned int r) : m_conditionString(cs), m_rank(r) {
+        AlarmCondition::AlarmCondition(const std::string& cs, unsigned int r) : m_conditionString(cs), m_rank(r) {
 
         };
 
 
-        AlarmCondition::AlarmCondition(std::string cs, const AlarmCondition & b) : m_conditionString(cs), m_rank(b.m_rank), m_base(boost::make_shared<AlarmCondition>(b)) {
+        AlarmCondition::AlarmCondition(const std::string& cs, const AlarmCondition & b) : m_conditionString(cs), m_rank(b.m_rank), m_base(boost::make_shared<AlarmCondition>(b)) {
 
         };
 
@@ -58,7 +58,7 @@ namespace karabo {
         AlarmCondition AlarmCondition::returnMostSignificant(const std::vector<AlarmCondition> & v) {
             if (v.empty()) return NONE;
             const AlarmCondition* s = &(v[0]);
-            for (std::vector<AlarmCondition>::const_iterator i = v.begin(); i != v.end(); i++) {
+            for (std::vector<AlarmCondition>::const_iterator i = v.begin(); i != v.end(); ++i) {
                 s = &(i->returnMoreSignificant(*s));
                 if (s->isSameCriticality(INTERLOCK)) break; // can't go higher than this
             }

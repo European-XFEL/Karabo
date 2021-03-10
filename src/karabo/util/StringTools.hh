@@ -202,7 +202,7 @@ namespace karabo {
             std::vector<std::string>::const_iterator it = value.begin();
             if (it->find_first_of(',') != std::string::npos) throw KARABO_NOT_SUPPORTED_EXCEPTION("Comma separator within in string array element is not supported during casting");
             s << *it;
-            it++;
+            ++it;
             for (; it != value.end(); ++it) {
                 s << "," << *it;
             }
@@ -238,7 +238,7 @@ namespace karabo {
             const T* ptr = value.first;
             std::ostringstream s;
             s << toString(ptr[0]);
-            for (size_t i = 1; i < value.second; i++) {
+            for (size_t i = 1; i < value.second; ++i) {
                 s << "," << toString(ptr[i]);
             }
             return s.str();
@@ -273,7 +273,7 @@ namespace karabo {
             std::ostringstream s;
             typename std::set<T>::const_iterator it = value.begin();
             s << toString(*it);
-            it++;
+            ++it;
             for (; it != value.end(); ++it) {
                 s << "," << toString(*it);
             }
@@ -291,7 +291,7 @@ namespace karabo {
             std::ostringstream s;
             typename std::unordered_set<T>::const_iterator it = value.begin();
             s << toString(*it);
-            it++;
+            ++it;
             for (; it != value.end(); ++it) {
                 s << "," << toString(*it);
             }
@@ -309,7 +309,7 @@ namespace karabo {
             std::ostringstream s;
             typename std::deque<T>::const_iterator it = value.begin();
             s << toString(*it);
-            it++;
+            ++it;
             for (; it != value.end(); ++it) {
                 s << "," << toString(*it);
             }
@@ -327,7 +327,7 @@ namespace karabo {
             std::ostringstream s;
             typename std::map<KeyType, ValueType>::const_iterator it = value.begin();
             s << "{" << toString(it->first) << ":" << toString(it->second);
-            it++;
+            ++it;
             for (; it != value.end(); ++it) {
                 s << "," << toString(it->first) << ":" << toString(it->second);
             }

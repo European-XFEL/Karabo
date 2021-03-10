@@ -35,7 +35,7 @@ namespace karabo {
             m_exceptionInfo.function = function;
             path pf(filename);
             bool collect = false;
-            for (path::iterator it = pf.begin(); it != pf.end(); it++) {
+            for (path::iterator it = pf.begin(); it != pf.end(); ++it) {
                 if (it->string() == "karabo" || it->string() == "src" || collect) {
                     if (collect) {
                         m_exceptionInfo.filename += "/" + it->generic_string();
