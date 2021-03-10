@@ -69,18 +69,16 @@ namespace karabo {
                 std::size_t size;
                 int contentType;
 
-                Buffer() {                    
+                Buffer() : size(0), contentType(BufferContents::COPY) {
                     vec = boost::shared_ptr<BufferType>(new BufferType());
                     ptr = boost::shared_ptr<BufferType::value_type>(vec->data(), boost::null_deleter());
-                    size = 0;
-                    contentType = BufferContents::COPY;
                 }
 
                 Buffer(boost::shared_ptr<BufferType> v, boost::shared_ptr<BufferType::value_type> p, std::size_t s, BufferContents cType) {
                     ptr = p;
                     vec = v;
                     size = s;
-                    contentType = cType;                    
+                    contentType = cType;  
                 }
             };
 
