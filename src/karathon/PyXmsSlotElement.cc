@@ -74,7 +74,7 @@ public:
     static bp::object allowedStatesPy(bp::tuple args, bp::dict kwargs){
         std::vector<karabo::util::State> states;
         SLOT_ELEMENT & self = bp::extract<SLOT_ELEMENT&>(args[0]);
-        for(unsigned int i = 1; i < bp::len(args); ++i){
+        for (unsigned int i = 1; i < bp::len(args); ++i){
             const std::string state = bp::extract<std::string>(args[i].attr("name"));
             states.push_back(karabo::util::State::fromString(state));
         }
