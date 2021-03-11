@@ -353,7 +353,7 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
     Hash h;
     NDArray ndarr(Dims(256, 256, 512), karabo::util::Types::DOUBLE);
     double* dptr = reinterpret_cast<double*>(ndarr.getDataPtr().get());
-    for(size_t i = 0; i != ndarr.size(); ++i) {
+    for (size_t i = 0; i != ndarr.size(); ++i) {
         dptr[i] = i % 100;
     }
 
@@ -464,12 +464,12 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
         NDArray tarr = dh2.get<NDArray>("ndarr");
         CPPUNIT_ASSERT(ndarr.itemSize() == tarr.itemSize());
         CPPUNIT_ASSERT(ndarr.byteSize() == tarr.byteSize());
-        for(int i = 0; i != 100; ++i) {
+        for (int i = 0; i != 100; ++i) {
             all_same &= (ndarr.getDataPtr().get()[i] == tarr.getDataPtr().get()[i]);
         }
         CPPUNIT_ASSERT(all_same);
 
-        for(int i = 0; i != 100; ++i) {
+        for (int i = 0; i != 100; ++i) {
             all_same &= (ndarr.getDataPtr().get()[ndarr.byteSize() - i - 1] == tarr.getDataPtr().get()[ndarr.byteSize() - i - 1]);
         }
         CPPUNIT_ASSERT(all_same);
@@ -523,12 +523,12 @@ void HashBinarySerializer_Test::testSpeedLargeArrays() {
         NDArray tarr = dh3.get<NDArray>("ndarr");
         CPPUNIT_ASSERT(ndarr.itemSize() == tarr.itemSize());
         CPPUNIT_ASSERT(ndarr.byteSize() == tarr.byteSize());
-        for(int i = 0; i != 100; ++i) {
+        for (int i = 0; i != 100; ++i) {
             all_same &= (ndarr.getDataPtr().get()[i] == tarr.getDataPtr().get()[i]);
         }
         CPPUNIT_ASSERT(all_same);
 
-        for(int i = 0; i != 100; ++i) {
+        for (int i = 0; i != 100; ++i) {
             all_same &= (ndarr.getDataPtr().get()[ndarr.byteSize()-i-1] == tarr.getDataPtr().get()[ndarr.byteSize()-i-1]);
         }
         CPPUNIT_ASSERT(all_same);
