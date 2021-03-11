@@ -99,7 +99,7 @@ void DataLogging_Test::testMigrateFileLoggerData() {
 
     boost::filesystem::path p(migrationResultsPath + "/processed/"+m_deviceId+"/");
     if(boost::filesystem::is_directory(p)) {
-        for(auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(p), {})) {
+        for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(p), {})) {
             std::ostringstream msg;
             msg << "Check if " << entry << " was migrated OK: "<<boost::filesystem::extension(entry);
             std::clog<<msg.str()<<std::endl;
@@ -111,7 +111,7 @@ void DataLogging_Test::testMigrateFileLoggerData() {
     unsigned int errorCount = 0;
     boost::filesystem::path perr(migrationResultsPath + "/part_processed/"+m_deviceId+"/");
     if(boost::filesystem::is_directory(perr)) {
-        for(auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(perr), {})) {
+        for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(perr), {})) {
             // print out the error
             std::ostringstream cmd;
             cmd << "cat "<<entry;

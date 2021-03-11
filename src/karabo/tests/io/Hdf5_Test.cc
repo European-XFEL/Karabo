@@ -1020,7 +1020,7 @@ void Hdf5_Test::testKaraboNDArray() {
     p.startPeriod("assertion");
     unsigned short* a1 = h.get<NDArray>("detector").getData<unsigned short>();
     unsigned short* a2 = h2.get<NDArray>("detector").getData<unsigned short>();
-    for(size_t i = 0; i < imageSize-100; i+=99){
+    for (size_t i = 0; i < imageSize-100; i+=99){
         CPPUNIT_ASSERT(a1[i] == a2[i]);
     }
     p.stopPeriod("assertion");
@@ -1265,7 +1265,7 @@ void Hdf5_Test::testKaraboPtr() {
     p.startPeriod("assertion");
     unsigned short* a1 = h.get<unsigned short*>("detector");
     unsigned short* a2 = h2.get<unsigned short*>("detector");
-    for(size_t i = 0; i < imageSize-100; i+=99){
+    for (size_t i = 0; i < imageSize-100; i+=99){
         CPPUNIT_ASSERT(a1[i] == a2[i]);
     }
     p.stopPeriod("assertion");

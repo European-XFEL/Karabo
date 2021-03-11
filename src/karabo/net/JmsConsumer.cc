@@ -279,19 +279,19 @@ namespace karabo {
         void JmsConsumer::clearConsumerHandles() {
 
 
-            BOOST_FOREACH(const Consumers::value_type& i, m_consumers) {
+            for (const Consumers::value_type& i : m_consumers) {
                 MQCloseMessageConsumer(i.second);
             }
             m_consumers.clear();
 
 
-            BOOST_FOREACH(const ConsumerDestinations::value_type& i, m_consumerDestinations) {
+            for (const ConsumerDestinations::value_type& i : m_consumerDestinations) {
                 MQFreeDestination(i.second.second);
             }
             m_consumerDestinations.clear();
 
 
-            BOOST_FOREACH(const ConsumerSessions::value_type& i, m_consumerSessions) {
+            for (const ConsumerSessions::value_type& i : m_consumerSessions) {
                 MQCloseSession(i.second);
             }
             m_consumerSessions.clear();
