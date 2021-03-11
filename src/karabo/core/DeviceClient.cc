@@ -836,7 +836,7 @@ namespace karabo {
             std::vector<std::string> properties;
 
 
-            BOOST_FOREACH(std::string path, paths) {
+            for (const std::string& path : paths) {
                 if (schema.isProperty(path)) {
                     if (accessLevel < schema.getRequiredAccessLevel(path)) {
                         continue; // Not allowed
@@ -2508,7 +2508,7 @@ if (nodeData) {\
         }
 
         void DeviceClient::recursivelyAddCompoundDataTypes(const karabo::util::Hash& schemaHash, karabo::util::Hash & hash) const {
-            for(auto it = hash.begin(); it != hash.end(); ++it) {
+            for (auto it = hash.begin(); it != hash.end(); ++it) {
                 const std::string& key = it->getKey();
                 if (schemaHash.hasAttribute(key, KARABO_SCHEMA_CLASS_ID)) {
                     const std::string& classId = schemaHash.getAttribute<std::string>(key, KARABO_SCHEMA_CLASS_ID);

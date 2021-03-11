@@ -373,7 +373,7 @@ namespace karabo {
                         config.set(key, Hash(), ';');
 
 
-                        BOOST_FOREACH(std::string subToken, tokens) {
+                        for (std::string& subToken : tokens) {
                             boost::trim(subToken);
                             if (!subToken.empty()) {
                                 readToken(subToken, config.get<Hash > (key));

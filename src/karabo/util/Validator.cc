@@ -282,7 +282,7 @@ namespace karabo {
                             vector<Hash>& workNodes = workNode.getValue<vector<Hash> >();
 
 
-                            BOOST_FOREACH(string optionName, optionNames) {
+                            for (const string& optionName : optionNames) {
                                 Hash tmp;
                                 r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), tmp, report, currentScope + "." + optionName);
                                 workNodes.push_back(Hash(optionName, tmp));
@@ -310,7 +310,7 @@ namespace karabo {
                             }
 
 
-                            BOOST_FOREACH(string optionName, optionNames) {
+                            for (const string& optionName : optionNames) {
                                 std::cout << "Silently converting from STRING" << endl;
                                 if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
                                     Hash tmp;
@@ -380,7 +380,7 @@ namespace karabo {
             if (!m_allowAdditionalKeys && !keys.empty()) {
 
 
-                BOOST_FOREACH(string key, keys) {
+                for (const string& key : keys) {
                     string currentScope;
                     if (scope.empty()) currentScope = key;
                     else currentScope = scope + "." + key;

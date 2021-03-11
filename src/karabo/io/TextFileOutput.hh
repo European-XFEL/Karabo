@@ -115,7 +115,7 @@ namespace karabo {
                 string extension = m_filename.extension().string().substr(1);
                 boost::to_lower(extension);
 
-                BOOST_FOREACH(string key, keys) {
+                for (const string& key : keys) {
                     string lKey(key);
                     boost::to_lower(lKey);
                     if (lKey == extension) {
