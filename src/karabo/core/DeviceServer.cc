@@ -449,7 +449,7 @@ namespace karabo {
             }
 
 
-            BOOST_FOREACH(const Hash& device, m_autoStart) {
+            for (const Hash& device : m_autoStart) {
                 slotStartDevice(device);
             }
 
@@ -466,7 +466,7 @@ namespace karabo {
             KARABO_LOG_INFO << "Updated list of devices available: " << karabo::util::toString(devices);
 
 
-            BOOST_FOREACH(const string& device, devices) {
+            for (const string& device : devices) {
                 if (!m_availableDevices.has(device)) {
                     Schema schema;
                     KARABO_LOG_FRAMEWORK_DEBUG << "Plugin contains device class \"" << device << "\".  Try to get schema ...";
