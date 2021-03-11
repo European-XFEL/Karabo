@@ -184,7 +184,7 @@ namespace karabo {
 
     void PipeReceiverDevice::onEndOfStreamProfile(const xms::InputChannel::Pointer& input) {
         unsigned long long transferTime = 0;
-        for(auto time = m_transferTimes.begin(); time != m_transferTimes.end(); ++time) {
+        for (auto time = m_transferTimes.begin(); time != m_transferTimes.end(); ++time) {
             transferTime += *time;
         }
 

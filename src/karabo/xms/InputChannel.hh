@@ -47,7 +47,7 @@ namespace karabo {
          * @code
          * void onInput(const InputChannel::Pointer& input) {
          *
-         *      for(unsigned int i = 0; i != input->size(); ++i) {
+         *      for (unsigned int i = 0; i != input->size(); ++i) {
          *           Hash h;
          *           const InputChannel::MetaData& meta = input->read(i);
          *           std::cout<<"Source: <<meta.getSource()<<std::endl;
