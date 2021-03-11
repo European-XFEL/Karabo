@@ -284,7 +284,7 @@ namespace karabo {
                     std::clog << "ALOCATE: " << size << std::endl;
                     std::vector<T> *vec = (std::vector<T>*) info; /* Get the pointer to the vector */
                     // vec->resize(size/sizeof(int),100);
-                    //                for(size_t i =0; i< 20;++i) std::clog << "vec[" << i << "] = " << vec->operator[](i) << std::endl; 
+                    //                for (size_t i =0; i< 20;++i) std::clog << "vec[" << i << "] = " << vec->operator[](i) << std::endl; 
                     //                return (void*) (*vec)[0];
                     return (void*) &(vec->operator[](0));
                 }

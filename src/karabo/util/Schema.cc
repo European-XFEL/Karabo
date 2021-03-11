@@ -901,7 +901,7 @@ namespace karabo {
                 vector<string> keys = getKeys();
 
 
-                BOOST_FOREACH(string key, keys) {
+                for (const string& key : keys) {
                     int nodeType;
                     try {
                         nodeType = getNodeType(key);
@@ -937,7 +937,7 @@ namespace karabo {
                     if (!keys.empty()) {
 
 
-                        BOOST_FOREACH(string key, keys) {
+                        for (const string& key : keys) {
                             string path = classId + "." + key;
                             int nodeType = -1;
                             try {
@@ -966,7 +966,7 @@ namespace karabo {
                     vector<string> keys = getKeys(classId);
 
 
-                    BOOST_FOREACH(string key, keys) {
+                    for (const string& key : keys) {
                         string path = classId + "." + key;
                         processingNode(path, stream);
                     }
@@ -977,7 +977,7 @@ namespace karabo {
                     vector<string> keys = getKeys(classId);
 
 
-                    BOOST_FOREACH(string key, keys) {
+                    for (const string& key : keys) {
 
 
                         string path = classId + "." + key;
@@ -1083,7 +1083,7 @@ namespace karabo {
         void Schema::r_updateAliasMap(const vector<string> keys, const std::string oldPath) {
 
 
-            BOOST_FOREACH(string key, keys) {
+            for (const string& key : keys) {
                 string newPath = key;
                 if (!oldPath.empty()) newPath = oldPath + "." + key;
                 if (keyHasAlias(newPath)) m_aliasToKey[getAliasAsString(newPath)] = newPath;
