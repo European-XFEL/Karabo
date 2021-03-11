@@ -154,7 +154,7 @@ namespace karabo {
             // Clear producers
 
 
-            BOOST_FOREACH(const Producers::value_type& i, m_producers) {
+            for (const Producers::value_type& i : m_producers) {
                 MQCloseMessageProducer(i.second);
             }
             m_producers.clear();
@@ -162,7 +162,7 @@ namespace karabo {
             // Clear producer destinations
 
 
-            BOOST_FOREACH(const ProducerDestinations::value_type& i, m_producerDestinations) {
+            for (const ProducerDestinations::value_type& i : m_producerDestinations) {
                 MQFreeDestination(i.second.second);
             }
             m_producerDestinations.clear();
