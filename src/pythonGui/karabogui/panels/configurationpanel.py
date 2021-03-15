@@ -14,8 +14,8 @@ from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy, ListOfNodesBinding,
     ProjectDeviceProxy, VectorHashBinding, attr_fast_deepcopy,
-    apply_configuration, extract_configuration, flat_iter_hash,
-    get_binding_value, has_changes, has_table_changes,
+    apply_configuration, extract_configuration, get_binding_value,
+    has_changes, has_table_changes,
     validate_table_value, validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.enums import AccessRole
@@ -344,7 +344,7 @@ class ConfigurationPanel(BasePanelWidget):
 
         editor = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
         model = editor.model()
-        for path, value, _ in flat_iter_hash(configuration):
+        for path, value, _ in Hash.flat_iterall(configuration):
             prop_proxy = model.property_proxy(path)
             prop_binding = prop_proxy.binding
             if prop_binding is None or isinstance(
@@ -404,7 +404,7 @@ class ConfigurationPanel(BasePanelWidget):
         if len(valid):
             apply_configuration(valid, proxy.binding)
             # Apply attributes in a second step
-            for path, _, attrs in flat_iter_hash(valid):
+            for path, _, attrs in Hash.flat_iterall(valid):
                 binding = proxy.get_property_binding(path)
                 if binding is not None:
                     # only update editable attribute values
@@ -422,7 +422,7 @@ class ConfigurationPanel(BasePanelWidget):
            and with invalid values"""
 
         valid, invalid = Hash(), Hash()  # {path: value}
-        for path, value, attrs in flat_iter_hash(configuration):
+        for path, value, attrs in Hash.flat_iterall(configuration):
             binding = proxy.get_property_binding(path)
             writable = (binding is not None and
                         binding.access_mode != AccessMode.READONLY)
