@@ -18,7 +18,7 @@ from ..api import (
     Uint16Binding, Uint32Binding, Uint64Binding, apply_configuration,
     apply_project_configuration, apply_default_configuration, apply_fast_data,
     build_binding, extract_attribute_modifications, extract_configuration,
-    extract_edits, flat_iter_hash)
+    extract_edits)
 from .schema import (
     ALL_PROPERTIES_MAP, get_all_props_schema, get_vectorattr_schema)
 
@@ -66,7 +66,7 @@ def test_data_files():
         extracted = extract_configuration(binding)
 
         # Check that the configuration was applied
-        for key, value, _ in flat_iter_hash(config):
+        for key, value, _ in Hash.flat_iterall(config):
             assert key in extracted
             if isinstance(value, np.ndarray):
                 assert all(extracted[key] == value)
