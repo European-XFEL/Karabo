@@ -28,6 +28,6 @@ from .types import (
     VectorUint64Binding, WidgetNodeBinding
 )
 from .util import (
-    attr_fast_deepcopy, flat_iter_hash, get_binding_value, get_editor_value,
+    attr_fast_deepcopy, get_binding_value, get_editor_value,
     get_table_changes, get_min_max, get_min_max_size, has_changes,
     has_min_max_attributes, has_table_changes, is_equal)
