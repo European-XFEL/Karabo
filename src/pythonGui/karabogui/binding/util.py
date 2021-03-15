@@ -110,23 +110,7 @@ def has_changes(binding, old_value, new_value):
         if old_value is None:
             changes = True
         elif is_nonintegral_number(old_value):
-            abs_err, rel_err = None, None
-            if binding is not None:
-                attrs = binding.attributes
-                abs_err = attrs.get(const.KARABO_SCHEMA_ABSOLUTE_ERROR)
-                rel_err = attrs.get(const.KARABO_SCHEMA_RELATIVE_ERROR)
-            diff = abs(old_value - new_value)
-            if abs_err is not None:
-                changes = (diff >= abs_err)
-            elif rel_err is not None:
-                changes = (diff >= abs(old_value * rel_err))
-            else:
-                if not old_value:
-                    # In case of a previous 0 value we ask differently
-                    changes = (diff >= ZERO_FLOAT_TOLERANCE)
-                else:
-                    # IEEE 754 compliance
-                    changes = (diff >= abs(old_value * FLOAT_TOLERANCE))
+            changes = has_floating_changes(binding, old_value, new_value)
         elif isinstance(old_value, np.ndarray):
             changes = not array_equal(new_value, old_value)
         elif isinstance(old_value, HashList):
@@ -150,20 +134,38 @@ def has_changes(binding, old_value, new_value):
     return changes
 
 
-def is_nonintegral_number(number):
-    # Check a value if it is not an integral number. Common cases are floats.
-    return (isinstance(number, (numbers.Complex, np.inexact))
-            and not isinstance(number, numbers.Integral))
+def is_nonintegral_number(value):
+    """Check if `value` is not an integral number, common cases are floats.
+    """
+    is_floating = isinstance(value, (numbers.Complex, np.inexact))
+    is_integer = isinstance(value, numbers.Integral)
+    return is_floating and not is_integer
 
 
-def has_diff(old_value, new_value, abs_err=None, rel_err=None):
-    diff = abs(old_value - new_value)
+def has_floating_changes(binding, old, new):
+    """Check if there are floating point differences between `old` and `new`
+
+    This function complies to the `IEEE 754` specification.
+    """
+    abs_err, rel_err = None, None
+    if binding is not None:
+        attrs = binding.attributes
+        abs_err = attrs.get(const.KARABO_SCHEMA_ABSOLUTE_ERROR)
+        rel_err = attrs.get(const.KARABO_SCHEMA_RELATIVE_ERROR)
+
+    difference = abs(old - new)
     if abs_err is not None:
-        return diff >= abs_err
+        changes = (difference >= abs_err)
     elif rel_err is not None:
-        return diff >= abs(old_value * rel_err)
+        changes = (difference >= abs(old * rel_err))
     else:
-        return diff >= abs(old_value * 1e-7)  # IEEE 754 compliance
+        if not old:
+            # Note: In case of a previous 0 value we must ask differently
+            changes = (difference >= ZERO_FLOAT_TOLERANCE)
+        else:
+            changes = (difference >= abs(old * FLOAT_TOLERANCE))
+
+    return changes
 
 
 def is_equal(a, b):
