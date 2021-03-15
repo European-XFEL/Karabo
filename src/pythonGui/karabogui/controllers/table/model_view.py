@@ -6,38 +6,27 @@
 import copy
 import json
 
-import numpy as np
-from PyQt5.QtCore import pyqtSlot, Qt, QAbstractTableModel, QModelIndex
+from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex
 from PyQt5.QtGui import QBrush, QColor
-from PyQt5.QtWidgets import QTableView, QComboBox, QItemDelegate
+from PyQt5.QtWidgets import QTableView
 
-from karabo.common.api import (
-    KARABO_SCHEMA_ACCESS_MODE, KARABO_SCHEMA_DEFAULT_VALUE,
-    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_VALUE_TYPE,
-    KARABO_SCHEMA_DISPLAY_TYPE_STATE, KARABO_SCHEMA_DISPLAYED_NAME,
-    KARABO_TYPE_BOOL, KARABO_TYPE_STRING)
+from karabogui.binding.api import BoolBinding, StringBinding, VectorBinding
+from karabo.common.api import KARABO_SCHEMA_DEFAULT_VALUE
 from karabo.native import AccessMode, Hash
 from karabogui.enums import NavigationItemTypes, ProjectItemTypes
 from karabogui.indicators import get_state_color
 
-VECTOR_TYPE = 'VECTOR'
-
-
-def is_state_display_type(schema_hash, key):
-    """Return if the display type belongs to a state element"""
-    dtype = schema_hash[key, ...].get(KARABO_SCHEMA_DISPLAY_TYPE, '')
-
-    return dtype == KARABO_SCHEMA_DISPLAY_TYPE_STATE
+from .utils import is_state_display_type
 
 
 class TableModel(QAbstractTableModel):
     def __init__(self, binding, set_edit_value, parent=None):
         super(QAbstractTableModel, self).__init__(parent)
         self._set_edit_value = set_edit_value
-        self._header = binding.row_schema.getKeys()
         self._role = Qt.EditRole
         self._data = []
-        self._schema_hash = binding.row_schema
+        self._bindings = binding.bindings
+        self._header = list(binding.bindings.keys())
 
     def rowCount(self, parent=None):
         """Reimplemented function of QAbstractTableModel"""
@@ -45,7 +34,7 @@ class TableModel(QAbstractTableModel):
 
     def columnCount(self, parent=None):
         """Reimplemented function of QAbstractTableModel"""
-        return len(self._schema_hash)
+        return len(self._header)
 
     def data(self, index, role):
         """Reimplemented function of QAbstractTableModel"""
@@ -58,15 +47,15 @@ class TableModel(QAbstractTableModel):
             # and READONLY access!
             key = self._header[column]
             value = self._data[row][key]
-            vtype = self._schema_hash[key, KARABO_SCHEMA_VALUE_TYPE]
-            if vtype == KARABO_TYPE_BOOL:
+            binding = self._bindings[key]
+            if isinstance(binding, BoolBinding):
                 return Qt.Checked if value else Qt.Unchecked
 
         if role in (Qt.DisplayRole, Qt.EditRole):
             key = self._header[column]
             value = self._data[row][key]
-            vtype = self._schema_hash[key, KARABO_SCHEMA_VALUE_TYPE]
-            if vtype.startswith(VECTOR_TYPE):
+            binding = self._bindings[key]
+            if isinstance(binding, VectorBinding):
                 # Guard against None values
                 value = [] if value is None else value
                 return ", ".join(str(v) for v in value)
@@ -74,7 +63,7 @@ class TableModel(QAbstractTableModel):
 
         elif role == Qt.BackgroundRole:
             key = self._header[column]
-            if is_state_display_type(self._schema_hash, key):
+            if is_state_display_type(self._bindings[key]):
                 value = self._data[row][key]
                 color = get_state_color(value)
                 if color is not None:
@@ -92,8 +81,7 @@ class TableModel(QAbstractTableModel):
 
         if orientation == Qt.Horizontal:
             key = self._header[section]
-            attrs = self._schema_hash[key, ...]
-            return attrs.get(KARABO_SCHEMA_DISPLAYED_NAME, key)
+            return self._bindings[key].displayed_name
 
         return None
 
@@ -105,10 +93,9 @@ class TableModel(QAbstractTableModel):
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
         key = self._header[index.column()]
         # Get an enum for the AccessMode
-        access = self._schema_hash[key, KARABO_SCHEMA_ACCESS_MODE]
-        access_mode = AccessMode(access)
-        vtype = self._schema_hash[key, KARABO_SCHEMA_VALUE_TYPE]
-        if vtype == KARABO_TYPE_BOOL and self._role == Qt.EditRole:
+        binding = self._bindings[key]
+        access_mode = binding.access_mode
+        if isinstance(binding, BoolBinding) and self._role == Qt.EditRole:
             flags &= ~Qt.ItemIsEditable
             if access_mode is AccessMode.READONLY:
                 # XXX: Remove the `enabled` flag due to INITONLY!
@@ -128,8 +115,8 @@ class TableModel(QAbstractTableModel):
         row, column = index.row(), index.column()
         if role == Qt.CheckStateRole:
             key = self._header[column]
-            vtype = self._schema_hash[key, KARABO_SCHEMA_VALUE_TYPE]
-            if vtype == KARABO_TYPE_BOOL:
+            binding = self._bindings[key]
+            if isinstance(binding, BoolBinding):
                 value = True if value == Qt.Checked else False
                 self._data[row][key] = value
                 self.dataChanged.emit(index, index)
@@ -141,9 +128,9 @@ class TableModel(QAbstractTableModel):
 
         if role in (Qt.DisplayRole, Qt.EditRole):
             key = self._header[column]
-            vtype = self._schema_hash[key, KARABO_SCHEMA_VALUE_TYPE]
+            binding = self._bindings[key]
             # now display value
-            if vtype.startswith(VECTOR_TYPE) and not is_device_update:
+            if isinstance(binding, VectorBinding) and not is_device_update:
                 # this will be a list of individual chars we need to join
                 value = "".join(value)
                 value = [v.strip() for v in value.split(",")]
@@ -169,12 +156,12 @@ class TableModel(QAbstractTableModel):
                 if column_hash is None:
                     column_hash = Hash()
                     for key in self._header:
-                        attrs = self._schema_hash[key, ...]
-                        val = attrs.get(KARABO_SCHEMA_DEFAULT_VALUE, None)
+                        attrs = self._bindings[key].attributes
+                        value = attrs.get(KARABO_SCHEMA_DEFAULT_VALUE, None)
 
                         # XXX: Formerly, the value was 'cast' here...
                         # val = valueType.cast(val)
-                        column_hash[key] = val
+                        column_hash[key] = value
                 if pos + row_nr < len(self._data):
                     self._data.insert(pos + row_nr, column_hash)
                 else:
@@ -233,66 +220,21 @@ class TableModel(QAbstractTableModel):
         self._role = role
 
 
-class ComboBoxDelegate(QItemDelegate):
-    def __init__(self, options, parent=None):
-        super(ComboBoxDelegate, self).__init__(parent)
-        # XXX: We might have options from number values, they serialize as
-        # ndarray! Once the value casting is back, the string cast has
-        # to be removed!
-        if isinstance(options, np.ndarray):
-            options = options.astype(np.str).tolist()
-        self._options = options
-
-    def createEditor(self, parent, option, index):
-        """Reimplemented function of QItemDelegate"""
-        combo = QComboBox(parent)
-        combo.addItems([str(o) for o in self._options])
-        combo.currentIndexChanged.connect(self._on_current_index_changed)
-        return combo
-
-    def setEditorData(self, editor, index):
-        """Reimplemented function of QItemDelegate"""
-        selection = index.model().data(index, Qt.DisplayRole)
-        try:
-            selection_index = self._options.index(selection)
-            editor.blockSignals(True)
-            editor.setCurrentIndex(selection_index)
-            editor.blockSignals(False)
-        except ValueError:
-            # XXX: Due to schema injection, a property value might not be in
-            # allowed options and thus not available. This is very rare
-            # and unlikely and we just continue!
-            raise RuntimeError("The value {} is not in the following "
-                               "options: {}".format(selection, self._options))
-
-    def setModelData(self, editor, model, index):
-        """Reimplemented function of QItemDelegate"""
-        model.setData(index, self._options[editor.currentIndex()], Qt.EditRole)
-
-    @pyqtSlot()
-    def _on_current_index_changed(self):
-        """The current index of the combobox changed. Notify the model.
-
-        This signal MUST be emitted when the editor widget has completed
-        editing the data, and wants to write it back into the model.
-        """
-        self.commitData.emit(self.sender())
-
-
 class KaraboTableView(QTableView):
     def __init__(self, parent=None):
         super(KaraboTableView, self).__init__(parent)
         self._header = None
-
-    def set_schema_hash(self, column_hash):
-        self._schema_hash = column_hash
-        self._header = column_hash.getKeys()
+        self._bindings = None
         self._drag_column = None
-        # XXX: Evaluate the eventual `drag-column`. If a string element is
+
+    def set_bindings(self, bindings):
+        self._bindings = bindings
+        self._header = list(bindings.keys())
+        # Note: Evaluate the eventual `drag-column`. If a string element is
         # found in the row schema, the first appearance is taken!
         for column_index, key in enumerate(self._header):
-            vtype = self._schema_hash[key, KARABO_SCHEMA_VALUE_TYPE]
-            if vtype == KARABO_TYPE_STRING:
+            binding = bindings[key]
+            if isinstance(binding, StringBinding):
                 self._drag_column = column_index
                 break
 
@@ -344,10 +286,10 @@ class KaraboTableView(QTableView):
             return True, index, True, deviceId
 
         key = self._header[index.column()]
-        vtype = self._schema_hash[key, KARABO_SCHEMA_VALUE_TYPE]
+        binding = self._bindings[key]
         if is_valid:
             event.accept()
-            not_string = (vtype != KARABO_TYPE_STRING)
+            not_string = not isinstance(binding, StringBinding)
             return True, index, not_string, deviceId
 
         event.ignore()
