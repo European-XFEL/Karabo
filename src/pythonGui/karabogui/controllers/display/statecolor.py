@@ -26,7 +26,7 @@ class DisplayStateColor(BaseBindingController):
         widget = FrameWidget(parent)
         objectName = generateObjectName(self)
         self._style_sheet = ("QLabel#{}".format(objectName) +
-                             " {{ background-color : rgba{}; }}")
+                             " {{ background-color : rgb{}; }}")
         widget.setObjectName(objectName)
 
         textAction = QAction("Show State String", widget)
