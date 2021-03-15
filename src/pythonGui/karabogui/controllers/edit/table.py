@@ -6,36 +6,25 @@
 from functools import partial
 
 from PyQt5.QtCore import Qt, QModelIndex
-from PyQt5.QtWidgets import QAbstractItemView, QMenu, QStyledItemDelegate
-from traits.api import Instance, Int, WeakRef
+from PyQt5.QtWidgets import QAbstractItemView, QMenu
+from traits.api import Dict, Instance, Int, WeakRef
 
 from karabo.common.api import (
-    KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_ROW_SCHEMA,
-    KARABO_SCHEMA_OPTIONS)
+    KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_ROW_SCHEMA)
 from karabo.common.scenemodel.api import TableElementModel
-from karabo.native import Hash
-from karabogui.binding.api import (
-    VectorHashBinding, get_editor_value)
+from karabogui.binding.api import VectorHashBinding, get_editor_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.controllers.table_editor import (
-    ComboBoxDelegate, KaraboTableView, TableModel)
+from karabogui.controllers.table.api import (
+    get_table_delegate, KaraboTableView, TableModel)
 import karabogui.icons as icons
-
-
-def _get_options(schema_hash, key):
-    """Extract a single key's options from a hash
-
-    If options are not specified, `None` is returned!
-    """
-    return schema_hash[key, ...].get(KARABO_SCHEMA_OPTIONS, None)
 
 
 class _BaseTableElement(BaseBindingController):
     # The scene model class used by this controller
     model = Instance(TableElementModel, args=())
     # Internal traits
-    _schema_hash = Instance(Hash)
+    _bindings = Dict
     _role = Int(Qt.DisplayRole)
     _item_model = WeakRef(TableModel)
 
@@ -71,7 +60,7 @@ class _BaseTableElement(BaseBindingController):
         if binding is not None:
             has_schema = not binding.row_schema.empty()
             if has_schema:
-                self._set_schema_hash(binding)
+                self._set_bindings(binding)
 
     def value_update(self, proxy):
         value = get_editor_value(proxy, [])
@@ -111,7 +100,7 @@ class _BaseTableElement(BaseBindingController):
             self.widget.setParent(None)
             self.widget = None
 
-    def _set_schema_hash(self, binding):
+    def _set_bindings(self, binding):
         """Configure the column schema hashes and keys
 
         The schema must not be `None` and is protected when calling this func.
@@ -119,33 +108,28 @@ class _BaseTableElement(BaseBindingController):
         if self._item_model is not None:
             self._item_model.setParent(None)
 
-        self._schema_hash = binding.row_schema
+        self._bindings = binding.bindings
         self._item_model = TableModel(binding, self._on_user_edit,
                                       parent=self.widget)
         self._item_model.set_role(self._role)
-
         self.widget.setModel(self._item_model)
-        self.widget.set_schema_hash(self._schema_hash)
+        self.widget.set_bindings(binding.bindings)
         self._create_delegates(self._role == Qt.DisplayRole)
 
     def _create_delegates(self, ro):
-        """Create all the combox delegates in the table element"""
-        c_hash = self._schema_hash
-        c_keys = c_hash.getKeys()
+        """Create all the table delegates in the table element"""
+        bindings = self._bindings
+        keys = bindings.keys()
         if ro:
-            # If we are readOnly, we have to remove any combo delegate
-            for column, key in enumerate(c_keys):
-                options = _get_options(c_hash, key)
-                if options is not None:
-                    delegate = QStyledItemDelegate(parent=self.widget)
-                    self.widget.setItemDelegateForColumn(column, delegate)
+            # If we are readOnly, we erase all edit delegates
+            for column, key in enumerate(keys):
+                self.widget.setItemDelegateForColumn(column, None)
         else:
-            # Create item delegates for columns which have options
-            for column, key in enumerate(c_keys):
-                options = _get_options(c_hash, key)
-                if options is not None:
-                    delegate = ComboBoxDelegate(options, parent=self.widget)
-                    self.widget.setItemDelegateForColumn(column, delegate)
+            # Create binding specific edit delegates
+            for column, key in enumerate(keys):
+                binding = bindings[key]
+                delegate = get_table_delegate(binding, self.widget)
+                self.widget.setItemDelegateForColumn(column, delegate)
 
     # ---------------------------------------------------------------------
     # Actions
@@ -155,7 +139,8 @@ class _BaseTableElement(BaseBindingController):
         self._item_model.insertRows(start, count, QModelIndex())
 
     def _set_index_default(self, index, key):
-        default_value = self._schema_hash[key, KARABO_SCHEMA_DEFAULT_VALUE]
+        attributes = self._bindings[key].attributes
+        default_value = attributes[KARABO_SCHEMA_DEFAULT_VALUE]
         self._item_model.setData(index, default_value, role=Qt.EditRole)
 
     def _add_row(self, index):
@@ -185,13 +170,13 @@ class _BaseTableElement(BaseBindingController):
             return
         index = selection_model.currentIndex()
 
-        menu = QMenu()
+        menu = QMenu(parent=self.widget)
         if index is not None:
             column = index.column()
-            key = self._schema_hash.getKeys()[column]
+            key = list(self._bindings.keys())[column]
             if (self._role == Qt.EditRole
-                    and self._schema_hash.hasAttribute(
-                        key, KARABO_SCHEMA_DEFAULT_VALUE)):
+                    and self._bindings[key].attributes.get(
+                        KARABO_SCHEMA_DEFAULT_VALUE)):
                 set_default_action = menu.addAction('Set Cell Default')
                 set_default_action.triggered.connect(
                     partial(self._set_index_default, index=index, key=key))
