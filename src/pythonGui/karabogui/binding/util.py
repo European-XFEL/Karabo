@@ -47,20 +47,6 @@ def attr_fast_deepcopy(d, ref=None):
     return out
 
 
-def flat_iter_hash(h, base=''):
-    """Recursively iterate over all the values in a Hash object such that
-    a simple iterator interface is exposed. In this way, a single for-loop
-    is sufficient to see an entire Hash.
-    """
-    base = base + '.' if base else ''
-    for key, value, attrs in h.iterall():
-        here = base + key
-        if isinstance(value, Hash):
-            yield from flat_iter_hash(value, base=here)
-        else:
-            yield here, value, attrs
-
-
 def get_editor_value(property_proxy, default=None):
     """Return the correct value of a PropertyProxy to show in an editor
 
