@@ -479,9 +479,9 @@ def validate_table_value(binding, value):
                 # invalid but continue gracefully ...
                 continue
 
-            if binding.access_mode is AccessMode.READONLY or value is None:
-                # The binding is not writable or property value is `None`
-                # or the value doesn't exist (from `realign_hash`).
+            if value is None:
+                # The property value is `None` or the value doesn't exist
+                # (from `realign_hash`).
                 # Try to use the default value from the binding!
                 validated_value = get_default_value(binding)
             else:
