@@ -27,7 +27,7 @@ from .colorbar import ColorBarWidget, ColorViewBox
 from .item import KaraboImageItem
 from .plot import KaraboImagePlot
 from .utils import (
-    beam_profile_table_html, create_colormap_menu,
-    create_icon_from_colormap, get_transformation,
-    levels_almost_equal)
+    beam_profile_table_html, bytescale, create_colormap_menu,
+    create_icon_from_colormap, get_transformation, levels_almost_equal,
+    rescale)
 from .viewbox import KaraboImageViewBox
