@@ -44,7 +44,7 @@ class KaraboImagePlot(PlotItem):
             parent=parent)
 
         # Initialize widgets
-        self.imageItem = KaraboImageItem(parent=None)
+        self.imageItem = KaraboImageItem(parent=self)
         self.imageItem.axisOrder = KaraboImagePlot.AXIS_ORDER
         self.addItem(self.imageItem)
 
