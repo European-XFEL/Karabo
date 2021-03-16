@@ -21,6 +21,7 @@ def safe_log10(value):
     index = value > 0
     result = np.log10(value, where=index)
     result[~index] = np.nan
+
     return result
 
 
