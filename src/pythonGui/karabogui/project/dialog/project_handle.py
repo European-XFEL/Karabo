@@ -86,6 +86,8 @@ class LoadProjectDialog(QDialog):
         # Domain is not selectable for subprojects - only master projects
         self.cbDomain.setEnabled(not is_subproject)
         # ... request the domains list
+        # initial request
+        self.initial_request = False
         domains = db_conn.get_available_domains()
 
         # Domain combobox
@@ -164,10 +166,11 @@ class LoadProjectDialog(QDialog):
             # domains arriving from the GUI server!
             messagebox.show_warning(msg, title='Default domain does not exist',
                                     parent=self)
-        if index in (self.cbDomain.currentIndex(), -1):
-            # Make sure the signal is triggered when setting the index below
-            self.cbDomain.setCurrentIndex(-1)
-        self.cbDomain.setCurrentIndex(index if index > -1 else 0)
+        with SignalBlocker(self.cbDomain):
+            self.cbDomain.setCurrentIndex(index if index > -1 else 0)
+        if not self.initial_request:
+            self.initial_request = True
+            self.update_view()
 
     def selected_item(self):
         """Return selected domain and project
