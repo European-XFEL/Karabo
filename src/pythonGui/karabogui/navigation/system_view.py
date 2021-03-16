@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (
     QAbstractItemView, QAction, QDialog, QMenu, QTreeView)
 
 from karabo.common.api import Capabilities
+from karabo.native import Timestamp
 from karabogui import icons
 from karabogui.enums import AccessRole
 from karabogui.globals import access_role_allowed
@@ -20,7 +21,7 @@ from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.request import call_device_slot
 from karabogui.singletons.api import get_manager, get_selection_tracker
 from karabogui.util import (
-    handle_scene_from_server, load_configuration_from_file,
+    handle_scene_from_server, load_configuration_from_file, move_to_cursor,
     open_documentation_link, save_configuration_to_file, set_treeview_header)
 from karabogui.widgets.popup import PopupWidget
 from .system_model import SystemTreeModel
@@ -62,6 +63,11 @@ class SystemTreeView(QTreeView):
         self.acAbout.setToolTip(text)
         self.acAbout.triggered.connect(self.onAbout)
 
+        text = "Time Information"
+        self.acTimeInformation = QAction(icons.clock, text, self)
+        self.acTimeInformation.triggered.connect(self.onTimeInformation)
+        self.acTimeInformation.setVisible(False)  # Classes don't have time
+
         # Device server instance menu
         self.mServerItem = QMenu(self)
 
@@ -74,6 +80,8 @@ class SystemTreeView(QTreeView):
 
         self.mServerItem.addSeparator()
         self.mServerItem.addAction(self.acAbout)
+
+        self.mServerItem.addAction(self.acTimeInformation)
 
         # Device class/instance menu
         self.mDeviceItem = QMenu(self)
@@ -117,6 +125,7 @@ class SystemTreeView(QTreeView):
         self.mDeviceItem.addSeparator()
         self.mDeviceItem.addAction(self.acAbout)
         self.mDeviceItem.addAction(self.acDocu)
+        self.mDeviceItem.addAction(self.acTimeInformation)
 
     def currentIndex(self):
         return self.model().currentIndex()
@@ -179,6 +188,48 @@ class SystemTreeView(QTreeView):
         self.popupWidget.show()
 
     @pyqtSlot()
+    def onTimeInformation(self):
+        """Get the time information from a `server` or `device`"""
+        info = self.indexInfo()
+        if info is None:
+            return
+
+        def show_server_information(instanceId, success, reply):
+            if not success:
+                return
+
+            if self.popupWidget is None:
+                self.popupWidget = PopupWidget(parent=self)
+
+            actual = Timestamp.fromHashAttributes(reply["time", ...])
+            attrs = {"instanceId": instanceId,
+                     "Actual Timestamp": actual,
+                     "Actual Train Id": actual.tid}
+
+            # Note: New protocol additions since 2.11
+            if "timeServerId" in reply:
+                attrs.update({"timeServerId": reply["timeServerId"]})
+            if "reference" in reply:
+                reference = Timestamp.fromHashAttributes(
+                    reply["reference", ...])
+                attrs.update({"Last Tick Timestamp": reference,
+                              "Last Tick Train Id": reference.tid})
+
+            self.popupWidget.setInfo(attrs)
+            self.popupWidget.adjustSize()
+            move_to_cursor(self.popupWidget)
+            self.popupWidget.show()
+
+        node_type = info.get('type')
+        if node_type is NavigationItemTypes.DEVICE:
+            instanceId = info.get('deviceId')
+        elif node_type is NavigationItemTypes.SERVER:
+            instanceId = info.get('serverId')
+
+        handler = partial(show_server_information, instanceId)
+        call_device_slot(handler, instanceId, 'slotGetTime')
+
+    @pyqtSlot()
     def onGetDocumenation(self):
         deviceId = self.indexInfo().get('deviceId')
         open_documentation_link(deviceId)
@@ -223,16 +274,19 @@ class SystemTreeView(QTreeView):
         if node_type is NavigationItemTypes.SERVER:
             self.acKillServer.setEnabled(enable_shutdown)
             self.acAbout.setVisible(True)
+            self.acTimeInformation.setVisible(False)
             self.mServerItem.exec_(QCursor.pos())
         elif node_type is NavigationItemTypes.CLASS:
             self.acKillDevice.setVisible(False)
             self.acAbout.setVisible(False)
+            self.acTimeInformation.setVisible(False)
             self.mDeviceItem.exec_(QCursor.pos())
         elif node_type is NavigationItemTypes.DEVICE:
             self.acKillDevice.setVisible(True)
             self.acKillDevice.setEnabled(enable_shutdown)
             self.acAbout.setVisible(True)
             self.acDocu.setVisible(True)
+            self.acTimeInformation.setVisible(True)
             has_scenes = _test_mask(info.get('capabilities', 0),
                                     Capabilities.PROVIDES_SCENES)
             self.acOpenScene.setVisible(has_scenes)
