@@ -4,21 +4,28 @@ What's New in Karabo 2.11.0
 
 The **most relevant improvements**, fixes and changes are:
 
-- C++/Bound CHANGE: The properties `useTimeServer` and `timeServerId` were removed from the devices since unused anyway (latter was only present in bound).
+- C++/Bound CHANGE: The properties ``useTimeServer`` and ``timeServerId`` were removed from the devices
+  since unused anyway (latter was only present in bound).
 - MDL API CHANGE: The method `onInitialization` will not shutdown the instance anymore on exception.
-- All API: The slot call ``slotGetTime`` takes an input argument now and provides the `timeServerId` and the last reference timestamp. It is also
+- All API: The slot call ``slotGetTime`` takes an input argument now and provides the ``timeServerId``
+  and the last reference timestamp. It is also
   available for device servers.
-- C++ (Bound/MDL to follow?): Input channels of devices now have a property that shows the output channels that are configured to be connected but are not.
+- C++: Input channels of devices now have a property that shows the output
+  channels that are configured to be connected but are not.
 
-- MDL API: New functions **hashToDict** and **dictToHash** are available. These function converts either nested dictionaries or hashes to their counterpart.
+- MDL API: New functions **hashToDict** and **dictToHash** are available.
+  These function converts either nested dictionaries or hashes to their counterpart.
 
-- The `ProjectManager` device is now compatible with a file backend. See :ref:`below <211_projectmanager>`.
+- The ``ProjectManager`` device is now compatible with a file backend. See :ref:`below <211_projectmanager>`.
 
 - MAJOR: **Python** was upgraded to version **3.8**. In this process more dependencies were added or upgraded, see :ref:`below <211_deps>`.
 
 - Karabo use on the Ubuntu16 platform is deprecated since that is not anymore maintained beyond April 2021.
 
 - Compilation of device packages requires at least gcc version 7. Note that the default compiler on all supported platforms except Ubuntu16 fulfils that.
+
+- The old undocumented way to use ``getHistory("device").propertyName`` is removed.
+  The ``getHistory``'s ``to`` argument is now optional. If missing, the current timestamp will be used.
 
 .. _211_deps:
 
