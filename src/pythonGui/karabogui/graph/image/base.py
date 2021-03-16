@@ -40,15 +40,15 @@ class KaraboImageView(QWidget):
         super(KaraboImageView, self).__init__(parent)
 
         # Main layout to organize
-        layout = QGridLayout()
+        layout = QGridLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        self.image_layout = GraphicsLayoutWidget()
+        self.image_layout = GraphicsLayoutWidget(self)
         self.layout().addWidget(self.image_layout, 0, 0, 1, 1)
 
         # Add our basic plotItem to this widget
-        self.plotItem = KaraboImagePlot(parent=None)
+        self.plotItem = KaraboImagePlot(parent=self.image_layout.ci)
         self.plotItem.imageLevelsChanged.connect(self._image_levels_changed)
         self.plotItem.imageItem.sigImageChanged.connect(self._image_changed)
 
