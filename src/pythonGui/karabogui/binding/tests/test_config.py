@@ -27,6 +27,11 @@ class TableRowReadOnly(Configurable):
     stringProperty = String(accessMode=AccessMode.READONLY)
 
 
+class TableRowReadOnlyDefault(Configurable):
+    uintProperty = UInt8(defaultValue=57,
+                         accessMode=AccessMode.READONLY)
+
+
 class TableRowMixedDefaults(Configurable):
     stringProperty = String(defaultValue='bar')
     uintProperty = UInt8(defaultValue=20)
@@ -408,6 +413,45 @@ def test_validate_vector_hash():
     assert invalid == HashList([Hash("stringProperty", "foo",
                                      "uintProperty", None,  # dropped value
                                      "boolProperty", True)])
+
+    # ReadOnly tables should be still validated
+    # -----------------------------------------------------------------------
+
+    # 1. A fully valid Hash
+    readonly_binding = types.VectorHashBinding(
+        row_schema=VectorHash(TableRowReadOnly).rowSchema.hash)
+    readonly_binding_default = types.VectorHashBinding(
+        row_schema=VectorHash(TableRowReadOnlyDefault).rowSchema.hash)
+
+    valid_hash = Hash("stringProperty", "karabo")
+    valid, invalid = validate_table_value(readonly_binding,
+                                          HashList([valid_hash]))
+    assert valid == HashList([Hash("stringProperty", "karabo")])
+    assert invalid == HashList([])
+
+    # 2. A valid string but boolean is not in the schema
+    readonly_binding = types.VectorHashBinding(
+        row_schema=VectorHash(TableRowReadOnly).rowSchema.hash)
+    invalid_hash = Hash("stringProperty", "foo",
+                        "boolProperty", True)  # A value to many
+    valid, invalid = validate_table_value(readonly_binding,
+                                          HashList([invalid_hash]))
+    assert valid == HashList([Hash("stringProperty", "foo")])
+    assert invalid == HashList([])
+
+    # 3. An empty Hash without default value in Schema
+    invalid_hash = Hash()
+    valid, invalid = validate_table_value(readonly_binding,
+                                          HashList([invalid_hash]))
+    assert valid == HashList([])
+    assert invalid == HashList([Hash("stringProperty", None)])
+
+    # 3. An empty Hash WITH default value in Schema
+    invalid_hash = Hash()
+    valid, invalid = validate_table_value(readonly_binding_default,
+                                          HashList([invalid_hash]))
+    assert valid == HashList([Hash("uintProperty", 57)])
+    assert invalid == HashList([])
 
 
 def test_sanitize_table():
