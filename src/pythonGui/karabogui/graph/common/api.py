@@ -31,4 +31,4 @@ from .viewbox import KaraboViewBox
 
 from .dialogs.axes_labels import AxesLabelsDialog
 
-from .utils import float_to_string, safe_log10
+from .utils import clip_array, float_to_string, safe_log10
