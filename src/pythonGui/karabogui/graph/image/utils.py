@@ -1,7 +1,7 @@
 from functools import partial
 
 import numpy as np
-from PyQt5.QtCore import QRectF, QPointF
+from PyQt5.QtCore import QPointF, QRectF
 from PyQt5.QtGui import (
     QBrush, QColor, QIcon, QLinearGradient, QPainter, QPixmap)
 from PyQt5.QtWidgets import QActionGroup, QAction, QMenu
@@ -27,14 +27,14 @@ def get_transformation(actual_array, dim=0):
     """
 
     if len(actual_array) != dim or dim == 0 or actual_array.ndim != 1:
-        # TODO: Improve error handling/message
-        raise ValueError("Invalid input.")
+        raise ValueError(f"Cannot calculate transformation with dim {dim} and"
+                         f" array dimension {len(actual_array)}.")
 
     image_array = np.arange(dim)
 
     scale, translate = np.ma.polyfit(image_array, actual_array, deg=1)
 
-    # since translate is also scaled in Qt, it needs to be compensated
+    # Since translate is also scaled in Qt, it needs to be compensated
     return scale, translate / scale
 
 
@@ -48,15 +48,21 @@ def map_rect_to_transform(rect, scaling, translation):
     return QRectF(*(tuple(trans_pos) + tuple(trans_size)))
 
 
-def levels_almost_equal(image_level, image_range, rtol=0.05):
-    tol = rtol * (image_level[1] - image_level[0])
-    return all([
-        np.abs(np.subtract(lvl, rng, dtype=np.float64)) <= tol
-        for lvl, rng, in zip(image_level, image_range)])
+def levels_almost_equal(lut_level, image_level, rtol=0.05):
+    """Check if the levels are relatively equal between lut and image levels
+
+    Note: The `lut_level` is typically defined by the colorbar
+    """
+    tolerance = rtol * (lut_level[1] - lut_level[0])
+
+    equals = [np.abs(np.subtract(lut, im, dtype=np.float64)) <= tolerance
+              for lut, im, in zip(lut_level, image_level)]
+
+    return all(equals)
 
 
 def create_icon_from_colormap(colormap):
-    """Creates a gradient icon from a given color map
+    """Return a gradient QIcon from a given color map string
 
     :param colormap: One of the maps from COLORMAPS
     :type colormap: str
@@ -98,25 +104,8 @@ def create_colormap_menu(colormaps, current_cmap, on_selection):
     return menu
 
 
-def beam_profile_table_html(x_stats, y_stats):
-    if not x_stats or not y_stats:
-        return ''
-
-    return PROFILE_STATS_HTML.format(
-        x_ampl=_to_string(x_stats.get("amplitude")),
-        x_maxpos=_to_string(x_stats.get("max_pos")),
-        x_fwhm=_to_string(x_stats.get("fwhm")),
-        y_ampl=_to_string(y_stats.get("amplitude")),
-        y_maxpos=_to_string(y_stats.get("max_pos")),
-        y_fwhm=_to_string(y_stats.get("fwhm")))
-
-
-def _to_string(value):
-    return "{:.3g}".format(value) if value is not None else "-"
-
-
 PROFILE_STATS_HTML = """
-<table style='font-size:8px'>
+<table style='font-size:8pt'>
 <tbody>
 <tr>
 <th align="left">&nbsp;</th><th>x</th><th>y</th>
@@ -135,9 +124,34 @@ PROFILE_STATS_HTML = """
 """
 
 
+def beam_profile_table_html(x_stats, y_stats):
+    """Generate a beam profile table in html"""
+    if not x_stats or not y_stats:
+        return ''
+
+    def _to_string(value):
+        return "{:.3g}".format(value) if value is not None else "-"
+
+    return PROFILE_STATS_HTML.format(
+        x_ampl=_to_string(x_stats.get("amplitude")),
+        x_maxpos=_to_string(x_stats.get("max_pos")),
+        x_fwhm=_to_string(x_stats.get("fwhm")),
+        y_ampl=_to_string(y_stats.get("amplitude")),
+        y_maxpos=_to_string(y_stats.get("max_pos")),
+        y_fwhm=_to_string(y_stats.get("fwhm")))
+
+
 def rescale(array, min_value, max_value, low=0.0, high=100.0):
-    """Scale the image with a new range. This is particularly used when
-       rescaling to (0, 255)."""
+    """Scale the `array` with a new range. This is particularly used when
+       rescaling to (0, 255).
+
+    :param array: the array for scaling
+    :param min_value: the minimum value of the array
+    :param max_value: the maximum value of the array
+
+    :param low: the target scaled minimum
+    :param high: the target scaled maximum
+    """
 
     if max_value == min_value:
         return array
@@ -155,11 +169,10 @@ def rescale(array, min_value, max_value, low=0.0, high=100.0):
 
 
 def bytescale(data, cmin=None, cmax=None, low=0, high=255):
-    """ Byte scales an array (image).
+    """ Byte scales an array (data).
 
-    Byte scaling means converting the input image to uint8 dtype and scaling
+    Byte scaling means converting the input data to `uint8` dtype and scaling
     the range to ``(low, high)`` (default 0-255).
-    If the input data already has dtype uint8, no scaling is done.
     """
     high = round(high)
     low = round(low)
@@ -190,16 +203,5 @@ def bytescale(data, cmin=None, cmax=None, low=0, high=255):
 
     scale = float(high - low) / cscale
     bytedata = (data - cmin) * scale + low
+
     return (bytedata.clip(low, high) + 0.5).astype(np.uint8)
-
-
-def correct_image_min(image_min, level_min=None):
-    """There could be cases that all image pixels have the same value.
-    Since a valid range is needed to produce a valid colormap, we correct the
-    image minimum for colormap calculation"""
-    if level_min is not None and image_min != level_min:
-        # we use the minimum level as the minimum image value.
-        return level_min
-    else:
-        # We use the decrement as the minimum image value.
-        return image_min - 1
