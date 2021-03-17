@@ -1,7 +1,7 @@
 import sys
 
 from karabogui.events import broadcast_event, KaraboEvent
-from karabogui.programs.base import create_gui_app, excepthook, init_gui
+from karabogui.programs.base import create_gui_app, init_gui
 
 
 def run_gui(args):
@@ -19,7 +19,6 @@ def run_gui(args):
 
 
 def main():
-    sys.excepthook = excepthook
     run_gui(sys.argv)
 
 
