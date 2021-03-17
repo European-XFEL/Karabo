@@ -334,6 +334,19 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
             self.assertTrue(ok, msg)
 
+        with self.subTest(msg="Test slotGetTime"):
+            ret = sigSlotA.request("testComm1", "slotGetTime", Hash()
+                                   ).waitForReply(timeOutInMs)
+            hsh = ret[0]
+            self.assertIsInstance(hsh, Hash)
+            self.assertIn("reference", hsh)
+            self.assertIn("time", hsh)
+            self.assertIn("timeServerId", hsh)
+            self.assertEqual(hsh["timeServerId"], "None")
+
+            attrs = hsh.getAttributes("reference")
+            self.assertEqual(attrs["tid"], 100)
+
     def waitUntilEqual(self, devId, propertyName, whatItShouldBe, maxTries):
         """
         Wait until property 'propertyName' of device 'deviceId' equals
