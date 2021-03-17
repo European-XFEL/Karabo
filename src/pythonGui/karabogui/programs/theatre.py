@@ -128,7 +128,7 @@ def run_theatre(ns):
     All scenes have the name deviceId|sceneName and are not editable!
     """
     app = create_gui_app(sys.argv)
-    init_gui(app, use_splash=True)
+    init_gui(app, use_splash=not ns.nosplash)
 
     # We might want to connect directly to the gui server
     if ns.host and ns.port:
@@ -140,7 +140,7 @@ def run_theatre(ns):
     if not success:
         app.quit()
 
-    waiter = DeviceWaiter(ns.scene_ids, ns.timeout)
+    waiter = DeviceWaiter(ns.scene_id, ns.timeout)
 
     if waiter.device_scenes:
         app.exec_()
@@ -152,7 +152,7 @@ def run_theatre(ns):
 
 def main():
     ap = argparse.ArgumentParser(description='Karabo Theater')
-    ap.add_argument('scene_ids', type=str, nargs='+',
+    ap.add_argument('scene_id', type=str, nargs='+',
                     help='The scene ids. Device provided scene '
                          'formatted like: "deviceId|sceneName".')
     ap.add_argument('-host', '--host', type=str,
@@ -165,6 +165,7 @@ def main():
     ap.add_argument('-timeout', '--timeout', type=int, default=10,
                     help='The timeout in seconds to be waited for the devices'
                          'to be visible')
+    ap.add_argument('-nosplash', '--nosplash', action='store_true')
     run_theatre(ap.parse_args())
 
 
