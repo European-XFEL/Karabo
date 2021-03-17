@@ -16,12 +16,16 @@ class TestWebValidator(TestCase):
         localhost_with_port = "localhost:8080"
         simple_website = "google.com"
         query_url = "ftp://someurl.com/page.html?param1=1&param2=2"
+        cinema_url = "karabo://cinema?param1=1&param2=2"
+        new_gui_url = "karabo://gui"
 
         self._assert_url(user_pass_url, valid=True)
         self._assert_url(ip_address, valid=True)
         self._assert_url(localhost_with_port, valid=True)
         self._assert_url(simple_website, valid=True)
         self._assert_url(query_url, valid=True)
+        self._assert_url(new_gui_url, valid=True)
+        self._assert_url(cinema_url, valid=True)
         self._assert_url("invalid url", valid=False)
 
     def _assert_url(self, url, *, valid):
