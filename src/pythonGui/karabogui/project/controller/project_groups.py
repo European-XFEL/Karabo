@@ -17,6 +17,7 @@ from karabogui import icons, messagebox
 from karabogui.enums import AccessRole, ProjectItemTypes
 from karabogui.globals import access_role_allowed
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
+from karabogui.project.wizard.api import CinemaWizardController
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.utils import (
@@ -126,6 +127,12 @@ def _fill_scenes_menu(menu, project_controller):
                                                parent=menu.parent()))
     load_from_device.setEnabled(project_allowed)
 
+    project_model = project_controller.model
+    cinema_action = QAction(icons.run, 'Create cinema link', menu)
+    cinema_action.triggered.connect(partial(_create_cinema_link,
+                                            project_model=project_model,
+                                            parent=menu.parent()))
+
     about_action = QAction(icons.about, 'About', menu)
     about_action.triggered.connect(partial(_about_scene,
                                            project_controller,
@@ -133,6 +140,8 @@ def _fill_scenes_menu(menu, project_controller):
     menu.addAction(add_action)
     menu.addAction(load_action)
     menu.addAction(load_from_device)
+    menu.addSeparator()
+    menu.addAction(cinema_action)
     menu.addSeparator()
     menu.addAction(about_action)
 
@@ -306,6 +315,12 @@ def _load_scene_from_device(project_controller, parent=None):
         handler = partial(handle_scene_from_server, device_id, scene_name,
                           project, None)
         call_device_slot(handler, device_id, 'requestScene', name=scene_name)
+
+
+def _create_cinema_link(project_model=None, parent=None):
+    wizard = CinemaWizardController(project_model=project_model,
+                                    parent=parent)
+    wizard.run()
 
 
 def _add_server(project_controller, parent=None):
