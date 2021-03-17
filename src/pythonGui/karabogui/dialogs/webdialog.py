@@ -27,17 +27,19 @@ tld_re = (
 )
 host_re = '(' + hostname_re + domain_re + tld_re + '|localhost)'
 
+karabo_re = '(gui|cinema|theatre)'
+
 URL_REGEX = re.compile(
     r'^(?:[a-z0-9\.\-\+]*)://'  # scheme is validated separately
     r'(?:[^\s:@/]+(?::[^\s:@/]*)?@)?'  # user:pass authentication
-    r'(?:' + ipv4_re + '|' + ipv6_re + '|' + host_re + ')'
+    r'(?:' + ipv4_re + '|' + ipv6_re + '|' + host_re + '|' + karabo_re + ')'
     r'(?::\d{2,5})?'  # port
     r'(?:[/?#][^\s]*)?'  # resource path
     r'\Z', re.IGNORECASE)
 
 SCHEME_URL_REGEX = re.compile(r'^([a-zA-Z]+)://')
 
-SCHEMES = ['http', 'https', 'ftp', 'ftps']
+SCHEMES = ['http', 'https', 'ftp', 'ftps', 'karabo']
 
 
 def is_valid_url(url):
