@@ -1431,18 +1431,40 @@ class PythonDevice(NoFsm):
         """
         self.set("lockedBy", "")
 
-    def slotGetTime(self):
+    def slotGetTime(self, info):
         """
         Return the actual time information of this device
 
-        This slot returns a Hash with key ``time`` and the attributes
-        provide an actual timestamp with train Id information.
+        :param info: An empty place holder hash
+
+        This slot returns a Hash with:
+
+        - key ``time`` and the attributes provide an actual
+        timestamp with train Id information
+        - key ``timeServerId`` to show the configured time server
+        - key ``reference`` and the attributes provide the latest
+        received timestamp information from the timeserver
         """
         result = Hash()
 
         result.set("time", True)
         stamp = self.getActualTimestamp()
         stamp.toHashAttributes(result.getAttributes("time"))
+
+        # Provide a nice output for the time server Id
+        timeServer = 'None' if not self.timeServerId else self.timeServerId
+        result.set("timeServerId", timeServer)
+
+        # And the last reference stamp received
+        result.set("reference", True)
+
+        with self._timeLock:
+            epoch = Epochstamp(self._timeSec, self._timeFrac)
+            train = Trainstamp(self._timeId)
+            stamp = Timestamp(epoch, train)
+
+        attrs = result.getAttributes("reference")
+        stamp.toHashAttributes(attrs)
 
         self.reply(result)
 
