@@ -85,6 +85,37 @@ def get_min_max(binding):
     return None, None
 
 
+def get_native_min_max(binding):
+    """Get the native minimum and maximum of an integer or float binding
+
+    This method does not take into account binding limits, only the native
+    binding range.
+    """
+    if isinstance(binding, types.IntBinding):
+        range_trait = binding.trait('value').handler
+        value_range = range_trait._low, range_trait._high
+        if range_trait._exclude_low:
+            value_range = (value_range[0] + 1, value_range[1])
+        if range_trait._exclude_high:
+            value_range = (value_range[0], value_range[1] - 1)
+
+        low = value_range[0]
+        high = value_range[1]
+        return low, high
+
+    elif isinstance(binding, types.FloatBinding):
+        attrs = binding.attributes
+        value_type = attrs[const.KARABO_SCHEMA_VALUE_TYPE]
+        if value_type in ('FLOAT', 'COMPLEX_FLOAT'):
+            info = np.finfo(np.float32)
+        else:
+            info = np.finfo(np.float64)
+
+        return info.min, info.max
+
+    return None, None
+
+
 def get_min_max_size(binding):
     """Given a BaseBinding instance, return the minimum and maximum size
     which can be assigned to the vector trait
