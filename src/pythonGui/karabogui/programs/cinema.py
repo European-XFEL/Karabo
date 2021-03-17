@@ -21,9 +21,10 @@ def run_cinema(ns):
     def trigger_scenes():
         topology.system_tree.on_trait_change(
             trigger_scenes, 'initialized', remove=True)
-        get_db_conn().default_domain = ns.domain
+        domain = ns.domain
+        get_db_conn().default_domain = domain
         for uuid in ns.scene_uuid:
-            db_scene = {'name': "Cinema",
+            db_scene = {'name': f'{domain}-{uuid}',
                         'target_window': SceneTargetWindow.MainWindow,
                         'target': uuid}
             broadcast_event(KaraboEvent.OpenSceneLink, db_scene)
