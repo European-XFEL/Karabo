@@ -15,7 +15,7 @@
 
 namespace karabo {
     namespace net {
-        
+
 
         class MqttBroker : public Broker  {
             /**
@@ -28,7 +28,7 @@ namespace karabo {
              * <domain>/slots/<slotInstanceId>    <--  all requests/calls/replies to the device send to this topic
              *     The further message dispatching to slots is provided by using info in message header.
              *
-             * <domain>/global_slots/<slotFunction>   <-- there is a way of implementing "broadcast" messages like in
+             * <domain>/global_slots              <-- there is a way of implementing "broadcast" messages like in
              *     JmsBroker.  In JMS it was enough to use "|*|" in header's slotInstanceIds.  In MQTT we have to
              *     be subscribe to such topic (to receive broadcast messages).  Known global slots:
              *     slotInstanceNew      -- to announce the new device in Karabo network
@@ -99,7 +99,7 @@ namespace karabo {
              * MQTT subscription:
              * subscribe to group of topics...
              *   "m_domain/slots/m_instanceId"
-             *   "m_domain/global_slots/+"      Example: "SPB/global_slots/slotInstanceNew"
+             *   "m_domain/global_slots"
              *
              * @param handler       - success handler
              * @param errorNotifier - error handler
@@ -142,18 +142,16 @@ namespace karabo {
                        const int priority = 4,
                        const int timeToLive = 0) override;
 
-            void writeLocal(const consumer::MessageHandler& handler,
-                            const karabo::util::Hash::Pointer& header,
-                            const karabo::util::Hash::Pointer& body) override;
+        protected:
+
+            virtual void publish(const std::string& topic,
+                                 const karabo::util::Hash::Pointer& msg,
+                                 PubOpts options);
 
         private:
 
             MqttBroker(const MqttBroker& o) = delete;
             MqttBroker(const MqttBroker& o, const std::string& newInstanceId);
-
-            virtual void publish(const std::string& topic,
-                                 const karabo::util::Hash::Pointer& msg,
-                                 PubOpts options);
 
             void mqttReadHashHandler(const boost::system::error_code& ec,
                                      const std::string& topic,
@@ -175,9 +173,23 @@ namespace karabo {
 
             void unregisterMqttTopics(const std::vector<std::string>& topics);
 
-            void checkOrder(const consumer::MessageHandler& handler,
-                            const karabo::util::Hash::Pointer& header,
-                            const karabo::util::Hash::Pointer& body, bool local=false);
+            void checkOrder(const std::string& topic,
+                            const karabo::util::Hash::Pointer& msg,
+                            const consumer::MessageHandler& handler);
+
+            void setOrderNumbers(const std::string& consumers, const karabo::util::Hash::Pointer& header);
+
+            void handleStore(const std::string& producerId);
+
+            /**
+             * Remove all entries in m_store[producerId] that have timestamp field
+             * other than validTimestamp.
+             * @param producerId
+             * @param validTimestamp
+             */
+            void cleanObsolete(const std::string& producerId, const double validTimestamp);
+
+            void setDeadline(const std::string& producerId);
 
         protected:
 
@@ -188,6 +200,52 @@ namespace karabo {
             karabo::net::Strand::Pointer m_handlerStrand;
             consumer::MessageHandler m_messageHandler;
             consumer::ErrorNotifier m_errorNotifier;
+            // Message ordering.
+            // ----------------
+            // Some messages are required to be received in the same order in which they were sent.  This makes
+            // sense when considering a communication between specific producer and specific consumer (one-to-one).
+            // Because there is a broker in between the message may come not in order.  More precisely, the broker
+            // guarantees the ordering of messages sending via the same topic with QoS > 0, but not for messages send
+            // via different topics.  In practice, the broker shows the ordering even for messages sent via different
+            // topics.  But it may be specific for particular broker and the protocol itself gives no guarantees.
+            // To discover a disorder the producer has to account messages sent to every consumer by using
+            //                     producerMap[consumerId] = serial number.
+            // The consumers, in turn, have to account message numbers for all producers they are interested in by
+            // using consumerMap[producerId]. Important!  The producer has to know to whom the message should be sent.
+            // Fortunately, in karabo messaging the producer knows this because consumers (slotInstanceIds) register
+            // themselves on producer (signalInstanceId) side. The message contains list of consumer IDs and,
+            // in parallel, the list of "order" (serial) numbers (vector of long long).
+            // The counting starts from 1 and incremented by 1 in every following message.  The message number 1 forces
+            // the consumer counter to reset.  After receiving a message the consumer compares the number in message
+            // with number in consumerMap[producerId] and can judge if disorder happens: the difference should be 1.
+            //
+            // Caveat:
+            //   1.  Message accounting works only if messages are not dropped by broker.   So QoS = 0 are not
+            // accounted (can be dropped) and "broadcasts" are not because the destinations are unknown
+            //   2.  After restarting the counters are initialized to 0, and, in case that some devices can be restarted
+            // and others are not the consumers should always be synchronized with producers
+
+            //                 consumerId,  last serial number sent
+            std::unordered_map<std::string, long long> m_producerMap;
+            boost::mutex m_producerMapMutex;
+
+            //                 producerId,  last serial number received   timestamp
+            std::unordered_map<std::string, long long> m_consumerMap;
+            std::unordered_map<std::string, double> m_consumerTimestamp;
+            boost::mutex m_consumerMapMutex;
+            // storage for temporarily keeping "pending" messages in hope the message with number that restores the
+            // order will come soon ...
+            //                 producerId -> map orderNumber -> (producer timestamp, callback)
+            std::unordered_map<std::string,
+                               std::map<long long, std::pair<double, boost::function<void()> > > > m_store;
+
+            typedef boost::shared_ptr<boost::asio::deadline_timer> DeadlinePointer;
+            // Deadline is established on producer: any disorder should be resolved before deadline.
+            std::unordered_map<std::string, DeadlinePointer >  m_deadlines;
+            // Deadline timer setup: timeout
+            unsigned int m_deadlineTimeout;
+            // producer timestamp is a "marker" of MqttBroker instance incarnation for m_instanceId in time
+            const double m_timestamp;    // timestamp used by this instance when in producer role
         };
 
     }
