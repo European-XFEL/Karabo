@@ -15,7 +15,7 @@ from .types import (
     Uint64Binding, VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
     VectorNumberBinding)
 from .util import (
-    array_equal, attr_fast_deepcopy, is_equal, is_writable, realign_hash)
+    array_equal, attr_fast_deepcopy, is_equal, realign_hash)
 
 VECTOR_FLOAT_BINDINGS = (VectorFloatBinding, VectorDoubleBinding)
 RECURSIVE_BINDINGS = (NodeBinding, ListOfNodesBinding,
@@ -439,7 +439,7 @@ def validate_hash(binding, new, init=False):
             # This is not reported as invalid.
             continue
 
-        if not is_writable(column_binding, init) or value is None:
+        if value is None:
             # The property is not writable or the value doesn't exist
             # (from realign_hash`). Use the default value from the binding.
             validated_value = get_default_value(column_bindings.get(path))
