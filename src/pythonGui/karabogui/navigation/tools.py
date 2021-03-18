@@ -10,7 +10,7 @@ from traits.api import ABCHasStrictTraits, Undefined
 from karabo.common.api import Capabilities
 from karabogui import messagebox
 from karabogui.enums import NavigationItemTypes
-from karabogui.util import get_scene_from_server
+from karabogui.request import get_scene_from_server
 from karabogui.singletons.api import get_topology
 
 
