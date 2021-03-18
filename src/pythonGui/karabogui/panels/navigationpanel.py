@@ -10,7 +10,7 @@ from karabo.common.api import (
     KARABO_DAEMON_MANAGER, KARABO_SCHEMA_DEFAULT_SCENE)
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.system_view import SystemTreeView
-from karabogui.util import get_scene_from_server
+from karabogui.request import get_scene_from_server
 
 from .base import BasePanelWidget
 from .searchwidget import SearchBar
