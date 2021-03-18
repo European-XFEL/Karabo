@@ -394,7 +394,8 @@ namespace karabo {
                 // TODO: In case of success so far, we should not have tried to write hello above!
                 KARABO_LOG_FRAMEWORK_INFO << "onConnect for " << outputChannelString << ": No preparation found, "
                         << "likely disconnected before, so cut connection.";
-                ec = boost::system::errc::make_error_code(boost::system::errc::operation_canceled);
+                // handler already called with failure from disconnectImpl(..)
+                return;
             } else if (itSetup->second.first != connectId) {
                 KARABO_LOG_FRAMEWORK_INFO << "onConnect for " << outputChannelString << ": Preparation found with "
                         << "wrong id, likely disconnected directly after connecting and then reconnected - reaching "
