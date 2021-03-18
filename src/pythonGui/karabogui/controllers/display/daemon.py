@@ -19,7 +19,7 @@ from karabo.common.scenemodel.api import DaemonManagerModel
 from karabogui.binding.api import VectorHashBinding, get_editor_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
-from karabogui.util import request_daemon_action
+from karabogui.request import request_daemon_action
 
 SERVER_COLUMN = 0
 STATUS_COLUMN = 1
