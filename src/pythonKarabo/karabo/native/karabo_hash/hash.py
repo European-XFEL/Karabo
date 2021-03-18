@@ -30,6 +30,11 @@ class HashElement:
                     _equal(self.attrs, other.attrs))
         return super().__eq__(other)
 
+    def __iter__(self):
+        """Iter implementation for tuple based unpacking"""
+        yield self.data
+        yield self.attrs
+
 
 SEPARATOR = "."
 
@@ -97,10 +102,24 @@ class Hash(OrderedDict):
         assert '.' not in key, "Can't set values in sub-hashes!"
         OrderedDict.__setitem__(self, key, value)
 
+    def getElement(self, path):
+        """This is a direct way of getting `value` and `attrs` of the `Hash`
+        in a `HashElement` object.
+
+        :returns: A value and attributes belonging to `path`
+        """
+        path = str(path)
+        if SEPARATOR not in path:
+            element = OrderedDict.__getitem__(self, path)
+        else:
+            element = self._get(path)
+
+        return element.data, element.attrs
+
     def setElement(self, key, value, attrs):
         """This is a direct way of setting `value` and `attrs` in the `Hash`
 
-        Setting both `value  and `attrs` at the same time can provide a fairly
+        Setting both `value` and `attrs` at the same time can provide a fairly
         big speedup! The attributes `attrs` have to be a dictionary.
         """
         assert isinstance(attrs, dict)
