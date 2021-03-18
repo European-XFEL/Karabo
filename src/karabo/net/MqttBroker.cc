@@ -6,6 +6,7 @@
  * Created on June 27, 2020, 9:23 PM
  */
 
+#include <chrono>
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/MqttBroker.hh"
 #include "karabo/net/utils.hh"
@@ -26,6 +27,15 @@ namespace karabo {
 
 
         void MqttBroker::expectedParameters(karabo::util::Schema& s) {
+
+            UINT32_ELEMENT(s).key("deadline")
+                .displayedName("Deadline timeout")
+                .description("Deadline timeout in milliseconds")
+                .assignmentOptional().defaultValue(100)
+                .unit(Unit::SECOND)
+                .metricPrefix(MetricPrefix::MILLI)
+                .commit();
+
         }
 
 
@@ -34,7 +44,17 @@ namespace karabo {
             , m_client()
             , m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService()))
             , m_messageHandler()
-            , m_errorNotifier() {
+            , m_errorNotifier()
+            , m_producerMap()
+            , m_producerMapMutex()
+            , m_consumerMap()
+            , m_consumerTimestamp()
+            , m_consumerMapMutex()
+            , m_store()
+            , m_deadlines()
+            , m_deadlineTimeout(config.get<unsigned int>("deadline"))
+            , m_timestamp(double(std::chrono::duration_cast<std::chrono::milliseconds>(
+                          std::chrono::system_clock::now().time_since_epoch()).count())) {
             Hash mqttConfig("brokers", m_availableBrokerUrls);
             mqttConfig.set("instanceId", m_instanceId);
             mqttConfig.set("domain", m_topic);
@@ -48,15 +68,25 @@ namespace karabo {
         }
 
 
-        MqttBroker::MqttBroker(const MqttBroker& o, const std::string& newInstanceId) :
-            Broker(o, newInstanceId),
-            m_client(Configurator<MqttClient>::create(MQTT_CLIENT_CLASS,
-                                                      Hash("brokers", m_availableBrokerUrls,
-                                                           "instanceId", newInstanceId,
-                                                           "domain", m_topic))),
-            m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService())),
-            m_messageHandler(),
-            m_errorNotifier() {
+        MqttBroker::MqttBroker(const MqttBroker& o, const std::string& newInstanceId)
+            : Broker(o, newInstanceId)
+            , m_client(Configurator<MqttClient>::create(MQTT_CLIENT_CLASS,
+                                                        Hash("brokers", m_availableBrokerUrls,
+                                                             "instanceId", newInstanceId,
+                                                             "domain", m_topic)))
+            , m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService()))
+            , m_messageHandler()
+            , m_errorNotifier()
+            , m_producerMap()
+            , m_producerMapMutex()
+            , m_consumerMap()
+            , m_consumerTimestamp()
+            , m_consumerMapMutex()
+            , m_store()
+            , m_deadlines()
+            , m_deadlineTimeout(o.m_deadlineTimeout)
+            , m_timestamp(double(std::chrono::duration_cast<std::chrono::milliseconds>(
+                          std::chrono::system_clock::now().time_since_epoch()).count())) {
         }
 
 
@@ -104,9 +134,7 @@ namespace karabo {
                                              const consumer::MessageHandler& handler,
                                              const consumer::ErrorNotifier& errorNotifier) {
             if (!ec) {
-                auto hdr = boost::make_shared<Hash>(msg->get<Hash>("header"));
-                auto body = boost::make_shared<Hash>(msg->get<Hash>("body"));
-                checkOrder(handler, hdr, body); // call success handler
+                checkOrder(topic, msg, handler); // call success handler
             } else {
                 // Error ...
                 std::ostringstream oss;
@@ -191,6 +219,22 @@ namespace karabo {
         }
 
 
+        void MqttBroker::setOrderNumbers(const std::string& consumers,
+                                         const karabo::util::Hash::Pointer& header) {
+            std::vector<std::string> consumerIds;
+            boost::split(consumerIds, consumers, boost::is_any_of("|"), boost::token_compress_on);
+            std::vector<long long> v;
+            // NOTE:  Rely on external mutex protection: m_producerMapMutex
+            for (const auto& id : consumerIds) {
+                // If 'id' not yet in map, m_producerMap[id] creates an entry and zero-initializes it (POD map value).
+                v.push_back(++m_producerMap[id]);
+            }
+            header->set("orderNumbers", toString(v));
+            //Set instance timestamp in milliseconds since epoch as a string
+            header->set("producerTimestamp", m_timestamp);
+        }
+
+
         void MqttBroker::write(const std::string& target,
                                const karabo::util::Hash::Pointer& header,
                                const karabo::util::Hash::Pointer& body,
@@ -210,6 +254,11 @@ namespace karabo {
 
             KARABO_LOG_FRAMEWORK_TRACE << "*** write TARGET = \"" << target << "\", topic=\"" << m_topic
                     << "\"...\n... and HEADER is \n" << *header;
+
+            boost::mutex::scoped_lock lock(m_producerMapMutex);
+
+            // If orderNumbers is already here ... we are going to re-evaluate it...
+            header->erase("orderNumbers");
 
             std::string topic = "";
 
@@ -243,9 +292,22 @@ namespace karabo {
                     throw KARABO_LOGIC_EXCEPTION(oss.str());
                 }
                 std::string slotInstanceIds = header->get<std::string>("slotInstanceIds");
-                slotInstanceIds = slotInstanceIds.substr(1, slotInstanceIds.size() - 2); // trim | (vertical line)
+                // strip possible vertical lines ...   ("__none__" is without '|')
+                if (slotInstanceIds.at(0) == '|' && slotInstanceIds.at(slotInstanceIds.size()-1) == '|') {
+                    slotInstanceIds = slotInstanceIds.substr(1, slotInstanceIds.size() - 2); // trim | (vertical line)
+                }
 
-                if (signalFunction == "__request__" || signalFunction == "__requestNoWait__") {
+                if (signalFunction == "__call__" && slotInstanceIds == "*") {
+                    // 'signalInstanceId' => Karabo_GuiServer_0 STRING
+                    // 'signalFunction' => __call__ STRING
+                    // 'slotInstanceIds' => |*| STRING
+                    // 'slotFunctions' => |*:slotInstanceNew| STRING
+
+                    //NOTE: broadcast messages are not used for serial number counting...
+                    topic = m_topic + "/global_slots";
+
+                } else if (signalFunction == "__request__" || signalFunction == "__requestNoWait__"
+                    // ************************** request **************************
                     // 'replyTo' => 38184c31-6a5a-4f9d-bc81-4d9ae754a16c STRING
                     // 'signalInstanceId' => Karabo_GuiServer_0 STRING
                     // 'signalFunction' => __request__ STRING
@@ -259,10 +321,8 @@ namespace karabo {
                     // 'slotInstanceIds' => |Karabo_DataLoggerManager_0| STRING
                     // 'slotFunctions' => |Karabo_DataLoggerManager_0:slotGetLoggerMap| STRING
 
-                    const std::string& slotInstanceId = slotInstanceIds;
-                    topic = m_topic + "/slots/" + boost::replace_all_copy(slotInstanceId, "/", "|");
-
-                } else if (signalFunction == "__reply__" || signalFunction == "__replyNoWait__") {
+                    || signalFunction == "__reply__" || signalFunction == "__replyNoWait__"
+                    // ************************** reply **************************
                     // 'replyFrom' => 10c91a8f-abbf-47bd-82f5-b8201057e0e2 STRING
                     // 'signalInstanceId' => Karabo_GuiServer_0 STRING
                     // 'signalFunction' => __reply__ STRING
@@ -273,49 +333,39 @@ namespace karabo {
                     // 'slotInstanceIds' => |DataLogger-karabo/dataLogger| STRING
                     // 'slotFunctions' => |DataLogger-karabo/dataLogger:slotChanged| STRING
 
+                    || signalFunction == "__call__") {
+                    // ************************** call **************************
+                    // 'signalInstanceId' => Karabo_GuiServer_0 STRING
+                    // 'signalFunction' => __call__ STRING
+                    // 'slotInstanceIds' => |Karabo_AlarmService| STRING
+                    // 'slotFunctions' => |Karabo_AlarmService:slotPingAnswer| STRING
+
                     const std::string& slotInstanceId = slotInstanceIds;
+                    if (signalFunction == "__call__" && slotInstanceId.find("|") != std::string::npos) {
+                        throw KARABO_LOGIC_EXCEPTION("Unexpected vertical line(|) in slotInstanceId=" + slotInstanceId);
+                    }
                     topic = m_topic + "/slots/" + boost::replace_all_copy(slotInstanceId, "/", "|");
 
-                } else if (signalFunction == "__call__") {
-
-                    if (slotInstanceIds == "*") {
-                        // 'signalInstanceId' => Karabo_GuiServer_0 STRING
-                        // 'signalFunction' => __call__ STRING
-                        // 'slotInstanceIds' => |*| STRING
-                        // 'slotFunctions' => |*:slotInstanceNew| STRING
-
-                        if (!header->has("slotFunctions")) {
-                            throw KARABO_LOGIC_EXCEPTION("Header has to define \"slotFunctions\"");
-                        }
-                        const std::string& slotFunctions = header->get<std::string>("slotFunctions");
-                        std::string slotFunction = slotFunctions.substr(1, slotFunctions.size() - 2); // trim |
-                        slotFunction = slotFunction.substr(2);
-                        topic = m_topic + "/global_slots/" + slotFunction;
-
-                    } else {
-                        // 'signalInstanceId' => Karabo_GuiServer_0 STRING
-                        // 'signalFunction' => __call__ STRING
-                        // 'slotInstanceIds' => |Karabo_AlarmService| STRING
-                        // 'slotFunctions' => |Karabo_AlarmService:slotPingAnswer| STRING
-
-                        const std::string& slotInstanceId = slotInstanceIds;
-                        if (slotInstanceId.find("|") != std::string::npos) {
-                            throw KARABO_LOGIC_EXCEPTION("Unexpected vertical line(|) in slotInstanceId=" + slotInstanceId);
-                        }
-                        topic = m_topic + "/slots/" + boost::replace_all_copy(slotInstanceId, "/", "|");
-
+                    if (pubopts.getPubQos() != PubQos::AtMostOnce) {
+                        setOrderNumbers(slotInstanceId, header);
                     }
 
                 } else {
+                    // ************************** emit **************************
                     // signalFunction == "signalSomething"
                     // Example:
                     // 'signalInstanceId' => Karabo_GuiServer_0 STRING
                     // 'signalFunction' => signalChanged STRING
-                    // 'slotInstanceIds' => |DataLogger-karabo/dataLogger| STRING
-                    // 'slotFunctions' => |DataLogger-karabo/dataLogger:slotChanged| STRING
+                    // 'slotInstanceIds' => |DataLogger-karabo/dataLogger||dataAggregator1| STRING
+                    // 'slotFunctions' => |DataLogger-karabo/dataLogger:slotChanged||dataAggregator1:slotData| STRING                    // 'slotInstanceIds' => |DataLogger-karabo/dataLogger| STRING
                     // ...
 
                     topic = m_topic + "/signals/" + boost::replace_all_copy(signalInstanceId, "/", "|") + "/" + signalFunction;
+
+                    if (pubopts.getPubQos() != PubQos::AtMostOnce) {
+                        // slotInstanceIds here is stripped: DataLogger-karabo/dataLogger||dataAggregator1
+                        setOrderNumbers(slotInstanceIds, header);
+                    }
 
                 }
             }
@@ -334,6 +384,7 @@ namespace karabo {
         }
 
 
+        // This method is protected and virtual ... can be overridden in derived class
         void MqttBroker::publish(const std::string& t,
                                  const karabo::util::Hash::Pointer& m,
                                  PubOpts o) {
@@ -420,41 +471,214 @@ namespace karabo {
             topics.push_back(m_topic + "/slots/" + id);
             options.push_back(SubQos::AtLeastOnce);
             if (m_consumeBroadcasts) {
-                topics.push_back(m_topic + "/global_slots/+");
+                topics.push_back(m_topic + "/global_slots");
                 options.push_back(SubQos::AtLeastOnce);
             }
-            registerMqttTopics(topics, options,
-                               bind_weak(&MqttBroker::checkOrder, this,
-                                         handler, _1, _2, false), errorNotifier);
+            registerMqttTopics(topics, options, handler, errorNotifier);
         }
 
 
         void MqttBroker::stopReading() {
             if (m_topic.empty() || m_instanceId.empty()) return;
-            // TODO:  Check m_store for pending messages ...
-            // ... and if any pass them to m_messageHandler
             m_client->unsubscribeAll();
             m_messageHandler = consumer::MessageHandler();
             m_errorNotifier = consumer::ErrorNotifier();
         }
 
 
-        void MqttBroker::writeLocal(const consumer::MessageHandler& handler,
-                                    const karabo::util::Hash::Pointer& header,
-                                    const karabo::util::Hash::Pointer& body) {
-            this->checkOrder(handler, header, body, true);
+        void MqttBroker::checkOrder(const std::string& topic,
+                                    const karabo::util::Hash::Pointer& msg,
+                                    const consumer::MessageHandler& handler) {
+
+            boost::mutex::scoped_lock lock(m_consumerMapMutex);
+
+            auto header = boost::make_shared<Hash>(msg->get<Hash>("header"));
+            auto body = boost::make_shared<Hash>(msg->get<Hash>("body"));
+            auto callback = boost::bind(handler, header, body);
+
+            // orderNumbers in header
+            if (header->empty()
+                    || !header->has("signalInstanceId")
+                    || !header->has("slotInstanceIds")
+                    || !header->has("orderNumbers")
+                    || header->get<std::string>("slotInstanceIds") == "|*|") {
+                m_handlerStrand->post(callback);
+                return;
+            }
+
+            // The producer identity is 'producerId' + 'producerTimestamp' (incarnation) ...
+            // because remote producer might be restarted and we can know that by timestamp.
+            auto producerId = header->get<std::string>("signalInstanceId");
+            // The message has to have "produceTimestamp"
+            if (!header->has("producerTimestamp")) {
+                throw KARABO_LOGIC_EXCEPTION("Message lacks \"producerTimestamp\"");
+            }
+            auto producerTimestamp = header->get<double>("producerTimestamp");
+
+            // Check if producer was known before.
+            if (m_consumerMap.find(producerId) == m_consumerMap.end()) {
+                // (Re-)initialize customer counters
+                m_consumerMap.emplace(producerId, 0LL);
+                m_consumerTimestamp[producerId] = 0.0;                      // set invalid timestamp
+		// NOTE: consumer is just restarted and m_store[producerId] is not valid
+                m_store[producerId] =                                       //producer instanceId
+                        std::map<long long,                                 //producer order number
+                                 std::pair<double,                          //producer timestamp
+                                           boost::function<void()> > >();   // callback
+            }
+
+            auto slotInstanceIds = header->get<std::string>("slotInstanceIds");
+            // Convert 'slotInstanceIds' to vector of consumers
+            std::vector<std::string> consumerIds;        // vector of consumerId
+            // strip '|'
+            auto stripIds = slotInstanceIds.substr(1, slotInstanceIds.size() - 2);
+            // split by "||"
+            boost::split(consumerIds, stripIds, boost::is_any_of("|"),
+                         boost::token_compress_on);
+
+            // Decode 'orderNumbers' to vector of serial numbers ...
+            auto orderNums = fromString<long long, std::vector>(header->get<std::string>("orderNumbers"));
+
+            // Validity check: compare sizes of two vectors: consumer names and serial numbers
+            if (orderNums.size() != consumerIds.size()) {
+                // Looks like orderNums is not correct, so we cannot trust it ...
+                // It can result in desynchronization between producer and consumer and
+                // points to logic problems!
+                std::ostringstream oss;
+                oss << "Length of orderNums=[" << toString(orderNums) << "] > consumerIds=["
+                        << toString(consumerIds) << "] ... m_consumerMap[" << producerId << "]="
+                        << m_consumerMap[producerId] << " ...  header=..\n" << *header;
+                throw KARABO_LOGIC_EXCEPTION(oss.str());
+            }
+
+            // Find in 2 parallel arrays of equal 'size' the producer's serial number ...
+            long long recvNumber = 0LL;
+            for(size_t n = 0; n < consumerIds.size(); ++n) {
+                if (consumerIds[n] == m_instanceId) {
+                    recvNumber = orderNums[n];
+                    break;
+                }
+            }
+
+            if (recvNumber == 0) {
+                // subscribed therefore received this message... but slot is not yet registered ...
+                return;
+            }
+
+            if (m_consumerTimestamp[producerId] != producerTimestamp) {
+                // Producer is of another incarnation (restarted)
+                m_consumerTimestamp[producerId] = producerTimestamp;
+                cleanObsolete(producerId, producerTimestamp);   // clean old messages
+                m_consumerMap[producerId] = 0;                  // synchronize consumer counter
+            }
+
+            // Expect the message received in order: recvNumber == (m_consumerMap[producerId] + 1)
+
+            if (recvNumber < (m_consumerMap[producerId] + 1)) {
+
+                return;     // duplicated message
+
+            } else if (recvNumber > (m_consumerMap[producerId] + 1)) {
+
+                // Put to 'm_store' of pending messages for reordering
+                m_store[producerId][recvNumber] = std::make_pair(producerTimestamp, callback);
+                // special case ... 1st message is out-of-order
+                if (m_consumerMap[producerId] == 0) {
+                    // GF:
+                    // First message that our current incarnation receives from producer that communicated with a
+                    // previous incarnation of us. Wait a little in case it is out-of-order and a previous message
+                    // is still going to come.
+
+                    // report to the log ...
+                    const std::string& signal = header->get<std::string>("signalFunction");
+                    const std::string& slotFunctions = header->get<std::string>("slotFunctions");
+                    KARABO_LOG_FRAMEWORK_INFO << "1st message from \"" << producerId
+                            << ":" << signal << "\" via topic: \"" << topic << "\" to \""
+                            << slotFunctions << "\"";
+                    // NOTE: questionable optimization (observation), but currently works in karabo
+                    if (topic.find("/slots/") != std::string::npos) {
+                        m_consumerMap[producerId] = m_store[producerId].begin()->first - 1;
+                    } else {
+                        // wait for other messages to reorder via 'm_store' or force to synchronize
+                        setDeadline(producerId);        // arm deadline timer if not armed yet
+                    }
+                }
+
+	    } else {
+
+                // Message received in order!
+                m_handlerStrand->post(callback);
+                m_consumerMap[producerId] = recvNumber; // just synchronize
+
+            }
+
+            handleStore(producerId);
         }
 
 
-        void MqttBroker::checkOrder(const consumer::MessageHandler& handler,
-                                    const karabo::util::Hash::Pointer& header,
-                                    const karabo::util::Hash::Pointer& body,
-                                    bool local) {
-
-            if (handler) {
-                m_handlerStrand->post(boost::bind(handler, header, body));
+        void MqttBroker::handleStore(const std::string& producerId) {
+            // Try to resolve possible ordering problem
+            for (auto it = m_store[producerId].begin(); it != m_store[producerId].end(); ) {
+                // Check if timestamp is valid ...
+                if (it->second.first != m_consumerTimestamp[producerId]) {
+                    ++it;
+                    continue;
+                }
+                if (it->first > (m_consumerMap[producerId] + 1)) {
+                    auto ri = m_store[producerId].rbegin();
+                    KARABO_LOG_FRAMEWORK_WARN << "*** JAM in \"" << m_instanceId << "\" for \"" << producerId
+                            << "\", store size: "
+                            << m_store[producerId].size() << ", low #" << it->first << ", high #" << ri->first
+                            << ", waited order number=" << (m_consumerMap[producerId] + 1);
+                    break;
+                }
+                if (it->first == (m_consumerMap[producerId] + 1)) {
+                    m_consumerMap[producerId] = it->first;
+                    m_handlerStrand->post(std::move(it->second.second)); // dispatch callback
+                }
+                it = m_store[producerId].erase(it);
             }
-            return;
+        }
+
+
+        void MqttBroker::cleanObsolete(const std::string& producerId, const double validTimestamp) {
+            for (auto it = m_store[producerId].begin(); it != m_store[producerId].end(); ) {
+                if (it->second.first == validTimestamp) {
+                    ++it;   // keep "valid" message
+                } else {
+                    it = m_store[producerId].erase(it);
+                }
+            }
+        }
+
+
+        void MqttBroker::setDeadline(const std::string& producerId) {
+            // Check if deadline timer is set for producerId ....
+            if (m_deadlines.find(producerId) != m_deadlines.end()) return;
+            auto dl = boost::make_shared<boost::asio::deadline_timer>(EventLoop::getIOService());
+            m_deadlines[producerId] = dl;
+            dl->expires_from_now(boost::posix_time::milliseconds(m_deadlineTimeout));
+            auto wself = weak_from_this();
+            dl->async_wait([wself, this, producerId](const boost::system::error_code& ec) {
+                auto self = wself.lock();
+                if (!self) return;
+                // It runs on EventLoop so needs to be protected...
+                boost::mutex::scoped_lock lock(m_consumerMapMutex);
+                if (ec) {
+                    // "Operation cancelled"
+                    m_deadlines.erase(producerId);
+                    return;
+                }
+                if (!m_store[producerId].empty()) {
+                    // Still need to be synchronized?
+                    if (m_consumerMap[producerId] == 0) {
+                        // try to synchronize with producer
+                        m_consumerMap[producerId] = m_store[producerId].begin()->first - 1;
+                        handleStore(producerId);
+                    }
+                }
+                m_deadlines.erase(producerId);
+            });
         }
 
 
