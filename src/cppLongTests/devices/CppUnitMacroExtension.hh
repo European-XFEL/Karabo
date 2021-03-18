@@ -1,0 +1,1 @@
+../../integrationTests/CppUnitMacroExtension.hh
