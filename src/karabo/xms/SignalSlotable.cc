@@ -55,16 +55,12 @@ namespace karabo {
             {
                 boost::shared_lock<boost::shared_mutex> lock(m_instanceMapMutex);
                 auto it = m_instanceMap.find(instanceId);
-                if (it != m_instanceMap.end()) {
-                    ptr = it->second.lock();
-                }
+                if (it != m_instanceMap.end()) ptr = it->second.lock();
             }
-            if (ptr) { // else likely being destructed
-                auto handler = boost::bind(&SignalSlotable::processEvent, ptr, _1, _2);
-                m_connection->writeLocal(handler, header, body);
-                return true;
-            }
-            return false;
+            if (!ptr) return false;
+
+            ptr->processEvent(header, body);
+            return true;
         }
 
 

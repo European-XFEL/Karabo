@@ -155,10 +155,6 @@ namespace karabo {
                        const int priority,
                        const int timeToLive) override;
 
-            void writeLocal(const consumer::MessageHandler& handler,
-                            const karabo::util::Hash::Pointer& header,
-                            const karabo::util::Hash::Pointer& body) override;
-
         private:
 
             JmsBroker(const JmsBroker& o) = delete;
