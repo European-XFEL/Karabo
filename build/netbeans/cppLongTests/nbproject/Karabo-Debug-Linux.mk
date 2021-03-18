@@ -85,19 +85,19 @@ ${TESTDIR}/TestFiles/f2: ${TESTDIR}/_ext/783893685/InputOutputChannel_LongTest.o
 ${TESTDIR}/_ext/565560950/BaseLogging_Test.o: ../../../src/cppLongTests/devices/BaseLogging_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/565560950
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/565560950/BaseLogging_Test.o ../../../src/cppLongTests/devices/BaseLogging_Test.cc
+	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/565560950/BaseLogging_Test.o ../../../src/cppLongTests/devices/BaseLogging_Test.cc
 
 
 ${TESTDIR}/_ext/565560950/TelegrafLogging_Test.o: ../../../src/cppLongTests/devices/TelegrafLogging_Test.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/565560950
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/565560950/TelegrafLogging_Test.o ../../../src/cppLongTests/devices/TelegrafLogging_Test.cc
+	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/565560950/TelegrafLogging_Test.o ../../../src/cppLongTests/devices/TelegrafLogging_Test.cc
 
 
 ${TESTDIR}/_ext/565560950/deviceTestRunner.o: ../../../src/cppLongTests/devices/deviceTestRunner.cc 
 	${MKDIR} -p ${TESTDIR}/_ext/565560950
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/565560950/deviceTestRunner.o ../../../src/cppLongTests/devices/deviceTestRunner.cc
+	$(COMPILE.cc) -g -D__SO__ -I../../../src -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/565560950/deviceTestRunner.o ../../../src/cppLongTests/devices/deviceTestRunner.cc
 
 
 ${TESTDIR}/_ext/783893685/InputOutputChannel_LongTest.o: ../../../src/cppLongTests/xms/InputOutputChannel_LongTest.cc 
