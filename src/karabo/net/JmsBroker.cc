@@ -131,13 +131,6 @@ namespace karabo {
         }
 
 
-        void JmsBroker::writeLocal(const consumer::MessageHandler& handler,
-                                   const karabo::util::Hash::Pointer& header,
-                                   const karabo::util::Hash::Pointer& body) {
-            handler(header, body);
-        }
-
-
         /**
          * Heartbeat is used for tracking instances (tracking all instances or no tracking at all)
          *
