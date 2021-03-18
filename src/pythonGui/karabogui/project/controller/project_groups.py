@@ -22,11 +22,12 @@ from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.utils import (
     check_device_server_exists, check_macro_exists)
-from karabogui.request import call_device_slot
+from karabogui.request import (
+    call_device_slot, handle_scene_from_server, handle_macro_from_server)
 from karabogui.singletons.api import get_config
 from karabogui.util import (
-    getOpenFileName, handle_macro_from_server, handle_scene_from_server,
-    move_to_cursor, show_filename_error, VALID_PROJECT_OBJECT_NAME)
+    getOpenFileName, move_to_cursor, show_filename_error,
+    VALID_PROJECT_OBJECT_NAME)
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 
 

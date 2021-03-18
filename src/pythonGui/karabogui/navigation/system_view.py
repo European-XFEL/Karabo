@@ -18,10 +18,10 @@ from karabogui.globals import access_role_allowed
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.enums import NavigationItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
-from karabogui.request import call_device_slot
+from karabogui.request import call_device_slot, handle_scene_from_server
 from karabogui.singletons.api import get_manager, get_selection_tracker
 from karabogui.util import (
-    handle_scene_from_server, load_configuration_from_file, move_to_cursor,
+    load_configuration_from_file, move_to_cursor,
     open_documentation_link, save_configuration_to_file, set_treeview_header)
 from karabogui.widgets.popup import PopupWidget
 from .system_model import SystemTreeModel
