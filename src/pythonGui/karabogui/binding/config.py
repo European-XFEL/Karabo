@@ -125,13 +125,23 @@ def sanitize_table_value(binding, value):
     :param binding: The existing `VectorHashBinding`
     :param value: the table value (`HashList`)
 
-    :return sanitized value of type `HashList`
+    :returns: success (bool), sanitized value (`HashList`)
     """
+    if value is None:
+        # Theoretically this should not happen. No `None` value is sent via
+        # network.
+        return [], False
+
     msg = "Expected a value of type `HashList`, got %s instead" % type(value)
     assert isinstance(value, (list, HashList)), msg
 
+    # Provide a success information if we received a valid table!
+    success = True
+
     def _sanitize_row(row_bindings, row_hash):
         """Validate a single row of the table"""
+        nonlocal success
+
         ret = Hash()
         if list(row_bindings.keys()) != list(row_hash.keys()):
             row_hash = realign_hash(row_hash, keys=row_bindings.keys())
@@ -149,13 +159,14 @@ def sanitize_table_value(binding, value):
                 # a column can have been added.
                 # Use the default value from the binding, if necessary force!
                 value = get_default_value(binding, force=True)
+                success = False
             else:
                 value = validate_value(binding, value)
-                # XXX: This is of course critical, if an apple becomes an
+                # Note: This is of course critical, if an apple becomes an
                 # orange, we should have at least an orange default value.
                 if value is None:
                     value = get_default_value(binding, force=True)
-
+                    success = False
             ret[path] = value
 
         return ret
@@ -164,10 +175,10 @@ def sanitize_table_value(binding, value):
     for row_hash in value:
         ret.append(_sanitize_row(binding.bindings, row_hash))
 
-    return ret
+    return success, ret
 
 
-def apply_project_configuration(config, binding):
+def apply_project_configuration(config, binding, base=''):
     """Recursively set values from a configuration Hash object to a binding
     object of a project device.
 
@@ -176,21 +187,32 @@ def apply_project_configuration(config, binding):
 
     Setting a project configuration sets the value directly and does not
     notify!
+
+    :Returns: failure `dict` of keys and error messages
     """
     namespace = binding.value
     assert isinstance(namespace, BindingNamespace)
+
+    fails = {}
+    base = base + '.' if base else ''
 
     for key, value, attrs in config.iterall():
         if key not in namespace:
             continue
 
+        # For storage in fail dict!
+        subkey = base + key
+
         node = getattr(namespace, key)
         if isinstance(value, Hash) and isinstance(node, NodeBinding):
-            apply_project_configuration(value, node)
+            fails.update(apply_project_configuration(value, node, base=subkey))
         else:
             if isinstance(node, VectorHashBinding):
-                value = sanitize_table_value(node, value)
-
+                success, value = sanitize_table_value(node, value)
+                if not success:
+                    fails.update(
+                        {subkey: "The table configuration was "
+                                 "sanitized - <b>The table is corrupted</b>"})
             traits = {'value': value}
             # Set the timestamp no matter what
             ts = Timestamp.fromHashAttributes(attrs)
@@ -201,7 +223,9 @@ def apply_project_configuration(config, binding):
                 node.update_attributes(attr_fast_deepcopy(attrs, {}))
             except TraitError:
                 # value in the configuration is not compatible to schema
-                continue
+                fails.update({subkey: f"Setting value of {value} failed"})
+
+    return fails
 
 
 def extract_attribute_modifications(schema, binding):
@@ -451,6 +475,7 @@ def validate_table_value(binding, value):
 
     :return valid, invalid: (HashList) The values could contain [None, Hash()]
     """
+
     def _validate_row(row_bindings, row_hash):
         """Validate a single row of the table
 
