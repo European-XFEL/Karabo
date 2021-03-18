@@ -18,7 +18,6 @@ from karabogui.controllers.api import populate_controller_registry
 from karabogui.fonts import FONT_FILENAMES, get_font_size_from_dpi
 from karabogui.singletons.api import (
     get_config, get_manager, get_network, get_panel_wrangler)
-from karabogui.programs.register_protocol import register_protocol
 from karabogui.util import process_qt_events
 
 
@@ -177,13 +176,6 @@ def init_gui(app, use_splash=True):
     icons.init()
     # Load the sceneview widget controllers
     populate_controller_registry()
-    # Register karabo:// URL protocol
-    try:
-        register_protocol()
-    except Exception as e:
-        # do not allow failed protocol registration to block the execution
-        RuntimeWarning(f"Scheme registration failed: {str(e)}")
-
     # Initialize the Manager singleton
     get_manager()
     # Initialize the PanelWrangler and attach the splash screen
