@@ -1,6 +1,7 @@
 import os
 import os.path as op
 from traceback import print_exception, format_exception
+import sys
 import warnings
 
 from PyQt5.QtCore import QLocale, Qt
@@ -101,6 +102,10 @@ def create_gui_app(args):
     app.setWindowIcon(QIcon(logo_path))
 
     QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
+
+    # Make sure our applications do not terminate on unhandled python
+    # exceptions.
+    sys.excepthook = excepthook
 
     return app
 
