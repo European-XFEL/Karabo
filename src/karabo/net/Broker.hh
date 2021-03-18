@@ -207,16 +207,6 @@ namespace karabo {
                                const int timeToLive) = 0;
 
             /**
-             * Send message locally (same process) to another device
-             * @param handler  consumer handler of "foreign" device
-             * @param header   message header (routing information)
-             * @param body     message body
-             */
-            virtual void writeLocal(const consumer::MessageHandler& handler,
-                                    const karabo::util::Hash::Pointer& header,
-                                    const karabo::util::Hash::Pointer& body) = 0;
-
-            /**
              *  Specifies the string of broker URLs from the environment variable KARABO_BROKER.
              *  If KARABO_BROKER is not defined, uses a hard coded fallback.
              */

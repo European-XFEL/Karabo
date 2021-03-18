@@ -20,6 +20,9 @@ class Broker_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testPublishSubscribeAsync);
     CPPUNIT_TEST(testReadingHeartbeatsAndLogs);
     CPPUNIT_TEST(testReadingGlobalCalls);
+    CPPUNIT_TEST(testReverseOrderedPublishSubscribe);
+    CPPUNIT_TEST(testProducerRestartConsumerContinues);
+    CPPUNIT_TEST(testProducerContinuesConsumerRestart);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -41,12 +44,17 @@ private:
     void _testReadingHeartbeatsAndLogs();
     void testReadingGlobalCalls();
     void _testReadingGlobalCalls(const std::string& brokerAddress);
+    void testReverseOrderedPublishSubscribe();
+    void testProducerRestartConsumerContinues();
+    void testProducerContinuesConsumerRestart();
+    void _testProducerRestartConsumerContinues();
+    void _testProducerContinuesConsumerRestart();
 
 private:
 
-    karabo::util::Hash m_config;
     std::string m_domain;
     boost::shared_ptr<boost::thread> m_thread;
+    karabo::util::Hash m_config;
 };
 
 #endif	/* BROKER_TEST_HH */
