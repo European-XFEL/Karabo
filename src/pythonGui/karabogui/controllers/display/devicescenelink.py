@@ -16,9 +16,8 @@ from karabogui.controllers.api import (
 from karabogui.dialogs.device_scenelink_dialog import DeviceSceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.fonts import get_qfont, substitute_font
-from karabogui.request import call_device_slot
+from karabogui.request import call_device_slot, handle_scene_from_server
 from karabogui.singletons.api import get_topology
-from karabogui.util import handle_scene_from_server
 
 
 def _get_device_id(keys):
