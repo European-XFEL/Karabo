@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from karabo.native import Hash, HashByte, HashList, Schema
+from karabo.native import Hash, HashByte, HashElement, HashList, Schema
 
 
 def check_array(array, expected):
@@ -115,6 +115,86 @@ def check_hash(h, special=True):
     assert isinstance(h["subelement.node"], Hash)
     assert h["subelement.node.subnode"] == 15
     attrs = h["subelement.node.subnode", ...]
+    assert attrs["minInc"] == 2
+
+    # Hash Element based getters
+    value, attrs = h.getElement("element")
+    assert value == 5
+    assert attrs["minInc"] == 5
+    assert attrs["alarmLow"] == -20
+    ellipsis_attrs = h["element", ...]
+    assert attrs == ellipsis_attrs
+
+    element = h.getElement("element")
+    value, attrs = element
+    assert value == 5
+    assert attrs["minInc"] == 5
+    assert attrs["alarmLow"] == -20
+
+    # Test noded elements
+    element = h.getElement("subelement.node")
+    value, attrs = element
+    assert isinstance(value, Hash)
+    assert value["subnode"] == 15
+    h_attrs = value["subnode", ...]
+    assert h_attrs["minInc"] == 2
+
+    # More direct
+    element = h.getElement("subelement.node.subnode")
+    value, attrs = element
+    assert value == 15
+    assert attrs["minInc"] == 2
+
+    # 1. Mutable check! Change element no node
+    element = h.getElement("element")
+    element = "Wrong"
+
+    element = h.getElement("element")
+    value, attrs = element
+    assert value == 5
+    assert attrs["minInc"] == 5
+
+    # 2. Mutable check! Change value and attrs
+    element = h.getElement("element")
+    value, attrs = element
+    value = "Wrong"
+    attrs = {"minInc": 25}
+
+    element = h.getElement("element")
+    value, attrs = element
+    assert value == 5
+    assert attrs["minInc"] == 5
+
+    # 3. Mutable check! Change element node
+    element = h.getElement("subelement.node")
+    element = "Wrong"
+
+    element = h.getElement("subelement.node")
+    value, attrs = element
+    assert isinstance(value, Hash)
+    assert value["subnode"] == 15
+
+    h_attrs = value["subnode", ...]
+    assert h_attrs["minInc"] == 2
+
+    # 4. Mutable check! More node
+    element = h.getElement("subelement.node.subnode")
+    element = "Wrong"
+
+    element = h.getElement("subelement.node.subnode")
+    value, attrs = element
+    assert value == 15
+    assert attrs["minInc"] == 2
+
+    # 5. Mutable check. Modify the value and attrs
+    element = h.getElement("subelement.node.subnode")
+    value, attrs = element
+    value = 255
+    attrs = {"minInc": 25}
+
+    element = h.getElement("subelement.node.subnode")
+    value, attrs = element
+    assert value == 15
     assert attrs["minInc"] == 2
 
 
@@ -381,3 +461,10 @@ def test_paths_and_keys():
 def test_schema_simple():
     s = Schema("a_schema")
     assert len(s.hash) == 0
+
+
+def test_hash_element():
+    h = HashElement(5, {"minInc": 2})
+    value, attrs = h
+    assert value == 5
+    assert attrs == {"minInc": 2}
