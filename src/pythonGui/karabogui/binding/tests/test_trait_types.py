@@ -1,4 +1,6 @@
 import numpy as np
+import pytest
+from traits.api import TraitError
 
 from ..api import (
     Int8Binding, Int16Binding, Int32Binding, Int64Binding, Uint8Binding,
@@ -30,6 +32,21 @@ def test_validate_integers():
         value = binding.validate_trait("value", 2)
         assert value == 2
         assert type(value) == dtype
+        # Put a goofy value and check raise
+        with pytest.raises(TraitError):
+            binding.validate_trait("value", [])
+
+    # Check basic limits for unsigned ints again ...
+    bindings = {
+        Uint64Binding: np.uint64,
+        Uint32Binding: np.uint32,
+        Uint16Binding: np.uint16,
+        Uint8Binding: np.uint8,
+    }
+    for property_binding in bindings.keys():
+        binding = property_binding()
+        with pytest.raises(TraitError):
+            binding.validate_trait("value", -1)
 
 
 def test_validate_float():
