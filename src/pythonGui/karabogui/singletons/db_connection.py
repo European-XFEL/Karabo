@@ -18,8 +18,7 @@ from karabogui.events import (
     broadcast_event, KaraboEvent, register_for_broadcasts
 )
 from karabogui.singletons.api import get_config, get_network
-from karabogui.util import handle_scene_from_server
-from karabogui.request import call_device_slot
+from karabogui.request import call_device_slot, handle_scene_from_server
 
 # This matches the batch size used in the project database
 MAX_BUFFER_ITEMS = 50
