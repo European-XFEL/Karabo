@@ -13,6 +13,7 @@ from karabo.native import Hash
 from karabogui.binding.api import (
     BaseDeviceProxy, DeviceProxy, ProjectDeviceProxy,
     apply_default_configuration, apply_project_configuration, extract_edits)
+from karabogui.logger import get_logger
 from karabogui.singletons.api import get_topology
 
 
@@ -123,6 +124,7 @@ class ProjectDeviceInstance(HasStrictTraits):
         # and we have schema
         if not self.online and len(self._offline_proxy.binding.value) > 0:
             apply_default_configuration(self._offline_proxy.binding)
+            # Do not report here...
             apply_project_configuration(config, self._offline_proxy.binding)
 
     def start_monitoring(self):
@@ -171,17 +173,23 @@ class ProjectDeviceInstance(HasStrictTraits):
 
     @on_trait_change('_online_proxy:online,_offline_proxy:schema_update')
     def _apply_offline_config(self):
-        """Apply offline device configuration
+        """Apply offline device configuration, but only is there is a schema
         """
-        # Only apply to offline device which already has a schema
         if not self.online and len(self._offline_proxy.binding.value) > 0:
             apply_default_configuration(self._offline_proxy.binding)
+            device_id = self._offline_proxy.device_id
             if self._offline_config is None:
-                print("Ignoring corrupted project configuration for "
-                      "device {}!".format(self._offline_proxy.device_id))
+                text = ("Ignoring corrupted project configuration "
+                        "for device {}!".format(device_id))
+                get_logger().error(text)
                 return
-            apply_project_configuration(self._offline_config,
-                                        self._offline_proxy.binding)
+
+            fails = apply_project_configuration(
+                self._offline_config, self._offline_proxy.binding)
+            if fails:
+                text = (f"Apply offline configuration for <b>{device_id}</b> "
+                        f"reported <b>{len(fails)}</b> problem(s)")
+                get_logger().error(text)
 
     @on_trait_change('_offline_proxy.status', post_init=True)
     def _status_changed(self, old, new):
