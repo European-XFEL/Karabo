@@ -42,7 +42,7 @@ def test_validate_value_float():
     """Test float binding validation"""
     # Check valid values
     binding = types.FloatBinding()
-    assert_binding(binding, 1.3)
+    assert_binding(binding, 1.3, expected=1.3)
     assert_binding(binding, np.float32(1.3), expected=np.float32(1.3))
     assert_binding(binding, np.float64(1.3), expected=np.float64(1.3))
     assert_binding(binding, np.uint32(1), expected=float(1.0))
@@ -59,15 +59,18 @@ def assert_binding(binding, value, expected=None, valid=True):
 
     :param binding: The corresponding binding
     :param value: The value to be verified
-    :param expected: None by default. If not provided, the `value` is taken
-                     as `expected` in the `valid` case.
+    :param expected: Expected value after validation. Must be provided
+                     on `valid` case.
     :param valid: If we have a `valid` value assert. Default is `True`.
     """
     validated = validate_value(binding, value)
-    if valid and expected is None:
-        expected = value
-    assert validated == expected
-    assert type(validated) == type(expected)
+    if not valid:
+        assert validated is None
+    else:
+        # Always force to specify expected
+        assert expected is not None
+        assert validated == expected
+        assert type(validated) == type(expected)
 
 
 def test_validate_value_uint8():
@@ -472,12 +475,14 @@ def test_sanitize_table():
 
     # Check with a single hash conform to the schema
     hash_list = HashList([VALID_TABLE_HASH])
-    value = sanitize_table_value(binding, hash_list)
+    success, value = sanitize_table_value(binding, hash_list)
     assert value == hash_list
+    assert success is True
 
     hash_list = HashList([VALID_TABLE_HASH, VALID_TABLE_HASH])
-    value = sanitize_table_value(binding, hash_list)
+    success, value = sanitize_table_value(binding, hash_list)
     assert value == hash_list
+    assert success is True
 
     # Check one hash that contains an invalid value for a property
     invalid_hash = Hash(
@@ -485,8 +490,9 @@ def test_sanitize_table():
         "uintProperty", -1,  # invalid for a uintProperty
         "boolProperty", True)
 
-    value = sanitize_table_value(binding, HashList([invalid_hash]))
+    success, value = sanitize_table_value(binding, HashList([invalid_hash]))
     assert value == HashList([VALID_TABLE_HASH])
+    assert success is False
 
     # Check with two hashes which one hash contains invalid properties
     invalid_hash = Hash(
@@ -494,8 +500,9 @@ def test_sanitize_table():
         "uintProperty", -1,  # invalid for a uintProperty
         "boolProperty", True)
     hash_list = HashList([VALID_TABLE_HASH, invalid_hash])
-    value = sanitize_table_value(binding, hash_list)
+    success, value = sanitize_table_value(binding, hash_list)
     assert value == HashList([VALID_TABLE_HASH, VALID_TABLE_HASH])
+    assert success is False
 
     # Check with two hashes which both contains invalid properties
     invalid_hash_1 = Hash(
@@ -507,45 +514,55 @@ def test_sanitize_table():
         "uintProperty", -1,  # invalid for a uintProperty
         "boolProperty", True)
     hash_list = HashList([invalid_hash_1, invalid_hash_2])
-    value = sanitize_table_value(binding, hash_list)
+    success, value = sanitize_table_value(binding, hash_list)
     assert value == HashList([VALID_TABLE_HASH, VALID_TABLE_HASH])
+    assert success is False
 
     # Check with a hash that misses a property. The schema has a default value
     invalid_hash = Hash("stringProperty", "foo",
                         "boolProperty", True)
-    value = sanitize_table_value(binding, HashList([invalid_hash]))
+    success, value = sanitize_table_value(binding, HashList([invalid_hash]))
     assert value == HashList([VALID_TABLE_HASH])
+    assert success is False
 
     # Check with a hash that has false property keys.
     # The schema has a default values in this test case
     invalid_hash = Hash("stringProperty", "foo",
                         "uintPropertyWRONG", 1,
                         "boolPropertyWRONG", True)
-    value = sanitize_table_value(binding, HashList([invalid_hash]))
+    success, value = sanitize_table_value(binding, HashList([invalid_hash]))
     assert value == HashList([VALID_TABLE_HASH])
+    assert success is False
 
     # Check with a hash misses a property and the schema does not have
     # a default value
     invalid_hash = Hash("stringProperty", "foo",
                         "boolProperty", True)
-    value = sanitize_table_value(empty_binding, HashList([invalid_hash]))
+    success, value = sanitize_table_value(empty_binding,
+                                          HashList([invalid_hash]))
     assert value == HashList([Hash("stringProperty", "foo",
                                    "uintProperty", 0,  # forced value
                                    "boolProperty", True)])
+    assert success is False
 
+    # Just one property, but no real validation
     valid_hash = Hash("stringProperty", "foobar")
-    value = sanitize_table_value(readonly_binding, HashList([valid_hash]))
+    success, value = sanitize_table_value(readonly_binding,
+                                          HashList([valid_hash]))
     assert value == HashList([Hash("stringProperty", "foobar")])
+    assert success is True
 
     # Mixed table. We provide:
     # uintProperty with string, validation fails -> available default
     # missing string property, available default
     # missing bool property, no available default, forced
     valid_hash = Hash("uintProperty", "K")
-    value = sanitize_table_value(mixed_default_binding, HashList([valid_hash]))
+    success, value = sanitize_table_value(mixed_default_binding,
+                                          HashList([valid_hash]))
     assert value == HashList([Hash("stringProperty", "bar",
                                    "uintProperty", 20,
                                    "boolProperty", False)])
+    assert success is False
 
 
 def _assert_array(binding, value, dtype):
