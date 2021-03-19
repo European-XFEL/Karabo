@@ -145,6 +145,14 @@ def check_hash(h, special=True):
     assert value == 15
     assert attrs["minInc"] == 2
 
+
+def test_hash_mutable():
+    """Test a Hash with mutable objects"""
+    h = Hash()
+    h.setElement("element", 5, {"minInc": 5, "alarmLow": -20})
+    h.setElement("subelement.node.subnode", 15, {"minInc": 2})
+    h.setElement("vector", [], {"maxSize": 5})
+
     # 1. Mutable check! Change element no node
     element = h.getElement("element")
     element = "Wrong"
@@ -177,25 +185,49 @@ def check_hash(h, special=True):
     h_attrs = value["subnode", ...]
     assert h_attrs["minInc"] == 2
 
-    # 4. Mutable check! More node
-    element = h.getElement("subelement.node.subnode")
-    element = "Wrong"
-
-    element = h.getElement("subelement.node.subnode")
-    value, attrs = element
-    assert value == 15
-    assert attrs["minInc"] == 2
-
-    # 5. Mutable check. Modify the value and attrs
-    element = h.getElement("subelement.node.subnode")
-    value, attrs = element
+    # 4. Mutable check. Modify attribute dict directly!
+    value, attrs = h.getElement("element")
+    assert value == 5
+    assert attrs == {"alarmLow": -20, "minInc": 5}
     value = 255
-    attrs = {"minInc": 25}
+    attrs.update({"minInc": 537})
 
-    element = h.getElement("subelement.node.subnode")
+    element = h.getElement("element")
     value, attrs = element
-    assert value == 15
-    assert attrs["minInc"] == 2
+    assert value == 5
+    assert attrs["minInc"] == 537
+
+    # 5. Mutable check. Modify value vector directly!
+    value, _ = h.getElement("vector")
+    assert value == []
+    value.append(255)
+
+    element = h.getElement("vector")
+    value, _ = element
+    assert value == [255]
+
+    # 6. Work with HashElement
+    ele = HashElement(*h.getElement("vector"))
+    assert isinstance(ele, HashElement)
+    value, attrs = ele
+    assert value == [255]
+    assert attrs["maxSize"] == 5
+
+    # Modifying the HashElement can change as well!
+    ele.data.append(15)
+    ele.attrs["maxSize"] = 25
+    value = h["vector"]
+    max_size = h["vector", "maxSize"]
+    assert value == [255, 15]
+    assert max_size == 25
+
+    # No changes as expected!
+    ele.data = 5
+    ele.attrs = {}
+    value = h["vector"]
+    attrs = h["vector", ...]
+    assert value == [255, 15]
+    assert attrs == {"maxSize": 25}
 
 
 def create_hash():
