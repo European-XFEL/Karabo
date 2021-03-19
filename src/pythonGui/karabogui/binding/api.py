@@ -3,8 +3,7 @@ from .builder import build_binding
 from .config import (
     apply_configuration, apply_default_configuration, apply_fast_data,
     apply_project_configuration, extract_attribute_modifications,
-    extract_configuration, extract_edits, extract_sparse_configurations,
-    get_default_value, validate_table_value, validate_value
+    extract_configuration, extract_edits, extract_sparse_configurations
 )
 from .compare import (attr_fast_deepcopy, get_table_changes, has_changes,
                       has_array_changes, has_floating_changes,
@@ -34,3 +33,5 @@ from .types import (
 from .util import (
     get_binding_value, get_editor_value, get_min_max, get_min_max_size,
     get_native_min_max, has_min_max_attributes, has_min_max_attributes)
+from .validate import (
+    validate_value, validate_table_value, get_default_value)
