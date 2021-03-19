@@ -208,7 +208,7 @@ class BaseSeriesGraph(BaseBindingController):
 
     def _update_date_widgets(self, vb, x_range):
         """This slot is called whenever the xRange changes"""
-        # Note that the time comes in seconds
+        # Note that the range comes in seconds (float)
         x_min, x_max = x_range
         start = QDateTime.fromMSecsSinceEpoch(x_min * 1000)
         end = QDateTime.fromMSecsSinceEpoch(x_max * 1000)
@@ -285,8 +285,9 @@ class BaseSeriesGraph(BaseBindingController):
         if not timestamps:
             return QDateTime.currentDateTime()
         else:
-            # Cast numpy value to float
-            return QDateTime.fromTime_t(float(max(timestamps)))
+            # Preserve resolution with `fromMSecsSinceEpoch`
+            # Qt has deprecated `QDateTime.fromTime_t`
+            return QDateTime.fromMSecsSinceEpoch(max(timestamps) * 1000)
 
     def _draw_start_time(self, proxy, value, timestamp):
         if proxy in self._curves_start:
