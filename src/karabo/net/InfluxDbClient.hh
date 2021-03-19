@@ -210,6 +210,11 @@ namespace karabo {
 
             /**
              * Send HTTP request to InfluxDb.  Helper function.
+             *
+             * Wraps the given InfluxResponseHandler within a callback to
+             * onResponse. It will be up to onResponse to call the action
+             * InfluxResponseHandler and keep the consumption of requests
+             * submitted to the InfluxDbClient going.
              */
             void sendToInfluxDb(const std::string& msg,
                                 const InfluxResponseHandler& action,
@@ -224,6 +229,25 @@ namespace karabo {
              * @return The raw form of the Authorization header.
              */
             std::string getRawBasicAuthHeader();
+
+            /**
+             * Handle unrecoverable read and parsing errors while processing HTTP
+             * responses from Influx.
+             *
+             * The recovery involves recycling the network connection, as there
+             * is no way to recover synchronism in the read operation within the
+             * current connection after those kind of errors happen.
+             * Also generates an HTTP response with status code 700 and an error
+             * message to communicate to users of the InfluxDbClient instance.
+             *
+             * @param errMsg the error message to be put in the generated 700
+             *               coded http response.
+             *
+             * @param requestId the unique identifier of the HTTP request whose
+             *                  response could not be processed (needed to update
+             *                  the internal bookeeping of the InfluxDb client).
+             */
+            void handleHttpReadError(const std::string &errMsg, const std::string &requestId);
 
        private:
 
@@ -267,4 +291,3 @@ namespace karabo {
 
 
 #endif	/* KARABO_NET_INFLUXDBCLIENT_HH */
-
