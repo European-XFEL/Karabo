@@ -23,7 +23,7 @@ class TableModel(QAbstractTableModel):
     def __init__(self, binding, set_edit_value, parent=None):
         super(QAbstractTableModel, self).__init__(parent)
         self._set_edit_value = set_edit_value
-        self._role = Qt.EditRole
+        self._is_readonly = False
         self._data = []
         self._bindings = binding.bindings
         self._header = list(binding.bindings.keys())
@@ -42,9 +42,7 @@ class TableModel(QAbstractTableModel):
             return None
 
         row, column = index.row(), index.column()
-        if role == Qt.CheckStateRole and self._role == Qt.EditRole:
-            # XXX: Again the Qt.EditRole check is to distinguish INITONLY
-            # and READONLY access!
+        if role == Qt.CheckStateRole and not self._is_readonly:
             key = self._header[column]
             value = self._data[row][key]
             binding = self._bindings[key]
@@ -95,7 +93,7 @@ class TableModel(QAbstractTableModel):
         # Get an enum for the AccessMode
         binding = self._bindings[key]
         access_mode = binding.access_mode
-        if isinstance(binding, BoolBinding) and self._role == Qt.EditRole:
+        if isinstance(binding, BoolBinding) and not self._is_readonly:
             flags &= ~Qt.ItemIsEditable
             if access_mode is AccessMode.READONLY:
                 # XXX: Remove the `enabled` flag due to INITONLY!
@@ -215,9 +213,9 @@ class TableModel(QAbstractTableModel):
     def duplicate_row(self, pos):
         self.insertRows(pos + 1, 1, QModelIndex(), copy_row=self._data[pos])
 
-    def set_role(self, role=Qt.DisplayRole):
-        """Set the role of the table element"""
-        self._role = role
+    def set_readonly(self, value):
+        """Set the readonly role of the table element"""
+        self._is_readonly = value
 
 
 class KaraboTableView(QTableView):
