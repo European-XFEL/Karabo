@@ -127,6 +127,7 @@ class DisplayVectorGraph(BaseArrayGraph):
 @register_binding_controller(ui_name='NDArray Graph',
                              klassname='NDArrayGraph',
                              binding_type=NDArrayBinding,
+                             priority=90,
                              can_show_nothing=False)
 class DisplayNDArrayGraph(BaseArrayGraph):
     """The NDArray controller for display of pulse data"""
