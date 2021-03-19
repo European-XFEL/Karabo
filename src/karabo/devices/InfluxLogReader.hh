@@ -49,7 +49,7 @@ namespace karabo {
             std::string property;
             karabo::util::Epochstamp from;
             karabo::util::Epochstamp to;
-            int maxDataPoints;
+            unsigned int maxDataPoints;
             karabo::xms::SignalSlotable::AsyncReply aReply;
 
             // return sampling interval in microsecond
@@ -258,4 +258,3 @@ namespace karabo {
 } // namespace karabo
 
 #endif	/* INFLUXLOGREADER_HH */
-
