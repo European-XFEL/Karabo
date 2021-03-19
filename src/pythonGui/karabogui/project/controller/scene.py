@@ -19,6 +19,7 @@ from karabogui import icons, messagebox
 from karabogui.enums import AccessRole, ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.globals import access_role_allowed
+from karabogui.project.wizard.api import CinemaWizardController
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
 from karabogui.singletons.api import get_db_conn, get_panel_wrangler
@@ -68,6 +69,13 @@ class SceneController(BaseProjectController):
                                                 parent=parent))
         can_revert = not self._is_showing() and self.model.modified
         revert_action.setEnabled(can_revert and project_allowed)
+
+        project_model = project_controller.model
+        cinema_action = QAction(icons.run, 'Create cinema link', menu)
+        cinema_action.triggered.connect(partial(self._create_cinema_link,
+                                                project_model=project_model,
+                                                parent=parent))
+
         menu.addAction(edit_action)
         menu.addAction(dupe_action)
         menu.addAction(delete_action)
@@ -75,6 +83,8 @@ class SceneController(BaseProjectController):
         menu.addAction(save_as_action)
         menu.addAction(replace_action)
         menu.addAction(revert_action)
+        menu.addSeparator()
+        menu.addAction(cinema_action)
 
         return menu
 
@@ -158,7 +168,6 @@ class SceneController(BaseProjectController):
             broadcast_event(KaraboEvent.RemoveProjectModelViews,
                             {'models': [scene]})
 
-    # @pyqtSlot()
     def _edit_scene(self, parent=None):
         dialog = ObjectEditDialog(object_type='scene', model=self.model,
                                   parent=parent)
@@ -185,7 +194,6 @@ class SceneController(BaseProjectController):
         wrangler = get_panel_wrangler()
         return wrangler.is_showing_project_item(scene)
 
-    # @pyqtSlot()
     def _revert_changes(self, parent=None):
         scene = self.model
         # NOTE: The domain only changes when a project is saved or loaded
@@ -199,7 +207,6 @@ class SceneController(BaseProjectController):
         read_project_model(StringIO(data), existing=scene)
         scene.modified = False
 
-    # @pyqtSlot()
     def _save_scene_to_file(self, parent=None):
         config = get_config()
         path = config['scene_dir']
@@ -224,3 +231,9 @@ class SceneController(BaseProjectController):
 
         with open(fn, 'w') as fout:
             fout.write(write_scene(scene))
+
+    def _create_cinema_link(self, project_model=None, parent=None):
+        wizard = CinemaWizardController(selected_scenes=[self.model],
+                                        project_model=project_model,
+                                        parent=parent)
+        wizard.run()
