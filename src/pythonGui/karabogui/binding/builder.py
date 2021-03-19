@@ -4,7 +4,7 @@ from karabo.common import const
 from karabo.native import Hash, NodeType, Schema
 from . import recursive
 from . import types
-from .util import attr_fast_deepcopy
+from .compare import attr_fast_deepcopy
 
 
 def build_binding(schema, existing=None):
