@@ -620,28 +620,14 @@ class KaraboPlotView(QWidget):
         self.plotItem.vb.enableAutoRange(axis=1, enable=enable)
 
     def set_range_x(self, min_value, max_value):
-        """Set the X Range of the view box with min and max value
-
-        The pyqtgraph viewbox has a wrong order when disabling the autorange
-        with manual values. This is currently fixed on pyqtgraph 0.11 but
-        as of this moment, the GUI uses a previous release. We explicitly
-        turn off the autorange first and avoid recalculation to circumvent
-        the bug."""
-        self.plotItem.vb.enableAutoRange(x=False)
+        """Set the X Range of the view box with min and max value"""
         self.plotItem.vb.setRange(xRange=[min_value, max_value],
-                                  disableAutoRange=False)
+                                  disableAutoRange=True)
 
     def set_range_y(self, min_value, max_value):
-        """Set the Y Range of the view box with min and max value
-
-        The pyqtgraph viewbox has a wrong order when disabling the autorange
-        with manual values. This is currently fixed on pyqtgraph 0.11 but
-        as of this moment, the GUI uses a previous release. We explicitly
-        turn off the autorange first and avoid recalculation to circumvent
-        the bug."""
-        self.plotItem.vb.enableAutoRange(y=False)
+        """Set the Y Range of the view box with min and max value"""
         self.plotItem.vb.setRange(yRange=[min_value, max_value],
-                                  disableAutoRange=False)
+                                  disableAutoRange=True)
 
     def get_view_range_x(self):
         view_range = self.plotItem.vb.viewRange()
