@@ -4,15 +4,15 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-import numpy as np
 from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QPalette, QValidator
-from PyQt5.QtWidgets import QComboBox, QItemDelegate, QLineEdit
+from PyQt5.QtWidgets import QComboBox, QStyledItemDelegate, QLineEdit
 
 from karabo.common.api import KARABO_SCHEMA_OPTIONS
 from karabogui.binding.api import (
     FloatBinding, get_default_value, get_native_min_max, IntBinding,
     validate_value)
+from karabogui.util import SignalBlocker
 
 
 def get_table_delegate(binding, parent):
@@ -24,40 +24,34 @@ def get_table_delegate(binding, parent):
     return None
 
 
-class ComboBoxDelegate(QItemDelegate):
+class ComboBoxDelegate(QStyledItemDelegate):
     def __init__(self, options, parent=None):
         super(ComboBoxDelegate, self).__init__(parent)
-        # XXX: We might have options from number values, they serialize as
-        # ndarray! Once the value casting is back, the string cast has
-        # to be removed!
-        if isinstance(options, np.ndarray):
-            options = options.astype(np.str).tolist()
-        self._options = options
+        # Note: We make sure that the options are a list of strings. For simple
+        # types in Karabo they are a coercing array on the binding
+        self._options = [str(value) for value in options]
 
     def createEditor(self, parent, option, index):
-        """Reimplemented function of QItemDelegate"""
+        """Reimplemented function of QStyledItemDelegate"""
         combo = QComboBox(parent)
-        combo.addItems([str(o) for o in self._options])
+        combo.addItems(self._options)
         combo.currentIndexChanged.connect(self._on_editor_changed)
         return combo
 
     def setEditorData(self, editor, index):
-        """Reimplemented function of QItemDelegate"""
+        """Reimplemented function of QStyledItemDelegate"""
         selection = index.model().data(index, Qt.DisplayRole)
-        try:
+        if selection in self._options:
             selection_index = self._options.index(selection)
-            editor.blockSignals(True)
-            editor.setCurrentIndex(selection_index)
-            editor.blockSignals(False)
-        except ValueError:
-            # XXX: Due to schema injection, a property value might not be in
-            # allowed options and thus not available. This is very rare
-            # and unlikely and we just continue!
-            raise RuntimeError("The value {} is not in the following "
-                               "options: {}".format(selection, self._options))
+            with SignalBlocker(editor):
+                editor.setCurrentIndex(selection_index)
+        else:
+            raise RuntimeError(
+                f"The value {selection} is not in the following "
+                f"options: {self._options}")
 
     def setModelData(self, editor, model, index):
-        """Reimplemented function of QItemDelegate"""
+        """Reimplemented function of QStyledItemDelegate"""
         model.setData(index, self._options[editor.currentIndex()], Qt.EditRole)
 
     @pyqtSlot()
@@ -87,13 +81,13 @@ class LineEditEditor(QLineEdit):
         self.setPalette(palette)
 
 
-class NumberDelegate(QItemDelegate):
+class NumberDelegate(QStyledItemDelegate):
     def __init__(self, binding, parent=None):
         super(NumberDelegate, self).__init__(parent)
         self._binding = binding
 
     def createEditor(self, parent, option, index):
-        """Reimplemented function of QItemDelegate"""
+        """Reimplemented function of QStyledItemDelegate"""
         editor = LineEditEditor(parent)
         value = index.model().data(index, Qt.DisplayRole)
         validator = NumberValidator(self._binding, value, parent=editor)
