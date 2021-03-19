@@ -3,7 +3,6 @@
 # Created on November 3, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from collections import OrderedDict
 from enum import Enum
 from functools import partial
 import os.path
@@ -18,6 +17,7 @@ from karabo.common.project.api import get_project_models
 from karabo.native import AccessLevel
 from karabogui import globals as krb_globals
 from karabogui import icons
+from karabogui.access import ACCESS_LEVELS
 from karabogui.dialogs.configuration import ConfigurationDialog
 from karabogui.dialogs.dialogs import AboutDialog
 from karabogui.dialogs.update_dialog import UpdateDialog
@@ -34,12 +34,6 @@ from karabogui.singletons.api import (
 from karabogui.util import process_qt_events
 from karabogui.wizard.wizard import Wizard
 
-ACCESS_LEVELS = OrderedDict()
-ACCESS_LEVELS['Admin'] = AccessLevel.ADMIN
-ACCESS_LEVELS['Expert'] = AccessLevel.EXPERT
-ACCESS_LEVELS['Operator'] = AccessLevel.OPERATOR
-ACCESS_LEVELS['User'] = AccessLevel.USER
-ACCESS_LEVELS['Observer'] = AccessLevel.OBSERVER
 
 CONSOLE_TITLE = 'Console'
 LOG_TITLE = 'Log'
