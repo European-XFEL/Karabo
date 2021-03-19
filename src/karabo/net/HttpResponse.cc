@@ -86,10 +86,10 @@ namespace karabo {
         void HttpResponse::parseHttpChunks(const std::string& chunks) {
             payload = "";
             size_t lengthPosition = 0;
-            int dataLength = 0;
+            unsigned long long dataLength = 0;
 
             do {
-                dataLength = std::stoi(chunks.c_str() + lengthPosition, 0, 16);
+                dataLength = std::stoull(chunks.c_str() + lengthPosition, 0, 16);
                 size_t dataPosition = chunks.find("\r\n", lengthPosition) + 2; // 2 - CRLF
                 payload.append(chunks.c_str() + dataPosition, dataLength);
                 lengthPosition = dataPosition + dataLength + 2;
@@ -136,6 +136,3 @@ namespace karabo {
     } // namespace karabo
 
 } // namespace net
-
-
-
