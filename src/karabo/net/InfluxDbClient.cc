@@ -82,7 +82,6 @@ namespace karabo {
         }
 
 
-        // TODO: pass the shared pointer to the DbClient as an argument and remove InfluxDbClient::setDbClient(...)
         InfluxDbClient::InfluxDbClient(const karabo::util::Hash& input)
             : m_url(input.get<std::string>("url"))
             , m_dbConnection()
@@ -383,27 +382,7 @@ namespace karabo {
             if (ec) {
                 std::ostringstream oss;
                 oss << "Reading response from InfluxDB failed: code #" << ec.value() << " -- " << ec.message();
-                KARABO_LOG_FRAMEWORK_WARN << oss.str();
-                {
-                    boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
-                    m_dbChannel.reset();
-                    m_connectionRequested = false;
-                }
-                InfluxResponseHandler handler;
-                HttpResponse o;
-                {
-                    boost::mutex::scoped_lock lock(m_responseHandlersMutex);
-                    auto it = m_registeredInfluxResponseHandlers.find(flyingId);
-                    if (it != m_registeredInfluxResponseHandlers.end()) {
-                        handler = it->second.second;
-                        m_registeredInfluxResponseHandlers.erase(it);
-                    }
-                    o.code = 700;
-                    o.message = oss.str();
-                    o.requestId = flyingId;
-                    o.connection = "close";
-                }
-                if (handler) handler(o);
+                handleHttpReadError(oss.str(), flyingId);
                 return;
             }
 
@@ -412,7 +391,20 @@ namespace karabo {
             {
                 if (line.substr(0, 9) == "HTTP/1.1 ") {
                     m_response.clear(); // Clear for new header
-                    m_response.parseHttpHeader(line); // Fill out m_response object
+                    try {
+                        m_response.parseHttpHeader(line); // Fill out m_response object
+                    } catch (std::exception &e) {
+                        // An error parsing the http header is not recoverable within the
+                        // same connection - the client would lose sync with the server in
+                        // a permanent way.
+                        std::ostringstream oss;
+                        oss << "Error parsing HttpHeader: " << e.what()
+                            << std::endl
+                            << "Content being parsed: " << line
+                            << std::endl;
+                        handleHttpReadError(oss.str(), flyingId);
+                        return;
+                    }
                     if (m_response.requestId.empty()) {
                         m_response.requestId = flyingId;
                         m_response.contentType = "application/json";
@@ -429,7 +421,20 @@ namespace karabo {
                         m_response.payload = (*m_dbChannel).consumeBytesAfterReadUntil(m_response.contentLength);
                     }
                 } else if (m_response.transferEncoding == "chunked") {
-                    m_response.parseHttpChunks(line);
+                    try {
+                        m_response.parseHttpChunks(line);
+                    } catch (std::exception &e) {
+                        // An error parsing an http chunk is not recoverable within the
+                        // same connection - the client would lose sync with the server in
+                        // a permanent way.
+                        std::ostringstream oss;
+                        oss << "Error parsing HttpChunk: " << e.what()
+                            << std::endl
+                            << "Content being parsed: " << line
+                            << std::endl;
+                        handleHttpReadError(oss.str(), flyingId);
+                        return;
+                    }
                     if (m_response.contentType != "application/json") {
                         std::ostringstream oss;
                         oss << "Currently only 'application/json' Content-Type is supported";
@@ -496,42 +501,49 @@ namespace karabo {
         void InfluxDbClient::onDbWrite(const karabo::net::ErrorCode& ec, boost::shared_ptr<std::vector<char> > p) {
             p.reset();
             if (ec) {
-                std::ostringstream oss;
-                oss << "Sending request to InfluxDB server at '"
-                    << m_hostname << "' failed: code #" << ec.value()
-                    << " -- " << ec.message();
-                KARABO_LOG_FRAMEWORK_WARN << oss.str();
-                {
-                    boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
-                    m_dbChannel.reset();
-                    m_connectionRequested = false;
-                }
                 std::string flyingId;
                 {
                     boost::mutex::scoped_lock lock(m_requestQueueMutex);
                     flyingId = m_flyingId;
                 }
-                // An error happened at the TCP level - generates an HTTP response with status code
-                // 700 to signal that error to the registered handler (if any).
-                InfluxResponseHandler handler;
-                {
-                    boost::mutex::scoped_lock lock(m_responseHandlersMutex);
-                    auto it = m_registeredInfluxResponseHandlers.find(flyingId);
-                    if (it == m_registeredInfluxResponseHandlers.end()) return;
-                    handler = it->second.second;
-                    m_registeredInfluxResponseHandlers.erase(it);
-                }
-                HttpResponse o;
-                o.code = 700;
-                o.message = oss.str();
-                o.requestId = flyingId;
-                o.connection = "close";
-                if (handler) handler(o);
+                std::ostringstream oss;
+                oss << "Sending request to InfluxDB server at '"
+                    << m_hostname << "' failed: code #" << ec.value()
+                    << " -- " << ec.message();
+                handleHttpReadError(oss.str(), flyingId);
                 return;
             }
             // For the ec == 0 condition - no error at tcp level -
             // Relies on readAsyncStringUntil call made at onDbConnect to consume
             // the http response.
+        }
+
+
+        void InfluxDbClient::handleHttpReadError(const std::string &errMsg,
+                                                 const std::string &requestId) {
+            KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+            {
+                boost::mutex::scoped_lock lock(m_connectionRequestedMutex);
+                m_dbChannel.reset();
+                m_connectionRequested = false;
+            }
+            InfluxResponseHandler handler;
+            {
+                boost::mutex::scoped_lock lock(m_responseHandlersMutex);
+                auto it = m_registeredInfluxResponseHandlers.find(requestId);
+                if (it != m_registeredInfluxResponseHandlers.end()) {
+                    handler = it->second.second;
+                    m_registeredInfluxResponseHandlers.erase(it);
+                }
+            }
+            if (handler) {
+                HttpResponse o;
+                o.code = 700;
+                o.message = errMsg;
+                o.requestId = requestId;
+                o.connection = "close";
+                handler(o);
+            }
         }
 
 
