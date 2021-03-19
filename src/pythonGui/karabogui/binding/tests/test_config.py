@@ -1,662 +1,282 @@
+from contextlib import contextmanager
+from glob import glob
+import os.path as op
+
 import numpy as np
-from numpy.testing import assert_array_equal
+from traits.api import Undefined
 
-from karabo.common.const import KARABO_SCHEMA_DEFAULT_VALUE
+from karabo.common.api import (
+    KARABO_SCHEMA_METRIC_PREFIX_ENUM, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
+    KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL, KARABO_ALARM_LOW, State
+)
 from karabo.native import (
-    AccessMode, Bool, Configurable, Hash, HashList, String, UInt8, VectorHash)
+    AccessLevel, AccessMode, Assignment, decodeBinary, Hash, HashList,
+    MetricPrefix, Schema, Timestamp, Unit
+)
+from ..api import (
+    apply_configuration, apply_project_configuration,
+    apply_default_configuration, apply_fast_data, build_binding,
+    extract_attribute_modifications, extract_configuration, extract_edits)
+from .schema import (
+    ALL_PROPERTIES_MAP, get_all_props_schema, get_vectorattr_schema)
 
-from karabogui.binding.config import (
-    validate_value, validate_table_value, get_default_value,
-    sanitize_table_value)
-import karabogui.binding.types as types
-
-
-class TableRow(Configurable):
-    stringProperty = String(defaultValue='foo')
-    uintProperty = UInt8(defaultValue=1)
-    boolProperty = Bool(defaultValue=True)
-
-
-class TableRowEmpty(Configurable):
-    stringProperty = String()
-    uintProperty = UInt8()
-    boolProperty = Bool()
+TEST_DATA_DIR = op.join(op.dirname(__file__), 'data')
 
 
-class TableRowReadOnly(Configurable):
-    stringProperty = String(accessMode=AccessMode.READONLY)
+def _dict_diff(d0, d1):
+    """Get the new items in dictionary d1"""
+    return {k: v for k, v in d1.items() if k not in d0 or d0[k] != v}
 
 
-class TableRowReadOnlyDefault(Configurable):
-    uintProperty = UInt8(defaultValue=57,
-                         accessMode=AccessMode.READONLY)
-
-
-class TableRowMixedDefaults(Configurable):
-    stringProperty = String(defaultValue='bar')
-    uintProperty = UInt8(defaultValue=20)
-    boolProperty = Bool()
-
-
-def test_validate_value_float():
-    """Test float binding validation"""
-    # Check valid values
-    binding = types.FloatBinding()
-    assert_binding(binding, 1.3, expected=1.3)
-    assert_binding(binding, np.float32(1.3), expected=np.float32(1.3))
-    assert_binding(binding, np.float64(1.3), expected=np.float64(1.3))
-    assert_binding(binding, np.uint32(1), expected=float(1.0))
-    assert_binding(binding, np.int32(-1), expected=float(-1.0))
-    assert_binding(binding, "1.0", expected=float(1.0))
-
-    # Check invalid values for floats
-    assert_binding(binding, "foo", valid=False)
-    assert_binding(binding, [1, 2, 3], valid=False)
-
-
-def assert_binding(binding, value, expected=None, valid=True):
-    """Validate a value against its binding
-
-    :param binding: The corresponding binding
-    :param value: The value to be verified
-    :param expected: Expected value after validation. Must be provided
-                     on `valid` case.
-    :param valid: If we have a `valid` value assert. Default is `True`.
+@contextmanager
+def watch_config_update_notification(binding, expected):
+    """Watch for binding.config_update notification, assert that trait event
+    should be fired/not fired according to `expected`
     """
-    validated = validate_value(binding, value)
-    if not valid:
-        assert validated is None
-    else:
-        # Always force to specify expected
-        assert expected is not None
-        assert validated == expected
-        assert type(validated) == type(expected)
-
-
-def test_validate_value_uint8():
-    """Test uint8 binding validation."""
-    binding = types.Uint8Binding()
-
-    # Check valid values
-    assert_binding(binding, 0, expected=np.uint8(0))
-    assert_binding(binding, 255, expected=np.uint8(255))
-    assert_binding(binding, np.int8(8), expected=np.uint8(8))
-    assert_binding(binding, '1', expected=np.uint8(1))
-
-    # Check invalid values
-    assert_binding(binding, -1, valid=False)
-    assert_binding(binding, 256, valid=False)
-    assert_binding(binding, 1.0, valid=False)  # the value is a float
-    assert_binding(binding, "foo", valid=False)
-    assert_binding(binding, [1, 2, 3], valid=False)
-    assert_binding(binding, HashList(), valid=False)
-
-
-def test_validate_value_int8():
-    """Test int8 binding validation."""
-    binding = types.Int8Binding()
-
-    # Check valid values
-    assert_binding(binding, -128, expected=np.int8(-128))
-    assert_binding(binding, 127, expected=np.int8(127))
-    assert_binding(binding, '1', expected=np.int8(1))
-    assert_binding(binding, np.uint32(1), expected=np.int8(1))
-
-    # Check invalid values
-    assert_binding(binding, -129, valid=False)
-    assert_binding(binding, 128, valid=False)
-    assert_binding(binding, 1.0, valid=False)  # the value is a float
-    assert_binding(binding, np.float(1.0), valid=False)
-    assert_binding(binding, "foo", valid=False)
-    assert_binding(binding, [1, 2, 3], valid=False)
-    assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
-
-
-def test_validate_value_int16():
-    """Test the int16 binding validation."""
-    binding = types.Int16Binding()
-
-    # Check valid values
-    assert_binding(binding, 0, expected=np.int16(0))
-    assert_binding(binding, (2 ** 15) - 1, expected=np.int16((2 ** 15) - 1))
-    assert_binding(binding, np.int8(8), expected=np.int16(8))
-    assert_binding(binding, '1', expected=np.int16(1))
-
-    # Check invalid values
-    assert_binding(binding, -(2 ** 64), valid=False)
-    assert_binding(binding, 1.0, valid=False)  # the value is a float
-    assert_binding(binding, "foo", valid=False)
-    assert_binding(binding, [1, 2, 3], valid=False)
-    assert_binding(binding, HashList(), valid=False)
-
-
-def test_validate_value_uint16():
-    """Test uint16 binding validation."""
-    binding = types.Uint16Binding()
-
-    # Check valid values
-    assert_binding(binding, 0, expected=np.uint16(0))
-    assert_binding(binding, (2 ** 16) - 1, expected=np.uint16((2 ** 16) - 1))
-    assert_binding(binding, np.int8(8), expected=np.uint16(8))
-    assert_binding(binding, '1', expected=np.uint16(1))
-
-    # Check invalid values
-    assert_binding(binding, -1, valid=False)
-    assert_binding(binding, (2 ** 16), valid=False)
-    assert_binding(binding, 1.0, valid=False)  # the value is a float
-    assert_binding(binding, "foo", valid=False)
-    assert_binding(binding, [1, 2, 3], valid=False)
-    assert_binding(binding, HashList(), valid=False)
-
-
-def test_validate_value_int32():
-    """Test int32 binding validation."""
-    binding = types.Int32Binding()
-
-    # Check valid values
-    assert_binding(binding, -(2 ** 31), expected=np.int32(-(2 ** 31)))
-    assert_binding(binding, (2 ** 31) - 1, expected=np.int32((2 ** 31) - 1))
-    assert_binding(binding, '1', expected=np.int32(1))
-    assert_binding(binding, np.uint32(1), expected=np.int32(1))
-
-    # Check invalid values
-    assert_binding(binding, -(2 ** 32), valid=False)
-    assert_binding(binding, (2 ** 32) - 1, valid=False)
-    assert_binding(binding, 1.0, valid=False)  # the value is a float
-    assert_binding(binding, np.float(1.0), valid=False)
-    assert_binding(binding, "foo", valid=False)
-    assert_binding(binding, [1, 2, 3], valid=False)
-    assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
-
-
-def test_validate_value_uint32():
-    """Test uint32 binding validation."""
-    binding = types.Uint32Binding()
-
-    # Check valid values
-    assert_binding(binding, 1, expected=np.uint32(1))
-    assert_binding(binding, (2 ** 32) - 1, expected=np.uint32((2 ** 32) - 1))
-    assert_binding(binding, '1', expected=np.uint32(1))
-    assert_binding(binding, np.uint32(1), expected=np.uint32(1))
-
-    # Check invalid values
-    assert_binding(binding, -(2 ** 32), valid=False)
-    assert_binding(binding, (2 ** 32), valid=False)
-    assert_binding(binding, 1.0, valid=False)  # the value is a float
-    assert_binding(binding, np.float(1.0), valid=False)
-    assert_binding(binding, "foo", valid=False)
-    assert_binding(binding, [1, 2, 3], valid=False)
-    assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
-
-
-def test_validate_value_int64():
-    """Test int64 binding validation."""
-    binding = types.Int64Binding()
-
-    # Check valid values
-    assert_binding(binding, -(2 ** 63), expected=np.int64(-(2 ** 63)))
-    assert_binding(binding, (2 ** 63) - 1, expected=np.int64((2 ** 63) - 1))
-    assert_binding(binding, '1', expected=np.int64(1))
-    assert_binding(binding, np.uint32(1), expected=np.int64(1))
-
-    # Check invalid values
-    assert_binding(binding, -(2 ** 64), valid=False)
-    assert_binding(binding, (2 ** 64) - 1, valid=False)
-    assert_binding(binding, 1.0, valid=False)  # the value is a float
-    assert_binding(binding, np.float(1.0), valid=False)
-    assert_binding(binding, "foo", valid=False)
-    assert_binding(binding, [1, 2, 3], valid=False)
-    assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
-
-
-def test_validate_value_uint64():
-    """Test uint64 binding validation."""
-    binding = types.Uint64Binding()
-
-    # Check valid values
-    assert_binding(binding, 1, expected=np.uint64(1))
-    assert_binding(binding, (2 ** 64) - 1, expected=np.uint64((2 ** 64) - 1))
-    assert_binding(binding, '1', expected=np.uint64(1))
-    assert_binding(binding, np.uint32(1), expected=np.uint64(1))
-
-    # Check invalid values
-    assert_binding(binding, -(2 ** 128), valid=False)
-    assert_binding(binding, (2 ** 128) - 1, valid=False)
-    assert_binding(binding, 1.0, valid=False)  # the value is a float
-    assert_binding(binding, np.float(1.0), valid=False)
-    assert_binding(binding, "foo", valid=False)
-    assert_binding(binding, [1, 2, 3], valid=False)
-    assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
-
-
-def test_validate_value_string():
-    """Test string binding validation.
-    If valid, it should return the casted value"""
-    binding = types.StringBinding()
-
-    # Check valid values
-    assert validate_value(binding, "1") == "1"
-    assert validate_value(binding, 1) == "1"
-    assert validate_value(binding, 1.0) == "1.0"
-
-    # Check invalid values
-    assert validate_value(binding, [1, 2, 3]) is None
-    assert validate_value(binding, HashList()) is None
-
-
-def test_validate_value_bool():
-    """Test bool binding validation.
-    If valid, it should return the casted value. The casting considers the
-    the __bool__ of the object (the conventional way), not sure if it's what
-    we want in Karabo."""
-    binding = types.BoolBinding()
-
-    # Check valid values
-    assert validate_value(binding, 1) is True
-    assert validate_value(binding, 0) is False
-    assert validate_value(binding, 1.0) is True
-    assert validate_value(binding, 0) is False
-    assert validate_value(binding, '1') is True
-    assert validate_value(binding, '0') is False
-    assert validate_value(binding, "True") is True
-    assert validate_value(binding, "False") is False
-
-    # Check dubious values
-    assert validate_value(binding, [1, 2, 3]) is True  # this should be invalid
-    assert validate_value(binding, 2.0) is True  # this should be invalid
-    assert validate_value(binding, HashList([Hash(), Hash()])) is True
-
-
-def test_validate_value_vectoruint8():
-    binding = types.VectorUint8Binding()
-
-    array = np.array([0, 10, 255])
-    # Check valid values
-    _assert_array(binding, array, dtype=np.uint8)
-    _assert_array(binding, array.astype(np.float32), dtype=np.uint8)
-    _assert_array(binding, array.astype(np.uint32), dtype=np.uint8)
-
-    # Check invalid values
-    assert validate_value(binding, [-1]) is None
-    assert validate_value(binding, [256]) is None
-    assert validate_value(binding, 0) is None
-    assert validate_value(binding, 255) is None
-    assert validate_value(binding, 1.0) is None
-    assert validate_value(binding, "foo") is None
-    assert validate_value(binding, HashList([Hash(), Hash()])) is None
-
-
-def test_validate_value_vectorint8():
-    binding = types.VectorInt8Binding()
-
-    # Check valid values
-    _assert_array(binding, [-1, 0, 1], dtype=np.int8)
-    _assert_array(binding, [-128, 0, 127], dtype=np.int8)
-    _assert_array(binding, [-1.0, 0.0, 1.0], dtype=np.int8)
-
-    # Check invalid values
-    assert validate_value(binding, [129]) is None
-    assert validate_value(binding, [128]) is None
-    assert validate_value(binding, -128) is None
-    assert validate_value(binding, 127) is None
-    assert validate_value(binding, 1.0) is None
-    assert validate_value(binding, "foo") is None
-    assert validate_value(binding, HashList([Hash(), Hash()])) is None
-
-
-def test_validate_value_vectorfloat():
-    binding = types.VectorFloatBinding()
-    array = np.array([-1, 0, 1])
-
-    # Check valid values
-    _assert_array(binding, array, dtype=np.float32)
-    _assert_array(binding, array.astype(np.float32), dtype=np.float32)
-    _assert_array(binding, array.astype(np.float64), dtype=np.float32)
-
-    # Check invalid values
-    assert validate_value(binding, -129) is None
-    assert validate_value(binding, 128) is None
-    assert validate_value(binding, 1.0) is None
-    assert validate_value(binding, "foo") is None
-    assert validate_value(binding, HashList([Hash(), Hash()])) is None
-
-
-def test_validate_value_vectordouble():
-    binding = types.VectorDoubleBinding()
-    array = np.array([-1, 0, 1])
-
-    # Check valid values
-    _assert_array(binding, array, dtype=np.float64)
-    _assert_array(binding, array.astype(np.float32), dtype=np.float64)
-    _assert_array(binding, array.astype(np.float64), dtype=np.float64)
-
-    # Check invalid values
-    assert validate_value(binding, -129) is None
-    assert validate_value(binding, 128) is None
-    assert validate_value(binding, 1.0) is None
-    assert validate_value(binding, "foo") is None
-    assert validate_value(binding, HashList([Hash(), Hash()])) is None
-
-
-def test_validate_vector_hash():
-    """Test vector hash binding validation.
-    It returns both valid and invalid values in the form of a HashList([]) for
-    each row."""
-    binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRow).rowSchema.hash)
-    empty_binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowEmpty).rowSchema.hash)
-
-    # Check with one valid hash
-    valid_hash = Hash("stringProperty", "foo",
-                      "uintProperty", 1,
-                      "boolProperty", True)
-    valid_hashlist = HashList([valid_hash])
-    valid, invalid = validate_table_value(binding, valid_hashlist)
-    assert valid == valid_hashlist
-    assert invalid == HashList([])
-
-    # Check two valid hashes
-    valid_hash = Hash("stringProperty", "foo",
-                      "uintProperty", 1,
-                      "boolProperty", True)
-    valid_hashlist = HashList([valid_hash, valid_hash])
-    valid, invalid = validate_table_value(binding, valid_hashlist)
-    assert valid == valid_hashlist
-    assert invalid == HashList([])
-
-    # Check with one hash that contains an invalid property
-    invalid_hash = Hash("stringProperty", "foo",
-                        "uintProperty", -1,  # invalid for a uintProperty
-                        "boolProperty", True)
-    valid, invalid = validate_table_value(binding, HashList([invalid_hash]))
-    assert valid == HashList([])
-    assert invalid == HashList([invalid_hash])
-
-    # Check with two hashes which one hash contains invalid properties
-    valid_hash = Hash("stringProperty", "foo",
-                      "uintProperty", 1,
-                      "boolProperty", True)
-    invalid_hash = Hash("stringProperty", "foo",
-                        "uintProperty", -1,  # invalid for a uintProperty
-                        "boolProperty", True)
-    hash_list = HashList([valid_hash, invalid_hash])
-    valid, invalid = validate_table_value(binding, hash_list)
-    assert valid == HashList([valid_hash])  # drop the row with invalids
-    assert invalid == HashList([invalid_hash])
-
-    # Check with two hashes which both contains invalid properties
-    valid_hash = Hash("stringProperty", [1, 2],  # invalid for a uintProperty
-                      "uintProperty", 1,
-                      "boolProperty", "bar")
-    invalid_hash = Hash("stringProperty", "foo",
-                        "uintProperty", -1,  # invalid for a uintProperty
-                        "boolProperty", True)
-    hash_list = HashList([valid_hash, invalid_hash])
-    valid, invalid = validate_table_value(binding, hash_list)
-    assert valid == HashList([])  # drop the row with invalids
-    assert invalid == HashList([valid_hash, invalid_hash])
-
-    # Check with a hash that contains an invalid property and default value
-    invalid_hash = Hash("stringProperty", "foo",
-                        "boolProperty", True)
-    valid, invalid = validate_table_value(binding, HashList([invalid_hash]))
-    assert valid == HashList([Hash("stringProperty", "foo",
-                                   "uintProperty", 1,  # default value
-                                   "boolProperty", True)])
-    assert invalid == HashList([])
-
-    # Check with a hash that contains an invalid property
-    # and without default value
-    invalid_hash = Hash("stringProperty", "foo",
-                        "boolProperty", True)
-    valid, invalid = validate_table_value(empty_binding,
-                                          HashList([invalid_hash]))
-    assert valid == HashList([])
-    assert invalid == HashList([Hash("stringProperty", "foo",
-                                     "uintProperty", None,  # dropped value
-                                     "boolProperty", True)])
-
-    # ReadOnly tables should be still validated
-    # -----------------------------------------------------------------------
-
-    # 1. A fully valid Hash
-    readonly_binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowReadOnly).rowSchema.hash)
-    readonly_binding_default = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowReadOnlyDefault).rowSchema.hash)
-
-    valid_hash = Hash("stringProperty", "karabo")
-    valid, invalid = validate_table_value(readonly_binding,
-                                          HashList([valid_hash]))
-    assert valid == HashList([Hash("stringProperty", "karabo")])
-    assert invalid == HashList([])
-
-    # 2. A valid string but boolean is not in the schema
-    readonly_binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowReadOnly).rowSchema.hash)
-    invalid_hash = Hash("stringProperty", "foo",
-                        "boolProperty", True)  # A value to many
-    valid, invalid = validate_table_value(readonly_binding,
-                                          HashList([invalid_hash]))
-    assert valid == HashList([Hash("stringProperty", "foo")])
-    assert invalid == HashList([])
-
-    # 3. An empty Hash without default value in Schema
-    invalid_hash = Hash()
-    valid, invalid = validate_table_value(readonly_binding,
-                                          HashList([invalid_hash]))
-    assert valid == HashList([])
-    assert invalid == HashList([Hash("stringProperty", None)])
-
-    # 3. An empty Hash WITH default value in Schema
-    invalid_hash = Hash()
-    valid, invalid = validate_table_value(readonly_binding_default,
-                                          HashList([invalid_hash]))
-    assert valid == HashList([Hash("uintProperty", 57)])
-    assert invalid == HashList([])
-
-
-def test_sanitize_table():
-    """Test vector hash binding sanitization."""
-    binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRow).rowSchema.hash)
-    empty_binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowEmpty).rowSchema.hash)
-    readonly_binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowReadOnly).rowSchema.hash)
-    mixed_default_binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowMixedDefaults).rowSchema.hash)
-
-    VALID_TABLE_HASH = Hash(
-        "stringProperty", "foo",
-        "uintProperty", 1,
-        "boolProperty", True)
-
-    # Check with a single hash conform to the schema
-    hash_list = HashList([VALID_TABLE_HASH])
-    success, value = sanitize_table_value(binding, hash_list)
-    assert value == hash_list
-    assert success is True
-
-    hash_list = HashList([VALID_TABLE_HASH, VALID_TABLE_HASH])
-    success, value = sanitize_table_value(binding, hash_list)
-    assert value == hash_list
-    assert success is True
-
-    # Check one hash that contains an invalid value for a property
-    invalid_hash = Hash(
-        "stringProperty", "foo",
-        "uintProperty", -1,  # invalid for a uintProperty
-        "boolProperty", True)
-
-    success, value = sanitize_table_value(binding, HashList([invalid_hash]))
-    assert value == HashList([VALID_TABLE_HASH])
-    assert success is False
-
-    # Check with two hashes which one hash contains invalid properties
-    invalid_hash = Hash(
-        "stringProperty", "foo",
-        "uintProperty", -1,  # invalid for a uintProperty
-        "boolProperty", True)
-    hash_list = HashList([VALID_TABLE_HASH, invalid_hash])
-    success, value = sanitize_table_value(binding, hash_list)
-    assert value == HashList([VALID_TABLE_HASH, VALID_TABLE_HASH])
-    assert success is False
-
-    # Check with two hashes which both contains invalid properties
-    invalid_hash_1 = Hash(
-        "stringProperty", [1, 2],  # invalid for a uintProperty
-        "uintProperty", 1,
-        "boolProperty", "bar")
-    invalid_hash_2 = Hash(
-        "stringProperty", "foo",
-        "uintProperty", -1,  # invalid for a uintProperty
-        "boolProperty", True)
-    hash_list = HashList([invalid_hash_1, invalid_hash_2])
-    success, value = sanitize_table_value(binding, hash_list)
-    assert value == HashList([VALID_TABLE_HASH, VALID_TABLE_HASH])
-    assert success is False
-
-    # Check with a hash that misses a property. The schema has a default value
-    invalid_hash = Hash("stringProperty", "foo",
-                        "boolProperty", True)
-    success, value = sanitize_table_value(binding, HashList([invalid_hash]))
-    assert value == HashList([VALID_TABLE_HASH])
-    assert success is False
-
-    # Check with a hash that has false property keys.
-    # The schema has a default values in this test case
-    invalid_hash = Hash("stringProperty", "foo",
-                        "uintPropertyWRONG", 1,
-                        "boolPropertyWRONG", True)
-    success, value = sanitize_table_value(binding, HashList([invalid_hash]))
-    assert value == HashList([VALID_TABLE_HASH])
-    assert success is False
-
-    # Check with a hash misses a property and the schema does not have
-    # a default value
-    invalid_hash = Hash("stringProperty", "foo",
-                        "boolProperty", True)
-    success, value = sanitize_table_value(empty_binding,
-                                          HashList([invalid_hash]))
-    assert value == HashList([Hash("stringProperty", "foo",
-                                   "uintProperty", 0,  # forced value
-                                   "boolProperty", True)])
-    assert success is False
-
-    # Just one property, but no real validation
-    valid_hash = Hash("stringProperty", "foobar")
-    success, value = sanitize_table_value(readonly_binding,
-                                          HashList([valid_hash]))
-    assert value == HashList([Hash("stringProperty", "foobar")])
-    assert success is True
-
-    # Mixed table. We provide:
-    # uintProperty with string, validation fails -> available default
-    # missing string property, available default
-    # missing bool property, no available default, forced
-    valid_hash = Hash("uintProperty", "K")
-    success, value = sanitize_table_value(mixed_default_binding,
-                                          HashList([valid_hash]))
-    assert value == HashList([Hash("stringProperty", "bar",
-                                   "uintProperty", 20,
-                                   "boolProperty", False)])
-    assert success is False
-
-
-def _assert_array(binding, value, dtype):
-    array = validate_value(binding, value)
-    assert_array_equal(array, value)
-    assert array.dtype == dtype
-
-
-def test_default_value():
-    """Test the default value generation of a binding"""
-    binding = types.FloatBinding()
-    # No default value provided, no `force` as default (False), value must
-    # be `None` if not present
-    value = get_default_value(binding)
-    assert value is None
-    # Force a default value for a float binding
-    value = get_default_value(binding, force=True)
-    assert value == 0.0
-    # Apply a default value and retrieve default value
-    binding.attributes[KARABO_SCHEMA_DEFAULT_VALUE] = 5.1
-    value = get_default_value(binding, force=True)
-    assert value == 5.1
-
-    # Go through all other bindings
-    binding = types.Int8Binding()
-    value = get_default_value(binding, force=True)
-    assert value == 0
-    binding = types.Int16Binding()
-    value = get_default_value(binding, force=True)
-    assert value == 0
-    binding = types.Int32Binding()
-    value = get_default_value(binding, force=True)
-    assert value == 0
-    binding = types.Int64Binding()
-    value = get_default_value(binding, force=True)
-    assert value == 0
-    binding = types.Uint8Binding()
-    value = get_default_value(binding, force=True)
-    assert value == 0
-    binding = types.Uint16Binding()
-    value = get_default_value(binding, force=True)
-    assert value == 0
-    binding = types.Uint32Binding()
-    value = get_default_value(binding, force=True)
-    assert value == 0
-    binding = types.Uint64Binding()
-    value = get_default_value(binding, force=True)
-    assert value == 0
-
-    binding = types.VectorHashBinding()
-    value = get_default_value(binding, force=True)
-    assert value == []
-
-    binding = types.VectorInt8Binding()
-    value = get_default_value(binding, force=True)
-    assert value == []
-    binding = types.VectorInt16Binding()
-    value = get_default_value(binding, force=True)
-    assert value == []
-    binding = types.VectorInt32Binding()
-    value = get_default_value(binding, force=True)
-    assert value == []
-    binding = types.VectorInt64Binding()
-    value = get_default_value(binding, force=True)
-    assert value == []
-    binding = types.VectorUint8Binding()
-    value = get_default_value(binding, force=True)
-    assert value == []
-    binding = types.VectorUint16Binding()
-    value = get_default_value(binding, force=True)
-    assert value == []
-    binding = types.VectorUint32Binding()
-    value = get_default_value(binding, force=True)
-    assert value == []
-    binding = types.VectorUint64Binding()
-    value = get_default_value(binding, force=True)
-    assert value == []
-
-    binding = types.StringBinding()
-    value = get_default_value(binding, force=True)
-    assert value == ""
-
-    binding = types.BoolBinding()
-    value = get_default_value(binding, force=True)
-    assert value is False
-
-    binding = types.CharBinding()
-    value = get_default_value(binding, force=True)
-    assert value == ""
-
-    binding = types.ByteArrayBinding()
-    value = get_default_value(binding, force=True)
-    assert value == bytearray([])
-
-    binding = types.ComplexBinding()
-    value = get_default_value(binding, force=True)
-    assert value == 0.0
+    notified = False
+
+    def _event_fired():
+        nonlocal notified
+        notified = True
+
+    try:
+        binding.on_trait_event(_event_fired, 'config_update')
+        yield
+    finally:
+        binding.on_trait_event(_event_fired, 'config_update', remove=True)
+        assert notified == expected
+
+
+def test_data_files():
+    for filename in glob(op.join(TEST_DATA_DIR, '*.schema')):
+        classname = op.splitext(op.basename(filename))[0]
+        with open(filename, 'rb') as fp:
+            hsh = decodeBinary(fp.read())
+
+        schema = Schema(name=classname, hash=hsh)
+        binding = build_binding(schema)
+
+        config_filename = op.splitext(filename)[0] + '.config'
+        with open(config_filename, 'rb') as fp:
+            config = decodeBinary(fp.read())
+
+        apply_configuration(config, binding)
+        extracted = extract_configuration(binding)
+
+        # Check that the configuration was applied
+        for key, value, _ in Hash.flat_iterall(config):
+            assert key in extracted
+            if isinstance(value, np.ndarray):
+                assert all(extracted[key] == value)
+            else:
+                assert extracted[key] == value
+
+
+def test_complete_schema():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+
+    namespace = binding.value
+    for name in namespace:
+        node = getattr(namespace, name)
+        assert isinstance(node, ALL_PROPERTIES_MAP[name])
+
+
+def test_build_binding_stability():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+
+    before_names = list(binding.value)
+    binding = build_binding(schema, existing=binding)
+    after_names = list(binding.value)
+
+    # The order must be unchanged!
+    assert before_names == after_names
+
+
+def test_default_values():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+
+    assert binding.value.a.value is Undefined
+    assert binding.value.b.value is Undefined
+    assert binding.value.c.value is Undefined
+
+    apply_default_configuration(binding)
+
+    assert binding.value.a.value
+    assert binding.value.b.value == 'c'
+    assert binding.value.c.value is Undefined
+
+    # Make sure the extracted default conversion is minimal
+    # It should include properties with default values, options, or node types
+    config = extract_configuration(binding)
+    default_props = ('a', 'b', 'm', 'h1', 'i1', 'j1')
+    for prop in default_props:
+        assert prop in config, '{!r} missing from config'.format(prop)
+
+    # Since no user edits, an empty Hash should have been extracted
+    # XXX: ListOfNodeBinding is always extracted
+    config = extract_edits(schema, binding)
+    assert config == Hash('j1', [])
+
+
+def test_apply_configuration():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+
+    config = Hash('a', False)
+    # Applying a configuration always notifies listeners
+    with watch_config_update_notification(binding, expected=True):
+        apply_configuration(config, binding)
+    assert not binding.value.a.value
+
+    config = Hash('not', 'exist')
+    apply_configuration(config, binding)
+    # Non exist property is ignored
+    assert 'not' not in binding.value
+
+    config = Hash('mm', b'foo')
+    # bytes type value is converted to bytearray by traits handler
+    apply_configuration(config, binding)
+    assert binding.value.mm.value == bytearray(b'foo')
+
+
+def test_apply_project_configuration():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+
+    config = Hash('a', False)
+    # Applying a project configuration always does not notify listeners
+    with watch_config_update_notification(binding, expected=False):
+        apply_project_configuration(config, binding)
+    assert not binding.value.a.value
+
+    config = Hash('e', 0.5)
+    # change one item in attributes and add a new item
+    attr = {KARABO_SCHEMA_UNIT_SYMBOL: 'g', KARABO_ALARM_LOW: 0.0}
+    config['e', ...] = attr
+    old_attrs = {k: v for k, v in binding.value.e.attributes.items()}
+    apply_project_configuration(config, binding)
+    new_attrs = {k: v for k, v in binding.value.e.attributes.items()}
+    assert _dict_diff(old_attrs, new_attrs) == attr
+
+    config = Hash('not', 'exist')
+    apply_project_configuration(config, binding)
+    # Non exist property is ignored
+    assert 'not' not in binding.value
+
+    config = Hash('mm', b'foo')
+    # bytes type value is converted to bytearray by traits handler
+    apply_project_configuration(config, binding)
+    assert binding.value.mm.value == bytearray(b'foo')
+
+    # try to apply a wrong table value from a project device
+    config = Hash('x', HashList([Hash('start', 'not a string', 'stop', 10)]))
+    apply_project_configuration(config, binding)
+    assert binding.value.x.value == HashList(
+        [Hash('start', 0.0, 'stop', 10.0)])
+
+
+def test_apply_fast_data():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+    ts = Timestamp()
+    ts.tid = 1337
+
+    config = Hash('a', False)
+    with watch_config_update_notification(binding, expected=True):
+        apply_fast_data(config, binding, ts)
+    assert not binding.value.a.value
+    assert binding.value.a.timestamp.tid == 1337
+
+    config = Hash('a', True)
+    # configuration is applied but no notification fired
+    with watch_config_update_notification(binding, expected=True):
+        apply_fast_data(config, binding, ts)
+    assert binding.value.a.value
+    assert binding.value.a.timestamp.tid == 1337
+
+
+def test_extract_edit():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+    apply_default_configuration(binding)
+
+    # 'a' has default value == True, give 'e' an alarm low attribute
+    # XXX: j1 will always be extracted
+    config = Hash('a', False, 'e', 0.0, 'j1', [])
+    config['e', ...] = {KARABO_ALARM_LOW: 42.0}
+    apply_project_configuration(config, binding)
+
+    extracted = extract_edits(schema, binding)
+    assert extracted == config
+
+
+def test_attribute_modification():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+
+    modifications = extract_attribute_modifications(schema, binding)
+    assert modifications is None
+
+    attributes = binding.value.h.attributes
+    attributes[KARABO_ALARM_LOW] = 42
+    modifications = extract_attribute_modifications(schema, binding)
+    assert len(modifications) == 1
+    assert modifications[0] == Hash('path', 'h',
+                                    'attribute', KARABO_ALARM_LOW,
+                                    'value', 42)
+
+    binding = build_binding(schema)
+    attributes = binding.value.h.attributes
+    attributes[KARABO_SCHEMA_METRIC_PREFIX_SYMBOL] = 'm'
+    modifications = extract_attribute_modifications(schema, binding)
+    assert modifications[0] == Hash(
+        'path', 'h',
+        'attribute', KARABO_SCHEMA_METRIC_PREFIX_ENUM,
+        'value', list(MetricPrefix).index(MetricPrefix.MILLI)
+    )
+
+    binding = build_binding(schema)
+    attributes = binding.value.h.attributes
+    attributes[KARABO_SCHEMA_UNIT_SYMBOL] = 'Sv'
+    modifications = extract_attribute_modifications(schema, binding)
+    assert modifications[0] == Hash('path', 'h',
+                                    'attribute', KARABO_SCHEMA_UNIT_ENUM,
+                                    'value', list(Unit).index(Unit.SIEVERT))
+
+
+def test_property_attributes():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+
+    assert binding.value.c.required_access_level is AccessLevel.EXPERT
+    assert binding.value.d.access_mode is AccessMode.READONLY
+    assert binding.value.d.assignment is Assignment.INTERNAL
+    assert binding.value.e.unit_label == 'm'
+
+    assert binding.value.a.access_mode is AccessMode.RECONFIGURABLE
+    assert binding.value.a.assignment is Assignment.OPTIONAL
+    assert binding.value.a.required_access_level is AccessLevel.USER
+
+    assert binding.value.m.options == ['foo', 'bar', 'baz', 'qux']
+
+    assert binding.value.k1.is_allowed(State.INTERLOCKED)
+    assert binding.value.k1.is_allowed(State.ACTIVE.value)
+
+
+def test_extract_attribute_modifications_vectorattr():
+    schema = get_vectorattr_schema()
+    binding = build_binding(schema)
+
+    apply_default_configuration(binding)
+    ret = extract_attribute_modifications(schema, binding)
+    assert ret is None
+
+    # Change alarmLow from [True, True] to [False, False]
+    newv = np.array([False, False])
+    binding.value.vec.attributes[KARABO_ALARM_LOW] = newv
+    ret = extract_attribute_modifications(schema, binding)
+    # XXX: middlelayer Hash can't compare np array either
+    assert all(ret[0]['value'] == newv)
