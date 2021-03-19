@@ -13,8 +13,8 @@ from .types import (
     ComplexBinding, FloatBinding, IntBinding, NodeBinding, SlotBinding,
     StringBinding, VectorBinding, VectorDoubleBinding, VectorFloatBinding,
     VectorHashBinding, VectorNumberBinding)
-from .util import (
-    array_equal, attr_fast_deepcopy, is_equal, realign_hash)
+from .compare import (
+    attr_fast_deepcopy, has_array_changes, is_equal, realign_hash)
 
 VECTOR_FLOAT_BINDINGS = (VectorFloatBinding, VectorDoubleBinding)
 RECURSIVE_BINDINGS = (NodeBinding, ListOfNodesBinding,
@@ -144,7 +144,7 @@ def sanitize_table_value(binding, value):
 
         ret = Hash()
         if list(row_bindings.keys()) != list(row_hash.keys()):
-            row_hash = realign_hash(row_hash, keys=row_bindings.keys())
+            row_hash = realign_hash(row_hash, reference=row_bindings.keys())
 
         for path, value in row_hash.items():
             binding = row_bindings.get(path, None)
@@ -448,7 +448,10 @@ def validate_value(binding, value):
             casted_value = binding.validate_trait("value", value)
             if isinstance(binding, VECTOR_FLOAT_BINDINGS):
                 value = np.array(value, dtype=casted_value.dtype)
-            value = casted_value if array_equal(casted_value, value) else None
+            if not has_array_changes(value, casted_value):
+                value = casted_value
+            else:
+                value = None
         elif isinstance(binding, VectorHashBinding):
             # VectorHashBinding is not a valid value
             value = None
@@ -494,7 +497,7 @@ def validate_table_value(binding, value):
         valid = Hash()
         # Check if order of the keys are respected...
         if list(row_bindings.keys()) != list(row_hash.keys()):
-            row_hash = realign_hash(row_hash, keys=row_bindings.keys())
+            row_hash = realign_hash(row_hash, reference=row_bindings.keys())
 
         for path, value in row_hash.items():
             binding = row_bindings.get(path, None)
