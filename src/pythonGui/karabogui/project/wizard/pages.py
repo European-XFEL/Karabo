@@ -252,8 +252,8 @@ class ConfigurePage(Page):
 
 
 LINK_TEXT = [
-    "karabo://cinema/?domain=DOMAIN&scene_uuid= ...",
-    "<a href='karabo://cinema/?domain=DOMAIN ...'>Cinema Name</a>",
+    "karabo://cinema?domain=DOMAIN&scene_uuid= ...",
+    "<a href='karabo://cinema?domain=DOMAIN ...'>Cinema Name</a>",
 ]
 
 
