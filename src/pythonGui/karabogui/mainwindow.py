@@ -97,7 +97,7 @@ _PANELS = {
 }
 
 SETTINGS_TITLE = '&Settings'
-VIEW_MENU_TITLE = '&View'
+PANEL_MENU_TITLE = '&Panels'
 GRAFANA_LINK = "https://ctrend.xfel.eu/"
 
 
@@ -136,7 +136,7 @@ class MainWindow(QMainWindow):
             _, _, icon = data
             action.setIcon(icon)
             action.triggered.connect(callback)
-            self._addViewMenuAction(action)
+            self._addPanelMenuAction(action)
             # Set the visibility with the panel configuration!
             visible = get_panel_configuration(name)['visible']
             self.panelActions[name] = action
@@ -376,9 +376,9 @@ class MainWindow(QMainWindow):
         mFileMenu.addAction(self.acExit)
 
         # Display actions to reopen panels
-        mViewMenu = menuBar.addMenu(VIEW_MENU_TITLE)
+        mViewMenu = menuBar.addMenu(PANEL_MENU_TITLE)
         # reference to view menu and its submenus {menuName: QMenu}
-        self.viewMenus = {VIEW_MENU_TITLE: mViewMenu}
+        self.viewMenus = {PANEL_MENU_TITLE: mViewMenu}
 
         # As basic action, no extra sub menu is required and we directly insert
         panelAction = QAction(icons.save, 'Save panel configuration', self)
@@ -396,7 +396,7 @@ class MainWindow(QMainWindow):
         self.acEnableHighDPI.triggered.connect(self._store_dpi_setting)
         mSettingsMenu.addAction(self.acEnableHighDPI)
 
-        mHelpMenu = menuBar.addMenu("&Panels")
+        mHelpMenu = menuBar.addMenu("&Links")
         mHelpMenu.addAction(self.acGrafana)
 
         mHelpMenu = menuBar.addMenu("&Help")
@@ -471,16 +471,16 @@ class MainWindow(QMainWindow):
         right = PanelContainer("Configuration", right_area)
         self._panel_areas[PanelAreaEnum.Right] = right
 
-    def _addViewMenuAction(self, action, name=VIEW_MENU_TITLE):
-        """Add a QAction to the view menu, If name is not VIEW_MENU_TITLE,
+    def _addPanelMenuAction(self, action, name=PANEL_MENU_TITLE):
+        """Add a QAction to the view menu, If name is not PANEL_MENU_TITLE,
         put the action in a sub menu.
 
         :param action: a QAction to a panel
-        :param name: name of the submenu or VIEW_MENU_TITLE
+        :param name: name of the submenu or PANEL_MENU_TITLE
         """
         viewMenus = self.viewMenus
         if name not in viewMenus:
-            viewMenus[name] = viewMenus[VIEW_MENU_TITLE].addMenu(name)
+            viewMenus[name] = viewMenus[PANEL_MENU_TITLE].addMenu(name)
             submenu = viewMenus[name]
         else:
             submenu = viewMenus[name]
