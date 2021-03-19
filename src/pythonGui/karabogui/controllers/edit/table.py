@@ -3,7 +3,6 @@
 # Created on August 10, 2015
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from functools import partial
 
 from PyQt5.QtCore import Qt, QModelIndex
 from PyQt5.QtWidgets import QAbstractItemView, QMenu
@@ -133,35 +132,42 @@ class _BaseTableElement(BaseBindingController):
                 self.widget.setItemDelegateForColumn(column, delegate)
 
     # ---------------------------------------------------------------------
-    # Actions
+    # Action Slots
 
-    def _row_to_end_action(self):
-        start, count = self._item_model.rowCount(), 1
-        self._item_model.insertRows(start, count, QModelIndex())
-
-    def _set_index_default(self, index, key):
+    def _set_index_default(self):
+        index = self.currentIndex()
+        key = list(self._bindings.keys())[index.column()]
         attributes = self._bindings[key].attributes
         default_value = attributes[KARABO_SCHEMA_DEFAULT_VALUE]
         self._item_model.setData(index, default_value, role=Qt.EditRole)
 
-    def _add_row(self, index):
-        self._item_model.insertRows(index.row() + 1, 1, QModelIndex())
+    def _add_row(self):
+        row = self.currentIndex().row()
+        self._item_model.insertRows(row + 1, 1, QModelIndex())
 
-    def _duplicate_row(self, index):
-        self._item_model.duplicate_row(index.row())
+    def _duplicate_row(self):
+        row = self.currentIndex().row()
+        self._item_model.duplicate_row(row)
 
-    def _move_row_up(self, index):
-        row = index.row()
+    def _move_row_up(self):
+        row = self.currentIndex().row()
         self._item_model.move_row_up(row)
         self.widget.selectRow(row - 1)
 
-    def _move_row_down(self, index):
-        row = index.row()
+    def _move_row_down(self):
+        row = self.currentIndex().row()
         self._item_model.move_row_down(row)
         self.widget.selectRow(row + 1)
 
-    def _remove_row(self, index):
+    def _remove_row(self):
+        index = self.currentIndex()
         self._item_model.removeRows(index.row(), 1, QModelIndex())
+
+    # ---------------------------------------------------------------------
+
+    def currentIndex(self):
+        """Convenience method to get the currentIndex of the selection"""
+        return self.widget.selectionModel().currentIndex()
 
     def _context_menu(self, pos):
         selection_model = self.widget.selectionModel()
@@ -172,27 +178,26 @@ class _BaseTableElement(BaseBindingController):
         index = selection_model.currentIndex()
 
         menu = QMenu(parent=self.widget)
-        if index is not None:
+        if index.isValid():
             column = index.column()
             key = list(self._bindings.keys())[column]
             if (not self._is_readonly and self._bindings[key].attributes.get(
                     KARABO_SCHEMA_DEFAULT_VALUE)):
                 set_default_action = menu.addAction('Set Cell Default')
-                set_default_action.triggered.connect(
-                    partial(self._set_index_default, index=index, key=key))
+                set_default_action.triggered.connect(self._set_index_default)
                 menu.addSeparator()
 
             up_action = menu.addAction(icons.arrowFancyUp, 'Move Row Up')
-            up_action.triggered.connect(partial(self._move_row_up, index))
+            up_action.triggered.connect(self._move_row_up)
             down_action = menu.addAction(icons.arrowFancyDown, 'Move Row Down')
-            down_action.triggered.connect(partial(self._move_row_down, index))
+            down_action.triggered.connect(self._move_row_down)
             menu.addSeparator()
             add_action = menu.addAction(icons.add, 'Add Row below')
-            add_action.triggered.connect(partial(self._add_row, index))
+            add_action.triggered.connect(self._add_row)
             du_action = menu.addAction(icons.editCopy, 'Duplicate Row below')
-            du_action.triggered.connect(partial(self._duplicate_row, index))
+            du_action.triggered.connect(self._duplicate_row)
             remove_action = menu.addAction(icons.delete, 'Delete Row')
-            remove_action.triggered.connect(partial(self._remove_row, index))
+            remove_action.triggered.connect(self._remove_row)
 
         menu.exec_(self.widget.viewport().mapToGlobal(pos))
 
