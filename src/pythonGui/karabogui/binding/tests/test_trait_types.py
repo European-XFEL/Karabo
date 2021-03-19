@@ -65,3 +65,89 @@ def test_validate_float():
     value = binding.validate_trait("value", np.float64(4))
     assert value == 4.0
     assert type(value) == np.float64
+
+
+def test_numpy_binding_types():
+    """Test if our numpy value type is preserved"""
+    int64Property = Int64Binding()
+    int64Property.value = np.int64(23)
+    assert int64Property.value == 23
+    assert type(int64Property.value) == np.int64
+    int64Property.value = 64
+    assert int64Property.value == 64
+    assert type(int64Property.value) == np.int64
+    int64Property.value = 23
+    assert int64Property.value == 23
+    assert type(int64Property.value) == np.int64
+
+    int32Property = Int32Binding()
+    int32Property.value = np.int32(23)
+    assert int32Property.value == 23
+    assert type(int32Property.value) == np.int32
+    int32Property.value = 64
+    assert int32Property.value == 64
+    assert type(int32Property.value) == np.int32
+    int32Property.value = np.int16(16)
+    assert int32Property.value == 16
+    assert type(int32Property.value) == np.int32
+
+    int16Property = Int16Binding()
+    int16Property.value = np.int16(23)
+    assert int16Property.value == 23
+    assert type(int16Property.value) == np.int16
+    int16Property.value = 64
+    assert int16Property.value == 64
+    assert type(int16Property.value) == np.int16
+    int16Property.value = np.int8(16)
+    assert int16Property.value == 16
+    assert type(int16Property.value) == np.int16
+
+    int8Property = Int8Binding()
+    int8Property.value = np.int8(23)
+    assert int8Property.value == 23
+    assert type(int8Property.value) == np.int8
+    int8Property.value = 64
+    assert int8Property.value == 64
+    print(type(int8Property.value))
+    assert type(int8Property.value) == np.int8
+    int8Property.value = np.int16(16)
+    assert int8Property.value == 16
+    assert type(int8Property.value) == np.int8
+
+    uint64Property = Uint64Binding()
+    uint64Property.value = np.uint64(23)
+    assert uint64Property.value == 23
+    assert type(uint64Property.value) == np.uint64
+    uint64Property.value = 64
+    assert uint64Property.value == 64
+    assert type(uint64Property.value) == np.uint64
+    uint64Property.value = np.int16(16)
+    assert uint64Property.value == 16
+    assert type(uint64Property.value) == np.uint64
+
+    uint32Property = Uint32Binding()
+    uint32Property.value = np.uint32(23)
+    assert uint32Property.value == 23
+    assert type(uint32Property.value) == np.uint32
+    uint32Property.value = 64
+    assert uint32Property.value == 64
+    assert type(uint32Property.value) == np.uint32
+    uint32Property.value = np.int16(16)
+    assert uint32Property.value == 16
+    assert type(uint32Property.value) == np.uint32
+
+    uint16Property = Uint16Binding()
+    uint16Property.value = np.uint16(23)
+    assert uint16Property.value == 23
+    assert type(uint16Property.value) == np.uint16
+    uint16Property.value = 64
+    assert uint16Property.value == 64
+    assert type(uint16Property.value) == np.uint16
+
+    uint8Property = Uint8Binding()
+    uint8Property.value = np.uint8(23)
+    assert uint8Property.value == 23
+    assert type(uint8Property.value) == np.uint8
+    uint8Property.value = 64
+    assert uint8Property.value == 64
+    assert type(uint8Property.value) == np.uint8
