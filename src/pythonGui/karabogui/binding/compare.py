@@ -1,4 +1,3 @@
-from copy import deepcopy
 from itertools import zip_longest
 import numbers
 
@@ -214,18 +213,18 @@ def realign_hash(hsh, reference):
     # 1. First iterate over the reference list to build up the new Hash
     for old_key in reference:
         if old_key in hsh:
-            ret[old_key] = deepcopy(hsh[old_key])
-            ret[old_key, ...] = deepcopy(hsh[old_key, ...])
+            value, attrs = hsh.getElement(old_key)
+            ret.setElement(old_key, simple_deepcopy(value),
+                           simple_deepcopy(attrs))
         else:
-            ret[old_key] = None
-            ret[old_key, ...] = {}
+            ret.setElement(old_key, None, {})
 
     # 2. Then, refill the hash keys that might not be in reference and append
     for key, value, attrs in Hash.flat_iterall(hsh):
         if key in reference:
             # Already considered
             continue
-        ret[key] = deepcopy(value)
-        ret[key, ...] = deepcopy(attrs)
+
+        ret.setElement(key, simple_deepcopy(value), simple_deepcopy(attrs))
 
     return ret
