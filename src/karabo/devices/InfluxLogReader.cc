@@ -50,6 +50,7 @@ namespace karabo {
 
         namespace nl = nlohmann;
 
+
         PropertyHistoryContext::PropertyHistoryContext(const std::string &deviceId,
                                                        const std::string &property,
                                                        const karabo::util::Epochstamp &from,
@@ -61,10 +62,6 @@ namespace karabo {
             aReply(aReply) {
         };
 
-        double PropertyHistoryContext::getInterval() const {
-            const TimeDuration d = to - from;
-            return std::round(static_cast<double>(d) / maxDataPoints * 1'000'000);
-        }
 
         ConfigFromPastContext::ConfigFromPastContext(const std::string &deviceId,
                                                      const karabo::util::Epochstamp &atTime,
@@ -109,21 +106,7 @@ namespace karabo {
                 karabo::devices::DataLogReader(cfg),
                 m_hashSerializer(BinarySerializer<Hash>::create("Bin")),
                 m_schemaSerializer(BinarySerializer<Schema>::create("Bin")),
-                m_maxHistorySize(cfg.get<int>("maxHistorySize")),
-                kNumberTypes({
-                    Types::to<ToLiteral>(Types::INT8),
-                    Types::to<ToLiteral>(Types::UINT8),
-                    Types::to<ToLiteral>(Types::INT16),
-                    Types::to<ToLiteral>(Types::UINT16),
-                    Types::to<ToLiteral>(Types::INT32),
-                    Types::to<ToLiteral>(Types::UINT32),
-                    Types::to<ToLiteral>(Types::INT64),
-                    // Warning! this is dangerous, arithmetic operators will be performed
-                    // server side on the INT64 cast of the UINT64 value.
-                    Types::to<ToLiteral>(Types::UINT64),
-                    Types::to<ToLiteral>(Types::FLOAT),
-                    Types::to<ToLiteral>(Types::DOUBLE)})
-        {
+                m_maxHistorySize(cfg.get<int>("maxHistorySize")) {
             // TODO: Use more appropriate names for the env var names - the names below are the ones currently used by
             //       the CI environment.
             std::string dbUser;
@@ -246,44 +229,20 @@ namespace karabo {
                 // Nothing left for the execution of this slot.
                 return;
             }
-            // The format of the data received is available here
-            //  https://docs.influxdata.com/influxdb/v1.7/guides/querying_data/
+
             nl::json respObj = nl::json::parse(dataCountResp.payload);
             const auto &values = respObj["results"][0]["series"][0]["values"];
             int dataCount = 0;
             for (const auto &value : values) {
                 auto countValue = value[1].get<int>();
-
                 dataCount += countValue;
-            }
-
-            const auto &columns = respObj["results"][0]["series"][0]["columns"];
-            bool allNumbers = true; // check if all fields support statistical aggregators
-            for (const auto &column : columns) {
-                const std::string& columnStr = column.get<std::string>();
-                const std::string::size_type typeSeparatorPos = columnStr.rfind("-");
-                if (typeSeparatorPos != std::string::npos) {
-                    const std::string typeName = columnStr.substr(typeSeparatorPos + 1);
-                    if (kNumberTypes.find(typeName) != kNumberTypes.end()){
-                        continue;
-                    } else {
-                        allNumbers = false;
-                        break;
-                    }
-                } else {
-                    allNumbers = false;
-                    KARABO_LOG_FRAMEWORK_ERROR << "Query for property '" << ctxt->deviceId << "." << ctxt->property << "'"
-                                               << " returned column without type seperator '" << column << "'";
-                }
             }
             if (dataCount < 1) {
                 // No data point for the given period.
                 ctxt->aReply(ctxt->deviceId, ctxt->property, std::vector<Hash>());
             } else if (dataCount <= ctxt->maxDataPoints) {
                 asyncGetPropertyValues(ctxt);
-            } else if (allNumbers){ // group by mean
-                asyncGetPropertyValuesMean(ctxt);
-            } else { // sample down
+            } else {
                 asyncGetPropertyValuesSamples(ctxt);
             }
         }
@@ -307,6 +266,7 @@ namespace karabo {
                 ctxt->aReply.error(errMsg);
             }
         }
+
 
         void InfluxLogReader::asyncGetPropertyValuesSamples(const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
 
@@ -362,98 +322,6 @@ namespace karabo {
             }
         }
 
-        void InfluxLogReader::asyncGetPropertyValuesMean(const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
-
-            std::ostringstream iqlQuery;
-            iqlQuery << "SELECT MEAN(/^" << ctxt->property << "-.*/) FROM \""
-                    << ctxt->deviceId << "\" WHERE time >= " <<  epochAsMicrosecString(ctxt->from) << m_durationUnit
-                    << " AND time <= " << epochAsMicrosecString(ctxt->to) << m_durationUnit
-                    << " GROUP BY time(" << toString(ctxt->getInterval()) << m_durationUnit << ") fill(none)";
-
-            const std::string queryStr = iqlQuery.str();
-
-            try {
-                m_influxClient->queryDb(queryStr,
-                                        bind_weak(&InfluxLogReader::onMeanPropertyValues, this, _1, ctxt));
-            } catch (const std::exception &e) {
-                const std::string &errMsg = std::string("Error querying property values samples: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
-                ctxt->aReply.error(errMsg);
-            }
-        }
-
-
-
-        void InfluxLogReader::onMeanPropertyValues(const karabo::net::HttpResponse &valuesResp,
-                                                   const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
-
-            bool errorHandled = handleHttpResponseError(valuesResp, ctxt->aReply);
-
-            if (errorHandled) {
-                // An error happened and has been reported to the slot caller.
-                // Nothing left for the execution of this slot.
-                return;
-            }
-
-            try {
-                InfluxResultSet influxResult;
-                jsonResultsToInfluxResultSet(valuesResp.payload, influxResult, "");
-
-                std::vector<Hash> propValues;
-                propValues.reserve(influxResult.second.size());
-                // Converts each row of values into a Hash.
-                // Gets the data type names of each column.
-                std::vector<std::string>colTypeNames(influxResult.first.size());
-                std::vector<std::string>colKeyNames(influxResult.first.size());
-                for (size_t col = 0; col < influxResult.first.size(); col++) {
-                    const std::string::size_type typeSeparatorPos = influxResult.first[col].rfind("-");
-                    if (typeSeparatorPos != std::string::npos) {
-                        const std::string typeName = influxResult.first[col].substr(typeSeparatorPos + 1);
-                        colTypeNames[col] = typeName;
-                    }
-                    colKeyNames[col] = "v"; // the mean value will passed on in the key "v" to match the protocol
-                }
-                for (const std::vector<boost::optional < std::string>> &valuesRow : influxResult.second) {
-                    unsigned long long time = std::stoull(*(valuesRow[0])); // This is safe as Influx always returns time.
-                    Epochstamp epoch(time / kSecConversionFactor, (time % kSecConversionFactor) * kFracConversionFactor);
-                    Hash hash;
-                    for (size_t col = 1; col < influxResult.first.size(); col++) {
-                        if (!valuesRow[col]) {
-                            // Skips any null value in the result set - any row returned by Influx will have at least
-                            // one non null value (may be an empty string).
-                            continue;
-                        }
-                        // For nan/inf floating points we added "_INF" we skip.
-                        const std::string& typeNameInflux = colTypeNames[col];
-                        const Types::ReferenceType type = Types::from<FromLiteral>(typeNameInflux);
-                        addNodeToHash(hash, colKeyNames[col], type, 0ull, epoch, *(valuesRow[col]));
-                        // skip further columns. In the rare case of schema evolution in the same interval
-                        // we take the first one reported. Multiple entries on the same timestamp will be an issue.
-                        continue;
-                    }
-                    if (hash.has("v")) {
-                        // TODO: the timestamp is the beginning of the interval group.
-                        //       we should add half the time interval to center the time interval
-                        //       the last interval should be half of the beginning of the interval and the
-                        //       end of the query (ctxt->to).
-                        // https://docs.influxdata.com/influxdb/v1.8/query_language/explore-data/#the-group-by-clause
-                        propValues.push_back(std::move(hash));
-                    }
-                }
-
-                ctxt->aReply(ctxt->deviceId, ctxt->property, propValues);
-
-            } catch (const std::exception &e) {
-                std::ostringstream oss;
-                oss << "Error retrieving values of property '"
-                        << ctxt->property << "' of device '" << ctxt->deviceId << "' between '"
-                        << ctxt->from.toIso8601Ext() << "' and '" << ctxt->to.toIso8601Ext() << "':\n"
-                        << e.what();
-                const std::string &errMsg = oss.str();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
-                ctxt->aReply.error(errMsg);
-            }
-        }
 
         void InfluxLogReader::slotGetConfigurationFromPastImpl(const std::string &deviceId,
                                                                const std::string &timepoint) {
@@ -806,9 +674,9 @@ namespace karabo {
             return unescaped;
         }
 
+
         void InfluxLogReader::influxResultSetToVectorHash(const InfluxResultSet &influxResult,
-                                                          std::vector<Hash> &vectHash)
-        {
+                                                          std::vector<Hash> &vectHash) {
             // Finds the position of the trainId column, if it is in the result set.
             int tidCol = -1;
             auto iter = std::find(influxResult.first.begin(), influxResult.first.end(), "_tid");

@@ -542,8 +542,7 @@ void BaseLogging_Test::testMaxNumDataHistory() {
 
     // History retrieval may take more than one attempt.
     nTries = timeoutSecs; // number of attempts spaced by 1 sec.
-    while (nTries >= 0 && history.size() < (maxNumDataSampled / 2ul))
-    {
+    while (nTries >= 0 && history.size() != maxNumDataSampled) {
         try {
             m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, "int32Property", params)
                     .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(replyDevice, replyProperty, history);
@@ -557,31 +556,28 @@ void BaseLogging_Test::testMaxNumDataHistory() {
         boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
         nTries--;
     }
-    size_t historySize = history.size();
-    CPPUNIT_ASSERT_MESSAGE("Timeout on requesting history",
-                           nTries >= 0);
-    CPPUNIT_ASSERT_MESSAGE("Size of the down-sampled history larger than request sample",
-                           historySize <= static_cast<size_t>(maxNumDataSampled));
-    CPPUNIT_ASSERT_MESSAGE("Size of the down-sampled history smaller than minimum expected (at least half in this case)",
-                           historySize >= (maxNumDataSampled / 2ul));
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Size for sampled history different from expected.",
+                                 static_cast<size_t>(maxNumDataSampled),
+                                 history.size());
     // Makes sure that the maxNumDataSampled values retrieved are distributed across the
     // whole set of maxNumDataFull values. A deviation margin is tolerated to accomodate
     // different timings involved in the writing sequence phase.
     const int deviationMargin = 8;
-    Hash & lastHistoryEntry = history[historySize - 1];
     CPPUNIT_ASSERT_MESSAGE("Value at history entry #0 is outside the expected range: should be between 0 and "
                            + karabo::util::toString(deviationMargin)
                            + ", got "
                            + karabo::util::toString(history[0].get<int>("v")) + ".",
                            history[0].get<int>("v") >= 0 && history[0].get<int>("v") <= deviationMargin);
     CPPUNIT_ASSERT_MESSAGE("Value at history entry #"
-                           + karabo::util::toString(lastHistoryEntry)
+                           + karabo::util::toString(history[maxNumDataSampled-1])
                            + " is outside the expected range: should be between "
                            + karabo::util::toString(40 - deviationMargin)
                            + " and 40, got "
-                           + karabo::util::toString(lastHistoryEntry.get<int>("v")) + ".",
-                           lastHistoryEntry.get<int>("v") >= 40 - deviationMargin
-                           && lastHistoryEntry.get<int>("v") <= 40);
+                           + karabo::util::toString(history[maxNumDataSampled-1].get<int>("v")) + ".",
+                           history[maxNumDataSampled - 1].get<int>("v") >= 40 - deviationMargin
+                           && history[maxNumDataSampled - 1].get<int>("v") <= 40);
+
     std::clog << "... OK" << std::endl;
 }
 
