@@ -33,7 +33,7 @@ from karabogui.panels.api import (
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
 from karabogui.util import process_qt_events
-from karabogui.wizard.wizard import Wizard
+from karabogui.wizards import TipsTricksWizard
 
 
 CONSOLE_TITLE = 'Console'
@@ -609,7 +609,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def onWizard(self):
-        Wizard(parent=self).open()
+        TipsTricksWizard(parent=self).open()
 
     @pyqtSlot(QAction)
     def onChangeAccessLevel(self, action):

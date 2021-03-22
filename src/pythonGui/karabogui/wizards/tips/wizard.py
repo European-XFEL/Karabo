@@ -39,10 +39,10 @@ LOGO_PATH = str(Path(icons.__file__).parent / Path('splash.png'))
 LOGO_WIDTH = 100
 
 
-class Wizard(QWizard):
+class TipsTricksWizard(QWizard):
 
     def __init__(self, parent=None):
-        super(Wizard, self).__init__(parent)
+        super(TipsTricksWizard, self).__init__(parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("Karabo Tips & Tricks")
 
