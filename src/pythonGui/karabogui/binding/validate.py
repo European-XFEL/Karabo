@@ -88,7 +88,7 @@ def validate_value(binding, value):
         if isinstance(binding, VectorNumberBinding):
             # Check if binding is a vector, then test array against its
             # expected `dtype`.
-            casted_value = binding.validate_trait("value", value)
+            casted_value = binding.check(value)
             if isinstance(binding, VECTOR_FLOAT_BINDINGS):
                 value = np.array(value, dtype=casted_value.dtype)
             if not has_array_changes(value, casted_value):
@@ -104,7 +104,7 @@ def validate_value(binding, value):
         else:
             # The value is a simple data type. We validate it with the binding
             # traits.
-            value = binding.validate_trait("value", value)
+            value = binding.check(value)
     except (TraitError, TypeError, ValueError):
         # TraitError happens when traits cannot cast, e.g. str to bool
         # Validation has failed, we inform that there's no validated value
