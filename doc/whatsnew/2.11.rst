@@ -32,7 +32,8 @@ The **most relevant improvements**, fixes and changes are:
 Table of changed dependencies
 +++++++++++++++++++++++++++++
 
-Please take note of the changed dependencies::
+Please take note of the changed dependencies:
+
 
 +--------------------+------------------+-----------+
 | **library**        | **Old**          | **New**   |
@@ -123,13 +124,13 @@ The initial configuration of the ``ProjectManager`` has to change from:
 
 .. code-block::
 
-init='{"KaraboProjectDB":{"classId":"ProjectManager", "host": "thehostname", "port": 8080}}'
+    init='{"KaraboProjectDB":{"classId":"ProjectManager", "host": "thehostname", "port": 8080}}'
 
 to:
 
 .. code-block::
 
-init='{"KaraboProjectDB":{"classId":"ProjectManager","projectDB":{"protocol": "exist_db", "exist_db":{"host": "thehostname", "port": 8080}}}}'
+    init='{"KaraboProjectDB":{"classId":"ProjectManager","projectDB":{"protocol": "exist_db", "exist_db":{"host": "thehostname", "port": 8080}}}}'
 
 The default run file contains instructions on how to use the filesystem as a
 projectDB backend. More info is available :ref:`here <run/all_local>`.
