@@ -93,6 +93,7 @@ namespace karabo {
             InputHandler m_endOfStreamHandler;
 
             ConnectionTracker m_connectionTracker;
+            karabo::net::Strand::Pointer m_connectStrand; // for handlers concerning connection setup/status
 
             std::string m_instanceId;
 
@@ -266,6 +267,8 @@ namespace karabo {
             bool respondsToEndOfStream();
 
             void parseOutputChannelConfiguration(const karabo::util::Hash& config);
+
+            void postConnectionTracker(const std::string& outputChannel, karabo::net::ConnectionStatus status);
 
         public:
             /**
