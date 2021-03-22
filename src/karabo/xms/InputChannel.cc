@@ -93,6 +93,7 @@ namespace karabo {
         InputChannel::InputChannel(const karabo::util::Hash& config)
             : m_strand(boost::make_shared<Strand>(karabo::net::EventLoop::getIOService()))
             , m_deadline(karabo::net::EventLoop::getIOService())
+            , m_connectStrand(boost::make_shared<Strand>(karabo::net::EventLoop::getIOService()))
             , m_respondToEndOfStream(true) {
             reconfigure(config, false);
 
@@ -184,7 +185,15 @@ namespace karabo {
                 const std::string& outputChannel = itChannel->first;
                 auto itOpenConn = m_openConnections.find(outputChannel);
                 if (itOpenConn != m_openConnections.end()) {
-                    result[outputChannel] = net::ConnectionStatus::CONNECTED;
+                    if (itOpenConn->second.second->isOpen()) {
+                        result[outputChannel] = net::ConnectionStatus::CONNECTED;
+                    } else { // How happen?
+                        KARABO_LOG_FRAMEWORK_WARN << getInstanceId() << " - getConnectionStatus() finds connection to '"
+                                << outputChannel << "' having its channel is closed - erase.";
+                        m_openConnections.erase(itOpenConn);
+                        postConnectionTracker(outputChannel, net::ConnectionStatus::DISCONNECTED);
+                        result[outputChannel] = net::ConnectionStatus::DISCONNECTED;
+                    }
                 } else if (m_connectionsBeingSetup.find(outputChannel) != m_connectionsBeingSetup.end()) {
                     result[outputChannel] = net::ConnectionStatus::CONNECTING;
                 } else {
@@ -252,38 +261,53 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_WARN << "InputChannel with id " << getInstanceId()
                             << " not configured to connect to " << outputChannelString;
                     ec = bse::make_error_code(bse::argument_out_of_domain);
-                } else if (m_openConnections.find(outputChannelString) != m_openConnections.end()) {
-                    KARABO_LOG_FRAMEWORK_INFO << "InputChannel with id " << getInstanceId()
-                            << " already connected to " << outputChannelString;
-                    ec = bse::make_error_code(bse::already_connected);
-                } else if (m_connectionsBeingSetup.find(outputChannelString) != m_connectionsBeingSetup.end()) {
-                    KARABO_LOG_FRAMEWORK_INFO << "InputChannel with id " << getInstanceId()
-                            << " already in connection process to " << outputChannelString;
-                    ec = bse::make_error_code(bse::connection_already_in_progress);
                 } else {
-                    // Store a random number together with handler - this helps to distinguish whether a call to
-                    // onConnect(..) was triggered by a connection attempt that was already cancelled or a following
-                    // new connection attempt.
-                    const unsigned int id = m_random();
-                    m_connectionsBeingSetup[outputChannelString] = std::make_pair(id, handler);
-                    lock.unlock();
-                    KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\" - create connection!";
-                    if (m_connectionTracker) m_connectionTracker(outputChannelString, net::ConnectionStatus::CONNECTING);
-                    // Prepare connection configuration given output channel information
-                    karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
-                    // Instantiate connection object
-                    karabo::net::Connection::Pointer connection = karabo::net::Connection::create(config);
+                    auto openConnIt = m_openConnections.find(outputChannelString);
+                    if (openConnIt != m_openConnections.end()) {
+                        const karabo::net::Channel::Pointer& channel = openConnIt->second.second;
+                        if (channel->isOpen()) {
+                            KARABO_LOG_FRAMEWORK_INFO << "InputChannel with id " << getInstanceId()
+                                    << " already connected to " << outputChannelString;
+                            if (handler) {
+                                m_connectStrand->post(boost::bind(handler, bse::make_error_code(bse::already_connected)));
+                            }
+                            return; // bail out, otherwise would enter code to connect
+                        } else { // How come here?
+                            KARABO_LOG_FRAMEWORK_WARN << "Connection attempt from '" << getInstanceId() << "' to '"
+                                    << outputChannelString << "' finds existing, but closed channel - erase and retry.";
+                            m_openConnections.erase(openConnIt);
+                            postConnectionTracker(outputChannelString, net::ConnectionStatus::DISCONNECTED);
+                        }
+                    }
+                    if (m_connectionsBeingSetup.find(outputChannelString) != m_connectionsBeingSetup.end()) {
+                        KARABO_LOG_FRAMEWORK_INFO << "InputChannel with id " << getInstanceId()
+                                << " already in connection process to " << outputChannelString;
+                        ec = bse::make_error_code(bse::connection_already_in_progress);
+                    } else {
+                        // Store a random number together with handler - this helps to distinguish whether a call to
+                        // onConnect(..) was triggered by a connection attempt that was already cancelled or a following
+                        // new connection attempt.
+                        const unsigned int id = m_random();
+                        m_connectionsBeingSetup[outputChannelString] = std::make_pair(id, handler);
+                        KARABO_LOG_FRAMEWORK_DEBUG << "connect  on \"" << m_instanceId << "\" - create connection!";
+                        postConnectionTracker(outputChannelString, net::ConnectionStatus::CONNECTING);
+                        lock.unlock();
+                        // Prepare connection configuration given output channel information
+                        karabo::util::Hash config = prepareConnectionConfiguration(outputChannelInfo);
+                        // Instantiate connection object
+                        karabo::net::Connection::Pointer connection = karabo::net::Connection::create(config);
 
-                    // Establish connection (and define sub-type of server)
-                    connection->startAsync(karabo::util::bind_weak(&InputChannel::onConnect, this, _1, connection,
-                                                                   outputChannelInfo, _2, id, handler));
-                    return; // Do not call handler below
+                        // Establish connection (and define sub-type of server)
+                        connection->startAsync(karabo::util::bind_weak(&InputChannel::onConnect, this, _1, connection,
+                                                                       outputChannelInfo, _2, id, handler));
+                        return; // Do not call handler below
+                    }
                 }
             }
 
             // We are left here with a detected failure:
             if (handler) {
-                EventLoop::getIOService().post(boost::bind(handler, ec));
+                m_connectStrand->post(boost::bind(handler, ec));
             }
         }
 
@@ -323,9 +347,11 @@ namespace karabo {
             if (itBeingSetup != m_connectionsBeingSetup.end()) {
                 const auto handler = std::move(itBeingSetup->second.second);
                 m_connectionsBeingSetup.erase(itBeingSetup);
-                lock.unlock(); // handlers are better called without mutex lock
-                if (handler) handler(boost::system::errc::make_error_code(boost::system::errc::operation_canceled));
-                if (m_connectionTracker) m_connectionTracker(outputChannelString, net::ConnectionStatus::DISCONNECTED);
+                if (handler) {
+                    auto ec = boost::system::errc::make_error_code(boost::system::errc::operation_canceled);
+                    m_connectStrand->post(boost::bind(handler, ec));
+                }
+                postConnectionTracker(outputChannelString, net::ConnectionStatus::DISCONNECTED);
                 return;
             }
 
@@ -336,8 +362,7 @@ namespace karabo {
             it->second.second->close(); // Closes channel
             it->second.first->stop();
             m_openConnections.erase(it);
-            lock.unlock(); // handler is better called without mutex lock
-            if (m_connectionTracker) m_connectionTracker(outputChannelString, net::ConnectionStatus::DISCONNECTED);
+            postConnectionTracker(outputChannelString, net::ConnectionStatus::DISCONNECTED);
         }
 
 
@@ -388,12 +413,13 @@ namespace karabo {
                 // TODO: In case of success so far, we should not have tried to write hello above!
                 KARABO_LOG_FRAMEWORK_INFO << "onConnect for " << outputChannelString << ": No preparation found, "
                         << "likely disconnected before, so cut connection.";
-                ec = boost::system::errc::make_error_code(boost::system::errc::operation_canceled);
+                // handler already posted with failure from disconnectImpl(..)
+                return;
             } else if (itSetup->second.first != connectId) {
                 KARABO_LOG_FRAMEWORK_INFO << "onConnect for " << outputChannelString << ": Preparation found with "
                         << "wrong id, likely disconnected directly after connecting and then reconnected - reaching "
                         << "here from disconnected first attempt";
-                // handler already called with failure from disconnectImpl(..)
+                // handler already posted with failure from disconnectImpl(..)
                 return; // connection and channel will 'fade out'
             } else {
                 m_connectionsBeingSetup.erase(itSetup);
@@ -406,13 +432,13 @@ namespace karabo {
                 m_openConnections[outputChannelString] = std::make_pair(connection, channel);
             }
 
-            // Call handlers if given - but without mutex lock, i.e. with some bad luck, first data arrived before..
-            lock.unlock();
+            // Post handlers - with some bad luck, first data arrived before they are executed...
             // Which order of handlers? InputOutputChannel_Test::testConnectDisconnect assumes first connection tracker
-            if (m_connectionTracker) {
-                m_connectionTracker(outputChannelString, (ec ? net::ConnectionStatus::DISCONNECTED : net::ConnectionStatus::CONNECTED));
+            auto status = (ec ? net::ConnectionStatus::DISCONNECTED : net::ConnectionStatus::CONNECTED);
+            postConnectionTracker(outputChannelString, status);
+            if (handler) {
+                m_connectStrand->post(boost::bind(handler, ec));
             }
-            if (handler) handler(ec);
         }
 
 
@@ -457,10 +483,7 @@ namespace karabo {
                             << "\". Erase connection...";
                     m_openConnections.erase(ii);
                     // Better call m_connectionTracker last (which needs outputChannelString to be a copy, see above).
-                    if (m_connectionTracker) {
-                        lock.unlock(); // release mutex lock before calling handler
-                        m_connectionTracker(outputChannelString, net::ConnectionStatus::DISCONNECTED);
-                    }
+                    postConnectionTracker(outputChannelString, net::ConnectionStatus::DISCONNECTED);
                     return;
                 }
             }
@@ -558,12 +581,12 @@ namespace karabo {
                         }
                     }
                 }
-                channelPtr->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this,
-                                                                                _1, channel, _2, _3));
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onTcpChannelRead (std::exception) : " << e.what();
             }
-
+            // Continue reading, whatever happened...
+            channelPtr->readAsyncHashVectorBufferSetPointer(util::bind_weak(&karabo::xms::InputChannel::onTcpChannelRead, this,
+                                                                            _1, channel, _2, _3));
         }
 
 
@@ -727,11 +750,24 @@ namespace karabo {
 
 
         void InputChannel::deferredNotificationsOfOutputChannelsForPossibleRead() {
-            std::string problems;
-            for (OpenConnections::const_iterator it = m_openConnections.begin(); it != m_openConnections.end(); ++it) {
-                const karabo::net::Channel::Pointer& channel = it->second.second;
-                if (!channel->isOpen()) continue;
+            // Get channels to update under mutex lock - weak pointers ensure that channels are not kept alive by this
+            std::vector<karabo::net::Channel::WeakPointer> channelsToUpdate;
+            {
+                boost::mutex::scoped_lock lock(m_outputChannelsMutex);
+                channelsToUpdate.reserve(m_openConnections.size());
+                for (OpenConnections::const_iterator it = m_openConnections.begin(); it != m_openConnections.end(); ++it) {
+                    const karabo::net::Channel::Pointer& channel = it->second.second;
+                    if (channel->isOpen()) {
+                        channelsToUpdate.push_back(karabo::net::Channel::WeakPointer(channel));
+                    }
+                }
+            }
 
+            // Synchronous write without mutex lock
+            std::string problems;
+            for (const karabo::net::Channel::WeakPointer& wChannel : channelsToUpdate) {
+                karabo::net::Channel::Pointer channel(wChannel.lock());
+                if (!channel) continue;
                 // write can fail if disconnected in wrong moment - but then channel should be closed afterwards:
                 try {
                     channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
@@ -796,6 +832,13 @@ namespace karabo {
                         ++it;
                     }
                 }
+            }
+        }
+
+
+        void InputChannel::postConnectionTracker(const std::string& outputChannel, karabo::net::ConnectionStatus status) {
+            if (m_connectionTracker) {
+                m_connectStrand->post(boost::bind(m_connectionTracker, outputChannel, status));
             }
         }
 
