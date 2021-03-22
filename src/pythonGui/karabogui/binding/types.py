@@ -120,6 +120,10 @@ class BaseBinding(HasStrictTraits):
             unit = attrs.get(KEY_UNITPREFIX, '') + attrs.get(KEY_UNIT, '')
             self.unit_label = unit
 
+    def check(self, value):
+        """Check and validate the value of this binding"""
+        return self.validate_trait("value", value)
+
 
 class BindingNamespace(object):
     """A namespace which is iterable and remembers the order in which values
