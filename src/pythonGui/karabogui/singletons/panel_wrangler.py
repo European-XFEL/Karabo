@@ -13,7 +13,7 @@ from karabogui.globals import AccessRole, access_role_allowed
 from karabogui.mainwindow import MainWindow, PanelAreaEnum
 from karabogui.panels.api import MacroPanel, ScenePanel
 from karabogui.singletons.api import get_config, get_project_model, get_db_conn
-from karabogui.wizard.wizard import Wizard
+from karabogui.wizards import TipsTricksWizard
 from karabogui.util import process_qt_events
 
 
@@ -215,7 +215,7 @@ class PanelWrangler(QObject):
 
         show_wizard = get_config()['wizard']
         if show_wizard:
-            wizard = Wizard(parent=self.main_window)
+            wizard = TipsTricksWizard(parent=self.main_window)
             # We can show the wizard if needed and block!
             wizard.exec()
 
