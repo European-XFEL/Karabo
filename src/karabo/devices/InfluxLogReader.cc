@@ -230,13 +230,23 @@ namespace karabo {
                 return;
             }
 
-            nl::json respObj = nl::json::parse(dataCountResp.payload);
-            const auto &values = respObj["results"][0]["series"][0]["values"];
-            int dataCount = 0;
-            for (const auto &value : values) {
-                auto countValue = value[1].get<int>();
-                dataCount += countValue;
+            unsigned long long dataCount = 0;
+            try {
+                // The format of the data received is available here
+                //  https://docs.influxdata.com/influxdb/v1.7/guides/querying_data/
+                nl::json respObj = nl::json::parse(dataCountResp.payload);
+                const auto &values = respObj["results"][0]["series"][0]["values"];
+                for (const auto &value : values) {
+                    auto countValue = value[1].get<unsigned long long>();
+                    dataCount += countValue;
+                }
+            } catch (const std::exception &e) {
+                const std::string &errMsg = std::string("Error summing up amount of values: ") + e.what();
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                ctxt->aReply.error(errMsg);
+                return;
             }
+
             if (dataCount < 1) {
                 // No data point for the given period.
                 ctxt->aReply(ctxt->deviceId, ctxt->property, std::vector<Hash>());
@@ -251,7 +261,7 @@ namespace karabo {
         void InfluxLogReader::asyncGetPropertyValues(const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
             std::ostringstream iqlQuery;
 
-            iqlQuery << "SELECT /^" << ctxt->property << "-.*|_tid/ FROM \""
+            iqlQuery << "SELECT /^" << ctxt->property << "-.*/ FROM \""
                     << ctxt->deviceId << "\" WHERE time >= " << epochAsMicrosecString(ctxt->from) << m_durationUnit
                     << " AND time <= " << epochAsMicrosecString(ctxt->to) << m_durationUnit;
 
