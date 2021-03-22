@@ -246,52 +246,36 @@ namespace karabo {
                 // Nothing left for the execution of this slot.
                 return;
             }
+            // The format of the data received is available here
+            //  https://docs.influxdata.com/influxdb/v1.7/guides/querying_data/
+            nl::json respObj = nl::json::parse(dataCountResp.payload);
+            const auto &values = respObj["results"][0]["series"][0]["values"];
+            int dataCount = 0;
+            for (const auto &value : values) {
+                auto countValue = value[1].get<int>();
 
-            unsigned long long dataCount = 0;
-            nl::json respObj;
-            try {
-                // The format of the data received is available here
-                //  https://docs.influxdata.com/influxdb/v1.7/guides/querying_data/
-                respObj = nl::json::parse(dataCountResp.payload);
-                const auto &values = respObj["results"][0]["series"][0]["values"];
-                for (const auto &value : values) {
-                    auto countValue = value[1].get<unsigned long long>();
-                    dataCount += countValue;
-                }
-            } catch (const std::exception &e) {
-                const std::string &errMsg = std::string("Error summing up amount of values: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
-                ctxt->aReply.error(errMsg);
-                return;
+                dataCount += countValue;
             }
 
+            const auto &columns = respObj["results"][0]["series"][0]["columns"];
             bool allNumbers = true; // check if all fields support statistical aggregators
-            try {
-                const auto &columns = respObj["results"][0]["series"][0]["columns"];
-                for (const auto &column : columns) {
-                    const std::string& columnStr = column.get<std::string>();
-                    const std::string::size_type typeSeparatorPos = columnStr.rfind("-");
-                    if (typeSeparatorPos != std::string::npos) {
-                        const std::string typeName = columnStr.substr(typeSeparatorPos + 1);
-                        if (kNumberTypes.find(typeName) != kNumberTypes.end()){
-                            continue;
-                        } else {
-                            allNumbers = false;
-                            break;
-                        }
+            for (const auto &column : columns) {
+                const std::string& columnStr = column.get<std::string>();
+                const std::string::size_type typeSeparatorPos = columnStr.rfind("-");
+                if (typeSeparatorPos != std::string::npos) {
+                    const std::string typeName = columnStr.substr(typeSeparatorPos + 1);
+                    if (kNumberTypes.find(typeName) != kNumberTypes.end()){
+                        continue;
                     } else {
                         allNumbers = false;
-                        KARABO_LOG_FRAMEWORK_ERROR << "Query for property '" << ctxt->deviceId << "." << ctxt->property << "'"
-                                                   << " returned column without type separator '" << column << "'";
+                        break;
                     }
+                } else {
+                    allNumbers = false;
+                    KARABO_LOG_FRAMEWORK_ERROR << "Query for property '" << ctxt->deviceId << "." << ctxt->property << "'"
+                                               << " returned column without type seperator '" << column << "'";
                 }
-            } catch (const std::exception &e) {
-                const std::string &errMsg = std::string("Error checking if fields support statistics aggregators: ") + e.what();
-                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
-                ctxt->aReply.error(errMsg);
-                return;
             }
-
             if (dataCount < 1) {
                 // No data point for the given period.
                 ctxt->aReply(ctxt->deviceId, ctxt->property, std::vector<Hash>());
@@ -308,7 +292,7 @@ namespace karabo {
         void InfluxLogReader::asyncGetPropertyValues(const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
             std::ostringstream iqlQuery;
 
-            iqlQuery << "SELECT /^" << ctxt->property << "-.*/ FROM \""
+            iqlQuery << "SELECT /^" << ctxt->property << "-.*|_tid/ FROM \""
                     << ctxt->deviceId << "\" WHERE time >= " << epochAsMicrosecString(ctxt->from) << m_durationUnit
                     << " AND time <= " << epochAsMicrosecString(ctxt->to) << m_durationUnit;
 
