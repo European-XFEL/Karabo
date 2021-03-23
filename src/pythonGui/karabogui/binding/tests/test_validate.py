@@ -2,7 +2,7 @@ import numpy as np
 
 from karabo.common.const import KARABO_SCHEMA_DEFAULT_VALUE
 from karabo.native import (
-    AccessMode, Bool, Configurable, Hash, HashList, String, UInt8, VectorHash)
+    AccessMode, Bool, Configurable, Hash, HashList, String, UInt8)
 
 from karabogui.binding.validate import (
     get_default_value, sanitize_table_value, validate_value,
@@ -341,10 +341,11 @@ def test_validate_vector_hash():
     """Test vector hash binding validation.
     It returns both valid and invalid values in the form of a HashList([]) for
     each row."""
+
     binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRow).rowSchema.hash)
+        row_schema=TableRow.getClassSchema().hash)
     empty_binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowEmpty).rowSchema.hash)
+        row_schema=TableRowEmpty.getClassSchema().hash)
 
     # Check with one valid hash
     valid_hash = Hash("stringProperty", "foo",
@@ -413,7 +414,7 @@ def test_validate_vector_hash():
                                           HashList([invalid_hash]))
     assert valid == HashList([])
     assert invalid == HashList([Hash("stringProperty", "foo",
-                                     "uintProperty", None,  # dropped value
+                                     "uintProperty", None,  # dropped val
                                      "boolProperty", True)])
 
     # ReadOnly tables should be still validated
@@ -421,9 +422,9 @@ def test_validate_vector_hash():
 
     # 1. A fully valid Hash
     readonly_binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowReadOnly).rowSchema.hash)
+        row_schema=TableRowReadOnly.getClassSchema().hash)
     readonly_binding_default = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowReadOnlyDefault).rowSchema.hash)
+        row_schema=TableRowReadOnlyDefault.getClassSchema().hash)
 
     valid_hash = Hash("stringProperty", "karabo")
     valid, invalid = validate_table_value(readonly_binding,
@@ -432,8 +433,7 @@ def test_validate_vector_hash():
     assert invalid == HashList([])
 
     # 2. A valid string but boolean is not in the schema
-    readonly_binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowReadOnly).rowSchema.hash)
+
     invalid_hash = Hash("stringProperty", "foo",
                         "boolProperty", True)  # A value to many
     valid, invalid = validate_table_value(readonly_binding,
@@ -459,13 +459,13 @@ def test_validate_vector_hash():
 def test_sanitize_table():
     """Test vector hash binding sanitization."""
     binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRow).rowSchema.hash)
+        row_schema=TableRow.getClassSchema().hash)
     empty_binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowEmpty).rowSchema.hash)
+        row_schema=TableRowEmpty.getClassSchema().hash)
     readonly_binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowReadOnly).rowSchema.hash)
+        row_schema=TableRowReadOnly.getClassSchema().hash)
     mixed_default_binding = types.VectorHashBinding(
-        row_schema=VectorHash(TableRowMixedDefaults).rowSchema.hash)
+        row_schema=TableRowMixedDefaults.getClassSchema().hash)
 
     VALID_TABLE_HASH = Hash(
         "stringProperty", "foo",

@@ -1,3 +1,4 @@
+from inspect import isfunction
 from karabo.common import const as constmod
 
 
@@ -10,6 +11,9 @@ def test_schema_attributes_def():
     all_symbols = dir(constmod)
     all_symbols = [s for s in all_symbols if not s.startswith('__')
                    and not s.startswith('KARABO_TYPE')]
+    # Remove all functions
+    all_symbols = [s for s in all_symbols if not isfunction(
+        getattr(constmod, s))]
     all_symbols.remove(tuple_symbol)
     for symbol in ignored_symbols:
         all_symbols.remove(symbol)
