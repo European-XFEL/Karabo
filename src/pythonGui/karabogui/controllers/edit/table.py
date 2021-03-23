@@ -8,10 +8,10 @@ from PyQt5.QtCore import Qt, QModelIndex
 from PyQt5.QtWidgets import QAbstractItemView, QMenu
 from traits.api import Bool, Dict, Instance, WeakRef
 
-from karabo.common.api import (
-    KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_ROW_SCHEMA)
+from karabo.common.api import KARABO_SCHEMA_ROW_SCHEMA
 from karabo.common.scenemodel.api import TableElementModel
-from karabogui.binding.api import VectorHashBinding, get_editor_value
+from karabogui.binding.api import (
+    get_editor_value, get_default_value, VectorHashBinding)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.controllers.table.api import (
@@ -26,6 +26,9 @@ class _BaseTableElement(BaseBindingController):
     _bindings = Dict
     _is_readonly = Bool
     _item_model = WeakRef(TableModel)
+
+    # ---------------------------------------------------------------------
+    # Abstract Methods
 
     def create_widget(self, parent):
         widget = KaraboTableView(parent=parent)
@@ -90,16 +93,18 @@ class _BaseTableElement(BaseBindingController):
                 self._item_model.setData(index, row[key], self._is_readonly,
                                          is_device_update=True)
 
-    def _on_user_edit(self, data):
-        """Callback method used by `self._item_model` when data changes"""
-        self.proxy.edit_value = data
-
     def destroy_widget(self):
         if self._item_model is not None:
             self._item_model.setParent(None)
         if self.widget:
             self.widget.setParent(None)
             self.widget = None
+
+    # ---------------------------------------------------------------------
+
+    def _on_user_edit(self, data):
+        """Callback method used by `self._item_model` when data changes"""
+        self.proxy.edit_value = data
 
     def _set_bindings(self, binding):
         """Configure the column schema hashes and keys
@@ -137,8 +142,8 @@ class _BaseTableElement(BaseBindingController):
     def _set_index_default(self):
         index = self.currentIndex()
         key = list(self._bindings.keys())[index.column()]
-        attributes = self._bindings[key].attributes
-        default_value = attributes[KARABO_SCHEMA_DEFAULT_VALUE]
+        binding = self._bindings[key]
+        default_value = get_default_value(binding, force=True)
         self._item_model.setData(index, default_value, role=Qt.EditRole)
 
     def _add_row(self):
@@ -163,43 +168,44 @@ class _BaseTableElement(BaseBindingController):
         index = self.currentIndex()
         self._item_model.removeRows(index.row(), 1, QModelIndex())
 
-    # ---------------------------------------------------------------------
-
-    def currentIndex(self):
-        """Convenience method to get the currentIndex of the selection"""
-        return self.widget.selectionModel().currentIndex()
-
     def _context_menu(self, pos):
+        """The custom context menu of a reconfigurable table element"""
         selection_model = self.widget.selectionModel()
         if selection_model is None:
             # XXX: We did not yet receive a schema and thus have no table and
             # selection model!
             return
-        index = selection_model.currentIndex()
 
+        index = selection_model.currentIndex()
         menu = QMenu(parent=self.widget)
         if index.isValid():
-            column = index.column()
-            key = list(self._bindings.keys())[column]
-            if (not self._is_readonly and self._bindings[key].attributes.get(
-                    KARABO_SCHEMA_DEFAULT_VALUE)):
-                set_default_action = menu.addAction('Set Cell Default')
-                set_default_action.triggered.connect(self._set_index_default)
-                menu.addSeparator()
+            set_default_action = menu.addAction('Set Cell Default')
+            set_default_action.triggered.connect(self._set_index_default)
+            menu.addSeparator()
 
             up_action = menu.addAction(icons.arrowFancyUp, 'Move Row Up')
             up_action.triggered.connect(self._move_row_up)
             down_action = menu.addAction(icons.arrowFancyDown, 'Move Row Down')
             down_action.triggered.connect(self._move_row_down)
             menu.addSeparator()
+
             add_action = menu.addAction(icons.add, 'Add Row below')
             add_action.triggered.connect(self._add_row)
             du_action = menu.addAction(icons.editCopy, 'Duplicate Row below')
             du_action.triggered.connect(self._duplicate_row)
             remove_action = menu.addAction(icons.delete, 'Delete Row')
             remove_action.triggered.connect(self._remove_row)
+        else:
+            add_action = menu.addAction(icons.add, 'Add Row below')
+            add_action.triggered.connect(self._add_row)
 
         menu.exec_(self.widget.viewport().mapToGlobal(pos))
+
+    # ---------------------------------------------------------------------
+
+    def currentIndex(self):
+        """Convenience method to get the currentIndex of the selection"""
+        return self.widget.selectionModel().currentIndex()
 
 
 def _is_compatible(binding):
