@@ -20,7 +20,7 @@ __integration_tests() {
 }
 
 __long_tests() {
-    if [[ "$SCHEDULED_JOB" != "long-tests" ]]; then
+    if [[ "$CI_PIPELINE_SOURCE" == "schedule" && "$SCHEDULED_JOB" != "long-tests" ]]; then
         # another scheduled job was triggered
         echo "Not a 'long-tests' job. Skipping."
         exit 0
@@ -29,7 +29,7 @@ __long_tests() {
 }
 
 __coverage_tests() {
-    if [[ "$SCHEDULED_JOB" != "coverage-tests" ]]; then
+    if [[ "$CI_PIPELINE_SOURCE" == "schedule" && "$SCHEDULED_JOB" != "coverage-tests" ]]; then
         # another scheduled job was triggered
         echo "Not a 'coverage-tests' job. Skipping."
         exit 0
