@@ -122,15 +122,15 @@ inside a docker container.
 This solution will force to adapt the ``run`` file of the project database manager.
 The initial configuration of the ``ProjectManager`` has to change from:
 
-.. code-block::
+.. code-block:: bash
 
-    init='{"KaraboProjectDB":{"classId":"ProjectManager", "host": "thehostname", "port": 8080}}'
+  init='{"KaraboProjectDB":{"classId":"ProjectManager", "host": "thehostname", "port": 8080}}'
 
 to:
 
-.. code-block::
+.. code-block:: bash
 
-    init='{"KaraboProjectDB":{"classId":"ProjectManager","projectDB":{"protocol": "exist_db", "exist_db":{"host": "thehostname", "port": 8080}}}}'
+  init='{"KaraboProjectDB":{"classId":"ProjectManager","projectDB":{"protocol": "exist_db", "exist_db":{"host": "thehostname", "port": 8080}}}}'
 
 The default run file contains instructions on how to use the filesystem as a
 projectDB backend. More info is available :ref:`here <run/all_local>`.
