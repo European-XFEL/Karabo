@@ -37,8 +37,8 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertEqual(props.get("visibility"), AccessLevel.ADMIN)
             self.assertEqual(props.get("serverId"), SERVER_ID)
             # Cannot know the pid - but it is non-zero and different from ours
-            self.assertNotEquals(props.get("pid"), 0)
-            self.assertNotEquals(props.get("pid"), os.getpid())
+            self.assertNotEqual(props.get("pid"), 0)
+            self.assertNotEqual(props.get("pid"), os.getpid())
 
         with self.subTest(msg="Test readOnly table"):
             tbl = self.dc.get(deviceId, "tableReadOnly")
@@ -156,6 +156,11 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
         # tests are run in sequence as sub tests
         # device server thus is only instantiated once
+        with self.subTest(msg="Test unique id"):
+            sigSlotTmp = SignalSlotable("testComm1") # id of running device
+            self.assertRaises(RuntimeError, sigSlotTmp.start)
+            del sigSlotTmp
+
         with self.subTest(msg="Test execute slots"):
             self.dc.execute("testComm1", "slotWithoutArguments")
             res = self.dc.get("testComm1", "someString")
