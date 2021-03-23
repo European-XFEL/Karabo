@@ -10,8 +10,8 @@ from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex
 from PyQt5.QtGui import QBrush, QColor
 from PyQt5.QtWidgets import QTableView
 
-from karabogui.binding.api import BoolBinding, StringBinding, VectorBinding
-from karabo.common.api import KARABO_SCHEMA_DEFAULT_VALUE
+from karabogui.binding.api import (
+    BoolBinding, get_default_value, StringBinding, VectorBinding)
 from karabo.native import AccessMode, Hash
 from karabogui.enums import NavigationItemTypes, ProjectItemTypes
 from karabogui.indicators import get_state_color
@@ -154,11 +154,9 @@ class TableModel(QAbstractTableModel):
                 if column_hash is None:
                     column_hash = Hash()
                     for key in self._header:
-                        attrs = self._bindings[key].attributes
-                        value = attrs.get(KARABO_SCHEMA_DEFAULT_VALUE, None)
-
-                        # XXX: Formerly, the value was 'cast' here...
-                        # val = valueType.cast(val)
+                        binding = self._bindings[key]
+                        value = get_default_value(binding, force=True)
+                        # Note: Before 2.2, the value was 'cast' here...
                         column_hash[key] = value
                 if pos + row_nr < len(self._data):
                     self._data.insert(pos + row_nr, column_hash)
@@ -179,7 +177,6 @@ class TableModel(QAbstractTableModel):
                 self._data.pop(pos + row_nr - 1)
         finally:
             self.endRemoveRows()
-
         if not is_device_update:
             self._set_edit_value(self._data)
 
