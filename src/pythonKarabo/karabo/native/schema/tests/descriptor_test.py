@@ -562,7 +562,9 @@ class Tests(TestCase):
         rowSchema["int", "valueType"] = "INT32"
         rowSchema["int", "unitSymbol"] = "m"
         rowSchema["int", "metricPrefixSymbol"] = "m"
+        rowSchema["int", "accessMode"] = 4
         rowSchema["string", "valueType"] = "STRING"
+        rowSchema["string", "accessMode"] = 1
 
         d = VectorHash(rowSchema=Schema("rs", hash=rowSchema))
         # NOTE: Explicitly change order of keyValue
