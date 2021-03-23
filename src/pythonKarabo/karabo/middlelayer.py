@@ -71,6 +71,8 @@ from karabo.native import (
     VectorComplexFloat, VectorDouble, VectorFloat, VectorHash, VectorInt16,
     VectorInt32, VectorInt64, VectorInt8, VectorRegexString, VectorString,
     VectorUInt16, VectorUInt32, VectorUInt64, VectorUInt8)
+# native schema utils
+from karabo.native import (get_default_value, sanitize_table_schema)
 # native hash serialisers
 from karabo.native import (
     daysAgo, decodeBinary, decodeXML, dictToHash, dtype_from_number,
