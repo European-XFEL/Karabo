@@ -17,7 +17,7 @@ jsonschema ecdsa tzlocal httplib2 traits pint nbformat
 notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml certifi
 chardet idna urllib3 requests ply psutil pycodestyle pyflakes mccabe flake8
 msgpack msgpack-numpy flaky pyyaml coverage matplotlib eulxml eulexist
-mqtt_python peewee)
+mqtt_python asyncio-mqtt peewee)
 
 ##############################################################################
 # Important constants
