@@ -126,7 +126,6 @@ KARABO_RUNTIME_ATTRIBUTES_MDL = (
     KARABO_ALARM_LOW, KARABO_ALARM_HIGH, KARABO_SCHEMA_DAQ_POLICY
 )
 
-
 KARABO_TYPE_BOOL = 'BOOL'
 KARABO_TYPE_CHAR = 'CHAR'
 KARABO_TYPE_INT8 = 'INT8'
@@ -202,3 +201,103 @@ KARABO_TYPES = (
     KARABO_TYPE_VECTOR_STRING,
     KARABO_TYPE_VECTOR_HASH,
 )
+
+__KARABO_VECTOR_TYPES = (
+    KARABO_TYPE_VECTOR_BOOL,
+    KARABO_TYPE_VECTOR_INT8,
+    KARABO_TYPE_VECTOR_UINT8,
+    KARABO_TYPE_VECTOR_INT16,
+    KARABO_TYPE_VECTOR_UINT16,
+    KARABO_TYPE_VECTOR_INT32,
+    KARABO_TYPE_VECTOR_UINT32,
+    KARABO_TYPE_VECTOR_INT64,
+    KARABO_TYPE_VECTOR_UINT64,
+    KARABO_TYPE_VECTOR_DOUBLE,
+    KARABO_TYPE_VECTOR_FLOAT,
+    KARABO_TYPE_VECTOR_COMPLEX_DOUBLE,
+    KARABO_TYPE_VECTOR_COMPLEX_FLOAT,
+    KARABO_TYPE_VECTOR_STRING,
+    KARABO_TYPE_VECTOR_HASH
+)
+
+__KARABO_INTEGER_TYPES = (
+    KARABO_TYPE_INT8,
+    KARABO_TYPE_UINT8,
+    KARABO_TYPE_INT16,
+    KARABO_TYPE_UINT16,
+    KARABO_TYPE_INT32,
+    KARABO_TYPE_UINT32,
+    KARABO_TYPE_INT64,
+    KARABO_TYPE_UINT64,
+)
+
+__KARABO_SIGNED_INTEGER_TYPES = (
+    KARABO_TYPE_INT8,
+    KARABO_TYPE_INT16,
+    KARABO_TYPE_INT32,
+    KARABO_TYPE_INT64,
+)
+
+__KARABO_UNSIGNED_INTEGER_TYPES = (
+    KARABO_TYPE_UINT8,
+    KARABO_TYPE_UINT16,
+    KARABO_TYPE_UINT32,
+    KARABO_TYPE_UINT64,
+)
+
+__KARABO_FLOAT_TYPES = (
+    KARABO_TYPE_FLOAT,
+    KARABO_TYPE_DOUBLE,
+    KARABO_TYPE_COMPLEX_FLOAT,
+    KARABO_TYPE_COMPLEX_DOUBLE,
+)
+
+
+def is_string_like_type(vtype: str) -> bool:
+    """Check if this value type is a string like type"""
+    return vtype in (KARABO_TYPE_CHAR, KARABO_TYPE_STRING)
+
+
+def is_string_type(vtype: str) -> bool:
+    """Check if this value type is a string type"""
+    return vtype == KARABO_TYPE_STRING
+
+
+def is_boolean_type(vtype: str) -> bool:
+    """Check if this value type is a bool type"""
+    return vtype == KARABO_TYPE_BOOL
+
+
+def is_bytearray_type(vtype: str) -> bool:
+    """Check if this value type is a bytearray type"""
+    return vtype == KARABO_TYPE_BYTE_ARRAY
+
+
+def is_vector_char_type(vtype: str) -> bool:
+    """Check if this value type is a vector char type"""
+    return vtype == KARABO_TYPE_VECTOR_CHAR
+
+
+def is_vector_type(vtype: str) -> bool:
+    """Check if this value type is a vector type"""
+    return vtype in __KARABO_VECTOR_TYPES
+
+
+def is_float_type(vtype: str) -> bool:
+    """Check if this value type is a floating type"""
+    return vtype in __KARABO_FLOAT_TYPES
+
+
+def is_integer_type(vtype: str) -> bool:
+    """Check if this value type is an integer type"""
+    return vtype in __KARABO_INTEGER_TYPES
+
+
+def is_unsigned_integer_type(vtype: str) -> bool:
+    """Check if this value type belongs to an unsigned integer"""
+    return vtype in __KARABO_UNSIGNED_INTEGER_TYPES
+
+
+def is_signed_integer_type(vtype: str) -> bool:
+    """Check if this value type belongs to a signed integer"""
+    return vtype in __KARABO_SIGNED_INTEGER_TYPES
