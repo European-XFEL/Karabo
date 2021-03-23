@@ -24,6 +24,7 @@ from .basetypes import (
     BoolValue, EnumValue, isSet, NoneValue, KaraboValue,
     StringValue, TableValue, VectorCharValue, VectorStringValue, QuantityValue)
 from .registry import Registry
+from .utils import sanitize_table_schema
 
 __all__ = [
     'Attribute', 'Bool', 'ByteArray', 'Char',  'ComplexFloat',
@@ -1222,6 +1223,8 @@ class VectorHash(Vector):
         if self.rowSchema is None:
             raise KaraboError("The table element {} does not have row "
                               "schema".format(self.key))
+        else:
+            self.rowSchema = sanitize_table_schema(self.rowSchema)
 
         self.dtype = np.dtype([(k, Type.fromname[a["valueType"]].numpy)
                                for k, v, a in self.rowSchema.hash.iterall()])
