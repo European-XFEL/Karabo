@@ -10,8 +10,8 @@ from PyQt5.QtWidgets import QComboBox, QStyledItemDelegate, QLineEdit
 
 from karabo.common.api import KARABO_SCHEMA_OPTIONS
 from karabogui.binding.api import (
-    FloatBinding, get_default_value, get_native_min_max, IntBinding,
-    validate_value)
+    FloatBinding, get_default_value, get_native_min_max, is_equal,
+    IntBinding, validate_value)
 from karabogui.util import SignalBlocker
 
 
@@ -89,21 +89,28 @@ class NumberDelegate(QStyledItemDelegate):
     def createEditor(self, parent, option, index):
         """Reimplemented function of QStyledItemDelegate"""
         editor = LineEditEditor(parent)
-        value = index.model().data(index, Qt.DisplayRole)
-        validator = NumberValidator(self._binding, value, parent=editor)
+        old = index.model().data(index, Qt.DisplayRole)
+        validator = NumberValidator(self._binding, old, parent=editor)
         editor.setValidator(validator)
-        editor.textChanged.connect(self._on_editor_changed)
         return editor
 
-    @pyqtSlot()
-    def _on_editor_changed(self):
-        self.commitData.emit(self.sender())
+    def setModelData(self, editor, model, index):
+        """Reimplemented function of QStyledItemDelegate
+
+        We only recreate the table if we have changes in our value! We can do
+        this since the delegate will call `setModelData` once its out of focus.
+        """
+        old = index.model().data(index, Qt.DisplayRole)
+        new = editor.text()
+        if not is_equal(old, new):
+            model.setData(index, new, Qt.EditRole)
+            self.commitData.emit(self.sender())
 
 
 class NumberValidator(QValidator):
-    def __init__(self, binding, value, parent=None):
+    def __init__(self, binding, old, parent=None):
         QValidator.__init__(self, parent)
-        self._set_value = value
+        self._old_value = old
         self._binding = binding
         self.low, self.high = get_native_min_max(binding)
 
@@ -130,9 +137,9 @@ class NumberValidator(QValidator):
         If the value input has not been validated properly return the previous
         value before editing.
         """
-        if self._set_value is None or self._set_value == "":
+        if self._old_value is None or self._old_value == "":
             # Note: Ideally a table value should always be there. We make sure
             # it stays like this
             return str(get_default_value(self._binding, force=True))
 
-        return str(self._set_value)
+        return str(self._old_value)
