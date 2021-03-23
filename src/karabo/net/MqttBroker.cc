@@ -498,10 +498,11 @@ namespace karabo {
 
             // orderNumbers in header
             if (header->empty()
-                    || !header->has("signalInstanceId")
-                    || !header->has("slotInstanceIds")
-                    || !header->has("orderNumbers")
-                    || header->get<std::string>("slotInstanceIds") == "|*|") {
+                || !header->has("signalInstanceId")
+                || !header->has("slotInstanceIds")
+                || !header->has("orderNumbers")
+                || header->get<std::string>("slotInstanceIds") == "|*|"
+                ) {
                 m_handlerStrand->post(callback);
                 return;
             }
@@ -591,7 +592,8 @@ namespace karabo {
 
                     // report to the log ...
                     const std::string& signal = header->get<std::string>("signalFunction");
-                    const std::string& slotFunctions = header->get<std::string>("slotFunctions");
+                    const boost::optional<Hash::Node&> slotFuncNode = header->find("slotFunctions");
+                    const std::string& slotFunctions = (slotFuncNode ? slotFuncNode->getValue<std::string>() : "");
                     KARABO_LOG_FRAMEWORK_INFO << "1st message from \"" << producerId
                             << ":" << signal << "\" via topic: \"" << topic << "\" to \""
                             << slotFunctions << "\"";
