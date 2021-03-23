@@ -65,17 +65,26 @@ class Object(Configurable):
 
     vectorUint = VectorUInt32()
     vectorBool = VectorBool()
-    vectorHash = VectorHash(TableRow)
 
     uintReadOnly = UInt32(accessMode=AccessMode.READONLY)
     uintInitOnly = UInt32(accessMode=AccessMode.INITONLY)
-    vectorHashReadOnly = VectorHash(TableRow,
-                                    accessMode=AccessMode.READONLY)
-    vectorHashInitOnly = VectorHash(TableRow,
-                                    accessMode=AccessMode.INITONLY)
-    vectorHashReadOnlyColumn = VectorHash(TableRowReadOnly)
-    vectorHashInitOnlyColumn = VectorHash(TableRowInitOnly)
-    vectorHashEmpty = VectorHash(TableRowEmpty)
+
+    # -----------------------------------------------------------------------
+    # Disable the MDL sanitization for tables in tests
+
+    def new_sanitize(schema):
+        return schema
+
+    with patch('karabo.native.schema.descriptors.sanitize_table_schema',
+               new=new_sanitize):
+        vectorHash = VectorHash(rows=TableRow)
+        vectorHashReadOnly = VectorHash(rows=TableRow,
+                                        accessMode=AccessMode.READONLY)
+        vectorHashInitOnly = VectorHash(rows=TableRow,
+                                        accessMode=AccessMode.INITONLY)
+        vectorHashReadOnlyColumn = VectorHash(rows=TableRowReadOnly)
+        vectorHashInitOnlyColumn = VectorHash(rows=TableRowInitOnly)
+        vectorHashEmpty = VectorHash(TableRowEmpty)
 
 
 class TestSetProxyConfiguration(GuiTestCase):
