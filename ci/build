@@ -31,7 +31,7 @@ __release_build() {
             # task.
             # The only drawback, is that all jobs will appear as successful
             # even though they are skipped.
-            if [[ "$SCHEDULED_JOB" != "nightly-build" ]]; then
+            if [[ "$CI_PIPELINE_SOURCE" == "schedule" && "$SCHEDULED_JOB" != "nightly-build" ]]; then
                 # another scheduled job was triggered
                 echo "Not a 'nightly-build' job. Skipping."
                 exit 0
