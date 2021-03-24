@@ -5,7 +5,7 @@ from asyncio import (
     gather, get_event_loop, iscoroutinefunction, Queue, set_event_loop,
     SelectorEventLoop, shield, sleep, TimeoutError, wait_for)
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import closing, ExitStack
+from contextlib import closing, AsyncExitStack
 from functools import wraps
 import getpass
 import inspect
@@ -20,13 +20,12 @@ import traceback
 import weakref
 from abc import ABC, abstractmethod
 import uuid
-import struct
-import paho.mqtt.client as mqtt
 
 from karabo.native import KaraboValue, KaraboError, unit_registry as unit
 from karabo.native import decodeBinary, encodeBinary, Hash
 
 from . import openmq
+from .pahomqtt import mqtt, AsyncioMqttHelper
 
 # See C++ karabo/xms/Signal.hh for reasoning about the two minutes...
 _MSG_TIME_TO_LIVE = 120000  # in ms - i.e. 2 minutes
@@ -109,6 +108,10 @@ class Broker(ABC):
         pass
 
     @abstractmethod
+    def enter_async_context(self, context):
+        pass
+
+    @abstractmethod
     def updateInstanceInfo(self, info):
         pass
 
@@ -157,7 +160,7 @@ class JmsBroker(Broker):
         self.logger = logging.getLogger(deviceId)
         self.info = None
         self.slots = {}
-        self.exitStack = ExitStack()
+        self.exitStack = AsyncExitStack()
 
     def send(self, p, args):
         hash = Hash()
@@ -398,7 +401,7 @@ class JmsBroker(Broker):
 
         A device is running if this coroutine is still running.
         Use `stop_tasks` to stop this main loop."""
-        with self.exitStack:
+        async with self.exitStack:
             # this method should not keep a reference to the device
             # while yielding, otherwise the device cannot be collected
             device = weakref.ref(device)
@@ -430,6 +433,9 @@ class JmsBroker(Broker):
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
+
+    async def enter_async_context(self, context):
+        return await self.exitStack.enter_async_context(context)
 
     def updateInstanceInfo(self, info):
         """update the short information about this instance
@@ -509,77 +515,7 @@ class JmsBroker(Broker):
         raise RuntimeError(f"No connection can be established for {hosts}")
 
 
-class AsyncioMqttHelper:
-    def __init__(self, loop, client):
-        self.loop = loop
-        self.client = client
-        self.client.on_socket_open = self.on_sock_open
-        self.client.on_socket_close = self.on_sock_close
-        self.client.on_socket_register_write = self.on_sock_register_write
-        self.client.on_socket_unregister_write = self.on_sock_unregister_write
-
-    def on_sock_open(self, client, userdata, sock):
-        def cb():
-            client.loop_read()
-        self.loop.add_reader(sock, cb)
-        self.misc = self.loop.create_task(self.misc_loop())
-
-    def on_sock_close(self, client, userdata, sock):
-        self.loop.remove_reader(sock)
-        self.misc.cancel()
-
-    def on_sock_register_write(self, client, userdata, sock):
-        def cb():
-            client.loop_write()
-        self.loop.add_writer(sock, cb)
-
-    def on_sock_unregister_write(self, client, userdata, sock):
-        self.loop.remove_writer(sock)
-
-    async def misc_loop(self):
-        while self.client.loop_misc() == mqtt.MQTT_ERR_SUCCESS:
-            try:
-                await asyncio.sleep(1)
-            except asyncio.CancelledError:
-                break
-
-
 class MqttBroker(Broker):
-    """MQTT protocol does NOT guarantee that the messages sent from
-    producer (client) via different topics will come to consumer (client)
-    in the same order.  To know the right order all clients (consumers
-    and producers) should keep track of last message number (order number)
-    "produced" or "consumed" for others clients. Every client can be both
-    consumer and producer so it has 2 maps: conmap (consumer map) and promap
-    (producer map). The key of map (dict) is deviceId (instanceId) of remote
-    party and the value is last order number received from (conmap) or sent to
-    (promap) this party. There is one additional 'store' dictinary for keeping
-    list of "pending" (out-of-order) messages awaiting for reordering.
-
-    Alice to Bob communication example:
-    Alice sends the message to Bob.  Before message is sent, Alice increments
-    local promap['Bob'] += 1 and put promap['Bob'] value into message header
-    order array ( in parallel with 'slotInstanceIds' list) and, then, send it.
-    Of course, if the Bob is the only subscriber then array size = 1.
-    Bob receives the message from Alice and put it in the list store['Alice'],
-    then sorts this list and checks first message's order number in the
-    header if it is equal Bob's local conmap['Alice']+1.  If not, Bob does
-    nothing.  If so, Bob increments conmap['Alice']+=1 and process the message
-    and checks the next message in the store['Alice'] list until list is not
-    empty or the equality conmap['Alice'] + 1 == store['Alice'][0] is true.
-
-    Notes:
-        1. All these makes sense for messages with QoS = 1 or 2.
-           The QoS = 0 messages may be dropped by broker so they do not have
-           order numbers in message header
-        2. Producer should know all consumers and in case of multicasting the
-           header contains vector of order numbers for every consumer.
-           Fortunately, this is the case in karabo: see 'slotInstanceIds'
-        3. If for some reasons the message comes without order number or with
-           order number less or equal conmap['Alice'] (i.e. obsolete) it is
-           processed immediately (out of order).
-
-    """
     def __init__(self, loop, deviceId, classId, broadcast=True):
         super(MqttBroker, self).__init__(False)
         self.domain = loop.topic
@@ -593,78 +529,40 @@ class MqttBroker(Broker):
         self.logger = logging.getLogger(deviceId)
         self.info = None
         self.slots = {}
-        self.exitStack = ExitStack()
+        self.exitStack = AsyncExitStack()
         self.subscriptions = set()
-        self._misc = None
         self.client = mqtt.Client(client_id=self.clientId,
                                   userdata=self.clientId)
         self.heartbeatTask = None
-        # Assign callbacks
-        self.client.on_connect = self.on_broker_connect
-        self.brokerConnected = None
-        self.client.on_disconnect = self.on_broker_disconnect
-        self._disconnected_future = None
-        self._published_future = None
-        self.client.on_publish = self._on_publish
-        # Every MqttBroker instance has the follwong 3 disctionaries...
-        self.conmap = {}
-        self.promap = {}
-        self.store = {}
         # Start paho.mqtt engine ...
         self.engine = AsyncioMqttHelper(self.loop, self.client)
 
     def broker_connect(self, host, port):
-        self.brokerConnected = self.loop.create_future()
+        connected = self.loop.create_future()
+
+        def cb(client, userdata, flags, rc):
+            connected.set_result(rc)
+
+        self.client.on_connect = cb
         self.client.connect(host, port, 60)
         self.client.socket().setsockopt(socket.SOL_SOCKET,
                                         socket.SO_SNDBUF, 2048)
-
-    def on_broker_connect(self, client, userdata, flags, rc):
-        if rc == 0:
-            self.subscribe_default()
-        self.brokerConnected.set_result(rc)
+        return connected
 
     def broker_disconnect(self):
-        self._disconnected_future = self.loop.create_future()
+        disconnected = self.loop.create_future()
+
+        def cb(client, userdata, rc):
+            disconnected.set_result(rc)
+
+        self.client.on_disconnect = cb
         self.client.disconnect()
-
-    def on_broker_disconnect(self, client, userdata, rc):
-        self._disconnected_future.set_result(rc)
-
-    async def subscribe(self, topic, qos=1):
-        topics = []
-        if isinstance(topic, str):
-            topics.append((topic, qos))
-        elif isinstance(topic, list):
-            topics = topic
-        future = self.loop.create_future()
-
-        def cb(client, userdata, mid, qos):
-            future.set_result(mid)
-
-        self.client.on_subscribe = cb
-        self.client.subscribe(topics)
-        return future
-
-    async def unsubscribe(self, topic):
-        topics = []
-        if isinstance(topic, str):
-            topics.append(topic)
-        elif isinstance(topic, list):
-            topics = topic
-        future = self.loop.create_future()
-
-        def cb(client, userdata, mid):
-            future.set_result(mid)
-
-        self.client.on_unsubscribe = cb
-        self.client.unsubscribe(topics)
-        return future
+        return disconnected
 
     def subscribe_default(self):
         """Subscribe to 'default' topics to allow a communication
         through the broker:
-            <domain>/global_slots/+
+            <domain>/global_slots
             <domain>/slots/<deviceId>
         """
         topics = None
@@ -675,22 +573,13 @@ class MqttBroker(Broker):
             topics = [(topic, 1)]
         # subscribe to all global slots
         if self.broadcast:
-            topic_broadcast = self.domain + "/global_slots/+"
+            topic_broadcast = self.domain + "/global_slots"
             if topic_broadcast not in self.subscriptions:
                 self.subscriptions.add(topic_broadcast)
                 topics.append((topic_broadcast, 1))
         if topics is None:
             return
         self.client.subscribe(topics)
-
-    def _on_publish(self, client, userdata, mid):
-        if self._published_future is not None:
-            self._published_future.set_result(mid)
-
-    async def publish(self, topic, payload=None, qos=0, retain=False):
-        self._published_future = Future(loop=self.loop)
-        self.client.publish(topic, payload, qos, retain)
-        return self._published_future
 
     def send(self, topic, header, args, qos=1):
         body = Hash()
@@ -762,16 +651,6 @@ class MqttBroker(Broker):
         p['slotInstanceIds'] = slotInstanceIds
         funcs = ("{}:{}".format(k, ",".join(v)) for k, v in targets.items())
         p['slotFunctions'] = ('|' + '||'.join(funcs) + '|')
-        tmpmap = {}
-        for t in targets:
-            if t in self.promap:
-                self.promap[t] += 1
-            else:
-                self.promap[t] = 1
-            tmpmap[t] = self.promap[t]
-        nums = [v for _, v in tmpmap.items()]
-        p['orderNumbers'] = struct.pack('<' + str(len(nums)) + 'Q', *nums)
-        del tmpmap
         if reply is not None:
             p['replyTo'] = reply
         p['hostname'] = socket.gethostname()
@@ -783,8 +662,7 @@ class MqttBroker(Broker):
             topic = self.domain + "/slots/" + slot_id
         elif signal == "call" or signal == "__call__":
             if slot_id == '*':
-                slot_func = p['slotFunctions'].strip('|')[2:]
-                topic = self.domain + "/global_slots/" + slot_func
+                topic = self.domain + "/global_slots"
             else:
                 topic = self.domain + "/slots/" + slot_id
         else:
@@ -822,12 +700,6 @@ class MqttBroker(Broker):
             p['replyFrom'] = replyTo
             p['signalFunction'] = "__reply__"
             p['slotInstanceIds'] = '|' + sender + '|'
-            if sender in self.promap:
-                self.promap[sender] += 1
-            else:
-                self.promap[sender] = 1
-            nums = [self.promap[sender]]
-            p['orderNumbers'] = struct.pack('<Q', *nums)
             p['error'] = error
             topic = self.domain + "/slots/" + sender.replace('/', '|')
             self.send(topic, p, reply)
@@ -840,13 +712,6 @@ class MqttBroker(Broker):
             p['slotFunctions'] = header['replyFunctions']
             p['error'] = error
             dest = replyId.strip('|')
-            if dest in self.promap:
-                self.promap[dest] += 1
-            else:
-                self.promap[dest] = 1
-            nums = [self.promap[dest]]
-            # The order numbers array is binary 64 bits array
-            p['orderNumbers'] = struct.pack('<Q', *nums)
             topic = self.domain + "/slots/" + dest.replace('/', '|')
             self.send(topic, p, reply)
 
@@ -859,7 +724,7 @@ class MqttBroker(Broker):
         topic = (self.domain + "/signals/" + source.replace('/', '|')
                  + "/" + signal)
         if topic not in self.subscriptions:
-            await self.subscribe(topic, qos=1)
+            await self.client.subscribe(topic, qos=1)
             self.subscriptions.add(topic)
         return True
 
@@ -867,7 +732,7 @@ class MqttBroker(Broker):
         topic = (self.domain + "/signals/" + source.replace('/', '|')
                  + "/" + signal)
         if topic in self.subscriptions:
-            await self.unsubscribe(topic)
+            await self.client.unsubscribe(topic)
             self.subscriptions.remove(topic)
         return True
 
@@ -895,68 +760,15 @@ class MqttBroker(Broker):
         simply call handle the message as usual...
         """
         try:
+            topic = message.topic
             hash = decodeBinary(message.payload)
         except BaseException:
             self.logger.exception("Malformed message")
             return
-        header = hash.get('header')
-        if (not header
-                or 'signalInstanceId' not in header
-                or 'slotinstanceIds' not in header
-                or 'orderNumbers' not in header
-                or header['slotInstanceId'] == '|*|'):
-            self._handleMessage(hash, device)
-            return
-        src = header.get('signalInstanceId')
-        if src not in self.store:
-            self.store[src] = []
-        if src not in self.conmap:
-            self.conmap[src] = 0
-        if 'slotInstanceIds' not in header or 'orderNumbers' not in header:
-            self._handleMessage(hash, device)
-            return
-        slots = (header['slotInstanceIds'][1:-1]).split('||')
-        buf = header['orderNumbers']
-        sz = len(buf)//8
-        if sz == 0:
-            nums = []
-        elif sz == 1:
-            nums = struct.unpack('<Q', buf)
-        else:
-            nums = struct.unpack('<' + str(sz) + 'Q', buf)
-        nums = list(nums)
-        # Find deviceId in the list of targets (slotInstanceIds) ...
-        lastnum = None
-        for idx, name in enumerate(slots):
-            if self.deviceId == name:
-                lastnum = nums[idx]
-                break
-        # If deviceId is not in the target's list...
-        if lastnum is None:
-            self._handleMessage(hash, device)
-            return
-        # if message is obsolete or duplicated ... handle it
-        # In C++ such messages may appear and filtering them out
-        # results in wrong behavior
-        if self.conmap[src] >= lastnum:
-            self._handleMessage(hash, device)
-            return
-        # if there was no previous "history" ... first message from "src"
-        if self.conmap[src] == 0:
-            self.conmap[src] = lastnum   # sync with sender
-            self._handleMessage(hash, device)
-            return
-        # Always store the message into sorted store...
-        self.store[src].append((lastnum, hash))
-        self.store[src] = sorted(self.store[src])
-        while self.store[src]:
-            num, msg = self.store[src][0]
-            if num != (self.conmap[src] + 1):
-                break
-            del self.store[src][0]
-            # synchronize with sender
-            self.conmap[src] = num
-            self._handleMessage(msg, device)
+        self.checkOrder(topic, device, hash)
+
+    def checkOrder(self, topic, device, hash):
+        self._handleMessage(hash, device)
 
     def _handleMessage(self, decoded, device):
         try:
@@ -1021,7 +833,7 @@ class MqttBroker(Broker):
 
         A device is running if this coroutine is still running.
         Use `stop_tasks` to stop this main loop."""
-        with self.exitStack:
+        async with self.exitStack:
             device = weakref.ref(device)
 
             def on_message(client, userdata, msg):
@@ -1058,6 +870,9 @@ class MqttBroker(Broker):
 
     def enter_context(self, context):
         return self.exitStack.enter_context(context)
+
+    async def enter_async_context(self, context):
+        return await self.exitStack.enter_async_context(context)
 
     def updateInstanceInfo(self, info):
         """update the short information about this instance
@@ -1118,13 +933,11 @@ class MqttBroker(Broker):
             host = host[2:]
             port = int(port)
             try:
-                self.broker_connect(host, port)
-                rc = await self.brokerConnected
+                rc = await self.broker_connect(host, port)
                 if rc == 0:
+                    self.subscribe_default()
                     self.url = url
                     break
-                else:
-                    self.brokerConnected = None
             except OSError as e:
                 print(e)
 
