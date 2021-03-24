@@ -1,0 +1,33 @@
+.test_build_template: &test_build
+  script:
+    - export REL_OS_NAME=$(lsb_release -is)
+    - export REL_OS_VERS_LONG=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+    - export REL_PROJECT_NAME=$CI_PROJECT_NAME
+    - export REL_TAG=$CI_BUILD_REF_NAME
+    - export BUILD_TYPE=Debug
+    - export NUM_JOBS=$(grep "processor" /proc/cpuinfo | wc -l)
+    - export REL_BUILD_DIR=$CI_PROJECT_DIR/dist/$BUILD_TYPE/GNU-Linux-x86/
+    - export REL_ARTIFACT_DEST=karaboDevices/$REL_PROJECT_NAME/tags/$REL_TAG
+    - export REL_ARTIFACT_NAME=libbeckhoff-$REL_TAG-$REL_OS_NAME-$REL_OS_VERS_LONG.so
+    - curl http://exflserv05.desy.de/karabo/karaboFramework/tags/$KARABO_TAG/karabo-$KARABO_TAG-Release-$REL_OS_NAME-$REL_OS_VERS_LONG-x86_64.sh > karabo.sh
+    - bash karabo.sh --prefix=/root
+    - source /root/karabo/activate
+    - pushd $CI_PROJECT_DIR
+    - make
+    # please add unit tests
+
+test:centos7:relese:
+  image: europeanxfel/karabo-ci:centos-7gcc7
+  before_script:
+    - source /opt/rh/devtoolset-7/enable
+    - export KARABO_TAG="latest_build"
+  <<: *test_build
+
+test:centos7:prerelese:
+  image: europeanxfel/karabo-ci:centos-7gcc7
+  before_script:
+    - source /opt/rh/devtoolset-7/enable
+    - export KARABO_TAG="latest_prerelease_build"
+  <<: *test_build
+
+# add more operating systems if necessary
