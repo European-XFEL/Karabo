@@ -202,10 +202,9 @@ namespace karabo {
                 // isFinite matters only for FLOAT/DOUBLE
                 logValue(query, deviceId, path, value, leafNode.getType(), isFinite);
             }
-            if (!query.str().empty()) {
-                // flush the query if something is in it.
-                terminateQuery(query, lineTimestamp);
-            }
+
+            terminateQuery(query, lineTimestamp);
+
         }
 
 
@@ -314,19 +313,24 @@ namespace karabo {
 
         void InfluxDeviceData::terminateQuery(std::stringstream& query,
                                               const karabo::util::Timestamp& stamp) {
-            const unsigned long long tid = stamp.getTrainId();
-            // influxDB integers are signed 64 bits. here we check that the we are within such limits
-            // Assuming a trainId rate of 10 Hz this limit will be surpassed in about 29 billion years
-            if (0 < tid && tid <= static_cast<unsigned long long>(std::numeric_limits<long long>::max())) {
-                query << ",_tid=" << tid << "i";
+            if (!query.str().empty()) {
+                // There's data to be output to Influx.
+
+                const unsigned long long tid = stamp.getTrainId();
+                // influxDB integers are signed 64 bits. here we check that the we are within such limits
+                // Assuming a trainId rate of 10 Hz this limit will be surpassed in about 29 billion years
+                if (0 < tid &&
+                    tid <= static_cast<unsigned long long>(std::numeric_limits<long long>::max())) {
+                        query << ",_tid=" << tid << "i";
+                }
+                const unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
+                if (ts > 0) {
+                    query << " " << ts;
+                }
+                query << "\n";
+                m_dbClientWrite->enqueueQuery(query.str());
+                query.str("");
             }
-            const unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
-            if (ts > 0) {
-                query << " " << ts;
-            }
-            query << "\n";
-            m_dbClientWrite->enqueueQuery(query.str());
-            query.str("");
         }
 
 
