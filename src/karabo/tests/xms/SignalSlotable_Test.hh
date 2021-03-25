@@ -77,6 +77,8 @@ private:
     void _testAutoConnectSlot();
     void _testRegisterSlotTwice();
     void _testAsyncConnectInputChannel();
+
+    std::string m_karaboBrokerBackup;
 };
 
 #endif	/* SIGNALSLOTABLE_TEST_HH */
