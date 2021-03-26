@@ -21,6 +21,7 @@ class UnitLabelWrapper(QFrame):
         # Add and populate layout
         layout = QHBoxLayout(self)
         layout.setSizeConstraint(QHBoxLayout.SetNoConstraint)
+        layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(widget)
         layout.addWidget(label)
