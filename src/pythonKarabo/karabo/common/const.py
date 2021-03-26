@@ -274,7 +274,7 @@ def is_string_like_type(vtype: str) -> bool:
 
 
 def is_string_type(vtype: str) -> bool:
-    """Check if this value type is a string type"""
+    """Check if this value type is a string type. AMEND ME!"""
     return vtype == KARABO_TYPE_STRING
 
 
