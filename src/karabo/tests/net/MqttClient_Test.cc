@@ -213,7 +213,6 @@ void MqttClient_Test::testConnectSync() {
 
 void MqttClient_Test::testConnectSync_(const std::string& classId) {
 
-    setenv("KARABO_BROKER", m_brokers.c_str(), 1);
     Hash config(
         "brokers",    fromString<std::string, std::vector>(m_brokers),
         "domain",     m_domain,
@@ -246,7 +245,6 @@ void MqttClient_Test::testConnectSync_(const std::string& classId) {
     client.reset();
 
     // Try to connect to an invalid broker
-    ::unsetenv("KARABO_BROKER");
     config.set("brokers", fromString<std::string, std::vector>("mqtt://invalidbroker.example.com:7777"));
     client = MqttClient::create(classId, config);
     ec = client->connect();
@@ -265,8 +263,6 @@ void MqttClient_Test::testConnectSync_(const std::string& classId) {
     CPPUNIT_ASSERT(ec == KARABO_ERROR_CODE_SUCCESS);
     CPPUNIT_ASSERT(client->isConnected() == false);
     client.reset();
-
-    ::setenv("KARABO_BROKER", default_broker.c_str(), 1);
 }
 
 
@@ -302,8 +298,6 @@ void MqttClient_Test::testConnectAsync_(const std::string& classId) {
         CPPUNIT_ASSERT(status == std::future_status::ready);
         client.reset();
     }
-
-    ::unsetenv("KARABO_BROKER");
 
     // Connect to an invalid broker ...
     // ... and expect error code : Host not found (authoritative)
@@ -349,7 +343,6 @@ void MqttClient_Test::testConnectAsync_(const std::string& classId) {
         CPPUNIT_ASSERT(status == std::future_status::ready);
         client.reset();
     }
-    ::setenv("KARABO_BROKER", default_broker.c_str(), 1);
 }
 
 
