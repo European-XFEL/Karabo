@@ -195,8 +195,8 @@ def test_attribute_schema_extract():
 
     class Online(Offline):
         integer = Overwrite(
-                unitSymbol=Unit.METER,
-                metricPrefixSymbol=MetricPrefix.MILLI)
+            unitSymbol=Unit.METER,
+            metricPrefixSymbol=MetricPrefix.MILLI)
 
         onlyOnline = Int32(
             defaultValue=20,
@@ -213,16 +213,13 @@ def test_attribute_schema_extract():
     attrs = extract_modified_schema_attributes(
         online_schema, offline_schema)
     assert attrs is not None
-    assert len(attrs) == 3
+    assert len(attrs) == 2
     assert attrs[0] == Hash('path', 'readOnlyDouble',
                             'attribute', "warnHigh",
                             'value', 15)
     assert attrs[1] == Hash('path', 'readOnlyDouble',
                             'attribute', "warnLow",
                             'value', -20)
-    assert attrs[2] == Hash('path', 'integer',
-                            'attribute', "metricPrefixEnum",
-                            'value', 13)
 
 
 def test_array_equal():
