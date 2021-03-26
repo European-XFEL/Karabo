@@ -16,7 +16,7 @@ from karabo.native import AccessMode, Hash
 from karabogui.enums import NavigationItemTypes, ProjectItemTypes
 from karabogui.indicators import get_state_color
 
-from .utils import is_state_display_type
+from .utils import convert_string_list, is_state_display_type
 
 
 class TableModel(QAbstractTableModel):
@@ -96,7 +96,6 @@ class TableModel(QAbstractTableModel):
         if isinstance(binding, BoolBinding) and not self._is_readonly:
             flags &= ~Qt.ItemIsEditable
             if access_mode is AccessMode.READONLY:
-                # XXX: Remove the `enabled` flag due to INITONLY!
                 flags &= ~Qt.ItemIsEnabled
             else:
                 flags |= Qt.ItemIsUserCheckable
@@ -127,13 +126,9 @@ class TableModel(QAbstractTableModel):
         if role in (Qt.DisplayRole, Qt.EditRole):
             key = self._header[column]
             binding = self._bindings[key]
-            # now display value
             if isinstance(binding, VectorBinding) and not is_device_update:
-                # this will be a list of individual chars we need to join
-                value = "".join(value)
-                value = [v.strip() for v in value.split(",")]
-                # XXX: Formerly, the value was 'cast' here...
-                # value = valueType.cast(value)
+                value = convert_string_list(value)
+                # Before Karabo 2.2 the value was cast here...
 
             self._data[row][key] = value
             self.dataChanged.emit(index, index)
