@@ -25,16 +25,18 @@ from karabogui.util import InputValidator, SignalBlocker, utc_to_local
 SIMPLE_NAME = 'simple_name'
 LAST_MODIFIED = 'last_modified'
 UUID = 'uuid'
-AUTHOR = 'author'
 DESCRIPTION = 'description'
 
 PROJECT_DATA = OrderedDict()
 PROJECT_DATA[SIMPLE_NAME] = 'Name'
 PROJECT_DATA[LAST_MODIFIED] = 'Last Modified'
 PROJECT_DATA[UUID] = 'UUID'
-PROJECT_DATA[AUTHOR] = 'Author'
 PROJECT_DATA[DESCRIPTION] = 'Description'
+
 ProjectEntry = namedtuple('ProjectEntry', [key for key in PROJECT_DATA.keys()])
+
+# A header selection will be without the description
+HEADER = ['Name', 'Last Modified', 'UUID']
 
 
 def get_column_index(project_data_key):
@@ -368,7 +370,7 @@ class NewProjectDialog(QDialog):
 
 
 class TableModel(QAbstractTableModel):
-    headers = [value for value in PROJECT_DATA.values()]
+    headers = HEADER
 
     def __init__(self, show_trashed=False, parent=None):
         super(TableModel, self).__init__(parent)
@@ -395,6 +397,8 @@ class TableModel(QAbstractTableModel):
                      - 'user' - The user who created the project
                      - 'date' - The date the project was last modified
                      - 'description' - The description of the project
+
+        Note: The `user` information is not used.
         """
         # XXX: this only works if the sent list of uuids is complete
         self.beginResetModel()
@@ -408,7 +412,6 @@ class TableModel(QAbstractTableModel):
                     simple_name=it.get('simple_name'),
                     last_modified=utc_to_local(it.get('date')),
                     uuid=(it.get('uuid'), is_trashed),
-                    author=it.get('user', ''),
                     description=it.get('description', ''),
                     )
                 self.entries.append(entry)
@@ -440,12 +443,16 @@ class TableModel(QAbstractTableModel):
             return None
         entry = self.entries[index.row()]
         column = index.column()
-        if role in (Qt.DisplayRole, Qt.ToolTipRole):
+        if role == Qt.DisplayRole:
             if column == get_column_index(UUID):
                 # Only display uuid here, ignore is_trashed
                 uuid, _ = entry[column]
                 return uuid
             return entry[column]
+        elif role == Qt.ToolTipRole:
+            description = entry[get_column_index(DESCRIPTION)]
+            description = description or "No description provided ..."
+            return description
         elif role == Qt.UserRole:
             return entry[column]
         return None
