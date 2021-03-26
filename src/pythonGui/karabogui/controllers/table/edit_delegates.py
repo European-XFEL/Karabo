@@ -10,10 +10,13 @@ from PyQt5.QtWidgets import QComboBox, QStyledItemDelegate, QLineEdit
 
 from karabo.common.api import KARABO_SCHEMA_OPTIONS
 from karabogui.binding.api import (
-    FloatBinding, get_default_value, get_min_max, is_equal,
-    IntBinding, validate_value)
+    FloatBinding, get_default_value, get_min_max, IntBinding, validate_value,
+    VectorBinding)
+from karabogui.controllers.validators import ListValidator
 from karabogui.logger import get_logger
 from karabogui.util import SignalBlocker
+
+from karabo.native import is_equal
 
 
 def get_table_delegate(binding, parent):
@@ -22,6 +25,8 @@ def get_table_delegate(binding, parent):
         return ComboBoxDelegate(options, parent)
     elif isinstance(binding, (FloatBinding, IntBinding)):
         return NumberDelegate(binding, parent)
+    elif isinstance(binding, VectorBinding):
+        return VectorDelegate(binding, parent)
     return None
 
 
@@ -157,5 +162,56 @@ class NumberValidator(QValidator):
             # Note: Ideally a table value should always be there. We make sure
             # it stays like this
             return str(get_default_value(self._binding, force=True))
+
+        return str(self._old_value)
+
+
+class VectorDelegate(QStyledItemDelegate):
+    def __init__(self, binding, parent=None):
+        super().__init__(parent=parent)
+        self._binding = binding
+
+    def createEditor(self, parent, option, index):
+        """Reimplemented function of QStyledItemDelegate"""
+        editor = LineEditEditor(parent)
+        old = index.model().data(index, Qt.DisplayRole)
+        old = _create_string_list(old)
+        validator = VectorValidator(self._binding, old, parent=editor)
+        editor.setValidator(validator)
+        return editor
+
+    def setModelData(self, editor, model, index):
+        """Reimplemented function of QStyledItemDelegate"""
+        old = index.model().data(index, Qt.DisplayRole)
+        old = _create_string_list(old)
+        new = editor.text()
+        if not is_equal(old, new):
+            model.setData(index, new, Qt.EditRole)
+            self.commitData.emit(self.sender())
+
+    def setEditorData(self, editor, index):
+        """Reimplemented function of QStyledItemDelegate"""
+        value = index.model().data(index, Qt.DisplayRole)
+        value = _create_string_list(value)
+        editor.setText(value)
+
+
+def _create_string_list(value):
+    """Return a string list with stripped white spaces if present"""
+    return value if not value else ",".join(
+        [v.rstrip().lstrip() for v in value.split(",")])
+
+
+class VectorValidator(ListValidator):
+
+    def __init__(self, binding, old, parent=None):
+        super().__init__(binding=binding, parent=parent)
+        self._old_value = old
+
+    def fixup(self, input):
+        """Reimplemented function of QValidator"""
+        if self._old_value is None:
+            # The model will account for an empty string and use a list
+            return ""
 
         return str(self._old_value)
