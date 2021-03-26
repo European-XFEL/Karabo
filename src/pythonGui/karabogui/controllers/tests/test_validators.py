@@ -128,7 +128,7 @@ def test_list_binding_float_validator():
 
 
 def test_list_validator_size():
-    binding = VectorFloatBinding(attributes={"minSize": 1, "maxSize":3})
+    binding = VectorFloatBinding(attributes={"minSize": 1, "maxSize": 3})
     validator = ListValidator(binding=binding)
 
     # We are not allowed to be empty!
