@@ -1,6 +1,7 @@
 from functools import partial
 
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QSize
+from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QAction, QGridLayout, QSizePolicy, QWidget
 from pyqtgraph import GraphicsView, mkPen, PlotItem, mkBrush
 
@@ -17,7 +18,7 @@ from karabogui.graph.common.const import (
     EMPTY_SYMBOL_OPTIONS, DEFAULT_SYMBOL, SYMBOL_SIZE, WIDGET_MIN_HEIGHT,
     WIDGET_MIN_WIDTH, WIDGET_WIDTH_HINT, WIDGET_HEIGHT_HINT)
 
-from karabogui.graph.plots.dialogs import RangeDialog
+from karabogui.graph.plots.dialogs import GraphViewDialog, RangeDialog
 from karabogui.graph.plots.items import (
     ScatterGraphPlot, VectorBarGraphPlot, VectorFillGraphPlot)
 from karabogui.graph.plots.tools import CrossTargetController
@@ -51,7 +52,8 @@ class KaraboPlotView(QWidget):
         self.setMinimumSize(WIDGET_MIN_WIDTH, WIDGET_MIN_HEIGHT)
 
         # Main layout to organize
-        layout = QGridLayout()
+        layout = QGridLayout(self)
+        layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
@@ -74,6 +76,8 @@ class KaraboPlotView(QWidget):
         self.graph_view = GraphicsView(parent=self)
         self.graph_view.setAntialiasing(False)
         self.graph_view.enableMouse(False)
+        # Erase all transparent palettes (Performance fix: PyQtGraph == 0.11.1)
+        self.graph_view.setPalette(QPalette())
 
         # row, col, row_span, col_span
         self.layout().addWidget(self.graph_view, 0, 0, 1, 1)
@@ -163,6 +167,12 @@ class KaraboPlotView(QWidget):
             triggered=self.configure_axes,
             name='axes')
 
+        view = KaraboAction(
+            text="View",
+            tooltip="Configure the background and title of the graph view",
+            triggered=self.configure_view,
+            name='view')
+
         for check_action in (x_grid, y_grid, x_log, y_log, x_invert, y_invert):
             if check_action.name in actions:
                 q_ac = build_qaction(check_action, self)
@@ -177,7 +187,7 @@ class KaraboPlotView(QWidget):
             if action.name in self.qactions:
                 viewbox.add_action(self.qactions[action.name], separator=False)
 
-        for k_action in (axes, x_range, y_range):
+        for k_action in (axes, x_range, y_range, view):
             if k_action.name in actions:
                 q_ac = build_qaction(k_action, self)
                 q_ac.triggered.connect(k_action.triggered)
@@ -265,6 +275,15 @@ class KaraboPlotView(QWidget):
             self.stateChanged.emit(config)
 
     @pyqtSlot()
+    def configure_view(self):
+        config, ok = GraphViewDialog.get(self.configuration, parent=self)
+        if ok:
+            self.set_title(config['title'])
+            self.set_background(config['background'])
+            self.configuration.update(**config)
+            self.stateChanged.emit(config)
+
+    @pyqtSlot()
     def reset_range(self):
         self.reset_range_x()
         self.reset_range_y()
@@ -289,6 +308,12 @@ class KaraboPlotView(QWidget):
 
     # ----------------------------------------------------------------
     # Base Functions
+
+    def set_background(self, color):
+        """Set the background color of the overall base plot widget"""
+        self.graph_view.setBackground(QColor(color))
+        if self._toolbar is not None:
+            self._toolbar.set_background(QColor(color))
 
     def reset_range_x(self):
         config = self.configuration
@@ -366,6 +391,10 @@ class KaraboPlotView(QWidget):
                     self._toolbar.buttons[roi_tool].setChecked(True)
 
         self.reset_range()
+
+        # Set the view configuration!
+        self.set_background(config['background'])
+        self.set_title(config['title'])
 
     # ----------------------------------------------------------------
     # Toolbar functions Events
@@ -588,7 +617,7 @@ class KaraboPlotView(QWidget):
 
     def set_title(self, title=None, **kwargs):
         """Set the title of the built-in plotItem"""
-        # XXX: Size
+        title = f"<b>{title}</b>" if title else None
         self.plotItem.setTitle(title, **kwargs)
 
     def hide_all_axis(self):
