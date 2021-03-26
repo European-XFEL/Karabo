@@ -6,12 +6,11 @@ import numpy as np
 from traits.api import Undefined
 
 from karabo.common.api import (
-    KARABO_SCHEMA_METRIC_PREFIX_ENUM, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
-    KARABO_SCHEMA_UNIT_ENUM, KARABO_SCHEMA_UNIT_SYMBOL, KARABO_ALARM_LOW, State
+    KARABO_SCHEMA_DAQ_POLICY, KARABO_ALARM_LOW, State
 )
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, decodeBinary, Hash, HashList,
-    MetricPrefix, Schema, Timestamp, Unit
+    Schema, Timestamp
 )
 from ..api import (
     apply_configuration, apply_project_configuration,
@@ -153,8 +152,8 @@ def test_apply_project_configuration():
     assert not binding.value.a.value
 
     config = Hash('e', 0.5)
-    # change one item in attributes and add a new item
-    attr = {KARABO_SCHEMA_UNIT_SYMBOL: 'g', KARABO_ALARM_LOW: 0.0}
+    # change one item in attributes
+    attr = {KARABO_ALARM_LOW: 0.0}
     config['e', ...] = attr
     old_attrs = {k: v for k, v in binding.value.e.attributes.items()}
     apply_project_configuration(config, binding)
@@ -230,21 +229,12 @@ def test_attribute_modification():
 
     binding = build_binding(schema)
     attributes = binding.value.h.attributes
-    attributes[KARABO_SCHEMA_METRIC_PREFIX_SYMBOL] = 'm'
+    attributes[KARABO_SCHEMA_DAQ_POLICY] = 2
     modifications = extract_attribute_modifications(schema, binding)
     assert modifications[0] == Hash(
         'path', 'h',
-        'attribute', KARABO_SCHEMA_METRIC_PREFIX_ENUM,
-        'value', list(MetricPrefix).index(MetricPrefix.MILLI)
-    )
-
-    binding = build_binding(schema)
-    attributes = binding.value.h.attributes
-    attributes[KARABO_SCHEMA_UNIT_SYMBOL] = 'Sv'
-    modifications = extract_attribute_modifications(schema, binding)
-    assert modifications[0] == Hash('path', 'h',
-                                    'attribute', KARABO_SCHEMA_UNIT_ENUM,
-                                    'value', list(Unit).index(Unit.SIEVERT))
+        'attribute', KARABO_SCHEMA_DAQ_POLICY,
+        'value', 2)
 
 
 def test_property_attributes():

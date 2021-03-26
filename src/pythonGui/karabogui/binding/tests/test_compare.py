@@ -1,8 +1,9 @@
 import numpy as np
 
 from karabo.common.api import (
-    KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_RELATIVE_ERROR,
-    KARABO_SCHEMA_DISPLAYED_NAME, KARABO_SCHEMA_UNIT_SYMBOL
+    KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_WARN_LOW,
+    KARABO_SCHEMA_RELATIVE_ERROR,
+    KARABO_SCHEMA_DISPLAYED_NAME
 )
 from karabo.native import (
     Configurable, Bool, Hash, HashList, Schema, String, UInt8, VectorHash)
@@ -32,16 +33,16 @@ def test_attr_fast_deepcopy():
 
     d0 = {
         KARABO_SCHEMA_DISPLAYED_NAME: 'foo',
-        KARABO_SCHEMA_UNIT_SYMBOL: 's',
+        KARABO_WARN_LOW: 1.0,
     }
     ref = {
         KARABO_SCHEMA_DISPLAYED_NAME: 'bar',
-        KARABO_SCHEMA_UNIT_SYMBOL: 'm',
+        KARABO_WARN_LOW: 1.2,
     }
     # get diff between d0 and ref, KARABO_SCHEMA_DISPLAYED_NAME is not in
     # KARABO_EDITABLE_ATTRIBUTES, should not be included in the diff
     diff = attr_fast_deepcopy(d0, ref)
-    assert diff == {KARABO_SCHEMA_UNIT_SYMBOL: 's'}
+    assert diff == {KARABO_WARN_LOW: 1.0}
 
 
 def test_array_equal():
