@@ -34,10 +34,10 @@ class TestVectorGraph(GuiTestCase):
         super(TestVectorGraph, self).setUp()
 
         schema = VectorObject.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'prop')
+        self.proxy = get_class_property_proxy(schema, "prop")
         device = self.proxy.root_proxy
-        self.value = PropertyProxy(root_proxy=device, path='value')
-        self.bool_value = PropertyProxy(root_proxy=device, path='bool_value')
+        self.value = PropertyProxy(root_proxy=device, path="value")
+        self.bool_value = PropertyProxy(root_proxy=device, path="bool_value")
         self.controller = DisplayVectorGraph(proxy=self.proxy)
         self.controller.create(None)
         self.assertIsNotNone(self.controller.widget)
@@ -67,7 +67,7 @@ class TestVectorGraph(GuiTestCase):
         curve = self.controller._curves.get(self.proxy)
         self.assertIsNotNone(curve)
         value = [2, 4, 6]
-        set_proxy_value(self.proxy, 'prop', value)
+        set_proxy_value(self.proxy, "prop", value)
         self.assertEqual(list(curve.yData), value)
 
     def test_set_value_inf(self):
@@ -75,15 +75,15 @@ class TestVectorGraph(GuiTestCase):
         curve = self.controller._curves.get(self.proxy)
         self.assertIsNotNone(curve)
         value = [2, 4, 6]
-        set_proxy_value(self.proxy, 'prop', value)
+        set_proxy_value(self.proxy, "prop", value)
         self.assertEqual(list(curve.yData), value)
 
         value = [2, np.inf, 6]
-        set_proxy_value(self.proxy, 'prop', value)
+        set_proxy_value(self.proxy, "prop", value)
         self.assertEqual(list(curve.yData), value)
 
         value = [np.inf, np.inf, np.inf]
-        set_proxy_value(self.proxy, 'prop', value)
+        set_proxy_value(self.proxy, "prop", value)
 
         # None curve in PyQtGraph >= 0.11.1
         empty = curve.yData is None or not len(curve.yData)
@@ -93,7 +93,7 @@ class TestVectorGraph(GuiTestCase):
         value = [np.NaN, np.NaN, np.NaN]
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
-            set_proxy_value(self.proxy, 'prop', value)
+            set_proxy_value(self.proxy, "prop", value)
             # Note: Older PyQtGraph version <= 0.11.0 are not catching all
             # NaN values.
             np.testing.assert_almost_equal(list(curve.yData), value)
@@ -104,7 +104,7 @@ class TestVectorGraph(GuiTestCase):
         curve = self.controller._curves.get(self.value)
         self.assertIsNotNone(curve)
         value = [6, 12, 6]
-        set_proxy_value(self.value, 'value', value)
+        set_proxy_value(self.value, "value", value)
         self.assertEqual(list(curve.yData), value)
 
     def test_set_bool_value(self):
@@ -113,7 +113,7 @@ class TestVectorGraph(GuiTestCase):
         curve = self.controller._curves.get(self.bool_value)
         self.assertIsNotNone(curve)
         value = [False, False, True]
-        set_proxy_value(self.bool_value, 'bool_value', value)
+        set_proxy_value(self.bool_value, "bool_value", value)
         self.assertEqual(list(curve.yData), [0, 0, 1])
 
     def test_action_names(self):
@@ -121,42 +121,42 @@ class TestVectorGraph(GuiTestCase):
                                         model=VectorGraphModel())
         controller.create(None)
         action = controller.widget.actions()[0]
-        self.assertEqual(action.text(), 'Grid X')
+        self.assertEqual(action.text(), "Grid X")
         action.trigger()
         self.assertEqual(controller.model.x_grid, False)
         action.trigger()
         self.assertEqual(controller.model.x_grid, True)
 
         action = controller.widget.actions()[1]
-        self.assertEqual(action.text(), 'Grid Y')
+        self.assertEqual(action.text(), "Grid Y")
         action.trigger()
         self.assertEqual(controller.model.y_grid, False)
         action.trigger()
         self.assertEqual(controller.model.y_grid, True)
 
         action = controller.widget.actions()[2]
-        self.assertEqual(action.text(), 'Log X')
+        self.assertEqual(action.text(), "Log X")
         action.trigger()
         self.assertEqual(controller.model.x_log, True)
         action.trigger()
         self.assertEqual(controller.model.x_log, False)
 
         action = controller.widget.actions()[3]
-        self.assertEqual(action.text(), 'Log Y')
+        self.assertEqual(action.text(), "Log Y")
         action.trigger()
         self.assertEqual(controller.model.y_log, True)
         action.trigger()
         self.assertEqual(controller.model.y_log, False)
 
         action = controller.widget.actions()[4]
-        self.assertEqual(action.text(), 'Invert X')
+        self.assertEqual(action.text(), "Invert X")
         action.trigger()
         self.assertEqual(controller.model.x_invert, True)
         action.trigger()
         self.assertEqual(controller.model.x_invert, False)
 
         action = controller.widget.actions()[5]
-        self.assertEqual(action.text(), 'Invert Y')
+        self.assertEqual(action.text(), "Invert Y")
         action.trigger()
         self.assertEqual(controller.model.y_invert, True)
         action.trigger()
@@ -165,14 +165,14 @@ class TestVectorGraph(GuiTestCase):
 
     def test_xtransform(self):
         value = [1, 2, 3]
-        set_proxy_value(self.proxy, 'prop', value)
-        self._assert_transformation(offset=20, step=10)
+        set_proxy_value(self.proxy, "prop", value)
 
-    def _assert_transformation(self, offset=0, step=1):
         # Get the action
-        action = self._get_controller_action('X-Transformation')
+        action = self._get_controller_action("X-Transformation")
         self.assertIsNotNone(action)
 
+        offset = 20
+        step = 10
         # Trigger the transformation configuration
         dialog = ("karabogui.controllers.display.array_graph."
                   "TransformDialog.get")
@@ -184,6 +184,22 @@ class TestVectorGraph(GuiTestCase):
         for proxy, curve in self.controller._curves.items():
             x_expected = generate_baseline(proxy.value, offset, step)
             np.testing.assert_array_equal(curve.xData, x_expected)
+
+    def test_view_settings(self):
+        # Get the action
+        action = self._get_controller_action("View")
+        self.assertIsNotNone(action)
+
+        # Trigger the transformation configuration
+        dialog = ("karabogui.graph.plots.dialogs.view."
+                  "GraphViewDialog.get")
+        content = {"title": "TestTitle", "background": "white"}
+        with mock.patch(dialog, return_value=(content, True)):
+            action.trigger()
+
+        config = self.controller.widget.configuration
+        self.assertEqual(config["title"], "TestTitle")
+        self.assertEqual(config["background"], "white")
 
     def _get_controller_action(self, text):
         # Get the x-transformation action
@@ -197,7 +213,7 @@ class TestArrayGraph(GuiTestCase):
         super(TestArrayGraph, self).setUp()
 
         schema = ArrayObject.getClassSchema()
-        self.proxy = get_class_property_proxy(schema, 'prop')
+        self.proxy = get_class_property_proxy(schema, "prop")
         self.controller = DisplayNDArrayGraph(proxy=self.proxy)
         self.controller.create(None)
         self.assertIsNotNone(self.controller.widget)
@@ -211,8 +227,8 @@ class TestArrayGraph(GuiTestCase):
         curve = self.controller._curves.get(self.proxy)
         self.assertIsNotNone(curve)
         value = np.array(list(range(10)), dtype="uint32")
-        array_hash = Hash('type', 14,
-                          'data', value.tobytes())
-        h = Hash('prop', array_hash)
+        array_hash = Hash("type", 14,
+                          "data", value.tobytes())
+        h = Hash("prop", array_hash)
         set_proxy_hash(self.proxy, h)
         np.testing.assert_array_equal(curve.yData, value)

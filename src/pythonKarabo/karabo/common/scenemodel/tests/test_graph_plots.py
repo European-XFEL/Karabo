@@ -17,6 +17,8 @@ def _assert_geometry_traits(model):
 
 def test_base_plot_model():
     traits = _geometry_traits()
+    traits['title'] = 'Graph'
+    traits['background'] = 'white'
     traits['x_label'] = 'X'
     traits['y_label'] = 'Y'
     traits['x_units'] = 'XUNIT'
@@ -36,6 +38,8 @@ def test_base_plot_model():
     model = api.VectorGraphModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
+    assert read_model.title == 'Graph'
+    assert read_model.background == 'white'
     assert read_model.x_label == 'X'
     assert read_model.y_label == 'Y'
     assert read_model.x_units == 'XUNIT'
