@@ -13,11 +13,36 @@ from .graph_utils import (
     BaseROIData, read_axes_set, read_basic_label, read_baseline,
     read_range_set, read_roi_info, write_axes_set, write_basic_label,
     write_baseline, write_range_set, write_roi_info,
-    read_histogram_model, write_histogram_model)
+    read_histogram_model, write_histogram_model, read_view_set, write_view_set)
+
+
+def write_base_plot(model, element, klass):
+    """Write the base of all graph plots
+
+    This method writes axes, labels, ranges and view (background, title) to
+    the element.
+    """
+    write_base_widget_data(model, element, klass)
+    write_basic_label(model, element)
+    write_axes_set(model, element)
+    write_range_set(model, element)
+    write_view_set(model, element)
+
+
+def read_base_plot(element):
+    """Read the base of all graph plots"""
+    traits = read_base_widget_data(element)
+    traits.update(read_basic_label(element))
+    traits.update(read_axes_set(element))
+    traits.update(read_range_set(element))
+    traits.update(read_view_set(element))
+    return traits
 
 
 class BasePlotModel(BaseWidgetObjectData):
     """ A base model for the plot graphs"""
+    title = String
+    background = String('transparent')
     x_label = String
     y_label = String
     x_units = String
@@ -174,10 +199,7 @@ class AlarmGraphModel(BasePlotModel):
 @register_scene_reader('XYPlot')  # deprecated matplotlib model
 @register_scene_reader('ScatterGraph')
 def _scatter_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
     traits['maxlen'] = int(element.get(NS_KARABO + 'maxlen', 100))
     traits['psize'] = float(element.get(NS_KARABO + 'psize', 7))
 
@@ -188,10 +210,7 @@ def _scatter_graph_reader(element):
 @register_scene_writer(ScatterGraphModel)
 def _scatter_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'ScatterGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'ScatterGraph')
     element.set(NS_KARABO + 'maxlen', str(model.maxlen))
     element.set(NS_KARABO + 'psize', str(model.psize))
 
@@ -200,10 +219,7 @@ def _scatter_graph_writer(model, parent):
 
 @register_scene_reader('VectorScatterGraph')
 def _vector_scatter_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
     traits['psize'] = float(element.get(NS_KARABO + 'psize', 7))
 
     return VectorScatterGraphModel(**traits)
@@ -212,10 +228,7 @@ def _vector_scatter_graph_reader(element):
 @register_scene_writer(VectorScatterGraphModel)
 def _vector_scatter_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'VectorScatterGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'VectorScatterGraph')
     element.set(NS_KARABO + 'psize', str(model.psize))
 
     return element
@@ -224,10 +237,7 @@ def _vector_scatter_graph_writer(model, parent):
 @register_scene_reader('XYVector')  # deprecated Qwt model
 @register_scene_reader('VectorXYGraph')
 def _vector_xy_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
 
     return VectorXYGraphModel(**traits)
 
@@ -236,20 +246,14 @@ def _vector_xy_graph_reader(element):
 @register_scene_writer(VectorXYGraphModel)
 def _vector_xy_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'VectorXYGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'VectorXYGraph')
 
     return element
 
 
 @register_scene_reader('VectorBarGraph')
 def _vector_bar_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
     traits['bar_width'] = float(element.get(NS_KARABO + 'bar_width', 0.1))
 
     return VectorBarGraphModel(**traits)
@@ -258,10 +262,7 @@ def _vector_bar_graph_reader(element):
 @register_scene_writer(VectorBarGraphModel)
 def _vector_bar_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'VectorBarGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'VectorBarGraph')
     element.set(NS_KARABO + 'bar_width', str(model.bar_width))
 
     return element
@@ -285,10 +286,7 @@ def _vector_hist_graph_writer(model, parent):
 
 @register_scene_reader('NDArrayGraph')
 def _ndarray_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
     traits.update(read_baseline(element))
     traits['roi_items'] = read_roi_info(element)
     traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
@@ -300,10 +298,7 @@ def _ndarray_graph_reader(element):
 @register_scene_writer(NDArrayGraphModel)
 def _ndarray_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'NDArrayGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'NDArrayGraph')
     write_roi_info(model, element)
     write_baseline(model, element)
     element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
@@ -314,10 +309,7 @@ def _ndarray_graph_writer(model, parent):
 
 @register_scene_reader('VectorFillGraph')
 def _vector_fill_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
 
     return VectorFillGraphModel(**traits)
 
@@ -325,10 +317,7 @@ def _vector_fill_graph_reader(element):
 @register_scene_writer(VectorFillGraphModel)
 def _vector_fill_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'VectorFillGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'VectorFillGraph')
 
     return element
 
@@ -336,10 +325,7 @@ def _vector_fill_graph_writer(model, parent):
 @register_scene_reader('DisplayPlot')  # deprecated Qwt model
 @register_scene_reader('VectorGraph')
 def _vector_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
     traits.update(read_baseline(element))
     traits['roi_items'] = read_roi_info(element)
     traits['roi_tool'] = int(element.get(NS_KARABO + 'roi_tool', 0))
@@ -352,10 +338,7 @@ def _vector_graph_reader(element):
 @register_scene_writer(VectorGraphModel)
 def _vector_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'VectorGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'VectorGraph')
     write_roi_info(model, element)
     write_baseline(model, element)
     element.set(NS_KARABO + 'roi_tool', str(model.roi_tool))
@@ -367,10 +350,7 @@ def _vector_graph_writer(model, parent):
 @register_scene_reader('DisplayTrendline')  # deprecated Qwt model
 @register_scene_reader('DisplayTrendGraph')
 def _trend_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
 
     return TrendGraphModel(**traits)
 
@@ -379,10 +359,7 @@ def _trend_graph_reader(element):
 @register_scene_writer(TrendGraphModel)
 def _trend_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'DisplayTrendGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'DisplayTrendGraph')
 
     return element
 
@@ -401,10 +378,7 @@ def _line_plot_writer(model, parent):
 
 @register_scene_reader('DisplayStateGraph')
 def _state_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
 
     return StateGraphModel(**traits)
 
@@ -412,20 +386,14 @@ def _state_graph_reader(element):
 @register_scene_writer(StateGraphModel)
 def _state_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'DisplayStateGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'DisplayStateGraph')
 
     return element
 
 
 @register_scene_reader('DisplayAlarmGraph')
 def _alarm_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
 
     return AlarmGraphModel(**traits)
 
@@ -433,10 +401,7 @@ def _alarm_graph_reader(element):
 @register_scene_writer(AlarmGraphModel)
 def _alarm_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'DisplayAlarmGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'DisplayAlarmGraph')
 
     return element
 
@@ -444,10 +409,7 @@ def _alarm_graph_writer(model, parent):
 @register_scene_reader('MultiCurvePlot')  # deprecated matplotlib model
 @register_scene_reader('MultiCurveGraph')
 def _multi_graph_reader(element):
-    traits = read_base_widget_data(element)
-    traits.update(read_basic_label(element))
-    traits.update(read_axes_set(element))
-    traits.update(read_range_set(element))
+    traits = read_base_plot(element)
 
     return MultiCurveGraphModel(**traits)
 
@@ -456,9 +418,6 @@ def _multi_graph_reader(element):
 @register_scene_writer(MultiCurveGraphModel)
 def _multi_graph_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
-    write_base_widget_data(model, element, 'MultiCurveGraph')
-    write_basic_label(model, element)
-    write_axes_set(model, element)
-    write_range_set(model, element)
+    write_base_plot(model, element, 'MultiCurveGraph')
 
     return element

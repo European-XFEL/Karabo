@@ -15,6 +15,7 @@ KARABO_BASE_SAVABLE = ['x', 'y', 'width', 'height', 'keys', 'parent_component']
 AXES_SET = ['x_grid', 'y_grid', 'x_log', 'y_log', 'x_invert', 'y_invert']
 LABEL_UNITS = ['x_label', 'y_label', 'x_units', 'y_units']
 BASELINE = ['offset', 'step']
+VIEW_SET = ['background', 'title']
 RANGE_SET = ['x_min', 'x_max', 'y_min', 'y_max']
 TRANSFORM_SET = ['x_scale', 'y_scale', 'x_translate', 'y_translate']
 
@@ -165,6 +166,18 @@ def read_baseline(element):
 def write_baseline(model, element):
     for name in BASELINE:
         element.set(NS_KARABO + name, str(getattr(model, name)))
+
+
+def read_view_set(element):
+    traits = {}
+    traits['title'] = element.get(NS_KARABO + 'title', '')
+    traits['background'] = element.get(NS_KARABO + 'background', 'transparent')
+    return traits
+
+
+def write_view_set(model, element):
+    element.set(NS_KARABO + 'title', str(model.title))
+    element.set(NS_KARABO + 'background', str(model.background))
 
 
 def read_range_set(element):

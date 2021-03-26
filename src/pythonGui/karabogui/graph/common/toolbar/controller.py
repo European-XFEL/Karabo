@@ -22,6 +22,10 @@ class ToolbarController(HasStrictTraits):
         controller = get_toolset(default_tool_type)
         self.toolsets[default_tool_type] = controller
 
+    def set_background(self, color):
+        """Set the background stylesheet of the toolbar widget"""
+        self.widget.setBackground(color)
+
     def _toolsets_items_changed(self, event):
         """Add the buttons"""
 
