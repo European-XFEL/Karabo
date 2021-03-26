@@ -7,7 +7,7 @@ from datetime import datetime
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
-    QFrame, QHBoxLayout, QPushButton, QVBoxLayout, QTextEdit)
+    QFrame, QHBoxLayout, QMenu, QPushButton, QVBoxLayout, QTextEdit)
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import DisplayTextLogModel
@@ -34,17 +34,23 @@ class DisplayTextLog(BaseBindingController):
     def create_widget(self, parent):
         widget = QFrame(parent)
         ver_layout = QVBoxLayout(widget)
+        ver_layout.setSpacing(0)
+
         self.log_widget = QTextEdit(widget)
 
         # no focus for this widget!
         self.log_widget.setFocusPolicy(Qt.NoFocus)
-        ver_layout.addWidget(self.log_widget)
+        self.log_widget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.log_widget.customContextMenuRequested.connect(
+            self._show_context_menu)
 
+        ver_layout.addWidget(self.log_widget)
         # start horizontal layout with button and spacer
         hor_layout = QHBoxLayout()
 
         # strech is required to move the button to the right
         hor_layout.addStretch(1)
+        hor_layout.setSpacing(0)
 
         button = QPushButton()
         button.setFixedSize(W_SIZE, W_SIZE)
@@ -83,3 +89,17 @@ class DisplayTextLog(BaseBindingController):
         # update our scroll bar
         bar = self.log_widget.verticalScrollBar()
         bar.setValue(bar.maximum())
+
+    def _show_context_menu(self, pos):
+        """Show a context menu"""
+        menu = QMenu(self.widget)
+        select_action = menu.addAction('Select All')
+        select_action.triggered.connect(self.log_widget.selectAll)
+        enable_select = len(self.log_widget.toPlainText()) > 0
+        select_action.setEnabled(enable_select)
+
+        copy_action = menu.addAction('Copy Selected')
+        copy_action.triggered.connect(self.log_widget.copy)
+        enable_copy = not self.log_widget.textCursor().selection().isEmpty()
+        copy_action.setEnabled(enable_copy)
+        menu.exec_(self.log_widget.viewport().mapToGlobal(pos))
