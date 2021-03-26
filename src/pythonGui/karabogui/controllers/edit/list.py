@@ -47,10 +47,7 @@ class _BaseListController(BaseBindingController):
 
     def binding_update(self, proxy):
         binding = proxy.binding
-        min_size, max_size = get_min_max_size(proxy.binding)
         self._validator = ListValidator(binding=binding, parent=self.widget)
-        self._validator.min_size = min_size
-        self._validator.max_size = max_size
         self._internal_widget.setValidator(self._validator)
 
     def set_read_only(self, ro):

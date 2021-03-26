@@ -5,17 +5,21 @@ import numpy as np
 from PyQt5.QtGui import QValidator
 
 from karabogui.binding.api import (
-    validate_value, VectorBoolBinding, VectorComplexDoubleBinding,
-    VectorComplexFloatBinding, VectorDoubleBinding, VectorFloatBinding,
-    VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
-    VectorInt64Binding, VectorStringBinding, VectorUint8Binding,
-    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding)
+    validate_value, get_min_max_size, VectorBoolBinding,
+    VectorComplexDoubleBinding, VectorComplexFloatBinding, VectorDoubleBinding,
+    VectorFloatBinding, VectorInt8Binding, VectorInt16Binding,
+    VectorInt32Binding, VectorInt64Binding, VectorStringBinding,
+    VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
+    VectorUint64Binding)
 
+BOOL_REGEX = r"(0|1|[T]rue|[F]alse)"
 INT_REGEX = r"^[-+]?\d+$"
 UINT_REGEX = r"^[+]?\d+$"
-DOUBLE_REGEX = r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$"
+STRING_REGEX = r"^.+$"
+# Was before r"^[-+]?\d*[\.]\d*$|^[-+]?\d+$"
+DOUBLE_REGEX = r"^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$"
 
-CAST_MAP = {
+_CAST_MAP = {
     VectorInt8Binding: np.int8,
     VectorInt16Binding: np.int16,
     VectorInt32Binding: np.int32,
@@ -26,8 +30,8 @@ CAST_MAP = {
     VectorUint64Binding: np.uint64,
 }
 
-REGEX_MAP = {
-    VectorBoolBinding: r"(0|1|[T]rue|[F]alse)",
+_REGEX = {
+    VectorBoolBinding: BOOL_REGEX,
     VectorComplexDoubleBinding: DOUBLE_REGEX,  # XXX
     VectorComplexFloatBinding: DOUBLE_REGEX,  # XXX
     VectorDoubleBinding: DOUBLE_REGEX,
@@ -36,24 +40,24 @@ REGEX_MAP = {
     VectorInt16Binding: INT_REGEX,
     VectorInt32Binding: INT_REGEX,
     VectorInt64Binding: INT_REGEX,
-    VectorStringBinding: r"^.+$",
+    VectorStringBinding: STRING_REGEX,
     VectorUint8Binding: UINT_REGEX,
     VectorUint16Binding: UINT_REGEX,
     VectorUint32Binding: UINT_REGEX,
     VectorUint64Binding: UINT_REGEX,
 }
 
-MEDIATE_MAP = {
+_INTERMEDIATE = {
     VectorBoolBinding: ('T', 't', 'r', 'u', 'F', 'a', 'l', 's', ','),
     VectorComplexDoubleBinding: ('+', '-', 'j', ','),  # X
     VectorComplexFloatBinding: ('+', '-', 'j', ','),  # X
-    VectorDoubleBinding: ('+', '-', ','),
-    VectorFloatBinding: ('+', '-', ',', '.'),
+    VectorDoubleBinding: ('+', '-', ',', 'e'),
+    VectorFloatBinding: ('+', '-', ',', '.', 'e'),
     VectorInt8Binding: ('+', '-', ','),
     VectorInt16Binding: ('+', '-', ','),
     VectorInt32Binding: ('+', '-', ','),
     VectorInt64Binding: ('+', '-', ','),
-    VectorStringBinding: (','),
+    VectorStringBinding: (',',),
     VectorUint8Binding: ('+', ','),
     VectorUint16Binding: ('+', ','),
     VectorUint32Binding: ('+', ','),
@@ -65,51 +69,51 @@ class ListValidator(QValidator):
     pattern = None
     intermediate = ()
 
-    def __init__(self, binding=None, min_size=None, max_size=None,
-                 parent=None):
-        super(ListValidator, self).__init__(parent)
-        bind_type = type(binding)
-        self.pattern = re.compile(REGEX_MAP.get(bind_type, ''))
-        self.intermediate = MEDIATE_MAP.get(bind_type, ())
-        self.literal = (str if bind_type == VectorStringBinding
+    def __init__(self, binding, parent=None):
+        super().__init__(parent=parent)
+        self._binding = binding
+        binding_type = type(self._binding)
+        self.pattern = re.compile(_REGEX.get(binding_type, ''))
+        self.intermediate = _INTERMEDIATE.get(binding_type, ())
+        self.literal = (str if binding_type == VectorStringBinding
                         else literal_eval)
-        # vector of integers are downcasted, here we get a function
+        # Note: Vector of integers are downcasted. We get a function
         # to validate that the user input matches the casted value
-        self.cast = CAST_MAP.get(bind_type, self.literal)
+        self.cast = _CAST_MAP.get(binding_type, self.literal)
+
+        min_size, max_size = get_min_max_size(binding)
         self.min_size = min_size
         self.max_size = max_size
 
     def validate(self, input, pos):
-        """The main validate function
-        """
-        # completely empty input might be acceptable!
-        if input in ('', []) and (self.min_size is None or self.min_size == 0):
+        """The main validate function of the ListValidator"""
+        # 1. Basic empty input check. Empty input might be acceptable!
+        if input == "" and (self.min_size is None or not self.min_size):
             return self.Acceptable, input, pos
-        elif (input in ('', []) and self.min_size is not None
-              and self.min_size > 0):
+        elif input == "" and self.min_size is not None and self.min_size > 0:
             return self.Intermediate, input, pos
         elif input.startswith(','):
             return self.Intermediate, input, pos
 
-        # check for size first
+        # 2. Check for size of list first
         values = [val for val in input.split(',')]
         if self.min_size is not None and len(values) < self.min_size:
             return self.Intermediate, input, pos
         if self.max_size is not None and len(values) > self.max_size:
             return self.Intermediate, input, pos
 
-        # intermediate positions
+        # 3. Intermediate positions
         if input[-1] in self.intermediate:
             return self.Intermediate, input, pos
 
-        # check every single list value if it is valid
+        # 4. Check every single list value if it is valid
         for value in values:
             if not self.pattern.match(value):
                 return self.Invalid, input, pos
-            # We have to check other behavior, e.g. leading zeros, and see
-            # if we can cast it properly (SyntaxError)
-            # Check for changes in between Vectors (ValueError)
-            # or if self.cast casts down integers (AssertionError)
+            # More checks including:
+            # 4.1 We have to see we can cast it properly (SyntaxError)
+            # 4.2 Check for changes in between Vectors (ValueError)
+            # 4.3 Casts down integers (AssertionError), limits
             try:
                 assert self.literal(value) == self.cast(value)
             except (ValueError, SyntaxError, AssertionError):
