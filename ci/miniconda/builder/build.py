@@ -218,33 +218,20 @@ class Builder:
         # Proceed only if recipe supports testing
         if not (recipe == KARABOGUI and self.args.test):
             return
+        recipe_dir = op.dirname(self.recipe_path(recipe))
+        extension = "sh" if sys_name() != "Windows" else "bat"
+        test_script = op.join(recipe_dir, f"_run_test.{extension}")
+        if not op.exists(test_script):
+            print(f"Test script '{test_script}' missing")
 
         # Check if there's an existing devenv environment
         if get_conda_prefix(recipe) is None:
             self.create_devenv(recipe)
 
         with self.karabo_installed(recipe):
-            to_test = ['karabogui', 'karabo.native', 'karabo.common']
-            self.test_environment(env=recipe, modules=to_test)
-
-    def test_environment(self, env, modules):
-        errors = []
-        for module in modules:
-            cmd = [Commands.RUN, '-n', env,
-                   'python', '-m', 'pytest', '-v', '--disable-warnings',
-                   '--pyargs', # '-p no:warnings',
-                   f'--junitxml=junit.{module}.xml', module]
-            try:
-                conda_run(*cmd)
-            except RuntimeError as e:
-                errors.append(f'{module}:\n{str(e)}')
-
-        if errors:
-            message = '\n\n'.join(errors)
-            raise RuntimeError(f"Failures in the following modules: "
-                               f"\n{message}")
-
-        print('Tests successful')
+            cmd = [Commands.RUN, '-n', recipe, test_script]
+            conda_run(*cmd)
+            print('Tests successful')
 
     # -----------------------------------------------------------------------
     # Building recipe
