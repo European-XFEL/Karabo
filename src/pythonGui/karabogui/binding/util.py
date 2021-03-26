@@ -46,32 +46,63 @@ def get_min_max(binding):
     return None, None
 
 
-def get_native_min_max(binding):
-    """Get the native minimum and maximum of an integer or float binding
+def get_numpy_binding(binding):
+    """Retrieve a corresponding numpy `dtype` to a binding `binding`
 
-    This method does not take into account binding limits, only the native
-    binding range.
+    Note: In case of vector types, the appropriate `dtype` of an element
+    is returned.
     """
-    if isinstance(binding, types.IntBinding):
-        range_trait = binding.trait('value').handler
-        value_range = range_trait._low, range_trait._high
-        if range_trait._exclude_low:
-            value_range = (value_range[0] + 1, value_range[1])
-        if range_trait._exclude_high:
-            value_range = (value_range[0], value_range[1] - 1)
+    to_numpy_dtype = {
+        types.Int8Binding: np.int8,
+        types.Uint8Binding: np.uint8,
+        types.Int16Binding: np.int16,
+        types.Uint16Binding: np.uint16,
+        types.Int32Binding: np.int32,
+        types.Uint32Binding: np.uint32,
+        types.Int64Binding: np.int64,
+        types.Uint64Binding: np.uint64,
+        types.FloatBinding: np.float64,
+        types.ComplexBinding: np.complex128,
+        types.VectorInt8Binding: np.int8,
+        types.VectorUint8Binding: np.uint8,
+        types.VectorInt16Binding: np.int16,
+        types.VectorUint16Binding: np.uint16,
+        types.VectorInt32Binding: np.int32,
+        types.VectorUint32Binding: np.uint32,
+        types.VectorInt64Binding: np.int64,
+        types.VectorUint64Binding: np.uint64,
+        types.VectorFloatBinding: np.float32,
+        types.VectorDoubleBinding: np.float64,
+        types.VectorComplexFloatBinding: np.complex64,
+        types.VectorComplexDoubleBinding: np.complex128
+    }
+    return to_numpy_dtype.get(type(binding), None)
 
-        low = value_range[0]
-        high = value_range[1]
-        return low, high
 
-    elif isinstance(binding, types.FloatBinding):
-        attrs = binding.attributes
-        value_type = attrs[const.KARABO_SCHEMA_VALUE_TYPE]
-        if value_type in ('FLOAT', 'COMPLEX_FLOAT'):
-            info = np.finfo(np.float32)
-        else:
-            info = np.finfo(np.float64)
+def get_native_min_max(binding):
+    """Returns the appropriate numeric minimum and maximum for a binding
 
+    Note: In of a vector binding the numeric limits of an element are returned
+
+    This function neglects binding specific minimum and maximum
+    """
+    VECTOR_UNSIGNED = (
+        types.VectorUint8Binding, types.VectorUint16Binding,
+        types.VectorUint32Binding, types.VectorUint64Binding)
+    VECTOR_SIGNED = (
+        types.VectorInt8Binding, types.VectorInt16Binding,
+        types.VectorInt32Binding, types.VectorInt64Binding)
+    VECTOR_INTEGER_BINDINGS = VECTOR_SIGNED + VECTOR_UNSIGNED
+
+    if isinstance(binding, (types.IntBinding, VECTOR_INTEGER_BINDINGS)):
+        numpy = get_numpy_binding(binding)
+        info = np.iinfo(numpy)
+        return info.min, info.max
+
+    elif isinstance(binding, (types.FloatBinding, types.VectorFloatBinding,
+                              types.VectorComplexDoubleBinding)):
+        numpy = get_numpy_binding(binding)
+        info = np.finfo(numpy)
         return info.min, info.max
 
     return None, None
