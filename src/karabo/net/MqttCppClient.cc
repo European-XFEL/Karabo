@@ -44,7 +44,6 @@ namespace karabo {
 
 
         MqttCppClient::~MqttCppClient() {
-            unsubscribeAll();
             disconnect();
         }
 

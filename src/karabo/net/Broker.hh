@@ -212,11 +212,20 @@ namespace karabo {
              */
             static std::vector<std::string> brokersFromEnv();
 
+
             /**
              *  Specifies the broker type as the protocol of the broker URLs defined by brokersFromEnv().
              *  Throws LogicException if broker addresses specified with different types or without protocol.
              */
             static std::string brokerTypeFromEnv();
+
+
+            /**
+             *  Specifies the broker type as the protocol of the given broker URLs.
+             *  Throws LogicException if broker addresses specified with different types or without protocol.
+             */
+            static std::string brokerTypeFrom(const std::vector<std::string>& urls);
+
 
             /**
              * Specify broker domain (i.e. topic for JmsBroker) from environment variables.
