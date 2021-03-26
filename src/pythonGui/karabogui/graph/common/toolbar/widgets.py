@@ -12,7 +12,6 @@ class ToolBar(QToolBar):
         # Setup toolbar settings
         self.setOrientation(orientation)
         self.setStyleSheet("QToolBar { border: 0px }")
-
         self._separators = {}
 
     def add_button(self, button):
@@ -22,6 +21,10 @@ class ToolBar(QToolBar):
 
         # Check separators
         self.addAction(action)
+
+    def setBackground(self, color):
+        sheet = "QToolBar {{ border: 0px; background-color: rgba{}; }}"
+        self.setStyleSheet(sheet.format(color.getRgb()))
 
 
 class WidgetAction(QWidgetAction):
