@@ -67,9 +67,14 @@ namespace karabo {
 
 
         std::string Broker::brokerTypeFromEnv() {
+            return brokerTypeFrom(brokersFromEnv());
+        }
+
+
+        std::string Broker::brokerTypeFrom(const std::vector<std::string>& urls) {
 
             std::string type;
-            for (const std::string& address : brokersFromEnv()) {
+            for (const std::string& address : urls) {
                 const size_t pos = address.find("://");
                 if (pos == std::string::npos || pos == 0u) {
                     throw KARABO_LOGIC_EXCEPTION("Broker address '" + address + "' does not specify protocol.");
