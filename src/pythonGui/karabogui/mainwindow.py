@@ -25,7 +25,7 @@ from karabogui.indicators import get_processing_color
 from karabogui.enums import AccessRole
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
-from karabogui.logger import get_logger, StatusBarHandler
+from karabogui.logger import get_logger, StatusLogWidget
 from karabogui import messagebox
 from karabogui.panels.api import (
     AlarmPanel, ConfigurationPanel, DevicePanel, PanelContainer, LoggingPanel,
@@ -253,7 +253,7 @@ class MainWindow(QMainWindow):
         """
         if data is not None:
             info = 'KARABO TOPIC: <b>{}</b>'.format(data['topic'])
-            self.brokerInfo.setText(info)
+            self.serverInfo.setText(info)
             # Store this information in the config singleton!
             get_config()["broker_topic"] = data['topic']
 
@@ -262,7 +262,7 @@ class MainWindow(QMainWindow):
             info = 'GUI SERVER: <b>{}:{}</b>'.format(hostname, hostport)
             self.serverInfo.setText(info)
         else:
-            self.brokerInfo.setText("")
+            self.serverInfo.setText("")
             self.serverInfo.setText("")
 
     # --------------------------------------
@@ -431,17 +431,15 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.ui_lamp)
 
     def _setupStatusBar(self):
-        widget_handler = StatusBarHandler()
-        get_logger().addHandler(widget_handler)
-        self.log_widget = widget_handler.get_widget()
-        self.log_widget.setParent(self)
-        self.statusBar().addPermanentWidget(self.log_widget, 1)
+        self.log_widget = StatusLogWidget(self)
+        status_bar = self.statusBar()
+        status_bar.addPermanentWidget(self.log_widget, 1)
 
         # More information ...
-        self.serverInfo = QLabel()
-        self.statusBar().addPermanentWidget(self.serverInfo)
-        self.brokerInfo = QLabel()
-        self.statusBar().addPermanentWidget(self.brokerInfo)
+        self.serverInfo = QLabel(self)
+        status_bar.addPermanentWidget(self.serverInfo)
+        self.serverInfo = QLabel(self)
+        status_bar.addPermanentWidget(self.serverInfo)
 
         get_logger().info("Ready ...")
 
