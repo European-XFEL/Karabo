@@ -1,4 +1,4 @@
-from karabogui.logger import get_logger, StatusBarHandler
+from karabogui.logger import get_logger, StatusLogWidget
 
 from karabogui.testing import GuiTestCase
 
@@ -7,10 +7,9 @@ class TestCase(GuiTestCase):
 
     def test_log_widget(self):
         logger = get_logger()
-        handler = StatusBarHandler()
-        log_widget = handler.get_log_widget()
+        widget = StatusLogWidget()
+        log_widget = widget.log_widget
         # add handler to logger
-        logger.addHandler(handler)
         assert log_widget.toPlainText() == ""
         msg = "Once upon a time ..."
         logger.info(msg)
