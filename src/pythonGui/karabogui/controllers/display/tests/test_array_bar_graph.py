@@ -48,7 +48,7 @@ class TestDisplayVectorBar(GuiTestCase):
         controller = ArrayBarGraph(proxy=self.value,
                                    model=VectorBarGraphModel())
         controller.create(None)
-        action = controller.widget.actions()[9]
+        action = controller.widget.actions()[10]
         self.assertEqual(action.text(), 'Bar Width')
 
         dsym = 'karabogui.controllers.display.array_bar_graph.QInputDialog'

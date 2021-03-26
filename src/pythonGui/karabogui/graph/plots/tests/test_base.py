@@ -2,8 +2,6 @@ import os
 from unittest.mock import patch
 
 import numpy as np
-from numpy.testing import (
-    assert_allclose, assert_array_equal, assert_almost_equal)
 
 from karabogui.graph.common.api import CrosshairROI, ROITool, safe_log10
 from karabogui.testing import GuiTestCase
@@ -12,6 +10,7 @@ from ..base import KaraboPlotView
 
 X_ARRAY = np.arange(10)
 Y_ARRAY = X_ARRAY ** 2
+
 FILENAME = "foo"
 NPY = ".npy"
 NPZ = ".npz"
@@ -106,12 +105,13 @@ class TestPlotViewExport(GuiTestCase):
 
 
 DEFAULT_CONFIG = {"x_grid": False, "y_grid": False,
-                  "x_log": False,  "y_log": False,
+                  "x_log": False, "y_log": False,
                   "x_invert": False, "y_invert": False,
                   "x_label": '', "y_label": '',
                   "x_units": '', "y_units": '',
                   "x_autorange": True, "y_autorange": True,
-                  "roi_items": [], "roi_tool": 0}
+                  "roi_items": [], "roi_tool": 0,
+                  "background": "transparent", "title": ""}
 
 orders = np.arange(-5, 5, dtype=np.float)
 LOG_ARRAY = 10 ** orders
@@ -170,14 +170,14 @@ class _BasePlotTest(GuiTestCase):
         x_data, y_data = self._plot.getData()
         if log_x:
             x_expected = safe_log10(x_expected)
-            assert_almost_equal(x_data, x_expected)
+            np.testing.assert_almost_equal(x_data, x_expected)
         else:
-            assert_array_equal(x_data, x_expected)
+            np.testing.assert_array_equal(x_data, x_expected)
         if log_y:
             y_expected = safe_log10(y_expected)
-            assert_almost_equal(y_data, y_expected)
+            np.testing.assert_almost_equal(y_data, y_expected)
         else:
-            assert_array_equal(y_data, y_expected)
+            np.testing.assert_array_equal(y_data, y_expected)
 
     def assert_range(self, x_expected, y_expected, log_x=False, log_y=False):
         self.assert_range_x(x_expected, log_x)
@@ -204,11 +204,12 @@ class _BasePlotTest(GuiTestCase):
         expected = np.nanmin(log_expected), np.nanmax(log_expected)
         # Calculate tolerance, expect a range of at least 1 order.
         tol = int((expected[-1] - expected[0]) * 0.12) or 1
-        assert_allclose(actual, expected, atol=tol)
+        np.testing.assert_allclose(actual, expected, atol=tol)
 
     def assert_linear_range(self, actual, expected):
         tol = (expected[-1] - expected[0]) * RANGE_TOLERANCE
-        assert_allclose(actual, [expected[0], expected[-1]], atol=tol)
+        np.testing.assert_allclose(actual, [expected[0], expected[-1]],
+                                   atol=tol)
 
 
 class TestCurveItem(_BasePlotTest):
@@ -281,8 +282,10 @@ class TestBarItem(_BasePlotTest):
 
     def _assert_bar(self, x_expected, y_expected):
         # Check bar attributes
-        assert_array_equal(self._plot.opts.get('x'), x_expected)
-        assert_array_equal(self._plot.opts.get('height'), y_expected)
+        np.testing.assert_array_equal(self._plot.opts.get('x'),
+                                      x_expected)
+        np.testing.assert_array_equal(self._plot.opts.get('height'),
+                                      y_expected)
 
 
 class TestPlotViewRestore(_BasePlotTest):
@@ -348,3 +351,17 @@ class TestPlotViewRestore(_BasePlotTest):
         self.restore(x_units="", y_units="")
         self.assertEqual(x_label.isVisible(), False)
         self.assertEqual(y_label.isVisible(), False)
+
+    def test_title_background(self):
+        toolbar = self.widget.add_toolbar()
+        self.restore(background="white")
+        brush = self.widget.graph_view.backgroundBrush()
+        self.assertEqual(brush.color().getRgb(), (255, 255, 255, 255))
+        self.restore(background="red")
+        brush = self.widget.graph_view.backgroundBrush()
+        self.assertEqual(brush.color().getRgb(), (255, 0, 0, 255))
+        self.assertIsNotNone(self.widget._toolbar)
+
+        tb = toolbar.widget
+        sheet = tb.styleSheet()
+        self.assertIn("background-color: rgba(255, 0, 0, 255)", sheet)
