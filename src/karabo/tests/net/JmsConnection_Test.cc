@@ -16,16 +16,6 @@
 #include <boost/thread.hpp>
 
 
-// uncomment next line if performing tests against local broker
-// #define BROKER_ADDRESS   "tcp://localhost:7777"
-
-#define BROKER_ADDRESS_SHORT   "tcp://exfl-broker:7777"
-// don't modify or remove next lines. This is the default
-#ifndef BROKER_ADDRESS
-#define BROKER_ADDRESS  "tcp://exfl-broker.desy.de:7777"
-#endif
-
-
 using namespace karabo::util;
 using namespace karabo::net;
 
@@ -33,7 +23,12 @@ CPPUNIT_TEST_SUITE_REGISTRATION(JmsConnection_Test);
 
 
 JmsConnection_Test::JmsConnection_Test()
-    : m_baseTopic(Broker::brokerDomainFromEnv()), // parallel CIs or users must get different topics, so take from environment
+    // If neither environment variable defined nor tcp://exfl-broker.desy.de:7777 in reach,
+    // change the latter e.g. to "tcp://localhost:7777"
+    : m_defaultBrokers(fromString<std::string, std::vector>(getenv("KARABO_BROKER")
+                                                            ? getenv("KARABO_BROKER")
+                                                            : "tcp://exfl-broker.desy.de:7777")),
+    m_baseTopic(Broker::brokerDomainFromEnv()), // parallel CIs or users must get different topics, so take from environment
     m_messageCount(0) {
 }
 
@@ -43,45 +38,45 @@ JmsConnection_Test::~JmsConnection_Test() {
 
 
 void JmsConnection_Test::testConnect() {
-    const char* broker_env = getenv("KARABO_BROKER");
-    {
-        setenv("KARABO_BROKER", BROKER_ADDRESS, true);
-        m_connection = JmsConnection::Pointer(new JmsConnection());
-        CPPUNIT_ASSERT(m_connection->isConnected() == false);
-        m_connection->connect();
-        CPPUNIT_ASSERT(m_connection->isConnected() == true);
-        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == BROKER_ADDRESS || m_connection->getBrokerUrl() == BROKER_ADDRESS_SHORT);
-        m_connection->disconnect();
-        CPPUNIT_ASSERT(m_connection->isConnected() == false);
-        m_connection->connect();
-        CPPUNIT_ASSERT(m_connection->isConnected() == true);
-        unsetenv("KARABO_BROKER");
-    }
 
-    {
-        m_connection = JmsConnection::Pointer(new JmsConnection("tcp://someBadHost:7777," BROKER_ADDRESS));
+    { // constructor with empty vector<string> leads to exception in connect()
+        m_connection = JmsConnection::Pointer(new JmsConnection(std::vector<std::string>()));
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
-        m_connection->connect();
-        CPPUNIT_ASSERT(m_connection->isConnected() == true);
-        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == BROKER_ADDRESS || m_connection->getBrokerUrl() == BROKER_ADDRESS_SHORT);
-        m_connection->disconnect();
+        CPPUNIT_ASSERT_THROW(m_connection->connect(), karabo::util::NetworkException);
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
     }
 
-    {
-        // this line should not be commented out. It is required for this test!
-        setenv("KARABO_BROKER", BROKER_ADDRESS, true);
-        m_connection = JmsConnection::Pointer(new JmsConnection("tcp://someBadHost:7777"));
+    CPPUNIT_ASSERT_GREATEREQUAL(1ul, m_defaultBrokers.size());
+    { // constructor from vector<string>
+        m_connection = JmsConnection::Pointer(new JmsConnection(m_defaultBrokers));
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
         m_connection->connect();
         CPPUNIT_ASSERT(m_connection->isConnected() == true);
-        CPPUNIT_ASSERT(m_connection->getBrokerUrl() == BROKER_ADDRESS || m_connection->getBrokerUrl() == BROKER_ADDRESS_SHORT);
+        CPPUNIT_ASSERT_EQUAL(m_defaultBrokers[0], m_connection->getBrokerUrl());
         m_connection->disconnect();
         CPPUNIT_ASSERT(m_connection->isConnected() == false);
-        unsetenv("KARABO_BROKER");
+        m_connection->connect();
+        CPPUNIT_ASSERT(m_connection->isConnected() == true);
     }
-    if (broker_env) {
-        setenv("KARABO_BROKER", broker_env, true);
+
+    { // constructor from string, with more than one addresses and first bad
+        m_connection = JmsConnection::Pointer(new JmsConnection("tcp://someBadHost:7777," + m_defaultBrokers[0]));
+        CPPUNIT_ASSERT(m_connection->isConnected() == false);
+        m_connection->connect();
+        CPPUNIT_ASSERT(m_connection->isConnected() == true);
+        CPPUNIT_ASSERT_EQUAL(m_defaultBrokers[0], m_connection->getBrokerUrl());
+        m_connection->disconnect();
+        CPPUNIT_ASSERT(m_connection->isConnected() == false);
+    }
+
+    { // constructor from Hash
+        m_connection = JmsConnection::Pointer(new JmsConnection(Hash("brokers", m_defaultBrokers)));
+        CPPUNIT_ASSERT(m_connection->isConnected() == false);
+        m_connection->connect();
+        CPPUNIT_ASSERT(m_connection->isConnected() == true);
+        CPPUNIT_ASSERT_EQUAL(m_defaultBrokers[0], m_connection->getBrokerUrl());
+        m_connection->disconnect();
+        CPPUNIT_ASSERT(m_connection->isConnected() == false);
     }
 }
 
@@ -131,13 +126,11 @@ void JmsConnection_Test::readHandler1(karabo::net::JmsConsumer::Pointer consumer
 
 
 void JmsConnection_Test::testCommunication1() {
-    setenv("KARABO_BROKER", BROKER_ADDRESS, true);
-
     // Here we test e.g. switching topic in consumer and producer
     m_messageCount = 0;
     m_failures.clear();
 
-    m_connection = JmsConnection::Pointer(new JmsConnection());
+    m_connection = JmsConnection::Pointer(new JmsConnection(m_defaultBrokers));
 
     m_connection->connect();
 
@@ -179,11 +172,9 @@ void JmsConnection_Test::readHandler2(karabo::net::JmsConsumer::Pointer channel,
 
 
 void JmsConnection_Test::testCommunication2() {
-    setenv("KARABO_BROKER", BROKER_ADDRESS, true);
-
     // Here we basically test selectors for the consumer.
 
-    m_connection = JmsConnection::Pointer(new JmsConnection());
+    m_connection = JmsConnection::Pointer(new JmsConnection(m_defaultBrokers));
     
     m_connection->connect();   
 
@@ -223,7 +214,7 @@ void JmsConnection_Test::testCommunication2() {
 
 void JmsConnection_Test::testPermanentRead() {
 
-    m_connection = boost::make_shared<JmsConnection>();
+    m_connection = boost::make_shared<JmsConnection>(m_defaultBrokers);
     m_connection->connect();
 
     m_messageCount = 0;

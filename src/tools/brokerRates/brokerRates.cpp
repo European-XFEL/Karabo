@@ -533,7 +533,8 @@ int main(int argc, const char** argv) {
 
     try {
         // Create connection object
-        net::JmsConnection::Pointer connection = boost::make_shared<net::JmsConnection>();
+        const std::vector<std::string> brokers(net::Broker::brokersFromEnv());
+        net::JmsConnection::Pointer connection = boost::make_shared<net::JmsConnection>(brokers);
         connection->connect();
 
         // 3rd argument true: skip serialisation (but get access to raw message size)!

@@ -24,7 +24,7 @@ using namespace karabo::xms;
 
 
 #define MQTT_BROKER "mqtt://exfldl02n0:1883"
-#define JMS_BROKER "tcp://exflbkr02n0:7777"
+#define JMS_BROKER "tcp://exfl-broker:7777"
 
 const int numWaitIterations = 1000;
 const int sleepPerWaitIterationMs = 5;
@@ -173,11 +173,17 @@ void SignalSlotable_Test::setUp() {
     //Logger::configure(Hash("priority", "ERROR"));
     //Logger::useOstream();
     // Event loop is started in xmsTestRunner.cc's main()
-    setenv("KARABO_BROKER", JMS_BROKER, true);
+    // Store broker environment variable
+    m_karaboBrokerBackup = (getenv("KARABO_BROKER") ? getenv("KARABO_BROKER") : "not_set");
 }
 
 
 void SignalSlotable_Test::tearDown() {
+    // Restore broker environment variable
+    if (m_karaboBrokerBackup != "not_set") {
+        setenv("KARABO_BROKER", m_karaboBrokerBackup.c_str(), true);
+    }
+    m_karaboBrokerBackup.clear();
 }
 
 
