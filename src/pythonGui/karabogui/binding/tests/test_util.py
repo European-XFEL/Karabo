@@ -7,8 +7,11 @@ from karabo.common.api import (
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
     Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    VectorBoolBinding, VectorInt32Binding, VectorFloatBinding,
-    get_native_min_max, get_min_max, get_min_max_size, has_min_max_attributes)
+    VectorBoolBinding, VectorInt8Binding, VectorInt16Binding,
+    VectorInt32Binding, VectorInt64Binding, VectorUint8Binding,
+    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding,
+    VectorFloatBinding, get_native_min_max, get_min_max, get_min_max_size,
+    has_min_max_attributes)
 
 
 def test_simple_int_min_max():
@@ -35,9 +38,26 @@ def test_native_int_min_max():
     assert get_native_min_max(Uint64Binding()) == (0, (1 << 64) - 1)
 
     # Binding specifications are neglected
-    binding = Int8Binding(attributes={KARABO_SCHEMA_MIN_EXC: -7,
-                                      KARABO_SCHEMA_MAX_EXC: 43})
+    binding = Int8Binding(attributes={
+        KARABO_SCHEMA_VALUE_TYPE: 'INT8',
+        KARABO_SCHEMA_MIN_EXC: -7,
+        KARABO_SCHEMA_MAX_EXC: 43})
     assert get_native_min_max(binding) == (-(1 << 7), (1 << 7) - 1)
+
+
+def test_native_vector_min_max():
+    test_map = [
+        (VectorInt8Binding, (-(1 << 7), (1 << 7) - 1)),
+        (VectorInt16Binding, (-(1 << 15), (1 << 15) - 1)),
+        (VectorInt32Binding, (-(1 << 31), (1 << 31) - 1)),
+        (VectorInt64Binding, (-(1 << 63), (1 << 63) - 1)),
+
+        (VectorUint8Binding, (0, (1 << 8) - 1)),
+        (VectorUint16Binding, (0, (1 << 16) - 1)),
+        (VectorUint32Binding, (0, (1 << 32) - 1)),
+        (VectorUint64Binding, (0, (1 << 64) - 1))]
+    for binding, expected in test_map:
+        assert get_native_min_max(binding()) == expected
 
 
 def test_ranged_int_min_max():
