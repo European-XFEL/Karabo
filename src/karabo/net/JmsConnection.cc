@@ -30,6 +30,7 @@ namespace karabo {
                     .displayedName("Brokers")
                     .description("Brokers must be provided as URLs of format: tcp://<host>:<port>. Extra URLs serve as fallback.")
                     .assignmentOptional().defaultValueFromString("tcp://exfl-broker.desy.de:7777")
+                    .minSize(1ul)
                     .commit();
         }
 
@@ -51,10 +52,6 @@ namespace karabo {
 
             this->setFlagDisconnected();
 
-            // Give precedence to the environment variable (if defined)
-            char* env = 0;
-            env = getenv("KARABO_BROKER");
-            if (env != 0) m_availableBrokerUrls = fromString<std::string, std::vector>(std::string(env));
             parseBrokerUrl();
 
             // Add one event-loop thread for handling automatic reconnection
@@ -90,7 +87,9 @@ namespace karabo {
             MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
             while (true) {
 
-
+                if (m_brokerAddresses.empty()) {
+                    throw KARABO_NETWORK_EXCEPTION("No JMS broker address given.");
+                }
                 for (const BrokerAddress& adr : m_brokerAddresses) {
                     const std::string scheme = to_upper_copy(adr.get<0>());
                     const std::string host = adr.get<1>();

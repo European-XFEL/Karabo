@@ -145,7 +145,6 @@ void Broker_Test::tearDown() {
 void Broker_Test::testConnectDisconnect() {
     std::string id = "alice";
     std::string urls = std::string(INVALID_JMS) + "," + JMS_BROKER;
-    setenv("KARABO_BROKER", urls.c_str(), true);
     m_config.clear();
     m_config.set("jms.brokers", fromString<std::string, std::vector>(urls));
     m_config.set("jms.domain", m_domain);
@@ -153,7 +152,6 @@ void Broker_Test::testConnectDisconnect() {
     _testConnectDisconnect();
 
     urls = std::string(INVALID_MQTT) + "," + MQTT_BROKER;
-    setenv("KARABO_BROKER", urls.c_str(), true);
     m_config.clear();
     m_config.set("mqtt.brokers", fromString<std::string, std::vector>(urls));
     m_config.set("mqtt.domain", m_domain);
@@ -190,14 +188,12 @@ void Broker_Test::_testConnectDisconnect() {
 void Broker_Test::testPublishSubscribe() {
 
     std::string urls = JMS_BROKER;
-    setenv("KARABO_BROKER", urls.c_str(), true);
     m_config.clear();
     m_config.set("jms.brokers", fromString<std::string, std::vector>(urls));
     m_config.set("jms.domain", m_domain);
     _testPublishSubscribe();
 
     urls = MQTT_BROKER;
-    setenv("KARABO_BROKER", urls.c_str(), true);
     m_config.clear();
     m_config.set("mqtt.brokers", fromString<std::string, std::vector>(urls));
     m_config.set("mqtt.domain", m_domain);
@@ -272,14 +268,12 @@ void Broker_Test::_testPublishSubscribe() {
 void Broker_Test::testPublishSubscribeAsync() {
 
     std::string urls = JMS_BROKER;
-    setenv("KARABO_BROKER", urls.c_str(), true);
     m_config.clear();
     m_config.set("jms.brokers", fromString<std::string, std::vector>(urls));
     m_config.set("jms.domain", m_domain);
     _testPublishSubscribeAsync();
 
     urls = MQTT_BROKER;
-    setenv("KARABO_BROKER", urls.c_str(), true);
     m_config.clear();
     m_config.set("mqtt.brokers", fromString<std::string, std::vector>(urls));
     m_config.set("mqtt.domain", m_domain);
@@ -389,14 +383,12 @@ void Broker_Test::_testPublishSubscribeAsync() {
 void Broker_Test::testReadingHeartbeatsAndLogs() {
 
     std::string urls = JMS_BROKER;
-    setenv("KARABO_BROKER", urls.c_str(), true);
     m_config.clear();
     m_config.set("jms.brokers", fromString<std::string, std::vector>(urls));
     m_config.set("jms.domain", m_domain);
     _testReadingHeartbeatsAndLogs();
 
     urls = MQTT_BROKER;
-    setenv("KARABO_BROKER", urls.c_str(), true);
     m_config.clear();
     m_config.set("mqtt.brokers", fromString<std::string, std::vector>(urls));
     m_config.set("mqtt.domain", m_domain);
@@ -575,9 +567,6 @@ void Broker_Test::_testReadingHeartbeatsAndLogs() {
 
 void Broker_Test::testReadingGlobalCalls() {
 
-    // TODO: JmsConnection gives precedence to environment variable, even if something else is configured!
-    unsetenv("KARABO_BROKER");
-
     _testReadingGlobalCalls(JMS_BROKER);
     _testReadingGlobalCalls(MQTT_BROKER);
 }
@@ -585,11 +574,7 @@ void Broker_Test::testReadingGlobalCalls() {
 
 void Broker_Test::_testReadingGlobalCalls(const std::string& brokerAddress) {
 
-    const size_t endProtocol = brokerAddress.find(':');
-    std::string type = brokerAddress.substr(0, endProtocol);
-    if (type == "tcp") {// tcp address means jms protocol
-        type = "jms";
-    }
+    std::string type = Broker::brokerTypeFrom({brokerAddress});
     std::clog << "_testReadingGlobalCalls " << type << " (" << brokerAddress << "): " << std::flush;
 
     Hash cfg("brokers", std::vector<std::string>({brokerAddress}),
@@ -691,7 +676,7 @@ void Broker_Test::_testReadingGlobalCalls(const std::string& brokerAddress) {
 
 
 void Broker_Test::testReverseOrderedPublishSubscribe() {
-    setenv("KARABO_BROKER", MQTT_BROKER, true);
+
     std::vector<std::string> urls = {MQTT_BROKER};
     //NOTE: use "deadline" setting for stack size >= 4: Alice has to wait for message with order #1!!!
     Hash input("brokers", urls, "domain", m_domain, "instanceId", "alice", "deadline", 300);
@@ -795,14 +780,12 @@ void Broker_Test::testReverseOrderedPublishSubscribe() {
 void Broker_Test::testProducerRestartConsumerContinues() {
 
     std::string urls = JMS_BROKER;
-    setenv("KARABO_BROKER", urls.c_str(), true);
     m_config.clear();
     m_config.set("jms.brokers", fromString<std::string, std::vector>(urls));
     m_config.set("jms.domain", m_domain);
     _testProducerRestartConsumerContinues();
 
     urls = MQTT_BROKER;
-    setenv("KARABO_BROKER", urls.c_str(), true);
     m_config.clear();
     m_config.set("mqtt.brokers", fromString<std::string, std::vector>(urls));
     m_config.set("mqtt.domain", m_domain);
@@ -927,14 +910,12 @@ void Broker_Test::testProducerContinuesConsumerRestart() {
     std::string urls;
 
     urls = JMS_BROKER;
-    setenv("KARABO_BROKER", urls.c_str(), true);
     m_config.clear();
     m_config.set("jms.brokers", fromString<std::string, std::vector>(urls));
     m_config.set("jms.domain", m_domain);
     _testProducerContinuesConsumerRestart();
 
     urls = MQTT_BROKER;
-    setenv("KARABO_BROKER", urls.c_str(), true);
     m_config.clear();
     m_config.set("mqtt.brokers", fromString<std::string, std::vector>(urls));
     m_config.set("mqtt.domain", m_domain);
