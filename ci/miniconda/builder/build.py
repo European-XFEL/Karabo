@@ -138,13 +138,6 @@ class Builder:
         if self.platform == 'osx-64':
             os.environ['LANG'] = 'en_US.UTF-8'
         elif self.platform == 'linux-64':
-            # This is a CI specific setting
-            proxy_server = os.environ.get('PROXY_SERVER')
-            if proxy_server:
-                os.environ['http_proxy'] = f'http://{proxy_server}/'
-                os.environ['https_proxy'] = f'https://{proxy_server}/'
-            os.environ['DISPLAY'] = ':99.0'
-
             # Setup XVFB
             os.environ['DISPLAY'] = XVFB_DISPLAY
             os.environ['XDG_RUNTIME_DIR'] = XDG_RUNTIME_DIR
