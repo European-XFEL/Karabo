@@ -12,6 +12,7 @@ from karabo.common.api import KARABO_SCHEMA_OPTIONS
 from karabogui.binding.api import (
     FloatBinding, get_default_value, get_min_max, is_equal,
     IntBinding, validate_value)
+from karabogui.logger import get_logger
 from karabogui.util import SignalBlocker
 
 
@@ -33,10 +34,10 @@ class ComboBoxDelegate(QStyledItemDelegate):
 
     def createEditor(self, parent, option, index):
         """Reimplemented function of QStyledItemDelegate"""
-        combo = QComboBox(parent)
-        combo.addItems(self._options)
-        combo.currentIndexChanged.connect(self._on_editor_changed)
-        return combo
+        editor = QComboBox(parent)
+        editor.addItems(self._options)
+        editor.currentIndexChanged.connect(self._on_editor_changed)
+        return editor
 
     def setEditorData(self, editor, index):
         """Reimplemented function of QStyledItemDelegate"""
@@ -46,13 +47,16 @@ class ComboBoxDelegate(QStyledItemDelegate):
             with SignalBlocker(editor):
                 editor.setCurrentIndex(selection_index)
         else:
-            raise RuntimeError(
+            get_logger().error(
                 f"The value {selection} is not in the following "
                 f"options: {self._options}")
 
     def setModelData(self, editor, model, index):
         """Reimplemented function of QStyledItemDelegate"""
-        model.setData(index, self._options[editor.currentIndex()], Qt.EditRole)
+        old = index.model().data(index, Qt.DisplayRole)
+        new = self._options[editor.currentIndex()]
+        if not is_equal(old, new):
+            model.setData(index, new, Qt.EditRole)
 
     @pyqtSlot()
     def _on_editor_changed(self):
@@ -60,6 +64,9 @@ class ComboBoxDelegate(QStyledItemDelegate):
 
         This signal MUST be emitted when the editor widget has completed
         editing the data, and wants to write it back into the model.
+
+        XXX: This is in principle a wrong implementation, as it should be
+        only emitted when the editor finished.
         """
         self.commitData.emit(self.sender())
 
