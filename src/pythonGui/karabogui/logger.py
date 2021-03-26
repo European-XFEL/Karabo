@@ -1,6 +1,6 @@
 import logging
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject, Qt
 from PyQt5.QtWidgets import (
     QFrame, QHBoxLayout, QPushButton, QTextEdit, QVBoxLayout)
 
@@ -14,17 +14,52 @@ LOG_HEIGHT = 75
 CLEAR_BUTTON_SIZE = 25
 
 
-class StatusBarHandler(logging.Handler):
-    """A logging handler holding a QTextEdit widget for the status bar
-    """
+class LogMediator(QObject):
+    """A mediator class for the `logger` to make sure logging is handled
+    gracefully by Qt"""
+    signal = pyqtSignal(str, logging.LogRecord)
 
-    def __init__(self):
-        super().__init__(level=logging.DEBUG)
-        self.widget = QFrame()
-        horizontal_layout = QHBoxLayout(self.widget)
+
+class QtHandler(logging.Handler):
+    def __init__(self, slotfunc, *args, **kwargs):
+        super(QtHandler, self).__init__(*args, **kwargs)
+        self.signaller = LogMediator()
+        self.signaller.signal.connect(slotfunc)
+        formatter = logging.Formatter(
+            fmt='%(asctime)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S')
+        self.setFormatter(formatter)
+
+    def emit(self, record):
+        s = self.format(record)
+        self.signaller.signal.emit(s, record)
+
+
+class StatusLogWidget(QFrame):
+    """A StatusLog widget holding a QTextEdit widget for log messages
+
+    The log widget can color the log messages according to their severity.
+    """
+    COLORS = {
+        logging.DEBUG: 'blue',
+        logging.INFO: 'black',
+        logging.WARNING: 'orange',
+        logging.ERROR: 'red',
+        logging.CRITICAL: 'purple',
+    }
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        horizontal_layout = QHBoxLayout(self)
         horizontal_layout.setContentsMargins(0, 0, 0, 0)
-        self.log_widget = QTextEdit(self.widget)
+        self.log_widget = QTextEdit(self)
+        self.log_widget.setReadOnly(True)
         self.log_widget.setFixedHeight(LOG_HEIGHT)
+
+        # Configure the log handler
+        self.handler = QtHandler(self.update_status)
+        logger = get_logger()
+        logger.addHandler(self.handler)
 
         # Transparent background and no focus
         viewport = self.log_widget.viewport()
@@ -44,21 +79,13 @@ class StatusBarHandler(logging.Handler):
         vertical_layout.addWidget(button)
         horizontal_layout.addLayout(vertical_layout)
 
-        formatter = logging.Formatter(
-            fmt='%(asctime)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S')
-        self.setFormatter(formatter)
-
-    def emit(self, record):
-        self.log_widget.append(self.format(record))
+    @pyqtSlot(str, logging.LogRecord)
+    def update_status(self, status, record):
+        color = self.COLORS.get(record.levelno, 'black')
+        s = '<font color="%s">%s</font>' % (color, status)
+        self.log_widget.append(s)
         bar = self.log_widget.verticalScrollBar()
         bar.setValue(bar.maximum())
-
-    def get_widget(self):
-        return self.widget
-
-    def get_log_widget(self):
-        return self.log_widget
 
 
 def get_logger():
