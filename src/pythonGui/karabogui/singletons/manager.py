@@ -603,19 +603,17 @@ class Manager(QObject):
             device_id, prop_path = name.split(":")
             device_proxy = self._topology.get_device(device_id)
             binding = device_proxy.get_property_binding(prop_path)
-            if meta_hash is not None:
-                timestamp = Timestamp.fromHashAttributes(
-                    meta_hash['timestamp', ...])
-            else:
-                # gui server is older with version < 2.4.0 and does not
-                # the meta hash
-                timestamp = Timestamp()
-            apply_fast_data(data_hash, binding.value.schema, timestamp)
-            device_proxy.config_update = True
-            if self._show_big_data_proc:
-                proc = Timestamp().toTimestamp() - timestamp.toTimestamp()
-                info = {'name': name, 'proc': proc}
-                broadcast_event(KaraboEvent.BigDataProcessing, info)
+            timestamp = Timestamp.fromHashAttributes(
+                meta_hash['timestamp', ...])
+            if binding is not None:
+                # Note: Binding can be `None` on startup when schema was not
+                # arriving and the application closing...
+                apply_fast_data(data_hash, binding.value.schema, timestamp)
+                device_proxy.config_update = True
+                if self._show_big_data_proc:
+                    proc = Timestamp().toTimestamp() - timestamp.toTimestamp()
+                    info = {'name': name, 'proc': proc}
+                    broadcast_event(KaraboEvent.BigDataProcessing, info)
             # Let the GUI server know we have processed this chunk
             get_network().onRequestNetwork(name)
 
