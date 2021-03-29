@@ -80,7 +80,11 @@ class TableModel(QAbstractTableModel):
 
         if orientation == Qt.Horizontal:
             key = self._header[section]
-            return self._bindings[key].displayed_name
+            binding = self._bindings[key]
+            units = binding.unit_label
+            displayed = binding.displayed_name
+
+            return f"{displayed} [{units}]" if units else displayed
 
         return None
 
