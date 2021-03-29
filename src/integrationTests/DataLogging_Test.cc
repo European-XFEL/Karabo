@@ -33,7 +33,6 @@ void DataLogging_Test::fileAllTestRunner() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     testAllInstantiated();
-    testNans();
     testInt();
     testUInt64();
     testFloat();
@@ -66,6 +65,7 @@ void DataLogging_Test::fileAllTestRunner() {
     //       Currently it is failing to retrieve all the logged entries (see comment on discussions of
     //       https://git.xfel.eu/gitlab/Karabo/Framework/merge_requests/4455).
     //testSchemaEvolution();
+    testNans();
 }
 
 void DataLogging_Test::testMigrateFileLoggerData() {
@@ -172,7 +172,6 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
     }
 
     testMaxNumDataHistory();
-    testNans();
     testInt(true);
     testUInt64(false);
     testFloat(false);
@@ -201,6 +200,7 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
     // in m_deviceId is not applicable.
     testCfgFromPastRestart();
     testSchemaEvolution();
+    testNans();
 }
 
 
