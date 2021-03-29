@@ -35,6 +35,8 @@ Deprecations
 - The old undocumented way to use ``getHistory("device").propertyName`` is deprecated and was removed.
   The ``getHistory``'s ``to`` argument is now optional. If missing, the current timestamp will be used.
 
+- C++ when a devices updates its properties via the ``set`` function, but the update is invalid, now an exception is thrown (as in Bound).
+
 .. _211_deps:
 
 Table of changed dependencies
