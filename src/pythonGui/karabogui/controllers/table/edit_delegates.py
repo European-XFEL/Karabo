@@ -5,14 +5,13 @@
 #############################################################################
 
 from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtGui import QPalette, QValidator
+from PyQt5.QtGui import QPalette
 from PyQt5.QtWidgets import QComboBox, QStyledItemDelegate, QLineEdit
 
 from karabo.common.api import KARABO_SCHEMA_OPTIONS
 from karabogui.binding.api import (
-    FloatBinding, get_default_value, get_min_max, IntBinding, validate_value,
-    VectorBinding)
-from karabogui.controllers.validators import ListValidator
+    FloatBinding, get_default_value, IntBinding, VectorBinding)
+from karabogui.controllers.validators import ListValidator, SimpleValidator
 from karabogui.logger import get_logger
 from karabogui.util import SignalBlocker
 
@@ -102,7 +101,7 @@ class NumberDelegate(QStyledItemDelegate):
         """Reimplemented function of QStyledItemDelegate"""
         editor = LineEditEditor(parent)
         old = index.model().data(index, Qt.DisplayRole)
-        validator = NumberValidator(self._binding, old, parent=editor)
+        validator = SimpleValidator(self._binding, old, parent=editor)
         editor.setValidator(validator)
         return editor
 
@@ -119,38 +118,11 @@ class NumberDelegate(QStyledItemDelegate):
             self.commitData.emit(self.sender())
 
 
-class NumberValidator(QValidator):
+class NumberValidator(SimpleValidator):
+
     def __init__(self, binding, old, parent=None):
-        super().__init__(parent=parent)
+        super().__init__(binding=binding, parent=parent)
         self._old_value = old
-        self._binding = binding
-        self.low, self.high = get_min_max(binding)
-
-    def validate(self, input, pos):
-        """Reimplemented function of QValidator to validate numeric input"""
-        if input in ('+', '-', ''):
-            return self.Intermediate, input, pos
-        elif input[-1] in (' '):
-            return self.Invalid, input, pos
-        elif input[-1] in ('+', '-', 'e'):
-            return self.Intermediate, input, pos
-
-        value = validate_value(self._binding, input)
-        if value is None:
-            return self.Invalid, input, pos
-
-        if self.inside_limits(value):
-            return self.Acceptable, input, pos
-
-        return self.Intermediate, input, pos
-
-    def inside_limits(self, value):
-        """Check if a value is within limits"""
-        if self.low is not None and value < self.low:
-            return False
-        if self.high is not None and value > self.high:
-            return False
-        return True
 
     def fixup(self, input):
         """Reimplemented function of QValidator
