@@ -24,7 +24,7 @@ class _BaseTableElement(BaseBindingController):
     model = Instance(TableElementModel, args=())
     # Internal traits
     _bindings = Dict
-    _is_readonly = Bool
+    _readonly = Bool(True)
     _item_model = WeakRef(TableModel)
 
     # ---------------------------------------------------------------------
@@ -39,12 +39,12 @@ class _BaseTableElement(BaseBindingController):
 
     def set_read_only(self, ro):
         if ro:
-            self._is_readonly = True
+            self._readonly = True
             self.widget.setEditTriggers(QAbstractItemView.NoEditTriggers)
             self.widget.setAlternatingRowColors(True)
             self.widget.setSelectionMode(QAbstractItemView.NoSelection)
         else:
-            self._is_readonly = False
+            self._readonly = False
             self.widget.setSelectionMode(QAbstractItemView.SingleSelection)
             flags = (QAbstractItemView.DoubleClicked
                      | QAbstractItemView.AnyKeyPressed
@@ -55,9 +55,9 @@ class _BaseTableElement(BaseBindingController):
             self.widget.setAcceptDrops(True)
         self.widget.setFocusPolicy(Qt.NoFocus if ro else Qt.ClickFocus)
         if self._item_model is not None:
-            self._item_model.set_readonly(self._is_readonly)
+            self._item_model.set_readonly(self._readonly)
             # We must set the delegates firstly on readOnly information!
-            self._create_delegates(self._is_readonly)
+            self._create_delegates()
 
     def binding_update(self, proxy):
         binding = proxy.binding
@@ -79,19 +79,19 @@ class _BaseTableElement(BaseBindingController):
             start = len(value) - 1
             count = row_count - len(value)
             self._item_model.removeRows(start, count, QModelIndex(),
-                                        is_device_update=True)
+                                        from_device=True)
 
         # Add rows if necessary
         elif row_count < len(value):
             start = row_count
             count = len(value) - row_count
             self._item_model.insertRows(start, count, QModelIndex(),
-                                        is_device_update=True)
+                                        from_device=True)
         for r, row in enumerate(value):
             for c, key in enumerate(row.getKeys()):
                 index = self._item_model.index(r, c, QModelIndex())
-                self._item_model.setData(index, row[key], self._is_readonly,
-                                         is_device_update=True)
+                self._item_model.setData(index, row[key], Qt.DisplayRole,
+                                         from_device=True)
 
     def destroy_widget(self):
         if self._item_model is not None:
@@ -116,16 +116,16 @@ class _BaseTableElement(BaseBindingController):
         self._bindings = binding.bindings
         self._item_model = TableModel(binding, self._on_user_edit,
                                       parent=self.widget)
-        self._item_model.set_readonly(self._is_readonly)
+        self._item_model.set_readonly(self._readonly)
         self.widget.setModel(self._item_model)
         self.widget.set_bindings(binding.bindings)
-        self._create_delegates(self._is_readonly)
+        self._create_delegates()
 
-    def _create_delegates(self, ro):
+    def _create_delegates(self):
         """Create all the table delegates in the table element"""
         bindings = self._bindings
         keys = bindings.keys()
-        if ro:
+        if self._readonly:
             # If we are readOnly, we erase all edit delegates
             for column, key in enumerate(keys):
                 self.widget.setItemDelegateForColumn(column, None)
