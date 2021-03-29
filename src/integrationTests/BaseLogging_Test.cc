@@ -15,6 +15,7 @@
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
 #include "karabo/util/DataLogUtils.hh"
+#include "karabo/util/Version.hh"
 
 #include <boost/filesystem.hpp>
 #include <cstdlib>
@@ -47,7 +48,7 @@ static Epochstamp threeDaysBack = Epochstamp() - TimeDuration(3,0,0,0,0);
 class DataLogTestDevice : public karabo::core::Device<> {
 
 public:
-    KARABO_CLASSINFO(DataLogTestDevice, "DataLogTestDevice", "2.8")
+    KARABO_CLASSINFO(DataLogTestDevice, "DataLogTestDevice", "integrationTests-" + karabo::util::Version::getVersion())
 
     static void expectedParameters(karabo::util::Schema& expected) {
 
@@ -102,6 +103,51 @@ private:
     }
 };
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogTestDevice)
+
+
+// A device with float and double properties without limits to be able to set inf and nan.
+// Otherwise copy PropertyTest behaviour as needed for testNans().
+class NanTestDevice : public karabo::core::Device<> {
+
+public:
+    KARABO_CLASSINFO(NanTestDevice, "NanTestDevice", "integrationTests-" + karabo::util::Version::getVersion())
+
+    static void expectedParameters(karabo::util::Schema& expected) {
+        INT32_ELEMENT(expected).key("int32Property")
+                .reconfigurable()
+                .assignmentOptional().defaultValue(3)
+                .commit();
+
+        FLOAT_ELEMENT(expected).key("floatProperty")
+                .reconfigurable()
+                .assignmentOptional().defaultValue(3.141596f)
+                .commit();
+
+        DOUBLE_ELEMENT(expected).key("doubleProperty")
+                .reconfigurable()
+                .assignmentOptional().defaultValue(3.1415967773331)
+                .commit();
+
+        DOUBLE_ELEMENT(expected).key("doublePropertyReadOnly")
+                .readOnly()
+                .initialValue(3.1415967773331)
+                .commit();
+    }
+
+
+    NanTestDevice(const karabo::util::Hash& input) : karabo::core::Device<>(input) {
+    }
+
+
+    void preReconfigure(Hash& incomingReconfiguration) {
+
+        if (incomingReconfiguration.has("doubleProperty")) {
+            set("doublePropertyReadOnly", incomingReconfiguration.get<double>("doubleProperty"));
+        }
+    }
+};
+
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, NanTestDevice)
 
 
 // Very special vector<Hash> treatment for CppUnit, ignoring differences in attributes.
@@ -1353,6 +1399,12 @@ void BaseLogging_Test::testChar(bool testPastConf) {
 
 
 void BaseLogging_Test::testNans() {
+    const std::string deviceId(m_deviceId + "forNan");
+    std::pair<bool, std::string> success = m_deviceClient->instantiate(m_server, "NanTestDevice",
+                                                                       Hash("deviceId", deviceId),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
     const size_t max_set = 100ul;
     const size_t full_return_size = max_set + 1ul;
@@ -1385,8 +1437,8 @@ void BaseLogging_Test::testNans() {
         new_conf.set("floatProperty", bad_floats[i % bad_floats.size()]);
         new_conf.set("doubleProperty", bad_doubles[i % bad_doubles.size()]);
 
-        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(m_deviceId, new_conf));
-        const Hash cfg = m_deviceClient->get(m_deviceId);
+        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(deviceId, new_conf));
+        const Hash cfg = m_deviceClient->get(deviceId);
         updateStamps.push_back(Epochstamp::fromHashAttributes(cfg.getAttributes("doubleProperty")));
         boost::this_thread::sleep(boost::posix_time::milliseconds(10));
         if (i < vec_es_afterWrites.size()) {
@@ -1401,8 +1453,8 @@ void BaseLogging_Test::testNans() {
     end_conf.set("int32Property", static_cast<int>(max_set));
     end_conf.set("floatProperty", (1.f * max_set));
     end_conf.set("doubleProperty", (1. * max_set));
-    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(m_deviceId, end_conf));
-    updateStamps.push_back(Epochstamp::fromHashAttributes(m_deviceClient->get(m_deviceId).getAttributes("doubleProperty")));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(deviceId, end_conf));
+    updateStamps.push_back(Epochstamp::fromHashAttributes(m_deviceClient->get(deviceId).getAttributes("doubleProperty")));
     // The sleep interval below had to be increased because of the Telegraf environment - the time required to save is
     // higher. If es_afterWrites captured after the sleep instruction refers to a time point that comes before the time
     // Telegraf + Influx are done writing the data, the property history will not be of the expected size and the test
@@ -1440,8 +1492,8 @@ void BaseLogging_Test::testNans() {
             try {
                 numChecks++;
                 // TODO: use the deviceClient to retrieve the property history
-                //history = m_deviceClient->getPropertyHistory(m_deviceId, key, before, after, max_set * 2);
-                m_sigSlot->request(dlreader0, "slotGetPropertyHistory", m_deviceId, property_pair.first, params)
+                //history = m_deviceClient->getPropertyHistory(deviceId, key, before, after, max_set * 2);
+                m_sigSlot->request(dlreader0, "slotGetPropertyHistory", deviceId, property_pair.first, params)
                         .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(device, property, history);
             } catch (const karabo::util::TimeoutException& e) {
                 karabo::util::Exception::clearTrace();
@@ -1465,7 +1517,7 @@ void BaseLogging_Test::testNans() {
         }
 
         CPPUNIT_ASSERT_EQUAL_MESSAGE("History size different than expected after " + toString(numChecks) +
-                                     " checks:\n\tdeviceId: " + m_deviceId +
+                                     " checks:\n\tdeviceId: " + deviceId +
                                      "\n\tproperty : " + property_pair.first +
                                      "\n\tparam.from: " + beforeWrites +
                                      "\n\tparam.to: " + afterWrites + "\n\tparam.maxNumData: " + toString(max_set * 2) +
@@ -1514,7 +1566,7 @@ void BaseLogging_Test::testNans() {
         bool configAtTimepoint = false;
         std::string configTimepoint;
         CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
-                                                   m_deviceId, vec_es_afterWrites[i].toIso8601())
+                                                   deviceId, vec_es_afterWrites[i].toIso8601())
                                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
                                 .receive(conf, schema, configAtTimepoint, configTimepoint));
 
@@ -1534,6 +1586,11 @@ void BaseLogging_Test::testNans() {
             CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(i), bad_doubles[i], theD);
         }
     }
+
+    // Clean-up
+    success = m_deviceClient->killDevice(deviceId);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
     std::clog << "Ok" << std::endl;
 
 }

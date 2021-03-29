@@ -606,9 +606,9 @@ namespace karabo {
             void set(const std::string& key, const karabo::util::AlarmCondition& condition, const karabo::util::Timestamp& timestamp) {
                 karabo::util::Hash h(key, condition.asString());
                 h.setAttribute(key, KARABO_INDICATE_ALARM_SET, true);
-                set(h, timestamp);
-                //also set the fields attribute
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
+                setNoLock(h, timestamp);
+                //also set the fields attribute
                 m_parameters.setAttribute(key, KARABO_ALARM_ATTR, condition.asString());
             }
 
@@ -698,15 +698,17 @@ namespace karabo {
              */
             void setNoLock(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
-                karabo::util::Hash validated;
                 std::pair<bool, std::string> result;
 
                 const Hash previousParametersInAlarm(m_validatorIntern.getParametersInWarnOrAlarm());
 
+                Hash validated;
                 result = m_validatorIntern.validate(m_fullSchema, hash, validated, timestamp);
 
                 if (result.first == false) {
-                    KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
+                    const std::string msg("Bad parameter setting attempted, validation reports: " + result.second);
+                    KARABO_LOG_WARN << msg;
+                    throw KARABO_PARAMETER_EXCEPTION(msg);
                 }
 
                 // Check for parameters being in a bad condition
