@@ -237,7 +237,6 @@ void TelegrafLogging_Test::influxAllTestRunnerWithTelegraf() {
     testMaxNumDataRange();
     testMaxNumDataHistory();
 
-    testNans();
     testInt(true);
     testUInt64(false);
     testFloat(false);
@@ -266,6 +265,7 @@ void TelegrafLogging_Test::influxAllTestRunnerWithTelegraf() {
     // in m_deviceId is not applicable.
     testCfgFromPastRestart();
     testSchemaEvolution();
+    testNans();
 
     std::clog << "==== Telegraf Influx Logging test finished ====" << std::endl;
 }
