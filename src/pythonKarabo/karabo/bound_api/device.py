@@ -657,6 +657,42 @@ class PythonDevice(NoFsm):
 
                 self._ss.emit(signal, validated, self.deviceid)
 
+    def setVectorUpdate(self, key, updates, updateType, timestamp=None):
+        """Concurrency safe update of vector property (not for tables)
+
+        :param key: key of the vector property to update
+        :param updates: iterable of items to remove from property vector
+                       (starting at the front) or to add (at the end)
+        :param updateType: indicates update type, applied individually to all
+                           items in 'updates',
+                           one of "add", "addIfNotIn", "removeOne", "removeAll"
+        :param timestamp: optional timestamp to assign to updated vector
+                          property, defaults to self.getActualTimestamp()
+        """
+        if timestamp is None:
+            timestamp = self.getActualTimestamp()
+
+        with self._stateChangeLock:
+            # vec is a copy, so we are safe if _setNoStateLock raises
+            vec = self._parameters.get(key)
+            if updateType == "add":
+                vec.extend(updates)
+            else:
+                for update in updates:
+                    if updateType == "addIfNotIn":
+                        if update not in vec:
+                            vec.append(update)
+                    elif updateType == "removeOne":
+                        if update in vec:
+                            vec.remove(update)
+                    elif updateType == "removeAll":
+                        for _ in range(vec.count(update)):
+                            vec.remove(update)
+                    else:
+                        raise ValueError(f"Unknown updateType '{updateType}'")
+            # Finally update the property
+            self._setNoStateLock(key, vec, timestamp)
+
     def _evaluateAndUpdateAlarmCondition(self, forceUpdate, prevParamsInAlarm,
                                          silent):
         """Evaluate the device's alarm condition
