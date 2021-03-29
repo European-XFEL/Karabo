@@ -6,7 +6,7 @@ import numpy as np
 from PyQt5.QtGui import QValidator
 
 from karabogui.binding.api import (
-    validate_value, get_min_max, get_min_max_size, VectorBoolBinding,
+    get_min_max, get_min_max_size, VectorBoolBinding,
     VectorComplexDoubleBinding, VectorComplexFloatBinding, VectorDoubleBinding,
     VectorFloatBinding, VectorInt8Binding, VectorInt16Binding,
     VectorInt32Binding, VectorInt64Binding, VectorStringBinding,
@@ -132,12 +132,13 @@ class BindingValidator(QValidator):
 
     def __init__(self, binding, parent=None):
         super(BindingValidator, self).__init__(parent)
-        self.binding = binding
+        self._binding = binding
 
     def validate(self, input, pos):
         """The main validate function using binding validate"""
-        valid = validate_value(self.binding, input)
-        if valid is None:
+        try:
+            self._binding.validate_trait("value", input)
+        except TraitError:
             return self.Intermediate, input, pos
 
         return self.Acceptable, input, pos
