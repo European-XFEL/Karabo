@@ -11,7 +11,8 @@ from PyQt5.QtWidgets import QComboBox, QStyledItemDelegate, QLineEdit
 from karabo.common.api import KARABO_SCHEMA_OPTIONS
 from karabogui.binding.api import (
     FloatBinding, get_default_value, IntBinding, VectorBinding)
-from karabogui.controllers.validators import ListValidator, SimpleValidator
+from karabogui.controllers.validators import (
+    BindingValidator as GenericValidator, ListValidator, SimpleValidator)
 from karabogui.logger import get_logger
 from karabogui.util import SignalBlocker
 
@@ -26,12 +27,13 @@ def get_table_delegate(binding, parent):
         return NumberDelegate(binding, parent)
     elif isinstance(binding, VectorBinding):
         return VectorDelegate(binding, parent)
-    return None
+    else:
+        return BindingDelegate(binding, parent)
 
 
 class ComboBoxDelegate(QStyledItemDelegate):
     def __init__(self, options, parent=None):
-        super(ComboBoxDelegate, self).__init__(parent)
+        super().__init__(parent)
         # Note: We make sure that the options are a list of strings. For simple
         # types in Karabo they are a coercing array on the binding
         self._options = [str(value) for value in options]
@@ -78,7 +80,7 @@ class ComboBoxDelegate(QStyledItemDelegate):
 class LineEditEditor(QLineEdit):
 
     def __init__(self, parent=None):
-        super(LineEditEditor, self).__init__(parent)
+        super().__init__(parent)
         self._normal_palette = self.palette()
         self._error_palette = QPalette(self._normal_palette)
         self._error_palette.setColor(QPalette.Text, Qt.red)
@@ -94,14 +96,14 @@ class LineEditEditor(QLineEdit):
 
 class NumberDelegate(QStyledItemDelegate):
     def __init__(self, binding, parent=None):
-        super(NumberDelegate, self).__init__(parent)
+        super().__init__(parent)
         self._binding = binding
 
     def createEditor(self, parent, option, index):
         """Reimplemented function of QStyledItemDelegate"""
         editor = LineEditEditor(parent)
         old = index.model().data(index, Qt.DisplayRole)
-        validator = SimpleValidator(self._binding, old, parent=editor)
+        validator = NumberValidator(self._binding, old, parent=editor)
         editor.setValidator(validator)
         return editor
 
@@ -185,5 +187,41 @@ class VectorValidator(ListValidator):
         if self._old_value is None:
             # The model will account for an empty string and use a list
             return ""
+
+        return str(self._old_value)
+
+
+class BindingDelegate(QStyledItemDelegate):
+    def __init__(self, binding, parent=None):
+        super().__init__(parent)
+        self._binding = binding
+
+    def createEditor(self, parent, option, index):
+        """Reimplemented function of QStyledItemDelegate"""
+        editor = LineEditEditor(parent)
+        old = index.model().data(index, Qt.DisplayRole)
+        validator = BindingValidator(self._binding, old, parent=editor)
+        editor.setValidator(validator)
+        return editor
+
+    def setModelData(self, editor, model, index):
+        """Reimplemented function of QStyledItemDelegate"""
+        old = index.model().data(index, Qt.DisplayRole)
+        new = editor.text()
+        if not is_equal(old, new):
+            model.setData(index, new, Qt.EditRole)
+            self.commitData.emit(self.sender())
+
+
+class BindingValidator(GenericValidator):
+
+    def __init__(self, binding, old, parent=None):
+        super().__init__(binding=binding, parent=parent)
+        self._old_value = old
+
+    def fixup(self, input):
+        """Reimplemented function of QValidator"""
+        if self._old_value is None:
+            return str(get_default_value(self._binding, force=True))
 
         return str(self._old_value)
