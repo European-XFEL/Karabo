@@ -8,7 +8,8 @@ from PyQt5.QtCore import Qt, QModelIndex
 from PyQt5.QtWidgets import QAbstractItemView, QMenu
 from traits.api import Bool, Dict, Instance, WeakRef
 
-from karabo.common.api import KARABO_SCHEMA_ROW_SCHEMA
+from karabo.common.api import (
+    KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_ROW_SCHEMA)
 from karabo.common.scenemodel.api import TableElementModel
 from karabogui.binding.api import (
     get_editor_value, get_default_value, VectorHashBinding)
@@ -193,8 +194,22 @@ class _BaseTableElement(BaseBindingController):
             add_action.triggered.connect(self._add_row)
             du_action = menu.addAction(icons.editCopy, 'Duplicate Row below')
             du_action.triggered.connect(self._duplicate_row)
+
             remove_action = menu.addAction(icons.delete, 'Delete Row')
             remove_action.triggered.connect(self._remove_row)
+
+            # Check for min and max size of the table
+            row_count = self._item_model.rowCount()
+            attributes = self.proxy.binding.attributes
+            min_size = attributes.get(KARABO_SCHEMA_MIN_SIZE)
+            max_size = attributes.get(KARABO_SCHEMA_MAX_SIZE)
+            add_row = True if max_size is None else row_count + 1 <= max_size
+            rm_row = True if min_size is None else row_count - 1 >= min_size
+
+            # Set actions enabled or disabled!
+            add_action.setEnabled(add_row)
+            du_action.setEnabled(add_row)
+            remove_action.setEnabled(rm_row)
         else:
             add_action = menu.addAction(icons.add, 'Add Row below')
             add_action.triggered.connect(self._add_row)
