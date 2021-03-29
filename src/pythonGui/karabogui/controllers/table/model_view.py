@@ -23,7 +23,7 @@ class TableModel(QAbstractTableModel):
     def __init__(self, binding, set_edit_value, parent=None):
         super(QAbstractTableModel, self).__init__(parent)
         self._set_edit_value = set_edit_value
-        self._is_readonly = False
+        self._readonly = False
         self._data = []
         self._bindings = binding.bindings
         self._header = list(binding.bindings.keys())
@@ -36,13 +36,14 @@ class TableModel(QAbstractTableModel):
         """Reimplemented function of QAbstractTableModel"""
         return len(self._header)
 
-    def data(self, index, role):
+    def data(self, index, role=Qt.DisplayRole):
         """Reimplemented function of QAbstractTableModel"""
         if not index.isValid():
             return None
 
         row, column = index.row(), index.column()
-        if role == Qt.CheckStateRole and not self._is_readonly:
+        if role == Qt.CheckStateRole and not self._readonly:
+            # Note: Only for editable tables we can return Qt.Checked state.
             key = self._header[column]
             value = self._data[row][key]
             binding = self._bindings[key]
@@ -93,7 +94,7 @@ class TableModel(QAbstractTableModel):
         # Get an enum for the AccessMode
         binding = self._bindings[key]
         access_mode = binding.access_mode
-        if isinstance(binding, BoolBinding) and not self._is_readonly:
+        if isinstance(binding, BoolBinding) and not self._readonly:
             flags &= ~Qt.ItemIsEditable
             if access_mode is AccessMode.READONLY:
                 flags &= ~Qt.ItemIsEnabled
@@ -104,7 +105,7 @@ class TableModel(QAbstractTableModel):
 
         return flags
 
-    def setData(self, index, value, role, is_device_update=False):
+    def setData(self, index, value, role=Qt.EditRole, from_device=False):
         """Reimplemented function of QAbstractTableModel"""
         if not index.isValid():
             return False
@@ -117,7 +118,7 @@ class TableModel(QAbstractTableModel):
                 value = True if value == Qt.Checked else False
                 self._data[row][key] = value
                 self.dataChanged.emit(index, index)
-                if not is_device_update:
+                if not from_device:
                     self._set_edit_value(self._data)
                 return True
 
@@ -126,21 +127,23 @@ class TableModel(QAbstractTableModel):
         if role in (Qt.DisplayRole, Qt.EditRole):
             key = self._header[column]
             binding = self._bindings[key]
-            if isinstance(binding, VectorBinding) and not is_device_update:
+            if isinstance(binding, VectorBinding) and not from_device:
                 value = convert_string_list(value)
                 # Before Karabo 2.2 the value was cast here...
 
             self._data[row][key] = value
             self.dataChanged.emit(index, index)
 
-            if role == Qt.EditRole and not is_device_update:
+            if not from_device:
+                # Before check for Qt.EditRole, but device updates
+                # are channeled with Qt.DisplayRole
                 self._set_edit_value(self._data)
             return True
 
         return False
 
     def insertRows(self, pos, rows, index, *,
-                   copy_row=None, is_device_update=False):
+                   copy_row=None, from_device=False):
         """Reimplemented function of QAbstractTableModel"""
         self.beginInsertRows(QModelIndex(), pos, pos + rows - 1)
         try:
@@ -160,11 +163,11 @@ class TableModel(QAbstractTableModel):
         finally:
             self.endInsertRows()
 
-        if not is_device_update:
+        if not from_device:
             self._set_edit_value(self._data)
         return True
 
-    def removeRows(self, pos, rows, index, *, is_device_update=False):
+    def removeRows(self, pos, rows, index, *, from_device=False):
         """Reimplemented function of QAbstractTableModel"""
         self.beginRemoveRows(QModelIndex(), pos, pos + rows - 1)
         try:
@@ -172,7 +175,7 @@ class TableModel(QAbstractTableModel):
                 self._data.pop(pos + row_nr - 1)
         finally:
             self.endRemoveRows()
-        if not is_device_update:
+        if not from_device:
             self._set_edit_value(self._data)
 
         return True
@@ -207,7 +210,7 @@ class TableModel(QAbstractTableModel):
 
     def set_readonly(self, value):
         """Set the readonly role of the table element"""
-        self._is_readonly = value
+        self._readonly = value
 
 
 class KaraboTableView(QTableView):
