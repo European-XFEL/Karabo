@@ -1,11 +1,12 @@
 from ast import literal_eval
 import re
 
+from traits.api import TraitError
 import numpy as np
 from PyQt5.QtGui import QValidator
 
 from karabogui.binding.api import (
-    validate_value, get_min_max_size, VectorBoolBinding,
+    validate_value, get_min_max, get_min_max_size, VectorBoolBinding,
     VectorComplexDoubleBinding, VectorComplexFloatBinding, VectorDoubleBinding,
     VectorFloatBinding, VectorInt8Binding, VectorInt16Binding,
     VectorInt32Binding, VectorInt64Binding, VectorStringBinding,
@@ -140,3 +141,41 @@ class BindingValidator(QValidator):
             return self.Intermediate, input, pos
 
         return self.Acceptable, input, pos
+
+
+class SimpleValidator(QValidator):
+    """This is a numeric binding validator which accounts min and max limits
+    """
+
+    def __init__(self, binding, parent=None):
+        super().__init__(parent=parent)
+        self._binding = binding
+        self.low, self.high = get_min_max(binding)
+
+    def validate(self, input, pos):
+        """Reimplemented function of QValidator to validate numeric input"""
+        if input in ('+', '-', ''):
+            return self.Intermediate, input, pos
+        elif input[-1] in (' '):
+            return self.Invalid, input, pos
+        elif input[-1] in ('+', '-', 'e'):
+            return self.Intermediate, input, pos
+
+        # Use the fast path validation
+        try:
+            value = self._binding.validate_trait("value", input)
+        except TraitError:
+            return self.Invalid, input, pos
+
+        if self.inside_limits(value):
+            return self.Acceptable, input, pos
+
+        return self.Intermediate, input, pos
+
+    def inside_limits(self, value):
+        """Check if a value is within limits"""
+        if value < self.low or value > self.high:
+            return False
+
+        # Check passed!
+        return True
