@@ -36,8 +36,9 @@ private:
 
     void testGetTimestamp();
     void testSchemaInjection();
-    void testGetSet();
+    void testGetconfigReconfig();
     void testUpdateState();
+    void testSet();
     void testSetVectorUpdate();
     void testSignal();
     void testBadInit();

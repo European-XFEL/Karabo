@@ -95,6 +95,16 @@ public:
                 .observerAccess()
                 .commit();
 
+        INT32_ELEMENT(expected).key("valueWithLimit")
+                .assignmentOptional().defaultValue(0)
+                .maxExc(1000)
+                .reconfigurable()
+                .commit();
+
+        INT32_ELEMENT(expected).key("valueOther")
+                .readOnly().initialValue(0)
+                .commit();
+
         UINT32_ELEMENT(expected).key("countStateToggles")
                 .description("How often slotToggleState was called")
                 .readOnly().initialValue(0u)
@@ -154,6 +164,8 @@ public:
 
         KARABO_SLOT(slotUpdateSchema, const karabo::util::Schema);
 
+        KARABO_SLOT(slotSet, Hash);
+
         KARABO_SLOT(slotToggleState, const Hash);
 
         KARABO_SLOT(node_slot);
@@ -185,6 +197,11 @@ public:
 
     void slotUpdateSchema(const Schema sch) {
         updateSchema(sch);
+    }
+
+
+    void slotSet(const Hash& h) {
+        set(h);
     }
 
 
@@ -364,8 +381,9 @@ void Device_Test::appTestRunner() {
     testInputOutputChannelInjection("slotUpdateSchema");
     testInputOutputChannelInjection("slotAppendSchema");
     testNodedSlot();
-    testGetSet();
+    testGetconfigReconfig();
     testUpdateState();
+    testSet();
     testSetVectorUpdate();
     testSignal();
     // Last tests needs its own device, so clean-up before
@@ -1165,7 +1183,8 @@ void Device_Test::testNodedSlot() {
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute("TestDevice", "node.slot", KRB_TEST_MAX_TIMEOUT));
 }
 
-void Device_Test::testGetSet() {
+
+void Device_Test::testGetconfigReconfig() {
     const int timeoutInMs = 10000;
     const std::string deviceId("TestDevice");
 
@@ -1250,6 +1269,43 @@ void Device_Test::testUpdateState() {
 
 }
 
+
+void Device_Test::testSet() {
+    std::clog << "Start testSet: " << std::flush;
+    const int timeoutInMs = KRB_TEST_MAX_TIMEOUT * 1000;
+    const std::string deviceId("TestDevice");
+
+    // Setting a non-existing value throws
+    CPPUNIT_ASSERT_THROW(m_deviceServer->request(deviceId, "slotSet", Hash("nonExistParam", 0))
+                         .timeout(timeoutInMs).receive(),
+                         karabo::util::RemoteException);
+
+    // Setting a reconfigurable property outside its validation limits throws
+    // (and even other valid changes in the same set(..) are ignored).
+    Hash hash;
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+    CPPUNIT_ASSERT_EQUAL(0, hash.get<int>("valueWithLimit"));
+    CPPUNIT_ASSERT_EQUAL(0, hash.get<int>("valueOther"));
+    CPPUNIT_ASSERT_THROW(m_deviceServer->request(deviceId, "slotSet", Hash("valueWithLimit", 1000, // hit slimit
+                                                                           "valueOther", 2000)) // would be OK
+                         .timeout(timeoutInMs).receive(),
+                         karabo::util::RemoteException);
+    Hash hash2;
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash2));
+    CPPUNIT_ASSERT(hash2.fullyEquals(hash)); // Also valueOther did not change
+
+
+    // Other settings work
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotSet", Hash("valueWithLimit", 999,
+                                                                              "valueOther", 2000))
+                            .timeout(timeoutInMs).receive());
+    hash2.clear();
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash2));
+    CPPUNIT_ASSERT_EQUAL(999, hash2.get<int>("valueWithLimit"));
+    CPPUNIT_ASSERT_EQUAL(2000, hash2.get<int>("valueOther"));
+
+    std::clog << "OK." << std::endl;
+}
 
 void Device_Test::testSetVectorUpdate() {
     std::clog << "Start testSetVectorUpdate: " << std::flush;
