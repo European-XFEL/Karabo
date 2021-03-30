@@ -380,3 +380,35 @@ class Schema_Injection_TestCase(unittest.TestCase):
         self.assertTrue(schema.has("aNewKeyNotExisting"))
         # So schema was changed, but device's schema not:
         self.assertFalse(device.getFullSchema().has("aNewKeyNotExisting"))
+
+    def test_setVectorUpdate(self):
+        """
+        Hijack schema test to test PythonDevice.setVectorUpdate(..)
+        """
+        self.deviceCfg["vector"] = [1, 2, 3]
+        device = Configurator(PythonDevice).create("DeviceWithAlarm",
+                                                   self.deviceCfg)
+        device.startFsm()
+        del self.deviceCfg["vector"]  # clean-up
+
+        # Testing sequence copied from C++ Device_Test::testSetVectorUpdate
+        # (therefore forced to start with [1, 2, 3])...
+        self.assertEqual(device.get("vector"), [1, 2, 3])
+
+        t = device.getActualTimestamp()
+        device.setVectorUpdate("vector", [3, 3, 1], "add", t)
+        self.assertEqual(device.get("vector"), [1, 2, 3, 3, 3, 1])
+
+        device.setVectorUpdate("vector", [1, 7], "addIfNotIn", t)
+        self.assertEqual(device.get("vector"), [1, 2, 3, 3, 3, 1, 7])
+
+        # Also try with default timestamp:
+        device.setVectorUpdate("vector", [3, 1, -99], "removeOne")
+        self.assertEqual(device.get("vector"), [2, 3, 3, 1, 7])
+
+        device.setVectorUpdate("vector", [2, -99, 3], "removeAll")
+        self.assertEqual(device.get("vector"), [1, 7])
+
+        with self.assertRaises(ValueError):
+            device.setVectorUpdate("vector", [0], "typo", t)
+
