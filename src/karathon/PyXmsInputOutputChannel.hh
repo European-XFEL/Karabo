@@ -9,7 +9,10 @@
 #define	KARATHON_PYXMSINPUTOUTPUTCHANNEL_HH
 
 #include <boost/python.hpp>
-#include <karabo/xms.hpp>
+#include <karabo/xms/ImageData.hh>
+#include <karabo/xms/Memory.hh>
+#include <karabo/xms/InputChannel.hh>
+#include <karabo/xms/OutputChannel.hh>
 #include "PythonFactoryMacros.hh"
 #include "ScopedGILRelease.hh"
 #include "ScopedGILAcquire.hh"
@@ -19,6 +22,7 @@
 #include "ToNumpy.hh"
 #include <karabo/util/DetectorGeometry.hh>
 #include <karabo/util/NDArray.hh>
+#include <karabo/util/FromLiteral.hh>
 
 #define PY_ARRAY_UNIQUE_SYMBOL karabo_ARRAY_API
 #define NO_IMPORT_ARRAY

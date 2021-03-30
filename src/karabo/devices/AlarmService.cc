@@ -12,6 +12,9 @@
 
 #include "karabo/util/State.hh"
 #include "karabo/util/MetaTools.hh"
+#include "karabo/util/PathElement.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
 #include "karabo/io/FileTools.hh"
 
 #include "AlarmService.hh"

@@ -1,5 +1,8 @@
 #include "MqttCppClient.hh"
 #include "karabo/log/Logger.hh"
+#include "karabo/util/Schema.hh"
+#include "karabo/util/SimpleElement.hh"
+
 #include "utils.hh"
 
 using namespace karabo::util;
