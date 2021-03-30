@@ -67,8 +67,29 @@ class TableModel(QAbstractTableModel):
                 color = get_state_color(value)
                 if color is not None:
                     return QBrush(QColor(*color))
+        elif role == Qt.ToolTipRole:
+            key = self._header[column]
+            attrs = self._bindings[key].attributes
+            return self._build_tooltip(attrs)
 
         return None
+
+    def _build_tooltip(self, attributes):
+        """Build a tooltip according to the attributes"""
+        selection = ["displayedName", "defaultValue", "valueType",
+                     "unitSymbol", "metricPrefixSymbol", "minInc", "maxInc",
+                     "minExc", "maxExc", "options"]
+        info = {}
+        for akey in selection:
+            avalue = attributes.get(akey)
+            if avalue is not None:
+                info.update({akey: str(avalue)})
+
+        return ("<table>" +
+                "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
+                        format(attr, str(value))
+                        for attr, value in info.items())
+                + "</table>")
 
     def headerData(self, section, orientation, role):
         """Reimplemented function of QAbstractTableModel"""
