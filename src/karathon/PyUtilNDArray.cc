@@ -3,7 +3,6 @@
  */
 
 #include <boost/python.hpp>
-#include <karabo/util.hpp>
 #include "Wrapper.hh"
 
 namespace bp = boost::python;

@@ -5,8 +5,9 @@
  * Created on July 15, 2016, 4:08 PM
  */
 
-#include <karabo/util.hpp>
-#include <karabo/log.hpp>
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
+#include <karabo/log/Logger.hh>
 
 #include "utils.hh"
 #include "JmsConnection.hh"

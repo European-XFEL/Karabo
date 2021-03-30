@@ -1,7 +1,7 @@
 #include "karabo/net/Broker.hh"
 #include "karabo/net/utils.hh"
-#include "karabo/util.hpp"
-#include "karabo/log.hpp"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
 
 using namespace karabo::util;
 

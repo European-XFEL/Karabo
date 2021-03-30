@@ -6,6 +6,7 @@
  */
 
 #include <tuple>
+#include <stack>
 #include "Broker_Test.hh"
 #include <karabo/util/Hash.hh>
 #include <karabo/util/StringTools.hh>

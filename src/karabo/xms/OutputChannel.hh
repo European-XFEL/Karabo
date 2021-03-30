@@ -13,16 +13,16 @@
 
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
-#include <karabo/util.hpp>
-#include <karabo/log.hpp>
-#include <karabo/io.hpp>
-#include <karabo/net.hpp>
 
 #include <unordered_set>
+#include <vector>
 
-#include "Statics.hh"
+#include "karabo/util/Hash.hh"
+#include "karabo/util/NodeElement.hh"
+#include "karabo/net/Channel.hh"
+#include "karabo/net/Connection.hh"
+
 #include "Memory.hh"
-#include "InputChannel.hh"
 
 
 /**
