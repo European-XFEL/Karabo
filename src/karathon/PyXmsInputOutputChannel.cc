@@ -258,6 +258,18 @@ namespace karathon {
     }
 
 
+    void InputChannelWrap::proxyChannelStatusTracker(const bp::object& handler, const std::string& name, karabo::net::ConnectionStatus status) {
+        Wrapper::proxyHandler(handler, "channelStatusTracker", name, status);
+    }
+
+
+    void InputChannelWrap::registerConnectionTrackerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self,
+                                                       const bp::object& statusTracker) {
+        auto trackerWrap = boost::bind(&proxyChannelStatusTracker, statusTracker, _1, _2);
+        self->registerConnectionTracker(trackerWrap);
+    }
+
+
     void InputChannelWrap::proxyInputHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& input) {
         Wrapper::proxyHandler(handler, "input", input);
     }
@@ -608,6 +620,12 @@ void exportPyXmsInputOutputChannel() {
                 .def("registerInputHandler", &karathon::InputChannelWrap().registerInputHandlerPy)
 
                 .def("registerEndOfStreamEventHandler", &karathon::InputChannelWrap().registerEndOfStreamEventHandlerPy)
+
+                .def("registerConnectionTracker", &karathon::InputChannelWrap().registerConnectionTrackerPy,
+                     "Register a handler to track the status of the connections to\nthe configured output channels.\n"
+                     "The handler has two arguments:\n"
+                     " * the output channel string like '<deviceId>:<outChannel>'\n"
+                     " * the ConnectionStatus")
 
                 .def("getConnectedOutputChannels", &karathon::InputChannelWrap().getConnectedOutputChannelsPy)
 
