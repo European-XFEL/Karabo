@@ -14,11 +14,13 @@ from karabo.common.project.macro import read_macro
 from karabo.common.scenemodel.const import SceneTargetWindow
 from karabo.common.scenemodel.io import read_scene
 from karabo.common.services import KARABO_DAEMON_MANAGER
+from karabo.common.traits import walk_traits_object
 
 from karabo.native import Hash
 from karabogui import messagebox
 from karabogui.binding.api import extract_sparse_configurations
 from karabogui.events import KaraboEvent, broadcast_event
+from karabogui.fonts import substitute_font
 from karabogui.singletons.api import get_manager, get_network, get_topology
 
 
@@ -135,6 +137,12 @@ def handle_scene_from_server(dev_id, name, project, target_window, success,
     if project is not None:
         event_type = KaraboEvent.ShowSceneView
         project.scenes.append(scene)
+
+    # TODO: Repair scene fonts here! 2.11.0, to be removed 2.13?
+    def visitor(model):
+        substitute_font(model)
+
+    walk_traits_object(scene, visitor_func=visitor)
     broadcast_event(event_type, {'model': scene, 'target_window': window})
 
 
