@@ -61,7 +61,11 @@ def sanitize_table_value(binding, value):
                 value = get_default_value(binding, force=True)
                 success = False
             else:
-                value = validate_value(binding, value)
+                try:
+                    value = binding.validate_trait("value", value)
+                    # Use the fast path validate
+                except TraitError:
+                    value = None
                 # Note: This is of course critical, if an apple becomes an
                 # orange, we should have at least an orange default value.
                 if value is None:
