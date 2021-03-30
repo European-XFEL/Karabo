@@ -364,9 +364,23 @@ def open_documentation_link(deviceId):
 
 
 def move_to_cursor(widget):
+    """Move the widget `widget` to the cursor
+
+    This method quickly adjusts the size of the widget and then calculates
+    an ideal position.
+    """
+    widget.adjustSize()
+    process_qt_events()
+
     pos = QCursor.pos()
-    pos.setX(pos.x() + 10)
-    pos.setY(pos.y() + 10)
+    size = widget.size()
+
+    x = pos.x() - size.width() // 2
+    if x > 0:
+        pos.setX(x)
+    y = pos.y() - size.height() // 2
+    if y > 0:
+        pos.setY(y)
     widget.move(pos)
 
 
