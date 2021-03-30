@@ -40,8 +40,7 @@ def _show_message_box(icon, text, title, details=None, parent=None):
     if details is not None:
         message_box.setDetailedText(details)
 
-    message_box.show()
-    message_box.raise_()
-    message_box.activateWindow()
+    if parent is not None:
+        return message_box.open()
 
-    return message_box
+    return message_box.exec()
