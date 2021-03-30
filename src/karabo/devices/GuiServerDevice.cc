@@ -12,6 +12,8 @@
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/TcpChannel.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
 #include "karabo/util/Version.hh"
 
 #include "karabo/core/InstanceChangeThrottler.hh"

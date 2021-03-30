@@ -11,6 +11,7 @@
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/LeafElement.hh"
+#include "karabo/util/ChoiceElement.hh"
 #include "karabo/util/NodeElement.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/net/Broker.hh"

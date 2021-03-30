@@ -9,7 +9,9 @@
 #include "karabo/log/Logger.hh"
 #include "karabo/io/FileTools.hh"
 #include "karabo/util/DataLogUtils.hh"
+#include "karabo/util/FromLiteral.hh"
 #include "karabo/util/MetaTools.hh"
+#include "karabo/util/NDArray.hh"
 #include "karabo/util/Schema.hh"
 
 #include "DeviceClient.hh"

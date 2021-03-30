@@ -6,6 +6,8 @@
 #include "karabo/util/State.hh"
 #include "karabo/util/Dims.hh"
 #include "karabo/util/NDArray.hh"
+#include "karabo/util/PathElement.hh"
+#include "karabo/util/TableElement.hh"
 #include "karabo/xms/ImageData.hh"
 #include "karabo/xms/InputChannel.hh"
 

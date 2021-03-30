@@ -10,10 +10,16 @@
 
 #include <exception>
 #include <boost/pointer_cast.hpp>
-#include "OutputChannel.hh"
+
+#include "karabo/net/EventLoop.hh"
 #include "karabo/net/TcpChannel.hh"
 #include "karabo/util/MetaTools.hh"
-#include "karabo/net/EventLoop.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/TableElement.hh"
+#include "karabo/util/VectorElement.hh"
+
+#include "InputChannel.hh"
+#include "OutputChannel.hh"
 
 namespace bs = boost::system;
 using namespace karabo::util;
