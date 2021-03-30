@@ -14,7 +14,9 @@
 #include "karabo/net/Queues.hh"
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/io/BufferSet.hh"
+#include "karabo/util/Dims.hh"
 #include "karabo/util/Exception.hh"
+#include "karabo/util/NDArray.hh"
 #include "karabo/net/TcpChannel.hh"
 
 #include <boost/bind.hpp>

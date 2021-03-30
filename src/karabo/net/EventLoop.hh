@@ -15,7 +15,7 @@
 #include <boost/asio.hpp>
 #include <boost/function/function_fwd.hpp>
 
-#include "karabo/util.hpp"
+#include "karabo/util/ClassInfo.hh"
 
 namespace karabo {
     namespace net {

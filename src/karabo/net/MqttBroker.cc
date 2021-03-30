@@ -11,6 +11,7 @@
 #include "karabo/net/MqttBroker.hh"
 #include "karabo/net/utils.hh"
 #include "karabo/log/Logger.hh"
+#include "karabo/util/SimpleElement.hh"
 
 
 using namespace karabo::util;
