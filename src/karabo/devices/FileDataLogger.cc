@@ -1,6 +1,9 @@
 #include <iostream>
 #include <boost/pointer_cast.hpp>
+#include <boost/filesystem/convenience.hpp>
 #include <nlohmann/json.hpp>
+
+#include "karabo/util/PathElement.hh"
 #include "FileDataLogger.hh"
 
 
