@@ -6,6 +6,7 @@
 #define	KARABO_DEVICES_FILEDATALOGGER_HH
 
 #include "karabo/util/Version.hh"
+#include "karabo/io/TextSerializer.hh"
 
 #include "DataLogger.hh"
 

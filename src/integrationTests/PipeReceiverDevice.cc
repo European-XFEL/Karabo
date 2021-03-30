@@ -11,6 +11,8 @@
 #include "karabo/util/Schema.hh"
 #include "karabo/util/Units.hh"
 #include "karabo/util/NDArray.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
 #include "karabo/util/StringTools.hh"
 #include "karabo/xms/InputChannel.hh"
 

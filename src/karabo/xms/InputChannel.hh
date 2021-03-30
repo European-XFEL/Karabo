@@ -14,16 +14,19 @@
 #define	KARABO_XMS_INPUTCHANNEL_HH
 
 #include <map>
+#include <string>
 #include <unordered_map>
 
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
 #include <boost/random/mersenne_twister.hpp>
 
-#include "karabo/net.hpp"
-#include "karabo/io.hpp"
-#include "karabo/log.hpp"
-#include "karabo/util.hpp"
+#include "karabo/net/Channel.hh"
+#include "karabo/net/Connection.hh"
+#include "karabo/net/Strand.hh"
+#include "karabo/net/utils.hh"
+#include "karabo/util/Hash.hh"
+#include "karabo/util/NodeElement.hh"
 #include "Memory.hh"
 
 /**

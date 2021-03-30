@@ -12,7 +12,7 @@
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
-#include <karabo/util.hpp>
+#include "karabo/util/Hash.hh"
 
 namespace karabo {
     namespace core {
