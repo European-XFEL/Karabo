@@ -22,6 +22,7 @@
 #include <karabo/util/StringTools.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/VectorElement.hh>
+#include <karabo/util/TableElement.hh>
 #include <karabo/util/Timestamp.hh>
 #include <karabo/util/TimeDuration.hh>
 

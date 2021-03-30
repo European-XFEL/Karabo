@@ -8,13 +8,19 @@
 #ifndef KARABO_NET_MQTTCPPCLIENT_HH
 #define	KARABO_NET_MQTTCPPCLIENT_HH
 
+#include <vector>
+#include <unordered_map>
+
 #include <mqtt_client_cpp.hpp>
-#include "karabo/util.hpp"
+#include "karabo/util/Hash.hh"
 #include "karabo/io/BinarySerializer.hh"
 #include "MqttClient.hh"
 
 
 namespace karabo {
+    namespace util {
+        class Schema;
+    }
     namespace net {
 
         using TcpEndPoint = MQTT_NS::tcp_endpoint<boost::asio::ip::tcp::socket, boost::asio::io_context::strand>;

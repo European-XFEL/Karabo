@@ -13,6 +13,8 @@
 #include "InputChannel.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/util/MetaTools.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
 
 #include <boost/system/error_code.hpp>
 
