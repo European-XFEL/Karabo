@@ -1,32 +1,141 @@
 ****************************
+What's New in Karabo 2.10.4
+****************************
+
+This release improves the karabo gui cinema. It features a cinema weblink
+creator for the project panel and various other enhancements.
+
+In order to use web links for the cinema, thew new url scheme handler
+can be registered using ``karabo-register-protocol`` after activating the gui
+environment.
+
+The InfluxLogReader device is now more robust on historical property fetching.
+The ``traindId`` of data retrieved via getProperty history is now forced to ``0``
+despite its value on the database might be different. Do not use this feature to
+debug trainId configurations. The value of the ``trainId`` can be fetched via
+web interfaces like Grafana or via the Influx command line.
+
+Furthermore, the input channel (re) connection in C++ is improved.
+
+Detailed Merge-Log
+==================
+
+- GUI: add protocol registration utility !5272
+- GUI: Enable cinema to run with multiple scenes !5276
+- GUI: Prevent sigterm in cinema and theatre !5273
+- GUI: adapt weblink widget to karabo url scheme !5281
+- GUI: Table fix !5271
+- GUI: remove protocol registration at application start !5285
+- GUI: Create-cinema-web !5283
+- GUI: Fix cinema typo in wizard !5296
+
+- DataLogger: Fix for non-responsive log reader issue !5306
+- C++: More robust input channel (re-)connection !5311
+
+
+****************************
+What's New in Karabo 2.10.3
+****************************
+
+This patch comes with a few fixes, mainly for the GUI.
+
+- The transparent background is removed (regression) in the plot widgets for a performance increase
+  of a factor of two (2).
+- Multiple plots can immediately shown for macros as well and it is possible
+  to deactivate the High DPI setting from the menu bar.
+
+Detailed Merge-Log
+==================
+
+- C++ JMS reading: respect handler setting order !5142
+- C++: Get rid of Hash copy when writing to JMS broker !5196
+
+- GUI: Fix multiple plots in vector graph !5173
+- GUI: fix installation path for protocol handler !5174
+- GUI: Remove transparency of image layout !5176
+- GUI: Remove transparent graphics view !5175
+- GUI: Process events on main window render !5178
+- GUI: Fix datetime appearance on trendline on windows !5185
+- GUI: Cherry picking DPI fixes and Grafana !5198
+- GUI: make protocol registration robust !5201
+
+
+****************************
+What's New in Karabo 2.10.2
+****************************
+
+This patch comes with important fixes for the karabo gui client:
+
+- This patch release significantly improves plot layouts in the GUI
+- Exporting multiple images enhanced
+- Add of resize scene dialog to scene toolbar
+- Workaround for the Qt bug of logical dpi
+- Fix table element configuration of init only elements
+- Other improvements ...
+
+**And removes the acknowledgement on acknowledgement of broker messages, which
+will give a significant messaging boost**
+
+Detailed Merge-Log
+==================
+
+**ALL APIs: Do not wait for broker to acknowledge acknowledgements !5138**
+
+- GUI: Significantly decrease margins in trendline layout !5033
+- GUI: Take the int of the localDotsPerInch !5041
+- GUI: setContentsMagins to 0 for plot widgets !5077
+- GUI: Protect VectorXY from device intstantiations !5080
+- GUI: Add an offset on pasted scene objects
+- GUI: Enhance Image Layout - Remove unnecessary margins !5095
+- GUI: Axis item double click !5096
+- GUI: One more margin for the image layout (Cherry pick for hotfix) !5097
+- GUI: Remove margins from trendline layout (Cherry pick for hotfix) !5098
+- GUI: Use bytescale in images (cherry pick for hotfix) !5089
+- GUI: Use traits Event on export current tool (cherry pick for hotfix) !5123
+- GUI: Resize scene dialog !5131
+- GUI: Fix table element configuration on init only tables !5136
+- GUI: Add karabo:// URL protocol !5137
+- GUI: Fix scatter plot item initial parameter and cleanup (cherry pick for hotfix) !5139
+- GUI: Cleanup more the axis item and remove patches (cherry pick hotfix) !5144
+
+
+****************************
 What's New in Karabo 2.10.1
 ****************************
 
 This patch release fixes some issues in the GUI and completes some
 features in the C++/bound framework:
 
+- GUI: Major enhancement of trendline time axis
 
-Graphical User Interface
-++++++++++++++++++++++++
-
-TODO
-
-C++/Bound Python Framework
-+++++++++++++++++++++++++++
-
-- InputChannel connection status tracking: 
+- C++/Bound: InputChannel connection status tracking:
   The `DeviceClient` method to register for pipeline data from an
   OutputChannel (registerChannelMonitor) now offers a hook to track
   the connection status that can be `DISCONNECTED`,`CONNECTING`,
   `CONNECTED` and maybe `DISCONNECTING`.
 
-- End-of-stream handling in many-to-one scenario:
+- C++/Bound: End-of-stream handling in many-to-one scenario:
   If an InputChannel receives data from several output channels,
   a registered end-of-stream handler is now reliably called when all
   output channels have sent their end-of-stream.
   Note: This completes the 2.10.0 fix of a long standing bug that made
   the many-to-one pipeline scenario pretty unreliable.
   Now it can be safely used.
+
+
+Detailed Merge-Log
+==================
+
+- C++: Fix EOS handling and its test for many-to-one pipeline !4991
+- C++:  InputChannel connection tracker !4995
+- C++: Expose input channel status tracking to DeviceClient interface !4996
+- C++: Clean input channel !4976
+- C++: Alarm signal with priority to ensure order !5006
+- Bound: Expose InputChannel ConnectionStatus to DeviceClient interface !4997
+
+- GUI: Use native axis item pyqtgraph !4985
+- GUI: Scale font size with the operating system !4977
+- GUI: Add WaitForEvents flag for processEvents !5008
 
 
 ****************************
