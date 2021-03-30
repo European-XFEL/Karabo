@@ -12,6 +12,8 @@
 #include "Device.hh"
 
 #include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
+#include "karabo/util/ListElement.hh"
 #include "karabo/util/NodeElement.hh"
 #include "karabo/util/ChoiceElement.hh"
 #include "karabo/util/Version.hh"

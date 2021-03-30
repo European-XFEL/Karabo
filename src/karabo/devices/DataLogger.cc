@@ -16,7 +16,11 @@
 #include "karabo/net/Strand.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/Strand.hh"
+#include "karabo/util/OverwriteElement.hh"
 #include "karabo/util/Schema.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/TableElement.hh"
+#include "karabo/util/VectorElement.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/xms/SlotElement.hh"
 

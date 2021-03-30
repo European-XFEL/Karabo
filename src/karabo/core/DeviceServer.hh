@@ -23,7 +23,7 @@
 #include "karabo/net/Strand.hh"
 #include "karabo/xms/SignalSlotable.hh"
 
-#include "boost/asio/deadline_timer.hpp"
+#include <boost/asio/deadline_timer.hpp>
 
 #include <vector>
 #include <utility>

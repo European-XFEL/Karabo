@@ -11,9 +11,8 @@
 #ifndef KARABO_XMS_SLOT_HH
 #define	KARABO_XMS_SLOT_HH
 
-#include "karabo/util.hpp"
+#include "karabo/util/Hash.hh"
 #include "karabo/util/PackParameters.hh"
-#include "karabo/log.hpp"
 
 /**
  * The main European XFEL namespace
