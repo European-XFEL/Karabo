@@ -12,7 +12,7 @@
 
 #include <string>
 #include <hdf5/hdf5.h>
-#include "karabo/log.hpp"
+#include "karabo/log/Logger.hh"
 
 
 

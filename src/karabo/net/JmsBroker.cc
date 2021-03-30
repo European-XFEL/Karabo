@@ -1,7 +1,7 @@
 #include "karabo/net/JmsBroker.hh"
 #include "karabo/net/JmsConnection.hh"
 #include "karabo/net/utils.hh"
-#include <karabo/log.hpp>
+#include <karabo/log/Logger.hh>
 
 
 using namespace karabo::util;

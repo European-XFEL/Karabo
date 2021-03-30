@@ -63,9 +63,14 @@
 
 #include <boost/asio/deadline_timer.hpp>
 
+#include "karabo/io/FileTools.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/StringTools.hh"
 #include "karabo/util/Epochstamp.hh"
+#include "karabo/util/ChoiceElement.hh"
+#include "karabo/util/PathElement.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
 #include "karabo/net/EventLoop.hh"
 
 #include "DataLoggerManager.hh"

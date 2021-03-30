@@ -4,7 +4,6 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <karabo/util.hpp>
 
 #include <boost/shared_array.hpp>
 
