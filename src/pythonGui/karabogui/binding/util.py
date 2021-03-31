@@ -38,10 +38,9 @@ def get_min_max(binding):
                  types.Uint32Binding, types.Uint64Binding)
     FLOAT_TYPES = (types.FloatBinding, types.ComplexBinding)
 
-    if isinstance(binding, INT_TYPES):
-        return _int_min_max(binding)
-    elif isinstance(binding, FLOAT_TYPES):
-        return _float_min_max(binding)
+    if isinstance(binding, (INT_TYPES, FLOAT_TYPES)):
+        return binding.getMinMax()
+
     # XXX: raise an exception?
     return None, None
 
@@ -132,68 +131,3 @@ def has_min_max_attributes(binding):
 
     return ((min_inc is not None or min_exc is not None) and
             (max_inc is not None or max_exc is not None))
-
-
-# -----------------------------------------------------------------------------
-# Internal functions
-
-def _build_array_cmp(dtype):
-    """Builds a comparison function for numpy arrays"""
-    coerce = dtype.type
-    if coerce is np.bool_:
-        coerce = int
-
-    def _array_cmp(a, b):
-        try:
-            return coerce(a) == coerce(b)
-        except ValueError:
-            return False
-
-    return _array_cmp
-
-
-def _float_min_max(binding):
-    attrs = binding.attributes
-    value_type = attrs.get(const.KARABO_SCHEMA_VALUE_TYPE)
-    if value_type in ('FLOAT', 'COMPLEX_FLOAT'):
-        info = np.finfo(np.float32)
-    else:
-        info = np.finfo(np.float64)
-
-    low = attrs.get(const.KARABO_SCHEMA_MIN_EXC)
-    if low is not None:
-        low = low * (1 + np.sign(low) * info.eps) + info.tiny
-    else:
-        low = attrs.get(const.KARABO_SCHEMA_MIN_INC, info.min)
-
-    high = attrs.get(const.KARABO_SCHEMA_MAX_EXC)
-    if high is not None:
-        high = high * (1 - np.sign(high) * info.eps) - info.tiny
-    else:
-        high = attrs.get(const.KARABO_SCHEMA_MAX_INC, info.max)
-
-    return low, high
-
-
-def _int_min_max(binding):
-    range_trait = binding.trait('value').handler
-    value_range = range_trait._low, range_trait._high
-    if range_trait._exclude_low:
-        value_range = (value_range[0] + 1, value_range[1])
-    if range_trait._exclude_high:
-        value_range = (value_range[0], value_range[1] - 1)
-
-    attrs = binding.attributes
-    low = attrs.get(const.KARABO_SCHEMA_MIN_EXC)
-    if low is not None:
-        low += 1
-    else:
-        low = attrs.get(const.KARABO_SCHEMA_MIN_INC, value_range[0])
-
-    high = attrs.get(const.KARABO_SCHEMA_MAX_EXC)
-    if high is not None:
-        high -= 1
-    else:
-        high = attrs.get(const.KARABO_SCHEMA_MAX_INC, value_range[1])
-
-    return low, high
