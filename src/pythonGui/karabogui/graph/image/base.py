@@ -126,7 +126,7 @@ class KaraboImageView(QWidget):
             plotItem = self.plotItem
 
             image = plotItem.imageItem
-            self._colorbar = ColorBarWidget(image)
+            self._colorbar = ColorBarWidget(image, parent=plotItem)
 
             top_axis_checked = plotItem.getAxis("top").style["showValues"]
             top_margin = X_AXIS_HEIGHT * top_axis_checked
