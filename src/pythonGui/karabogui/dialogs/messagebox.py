@@ -1,6 +1,6 @@
 from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, QSize, Qt, QTimer
-from PyQt5.QtWidgets import QApplication, QDialog, QMessageBox, QStyle
+from PyQt5.QtCore import pyqtSlot, QPoint, QSize, Qt, QTimer
+from PyQt5.QtWidgets import QApplication, QDialog, QMenu, QMessageBox, QStyle
 
 from .utils import get_dialog_ui
 
@@ -31,6 +31,9 @@ class KaraboMessageBox(QDialog):
         self.show_details_button.clicked.connect(self._show_details)
         self.show_details_button.setVisible(False)
         self.details_widget.setVisible(False)
+        self.details_widget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.details_widget.customContextMenuRequested.connect(
+            self._show_context_menu)
         self._is_showing_details = False
         self._size_hint = QSize()
 
@@ -93,3 +96,18 @@ class KaraboMessageBox(QDialog):
         self.show_details_button.setText(button_text[self._is_showing_details])
         self.details_widget.setVisible(self._is_showing_details)
         self.adjustSize()
+
+    @pyqtSlot(QPoint)
+    def _show_context_menu(self, pos):
+        """Show a context menu"""
+        menu = QMenu(self)
+        select_action = menu.addAction('Select All')
+        select_action.triggered.connect(self.details_widget.selectAll)
+        enable_select = len(self.details_widget.toPlainText()) > 0
+        select_action.setEnabled(enable_select)
+
+        copy_action = menu.addAction('Copy Selected')
+        copy_action.triggered.connect(self.details_widget.copy)
+        enable_cp = not self.details_widget.textCursor().selection().isEmpty()
+        copy_action.setEnabled(enable_cp)
+        menu.exec_(self.details_widget.viewport().mapToGlobal(pos))
