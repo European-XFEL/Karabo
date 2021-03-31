@@ -8,7 +8,7 @@ from karabo.common.scenemodel.api import VectorGraphModel
 from karabo.native import Configurable, VectorBool, VectorFloat, VectorInt32
 from karabo.native import Hash, NDArray, UInt32
 from karabogui.binding.proxy import PropertyProxy
-from karabogui.controllers.display.array_graph import (
+from karabogui.controllers.display.vector_graph import (
     DisplayNDArrayGraph, DisplayVectorGraph)
 from karabogui.graph.plots.utils import generate_baseline
 from karabogui.testing import (
@@ -174,7 +174,7 @@ class TestVectorGraph(GuiTestCase):
         offset = 20
         step = 10
         # Trigger the transformation configuration
-        dialog = ("karabogui.controllers.display.array_graph."
+        dialog = ("karabogui.controllers.display.vector_graph."
                   "TransformDialog.get")
         content = {"offset": offset, "step": step}
         with mock.patch(dialog, return_value=(content, True)):
