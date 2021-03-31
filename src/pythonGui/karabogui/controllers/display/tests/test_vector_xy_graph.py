@@ -4,7 +4,7 @@ from karabo.native import Configurable, VectorInt32
 from karabogui.binding.api import PropertyProxy
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
-from ..display_xy_vector import DisplayVectorXYGraph
+from ..vector_xy_graph import DisplayVectorXYGraph
 
 
 class Object(Configurable):
