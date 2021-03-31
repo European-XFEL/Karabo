@@ -158,7 +158,11 @@
        </widget>
       </item>
       <item>
-       <widget class="QTextEdit" name="details_textedit"/>
+       <widget class="QTextEdit" name="details_textedit">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
