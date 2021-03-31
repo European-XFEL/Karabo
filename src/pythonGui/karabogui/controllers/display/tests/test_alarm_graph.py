@@ -8,7 +8,7 @@ from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 
 from .data import build_historic_alarm_string
-from ..display_time_graphs import DisplayAlarmGraph
+from ..time_graphs import DisplayAlarmGraph
 
 
 class Object(Configurable):

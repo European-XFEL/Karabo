@@ -24,7 +24,7 @@ MAX_BARS = 3000
     klassname='VectorBarGraph',
     binding_type=(NDArrayBinding, VectorNumberBinding),
     can_show_nothing=False)
-class ArrayBarGraph(BaseBindingController):
+class DisplayVectorBarGraph(BaseBindingController):
     """The BarGraph controller for display of pulse data in a histogram format
     """
     model = Instance(VectorBarGraphModel, args=())
