@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..display_vector_fill import DisplayVectorFillGraph
+from ..vector_fill_graph import DisplayVectorFillGraph
 
 from karabo.native import Configurable, VectorInt32
 from karabogui.testing import (GuiTestCase, get_class_property_proxy,

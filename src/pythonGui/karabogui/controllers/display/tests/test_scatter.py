@@ -2,7 +2,7 @@ from platform import system
 from unittest.mock import patch
 from unittest import skipIf
 
-from ..display_scatter import DisplayScatterGraph
+from ..scatter_graph import DisplayScatterGraph
 from karabo.common.scenemodel.api import ScatterGraphModel
 
 from karabo.native import Configurable, Double, Hash, Timestamp
@@ -62,7 +62,7 @@ class TestScatterGraph(GuiTestCase):
         action = controller.widget.actions()[10]
         self.assertEqual(action.text(), 'Queue Size')
 
-        dsym = 'karabogui.controllers.display.display_scatter.QInputDialog'
+        dsym = 'karabogui.controllers.display.scatter_graph.QInputDialog'
         with patch(dsym) as QInputDialog:
             QInputDialog.getInt.return_value = 20, True
             action.trigger()
@@ -78,7 +78,7 @@ class TestScatterGraph(GuiTestCase):
         action = controller.widget.actions()[11]
         self.assertEqual(action.text(), 'Point Size')
 
-        dsym = 'karabogui.controllers.display.display_scatter.QInputDialog'
+        dsym = 'karabogui.controllers.display.scatter_graph.QInputDialog'
         with patch(dsym) as QInputDialog:
             QInputDialog.getDouble.return_value = 2.7, True
             action.trigger()
