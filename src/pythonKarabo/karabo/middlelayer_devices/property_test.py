@@ -12,8 +12,8 @@ from karabo.common.scenemodel.api import (
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, AlarmCondition,
-    background, Bool, Configurable, DaqDataType,
-    Device, Double, Float, Hash, InputChannel, Int32, Int64, MetricPrefix,
+    background, Bool, Configurable, DaqDataType, Device, Double,
+    Float, Hash, InputChannel, Int32, Int64, KaraboError, MetricPrefix,
     NDArray, Node, OutputChannel, Overwrite, RegexString, UInt32, UInt64,
     Unit, sleep, Slot, slot, State, String, VectorBool, VectorChar,
     VectorDouble, VectorFloat, VectorHash, VectorInt32, VectorInt64,
@@ -116,11 +116,6 @@ class TableRow(Configurable):
         description="An option property for strings",
         options=["spam", "eggs"],
         defaultValue="spam")
-
-    boolInit = Bool(
-        displayedName="Bool (INIT)",
-        defaultValue=True,
-        accessMode=AccessMode.INITONLY)
 
     bool = Bool(
         displayedName="Bool",
@@ -373,10 +368,10 @@ class PropertyTestMDL(Device):
         description="Table containing one node",
         accessMode=AccessMode.RECONFIGURABLE,
         defaultValue=[
-            Hash('intProperty', 1, 'stringProperty', 'spam', 'boolInit', True,
+            Hash('intProperty', 1, 'stringProperty', 'spam',
                  'bool', False, 'boolReadOnly', False, 'floatProperty', 5.0,
                  'doubleProperty', 27.1),
-            Hash('intProperty', 3, 'stringProperty', 'eggs', 'boolInit', False,
+            Hash('intProperty', 3, 'stringProperty', 'eggs',
                  'bool', True, 'boolReadOnly', True, 'floatProperty', 1.3,
                  'doubleProperty', 22.5)])
 
@@ -582,15 +577,36 @@ class PropertyTestMDL(Device):
         return Hash('type', 'deviceMacro', 'origin', self.deviceId, 'payload',
                     payload)
 
+    faultyError = String(
+        displayedName="Faulty Error",
+        description="Configure the type of exception to be thrown",
+        defaultValue="KaraboError",
+        options=["KaraboError", "RuntimeError"]
+    )
+
     @String(displayedName="Faulty String",
             description="A string property that could not be set from "
                         "the system",
             defaultValue="Karabo")
     def faultyString(self, value):
         if value != "Karabo":
-            raise RuntimeError(f"Only 'Karabo' is allowed here not '{value}'")
+            if self.faultyError == "RuntimeError":
+                exception = RuntimeError
+            else:
+                exception = KaraboError
+            raise exception(f"Only 'Karabo' is allowed here not '{value}'")
         else:
             self.faultyString = value
+
+    @Slot(displayedName="Faulty Slot",
+          description="A slot that throws an error",
+          defaultValue="Karabo")
+    def faultySlot(self):
+        if self.faultyError == "RuntimeError":
+            exception = RuntimeError
+        else:
+            exception = KaraboError
+        raise exception("Faulty Slot cannot be executed")
 
 
 def get_scene(deviceId):
