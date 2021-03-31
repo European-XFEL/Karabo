@@ -1,5 +1,7 @@
 from unittest.mock import ANY, Mock, call, patch
 
+from PyQt5.QtCore import QSize
+
 from karabo.common.api import ProxyStatus
 from karabo.native import (
     AccessMode, Configurable, Hash, Int32, Schema, Timestamp)
@@ -14,6 +16,7 @@ def make_project_db_handler(fall_through):
     @project_db_handler(fall_through)
     def handle(self, reply):
         return reply
+
     return handle
 
 
@@ -37,6 +40,7 @@ class TestManager(GuiTestCase):
             network.reset_mock()
             manager.shutdownDevice('dev', showConfirm=False)
             with patch('karabogui.singletons.manager.QMessageBox') as mb:
+                mb().size.return_value = QSize(10, 10)
                 mb().exec.return_value = mb.Yes
                 manager.shutdownDevice('dev')
                 network.onKillDevice.assert_called_with('dev')
@@ -51,6 +55,7 @@ class TestManager(GuiTestCase):
                 network.onKillDevice.assert_not_called()
 
             with patch('karabogui.singletons.manager.QMessageBox') as mb:
+                mb().size.return_value = QSize(10, 10)
                 mb().exec.return_value = mb.Yes
                 network.reset_mock()
                 manager.shutdownDevice('dev')
@@ -66,6 +71,7 @@ class TestManager(GuiTestCase):
         with singletons(network=network):
             manager = Manager()
             with patch('karabogui.singletons.manager.QMessageBox') as mb:
+                mb().size.return_value = QSize(10, 10)
                 mb().exec.return_value = mb.Yes
                 manager.shutdownServer('swerver')
                 network.onKillServer.assert_called_with('swerver')
