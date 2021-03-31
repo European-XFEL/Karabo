@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import numpy as np
 
-from ..array_bar_graph import ArrayBarGraph
+from ..vector_bar_graph import DisplayVectorBarGraph
 from karabo.common.scenemodel.api import VectorBarGraphModel
 
 from karabo.native import Configurable, Hash, Int32, NDArray, VectorInt32
@@ -28,7 +28,7 @@ class TestDisplayVectorBar(GuiTestCase):
 
         schema = Object.getClassSchema()
         self.value = get_class_property_proxy(schema, 'value')
-        self.controller = ArrayBarGraph(proxy=self.value)
+        self.controller = DisplayVectorBarGraph(proxy=self.value)
         self.controller.create(None)
         self.assertIsNotNone(self.controller.widget)
 
@@ -45,13 +45,13 @@ class TestDisplayVectorBar(GuiTestCase):
         self.assertEqual(list(curve.opts.get('height')), value)
 
     def test_bar_width(self):
-        controller = ArrayBarGraph(proxy=self.value,
-                                   model=VectorBarGraphModel())
+        controller = DisplayVectorBarGraph(proxy=self.value,
+                                           model=VectorBarGraphModel())
         controller.create(None)
         action = controller.widget.actions()[10]
         self.assertEqual(action.text(), 'Bar Width')
 
-        dsym = 'karabogui.controllers.display.array_bar_graph.QInputDialog'
+        dsym = 'karabogui.controllers.display.vector_bar_graph.QInputDialog'
         with patch(dsym) as QInputDialog:
             QInputDialog.getDouble.return_value = 2.7, True
             action.trigger()
@@ -67,7 +67,7 @@ class TestArrayBar(GuiTestCase):
 
         schema = NDArrayObject.getClassSchema()
         self.value = get_class_property_proxy(schema, 'value')
-        self.controller = ArrayBarGraph(proxy=self.value)
+        self.controller = DisplayVectorBarGraph(proxy=self.value)
         self.controller.create(None)
         self.assertIsNotNone(self.controller.widget)
 
