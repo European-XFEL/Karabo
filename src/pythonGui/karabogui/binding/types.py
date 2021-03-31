@@ -2,7 +2,7 @@ import numpy as np
 from traits.api import (
     Array, CArray, CBool, Complex, Dict, Either, Enum, Event,
     HasStrictTraits, Instance, List, Property, String, Trait,
-    TraitHandler, Undefined, cached_property)
+    TraitError, TraitHandler, Undefined, cached_property)
 
 from .trait_types import Float, NumpyRange
 from karabo.common import const
@@ -235,6 +235,39 @@ class FloatBinding(BaseBinding):
     value = Float
     options = CArray
 
+    def check(self, value):
+        value = super().check(value)
+        # Karabo attribute check
+        low, high = self.getMinMax()
+        if value < low:
+            raise TraitError(f"The value {value} is lower than {low}")
+        if value > high:
+            raise TraitError(f"The value {value} is higher than {high}")
+
+        return value
+
+    def getMinMax(self):
+        attrs = self.attributes
+        value_type = attrs.get(const.KARABO_SCHEMA_VALUE_TYPE)
+        if value_type in ('FLOAT', 'COMPLEX_FLOAT'):
+            info = np.finfo(np.float32)
+        else:
+            info = np.finfo(np.float64)
+
+        low = attrs.get(const.KARABO_SCHEMA_MIN_EXC)
+        if low is not None:
+            low = low * (1 + np.sign(low) * info.eps) + info.tiny
+        else:
+            low = attrs.get(const.KARABO_SCHEMA_MIN_INC, info.min)
+
+        high = attrs.get(const.KARABO_SCHEMA_MAX_EXC)
+        if high is not None:
+            high = high * (1 - np.sign(high) * info.eps) - info.tiny
+        else:
+            high = attrs.get(const.KARABO_SCHEMA_MAX_INC, info.max)
+
+        return low, high
+
 
 class HashBinding(BaseBinding):
     value = Instance(Hash)
@@ -243,6 +276,40 @@ class HashBinding(BaseBinding):
 class IntBinding(BaseBinding):
     """The base class for all integer binding types"""
     options = CArray
+
+    def check(self, value):
+        value = super().check(value)
+        # Karabo attribute check
+        low, high = self.getMinMax()
+        if value < low:
+            raise TraitError(f"The value {value} is lower than {low}")
+        if value > high:
+            raise TraitError(f"The value {value} is higher than {high}")
+
+        return value
+
+    def getMinMax(self):
+        range_trait = self.trait('value').handler
+        value_range = range_trait._low, range_trait._high
+        if range_trait._exclude_low:
+            value_range = (value_range[0] + 1, value_range[1])
+        if range_trait._exclude_high:
+            value_range = (value_range[0], value_range[1] - 1)
+
+        attrs = self.attributes
+        low = attrs.get(const.KARABO_SCHEMA_MIN_EXC)
+        if low is not None:
+            low += 1
+        else:
+            low = attrs.get(const.KARABO_SCHEMA_MIN_INC, value_range[0])
+
+        high = attrs.get(const.KARABO_SCHEMA_MAX_EXC)
+        if high is not None:
+            high -= 1
+        else:
+            high = attrs.get(const.KARABO_SCHEMA_MAX_INC, value_range[1])
+
+        return low, high
 
 
 class SignedIntBinding(IntBinding):

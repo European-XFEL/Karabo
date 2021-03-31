@@ -1,6 +1,8 @@
 import numpy as np
 
-from karabo.common.const import KARABO_SCHEMA_DEFAULT_VALUE
+from karabo.common.const import (
+    KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MAX_INC,
+    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC)
 from karabo.native import (
     AccessMode, Bool, Configurable, Hash, HashList, String, UInt8)
 
@@ -226,6 +228,38 @@ def test_validate_value_uint64():
     assert_binding(binding, "foo", valid=False)
     assert_binding(binding, [1, 2, 3], valid=False)
     assert_binding(binding, HashList([Hash(), Hash()]), valid=False)
+
+
+def test_validate_min_max_binding():
+    """Test the validate with min and max attributes of a binding"""
+    attrs = {KARABO_SCHEMA_MIN_EXC: 0, KARABO_SCHEMA_MAX_EXC: 4}
+    binding = types.Int8Binding(attributes=attrs)
+    assert_binding(binding, 0, valid=False)
+    assert_binding(binding, -1, valid=False)
+    assert_binding(binding, 3, expected=np.int8(3))
+    assert_binding(binding, '1', expected=np.int8(1))
+    assert_binding(binding, 4, valid=False)
+
+    attrs = {KARABO_SCHEMA_MIN_INC: 0, KARABO_SCHEMA_MAX_INC: 4}
+    binding = types.Int8Binding(attributes=attrs)
+    assert_binding(binding, 0, expected=np.int8(0))
+    assert_binding(binding, 4, expected=np.int8(4))
+    assert_binding(binding, '1', expected=np.int8(1))
+
+    # And the float
+    attrs = {KARABO_SCHEMA_MIN_EXC: 0, KARABO_SCHEMA_MAX_EXC: 4}
+    binding = types.FloatBinding(attributes=attrs)
+    assert_binding(binding, 0.0, valid=False)
+    assert_binding(binding, 0.00000000000001, expected=float(0.00000000000001))
+    assert_binding(binding, -4.7, valid=False)
+    assert_binding(binding, 3.99999999999999, expected=float(3.99999999999999))
+    assert_binding(binding, 4.00000000000000000000000000000001, valid=False)
+
+    attrs = {KARABO_SCHEMA_MIN_INC: 0, KARABO_SCHEMA_MAX_INC: 4}
+    binding = types.FloatBinding(attributes=attrs)
+    assert_binding(binding, 0, expected=float(0.0))
+    assert_binding(binding, 4, expected=float(4.0))
+    assert_binding(binding, '1', expected=float(1.0))
 
 
 def test_validate_value_string():
