@@ -4,7 +4,7 @@ from unittest import mock, skipIf
 import numpy as np
 from PyQt5.QtWidgets import QGraphicsTextItem
 
-from ..array_roll_graph import ArrayRollGraph
+from ..vector_roll_graph import ArrayRollGraph
 from karabo.common.scenemodel.api import VectorRollGraphModel
 from karabo.native import (
     Configurable, Hash, Int32, NDArray, Timestamp, VectorInt32)
@@ -87,7 +87,7 @@ class TestVectorRollGraph(GuiTestCase):
         action = controller.widget.actions()[3]
         self.assertEqual(action.text(), 'Image Size')
 
-        dsym = 'karabogui.controllers.display.array_roll_graph.QInputDialog'
+        dsym = 'karabogui.controllers.display.vector_roll_graph.QInputDialog'
         with mock.patch(dsym) as QInputDialog:
             QInputDialog.getInt.return_value = 20, True
             action.trigger()

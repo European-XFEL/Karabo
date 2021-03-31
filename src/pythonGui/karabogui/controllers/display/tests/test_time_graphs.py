@@ -8,7 +8,7 @@ from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 
 from .data import build_historic_data_float
-from ..display_time_graphs import DisplayTrendGraph
+from ..time_graphs import DisplayTrendGraph
 
 
 class Object(Configurable):
