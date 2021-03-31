@@ -1,10 +1,12 @@
 import numpy as np
 from pyqtgraph import AxisItem, ColorMap, GraphicsWidget, ImageItem, ViewBox
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPoint, Qt
-from PyQt5.QtGui import QFont, QTransform
+from PyQt5.QtGui import QTransform
 from PyQt5.QtWidgets import QDialog, QGraphicsGridLayout, QMenu
 
+from karabogui.fonts import get_qfont
 from karabogui.graph.common.api import COLORMAPS
+from karabogui.util import move_to_cursor
 
 from .dialogs.levels import LevelsDialog
 from .utils import levels_almost_equal
@@ -15,39 +17,35 @@ NUM_SAMPLES = 256
 class ColorBarWidget(GraphicsWidget):
     levelsChanged = pyqtSignal(object)
 
-    def __init__(self, imageItem, label=None, parent=None):
-        super(ColorBarWidget, self).__init__(parent=parent)
+    def __init__(self, imageItem, parent=None):
+        super().__init__(parent=parent)
+        self.imageItem = imageItem
 
         self.levels = min_level, max_level = [0, NUM_SAMPLES - 1]
         data = np.linspace(min_level, max_level, NUM_SAMPLES)[None, :]
 
-        self.grid_layout = QGraphicsGridLayout()
-        self.grid_layout.setHorizontalSpacing(0)
-        self.grid_layout.setVerticalSpacing(0)
+        self.grid_layout = QGraphicsGridLayout(self)
+        self.grid_layout.setSpacing(0)
         self.grid_layout.setContentsMargins(0, 40, 0, 0)
 
-        self.vb = ColorViewBox(parent=None)
+        self.vb = ColorViewBox(parent=self)
         self.vb.menu = self._create_menu()
 
-        self.barItem = ImageItem(parent=None)
+        self.barItem = ImageItem(parent=self)
         self.barItem.setImage(data)
         self.vb.addItem(self.barItem)
         self.grid_layout.addItem(self.vb, 0, 0)
         self.vb.setYRange(*self.levels, padding=0)
 
-        font = QFont()
-        font.setPixelSize(8)
+        font = get_qfont()
+        font.setPointSize(8)
 
-        self.axisItem = AxisItem(orientation='right')
-        self.axisItem.tickFont = font
+        self.axisItem = AxisItem(orientation='right', parent=self)
+        self.axisItem.setStyle(tickFont=font)
         self.axisItem.linkToView(self.vb)
         self.grid_layout.addItem(self.axisItem, 0, 1)
 
         self.setLayout(self.grid_layout)
-
-        self.imageItem = imageItem
-        if label is not None:
-            self.set_label(label)
 
     # ---------------------------------------------------------------------
     # PyQt slots
@@ -57,12 +55,10 @@ class ColorBarWidget(GraphicsWidget):
         image_range = self.imageItem.image.min(), self.imageItem.image.max()
         dialog = LevelsDialog(self.imageItem.levels,
                               image_range,
-                              self.imageItem.auto_levels,
-                              self.parent())
-
+                              self.imageItem.auto_levels, self.parent())
+        move_to_cursor(dialog)
         if dialog.exec_() == QDialog.Accepted:
             levels = dialog.levels
-
             self.set_levels(levels or image_range)
 
             # Request changing of levels
@@ -76,13 +72,11 @@ class ColorBarWidget(GraphicsWidget):
             self._show_levels_dialog()
             event.accept()
             return
-        super(ColorBarWidget, self).mouseDoubleClickEvent(event)
+
+        super().mouseDoubleClickEvent(event)
 
     # ---------------------------------------------------------------------
     # Public methods
-
-    def set_label(self, label):
-        self.axisItem.setLabel(label)
 
     def set_colormap(self, cmap):
         lut = (ColorMap(*zip(*COLORMAPS[cmap]), mode="RGB")
