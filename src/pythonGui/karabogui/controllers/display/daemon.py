@@ -5,6 +5,7 @@
 #############################################################################
 from collections import namedtuple
 from contextlib import contextmanager
+import weakref
 
 from PyQt5.QtCore import (
     QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt, pyqtSlot)
@@ -20,6 +21,7 @@ from karabogui.binding.api import VectorHashBinding, get_editor_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.request import request_daemon_action
+from karabogui.util import move_to_cursor
 
 SERVER_COLUMN = 0
 STATUS_COLUMN = 1
@@ -142,10 +144,12 @@ class ButtonDelegate(QStyledItemDelegate):
                                       parent=self.parent())
                 msg_box.setDefaultButton(QMessageBox.Cancel)
                 msg_box.setModal(False)
+                move_to_cursor(msg_box)
                 if msg_box.exec_() != QMessageBox.Yes:
                     return
 
-            request_daemon_action(serviceId, hostId, cmd)
+            parent = weakref.ref(self.parent())
+            request_daemon_action(serviceId, hostId, cmd, parent)
 
 
 class DaemonTableModel(QAbstractTableModel):
