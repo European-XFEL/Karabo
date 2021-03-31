@@ -20,7 +20,13 @@ class CommTestDevice(PythonDevice):
                 .commit()
             ,
             STRING_ELEMENT(expected).key("someString")
-                .readOnly().initialValue("")
+            # As reconfigurable() it will be sent with priority 4
+            # (like commands and replies) and thus order is guaranteed by JMS
+            # (as readOnly() [that is sent in C++/bound with priority 3]
+            #  it failed e.g. in
+            #  https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/183917)
+                .assignmentOptional().defaultValue("")
+                .reconfigurable()
                 .commit()
             ,
             VECTOR_INT32_ELEMENT(expected).key("vectorInt32")
