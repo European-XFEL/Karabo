@@ -11,7 +11,7 @@ from karabogui.controllers.display.tests.image import (
     get_image_hash, get_pipeline_schema)
 from karabogui.testing import GuiTestCase
 
-from ..display_detector_graph import DisplayDetectorGraph, FrameSlider
+from ..detector_graph import DisplayDetectorGraph, FrameSlider
 
 
 class TestFrameSlider(GuiTestCase):

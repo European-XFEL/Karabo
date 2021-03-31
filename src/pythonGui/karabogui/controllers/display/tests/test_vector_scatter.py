@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import numpy as np
 
-from ..display_vector_scatter import DisplayVectorScatterGraph
+from ..vector_scatter_graph import DisplayVectorScatterGraph
 from karabo.common.scenemodel.api import VectorScatterGraphModel
 
 from karabo.native import Configurable, VectorFloat, VectorInt32
@@ -50,7 +50,7 @@ class TestVectorScatterGraph(GuiTestCase):
         self.assertEqual(action.text(), 'Point Size')
 
         dsym = ('karabogui.controllers.display.'
-                'display_vector_scatter.QInputDialog')
+                'vector_scatter_graph.QInputDialog')
         with patch(dsym) as QInputDialog:
             QInputDialog.getDouble.return_value = 2.7, True
             action.trigger()
