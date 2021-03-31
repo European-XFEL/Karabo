@@ -23,6 +23,8 @@ VECTOR_MAX_SIZE = 10
 
 NDARRAY_SHAPE = (100, 200)
 
+DEFAULT_OPT = ["a", "b", "c"]
+
 
 class DataNode(Configurable):
     daqDataType = DaqDataType.TRAIN
@@ -607,6 +609,24 @@ class PropertyTestMDL(Device):
         else:
             exception = KaraboError
         raise exception("Faulty Slot cannot be executed")
+
+    @VectorString(displayedName="Options for optString",
+                  minSize=1,
+                  defaultValue=DEFAULT_OPT)
+    async def optionsForOptString(self, value):
+        self.optionsForOptString = value
+        background(self._injectStringOpt())
+
+    async def _injectStringOpt(self):
+        self.__class__.optString = Overwrite(
+            options=self.optionsForOptString.value,
+            defaultValue=self.optionsForOptString.value[0]
+        )
+        await self.publishInjectedParameters()
+
+    optString = String(displayedName="String with Options",
+                       defaultValue=DEFAULT_OPT[0],
+                       options=DEFAULT_OPT)
 
 
 def get_scene(deviceId):
