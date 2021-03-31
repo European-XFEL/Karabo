@@ -6,7 +6,7 @@ from karabogui.controllers.display.tests.image import (
 from karabogui.graph.common.const import AXIS_ITEMS
 from karabogui.testing import GuiTestCase
 
-from ..display_webcam_graph import DisplayWebCamGraph
+from ..webcam_graph import DisplayWebCamGraph
 
 
 class TestCase(GuiTestCase):

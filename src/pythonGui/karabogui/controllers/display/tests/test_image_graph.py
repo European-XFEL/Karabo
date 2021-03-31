@@ -18,7 +18,7 @@ from karabogui.graph.common.enums import MouseMode
 from karabogui.graph.common.enums import AuxPlots, ROITool
 from karabogui.testing import GuiTestCase
 
-from ..display_image_graph import DisplayImageGraph
+from ..image_graph import DisplayImageGraph
 
 
 class TestImageGraph(GuiTestCase):

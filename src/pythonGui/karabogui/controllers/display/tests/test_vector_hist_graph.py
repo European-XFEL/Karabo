@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..array_hist_graph import VectorHistogramGraph
+from ..vector_hist_graph import VectorHistogramGraph
 
 from karabo.native import Configurable, Double, Hash, VectorFloat, NDArray
 from karabogui.testing import (
