@@ -207,8 +207,11 @@ class Manager(QObject):
             if pending:
                 # in case multiple updates are sent and only few failed
                 self.expect_properties(device, pending)
-            text = ('Device reconfiguration of <b>{}</b> encountered an error.'
-                    ' The values could NOT be applied!'.format(deviceId))
+            text = (f'Device reconfiguration of <b>{deviceId}</b> encountered '
+                    'an error. <br><br>The reason is probably: <br>'
+                    f'<i>{get_error_message(reason)}</i><br><br>'
+                    'Click "Show Details..." for more information.')
+
             messagebox.show_error(text, details=reason)
         else:
             device_proxy = self._waiting_devices.pop(deviceId, None)
