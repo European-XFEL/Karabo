@@ -172,7 +172,7 @@ def handle_macro_from_server(dev_id, name, project, success, reply):
     broadcast_event(KaraboEvent.ShowMacroView, {'model': macro})
 
 
-def request_daemon_action(serverId, hostId, action):
+def request_daemon_action(serverId, hostId, action, parent):
     """Request an action for the daemon manager
 
     :param serverId: The targeted `serverId`
@@ -184,24 +184,28 @@ def request_daemon_action(serverId, hostId, action):
     # XXX: Protect here if the device is offline. We share the same
     # logic as the device scene link!
     if device is not None and device.status not in ONLINE_STATUSES:
-        messagebox.show_warning("Device is not online!", "Warning")
+        parent = parent()
+        messagebox.show_warning("Device is not online!", "Warning",
+                                parent=parent)
         return
 
-    handler = partial(handle_daemon_from_server, serverId, action)
+    handler = partial(handle_daemon_from_server, serverId, action, parent)
     call_device_slot(handler, device_id, 'requestDaemonAction',
                      serverId=serverId, hostId=hostId, action=action)
 
 
-def handle_daemon_from_server(serverId, action, success, reply):
+def handle_daemon_from_server(serverId, action, parent, success, reply):
     """Callback handler for a request the daemon manager"""
+    parent = parent()
     if not success or not reply.get('payload.success', False):
         msg = 'The command "{}" for the server "{}" was not successful!'
         messagebox.show_warning(msg.format(action, serverId),
-                                title='Daemon Service Failed')
+                                title='Daemon Service Failed',
+                                parent=parent)
         return
-
     msg = 'The command "{}" for the server "{}" was successful!'
     messagebox.show_information(msg.format(action, serverId),
-                                title='Daemon Service Success!')
+                                title='Daemon Service Success!',
+                                parent=parent)
 
     return
