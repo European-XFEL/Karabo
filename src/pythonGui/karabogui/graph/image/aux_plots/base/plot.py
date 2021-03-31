@@ -3,7 +3,7 @@ from abc import abstractmethod
 from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QTransform
 from PyQt5.QtWidgets import QMenu
-from pyqtgraph import PlotItem, ViewBox
+from pyqtgraph import GraphicsWidget, PlotItem, ViewBox
 from traits.api import (
     ABCHasStrictTraits, Constant, Instance, Property, String)
 
@@ -46,6 +46,26 @@ class AuxPlotViewBox(ViewBox):
             return
         pos = event.screenPos()
         self.menu.popup(QPoint(pos.x(), pos.y()))
+
+    # ------------ Patch PyQtGraph > 0.11.0 ----------------
+
+    # The following lines revert changes done in PR!1435
+    # https://github.com/pyqtgraph/pyqtgraph/pull/1435/
+    # These changes lead to a peformance decrease of a factor of two (2)
+    # which are reverted here, until pyqtgraph comes up with a different
+    # fix.
+    # Issue - https://github.com/pyqtgraph/pyqtgraph/issues/1602
+    # Failed fix: https://github.com/pyqtgraph/pyqtgraph/pull/1610
+
+    def paint(self, p, opt, widget):
+        if self.border is not None:
+            bounds = self.shape()
+            p.setPen(self.border)
+            p.drawPath(bounds)
+
+    def update(self, *args, **kwargs):
+        self.prepareForPaint()
+        GraphicsWidget.update(self, *args, **kwargs)
 
 
 class AuxPlotItem(PlotItem):
