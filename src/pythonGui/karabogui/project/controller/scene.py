@@ -19,12 +19,13 @@ from karabogui import icons, messagebox
 from karabogui.enums import AccessRole, ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.globals import access_role_allowed
-from karabogui.project.wizard.api import CinemaWizardController
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
 from karabogui.singletons.api import get_db_conn, get_panel_wrangler
 from karabogui.util import getOpenFileName, getSaveFileName, move_to_cursor
 from karabogui.singletons.api import get_config
+from karabogui.wizards.api import CinemaWizardController
+
 from .bases import BaseProjectController, ProjectControllerUiData
 
 
