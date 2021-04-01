@@ -109,6 +109,11 @@ class ColorBarWidget(GraphicsWidget):
 
         # Transform the bar item according to the range
         image_min, image_max = image_range
+        if image_min == image_max:
+            # Protect against same levels and simply lower the minimum
+            # for a functional colorbar
+            image_min -= 1
+
         scale = (image_max - image_min) / NUM_SAMPLES
         translate = image_min / scale
         transform = QTransform()
