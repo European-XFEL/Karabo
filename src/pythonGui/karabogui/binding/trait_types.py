@@ -16,7 +16,7 @@ class NumpyRange(BaseRange):
         if type(value) is str:
             try:
                 return self._dtype(value)
-            except ValueError:
+            except (OverflowError, ValueError):
                 self.error(object, name, value)
 
         return self._dtype(super().validate(object, name, value))
