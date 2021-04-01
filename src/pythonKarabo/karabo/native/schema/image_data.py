@@ -1,6 +1,6 @@
 import numpy
 
-from karabo.native.karabo_hash import (
+from karabo.native.data import (
     AccessMode, DaqDataType, dtype_from_number, EncodingType, Hash,
     HashElement, NodeType, Unit)
 
