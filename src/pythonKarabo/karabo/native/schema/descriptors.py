@@ -1224,7 +1224,8 @@ class VectorHash(Vector):
             raise KaraboError("The table element {} does not have row "
                               "schema".format(self.key))
         else:
-            self.rowSchema = sanitize_table_schema(self.rowSchema)
+            readonly = self.accessMode is AccessMode.READONLY
+            self.rowSchema = sanitize_table_schema(self.rowSchema, readonly)
 
         self.dtype = np.dtype([(k, Type.fromname[a["valueType"]].numpy)
                                for k, v, a in self.rowSchema.hash.iterall()])

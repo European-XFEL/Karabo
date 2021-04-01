@@ -619,21 +619,16 @@ class Tests(TestCase):
         self.assertIs(attrs["metricPrefixSymbol"], MetricPrefix.NONE)
 
     def test_vector_hash(self):
-        rowSchema = Hash("int", None, "string", None, "vector", None,
-                         "bytes", None, "array", None)
+        rowSchema = Hash("int", None, "string", None, "vector", None)
         rowSchema["int", "valueType"] = "INT32"
         rowSchema["int", "unitSymbol"] = "m"
         rowSchema["int", "metricPrefixSymbol"] = "m"
         rowSchema["string", "valueType"] = "STRING"
         rowSchema["vector", "valueType"] = "VECTOR_DOUBLE"
-        rowSchema["bytes", "valueType"] = "VECTOR_CHAR"
-        rowSchema["array", "valueType"] = "BYTE_ARRAY"
 
         d = VectorHash(rowSchema=Schema("rs", hash=rowSchema))
-        v = d.toKaraboValue([(3, "hallo", np.arange(5, dtype=float),
-                              b"a", b"b"),
-                             (2.5, "bla", np.array([], dtype=float),
-                              b"", b"")])
+        v = d.toKaraboValue([(3, "hallo", np.arange(5, dtype=float)),
+                             (2.5, "bla", np.array([], dtype=float))])
         self.assertEqual(len(v), 2)
         self.assertEqual(v[1]["int"], 2 * unit.millimeter)
         self.assertEqual(v[1]["string"], "bla")
@@ -642,10 +637,8 @@ class Tests(TestCase):
         self.assertEqual(v[0]["vector"][2], 2)
         self.assertEqual(len(v[1]["vector"]), 0)
         self.assertEqual(v[1]["vector"].dtype, float)
-        self.assertEqual(v[1]["array"], b"")
-        self.assertEqual(v[0]["bytes"], b"a")
         self.assertEqual(v.dtype.names,
-                         ("int", "string", "vector", "bytes", "array"))
+                         ("int", "string", "vector"))
         d.toKaraboValue(v)
         data, _ = d.toDataAndAttrs(v)
         self.assertEqual(len(data), 2)
@@ -673,10 +666,8 @@ class Tests(TestCase):
         self.assertEqual(v[0]["vector"][2], 2)
         self.assertEqual(len(v[1]["vector"]), 0)
         self.assertEqual(v[1]["vector"].dtype, float)
-        self.assertEqual(v[1]["array"], b"")
-        self.assertEqual(v[0]["bytes"], b"a")
         self.assertEqual(v.dtype.names,
-                         ("int", "string", "vector", "bytes", "array"))
+                         ("int", "string", "vector"))
         d.toKaraboValue(v)
 
     def test_general(self):
