@@ -4,7 +4,7 @@ from weakref import WeakKeyDictionary
 
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
-from karabo.native.karabo_hash import (
+from karabo.native.data import (
     AccessLevel, NodeType, Hash, HashList, Schema)
 from karabo.native.time_mixin import get_timestamp
 

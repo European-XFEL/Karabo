@@ -13,7 +13,7 @@ from xml.sax.saxutils import escape
 import numpy
 import pint
 
-from karabo.native.karabo_hash import EncodingType, MetricPrefix, Unit
+from karabo.native.data import EncodingType, MetricPrefix, Unit
 from ..weak import Weak
 
 __all__ = ['BoolValue', 'EnumValue', 'ImageData', 'isSet', 'KaraboValue',

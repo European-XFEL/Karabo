@@ -12,7 +12,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import read_scene
-from karabo.native.karabo_hash import decodeXML, encodeXML
+from karabo.native.data import decodeXML, encodeXML
 
 
 class Project(object):

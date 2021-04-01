@@ -13,10 +13,10 @@ import numpy as np
 
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
-from karabo.native.karabo_hash import (
+from karabo.native.data import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqPolicy,
     LeafType, MetricPrefix, NodeType, Unit)
-from karabo.native.karabo_hash import (
+from karabo.native.data import (
     Hash, HashByte, HashList, hashtype_from_string, Schema)
 from karabo.native import KaraboError
 
