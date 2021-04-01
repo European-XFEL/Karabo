@@ -520,12 +520,12 @@ class SignalSlotable(Configurable):
         else:
             m = self.onException
             args = slot, exc, tb
+            error_name = type(exc).__name__
             if slot is None:
-                logger.error('error in device "%s"', self.deviceId,
+                logger.error(f"{error_name}: {exc}",
                              exc_info=(type(exc), exc, tb))
             else:
-                logger.error('error in slot "%s" of device "%s"',
-                             slot.key, self.deviceId,
+                logger.error(f"{error_name} in slot '{slot.key}': {exc}",
                              exc_info=(type(exc), exc, tb))
 
         async def logException(coro):
