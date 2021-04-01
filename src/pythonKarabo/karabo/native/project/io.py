@@ -12,7 +12,7 @@ from karabo.common.project.api import (
     write_device_server
 )
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
-from karabo.native.karabo_hash import decodeXML, encodeXML, Hash
+from karabo.native.data import decodeXML, encodeXML, Hash
 
 _ITEM_TYPES = {
     DeviceConfigurationModel: PROJECT_DB_TYPE_DEVICE_CONFIG,
