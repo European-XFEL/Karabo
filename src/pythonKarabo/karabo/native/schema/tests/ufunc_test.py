@@ -8,7 +8,7 @@ from pint import DimensionalityError
 from karabo.native.schema import (
     Int32, VectorComplexDouble, VectorDouble,
     VectorInt32, QuantityValue as QV)
-from karabo.native.karabo_hash import MetricPrefix, Timestamp, Unit
+from karabo.native.data import MetricPrefix, Timestamp, Unit
 
 from karabo.native.schema.tests.compat import (
     PINT_INCOMPATIBLE, PINT_REASON)
