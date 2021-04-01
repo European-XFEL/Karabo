@@ -3,8 +3,21 @@
 from unittest import TestCase, main
 
 from karabo.native import (
-    AccessMode, Bool, Configurable, Double, Float, get_default_value, Int32,
-    sanitize_table_schema, String, VectorDouble, VectorHash)
+    AccessMode, Bool, ByteArray, Char, Configurable, Double, Float,
+    get_default_value, Int32, sanitize_table_schema, RegexString,
+    String, TypeHash, TypeNone, TypeSchema, VectorChar, VectorDouble,
+    VectorHash, VectorRegexString)
+
+
+def get_test_table(access=AccessMode.READONLY):
+    class TestTable(Configurable):
+        """A Configurable with a Table Element."""
+        table = VectorHash(
+            rows=Row,
+            displayedName="Table",
+            accessMode=access)
+
+    return TestTable
 
 
 class Row(Configurable):
@@ -21,14 +34,6 @@ class Row(Configurable):
     doubleProperty = Double(defaultValue=2.0)
     vectorProperty = VectorDouble(defaultValue=[1.2, 1.1])
     boolProperty = Bool(defaultValue=True)
-
-
-class TestTable(Configurable):
-    """A Configurable with a Table Element."""
-    table = VectorHash(
-        rows=Row,
-        displayedName="Table",
-        accessMode=AccessMode.READONLY)
 
 
 class Tests(TestCase):
@@ -67,8 +72,8 @@ class Tests(TestCase):
             attrs = table_hash[prop, ...]
             self.assertEqual(attrs["defaultValue"], value)
 
-        # In place modification
-        sanitize_table_schema(table_row)
+        # In place modification, readonly false
+        sanitize_table_schema(table_row, False)
         valid_table_hash = table_row.hash
         new_defaults = {
             "integerPropertyNotValid": 0,
@@ -85,6 +90,47 @@ class Tests(TestCase):
         # 2.1. Check accessMode sanitize
         access = table_hash["floatPropertyNotValid", "accessMode"]
         self.assertEqual(access, AccessMode.RECONFIGURABLE.value)
+
+    def test_table_configurable_readonly(self):
+        """Test that a readOnly table does not get defaults"""
+
+        # 1 reconfigurable
+        schema = get_test_table().getClassSchema()
+        table_hash = schema.hash["table", "rowSchema"].hash
+        no_defaults = [
+            "integerPropertyNotValid",
+            "stringPropertyNotValid",
+            "floatPropertyNotValid",
+            "doublePropertyNotValid",
+            "vectorPropertyNotValid",
+            "boolPropertyNotValid"]
+
+        for prop in no_defaults:
+            attrs = table_hash[prop, ...]
+            self.assertNotIn("defaultValue", attrs)
+
+        # Now we can test that a reconfigurable table
+        # is sanitized with defaults!
+        schema = get_test_table(
+            access=AccessMode.RECONFIGURABLE).getClassSchema()
+        table_hash = schema.hash["table", "rowSchema"].hash
+        for prop in no_defaults:
+            attrs = table_hash[prop, ...]
+            self.assertIn("defaultValue", attrs)
+
+    def test_not_supported_sanitize(self):
+
+        def get_table(desc):
+            class Row(Configurable):
+                notValid = desc()
+            return Row
+
+        for descriptor in [ByteArray, Char, VectorChar, RegexString,
+                           TypeHash, TypeNone, TypeSchema, VectorRegexString]:
+            with self.assertRaises(TypeError):
+                table_row = get_table(descriptor).getClassSchema()
+                # Use readOnly here to validate only the descriptor
+                sanitize_table_schema(table_row, True)
 
     def test_default_value(self):
         integerPropertyNoDefault = Int32(accessMode=AccessMode.READONLY)
