@@ -45,8 +45,21 @@ def test_validate_integers():
     }
     for property_binding in bindings.keys():
         binding = property_binding()
+        negative_value = -1
         with pytest.raises(TraitError):
-            binding.validate_trait("value", -1)
+            binding.validate_trait("value", negative_value)
+
+        negative_overflow = -2e100
+        with pytest.raises(TraitError):
+            binding.validate_trait("value", str(negative_overflow))
+        with pytest.raises(TraitError):
+            binding.validate_trait("value", negative_overflow)
+
+        positive_overflow = 2e100
+        with pytest.raises(TraitError):
+            binding.validate_trait("value", str(positive_overflow))
+        with pytest.raises(TraitError):
+            binding.validate_trait("value", positive_overflow)
 
 
 def test_validate_float():
