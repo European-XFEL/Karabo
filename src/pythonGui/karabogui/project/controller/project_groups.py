@@ -17,7 +17,6 @@ from karabogui import icons, messagebox
 from karabogui.enums import AccessRole, ProjectItemTypes
 from karabogui.globals import access_role_allowed
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
-from karabogui.project.wizard.api import CinemaWizardController
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.utils import (
@@ -28,6 +27,8 @@ from karabogui.singletons.api import get_config
 from karabogui.util import (
     getOpenFileName, move_to_cursor, show_filename_error,
     VALID_PROJECT_OBJECT_NAME)
+from karabogui.wizards.api import CinemaWizardController
+
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 
 
