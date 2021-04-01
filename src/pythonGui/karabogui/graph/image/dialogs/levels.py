@@ -14,6 +14,7 @@ class LevelsDialog(QDialog):
         ui_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                'levels_dialog.ui')
         uic.loadUi(ui_path, self)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
 
         # Check if autolevel: image levels and range are almost equal.
         # This is with a tolerance of 1%.
