@@ -114,11 +114,35 @@ SIMPLE_ERROR_MESSAGE = """\
 Failure on request to execute 'reset' on device 'plcMonitor. Request not answered within 5 seconds."""
 
 
+KARABO_ERROR_MESSAGE = """
+Failure on request to execute 'faultySlot' on device 'XHQ_EG_DG/DATA/PROPERTY_TEST_MDL', details:
+1. Exception =====>  {
+    Exception Type....:  Remote Exception from XHQ_EG_DG/DATA/PROPERTY_TEST_MDL
+    Message...........:  Traceback (most recent call last):
+  File "/home/degon/Framework/src/pythonKarabo/karabo/native/schema/descriptors.py", line 657, in wrapper
+    ret = await coro
+  File "/home/degon/Framework/src/pythonKarabo/karabo/middlelayer_api/eventloop.py", line 1234, in run_coroutine_or_thread
+    return (await future)
+  File "/home/degon/Framework/src/pythonKarabo/karabo/middlelayer_api/eventloop.py", line 1207, in thread
+    ret = f(*args, **kwargs)
+  File "/home/degon/Framework/src/pythonKarabo/karabo/native/schema/descriptors.py", line 628, in wrapper
+    return self.method(device)
+  File "/home/degon/Framework/src/pythonKarabo/karabo/middlelayer_devices/property_test.py", line 614, in faultySlot
+    raise exception("Fauly Slot cannot be executed")
+karabo.native.exceptions.KaraboError: Fauly Slot cannot be executed
+
+    Timestamp.........:  2021-Mar-31 13:35:28.973438
+}
+"""
+
+
 EXPECTED_MESSAGE = {
     CPP_SLOT_ERROR_MESSAGE: 'Command "move" is not allowed in current state "ERROR" of device "MOV_TEST/MOTOR/SERVO_1".',
     PYTHON_SLOT_ERROR_MESSAGE: 'RuntimeError: Problematic execute: ProblematicSlot',
     PYTHON_MULTIPLE_ERROR_MESSAGE: 'RuntimeError: Something went wrong.',
-    SIMPLE_ERROR_MESSAGE: SIMPLE_ERROR_MESSAGE
+    SIMPLE_ERROR_MESSAGE: SIMPLE_ERROR_MESSAGE,
+    KARABO_ERROR_MESSAGE: "Fauly Slot cannot be executed"
+
 }
 
 
@@ -127,6 +151,7 @@ def test_get_error_message():
     _assert_error_message(PYTHON_SLOT_ERROR_MESSAGE)
     _assert_error_message(PYTHON_MULTIPLE_ERROR_MESSAGE)
     _assert_error_message(SIMPLE_ERROR_MESSAGE)
+    _assert_error_message(KARABO_ERROR_MESSAGE)
 
 
 def _assert_error_message(message):
