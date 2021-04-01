@@ -41,5 +41,8 @@ def get_error_message(failure_reason):
             if KaraboError.__name__ not in exception:
                 verbose_message = f"{exception}: {message}"
                 break
+        else:
+            # Only KaraboErrors, show it!
+            verbose_message = f"{message}"
 
     return verbose_message
