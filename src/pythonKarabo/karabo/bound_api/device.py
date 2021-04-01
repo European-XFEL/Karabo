@@ -18,6 +18,7 @@ from karathon import (
     STATE_ELEMENT, STRING_ELEMENT,
     OBSERVER, WRITE,
     AccessLevel, AccessType, AssemblyRules, Broker, ChannelMetaData,
+    ConnectionStatus,
     EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
     LeafType, loadFromFile, Logger, MetricPrefix,
     Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
@@ -1342,9 +1343,7 @@ class PythonDevice(NoFsm):
                             )
 
                     elif displayType == "InputChannel":
-                        # Would best be INFO level, but without broadcasting:
-                        self.log.DEBUG(f"Creating input channel '{key}'")
-                        self._ss.createInputChannel(key, self._parameters)
+                        self._prepareInputChannel(key)
                     else:
                         self.log.DEBUG("Not creating in-/output channel for '"
                                        + key + "' since it's a '"
@@ -1357,6 +1356,26 @@ class PythonDevice(NoFsm):
 
         with self._stateChangeLock:
             _initChannels(topLevel)
+
+    def _prepareInputChannel(self, path):
+        # Would best be INFO level, but without broadcasting:
+        self.log.DEBUG(f"Creating input channel '{path}'")
+        channel = self._ss.createInputChannel(path, self._parameters)
+        h = Hash(path + ".missingConnections",
+                 self._parameters.get(path + ".connectedOutputChannels"))
+        self._setNoStateLock(h)
+
+        def tracker(name, status):
+            if (status == ConnectionStatus.CONNECTING
+                    or status == ConnectionStatus.DISCONNECTING):
+                return  # ignore any intermediate connection status
+            updateType = "addIfNotIn"
+            if status == ConnectionStatus.CONNECTED:
+                updateType = "removeOne"
+            self.setVectorUpdate(path + ".missingConnections",
+                                 [name], updateType)
+
+        channel.registerConnectionTracker(tracker)
 
     def KARABO_ON_DATA(self, channelName, handlerPerData):
         """Registers a data handler function
