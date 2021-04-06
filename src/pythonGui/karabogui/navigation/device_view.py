@@ -4,9 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtCore import pyqtSlot, Qt, QPoint
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Slot, Qt, QPoint
+from qtpy.QtGui import QCursor
+from qtpy.QtWidgets import (
     QAbstractItemView, QAction, QHeaderView, QMenu, QTreeView)
 
 from karabogui import icons
@@ -138,7 +138,7 @@ class DeviceTreeView(QTreeView):
     # ----------------------------
     # Slots
 
-    @pyqtSlot(str, object)
+    @Slot(str, object)
     def onSelectionChanged(self, item_type, proxy):
         """Called by the data model when an item is selected
         """
@@ -153,7 +153,7 @@ class DeviceTreeView(QTreeView):
             proxy = None
         broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': proxy})
 
-    @pyqtSlot()
+    @Slot()
     def onAbout(self):
         index = self.currentIndex()
         node = self.model().index_ref(index)
@@ -169,7 +169,7 @@ class DeviceTreeView(QTreeView):
         self.popupWidget.move(pos)
         self.popupWidget.show()
 
-    @pyqtSlot()
+    @Slot()
     def onGetConfigurationFromPast(self):
         info = self.indexInfo()
         archive = info['attributes'].get('archive', False)
@@ -190,7 +190,7 @@ class DeviceTreeView(QTreeView):
         dialog.raise_()
         dialog.activateWindow()
 
-    @pyqtSlot()
+    @Slot()
     def onGetConfigurationFromName(self):
         info = self.indexInfo()
         device_id = info.get('deviceId')
@@ -201,7 +201,7 @@ class DeviceTreeView(QTreeView):
         dialog.raise_()
         dialog.activateWindow()
 
-    @pyqtSlot(QPoint)
+    @Slot(QPoint)
     def onCustomContextMenuRequested(self, pos):
         info = self.indexInfo()
         node_type = info.get('type', NavigationItemTypes.UNDEFINED)
@@ -211,7 +211,7 @@ class DeviceTreeView(QTreeView):
             self.ac_kill_device.setEnabled(enable)
             self.menu.exec_(QCursor.pos())
 
-    @pyqtSlot()
+    @Slot()
     def onKillInstance(self):
         info = self.indexInfo()
         node_type = info.get('type')
@@ -221,19 +221,19 @@ class DeviceTreeView(QTreeView):
             deviceId = info.get('deviceId')
             manager.shutdownDevice(deviceId, parent=self)
 
-    @pyqtSlot()
+    @Slot()
     def onGetDocumenation(self):
         deviceId = self.indexInfo().get('deviceId')
         open_documentation_link(deviceId)
 
-    @pyqtSlot()
+    @Slot()
     def onDoubleClickHeader(self):
         if self.expanded:
             self.collapseAll()
         else:
             self.expandAll()
 
-    @pyqtSlot()
+    @Slot()
     def resetExpand(self):
         self.expanded = False
 

@@ -1,8 +1,8 @@
 import os
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtWidgets import QDialog
+from qtpy import uic
+from qtpy.QtCore import Slot, Qt
+from qtpy.QtWidgets import QDialog
 
 from karabogui.graph.common.utils import float_to_string
 
@@ -40,7 +40,7 @@ class LevelsDialog(QDialog):
         self.min_spinbox.setValue(min_level)
         self.max_spinbox.setValue(max_level)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def set_automatic_levels(self, state):
         self.values_widget.setEnabled(state == Qt.Unchecked)
         self.min_spinbox.setValue(self._image_range[0])

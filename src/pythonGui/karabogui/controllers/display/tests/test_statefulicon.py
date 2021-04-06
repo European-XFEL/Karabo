@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QDialog, QWidget
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QDialog, QWidget
 
 from karabo.common.api import State
 from karabo.common.scenemodel.api import StatefulIconWidgetModel

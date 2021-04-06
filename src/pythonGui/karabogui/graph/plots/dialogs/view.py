@@ -1,9 +1,9 @@
 import os
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtGui import QColor, QPixmap, QIcon
-from PyQt5.QtWidgets import QColorDialog, QDialog
+from qtpy import uic
+from qtpy.QtCore import Slot, Qt
+from qtpy.QtGui import QColor, QPixmap, QIcon
+from qtpy.QtWidgets import QColorDialog, QDialog
 
 
 class GraphViewDialog(QDialog):
@@ -26,18 +26,18 @@ class GraphViewDialog(QDialog):
         pixmap.fill(QColor(self.graph_bg_color))
         self.ui_pb_background.setIcon(QIcon(pixmap))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def on_ui_cb_background_stateChanged(self, state):
         if state != Qt.Checked:
             self.graph_bg_color = 'transparent'
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def on_ui_cb_background_toggled(self, checked):
         self.ui_pb_background.setEnabled(checked)
         if not checked:
             self.graph_bg_color = 'transparent'
 
-    @pyqtSlot()
+    @Slot()
     def on_ui_pb_background_clicked(self):
         color = QColorDialog.getColor(QColor(self.graph_bg_color))
         if color.isValid():

@@ -3,9 +3,9 @@
 # Created on November 4, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QTabBar, QTabWidget
+from qtpy.QtCore import Slot
+from qtpy.QtGui import QCursor
+from qtpy.QtWidgets import QTabBar, QTabWidget
 
 from .placeholderpanel import PlaceholderPanel
 from .utils import get_panel_icon
@@ -184,7 +184,7 @@ class PanelContainer(QTabWidget):
     # ----------------------------------------------------------------------
     # slots
 
-    @pyqtSlot(int)
+    @Slot(int)
     def onCloseTab(self, index):
         # Get panel, which is about to be closed
         panel = self.widget(index)

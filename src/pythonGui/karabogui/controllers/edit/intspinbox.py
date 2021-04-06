@@ -3,8 +3,8 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import QLocale, Qt
-from PyQt5.QtWidgets import QSpinBox
+from qtpy.QtCore import QLocale, Qt
+from qtpy.QtWidgets import QSpinBox
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import EditableSpinBoxModel

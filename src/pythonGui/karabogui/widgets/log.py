@@ -5,13 +5,13 @@
 #############################################################################
 from collections import namedtuple
 
-from PyQt5.QtCore import (pyqtSlot, QAbstractTableModel, QDate, QDateTime,
-                          QModelIndex, Qt)
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import (QAbstractItemView, QDateTimeEdit,
-                             QFormLayout, QFrame, QGroupBox, QHBoxLayout,
-                             QLabel, QLineEdit, QPushButton, QTableView,
-                             QToolButton, QVBoxLayout, QWidget)
+from qtpy.QtCore import (Slot, QAbstractTableModel, QDate, QDateTime,
+                         QModelIndex, Qt)
+from qtpy.QtGui import QColor
+from qtpy.QtWidgets import (QAbstractItemView, QDateTimeEdit,
+                            QFormLayout, QFrame, QGroupBox, QHBoxLayout,
+                            QLabel, QLineEdit, QPushButton, QTableView,
+                            QToolButton, QVBoxLayout, QWidget)
 
 from karabogui import icons
 from karabogui.events import broadcast_event, KaraboEvent
@@ -241,7 +241,7 @@ class LogWidget(QWidget):
         self.logs = self.logs[:-10000]
         self.onFilterChanged()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def onFilterOptionVisible(self, checked):
         """This slot is called from here when the filter options should be
         visible or not.
@@ -257,7 +257,7 @@ class LogWidget(QWidget):
 
         self.filterWidget.setVisible(checked)
 
-    @pyqtSlot()
+    @Slot()
     def onFilterChanged(self):
         self.queryModel.setList(self.filter(self.logs))
 
@@ -300,7 +300,7 @@ class LogWidget(QWidget):
 
         return []
 
-    @pyqtSlot(QModelIndex)
+    @Slot(QModelIndex)
     def onItemDoubleClicked(self, index):
         value = index.data()
         if value is None:
@@ -309,7 +309,7 @@ class LogWidget(QWidget):
         deviceId = self.queryModel.data(index, Qt.DisplayRole)
         broadcast_event(KaraboEvent.ShowDevice, {'deviceId': deviceId})
 
-    @pyqtSlot()
+    @Slot()
     def onSaveToFile(self):
         """Write current database content to a file """
         filename = getSaveFileName(
@@ -324,7 +324,7 @@ class LogWidget(QWidget):
             for log in self.logs:
                 out.write("{0} | {1} | {2} | {3} | {4} | {5}#\n".format(*log))
 
-    @pyqtSlot()
+    @Slot()
     def onClearLog(self):
         self.logs = []
         self.onFilterChanged()

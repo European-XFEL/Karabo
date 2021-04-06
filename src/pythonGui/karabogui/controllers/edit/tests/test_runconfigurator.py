@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt
+from qtpy.QtCore import Qt
 
 from karabo.common.api import (
     KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_ROW_SCHEMA)

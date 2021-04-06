@@ -6,10 +6,10 @@
 from collections import OrderedDict
 from functools import partial
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QRect, Qt, QModelIndex, QPoint
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import (QAbstractItemDelegate, QAbstractItemView, QAction,
-                             QMenu, QTreeView)
+from qtpy.QtCore import Signal, Slot, QRect, Qt, QModelIndex, QPoint
+from qtpy.QtGui import QCursor
+from qtpy.QtWidgets import (QAbstractItemDelegate, QAbstractItemView, QAction,
+                            QMenu, QTreeView)
 
 from karabo.common.api import (
     KARABO_SCHEMA_ALIAS, KARABO_SCHEMA_DESCRIPTION,
@@ -38,7 +38,7 @@ from .utils import get_proxy_value
 class ConfigurationTreeView(QTreeView):
     """A tree view for `Configuration` instances
     """
-    itemSelectionChanged = pyqtSignal()
+    itemSelectionChanged = Signal()
 
     def __init__(self, parent=None):
         super(ConfigurationTreeView, self).__init__(parent)
@@ -222,7 +222,7 @@ class ConfigurationTreeView(QTreeView):
             if index.flags() & Qt.ItemIsEditable == Qt.ItemIsEditable:
                 return index
 
-    @pyqtSlot(QPoint)
+    @Slot(QPoint)
     def _show_context_menu(self, event):
         """Show a custom context menu
         """
@@ -245,7 +245,7 @@ class ConfigurationTreeView(QTreeView):
             menu.addAction(acResetToDefault)
             menu.exec(QCursor.pos())
 
-    @pyqtSlot(object)
+    @Slot(object)
     def _reset_to_default(self, proxy):
         """Reset the value of the given `proxy` to the default
         """
@@ -258,7 +258,7 @@ class ConfigurationTreeView(QTreeView):
                 proxy.value = default_value
             self.model().layoutChanged.emit()
 
-    @pyqtSlot(QModelIndex, QModelIndex)
+    @Slot(QModelIndex, QModelIndex)
     def _update_popup_contents(self, topLeft, bottomRight):
         """When the data in the model changes, blindly update the popup widget
         if it happens to be showing.

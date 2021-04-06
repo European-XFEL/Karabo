@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from PyQt5.QtWidgets import QDialog
+from qtpy.QtWidgets import QDialog
 
 from karabo.native import Configurable, VectorString
 from karabogui.binding.api import apply_default_configuration

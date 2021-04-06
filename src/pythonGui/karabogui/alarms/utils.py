@@ -3,7 +3,7 @@
 # Created on May 10, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import QDateTime
+from qtpy.QtCore import QDateTime
 
 from karabo.native import Timestamp
 from .const import (ACKNOWLEDGEABLE, ALARM_DATA, ALARM_NONE, ALARM_TYPE,

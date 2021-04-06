@@ -1,8 +1,8 @@
 from functools import partial
 
-from PyQt5.QtCore import QPoint, QRect, QRectF, QSize, Qt, pyqtSlot
-from PyQt5.QtGui import QColor, QPainter, QPen
-from PyQt5.QtWidgets import QAction, QDialog, QPushButton, QSizePolicy
+from qtpy.QtCore import QPoint, QRect, QRectF, QSize, Qt, Slot
+from qtpy.QtGui import QColor, QPainter, QPen
+from qtpy.QtWidgets import QAction, QDialog, QPushButton, QSizePolicy
 from traits.api import Instance, Undefined
 
 from karabogui import messagebox
@@ -97,7 +97,7 @@ class LinkWidget(QPushButton):
             _get_device_id(self.model.keys), self.model.target)
         self.setToolTip(tooltip)
 
-    @pyqtSlot()
+    @Slot()
     def _handle_click(self):
         device_id = _get_device_id(self.model.keys)
         device = get_topology().get_device(device_id)

@@ -3,9 +3,9 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPalette, QValidator
-from PyQt5.QtWidgets import QAction, QInputDialog, QLineEdit
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QPalette, QValidator
+from qtpy.QtWidgets import QAction, QInputDialog, QLineEdit
 from traits.api import Instance, Int, on_trait_change, Str
 
 from karabo.common.api import KARABO_SCHEMA_REGEX

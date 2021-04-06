@@ -10,9 +10,9 @@ import sys
 
 from lxml import etree
 import pkg_resources
-from PyQt5 import uic
-from PyQt5.QtCore import QProcess, pyqtSlot, Qt
-from PyQt5.QtWidgets import QDialog
+from qtpy import uic
+from qtpy.QtCore import QProcess, Slot, Qt
+from qtpy.QtWidgets import QDialog
 
 from karabogui import icons
 from karabogui.controllers.util import load_extensions
@@ -257,13 +257,13 @@ class UpdateDialog(QDialog):
     # --------------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot()
+    @Slot()
     def on_bt_refresh_clicked(self):
         self.bt_refresh.setEnabled(False)
         self.refresh_versions()
         self.bt_refresh.setEnabled(True)
 
-    @pyqtSlot()
+    @Slot()
     def on_bt_stop_clicked(self):
         """Kills the running process"""
         self.bt_stop.setEnabled(False)
@@ -272,14 +272,14 @@ class UpdateDialog(QDialog):
             self._clear_process()
         self.bt_stop.setEnabled(True)
 
-    @pyqtSlot()
+    @Slot()
     def on_bt_uninstall_clicked(self):
         self.bt_uninstall.setEnabled(False)
         self.bt_update.setEnabled(False)
         self.bt_stop.setEnabled(True)
         self._start_uninstall_process()
 
-    @pyqtSlot()
+    @Slot()
     def on_bt_update_clicked(self):
         """Updates gui extensions to the latest tag"""
         self.bt_refresh.setEnabled(False)
@@ -287,14 +287,14 @@ class UpdateDialog(QDialog):
         self.bt_stop.setEnabled(True)
         self._start_update_process()
 
-    @pyqtSlot()
+    @Slot()
     def _on_output(self):
         while self._process.canReadLine():
             line = self._process.readLine()
             data = line.data().decode('utf-8')
             self._update_log(data)
 
-    @pyqtSlot()
+    @Slot()
     def _on_finished(self, is_update):
         """Called when the uninstall finishes or crashes"""
         self.bt_refresh.setEnabled(True)
@@ -312,7 +312,7 @@ class UpdateDialog(QDialog):
         importlib.reload(pkg_resources)
         load_extensions()
 
-    @pyqtSlot()
+    @Slot()
     def _on_update_finished(self):
         """Called whenever the process finishes or crashes.
 

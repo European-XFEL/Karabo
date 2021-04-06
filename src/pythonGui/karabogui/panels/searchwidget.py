@@ -8,9 +8,9 @@ from collections import deque
 import os.path as op
 import weakref
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QWidget
+from qtpy import uic
+from qtpy.QtCore import Slot
+from qtpy.QtWidgets import QWidget
 
 from karabogui import icons
 
@@ -84,7 +84,7 @@ class SearchBar(QWidget):
     # -----------------------------------------
     # Qt Slots
 
-    @pyqtSlot(str)
+    @Slot(str)
     def _filter_changed(self, text):
         """ Slot is called whenever the search filter text was changed"""
         if self.model is None:
@@ -111,12 +111,12 @@ class SearchBar(QWidget):
         self.arrow_left.setEnabled(enable)
         self.arrow_right.setEnabled(enable)
 
-    @pyqtSlot()
+    @Slot()
     def _update_filter(self):
         text = self.label_filter.text()
         self._filter_changed(text)
 
-    @pyqtSlot()
+    @Slot()
     def _arrow_left_clicked(self):
         """rotate index array to the right, so the first index point to the
         previous found node
@@ -124,7 +124,7 @@ class SearchBar(QWidget):
         self.index_array.rotate(1)
         self._select_node()
 
-    @pyqtSlot()
+    @Slot()
     def _arrow_right_clicked(self):
         """rotate index array to the left, so the first index point to the
         next found node

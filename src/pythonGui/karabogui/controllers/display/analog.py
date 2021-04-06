@@ -4,9 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QColor, QPainter, QPainterPath, QPen
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtCore import Qt, QRectF
+from qtpy.QtGui import QColor, QPainter, QPainterPath, QPen
+from qtpy.QtWidgets import QWidget
 from traits.api import Instance
 
 from karabo.common.api import (

@@ -5,8 +5,8 @@
 #############################################################################
 import os.path as op
 
-from PyQt5 import uic
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QHBoxLayout
+from qtpy import uic
+from qtpy.QtWidgets import QDialog, QDialogButtonBox, QHBoxLayout
 
 from karabogui.controllers.edit.table import EditableTableElement
 

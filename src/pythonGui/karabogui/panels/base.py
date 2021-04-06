@@ -5,10 +5,10 @@
 #############################################################################
 from enum import Enum
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt5.QtGui import QPainter
-from PyQt5.QtPrintSupport import QPrinter, QPrintPreviewDialog
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Signal, Slot, Qt
+from qtpy.QtGui import QPainter
+from qtpy.QtPrintSupport import QPrinter, QPrintPreviewDialog
+from qtpy.QtWidgets import (
     QAction, QFrame, QHBoxLayout, QSizePolicy, QVBoxLayout, QWidget)
 from karabogui import icons
 from karabogui.events import KaraboEvent, broadcast_event
@@ -30,7 +30,7 @@ class BasePanelWidget(QFrame):
     independent top-level windows or tabs within the main window of the Karabo
     gui.
     """
-    signalPanelClosed = pyqtSignal(str)
+    signalPanelClosed = Signal(str)
 
     def __init__(self, title, allow_closing=False):
         super(BasePanelWidget, self).__init__(parent=None)
@@ -110,7 +110,7 @@ class BasePanelWidget(QFrame):
     # --------------------------------------
     # Qt slots and callbacks
 
-    @pyqtSlot()
+    @Slot()
     def handlePreview(self):
         printer = QPrinter()
         printer.setPageSize(QPrinter.A4)
@@ -120,7 +120,7 @@ class BasePanelWidget(QFrame):
         dialog.paintRequested.connect(self.handle_paint_request)
         dialog.exec_()
 
-    @pyqtSlot(QPrinter)
+    @Slot(QPrinter)
     def handle_paint_request(self, printer):
         """Executed for each paint request in the print preview dialog"""
         pixmap = self.grab()

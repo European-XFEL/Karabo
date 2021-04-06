@@ -1,6 +1,6 @@
-from PyQt5.QtCore import pyqtSlot, Qt, QTimer
-from PyQt5.QtGui import QPainter, QPen, QColor, QPixmap
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtCore import Slot, Qt, QTimer
+from qtpy.QtGui import QPainter, QPen, QColor, QPixmap
+from qtpy.QtWidgets import QWidget
 
 from karabogui.sceneview.const import GRID_STEP
 
@@ -57,7 +57,7 @@ class GridView(QWidget):
         self._update_timer.start()
         super(GridView, self).resizeEvent(event)
 
-    @pyqtSlot()
+    @Slot()
     def _needs_update(self):
         self._update_timer.stop()
         self.showGrid(self._visible)

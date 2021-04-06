@@ -6,7 +6,7 @@
 from functools import partial
 from collections import defaultdict
 
-from PyQt5.QtWidgets import QAction, QDialog, QMenu
+from qtpy.QtWidgets import QAction, QDialog, QMenu
 from traits.api import Instance, List, on_trait_change
 
 from karabo.common.api import walk_traits_object

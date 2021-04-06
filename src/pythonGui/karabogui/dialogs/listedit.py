@@ -6,9 +6,9 @@
 from collections import OrderedDict
 
 import numpy as np
-from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtGui import QFontMetrics
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Slot, Qt
+from qtpy.QtGui import QFontMetrics
+from qtpy.QtWidgets import (
     QDialog, QPushButton, QListWidget, QListWidgetItem, QInputDialog,
     QHBoxLayout, QVBoxLayout, QApplication)
 
@@ -185,7 +185,7 @@ class ListEditDialog(QDialog):
     # ----------------------------------------------------------------------
     # Slots
 
-    @pyqtSlot()
+    @Slot()
     def _on_add_clicked(self):
         if (self._maxSize is not None
                 and self._list_widget.count() == self._maxSize):
@@ -208,7 +208,7 @@ class ListEditDialog(QDialog):
         self._list_widget.setCurrentRow(self._list_widget.count() - 1)
         self._on_update_buttons()
 
-    @pyqtSlot()
+    @Slot()
     def _on_edit_clicked(self):
         if len(self._allowed_choices) < 1:
             value = self._retrieve_any_string(
@@ -226,7 +226,7 @@ class ListEditDialog(QDialog):
         currentItem.setText(str(value))
         self._on_update_buttons()
 
-    @pyqtSlot()
+    @Slot()
     def _on_remove_clicked(self):
         if (self._minSize is not None
                 and self._list_widget.count() == self._minSize):
@@ -236,7 +236,7 @@ class ListEditDialog(QDialog):
         self._list_widget.takeItem(self._list_widget.currentRow())
         self._on_update_buttons()
 
-    @pyqtSlot()
+    @Slot()
     def _on_moveup_clicked(self):
         row = self._list_widget.currentRow()
         widget = self._list_widget
@@ -252,7 +252,7 @@ class ListEditDialog(QDialog):
             widget.setCurrentRow(row - 1)
             self._on_update_buttons()
 
-    @pyqtSlot()
+    @Slot()
     def _on_movedown_clicked(self):
         row = self._list_widget.currentRow()
         widget = self._list_widget
@@ -267,7 +267,7 @@ class ListEditDialog(QDialog):
             widget.setCurrentRow(row + 1)
             self._on_update_buttons()
 
-    @pyqtSlot()
+    @Slot()
     def _on_update_buttons(self):
         hasItems = self._list_widget.count() > 0
         self._edit_button.setEnabled(hasItems)

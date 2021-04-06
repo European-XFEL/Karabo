@@ -3,7 +3,7 @@
 # Created on November 29, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtWidgets import QDialog, QMessageBox
+from qtpy.QtWidgets import QDialog, QMessageBox
 
 from karabo.common.api import set_modified_flag, walk_traits_object
 from karabo.common.macro_sanity_check import validate_macro

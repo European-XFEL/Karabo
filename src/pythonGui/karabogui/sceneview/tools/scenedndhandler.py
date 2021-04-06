@@ -6,8 +6,8 @@
 from abc import abstractmethod
 import json
 
-from PyQt5.QtCore import QPoint
-from PyQt5.QtWidgets import QBoxLayout
+from qtpy.QtCore import QPoint
+from qtpy.QtWidgets import QBoxLayout
 from traits.api import ABCHasStrictTraits
 
 from karabogui.binding.api import ImageBinding, SlotBinding

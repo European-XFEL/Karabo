@@ -7,10 +7,10 @@ from collections import namedtuple
 from contextlib import contextmanager
 import weakref
 
-from PyQt5.QtCore import (
-    QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt, pyqtSlot)
-from PyQt5.QtGui import QBrush, QColor
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import (
+    QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt, Slot)
+from qtpy.QtGui import QBrush, QColor
+from qtpy.QtWidgets import (
     QHBoxLayout, QHeaderView, QLineEdit, QMessageBox, QPushButton, QStyle,
     QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
 
@@ -122,7 +122,7 @@ class ButtonDelegate(QStyledItemDelegate):
         else:
             super(ButtonDelegate, self).paint(painter, option, index)
 
-    @pyqtSlot(QModelIndex)
+    @Slot(QModelIndex)
     def cellClicked(self, index):
         if not index.isValid() or not self.clickable:
             return

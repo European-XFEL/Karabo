@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt5.QtCore import QPointF
+from qtpy.QtCore import QPointF
 
 from karabogui.testing import GuiTestCase
 

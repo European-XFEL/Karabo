@@ -1,8 +1,8 @@
 import os
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QDialog
+from qtpy import uic
+from qtpy.QtCore import Slot
+from qtpy.QtWidgets import QDialog
 
 
 class HistogramDialog(QDialog):
@@ -26,7 +26,7 @@ class HistogramDialog(QDialog):
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
 
-    @pyqtSlot()
+    @Slot()
     def check_scales(self):
         state = self.ui_auto.isChecked()
         self.ui_start.setEnabled(not state)

@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-from PyQt5.QtWidgets import (
+from qtpy.QtWidgets import (
     QAction, QMessageBox, QStackedLayout, QToolButton, QWidget
 )
 from traits.api import Instance, List

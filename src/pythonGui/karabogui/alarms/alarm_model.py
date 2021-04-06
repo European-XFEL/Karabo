@@ -3,7 +3,7 @@
 # Created on September 22, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import QAbstractTableModel, QModelIndex, Qt
+from qtpy.QtCore import QAbstractTableModel, QModelIndex, Qt
 
 from karabo.common.api import KARABO_ALARM_SERVICE
 

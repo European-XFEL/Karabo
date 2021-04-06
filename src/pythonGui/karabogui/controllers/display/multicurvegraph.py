@@ -8,7 +8,7 @@ from itertools import cycle, product
 from weakref import WeakValueDictionary
 
 import numpy as np
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtWidgets import QWidget
 from traits.api import Bool, Callable, Dict, Instance, List
 
 from karabo.common.scenemodel.api import MultiCurveGraphModel

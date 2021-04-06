@@ -5,9 +5,9 @@ from xml.etree.ElementTree import (
     Element, ElementTree, TreeBuilder, XMLParser, register_namespace
 )
 
-from PyQt5.QtCore import QBuffer
-from PyQt5.QtSvg import QSvgWidget
-from PyQt5.QtWidgets import QAction, QInputDialog
+from qtpy.QtCore import QBuffer
+from qtpy.QtSvg import QSvgWidget
+from qtpy.QtWidgets import QAction, QInputDialog
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayIconsetModel

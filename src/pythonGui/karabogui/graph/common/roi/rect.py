@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt5.QtCore import QRectF, QSizeF
+from qtpy.QtCore import QRectF, QSizeF
 from pyqtgraph import Point
 
 from .base import KaraboROI

@@ -5,10 +5,10 @@
 #############################################################################
 import os.path as op
 
-from PyQt5 import uic
-from PyQt5.QtCore import QDateTime, pyqtSlot, QPoint, QSize, Qt
-from PyQt5.QtGui import QPixmap, QPen, QPainter, QIcon
-from PyQt5.QtWidgets import (
+from qtpy import uic
+from qtpy.QtCore import QDateTime, Slot, QPoint, QSize, Qt
+from qtpy.QtGui import QPixmap, QPen, QPainter, QIcon
+from qtpy.QtWidgets import (
     QColorDialog, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
     QTableWidgetItem)
 
@@ -128,14 +128,14 @@ class PenDialog(QDialog):
                     return style
         return pen.style()
 
-    @pyqtSlot()
+    @Slot()
     def on_pbStrokeColor_clicked(self):
         color = QColorDialog.getColor(self.pen.color())
         if color.isValid():
             self.pen.setColor(color)
             self.set_color()
 
-    @pyqtSlot()
+    @Slot()
     def on_pbFillColor_clicked(self):
         # The button is now only visible when `self.brush` is not None.
         # Just in case, do nothing.
@@ -276,7 +276,7 @@ class ReplaceDialog(QDialog):
             retval[self.twTable.item(i, 0).text()] = item_text
         return retval
 
-    @pyqtSlot(QTableWidgetItem)
+    @Slot(QTableWidgetItem)
     def onItemChanged(self, item):
         if item.column() != 1:
             return
@@ -337,21 +337,21 @@ class SceneLinkDialog(QDialog):
     def selectedTargetWindow(self):
         return self._selectedTargetWin
 
-    @pyqtSlot(int)
+    @Slot(int)
     def on_lwScenes_currentRowChanged(self, index):
         self._selectedScene = index
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def on_dialogRadio_clicked(self, checked=False):
         if checked:
             self._selectedTargetWin = SceneTargetWindow.Dialog
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def on_mainRadio_clicked(self, checked=False):
         if checked:
             self._selectedTargetWin = SceneTargetWindow.MainWindow
 
-    @pyqtSlot(str)
+    @Slot(str)
     def on_leFilter_textChanged(self, text):
         self._select_item(text, Qt.MatchStartsWith)
 
@@ -416,12 +416,12 @@ class ConfigurationFromPastDialog(QDialog):
         if not data.get("status"):
             self.close()
 
-    @pyqtSlot()
+    @Slot()
     def _show_device(self):
         broadcast_event(KaraboEvent.ShowDevice, {'deviceId': self.instance_id,
                                                  'showTopology': True})
 
-    @pyqtSlot()
+    @Slot()
     def accept(self):
         """The dialog was accepted and we can request a configuration"""
         self._request_configuration()
@@ -460,19 +460,19 @@ class ConfigurationFromPastDialog(QDialog):
         time = self._get_time_information(selected_time_point)
         self.ui_timepoint.setDateTime(time)
 
-    @pyqtSlot()
+    @Slot()
     def on_ui_one_week_clicked(self):
         self._set_timepoint(ONE_WEEK)
 
-    @pyqtSlot()
+    @Slot()
     def on_ui_one_day_clicked(self):
         self._set_timepoint(ONE_DAY)
 
-    @pyqtSlot()
+    @Slot()
     def on_ui_one_hour_clicked(self):
         self._set_timepoint(ONE_HOUR)
 
-    @pyqtSlot()
+    @Slot()
     def on_ui_ten_minutes_clicked(self):
         self._set_timepoint(TEN_MINUTES)
 

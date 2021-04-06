@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QRect
+from qtpy.QtCore import QRect
 from traits.api import HasStrictTraits, List
 
 from .tools.api import is_resizable

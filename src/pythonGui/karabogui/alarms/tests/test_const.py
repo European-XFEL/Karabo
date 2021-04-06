@@ -1,8 +1,8 @@
 from unittest import mock, skip
 
 from pytest import raises as assert_raises
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtCore import QSize
+from qtpy.QtGui import QIcon, QPixmap
+from qtpy.QtCore import QSize
 
 from karabogui.testing import GuiTestCase
 from .. import const

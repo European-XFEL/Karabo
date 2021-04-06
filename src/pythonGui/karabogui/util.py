@@ -10,10 +10,10 @@ import webbrowser
 import weakref
 
 from dateutil.tz import tzlocal, tzutc
-from PyQt5.QtCore import QEvent, QEventLoop, QObject, Qt, QSize
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import QEvent, QEventLoop, QObject, Qt, QSize
+from qtpy.QtWidgets import (
     QApplication, QDialog, QFileDialog, QHeaderView, QLabel)
-from PyQt5.QtGui import QCursor, QMovie, QValidator
+from qtpy.QtGui import QCursor, QMovie, QValidator
 
 from karabo.native import decodeXML, Hash, writeXML
 from karabogui import globals as krb_globals, icons, messagebox

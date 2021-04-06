@@ -4,8 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtCore import Qt, QModelIndex
-from PyQt5.QtWidgets import QAbstractItemView, QMenu
+from qtpy.QtCore import Qt, QModelIndex
+from qtpy.QtWidgets import QAbstractItemView, QMenu
 from traits.api import Bool, Dict, Instance, WeakRef
 
 from karabo.common.api import (

@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt5.QtGui import QImage
+from qtpy.QtGui import QImage
 
 from karabogui.graph.image.base import KaraboImageView
 from karabogui.testing import GuiTestCase

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtWidgets import QWidget
 from traits.api import (
     HasStrictTraits, Bool, Instance, List, Property, on_trait_change)
 

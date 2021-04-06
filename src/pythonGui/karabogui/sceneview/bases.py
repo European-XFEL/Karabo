@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from PyQt5.QtGui import QIcon, QKeySequence
+from qtpy.QtGui import QIcon, QKeySequence
 from traits.api import ABCHasStrictTraits, Bool, Instance, Int, String
 
 

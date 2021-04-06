@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PyQt5.QtGui import QFont
+from qtpy.QtGui import QFont
 
 from karabo.common.scenemodel.api import SCENE_FONT_FAMILY, SCENE_FONT_SIZE
 from karabogui.const import GUI_DPI_FACTOR

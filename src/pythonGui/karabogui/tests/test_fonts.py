@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QFont
+from qtpy.QtGui import QFont
 
 from ..fonts import FONT_STYLE_HINTS, get_qfont
 

@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, pyqtSignal
+from qtpy.QtCore import Qt, Signal
 from pyqtgraph import AxisItem as PgAxisItem, DateAxisItem
 
 from karabogui.graph.common.const import (
@@ -15,7 +15,7 @@ def get_axis_font(size):
 
 
 class AxisItem(PgAxisItem):
-    axisDoubleClicked = pyqtSignal()
+    axisDoubleClicked = Signal()
 
     axisStyle = {
         "autoExpandTextSpace": False,
@@ -70,7 +70,7 @@ class AxisItem(PgAxisItem):
 
 
 class TimeAxisItem(DateAxisItem):
-    axisDoubleClicked = pyqtSignal()
+    axisDoubleClicked = Signal()
 
     axisStyle = {
         "autoExpandTextSpace": False,

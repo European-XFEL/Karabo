@@ -4,10 +4,10 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QFontMetrics
-from PyQt5.QtSvg import QSvgWidget
-from PyQt5.QtWidgets import QFrame, QLabel, QLineEdit
+from qtpy.QtCore import QSize, Qt
+from qtpy.QtGui import QFontMetrics
+from qtpy.QtSvg import QSvgWidget
+from qtpy.QtWidgets import QFrame, QLabel, QLineEdit
 
 from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.fonts import substitute_font

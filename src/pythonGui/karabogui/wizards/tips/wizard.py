@@ -3,9 +3,9 @@ from lxml import etree
 from pathlib import Path
 import random
 
-from PyQt5.QtCore import pyqtSlot, QSize, Qt
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Slot, QSize, Qt
+from qtpy.QtGui import QPixmap
+from qtpy.QtWidgets import (
     QCheckBox, QLabel, QPushButton, QVBoxLayout, QWizard, QWizardPage)
 
 from karabogui import icons
@@ -85,7 +85,7 @@ class TipsTricksWizard(QWizard):
 
             self.addPage(page)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def update_start(self, state):
         show_wizard = not bool(state)
         get_config()['wizard'] = show_wizard

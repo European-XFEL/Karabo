@@ -1,9 +1,9 @@
 from enum import Enum
 import json
 
-from PyQt5.QtCore import QMimeData, Qt
-from PyQt5.QtGui import QPalette
-from PyQt5.QtWidgets import QStyle
+from qtpy.QtCore import QMimeData, Qt
+from qtpy.QtGui import QPalette
+from qtpy.QtWidgets import QStyle
 
 from karabo.common.api import (
     KARABO_SCHEMA_DAQ_POLICY, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,

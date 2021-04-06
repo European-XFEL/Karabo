@@ -3,7 +3,7 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtWidgets import QMenu
+from qtpy.QtWidgets import QMenu
 from traits.api import Instance, List, on_trait_change
 
 from karabo.common.project.api import ProjectModel

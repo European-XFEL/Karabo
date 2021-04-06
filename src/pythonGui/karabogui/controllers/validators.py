@@ -3,7 +3,7 @@ import re
 
 from traits.api import TraitError
 import numpy as np
-from PyQt5.QtGui import QValidator
+from qtpy.QtGui import QValidator
 
 from karabogui.binding.api import (
     get_min_max, get_min_max_size, VectorBoolBinding,
