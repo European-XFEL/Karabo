@@ -10,7 +10,6 @@ from karabogui.singletons.api import get_mediator
 class KaraboEvent(Enum):
     AccessLevelChanged = "Global Access Level changed"
     BigDataProcessing = "Big data delay"
-    BrokerInformationUpdate = "Broker information update"
     ClearConfigurator = "Clear configurator"
     ConnectMacroInstance = "Connect macro instance"
     CreateMainWindow = "Create the main window"
@@ -38,6 +37,7 @@ class KaraboEvent(Enum):
     ProjectItemsSaved = "Project items saved"
     ProjectManagersList = "Project managers list"
     ProjectUpdated = "Project Updated"
+    ServerInformationUpdate = "Server information update"
     ShowDaemonService = "Show daemon service"
     ShowConfiguration = "Show configuration"
     ShowConfigurationFromName = "Show Configuration From Name"
