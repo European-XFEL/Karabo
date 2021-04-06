@@ -5,7 +5,7 @@
 #############################################################################
 import os.path as op
 
-from PyQt5.QtWidgets import QBoxLayout
+from qtpy.QtWidgets import QBoxLayout
 
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, LabelModel, LineModel)

@@ -1,6 +1,6 @@
-from PyQt5 import uic
-from PyQt5.QtCore import QAbstractItemModel, QModelIndex, Qt
-from PyQt5.QtWidgets import QAbstractItemView, QDialog, QHeaderView
+from qtpy import uic
+from qtpy.QtCore import QAbstractItemModel, QModelIndex, Qt
+from qtpy.QtWidgets import QAbstractItemView, QDialog, QHeaderView
 from traits.api import (
     Any, Bool, HasStrictTraits, Instance, List, Property, String)
 

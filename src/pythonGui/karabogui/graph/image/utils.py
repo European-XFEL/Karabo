@@ -1,10 +1,10 @@
 from functools import partial
 
 import numpy as np
-from PyQt5.QtCore import QPointF, QRectF
-from PyQt5.QtGui import (
+from qtpy.QtCore import QPointF, QRectF
+from qtpy.QtGui import (
     QBrush, QColor, QIcon, QLinearGradient, QPainter, QPixmap)
-from PyQt5.QtWidgets import QActionGroup, QAction, QMenu
+from qtpy.QtWidgets import QActionGroup, QAction, QMenu
 
 from karabogui.graph.common.api import COLORMAPS
 from karabogui.graph.common.const import ICON_SIZE

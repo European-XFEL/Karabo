@@ -2,8 +2,8 @@ import argparse
 import re
 import sys
 
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import qApp
+from qtpy.QtCore import QTimer
+from qtpy.QtWidgets import qApp
 
 from karabo.common.api import Capabilities
 from karabogui import messagebox

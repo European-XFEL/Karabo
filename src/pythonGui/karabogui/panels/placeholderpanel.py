@@ -3,7 +3,7 @@
 # Created on May 20, 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtWidgets import QLabel
+from qtpy.QtWidgets import QLabel
 
 from .base import BasePanelWidget
 

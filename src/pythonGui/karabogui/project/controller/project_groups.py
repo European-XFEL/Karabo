@@ -6,7 +6,7 @@
 from functools import partial
 import os.path as op
 
-from PyQt5.QtWidgets import QAction, QDialog, QMenu
+from qtpy.QtWidgets import QAction, QDialog, QMenu
 from traits.api import Instance, Property, String
 
 from karabo.common.api import Capabilities

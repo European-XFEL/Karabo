@@ -3,7 +3,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtWidgets import QAction, QInputDialog
+from qtpy.QtWidgets import QAction, QInputDialog
 from traits.api import ArrayOrNone, Instance, WeakRef
 
 from karabogui.binding.api import (

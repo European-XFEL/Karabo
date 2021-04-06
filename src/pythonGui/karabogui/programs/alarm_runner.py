@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from PyQt5.QtWidgets import QApplication
+from qtpy.QtWidgets import QApplication
 
 from karabogui.panels.alarmpanel import AlarmPanel
 from karabogui.programs.base import create_gui_app, init_gui

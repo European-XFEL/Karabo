@@ -1,8 +1,8 @@
 import numpy as np
 from pyqtgraph import AxisItem, ColorMap, GraphicsWidget, ImageItem, ViewBox
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPoint, Qt
-from PyQt5.QtGui import QTransform
-from PyQt5.QtWidgets import QDialog, QGraphicsGridLayout, QMenu
+from qtpy.QtCore import Signal, Slot, QPoint, Qt
+from qtpy.QtGui import QTransform
+from qtpy.QtWidgets import QDialog, QGraphicsGridLayout, QMenu
 
 from karabogui.fonts import get_qfont
 from karabogui.graph.common.api import COLORMAPS
@@ -15,7 +15,7 @@ NUM_SAMPLES = 256
 
 
 class ColorBarWidget(GraphicsWidget):
-    levelsChanged = pyqtSignal(object)
+    levelsChanged = Signal(object)
 
     def __init__(self, imageItem, parent=None):
         super().__init__(parent=parent)
@@ -50,7 +50,7 @@ class ColorBarWidget(GraphicsWidget):
     # ---------------------------------------------------------------------
     # PyQt slots
 
-    @pyqtSlot()
+    @Slot()
     def _show_levels_dialog(self):
         image_range = self.imageItem.image.min(), self.imageItem.image.max()
         dialog = LevelsDialog(self.imageItem.levels,

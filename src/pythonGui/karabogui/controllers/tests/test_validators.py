@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QValidator
+from qtpy.QtGui import QValidator
 
 from karabogui.binding.api import (
     FloatBinding, VectorFloatBinding, VectorUint8Binding)

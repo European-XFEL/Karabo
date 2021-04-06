@@ -1,6 +1,6 @@
 import contextlib
 
-from PyQt5.QtCore import QAbstractItemModel, QModelIndex
+from qtpy.QtCore import QAbstractItemModel, QModelIndex
 from traits.api import HasStrictTraits, WeakRef
 
 

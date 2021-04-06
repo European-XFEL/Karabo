@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from PyQt5.QtWidgets import QToolButton, QMessageBox
+from qtpy.QtWidgets import QToolButton, QMessageBox
 from unittest.mock import MagicMock
 
 from karabo.common.states import State

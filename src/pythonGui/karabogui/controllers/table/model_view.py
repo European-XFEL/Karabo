@@ -6,9 +6,9 @@
 import copy
 import json
 
-from PyQt5.QtCore import Qt, QAbstractTableModel, QModelIndex
-from PyQt5.QtGui import QBrush, QColor
-from PyQt5.QtWidgets import QTableView
+from qtpy.QtCore import Qt, QAbstractTableModel, QModelIndex
+from qtpy.QtGui import QBrush, QColor
+from qtpy.QtWidgets import QTableView
 
 from karabogui.binding.api import (
     BoolBinding, get_default_value, StringBinding, VectorBinding)

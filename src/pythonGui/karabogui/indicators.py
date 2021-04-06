@@ -5,8 +5,8 @@
 #############################################################################
 from enum import Enum
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QColor, QIcon, QPainter, QPixmap
 
 from karabo.common.api import State, ProxyStatus
 from . import icons

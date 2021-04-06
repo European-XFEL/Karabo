@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QPushButton, QVBoxLayout, QWidget
 
 from karabo.common.api import (
     KARABO_DAEMON_MANAGER, KARABO_SCHEMA_DEFAULT_SCENE)

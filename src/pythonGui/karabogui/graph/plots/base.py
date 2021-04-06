@@ -1,8 +1,8 @@
 from functools import partial
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QSize
-from PyQt5.QtGui import QColor, QPalette
-from PyQt5.QtWidgets import QAction, QGridLayout, QSizePolicy, QWidget
+from qtpy.QtCore import Signal, Slot, QSize
+from qtpy.QtGui import QColor, QPalette
+from qtpy.QtWidgets import QAction, QGridLayout, QSizePolicy, QWidget
 from pyqtgraph import GraphicsView, mkPen, PlotItem, mkBrush
 
 from karabogui.actions import build_qaction, KaraboAction
@@ -44,7 +44,7 @@ class KaraboPlotView(QWidget):
 
     This widget houses the plotItem and the toolbar for other tooling features
     """
-    stateChanged = pyqtSignal(object)
+    stateChanged = Signal(object)
 
     def __init__(self, axis=AxisType.Classic, actions=None, parent=None):
         super(KaraboPlotView, self).__init__(parent)
@@ -204,7 +204,7 @@ class KaraboPlotView(QWidget):
     # ----------------------------------------------------------------
     # Base Action Slots
 
-    @pyqtSlot(object, object, object)
+    @Slot(object, object, object)
     def check_action_callback(self, state, callback=None, name=None):
         if callback is not None:
             callback(state)
@@ -233,7 +233,7 @@ class KaraboPlotView(QWidget):
     def set_invert_y(self, state):
         self.plotItem.invertY(state)
 
-    @pyqtSlot()
+    @Slot()
     def configure_axes(self):
         config, ok = AxesLabelsDialog.get(self.configuration, parent=self)
         if ok:
@@ -244,7 +244,7 @@ class KaraboPlotView(QWidget):
             self.configuration.update(**config)
             self.stateChanged.emit(config)
 
-    @pyqtSlot()
+    @Slot()
     def configure_range_x(self):
         x_min, x_max = self.get_view_range_x()
         actual = {'x_min': x_min, 'x_max': x_max}
@@ -259,7 +259,7 @@ class KaraboPlotView(QWidget):
                 self.set_autorange_x(x_autorange)
             self.stateChanged.emit(config)
 
-    @pyqtSlot()
+    @Slot()
     def configure_range_y(self):
         y_min, y_max = self.get_view_range_y()
         actual = {'y_min': y_min, 'y_max': y_max}
@@ -274,7 +274,7 @@ class KaraboPlotView(QWidget):
                 self.set_autorange_y(autorange)
             self.stateChanged.emit(config)
 
-    @pyqtSlot()
+    @Slot()
     def configure_view(self):
         config, ok = GraphViewDialog.get(self.configuration, parent=self)
         if ok:
@@ -283,12 +283,12 @@ class KaraboPlotView(QWidget):
             self.configuration.update(**config)
             self.stateChanged.emit(config)
 
-    @pyqtSlot()
+    @Slot()
     def reset_range(self):
         self.reset_range_x()
         self.reset_range_y()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def toggle_data_symbols(self, show):
         """Toggle the data points on the plotItems"""
         self._show_symbols = show
@@ -427,7 +427,7 @@ class KaraboPlotView(QWidget):
 
         return self._roi
 
-    @pyqtSlot()
+    @Slot()
     def _set_roi_configuration(self):
         """Set ROI information to the model"""
         items = []
@@ -478,7 +478,7 @@ class KaraboPlotView(QWidget):
 
         return self._toolbar
 
-    @pyqtSlot(object)
+    @Slot(object)
     def export(self, export_type=ExportTool.Data):
         """Exports the data or image according to the desired format"""
         if export_type == ExportTool.Image:
@@ -699,7 +699,7 @@ class KaraboPlotView(QWidget):
     # -----------------------------------------------------------------------
     # ROI methods
 
-    @pyqtSlot(object)
+    @Slot(object)
     def _activate_roi_tool(self, tool):
         if tool is None:
             tool = ROITool.NoROI
@@ -731,7 +731,7 @@ class KaraboPlotView(QWidget):
         self.plotItem.vb.addItem(self._canvas, ignoreBounds=True)
         self._canvas.editingFinished.connect(partial(self._draw_roi, roi_tool))
 
-    @pyqtSlot(object)
+    @Slot(object)
     def _draw_roi(self, roi_tool, rect):
         self._deactivate_canvas()
         if rect.isValid():

@@ -1,8 +1,8 @@
 import os
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QDialog
+from qtpy import uic
+from qtpy.QtCore import Slot
+from qtpy.QtWidgets import QDialog
 
 from karabogui.validators import NumberValidator
 
@@ -44,7 +44,7 @@ class RangeDialog(QDialog):
         self.axis_auto = '{}_autorange'.format(axis)
         self.ui_axis.setText('Axis View: {}-axis'.format(axis))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _check_box_triggered(self, state):
         self.ui_min.setEnabled(not state)
         self.ui_max.setEnabled(not state)

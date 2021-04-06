@@ -5,9 +5,9 @@
 #############################################################################
 from enum import Enum
 
-from PyQt5.QtCore import QEvent, QRect, QSize, Qt
-from PyQt5.QtGui import QBrush, QColor, QDoubleValidator, QPalette, QValidator
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import QEvent, QRect, QSize, Qt
+from qtpy.QtGui import QBrush, QColor, QDoubleValidator, QPalette, QValidator
+from qtpy.QtWidgets import (
     QApplication, QAbstractItemDelegate, QComboBox, QDialog, QHBoxLayout,
     QLineEdit, QStyle, QStyleOptionButton, QStyledItemDelegate, QWidget
 )
