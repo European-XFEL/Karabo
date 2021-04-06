@@ -158,7 +158,7 @@ class MainWindow(QMainWindow):
         # Register to KaraboBroadcastEvent, Note: unregister_from_broadcasts is
         # not necessary
         event_map = {
-            KaraboEvent.BrokerInformationUpdate: self._event_broker_connection,
+            KaraboEvent.ServerInformationUpdate: self._event_server_connection,
             KaraboEvent.BigDataProcessing: self._event_big_data,
             KaraboEvent.DatabaseIsBusy: self._event_db_processing,
             KaraboEvent.MaximizePanel: self._event_container_maximized,
@@ -172,8 +172,8 @@ class MainWindow(QMainWindow):
     # -----------------------------------------------------------------------
     # Karabo Events
 
-    def _event_broker_connection(self, data):
-        self.update_broker_connection(data)
+    def _event_server_connection(self, data):
+        self.update_server_connection(data)
 
     def _event_network(self, data):
         status = data.get('status', False)
@@ -248,21 +248,18 @@ class MainWindow(QMainWindow):
 
     # -----------------------------------------------------------------------
 
-    def update_broker_connection(self, data=None):
+    def update_server_connection(self, data=None):
         """Update the status bar with our broker connection information
         """
         if data is not None:
-            info = 'KARABO TOPIC: <b>{}</b>'.format(data['topic'])
-            self.serverInfo.setText(info)
+            topic = data['topic']
             # Store this information in the config singleton!
-            get_config()["broker_topic"] = data['topic']
-
+            get_config()["broker_topic"] = topic
             hostname = data['hostname']
             hostport = data['hostport']
-            info = 'GUI SERVER: <b>{}:{}</b>'.format(hostname, hostport)
+            info = f'<b>{hostname}:{hostport} ({topic})</b>'
             self.serverInfo.setText(info)
         else:
-            self.serverInfo.setText("")
             self.serverInfo.setText("")
 
     # --------------------------------------
@@ -627,7 +624,7 @@ class MainWindow(QMainWindow):
             # Disconnecting AND need to save first
             self.acServerConnect.setChecked(True)
         else:
-            self.update_broker_connection()
+            self.update_server_connection()
             # Either connecting or no need to save before disconnecting
             get_network().onServerConnection(connect, parent=self)
 
