@@ -1,5 +1,5 @@
-from PyQt5.QtCore import QRect
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtCore import QRect
+from qtpy.QtWidgets import QWidget
 
 from karabo.common.scenemodel.api import StickerModel
 from karabogui.testing import GuiTestCase

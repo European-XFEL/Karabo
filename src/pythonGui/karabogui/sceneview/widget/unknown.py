@@ -3,10 +3,10 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import QByteArray, QPoint, QRect, Qt
-from PyQt5.QtGui import QBrush, QPainter, QPen
-from PyQt5.QtSvg import QSvgRenderer
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtCore import QByteArray, QPoint, QRect, Qt
+from qtpy.QtGui import QBrush, QPainter, QPen
+from qtpy.QtSvg import QSvgRenderer
+from qtpy.QtWidgets import QWidget
 
 from karabo.common.scenemodel.api import write_single_model
 

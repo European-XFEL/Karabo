@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import sys
 
-from PyQt5.QtCore import QSettings
+from qtpy.QtCore import QSettings
 
 from karabogui.globals import HIDDEN_KARABO_FOLDER
 from karabogui.programs.utils import create_linux_desktop_file

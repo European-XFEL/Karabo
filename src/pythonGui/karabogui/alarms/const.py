@@ -6,7 +6,7 @@
 from collections import OrderedDict, namedtuple
 import os.path as op
 
-from PyQt5.QtGui import QColor
+from qtpy.QtGui import QColor
 
 from karabogui import icons
 

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWizard, QWizardPage
+from qtpy.QtWidgets import QWizard, QWizardPage
 from traits.api import (
     Constant, DelegatesTo, HasStrictTraits, Instance, on_trait_change)
 

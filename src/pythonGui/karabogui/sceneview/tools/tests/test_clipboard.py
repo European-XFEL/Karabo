@@ -1,5 +1,5 @@
-from PyQt5.QtCore import QRectF
-from PyQt5.QtWidgets import QBoxLayout
+from qtpy.QtCore import QRectF
+from qtpy.QtWidgets import QBoxLayout
 
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, LabelModel, DisplayLabelModel)

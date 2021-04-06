@@ -1,6 +1,6 @@
 from numpy import log10
-from PyQt5.QtCore import QLocale, Qt
-from PyQt5.QtWidgets import QAction, QDoubleSpinBox, QInputDialog
+from qtpy.QtCore import QLocale, Qt
+from qtpy.QtWidgets import QAction, QDoubleSpinBox, QInputDialog
 from traits.api import Instance, on_trait_change
 
 from karabo.common.api import KARABO_SCHEMA_ABSOLUTE_ERROR

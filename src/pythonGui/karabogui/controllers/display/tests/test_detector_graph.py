@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QGraphicsTextItem
+from qtpy.QtWidgets import QGraphicsTextItem
 from unittest import mock, skip
 
 from karabo.native import EncodingType

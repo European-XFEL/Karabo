@@ -1,7 +1,7 @@
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtGui import QFont, QFontDatabase
-from PyQt5.QtWidgets import QDialog
+from qtpy import uic
+from qtpy.QtCore import Slot
+from qtpy.QtGui import QFont, QFontDatabase
+from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.const import SCENE_FONT_SIZES
 
@@ -52,43 +52,43 @@ class FontDialog(QDialog):
         # Update preview to reflect current format
         self._preview()
 
-    @pyqtSlot()
+    @Slot()
     def _preview(self):
         qfont = QFont(self.qfont)
         qfont.setPointSize(get_font_size_from_dpi(qfont.pointSize()))
         self.preview_label.setFont(qfont)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def _update_font(self, family):
         self.qfont.setFamily(get_font_from_alias(family))
         self._preview()
 
-    @pyqtSlot(str)
+    @Slot(str)
     def _update_font_size(self, size):
         self.qfont.setPointSize(int(size))
         self._preview()
 
-    @pyqtSlot(str)
+    @Slot(str)
     def _update_font_style(self, style):
         self.qfont.setStyleName(style)
         self._preview()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _update_bold(self, enabled):
         self.qfont.setBold(enabled)
         self._preview()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _update_italic(self, enabled):
         self.qfont.setItalic(enabled)
         self._preview()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _update_strikeout(self, enabled):
         self.qfont.setStrikeOut(enabled)
         self._preview()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _update_underline(self, enabled):
         self.qfont.setUnderline(enabled)
         self._preview()
