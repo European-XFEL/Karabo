@@ -2,7 +2,7 @@ import numpy as np
 
 from karabo.common.const import (
     KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MAX_INC,
-    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC)
+    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_OPTIONS)
 from karabo.native import (
     AccessMode, Bool, Configurable, Hash, HashList, String, UInt8)
 
@@ -693,3 +693,41 @@ def test_default_value():
     binding = types.ComplexBinding()
     value = get_default_value(binding, force=True)
     assert value == 0.0
+
+
+def test_default_value_minimum():
+    """Test the default value generation of a binding"""
+    attributes = {KARABO_SCHEMA_MIN_INC: 2}
+    binding = types.Int8Binding(attributes=attributes)
+    # 1. No default value provided, we force to minimum
+    value = get_default_value(binding, force=True)
+    assert value == 2
+    # 2. Provide a default, higher than minimum
+    attributes = {KARABO_SCHEMA_MIN_INC: 2, KARABO_SCHEMA_DEFAULT_VALUE: 5}
+    binding = types.Int8Binding(attributes=attributes)
+    value = get_default_value(binding, force=True)
+    assert value == 5
+    # 3. Check options
+    attributes = {KARABO_SCHEMA_OPTIONS: [5, 6, 7]}
+    binding = types.Int8Binding(attributes=attributes)
+    value = get_default_value(binding, force=True)
+    assert value == 5
+
+    # ------------------------------
+
+    attributes = {KARABO_SCHEMA_MIN_EXC: 0.0}
+    binding = types.FloatBinding(attributes=attributes)
+    # 1. No default value provided, we force to slighly above minimum
+    value = get_default_value(binding, force=True)
+    assert value > 0.0
+    assert value < 1e-32
+    # 2. Provide a default, higher than minimum
+    attributes = {KARABO_SCHEMA_MIN_INC: 2.1, KARABO_SCHEMA_DEFAULT_VALUE: 5.2}
+    binding = types.FloatBinding(attributes=attributes)
+    value = get_default_value(binding, force=True)
+    assert value == 5.2
+    # 3. Check options
+    attributes = {KARABO_SCHEMA_OPTIONS: [5.1, 6.2, 7.3]}
+    binding = types.FloatBinding(attributes=attributes)
+    value = get_default_value(binding, force=True)
+    assert value == 5.1
