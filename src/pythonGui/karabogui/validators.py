@@ -5,7 +5,7 @@
 #############################################################################
 import re
 
-from PyQt5.QtGui import QValidator
+from qtpy.QtGui import QValidator
 
 
 class HexValidator(QValidator):

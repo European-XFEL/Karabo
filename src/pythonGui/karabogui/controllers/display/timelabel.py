@@ -6,8 +6,8 @@
 from datetime import datetime
 import traceback
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAction, QFrame, QLabel, QInputDialog
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QAction, QFrame, QLabel, QInputDialog
 from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import DisplayTimeModel

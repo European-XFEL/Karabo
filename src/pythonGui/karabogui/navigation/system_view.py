@@ -5,9 +5,9 @@
 #############################################################################
 from functools import partial
 
-from PyQt5.QtCore import Qt, pyqtSlot, QPoint
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Qt, Slot, QPoint
+from qtpy.QtGui import QCursor
+from qtpy.QtWidgets import (
     QAbstractItemView, QAction, QDialog, QMenu, QTreeView)
 
 from karabo.common.api import Capabilities
@@ -171,7 +171,7 @@ class SystemTreeView(QTreeView):
     # ----------------------------
     # Slots
 
-    @pyqtSlot()
+    @Slot()
     def onAbout(self):
         index = self.currentIndex()
         node = self.model().index_ref(index)
@@ -187,7 +187,7 @@ class SystemTreeView(QTreeView):
         self.popupWidget.move(pos)
         self.popupWidget.show()
 
-    @pyqtSlot()
+    @Slot()
     def onTimeInformation(self):
         """Get the time information from a `server` or `device`"""
         info = self.indexInfo()
@@ -229,12 +229,12 @@ class SystemTreeView(QTreeView):
         handler = partial(show_server_information, instanceId)
         call_device_slot(handler, instanceId, 'slotGetTime')
 
-    @pyqtSlot()
+    @Slot()
     def onGetDocumenation(self):
         deviceId = self.indexInfo().get('deviceId')
         open_documentation_link(deviceId)
 
-    @pyqtSlot()
+    @Slot()
     def onKillInstance(self):
         info = self.indexInfo()
         node_type = info.get('type')
@@ -247,7 +247,7 @@ class SystemTreeView(QTreeView):
             serverId = info.get('serverId')
             manager.shutdownServer(serverId, parent=self)
 
-    @pyqtSlot()
+    @Slot()
     def onOpenDeviceScene(self):
         info = self.indexInfo()
         dialog = DeviceCapabilityDialog(
@@ -262,7 +262,7 @@ class SystemTreeView(QTreeView):
             call_device_slot(handler, device_id, 'requestScene',
                              name=scene_name)
 
-    @pyqtSlot(QPoint)
+    @Slot(QPoint)
     def onCustomContextMenuRequested(self, pos):
         def _test_mask(mask, bit):
             return (mask & bit) == bit
@@ -292,7 +292,7 @@ class SystemTreeView(QTreeView):
             self.acOpenScene.setVisible(has_scenes)
             self.mDeviceItem.exec_(QCursor.pos())
 
-    @pyqtSlot(str, object)
+    @Slot(str, object)
     def onSelectionChanged(self, item_type, proxy):
         """Called by the data model when an item is selected
         """
@@ -307,24 +307,24 @@ class SystemTreeView(QTreeView):
             proxy = None
         broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': proxy})
 
-    @pyqtSlot()
+    @Slot()
     def onOpenFromFile(self):
         if self._selected_proxy is not None:
             load_configuration_from_file(self._selected_proxy, parent=self)
 
-    @pyqtSlot()
+    @Slot()
     def onSaveToFile(self):
         if self._selected_proxy is not None:
             save_configuration_to_file(self._selected_proxy, parent=self)
 
-    @pyqtSlot()
+    @Slot()
     def onDoubleClickHeader(self):
         if self.expanded:
             self.collapseAll()
         else:
             self.expandAll()
 
-    @pyqtSlot()
+    @Slot()
     def resetExpand(self):
         self.expandAll()
 

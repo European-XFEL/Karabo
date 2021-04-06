@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QAction, QMenu
+from qtpy.QtWidgets import QAction, QMenu
 from traits.api import (
     ArrayOrNone, Bool, Dict, Instance, on_trait_change, Property, Type)
 

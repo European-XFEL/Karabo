@@ -5,10 +5,10 @@
 #############################################################################
 import os.path as op
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtGui import QValidator
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QSpinBox
+from qtpy import uic
+from qtpy.QtCore import Slot
+from qtpy.QtGui import QValidator
+from qtpy.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QSpinBox
 
 from karabogui.util import InputValidator, SignalBlocker
 
@@ -53,14 +53,14 @@ class ObjectDuplicateDialog(QDialog):
         text = 'You are about to create <b>{}</b> duplicate(s)'.format(nb_dupe)
         self.laText.setText(text)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _updateIndex(self, value):
         enabled = True if not value else False
         self.sbStart.setEnabled(enabled)
         self.sbEnd.setEnabled(enabled)
         self._update_text()
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _indexChanged(self, value):
         start_index = self.sbStart.value()
         end_index = self.sbEnd.value()
@@ -123,7 +123,7 @@ class ObjectEditDialog(QDialog):
         self.setWindowTitle(title)
         self.validate()
 
-    @pyqtSlot()
+    @Slot()
     def validate(self):
         enabled = self.leTitle.hasAcceptableInput()
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)

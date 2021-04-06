@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt
-from PyQt5.QtGui import QClipboard, QIntValidator, QPixmap
-from PyQt5.QtWidgets import (
+from qtpy import uic
+from qtpy.QtCore import Signal, Slot, Qt
+from qtpy.QtGui import QClipboard, QIntValidator, QPixmap
+from qtpy.QtWidgets import (
     QApplication, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QListWidget,
     QListWidgetItem, QPushButton, QRadioButton, QSizePolicy, QSpacerItem,
     QVBoxLayout, QWizardPage, QWizard)
@@ -27,7 +27,7 @@ class PageContainer(QWizard):
         page.container = self
         super(PageContainer, self).setPage(index, page)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def fitContents(self, index):
         self.adjustSize()
 
@@ -144,7 +144,7 @@ class SelectScenesPage(Page):
             item.setData(Qt.UserRole, data)
             self.selected_listwidget.addItem(item)
 
-    @pyqtSlot()
+    @Slot()
     def _available_selected(self):
         selected = self.available_listwidget.selectedItems()
         self.add_button.setEnabled(bool(len(selected)))
@@ -153,7 +153,7 @@ class SelectScenesPage(Page):
             self.selected_listwidget.clearSelection()
         self.remove_button.setEnabled(False)
 
-    @pyqtSlot()
+    @Slot()
     def _selected_selected(self):
         selected = self.selected_listwidget.selectedItems()
         self.remove_button.setEnabled(bool(len(selected)))
@@ -162,7 +162,7 @@ class SelectScenesPage(Page):
             self.available_listwidget.clearSelection()
         self.add_button.setEnabled(False)
 
-    @pyqtSlot()
+    @Slot()
     def _add_scene(self):
         list_widget = self.available_listwidget
         selected = list_widget.selectedItems()
@@ -175,7 +175,7 @@ class SelectScenesPage(Page):
         self.selected_listwidget.addItem(selected)
         self.sceneAdded(selected.data(Qt.UserRole))
 
-    @pyqtSlot()
+    @Slot()
     def _remove_scene(self):
         list_widget = self.selected_listwidget
         selected = list_widget.selectedItems()
@@ -195,7 +195,7 @@ class ConfigurePage(Page):
 
     ui_file = "link.ui"
 
-    configChanged = pyqtSignal(object)
+    configChanged = Signal(object)
 
     edits = None
 
@@ -213,7 +213,7 @@ class ConfigurePage(Page):
         for field in self.edits:
             field.textChanged.connect(self._check_empty_fields)
 
-    @pyqtSlot()
+    @Slot()
     def _check_empty_fields(self):
         """validation of empty input fields"""
         complete = all([field.text() for field in self.edits])
@@ -229,24 +229,24 @@ class ConfigurePage(Page):
         self.host_lineedit.setText(config["host"])
         self.port_lineedit.setText(str(config["port"]))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _show_login_changed(self, enabled):
         self.login_widget.setVisible(not enabled)
         self.configChanged.emit({"show_login": enabled})
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _show_splash_changed(self, enabled):
         self.configChanged.emit({"show_splash": enabled})
 
-    @pyqtSlot(str)
+    @Slot(str)
     def _username_changed(self, username):
         self.configChanged.emit({"username": username})
 
-    @pyqtSlot()
+    @Slot()
     def _host_changed(self):
         self.configChanged.emit({"host": self.host_lineedit.text()})
 
-    @pyqtSlot()
+    @Slot()
     def _port_changed(self):
         self.configChanged.emit({"port": self.port_lineedit.text()})
 
@@ -308,7 +308,7 @@ class LinkPage(Page):
         vbox.addWidget(group)
         vbox.addWidget(description)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def update_url_info(self, checked):
         if self.classic.isChecked():
             self.link_description.setText(LINK_TEXT[0])
@@ -359,7 +359,7 @@ class LinkPage(Page):
 
         self.url = "karabo://cinema?" + "&".join(args)
 
-    @pyqtSlot()
+    @Slot()
     def finished(self):
         if self.weblink.isChecked():
             self.url = f'<a href="{self.url}">{self.cinema_name.text()}</a>'

@@ -7,11 +7,11 @@ from collections import OrderedDict, namedtuple
 from operator import attrgetter
 import os.path as op
 
-from PyQt5 import uic
-from PyQt5.QtCore import (
-    pyqtSlot, QAbstractTableModel, QItemSelection, QModelIndex,
+from qtpy import uic
+from qtpy.QtCore import (
+    Slot, QAbstractTableModel, QItemSelection, QModelIndex,
     QSortFilterProxyModel, Qt)
-from PyQt5.QtWidgets import (
+from qtpy.QtWidgets import (
     QAbstractButton, QButtonGroup, QDialog, QDialogButtonBox)
 
 from karabogui import messagebox
@@ -125,7 +125,7 @@ class LoadProjectDialog(QDialog):
     def _event_item_list(self, data):
         items = data.get('items', [])
         self.model.sourceModel().add_project_manager_data(items)
-        # NOTE: Resize all columns until PyQt5
+        # NOTE: Resize all columns until qtpy
         self.twProjects.resizeColumnsToContents()
         self._titleChanged(self.leTitle.text())
 
@@ -218,12 +218,12 @@ class LoadProjectDialog(QDialog):
         enable = self._selected_item_loadable()
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def _titleChanged(self, text):
         self.model.setFilterFixedString(text)
         self._check_button_state()
 
-    @pyqtSlot(QItemSelection, QItemSelection)
+    @Slot(QItemSelection, QItemSelection)
     def _selectionChanged(self, selected, deselected):
         """ Whenever an item is selected the current title and the button box
         need to be updated
@@ -231,7 +231,7 @@ class LoadProjectDialog(QDialog):
         # Make sure loading of trashed projects is not possible
         self._check_button_state()
 
-    @pyqtSlot(QModelIndex)
+    @Slot(QModelIndex)
     def _load_item(self, index):
         """ Slot connectect to the ``QTableView`` signal ``doubleClicked``
         Only accept the dialog, if the selected project is loadable.
@@ -240,11 +240,11 @@ class LoadProjectDialog(QDialog):
         if self._selected_item_loadable():
             self.accept()
 
-    @pyqtSlot(str)
+    @Slot(str)
     def on_cbDomain_currentIndexChanged(self, domain):
         self.update_view()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def on_cbShowTrash_toggled(self, is_checked):
         model = self.model.sourceModel()
         model.show_trashed = is_checked
@@ -252,7 +252,7 @@ class LoadProjectDialog(QDialog):
         self._check_button_state()
         self.update_view()
 
-    @pyqtSlot(str, str, bool)
+    @Slot(str, str, bool)
     def _update_is_trashed(self, domain, uuid, current_is_trashed):
         """ Change ``is_trashed`` attribute of project with given ``uuid``
 
@@ -268,7 +268,7 @@ class LoadProjectDialog(QDialog):
             # NOTE: The view update is happening asynchronously. Once we get
             # a reply from the GUI server, we request a new view
 
-    @pyqtSlot(QAbstractButton)
+    @Slot(QAbstractButton)
     def _openFromChanged(self, button):
         # Update view
         self.update_view()
@@ -329,7 +329,7 @@ class NewProjectDialog(QDialog):
     # -----------------------------------------------------------------------
     # PyQt Slots
 
-    @pyqtSlot()
+    @Slot()
     def validate(self):
         enabled = self.leTitle.hasAcceptableInput()
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)

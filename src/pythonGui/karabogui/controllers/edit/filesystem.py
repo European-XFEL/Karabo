@@ -3,9 +3,9 @@
 # Created on September 21, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QIcon
+from qtpy.QtWidgets import (
     QFileDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget)
 from traits.api import Constant, Instance, Int
 

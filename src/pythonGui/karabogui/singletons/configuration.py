@@ -5,7 +5,7 @@
 #############################################################################
 from collections import defaultdict
 
-from PyQt5.QtCore import QObject, QSettings
+from qtpy.QtCore import QObject, QSettings
 
 
 def _safe_bool(value, make_bool=True):

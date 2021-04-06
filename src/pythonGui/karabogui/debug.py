@@ -4,7 +4,7 @@ import os.path as op
 import pdb
 from time import perf_counter
 
-from PyQt5.QtCore import pyqtRemoveInputHook
+from qtpy.QtCore import pyqtRemoveInputHook
 
 from karabogui.util import process_qt_events
 

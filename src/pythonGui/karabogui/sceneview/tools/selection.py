@@ -1,5 +1,5 @@
-from PyQt5.QtCore import QPoint, QRect, Qt
-from PyQt5.QtGui import QColor, QPen
+from qtpy.QtCore import QPoint, QRect, Qt
+from qtpy.QtGui import QColor, QPen
 from traits.api import Any, Enum, HasStrictTraits, Instance, String
 
 from karabogui.binding.api import DeviceProxy
