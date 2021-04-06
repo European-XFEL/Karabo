@@ -1,6 +1,6 @@
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QDialog
+from qtpy import uic
+from qtpy.QtCore import Slot
+from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.const import SCENE_FONT_SIZES, SCENE_FONT_WEIGHTS
 
@@ -31,7 +31,7 @@ class FormatLabelDialog(QDialog):
         # Update preview to reflect current format
         self._preview()
 
-    @pyqtSlot()
+    @Slot()
     def _preview(self):
         font = self.preview_label.font()
         font.setPointSize(self.font_size)

@@ -3,9 +3,9 @@ from platform import system
 import random
 from unittest import mock, skipIf
 
-from PyQt5.QtCore import QPoint, QSize
-from PyQt5.QtGui import QFont, QFontDatabase
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtCore import QPoint, QSize
+from qtpy.QtGui import QFont, QFontDatabase
+from qtpy.QtWidgets import QWidget
 
 from karabo.common.api import ProxyStatus
 from karabo.common.scenemodel.api import (

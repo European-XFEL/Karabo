@@ -3,9 +3,9 @@ import contextlib
 import sys
 import unittest
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtTest import QTest
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QApplication
+from qtpy.QtTest import QTest
 
 from karabo.common.api import Capabilities, ProxyStatus
 from karabo.native import AccessLevel, Hash

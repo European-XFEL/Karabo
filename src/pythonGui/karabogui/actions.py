@@ -3,8 +3,8 @@
 # Created on October 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction
+from qtpy.QtGui import QIcon
+from qtpy.QtWidgets import QAction
 from traits.api import HasStrictTraits, Bool, Callable, Instance, String
 
 

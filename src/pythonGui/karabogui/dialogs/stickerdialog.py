@@ -3,10 +3,10 @@
 # Created on April 28, 2020
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, QSize, Qt
-from PyQt5.QtGui import QColor, QIcon, QPixmap, QTextFormat
-from PyQt5.QtWidgets import QApplication, QColorDialog, QDialog, QTextEdit
+from qtpy import uic
+from qtpy.QtCore import Slot, QSize, Qt
+from qtpy.QtGui import QColor, QIcon, QPixmap, QTextFormat
+from qtpy.QtWidgets import QApplication, QColorDialog, QDialog, QTextEdit
 
 from karabogui.fonts import (
     get_alias_from_font, get_qfont, substitute_font)
@@ -79,7 +79,7 @@ class StickerDialog(QDialog):
     # ----------------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot()
+    @Slot()
     def on_leText_cursorPositionChanged(self):
         extra_selections = []
         selection = QTextEdit.ExtraSelection()
@@ -90,11 +90,11 @@ class StickerDialog(QDialog):
         extra_selections.append(selection)
         self.leText.setExtraSelections(extra_selections)
 
-    @pyqtSlot()
+    @Slot()
     def on_leText_textChanged(self):
         self.model.text = self.leText.toPlainText()
 
-    @pyqtSlot()
+    @Slot()
     def on_pbFont_clicked(self):
         dialog = FontDialog(self.text_font, parent=self)
         if dialog.exec_() == QDialog.Accepted:
@@ -103,7 +103,7 @@ class StickerDialog(QDialog):
             self.set_text_font_button()
             self.update_plain_widget()
 
-    @pyqtSlot()
+    @Slot()
     def on_pbTextColor_clicked(self):
         color = QColorDialog.getColor(QColor(self.model.foreground))
         if color.isValid():
@@ -111,7 +111,7 @@ class StickerDialog(QDialog):
             self.set_text_color_button()
             self.update_plain_widget()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def on_cbBackground_toggled(self, checked):
         self.pbBackground.setEnabled(checked)
         if not checked:
@@ -119,7 +119,7 @@ class StickerDialog(QDialog):
             self.set_text_background_button()
         self.update_plain_widget()
 
-    @pyqtSlot()
+    @Slot()
     def on_pbBackground_clicked(self):
         color = QColorDialog.getColor(QColor(self.model.background))
         if color.isValid():

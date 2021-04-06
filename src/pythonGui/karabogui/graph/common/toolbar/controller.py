@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QToolBar
+from qtpy.QtWidgets import QToolBar
 from traits.api import HasStrictTraits, Dict, Instance
 
 from .factory import tool_factory

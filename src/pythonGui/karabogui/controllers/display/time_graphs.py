@@ -3,9 +3,9 @@ from collections import OrderedDict
 import datetime
 from itertools import cycle
 
-from PyQt5 import uic
-from PyQt5.QtCore import QDateTime, QTimer
-from PyQt5.QtWidgets import QAction, QDialog, QVBoxLayout, QWidget
+from qtpy import uic
+from qtpy.QtCore import QDateTime, QTimer
+from qtpy.QtWidgets import QAction, QDialog, QVBoxLayout, QWidget
 from traits.api import Bool, Dict, Instance, Int, Set, String, WeakRef
 
 from karabo.common.scenemodel.api import (

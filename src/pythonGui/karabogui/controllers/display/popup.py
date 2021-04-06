@@ -1,7 +1,7 @@
 import os.path as op
 
-from PyQt5.QtSvg import QSvgWidget
-from PyQt5.QtWidgets import QMessageBox
+from qtpy.QtSvg import QSvgWidget
+from qtpy.QtWidgets import QMessageBox
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import PopUpModel

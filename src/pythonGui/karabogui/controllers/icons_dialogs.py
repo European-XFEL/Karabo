@@ -5,10 +5,10 @@ import sys
 import urllib.request
 from urllib.error import URLError
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QBuffer, QByteArray, Qt
-from PyQt5.QtGui import QPixmap, QPixmapCache
-from PyQt5.QtWidgets import QApplication, QDialog, QLabel
+from qtpy import uic
+from qtpy.QtCore import Signal, Slot, QBuffer, QByteArray, Qt
+from qtpy.QtGui import QPixmap, QPixmapCache
+from qtpy.QtWidgets import QApplication, QDialog, QLabel
 from traits.api import Instance, Property
 
 from karabo.common.scenemodel.api import IconData
@@ -82,7 +82,7 @@ class IconLabel(QLabel):
 class Label(IconLabel):
     """A Custom QLabel subclass which is referenced by the 'icons.ui' file
     """
-    newMime = pyqtSignal(str)
+    newMime = Signal(str)
 
     def __init__(self, parent):
         super(Label, self).__init__(parent)
@@ -228,7 +228,7 @@ class _BaseDialog(QDialog):
             return
         self.image.setPixmap(pixmap)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def on_valueList_currentRowChanged(self, row):
         self._update_buttons()
         self.image.setPixmap(self.items[row].pixmap)
@@ -250,7 +250,7 @@ class _BaseDialog(QDialog):
             item.image = filename
         self._update_image(item)
 
-    @pyqtSlot()
+    @Slot()
     def on_open_clicked(self):
         filename = getOpenFileName(
             parent=self, caption='Open Icon',
@@ -267,11 +267,11 @@ class _BaseDialog(QDialog):
         item.image = filename
         self._update_image(item)
 
-    @pyqtSlot()
+    @Slot()
     def on_paste_clicked(self):
         self.on_image_newMime(QApplication.clipboard().mimeData())
 
-    @pyqtSlot()
+    @Slot()
     def on_deleteValue_clicked(self):
         if len(self.items) == 0:
             return
@@ -284,7 +284,7 @@ class _BaseDialog(QDialog):
                 self.image.setDefaultPixmap()
         self._update_buttons()
 
-    @pyqtSlot()
+    @Slot()
     def on_up_clicked(self):
         cr = self.valueList.currentRow()
         if not 0 < cr <= len(self.items) - 1:
@@ -293,7 +293,7 @@ class _BaseDialog(QDialog):
         self.items[cr - 1], self.items[cr] = self.items[cr], self.items[cr - 1]
         self.valueList.setCurrentRow(cr - 1)
 
-    @pyqtSlot()
+    @Slot()
     def on_down_clicked(self):
         cr = self.valueList.currentRow()
         if cr >= len(self.items) - 1:
@@ -318,7 +318,7 @@ class DigitDialog(_BaseDialog):
         if high is not None:
             self.value.setMaximum(high)
 
-    @pyqtSlot()
+    @Slot()
     def on_addValue_clicked(self):
         idx = 0
         entry_value = self.value.value()
@@ -362,7 +362,7 @@ class TextDialog(_BaseDialog):
         super(TextDialog, self).__init__(items, parent)
         self.stack.setCurrentWidget(self.textPage)
 
-    @pyqtSlot()
+    @Slot()
     def on_addValue_clicked(self):
         entry_value = self.textValue.text()
         # Check if entry is already existing

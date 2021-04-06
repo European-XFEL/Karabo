@@ -1,8 +1,8 @@
 from unittest import mock
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QKeyEvent
-from PyQt5.QtWidgets import QApplication
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QKeyEvent
+from qtpy.QtWidgets import QApplication
 
 from karabo.common.project.api import ProjectModel
 from karabo.common.scenemodel.api import SceneModel

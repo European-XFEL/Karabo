@@ -1,5 +1,5 @@
-from PyQt5.QtCore import QPointF, Qt
-from PyQt5.QtGui import QBrush, QColor, QLinearGradient, QPen
+from qtpy.QtCore import QPointF, Qt
+from qtpy.QtGui import QBrush, QColor, QLinearGradient, QPen
 from pyqtgraph import PlotDataItem
 from traits.api import (
     Array, cached_property, Constant, Instance, on_trait_change, Property,

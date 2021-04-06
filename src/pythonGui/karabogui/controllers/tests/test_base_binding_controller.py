@@ -1,6 +1,6 @@
 from unittest import mock
 
-from PyQt5.QtWidgets import QLabel
+from qtpy.QtWidgets import QLabel
 from traits.api import Dict, Instance, Int, Str, Undefined
 
 from karabo.common.api import ProxyStatus, State, KARABO_SCHEMA_DISPLAYED_NAME

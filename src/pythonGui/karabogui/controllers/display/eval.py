@@ -1,7 +1,7 @@
 import traceback
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAction, QDialog, QFrame, QInputDialog, QLabel
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QAction, QDialog, QFrame, QInputDialog, QLabel
 from traits.api import Callable, Dict, Instance, Str, Tuple
 
 from karabo.common.scenemodel.api import EvaluatorModel

@@ -8,7 +8,7 @@ import json
 import re
 from weakref import WeakValueDictionary
 
-from PyQt5.QtCore import (
+from qtpy.QtCore import (
     QAbstractItemModel, QItemSelection, QItemSelectionModel, QMimeData,
     QModelIndex, Qt)
 

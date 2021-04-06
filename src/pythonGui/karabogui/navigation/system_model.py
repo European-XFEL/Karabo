@@ -6,8 +6,8 @@
 import json
 from weakref import WeakValueDictionary
 
-from PyQt5.QtCore import (
-    pyqtSignal, pyqtSlot, QAbstractItemModel, QMimeData, QModelIndex, Qt,
+from qtpy.QtCore import (
+    Signal, Slot, QAbstractItemModel, QMimeData, QModelIndex, Qt,
     QItemSelection, QItemSelectionModel)
 
 from karabo.common.api import ProxyStatus
@@ -22,7 +22,7 @@ from .utils import get_language_icon
 
 
 class SystemTreeModel(QAbstractItemModel):
-    signalItemChanged = pyqtSignal(str, object)  # type, BaseDeviceProxy
+    signalItemChanged = Signal(str, object)  # type, BaseDeviceProxy
 
     def __init__(self, parent=None):
         super(SystemTreeModel, self).__init__(parent)
@@ -241,7 +241,7 @@ class SystemTreeModel(QAbstractItemModel):
                                                 encoding='UTF-8'))
         return mimeData
 
-    @pyqtSlot(QItemSelection, QItemSelection)
+    @Slot(QItemSelection, QItemSelection)
     def onSelectionChanged(self, selected, deselected):
         selectedIndexes = selected.indexes()
 

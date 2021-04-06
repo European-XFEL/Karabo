@@ -5,9 +5,9 @@
 #############################################################################
 import webbrowser
 
-from PyQt5.QtCore import pyqtSlot, QPoint, QRect, QRectF, QSize, Qt
-from PyQt5.QtGui import QColor, QPainter, QPen
-from PyQt5.QtWidgets import QAction, QDialog, QPushButton
+from qtpy.QtCore import Slot, QPoint, QRect, QRectF, QSize, Qt
+from qtpy.QtGui import QColor, QPainter, QPen
+from qtpy.QtWidgets import QAction, QDialog, QPushButton
 
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
@@ -62,7 +62,7 @@ class SceneLinkWidget(KaraboSceneWidget, QPushButton):
             painter.setPen(pen)
             painter.drawText(boundary, Qt.AlignCenter, self.model.text)
 
-    @pyqtSlot()
+    @Slot()
     def _handle_click(self):
         if len(self.model.target) > 0:
             parts = self.model.target.split(':')
@@ -106,7 +106,7 @@ class SceneLinkWidget(KaraboSceneWidget, QPushButton):
         self.model.trait_set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
-    @pyqtSlot()
+    @Slot()
     def edit_label(self):
         dialog = TextDialog(self.model, parent=self)
         if dialog.exec_() == QDialog.Rejected:
@@ -122,7 +122,7 @@ class SceneLinkWidget(KaraboSceneWidget, QPushButton):
         self.setFont(get_qfont(label.font))
         self.update()
 
-    @pyqtSlot()
+    @Slot()
     def edit_target(self):
         self.edit()
 
@@ -180,7 +180,7 @@ class WebLinkWidget(KaraboSceneWidget, QPushButton):
             painter.setPen(pen)
             painter.drawText(boundary, Qt.AlignCenter, self.model.text)
 
-    @pyqtSlot()
+    @Slot()
     def _handle_click(self):
         if len(self.model.target) > 0:
             try:
@@ -216,7 +216,7 @@ class WebLinkWidget(KaraboSceneWidget, QPushButton):
         self.model.trait_set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
-    @pyqtSlot()
+    @Slot()
     def edit_label(self):
         dialog = TextDialog(self.model, parent=self)
         if dialog.exec_() == QDialog.Rejected:
@@ -232,7 +232,7 @@ class WebLinkWidget(KaraboSceneWidget, QPushButton):
         self.setFont(get_qfont(label.font))
         self.update()
 
-    @pyqtSlot()
+    @Slot()
     def edit_target(self):
         self.edit()
 

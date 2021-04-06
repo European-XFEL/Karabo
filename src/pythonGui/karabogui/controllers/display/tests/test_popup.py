@@ -2,7 +2,7 @@ from platform import system
 from unittest.mock import patch, Mock
 from unittest import skipIf
 
-from PyQt5.QtWidgets import QMessageBox
+from qtpy.QtWidgets import QMessageBox
 
 from karabo.common.api import State
 from karabo.native import Configurable, String, Slot

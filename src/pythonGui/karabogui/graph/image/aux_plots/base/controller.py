@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMenu
+from qtpy.QtWidgets import QMenu
 from pyqtgraph import PlotItem
 from traits.api import (
     Bool, Event, Dict, HasStrictTraits, Instance, Property, String, Type)

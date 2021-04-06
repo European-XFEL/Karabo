@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QAction, QDialog
+from qtpy.QtWidgets import QAction, QDialog
 from traits.api import Instance, on_trait_change, Type
 
 from karabo.common.scenemodel.api import (

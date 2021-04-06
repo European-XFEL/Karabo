@@ -5,9 +5,9 @@
 #############################################################################
 from functools import partial
 
-from PyQt5.QtCore import pyqtSlot, Qt, QModelIndex, QItemSelection
-from PyQt5.QtGui import QClipboard, QCursor, QKeySequence
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Slot, Qt, QModelIndex, QItemSelection
+from qtpy.QtGui import QClipboard, QCursor, QKeySequence
+from qtpy.QtWidgets import (
     QApplication, QAction, QDialog, QMessageBox, QTreeView)
 
 from karabo.common.project.api import find_parent_object
@@ -104,7 +104,7 @@ class ProjectView(QTreeView):
     # ----------------------------
     # Slots
 
-    @pyqtSlot(QModelIndex, int, int)
+    @Slot(QModelIndex, int, int)
     def _items_added(self, parent_index, start, end):
         """React to the addition of an item (or items).
         """
@@ -120,7 +120,7 @@ class ProjectView(QTreeView):
             # except for device instances
             self.expand(parent_index)
 
-    @pyqtSlot(QItemSelection, QItemSelection)
+    @Slot(QItemSelection, QItemSelection)
     def _selection_change(self, selected, deselected):
         """ Notify controller objects when their Qt list item object is
         selected.
@@ -133,7 +133,7 @@ class ProjectView(QTreeView):
             # Grab control of the global selection
             get_selection_tracker().grab_selection(self.selectionModel())
 
-    @pyqtSlot()
+    @Slot()
     def _show_context_menu(self):
         """ Show a context menu for the currently selected item.
         """
@@ -231,7 +231,7 @@ class ProjectView(QTreeView):
         if result == QDialog.Accepted:
             project.simple_name = dialog.simple_name
 
-    @pyqtSlot()
+    @Slot()
     def _instantiate_devices(self, selected_controller):
         """ Instantiate all devices in the given project
 
@@ -254,7 +254,7 @@ class ProjectView(QTreeView):
             messagebox.show_warning(msg, title='Servers offline',
                                     parent=self)
 
-    @pyqtSlot()
+    @Slot()
     def _instantiate_macros(self, selected_controller):
         """ Instantiate all macros in the given project
 
@@ -317,14 +317,14 @@ class ProjectView(QTreeView):
             # We directly save on attribute update!
             save_object(project)
 
-    @pyqtSlot()
+    @Slot()
     def onDoubleClickHeader(self):
         if self.expanded:
             self.collapseAll()
         else:
             self.expandAll()
 
-    @pyqtSlot()
+    @Slot()
     def resetExpand(self):
         self.expandAll()
 

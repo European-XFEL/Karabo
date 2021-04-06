@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from PyQt5.QtCore import Qt
+from qtpy.QtCore import Qt
 
 from karabo.common.project.device import DeviceInstanceModel
 from karabo.common.project.device_config import DeviceConfigurationModel

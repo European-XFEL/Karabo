@@ -3,10 +3,10 @@ from functools import partial
 import time
 
 import numpy as np
-from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QColor, QPainter, QPainterPath, QPen
-from PyQt5.QtWidgets import (QAction, QActionGroup, QHBoxLayout,
-                             QInputDialog, QLineEdit, QWidget)
+from qtpy.QtCore import QPoint, Qt
+from qtpy.QtGui import QColor, QPainter, QPainterPath, QPen
+from qtpy.QtWidgets import (QAction, QActionGroup, QHBoxLayout,
+                            QInputDialog, QLineEdit, QWidget)
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import SparklineModel
@@ -113,13 +113,13 @@ class SparkRenderer(QWidget):
         # evaluate tendency for last 5 point intervals
         iws = self._indicator_window_size
         c_idx_nz = np.nonzero(self.ycnts[-iws:])
-        t_idx_nz = np.nonzero(self.ycnts[-2*iws:-iws])
+        t_idx_nz = np.nonzero(self.ycnts[-2 * iws:-iws])
         if np.any(c_idx_nz) and np.any(t_idx_nz):
             current_avg = np.mean(self.yvals[-iws:][c_idx_nz]
                                   / self.ycnts[-iws:][c_idx_nz])
-            test_avg = np.mean(self.yvals[-2*iws:-iws][t_idx_nz]
-                               / self.ycnts[-2*iws:-iws][t_idx_nz])
-            delta = (current_avg-test_avg)/test_avg if test_avg else 0.
+            test_avg = np.mean(self.yvals[-2 * iws:-iws][t_idx_nz]
+                               / self.ycnts[-2 * iws:-iws][t_idx_nz])
+            delta = (current_avg - test_avg) / test_avg if test_avg else 0.
             if abs(delta) <= self._tendency_eps or not np.isfinite(delta):
                 self.tendency = 0
             else:
@@ -174,37 +174,38 @@ class SparkRenderer(QWidget):
             font.setPointSize(8)
             font.setFamily("Monospace")
             painter.setFont(font)
-            painter.drawText(QPoint(width+5, 10),
+            painter.drawText(QPoint(width + 5, 10),
                              self._returnFormatted(self.yrange[1]))
-            painter.drawText(QPoint(width+5, height+2),
+            painter.drawText(QPoint(width + 5, height + 2),
                              self._returnFormatted(self.yrange[0]))
 
             #  add tendency indicator
             x_points = self.tendency_indicators[self.tendency]['x'] + width
             y_points = self.tendency_indicators[self.tendency]['y']
-            dy = height/2 + 2.5
+            dy = height / 2 + 2.5
             if self.tendency != 0:
-                dy = height/2 + (-1)*self.tendency*height/2
+                dy = height / 2 + (-1) * self.tendency * height / 2
             path = self._createPainterPath(np.array(x_points),
-                                           np.array(y_points)+dy)
+                                           np.array(y_points) + dy)
             painter.fillPath(path, Qt.magenta)
             painter.drawPath(path)
 
             # add timebase info
             tb = self.time_base
             if tb >= 3600:
-                tb = "{:d}h".format(tb//3600)
+                tb = "{:d}h".format(tb // 3600)
             elif tb >= 600:
-                tb = "{:d}m".format(tb//60)
+                tb = "{:d}m".format(tb // 60)
             else:
                 tb = "{:d}s".format(tb)
 
-            dy = self.height()-13
+            dy = self.height() - 13
             path = self._createPainterPath(np.array([3., 28., 28., 3., 3.]),
-                                           np.array([0., 0., 12., 12., 0.])+dy)
+                                           np.array(
+                                               [0., 0., 12., 12., 0.]) + dy)
             painter.fillPath(path, QColor(255, 255, 255, 200))
             painter.drawPath(path)
-            painter.drawText(QPoint(5, self.height()-2), tb)
+            painter.drawText(QPoint(5, self.height() - 2), tb)
 
     def _returnFormatted(self, v):
         if v == 0:
@@ -233,7 +234,7 @@ class SparkRenderer(QWidget):
         t = timestamp.toTimestamp()
 
         # check if we need to roll to the next bin
-        dt = int((t-self.then)/(self.time_base / self._p_max))
+        dt = int((t - self.then) / (self.time_base / self._p_max))
         if dt >= 1:
             # the sparkline might need to cover "gaps" in its data series
             # e.g. when for a given bin, no data was pushed to the widget
@@ -245,15 +246,15 @@ class SparkRenderer(QWidget):
             # gap filling behaviour for valid "dt"s.
             if dt < self.yvals.size:
                 self.yvals = np.roll(self.yvals, -dt)
-                self.yvals[-dt:-1] = self.yvals[-dt-1]
+                self.yvals[-dt:-1] = self.yvals[-dt - 1]
                 self.yvals[-1] = 0.
                 self.ycnts = np.roll(self.ycnts, -dt)
-                self.ycnts[-dt:-1] = self.ycnts[-dt-1]
+                self.ycnts[-dt:-1] = self.ycnts[-dt - 1]
                 self.ycnts[-1] = 0.
                 self.ymax = np.roll(self.ymax, -dt)
-                self.ymax[-dt:-1] = self.ymax[-dt-1]
+                self.ymax[-dt:-1] = self.ymax[-dt - 1]
                 self.ymin = np.roll(self.ymin, -dt)
-                self.ymin[-dt:-1] = self.ymin[-dt-1]
+                self.ymin[-dt:-1] = self.ymin[-dt - 1]
             else:
                 self.yvals[:] = self.yvals[-1]
                 self.ycnts[:] = self.ycnts[-1]
@@ -283,7 +284,7 @@ class SparkRenderer(QWidget):
             return
 
         now = time.time()
-        x = now-x
+        x = now - x
         binned, bins = np.histogram(x, bins=self._p_max,
                                     range=[0, self.time_base], weights=y)
 
@@ -318,8 +319,8 @@ class SparkRenderer(QWidget):
         # the y range which simply needs to scale to new maxima and minima
         if self.yrange is None or self.reset_range:
             # initially only single value
-            self.yrange = (min(0.9*value, 1.1*value),
-                           max(0.9*value, 1.1*value))
+            self.yrange = (min(0.9 * value, 1.1 * value),
+                           max(0.9 * value, 1.1 * value))
             self.reset_range = False
         else:
             self.yrange = min(value, *self.yrange), max(value, *self.yrange)
@@ -331,8 +332,8 @@ class SparkRenderer(QWidget):
 
         # scale to plot fraction
         pheight = self._plot_frac * self.height()
-        self.offset = (self.height() - pheight)//2
-        self.ystep = 1./pheight
+        self.offset = (self.height() - pheight) // 2
+        self.ystep = 1. / pheight
 
     def update_time_base(self, time_base):
         self.time_base = time_base

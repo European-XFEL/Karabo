@@ -1,9 +1,9 @@
 import re
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtGui import QPalette, QValidator
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox
+from qtpy import uic
+from qtpy.QtCore import Slot, Qt
+from qtpy.QtGui import QPalette, QValidator
+from qtpy.QtWidgets import QDialog, QDialogButtonBox
 
 from .utils import get_dialog_ui
 
@@ -93,7 +93,7 @@ class WebDialog(QDialog):
         self.setWindowTitle(title)
         self._on_validate()
 
-    @pyqtSlot()
+    @Slot()
     def _on_validate(self):
         acceptable_input = self.ui_target.hasAcceptableInput()
         palette = (self._normal_palette if acceptable_input

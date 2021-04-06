@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt5.QtGui import QBrush, QPen
+from qtpy.QtGui import QBrush, QPen
 from pyqtgraph import PlotDataItem
 from traits.api import Constant, Instance
 

@@ -1,4 +1,4 @@
-from PyQt5.QtCore import pyqtSlot
+from qtpy.QtCore import Slot
 
 from karabogui.graph.common.const import SCALING, TRANSLATION
 from karabogui.graph.common.enums import ROITool
@@ -31,7 +31,7 @@ class ImageROIController(BaseROIController):
         self.plotItem.imageTransformed.disconnect(self._update_transform)
         super(ImageROIController, self).destroy()
 
-    @pyqtSlot()
+    @Slot()
     def update(self):
         """Emits the ROI information, which can be either from the whole plot
            or the ROI rectangle."""
@@ -56,7 +56,7 @@ class ImageROIController(BaseROIController):
 
         self.updated.emit(region)
 
-    @pyqtSlot()
+    @Slot()
     def _update_geometry(self, roi=None):
         """Adjusts ROI item geometry with the current image transform"""
         if self._current_tool == ROITool.NoROI:
@@ -73,13 +73,13 @@ class ImageROIController(BaseROIController):
                 self.plotItem.axes_transform[SCALING],
                 self.plotItem.axes_transform[TRANSLATION], update=False)
 
-    @pyqtSlot(object)
+    @Slot(object)
     def _set_current_item(self, roi_item, update=True):
         super(ImageROIController, self)._set_current_item(roi_item, update)
         if update and self.plotItem.image_set:
             self.update()
 
-    @pyqtSlot()
+    @Slot()
     def _update_transform(self):
         self._update_geometry()
         self.update()

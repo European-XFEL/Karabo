@@ -1,7 +1,7 @@
 from unittest import mock
 
 from numpy.testing import assert_array_equal
-from PyQt5.QtWidgets import QGraphicsTextItem
+from qtpy.QtWidgets import QGraphicsTextItem
 from pyqtgraph import ColorMap
 
 from karabo.native import EncodingType

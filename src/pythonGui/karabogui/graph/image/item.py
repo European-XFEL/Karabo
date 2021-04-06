@@ -1,6 +1,6 @@
 import numpy as np
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QPointF, QRectF, Qt
-from PyQt5.QtGui import QColor, QImage, qRgb, QTransform
+from qtpy.QtCore import Signal, Slot, QPointF, QRectF, Qt
+from qtpy.QtGui import QColor, QImage, qRgb, QTransform
 from pyqtgraph import (
     functions as fn, GraphicsObject, getConfigOption, Point)
 from scipy.ndimage import zoom
@@ -13,10 +13,10 @@ NULL_COLOR = QColor(255, 255, 255, 70)
 
 
 class KaraboImageItem(GraphicsObject):
-    clicked = pyqtSignal(float, float)
-    hovered = pyqtSignal(object, object)
+    clicked = Signal(float, float)
+    hovered = Signal(object, object)
 
-    sigImageChanged = pyqtSignal()
+    sigImageChanged = Signal()
 
     def __init__(self, image=np.zeros((50, 50), dtype=np.uint8), parent=None):
         GraphicsObject.__init__(self)
@@ -132,7 +132,7 @@ class KaraboImageItem(GraphicsObject):
 
         return color
 
-    @pyqtSlot()
+    @Slot()
     def reset_downsampling(self, update=True):
         self._lastDownsample = None
         if update:

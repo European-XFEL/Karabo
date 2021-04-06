@@ -5,8 +5,8 @@
 #############################################################################
 from xml.sax.saxutils import escape
 
-from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtWidgets import QPushButton, QTextEdit, QVBoxLayout, QWidget
+from qtpy.QtCore import Slot, Qt
+from qtpy.QtWidgets import QPushButton, QTextEdit, QVBoxLayout, QWidget
 
 
 class PopupWidget(QWidget):
@@ -45,7 +45,7 @@ class PopupWidget(QWidget):
         button_text = "Update" if self.freeze else "Freeze"
         self._ui_freeze_button.setText(button_text)
 
-    @pyqtSlot()
+    @Slot()
     def toggle_freeze(self):
         self.freeze = not self.freeze
         if self.freeze is False and self.info_cache is not None:

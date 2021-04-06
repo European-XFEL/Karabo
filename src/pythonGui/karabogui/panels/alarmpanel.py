@@ -4,8 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtCore import pyqtSlot, QModelIndex
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Slot, QModelIndex
+from qtpy.QtWidgets import (
     QAbstractButton, QAbstractItemView, QButtonGroup, QHBoxLayout, QHeaderView,
     QPushButton, QRadioButton, QStyle, QStyledItemDelegate, QTableView,
     QVBoxLayout, QWidget)
@@ -71,7 +71,7 @@ class AlarmPanel(BasePanelWidget):
 
         return widget
 
-    @pyqtSlot(QAbstractButton)
+    @Slot(QAbstractButton)
     def filterToggled(self, button):
         """ The filter ``button`` was activated. Update filtering needed."""
         if button is self.ui_show_alarm_warn:
@@ -85,7 +85,7 @@ class AlarmPanel(BasePanelWidget):
         if event.isAccepted():
             self.signalPanelClosed.emit(self.windowTitle())
 
-    @pyqtSlot(QModelIndex)
+    @Slot(QModelIndex)
     def onRowDoubleClicked(self, index):
         """A double click on a column should select the device in topology"""
         value = index.data()
@@ -167,7 +167,7 @@ class ButtonDelegate(QStyledItemDelegate):
             button.setGeometry(option.rect)
             self._updateButton(button, text, clickable)
 
-    @pyqtSlot(QModelIndex)
+    @Slot(QModelIndex)
     def cellClicked(self, index):
         if not index.isValid():
             return

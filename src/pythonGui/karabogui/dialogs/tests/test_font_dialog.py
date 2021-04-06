@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QFont, QFontDatabase
+from qtpy.QtGui import QFont, QFontDatabase
 
 from karabogui.fonts import FONT_FILENAMES, get_alias_from_font
 from karabogui.testing import GuiTestCase

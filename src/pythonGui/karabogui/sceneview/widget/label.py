@@ -3,9 +3,9 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import pyqtSlot, QSize, Qt
-from PyQt5.QtGui import QFontMetrics
-from PyQt5.QtWidgets import QAction, QDialog, QFrame, QLabel
+from qtpy.QtCore import Slot, QSize, Qt
+from qtpy.QtGui import QFontMetrics
+from qtpy.QtWidgets import QAction, QDialog, QFrame, QLabel
 
 from karabogui.fonts import get_qfont
 from karabogui.dialogs.textdialog import TextDialog
@@ -132,7 +132,7 @@ class LabelWidget(KaraboSceneWidget, QLabel):
         self.model.trait_set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
-    @pyqtSlot()
+    @Slot()
     def edit_colors_text(self):
         self.edit(scene_view=None)
         self.update()

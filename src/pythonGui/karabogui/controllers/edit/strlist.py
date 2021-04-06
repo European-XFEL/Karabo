@@ -3,7 +3,7 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtWidgets import QDialog, QPushButton
+from qtpy.QtWidgets import QDialog, QPushButton
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import EditableListElementModel
