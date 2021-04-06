@@ -1,4 +1,4 @@
-from PyQt5.QtCore import pyqtSlot
+from qtpy.QtCore import Slot
 
 from karabogui.testing import GuiTestCase
 from karabogui.graph.common.api import (
@@ -47,7 +47,7 @@ class TestAuxPlotsToolset(GuiTestCase):
         # Set up test
         tool = None
 
-        @pyqtSlot(object)
+        @Slot(object)
         def set_tool(value):
             nonlocal tool
             tool = value
@@ -100,7 +100,7 @@ class TestROIToolset(GuiTestCase):
         # Set up test
         tool = None
 
-        @pyqtSlot(object)
+        @Slot(object)
         def set_tool(value):
             nonlocal tool
             tool = value

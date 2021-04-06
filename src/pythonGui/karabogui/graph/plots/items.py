@@ -1,9 +1,9 @@
 import weakref
 
 import numpy as np
-from PyQt5.QtCore import QRectF
-from PyQt5.QtGui import QPainter, QPainterPath, QPicture, QTransform
-from PyQt5.QtWidgets import QGraphicsPathItem
+from qtpy.QtCore import QRectF
+from qtpy.QtGui import QPainter, QPainterPath, QPicture, QTransform
+from qtpy.QtWidgets import QGraphicsPathItem
 from pyqtgraph import (
     arrayToQPath, BarGraphItem, functions as fn, getConfigOption,
     ScatterPlotItem)

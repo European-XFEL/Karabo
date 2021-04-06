@@ -2,7 +2,7 @@ from enum import Enum
 from functools import total_ordering
 from heapq import heappush, heappop
 
-from PyQt5.QtCore import pyqtSlot, QTimer
+from qtpy.QtCore import Slot, QTimer
 
 
 @total_ordering
@@ -32,7 +32,7 @@ counter = 0
 timer = None
 
 
-@pyqtSlot()
+@Slot()
 def timeout():
     """execute up to ``MAX_ITEM_PROCESSING`` tasks if existing
 

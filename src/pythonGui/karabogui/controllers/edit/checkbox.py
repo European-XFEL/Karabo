@@ -3,8 +3,8 @@
 # Created on February 10, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QCheckBox
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QCheckBox
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import CheckBoxModel

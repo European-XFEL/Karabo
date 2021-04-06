@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtWidgets import QWidget
 
 from karabo.common.scenemodel.api import GlobalAlarmModel
 from karabo.native import Configurable, String

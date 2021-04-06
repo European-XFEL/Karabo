@@ -5,9 +5,9 @@
 #############################################################################
 from functools import partial
 
-from PyQt5.QtCore import pyqtSlot, QEvent, QSize, Qt
-from PyQt5.QtGui import QKeySequence, QPalette
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Slot, QEvent, QSize, Qt
+from qtpy.QtGui import QKeySequence, QPalette
+from qtpy.QtWidgets import (
     QAction, QActionGroup, QApplication, QDialog, QMenu, QScrollArea)
 
 from karabogui import icons
@@ -151,19 +151,19 @@ class ScenePanel(BasePanelWidget):
     # ----------------------------
     # Qt slots
 
-    @pyqtSlot()
+    @Slot()
     def apply_editor_changes(self):
         self.scene_view.apply_editor_changes()
 
-    @pyqtSlot()
+    @Slot()
     def decline_editor_changes(self):
         self.scene_view.decline_editor_changes()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def toggle_snap_to_grid(self, is_checked):
         self.scene_view.snap_to_grid = is_checked
 
-    @pyqtSlot()
+    @Slot()
     def resize_scene(self):
         dialog = ResizeSceneDialog(self.scene_view.size(), parent=self)
         move_to_cursor(dialog)
@@ -175,7 +175,7 @@ class ScenePanel(BasePanelWidget):
             width, height = self._compute_panel_size()
             self.resize(width, height)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def design_mode_changed(self, is_checked):
         self.drawing_tool_bar.setVisible(is_checked)
         text = self.design_mode_text(is_checked)

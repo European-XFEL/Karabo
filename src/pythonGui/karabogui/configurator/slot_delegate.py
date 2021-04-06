@@ -3,8 +3,8 @@
 # Created on August 4, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import QEvent, QRect, Qt
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import QEvent, QRect, Qt
+from qtpy.QtWidgets import (
     QApplication, QStyle, QStyleOptionButton, QStyledItemDelegate
 )
 

@@ -3,8 +3,8 @@
 # Created on May 9, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5 import uic
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox
+from qtpy import uic
+from qtpy.QtWidgets import QDialog, QDialogButtonBox
 from traits.api import Undefined
 
 from karabo.common.api import Capabilities

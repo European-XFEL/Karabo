@@ -8,8 +8,8 @@ from functools import partial
 import os.path
 import webbrowser
 
-from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Qt, Slot
+from qtpy.QtWidgets import (
     QAction, QActionGroup, QFrame, QLabel, QMainWindow, QMenu, QMessageBox,
     QSizePolicy, QSplitter, QToolButton, QWidget, qApp)
 
@@ -570,7 +570,7 @@ class MainWindow(QMainWindow):
     # --------------------------------------
     # Qt slots
 
-    @pyqtSlot()
+    @Slot()
     def _store_dpi_setting(self):
         enabled = get_config()['highDPI']
         get_config()['highDPI'] = not enabled
@@ -579,37 +579,37 @@ class MainWindow(QMainWindow):
                 "client application of the setting to become active.")
         messagebox.show_information(text)
 
-    @pyqtSlot()
+    @Slot()
     def _store_panel_configuration(self):
         for name in _CLOSABLE_PANELS:
             visible = name in self._active_closable_panels
             set_panel_configuration(name, visible=visible)
 
-    @pyqtSlot()
+    @Slot()
     def onConfiguration(self):
         ConfigurationDialog(parent=self).open()
 
-    @pyqtSlot()
+    @Slot()
     def onHelpAbout(self):
         AboutDialog(parent=self).open()
 
-    @pyqtSlot()
+    @Slot()
     def onCheckUpdates(self):
         dialog = UpdateDialog(parent=self)
         dialog.open()
 
-    @pyqtSlot()
+    @Slot()
     def onGrafana(self):
         try:
             webbrowser.open_new(GRAFANA_LINK)
         except webbrowser.Error:
             messagebox.show_error("No web browser available!", parent=self)
 
-    @pyqtSlot()
+    @Slot()
     def onWizard(self):
         TipsTricksWizard(parent=self).open()
 
-    @pyqtSlot(QAction)
+    @Slot(QAction)
     def onChangeAccessLevel(self, action):
         level = action.data()
         assert isinstance(level, AccessLevel), 'Garbage access level value!'
@@ -618,7 +618,7 @@ class MainWindow(QMainWindow):
         # Tell the world
         broadcast_event(KaraboEvent.AccessLevelChanged, {})
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def onConnectionButtonPress(self, connect):
         """Slot triggered when the `acServerConnect` button is clicked.
         i.e. The user wishes to (dis)connect the GUI client from/to the server.
@@ -631,14 +631,14 @@ class MainWindow(QMainWindow):
             # Either connecting or no need to save before disconnecting
             get_network().onServerConnection(connect, parent=self)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def onPanelClose(self, name):
         action = self.panelActions.get(name)
         if action is not None:
             action.setEnabled(True)
         self._active_closable_panels.pop(name)
 
-    @pyqtSlot(float, bool)
+    @Slot(float, bool)
     def onNetworkPerformance(self, proc_delay, active):
         """Color our network lamp with respect to the processing delay
         """
@@ -649,7 +649,7 @@ class MainWindow(QMainWindow):
         if active:
             self.ui_lamp.setText('{:.3f}'.format(proc_delay))
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def onServerConnectionChanged(self, isConnected):
         """Slot triggered when the network connection goes up/down. At this
         point, there is no way to easily undo the state change.
@@ -679,7 +679,7 @@ class MainWindow(QMainWindow):
 
         self.tbAccessLevel.setEnabled(isConnected)
 
-    @pyqtSlot()
+    @Slot()
     def onUpdateAccessLevel(self):
         global_access_level = krb_globals.GLOBAL_ACCESS_LEVEL
 

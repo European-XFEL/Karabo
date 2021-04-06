@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt
+from qtpy.QtCore import Qt
 
 from karabo.common.scenemodel.api import TableElementModel
 from karabo.native import Configurable, Bool, Hash, Int32, String, VectorHash

@@ -5,8 +5,8 @@
 #############################################################################
 from weakref import WeakValueDictionary
 
-from PyQt5.QtCore import (
-    pyqtSignal, pyqtSlot, QAbstractItemModel, QModelIndex, Qt, QItemSelection,
+from qtpy.QtCore import (
+    Signal, Slot, QAbstractItemModel, QModelIndex, Qt, QItemSelection,
     QItemSelectionModel)
 
 from karabo.common.api import ProxyStatus
@@ -17,7 +17,7 @@ from .context import _UpdateContext
 
 
 class DeviceTreeModel(QAbstractItemModel):
-    signalItemChanged = pyqtSignal(str, object)  # type, BaseDeviceProxy
+    signalItemChanged = Signal(str, object)  # type, BaseDeviceProxy
 
     def __init__(self, parent=None):
         super(DeviceTreeModel, self).__init__(parent)
@@ -188,7 +188,7 @@ class DeviceTreeModel(QAbstractItemModel):
     def currentIndex(self):
         return self.selectionModel.currentIndex()
 
-    @pyqtSlot(QItemSelection, QItemSelection)
+    @Slot(QItemSelection, QItemSelection)
     def onSelectionChanged(self, selected, deselected):
         selectedIndexes = selected.indexes()
 

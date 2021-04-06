@@ -1,7 +1,7 @@
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtGui import QColor, QFont, QPixmap, QIcon
-from PyQt5.QtWidgets import QColorDialog, QDialog
+from qtpy import uic
+from qtpy.QtCore import Slot, Qt
+from qtpy.QtGui import QColor, QFont, QPixmap, QIcon
+from qtpy.QtWidgets import QColorDialog, QDialog
 
 from karabogui.fonts import get_font_size_from_dpi
 from karabo.common.scenemodel.api import LabelModel
@@ -54,17 +54,17 @@ class TextDialog(QDialog):
         pixmap.fill(QColor(self.label_model.background))
         self.pbBackground.setIcon(QIcon(pixmap))
 
-    @pyqtSlot(int)
+    @Slot(int)
     def on_cbBackground_stateChanged(self, state):
         if state != Qt.Checked:
             self.label_model.background = 'transparent'
             self.set_text_background_button()
 
-    @pyqtSlot(str)
+    @Slot(str)
     def on_leText_textChanged(self, text):
         self.label_model.text = text
 
-    @pyqtSlot()
+    @Slot()
     def on_pbFont_clicked(self):
         dialog = FontDialog(self.text_font, parent=self)
         if dialog.exec_() == QDialog.Accepted:
@@ -72,30 +72,30 @@ class TextDialog(QDialog):
             self.label_model.font = self.text_font.toString()
             self.set_text_font_button()
 
-    @pyqtSlot()
+    @Slot()
     def on_pbTextColor_clicked(self):
         color = QColorDialog.getColor(QColor(self.label_model.foreground))
         if color.isValid():
             self.label_model.foreground = color.name()
             self.set_text_color_button()
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def on_cbFrameWidth_toggled(self, checked):
         self.sbFrameWidth.setEnabled(checked)
         if not checked:
             self.label_model.frame_width = 0
 
-    @pyqtSlot(int)
+    @Slot(int)
     def on_sbFrameWidth_valueChanged(self, value):
         self.label_model.frame_width = value
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def on_cbBackground_toggled(self, checked):
         self.pbBackground.setEnabled(checked)
         if not checked:
             self.label_model.background = ''
 
-    @pyqtSlot()
+    @Slot()
     def on_pbBackground_clicked(self):
         color = QColorDialog.getColor(QColor(self.label_model.background))
         if color.isValid():

@@ -5,9 +5,9 @@
 #############################################################################
 import os.path as op
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox
+from qtpy import uic
+from qtpy.QtCore import Slot
+from qtpy.QtWidgets import QDialog, QDialogButtonBox
 
 from karabo.native import AccessLevel
 from karabogui import globals as krb_globals
@@ -138,7 +138,7 @@ class DeviceHandleDialog(QDialog):
         index = self.cbClass.findText(class_id)
         self.cbClass.setCurrentIndex(index)
 
-    @pyqtSlot()
+    @Slot()
     def _update_button_box(self):
         """Only enable Ok button, if title and configuration is set
         """
@@ -147,7 +147,7 @@ class DeviceHandleDialog(QDialog):
                    len(self.cbClass.currentText()))
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def config_changed(self, index):
         config_model = self.cbConfig.itemData(index)
         # Update dialog to active configuration data

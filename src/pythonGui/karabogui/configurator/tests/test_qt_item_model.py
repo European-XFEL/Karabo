@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt
+from qtpy.QtCore import Qt
 
 from karabo.common.api import ProxyStatus, State
 from karabo.native import (

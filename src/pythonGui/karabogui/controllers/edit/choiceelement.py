@@ -3,7 +3,7 @@
 # Created on February 28, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtWidgets import QComboBox
+from qtpy.QtWidgets import QComboBox
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import ChoiceElementModel

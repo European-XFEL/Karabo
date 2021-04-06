@@ -4,9 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtGui import QPalette
-from PyQt5.QtWidgets import QComboBox, QStyledItemDelegate, QLineEdit
+from qtpy.QtCore import Slot, Qt
+from qtpy.QtGui import QPalette
+from qtpy.QtWidgets import QComboBox, QStyledItemDelegate, QLineEdit
 
 from karabo.common.api import KARABO_SCHEMA_OPTIONS
 from karabogui.binding.api import (
@@ -64,7 +64,7 @@ class ComboBoxDelegate(QStyledItemDelegate):
         if not is_equal(old, new):
             model.setData(index, new, Qt.EditRole)
 
-    @pyqtSlot()
+    @Slot()
     def _on_editor_changed(self):
         """The current index of the combobox changed. Notify the model.
 
@@ -86,7 +86,7 @@ class LineEditEditor(QLineEdit):
         self._error_palette.setColor(QPalette.Text, Qt.red)
         self.textChanged.connect(self._check_background)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def _check_background(self, text):
         acceptable_input = self.hasAcceptableInput()
         palette = (self._normal_palette if acceptable_input

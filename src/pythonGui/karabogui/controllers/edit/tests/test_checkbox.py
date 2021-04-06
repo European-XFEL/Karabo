@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt
+from qtpy.QtCore import Qt
 
 from karabo.common.scenemodel.api import CheckBoxModel
 from karabo.common.states import State
