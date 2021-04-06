@@ -1,10 +1,10 @@
 from collections import namedtuple
 
-from PyQt5 import uic
-from PyQt5.QtCore import (
-    pyqtSlot, QAbstractTableModel, QItemSelection, QSortFilterProxyModel, Qt)
-from PyQt5.QtGui import QPalette
-from PyQt5.QtWidgets import QDialog, QHeaderView, QDialogButtonBox
+from qtpy import uic
+from qtpy.QtCore import (
+    Slot, QAbstractTableModel, QItemSelection, QSortFilterProxyModel, Qt)
+from qtpy.QtGui import QPalette
+from qtpy.QtWidgets import QDialog, QHeaderView, QDialogButtonBox
 
 from karabogui.events import (
     broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
@@ -53,7 +53,7 @@ class SaveConfigurationDialog(QDialog):
         }
         register_for_broadcasts(self.event_map)
 
-    @pyqtSlot()
+    @Slot()
     def _check_button(self):
         """Basic validation of configuration name"""
         enable = self.ui_name.hasAcceptableInput()
@@ -63,7 +63,7 @@ class SaveConfigurationDialog(QDialog):
             self.ui_name.setPalette(self._error_palette)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
-    @pyqtSlot(int)
+    @Slot(int)
     def _change_text(self, index):
         self.ui_priority_text.setText(PRIORITY_EXP[index])
 
@@ -178,12 +178,12 @@ class ConfigurationFromName(QDialog):
     # --------------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot()
+    @Slot()
     def _show_device(self):
         broadcast_event(KaraboEvent.ShowDevice, {'deviceId': self.instance_id,
                                                  'showTopology': True})
 
-    @pyqtSlot()
+    @Slot()
     def open_save_dialog(self):
         dialog = SaveConfigurationDialog(parent=self)
         if dialog.exec() == QDialog.Accepted:
@@ -200,13 +200,13 @@ class ConfigurationFromName(QDialog):
                 name, [self.instance_id], priority=priority,
                 description=description, update=True)
 
-    @pyqtSlot()
+    @Slot()
     def accept(self):
         """The dialog was accepted and we can request a configuration"""
         self._request_configuration()
         super(ConfigurationFromName, self).accept()
 
-    @pyqtSlot()
+    @Slot()
     def _request_configuration(self):
         """Request the configuration for the actual `instance_id`"""
         index = self.ui_table_widget.selectionModel().selectedRows()[0]
@@ -216,17 +216,17 @@ class ConfigurationFromName(QDialog):
         name = model.index(index.row(), NAME_FIELD).data()
         get_network().onGetConfigurationFromName(self.instance_id, name)
 
-    @pyqtSlot()
+    @Slot()
     def on_ui_button_refresh_clicked(self):
         """Refresh the list of configurations for the actual `instance_id`"""
         get_network().onListConfigurationFromName(self.instance_id)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def _filter_changed(self, text):
         self.model.setFilterFixedString(text)
         self._check_button_state()
 
-    @pyqtSlot(QItemSelection, QItemSelection)
+    @Slot(QItemSelection, QItemSelection)
     def _selectionChanged(self, selected, deselected):
         self._check_button_state()
 

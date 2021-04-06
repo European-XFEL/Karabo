@@ -2,9 +2,9 @@ from abc import abstractmethod
 from io import StringIO
 from operator import sub
 
-from PyQt5.QtCore import QMimeData, QPoint
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QApplication, QDialog, QMessageBox
+from qtpy.QtCore import QMimeData, QPoint
+from qtpy.QtGui import QCursor
+from qtpy.QtWidgets import QApplication, QDialog, QMessageBox
 
 from karabo.common.scenemodel.api import (
     ArrowModel, BaseLayoutModel, BaseWidgetObjectData, SceneModel, read_scene,

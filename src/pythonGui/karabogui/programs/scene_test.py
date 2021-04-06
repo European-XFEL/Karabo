@@ -2,7 +2,7 @@ import argparse
 from collections import OrderedDict
 import sys
 
-from PyQt5.QtWidgets import QApplication, QBoxLayout
+from qtpy.QtWidgets import QApplication, QBoxLayout
 
 from karabo.common.scenemodel.api import BoxLayoutModel, LabelModel, SceneModel
 from karabogui import icons

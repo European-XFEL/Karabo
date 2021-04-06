@@ -1,7 +1,7 @@
 import numpy as np
-from PyQt5.QtCore import Qt, pyqtSlot, QPoint
-from PyQt5.QtGui import QTransform
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Qt, Slot, QPoint
+from qtpy.QtGui import QTransform
+from qtpy.QtWidgets import (
     QAction, QInputDialog, QLabel, QMenu, QWidgetAction)
 from pyqtgraph import ROI, TextItem, functions as fn, Point
 
@@ -73,7 +73,7 @@ class KaraboROI(ROI):
     # ---------------------------------------------------------------------
     # PyQt slots
 
-    @pyqtSlot()
+    @Slot()
     def _change_roi_text_item_details(self):
         if not self.textItem:
             return
@@ -354,7 +354,7 @@ class KaraboROI(ROI):
     # ---------------------------------------------------------------------
     # Private methods
 
-    @pyqtSlot()
+    @Slot()
     def _configure_roi(self):
         text, ok = QInputDialog.getText(None, 'Configure ROI', 'Name:',
                                         text=self.name)

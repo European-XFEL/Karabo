@@ -1,9 +1,9 @@
 from functools import partial
 from struct import calcsize, pack, unpack
 
-from PyQt5.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QByteArray,  QObject
-from PyQt5.QtWidgets import QDialog, QMessageBox, qApp
+from qtpy.QtNetwork import QAbstractSocket, QTcpSocket
+from qtpy.QtCore import Signal, Slot, QByteArray,  QObject
+from qtpy.QtWidgets import QDialog, QMessageBox, qApp
 
 from karabo.common.api import KARABO_CONFIG_MANAGER
 from karabo.native import (
@@ -32,9 +32,9 @@ class Network(QObject):
     """The `Network` class is the singleton holding the tcp socket for
     the gui server connection.
     """
-    signalServerConnectionChanged = pyqtSignal(bool)
-    signalReceivedData = pyqtSignal(object)
-    signalNetworkPerformance = pyqtSignal(float, bool)
+    signalServerConnectionChanged = Signal(bool)
+    signalReceivedData = Signal(object)
+    signalNetworkPerformance = Signal(float, bool)
 
     def __init__(self, parent=None):
         super(Network, self).__init__(parent=parent)
@@ -132,7 +132,7 @@ class Network(QObject):
         """External method to toggle the performance monitor"""
         self._show_proc_delay = not self._show_proc_delay
 
-    @pyqtSlot()
+    @Slot()
     def onReadServerData(self):
         """Run the network reader generator until it yields"""
         # self._data_reader is a generator object from self._network_generator.
@@ -169,7 +169,7 @@ class Network(QObject):
         self._performance_monitor(self._waiting_messages.pop(id(data)))
         self.signalReceivedData.emit(decodeBinary(data))
 
-    @pyqtSlot(QAbstractSocket.SocketError)
+    @Slot(QAbstractSocket.SocketError)
     def onSocketError(self, socketError):
         print("onSocketError", self._tcp_socket.errorString(), socketError)
 
@@ -245,7 +245,7 @@ class Network(QObject):
         else:
             self.disconnectFromServer()
 
-    @pyqtSlot()
+    @Slot()
     def onQuitApplication(self):
         """This slot is triggered from the MainWindow
 
@@ -255,7 +255,7 @@ class Network(QObject):
         """
         self.endServerConnection()
 
-    @pyqtSlot()
+    @Slot()
     def onConnected(self):
         def _least_recently_used(item, sequence, maxsize):
             """Apply of the Least Recently Used (LRU) algorithm on sequence
@@ -286,7 +286,7 @@ class Network(QObject):
         self._request_queue = []
         self._data_reader = self._network_generator()
 
-    @pyqtSlot()
+    @Slot()
     def onDisconnected(self):
         """The tcp socket was disconnected"""
 

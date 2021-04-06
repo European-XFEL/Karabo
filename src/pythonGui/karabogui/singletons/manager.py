@@ -7,8 +7,8 @@ from datetime import datetime
 from functools import wraps
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
-from PyQt5.QtCore import pyqtSlot, QObject
-from PyQt5.QtWidgets import QMessageBox
+from qtpy.QtCore import Slot, QObject
+from qtpy.QtWidgets import QMessageBox
 
 from karabo.common.api import ProxyStatus
 from karabo.native import AccessMode, Assignment, Hash, Timestamp
@@ -165,13 +165,13 @@ class Manager(QObject):
 
         get_network().onKillServer(serverId)
 
-    @pyqtSlot(object)
+    @Slot(object)
     def onReceivedData(self, hsh):
         handler = getattr(self, "handle_" + hsh["type"])
         kwargs = {k: v for k, v in hsh.items() if k != "type"}
         handler(**kwargs)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def onServerConnectionChanged(self, isConnected):
         """If the server connection is changed, the model needs an update.
         """

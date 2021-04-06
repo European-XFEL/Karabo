@@ -3,10 +3,10 @@
 # Created on December 7, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QStandardItemModel, QStandardItem, QIcon
-from PyQt5.QtSvg import QSvgWidget
-from PyQt5.QtWidgets import QDialog, QListView
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QPixmap, QStandardItemModel, QStandardItem, QIcon
+from qtpy.QtSvg import QSvgWidget
+from qtpy.QtWidgets import QDialog, QListView
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import StatefulIconWidgetModel

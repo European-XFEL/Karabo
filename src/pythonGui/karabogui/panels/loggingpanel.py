@@ -3,7 +3,7 @@
 # Created on February 1, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtWidgets import QAction, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QAction, QVBoxLayout, QWidget
 
 from karabogui import icons
 from karabogui.events import (

@@ -2,7 +2,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtWidgets import QVBoxLayout, QWidget
+from qtpy.QtWidgets import QVBoxLayout, QWidget
 
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.device_view import DeviceTreeView

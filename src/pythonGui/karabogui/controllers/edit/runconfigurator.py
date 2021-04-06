@@ -3,9 +3,9 @@
 # Created on September 28, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import QModelIndex, Qt
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QAbstractItemView, QTreeView, QHeaderView
+from qtpy.QtCore import QModelIndex, Qt
+from qtpy.QtGui import QStandardItemModel, QStandardItem
+from qtpy.QtWidgets import QAbstractItemView, QTreeView, QHeaderView
 from traits.api import Bool, Instance, List
 
 from karabo.common.scenemodel.api import RunConfiguratorModel

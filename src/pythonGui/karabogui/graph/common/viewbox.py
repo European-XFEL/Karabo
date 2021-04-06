@@ -1,6 +1,6 @@
 import numpy as np
-from PyQt5.QtCore import QPoint, Qt, pyqtSignal
-from PyQt5.QtWidgets import QMenu
+from qtpy.QtCore import QPoint, Qt, Signal
+from qtpy.QtWidgets import QMenu
 from pyqtgraph import GraphicsWidget, ViewBox
 
 from .enums import MouseMode
@@ -10,7 +10,7 @@ ZOOM_OUT = -1
 
 
 class KaraboViewBox(ViewBox):
-    middleButtonClicked = pyqtSignal()
+    middleButtonClicked = Signal()
 
     def __init__(self, parent=None):
         super(KaraboViewBox, self).__init__(parent, enableMenu=False)

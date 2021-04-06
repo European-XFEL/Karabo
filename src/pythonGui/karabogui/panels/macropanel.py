@@ -3,9 +3,9 @@
 # Created in June 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import pyqtSlot, Qt, QEvent, QPoint
-from PyQt5.QtGui import QTextCursor
-from PyQt5.QtWidgets import QMenu, QPlainTextEdit, QSplitter
+from qtpy.QtCore import Slot, Qt, QEvent, QPoint
+from qtpy.QtGui import QTextCursor
+from qtpy.QtWidgets import QMenu, QPlainTextEdit, QSplitter
 
 try:
     from qtconsole.pygments_highlighter import PygmentsHighlighter
@@ -171,7 +171,7 @@ class MacroPanel(BasePanelWidget):
         self.ui_console.insertPlainText("\n")
         self.ui_console.moveCursor(QTextCursor.End)
 
-    @pyqtSlot(QPoint)
+    @Slot(QPoint)
     def _show_context_menu(self, pos):
         """Show a context menu"""
         menu = QMenu()
@@ -181,7 +181,7 @@ class MacroPanel(BasePanelWidget):
         select_action.triggered.connect(self.ui_console.selectAll)
         menu.exec_(self.ui_console.viewport().mapToGlobal(pos))
 
-    @pyqtSlot()
+    @Slot()
     def on_run(self):
         allowed = krb_globals.access_role_allowed(AccessRole.SERVICE_EDIT)
         if not allowed:
@@ -209,7 +209,7 @@ class MacroPanel(BasePanelWidget):
 
         run_macro(self.model)
 
-    @pyqtSlot()
+    @Slot()
     def on_save(self):
         fn = getSaveFileName(
                 caption="Save macro to file",
@@ -222,6 +222,6 @@ class MacroPanel(BasePanelWidget):
         with open(fn, "w") as out:
             out.write(write_macro(self.model))
 
-    @pyqtSlot()
+    @Slot()
     def on_macro_changed(self):
         self.model.code = self.ui_editor.toPlainText()

@@ -5,7 +5,7 @@
 #############################################################################
 from textwrap import dedent
 
-from PyQt5.QtWidgets import QMessageBox
+from qtpy.QtWidgets import QMessageBox
 
 from karabogui.dialogs.messagebox import KaraboMessageBox
 

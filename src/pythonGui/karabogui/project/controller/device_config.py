@@ -5,8 +5,8 @@
 #############################################################################
 from functools import partial
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAction, QDialog, QMenu, QTextEdit, QVBoxLayout
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QAction, QDialog, QMenu, QTextEdit, QVBoxLayout
 from traits.api import Instance, Int
 
 from karabo.common.project.api import (

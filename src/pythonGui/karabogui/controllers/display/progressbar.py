@@ -3,8 +3,8 @@
 # Created on October 26, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAction, QProgressBar
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QAction, QProgressBar
 from traits.api import Float, Instance, Tuple
 
 from karabo.common.api import (

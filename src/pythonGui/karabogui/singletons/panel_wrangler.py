@@ -3,7 +3,7 @@
 # Created on February 16, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import pyqtSlot, QObject
+from qtpy.QtCore import Slot, QObject
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
@@ -170,7 +170,7 @@ class PanelWrangler(QObject):
             panel, area_enum = self._instance_panels.pop(instance_id)
             main_win.removePanel(panel, area_enum)
 
-    @pyqtSlot(str)
+    @Slot(str)
     def _on_tab_close(self, instance_id):
         """A panel emits its instance id when user close it, this function
         enables the action to reopen it

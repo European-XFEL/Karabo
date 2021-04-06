@@ -5,7 +5,7 @@
 #############################################################################
 import os.path as op
 
-from PyQt5.QtWidgets import QAction
+from qtpy.QtWidgets import QAction
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import ErrorBoolModel

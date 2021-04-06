@@ -5,7 +5,7 @@
 #############################################################################
 import os.path as op
 
-from PyQt5.QtSvg import QSvgWidget
+from qtpy.QtSvg import QSvgWidget
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import CheckBoxModel

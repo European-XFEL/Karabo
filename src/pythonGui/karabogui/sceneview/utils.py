@@ -6,8 +6,8 @@
 from contextlib import contextmanager
 import math
 
-from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import QFontMetrics
+from qtpy.QtCore import QPoint
+from qtpy.QtGui import QFontMetrics
 
 from karabogui.fonts import get_qfont
 

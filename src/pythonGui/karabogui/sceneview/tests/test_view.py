@@ -7,9 +7,9 @@ from contextlib import contextmanager
 import os.path as op
 from unittest import mock
 
-from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import QRegion
-from PyQt5.QtWidgets import QBoxLayout, QDialog
+from qtpy.QtCore import QPoint
+from qtpy.QtGui import QRegion
+from qtpy.QtWidgets import QBoxLayout, QDialog
 
 from karabo.common.api import (
     ProxyStatus, set_initialized_flag, set_modified_flag)
