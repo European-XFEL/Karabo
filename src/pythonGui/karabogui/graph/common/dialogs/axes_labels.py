@@ -1,7 +1,7 @@
 import os
 
-from PyQt5 import uic
-from PyQt5.QtWidgets import QDialog
+from qtpy import uic
+from qtpy.QtWidgets import QDialog
 
 
 class AxesLabelsDialog(QDialog):

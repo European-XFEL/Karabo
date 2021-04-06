@@ -4,9 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtCore import pyqtSlot, QRect, QSize, Qt
-from PyQt5.QtGui import QColor, QFontMetrics, QPainter, QTextFormat
-from PyQt5.QtWidgets import QPlainTextEdit, QTextEdit, QWidget
+from qtpy.QtCore import Slot, QRect, QSize, Qt
+from qtpy.QtGui import QColor, QFontMetrics, QPainter, QTextFormat
+from qtpy.QtWidgets import QPlainTextEdit, QTextEdit, QWidget
 
 LINE_WIDGET_BACKGROUND = QColor(224, 224, 224)
 LINE_WIDGET_COLOR = QColor(160, 160, 160)
@@ -46,11 +46,11 @@ class CodeEditor(QPlainTextEdit):
     # -----------------------------------
     # Qt slots
 
-    @pyqtSlot()
+    @Slot()
     def updateMargins(self):
         self.setViewportMargins(self.numberWidgetArea(), 0, 0, 0)
 
-    @pyqtSlot(QRect, int)
+    @Slot(QRect, int)
     def updateLineNumberWidget(self, rect, dy):
         if dy:
             self.number_widget.scroll(0, dy)
@@ -68,7 +68,7 @@ class CodeEditor(QPlainTextEdit):
         if rect.contains(self.viewport().rect()):
             self.updateMargins()
 
-    @pyqtSlot()
+    @Slot()
     def highlightCurrentLine(self):
         extra_selections = []
 

@@ -1,7 +1,7 @@
 from unittest import mock
 
-from PyQt5.QtCore import QSize
-from PyQt5.QtWidgets import QDialog
+from qtpy.QtCore import QSize
+from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.api import SceneModel
 

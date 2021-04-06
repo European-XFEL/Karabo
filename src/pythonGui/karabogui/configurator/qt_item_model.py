@@ -5,8 +5,8 @@
 #############################################################################
 from weakref import WeakValueDictionary
 
-from PyQt5.QtCore import pyqtSignal, QAbstractItemModel, QModelIndex, Qt
-from PyQt5.QtGui import QBrush, QColor
+from qtpy.QtCore import Signal, QAbstractItemModel, QModelIndex, Qt
+from qtpy.QtGui import QBrush, QColor
 
 from karabo.native import AccessLevel, AccessMode, Assignment
 from karabo.common.api import (
@@ -51,7 +51,7 @@ def _friendly_repr(proxy, value):
 
 
 class ConfigurationTreeModel(QAbstractItemModel):
-    signalHasModifications = pyqtSignal(bool)
+    signalHasModifications = Signal(bool)
 
     def __init__(self, parent=None):
         super(ConfigurationTreeModel, self).__init__(parent)

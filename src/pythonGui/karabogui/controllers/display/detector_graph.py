@@ -1,8 +1,8 @@
 from os import path as op
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QWidget
+from qtpy import uic
+from qtpy.QtCore import Signal
+from qtpy.QtWidgets import QWidget
 from traits.api import Enum, Instance, Int, WeakRef
 
 from karabo.common.scenemodel.api import (
@@ -19,8 +19,8 @@ from karabogui.graph.image.api import (
 
 
 class FrameSlider(QWidget):
-    axisChanged = pyqtSignal(str)
-    cellChanged = pyqtSignal(int)
+    axisChanged = Signal(str)
+    cellChanged = Signal(int)
 
     def __init__(self, parent=None):
         super(FrameSlider, self).__init__(parent)

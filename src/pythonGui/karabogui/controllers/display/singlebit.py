@@ -4,8 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from numpy import log2
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAction, QInputDialog, QLabel, QSizePolicy
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QAction, QInputDialog, QLabel, QSizePolicy
 from traits.api import Instance, Str, on_trait_change
 
 from karabo.common.api import State

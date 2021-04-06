@@ -3,9 +3,9 @@
 # Created on February 18, 2020
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import pyqtSlot, QRect
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QAction, QDialog, QPlainTextEdit
+from qtpy.QtCore import Slot, QRect
+from qtpy.QtGui import QColor
+from qtpy.QtWidgets import QAction, QDialog, QPlainTextEdit
 
 from karabogui.fonts import get_qfont
 from karabogui.dialogs.stickerdialog import GREY, StickerDialog
@@ -58,7 +58,7 @@ class StickerWidget(KaraboSceneWidget, QPlainTextEdit):
         self.model.trait_set(x=new_pos.x(), y=new_pos.y())
         self.move(new_pos)
 
-    @pyqtSlot()
+    @Slot()
     def edit_colors_text(self):
         parent = self.parent()
         self.edit(parent)

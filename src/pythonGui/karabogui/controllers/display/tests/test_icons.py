@@ -1,7 +1,7 @@
 import operator
 from unittest import mock
 
-from PyQt5.QtGui import QPixmap
+from qtpy.QtGui import QPixmap
 
 from karabo.common.scenemodel.api import (
     DigitIconsModel, IconData, SelectionIconsModel, TextIconsModel)

@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from PyQt5.QtGui import QValidator
+from qtpy.QtGui import QValidator
 
 from ..webdialog import WebValidator
 

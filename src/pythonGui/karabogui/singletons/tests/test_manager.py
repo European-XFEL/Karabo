@@ -1,6 +1,6 @@
 from unittest.mock import ANY, Mock, call, patch
 
-from PyQt5.QtCore import QSize
+from qtpy.QtCore import QSize
 
 from karabo.common.api import ProxyStatus
 from karabo.native import (

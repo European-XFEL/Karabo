@@ -1,6 +1,6 @@
-from PyQt5.QtCore import pyqtSignal, QPointF, QRectF, QSizeF, Qt
-from PyQt5.QtGui import QColor, QPen
-from PyQt5.QtWidgets import QGraphicsObject
+from qtpy.QtCore import Signal, QPointF, QRectF, QSizeF, Qt
+from qtpy.QtGui import QColor, QPen
+from qtpy.QtWidgets import QGraphicsObject
 
 
 class BaseCanvas(QGraphicsObject):
@@ -18,7 +18,7 @@ class BaseCanvas(QGraphicsObject):
 
     """
 
-    editingFinished = pyqtSignal(object)
+    editingFinished = Signal(object)
 
     def __init__(self, rect):
         super(BaseCanvas, self).__init__()

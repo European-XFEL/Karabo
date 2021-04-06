@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from PyQt5.QtWidgets import QDialog
+from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.api import (
     EditableListModel, EditableRegexListModel)

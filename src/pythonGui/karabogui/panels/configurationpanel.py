@@ -3,9 +3,9 @@
 # Created on November 3, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtGui import QPalette
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Qt, Slot
+from qtpy.QtGui import QPalette
+from qtpy.QtWidgets import (
     QAction, QHBoxLayout, QPushButton, QScrollArea, QStackedWidget,
     QVBoxLayout, QWidget)
 
@@ -636,41 +636,41 @@ class ConfigurationPanel(BasePanelWidget):
     # -----------------------------------------------------------------------
     # slots
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _on_button_changes(self, has_changes):
         self.pbApplyAll.setEnabled(has_changes)
         self.pbResetAll.setEnabled(has_changes)
         self.acApplyAll.setEnabled(has_changes)
         self.acResetAll.setEnabled(has_changes)
 
-    @pyqtSlot()
+    @Slot()
     def _on_apply_all(self):
         tree_widget = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
         tree_widget.apply_all()
 
-    @pyqtSlot()
+    @Slot()
     def _on_reset_all(self):
         tree_widget = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
         tree_widget.decline_all()
 
-    @pyqtSlot()
+    @Slot()
     def _on_open_from_file(self):
         if self._showing_proxy is not None:
             load_configuration_from_file(self._showing_proxy, parent=self)
 
-    @pyqtSlot()
+    @Slot()
     def _on_save_to_file(self):
         if self._showing_proxy is not None:
             save_configuration_to_file(self._showing_proxy, parent=self)
 
-    @pyqtSlot()
+    @Slot()
     def _on_kill_device(self):
         if not isinstance(self._showing_proxy, DeviceProxy):
             return
         get_manager().shutdownDevice(self._showing_proxy.device_id,
                                      parent=self)
 
-    @pyqtSlot()
+    @Slot()
     def _on_init_device(self):
         config = None
         proxy = self._showing_proxy

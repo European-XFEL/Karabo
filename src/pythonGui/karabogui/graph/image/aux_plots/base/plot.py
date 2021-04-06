@@ -1,8 +1,8 @@
 from abc import abstractmethod
 
-from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import QTransform
-from PyQt5.QtWidgets import QMenu
+from qtpy.QtCore import QPoint
+from qtpy.QtGui import QTransform
+from qtpy.QtWidgets import QMenu
 from pyqtgraph import GraphicsWidget, PlotItem, ViewBox
 from traits.api import (
     ABCHasStrictTraits, Constant, Instance, Property, String)

@@ -1,8 +1,8 @@
 from copy import deepcopy
 
 import numpy as np
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QRectF
-from PyQt5.QtGui import QFont
+from qtpy.QtCore import Signal, Slot, QRectF
+from qtpy.QtGui import QFont
 from pyqtgraph import ColorMap, PlotItem
 
 from karabogui.graph.common.api import (
@@ -25,9 +25,9 @@ def axis_tick_font():
 
 
 class KaraboImagePlot(PlotItem):
-    imageTransformed = pyqtSignal()
-    imageLevelsChanged = pyqtSignal(object)
-    imageAxesChanged = pyqtSignal()
+    imageTransformed = Signal()
+    imageLevelsChanged = Signal(object)
+    imageAxesChanged = Signal()
 
     AXIS_ORDER = "row-major"  # aligning the image coords to view coords
     DEFAULT_ROTATION = 0  # rotated at 0 deg.. which is not rotated at all
@@ -84,7 +84,7 @@ class KaraboImagePlot(PlotItem):
     # ---------------------------------------------------------------------
     # PyQt slots
 
-    @pyqtSlot()
+    @Slot()
     def _restore_view(self):
         """Restores the image item to the original transform, which is
         usually no scaling, translation, and rotation.
@@ -195,7 +195,7 @@ class KaraboImagePlot(PlotItem):
                .getLookupTable(alpha=False, mode="RGB"))
         self.imageItem.set_lookup_table(lut)
 
-    @pyqtSlot(object)
+    @Slot(object)
     def set_image_levels(self, levels):
         """Sets the image levels. Also updates the information of the
         selected pixel.
@@ -245,7 +245,7 @@ class KaraboImagePlot(PlotItem):
         labels[LABEL] = text
         labels[UNITS] = units
 
-    @pyqtSlot(ExportTool)
+    @Slot(ExportTool)
     def export(self, export_type):
         """Exports the image according to the desired format"""
         if export_type == ExportTool.Image:
