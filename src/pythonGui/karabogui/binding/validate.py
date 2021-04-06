@@ -209,8 +209,16 @@ def get_default_value(binding, force=False):
     attrs = binding.attributes
     value = attrs.get(const.KARABO_SCHEMA_DEFAULT_VALUE, None)
     if value is None and force:
-        value = _get_binding_default(binding)
-        assert value is not None, f"No default value for {type(binding)} ..."
+        options = attrs.get(const.KARABO_SCHEMA_OPTIONS, None)
+        if options is not None and len(options):
+            value = options[0]
+        else:
+            value = _get_binding_default(binding)
+            assert value is not None, f"No default value for {type(binding)}"
+            # In case of simple types, we have to check minimum's
+            if isinstance(binding, (IntBinding, FloatBinding)):
+                value = validate_binding_minimum(binding, value)
+
     return value
 
 
@@ -221,3 +229,48 @@ def convert_string(value: str):
     except (SyntaxError, ValueError):
         # Conversion of string to a literal failed, we return the value as is.
         return value
+
+
+def validate_binding_minimum(binding, value):
+    """Check the binding `binding` for a minimum value and align the
+    value `value` if necessary
+
+    The binding must be of an instance of `IntBinding` or `FloatBinding`
+    """
+    attrs = binding.attributes
+    if isinstance(binding, IntBinding):
+        range_trait = binding.trait('value').handler
+        trait_low = range_trait._low
+        if range_trait._exclude_low:
+            trait_low = trait_low + 1
+
+        low = attrs.get(const.KARABO_SCHEMA_MIN_EXC)
+        if low is not None:
+            low += 1
+        else:
+            low = attrs.get(const.KARABO_SCHEMA_MIN_INC, trait_low)
+
+        if value >= low:
+            return value
+
+        return low
+
+    elif isinstance(binding, FloatBinding):
+        value_type = attrs.get(const.KARABO_SCHEMA_VALUE_TYPE)
+        if value_type in ('FLOAT', 'COMPLEX_FLOAT'):
+            info = np.finfo(np.float32)
+        else:
+            info = np.finfo(np.float64)
+
+        low = attrs.get(const.KARABO_SCHEMA_MIN_EXC)
+        if low is not None:
+            low = low * (1 + np.sign(low) * info.eps) + info.tiny
+        else:
+            low = attrs.get(const.KARABO_SCHEMA_MIN_INC, info.min)
+
+        if value >= low:
+            return value
+
+        return low
+
+    return value
