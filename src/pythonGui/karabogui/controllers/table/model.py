@@ -4,16 +4,13 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import copy
-import json
 
 from qtpy.QtCore import Qt, QAbstractTableModel, QModelIndex
 from qtpy.QtGui import QBrush, QColor
-from qtpy.QtWidgets import QTableView
 
 from karabogui.binding.api import (
-    BoolBinding, get_default_value, StringBinding, VectorBinding)
+    BoolBinding, get_default_value, VectorBinding)
 from karabo.native import AccessMode, Hash
-from karabogui.enums import NavigationItemTypes, ProjectItemTypes
 from karabogui.indicators import get_state_color
 
 from .utils import convert_string_list, is_state_display_type
@@ -236,79 +233,3 @@ class TableModel(QAbstractTableModel):
     def set_readonly(self, value):
         """Set the readonly role of the table element"""
         self._readonly = value
-
-
-class KaraboTableView(QTableView):
-    def __init__(self, parent=None):
-        super(KaraboTableView, self).__init__(parent)
-        self._header = None
-        self._bindings = None
-        self._drag_column = None
-
-    def set_bindings(self, bindings):
-        self._bindings = bindings
-        self._header = list(bindings.keys())
-        # Note: Evaluate the eventual `drag-column`. If a string element is
-        # found in the row schema, the first appearance is taken!
-        for column_index, key in enumerate(self._header):
-            binding = bindings[key]
-            if isinstance(binding, StringBinding):
-                self._drag_column = column_index
-                break
-
-    def dragEnterEvent(self, event):
-        self._validate_drag_event(event)
-
-    def dragMoveEvent(self, event):
-        self._validate_drag_event(event)
-
-    def dropEvent(self, event):
-        is_valid, index, new_row, deviceId = self._validate_drag_event(event)
-
-        if is_valid:
-            model = self.model()
-            if new_row:
-                if self._drag_column is not None:
-                    model.insertRows(model.rowCount(), 1, QModelIndex())
-                    index = model.index(model.rowCount() - 1,
-                                        self._drag_column,
-                                        QModelIndex())
-                    # scroll to the end and pad with new whitespace to drop
-                    # next item
-                    self.scrollToBottom()
-                else:
-                    return
-            model.setData(index, deviceId, Qt.EditRole)
-
-    def _validate_drag_event(self, event):
-        if self._header is None:
-            # Header is present after the schema has arrived.
-            return False, None, False, 'None'
-
-        items = event.mimeData().data('treeItems').data()
-        if len(items) == 0:
-            event.ignore()
-            return False, None, False, 'None'
-
-        item = json.loads(items.decode())[0]
-        index = self.indexAt(event.pos())
-        item_type = item.get('type')
-        is_navigation_device = item_type == NavigationItemTypes.DEVICE
-        is_project_device = item_type == ProjectItemTypes.DEVICE
-        is_valid = is_navigation_device or is_project_device
-        deviceId = item.get('deviceId', 'None')
-
-        # Drop in empty area is also okay but must trigger new_row
-        if not index.isValid() and is_valid:
-            event.accept()
-            return True, index, True, deviceId
-
-        key = self._header[index.column()]
-        binding = self._bindings[key]
-        if is_valid:
-            event.accept()
-            not_string = not isinstance(binding, StringBinding)
-            return True, index, not_string, deviceId
-
-        event.ignore()
-        return False, None, False, deviceId
