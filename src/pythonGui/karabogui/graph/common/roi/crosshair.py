@@ -1,6 +1,6 @@
 import numpy as np
-from PyQt5.QtCore import pyqtSlot, QRectF
-from PyQt5.QtGui import QPainterPathStroker, QPainterPath
+from qtpy.QtCore import Slot, QRectF
+from qtpy.QtGui import QPainterPathStroker, QPainterPath
 from pyqtgraph import Point
 
 from karabogui.graph.common.utils import float_to_string
@@ -28,7 +28,7 @@ class CrosshairROI(KaraboROI):
         self.sigRegionChanged.connect(self.redraw)
         self.aspectLocked = True
 
-    @pyqtSlot()
+    @Slot()
     def _change_roi_text_item_details(self):
         if not self.textItem:
             return

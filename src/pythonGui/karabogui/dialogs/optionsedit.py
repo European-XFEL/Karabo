@@ -1,7 +1,7 @@
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, QCoreApplication, Qt
-from PyQt5.QtGui import QFontMetrics
-from PyQt5.QtWidgets import QDialog, QInputDialog, QListWidgetItem
+from qtpy import uic
+from qtpy.QtCore import Slot, QCoreApplication, Qt
+from qtpy.QtGui import QFontMetrics
+from qtpy.QtWidgets import QDialog, QInputDialog, QListWidgetItem
 
 from .utils import get_dialog_ui
 
@@ -98,7 +98,7 @@ class OptionsEditDialog(QDialog):
     # ----------------------------------------------------------------------
     # Slots
 
-    @pyqtSlot()
+    @Slot()
     def on_add_button_clicked(self):
         value = self._retrieve_any_string(self._add_caption, self._add_label)
 
@@ -109,7 +109,7 @@ class OptionsEditDialog(QDialog):
         self.list_widget.setCurrentRow(self.list_widget.count() - 1)
         self._on_update_buttons()
 
-    @pyqtSlot()
+    @Slot()
     def on_edit_button_clicked(self):
         value = self._retrieve_any_string(self._edit_caption, self._edit_label)
 
@@ -121,12 +121,12 @@ class OptionsEditDialog(QDialog):
         current_item.setText(str(value))
         self._on_update_buttons()
 
-    @pyqtSlot()
+    @Slot()
     def on_delete_button_clicked(self):
         self.list_widget.takeItem(self.list_widget.currentRow())
         self._on_update_buttons()
 
-    @pyqtSlot()
+    @Slot()
     def on_up_button_clicked(self):
         row = self.list_widget.currentRow()
         widget = self.list_widget
@@ -135,7 +135,7 @@ class OptionsEditDialog(QDialog):
             widget.setCurrentRow(row - 1)
             self._on_update_buttons()
 
-    @pyqtSlot()
+    @Slot()
     def on_down_button_clicked(self):
         row = self.list_widget.currentRow()
         widget = self.list_widget
@@ -144,7 +144,7 @@ class OptionsEditDialog(QDialog):
             widget.setCurrentRow(row + 1)
             self._on_update_buttons()
 
-    @pyqtSlot()
+    @Slot()
     def _on_update_buttons(self):
         has_items = self.list_widget.count() > 0
         self.edit_button.setEnabled(has_items)

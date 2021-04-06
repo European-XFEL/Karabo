@@ -1,6 +1,6 @@
-from PyQt5.QtCore import QSize, Qt, pyqtSignal
-from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtCore import QSize, Qt, Signal
+from qtpy.QtGui import QPainter
+from qtpy.QtWidgets import QWidget
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import BitfieldModel
@@ -13,7 +13,7 @@ from karabogui.controllers.api import (
 
 
 class BitfieldWidget(QWidget):
-    valueChanged = pyqtSignal(int)
+    valueChanged = Signal(int)
 
     def __init__(self, parent):
         QWidget.__init__(self, parent)

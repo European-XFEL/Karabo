@@ -1,4 +1,4 @@
-from PyQt5.QtCore import pyqtSlot, QObject
+from qtpy.QtCore import Slot, QObject
 from pyqtgraph import InfiniteLine, SignalProxy
 
 from karabogui.graph.common.api import CoordsLegend, create_button
@@ -21,7 +21,7 @@ class CrossTargetController(QObject):
             tooltip="Get a CrossTarget for the plot",
             on_clicked=self.toggle)
 
-    @pyqtSlot(object)
+    @Slot(object)
     def mouseMoved(self, event):
         """Catch the mouseMove event on the plotItem and show coordinates"""
         pos = event[0]
@@ -39,7 +39,7 @@ class CrossTargetController(QObject):
     # -----------------------------------------------------------------------
     # Public methods
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def toggle(self, state):
         if state:
             self.activate()

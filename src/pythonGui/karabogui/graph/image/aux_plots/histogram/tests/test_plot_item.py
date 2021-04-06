@@ -1,6 +1,6 @@
 import numpy as np
-from PyQt5.QtCore import QRectF
-from PyQt5.QtGui import (
+from qtpy.QtCore import QRectF
+from qtpy.QtGui import (
     QBrush, QColor, QLinearGradient, QPainter, QPen, QPixmap)
 
 from karabogui.testing import GuiTestCase

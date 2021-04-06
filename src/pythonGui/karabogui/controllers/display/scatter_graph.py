@@ -6,7 +6,7 @@
 from collections import deque
 from functools import partial
 
-from PyQt5.QtWidgets import QAction, QInputDialog
+from qtpy.QtWidgets import QAction, QInputDialog
 from traits.api import Any, Callable, Instance, WeakRef
 
 

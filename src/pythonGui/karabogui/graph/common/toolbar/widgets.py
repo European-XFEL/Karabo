@@ -1,5 +1,5 @@
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QSize, Qt
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Signal, Slot, QSize, Qt
+from qtpy.QtWidgets import (
     QAction, QMenu, QToolBar, QToolButton, QWidgetAction)
 
 from ..const import ICON_SIZE, BUTTON_SIZE
@@ -108,7 +108,7 @@ class WidgetAction(QWidgetAction):
         self._menu_button = None
         super(WidgetAction, self).deleteWidget(widget)
 
-    @pyqtSlot()
+    @Slot()
     def _on_menu_button_clicked(self):
         # Change the default action according to the selected action
         for orig_action, new_action in self._actions.items():
@@ -125,7 +125,7 @@ class WidgetAction(QWidgetAction):
 
 
 class DropDownMenu(QMenu):
-    triggered = pyqtSignal(QAction)
+    triggered = Signal(QAction)
 
     def mouseReleaseEvent(self, event):
         super(DropDownMenu, self).mouseReleaseEvent(event)
@@ -138,7 +138,7 @@ class DropDownMenu(QMenu):
 class DropDownButton(QToolButton):
     # A similar signal with `clicked` but contains the data from the actions.
     # Will return `None` if unchecked.
-    triggered = pyqtSignal(object)
+    triggered = Signal(object)
 
     def __init__(self, parent=None):
         super(DropDownButton, self).__init__(parent=parent)
@@ -175,14 +175,14 @@ class DropDownButton(QToolButton):
         if checkable:
             self.toggled.connect(self._check_action)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _trigger_data(self, checked):
         data = None
         if checked:
             data = self.defaultAction().data()
         self.triggered.emit(data)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _check_action(self, checked):
         current = self.defaultAction()
         for action in self.menu().actions():

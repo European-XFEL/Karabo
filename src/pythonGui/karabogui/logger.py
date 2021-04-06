@@ -1,7 +1,7 @@
 import logging
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject, Qt
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Signal, Slot, QObject, Qt
+from qtpy.QtWidgets import (
     QFrame, QHBoxLayout, QPushButton, QTextEdit, QVBoxLayout)
 
 import karabogui.icons as icons
@@ -17,7 +17,7 @@ CLEAR_BUTTON_SIZE = 25
 class LogMediator(QObject):
     """A mediator class for the `logger` to make sure logging is handled
     gracefully by Qt"""
-    signal = pyqtSignal(str, logging.LogRecord)
+    signal = Signal(str, logging.LogRecord)
 
 
 class QtHandler(logging.Handler):
@@ -79,7 +79,7 @@ class StatusLogWidget(QFrame):
         vertical_layout.addWidget(button)
         horizontal_layout.addLayout(vertical_layout)
 
-    @pyqtSlot(str, logging.LogRecord)
+    @Slot(str, logging.LogRecord)
     def update_status(self, status, record):
         color = self.COLORS.get(record.levelno, 'black')
         s = '<font color="%s">%s</font>' % (color, status)

@@ -1,7 +1,7 @@
 from functools import partial
 
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, QEvent, QSize
-from PyQt5.QtWidgets import QAction, QGridLayout, QWidget
+from qtpy.QtCore import Signal, Slot, QEvent, QSize
+from qtpy.QtWidgets import QAction, QGridLayout, QWidget
 from pyqtgraph import GraphicsLayoutWidget
 
 from karabogui import icons
@@ -28,8 +28,8 @@ ROI_CANVAS_MAP = {
 
 
 class KaraboImageView(QWidget):
-    stateChanged = pyqtSignal(object)
-    toolTipChanged = pyqtSignal()
+    stateChanged = Signal(object)
+    toolTipChanged = Signal()
 
     def __init__(self, parent=None):
         """ The main image view widget for a single ImagePlot
@@ -403,7 +403,7 @@ class KaraboImageView(QWidget):
     # -----------------------------------------------------------------------
     # Qt Slots
 
-    @pyqtSlot()
+    @Slot()
     def _image_changed(self):
         """Unified handle of image changes. This is to avoid race conditions.
            Will move the picker and ROI slots here as well"""
@@ -421,7 +421,7 @@ class KaraboImageView(QWidget):
         if self.roi is not None:
             self.roi.update()
 
-    @pyqtSlot(object)
+    @Slot(object)
     def _image_levels_changed(self, levels):
         """Unified handle of image level changes."""
 
@@ -432,13 +432,13 @@ class KaraboImageView(QWidget):
             self._aux_plots.set_config(plot=AuxPlots.Histogram,
                                        levels=levels or self._colorbar.levels)
 
-    @pyqtSlot(MouseMode)
+    @Slot(MouseMode)
     def set_mouse_mode(self, mode):
         self.plotItem.vb.set_mouse_mode(mode)
         if self._picker is not None:
             self._picker.activate(mode is MouseMode.Picker)
 
-    @pyqtSlot(AuxPlots)
+    @Slot(AuxPlots)
     def show_aux_plots(self, plot_type):
         """Hides/shows the auxiliar plots set for this controller"""
         if self._aux_plots is not None:
@@ -447,7 +447,7 @@ class KaraboImageView(QWidget):
         if self.roi is not None:
             self.roi.enable_updates(plot_type != AuxPlots.NoPlot)
 
-    @pyqtSlot()
+    @Slot()
     def _show_labels_dialog(self):
         config, result = AxesLabelsDialog.get(self.configuration,
                                               parent=self)
@@ -478,7 +478,7 @@ class KaraboImageView(QWidget):
                 margin -= LABEL_HEIGHT
             self._colorbar.set_margins(top=margin)
 
-    @pyqtSlot()
+    @Slot()
     def _show_transforms_dialog(self):
         transform = self.plotItem.axes_transform
         aspect_ratio = self.plotItem.aspect_ratio
@@ -503,7 +503,7 @@ class KaraboImageView(QWidget):
         self.configuration.update(**config)
         self.stateChanged.emit(config)
 
-    @pyqtSlot()
+    @Slot()
     def _set_roi_configuration(self):
         config = {}
         aux_plots_tool = self.toolbar.toolsets[AuxPlots].current_tool
@@ -529,14 +529,14 @@ class KaraboImageView(QWidget):
         self.configuration.update(**config)
         self.stateChanged.emit(config)
 
-    @pyqtSlot()
+    @Slot()
     def _set_axes_to_aux(self):
         self._aux_plots.set_axes(*self.plotItem.transformed_axes)
 
     # -----------------------------------------------------------------------
     # ROI methods
 
-    @pyqtSlot(object)
+    @Slot(object)
     def _activate_roi_tool(self, roi_tool):
         if self._canvas is not None:
             self._deactivate_canvas()
@@ -565,7 +565,7 @@ class KaraboImageView(QWidget):
         self.plotItem.vb.addItem(self._canvas)
         self._canvas.editingFinished.connect(partial(self._draw_roi, roi_tool))
 
-    @pyqtSlot(object)
+    @Slot(object)
     def _draw_roi(self, roi_tool, rect):
         self._deactivate_canvas()
         if rect.isValid():

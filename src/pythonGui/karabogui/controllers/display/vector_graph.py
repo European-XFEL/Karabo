@@ -6,7 +6,7 @@ from itertools import cycle
 from weakref import WeakValueDictionary
 
 import numpy as np
-from PyQt5.QtWidgets import QAction
+from qtpy.QtWidgets import QAction
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import (

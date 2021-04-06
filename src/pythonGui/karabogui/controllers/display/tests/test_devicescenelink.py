@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from PyQt5.QtWidgets import QMessageBox
+from qtpy.QtWidgets import QMessageBox
 
 from karabo.common.enums import ProxyStatus
 from karabo.common.scenemodel.api import (

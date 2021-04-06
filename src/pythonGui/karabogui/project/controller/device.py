@@ -7,9 +7,9 @@ from functools import partial
 from io import StringIO
 
 from traits.api import Undefined
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QAction, QDialog, QMenu, QMessageBox
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QCursor
+from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, Property, on_trait_change
 
 from karabo.common.api import Capabilities, NO_CONFIG_STATUSES

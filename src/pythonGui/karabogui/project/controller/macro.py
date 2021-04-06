@@ -8,7 +8,7 @@ from io import StringIO
 import os.path as op
 import re
 
-from PyQt5.QtWidgets import QAction, QDialog, QMenu, QMessageBox
+from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, String, on_trait_change
 
 from karabo.common.api import ProxyStatus, walk_traits_object
@@ -222,7 +222,7 @@ class MacroController(BaseProjectGroupController):
             broadcast_event(KaraboEvent.RemoveProjectModelViews,
                             {'models': [macro]})
 
-    # @pyqtSlot()
+    # @Slot()
     def _edit_macro(self, parent=None):
         dialog = ObjectEditDialog(object_type='macro', model=self.model,
                                   parent=parent)
@@ -243,7 +243,7 @@ class MacroController(BaseProjectGroupController):
                 dupe_macro.simple_name = simple_name
                 project.macros.append(dupe_macro)
 
-    # @pyqtSlot()
+    # @Slot()
     def _save_macro_to_file(self, parent=None):
         config = get_config()
         path = config['macro_dir']
@@ -269,7 +269,7 @@ class MacroController(BaseProjectGroupController):
         with open(fn, 'w') as fout:
             fout.write(write_macro(macro))
 
-    # @pyqtSlot()
+    # @Slot()
     def run_macro(self, parent=None):
         """Action handler to instantiate the macro
 

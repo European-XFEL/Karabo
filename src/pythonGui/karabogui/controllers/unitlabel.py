@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy
+from qtpy.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy
 
 
 class UnitLabelWrapper(QFrame):

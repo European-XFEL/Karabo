@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget
+from qtpy.QtWidgets import QWidget
 from traits.api import Any, Dict, HasStrictTraits, Instance, List
 
 from karabo.common.project.api import ProjectModel

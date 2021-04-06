@@ -6,10 +6,10 @@
 from contextlib import contextmanager
 import time
 
-from PyQt5.QtCore import (
-    pyqtSignal, pyqtSlot, QEvent, QPoint, QRect, QSize, Qt, QTimer)
-from PyQt5.QtGui import QBrush, QColor, QPalette, QPainter, QPen
-from PyQt5.QtWidgets import QSizePolicy, QStackedLayout, QWidget
+from qtpy.QtCore import (
+    Signal, Slot, QEvent, QPoint, QRect, QSize, Qt, QTimer)
+from qtpy.QtGui import QBrush, QColor, QPalette, QPainter, QPen
+from qtpy.QtWidgets import QSizePolicy, QStackedLayout, QWidget
 
 from karabo.common.api import set_initialized_flag
 from karabo.common.scenemodel.api import (
@@ -58,7 +58,7 @@ class SceneView(QWidget):
     """An object representing the view for a Karabo GUI scene.
     """
 
-    resetToSelectionTool = pyqtSignal()
+    resetToSelectionTool = Signal()
 
     def __init__(self, model=None, parent=None):
         super(SceneView, self).__init__(parent)
@@ -373,7 +373,7 @@ class SceneView(QWidget):
                 obj.set_visible(True)
         self.tab_visible = True
 
-    @pyqtSlot()
+    @Slot()
     def _clean_visible_widgets(self):
         """Remove the visibility state of this scene"""
         for obj in self._scene_obj_cache.values():
@@ -569,7 +569,7 @@ class SceneView(QWidget):
     # --------------------------------------------------------------------
     # Private methods
 
-    @pyqtSlot()
+    @Slot()
     def _clean_removed_widgets(self):
         """Called by the `_widget_removal_timer` when there might be widgets to
         clean up.

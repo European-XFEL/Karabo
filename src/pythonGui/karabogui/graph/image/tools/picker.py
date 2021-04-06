@@ -1,7 +1,7 @@
 import numpy as np
-from PyQt5.QtCore import pyqtSlot, QObject, QPointF, QRectF, Qt
-from PyQt5.QtGui import QColor, QPen
-from PyQt5.QtWidgets import QGraphicsRectItem, QGraphicsObject
+from qtpy.QtCore import Slot, QObject, QPointF, QRectF, Qt
+from qtpy.QtGui import QColor, QPen
+from qtpy.QtWidgets import QGraphicsRectItem, QGraphicsObject
 
 from karabogui.graph.common.api import CoordsLegend
 from karabogui.graph.common.const import SCALING, TRANSLATION
@@ -67,7 +67,7 @@ class PickerController(QObject):
                 self._update_geometry()
                 self.update()
 
-    @pyqtSlot(float, float)
+    @Slot(float, float)
     def select_pixel(self, x, y):
         if not self._selection_rect.isVisible():
             self._selection_rect.show()
@@ -76,7 +76,7 @@ class PickerController(QObject):
         self._selection_rect.setPos(x, y)
         self.update()
 
-    @pyqtSlot()
+    @Slot()
     def update(self):
         if not self._selection_rect.isVisible():
             return
@@ -93,7 +93,7 @@ class PickerController(QObject):
 
         self._picker_legend.set_value(pos.x(), pos.y(), value, color)
 
-    @pyqtSlot(object, object)
+    @Slot(object, object)
     def hover_pixel(self, x, y):
         if x is None and y is None:
             if self._indicator_rect.isVisible():

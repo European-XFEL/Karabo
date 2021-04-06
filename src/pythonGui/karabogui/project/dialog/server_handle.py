@@ -5,9 +5,9 @@
 #############################################################################
 import os.path as op
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox
+from qtpy import uic
+from qtpy.QtCore import Slot
+from qtpy.QtWidgets import QDialog, QDialogButtonBox
 
 from karabo.native import AccessLevel
 from karabogui import globals as krb_globals
@@ -64,7 +64,7 @@ class ServerHandleDialog(QDialog):
 
         return sorted(available_servers)
 
-    @pyqtSlot()
+    @Slot()
     def _update_button_box(self):
         """Only enable Ok button, if title and configuration is set
         """

@@ -3,10 +3,10 @@
 # Created on December 21, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtGui import QIntValidator
-from PyQt5.QtWidgets import QComboBox, QDialog
+from qtpy import uic
+from qtpy.QtCore import Slot, Qt
+from qtpy.QtGui import QIntValidator
+from qtpy.QtWidgets import QComboBox, QDialog
 
 from .utils import get_dialog_ui
 
@@ -40,7 +40,7 @@ class LoginDialog(QDialog):
         self.ui_port.setText(port)
         self.ui_port.setValidator(QIntValidator(None))
 
-    @pyqtSlot(str)
+    @Slot(str)
     def on_hostname_changed(self, value):
         """Split the selected text into hostname and port
         """

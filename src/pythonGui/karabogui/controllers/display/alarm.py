@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtSvg import QSvgWidget
+from qtpy.QtSvg import QSvgWidget
 from traits.api import Instance
 
 from karabo.common.alarm_conditions import AlarmCondition
