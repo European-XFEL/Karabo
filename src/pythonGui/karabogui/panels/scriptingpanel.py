@@ -5,8 +5,8 @@
 #############################################################################
 from functools import partial
 
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QAction, QVBoxLayout, QWidget
+from qtpy.QtCore import Slot
+from qtpy.QtWidgets import QAction, QVBoxLayout, QWidget
 
 from karabogui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEvent)
@@ -86,7 +86,7 @@ class ScriptingPanel(BasePanelWidget):
 
         return [toolbar]
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def _on_button_pressed(self, isChecked):
         if isChecked:
             # Turn on session
@@ -104,7 +104,7 @@ class ScriptingPanel(BasePanelWidget):
         else:
             self._stop_ipython()
 
-    @pyqtSlot()
+    @Slot()
     def _stop_ipython(self):
         if self.console:
             # Stop any operations
@@ -117,11 +117,11 @@ class ScriptingPanel(BasePanelWidget):
             self.console.destroy()
             self.console = None
 
-    @pyqtSlot()
+    @Slot()
     def enable_button_cb(self):
         self.acStartIPython.setEnabled(True)
 
-    @pyqtSlot()
+    @Slot()
     def _set_button_state(self, state):
         action = self.acStartIPython
 

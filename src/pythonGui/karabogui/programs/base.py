@@ -5,9 +5,9 @@ from traceback import print_exception, format_exception
 import sys
 import warnings
 
-from PyQt5.QtCore import pyqtSlot, QLocale, Qt
-from PyQt5.QtGui import QFont, QFontDatabase, QIcon, QPalette, QPixmap
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Slot, QLocale, Qt
+from qtpy.QtGui import QFont, QFontDatabase, QIcon, QPalette, QPixmap
+from qtpy.QtWidgets import (
     QApplication, QMessageBox, QSplashScreen, QStyleFactory)
 from pyqtgraph import setConfigOptions
 
@@ -39,7 +39,7 @@ def excepthook(exc_type, value, traceback):
         print("could not send exception to network")
 
 
-@pyqtSlot()
+@Slot()
 def updatePalette(palette):
     """Configure the pyqtgraph widgets on runtime automatically to `QPalette`
     changes"""

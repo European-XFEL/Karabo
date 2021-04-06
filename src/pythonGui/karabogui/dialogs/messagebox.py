@@ -1,6 +1,6 @@
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, QPoint, QSize, Qt, QTimer
-from PyQt5.QtWidgets import QApplication, QDialog, QMenu, QMessageBox, QStyle
+from qtpy import uic
+from qtpy.QtCore import Slot, QPoint, QSize, Qt, QTimer
+from qtpy.QtWidgets import QApplication, QDialog, QMenu, QMessageBox, QStyle
 
 from .utils import get_dialog_ui
 
@@ -84,7 +84,7 @@ class KaraboMessageBox(QDialog):
     # ----------------------------------------------------------------------
     # Private methods
 
-    @pyqtSlot()
+    @Slot()
     def _show_details(self):
         """Show/hide the details widget area and modify the button text when
            the "Show(Hide) Details..." button is clicked. This also recomputes
@@ -97,7 +97,7 @@ class KaraboMessageBox(QDialog):
         self.details_widget.setVisible(self._is_showing_details)
         self.adjustSize()
 
-    @pyqtSlot(QPoint)
+    @Slot(QPoint)
     def _show_context_menu(self, pos):
         """Show a context menu"""
         menu = QMenu(self)

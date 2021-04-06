@@ -1,7 +1,7 @@
 from unittest.mock import Mock, patch
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QToolButton
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QToolButton
 from karabo.common.states import State
 from karabo.native import AccessLevel, Configurable, Slot, String
 from karabogui.binding.api import (

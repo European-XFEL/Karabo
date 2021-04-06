@@ -1,6 +1,6 @@
 from numpy import uint64
-from PyQt5.QtCore import QEvent, QPoint, QRect, Qt
-from PyQt5.QtGui import QMouseEvent
+from qtpy.QtCore import QEvent, QPoint, QRect, Qt
+from qtpy.QtGui import QMouseEvent
 
 from karabo.native import Configurable, UInt16, UInt32
 from karabogui.binding.api import build_binding

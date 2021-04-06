@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QAction, QMenu
+from qtpy.QtWidgets import QAction, QMenu
 from traits.api import Bool, Dict, Instance, on_trait_change, Property, Type
 
 from .analyzer import HistogramAnalyzer

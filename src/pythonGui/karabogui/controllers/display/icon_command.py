@@ -1,6 +1,6 @@
-from PyQt5.QtCore import pyqtSlot, QModelIndex, QSize, Qt
-from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Slot, QModelIndex, QSize, Qt
+from qtpy.QtGui import QIcon, QStandardItemModel, QStandardItem
+from qtpy.QtWidgets import (
     QAction, QDialog, QHBoxLayout,  QListView, QToolButton, QWidget)
 from traits.api import Instance
 
@@ -74,7 +74,7 @@ class IconSelectionDialog(QDialog):
         self.list_view.setModel(model)
         self.list_view.doubleClicked.connect(self.handleDoubleClick)
 
-    @pyqtSlot(QModelIndex)
+    @Slot(QModelIndex)
     def handleDoubleClick(self, index):
         icon = index.data(Qt.UserRole + 1)
         if icon is not None:

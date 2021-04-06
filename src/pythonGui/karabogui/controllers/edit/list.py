@@ -1,8 +1,8 @@
 from ast import literal_eval
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPalette, QValidator
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QPalette, QValidator
+from qtpy.QtWidgets import (
     QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget)
 from traits.api import Instance, Int
 

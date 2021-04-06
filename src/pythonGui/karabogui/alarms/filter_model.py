@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from PyQt5.QtCore import QModelIndex, Qt, QSortFilterProxyModel
+from qtpy.QtCore import QModelIndex, Qt, QSortFilterProxyModel
 
 from .const import ALARM_WARNING_TYPES
 

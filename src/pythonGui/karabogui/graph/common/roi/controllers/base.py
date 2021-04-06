@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+from qtpy.QtCore import QObject, Signal, Slot
 from pyqtgraph import Point
 
 from karabogui.graph.common.enums import ROITool
@@ -17,9 +17,9 @@ class BaseROIController(QObject):
         - removed: when an ROI is removed
         - selected: when one of the ROIs is selected
     """
-    updated = pyqtSignal(object)
-    removed = pyqtSignal()
-    selected = pyqtSignal(object)
+    updated = Signal(object)
+    removed = Signal()
+    selected = Signal(object)
 
     TOOL_MAP = {
         ROITool.Rect: RectROI,
@@ -158,7 +158,7 @@ class BaseROIController(QObject):
         self._updates_enabled = enable
         self.update()
 
-    @pyqtSlot()
+    @Slot()
     def update(self):
         """Subclass for ROI region change interactions"""
 
@@ -176,7 +176,7 @@ class BaseROIController(QObject):
         for item in roi_items:
             item.set_visible(False)
 
-    @pyqtSlot(object)
+    @Slot(object)
     def _remove_roi_item(self, roi_item):
         """
         Deletes the given ROI and removes it from the list.
@@ -220,7 +220,7 @@ class BaseROIController(QObject):
         """ Shows an ROI item """
         roi_item.set_visible(True)
 
-    @pyqtSlot(object)
+    @Slot(object)
     def _set_current_item(self, roi_item, update=True):
         # Check if item is the same as current
         if roi_item is self._current_item[self._current_tool]:

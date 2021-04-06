@@ -1,6 +1,6 @@
-from PyQt5.QtCore import QLine, QLineF, QPoint, QRect, Qt
-from PyQt5.QtGui import QBrush, QPainterPath, QPen, QTransform
-from PyQt5.QtWidgets import QDialog
+from qtpy.QtCore import QLine, QLineF, QPoint, QRect, Qt
+from qtpy.QtGui import QBrush, QPainterPath, QPen, QTransform
+from qtpy.QtWidgets import QDialog
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import (

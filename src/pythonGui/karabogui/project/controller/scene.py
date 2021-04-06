@@ -8,7 +8,7 @@ from io import StringIO
 import os.path as op
 import re
 
-from PyQt5.QtWidgets import QAction, QDialog, QMenu, QMessageBox
+from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance
 
 from karabo.common.api import BaseSavableModel, walk_traits_object

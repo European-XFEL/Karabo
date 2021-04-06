@@ -3,8 +3,8 @@
 # Created on July 9, 2019
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import (
     QAction, QFrame, QHBoxLayout, QInputDialog, QLabel, QSlider, QWidget)
 from traits.api import Bool, Instance, on_trait_change
 

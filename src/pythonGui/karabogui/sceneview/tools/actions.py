@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from bisect import bisect
 
-from PyQt5.QtWidgets import QBoxLayout
+from qtpy.QtWidgets import QBoxLayout
 from traits.api import Callable, Int
 
 from karabo.common.scenemodel.api import (

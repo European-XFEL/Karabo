@@ -2,7 +2,7 @@ from platform import system
 from unittest import mock, skipIf
 
 import numpy as np
-from PyQt5.QtWidgets import QGraphicsTextItem
+from qtpy.QtWidgets import QGraphicsTextItem
 
 from ..vector_roll_graph import ArrayRollGraph
 from karabo.common.scenemodel.api import VectorRollGraphModel

@@ -3,7 +3,7 @@
 # Created on October 28, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from PyQt5.QtCore import Qt
+from qtpy.QtCore import Qt
 
 from karabogui.project.topo_listener import SystemTopologyListener
 from karabogui.singletons.api import get_topology

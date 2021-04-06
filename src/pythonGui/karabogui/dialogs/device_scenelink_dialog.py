@@ -1,8 +1,8 @@
 from collections import namedtuple
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QDialog
+from qtpy import uic
+from qtpy.QtCore import Slot
+from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.api import SceneTargetWindow
 
@@ -43,12 +43,12 @@ class DeviceSceneLinkDialog(QDialog):
         return LinkModel(target=self.cbScenes.currentText(),
                          target_window=self._selectedTargetWin)
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def on_dialogRadio_clicked(self, checked=False):
         if checked:
             self._selectedTargetWin = SceneTargetWindow.Dialog
 
-    @pyqtSlot(bool)
+    @Slot(bool)
     def on_mainRadio_clicked(self, checked=False):
         if checked:
             self._selectedTargetWin = SceneTargetWindow.MainWindow
