@@ -672,7 +672,7 @@ class Manager(QObject):
     def _set_server_information(self, info):
         read_only = info.get('readOnly', False)
         get_network().set_server_information(read_only=read_only)
-        broadcast_event(KaraboEvent.BrokerInformationUpdate, info)
+        broadcast_event(KaraboEvent.ServerInformationUpdate, info)
 
 
 # ------------------------------------------------------------------
