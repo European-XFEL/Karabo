@@ -1,3 +1,5 @@
+import time
+
 from qtpy.QtCore import Qt, Signal
 from pyqtgraph import AxisItem as PgAxisItem, DateAxisItem
 
@@ -69,6 +71,16 @@ class AxisItem(PgAxisItem):
         event.ignore()
 
 
+def getOffsetFromUtc():
+    """Retrieve the utc offset respecting the daylight saving time"""
+    ts = time.localtime()
+    if ts.tm_isdst:
+        utc_offset = time.altzone
+    else:
+        utc_offset = time.timezone
+    return utc_offset
+
+
 class TimeAxisItem(DateAxisItem):
     axisDoubleClicked = Signal()
 
@@ -81,6 +93,9 @@ class TimeAxisItem(DateAxisItem):
     def __init__(self, orientation):
         super(TimeAxisItem, self).__init__(orientation)
         self.setStyle(**self.axisStyle)
+        # ----- Patch PyQtGraph <= 0.12.0 --------
+        # https://github.com/pyqtgraph/pyqtgraph/pull/1694
+        self.utcOffset = getOffsetFromUtc()
 
     def mouseDoubleClickEvent(self, event):
         if event.button() == Qt.LeftButton:
