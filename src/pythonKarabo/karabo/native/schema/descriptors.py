@@ -1286,6 +1286,13 @@ class VectorHash(Vector):
 
         data = HashList(Hash((col, row[col]) for col in self.dtype.names)
                         for row in value.value)
+        if not data:
+            # Note: If we have an empty HashList we flag our attributes
+            # with a rowSchema as a workaround. This way we make sure c++
+            # can distinguish when merging Hashes.
+            attrs.update({"rowSchema": Schema(
+                name=self.rowSchema.name, hash=Hash())})
+
         return data, attrs
 
 
