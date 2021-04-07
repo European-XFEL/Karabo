@@ -95,9 +95,9 @@ class BaseArrayGraph(BaseBindingController):
             return
 
         plot = self._curves[proxy]
-        # NOTE: With empty data or only inf we clear as NaN will clear as well!
-        y, _ = get_array_data(proxy)
-        if not len(y) or np.isinf(y).all():
+        # NOTE: With empty data we will clear the plot!
+        y, _ = get_array_data(proxy, default=[])
+        if not len(y):
             plot.setData([], [])
             return
 
