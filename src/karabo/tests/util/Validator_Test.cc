@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   Validator_Test.cc
  * Author: flucke
- * 
+ *
  * Created on September 9, 2016, 12:18 PM
  */
 
@@ -14,8 +14,8 @@
 #include "karabo/util/Schema.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Validator.hh"
-#include "karabo/util/TableElement.hh"
 #include "karabo/util/SimpleElement.hh"
+#include "karabo/util/TableElement.hh"
 
 using namespace karabo;
 using util::TABLE_ELEMENT;
@@ -24,23 +24,13 @@ using util::STRING_ELEMENT;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Validator_Test);
 
+Validator_Test::Validator_Test() { }
 
-Validator_Test::Validator_Test() {
-}
+Validator_Test::~Validator_Test() { }
 
+void Validator_Test::setUp() { }
 
-Validator_Test::~Validator_Test() {
-}
-
-
-void Validator_Test::setUp() {
-
-}
-
-
-void Validator_Test::tearDown() {
-
-}
+void Validator_Test::tearDown() { }
 
 
 void Validator_Test::testTableMandatoryColumn() {
@@ -145,7 +135,7 @@ void Validator_Test::testTableOptionalColumn() {
     CPPUNIT_ASSERT(res.first);
     CPPUNIT_ASSERT(validated.has("table"));
     CPPUNIT_ASSERT(validated.is<std::vector<util::Hash> >("table"));
-    CPPUNIT_ASSERT(1u == validated.get<std::vector<util::Hash> >("table").size());
+    CPPUNIT_ASSERT_EQUAL(1ul, validated.get<std::vector<util::Hash> >("table").size());
     CPPUNIT_ASSERT_EQUAL(-2, validated.get<std::vector<util::Hash> >("table")[0].get<int>("int"));
     CPPUNIT_ASSERT_EQUAL(std::string("testing"), validated.get<std::vector<util::Hash> >("table")[0].get<std::string>("str"));
 
@@ -160,7 +150,7 @@ void Validator_Test::testTableOptionalColumn() {
     // Checks that the missing column has been injected by the validator - see tableValidationAttributes.
     CPPUNIT_ASSERT(validated.has("table"));
     CPPUNIT_ASSERT(validated.is<std::vector<util::Hash> >("table"));
-    CPPUNIT_ASSERT(1u == validated.get<std::vector<util::Hash> >("table").size());
+    CPPUNIT_ASSERT_EQUAL(1ul, validated.get<std::vector<util::Hash> >("table").size());
     CPPUNIT_ASSERT(validated.get<std::vector<util::Hash> >("table")[0].has("str"));
     CPPUNIT_ASSERT_EQUAL(std::string("a string"),
                          validated.get<std::vector < util::Hash >> ("table")[0].get<std::string>("str"));
@@ -189,8 +179,150 @@ void Validator_Test::testTableOptionalColumn() {
     // Checks that the string value has been properly converted to an int by the validator.
     CPPUNIT_ASSERT(validated.has("table"));
     CPPUNIT_ASSERT(validated.is<std::vector<util::Hash> >("table"));
-    CPPUNIT_ASSERT(1u == validated.get<std::vector<util::Hash> >("table").size());
+    CPPUNIT_ASSERT_EQUAL(1ul, validated.get<std::vector<util::Hash> >("table").size());
     CPPUNIT_ASSERT_EQUAL(2, validated.get<std::vector<util::Hash> >("table")[0].get<int>("int"));
 
+    validated.clear();
+}
+
+
+void Validator_Test::testTableMinMaxRows() {
+    util::Schema rowSchema;
+    INT32_ELEMENT(rowSchema).key("int")
+            .assignmentOptional().defaultValue(1)
+            .commit();
+    STRING_ELEMENT(rowSchema).key("str")
+            .assignmentOptional().defaultValue("a string")
+            .commit();
+
+    util::Schema tblWithMinMaxSchema;
+    TABLE_ELEMENT(tblWithMinMaxSchema).key("tblWithMinMax")
+            .setColumns(rowSchema)
+            .minSize(1)
+            .maxSize(1)
+            .assignmentOptional().defaultValue(
+                    {util::Hash("int", 1, "str", "First Row")})
+            .commit();
+
+    util::Validator validator;
+    util::Hash validated;
+
+    // Checks that a table with 1 row is valid. The validator ensures
+    // that the table is valid by adding the row of the default table
+    // value.
+    std::pair<bool, std::string> res =
+        validator.validate(tblWithMinMaxSchema,
+                           util::Hash(),
+                           validated);
+    CPPUNIT_ASSERT(res.first);
+    CPPUNIT_ASSERT(validated.has("tblWithMinMax"));
+    CPPUNIT_ASSERT(validated.is<std::vector<util::Hash>>("tblWithMinMax"));
+    CPPUNIT_ASSERT_EQUAL(
+            1ul,
+            validated.get<std::vector<util::Hash>>("tblWithMinMax").size());
+     validated.clear();
+
+     // Checks that a table with more than maxSize rows is invalid.
+     std::vector<util::Hash> tblTwoRows {
+             util::Hash("int", 1, "str", "First Row"),
+             util::Hash("int", 2, "str", "Second Row")
+     };
+     res = validator.validate(tblWithMinMaxSchema,
+                              util::Hash("tblWithMinMax", tblTwoRows),
+                              validated);
+     CPPUNIT_ASSERT(!res.first);
+     CPPUNIT_ASSERT_MESSAGE(
+             "Expected error with 'must have no more than' substring.\nGot: "
+              + res.second,
+             res.second.find("must have no more than") != std::string::npos);
+     validated.clear();
+
+     // Checks that a table with less than minSize rows is invalid.
+     tblWithMinMaxSchema.setMinSize("tblWithMinMax", 2u);
+     tblWithMinMaxSchema.setMaxSize("tblWithMinMax", 2u);
+     res = validator.validate(tblWithMinMaxSchema, util::Hash(), validated);
+     CPPUNIT_ASSERT(!res.first);
+     CPPUNIT_ASSERT_MESSAGE(
+             "Expected error with 'must have at least' substring.\nGot:"
+             + res.second,
+             res.second.find("must have at least") != std::string::npos);
+     validated.clear();
+}
+
+
+void Validator_Test::testColumnMinMaxAttrs() {
+    util::Schema rowSchema;
+    INT32_ELEMENT(rowSchema).key("int_1")
+            .assignmentOptional().defaultValue(1)
+            .minInc(1)
+            .maxInc(20)
+            .commit();
+    INT32_ELEMENT(rowSchema).key("int_2")
+            .assignmentOptional().defaultValue(2)
+            .minExc(1)
+            .maxExc(20)
+            .commit();
+
+    util::Schema tblSchema;
+    TABLE_ELEMENT(tblSchema).key("tbl")
+            .setColumns(rowSchema)
+            .assignmentOptional().defaultValue(std::vector<util::Hash>())
+            .commit();
+
+    util::Validator validator;
+    util::Hash validated;
+
+    // Checks that the empty table doesn't violate columns min, max attributes.
+    std::pair<int, std::string> res =
+        validator.validate(tblSchema, util::Hash(), validated);
+    CPPUNIT_ASSERT(res.first);
+    validated.clear();
+
+    // Checks that minInc and maxInc are enforced.
+    std::vector<util::Hash> tblRows {
+             util::Hash("int_1", 1, "int_2", 19),  // Valid line.
+             util::Hash("int_1", 1, "int_2", 20),  // int_2 MaxExc(20) violation.
+             util::Hash("int_1", 1, "int_2", 1),   // int_2 MinExc(1) violation.
+             util::Hash("int_1", 0, "int_2", 19),  // int_1 MinInc(1) violation.
+             util::Hash("int_1", 21, "int_2", 19)  // int_1 MaxInc(20) violation.
+    };
+    res = validator.validate(tblSchema,
+                             util::Hash("tbl", tblRows),
+                             validated);
+    CPPUNIT_ASSERT(!res.first);
+    CPPUNIT_ASSERT_MESSAGE(
+            "Expected error with 'Value 20 for parameter' substring.\nGot: "
+            + res.second,
+            res.second.find("Value 20 for parameter") != std::string::npos);
+    validated.clear();
+    tblRows.erase(tblRows.begin() + 1); // Advances to next invalid line
+    res = validator.validate(tblSchema,
+                             util::Hash("tbl", tblRows),
+                             validated);
+    CPPUNIT_ASSERT(!res.first);
+    CPPUNIT_ASSERT_MESSAGE(
+            "Expected error with 'Value 1 for parameter' substring.\nGot: "
+            + res.second,
+            res.second.find("Value 1 for parameter") != std::string::npos);
+    validated.clear();
+    tblRows.erase(tblRows.begin() + 1); // Advances to next invalid line
+    res = validator.validate(tblSchema,
+                             util::Hash("tbl", tblRows),
+                             validated);
+    CPPUNIT_ASSERT(!res.first);
+    CPPUNIT_ASSERT_MESSAGE(
+            "Expected error with 'Value 0 for parameter' substring.\nGot: "
+            + res.second,
+            res.second.find("Value 0 for parameter") != std::string::npos);
+    validated.clear();
+    tblRows.erase(tblRows.begin() + 1); // Advances to next invalid line
+    res = validator.validate(tblSchema,
+                             util::Hash("tbl", tblRows),
+                             validated);
+    CPPUNIT_ASSERT(!res.first);
+    CPPUNIT_ASSERT_MESSAGE(
+            "Expected error with 'Value 21 for parameter' substring.\nGot: "
+            + res.second,
+            res.second.find("Value 21 for parameter") != std::string::npos);
     validated.clear();
 }
