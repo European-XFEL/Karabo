@@ -36,7 +36,7 @@ namespace karabo {
         /**
          * @class Validator
          * @brief The Validator valididates configurations against Schemata
-         * 
+         *
          * The Validator class validates configurations stored in a Hash against
          * a Schema describing the Hash. If the schema defines default values
          * these are inserted into the Hash, depending on the assignment policy.
@@ -58,7 +58,7 @@ namespace karabo {
 
             mutable boost::shared_mutex m_rollingStatMutex;
             std::map<std::string, RollingWindowStatistics::Pointer> m_parameterRollingStats;
-            
+
         public:
             static const std::string kAlarmParamPathSeparator;
 
@@ -66,27 +66,27 @@ namespace karabo {
 
             /**
             * ValidationRules specify the behavior of the Validator if
-            * it encounters differences between the input Hash and 
+            * it encounters differences between the input Hash and
             * the Schema defining it. The following rules may be set
-            * 
+            *
             * - injectDefaults: inject default values if a value for an element
-            *                   defined in the Schema is missing from the input Hash. 
-            *                   
-            * - allowUnrootedConfiguration: allow for unrooted input Hash, i.e. one that 
+            *                   defined in the Schema is missing from the input Hash.
+            *
+            * - allowUnrootedConfiguration: allow for unrooted input Hash, i.e. one that
             *                   doesn't have a classId as the key of the root node
-            * 
+            *
             * - allowAdditionalKeys: allow additional keys in the input Hash that do not map
             *                   to elements specified in the schema
-            * 
-            * - allowMissingKeys: allow for keys missing in the input Hash even if an element for 
+            *
+            * - allowMissingKeys: allow for keys missing in the input Hash even if an element for
             *                     this key is present in the schema
-            * 
+            *
             * - injectTimestamps: inject time information if no information is present for a given key.
-            * 
+            *
             * If any of the above scenarios are encountered during validation and the option is not
             * set to true, i.e. the Validator is not allowed to resolve the issue, validation will
             * fail.
-            * 
+            *
             * The Validator additionally perform warning and alarm condition checks and maintains
             * a record of parameters currently in a warning or alarm condition. For this it also tracks
             * the rolling window statistics for a given element
@@ -144,7 +144,7 @@ namespace karabo {
 
             /**
              * Get the currrent ValidationRules for this Validator
-             * @return 
+             * @return
              */
             Validator::ValidationRules getValidationRules() const;
 
@@ -159,70 +159,76 @@ namespace karabo {
              * @return a std::pair where the first entry is a Boolean indicating if validation was successful (true),
              *         and the second entry contains a string identifying the first validation failure encountered if
              *         validation has failed.
-             * 
+             *
              * During validation the following input is checked to fulfill the following characteristics
-             * 
+             *
              *  - all elements as defined by the Schema are present, if the validation rules do not allow for default injection
              *    missing keys. In the first case validation of a missing element only passes if a default value for the element
              *    has been defined in the schema
-             * 
+             *
              *  - no elements in addition to those defined by the Schema are present, if the rules define that no additional keys
              *    are allowed
-             * 
+             *
              *  - that the root element of the input Hash stands alone and represents the class id of a factorizable class
              *    if an unrooted configuration is not allowed by the validation rules
-             * 
+             *
              * In addition for the above "sanity" checks, the Validator performs the following tasks:
-             * 
-             *  - check scalar values against their alarm bounds. If rolling window statistics are enabled also check the 
+             *
+             *  - check scalar values against their alarm bounds. If rolling window statistics are enabled also check the
              *    rolling window variance of the value
-             *  
+             *
              *  - for sequence values validate that they fulfill their minimum and maximum size requirements if defined by
              *    the Schema
-             * 
+             *
              *  - inject timestamps if none are present for an element
              */
             std::pair<bool, std::string> validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp& timestamp = Timestamp());
 
             /**
              * Check if the Validator is tracking any parameters in alarm.
-             * @return 
+             * @return
              */
             bool hasParametersInWarnOrAlarm() const;
 
             /**
              * Return a Hash containing the current parameters in warning or alarm
              * tracked by this Validator. The Hash is of the following structure:
-             * 
+             *
              * - key: the path to the parameter (defined as scope) with separators
              *        in the path replaced by Validator::kAlarmParamPathSeparator
              * - value: a Hash with the following entries:
              *          type: string representation of the karabo::util::AlarmCondition
              *          message: string identifying the condition violated
-             * @return 
+             * @return
              */
             const karabo::util::Hash& getParametersInWarnOrAlarm() const;
 
             /**
              * Check if reconfigurable parameters exist in the last provided Schema
-             * @return 
+             * @return
              */
             bool hasReconfigurableParameter() const;
 
             /**
              * Get the rolling window statistics for the element identified by scope
              * @param scope
-             * @return 
+             * @return
              */
             RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & scope) const;
 
         private:
 
-            void r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope = "");
+            void r_validate(
+                const Hash& master, const Hash& user, Hash& working,
+                std::ostringstream& report, std::string scope = "");
 
-            void validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope);
+            void validateLeaf(
+                const Hash::Node& masterNode, Hash::Node& workNode,
+                std::ostringstream& report, std::string scope);
 
-            void validateVectorOfHashesLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report);
+            void validateVectorOfHashesLeaf(
+                const Hash::Node& masterNode, Hash::Node& workNode,
+                std::ostringstream& report);
 
             void attachTimestampIfNotAlreadyThere(Hash::Node& node);
 
@@ -237,4 +243,3 @@ namespace karabo {
 }
 
 #endif	/* VALIDATOR_HH */
-
