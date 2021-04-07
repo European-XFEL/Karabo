@@ -28,7 +28,7 @@ class NetworkMock:
 MOCKED_NETWORK = NetworkMock(username="operator",
                              host="not-localhost",
                              port="12345")
-GET_NETWORK_PATH = "karabogui.project.wizard.wizard.get_network"
+GET_NETWORK_PATH = "karabogui.wizards.cinema.wizard.get_network"
 
 
 class BaseCinemaInstallerTest(GuiTestCase):
