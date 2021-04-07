@@ -6,7 +6,7 @@
 import numpy as np
 from traits.api import Undefined
 
-from karabo.native import EncodingType
+from karabo.native import EncodingType, Timestamp
 
 # Ensure correct mapping of reference type to numpy dtype.
 REFERENCE_TYPENUM_TO_DTYPE = {
@@ -93,28 +93,33 @@ def get_dimensions_and_encoding(image_node):
     return dimX, dimY, dimZ, encoding
 
 
-def get_array_data(proxy):
+def get_array_data(proxy, default=None):
     """Retrieve the array and timestamp data from a property proxy belonging
     to an array binding
 
-    Note: Checks for `Undefined` on the proxy value and `None` data.
+    :param default: default value to be returned if no value is available
+
+    This function checks for `Undefined` on the proxy value and `None` data.
+    If not data is available the `default` is returned with actual timestamp.
+
+    :returns: data, timestamp
     """
     binding = proxy.binding
     if binding.__class__.__name__.startswith('Vector'):
         value = binding.value
         if value is None or value is Undefined:
-            return None, None
+            return default, Timestamp()
 
         return value, binding.timestamp
 
     # We now have an `NDArray`
     node = binding.value
     if node is Undefined:
-        return None, None
+        return default, Timestamp()
 
     pixels = node.data.value
     if pixels is None:
-        return None, None
+        return default, Timestamp()
 
     arr_type = REFERENCE_TYPENUM_TO_DTYPE[node.type.value]
     value = np.frombuffer(pixels, dtype=arr_type)
@@ -123,4 +128,4 @@ def get_array_data(proxy):
     if value.ndim == 1:
         return value, timestamp
 
-    return None, None
+    return default, Timestamp()
