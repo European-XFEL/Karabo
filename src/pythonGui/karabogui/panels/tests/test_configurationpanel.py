@@ -72,7 +72,7 @@ class Object(Configurable):
     # -----------------------------------------------------------------------
     # Disable the MDL sanitization for tables in tests
 
-    def new_sanitize(schema):
+    def new_sanitize(schema, ro):
         return schema
 
     with patch('karabo.native.schema.descriptors.sanitize_table_schema',
