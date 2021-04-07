@@ -86,9 +86,7 @@ class TestVectorGraph(GuiTestCase):
         set_proxy_value(self.proxy, "prop", value)
 
         # None curve in PyQtGraph >= 0.11.1
-        empty = curve.yData is None or not len(curve.yData)
-        # None curve on inf values!
-        self.assertTrue(empty)
+        self.assertEqual(list(curve.yData), value)
 
         value = [np.NaN, np.NaN, np.NaN]
         with warnings.catch_warnings(record=True):
