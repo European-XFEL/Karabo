@@ -2,7 +2,8 @@ import numpy as np
 
 from karabo.common.const import (
     KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MAX_INC,
-    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_OPTIONS)
+    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MIN_SIZE,
+    KARABO_SCHEMA_OPTIONS)
 from karabo.native import (
     AccessMode, Bool, Configurable, Hash, HashList, String, UInt8)
 
@@ -731,3 +732,29 @@ def test_default_value_minimum():
     binding = types.FloatBinding(attributes=attributes)
     value = get_default_value(binding, force=True)
     assert value == 5.1
+
+
+def test_default_value_vector_minsize():
+    """Test the default value generation of a binding"""
+    attributes = {KARABO_SCHEMA_MIN_SIZE: 2}
+    binding = types.VectorUint8Binding(attributes=attributes)
+    # 1. No default value provided, we force to minimum with minSize 2
+    value = get_default_value(binding, force=True)
+    assert isinstance(value, np.ndarray)
+    assert (value == [0, 0]).all()
+    assert value.dtype == np.uint8
+
+    # 2. Provide a default, higher than min size
+    attributes = {KARABO_SCHEMA_MIN_SIZE: 2,
+                  KARABO_SCHEMA_DEFAULT_VALUE: [3, 3, 3]}
+    binding = types.Int8Binding(attributes=attributes)
+    value = get_default_value(binding, force=True)
+    assert value == [3, 3, 3]
+    # Default value in this test provided without numpy type
+    assert getattr(value, 'dtype', None) is None
+
+    # 3. No default value provided, vector string of size 4
+    attributes = {KARABO_SCHEMA_MIN_SIZE: 4}
+    binding = types.VectorStringBinding(attributes=attributes)
+    value = get_default_value(binding, force=True)
+    assert value == ["", "", "", ""]
