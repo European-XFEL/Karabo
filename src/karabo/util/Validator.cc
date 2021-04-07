@@ -1,21 +1,25 @@
-/* 
+/*
 
  * File:   Validator.cc
  * Author: <burkhard.heisen@xfel.eu>
- * 
+ *
  * Created on February 8, 2013, 6:03 PM
  */
 
-#include "Validator.hh"  
+#include "AlarmConditions.hh"
+#include "Validator.hh"
 #include "Schema.hh"
 #include "FromLiteral.hh"
 #include "Epochstamp.hh"
 #include "NDArray.hh"
+#include "StringTools.hh"
 #include "TableElement.hh"
+#include "Types.hh"
 
 using std::string;
 using std::endl;
 using std::vector;
+using std::set;
 
 namespace karabo {
     namespace util {
@@ -63,8 +67,9 @@ namespace karabo {
         }
 
 
-        std::pair<bool, std::string> Validator::validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp& timestamp) {
-
+        std::pair<bool, string> Validator::validate(
+            const Schema& schema, const Hash& unvalidatedInput,
+            Hash& validatedOutput, const Timestamp& timestamp) {
 
             // Clear previous "reconfigurable" flag
             m_hasReconfigurableParameter = false;
@@ -76,37 +81,53 @@ namespace karabo {
 
             // In case of failed validation, report why it failed
             std::ostringstream validationFailedReport;
-            
-          
+
             if (!m_allowUnrootedConfiguration) {
                 if (unvalidatedInput.size() != 1) {
-                    return std::make_pair<bool, string > (false, "Expecting a rooted input, i.e. a Hash with exactly one key (describing the classId) at the top level");
+                    return std::make_pair<bool, string>(
+                        false,
+                        "Expecting a rooted input, i.e. a Hash with exactly one key (describing the classId) at the top level");
                 } else {
                     const Hash::Node& node = *(unvalidatedInput.begin());
                     const std::string& classId = node.getKey();
                     if (schema.getRootName() != classId) {
-                        return std::make_pair<bool, string > (false, "Wrong schema for given input. Schema describes class \"" + schema.getRootName() + "\", whilst input wants to configure class \"" + classId + "\"");
-                    }
+                        return std::make_pair<bool, string>(
+                            false,
+                            "Wrong schema for given input. Schema describes class \""
+                            + schema.getRootName() +
+                            "\", whilst input wants to configure class \"" +
+                            classId + "\"");
+                     }
                     if (node.getType() == Types::HASH) {
-
                         Hash::Node& tmp = validatedOutput.set(classId, Hash());
-                        this->r_validate(schema.getParameterHash(), node.getValue<Hash > (), tmp.getValue<Hash > (), validationFailedReport, classId);
-
-                        if (validationFailedReport.str().empty()) return std::make_pair<bool, string > (true, "");
-                        else return std::make_pair<bool, string > (false, validationFailedReport.str());
+                        this->r_validate(
+                            schema.getParameterHash(), node.getValue<Hash > (),
+                            tmp.getValue<Hash > (), validationFailedReport, classId);
+                        if (validationFailedReport.str().empty()) {
+                            return std::make_pair<bool, string>(true, "");
+                        } else {
+                            return std::make_pair<bool, string>(false, validationFailedReport.str());
+                        }
                     } else {
-                        return std::make_pair<bool, string > (false, "Root-node for given configuration is of wrong type. It must be HASH");
+                        return std::make_pair<bool, string>(false, "Root-node for given configuration is of wrong type. It must be HASH");
                     }
                 }
             } else {
-                this->r_validate(schema.getParameterHash(), unvalidatedInput, validatedOutput, validationFailedReport, "");
-                if (validationFailedReport.str().empty()) return std::make_pair<bool, string > (true, "");
-                else return std::make_pair<bool, string > (false, validationFailedReport.str());
+                this->r_validate(
+                    schema.getParameterHash(), unvalidatedInput,
+                    validatedOutput, validationFailedReport, "");
+                if (validationFailedReport.str().empty()) {
+                    return std::make_pair<bool, string>(true, "");
+                } else {
+                    return std::make_pair<bool, string>(false, validationFailedReport.str());
+                }
             }
         }
 
 
-        void Validator::r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope) {
+        void Validator::r_validate(const Hash& master, const Hash& user,
+                                   Hash& working, std::ostringstream& report,
+                                   std::string scope) {
             std::set<std::string> keys;
             user.getKeys(keys);
 
@@ -208,7 +229,11 @@ namespace karabo {
                         } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
                             std::string optionName = it->getAttribute<string > (KARABO_SCHEMA_DEFAULT_VALUE);
                             Hash::Node& workNode = working.set(key, Hash(optionName, Hash())); // Inject empty choice
-                            r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), workNode.getValue<Hash > ().get<Hash > (optionName), report, currentScope + "." + optionName);
+                            r_validate(
+                                it->getValue<Hash > ().get<Hash > (optionName),
+                                Hash(),
+                                workNode.getValue<Hash > ().get<Hash > (optionName),
+                                report, currentScope + "." + optionName);
                         }
                     } else { // User has set a node
 
@@ -223,17 +248,22 @@ namespace karabo {
                             string optionName = user.get<string > (key);
                             if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
                                 Hash::Node& workNode = working.set(key, Hash(optionName, Hash())); // Inject empty choice
-                                r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), workNode.getValue<Hash > ().get<Hash > (optionName), report, currentScope + "." + optionName);
+                                r_validate(
+                                    it->getValue<Hash > ().get<Hash > (optionName),
+                                    Hash(), workNode.getValue<Hash > ().get<Hash > (optionName),
+                                    report, currentScope + "." + optionName);
                             } else {
                                 report << "Provided parameter: \"" << optionName << "\" is not a valid option for choice: \"" << key << "\". ";
                                 report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
                                 return;
                             }
                         } else if (user.getType(key) != Types::HASH) {
-                            report << "Parameter \"" << currentScope << "\" has incorrect type, expecting HASH not " << Types::to<ToLiteral > (user.getType(key)) << endl;
+                            report << "Parameter \"" << currentScope
+                                << "\" has incorrect type, expecting HASH not "
+                                << Types::to<ToLiteral > (user.getType(key))
+                                << endl;
                             return;
                         } else {
-
                             const Hash& choice = user.get<Hash > (key);
                             if (choice.size() == 0) {
                                 if (assignment == Schema::MANDATORY_PARAM) {
@@ -245,14 +275,22 @@ namespace karabo {
                                 } else if (assignment == Schema::OPTIONAL_PARAM && hasDefault && m_injectDefaults) {
                                     std::string optionName = it->getAttribute<string > (KARABO_SCHEMA_DEFAULT_VALUE);
                                     Hash::Node& workNode = working.set(key, Hash(optionName, Hash())); // Inject empty choice
-                                    r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), workNode.getValue<Hash > ().get<Hash > (optionName), report, currentScope + "." + optionName);
+                                    r_validate(
+                                        it->getValue<Hash > ().get<Hash > (optionName),
+                                        Hash(),
+                                        workNode.getValue<Hash > ().get<Hash > (optionName),
+                                        report, currentScope + "." + optionName);
                                 }
                             } else if (choice.size() == 1) { // That is what we expect it should be
                                 const Hash::Node& usersOption = *(choice.begin());
                                 const string& optionName = usersOption.getKey();
                                 if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
                                     Hash::Node& workNode = working.set(key, Hash(optionName, Hash())); // Inject empty choice
-                                    r_validate(it->getValue<Hash > ().get<Hash > (optionName), usersOption.getValue<Hash > (), workNode.getValue<Hash > ().get<Hash > (optionName), report, currentScope + "." + optionName);
+                                    r_validate(
+                                        it->getValue<Hash > ().get<Hash > (optionName),
+                                        usersOption.getValue<Hash > (),
+                                        workNode.getValue<Hash > ().get<Hash > (optionName),
+                                        report, currentScope + "." + optionName);
                                 } else {
                                     report << "Provided parameter: \"" << optionName << "\" is not a valid option for choice: \"" << key << "\". ";
                                     report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
@@ -284,7 +322,10 @@ namespace karabo {
 
                             for (const string& optionName : optionNames) {
                                 Hash tmp;
-                                r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), tmp, report, currentScope + "." + optionName);
+                                r_validate(
+                                    it->getValue<Hash > ().get<Hash > (optionName),
+                                    Hash(), tmp,
+                                    report, currentScope + "." + optionName);
                                 workNodes.push_back(Hash(optionName, tmp));
                             }
                         }
@@ -309,12 +350,14 @@ namespace karabo {
                                 return;
                             }
 
-
                             for (const string& optionName : optionNames) {
                                 std::cout << "Silently converting from STRING" << endl;
                                 if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
                                     Hash tmp;
-                                    r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), tmp, report, currentScope + "." + optionName);
+                                    r_validate(
+                                        it->getValue<Hash > ().get<Hash > (optionName),
+                                        Hash(), tmp,
+                                        report, currentScope + "." + optionName);
                                     workNodes.push_back(Hash(optionName, tmp));
                                 } else {
                                     report << "Provided parameter: \"" << optionName << "\" is not a valid option for list: \"" << key << "\". ";
@@ -352,9 +395,15 @@ namespace karabo {
                                         if (rootNode.getType() == Types::STRING && rootNode.getValue<string>().empty()) {
                                             // Silently taking empty string as Hash
                                             Hash faked;
-                                            r_validate(it->getValue<Hash > ().get<Hash > (optionName), faked, tmp, report, currentScope + "." + optionName);
+                                            r_validate(
+                                                it->getValue<Hash > ().get<Hash > (optionName),
+                                                faked, tmp,
+                                                report, currentScope + "." + optionName);
                                         } else {
-                                            r_validate(it->getValue<Hash > ().get<Hash > (optionName), rootNode.getValue<Hash>(), tmp, report, currentScope + "." + optionName);
+                                            r_validate(
+                                                it->getValue<Hash > ().get<Hash > (optionName),
+                                                rootNode.getValue<Hash>(), tmp,
+                                                report, currentScope + "." + optionName);
                                         }
 
                                         workNodes.push_back(Hash(optionName, tmp));
@@ -376,10 +425,7 @@ namespace karabo {
                 }
             }
 
-            
             if (!m_allowAdditionalKeys && !keys.empty()) {
-
-
                 for (const string& key : keys) {
                     string currentScope;
                     if (scope.empty()) currentScope = key;
@@ -404,7 +450,10 @@ namespace karabo {
             Hash::Node& m_workNode;
         };
 
-        void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) {
+        void Validator::validateLeaf(
+            const Hash::Node& masterNode, Hash::Node& workNode,
+            std::ostringstream& report, std::string scope) {
+
             if (m_injectTimestamps) attachTimestampIfNotAlreadyThere(workNode);
 
             Types::ReferenceType referenceType = Types::from<FromLiteral>(masterNode.getAttribute<string>(KARABO_SCHEMA_VALUE_TYPE));
@@ -553,12 +602,42 @@ namespace karabo {
         }
 
 
-        void Validator::validateVectorOfHashesLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report) {
-            // A vector of hashes may be a table element - if it has a RowSchema attribute it is assumed to
-            // be a table element.
+        void Validator::validateVectorOfHashesLeaf(
+            const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report) {
+            // A vector of hashes may be a table element - if it has a RowSchema attribute
+            // it is assumed to be a table element.
             if (masterNode.hasAttribute(KARABO_SCHEMA_ROW_SCHEMA)) {
+                const std::string &tableName = masterNode.getKey();
+
                 const auto& rowSchema = masterNode.getAttribute<karabo::util::Schema>(KARABO_SCHEMA_ROW_SCHEMA);
                 std::vector<karabo::util::Hash>& table = workNode.getValue<std::vector < karabo::util::Hash >> ();
+
+                const long long minSize =
+                    !masterNode.hasAttribute(KARABO_SCHEMA_MIN_SIZE) ? -1ll :
+                    masterNode.getAttribute<unsigned int>(KARABO_SCHEMA_MIN_SIZE);
+                const long long maxSize =
+                    !masterNode.hasAttribute(KARABO_SCHEMA_MAX_SIZE) ? -1ll :
+                    masterNode.getAttribute<unsigned int>(KARABO_SCHEMA_MAX_SIZE);
+
+                // Validates that the number of rows is within the specified limits.
+                if (minSize >= 0) {
+                    if (table.size() < static_cast<unsigned int>(minSize)) {
+                        report << "Table at '" << tableName << "' must have at least "
+                               << minSize << (minSize == 1ll ? " row" : " rows");
+                        report << "; it has " << table.size() << "." << std::endl;
+                        return;
+                    }
+                }
+                if (maxSize >= 0) {
+                    if (table.size() > static_cast<unsigned int>(maxSize)) {
+                        report << "Table at '" << tableName << "' must have no more than " << maxSize
+                               << (maxSize == 1ll ? " row" : " rows");
+                        report << "; it has " << table.size() << "." << std::endl;
+                        return;
+                    }
+                }
+
+                // Validates each row.
                 if (table.size() > 0) {
                     Validator rowValidator(util::tableValidationRules);
                     for (decltype(table.size()) i = 0; i < table.size(); i++) {
@@ -639,7 +718,7 @@ namespace karabo {
                     string msg("Value " + workNode.getValueAs<string>() + " of parameter \"" + scope + "\" went "
                                + (checkGreater ? "above " : "below ") + alarmCond.asBaseString() + " level of "
                                + karabo::util::toString(threshold));
-                    const std::string scopeSlashes = boost::replace_all_copy(scope, ".", kAlarmParamPathSeparator); 
+                    const std::string scopeSlashes = boost::replace_all_copy(scope, ".", kAlarmParamPathSeparator);
                     Hash::Node& desc = m_parametersInWarnOrAlarm.set(scopeSlashes, Hash("type", alarmString, "message", msg));
                     m_timestamp.toHashAttributes(desc.getAttributes());
                     workNode.setAttribute(KARABO_ALARM_ATTR, alarmString);
@@ -651,7 +730,7 @@ namespace karabo {
             }
             return false; // nothing to clear
         }
-        
+
         const std::string Validator::kAlarmParamPathSeparator = "KRB_ALARM_SEP_REPLACEMENT";
 
     }
