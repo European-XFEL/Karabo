@@ -81,8 +81,8 @@ class VectorHistogramGraph(BaseBindingController):
                                stepMode=True)
 
     def value_update(self, proxy):
-        value, _ = get_array_data(proxy)
-        if value is None or not len(value):
+        value, _ = get_array_data(proxy, default=[])
+        if not len(value):
             self._plot.setData([], stepMode=None)
             return
 
