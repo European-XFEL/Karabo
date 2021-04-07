@@ -1,7 +1,6 @@
 import numpy as np
 
-from karabo.native import Configurable, Hash, NDArray, UInt32
-
+from karabo.native import Configurable, Hash, NDArray, UInt32, VectorDouble
 from karabogui.testing import (
     get_class_property_proxy, set_proxy_hash)
 
@@ -44,3 +43,23 @@ def test_array():
     property_value, _ = get_array_data(proxy)
     # XXX: Traits does casting to a different 1 dimensional shape!
     assert property_value is not None
+
+
+def test_vector():
+    """Test the `get_array` function with vectors"""
+
+    class VectorObject(Configurable):
+        prop = VectorDouble(
+            displayedName="Vector Double")
+
+    schema = VectorObject.getClassSchema()
+    proxy = get_class_property_proxy(schema, 'prop')
+    property_value, _ = get_array_data(proxy)
+    assert property_value is None
+    property_value, _ = get_array_data(proxy, default=[])
+    assert property_value == []
+    value = [1, 2, 3, 4]
+    h = Hash('prop', value)
+    set_proxy_hash(proxy, h)
+    property_value, _ = get_array_data(proxy)
+    np.testing.assert_almost_equal(property_value, value)
