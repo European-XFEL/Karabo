@@ -12,7 +12,8 @@ from karabogui.binding.types import (
     BoolBinding, ByteArrayBinding, CharBinding, ComplexBinding, FloatBinding,
     IntBinding, NodeBinding, StringBinding, VectorBinding, VectorDoubleBinding,
     VectorFloatBinding, VectorHashBinding, VectorNumberBinding,
-)
+    VectorStringBinding)
+from karabogui.binding.util import get_numpy_binding
 
 VECTOR_FLOAT_BINDINGS = (VectorFloatBinding, VectorDoubleBinding)
 RECURSIVE_BINDINGS = (NodeBinding, ListOfNodesBinding,
@@ -185,18 +186,34 @@ def validate_table_value(binding, value):
 def get_default_value(binding, force=False):
     """Get the default value from a binding"""
 
+    def _get_vector_default(binding):
+        """ Provide a default value for vector binding `binding` considering
+        minSize attribute"""
+        attrs = binding.attributes
+        min_size = attrs.get(const.KARABO_SCHEMA_MIN_SIZE)
+        if min_size is None:
+            return []
+
+        if isinstance(binding, VectorNumberBinding):
+            numpy = get_numpy_binding(binding)
+            value = np.zeros(shape=(min_size,), dtype=numpy)
+        elif isinstance(binding, VectorStringBinding):
+            value = [""] * min_size
+        else:
+            value = []
+        return value
+
     def _get_binding_default(binding):
         # Provide a default value for all leafType bindings of `binding`
         if isinstance(binding, (CharBinding, StringBinding)):
             return ""
         if isinstance(binding, IntBinding):
-            # XXX: No min and max taken into account for now
-            return 0
+            return validate_binding_minimum(binding, 0)
         elif isinstance(binding, FloatBinding):
-            return 0.0
+            return validate_binding_minimum(binding, 0.0)
         elif isinstance(binding, VectorBinding):
             # All vectors including table!
-            return []
+            return _get_vector_default(binding)
         elif isinstance(binding, ComplexBinding):
             return 0.0
         elif isinstance(binding, BoolBinding):
@@ -215,9 +232,6 @@ def get_default_value(binding, force=False):
         else:
             value = _get_binding_default(binding)
             assert value is not None, f"No default value for {type(binding)}"
-            # In case of simple types, we have to check minimum's
-            if isinstance(binding, (IntBinding, FloatBinding)):
-                value = validate_binding_minimum(binding, value)
 
     return value
 
