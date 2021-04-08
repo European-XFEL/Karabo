@@ -1,8 +1,9 @@
 import os
 import unittest
-from karabo.config_db.configuration_database import (
+from ..configuration_database import (
     DbHandle, ConfigurationDatabase)
-from karabo.config_db.utils import ConfigurationDBError
+from ..utils import create_config_set_id
+from ..utils import ConfigurationDBError
 from datetime import datetime
 
 TEST_DB_PATH = 'configManagerTest.db'
@@ -14,8 +15,8 @@ CFG_NAME_3 = 'ThirdConfig'
 CFG_DEVICE_1 = 'SCS/CAM/BASLER'
 CFG_DEVICE_2 = 'CAS_LAB/DIGI/ADQ-12'
 
-TIMESTAMP_1 = '2020-01-30 12:02:02.123'
-TIMESTAMP_2 = '2019-01-30 12:02:02.123'
+TIMESTAMP_1 = '2020-01-30T20:02:02.123000'
+TIMESTAMP_2 = '2019-01-30T09:02:02.123000'
 
 
 def create_config(deviceId):
@@ -180,14 +181,17 @@ class TestConfigurationManagerData(unittest.TestCase):
             'is already taken for at least') > -1)
 
     def test_config_name_taken(self):
-        """ Checks that the is_config_name_taken returns false when there's no
-            no config with a given name for any device in the list and true
-            when at least one of the devices in the list has a config with the
-            given name.
+        """ Checks that the is_config_name_taken returns true when there is at
+            least one non-overwritable config for any of the devices in the
+            list and if there's an overwritable config with the same name, it
+            is for the exact same set of devices.
         """
         self.database.save_configuration(CFG_NAME_1, CFG_1)
+
         self.assertFalse(
-            self.database.is_config_name_taken(CFG_NAME_1, [CFG_DEVICE_2])
+            self.database.is_config_name_taken(
+                CFG_NAME_1, [CFG_DEVICE_2]
+            )
         )
         self.assertTrue(
             self.database.is_config_name_taken(CFG_NAME_1, [CFG_DEVICE_1])
@@ -203,8 +207,26 @@ class TestConfigurationManagerData(unittest.TestCase):
                 [CFG_DEVICE_1, CFG_DEVICE_2])
         )
 
+        # Checks for equally named overwritable configs for different sets of
+        # devices - that condition must also trigger a name already taken
+        # error.
+        self.database.save_configuration(
+            CFG_NAME_3, CFG_SET, overwritable=True)
+        with self.assertRaises(ConfigurationDBError) as verr:
+            self.database.save_configuration(
+                CFG_NAME_3, CFG_1, overwritable=False
+            )
+        self.assertTrue(verr.exception.args[0].find(
+            'is already taken for at least') > -1)
+        with self.assertRaises(ConfigurationDBError) as verr:
+            self.database.save_configuration(
+                CFG_NAME_3, CFG_1, overwritable=True
+            )
+        self.assertTrue(verr.exception.args[0].find(
+            'is already taken for at least') > -1)
+
     def test_device_conf_limit(self):
-        import karabo.config_db.configuration_database as dbsettings
+        from .. import configuration_database as dbsettings
         dbsettings.CONFIGURATION_LIMIT = 20
         deviceName = "DeviceExceeds"
 
@@ -222,7 +244,7 @@ class TestConfigurationManagerData(unittest.TestCase):
             that ovewriting a configuration without specifying a timestamp
             updates the timestamp to the current time.
         """
-        import karabo.config_db.configuration_database as dbsettings
+        from .. import configuration_database as dbsettings
         dbsettings.CONFIGURATION_LIMIT = 10
         deviceName = "DeviceExceeds-WithOverwritableConfig"
 
@@ -245,7 +267,7 @@ class TestConfigurationManagerData(unittest.TestCase):
         self.assertEqual(1, cfg['priority'])
         self.assertEqual(True, cfg['overwritable'])
         timeStamp1 = datetime.strptime(
-            cfg['timepoint'], '%Y-%m-%d %H:%M:%S.%f')
+            cfg['timepoint'], '%Y-%m-%dT%H:%M:%S.%f')
 
         # Ovewrites the configuration at the limit.
         # Overwritable flag must not be updated.
@@ -262,9 +284,24 @@ class TestConfigurationManagerData(unittest.TestCase):
         self.assertEqual(3, cfg['priority'])
         self.assertEqual(True, cfg['overwritable'])
         timeStamp2 = datetime.strptime(
-            cfg['timepoint'], '%Y-%m-%d %H:%M:%S.%f')
-
+            cfg['timepoint'], '%Y-%m-%dT%H:%M:%S.%f')
         self.assertGreater(timeStamp2, timeStamp1)
+
+        # Overwrite the configuration a second time, to be
+        # sure that all the device configurations will be properly
+        # updated.
+        self.database.save_configuration(
+            overCfgName, overCfg, description="Bleh-Bleh", priority=2)
+        cfg = self.database.get_configuration(deviceName, overCfgName)
+        self.assertEqual(len(cfg), 8)
+        self.assertEqual(overCfgName, cfg['name'])
+        self.assertEqual('Bleh-Bleh', cfg['description'])
+        self.assertEqual('.', cfg['user'])
+        self.assertEqual(2, cfg['priority'])
+        self.assertEqual(True, cfg['overwritable'])
+        timeStamp3 = datetime.strptime(
+            cfg['timepoint'], '%Y-%m-%dT%H:%M:%S.%f')
+        self.assertGreater(timeStamp3, timeStamp2)
 
         # An attempt to save a new configuration, overwritable or not,
         # should fail once the limit is reached.
@@ -272,6 +309,47 @@ class TestConfigurationManagerData(unittest.TestCase):
             self.database.save_configuration(
                 "exceed-crash",  overCfg, f"{overCfgName}-limit",
                 overwritable=True)
+
+    def test_save_conf_injected_setIdDigest(self):
+        """ Checks that saving configurations, ovewritable or not, with an
+            externally injected setIdDigest works.
+        """
+        device_1 = "Device_1"
+        device_2 = "Device_2"
+
+        # Generates a setIdDigest for both devices
+        digest = create_config_set_id([device_1, device_2])
+
+        cfg_1 = [create_config(device_1)]
+        cfg_name = 'Config'
+        cfg_2 = [create_config(device_2)]
+
+        self.database.save_configuration(cfg_name, cfg_1,
+                                         setIdDigest=digest)
+        self.database.save_configuration(cfg_name, cfg_2,
+                                         setIdDigest=digest)
+        cfg = self.database.get_configuration(device_1, cfg_name)
+        self.assertEqual(False, cfg['overwritable'])
+        self.assertEqual(1, cfg['priority'])
+        self.assertEqual(cfg_name, cfg['name'])
+        cfgs_sets = self.database.list_configuration_sets([device_1, device_2])
+        self.assertEqual(1, len(cfgs_sets))
+
+        cfg_name_2 = 'Config_2'
+        self.database.save_configuration(cfg_name_2, cfg_1,
+                                         setIdDigest=digest,
+                                         overwritable=True)
+        self.database.save_configuration(cfg_name_2, cfg_2,
+                                         setIdDigest=digest)
+        cfg = self.database.get_configuration(device_2, cfg_name_2)
+        self.assertEqual(True, cfg['overwritable'])
+        self.assertEqual(cfg_name_2, cfg['name'])
+        cfgs_sets = self.database.list_configuration_sets([device_1, device_2])
+        self.assertEqual(2, len(cfgs_sets))
+        self.assertEqual(False, cfgs_sets[0]['overwritable'])
+        self.assertEqual(True, cfgs_sets[1]['overwritable'])
+        self.assertEqual(cfg_name, cfgs_sets[0]['name'])
+        self.assertEqual(cfg_name_2, cfgs_sets[1]['name'])
 
 
 if __name__ == '__main__':
