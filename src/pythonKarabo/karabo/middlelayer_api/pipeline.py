@@ -260,6 +260,10 @@ class NetworkInput(Configurable):
         self.connected = {}
         self.handler_lock = Lock()
 
+    async def connect_handler(self, output):
+        # XXX: Please keep this for the time being.
+        print("NetworkInput connect handler called by {}!".format(output))
+
     async def close_handler(self, output):
         # XXX: Please keep this for the time being.
         print("NetworkInput close handler called by {}!".format(output))
@@ -268,11 +272,12 @@ class NetworkInput(Configurable):
         # XXX: Please keep this for the time being.
         print("EndOfStream handler called by {}!".format(cls))
 
-    async def call_handler(self, data, meta):
+    async def call_handler(self, func, *args):
+        """Call a network input handler under mutex and error protection"""
         async with self.handler_lock:
             try:
                 await get_event_loop().run_coroutine_or_thread(
-                    self.handler, data, meta)
+                    func, *args)
             except CancelledError:
                 # Cancelled Error is handled in the `start_channel` method
                 pass
@@ -304,6 +309,9 @@ class NetworkInput(Configurable):
                 info["hostname"], int(info["port"]))
             channel = Channel(reader, writer, channelName=output)
             with closing(channel):
+                # Tell the world we are connected before we start
+                # requesting data
+                await shield(self.call_handler(self.connect_handler, output))
                 instance_id = "{}:{}".format(self.parent.deviceId,
                                              self._name)
                 cmd = Hash("reason", "hello",
@@ -320,13 +328,13 @@ class NetworkInput(Configurable):
                     channel.writeHash(cmd)
                 else:
                     # We still inform when the connection has been closed!
-                    await self.safe_close_handler(output)
+                    await shield(self.call_handler(self.close_handler, output))
                     # Start a new roundtrip, but don't create a new task!
                     await sleep(2)
                     await self.start_channel(output)
         except CancelledError:
             # Note: Happens when we are destroyed or disconnected!
-            await self.safe_close_handler(output)
+            await shield(self.call_handler(self.close_handler, output))
             self.connected.pop(output)
             self.connectedOutputChannels = list(self.connected)
         except Exception as e:
@@ -334,21 +342,14 @@ class NetworkInput(Configurable):
             # for exceptions. This should not happen!
             print(f"Experienced unexpected exception {e} in input channel "
                   f"of device {self.parent.deviceId} for {output}")
-            await self.safe_close_handler(output)
+            await shield(self.call_handler(self.close_handler, output))
             # We might get cancelled during sleeping!
             try:
                 await sleep(2)
                 await self.start_channel(output)
             except CancelledError:
-                await self.safe_close_handler(output)
                 self.connected.pop(output)
                 self.connectedOutputChannels = list(self.connected)
-
-    async def safe_close_handler(self, output):
-        """The close handler is called under the handler lock"""
-        async with self.handler_lock:
-            await shield(get_event_loop().run_coroutine_or_thread(
-                self.close_handler, output))
 
     async def readChunk(self, channel, cls):
         try:
@@ -362,7 +363,7 @@ class NetworkInput(Configurable):
                 return False
         data = await channel.readBytes()
         if "endOfStream" in header:
-            await shield(get_event_loop().run_coroutine_or_thread(
+            await shield(self.call_handler(
                 self.end_of_stream_handler, channel.channelName))
             return True
         pos = 0
@@ -372,11 +373,11 @@ class NetworkInput(Configurable):
             meta = PipelineMetaData()
             meta._onChanged(meta_hash)
             if self.raw:
-                await shield(self.call_handler(chunk, meta))
+                await shield(self.call_handler(self.handler, chunk, meta))
             else:
                 proxy = cls()
                 proxy._onChanged(chunk)
-                await shield(self.call_handler(proxy, meta))
+                await shield(self.call_handler(self.handler, proxy, meta))
             pos += length
         return True
 
@@ -417,11 +418,19 @@ class InputChannel(Node):
         def input(self, name):
             # EndOfStream handler has been called by `name`
 
+    Should it be necessary to act upon `connect`, a handler may be
+    installed::
+
+        @input.connect
+        def input(self, name):
+            # Connect handler has been called by `name`
+
     :param raw: especially if the sender has not declared the schema of the
         data it sends, one can set `raw` to `True` in order to get the
         uninterpreted hash. The `data` object will be empty if the sender has
         not declared a schema.
     """
+    connect_handler = None
     close_handler = None
     end_of_stream_handler = None
 
@@ -442,6 +451,9 @@ class InputChannel(Node):
         channel.handler = self.handler.__get__(instance, type(instance))
         channel.parent = instance
         channel._name = self.key
+        if self.connect_handler is not None:
+            channel.connect_handler = self.connect_handler.__get__(
+                instance, type(instance))
         if self.close_handler is not None:
             channel.close_handler = self.close_handler.__get__(
                 instance, type(instance))
@@ -449,6 +461,10 @@ class InputChannel(Node):
             channel.end_of_stream_handler = self.end_of_stream_handler.__get__(
                 instance, type(instance))
         return ret
+
+    def connect(self, func):
+        self.connect_handler = func
+        return self
 
     def close(self, func):
         self.close_handler = func
@@ -515,6 +531,7 @@ class OutputProxy(SubProxyBase):
         self.meta = True
         self._data_handler = None
         self._eos_handler = None
+        self._connect_handler = None
         self._close_handler = None
         self.networkInput = None
 
@@ -537,6 +554,16 @@ class OutputProxy(SubProxyBase):
             raise RuntimeError("Setting an endOfStream handler must happen "
                                "before connecting to the output channel!")
         self._eos_handler = handler
+
+    def setConnectHandler(self, handler):
+        """Redirect the connect signal of the pipelining proxy
+
+        NOTE: The handler must take one argument ``channelname``.
+        """
+        if self.initialized:
+            raise RuntimeError("Setting a connected handler must happen "
+                               "before connecting to the output channel!")
+        self._connect_handler = handler
 
     def setCloseHandler(self, handler):
         """Redirect the closing signal of the pipelining proxy
@@ -577,6 +604,8 @@ class OutputProxy(SubProxyBase):
             self.networkInput.handler = self.handler
         if self._eos_handler is not None:
             self.networkInput.end_of_stream_handler = self._eos_handler
+        if self._connect_handler is not None:
+            self.networkInput.connect_handler = self._connect_handler
         if self._close_handler is not None:
             self.networkInput.close_handler = self._close_handler
         output = ":".join((self._parent.deviceId, self.longkey))
