@@ -1,4 +1,4 @@
-from asyncio import sleep
+from asyncio import Future, sleep, wait_for
 from contextlib import contextmanager
 from unittest import main
 
@@ -68,6 +68,9 @@ class Receiver(Device):
         defaultValue=0,
         displayedName="Received Packets")
 
+    connected = Bool(
+        defaultValue=False)
+
     closed = Bool(
         defaultValue=False)
 
@@ -90,6 +93,10 @@ class Receiver(Device):
     @InputChannel(raw=True)
     async def input(self, data, meta):
         self.received = self.received.value + 1
+
+    @input.connect
+    async def input(self, name):
+        self.connected = True
 
     @input.close
     async def input(self, name):
@@ -137,6 +144,8 @@ class RemotePipelineTest(DeviceTest):
         self.assertIn("alice:output", channels)
         channels = charlie.input.connectedOutputChannels.value
         self.assertIn("alice:output", channels)
+        # Charlie is new and we check the handler
+        self.assertEqual(charlie.connected.value, True)
 
         self.assertEqual(self.bob.input.onSlowness, "drop")
         self.assertEqual(self.bob.input.dataDistribution, "copy")
@@ -179,6 +188,11 @@ class RemotePipelineTest(DeviceTest):
         with (await getDevice("outputdevice")) as proxy:
             self.assertTrue(isAlive(proxy))
             received = False
+            connected = False
+
+            def connect_handler(channel_name):
+                nonlocal connected
+                connected = True
 
             def handler(data, meta):
                 """Output handler to see if we received data
@@ -188,6 +202,7 @@ class RemotePipelineTest(DeviceTest):
 
             self.assertEqual(received, False)
             # Patch the handler to see if our boolean triggers
+            proxy.output.setConnectHandler(connect_handler)
             proxy.output.setDataHandler(handler)
             proxy.output.connect()
             # Send more often as our proxy has a drop setting and we are busy
@@ -195,6 +210,7 @@ class RemotePipelineTest(DeviceTest):
             for data in range(NUM_DATA):
                 await proxy.sendData()
             self.assertEqual(received, True)
+            self.assertEqual(connected, True)
             # We received data and now kill the device
             await output_device.slotKillDevice()
             await waitUntil(lambda: not isAlive(proxy))
@@ -205,9 +221,10 @@ class RemotePipelineTest(DeviceTest):
             await output_device.startInstance()
             await waitUntil(lambda: isAlive(proxy))
             self.assertEqual(received, True)
-
-            # Set the received to false!
+            # Set the received and connected to false!
             received = False
+            connected = False
+            self.assertEqual(connected, False)
             self.assertEqual(received, False)
             # Wait a few seconds because the reconnect will wait seconds
             # as well before attempt
@@ -217,6 +234,8 @@ class RemotePipelineTest(DeviceTest):
             # Our reconnect was successful, we are receiving data via the
             # output channel
             self.assertEqual(received, True)
+            self.assertEqual(connected, True)
+
             received = False
 
         self.assertEqual(received, False)
@@ -350,24 +369,36 @@ class RemotePipelineTest(DeviceTest):
         await output_device.slotKillDevice()
 
     @async_tst
-    async def test_output_proxy_close_handler(self):
-        """Test the output close handler of a proxy"""
+    async def test_output_proxy_connected_close_handler(self):
+        """Test the output connected and close handler of a proxy"""
         NUM_DATA = 5
         output_device = Sender({"_deviceId_": "outputdevice"})
         await output_device.startInstance()
 
         closed = False
-        name = ""
+        closed_name = ""
+
+        connected_name = ""
+        connected = Future()
 
         def close_handler(channel_name):
-            nonlocal closed, name
+            nonlocal closed, closed_name
             closed = True
-            name = channel_name
+            closed_name = channel_name
+
+        def connect_handler(channel_name):
+            nonlocal connected, connected_name
+            connected.set_result(True)
+            connected_name = channel_name
 
         with (await getDevice("outputdevice")) as proxy:
             self.assertTrue(isAlive(proxy))
+            proxy.output.setConnectHandler(connect_handler)
             proxy.output.setCloseHandler(close_handler)
             proxy.output.connect()
+            await connected
+            self.assertEqual(connected.result(), True)
+            self.assertEqual(connected_name, "outputdevice:output")
             # Check that we are sending data with timestamps
             for data in range(NUM_DATA):
                 await proxy.sendData()
@@ -380,7 +411,7 @@ class RemotePipelineTest(DeviceTest):
             # No we kill the sender and verify our closed handler is called
             await output_device.slotKillDevice()
             self.assertEqual(closed, True)
-            self.assertEqual(name, "outputdevice:output")
+            self.assertEqual(closed_name, "outputdevice:output")
 
         del proxy
 
