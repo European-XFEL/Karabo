@@ -124,6 +124,29 @@ CMD_GET_OVERWRITABLE_CONFIG_FOR_SET = """
           AND overwritable = 1
     """
 
+CMD_GET_CONFIG_FOR_SET = """
+        SELECT id
+        FROM ConfigSet
+        WHERE device_set_id = ?
+          AND config_name = ?
+    """
+
+CMD_GET_OVERWRITABLE_CONFIGS_FOR_NAME = """
+        SELECT device_set_id
+          FROM ConfigSet
+          WHERE config_name = ?
+            AND overwritable = 1
+    """
+
+CMD_GET_CONFIGS_PER_DEVICE_SET_MIN_AGE = """
+        SELECT cfg_set.id set_id, cfg_set.device_set_id set_digest,
+               cfg_set.config_name, cfg.id cfg_id, cfg.device_id, cfg.timestamp
+        FROM DeviceConfig cfg, ConfigSet cfg_set
+        WHERE cfg.config_set_id = cfg_set.id
+          AND (JULIANDAY('NOW') - JULIANDAY(cfg.timestamp))*1440 > ?
+        ORDER BY set_id
+"""
+
 CMD_GET_LAST_CONFIGURATION = """
         SELECT cfg_set.config_name, cfg.timestamp, cfg.config_data,
                sch.schema_data, cfg_set.description, cfg_set.priority,
@@ -137,7 +160,7 @@ CMD_GET_LAST_CONFIGURATION = """
         LIMIT 1
     """
 
-def CMD_CHECK_NAME_TAKEN_ANY_DEVICE(num_of_devices):
+def CMD_CHECK_NAME_USED_READONLY_CONFIG(num_of_devices):
     return f"""
         SELECT COUNT(cfg.id)
         FROM DeviceConfig cfg, ConfigSet cfg_set
