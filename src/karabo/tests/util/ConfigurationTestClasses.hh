@@ -587,7 +587,7 @@ namespace configurationTest {
                     .minInc(2)
                     .maxExc(10)
                     .displayedName("A")
-                    .assignmentOptional().noDefaultValue()
+                    .assignmentOptional().defaultValue(2)
                     .commit();
 
             STRING_ELEMENT(rowSchema)

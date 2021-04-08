@@ -23,12 +23,12 @@ class TestDevice(PythonDevice):
             .unit(METER)
             .metricPrefix(KILO)
             .assignmentOptional()
-            .noDefaultValue()
+            .defaultValue(0.0)
             .commit(),
 
             STRING_ELEMENT(tableSchema).key("s")
             .assignmentOptional()
-            .noDefaultValue()
+            .defaultValue("")
             .commit()
         )
         pipeSchema = Schema()
