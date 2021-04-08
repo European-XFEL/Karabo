@@ -1,6 +1,7 @@
 import base64
 import hashlib
 
+from datetime import datetime
 from karabo.native import encodeBinary, decodeBinary, Hash
 
 CONFIG_DB_DEVICE_ID = "deviceId"
@@ -15,6 +16,8 @@ CONFIG_DB_DIFF_TIMEPOINT = "diff_timepoint"
 CONFIG_DB_TIMEPOINT = "timepoint"
 CONFIG_DB_USER = "user"
 CONFIG_DB_OVERWRITABLE = "overwritable"
+
+ISO8601_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
 
 class ConfigurationDBError(Exception):
@@ -81,3 +84,16 @@ def create_config_set_id(deviceIds):
     uniques = sorted(set([devId.upper() for devId in deviceIds]))
     ids_str = '::'.join(uniques)
     return hashlib.sha1(ids_str.encode('utf-8')).hexdigest()
+
+
+def datetime_from_string(str_date):
+    """Obtains the datetime object equivalent to a string that is assumed to
+    be in either ISO8601 or 'YYYY-MM-DD HH:mm:SS.Micro' formats.
+
+    An exception will be thrown if the string isn't in any of the expected
+    formats.
+    """
+    if str_date.find('T') >= 0:
+        return datetime.strptime(str_date, ISO8601_FORMAT)
+    else:
+        return datetime.strptime(str_date, '%Y-%m-%d %H:%M:%S.%f')

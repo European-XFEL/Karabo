@@ -1,5 +1,5 @@
 #############################################################################
-# Author: degon
+# Author: degon & costar
 # Created on August 21, 2020, 11:42 AM
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
@@ -7,15 +7,15 @@ from contextlib import contextmanager
 import os
 
 from karabo.common.services import KARABO_CONFIG_MANAGER as MANAGER
+from karabo.config_db import create_config_set_id
 from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
 from karabo.middlelayer import (
     call, coslot, connectDevice, DaqPolicy, Device, Double,
     getConfigurationFromName, getLastConfiguration, Hash, HashList,
     instantiateFromName, KaraboError, listConfigurationFromName,
-    listDevicesWithConfiguration, saveConfigurationFromName, sleep, Slot,
+    listDevicesWithConfiguration, saveConfigurationFromName, Slot,
     slot, String)
-from karabo.middlelayer_devices.configuration_manager import (
-    ConfigurationManager)
+from ..configuration_manager import ConfigurationManager
 
 DB_NAME = "test_karabo_db"
 
@@ -25,16 +25,16 @@ conf = {
     "dbName": DB_NAME
 }
 
-conf_test_device = {
-    "_deviceId_": "TEST_DEVICE"
+conf_alice = {
+    "_deviceId_": "ALICE"
 }
 
-conf_another_test_device = {
-    "_deviceId_": "ANOTHER_TEST_DEVICE"
+conf_bob = {
+    "_deviceId_": "BOB"
 }
 
-conf_client_device = {
-    "_deviceId_": "TEST_CLIENT_DEVICE"
+conf_charlie = {
+    "_deviceId_": "CHARLIE"
 }
 
 
@@ -104,9 +104,9 @@ class TestConfigurationManager(DeviceTest):
     @contextmanager
     def lifetimeManager(cls):
         cls.dev = ConfigurationManager(conf)
-        cls.testDev = TestDevice(conf_test_device)
-        cls.anotherTestDev = TestDevice(conf_another_test_device)
-        cls.clientDev = TestDevice(conf_client_device)
+        cls.testDev = TestDevice(conf_alice)
+        cls.anotherTestDev = TestDevice(conf_bob)
+        cls.clientDev = TestDevice(conf_charlie)
         with cls.deviceManager(cls.testDev, cls.clientDev, cls.anotherTestDev,
                                lead=cls.dev):
             yield
@@ -117,29 +117,29 @@ class TestConfigurationManager(DeviceTest):
         config_name = "testConfig"
 
         attrs = [Hash("path", "value", "attribute", "warnHigh", "value", 50.0)]
-        r = await call("TEST_DEVICE", "slotUpdateSchemaAttributes", attrs)
+        r = await call("ALICE", "slotUpdateSchemaAttributes", attrs)
         self.assertEqual(self.testDev.value.descriptor.warnHigh, 50.0)
-        h = Hash("name", config_name, "deviceIds", ["TEST_DEVICE"],
+        h = Hash("name", config_name, "deviceIds", ["ALICE"],
                  "priority", 3)
         r = await call(MANAGER, "slotSaveConfigurationFromName", h)
         self.assertEqual(r["success"], True)
         config_name = "testConfig1"
-        h = Hash("name", config_name, "deviceIds", ["TEST_DEVICE",
-                                                    "ANOTHER_TEST_DEVICE"],
+        h = Hash("name", config_name, "deviceIds", ["ALICE",
+                                                    "BOB"],
                  "priority", 2)
         r = await call(MANAGER, "slotSaveConfigurationFromName", h)
         self.assertEqual(r["success"], True)
 
         invalid_config_name = "s#invalid"
-        h = Hash("name", invalid_config_name, "deviceIds", ["TEST_DEVICE",
-                                                            "ANOTHER_TEST_DEVICE"],
+        h = Hash("name", invalid_config_name, "deviceIds", ["ALICE",
+                                                            "BOB"],
                  "priority", 2)
         with self.assertRaises(KaraboError):
             await call(MANAGER, "slotSaveConfigurationFromName", h)
 
         long_name = "s" * 40
-        h = Hash("name", long_name, "deviceIds", ["TEST_DEVICE",
-                                                  "ANOTHER_TEST_DEVICE"],
+        h = Hash("name", long_name, "deviceIds", ["ALICE",
+                                                  "BOB"],
                  "priority", 2)
         with self.assertRaises(KaraboError):
             await call(MANAGER, "slotSaveConfigurationFromName", h)
@@ -148,16 +148,16 @@ class TestConfigurationManager(DeviceTest):
     async def test_configuration_save_check(self):
         """Cross check if we saved the config"""
         config_name = "testConfig1"
-        h = Hash("name", config_name, "deviceIds", ["TEST_DEVICE",
-                                                    "ANOTHER_TEST_DEVICE"])
+        h = Hash("name", config_name, "deviceIds", ["ALICE",
+                                                    "BOB"])
         r = await call(MANAGER, "slotCheckConfigurationFromName", h)
         self.assertEqual(r["success"], True)
         self.assertEqual(r["taken"], True)
 
         # Wrong config name
         config_name = "NotSavedConfig"
-        h = Hash("name", config_name, "deviceIds", ["TEST_DEVICE",
-                                                    "ANOTHER_TEST_DEVICE"])
+        h = Hash("name", config_name, "deviceIds", ["ALICE",
+                                                    "BOB"])
         r = await call(MANAGER, "slotCheckConfigurationFromName", h)
         self.assertEqual(r["success"], True)
         self.assertEqual(r["taken"], False)
@@ -175,21 +175,21 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(r["success"], True)
         devices = r["item"]
         self.assertNotIn("FOODEVICE", devices)
-        self.assertIn("TEST_DEVICE", devices)
-        self.assertNotIn("ANOTHER_TEST_DEVICE", devices)
+        self.assertIn("ALICE", devices)
+        self.assertNotIn("BOB", devices)
 
         h = Hash("priority", 2)
         r = await call(MANAGER, "slotListDevices", h)
         self.assertEqual(r["success"], True)
         devices = r["item"]
         self.assertNotIn("FOODEVICE", devices)
-        self.assertIn("TEST_DEVICE", devices)
-        self.assertIn("ANOTHER_TEST_DEVICE", devices)
+        self.assertIn("ALICE", devices)
+        self.assertIn("BOB", devices)
 
     @async_tst
     async def test_configuration_bulk_save_reject(self):
         """Test the reject of saving of too many configurations"""
-        deviceIds = ["TEST_DEVICE"] * 31
+        deviceIds = ["ALICE"] * 31
         config_name = "testConfig"
         h = Hash("name", config_name, "deviceIds", deviceIds,
                  "priority", 3)
@@ -200,7 +200,7 @@ class TestConfigurationManager(DeviceTest):
     async def test_get_configuration(self):
         """Test the manual retrieving of configurations"""
         config_name = "testConfig"
-        h = Hash("name", config_name, "deviceId", "TEST_DEVICE", "schema",
+        h = Hash("name", config_name, "deviceId", "ALICE", "schema",
                  True)
         r = await call(MANAGER, "slotGetConfigurationFromName", h)
         item = r["item"]
@@ -217,7 +217,7 @@ class TestConfigurationManager(DeviceTest):
 
     @async_tst
     async def test_list_configuration(self):
-        h = Hash("name", "", "deviceId", "TEST_DEVICE")
+        h = Hash("name", "", "deviceId", "ALICE")
         r = await call(MANAGER, "slotListConfigurationFromName", h)
         items = r["items"]
         self.assertIsInstance(items, HashList)
@@ -228,7 +228,7 @@ class TestConfigurationManager(DeviceTest):
         item = items[1]
         self.assertEqual(item["name"], "testConfig1")
 
-        h = Hash("name", "", "deviceId", "ANOTHER_TEST_DEVICE")
+        h = Hash("name", "", "deviceId", "BOB")
         r = await call(MANAGER, "slotListConfigurationFromName", h)
         items = r["items"]
         self.assertIsInstance(items, HashList)
@@ -237,10 +237,11 @@ class TestConfigurationManager(DeviceTest):
 
     @async_tst
     async def test_list_configuration_sets(self):
-        h = Hash("deviceIds", ["TEST_DEVICE", "ANOTHER_TEST_DEVICE"])
+        devices = ["ALICE", "BOB"]
+        h = Hash("deviceIds", devices)
         r = await call(MANAGER, "slotListConfigurationSets", h)
         items = r["items"]
-        # The other one for TEST_DEVICE is off in time.
+        # Just one succesful save for both under same setId
         self.assertEqual(len(items), 1)
         config_set = items[0]
         self.assertEqual(config_set["name"], "testConfig1")
@@ -248,18 +249,42 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(config_set["description"], "")
         self.assertEqual(config_set["user"], ".")
 
+        # Save in chunks but with same setId
+        digest = create_config_set_id(devices)
+        config_name = "testConfig2"
+        h = Hash("name", config_name, "deviceIds", [devices[0]],
+                 "priority", 2, "setIdDigest", digest)
+        r = await call(MANAGER, "slotSaveConfigurationFromName", h)
+        self.assertEqual(r["success"], True)
+
+        config_name = "testConfig2"
+        h = Hash("name", config_name, "deviceIds", [devices[1]],
+                 "priority", 2, "setIdDigest", digest)
+        r = await call(MANAGER, "slotSaveConfigurationFromName", h)
+        self.assertEqual(r["success"], True)
+
+        h = Hash("deviceIds", devices)
+        r = await call(MANAGER, "slotListConfigurationSets", h)
+        items = r["items"]
+        # Just one succesful save for both under same setId
+        self.assertEqual(len(items), 2)
+        config_set = items[0]
+        self.assertEqual(config_set["name"], "testConfig1")
+        config_set = items[1]
+        self.assertEqual(config_set["name"], "testConfig2")
+
     @async_tst
     async def test_zhe_get_last_configuration(self):
         """The typo is intended as order of tests is alphabetically done"""
-        h = Hash("deviceId", "TEST_DEVICE")
+        h = Hash("deviceId", "ALICE")
         r = await call(MANAGER,
                        "slotListConfigurationFromName", h)
         items = r["items"]
-        # We stored two configurations!
-        self.assertEqual(len(items), 2)
+        # We stored three configurations!
+        self.assertEqual(len(items), 3)
 
         # Get the last configuration!
-        h = Hash("deviceId", "TEST_DEVICE", "priority", 3, "schema", True)
+        h = Hash("deviceId", "ALICE", "priority", 3, "schema", True)
         r = await call(MANAGER, "slotGetLastConfiguration", h)
 
         item = r["item"]
@@ -273,39 +298,39 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(policy, DaqPolicy.SAVE)
 
         # Get the last config without schema!
-        h = Hash("deviceId", "TEST_DEVICE", "priority", 3)
+        h = Hash("deviceId", "ALICE", "priority", 3)
         r = await call(MANAGER, "slotGetLastConfiguration", h)
         item = r["item"]
         self.assertNotIn("schema", item)
 
     @async_tst
-    async def test_device_client_configuration(self):
+    async def test_get_client_configuration(self):
         """Test the functions that can be used from ikarabo"""
         # Device client functions
         await saveConfigurationFromName(
-            "TEST_CLIENT_DEVICE", name="testConfigClient",
+            "CHARLIE", name="testConfigClient",
             description="No desc", priority=3)
         await saveConfigurationFromName(
-            ["TEST_CLIENT_DEVICE"], name="testConfigClientList",
+            ["CHARLIE"], name="testConfigClientList",
             description="Client list", priority=1)
 
-        dev = await connectDevice("TEST_CLIENT_DEVICE")
+        dev = await connectDevice("CHARLIE")
         await saveConfigurationFromName(
-            ["TEST_CLIENT_DEVICE", dev], name="testConfigClientMixedList",
+            ["CHARLIE", dev], name="testConfigClientMixedList",
             description="Mixed", priority=2)
-        l = await listConfigurationFromName("TEST_CLIENT_DEVICE")
+        l = await listConfigurationFromName("CHARLIE")
         self.assertEqual(len(l), 3)
         self.assertIsInstance(l, HashList)
         clist = ["testConfigClient", "testConfigClientList",
                  "testConfigClientMixedList"]
         self.assertIn(l[0]["name"], clist)
         self.assertIn(l[1]["name"], clist)
-        config = await getConfigurationFromName("TEST_CLIENT_DEVICE",
+        config = await getConfigurationFromName("CHARLIE",
                                                 "testConfigClientList")
         value = config["value"]
         self.assertEqual(value, 5.0)
 
-        item = await getLastConfiguration("TEST_CLIENT_DEVICE", priority=3)
+        item = await getLastConfiguration("CHARLIE", priority=3)
         self.assertEqual(item["name"], "testConfigClient")
         config = item["config"]
         value = config["value"]
@@ -315,42 +340,42 @@ class TestConfigurationManager(DeviceTest):
         self.assertEqual(item["description"], "No desc")
 
         deviceIds = await listDevicesWithConfiguration()
-        self.assertIn("TEST_CLIENT_DEVICE", deviceIds)
-        self.assertIn("TEST_DEVICE", deviceIds)
-        self.assertNotIn("ANOTHER_TEST_DEVICE", deviceIds)
+        self.assertIn("CHARLIE", deviceIds)
+        self.assertIn("ALICE", deviceIds)
+        self.assertNotIn("BOB", deviceIds)
 
         deviceIds = await listDevicesWithConfiguration(priority=2)
-        self.assertIn("TEST_CLIENT_DEVICE", deviceIds)
-        self.assertIn("TEST_DEVICE", deviceIds)
-        self.assertIn("ANOTHER_TEST_DEVICE", deviceIds)
+        self.assertIn("CHARLIE", deviceIds)
+        self.assertIn("ALICE", deviceIds)
+        self.assertIn("BOB", deviceIds)
 
         # Instantiate a device with a device client function
-        serverMock = MockServer({"_deviceId_": "TEST_SERVER"})
+        serverMock = MockServer({"_deviceId_": "MDL_SERVER"})
         await serverMock.startInstance()
         try:
             self.assertEqual(serverMock.lastClassId, "")
             self.assertEqual(serverMock.lastDeviceId, "")
             self.assertEqual(serverMock.lastConfigDouble, DEFAULT_LAST_DOUBLE)
-            await instantiateFromName("TEST_DEVICE", name="testConfig",
-                                      serverId="TEST_SERVER")
+            await instantiateFromName("ALICE", name="testConfig",
+                                      serverId="MDL_SERVER")
             self.assertEqual(serverMock.lastClassId, "TestDevice")
-            self.assertEqual(serverMock.lastDeviceId, "TEST_DEVICE")
+            self.assertEqual(serverMock.lastDeviceId, "ALICE")
             self.assertEqual(serverMock.lastConfigDouble, 5.0)
         finally:
             await serverMock.slotKillDevice()
 
     @async_tst
     async def test_instantiate_device(self):
-        serverMock = MockServer({"_deviceId_": "TEST_SERVER"})
+        serverMock = MockServer({"_deviceId_": "MDL_SERVER"})
         await serverMock.startInstance()
         try:
             h = Hash()
-            h["deviceId"] = "TEST_DEVICE"
+            h["deviceId"] = "ALICE"
             h["name"] = "testConfig"
-            h["serverId"] = "TEST_SERVER"
+            h["serverId"] = "MDL_SERVER"
             attrs = [Hash("path", "value", "attribute",
                           "warnHigh", "value", 200.0)]
-            await call("TEST_DEVICE", "slotUpdateSchemaAttributes", attrs)
+            await call("ALICE", "slotUpdateSchemaAttributes", attrs)
             self.assertEqual(self.testDev.value.descriptor.warnHigh, 200.0)
             # Note: This is sneaky and a mind game. We have a fake server
             # that we call to instantiate a device which is already online
@@ -360,7 +385,7 @@ class TestConfigurationManager(DeviceTest):
 
             await call(MANAGER, "slotInstantiateDevice", h)
             self.assertEqual(serverMock.lastClassId, "TestDevice")
-            self.assertEqual(serverMock.lastDeviceId, "TEST_DEVICE")
+            self.assertEqual(serverMock.lastDeviceId, "ALICE")
             self.assertEqual(serverMock.lastConfigDouble, 5.0)
             self.assertEqual(self.testDev.value.descriptor.warnHigh, 50.0)
 
@@ -371,20 +396,20 @@ class TestConfigurationManager(DeviceTest):
             self.assertEqual(serverMock.lastConfigDouble, DEFAULT_LAST_DOUBLE)
 
             h = Hash()
-            h["deviceId"] = "TEST_DEVICE"
+            h["deviceId"] = "ALICE"
             h["name"] = "testConfig"
             h["classId"] = "NoClass"
-            h["serverId"] = "TEST_SERVER"
+            h["serverId"] = "MDL_SERVER"
             # ClassId missmatch ...
             with self.assertRaises(KaraboError):
                 await call(MANAGER, "slotInstantiateDevice", h)
 
             h = Hash()
-            h["deviceId"] = "TEST_DEVICE"
-            h["serverId"] = "TEST_SERVER"
+            h["deviceId"] = "ALICE"
+            h["serverId"] = "MDL_SERVER"
             await call(MANAGER, "slotInstantiateDevice", h)
             self.assertEqual(serverMock.lastClassId, "TestDevice")
-            self.assertEqual(serverMock.lastDeviceId, "TEST_DEVICE")
+            self.assertEqual(serverMock.lastDeviceId, "ALICE")
             self.assertEqual(serverMock.lastConfigDouble, 5.0)
         finally:
             await serverMock.slotKillDevice()
