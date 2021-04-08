@@ -1,12 +1,12 @@
-
-
 from unittest import TestCase, main
+
+import numpy as np
 
 from karabo.native import (
     AccessMode, Bool, ByteArray, Char, Configurable, Double, Float,
-    get_default_value, Int32, sanitize_table_schema, RegexString,
+    get_default_value, Int8, Int32, sanitize_table_schema, RegexString,
     String, TypeHash, TypeNone, TypeSchema, VectorChar, VectorDouble,
-    VectorHash, VectorRegexString)
+    VectorHash, VectorUInt8, VectorRegexString, VectorString)
 
 
 def get_test_table(access=AccessMode.READONLY):
@@ -123,6 +123,7 @@ class Tests(TestCase):
         def get_table(desc):
             class Row(Configurable):
                 notValid = desc()
+
             return Row
 
         for descriptor in [ByteArray, Char, VectorChar, RegexString,
@@ -179,6 +180,75 @@ class Tests(TestCase):
         boolProperty = Bool(defaultValue=True)
         default = get_default_value(boolProperty)
         self.assertEqual(default, True)
+
+    def test_default_value_vector_minsize(self):
+        """Test the default value generation"""
+        vectorProperty = VectorDouble(minSize=2)
+        # 1. No default value provided, we force to minimum with minSize 2
+        value = get_default_value(vectorProperty, force=True)
+        assert isinstance(value, np.ndarray)
+        assert (value == [0, 0]).all()
+        assert value.dtype == np.float64
+
+        # 2. Provide a default, higher than min size
+        vectorProperty = VectorUInt8(minSize=2, defaultValue=[3, 3, 3])
+        value = get_default_value(vectorProperty, force=True)
+        assert value == [3, 3, 3]
+        # Default value in this test provided without numpy type
+        assert getattr(value, 'dtype', None) is None
+
+        # 3. No default value provided, vector string of size 4
+        vectorProperty = VectorString(minSize=4)
+        value = get_default_value(vectorProperty, force=True)
+        assert value == ["", "", "", ""]
+
+    def test_default_value_minimum(self):
+        """Test the default value generation of a simple descriptor"""
+        intProperty = Int8(minInc=2)
+        # 1. No default value provided, we force to minimum
+        value = get_default_value(intProperty, force=True)
+        assert value == 2
+        assert value.dtype == np.int8
+        # 2. Provide a default, higher than minimum
+        intProperty = Int8(minInc=2, defaultValue=5)
+        value = get_default_value(intProperty, force=True)
+        assert value == 5
+        assert value.dtype == np.int8
+        # 3. Check options
+        intProperty = Int8(options=[5, 6, 7])
+        value = get_default_value(intProperty, force=True)
+        assert value == 5
+        # 4. No default value provided, we force to default, but 0
+        intProperty = Int8(minInc=-2)
+        value = get_default_value(intProperty, force=True)
+        assert value == 0
+
+        # ------------------------------
+
+        floatProperty = Float(minExc=0)
+        # 1. No default value provided, we force to slighly above minimum
+        value = get_default_value(floatProperty, force=True)
+        assert value > 0.0
+        assert value < 1e-32
+        # 2. Provide a default, higher than minimum
+        doubleProperty = Double(minInc=2.1, defaultValue=5.2)
+        value = get_default_value(doubleProperty, force=True)
+        assert value == 5.2
+        assert value.dtype == np.float64
+        # 3. Check options
+        doubleProperty = Double(options=[5.1, 6.2, 7.3])
+        value = get_default_value(doubleProperty, force=True)
+        assert value == 5.1
+        # 4. No default value provided, we force to default, but 0
+        doubleProperty = Double(minInc=-2.1)
+        value = get_default_value(doubleProperty, force=True)
+        assert value == 0.0
+
+        # ------------------------------
+
+        vectorHashProperty = VectorHash(rows=Row, minSize=2)
+        with self.assertRaises(TypeError):
+            get_default_value(vectorHashProperty, force=True)
 
 
 if __name__ == "__main__":
