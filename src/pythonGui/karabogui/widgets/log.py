@@ -5,12 +5,12 @@
 #############################################################################
 from collections import namedtuple
 
-from qtpy.QtCore import (Slot, QAbstractTableModel, QDate, QDateTime,
-                         QModelIndex, Qt)
-from qtpy.QtGui import QColor
-from qtpy.QtWidgets import (QAbstractItemView, QDateTimeEdit,
+from qtpy.QtCore import (QAbstractTableModel, QDate, QDateTime,
+                         QModelIndex, QPoint, Slot, Qt)
+from qtpy.QtGui import QColor, QClipboard
+from qtpy.QtWidgets import (QAbstractItemView, QApplication, QDateTimeEdit,
                             QFormLayout, QFrame, QGroupBox, QHBoxLayout,
-                            QLabel, QLineEdit, QPushButton, QTableView,
+                            QLabel, QLineEdit, QMenu, QPushButton, QTableView,
                             QToolButton, QVBoxLayout, QWidget)
 
 from karabogui import icons
@@ -66,6 +66,11 @@ class LogWidget(QWidget):
         twLogTable.sortByColumn(0, Qt.DescendingOrder)
 
         twLogTable.doubleClicked.connect(self.onItemDoubleClicked)
+
+        twLogTable.setContextMenuPolicy(Qt.CustomContextMenu)
+        twLogTable.customContextMenuRequested.connect(self._context_menu)
+
+        self.table = twLogTable
 
     def _setupFilterWidget(self):
         """The filter widget and its components is created and returned.
@@ -219,6 +224,33 @@ class LogWidget(QWidget):
         hFilterLayout.addStretch()
 
         return filterWidget
+
+    @Slot(QPoint)
+    def _context_menu(self, pos):
+        """The custom context menu of a reconfigurable table element"""
+        index = self.table.selectionModel().currentIndex()
+        menu = QMenu()
+        if index.isValid():
+            copy_action = menu.addAction("Copy to clipboard")
+            copy_action.triggered.connect(self._copy_clipboard)
+            menu.exec_(self.table.viewport().mapToGlobal(pos))
+
+    @Slot()
+    def _copy_clipboard(self):
+        index = self.table.selectionModel().currentIndex()
+        if index.isValid():
+            model = self.table.model()
+            time = model.data(index.siblingAtColumn(1), Qt.DisplayRole)
+            time = time.toString("dd.MM.yyyy hh:mm:ss.z")
+            logtype = model.data(index.siblingAtColumn(2), Qt.DisplayRole)
+            instance_id = model.data(index.siblingAtColumn(3), Qt.DisplayRole)
+            exception = model.data(index.siblingAtColumn(4), Qt.DisplayRole)
+            description = model.data(index.siblingAtColumn(5), Qt.DisplayRole)
+            log = (f"- {time} --- {logtype} --- {instance_id} -\n\n-----\n"
+                   f"{exception}\n{description}")
+            clipboard = QApplication.clipboard()
+            clipboard.clear(mode=QClipboard.Clipboard)
+            clipboard.setText(log, mode=QClipboard.Clipboard)
 
     def onLogDataAvailable(self, logData):
         new = [Log(i, messageType=log["type"], instanceId=log["category"],
