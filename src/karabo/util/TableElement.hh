@@ -8,15 +8,17 @@
 #ifndef KARABO_UTIL_TABLEELEMENT_HH
 #define	KARABO_UTIL_TABLEELEMENT_HH
 
-
-#include "GenericElement.hh"
-#include "LeafElement.hh"
-#include "Configurator.hh"
-#include "Validator.hh"
-#include <vector>
 #include <boost/any.hpp>
 #include <boost/cast.hpp>
+#include <utility>
+#include <vector>
+
+#include "Configurator.hh"
+#include "GenericElement.hh"
+#include "LeafElement.hh"
 #include "OverwriteElement.hh"
+#include "Types.hh"
+#include "Validator.hh"
 
 
 namespace karabo {
@@ -86,15 +88,15 @@ namespace karabo {
         /**
          * @class TableElement
          * @brief The TableElement represents a vector<Hash> with fixed entries and types
-         * 
+         *
          * The TableElement represents a vector<Hash> with fixed entries and types. This
          * means that each entry in the vector is expected to be a Hash with the
          * same keys and same types, except for those which are set to assignment optional
          * and have a default value.
-         * 
+         *
          * Tables are defined by assigning a rowSchema to them, hence specifying how the
          * Hash entries in the vector should look like. The Schema::Validator is aware of
-         * these specifications and will perform validation on these elements. 
+         * these specifications and will perform validation on these elements.
          */
         class TableElement : public GenericElement<TableElement> {
 
@@ -104,7 +106,7 @@ namespace karabo {
             TableDefaultValue<TableElement> m_defaultValue;
             ReadOnlySpecific<TableElement, std::vector<Hash>> m_readOnlySpecific;
             Schema::AssemblyRules m_parentSchemaAssemblyRules;
-            
+
         public:
 
             TableElement(Schema& expected) : GenericElement<TableElement>(expected) {
@@ -264,8 +266,8 @@ namespace karabo {
 
                 return *this;
             }
-            
-            
+
+
             /**
              * This method establishes content of the table, i.e. table columns and their types
              * @param schema
@@ -275,7 +277,7 @@ namespace karabo {
                 m_nodeSchema = schema;
                 return *this;
             }
-            
+
             /**
              * This method appends additional columns to the right side of the table.
              * @param schema
@@ -304,6 +306,69 @@ namespace karabo {
         protected:
 
             void beforeAddition();
+
+        private:
+
+            /**
+             * @brief Controlling method for row schema sanitization.
+             *
+             * @throws karabo::util::LogicException this can be throw by
+             * some specific sanitization methods.
+             */
+            void sanitizeRowSchema(karabo::util::Schema& rowSchema);
+
+            /**
+             * @brief Turns reconfigurable and init columns into read-only
+             * columns when the hosting table is read-only. When the hosting
+             * table is init or reconfigurable, turns every init column into
+             * a reconfigurable column.
+             */
+            void sanitizeColumnsAccessModes(karabo::util::Schema& rowSchema);
+
+            /**
+             * @brief Makes sure that every non read-only column in a non
+             * read-only table has a default value set.
+             *
+             * Default values are synthesized for the columns that don't have
+             * a default value. The synthesized values correspond to the
+             * default initializer of the column type (e.g. 0 for int columns,
+             * false for bool columns and empty vectors for vector<..> columns).
+             *
+             * @throw karabo::util::LogicException if the synthesized column
+             * default values are incompatible with any attribute that already
+             * existed in the schema, like 'minInc' or 'minSize' or if the
+             * type of the column lacking a default value is not supported for
+             * table columns.
+             */
+            void sanitizeNoDefaultColumns(karabo::util::Schema& rowSchema);
+
+            /**
+             * @brief Finds, in the TableElement rowSchema, a column of an
+             * unsupported type - the TableElement supports a subset of the
+             * Leaf types for valid column types.
+             *
+             * @return std::pair<std::string, karabo::util::Types::ReferenceType>
+             * 'first' is the name of the column of the invalid type (empty
+             * string if all columns are of supported types) and 'second' is the
+             * type of the column with the invalid type (UNKNOWN if there is no
+             * column of an invalid type).
+             */
+            std::pair<std::string, karabo::util::Types::ReferenceType>
+                findUnsupportedColumnType(const karabo::util::Schema& rowSchema);
+
+            void setDefaultValueForColumn(
+                const std::string& colName,
+                const karabo::util::Types::ReferenceType& colType,
+                karabo::util::Schema& rowSchema);
+
+            void checkNumericDefaultInRange(
+                const std::string& colName, const karabo::util::Schema& rowSchema);
+
+            void checkSimpleDefaultInOptions(
+                const std::string& colName,
+                const karabo::util::Types::ReferenceType& colType,
+                const karabo::util::Schema& rowSchema);
+
         };
 
         typedef util::TableElement TABLE_ELEMENT;
@@ -312,4 +377,3 @@ namespace karabo {
 
 
 #endif	/* TABLEELEMENT_HH */
-
