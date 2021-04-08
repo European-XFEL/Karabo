@@ -288,9 +288,19 @@ def is_bytearray_type(vtype: str) -> bool:
     return vtype == KARABO_TYPE_BYTE_ARRAY
 
 
+def is_vector_bool_type(vtype: str) -> bool:
+    """Check if this value type is a vector bool type"""
+    return vtype == KARABO_TYPE_VECTOR_BOOL
+
+
 def is_vector_char_type(vtype: str) -> bool:
     """Check if this value type is a vector char type"""
     return vtype == KARABO_TYPE_VECTOR_CHAR
+
+
+def is_vector_string_type(vtype: str) -> bool:
+    """Check if this value type is a vector string type"""
+    return vtype == KARABO_TYPE_VECTOR_STRING
 
 
 def is_vector_type(vtype: str) -> bool:
@@ -326,3 +336,8 @@ def is_vector_integer_type(vtype: str) -> bool:
 def is_vector_float_type(vtype: str) -> bool:
     """Check if this value type belongs to a vector with float types"""
     return vtype in __KARABO_VECTOR_FLOAT_TYPES
+
+
+def is_vector_hash_type(vtype: str) -> bool:
+    """Check if this value type belongs to a vector hash"""
+    return vtype == KARABO_TYPE_VECTOR_HASH
