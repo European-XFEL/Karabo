@@ -72,6 +72,10 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testGetLeaves);
     CPPUNIT_TEST(testAllowedActions);
     CPPUNIT_TEST(testDefaultReadOnlyThrows);
+    CPPUNIT_TEST(testTableColNoDefaultValue);
+    CPPUNIT_TEST(testTableColInitOnly);
+    CPPUNIT_TEST(testTableColUnsupportedType);
+    CPPUNIT_TEST(testTableColWrongAccessMode);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -125,8 +129,6 @@ private: //functions
     void testArchivePolicy();
     void testOverwriteElement();
     void testMerge();
-    void testTable();
-    void testTableReadOnly();
     void testList();
     void testInvalidNodes();
     void testRuntimeAttributes();
@@ -142,15 +144,52 @@ private: //functions
     void testGetLeaves();
     void testAllowedActions();
     /**
-     * Checks that a schema element that uses the definition sequence
-     * ...assignmentOptional().defaultValue(value).readOnly() throws an exception.
-     * Conceptually, defaultValue and readOnly are incompatible and readOnly 
+     * @brief Checks that a schema element that uses the definition sequence
+     * "...assignmentOptional().defaultValue(value).readOnly()" throws an
+     * exception.
+     *
+     * Conceptually, defaultValue and readOnly are incompatible and readOnly
      * elements should use initialValue() instead of defaultValue().
      * As the invalid usage does not trigger compilation errors, a
      * throw-at-runtime approach has been used.
      */
     void testDefaultReadOnlyThrows();
 
+    void testTable();
+    void testTableReadOnly();
+
+    /**
+     * @brief Checks that reconfigurable table columns of supported types for
+     * which no default value has been specified are fixed.
+     *
+     * The fix consists of adding the missing default value attribute to the
+     * row schema with the default initialization value for the column type.
+     * If it is not possible to synthesize a default value - e.g. the default
+     * initialization value for the column type is outside the allowed range
+     * of values - an exception is thrown.
+     */
+    void testTableColNoDefaultValue();
+
+    /**
+     * @brief Checks that init only table columns (unsupported) are fixed,
+     * being converted to read-only columns when the table is read-only and
+     * to reconfigurable columns when the table is not read-only.
+     */
+    void testTableColInitOnly();
+
+    /**
+     * @brief Checks that the presence of unsupported table column types
+     * throws an exception.
+     */
+    void testTableColUnsupportedType();
+
+    /**
+     * @brief Checks that table columns with access mode incompatible with
+     * the table's access mode are fixed (reconfigurable columns on read-only
+     * tables become read-only with their initial value set to the default
+     * value of the previously reconfigurable column).
+     */
+    void testTableColWrongAccessMode();
 };
 
 #endif	/* SCHEMA_TEST_HH */
