@@ -71,6 +71,7 @@ class ConfigurationManager(DeviceClientBase):
     - Retrieve device configurations by ``name``
     - List device configurations by ``deviceId``
     """
+
     state = Overwrite(
         defaultValue=State.INIT,
         options=[State.INIT, State.CHANGING, State.UNKNOWN, State.ON])
@@ -294,6 +295,8 @@ class ConfigurationManager(DeviceClientBase):
         if self.deviceName:
             background(self._list_configurations())
 
+        self.logger.info(f"Starting configuration manager {self.deviceId}")
+
     # Karabo Slot Interface
     # -----------------------------------------------------------------------
 
@@ -320,9 +323,7 @@ class ConfigurationManager(DeviceClientBase):
                            listed.
 
         :returns: list of configuration items (can be empty) with meta
-                  information. Only configuration records are listed
-                  by name which are available for each device in a time
-                  frame of 120 seconds.
+                  information.
                   A configuration item has keys `name`, `priority`,
                   `description`, `user`, `min_point`, `max_timepoint`
                   and `diff_timepoint`.
@@ -440,6 +441,14 @@ class ConfigurationManager(DeviceClientBase):
            - user: the user name of the currently logged in user in the client
 
            - deviceIds: a vector of strings with deviceIds
+
+           - overwritable: Will the configuration be overwritable?
+                           Ignored if the named configuration already exists
+
+           - setIdDigest: the digest to be used for the set of devices whose
+                          configurations are being saved. If no value is
+                          provided, a digest is generated internally for
+                          the set of devices in the method arguments.
         """
         config_name = info["name"]  # Note: Must be there!
         deviceIds = info["deviceIds"]
@@ -464,6 +473,8 @@ class ConfigurationManager(DeviceClientBase):
         description = info.get("description", "")
         priority = info.get("priority", 1)
         timestamp = info.get("timestamp", Timestamp().toLocal())
+        overwritable = info.get("overwritable", False)
+        setIdDigest = info.get("setIdDigest", None)
 
         try:
             async def poll_(device_id):
@@ -486,7 +497,8 @@ class ConfigurationManager(DeviceClientBase):
         # Let it throw here if needed!
         self.db.save_configuration(
             config_name, items, description=description, user=user,
-            priority=priority, timestamp=timestamp)
+            priority=priority, overwritable=overwritable,
+            setIdDigest=setIdDigest, timestamp=timestamp)
 
         return Hash("success", True)
 
@@ -555,15 +567,15 @@ class ConfigurationManager(DeviceClientBase):
                 except (CancelledError, TimeoutError) as e:
                     future.set_exception(e)
                     raise KaraboError(
-                            f"server {serverId} is not available to start "
-                            f"device with deviceId {deviceId} ... Could not "
-                            f"retrieve the schema!")
+                        f"server {serverId} is not available to start "
+                        f"device with deviceId {deviceId} ... Could not "
+                        f"retrieve the schema!")
                 except Exception as e:
                     # In case we experience an unknown error, notify!
                     future.set_exception(e)
                     raise KaraboError(
-                            f"Exception occured when starting device with "
-                            f"deviceId {deviceId} on {serverId}: {e}")
+                        f"Exception occured when starting device with "
+                        f"deviceId {deviceId} on {serverId}: {e}")
                 else:
                     future.set_result(schema)
                     # Got a new schema, cache it!
