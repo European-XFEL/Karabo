@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   Schema_Test.cc
  * Author: irinak
- * 
+ *
  * Created on September 28, 2012, 1:14 PM
  */
 
@@ -42,7 +42,7 @@ void Schema_Test::testBuildUp() {
             CPPUNIT_ASSERT(schema.isLeaf("shapes.circle.radius") == true);
         }
         GraphicsRenderer::Pointer p = GraphicsRenderer::create("GraphicsRenderer", Hash("shapes.Circle.radius", 0.5, "color", "red", "antiAlias", "true"));
-        //cout << Configurator<GraphicsRenderer>::getSchema("GraphicsRenderer"); 
+        //cout << Configurator<GraphicsRenderer>::getSchema("GraphicsRenderer");
 
     } catch (const karabo::util::Exception& e) {
         KARABO_LOG_FRAMEWORK_DEBUG << e;
@@ -73,7 +73,7 @@ void Schema_Test::testGetRequiredAccessLevel() {
 
     Schema schema = GraphicsRenderer::getSchema("GraphicsRenderer");
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes") == Schema::EXPERT);
-    //all sub-elements of Node-element 'shapes' will have EXPERT level: 
+    //all sub-elements of Node-element 'shapes' will have EXPERT level:
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled") == Schema::EXPERT);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle") == Schema::EXPERT);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.b") == Schema::EXPERT);
@@ -120,7 +120,7 @@ void Schema_Test::testSetRequiredAccessLevel() {
 
     Schema schema = GraphicsRenderer::getSchema("GraphicsRenderer");
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes") == Schema::EXPERT);
-    //all sub-elements of Node-element 'shapes' will have EXPERT level: 
+    //all sub-elements of Node-element 'shapes' will have EXPERT level:
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle.shadowEnabled") == Schema::EXPERT);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Circle") == Schema::EXPERT);
     CPPUNIT_ASSERT(schema.getRequiredAccessLevel("shapes.Rectangle.a") == Schema::ADMIN);
@@ -742,7 +742,7 @@ void Schema_Test::testHelpFunction() {
     /*
     Schema schema("GraphicsRenderer1", Schema::AssemblyRules(READ | WRITE | INIT));
     GraphicsRenderer1::expectedParameters(schema);
-  
+
     schema.help();
     schema.help("shapes");
     schema.help("shapes.circle");
@@ -773,78 +773,6 @@ void Schema_Test::testMerge() {
     schema.merge(schema2);
     CPPUNIT_ASSERT(schema.getDefaultValue<unsigned int>("monitor.count") == 777);
     CPPUNIT_ASSERT(schema.getDefaultValue<float>("monitor.stats.d1") == 3.1415f);
-}
-
-
-void Schema_Test::testTable() {
-    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
-    OtherSchemaElements::expectedParameters(sch);
-    CPPUNIT_ASSERT(sch.isLeaf("testTable") == true);
-    CPPUNIT_ASSERT(sch.getParameterHash().hasAttribute("testTable", "rowSchema") == true);
-    const std::vector<Hash> shouldBeDefault(2, Hash("a", 3, "b", "foo"));
-    const std::vector<Hash>& theDefault = sch.getDefaultValue<std::vector<Hash> >("testTable");
-    CPPUNIT_ASSERT_EQUAL(shouldBeDefault.size(), theDefault.size());
-    CPPUNIT_ASSERT_EQUAL(shouldBeDefault[0].size(), theDefault[1].size());
-    CPPUNIT_ASSERT_EQUAL(shouldBeDefault[1].get<int>("a"), theDefault[0].get<int>("a"));
-    CPPUNIT_ASSERT_EQUAL(shouldBeDefault[1].get<std::string>("b"), theDefault[1].get<std::string>("b"));
-
-    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<Hash> >("testTableEmptyDefault").empty());
-}
-
-
-void Schema_Test::testTableReadOnly() {
-
-    karabo::util::Schema rowSchema;
-
-    STRING_ELEMENT(rowSchema).key("s")
-            .assignmentOptional().noDefaultValue()
-            .commit();
-
-    BOOL_ELEMENT(rowSchema).key("b")
-            .assignmentOptional().noDefaultValue()
-            .commit();
-
-    karabo::util::Schema invalidReadOnlySchema;
-
-    // The assignmentOptional().defaultValue(...).readOnly() sequence below,
-    // if accepted, would reset the element value to empty vector of hashes,
-    // overriding the defaultValue setting.
-    CPPUNIT_ASSERT_THROW(
-                         TABLE_ELEMENT(invalidReadOnlySchema).key("InvalidTable")
-                         .setColumns(rowSchema)
-                         .assignmentOptional().defaultValue(std::vector<Hash>(1, Hash("s", "foo", "b", false)))
-                         .readOnly()
-                         .commit(),
-                         karabo::util::LogicException
-                         );
-
-    karabo::util::Schema validReadOnlySchema;
-
-    CPPUNIT_ASSERT_NO_THROW(
-                            TABLE_ELEMENT(validReadOnlySchema).key("ValidTable")
-                            .setColumns(rowSchema)
-                            .readOnly().initialValue(std::vector<Hash>(1, Hash("s", "bar", "b", true)))
-                            .commit()
-                            );
-
-    // Verifies that a config built from a Schema with read-only TABLE_ELEMENT is valid
-    // and has the specified initial value.
-    Hash configWithTable;
-    Validator validator;
-    auto res = validator.validate(validReadOnlySchema, Hash(), configWithTable);
-    CPPUNIT_ASSERT_EQUAL(true, res.first);
-    const std::vector<Hash> &tableRows = configWithTable.get<std::vector < Hash >> ("ValidTable");
-    CPPUNIT_ASSERT_EQUAL(1UL, tableRows.size());
-    CPPUNIT_ASSERT_EQUAL(std::string("bar"), tableRows[0].get<std::string>("s"));
-    CPPUNIT_ASSERT_EQUAL(true, tableRows[0].get<bool>("b"));
-
-    // Tables need their row schema:
-    karabo::util::Schema noColumnsSchema;
-    CPPUNIT_ASSERT_THROW(
-                         TABLE_ELEMENT(noColumnsSchema).key("tableLackingColumnsSchema")
-                         .readOnly()
-                         .commit(),
-                         karabo::util::LogicException);
 }
 
 
@@ -1321,7 +1249,7 @@ void Schema_Test::testAllowedActions() {
                          karabo::util::ParameterException);
 }
 
-                         
+
 void Schema_Test::testDefaultReadOnlyThrows() {
 
     karabo::util::Schema invalidSchema;
@@ -1345,4 +1273,673 @@ void Schema_Test::testDefaultReadOnlyThrows() {
                             .commit()
                             );
 
+}
+
+
+void Schema_Test::testTable() {
+    Schema sch("OtherSchemaElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    OtherSchemaElements::expectedParameters(sch);
+    CPPUNIT_ASSERT(sch.isLeaf("testTable") == true);
+    CPPUNIT_ASSERT(sch.getParameterHash().hasAttribute("testTable", "rowSchema") == true);
+    const std::vector<Hash> shouldBeDefault(2, Hash("a", 3, "b", "foo"));
+    const std::vector<Hash>& theDefault = sch.getDefaultValue<std::vector<Hash> >("testTable");
+    CPPUNIT_ASSERT_EQUAL(shouldBeDefault.size(), theDefault.size());
+    CPPUNIT_ASSERT_EQUAL(shouldBeDefault[0].size(), theDefault[1].size());
+    CPPUNIT_ASSERT_EQUAL(shouldBeDefault[1].get<int>("a"), theDefault[0].get<int>("a"));
+    CPPUNIT_ASSERT_EQUAL(shouldBeDefault[1].get<std::string>("b"), theDefault[1].get<std::string>("b"));
+
+    CPPUNIT_ASSERT(sch.getDefaultValue<std::vector<Hash> >("testTableEmptyDefault").empty());
+}
+
+
+void Schema_Test::testTableReadOnly() {
+
+    karabo::util::Schema rowSchema;
+
+    STRING_ELEMENT(rowSchema).key("s")
+            .assignmentOptional().noDefaultValue()
+            .commit();
+
+    BOOL_ELEMENT(rowSchema).key("b")
+            .assignmentOptional().noDefaultValue()
+            .commit();
+
+    karabo::util::Schema invalidReadOnlySchema;
+
+    // The assignmentOptional().defaultValue(...).readOnly() sequence below,
+    // if accepted, would reset the element value to empty vector of hashes,
+    // overriding the defaultValue setting.
+    CPPUNIT_ASSERT_THROW(
+                         TABLE_ELEMENT(invalidReadOnlySchema).key("InvalidTable")
+                         .setColumns(rowSchema)
+                         .assignmentOptional().defaultValue(std::vector<Hash>(1, Hash("s", "foo", "b", false)))
+                         .readOnly()
+                         .commit(),
+                         karabo::util::LogicException
+                         );
+
+    karabo::util::Schema validReadOnlySchema;
+
+    CPPUNIT_ASSERT_NO_THROW(
+                            TABLE_ELEMENT(validReadOnlySchema).key("ValidTable")
+                            .setColumns(rowSchema)
+                            .readOnly().initialValue(std::vector<Hash>(1, Hash("s", "bar", "b", true)))
+                            .commit()
+                            );
+
+    // Verifies that a config built from a Schema with read-only TABLE_ELEMENT is valid
+    // and has the specified initial value.
+    Hash configWithTable;
+    Validator validator;
+    auto res = validator.validate(validReadOnlySchema, Hash(), configWithTable);
+    CPPUNIT_ASSERT_EQUAL(true, res.first);
+    const std::vector<Hash> &tableRows = configWithTable.get<std::vector < Hash >> ("ValidTable");
+    CPPUNIT_ASSERT_EQUAL(1UL, tableRows.size());
+    CPPUNIT_ASSERT_EQUAL(std::string("bar"), tableRows[0].get<std::string>("s"));
+    CPPUNIT_ASSERT_EQUAL(true, tableRows[0].get<bool>("b"));
+
+    // Tables need their row schema:
+    karabo::util::Schema noColumnsSchema;
+    CPPUNIT_ASSERT_THROW(
+                         TABLE_ELEMENT(noColumnsSchema).key("tableLackingColumnsSchema")
+                         .readOnly()
+                         .commit(),
+                         karabo::util::LogicException);
+}
+
+
+void Schema_Test::testTableColNoDefaultValue() {
+    karabo::util::Schema rowSchema;
+    // All the supported column types with no default value.
+    BOOL_ELEMENT(rowSchema).key("bool")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    DOUBLE_ELEMENT(rowSchema).key("double")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    FLOAT_ELEMENT(rowSchema).key("float")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    STRING_ELEMENT(rowSchema).key("string")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    INT8_ELEMENT(rowSchema).key("int8")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    INT16_ELEMENT(rowSchema).key("int16")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    INT32_ELEMENT(rowSchema).key("int32")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    INT64_ELEMENT(rowSchema).key("int64")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    UINT8_ELEMENT(rowSchema).key("uint8")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    UINT16_ELEMENT(rowSchema).key("uint16")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    UINT32_ELEMENT(rowSchema).key("uint32")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    UINT64_ELEMENT(rowSchema).key("uint64")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    VECTOR_BOOL_ELEMENT(rowSchema).key("vectorBool")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    VECTOR_DOUBLE_ELEMENT(rowSchema).key("vectorDouble")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    VECTOR_FLOAT_ELEMENT(rowSchema).key("vectorFloat")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    VECTOR_STRING_ELEMENT(rowSchema).key("vectorString")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    VECTOR_INT8_ELEMENT(rowSchema).key("vectorInt8")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    VECTOR_INT16_ELEMENT(rowSchema).key("vectorInt16")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    VECTOR_INT32_ELEMENT(rowSchema).key("vectorInt32")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    VECTOR_INT64_ELEMENT(rowSchema).key("vectorInt64")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    VECTOR_UINT8_ELEMENT(rowSchema).key("vectorUint8")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    VECTOR_UINT16_ELEMENT(rowSchema).key("vectorUint16")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    VECTOR_UINT32_ELEMENT(rowSchema).key("vectorUint32")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    VECTOR_UINT64_ELEMENT(rowSchema).key("vectorUint64")
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+
+
+    // Checks that a table with the sanitizable row schema above can
+    // be instantiated.
+    karabo::util::Schema tblSchema;
+    CPPUNIT_ASSERT_NO_THROW(
+        TABLE_ELEMENT(tblSchema).key("tbl")
+                .setColumns(rowSchema)
+                .assignmentOptional().defaultValue(vector<karabo::util::Hash>())
+                .reconfigurable()
+                .commit();
+    );
+
+    // Checks the synthesized defaults for each of the supported column types.
+    const Schema &sanitRowSchema =
+        tblSchema.getParameterHash().getAttribute<Schema>(
+            "tbl", KARABO_SCHEMA_ROW_SCHEMA);
+
+    // For simple elements.
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("bool"));
+    CPPUNIT_ASSERT_EQUAL(false, sanitRowSchema.getDefaultValue<bool>("bool"));
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("int8"));
+    CPPUNIT_ASSERT_EQUAL(
+        static_cast<signed char>(0),
+        sanitRowSchema.getDefaultValue<signed char>("int8"));
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("int16"));
+    CPPUNIT_ASSERT_EQUAL(
+        static_cast<signed short>(0),
+        sanitRowSchema.getDefaultValue<signed short>("int16"));
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("int32"));
+    CPPUNIT_ASSERT_EQUAL(0, sanitRowSchema.getDefaultValue<int>("int32"));
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("int64"));
+    CPPUNIT_ASSERT_EQUAL(0ll, sanitRowSchema.getDefaultValue<long long>("int64"));
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("uint8"));
+    CPPUNIT_ASSERT_EQUAL(
+        static_cast<unsigned char>(0),
+        sanitRowSchema.getDefaultValue<unsigned char>("uint8"));
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("uint16"));
+    CPPUNIT_ASSERT_EQUAL(
+        static_cast<unsigned short>(0),
+        sanitRowSchema.getDefaultValue<unsigned short>("uint16"));
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("uint32"));
+    CPPUNIT_ASSERT_EQUAL(0u, sanitRowSchema.getDefaultValue<unsigned int>("uint32"));
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("uint64"));
+    CPPUNIT_ASSERT_EQUAL(0ull, sanitRowSchema.getDefaultValue<unsigned long long>("uint64"));
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("float"));
+    CPPUNIT_ASSERT_EQUAL(0.0f, sanitRowSchema.getDefaultValue<float>("float"));
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("double"));
+    CPPUNIT_ASSERT_EQUAL(0.0, sanitRowSchema.getDefaultValue<double>("double"));
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("string"));
+    CPPUNIT_ASSERT(sanitRowSchema.getDefaultValue<string>("string").empty());
+    // For vector elements.
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("vectorBool"));
+    CPPUNIT_ASSERT_EQUAL(
+        0ul,
+        sanitRowSchema.getDefaultValue<vector<bool>>("vectorBool").size());
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("vectorInt8"));
+    CPPUNIT_ASSERT_EQUAL(
+        0ul,
+        sanitRowSchema.getDefaultValue<vector<signed char>>("vectorInt8").size());
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("vectorInt16"));
+    CPPUNIT_ASSERT_EQUAL(
+        0ul,
+        sanitRowSchema.getDefaultValue<vector<signed short>>("vectorInt16").size());
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("vectorInt32"));
+    CPPUNIT_ASSERT_EQUAL(
+        0ul,
+        sanitRowSchema.getDefaultValue<vector<int>>("vectorInt32").size());
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("vectorInt64"));
+    CPPUNIT_ASSERT_EQUAL(
+        0ul,
+        sanitRowSchema.getDefaultValue<vector<long long>>("vectorInt64").size());
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("vectorUint8"));
+    CPPUNIT_ASSERT_EQUAL(
+        0ul,
+        sanitRowSchema.getDefaultValue<vector<unsigned char>>("vectorUint8").size());
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("vectorUint16"));
+    CPPUNIT_ASSERT_EQUAL(
+        0ul,
+        sanitRowSchema.getDefaultValue<vector<unsigned short>>("vectorUint16").size());
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("vectorUint32"));
+    CPPUNIT_ASSERT_EQUAL(
+        0ul,
+        sanitRowSchema.getDefaultValue<vector<unsigned int>>("vectorUint32").size());
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("vectorUint64"));
+    CPPUNIT_ASSERT_EQUAL(
+        0ul,
+        sanitRowSchema.getDefaultValue<vector<unsigned long long>>("vectorUint64").size());
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("vectorFloat"));
+    CPPUNIT_ASSERT_EQUAL(
+        0ul,
+        sanitRowSchema.getDefaultValue<vector<float>>("vectorFloat").size());
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("vectorDouble"));
+    CPPUNIT_ASSERT_EQUAL(
+        0ul,
+        sanitRowSchema.getDefaultValue<vector<double>>("vectorDouble").size());
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("vectorString"));
+    CPPUNIT_ASSERT_EQUAL(
+        0ul,
+        sanitRowSchema.getDefaultValue<vector<string>>("vectorString").size());
+
+    // Checks that a read-only table with no default values for its columns
+    // can be instantiated and that the missing default column values are
+    // generated by the sanitization process.
+    karabo::util::Schema roTblRowSchema;
+    INT32_ELEMENT(roTblRowSchema).key("int")
+            .assignmentOptional().noDefaultValue()
+            .commit();
+    STRING_ELEMENT(roTblRowSchema).key("str")
+            .assignmentOptional().noDefaultValue()
+            .commit();
+    INT32_ELEMENT(roTblRowSchema).key("intWithOptions")
+            .assignmentOptional().noDefaultValue()
+            .options("0 1 2 3 4 5 6 7 8 9")
+            .minInc(0)
+            .minExc(-1)
+            .maxInc(0)
+            .maxExc(1)
+            .commit();
+    karabo::util::Schema roTblSchema;
+    CPPUNIT_ASSERT_NO_THROW(
+        TABLE_ELEMENT(roTblSchema).key("tbl")
+                .setColumns(roTblRowSchema)
+                .readOnly().initialValue(vector<Hash>())
+                .commit();
+    );
+    // Checks the synthesized defaults for the columns.
+    const Schema &sanitRoRowSchema =
+        roTblSchema.getParameterHash().getAttribute<Schema>(
+            "tbl", KARABO_SCHEMA_ROW_SCHEMA);
+    CPPUNIT_ASSERT(sanitRoRowSchema.hasDefaultValue("int"));
+    CPPUNIT_ASSERT_EQUAL(0, sanitRoRowSchema.getDefaultValue<int>("int"));
+    CPPUNIT_ASSERT(sanitRoRowSchema.hasDefaultValue("str"));
+    CPPUNIT_ASSERT(sanitRoRowSchema.getDefaultValue<string>("str").empty());
+    CPPUNIT_ASSERT(sanitRoRowSchema.hasDefaultValue("intWithOptions"));
+    CPPUNIT_ASSERT_EQUAL(0, sanitRoRowSchema.getDefaultValue<int>("intWithOptions"));
+
+    // Checks that tables with unsanitizable row schemas regarding default
+    // values throw - the default value that would be synthesized is either
+    // outside the default range (single elements) or outside the allowed
+    // cardinalities (vector elements).
+    karabo::util::Schema invalidRowSchema;
+    INT32_ELEMENT(invalidRowSchema).key("intNoDefault")
+            .assignmentOptional().noDefaultValue()
+            .minInc(1)
+            .reconfigurable()
+            .commit();
+    karabo::util::Schema tblInvalidSchema;
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+        "Expected exception while creating table with column missing default value and 'minInc' greater than synthezisable default.",
+        TABLE_ELEMENT(tblInvalidSchema).key("invalidSchema")
+            .setColumns(invalidRowSchema)
+            .assignmentOptional().defaultValue(vector<Hash>())
+            .reconfigurable()
+            .commit(),
+        karabo::util::LogicException
+    );
+    karabo::util::Schema invalidRowSchema2;
+    INT32_ELEMENT(invalidRowSchema2).key("intNoDefault")
+            .assignmentOptional().noDefaultValue()
+            .maxInc(-1)
+            .reconfigurable()
+            .commit();
+    karabo::util::Schema tblInvalidSchema2;
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+        "Expected exception while creating table with column missing default value and 'maxInc' lower than synthezisable default.",
+        TABLE_ELEMENT(tblInvalidSchema2).key("invalidSchema2")
+            .setColumns(invalidRowSchema2)
+            .assignmentOptional().defaultValue(vector<Hash>())
+            .reconfigurable()
+            .commit(),
+        karabo::util::LogicException
+    );
+    karabo::util::Schema invalidRowSchema3;
+    INT32_ELEMENT(invalidRowSchema3).key("intNoDefault")
+            .assignmentOptional().noDefaultValue()
+            .minExc(0)
+            .reconfigurable()
+            .commit();
+    karabo::util::Schema tblInvalidSchema3;
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+        "Expected exception while creating table with column missing default value and 'minExc' greater than synthezisable default.",
+        TABLE_ELEMENT(tblInvalidSchema3).key("invalidSchema3")
+            .setColumns(invalidRowSchema3)
+            .assignmentOptional().defaultValue(vector<Hash>())
+            .reconfigurable()
+            .commit(),
+        karabo::util::LogicException
+    );
+    karabo::util::Schema invalidRowSchema4;
+    INT32_ELEMENT(invalidRowSchema4).key("intNoDefault")
+            .assignmentOptional().noDefaultValue()
+            .maxExc(0)
+            .reconfigurable()
+            .commit();
+    karabo::util::Schema tblInvalidSchema4;
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+        "Expected exception while creating table with column missing default value and 'maxExc' lower than synthezisable default.",
+        TABLE_ELEMENT(tblInvalidSchema4).key("invalidSchema4")
+            .setColumns(invalidRowSchema4)
+            .assignmentOptional().defaultValue(vector<Hash>())
+            .reconfigurable()
+            .commit(),
+        karabo::util::LogicException
+    );
+    karabo::util::Schema invalidRowSchema5;
+    VECTOR_INT32_ELEMENT(invalidRowSchema5).key("vectorIntNoDefault")
+            .assignmentOptional().noDefaultValue()
+            .minSize(1)
+            .reconfigurable()
+            .commit();
+    karabo::util::Schema tblInvalidSchema5;
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+        "Expected exception while creating table with column missing default value and 'minSize' greater than size of synthezisable default.",
+        TABLE_ELEMENT(tblInvalidSchema5).key("invalidSchema5")
+            .setColumns(invalidRowSchema5)
+            .assignmentOptional().defaultValue(vector<Hash>())
+            .reconfigurable()
+            .commit(),
+        karabo::util::LogicException
+    );
+    karabo::util::Schema invalidRowSchema6;
+    INT32_ELEMENT(invalidRowSchema6).key("invalidInt")
+            .options("1 2 3 4 5 6 7 8 9") // 0 not in options.
+            .assignmentOptional().noDefaultValue()
+            .reconfigurable()
+            .commit();
+    karabo::util::Schema tblInvalidSchema6;
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+        "Expected exception while creating table with column missing default value and sinthazisable default not in the 'options' set.",
+        TABLE_ELEMENT(tblInvalidSchema6).key("invalidSchema6")
+            .setColumns(invalidRowSchema6)
+            .assignmentOptional().defaultValue(vector<Hash>())
+            .reconfigurable()
+            .commit(),
+        karabo::util::LogicException
+    );
+}
+
+
+void Schema_Test::testTableColUnsupportedType() {
+    // Checks that a table with all supported column types
+    // is accepted.
+    Schema rowSchema;
+    BOOL_ELEMENT(rowSchema).key("bool")
+            .assignmentOptional().defaultValue(false)
+            .reconfigurable()
+            .commit();
+    DOUBLE_ELEMENT(rowSchema).key("double")
+            .assignmentOptional().defaultValue(0.0)
+            .reconfigurable()
+            .commit();
+    FLOAT_ELEMENT(rowSchema).key("float")
+            .assignmentOptional().defaultValue(0.0f)
+            .reconfigurable()
+            .commit();
+    STRING_ELEMENT(rowSchema).key("string")
+            .assignmentOptional().defaultValue("")
+            .reconfigurable()
+            .commit();
+    INT8_ELEMENT(rowSchema).key("int8")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit();
+    INT16_ELEMENT(rowSchema).key("int16")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit();
+    INT32_ELEMENT(rowSchema).key("int32")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit();
+    INT64_ELEMENT(rowSchema).key("int64")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit();
+    UINT8_ELEMENT(rowSchema).key("uint8")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit();
+    UINT16_ELEMENT(rowSchema).key("uint16")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit();
+    UINT32_ELEMENT(rowSchema).key("uint32")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit();
+    UINT64_ELEMENT(rowSchema).key("uint64")
+            .assignmentOptional().defaultValue(0)
+            .reconfigurable()
+            .commit();
+    VECTOR_BOOL_ELEMENT(rowSchema).key("vectorBool")
+            .assignmentOptional().defaultValue(vector<bool>())
+            .reconfigurable()
+            .commit();
+    VECTOR_DOUBLE_ELEMENT(rowSchema).key("vectorDouble")
+            .assignmentOptional().defaultValue(vector<double>())
+            .reconfigurable()
+            .commit();
+    VECTOR_FLOAT_ELEMENT(rowSchema).key("vectorFloat")
+            .assignmentOptional().defaultValue(vector<float>())
+            .reconfigurable()
+            .commit();
+    VECTOR_STRING_ELEMENT(rowSchema).key("vectorString")
+            .assignmentOptional().defaultValue(vector<string>())
+            .reconfigurable()
+            .commit();
+    VECTOR_INT8_ELEMENT(rowSchema).key("vectorInt8")
+            .assignmentOptional().defaultValue(vector<signed char>())
+            .reconfigurable()
+            .commit();
+    VECTOR_INT16_ELEMENT(rowSchema).key("vectorInt16")
+            .assignmentOptional().defaultValue(vector<signed short>())
+            .reconfigurable()
+            .commit();
+    VECTOR_INT32_ELEMENT(rowSchema).key("vectorInt32")
+            .assignmentOptional().defaultValue(vector<int>())
+            .reconfigurable()
+            .commit();
+    VECTOR_INT64_ELEMENT(rowSchema).key("vectorInt64")
+            .assignmentOptional().defaultValue(vector<long long>())
+            .reconfigurable()
+            .commit();
+    VECTOR_UINT8_ELEMENT(rowSchema).key("vectorUint8")
+            .assignmentOptional().defaultValue(vector<unsigned char>())
+            .reconfigurable()
+            .commit();
+    VECTOR_UINT16_ELEMENT(rowSchema).key("vectorUint16")
+            .assignmentOptional().defaultValue(vector<unsigned short>())
+            .reconfigurable()
+            .commit();
+    VECTOR_UINT32_ELEMENT(rowSchema).key("vectorUint32")
+            .assignmentOptional().defaultValue(vector<unsigned int>())
+            .reconfigurable()
+            .commit();
+    VECTOR_UINT64_ELEMENT(rowSchema).key("vectorUint64")
+            .assignmentOptional().defaultValue(vector<unsigned long long>())
+            .reconfigurable()
+            .commit();
+
+    Schema tblSchema;
+    CPPUNIT_ASSERT_NO_THROW(
+        TABLE_ELEMENT(tblSchema).key("tbl")
+        .setColumns(rowSchema)
+        .assignmentOptional().defaultValue(vector<Hash>())
+        .reconfigurable()
+        .commit();
+    );
+
+    // Checks that non-supported column types in the row schema of a
+    // table leads to an exception being thrown.
+    Schema invalidRowSchema;
+    INT32_ELEMENT(invalidRowSchema).key("int32")
+            .assignmentOptional().defaultValue(1)
+            .reconfigurable()
+            .commit();
+    // Non-supported col. type.
+    VECTOR_CHAR_ELEMENT(invalidRowSchema).key("vector_char")
+            .assignmentOptional().defaultValue(vector<char>())
+            .reconfigurable()
+            .commit();
+
+    Schema invalidTblSchema;
+         CPPUNIT_ASSERT_THROW_MESSAGE(
+             "Expected exception trying to create VECTOR_CHAR table column.",
+             TABLE_ELEMENT(invalidTblSchema).key("invalidTbl")
+             .setColumns(invalidRowSchema)
+             .assignmentOptional().defaultValue(vector<Hash>())
+             .reconfigurable()
+             .commit(),
+             karabo::util::LogicException
+         );
+}
+
+
+void Schema_Test::testTableColInitOnly() {
+    // Checks that the 'initOnlyInt' column becomes a writable column
+    // in the sanitized row schema when the table is reconfigurable.
+    karabo::util::Schema rowSchema;
+    INT32_ELEMENT(rowSchema).key("initOnlyInt")
+            .assignmentOptional().defaultValue(2)
+            .init()
+            .commit();
+    STRING_ELEMENT(rowSchema).key("str")
+            .assignmentOptional().defaultValue("a string...")
+            .reconfigurable()
+            .commit();
+    karabo::util::Schema tblSchema;
+    TABLE_ELEMENT(tblSchema).key("tbl")
+            .setColumns(rowSchema)
+            .assignmentOptional().defaultValue(vector<Hash>())
+            .reconfigurable()
+            .commit();
+    const Schema &sanitRowSchema =
+        tblSchema.getParameterHash().getAttribute<Schema>("tbl", KARABO_SCHEMA_ROW_SCHEMA);
+    CPPUNIT_ASSERT(sanitRowSchema.hasAccessMode("initOnlyInt"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+        "Init-only columns of reconfigurable tables should have been converted to reconfigurable columns.",
+        static_cast<int>(karabo::util::AccessType::WRITE),
+        sanitRowSchema.getAccessMode("initOnlyInt"));
+
+    // Checks that the 'initOnlyInt' column becomes a read-only column
+    // in the sanitized row schema when the table is read-only.
+    karabo::util::Schema rowSchema2;
+    INT32_ELEMENT(rowSchema2).key("initOnlyInt")
+            .assignmentOptional().defaultValue(2)
+            .init()
+            .commit();
+    STRING_ELEMENT(rowSchema2).key("str")
+            .assignmentOptional().defaultValue("a string...")
+            .reconfigurable()
+            .commit();
+    karabo::util::Schema ReadOnlyTblSchema;
+    TABLE_ELEMENT(ReadOnlyTblSchema).key("tbl")
+            .setColumns(rowSchema2)
+            .readOnly().initialValue(vector<Hash>())
+            .commit();
+    const Schema &sanitRowSchema2 =
+        ReadOnlyTblSchema.getParameterHash().getAttribute<Schema>("tbl", KARABO_SCHEMA_ROW_SCHEMA);
+    CPPUNIT_ASSERT(sanitRowSchema2.hasAccessMode("initOnlyInt"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+        "Init-only columns of read-only tables should be converted to read-only columns.",
+        static_cast<int>(karabo::util::AccessType::READ),
+        sanitRowSchema2.getAccessMode("initOnlyInt"));
+
+    // Checks that the 'initOnlyInt' column becomes a writable column
+    // in the sanitized row schema when the table is init-only.
+    karabo::util::Schema rowSchema3;
+    INT32_ELEMENT(rowSchema3).key("initOnlyInt")
+            .assignmentOptional().defaultValue(2)
+            .init()
+            .commit();
+    STRING_ELEMENT(rowSchema3).key("str")
+            .assignmentOptional().defaultValue("a string...")
+            .reconfigurable()
+            .commit();
+    karabo::util::Schema initOnlyTblSchema;
+    TABLE_ELEMENT(initOnlyTblSchema).key("tbl")
+            .setColumns(rowSchema)
+            .assignmentOptional().defaultValue(vector<Hash>())
+            .init()
+            .commit();
+    const Schema &sanitRowSchema3 =
+        initOnlyTblSchema.getParameterHash().getAttribute<Schema>("tbl", KARABO_SCHEMA_ROW_SCHEMA);
+    CPPUNIT_ASSERT(sanitRowSchema3.hasAccessMode("initOnlyInt"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+        "Init-only columns of init-only tables should be converted to reconfigurable columns.",
+        static_cast<int>(karabo::util::AccessType::WRITE),
+    sanitRowSchema3.getAccessMode("initOnlyInt"));
+}
+
+
+void Schema_Test::testTableColWrongAccessMode() {
+    karabo::util::Schema rowSchema;
+    INT32_ELEMENT(rowSchema).key("int")
+            .assignmentOptional().defaultValue(2)
+            .reconfigurable()
+            .commit();
+    STRING_ELEMENT(rowSchema).key("str")
+            .assignmentOptional().defaultValue("a string")
+            .reconfigurable()
+            .commit();
+    karabo::util::Schema ReadOnlyTblSchema;
+    TABLE_ELEMENT(ReadOnlyTblSchema).key("tbl")
+            .setColumns(rowSchema)
+            .readOnly().initialValue(vector<Hash>())
+            .commit();
+    const Schema &sanitRowSchema =
+        ReadOnlyTblSchema.getParameterHash().getAttribute<Schema>("tbl", KARABO_SCHEMA_ROW_SCHEMA);
+    // Checks that due to the table read-only access mode, the reconfigurable
+    // columns became read-only columns, with their initial values set to the
+    // default value of their previously reconfigurable forms.
+    CPPUNIT_ASSERT(sanitRowSchema.hasAccessMode("int"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+        "Reconfigurable column 'int' of read-only table 'tbl' should have been converted to read-only.",
+        static_cast<int>(karabo::util::AccessType::READ),
+        sanitRowSchema.getAccessMode("int"));
+    CPPUNIT_ASSERT(sanitRowSchema.hasAccessMode("str"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+        "Reconfigurable column 'str' of read-only table 'tbl' should have been converted to read-only.",
+        static_cast<int>(karabo::util::AccessType::READ),
+        sanitRowSchema.getAccessMode("str"));
+    // The initialValue method of LeafElement actually sets the "defaultValue"
+    // attribute, so we check by asserting that the default value has been
+    // preserved by the row schema sanitization process.
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("int"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+        "Default value of column 'int', which was '2', should have been preserved.",
+        2, sanitRowSchema.getDefaultValue<int>("int"));
+    CPPUNIT_ASSERT(sanitRowSchema.hasDefaultValue("str"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+        "Default value of column 'str', which was 'a string', should have been preserved.",
+        string("a string"),
+        sanitRowSchema.getDefaultValue<string>("str"));
 }
