@@ -628,7 +628,7 @@ namespace karabo {
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
             }
-            return it->second.template getValueAsAny();
+            return it->second.getValueAsAny();
         }
 
         template<class KeyType, class MappedType>
@@ -637,7 +637,7 @@ namespace karabo {
             if ((it = find(key)) == m_mapNodes.end()) {
                 throw KARABO_PARAMETER_EXCEPTION("Key '" + key + "' does not exist");
             }
-            return it->second.template getValueAsAny();
+            return it->second.getValueAsAny();
         }
 
         template<class KeyType, class MappedType>

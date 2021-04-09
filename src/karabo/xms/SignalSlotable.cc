@@ -25,6 +25,9 @@
 #include <vector>
 #include <cstdlib>
 
+using boost::placeholders::_1;
+using boost::placeholders::_2;
+
 namespace karabo {
     namespace xms {
 

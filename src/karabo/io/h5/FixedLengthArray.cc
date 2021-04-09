@@ -10,25 +10,17 @@
 #include "FixedLengthArray.hh"
 using namespace karabo::io;
 
-namespace karabo {
-    namespace io {
-        namespace h5 {
 
-
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, CharArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int8ArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int16ArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int32ArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int64ArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt8ArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt16ArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt32ArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt64ArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, BoolArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, StringArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, FloatArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, DoubleArrayElement)
-
-        }
-    }
-}
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::CharArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::Int8ArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::Int16ArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::Int32ArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::Int64ArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::UInt8ArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::UInt16ArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::UInt32ArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::UInt64ArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::BoolArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::StringArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::FloatArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::DoubleArrayElement)
