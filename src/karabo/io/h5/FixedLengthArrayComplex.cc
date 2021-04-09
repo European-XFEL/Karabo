@@ -8,15 +8,6 @@
 
 
 #include "FixedLengthArrayComplex.hh"
-using namespace karabo::io;
 
-namespace karabo {
-    namespace io {
-        namespace h5 {
-
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, FloatArrayComplexElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, DoubleArrayComplexElement)
-
-        }
-    }
-}
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::FloatArrayComplexElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::DoubleArrayComplexElement)

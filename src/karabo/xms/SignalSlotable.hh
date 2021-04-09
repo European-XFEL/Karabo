@@ -1418,26 +1418,26 @@ namespace karabo {
 }
 
 #define KARABO_SIGNAL0(signalName) this->registerSignal(signalName);
-#define KARABO_SIGNAL1(signalName, a1) this->registerSignal<a1>(signalName);
-#define KARABO_SIGNAL2(signalName, a1, a2) this->registerSignal<a1,a2>(signalName);
-#define KARABO_SIGNAL3(signalName, a1, a2, a3) this->registerSignal<a1,a2,a3>(signalName);
-#define KARABO_SIGNAL4(signalName, a1, a2, a3, a4) this->registerSignal<a1,a2,a3,a4>(signalName);
+#define KARABO_SIGNAL1(signalName, a1) this->template registerSignal<a1>(signalName);
+#define KARABO_SIGNAL2(signalName, a1, a2) this->template registerSignal<a1,a2>(signalName);
+#define KARABO_SIGNAL3(signalName, a1, a2, a3) this->template registerSignal<a1,a2,a3>(signalName);
+#define KARABO_SIGNAL4(signalName, a1, a2, a3, a4) this->template registerSignal<a1,a2,a3,a4>(signalName);
 
 #define KARABO_SYSTEM_SIGNAL0(signalName) this->registerSystemSignal(signalName);
-#define KARABO_SYSTEM_SIGNAL1(signalName, a1) this->registerSystemSignal<a1>(signalName);
-#define KARABO_SYSTEM_SIGNAL2(signalName, a1, a2) this->registerSystemSignal<a1,a2>(signalName);
-#define KARABO_SYSTEM_SIGNAL3(signalName, a1, a2, a3) this->registerSystemSignal<a1,a2,a3>(signalName);
-#define KARABO_SYSTEM_SIGNAL4(signalName, a1, a2, a3, a4) this->registerSystemSignal<a1,a2,a3,a4>(signalName);
+#define KARABO_SYSTEM_SIGNAL1(signalName, a1) this->template registerSystemSignal<a1>(signalName);
+#define KARABO_SYSTEM_SIGNAL2(signalName, a1, a2) this->template registerSystemSignal<a1,a2>(signalName);
+#define KARABO_SYSTEM_SIGNAL3(signalName, a1, a2, a3) this->template registerSystemSignal<a1,a2,a3>(signalName);
+#define KARABO_SYSTEM_SIGNAL4(signalName, a1, a2, a3, a4) this->template registerSystemSignal<a1,a2,a3,a4>(signalName);
 
 #define KARABO_SLOT0(slotName) this->registerSlot(boost::bind(&Self::slotName,this),#slotName);
-#define KARABO_SLOT1(slotName, a1) this->registerSlot<a1>(boost::bind(&Self::slotName,this,_1),#slotName);
-#define KARABO_SLOT2(slotName, a1, a2) this->registerSlot<a1,a2>(boost::bind(&Self::slotName,this,_1,_2),#slotName);
-#define KARABO_SLOT3(slotName, a1, a2, a3) this->registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName);
-#define KARABO_SLOT4(slotName, a1, a2, a3, a4) this->registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName);
+#define KARABO_SLOT1(slotName, a1) this->template registerSlot<a1>(boost::bind(&Self::slotName,this,boost::placeholders::_1),#slotName);
+#define KARABO_SLOT2(slotName, a1, a2) this->template registerSlot<a1,a2>(boost::bind(&Self::slotName,this,boost::placeholders::_1,boost::placeholders::_2),#slotName);
+#define KARABO_SLOT3(slotName, a1, a2, a3) this->template registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,boost::placeholders::_1,boost::placeholders::_2,boost::placeholders::_3),#slotName);
+#define KARABO_SLOT4(slotName, a1, a2, a3, a4) this->template registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,boost::placeholders::_1,boost::placeholders::_2,boost::placeholders::_3,boost::placeholders::_4),#slotName);
 
-#define KARABO_ON_INPUT(channelName, funcName) this->registerInputHandler(channelName, karabo::util::bind_weak(&Self::funcName,this,_1));
-#define KARABO_ON_DATA(channelName, funcName) this->registerDataHandler(channelName, karabo::util::bind_weak(&Self::funcName, this,_1,_2));
-#define KARABO_ON_EOS(channelName, funcName) this->registerEndOfStreamHandler(channelName, karabo::util::bind_weak(&Self::funcName,this,_1));
+#define KARABO_ON_INPUT(channelName, funcName) this->registerInputHandler(channelName, karabo::util::bind_weak(&Self::funcName,this,boost::placeholders::_1));
+#define KARABO_ON_DATA(channelName, funcName) this->registerDataHandler(channelName, karabo::util::bind_weak(&Self::funcName, this,boost::placeholders::_1,boost::placeholders::_2));
+#define KARABO_ON_EOS(channelName, funcName) this->registerEndOfStreamHandler(channelName, karabo::util::bind_weak(&Self::funcName,this,boost::placeholders::_1));
 
 #define _KARABO_SIGNAL_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC
 #define _KARABO_SYSTEM_SIGNAL_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC

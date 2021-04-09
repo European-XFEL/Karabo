@@ -26,11 +26,10 @@ using namespace karabo::io;
 using namespace karabo::xms;
 
 
+KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, karabo::devices::GuiServerDevice)
 
 namespace karabo {
     namespace devices {
-
-        KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, GuiServerDevice)
 
         // requestFromSlot is a fine grained writeable command and will be handled differently!
         const std::unordered_set <std::string> GuiServerDevice::m_writeCommands ({

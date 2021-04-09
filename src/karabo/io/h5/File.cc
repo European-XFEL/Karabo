@@ -18,13 +18,13 @@
 using namespace std;
 using namespace karabo::util;
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::File)
 
 namespace karabo {
     namespace io {
         namespace h5 {
 
 
-            KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::File)
 
 
             int File::m_init = File::initErrorHandling();

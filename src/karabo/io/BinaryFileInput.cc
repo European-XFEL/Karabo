@@ -12,12 +12,6 @@
 
 using namespace karabo::util;
 
-namespace karabo {
-    namespace io {
-
-        KARABO_REGISTER_FOR_CONFIGURATION(Input<Hash>, BinaryFileInput<Hash>)
-        KARABO_REGISTER_FOR_CONFIGURATION(Input<Schema>, BinaryFileInput<Schema>)
-        KARABO_REGISTER_FOR_CONFIGURATION(Input<std::vector<char> >, BinaryFileInput<std::vector<char> >)
-
-    }
-}
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<Hash>, karabo::io::BinaryFileInput<Hash>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<Schema>, karabo::io::BinaryFileInput<Schema>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<std::vector<char> >, karabo::io::BinaryFileInput<std::vector<char> >)

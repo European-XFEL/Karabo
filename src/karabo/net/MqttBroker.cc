@@ -19,12 +19,12 @@ using namespace karabo::util;
 
 #define MQTT_CLIENT_CLASS "MqttCppClient"
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Broker, karabo::net::MqttBroker)
 
 namespace karabo {
     namespace net {
 
 
-        KARABO_REGISTER_FOR_CONFIGURATION(Broker, MqttBroker)
 
 
         void MqttBroker::expectedParameters(karabo::util::Schema& s) {
