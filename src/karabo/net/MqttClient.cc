@@ -73,7 +73,9 @@ namespace karabo {
 
         MqttClient::~MqttClient() {
             m_ios->stop();
-            m_thread->join();
+            if (m_thread->get_id() != boost::this_thread::get_id()) {
+                m_thread->join();
+            }
         }
 
 
