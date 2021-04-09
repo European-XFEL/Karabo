@@ -10,11 +10,4 @@
 
 #include "Hdf5FileOutput.hh"
 
-using namespace karabo::util;
-
-namespace karabo {
-    namespace io {
-
-        KARABO_REGISTER_FOR_CONFIGURATION(Output<Hash>, Hdf5FileOutput<Hash>)
-    }
-}
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::util::Hash>, karabo::io::Hdf5FileOutput<karabo::util::Hash>)

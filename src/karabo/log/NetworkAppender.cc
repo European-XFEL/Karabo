@@ -23,11 +23,12 @@ using namespace krb_log4cpp;
 using namespace karabo::util;
 using namespace karabo::net;
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::log::NetworkAppender)
+
 namespace karabo {
     namespace log {
 
-        KARABO_REGISTER_FOR_CONFIGURATION(NetworkAppender)
-
+        
         void NetworkAppender::expectedParameters(karabo::util::Schema& s) {
 
             STRING_ELEMENT(s).key("name")

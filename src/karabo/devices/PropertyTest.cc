@@ -11,6 +11,8 @@
 #include "karabo/xms/ImageData.hh"
 #include "karabo/xms/InputChannel.hh"
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::devices::NestedClass)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::PropertyTest)
 
 namespace karabo {
     namespace devices {
@@ -23,8 +25,6 @@ namespace karabo {
 
         const unsigned int defVectorMaxSize = 100;
 
-        KARABO_REGISTER_FOR_CONFIGURATION(NestedClass)
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, PropertyTest)
 
 
         NestedClass::NestedClass(const karabo::util::Hash& input) {

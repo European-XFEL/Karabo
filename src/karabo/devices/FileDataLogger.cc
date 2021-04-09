@@ -6,6 +6,8 @@
 #include "karabo/util/PathElement.hh"
 #include "FileDataLogger.hh"
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogger, karabo::devices::FileDataLogger)
+KARABO_REGISTER_IN_FACTORY_1(karabo::devices::DeviceData, karabo::devices::FileDeviceData, karabo::util::Hash)
 
 namespace karabo {
     namespace devices {
@@ -17,8 +19,6 @@ namespace karabo {
         using namespace karabo::xms;
         using json = nlohmann::json;
 
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogger, FileDataLogger)
-        KARABO_REGISTER_IN_FACTORY_1(DeviceData, FileDeviceData, karabo::util::Hash)
 
         FileDeviceData::FileDeviceData(const karabo::util::Hash& input)
             : DeviceData(input)

@@ -14,12 +14,12 @@ using namespace karabo::util;
 using namespace std;
 
 KARABO_EXPLICIT_TEMPLATE(karabo::io::BinarySerializer<karabo::util::Hash>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::BinarySerializer<Hash>, karabo::io::HashBinarySerializer);
 
 namespace karabo {
     namespace io {
 
         
-        KARABO_REGISTER_FOR_CONFIGURATION(BinarySerializer<Hash>, HashBinarySerializer);
 
 
         void HashBinarySerializer::expectedParameters(karabo::util::Schema& expected) {
