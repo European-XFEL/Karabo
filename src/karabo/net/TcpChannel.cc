@@ -15,6 +15,9 @@
 #include "karabo/io/HashBinarySerializer.hh"
 #include <utility>
 
+using boost::placeholders::_1;
+using boost::placeholders::_2;
+
 namespace karabo {
     namespace net {
 

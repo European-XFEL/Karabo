@@ -74,7 +74,7 @@ namespace karabo {
                 using namespace karabo::util;
                 m_key = key;
                 NODE_ELEMENT(m_schema).key(m_key)
-                        .appendParametersOf<Described>()
+                        .template appendParametersOf<Described>()
                         .commit();
 
                 return *(static_cast<Derived*> (this));
@@ -289,7 +289,7 @@ namespace karabo {
             Derived& setMaxSize(const std::string& subKey, const unsigned int maxSize) {
                 using namespace karabo::util;
                 OVERWRITE_ELEMENT(m_schema).key(m_key + "." + subKey)
-                        .setNewMaxSize<unsigned int>(maxSize)
+                        .template setNewMaxSize<unsigned int>(maxSize)
                         .commit();
 
                 return *(static_cast<Derived*> (this));

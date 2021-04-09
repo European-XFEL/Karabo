@@ -6,12 +6,12 @@
 
 using namespace karabo::util;
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Broker, karabo::net::JmsBroker)
 
 namespace karabo {
     namespace net {
 
 
-        KARABO_REGISTER_FOR_CONFIGURATION(Broker, JmsBroker)
 
         void JmsBroker::expectedParameters(karabo::util::Schema& s) {
         }
