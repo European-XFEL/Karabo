@@ -16,14 +16,13 @@
 #include "EventLoop.hh"
 #include <openmqc/mqcrt.h>
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::JmsConnection)
+
 namespace karabo {
     namespace net {
 
         using namespace karabo::util;
         using namespace boost;
-
-        KARABO_REGISTER_FOR_CONFIGURATION(JmsConnection);
-
 
         void JmsConnection::expectedParameters(Schema& s) {
 

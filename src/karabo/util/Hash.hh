@@ -20,7 +20,6 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/optional.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include "ClassInfo.hh"
 #include "StringTools.hh"

@@ -29,3 +29,4 @@ dependencies:
   - libtiff
   - pugixml=1.2=xfel
   - cppunit
+  - mqtt_cpp

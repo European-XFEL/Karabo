@@ -14,11 +14,10 @@
 using namespace std;
 using namespace karabo::util;
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::log::OstreamAppender)
+
 namespace karabo {
     namespace log {
-
-
-        KARABO_REGISTER_FOR_CONFIGURATION(OstreamAppender)
 
         void OstreamAppender::expectedParameters(Schema& s) {
 

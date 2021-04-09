@@ -28,8 +28,7 @@ namespace karabo {
 
         public:
 
-            /**
-             This class allows to define restrictions for the OVERWRITE_ELEMENT, i.e. which
+            /** This class allows to define restrictions for the OVERWRITE_ELEMENT, i.e. which
              * attributes of a different element may not be altered through OVERWRITE. The
              * TABLE_ELEMENT e.g. has no notion of minInc or maxInc, and these should thus
              * not be settable to it via overwrites.
