@@ -14,12 +14,11 @@
 using namespace karabo::io::h5;
 using namespace karabo::util;
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::FormatDiscoveryPolicy)
+
 namespace karabo {
     namespace io {
         namespace h5 {
-
-
-            KARABO_REGISTER_FOR_CONFIGURATION(FormatDiscoveryPolicy)
 
             void FormatDiscoveryPolicy::expectedParameters(karabo::util::Schema& expected) {
 

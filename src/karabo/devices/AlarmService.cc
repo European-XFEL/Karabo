@@ -19,6 +19,7 @@
 
 #include "AlarmService.hh"
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::AlarmService)
 
 namespace karabo {
 
@@ -31,9 +32,6 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::io;
         using namespace karabo::core;
-
-
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, AlarmService)
 
 
         void AlarmService::expectedParameters(Schema& expected) {

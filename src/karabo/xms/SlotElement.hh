@@ -86,7 +86,7 @@ namespace karabo {
                 return allowedStates(std::vector<karabo::util::State>(arr, arr+6));
             }
 
-            virtual void beforeAddition() = 0;
+            virtual void beforeAddition() override = 0;
 
             Derived& key(const std::string& name) override {
                 if (name.find('_') != std::string::npos) {

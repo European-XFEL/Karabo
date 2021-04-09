@@ -24,6 +24,11 @@
 #include "InfluxDbClient.hh"
 #include "karabo/util/SimpleElement.hh"
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::InfluxDbClient);
+
+using boost::placeholders::_1;
+using boost::placeholders::_2;
+
 namespace karabo {
 
     namespace net {
@@ -35,9 +40,6 @@ namespace karabo {
         boost::mutex InfluxDbClient::m_uuidGeneratorMutex;
         boost::uuids::random_generator InfluxDbClient::m_uuidGenerator;
         const unsigned int InfluxDbClient::k_connTimeoutMs = 1500u;
-
-        KARABO_REGISTER_FOR_CONFIGURATION(InfluxDbClient);
-
 
         void InfluxDbClient::expectedParameters(karabo::util::Schema& expected) {
 

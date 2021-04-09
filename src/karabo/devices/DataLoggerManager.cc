@@ -75,6 +75,7 @@
 
 #include "DataLoggerManager.hh"
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLoggerManager)
 
 namespace karabo {
     namespace devices {
@@ -100,7 +101,6 @@ namespace karabo {
         }
 
 
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLoggerManager)
 
 
         void DataLoggerManager::expectedParameters(Schema& expected) {

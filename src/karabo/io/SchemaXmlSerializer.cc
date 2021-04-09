@@ -15,13 +15,10 @@ using namespace karabo::util;
 using namespace std;
 
 KARABO_EXPLICIT_TEMPLATE(karabo::io::TextSerializer<karabo::util::Schema>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::TextSerializer<karabo::util::Schema>, karabo::io::SchemaXmlSerializer)
 
 namespace karabo {
     namespace io {
-
-
-        KARABO_REGISTER_FOR_CONFIGURATION(TextSerializer<Schema>, SchemaXmlSerializer)
-
 
         void SchemaXmlSerializer::expectedParameters(karabo::util::Schema& expected) {
 
