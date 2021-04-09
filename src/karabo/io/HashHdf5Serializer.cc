@@ -17,12 +17,10 @@ using namespace std;
 using namespace karabo::util;
 
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Hdf5Serializer<karabo::util::Hash>, karabo::io::HashHdf5Serializer)
+
 namespace karabo {
     namespace io {
-
-
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Hdf5Serializer<karabo::util::Hash>, karabo::io::HashHdf5Serializer)
-
 
         ////////////////////////////////////
 

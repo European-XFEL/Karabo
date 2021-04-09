@@ -26,12 +26,13 @@ using namespace std;
 using namespace karabo::util;
 using namespace karabo::io::h5;
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Format)
+
 namespace karabo {
     namespace io {
         namespace h5 {
 
 
-            KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Format)
 
             karabo::util::Schema Format::m_schema = Schema();
             bool Format::m_schemaExists = false;

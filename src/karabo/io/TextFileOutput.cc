@@ -10,13 +10,6 @@
 
 #include "TextFileOutput.hh"
 
-using namespace karabo::util;
-
-namespace karabo {
-    namespace io {
-
-        KARABO_REGISTER_FOR_CONFIGURATION(Output<Hash>, TextFileOutput<Hash>)
-        KARABO_REGISTER_FOR_CONFIGURATION(Output<Schema>, TextFileOutput<Schema>)
-        KARABO_REGISTER_FOR_CONFIGURATION(Output<std::vector<char> >, TextFileOutput<std::vector<char> >)
-    }
-}
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::util::Hash>, karabo::io::TextFileOutput<karabo::util::Hash>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::util::Schema>, karabo::io::TextFileOutput<karabo::util::Schema>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<std::vector<char> >, karabo::io::TextFileOutput<std::vector<char> >)

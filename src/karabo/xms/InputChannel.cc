@@ -23,11 +23,16 @@ using namespace karabo::io;
 using namespace karabo::net;
 
 using std::string;
+using boost::placeholders::_1;
+using boost::placeholders::_2;
+using boost::placeholders::_3;
+
+
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::xms::InputChannel)
 
 namespace karabo {
     namespace xms {
 
-        KARABO_REGISTER_FOR_CONFIGURATION(InputChannel);
 
         const unsigned int InputChannel::DEFAULT_MAX_QUEUE_LENGTH = 2u;
 

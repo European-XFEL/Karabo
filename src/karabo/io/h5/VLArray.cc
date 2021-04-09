@@ -8,24 +8,15 @@
 
 
 #include "VLArray.hh"
-using namespace karabo::io;
-
-namespace karabo {
-    namespace io {
-        namespace h5 {
 
 
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int8VLArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int16VLArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int32VLArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, Int64VLArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt8VLArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt16VLArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt32VLArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, UInt64VLArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, FloatVLArrayElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, DoubleVLArrayElement)
-
-        }
-    }
-}
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::Int8VLArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::Int16VLArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::Int32VLArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::Int64VLArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::UInt8VLArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::UInt16VLArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::UInt32VLArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::UInt64VLArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::FloatVLArrayElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::DoubleVLArrayElement)

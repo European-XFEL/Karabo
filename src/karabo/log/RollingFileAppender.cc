@@ -13,12 +13,10 @@
 using namespace std;
 using namespace karabo::util;
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::log::RollingFileAppender)
+
 namespace karabo {
     namespace log {
-
-
-        KARABO_REGISTER_FOR_CONFIGURATION(RollingFileAppender)
-
 
         void RollingFileAppender::expectedParameters(Schema& s) {
 
