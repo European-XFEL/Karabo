@@ -10,12 +10,11 @@ using namespace karabo::io;
 using namespace karabo::log;
 using namespace boost::system;
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::MqttClient, karabo::net::MqttCppClient)
+
 namespace karabo {
     namespace net {
-        
 
-        KARABO_REGISTER_FOR_CONFIGURATION(MqttClient, MqttCppClient)
-        
 
         void MqttCppClient::expectedParameters(Schema& expected) {
 

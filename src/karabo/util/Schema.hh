@@ -15,7 +15,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/tuple/tuple.hpp>
 
 #include "Hash.hh"

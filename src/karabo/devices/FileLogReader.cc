@@ -32,6 +32,10 @@
 
 namespace bf = boost::filesystem;
 namespace bs = boost::system;
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice,
+                                    karabo::core::Device<karabo::core::OkErrorFsm>,
+                                    karabo::devices::DataLogReader,
+                                    karabo::devices::FileLogReader)
 
 namespace karabo {
     namespace devices {
@@ -42,10 +46,6 @@ namespace karabo {
         using namespace karabo::io;
         using json = nlohmann::json;
 
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice,
-                                          karabo::core::Device<karabo::core::OkErrorFsm>,
-                                          DataLogReader,
-                                          FileLogReader)
 
         IndexBuilderService::Pointer IndexBuilderService::m_instance;
 

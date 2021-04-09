@@ -13,12 +13,13 @@
 using namespace karabo::io::h5;
 using namespace karabo::util;
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Group)
+
 namespace karabo {
     namespace io {
         namespace h5 {
 
 
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Group)
 
             void Group::expectedParameters(karabo::util::Schema& expected) {
 

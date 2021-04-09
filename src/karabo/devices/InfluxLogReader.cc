@@ -37,6 +37,12 @@
 
 #include "InfluxLogReader.hh"
 
+
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice,
+                                    karabo::core::Device<karabo::core::OkErrorFsm>,
+                                    karabo::devices::DataLogReader,
+                                    karabo::devices::InfluxLogReader)
+
 namespace karabo {
 
     namespace devices {
@@ -73,11 +79,6 @@ namespace karabo {
             lastLoginBeforeTime(0UL), lastLogoutBeforeTime(0UL), aReply(aReply) {
         };
 
-
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice,
-                                          karabo::core::Device<karabo::core::OkErrorFsm>,
-                                          DataLogReader,
-                                          InfluxLogReader)
 
         const unsigned long InfluxLogReader::kSecConversionFactor = 1000000;
         const unsigned long InfluxLogReader::kFracConversionFactor = 1000000000000;
