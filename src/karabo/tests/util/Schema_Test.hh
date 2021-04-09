@@ -34,6 +34,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testGetAssignment);
     CPPUNIT_TEST(testGetOptions);
     CPPUNIT_TEST(testGetDefaultValue);
+    CPPUNIT_TEST(testInvalidDefaultsThrow);
     CPPUNIT_TEST(testGetAllowedStates);
     CPPUNIT_TEST(testGetUnit);
     CPPUNIT_TEST(testGetMetricPrefix);
@@ -108,6 +109,7 @@ private: //functions
     void testGetAssignment();
     void testGetOptions();
     void testGetDefaultValue();
+    void testInvalidDefaultsThrow();
     void testGetAllowedStates();
     void testGetUnit();
     void testGetMetricPrefix();
