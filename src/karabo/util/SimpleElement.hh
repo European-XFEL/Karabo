@@ -183,7 +183,7 @@ namespace karabo {
                 checkMinExcMaxExc();
                 checkMinIncMaxInc();
                 checkWarnAndAlarm();
-
+                checkDefaultValue();
 
             }
 
@@ -240,6 +240,75 @@ namespace karabo {
                         msg << attributeLow << " value (" << min << ") is greater than " << attributeHigh << "(" << max
                                 << ") on parameter \"" << this->m_node->getKey() << "\"";
                         throw KARABO_PARAMETER_EXCEPTION(msg.str());
+                    }
+                }
+            }
+
+
+            // If a default value is defined, check that it is within limits and
+            // is among the valid options; throw an exception otherwise.
+            void checkDefaultValue() {
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
+                    const ValueType& defaultVal =
+                        this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_DEFAULT_VALUE);
+                    if (this->m_node->hasAttribute(KARABO_SCHEMA_MIN_EXC)) {
+                        const ValueType& minExcVal =
+                            this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MIN_EXC);
+                        if (defaultVal <= minExcVal) {
+                            std::ostringstream oss;
+                            oss << "Default value, '" << defaultVal
+                                << "', is smaller than minExc limit, '"
+                                << minExcVal << "' for parameter '"
+                                << this->m_node->getKey() << "'.";
+                            throw KARABO_PARAMETER_EXCEPTION(oss.str());
+                        }
+                    }
+                    if (this->m_node->hasAttribute(KARABO_SCHEMA_MIN_INC)) {
+                        const ValueType& minIncVal =
+                            this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MIN_INC);
+                        if (defaultVal < minIncVal) {
+                            std::ostringstream oss;
+                            oss << "Default value, '" << defaultVal
+                                << "', is smaller than minInc limit, '"
+                                << minIncVal << "' for parameter '"
+                                << this->m_node->getKey() << "'.";
+                            throw KARABO_PARAMETER_EXCEPTION(oss.str());
+                        }
+                    }
+                    if (this->m_node->hasAttribute(KARABO_SCHEMA_MAX_EXC)) {
+                        const ValueType& maxExcVal =
+                            this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MAX_EXC);
+                        if (defaultVal >= maxExcVal) {
+                            std::ostringstream oss;
+                            oss << "Default value, '" << defaultVal
+                                << "', is greater than maxExc limit, '"
+                                << maxExcVal << "' for parameter '"
+                                << this->m_node->getKey() << "'.";
+                            throw KARABO_PARAMETER_EXCEPTION(oss.str());
+                        }
+                    }
+                    if (this->m_node->hasAttribute(KARABO_SCHEMA_MAX_INC)) {
+                        const ValueType& maxIncVal =
+                            this->m_node->template getAttribute<ValueType>(KARABO_SCHEMA_MAX_INC);
+                        if (defaultVal > maxIncVal) {
+                            std::ostringstream oss;
+                            oss << "Default value, '" << defaultVal
+                                << "', is greater than maxInc limit, '"
+                                << maxIncVal << "' for parameter '"
+                                << this->m_node->getKey() << "'.";
+                            throw KARABO_PARAMETER_EXCEPTION(oss.str());
+                        }
+                    }
+                    if (this->m_node->hasAttribute(KARABO_SCHEMA_OPTIONS)) {
+                        const std::vector<ValueType>& optionsVals =
+                            this->m_node->template getAttribute<std::vector<ValueType>>(KARABO_SCHEMA_OPTIONS);
+                        if (std::find(optionsVals.begin(), optionsVals.end(), defaultVal) == optionsVals.end()) {
+                            std::ostringstream oss;
+                            oss << "Default value, '" << defaultVal
+                                << "', is not among the valid options for parameter '"
+                                << this->m_node->getKey() << "'.";
+                            throw KARABO_PARAMETER_EXCEPTION(oss.str());
+                        }
                     }
                 }
             }

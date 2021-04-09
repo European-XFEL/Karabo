@@ -32,7 +32,7 @@ namespace karabo {
              * Specify a minimum number of entries the vector element needs to have to pass
              * validation
              * @param value
-             * @return 
+             * @return
              */
             VectorElement& minSize(const unsigned int& value) {
                 this->m_node->setAttribute(KARABO_SCHEMA_MIN_SIZE, value);
@@ -43,7 +43,7 @@ namespace karabo {
              * Specify a maximum number of entries the vector element needs to have to pass
              * validation
              * @param value
-             * @return 
+             * @return
              */
             VectorElement& maxSize(const unsigned int& value) {
                 this->m_node->setAttribute(KARABO_SCHEMA_MAX_SIZE, value);
@@ -98,7 +98,41 @@ namespace karabo {
                         this->observerAccess();
                     }
                 }
+
+                // If a default value is defined, check that it is within the
+                // limits specified by [minSize, maxSize]; throw an exception
+                // otherwise.
+                if (this->m_node->hasAttribute(KARABO_SCHEMA_DEFAULT_VALUE)) {
+                    const CONT<T>& defaultVal =
+                        this->m_node->template getAttribute<CONT<T>>(KARABO_SCHEMA_DEFAULT_VALUE);
+                    if (this->m_node->hasAttribute(KARABO_SCHEMA_MIN_SIZE)) {
+                        const unsigned int minSizeVal =
+                            this->m_node->template getAttribute<unsigned int>(KARABO_SCHEMA_MIN_SIZE);
+                        if (defaultVal.size() < minSizeVal) {
+                            std::ostringstream oss;
+                            oss << "Default value has less elements, '"
+                                << defaultVal.size() << "' than allowed by "
+                                << "minSize, '" << minSizeVal << "', for parameter '"
+                                << this->m_node->getKey() << "'.";
+                            throw KARABO_PARAMETER_EXCEPTION(oss.str());
+                        }
+                    }
+                    if (this->m_node->hasAttribute(KARABO_SCHEMA_MAX_SIZE)) {
+                        const unsigned int maxSizeVal =
+                            this->m_node->template getAttribute<unsigned int>(KARABO_SCHEMA_MAX_SIZE);
+                        if (defaultVal.size() > maxSizeVal) {
+                            std::ostringstream oss;
+                            oss << "Default value has more elements, '"
+                                << defaultVal.size() << "' than allowed by "
+                                << "maxSize, '" << maxSizeVal << "', for parameter '"
+                                << this->m_node->getKey() << "'.";
+                            throw KARABO_PARAMETER_EXCEPTION(oss.str());
+                        }
+                    }
+                }
             }
+
+
         };
 
         typedef VectorElement<bool > VECTOR_BOOL_ELEMENT;
