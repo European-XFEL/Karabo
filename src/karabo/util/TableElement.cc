@@ -79,7 +79,7 @@ namespace karabo {
                     << "' has a column, '" << unsupCol.first
                     << "', of unsupported type '"
                     << Types::to<ToLiteral>(unsupCol.second) << "'.";
-                throw KARABO_LOGIC_EXCEPTION(oss.str());
+                throw KARABO_PARAMETER_EXCEPTION(oss.str());
             }
 
             if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
@@ -200,7 +200,7 @@ namespace karabo {
                         << colName << "': the minimum vector size, '"
                         << minVecSize << "', is greater than '0', the size of "
                         << "the default vector.";
-                    throw KARABO_LOGIC_EXCEPTION(oss.str());
+                    throw KARABO_PARAMETER_EXCEPTION(oss.str());
                 }
             } else if (Types::isSimple(colType)) {
                 checkSimpleDefaultInOptions(colName, colType, rowSchema);
@@ -248,7 +248,7 @@ namespace karabo {
                     oss << "Column '" << colName
                         << "' lacks a default value and is of an unsupported type, '"
                         << Types::to<ToLiteral>(colType) << "'.";
-                    throw KARABO_LOGIC_EXCEPTION(oss.str());
+                    throw KARABO_PARAMETER_EXCEPTION(oss.str());
             }
         }
 
@@ -299,7 +299,7 @@ namespace karabo {
                     oss << "Column '" << colName
                         << "' lacks a default value and is of an unsupported type, '"
                         << Types::to<ToLiteral>(colType) << "'.";
-                    throw KARABO_LOGIC_EXCEPTION(oss.str());
+                    throw KARABO_PARAMETER_EXCEPTION(oss.str());
                 }
             }
 
@@ -307,7 +307,7 @@ namespace karabo {
                 std::ostringstream oss;
                 oss << "Default value to be generated for column '"
                     << colName << "' is not among the valid options.";
-                throw KARABO_LOGIC_EXCEPTION(oss.str());
+                throw KARABO_PARAMETER_EXCEPTION(oss.str());
             }
         }
 
@@ -326,7 +326,7 @@ namespace karabo {
                     oss <<  "Default value to be generated for column '"
                         << colName << "' would be outside of lower bound '"
                         << minExc << "'.";
-                    throw KARABO_LOGIC_EXCEPTION(oss.str());
+                    throw KARABO_PARAMETER_EXCEPTION(oss.str());
                 }
             }
             if (rowSchema.hasMinInc(colName)) {
@@ -336,7 +336,7 @@ namespace karabo {
                     oss <<  "Default value to be generated for column '"
                         << colName << "' would be outside of lower bound '"
                         << minInc << "'.";
-                    throw KARABO_LOGIC_EXCEPTION(oss.str());
+                    throw KARABO_PARAMETER_EXCEPTION(oss.str());
                 }
             }
             if (rowSchema.hasMaxExc(colName)) {
@@ -346,7 +346,7 @@ namespace karabo {
                     oss <<  "Default value to be generated for column '"
                         << colName << "' would be outside of upper bound '"
                         << maxExc << "'.";
-                    throw KARABO_LOGIC_EXCEPTION(oss.str());
+                    throw KARABO_PARAMETER_EXCEPTION(oss.str());
                 }
             }
             if (rowSchema.hasMaxInc(colName)) {
@@ -356,7 +356,7 @@ namespace karabo {
                     oss <<  "Default value to be generated for column '"
                         << colName << "' would be outside of upper bound '"
                         << maxInc << "'.";
-                    throw KARABO_LOGIC_EXCEPTION(oss.str());
+                    throw KARABO_PARAMETER_EXCEPTION(oss.str());
                 }
             }
         }
