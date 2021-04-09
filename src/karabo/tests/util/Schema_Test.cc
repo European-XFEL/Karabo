@@ -320,6 +320,74 @@ void Schema_Test::testGetDefaultValue() {
 }
 
 
+void Schema_Test::testInvalidDefaultsThrow() {
+    karabo::util::Schema schInvalidDefault;
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+        "Expected exception adding int element with default smaller than minimum.",
+        INT32_ELEMENT(schInvalidDefault).key("int")
+            .assignmentOptional().defaultValue(1)
+            .minExc(1)
+            .reconfigurable()
+            .commit(),
+        karabo::util::ParameterException
+    );
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+        "Expected exception adding float element with default smaller than minimum.",
+        FLOAT_ELEMENT(schInvalidDefault).key("float")
+            .assignmentOptional().defaultValue(0.9999f)
+            .minInc(1.0f)
+            .reconfigurable()
+            .commit(),
+        karabo::util::ParameterException
+    );
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+        "Expected exception adding double element with default greater than maximum.",
+        DOUBLE_ELEMENT(schInvalidDefault).key("double")
+            .assignmentOptional().defaultValue(1.0)
+            .maxExc(1.0)
+            .reconfigurable()
+            .commit(),
+        karabo::util::ParameterException
+    );
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+        "Expected exception adding uint32 element with default greater than maximum.",
+        UINT32_ELEMENT(schInvalidDefault).key("uint32")
+            .assignmentOptional().defaultValue(121u)
+            .maxInc(120u)
+            .reconfigurable()
+            .commit(),
+        karabo::util::ParameterException
+    );
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+        "Expected exception adding string element with default not among options.",
+        STRING_ELEMENT(schInvalidDefault).key("string")
+            .assignmentOptional().defaultValue("NotAnOption")
+            .options("OneOption AnotherOption")
+            .reconfigurable()
+            .commit(),
+        karabo::util::ParameterException
+    );
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+        "Expected exception adding int vector with size smaller than minSize.",
+        VECTOR_INT32_ELEMENT(schInvalidDefault).key("vectorInt")
+            .assignmentOptional().defaultValue(std::vector<int>{1, 2})
+            .minSize(4)
+            .reconfigurable()
+            .commit(),
+        karabo::util::ParameterException
+    );
+    CPPUNIT_ASSERT_THROW_MESSAGE(
+        "Expected exception adding bool vector with size greater than maxSize.",
+        VECTOR_BOOL_ELEMENT(schInvalidDefault).key("vectorBool")
+            .assignmentOptional().defaultValue(std::vector<bool>{true, false, true})
+            .maxSize(2)
+            .reconfigurable()
+            .commit(),
+        karabo::util::ParameterException
+    );
+}
+
+
 void Schema_Test::testGetAllowedStates() {
 
     vector<State> allowedStates = m_schema.getAllowedStates("exampleKey3");
