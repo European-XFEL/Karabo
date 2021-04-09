@@ -194,7 +194,8 @@ namespace karabo {
              */
             Derived& overwriteRestrictions(OverwriteElement::Restrictions & restrictions) {
                 if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
-                    OverwriteElement::Restrictions existing(m_node->getAttribute < std::vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
+                    OverwriteElement::Restrictions existing;
+                    existing.assignFromAttrVector(m_node->getAttribute < std::vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
                     //now merge
                     restrictions.merge(existing);
                 }

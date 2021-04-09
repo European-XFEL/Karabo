@@ -26,11 +26,12 @@ using namespace std;
 using namespace boost::asio;
 using namespace karabo::util;
 
+
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::Connection, karabo::net::TcpConnection)
+
 namespace karabo {
     namespace net {
 
-
-        KARABO_REGISTER_FOR_CONFIGURATION(Connection, TcpConnection)
 
         void TcpConnection::expectedParameters(karabo::util::Schema& expected) {
             STRING_ELEMENT(expected)

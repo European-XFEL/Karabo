@@ -35,6 +35,8 @@
 #include <csignal>
 #include <unistd.h>
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::DeviceServer)
+
 namespace karabo {
 
     namespace core {
@@ -49,7 +51,6 @@ namespace karabo {
         using namespace karabo::xms;
         using namespace krb_log4cpp;
 
-        KARABO_REGISTER_FOR_CONFIGURATION(DeviceServer)
 
         void DeviceServer::expectedParameters(Schema& expected) {
 

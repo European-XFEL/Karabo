@@ -10,28 +10,19 @@
 #include "DatasetReader.hh"
 using namespace karabo::io;
 
-namespace karabo {
-    namespace io {
-        namespace h5 {
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<char>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<signed char>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<short>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<int>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<long long>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<unsigned char>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<unsigned short>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<unsigned int>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<unsigned long long>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<double>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<float>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<std::string>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<bool>)
 
-
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<char>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<signed char>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<short>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<int>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<long long>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<unsigned char>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<unsigned short>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<unsigned int>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<unsigned long long>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<double>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<float>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<std::string>)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader<bool>)
-
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader< std::complex<float> >)
-            KARABO_REGISTER_FOR_CONFIGURATION(DatasetReader< std::complex<double> >)
-
-        }
-    }
-}
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader< std::complex<float> >)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader< std::complex<double> >)

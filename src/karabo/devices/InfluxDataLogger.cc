@@ -1,7 +1,6 @@
 #include <iostream>
 #include <chrono>
 #include <future>
-#include <boost/io/detail/quoted_manip.hpp>
 #include <openssl/sha.h>
 #include "InfluxDataLogger.hh"
 #include <nlohmann/json.hpp>
@@ -12,6 +11,10 @@
 #define DUR "u"
 #define PRECISION_FACTOR 1000000
 
+
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogger, karabo::devices::InfluxDataLogger)
+KARABO_REGISTER_IN_FACTORY_1(karabo::devices::DeviceData, karabo::devices::InfluxDeviceData, karabo::util::Hash)
+
 namespace karabo {
     namespace devices {
 
@@ -20,12 +23,7 @@ namespace karabo {
         using namespace karabo::net;
         using namespace karabo::util;
 
-
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, DataLogger, InfluxDataLogger)
-        KARABO_REGISTER_IN_FACTORY_1(DeviceData, InfluxDeviceData, karabo::util::Hash)
-
-	const unsigned int InfluxDataLogger::k_httpResponseTimeoutMs = 1500u;
-
+        const unsigned int InfluxDataLogger::k_httpResponseTimeoutMs = 1500u;
 
         InfluxDeviceData::InfluxDeviceData(const karabo::util::Hash& input)
             : DeviceData(input)

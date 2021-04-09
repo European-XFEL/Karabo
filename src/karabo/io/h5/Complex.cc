@@ -8,15 +8,6 @@
 
 
 #include "Complex.hh"
-using namespace karabo::io;
 
-namespace karabo {
-    namespace io {
-        namespace h5 {
-
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, FloatComplexElement)
-            KARABO_REGISTER_FOR_CONFIGURATION(Element, Dataset, DoubleComplexElement)
-
-        }
-    }
-}
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::FloatComplexElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::DoubleComplexElement)

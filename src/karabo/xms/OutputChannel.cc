@@ -25,14 +25,16 @@ namespace bs = boost::system;
 using namespace karabo::util;
 using namespace karabo::io;
 using namespace karabo::net;
+using boost::placeholders::_1;
+using boost::placeholders::_2;
 
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::xms::OutputChannel)
+// Register also the constructor with an extra int flag:
+KARABO_REGISTER_FOR_CONFIGURATION_ADDON(int, karabo::xms::OutputChannel);
 
 namespace karabo {
     namespace xms {
 
-        KARABO_REGISTER_FOR_CONFIGURATION(OutputChannel);
-        // Register also the constructor with an extra int flag:
-        KARABO_REGISTER_FOR_CONFIGURATION_ADDON(int, OutputChannel);
 
         // Number of attempts for delayed 2nd construction phase, i.e. initializeServerConnection().
         // Seen it fail 1500 times (in a very busy host and C++ server) before adding the sleep in

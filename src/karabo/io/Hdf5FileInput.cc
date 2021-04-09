@@ -10,11 +10,4 @@
 
 #include "Hdf5FileInput.hh"
 
-using namespace karabo::util;
-
-namespace karabo {
-    namespace io {
-
-        KARABO_REGISTER_FOR_CONFIGURATION(Input<Hash>, Hdf5FileInput<Hash>)
-    }
-}
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<karabo::util::Hash>, karabo::io::Hdf5FileInput<karabo::util::Hash>)
