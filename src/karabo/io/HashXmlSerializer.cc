@@ -18,13 +18,10 @@ using namespace karabo::util;
 using namespace std;
 
 KARABO_EXPLICIT_TEMPLATE(karabo::io::TextSerializer<karabo::util::Hash>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::TextSerializer<karabo::util::Hash>, karabo::io::HashXmlSerializer)
 
 namespace karabo {
     namespace io {
-
-
-        KARABO_REGISTER_FOR_CONFIGURATION(TextSerializer<Hash>, HashXmlSerializer)
-
 
         void HashXmlSerializer::expectedParameters(karabo::util::Schema& expected) {
 

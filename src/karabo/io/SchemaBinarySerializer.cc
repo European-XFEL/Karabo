@@ -13,12 +13,10 @@ using namespace std;
 using namespace karabo::util;
 
 KARABO_EXPLICIT_TEMPLATE(karabo::io::BinarySerializer<karabo::util::Schema>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::BinarySerializer<Schema>, karabo::io::SchemaBinarySerializer)
 
 namespace karabo {
     namespace io {
-
-
-        KARABO_REGISTER_FOR_CONFIGURATION(BinarySerializer<Schema>, SchemaBinarySerializer)
 
         SchemaBinarySerializer::SchemaBinarySerializer(const Hash& input) {
             m_serializer = BinarySerializer<Hash>::create("Bin", input);
