@@ -312,7 +312,7 @@ namespace karabo {
             /**
              * @brief Controlling method for row schema sanitization.
              *
-             * @throws karabo::util::LogicException this can be throw by
+             * @throws karabo::util::ParameterException can be throw by
              * some specific sanitization methods.
              */
             void sanitizeRowSchema(karabo::util::Schema& rowSchema);
@@ -334,7 +334,7 @@ namespace karabo {
              * default initializer of the column type (e.g. 0 for int columns,
              * false for bool columns and empty vectors for vector<..> columns).
              *
-             * @throw karabo::util::LogicException if the synthesized column
+             * @throw karabo::util::ParameterException if the synthesized column
              * default values are incompatible with any attribute that already
              * existed in the schema, like 'minInc' or 'minSize' or if the
              * type of the column lacking a default value is not supported for
