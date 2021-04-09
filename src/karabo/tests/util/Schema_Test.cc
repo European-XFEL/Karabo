@@ -1670,7 +1670,7 @@ void Schema_Test::testTableColNoDefaultValue() {
             .assignmentOptional().defaultValue(vector<Hash>())
             .reconfigurable()
             .commit(),
-        karabo::util::LogicException
+        karabo::util::ParameterException
     );
     karabo::util::Schema invalidRowSchema2;
     INT32_ELEMENT(invalidRowSchema2).key("intNoDefault")
@@ -1686,7 +1686,7 @@ void Schema_Test::testTableColNoDefaultValue() {
             .assignmentOptional().defaultValue(vector<Hash>())
             .reconfigurable()
             .commit(),
-        karabo::util::LogicException
+        karabo::util::ParameterException
     );
     karabo::util::Schema invalidRowSchema3;
     INT32_ELEMENT(invalidRowSchema3).key("intNoDefault")
@@ -1702,7 +1702,7 @@ void Schema_Test::testTableColNoDefaultValue() {
             .assignmentOptional().defaultValue(vector<Hash>())
             .reconfigurable()
             .commit(),
-        karabo::util::LogicException
+        karabo::util::ParameterException
     );
     karabo::util::Schema invalidRowSchema4;
     INT32_ELEMENT(invalidRowSchema4).key("intNoDefault")
@@ -1718,7 +1718,7 @@ void Schema_Test::testTableColNoDefaultValue() {
             .assignmentOptional().defaultValue(vector<Hash>())
             .reconfigurable()
             .commit(),
-        karabo::util::LogicException
+        karabo::util::ParameterException
     );
     karabo::util::Schema invalidRowSchema5;
     VECTOR_INT32_ELEMENT(invalidRowSchema5).key("vectorIntNoDefault")
@@ -1734,7 +1734,7 @@ void Schema_Test::testTableColNoDefaultValue() {
             .assignmentOptional().defaultValue(vector<Hash>())
             .reconfigurable()
             .commit(),
-        karabo::util::LogicException
+        karabo::util::ParameterException
     );
     karabo::util::Schema invalidRowSchema6;
     INT32_ELEMENT(invalidRowSchema6).key("invalidInt")
@@ -1750,7 +1750,7 @@ void Schema_Test::testTableColNoDefaultValue() {
             .assignmentOptional().defaultValue(vector<Hash>())
             .reconfigurable()
             .commit(),
-        karabo::util::LogicException
+        karabo::util::ParameterException
     );
 }
 
@@ -1886,7 +1886,7 @@ void Schema_Test::testTableColUnsupportedType() {
              .assignmentOptional().defaultValue(vector<Hash>())
              .reconfigurable()
              .commit(),
-             karabo::util::LogicException
+             karabo::util::ParameterException
          );
 }
 
