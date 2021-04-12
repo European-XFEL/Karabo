@@ -11,17 +11,22 @@ from karabogui.graph.common.api import (
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, DEFAULT_LABEL_X, DEFAULT_LABEL_Y,
     DEFAULT_OFFSET_X, DEFAULT_OFFSET_Y, DEFAULT_SCALE_X, DEFAULT_SCALE_Y,
-    DEFAULT_UNITS_X, DEFAULT_UNITS_Y, IS_FLIPPED, LABEL, ROTATION,
-    ROTATION_FACTOR, SCALING, TRANSLATION, UNITS)
+    DEFAULT_UNITS_X, DEFAULT_UNITS_Y, ROTATION_FACTOR)
+from karabogui.graph.common.const import (
+    TF_FLIPPED, TF_ROTATION, TF_SCALING, TF_TRANSLATION)
 
 from .item import KaraboImageItem
 from .viewbox import KaraboImageViewBox
 
 
 def axis_tick_font():
-    font = QFont()
-    font.setPixelSize(11)
+    font = QFont("Source Sans Pro")
+    font.setPixelSize(10)
     return font
+
+
+TICK_AXIS = ["top", "left"]
+AXIS_ORDER = "row-major"
 
 
 class KaraboImagePlot(PlotItem):
@@ -29,23 +34,18 @@ class KaraboImagePlot(PlotItem):
     imageLevelsChanged = Signal(object)
     imageAxesChanged = Signal()
 
-    AXIS_ORDER = "row-major"  # aligning the image coords to view coords
-    DEFAULT_ROTATION = 0  # rotated at 0 deg.. which is not rotated at all
-
-    # x-axis is not flipped, while y-axis is. This is due to the axis order
-    IS_FLIPPED = np.array([False, True])
-    MAJOR_AXES = ["top", "left"]
-
     def __init__(self, parent=None):
         super(KaraboImagePlot, self).__init__(
             viewBox=KaraboImageViewBox(parent=None),
-            axisItems=create_axis_items(axes_with_ticks=self.MAJOR_AXES),
+            axisItems=create_axis_items(axes_with_ticks=TICK_AXIS),
             enableMenu=False,
             parent=parent)
 
         # Initialize widgets
         self.imageItem = KaraboImageItem(parent=self)
-        self.imageItem.axisOrder = KaraboImagePlot.AXIS_ORDER
+        # aligning the image coords to view coords
+        self.imageItem.axisOrder = AXIS_ORDER
+
         self.addItem(self.imageItem)
 
         # Improve axes rendering
@@ -62,19 +62,21 @@ class KaraboImagePlot(PlotItem):
         self._units = []
         self.aspect_ratio = AspectRatio.PixelDependent
 
-        self._original_transform = {}
-        self._original_units = []
+        self._base_transform = {}
+        self._base_units = []
 
+        # Container for ranges
         self._axes_data = [np.array([]), np.array([])]
         self.transformed_axes = None
 
         # Plot items
         self.printer = None
 
-        x_label = {UNITS: DEFAULT_UNITS_X, LABEL: DEFAULT_LABEL_X}
-        y_label = {UNITS: DEFAULT_UNITS_Y, LABEL: DEFAULT_LABEL_Y}
+        x_label = {"units": DEFAULT_UNITS_X, "label": DEFAULT_LABEL_X}
+        y_label = {"units": DEFAULT_UNITS_Y, "label": DEFAULT_LABEL_Y}
         self._labels = [x_label, y_label]
 
+        # Set default values for the transform
         self._set_default_transform()
         self._flip()
 
@@ -127,7 +129,7 @@ class KaraboImagePlot(PlotItem):
         if self.aspect_ratio == AspectRatio.NoAspectRatio:
             self.vb.setAspectLocked(False)
         elif self.aspect_ratio == AspectRatio.PixelDependent:
-            x_scale, y_scale = self._transform[SCALING]
+            x_scale, y_scale = self._transform[TF_SCALING]
             self.vb.setAspectLocked(True, ratio=y_scale / x_scale)
         elif self.aspect_ratio == AspectRatio.ScaleDependent:
             self.vb.setAspectLocked(True, ratio=1)
@@ -157,32 +159,21 @@ class KaraboImagePlot(PlotItem):
 
     def set_transform(self, x_scale, y_scale, x_translate, y_translate,
                       aspect_ratio=AspectRatio.PixelDependent, default=False):
-        scaling = np.array([x_scale, y_scale])
-        translation = np.array([x_translate, y_translate])
+        scaling = np.array([x_scale, y_scale], dtype=np.float64)
+        translation = np.array([x_translate, y_translate], dtype=np.float64)
 
         if default:
-            self._original_transform[SCALING] = scaling
-            self._original_transform[TRANSLATION] = translation
+            self._base_transform[TF_SCALING] = scaling
+            self._base_transform[TF_TRANSLATION] = translation
             self._revert_transform()
         else:
-            self._transform[SCALING] = scaling
-            self._transform[TRANSLATION] = translation
+            self._transform[TF_SCALING] = scaling
+            self._transform[TF_TRANSLATION] = translation
 
         self.aspect_ratio = aspect_ratio
 
         if not default:
             self._apply_transform()
-
-    def set_translation(self, x_translate=None, y_translate=None, update=True):
-        if x_translate is None and y_translate is None:
-            return
-
-        if x_translate is not None:
-            self._transform[TRANSLATION][0] = x_translate
-        if y_translate is not None:
-            self._transform[TRANSLATION][1] = y_translate
-
-        self._apply_transform(update)
 
     def set_colormap(self, cmap):
         """Sets the colormap of the image by setting the image item LUT.
@@ -242,8 +233,8 @@ class KaraboImagePlot(PlotItem):
             self.showLabel(ax, show=show)
 
         labels = self._labels[axis]
-        labels[LABEL] = text
-        labels[UNITS] = units
+        labels["label"] = text
+        labels["units"] = units
 
     @Slot(ExportTool)
     def export(self, export_type):
@@ -258,40 +249,36 @@ class KaraboImagePlot(PlotItem):
         exporter.export()
 
     def _set_default_transform(self):
-        self._original_transform[SCALING] = np.array([DEFAULT_SCALE_X,
-                                                      DEFAULT_SCALE_Y])
-        self._original_transform[TRANSLATION] = np.array([DEFAULT_OFFSET_X,
-                                                          DEFAULT_OFFSET_Y])
-        self._original_transform[ROTATION] = KaraboImagePlot.DEFAULT_ROTATION
-        self._original_transform[IS_FLIPPED] = KaraboImagePlot.IS_FLIPPED
+        self._base_transform[TF_ROTATION] = np.array(
+            [DEFAULT_SCALE_X, DEFAULT_SCALE_Y], dtype=np.float64)
+        self._base_transform[TF_TRANSLATION] = np.array(
+            [DEFAULT_OFFSET_X, DEFAULT_OFFSET_Y], dtype=np.float64)
+        self._base_transform[TF_ROTATION] = 0
+        # x-axis is not flipped, while y-axis is. This is due to the axis order
+        self._base_transform[TF_FLIPPED] = [False, True]
 
         self._revert_transform()
 
     def _revert_transform(self):
-        self._transform = deepcopy(self._original_transform)
-        self._units = deepcopy(self._original_units)
+        self._transform = deepcopy(self._base_transform)
+        self._units = deepcopy(self._base_units)
 
     # ---------------------------------------------------------------------
     # Transform methods
 
-    def _axes_changed(self, image=None):
+    def _axes_changed(self, image):
         """Returns True/False if the axes information changed in relation to
-        an image, which is either a new or current one"""
-        if image is None:
-            # Use current
-            image = self.imageItem.image
+        an image"""
+        size_x = self._axes_data[0].size
+        size_y = self._axes_data[1].size
+        new_size_y, new_size_x = image.shape[:2]
 
-        x_current_size = self._axes_data[0].size
-        y_current_size = self._axes_data[1].size
-
-        y_new_size, x_new_size = image.shape[:2]
-
-        return x_current_size != x_new_size or y_current_size != y_new_size
+        return (size_x != new_size_x) or (size_y != new_size_y)
 
     def _update_axes_transforms(self):
         """Updates the transformed axes"""
-        translation = self._transform[TRANSLATION]
-        scaling = self._transform[SCALING]
+        translation = self._transform[TF_TRANSLATION]
+        scaling = self._transform[TF_SCALING]
 
         self.transformed_axes = []
         for i, axis in enumerate(self._axes_data):
@@ -303,9 +290,9 @@ class KaraboImagePlot(PlotItem):
         """Applies transformation on the image item such as scale, translate,
            and rotation. Other plot items such as ROIs and indicators are
            transformed as well."""
-        rotation = self._transform[ROTATION]
-        translation = self._transform[TRANSLATION]
-        scaling = self._transform[SCALING]
+        rotation = self._transform[TF_ROTATION]
+        translation = self._transform[TF_TRANSLATION]
+        scaling = self._transform[TF_SCALING]
 
         self.imageItem.set_transform(
             scaling=scaling * ROTATION_FACTOR[rotation],
@@ -328,8 +315,8 @@ class KaraboImagePlot(PlotItem):
             self.vb.enableAutoRange()
 
     def mapRectFromTransform(self, rect):
-        translation = self._transform[TRANSLATION]
-        scaling = self._transform[SCALING]
+        translation = self._transform[TF_TRANSLATION]
+        scaling = self._transform[TF_SCALING]
 
         pos = np.array([rect.x(), rect.y()])
         abs_pos = ((pos - translation) / scaling).astype(int)
@@ -340,8 +327,8 @@ class KaraboImagePlot(PlotItem):
         return QRectF(*(tuple(abs_pos) + tuple(abs_size)))
 
     def mapRectToTransform(self, rect):
-        translation = self._transform[TRANSLATION]
-        scaling = self._transform[SCALING]
+        translation = self._transform[TF_TRANSLATION]
+        scaling = self._transform[TF_SCALING]
 
         pos = np.array([rect.x(), rect.y()])
         trans_pos = pos * scaling + translation
@@ -354,10 +341,10 @@ class KaraboImagePlot(PlotItem):
     def _flip(self):
         """Flips the image by inverting the viewbox
            and adjusting the shown axes"""
-        flipped_x = self._transform[IS_FLIPPED][0]
+        flipped_x = self._transform[TF_FLIPPED][0]
         self.vb.invertX(flipped_x)
 
-        flipped_y = self._transform[IS_FLIPPED][1]
+        flipped_y = self._transform[TF_FLIPPED][1]
         self.vb.invertY(flipped_y)
 
         major_x = "right" if flipped_x else "left"
