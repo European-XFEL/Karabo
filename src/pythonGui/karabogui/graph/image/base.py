@@ -9,8 +9,7 @@ from karabogui import icons
 from karabogui.graph.common.api import (
     AxesLabelsDialog, AuxPlots, COLORMAPS, ExportTool, ImageROIController,
     MouseMode, PointCanvas, RectCanvas, ROITool, ToolbarController)
-from karabogui.graph.common.const import (
-    LABEL_HEIGHT, SCALING, X_AXIS_HEIGHT, UNITS)
+from karabogui.graph.common.const import TF_SCALING, X_AXIS_HEIGHT
 
 from .aux_plots.controller import AuxPlotsController
 from .colorbar import ColorBarWidget
@@ -475,7 +474,7 @@ class KaraboImageView(QWidget):
         if axis == 0 and self._colorbar is not None:
             margin = X_AXIS_HEIGHT
             if text == '' and units == '':
-                margin -= LABEL_HEIGHT
+                margin -= 20
             self._colorbar.set_margins(top=margin)
 
     @Slot()
@@ -604,8 +603,8 @@ class KaraboImageView(QWidget):
 
     def _update_scale_legend(self):
         if self._scale_legend is not None:
-            x_scale, y_scale = self.plotItem.axes_transform[SCALING]
-            x_units, y_units = [labels[UNITS] for labels in
+            x_scale, y_scale = self.plotItem.axes_transform[TF_SCALING]
+            x_units, y_units = [labels["units"] for labels in
                                 self.plotItem.axes_labels]
             self._scale_legend.set_value(x_scale, y_scale, x_units, y_units)
 
