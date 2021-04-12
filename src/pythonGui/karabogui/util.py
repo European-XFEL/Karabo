@@ -369,7 +369,6 @@ def move_to_cursor(widget):
     This method quickly adjusts the size of the widget and then calculates
     an ideal position.
     """
-    widget.adjustSize()
     process_qt_events()
 
     pos = QCursor.pos()
