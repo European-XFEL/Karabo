@@ -4,7 +4,7 @@ from qtpy.QtGui import QColor, QPen
 from qtpy.QtWidgets import QGraphicsRectItem, QGraphicsObject
 
 from karabogui.graph.common.api import CoordsLegend
-from karabogui.graph.common.const import SCALING, TRANSLATION
+from karabogui.graph.common.const import TF_SCALING, TF_TRANSLATION
 from karabogui.graph.image.legends.picker import PickerLegend
 
 
@@ -109,11 +109,11 @@ class PickerController(QObject):
     def _update_geometry(self):
         """Adjusts picker items geometry with the current image transform"""
         self._indicator_rect.update_geometry_from_transform(
-            self.plotItem.axes_transform[SCALING],
-            self.plotItem.axes_transform[TRANSLATION])
+            self.plotItem.axes_transform[TF_SCALING],
+            self.plotItem.axes_transform[TF_TRANSLATION])
         self._selection_rect.update_geometry_from_transform(
-            self.plotItem.axes_transform[SCALING],
-            self.plotItem.axes_transform[TRANSLATION])
+            self.plotItem.axes_transform[TF_SCALING],
+            self.plotItem.axes_transform[TF_TRANSLATION])
 
     def destroy(self):
         imageItem = self.plotItem.imageItem

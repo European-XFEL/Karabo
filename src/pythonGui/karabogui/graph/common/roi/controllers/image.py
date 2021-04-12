@@ -1,6 +1,6 @@
 from qtpy.QtCore import Slot
 
-from karabogui.graph.common.const import SCALING, TRANSLATION
+from karabogui.graph.common.const import TF_SCALING, TF_TRANSLATION
 from karabogui.graph.common.enums import ROITool
 from karabogui.graph.common.roi.utils import ImageRegion
 
@@ -70,8 +70,8 @@ class ImageROIController(BaseROIController):
 
         for item in roi_items:
             item.update_geometry_from_transform(
-                self.plotItem.axes_transform[SCALING],
-                self.plotItem.axes_transform[TRANSLATION], update=False)
+                self.plotItem.axes_transform[TF_SCALING],
+                self.plotItem.axes_transform[TF_TRANSLATION], update=False)
 
     @Slot(object)
     def _set_current_item(self, roi_item, update=True):
