@@ -111,32 +111,22 @@ ALL_STATES = [
     State.DECREASING,
     State.KNOWN,
 ]
+
 STATE_INTEGER_MAP = {state.value: i for i, state in enumerate(ALL_STATES)}
 INTEGER_STATE_MAP = {i: state.value for i, state in enumerate(ALL_STATES)}
-
-MIN_STATE_INT = min(STATE_INTEGER_MAP.values())
-MAX_STATE_INT = max(STATE_INTEGER_MAP.values())
 
 ALARM_INTEGER_MAP = {alarm.value: i for i, alarm in
                      enumerate(AlarmCondition.__members__.values())}
 INTEGER_ALARM_MAP = {i: alarm.value for i, alarm in
                      enumerate(AlarmCondition.__members__.values())}
 
-MIN_ALARM_INT = min(ALARM_INTEGER_MAP.values())
-MAX_ALARM_INT = max(ALARM_INTEGER_MAP.values())
-
 # Image Constants
 # --------------------------------------------------------------------------
 
-LABEL = "label"
-UNITS = "units"
-PREFIX = "prefix"
-VISIBLE = "visible"
-SCALING = "scaling"
-TRANSLATION = "translation"
-IS_FLIPPED = "is_flipped"
-IS_INVERTED = "is_inverted"
-ROTATION = "rotation"
+TF_SCALING = "scaling"
+TF_TRANSLATION = "translation"
+TF_FLIPPED = "flipped"
+TF_ROTATION = "rotation"
 
 ROTATION_FACTOR = {
     0: (1, 1),
@@ -145,18 +135,13 @@ ROTATION_FACTOR = {
     270: (-1, 1)
 }
 
+DEFAULT_SCALE_X = 1.0
+DEFAULT_SCALE_Y = 1.0
+DEFAULT_OFFSET_X = 0.0
+DEFAULT_OFFSET_Y = 0.0
+
 X_AXIS_HEIGHT = 46
 Y_AXIS_WIDTH = 75
-LABEL_HEIGHT = 20
-
-# default values
-
-VIRIDIS = "viridis"
-
-DEFAULT_SCALE_X = 1
-DEFAULT_SCALE_Y = 1
-DEFAULT_OFFSET_X = 0
-DEFAULT_OFFSET_Y = 0
 
 DEFAULT_UNITS_X = "pixels"
 DEFAULT_LABEL_X = "X-axis"
