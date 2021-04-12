@@ -3,7 +3,7 @@ import os
 from qtpy import uic
 from qtpy.QtWidgets import QDialog
 
-from karabogui.graph.common.const import SCALING, TRANSLATION
+from karabogui.graph.common.const import TF_SCALING, TF_TRANSLATION
 
 
 class ImageTransformsDialog(QDialog):
@@ -17,8 +17,8 @@ class ImageTransformsDialog(QDialog):
         uic.loadUi(ui_path, self)
 
         # populate transform fields
-        scale = transforms[SCALING]
-        offset = transforms[TRANSLATION]
+        scale = transforms[TF_SCALING]
+        offset = transforms[TF_TRANSLATION]
 
         self.ui_xscale.setValue(scale[0])
         self.ui_yscale.setValue(scale[1])
