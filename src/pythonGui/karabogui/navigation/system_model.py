@@ -200,8 +200,11 @@ class SystemTreeModel(QAbstractItemModel):
             return Qt.NoItemFlags
 
         ret = Qt.ItemIsEnabled | Qt.ItemIsSelectable
-        if node.level > 1:
+        if node.level == 3:
+            # Devices can be dragged into other widgets
             ret |= Qt.ItemIsDragEnabled
+            # Devices never have children optimization
+            ret |= Qt.ItemNeverHasChildren
         return ret
 
     def headerData(self, section, orientation, role):
