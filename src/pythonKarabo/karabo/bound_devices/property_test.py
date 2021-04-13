@@ -350,7 +350,9 @@ class PropertyTest(PythonDevice):
             .reconfigurable()
             .commit(),
         )
-
+        # Transform access mode of columns for readOnly table
+        for key in columns.getKeys():
+            OVERWRITE_ELEMENT(columns).key(key).setNowReadOnly().commit()
         (
 
             TABLE_ELEMENT(expected).key("tableReadOnly")
