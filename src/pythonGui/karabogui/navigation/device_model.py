@@ -153,6 +153,8 @@ class DeviceTreeModel(QAbstractItemModel):
             return Qt.NoItemFlags
 
         ret = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        if node.level == 2:
+            ret |= Qt.ItemNeverHasChildren
         return ret
 
     def headerData(self, section, orientation, role):
