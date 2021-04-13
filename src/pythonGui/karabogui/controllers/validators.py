@@ -6,12 +6,12 @@ import numpy as np
 from qtpy.QtGui import QValidator
 
 from karabogui.binding.api import (
-    get_min_max, get_min_max_size, VectorBoolBinding,
-    VectorComplexDoubleBinding, VectorComplexFloatBinding, VectorDoubleBinding,
-    VectorFloatBinding, VectorInt8Binding, VectorInt16Binding,
-    VectorInt32Binding, VectorInt64Binding, VectorStringBinding,
-    VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
-    VectorUint64Binding)
+    convert_string, get_min_max, get_min_max_size, VectorBoolBinding,
+    VectorComplexDoubleBinding, VectorComplexFloatBinding,
+    VectorDoubleBinding, VectorFloatBinding, VectorInt8Binding,
+    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
+    VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
+    VectorUint32Binding, VectorUint64Binding)
 
 BOOL_REGEX = r"(0|1|[T]rue|[F]alse)"
 INT_REGEX = r"^[-+]?\d+$"
@@ -164,17 +164,18 @@ class SimpleValidator(QValidator):
 
         # Use the fast path validation
         try:
-            value = self._binding.validate_trait("value", input)
+            self._binding.validate_trait("value", input)
         except TraitError:
             return self.Invalid, input, pos
 
-        if self.inside_limits(value):
+        if self.inside_limits(input):
             return self.Acceptable, input, pos
 
         return self.Intermediate, input, pos
 
     def inside_limits(self, value):
         """Check if a value is within limits"""
+        value = convert_string(value)
         if value < self.low or value > self.high:
             return False
 
