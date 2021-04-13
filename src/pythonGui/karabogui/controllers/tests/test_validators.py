@@ -1,9 +1,10 @@
 from qtpy.QtGui import QValidator
 
+from karabo.common.const import KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MAX_EXC
 from karabogui.binding.api import (
-    FloatBinding, VectorFloatBinding, VectorUint8Binding)
+    FloatBinding, Uint8Binding, VectorFloatBinding, VectorUint8Binding)
 
-from ..validators import BindingValidator, ListValidator
+from ..validators import BindingValidator, ListValidator, SimpleValidator
 
 
 def test_generic_binding_validator():
@@ -164,4 +165,42 @@ def test_list_integer_limits():
     assert result == QValidator.Intermediate
 
     result, _, _ = validator.validate("255", None)
+    assert result == QValidator.Acceptable
+
+
+def test_simple_validator():
+    binding = Uint8Binding()
+    validator = SimpleValidator(binding=binding)
+    result, _, _ = validator.validate("1", None)
+    assert result == QValidator.Acceptable
+    result, _, _ = validator.validate("-1", None)
+    assert result == QValidator.Intermediate
+    result, _, _ = validator.validate("-", None)
+    assert result == QValidator.Intermediate
+    result, _, _ = validator.validate("0", None)
+    assert result == QValidator.Acceptable
+    result, _, _ = validator.validate("255", None)
+    assert result == QValidator.Acceptable
+    result, _, _ = validator.validate("256", None)
+    assert result == QValidator.Intermediate
+
+    # Test with binding attributes
+    attributes = {KARABO_SCHEMA_MIN_INC: 2, KARABO_SCHEMA_MAX_EXC: 128}
+    binding = Uint8Binding(attributes=attributes)
+    validator = SimpleValidator(binding=binding)
+    result, _, _ = validator.validate("1", None)
+    assert result == QValidator.Intermediate
+    result, _, _ = validator.validate("2", None)
+    assert result == QValidator.Acceptable
+    result, _, _ = validator.validate("-1", None)
+    assert result == QValidator.Intermediate
+    result, _, _ = validator.validate("-", None)
+    assert result == QValidator.Intermediate
+    result, _, _ = validator.validate("0", None)
+    assert result == QValidator.Intermediate
+    result, _, _ = validator.validate("255", None)
+    assert result == QValidator.Intermediate
+    result, _, _ = validator.validate("128", None)
+    assert result == QValidator.Intermediate
+    result, _, _ = validator.validate("127", None)
     assert result == QValidator.Acceptable
