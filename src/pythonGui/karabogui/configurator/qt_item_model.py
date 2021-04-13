@@ -192,12 +192,15 @@ class ConfigurationTreeModel(QAbstractItemModel):
         self._notify_of_modifications()
 
     def _config_update(self):
-        """Notify the view of item updates
+        """Notify the view of item updates.
+
+        Note: The `config_update` updates background color for alarms and
+        states as well as the display value
         """
         last_row = self.rowCount()
         first = self.index(0, 1)
         last = self.index(last_row, 1)
-        self.dataChanged.emit(first, last)
+        self.dataChanged.emit(first, last, [Qt.BackgroundRole, Qt.DisplayRole])
         self._notify_of_modifications()
 
     def _notify_of_modifications(self):
