@@ -18,6 +18,7 @@ from karabogui.globals import access_role_allowed
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.enums import NavigationItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.navigation.system_filter_model import TopologyFilterModel
 from karabogui.request import call_device_slot, handle_scene_from_server
 from karabogui.singletons.api import get_manager, get_selection_tracker
 from karabogui.util import (
@@ -34,11 +35,15 @@ class SystemTreeView(QTreeView):
         self._selected_proxy = None  # A BaseDeviceProxy
 
         model = SystemTreeModel(parent=self)
-        self.setModel(model)
-        self.setSelectionModel(model.selectionModel)
-        model.signalItemChanged.connect(self.onSelectionChanged)
-        model.modelReset.connect(self.resetExpand)
+        proxy_model = TopologyFilterModel(parent=self,
+                                          source_model=model)
+        self.setModel(proxy_model)
+        self.setSelectionModel(proxy_model.selectionModel)
+
         set_treeview_header(self.header())
+        proxy_model.setFilterKeyColumn(0)
+        proxy_model.signalItemChanged.connect(self.onSelectionChanged)
+        proxy_model.modelReset.connect(self.resetExpand)
 
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
