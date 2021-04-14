@@ -5,9 +5,7 @@
 #############################################################################
 from weakref import WeakValueDictionary
 
-from qtpy.QtCore import (
-    Signal, Slot, QAbstractItemModel, QModelIndex, Qt, QItemSelection,
-    QItemSelectionModel)
+from qtpy.QtCore import QAbstractItemModel, QModelIndex, Qt
 
 from karabo.common.api import ProxyStatus
 from karabogui import globals as krb_globals, icons
@@ -17,18 +15,13 @@ from .context import _UpdateContext
 
 
 class DeviceTreeModel(QAbstractItemModel):
-    signalItemChanged = Signal(str, object)  # type, BaseDeviceProxy
 
     def __init__(self, parent=None):
         super(DeviceTreeModel, self).__init__(parent)
-
         self._model_index_refs = WeakValueDictionary()
-
         # Our hierarchy tree
         self.tree = get_topology().device_tree
         self.tree.update_context = _UpdateContext(item_model=self)
-        self.selectionModel = QItemSelectionModel(self, self)
-        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
         event_map = {
             KaraboEvent.AccessLevelChanged: self._event_access_level,
@@ -72,7 +65,7 @@ class DeviceTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return QModelIndex()
 
-        children = parent_node.get_visible_children()
+        children = parent_node.children
         return self.createIndex(row, column, children[row])
 
     def parent(self, index):
@@ -110,7 +103,7 @@ class DeviceTreeModel(QAbstractItemModel):
             if parent_node is None:
                 return 0
 
-        return len(parent_node.get_visible_children())
+        return len(parent_node.children)
 
     def columnCount(self, parentIndex=QModelIndex()):
         """Reimplemented function of QAbstractItemModel.
@@ -182,87 +175,9 @@ class DeviceTreeModel(QAbstractItemModel):
 
         def visitor(node):
             node.is_visible = not (node.visibility > access)
-            node.clear_cache = True
 
         self.tree.visit(visitor)
         self.layoutChanged.emit()
 
     def currentIndex(self):
         return self.selectionModel.currentIndex()
-
-    @Slot(QItemSelection, QItemSelection)
-    def onSelectionChanged(self, selected, deselected):
-        selectedIndexes = selected.indexes()
-
-        if not selectedIndexes:
-            return
-
-        node = None
-        index = selectedIndexes[0]
-        if not index.isValid():
-            level = 0
-        else:
-            node = self.index_ref(index)
-            if node is None:
-                return
-            level = node.level
-
-        if level == 0:
-            proxy = None
-            item_type = 'domain'
-        elif level == 1:
-            proxy = None
-            item_type = 'type'
-        if level == 2:
-            deviceId = node.node_id
-            proxy = get_topology().get_device(deviceId)
-            item_type = 'device'
-
-        self.signalItemChanged.emit(item_type, proxy)
-
-    # ------------------------------------------------------------------
-    # Search Model related methods
-
-    def selectIndex(self, index):
-        """Select the given `index` of type `QModelIndex` if this is not None
-        """
-        if index is None:
-            self.selectionModel.selectionChanged.emit(QItemSelection(),
-                                                      QItemSelection())
-            return
-
-        self.selectionModel.setCurrentIndex(index,
-                                            QItemSelectionModel.ClearAndSelect)
-
-        treeview = super(DeviceTreeModel, self).parent()
-        treeview.scrollTo(index)
-
-    def selectNodeById(self, node_id):
-        """Select the `DeviceTreeNode` with the given `node_id`.
-
-        :param node_id: A string which we are looking for in the tree
-        """
-        nodes = self.findNodes(node_id, full_match=True)
-        assert len(nodes) <= 1
-        if nodes:
-            # Select first entry
-            self.selectNode(nodes[0])
-
-    def selectNode(self, node):
-        """Select the given `node` of type `DeviceTreeNode`
-
-        If the the node or index is None, nothing is selected
-
-        :param node: The `DeviceTreeNode` which should be selected
-        """
-        if node is not None:
-            index = self.createIndex(node.row(), 0, node)
-        else:
-            # Select nothing
-            index = None
-        self.selectIndex(index)
-
-    def findNodes(self, node_id, **kwargs):
-        if kwargs.get('access_level') is None:
-            kwargs['access_level'] = krb_globals.GLOBAL_ACCESS_LEVEL
-        return self.tree.find(node_id, **kwargs)
