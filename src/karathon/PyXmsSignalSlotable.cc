@@ -115,7 +115,8 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("getAvailableSignals", &SignalSlotableWrap::getAvailableSignalsPy, bp::arg("instanceId"))
             .def("getAvailableSlots", &SignalSlotableWrap::getAvailableSlotsPy, bp::arg("instanceId"))
 
-            .def("disconnect", (void (SignalSlotable::*)(string const &, string const &)) (&SignalSlotable::disconnect), (bp::arg("signal"), bp::arg("slot")))
+            .def("disconnect", &SignalSlotable::disconnect, (bp::arg("signalInstanceId"), bp::arg("signalFunction"),
+                                                             bp::arg("slotInstanceId"), bp::arg("slotFunction")))
             .def("getInstanceId"
                  , (string const & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceId)
                  , bp::return_value_policy< bp::copy_const_reference > ())
@@ -216,6 +217,14 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("getOutputChannel", &SignalSlotableWrap::getOutputChannelPy, (bp::arg("channelName")))
 
             .def("getInputChannel", &SignalSlotableWrap::getInputChannelPy, (bp::arg("channelName")))
+
+            .def("getOutputChannelNames", &SignalSlotable::getOutputChannelNames)
+
+            .def("getInputChannelNames", &SignalSlotableWrap::getInputChannelNamesPy)
+
+            .def("removeInputChannel", &SignalSlotable::removeInputChannel, (bp::arg("channelName")))
+
+            .def("removeOutputChannel", &SignalSlotable::removeOutputChannel, (bp::arg("channelName")))
 
             .def("registerDataHandler", &SignalSlotableWrap::registerDataHandlerPy,
                  (bp::arg("channelName"), bp::arg("handlerPerData") = bp::object()))
