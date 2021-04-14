@@ -29,13 +29,12 @@ Bound Python API
 
 - Failure on instantiation generates an exception in all 3 APIs.
   In the Bounnd Pyhon API, this exception is not reported to the caller.
+- Bound API does not support CHAR_ELEMENT, (U)INT8_ELEMENT, (U)INT16_ELEMENT
 
 Middlelayer API
 ===============
 
 - The MDL API cannot set ``Attributes`` on runtime in elements which are in ``Nodes``.
-- The alarms for the ``globalAlarmCondition`` are not latching!
-  Hence, acknowledging of these alarms is not possible.
 
 Tools
 =====
