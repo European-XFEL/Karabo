@@ -72,6 +72,7 @@ else:
         'karabo.integration_tests': [
             'device_comm_test/CommTestDevice.egg-info/*.*',
             'device_provided_scenes_test/SceneProvidingDevice.egg-info/*.*',
+            'device_schema_injection_test/DeviceChannelInjection.egg-info/*.*',
             'pipeline_processing_test/PPReceiverDevice.egg-info/*.*',
             'pipeline_processing_test/PPSenderDevice.egg-info/*.*'],
         'karabo.interactive': [

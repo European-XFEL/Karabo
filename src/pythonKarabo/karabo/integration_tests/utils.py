@@ -127,3 +127,25 @@ class BoundDeviceTestCase(TestCase):
         self._eventLoopThread.join()
 
         self.dc = None
+
+    def waitUntilTrue(self, condition, maxTimeoutSec, maxTries=20):
+        """
+        Wait until condition() gets True.
+        :param condition method to become True
+        :param maxTimeoutSec maximum time in seconds to wait for it to get True
+        :maxTries up to how many times condition() is evaluated within
+                   maxTimeoutSec
+
+        :return whether condition() became True
+        """
+        interval = maxTimeoutSec / maxTries
+        counter = maxTries
+        while counter > 0:
+            print("waitUntilTrue", counter)
+            if condition():
+                return True
+            else:
+                counter -= 1
+                sleep(interval)
+        # Give up:
+        return False
