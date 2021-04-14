@@ -19,9 +19,10 @@ class ConsumerDevice(Device):
     projectManagerUpdate = String(
         defaultValue="")
 
-    @slot
-    def connectProject(self, instance):
-        self._ss.connect(instance, "signalProjectUpdate", self.slotProject)
+    @coslot
+    async def connectProject(self, instance):
+        await self._ss.async_connect(instance, "signalProjectUpdate",
+                                     self.slotProject)
         return True
 
     @coslot
