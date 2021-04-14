@@ -10,7 +10,6 @@ import socket
 import re
 import signal
 import traceback
-from functools import partial
 
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
@@ -970,6 +969,9 @@ class PythonDevice(NoFsm):
         be raised.
         Likewise, if the type changes, and the value cannot be cast, an error
         will be raised.
+        Input and output channels will be created if injected and removed again
+        in case updateSchema is called again without them.
+        An output channel is also recreated if its schema changes.
 
         :param schema: to be merged with the static schema
         """
@@ -987,13 +989,62 @@ class PythonDevice(NoFsm):
         with self._stateChangeLock:
             for path in self._injectedSchema.getPaths():
                 if not (self._staticSchema.has(path) or schema.has(path)):
-                    self._parameters.erase(path)
+                    self._parameters.erasePath(path)
+                    # Now we might have removed 'n.m.l.c' completely although
+                    # 'n.m' is in static schema - restore (empty) node 'n.m':
+                    pathSplit = path.split('.')
+                    for i in range(1, len(pathSplit)):
+                        p = ".".join(pathSplit[0:-i])  # 'n.m.l', 'n.m', 'n'
+                        if (self._staticSchema.has(p)
+                                and not self._parameters.has(p)):
+                            self._parameters[p] = Hash()
+                            # 'n.m' added added back (after 'n.m.l' failed)
+                            break
+
             self._stateDependentSchema.clear()
-            self._injectedSchema.copy(schema)
             prevFullSchemaPaths = self._fullSchema.getPaths()
+            for path in self._fullSchema.getPaths():
+                if self._fullSchema.isNode(path):
+                    # remove to keep 'node.injected' if static has 'node'
+                    prevFullSchemaPaths.remove(path)
+
+            # Erase previously present injected InputChannels
+            # (except if re-injected to change properties).
+            for inChannel in self._ss.getInputChannelNames():
+                if self._staticSchema.has(inChannel):
+                    continue
+                if self._injectedSchema.has(inChannel):
+                    self.log.INFO("updateSchema: Remove input channel '"
+                                  f"{inChannel}'")
+                    self._ss.removeInputChannel(inChannel)
+
+            # Treat injected OutputChannels
+            outChannelsToRecreate = set()
+            for outChannel in self._ss.getOutputChannelNames():
+                if self._injectedSchema.has(outChannel):
+                    if self._staticSchema.has(outChannel):
+                        # Channel changes its schema back to its default
+                        outChannelsToRecreate.add(outChannel)
+                        self.log.INFO(f"added for recreation {outChannel}")
+                    else:
+                        # Previously injected channel has to be removed
+                        self.log.INFO("updateSchema: Remove output channel '"
+                                      f"{outChannel}'")
+                        self._ss.removeOutputChannel(outChannel)
+                if (self._staticSchema.has(outChannel)
+                    and schema.has(outChannel)
+                    and (not schema.hasDisplayType(outChannel)
+                         or schema.getDisplayType(outChannel)
+                         != "OutputChannel"
+                         )):
+                    outChannelsToRecreate.add(outChannel)
+                    self.log.INFO(f"BB: added for recreation {outChannel}")
+                # elif schema.getDisplayType(outChannel) == "OutputChannel":
+                #    will be recreated by _initChannels(injectedSchema) below
+
+            self._injectedSchema.copy(schema)
             self._fullSchema.copy(self._staticSchema)
             self._fullSchema += self._injectedSchema
-            self._fullSchema.updateAliasMap()
 
             # notify the distributed system...
             self._ss.emit("signalSchemaUpdated",
@@ -1004,7 +1055,16 @@ class PythonDevice(NoFsm):
             for path in prevFullSchemaPaths:
                 validated.erasePath(path)
 
-        self.set(validated)
+            self._setNoStateLock(validated)
+
+            # Init any freshly injected channels
+            self._initChannels(topLevel="", schema=self._injectedSchema)
+            # ... and those with potential Schema change
+            for outToCreate in outChannelsToRecreate:
+                self.log.INFO("updateSchema triggers creation of output "
+                              f"channel '{outToCreate}'"
+                              f" {str(outChannelsToRecreate)}")
+                self._prepareOutputChannel(outToCreate)
 
         self.log.INFO("Schema updated")
 
@@ -1313,51 +1373,68 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotLoggerPriority)
         self._ss.registerSlot(self.slotClearLock)
 
-    def initChannels(self, topLevel=""):
+    def initChannels(self, topLevel="", schema=None):
         """
-        Initialise Input-/OutputChannels, recursing through the _fullSchema,
-        starting at topLevel
+        Initialise Input-/OutputChannels
+        :param schema to recurse for channels - if None, use self._fullSchema
+        :param topLevel is path in schema hierarchy where to start recursion
         """
-        def _initChannels(topLevel):
-            # Keys under topLevel, without leading "topLevel.":
-            subKeys = self._fullSchema.getKeys(topLevel)
-            # Now go recursively down the node:
-            for subKey in subKeys:
-                key = topLevel + '.' + subKey if topLevel else subKey
-                if self._fullSchema.hasDisplayType(key):
-                    displayType = self._fullSchema.getDisplayType(key)
-                    if displayType == "OutputChannel":
-                        # Would best be INFO level, but without broadcasting:
-                        self.log.DEBUG(f"Creating output channel '{key}'")
-                        outputChannel = self._ss.createOutputChannel(
-                            key, self._parameters)
-                        if not outputChannel:
-                            self.log.ERROR(f"Failed to create output channel "
-                                           f"'{key}'")
-                        else:
-                            outputChannel.registerShowConnectionsHandler(
-                                partial(
-                                    lambda x, y: self.set(x + ".connections",
-                                                          y),
-                                    key)
-                            )
-
-                    elif displayType == "InputChannel":
-                        self._prepareInputChannel(key)
-                    else:
-                        self.log.DEBUG("Not creating in-/output channel for '"
-                                       + key + "' since it's a '"
-                                       + displayType + "'")
-                elif self._fullSchema.isNode(key):
-                    # Recursively go down the tree for channels within nodes
-                    self.log.DEBUG("Looking for input/output channels " +
-                                   "under node '" + key + "'")
-                    _initChannels(key)
-
         with self._stateChangeLock:
-            _initChannels(topLevel)
+            if schema is None:
+                schema = self._fullSchema
+            self._initChannels(topLevel, schema)
+
+    def _initChannels(self, topLevel, schema):
+        """
+        Helper for initChannels, requiring _stateChangeLock protection
+        """
+        # Keys under topLevel, without leading "topLevel.":
+        subKeys = schema.getKeys(topLevel)
+        # Now go recursively down the node:
+        for subKey in subKeys:
+            key = topLevel + '.' + subKey if topLevel else subKey
+            if schema.hasDisplayType(key):
+                displayType = schema.getDisplayType(key)
+                if displayType == "OutputChannel":
+                    self._prepareOutputChannel(key)
+                elif displayType == "InputChannel":
+                    self._prepareInputChannel(key)
+                else:
+                    self.log.DEBUG("Not creating in-/output channel for '"
+                                   + key + "' since it's a '"
+                                   + displayType + "'")
+            elif schema.isNode(key):
+                # Recursively go down the tree for channels within nodes
+                self.log.DEBUG("Looking for input/output channels " +
+                               "under node '" + key + "'")
+                self._initChannels(key, schema)
+
+    def _prepareOutputChannel(self, path):
+        """
+        Internal method to create an OutputChannel for given path.
+        Needs _stateChangeLock protection
+        """
+        # Would best be INFO level, but without broadcasting:
+        self.log.DEBUG(f"Creating output channel '{path}'")
+        outputChannel = self._ss.createOutputChannel(
+            path, self._parameters)
+        if not outputChannel:
+            self.log.ERROR(f"Failed to create output channel "
+                           f"'{path}'")
+        else:
+            def connectionsHandler(table):
+                with self._stateChangeLock:
+                    if self._fullSchema.has(path):
+                        self._setNoStateLock(path + ".connections", table)
+                    # else might just be removed by self.updateSchema
+
+            outputChannel.registerShowConnectionsHandler(connectionsHandler)
 
     def _prepareInputChannel(self, path):
+        """
+        Internal method to create an InputChannel for given path.
+        Needs _stateChangeLock protection
+        """
         # Would best be INFO level, but without broadcasting:
         self.log.DEBUG(f"Creating input channel '{path}'")
         channel = self._ss.createInputChannel(path, self._parameters)
@@ -1388,9 +1465,6 @@ class PythonDevice(NoFsm):
                 pass
 
         where `data` and `metaData` are both Hashes.
-
-         Note that for each channelName one can only use one of
-        `KARABO_ON_DATA` and`KARABO_ON_INPUT`.
         """
         self._ss.registerDataHandler(channelName, handlerPerData)
 
@@ -1406,9 +1480,6 @@ class PythonDevice(NoFsm):
                     data, metaData = input.read(i)
 
         Here `input` is a reference to the input channel.
-
-        Note that for each channelName one can only use one of
-        `KARABO_ON_DATA` and`KARABO_ON_INPUT`.
         """
         self._ss.registerInputHandler(channelName, handlerPerInput)
 
