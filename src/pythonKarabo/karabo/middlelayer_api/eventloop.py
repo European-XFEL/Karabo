@@ -25,7 +25,7 @@ from karabo.native import KaraboValue, KaraboError, unit_registry as unit
 from karabo.native import decodeBinary, encodeBinary, Hash
 
 from . import openmq
-from .pahomqtt import mqtt, AsyncioMqttHelper
+from .pahomqtt import AsyncioMqttHelper, MqttError
 
 # See C++ karabo/xms/Signal.hh for reasoning about the two minutes...
 _MSG_TIME_TO_LIVE = 120000  # in ms - i.e. 2 minutes
@@ -36,8 +36,8 @@ _NUM_THREADS = 200
 
 
 class Broker(ABC):
-    def __init__(self, need_subscribe):
-        self.needSubscribe = need_subscribe
+    def __init__(self):
+        pass
 
     @abstractmethod
     def send(self, p, args):
@@ -80,7 +80,15 @@ class Broker(ABC):
         pass
 
     @abstractmethod
+    def async_connect(self, deviceId, signal, slot):
+        pass
+
+    @abstractmethod
     def disconnect(self, deviceId, signal, slot):
+        pass
+
+    @abstractmethod
+    def async_disconnect(self, deviceId, signal, slot):
         pass
 
     @abstractmethod
@@ -123,8 +131,13 @@ class Broker(ABC):
     def get_property(self, message, prop):
         return None
 
-    @abstractmethod
-    def check_connection(self):
+    async def ensure_connection(self):
+        pass
+
+    async def async_unsubscribe_all(self):
+        pass
+
+    async def ensure_disconnect(self):
         pass
 
     @staticmethod
@@ -143,7 +156,7 @@ class Broker(ABC):
 
 class JmsBroker(Broker):
     def __init__(self, loop, deviceId, classId, broadcast=True):
-        super(JmsBroker, self).__init__(False)
+        super(JmsBroker, self).__init__()
         self.loop = loop
         self.connection = loop.connection
         self.session = openmq.Session(self.connection, False, 1, 0)
@@ -287,12 +300,36 @@ class JmsBroker(Broker):
         self.reply(message, trace, error=True)
 
     def connect(self, deviceId, signal, slot):
-        self.emit("call", {deviceId: ["slotConnectToSignal"]}, signal,
+        """This is an interface for establishing connection netween local slot
+        and remote signal.  In JMS case we simply send a message in
+        fire-and-forget style to the signal side to register a slot
+        NOTE: In case of many signals we send multiple messages (same slot)
+        """
+        signals = []
+        if isinstance(signal, (list, tuple)):
+            signals = list(signal)
+        else:
+            signals.append(signal)
+        self.emit("call", {deviceId: ["slotConnectToSignal"]}, signals,
                   slot.__self__.deviceId, slot.__name__)
 
+    async def async_connect(self, deviceId, signal, slot):
+        """Asynchronous signalslot connection in case JMS broker uses
+        'connect' interface
+        """
+        self.connect(deviceId, signal, slot)
+
     def disconnect(self, deviceId, signal, slot):
-        self.emit("call", {deviceId: ["slotDisconnectFromSignal"]}, signal,
+        signals = []
+        if isinstance(signal, (list, tuple)):
+            signals = list(signal)
+        else:
+            signals.append(signal)
+        self.emit("call", {deviceId: ["slotDisconnectFromSignal"]}, signals,
                   slot.__self__.deviceId, slot.__name__)
+
+    async def async_disconnect(self, deviceId, signal, slot):
+        self.disconnect(deviceId, signal, slot)
 
     async def consume(self, device):
         loop = get_event_loop()
@@ -484,9 +521,6 @@ class JmsBroker(Broker):
     def get_property(self, message, prop):
         return message.properties[prop].decode('ascii')
 
-    async def check_connection(self):
-        pass
-
     @staticmethod
     def create_connection(hosts, connection):
         if connection is not None:
@@ -517,7 +551,7 @@ class JmsBroker(Broker):
 
 class MqttBroker(Broker):
     def __init__(self, loop, deviceId, classId, broadcast=True):
-        super(MqttBroker, self).__init__(False)
+        super(MqttBroker, self).__init__()
         self.domain = loop.topic
         self.loop = loop
         self.clientId = str(uuid.uuid4())
@@ -531,35 +565,12 @@ class MqttBroker(Broker):
         self.slots = {}
         self.exitStack = AsyncExitStack()
         self.subscriptions = set()
-        self.client = mqtt.Client(client_id=self.clientId,
-                                  userdata=self.clientId)
-        self.heartbeatTask = None
-        # Start paho.mqtt engine ...
-        self.engine = AsyncioMqttHelper(self.loop, self.client)
+        self.client = AsyncioMqttHelper(
+                self.loop, client_id=self.clientId, logger=self.logger)
+        # Client birth time representing device ID incarnation.
+        self.timestamp = time.time() * 1000000 // 1000      # float
 
-    def broker_connect(self, host, port):
-        connected = self.loop.create_future()
-
-        def cb(client, userdata, flags, rc):
-            connected.set_result(rc)
-
-        self.client.on_connect = cb
-        self.client.connect(host, port, 60)
-        self.client.socket().setsockopt(socket.SOL_SOCKET,
-                                        socket.SO_SNDBUF, 2048)
-        return connected
-
-    def broker_disconnect(self):
-        disconnected = self.loop.create_future()
-
-        def cb(client, userdata, rc):
-            disconnected.set_result(rc)
-
-        self.client.on_disconnect = cb
-        self.client.disconnect()
-        return disconnected
-
-    def subscribe_default(self):
+    async def subscribe_default(self):
         """Subscribe to 'default' topics to allow a communication
         through the broker:
             <domain>/global_slots
@@ -579,7 +590,7 @@ class MqttBroker(Broker):
                 topics.append((topic_broadcast, 1))
         if topics is None:
             return
-        self.client.subscribe(topics)
+        await self.client.subscribe(topics)
 
     def send(self, topic, header, args, qos=1):
         body = Hash()
@@ -587,9 +598,18 @@ class MqttBroker(Broker):
             body['a{}'.format(i + 1)] = a
         header['signalInstanceId'] = self.deviceId
         header['__format'] = 'Bin'
+        header['producerTimestamp'] = self.timestamp
+        self.incrementOrderNumbers(topic, header, qos)
         data = Hash('header', header, 'body', body)
         m = encodeBinary(data)
-        self.client.publish(topic, payload=m, qos=qos)
+        # await self.client.publish(topic, m, qos)
+        self.loop.call_soon_threadsafe(self.loop.create_task,
+                                       self.client.publish(topic, m, qos))
+
+    def incrementOrderNumbers(self, topic, header, qos):
+        if qos == 0:
+            return
+        # No code at the moment...
 
     def heartbeat(self, interval):
         topic = (self.domain + "/signals/" + self.deviceId.replace('/', '|')
@@ -606,7 +626,8 @@ class MqttBroker(Broker):
         body["a3"] = self.info
         data = Hash("header", header, "body", body)
         m = encodeBinary(data)
-        self.client.publish(topic, payload=m, qos=0)
+        self.loop.call_soon_threadsafe(self.loop.create_task,
+                                       self.client.publish(topic, m, 0))
 
     def notify_network(self, info):
         """notify the network that we are alive
@@ -639,7 +660,7 @@ class MqttBroker(Broker):
                 self.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
 
-        self.heartbeatTask = ensure_future(heartbeat())
+        ensure_future(heartbeat())
 
     def call(self, signal, targets, reply, args):
         if not targets:
@@ -682,7 +703,8 @@ class MqttBroker(Broker):
         data = Hash("header", Hash("target", "log"),
                     "body", Hash("messages", [message]))
         m = encodeBinary(data)
-        self.client.publish(topic, m,  qos=0)
+        self.loop.call_soon_threadsafe(self.loop.create_task,
+                                       self.client.publish(topic, m, 0))
 
     def emit(self, signal, targets, *args):
         self.call(signal, targets, None, args)
@@ -720,39 +742,71 @@ class MqttBroker(Broker):
             type(exception), exception, exception.__traceback__))
         self.reply(message, trace, error=True)
 
-    async def subscribeToRemoteSignal(self, source, signal):
-        topic = (self.domain + "/signals/" + source.replace('/', '|')
-                 + "/" + signal)
-        if topic not in self.subscriptions:
-            await self.client.subscribe(topic, qos=1)
-            self.subscriptions.add(topic)
-        return True
-
-    async def unsubscribeFromRemoteSignal(self, source, signal):
-        topic = (self.domain + "/signals/" + source.replace('/', '|')
-                 + "/" + signal)
-        if topic in self.subscriptions:
-            await self.client.unsubscribe(topic)
-            self.subscriptions.remove(topic)
-        return True
-
     def connect(self, deviceId, signal, slot):
-        topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
-                 + "/" + signal)
-        if topic not in self.subscriptions:
-            self.client.subscribe(topic, qos=1)
-            self.subscriptions.add(topic)
-        self.emit("call", {deviceId: ["slotConnectToSignal"]}, signal,
-                  slot.__self__.deviceId, slot.__name__)
+        """This is way of establishing "karabo signalslot"connection with
+        a signal.  In MQTT case this is just creating a task that will
+        call `async_connect` that, in turn, may take time becuase communication
+        with MQTT broker is involved.
+        """
+        self.loop.call_soon_threadsafe(self.loop.create_task,
+                                       self.async_connect(deviceId,
+                                                          signal, slot))
+
+    async def async_connect(self, deviceId, signal, slot):
+        """This is way of establishing karabo connection between local slot and
+        remote signal.  In MQTT case this is two steps procedure:
+        1. subscription to the topic with topic name built from signal info
+        2. sending to the signal side the slot registration message
+        NOTE: Optimization: we can connect many signals to the same alot
+        at once
+        """
+        signals = []
+        if isinstance(signal, (list, tuple)):
+            signals = list(signal)
+        else:
+            signals.append(signal)
+        topics = []
+        for s in signals:
+            topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
+                     + "/" + s)
+            if topic not in self.subscriptions:
+                self.subscriptions.add(topic)
+                topics.append((topic, 1))
+        if topics:
+            await self.client.subscribe(topics)
+        self.emit("call", {deviceId: ["slotConnectToSignal"]},
+                  signals, slot.__self__.deviceId, slot.__name__)
 
     def disconnect(self, deviceId, signal, slot):
-        topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
-                 + "/" + signal)
-        if topic in self.subscriptions:
-            self.client.unsubscribe(topic)
-            self.subscriptions.remove(topic)
-        self.emit("call", {deviceId: ["slotDisconnectFromSignal"]}, signal,
-                  slot.__self__.deviceId, slot.__name__)
+        self.loop.call_soon_threadsafe(self.loop.create_task,
+                                       self.async_disconnect(deviceId,
+                                                             signal, slot))
+
+    async def async_disconnect(self, deviceId, signal, slot):
+        signals = []
+        if isinstance(signal, (list, tuple)):
+            signals = list(signal)
+        else:
+            signals.append(signal)
+        topics = []
+        for s in signals:
+            topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
+                     + "/" + s)
+            if topic in self.subscriptions:
+                self.subscriptions.remove(topic)
+                topics.append(topic)
+        if topics:
+            await self.client.unsubscribe(topics)
+        self.emit("call", {deviceId: ["slotDisconnectFromSignal"]},
+                  signals, slot.__self__.deviceId, slot.__name__)
+
+    async def async_unsubscribe_all(self):
+        await self.client.unsubscribe([t for t in self.subscriptions])
+        self.subscriptions = set()
+
+    async def ensure_disconnect(self):
+        """Close broker connection"""
+        await self.client.disconnect()
 
     async def handleMessage(self, message, device):
         """Check message order first if the header
@@ -788,6 +842,7 @@ class MqttBroker(Broker):
             return
         try:
             for slot, name in callSlots:
+                # call 'coslot.outer(...)' for slot, i.e. reply
                 slot.slot(slot, device, name, decoded, params)
         except Exception:
             # the slot.slot wrapper should already catch all exceptions
@@ -818,15 +873,19 @@ class MqttBroker(Broker):
             self.slots[name] = slot
 
     async def consume(self, device):
-        running = True
-        while(running):
-            try:
-                await shield(self.engine.misc)
-            except CancelledError:
-                running = False
-                self.client.loop()
-                self.client.on_message = None
-                raise
+        if self.client is None:
+            raise MqttError("MQTT client is not connected")
+
+        def receiver(client, userdata, msg):
+            d = device()
+            if d is None:
+                return
+            self.loop.call_soon_threadsafe(
+                self.loop.create_task, self.handleMessage(msg, d), d)
+            d = None
+
+        self.client.register_on_message(receiver)
+        await self.client.custom_loop()
 
     async def main(self, device):
         """This is the main loop of a device (SignalSlotable instance)
@@ -835,19 +894,7 @@ class MqttBroker(Broker):
         Use `stop_tasks` to stop this main loop."""
         async with self.exitStack:
             device = weakref.ref(device)
-
-            def on_message(client, userdata, msg):
-                if userdata != self.clientId:
-                    return
-                d = device()
-                if d is None:
-                    return
-                self.loop.call_soon_threadsafe(
-                    self.loop.create_task, self.handleMessage(msg, d), d)
-                d = None
-
-            self.client.on_message = on_message
-            await self.consume(device())
+            await self.consume(device)
 
     async def stop_tasks(self):
         """Stop all currently running task
@@ -857,10 +904,6 @@ class MqttBroker(Broker):
         Note that the task this coroutine is called from, as an exception,
         is not cancelled. That's the chicken-egg-problem.
         """
-        if not self.loop.is_closed() and self.heartbeatTask is not None:
-            self.heartbeatTask.cancel()
-        await sleep(0.1)
-        # self.client.disconnect()
         me = asyncio.current_task(loop=None)
         tasks = [t for t in self.tasks if t is not me]
         for t in tasks:
@@ -924,31 +967,15 @@ class MqttBroker(Broker):
             return None
         return header.get(prop)
 
-    async def connectMqttBroker(self):
+    async def ensure_connection(self):
         urls = os.environ.get("KARABO_BROKER",
                               "mqtt://exfldl02n0:1883").split(',')
-        self.url = None
-        for url in urls:
-            protocol, host, port = url.split(':')
-            host = host[2:]
-            port = int(port)
-            try:
-                rc = await self.broker_connect(host, port)
-                if rc == 0:
-                    self.subscribe_default()
-                    self.url = url
-                    break
-            except OSError as e:
-                print(e)
-
-        if self.url is None:
-            raise RuntimeError(
-                f"Failed to connect to any of KARABO_BROKER={urls}")
-        # print(f"Device '{self.deviceId}' connected to broker \"{self.url}\"")
-
-    async def check_connection(self):
-        if not self.client.is_connected():
-            await self.connectMqttBroker()
+        try:
+            await self.client.connect(urls)
+            await self.subscribe_default()
+        except MqttError as e:
+            raise MqttError(
+                f'Fail to connect to any of KARABO_BROKER="{urls}": {str(e)}')
 
     @staticmethod
     def create_connection(hosts, connection):
@@ -1178,7 +1205,11 @@ class EventLoop(SelectorEventLoop):
         task = super().create_task(coro, name=name)
         try:
             if instance is None:
-                instance = get_event_loop().instance()
+                try:
+                    instance = get_event_loop().instance()
+                except RuntimeError:
+                    # No event loop for current thread:
+                    return task
             instance._ss.tasks.add(task)
             task.add_done_callback(instance._ss.tasks.remove)
             task.instance = weakref.ref(instance)

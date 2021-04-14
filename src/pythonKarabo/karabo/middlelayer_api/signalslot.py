@@ -78,21 +78,9 @@ class BoundSignal(object):
         self.args = signal.args
 
     def connect(self, target, slot):
-        # Check first that broker protocol requires a subscription
-        # initiated from 'target' side ...
-        if self.device._ss.needSubscribe:
-            self.device._ss.emit("call",
-                                 {target: ["slotSubscribeRemoteSignal"]},
-                                 self.device.deviceId, self.name)
         self.connected.setdefault(target, set()).add(slot)
 
     def disconnect(self, target, slot):
-        # Check first that broker protocol requires a un-subscription
-        # initiated from 'target' side ...
-        if self.device._ss.needSubscribe:
-            self.device._ss.emit("call",
-                                 {target: ["slotUnsubscribeRemoteSignal"]},
-                                 self.device.deviceId, self.name)
         s = self.connected.get(target, None)
         if s is None:
             return False
@@ -302,7 +290,7 @@ class SignalSlotable(Configurable):
 
     async def _run(self, server=None, **kwargs):
         try:
-            await self._ss.check_connection()
+            await self._ss.ensure_connection()
             self._register_slots()
             ensure_future(self._ss.main(self))
             await self._assert_name_unique()
@@ -365,55 +353,46 @@ class SignalSlotable(Configurable):
         """
         get_event_loop().stop()
 
-    @coslot
-    async def slotSubscribeRemoteSignal(self, signalInstanceId,
-                                        signalFunction):
-        """Slot used to delegate a subscription to remote signal
-        asynchronously if such subscription is required by used broker...
-        """
-        # Check first if 'subscriber' is implemented for broker
-        subscriber = getattr(self._ss, 'subscribeToRemoteSignal', None)
-        if subscriber is None:
-            return False
-        await subscriber(signalInstanceId, signalFunction)
-        return True
-
-    @coslot
-    async def slotUnsubscribeRemoteSignal(self, signalInstanceId,
-                                          signalFunction):
-        """Slot used to delegate an un-subscription from remote signal
-        asynchronously if such un-subscription is required by used broker...
-        """
-        # Check first if 'subscriber' is implemented for broker
-        subscriber = getattr(self._ss, 'unsubscribeFromRemoteSignal', None)
-        if subscriber is None:
-            return False
-        await subscriber(signalInstanceId, signalFunction)
-        return True
-
     @slot
-    def slotConnectToSignal(self, signalFunction,
-                            slotInstanceId, slotFunction):
-        """Slot used to delegate a 'connection' between signal and slot to
-        signal side (synchronously)
+    def slotConnectToSignal(self, signalFunction, slotInstanceId,
+                            slotFunction):
+        """This helper slot is used to finalize the signalslot connection
+        procedure, namely, registration 'slotFunction' on signal side
         """
-        signalObj = getattr(self, signalFunction, None)
-        if signalObj is None:
-            return False
+        signals = []
+        if isinstance(signalFunction, str):
+            signals.append(signalFunction)
         else:
-            signalObj.connect(slotInstanceId, slotFunction)
-            return True
+            signals = list(signalFunction)
+        rc = True
+        for s in signals:
+            signalObj = getattr(self, s, None)
+            if signalObj is None:
+                rc = False
+                continue
+            else:
+                signalObj.connect(slotInstanceId, slotFunction)
+        return rc
 
     @slot
     def slotDisconnectFromSignal(self, signal, target, slot):
-        """Slot used to delegate a 'disconnection' of signal and slot to
-        signal side (synchronously)
+        """This helper slot is used to finalize the signalslot disconnection
+        procedure, namely, de-registration 'slotFunction' on signal side
         """
-        signalObj = getattr(self, signal, None)
-        if signalObj is None:
-            return False
+        signals = []
+        if isinstance(signal, str):
+            signals.append(signal)
         else:
-            return signalObj.disconnect(target, slot)
+            signals = list(signal)
+        rc = True
+        for s in signals:
+            signalObj = getattr(self, s, None)
+            if signalObj is None:
+                rc = False
+                continue
+            else:
+                signalObj.disconnect(target, slot)
+        return rc
 
     @slot
     def slotHasSlot(self, slot):

@@ -389,8 +389,8 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
     async def _run(self, **kwargs):
         await super(MiddleLayerDeviceServer, self)._run(**kwargs)
         if isSet(self.timeServerId):
-            self._ss.connect(self.timeServerId, "signalTimeTick",
-                             self.slotTimeTick)
+            await self._ss.async_connect(self.timeServerId, "signalTimeTick",
+                                         self.slotTimeTick)
 
     @slot
     def slotTimeTick(self, train_id, sec, frac, period):
@@ -493,15 +493,16 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
             instanceId, info)
         if (info.get("classId") == "TimeServer" and
                 instanceId == self.timeServerId):
-            self._ss.connect(self.timeServerId, "signalTimeTick",
-                             self.slotTimeTick)
+            await self._ss.async_connect(self.timeServerId, "signalTimeTick",
+                                         self.slotTimeTick)
         # Forward the broadcast to the device instances!
         await gather(*[dev.slotInstanceNew(instanceId, info)
                        for dev in self.deviceInstanceMap.values()])
 
     @slot
     def slotInstanceGone(self, instanceId, info):
-        super(MiddleLayerDeviceServer, self).slotInstanceGone(instanceId, info)
+        super(MiddleLayerDeviceServer, self).slotInstanceGone(instanceId,
+                                                              info)
         self.deviceInstanceMap.pop(instanceId, None)
         # Forward the broadcast to the device instances!
         for device in self.deviceInstanceMap.values():
