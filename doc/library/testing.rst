@@ -161,7 +161,7 @@ the *BoundDeviceTestCase* implemented in *karabo/integration_tests/utils.py*
 as the test base class as in the *pipeline_cross_test* sub-directory.
 This base provides *def start_server(self, api, server_id, ...)* to start
 server processes of the *cpp*, *bound* or *mdl* API - and takes care to
-properly terminate these processes after each tests.
+properly terminate these processes after each test.
 
 If the test case includes a new Bound Python device (like in the case of the
 *device_comm_test*), the code for that class can be put into a file in the
@@ -169,11 +169,13 @@ test sub-directory.
 To make it available as a plugin for the bound Python server, one needs to do
 the following:
 
-* Create an *\*.egg-info* file into the test sub-directory.
+* Create an *\*.egg-info* directory in the test sub-directory.
 * Inside *\*.egg-info*, create the files *entry_points.txt*,
   *PKG-INFO* and *SOURCES.txt* and fill properly - e.g. have a look at
   *device_comm_test/CommTestDevice.egg-info*
 * Add the egg info to the *src/pythonKarabo/setup.py* file.
+* Specify the *plugin_dir* keyword argument when starting the server using the
+  *start_server* method inherited from *BoundDeviceTestCase*.
 
 Note that this egg info stuff might not be needed when karabo has been built
 using *./auto_build_all.sh* with the *--pyDevelop* flag. But it is needed
