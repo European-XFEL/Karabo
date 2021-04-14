@@ -3,7 +3,6 @@
 # Created on February 1, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from datetime import datetime
 from functools import wraps
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
@@ -342,66 +341,13 @@ class Manager(QObject):
                         {'devices': gone_instanceIds})
 
     def handle_instanceNew(self, topologyEntry):
-        """This function receives the configuration for a new instance.
-
-        If the instance already exists in the central hash, it is first
-        removed from there.
-        """
-        existing_devices = self._topology.instance_new(topologyEntry)
-
-        log_messages = []
-        for inst_id in existing_devices:
-            message = {
-                'timestamp': datetime.now().isoformat(),
-                'type': 'INFO',
-                'category': inst_id,
-                'message': ('Detected dirty shutdown for instance "{}", '
-                            'which is coming up now.').format(inst_id)
-            }
-            log_messages.append(message)
-        self.handle_log(log_messages)
-
-        devices, servers = _extract_topology_devices(topologyEntry)
-        # Broadcast the change to listeners
-        broadcast_event(KaraboEvent.SystemTopologyUpdate,
-                        {'devices': devices, 'servers': servers})
-
-        # Tell the GUI about various devices or servers that are alive
-        for instance_id, class_id, _ in devices:
-            if class_id == 'AlarmService':
-                self._request_alarm_info(instance_id)
-            elif class_id == 'ProjectManager':
-                broadcast_event(KaraboEvent.ProjectDBConnect,
-                                {'device': instance_id})
+        pass
 
     def handle_instanceUpdated(self, topologyEntry):
-        self._topology.instance_updated(topologyEntry)
+        pass
 
     def handle_instanceGone(self, instanceId, instanceType):
-        """Remove ``instance_id`` from topology and update"""
-        # Tell the GUI about various devices that are now gone
-        self._broadcast_if_of_type('AlarmService', instanceId,
-                                   KaraboEvent.RemoveAlarmServices)
-
-        # Update the system topology
-        devices, servers = self._topology.instance_gone(instanceId,
-                                                        instanceType)
-        # Broadcast the change to listeners
-        broadcast_event(KaraboEvent.SystemTopologyUpdate,
-                        {'devices': devices, 'servers': servers})
-
-        if instanceType == 'server':
-            # Clear corresponding parameter pages
-            # TODO: We need to find all the Configuration objects in the open
-            # projects and clear their parameter editor objects if they happen
-            # to belong to the server that was just removed!
-            # This was formerly handled by the old ProjectModel class
-            pass
-
-        # Once everything has calmed down, tell the configurator to clear
-        # NOTE: Doing this last avoids resetting displayed project devices
-        broadcast_event(KaraboEvent.ClearConfigurator,
-                        {'devices': [instanceId]})
+        pass
 
     def handle_attributesUpdated(self, reply):
         instanceId = reply["instanceId"]
