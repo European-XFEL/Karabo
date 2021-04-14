@@ -49,24 +49,8 @@ if platform.startswith('win'):
     HIDDEN_KARABO_FOLDER = path.join(environ['APPDATA'], 'karabo')
 else:
     HIDDEN_KARABO_FOLDER = path.join(environ['HOME'], '.karabo')
+
 # Project folder
 KARABO_PROJECT_FOLDER = path.join(HIDDEN_KARABO_FOLDER, 'projects')
+# Karabo GUI Client ID
 KARABO_CLIENT_ID = f"{socket.gethostname()}-{getpid()}"
-
-
-MAX_UINT8 = (2 ** 8) - 1
-MIN_UINT8 = (2 ** 8)
-MAX_UINT16 = (2 ** 16) - 1
-MIN_UINT16 = (2 ** 16)
-MAX_UINT32 = (2 ** 32) - 1  # 0xffffffff
-MIN_UINT32 = (2 ** 32)
-MAX_UINT64 = (2 ** 64) - 1
-MIN_UINT64 = (2 ** 64)
-MAX_INT8 = (2 ** 7) - 1
-MIN_INT8 = -(2 ** 7)
-MAX_INT16 = (2 ** 15) - 1
-MIN_INT16 = -(2 ** 15)
-MAX_INT32 = (2 ** 31) - 1  # 0x7fffffff
-MIN_INT32 = -(2 ** 31)  # -0x80000000
-MAX_INT64 = (2 ** 63) - 1
-MIN_INT64 = -(2 ** 63)
