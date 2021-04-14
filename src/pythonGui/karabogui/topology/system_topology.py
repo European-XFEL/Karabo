@@ -418,19 +418,40 @@ class SystemTopology(HasStrictTraits):
         """Called when an `instanceNew` message is received from the server
         """
         existing_devices = self.system_tree.clear_existing(server_hash)
-
-        # XXX: Clear device and class tree widgets, if existent
-
         # Update system topology with new configuration
-        self.instance_updated(server_hash)
+        self.update(server_hash)
+
+        # Topology changed so send new class schema requests
+        srv_hsh = server_hash.get('server', None)
+        if srv_hsh is None:
+            return
+
+        for server_id in srv_hsh:
+            for srv_id, cls_id in self._class_proxies.keys():
+                if (srv_id == server_id and cls_id
+                        in srv_hsh[srv_id, ...].get('deviceClasses', ())):
+                    proxy = self._class_proxies[(srv_id, cls_id)]
+                    if len(proxy.binding.value) == 0:
+                        proxy.refresh_schema()
+
+            # Update all offline devices (project device proxies)
+            self._project_device_proxies_server_update(server_id)
 
         return existing_devices
 
     def instance_updated(self, server_hash):
         """Called when an `instanceUpdated` message is received from the server
         """
-        # Keep the system Hash up to date
-        self.update(server_hash)
+        if self._system_hash is None:
+            self._system_hash = server_hash
+        else:
+            self._system_hash.merge(server_hash, "merge")
+
+        # Only the system tree takes an instance update at the moment
+        # for the instanceInfo
+        self.system_tree.instance_update(server_hash)
+        # Note: Check if this is really needed!
+        self._update_online_device_status()
 
         # Topology changed so send new class schema requests
         srv_hsh = server_hash.get('server', None)
@@ -464,26 +485,18 @@ class SystemTopology(HasStrictTraits):
             self._system_hash.merge(server_hash, "merge")
 
         # Update high-level representation
-        # Error and alarm information are also get updated to nodes appear in
-        # the system topology in the navigation panel
         new_topology_nodes = self.system_tree.update(server_hash)
 
         self.device_tree.update(server_hash)
         for proxy in self._device_proxies.values():
-            # extract this device's information from system hash
             attrs = self._get_device_attributes(proxy.device_id)
             if proxy.status is ProxyStatus.OFFLINE and attrs:
                 proxy.status = ProxyStatus.ONLINE
             elif proxy.status is not ProxyStatus.OFFLINE and attrs is None:
                 proxy.status = ProxyStatus.OFFLINE
-            # The information we pull out of the system hash may also contain
-            # device error or alarm information, project device will not be
-            # updated until user show them in the configurator, so here we set
-            # the shortcut flag directly so their icon will be updated in the
-            # project panel view.
-            prj_dev = self._project_devices.get(proxy.device_id)
-            if prj_dev is not None and attrs is not None:
-                prj_dev.error = (attrs.get('status', '') == 'error')
+            project_device = self._project_devices.get(proxy.device_id)
+            if project_device is not None and attrs is not None:
+                project_device.error = (attrs.get('status', '') == 'error')
 
             if proxy.device_id in new_topology_nodes:
                 proxy.topology_node = new_topology_nodes[proxy.device_id]
@@ -636,24 +649,18 @@ class SystemTopology(HasStrictTraits):
         Call this function every time a new system hash is arrived from the
         GUI server, so we can keep all device presentations up to date
         """
-        # self._device_proxies is a dictionary keeps all the online devices
-        # which are visible in the topology
-        for dev in self._device_proxies.values():
-            did = dev.device_id
+        for proxy in self._device_proxies.values():
+            device_id = proxy.device_id
             # extract this device's information from system hash
-            attrs = self._get_device_attributes(did)
-            if dev.status is ProxyStatus.OFFLINE and attrs:
-                dev.status = ProxyStatus.ONLINE
-            elif dev.status is not ProxyStatus.OFFLINE and attrs is None:
-                dev.status = ProxyStatus.OFFLINE
-            # The information we pull out of the system hash may also contain
-            # device error or alarm information, project device will not be
-            # updated until user show them in the configurator, so here we set
-            # the shortcut flag directly so their icon will be updated in the
-            # project panel view.
-            prj_dev = self._project_devices.get(did)
-            if prj_dev is not None and attrs is not None:
-                prj_dev.error = (attrs.get('status', '') == 'error')
+            attrs = self._get_device_attributes(device_id)
+            if proxy.status is ProxyStatus.OFFLINE and attrs:
+                proxy.status = ProxyStatus.ONLINE
+            elif proxy.status is not ProxyStatus.OFFLINE and attrs is None:
+                proxy.status = ProxyStatus.OFFLINE
+            # Synchronize project errors
+            project_device = self._project_devices.get(device_id)
+            if project_device is not None and attrs is not None:
+                project_device.error = (attrs.get('status', '') == 'error')
 
     def _project_device_proxies_server_update(self, server_id):
         """Because the server online status has changed , update the project
