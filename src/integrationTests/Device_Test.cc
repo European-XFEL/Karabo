@@ -70,14 +70,14 @@ public:
         STRING_ELEMENT(rowSchema).key("type")
                 .displayedName("Type column")
                 .description("Type column")
-                .assignmentOptional().noDefaultValue()
+                .assignmentOptional().defaultValue(std::string())
                 .reconfigurable()
                 .commit();
 
         STRING_ELEMENT(rowSchema).key("name")
                 .displayedName("Name column")
                 .description("Name column")
-                .assignmentOptional().noDefaultValue()
+                .assignmentOptional().defaultValue(std::string())
                 .reconfigurable()
                 .commit();
 

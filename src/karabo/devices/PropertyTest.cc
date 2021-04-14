@@ -486,12 +486,17 @@ namespace karabo {
                                                        Hash("e1", "xyz", "e2", false, "e3", 42, "e4", 2.33333F, "e5", 7.77777)})
                     .reconfigurable()
                     .commit();
-
+            //Transform access mode of columns for readOnly table
+            Schema columnsReadOnly;
+            NestedClass::expectedParameters(columnsReadOnly);
+            columnsReadOnly.merge(columns);
+            for (const std::string& key : columnsReadOnly.getKeys()) {
+                OVERWRITE_ELEMENT(columnsReadOnly).key(key).setNowReadOnly().commit();
+            }
             TABLE_ELEMENT(expected).key("tableReadOnly")
                     .displayedName("Read-only table property")
                     .description("Read-only table containing one node.")
-                    .addColumnsFromClass<NestedClass>()
-                    .addColumns(columns)
+                    .setColumns(columnsReadOnly)
                     .readOnly().initialValue({Hash("e1", "abc", "e2", true, "e3", 12, "e4", 0.9837F, "e5", 1.2345),
                                               Hash("e1", "xyz", "e2", false, "e3", 42, "e4", 2.33333F, "e5", 7.77777)})
                     .commit();
