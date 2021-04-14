@@ -305,6 +305,14 @@ namespace karathon {
             return bp::object(getInputChannel(name));
         }
 
+        bp::list getInputChannelNamesPy() {
+            bp::list result;
+            for (const auto& inputNameChannel : getInputChannels()) {
+                result.append(inputNameChannel.first);
+            }
+            return result;
+        }
+
         void registerDataHandlerPy(const std::string& channelName, const bp::object& handler) {
             registerDataHandler(channelName, boost::bind(&InputChannelWrap::proxyDataHandler, handler, _1, _2));
         }
