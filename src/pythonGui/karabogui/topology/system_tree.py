@@ -7,7 +7,7 @@ from contextlib import contextmanager
 import re
 
 from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
-                        Int, List, on_trait_change, String, WeakRef)
+                        Int, List, String, WeakRef)
 
 from karabo.common.api import ProxyStatus
 from karabo.native import AccessLevel
@@ -37,8 +37,6 @@ class SystemTreeNode(HasStrictTraits):
 
     parent = WeakRef('SystemTreeNode')
     children = List(Instance('SystemTreeNode'))
-    _visible_children = List(Instance('SystemTreeNode'))
-    clear_cache = Bool(True)
 
     # cached current visibility
     is_visible = Bool(True)
@@ -95,16 +93,6 @@ class SystemTreeNode(HasStrictTraits):
         self.alarm_info.remove_alarm_type(dev_property, alarm_type)
         return pre_change != self.alarm_info.alarm_type
 
-    @on_trait_change('children[]')
-    def _register_clear_cache(self):
-        self.clear_cache = True
-
-    def get_visible_children(self):
-        if self.clear_cache:
-            self._visible_children = [c for c in self.children if c.is_visible]
-            self.clear_cache = False
-        return self._visible_children
-
 
 class SystemTree(HasStrictTraits):
     """A data model which holds data concerning the devices and servers in a
@@ -115,6 +103,9 @@ class SystemTree(HasStrictTraits):
 
     # A context manager to enter when manipulating the tree
     update_context = Instance(object)
+
+    # An event which is triggered whenenver the tree needs a layout update
+    status_update = Event
 
     # An event which is triggered whenenver a device has an alarm update
     alarm_update = Event
@@ -225,21 +216,15 @@ class SystemTree(HasStrictTraits):
             return server_class_keys
 
         # Take care of removing all children from bottom to top
-        while server_node.children:
-            class_node = server_node.children[-1]
-            while class_node.children:
-                # Just for security take care of devices
-                device_node = class_node.children[-1]
-                # Remove device node
-                with self.update_context.removal_context(device_node):
-                    class_node.children.pop()
-                self._device_nodes.pop(device_node.node_id)
+        for class_node in server_node.children:
+            with self.update_context.removal_children_context(class_node):
+                for device_node in class_node.children:
+                    self._device_nodes.pop(device_node.node_id)
+                class_node.children = []
 
-            # Remove class node
-            with self.update_context.removal_context(class_node):
-                key = (server_node.node_id, class_node.node_id)
-                server_class_keys.append(key)
-                server_node.children.pop()
+        with self.update_context.removal_children_context(server_node):
+            # Remove class nodes
+            server_node.children = []
 
         # Finally remove server node
         host_node = server_node.parent
@@ -247,10 +232,6 @@ class SystemTree(HasStrictTraits):
             host_node.children.remove(server_node)
 
         self._server_nodes.pop(instance_id)
-
-        if not len(host_node.children):
-            with self.update_context.removal_context(host_node):
-                self.root.children.remove(host_node)
 
         return server_class_keys
 
@@ -267,7 +248,45 @@ class SystemTree(HasStrictTraits):
             self._handle_server_data(system_hash)
             nodes = self._handle_device_data('device', system_hash)
             nodes.update(self._handle_device_data('macro', system_hash))
+
         return nodes
+
+    def instance_update(self, system_hash):
+        """Put the contents of Hash `system_hash` into the internal tree
+        structure.
+        """
+
+        device_status = set()
+
+        if 'server' in system_hash:
+            for server_id, _, attrs in system_hash['server'].iterall():
+                if len(attrs) == 0:
+                    continue
+                server_node = self._server_nodes.get(server_id, None)
+                if server_node is None:
+                    continue
+                server_node.attributes = attrs
+
+        for device_type in ('device', 'macro'):
+            if device_type in system_hash:
+                for device_id, _, attrs in system_hash[device_type].iterall():
+                    if len(attrs) == 0:
+                        continue
+
+                    device_node = self._device_nodes.get(device_id, None)
+                    if device_node is None:
+                        continue
+
+                    device_status.add(device_id)
+                    status = ProxyStatus(attrs.get('status', 'ok'))
+                    capabilities = attrs.get('capabilities', 0)
+
+                    device_node.capabilities = capabilities
+                    device_node.status = status
+                    device_node.attributes = attrs
+
+        if device_status:
+            self.status_update = device_status
 
     def initialize(self, system_hash):
         """Initialize the system topology with a reset context
@@ -284,6 +303,7 @@ class SystemTree(HasStrictTraits):
         Call the `visitor` function on each item, if the function returns
         a true-ish value, the loop will be stopped.
         """
+
         def _iter_tree_node(node):
             yield node
             for child in node.children:
@@ -298,6 +318,7 @@ class SystemTree(HasStrictTraits):
     def _update_context_default(self):
         """Traits default initializer for the `update_context` trait.
         """
+
         class Dummy(object):
             @contextmanager
             def reset_context(self):
@@ -313,6 +334,10 @@ class SystemTree(HasStrictTraits):
 
             @contextmanager
             def layout_context(self):
+                yield
+
+            @contextmanager
+            def removal_children_context(self, tree_node):
                 yield
 
         return Dummy()
