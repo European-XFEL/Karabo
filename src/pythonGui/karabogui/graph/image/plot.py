@@ -249,7 +249,7 @@ class KaraboImagePlot(PlotItem):
         exporter.export()
 
     def _set_default_transform(self):
-        self._base_transform[TF_ROTATION] = np.array(
+        self._base_transform[TF_SCALING] = np.array(
             [DEFAULT_SCALE_X, DEFAULT_SCALE_Y], dtype=np.float64)
         self._base_transform[TF_TRANSLATION] = np.array(
             [DEFAULT_OFFSET_X, DEFAULT_OFFSET_Y], dtype=np.float64)
