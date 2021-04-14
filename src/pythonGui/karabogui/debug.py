@@ -54,7 +54,7 @@ def timeit(process_events=True):
         def wrapper(*args, **kwargs):
             # Empty the eventloop stack before!
             if process_events:
-                process_qt_events(timeout=10)
+                process_qt_events(timeout=200)
 
             t_start = perf_counter()
             ret = func(*args, **kwargs)
