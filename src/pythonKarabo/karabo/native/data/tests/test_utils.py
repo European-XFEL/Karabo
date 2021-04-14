@@ -115,7 +115,7 @@ def test_create_hash_html():
     h = Hash()
     h["int"] = 2
     h["hash"] = Hash("float", 6.4, "int", 8)
-    h["hashlist"] = HashList(Hash("float", 5.2, "int", 6))
+    h["hashlist"] = HashList([Hash("float", 5.2, "int", 6)])
 
     html = create_html_hash(h)
 
@@ -128,8 +128,9 @@ def test_create_hash_html():
     assert "table" in parser.tags_count
     assert "tr" in parser.tags_count
     assert "td" in parser.tags_count
-    # One table for <table> and other for </table>
-    assert parser.tags_count["table"] == 2
+    # Two tables, one for the Hash and another for the HashList key.
+    # Each table has a pair of (<table>, </table>) tags, hence the 4.
+    assert parser.tags_count["table"] == 4
     # Each <tr> is matched by a </tr>
     assert parser.tags_count["tr"] % 2 == 0
     # Each <td> is matched by a </td>
@@ -152,8 +153,12 @@ def test_create_hash_html():
     int_val_idx = parser.cells_data.index('8', float_val_idx+1)
     assert int_val_idx == int_key_idx + 1
 
-    # TODO: Handle vector of hash type in the utils.create_html_hash function.
-    #       The vector of hash doesn't make into the generated html.
+    hashlist_key_idx = parser.cells_data.index('hashlist', int_val_idx + 1)
+    assert parser.cells_data[hashlist_key_idx] == 'hashlist'
+    assert parser.cells_data[hashlist_key_idx + 1] == 'float'
+    assert parser.cells_data[hashlist_key_idx + 2] == 'int'
+    assert parser.cells_data[hashlist_key_idx + 3] == '5.2'
+    assert parser.cells_data[hashlist_key_idx + 4] == '6'
 
 
 def test_dict_hash():

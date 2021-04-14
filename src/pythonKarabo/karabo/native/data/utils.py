@@ -143,8 +143,25 @@ def create_html_hash(hsh):
                        '<td/></tr>'.format(nest + 1, key))
                 yield from _html_hash_generator(value, nest + 1)
             elif isinstance(value, HashList):
-                # XXX: Table support!
-                continue
+                yield ('<tr><td style="padding-left:{}em">{}</td><td>'
+                       .format(nest + 1, key))
+                if value:
+                    yield "<table>"
+                    yield "<tr>"
+                    header_row = value[0]
+                    for k in header_row.keys():
+                        yield f"<th>{escape(str(k))}</th>"
+                    yield "</tr>"
+                    for row in value:
+                        yield "<tr>"
+                        for _, v in row.items():
+                            yield f"<td>{escape(str(v))}</td>"
+                        yield "</tr>"
+                    yield "</table>"
+                else:
+                    yield "[]"
+                yield '</td></tr>'
+                yield from _html_attributes(nest + 1, attr)
             else:
                 yield ('<tr><td style="padding-left:{}em">{}</td><td>'
                        .format(nest + 1, key))
