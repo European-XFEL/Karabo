@@ -78,6 +78,26 @@ class _UpdateContext(HasStrictTraits):
             yield
 
     @contextlib.contextmanager
+    def removal_children_context(self, tree_node):
+        """Provide a context for the removal of a single item from the model.
+        """
+        node_row = tree_node.row()
+        index = self.item_model.createIndex(node_row, 0, tree_node)
+
+        def gen():
+            try:
+                self.item_model.beginRemoveRows(index, 0,
+                                                len(tree_node.children) - 1)
+                yield
+            finally:
+                self.item_model.endRemoveRows()
+
+        if index.isValid() and tree_node.children:
+            yield from gen()
+        else:
+            yield
+
+    @contextlib.contextmanager
     def layout_context(self):
         """Provide a context for layout change announcements
         """
