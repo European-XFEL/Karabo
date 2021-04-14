@@ -7,7 +7,7 @@ from qtpy.QtWidgets import QVBoxLayout, QWidget
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.device_view import DeviceTreeView
 from .base import BasePanelWidget
-from .searchwidget import SearchBar
+from .tool_widget import InterfaceBar
 
 
 class DevicePanel(BasePanelWidget):
@@ -28,9 +28,8 @@ class DevicePanel(BasePanelWidget):
         main_layout.setContentsMargins(2, 2, 2, 2)
         self.tree_view = DeviceTreeView(widget)
 
-        self.sbar = SearchBar(parent=widget)
-        model = self.tree_view.model()
-        self.sbar.setModel(model)
+        self.sbar = InterfaceBar(parent=widget)
+        self.sbar.setView(self.tree_view)
 
         main_layout.addWidget(self.sbar)
         main_layout.addWidget(self.tree_view)
