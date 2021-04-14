@@ -7,7 +7,7 @@ from contextlib import contextmanager
 import re
 
 from traits.api import (HasStrictTraits, Bool, Dict, Enum, Instance,
-                        Int, List, on_trait_change, String, WeakRef)
+                        Int, List, String, WeakRef)
 
 import karabogui.globals as krb_globals
 from karabo.common.api import ProxyStatus
@@ -29,13 +29,12 @@ class DeviceTreeNode(HasStrictTraits):
     visibility = Enum(*AccessLevel)
     status = Enum(*ProxyStatus)
     capabilities = Int
+    interfaces = Int
     attributes = Dict
     level = Int(-1)
 
     parent = WeakRef('DeviceTreeNode')
     children = List(Instance('DeviceTreeNode'))
-    _visible_children = List(Instance('DeviceTreeNode'))
-    clear_cache = Bool(True)
 
     # cached current visibility
     is_visible = Bool(True)
@@ -68,16 +67,6 @@ class DeviceTreeNode(HasStrictTraits):
         if self.parent is None:
             return 0
         return self.parent.children.index(self)
-
-    @on_trait_change('children[]')
-    def _register_clear_cache(self):
-        self.clear_cache = True
-
-    def get_visible_children(self):
-        if self.clear_cache:
-            self._visible_children = [c for c in self.children if c.is_visible]
-            self.clear_cache = False
-        return self._visible_children
 
 
 class DeviceSystemTree(HasStrictTraits):
@@ -206,6 +195,7 @@ class DeviceSystemTree(HasStrictTraits):
             visibility = AccessLevel(attrs.get('visibility',
                                                AccessLevel.OBSERVER))
             capabilities = attrs.get('capabilities', 0)
+            interfaces = attrs.get('interfaces', 0)
             server_id = attrs.get('serverId', 'unknown-server')
             status = ProxyStatus(attrs.get('status', 'ok'))
 
@@ -235,6 +225,7 @@ class DeviceSystemTree(HasStrictTraits):
             device_node.status = status
             device_node.attributes = attrs
             device_node.capabilities = capabilities
+            device_node.interfaces = interfaces
 
             self._device_nodes[karabo_name] = device_node
 
