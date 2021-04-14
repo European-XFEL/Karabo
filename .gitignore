@@ -26,6 +26,7 @@ GNU-Linux-x86
 GNU_MacPorts-MacOSX
 *.pyc
 *.egg-info
+!src/pythonKarabo/karabo/integration_tests/*/*.egg-info
 .*
 *.profraw
 *~

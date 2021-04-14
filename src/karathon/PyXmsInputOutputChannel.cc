@@ -216,7 +216,35 @@ namespace karathon {
 
 
     void OutputChannelWrap::registerShowConnectionsHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler) {
-        self->registerShowConnectionsHandler(boost::bind(OutputChannelWrap::proxyShowConnectionsHandler, handler, _1));
+
+        // A functor to wrap the handler such that the handler's destructor is called under GIL
+        struct WrapForGilDestructor {
+
+
+            WrapForGilDestructor(karabo::xms::ShowConnectionsHandler&& handler)
+                : m_handler(new karabo::xms::ShowConnectionsHandler(handler)) {
+            }
+
+
+            ~WrapForGilDestructor() {
+                ScopedGILAcquire gil;
+                m_handler.reset();
+            }
+
+
+            void operator()(const std::vector<karabo::util::Hash>& arg) {
+                // Assume that m_handler will acquire GIL if needed
+                (*m_handler)(arg);
+            }
+
+            std::shared_ptr<karabo::xms::ShowConnectionsHandler> m_handler;
+        };
+
+        // Setting the handler might overwrite and thus destruct a previous handler.
+        // That one's destruction might acquire the GIL via WrapForGilDestructor, see above.
+        // So better release the GIL here (although the deadlock has not been seen without releasing).
+        ScopedGILRelease noGil;
+        self->registerShowConnectionsHandler(WrapForGilDestructor(boost::bind(OutputChannelWrap::proxyShowConnectionsHandler, handler, _1)));
     }
 
 
@@ -258,6 +286,11 @@ namespace karathon {
     }
 
 
+    void InputChannelWrap::proxyInputHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& input) {
+        Wrapper::proxyHandler(handler, "input", input);
+    }
+
+
     void InputChannelWrap::proxyChannelStatusTracker(const bp::object& handler, const std::string& name, karabo::net::ConnectionStatus status) {
         Wrapper::proxyHandler(handler, "channelStatusTracker", name, status);
     }
@@ -267,11 +300,6 @@ namespace karathon {
                                                        const bp::object& statusTracker) {
         auto trackerWrap = boost::bind(&proxyChannelStatusTracker, statusTracker, _1, _2);
         self->registerConnectionTracker(trackerWrap);
-    }
-
-
-    void InputChannelWrap::proxyInputHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& input) {
-        Wrapper::proxyHandler(handler, "input", input);
     }
 
 
