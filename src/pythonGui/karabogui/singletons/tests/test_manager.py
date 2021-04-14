@@ -1,5 +1,4 @@
 from unittest.mock import ANY, Mock, call, patch
-
 from qtpy.QtCore import QSize
 
 from karabo.common.api import ProxyStatus
@@ -128,18 +127,29 @@ class TestManager(GuiTestCase):
             target = 'karabogui.singletons.manager.broadcast_event'
             with patch(target) as broadcast_event:
                 topo_hash = system_hash()
+                manager._topology.initialize(topo_hash)
+
+                topo_hash = system_hash()
                 del topo_hash['device.divvy']
                 del topo_hash['macro']
 
-                manager.handle_instanceNew(topo_hash)
+                changes = Hash("new", topo_hash,
+                               "update", Hash(), "gone", Hash())
+                manager.handle_topologyUpdate(changes)
 
                 topo_update = {
                     'devices': [('orphan', 'Parentless',
                                  ProxyStatus.NOSERVER)],
                     'servers': [('swerver', 'BIG_IRON', ProxyStatus.OK)]
                 }
-                broadcast_event.assert_called_with(
-                    KaraboEvent.SystemTopologyUpdate, topo_update)
+                calls = broadcast_event.mock_calls
+                assert len(calls) == 2
+                # First call is to check for new devices
+                assert calls[0][1] == (KaraboEvent.SystemTopologyUpdate,
+                                       topo_update)
+                # Second call is to clear with gone devices
+                assert calls[1][1] == (KaraboEvent.ClearConfigurator,
+                                       {'devices': []})
 
     def test_handle_instance_gone(self):
         network, topology = Mock(), Mock()
@@ -147,7 +157,7 @@ class TestManager(GuiTestCase):
             manager = Manager()
 
             devices = [('orphan', 'Parentless', ProxyStatus.OFFLINE)]
-            topology.instance_gone.return_value = (devices, [])
+            topology.topology_update.return_value = (devices, [])
 
             calls = [
                 call(KaraboEvent.SystemTopologyUpdate,
@@ -158,8 +168,21 @@ class TestManager(GuiTestCase):
 
             target = 'karabogui.singletons.manager.broadcast_event'
             with patch(target) as broadcast_event:
-                manager.handle_instanceGone('orphan', 'device')
+                changes = Hash("new", Hash(),
+                               "update", Hash(),
+                               "gone", Hash("device", "orphan"))
+                manager.handle_topologyUpdate(changes)
                 broadcast_event.assert_has_calls(calls)
+
+    def test_handle_instance_updated(self):
+        topology = Mock()
+        with singletons(topology=topology):
+            topology.topology_update.return_value = [], []
+            manager = Manager()
+            changes = Hash("new", Hash(), "update", Hash(),
+                           "gone", Hash())
+            manager.handle_topologyUpdate(changes)
+            topology.topology_update.assert_called_with(changes)
 
     def test_handle_class_schema(self):
         network, topology = Mock(), Mock()
@@ -317,13 +340,6 @@ class TestManager(GuiTestCase):
             topology.device_config_updated.assert_called_with(
                 'Pauly', Hash('choochness', 11)
             )
-
-    def test_handle_instance_updated(self):
-        topology = Mock()
-        with singletons(topology=topology):
-            manager = Manager()
-            manager.handle_instanceUpdated(Hash())
-            topology.instance_updated.assert_called_with(Hash())
 
     def test_handle_project_list_items(self):
         manager = Manager()
