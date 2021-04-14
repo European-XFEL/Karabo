@@ -22,6 +22,7 @@ from karabogui.util import open_documentation_link
 from karabogui.widgets.popup import PopupWidget
 
 from .device_model import DeviceTreeModel
+from .device_filter_model import DeviceFilterModel
 from .tools import DeviceSceneHandler
 
 
@@ -31,10 +32,12 @@ class DeviceTreeView(QTreeView):
         self._selected_proxy = None  # A BaseDeviceProxy
 
         model = DeviceTreeModel(parent=self)
-        self.setModel(model)
-        self.setSelectionModel(model.selectionModel)
-        model.signalItemChanged.connect(self.onSelectionChanged)
-        model.modelReset.connect(self.resetExpand)
+        proxy_model = DeviceFilterModel(parent=self,
+                                        source_model=model)
+        self.setModel(proxy_model)
+        self.setSelectionModel(proxy_model.selectionModel)
+        proxy_model.signalItemChanged.connect(self.onSelectionChanged)
+        proxy_model.modelReset.connect(self.resetExpand)
         header = self.header()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)
         # Prevent drag reorder of the header
