@@ -60,20 +60,22 @@ namespace karabo {
             Schema lastUpdateSchema;
             STRING_ELEMENT(lastUpdateSchema).key("deviceId")
                     .displayedName("Device")
-                    .assignmentMandatory()
+                    .readOnly()
+                    .initialValue(std::string())
                     .commit();
 
             STRING_ELEMENT(lastUpdateSchema).key("lastUpdateUtc")
                     .displayedName("Last Update (UTC)")
-                    .assignmentMandatory()
+                    .readOnly()
+                    .initialValue(std::string())
                     .commit();
 
             TABLE_ELEMENT(expected).key("lastUpdatesUtc")
                     .displayedName("Last Updates (UTC)")
                     .description("Timestamps of last recorded parameter update in UTC (updated in flush interval)")
                     .setColumns(lastUpdateSchema)
-                    .assignmentOptional() // should be readOnly!
-                    .defaultValue(std::vector<Hash>())
+                    .readOnly()
+                    .initialValue(std::vector<Hash>())
                     .commit();
 
             UINT32_ELEMENT(expected).key("flushInterval")
