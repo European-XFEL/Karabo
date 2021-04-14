@@ -13,7 +13,7 @@ from karabogui.navigation.system_view import SystemTreeView
 from karabogui.request import get_scene_from_server
 
 from .base import BasePanelWidget
-from .searchwidget import SearchBar
+from .tool_widget import SearchBar
 
 
 class TopologyPanel(BasePanelWidget):
@@ -39,9 +39,7 @@ class TopologyPanel(BasePanelWidget):
         self.daemon_button = QPushButton("Service Manager", parent=widget)
         self.daemon_button.clicked.connect(self._retrieve_service_scene)
         self.daemon_button.setVisible(False)
-
-        model = self.tree_view.model()
-        self.sbar.setModel(model)
+        self.sbar.setView(self.tree_view)
 
         main_layout.addWidget(self.sbar)
         main_layout.addWidget(self.daemon_button)
