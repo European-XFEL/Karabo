@@ -99,6 +99,8 @@ _PANELS = {
 SETTINGS_TITLE = '&Settings'
 PANEL_MENU_TITLE = '&Panels'
 GRAFANA_LINK = "https://ctrend.xfel.eu/"
+RTD_GUI_LINK = "https://rtd.xfel.eu/docs/howtogui/en/latest/"
+RTD_FW_LINK = "https://rtd.xfel.eu/docs/karabo/en/latest/"
 
 
 class MainWindow(QMainWindow):
@@ -365,6 +367,18 @@ class MainWindow(QMainWindow):
 
         self.acGrafana = QAction(icons.weblink, "Grafana", self)
         self.acGrafana.triggered.connect(self.onGrafana)
+        self.acGrafana.setCheckable(False)
+
+        self.acGuiDocumentation = QAction(
+            icons.weblink, "GUI Documentation", self)
+        self.acGuiDocumentation.triggered.connect(self.onGuiDocumentation)
+        self.acGuiDocumentation.setCheckable(False)
+
+        self.acKaraboDocumentation = QAction(
+            icons.logo, "Karabo Documentation", self)
+        self.acKaraboDocumentation.triggered.connect(
+            self.onKaraboDocumentation)
+        self.acKaraboDocumentation.setCheckable(False)
 
     def _setupMenuBar(self):
         menuBar = self.menuBar()
@@ -395,6 +409,8 @@ class MainWindow(QMainWindow):
 
         mHelpMenu = menuBar.addMenu("&Links")
         mHelpMenu.addAction(self.acGrafana)
+        mHelpMenu.addAction(self.acGuiDocumentation)
+        mHelpMenu.addAction(self.acKaraboDocumentation)
 
         mHelpMenu = menuBar.addMenu("&Help")
         mHelpMenu.addAction(self.acHelpAbout)
@@ -599,6 +615,20 @@ class MainWindow(QMainWindow):
     def onGrafana(self):
         try:
             webbrowser.open_new(GRAFANA_LINK)
+        except webbrowser.Error:
+            messagebox.show_error("No web browser available!", parent=self)
+
+    @Slot()
+    def onGuiDocumentation(self):
+        try:
+            webbrowser.open_new(RTD_GUI_LINK)
+        except webbrowser.Error:
+            messagebox.show_error("No web browser available!", parent=self)
+
+    @Slot()
+    def onKaraboDocumentation(self):
+        try:
+            webbrowser.open_new(RTD_FW_LINK)
         except webbrowser.Error:
             messagebox.show_error("No web browser available!", parent=self)
 
