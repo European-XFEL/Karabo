@@ -217,6 +217,58 @@ runPythonUnitTests() {
     safeRunTests "karabo.interactive"
 
     echo
+    echo Running Karabo Python unit tests with MQTT broker ...
+    echo
+
+    export KARABO_BROKER="mqtt://exfldl02n0:1883"
+
+    safeRunTests "karabo.bound_api" "mqtt"
+    safeRunTests "karabo.bound_devices" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.alarm_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.api_module_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.cli_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.code_quality_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.configuration_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.device_client_test" "_mqtt"
+    # safeRunTests "karabo.middlelayer_api.tests.device_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.eventloop_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.heartbeat_mixin_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.inject_node_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.json_test" "_mqtt"
+    # safeRunTests "karabo.middlelayer_api.tests.macro_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.monitor_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.pipeline_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.pretty_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.proxy_test" "_mqtt"
+    # safeRunTests "karabo.middlelayer_api.tests.remote_pipeline_test" "_mqtt"
+    # safeRunTests "karabo.middlelayer_api.tests.remote_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.synchronization_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.unitutil_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_api.tests.utils_test" "_mqtt"
+    safeRunTests "karabo.middlelayer_devices.tests.test_code_quality" "_mqtt"
+    safeRunTests "karabo.middlelayer_devices.tests.test_config_manager" "_mqtt"
+    # safeRunTests "karabo.middlelayer_devices.tests.test_file_project_manager" "_mqtt"
+    # safeRunTests "karabo.middlelayer_devices.tests.test_project_manager" "_mqtt"
+    # safeRunTests "karabo.middlelayer_devices.tests.test_propertymdl" "_mqtt"
+    safeRunTests "karabo.influxdb" "_mqtt"
+    # safeRunTests "karabo.native.karabo_hash" "_mqtt"
+    safeRunTests "karabo.native.project" "_mqtt"
+    # safeRunTests "karabo.native.schema.tests.basetypes_test" "_mqtt"
+    safeRunTests "karabo.native.schema.tests.cast_test" "_mqtt"
+    safeRunTests "karabo.native.schema.tests.configurable_test" "_mqtt"
+    safeRunTests "karabo.native.schema.tests.descriptor_test" "_mqtt"
+    safeRunTests "karabo.native.schema.tests.registry_test" "_mqtt"
+    safeRunTests "karabo.native.schema.tests.ufunc_test" "_mqtt"
+    safeRunTests "karabo.native.schema.tests.utils_test" "_mqtt"
+    safeRunTests "karabo.native.tests" "_mqtt"
+    # safeRunTests "karabo.project_db.exist_db" "_mqtt"
+    safeRunTests "karabo.project_db.file_db" "_mqtt"
+    safeRunTests "karabo.project_db.tests" "_mqtt"
+    safeRunTests "karabo.config_db" "_mqtt"
+    safeRunTests "karabo.tests" "_mqtt"
+    safeRunTests "karabo.interactive" "_mqtt"
+
+    echo
     echo Karabo Python unit tests complete
     echo
 }
