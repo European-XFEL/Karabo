@@ -1,0 +1,5 @@
+DeviceChannelInjection.egg-info/PKG-INFO
+DeviceChannelInjection.egg-info/SOURCES.txt
+DeviceChannelInjection.egg-info/entry_points.txt
+__init__.py
+deviceChannelInjection.py
