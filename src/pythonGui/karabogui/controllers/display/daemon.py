@@ -176,6 +176,12 @@ class DaemonTableModel(QAbstractTableModel):
         for index, row_data in enumerate(value):
             if index < num_rows:
                 self._table_data[index] = serviceEntry(**row_data)
+                # XXX: The QAbstractItemModel does not update immediately when
+                # the item delegate columns are included!
+                row_begin = self.index(index, 0, QModelIndex())
+                row_end = self.index(index, self.columnCount() - 3,
+                                     QModelIndex())
+                self.dataChanged.emit(row_begin, row_end)
             else:
                 row = self.rowCount()
                 self.beginInsertRows(QModelIndex(), row, row)
@@ -190,12 +196,6 @@ class DaemonTableModel(QAbstractTableModel):
                 self.beginRemoveRows(QModelIndex(), row - 1, row)
                 self._table_data.pop()
                 self.endRemoveRows()
-
-        # XXX: We are nifty here and simply announce a complete layoutChange
-        # This turns out to be several times faster than doing a dataChange
-        # for every item. Avoid races by doing this close together...
-        self.layoutAboutToBeChanged.emit()
-        self.layoutChanged.emit()
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
