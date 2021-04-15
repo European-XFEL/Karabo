@@ -969,9 +969,13 @@ class PythonDevice(NoFsm):
         be raised.
         Likewise, if the type changes, and the value cannot be cast, an error
         will be raised.
+
         Input and output channels will be created if injected and removed again
         in case updateSchema is called again without them.
         An output channel is also recreated if its schema changes.
+        Note that for (re-)created input channels there are no data, input and
+        end-of-stream handlers registered (anymore). This has to be (re-)done
+        via the corresponding self.KARABO_ON_[DATA|INPUT|EOS] methods.
 
         :param schema: to be merged with the static schema
         """
@@ -1002,11 +1006,9 @@ class PythonDevice(NoFsm):
                             break
 
             self._stateDependentSchema.clear()
-            prevFullSchemaPaths = self._fullSchema.getPaths()
-            for path in self._fullSchema.getPaths():
-                if self._fullSchema.isNode(path):
-                    # remove to keep 'node.injected' if static has 'node'
-                    prevFullSchemaPaths.remove(path)
+
+            prevFullSchemaLeaves = [p for p in self._fullSchema.getPaths()
+                                    if not self._fullSchema.isNode(p)]
 
             # Erase previously present injected InputChannels
             # (except if re-injected to change properties).
@@ -1025,7 +1027,6 @@ class PythonDevice(NoFsm):
                     if self._staticSchema.has(outChannel):
                         # Channel changes its schema back to its default
                         outChannelsToRecreate.add(outChannel)
-                        self.log.INFO(f"added for recreation {outChannel}")
                     else:
                         # Previously injected channel has to be removed
                         self.log.INFO("updateSchema: Remove output channel '"
@@ -1038,7 +1039,6 @@ class PythonDevice(NoFsm):
                          != "OutputChannel"
                          )):
                     outChannelsToRecreate.add(outChannel)
-                    self.log.INFO(f"BB: added for recreation {outChannel}")
                 # elif schema.getDisplayType(outChannel) == "OutputChannel":
                 #    will be recreated by _initChannels(injectedSchema) below
 
@@ -1050,9 +1050,9 @@ class PythonDevice(NoFsm):
             self._ss.emit("signalSchemaUpdated",
                           self._fullSchema, self.deviceid)
 
-            # Keep new paths only. This hash is then set, to avoid re-sending
+            # Keep new leaves only. This hash is then set, to avoid re-sending
             # updates with the same value.
-            for path in prevFullSchemaPaths:
+            for path in prevFullSchemaLeaves:
                 validated.erasePath(path)
 
             self._setNoStateLock(validated)
@@ -1062,8 +1062,7 @@ class PythonDevice(NoFsm):
             # ... and those with potential Schema change
             for outToCreate in outChannelsToRecreate:
                 self.log.INFO("updateSchema triggers creation of output "
-                              f"channel '{outToCreate}'"
-                              f" {str(outChannelsToRecreate)}")
+                              f"channel '{outToCreate}'")
                 self._prepareOutputChannel(outToCreate)
 
         self.log.INFO("Schema updated")
@@ -1077,7 +1076,14 @@ class PythonDevice(NoFsm):
         Likewise, if the type changes, and the value cannot be cast, an error
         will be raised.
 
-        :param schema: to append
+        Input and output channels will be created if injected.
+        An output channel is also recreated if its schema changes, to make the
+        other end aware.
+        Note that for (re-)created input channels there are no data, input and
+        end-of-stream handlers registered (anymore). This has to be (re-)done
+        via the corresponding self.KARABO_ON_[DATA|INPUT|EOS] methods.
+
+        :param schema: to append to current full schema
         """
         rules = ValidatorValidationRules()
         rules.allowAdditionalKeys = True
@@ -1091,22 +1097,42 @@ class PythonDevice(NoFsm):
                                              self.getActualTimestamp())
 
         with self._stateChangeLock:
+            # Take care of OutputChannels schema changes
+            outChannelsToRecreate = set()
+            for path in self._ss.getOutputChannelNames():
+                if (self._fullSchema.has(path) and schema.has(path)
+                    and (not schema.hasDisplayType(path) or
+                         schema.getDisplayType(path) != "OutputChannel")):
+                    # maybe output schema change without using OUTPUT_CHANNEL
+                    outChannelsToRecreate.add(path)
+                # elif schema.getDisplayType(path) == "OutputChannel":
+                #      will be recreated by _initChannels(schema) below
+
             self._stateDependentSchema = {}
             self._injectedSchema += schema
-            prevFullSchemaPaths = self._fullSchema.getPaths()
+
+            prevFullSchemaLeaves = [p for p in self._fullSchema.getPaths()
+                                    if not self._fullSchema.isNode(p)]
             self._fullSchema.copy(self._staticSchema)
             self._fullSchema += self._injectedSchema
-            self._fullSchema.updateAliasMap()
 
             # notify the distributed system...
             self._ss.emit("signalSchemaUpdated", self._fullSchema,
                           self.deviceid)
 
-            # Keep new paths only. This hash is then set, to avoid re-sending
+            # Keep new leaves only. This hash is then set, to avoid re-sending
             # updates with the same value.
-            for path in prevFullSchemaPaths:
+            for path in prevFullSchemaLeaves:
                 validated.erasePath(path)
-        self.set(validated)
+            self._setNoStateLock(validated)
+
+            # Init any freshly injected channels
+            self._initChannels(topLevel="", schema=schema)
+            # ... and those output channels with potential Schema change
+            for outToCreate in outChannelsToRecreate:
+                self.log.INFO("updateSchema triggers creation of output "
+                              f"channel '{outToCreate}'")
+                self._prepareOutputChannel(outToCreate)
 
         self.log.INFO("Schema appended")
 
