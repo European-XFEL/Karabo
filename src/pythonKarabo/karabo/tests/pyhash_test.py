@@ -382,7 +382,7 @@ class Hash_TestCase(unittest.TestCase):
     def test_paths(self):
         h = self.create_hash()
         paths = h.paths(intermediate=False)
-        self.assertEquals(len(paths), 16)
+        self.assertEqual(len(paths), 16)
         self.assertIn('bool', paths)
         self.assertIn('hash.a', paths)
         self.assertNotIn('hash', paths)
@@ -392,7 +392,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertNotIn('schema.blub', paths)
 
         all_paths = h.paths(intermediate=True)
-        self.assertEquals(len(all_paths), 17)
+        self.assertEqual(len(all_paths), 17)
         self.assertIn('hash', all_paths)
 
 
