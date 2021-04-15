@@ -49,6 +49,11 @@ class DeviceNode(String):
         self.commands = commands
         self.timeout = timeout
         if self.properties or self.commands:
+            import warnings
+            warnings.warn(
+                "Using `properties` or `commands` in a DeviceNode is "
+                "deprecated and will be removed in Karabo 2.13",
+                DeprecationWarning, stacklevel=2)
             for default in ("deviceId", "state", "alarmCondition"):
                 if default not in self.properties:
                     self.properties.append(default)
