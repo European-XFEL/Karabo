@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from ..macro_sanity_check import validate_macro
+from karabo.common.macro_sanity_check import validate_macro
 
 ASYNC_UPDATE_MACRO = """
 from karabo.middlelayer import Macro, Slot, String
@@ -29,6 +29,20 @@ class Macro(Macro):
         print("Hello {}!".format(self.name))
 """
 
+TIME_CONFLICT_MACRO = """
+import time
+
+from karabo.middlelayer import Macro, Slot, String
+class Macro(Macro):
+    task = None
+    name = String()
+    @Slot()
+    def execute(self):
+        if self.task is not None:
+            self.task.cancel()
+        print("Hello {}!".format(self.name))
+"""
+
 
 class Tests(TestCase):
 
@@ -54,6 +68,10 @@ class Tests(TestCase):
         time = ("import time\n"
                 "#time.sleep(1)\n")
         res = validate_macro(time)
+        self.assertSequenceEqual([], res)
+
+    def test_time_conflict(self):
+        res = validate_macro(TIME_CONFLICT_MACRO)
         self.assertSequenceEqual([], res)
 
     def test_importtimeas(self):

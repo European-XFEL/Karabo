@@ -42,7 +42,8 @@ def _has_imports(tree, module, func):
         ``as_names``.
         """
         if (isinstance(node, ast.Expr) and isinstance(node.value, ast.Call)
-                and isinstance(node.value.func, ast.Attribute)):
+                and isinstance(node.value.func, ast.Attribute)
+                and isinstance(node.value.func.value, ast.Name)):
             for alias in as_names:
                 if (node.value.func.value.id == alias
                         and node.value.func.attr == func):
