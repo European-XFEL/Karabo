@@ -49,14 +49,14 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         with self.subTest(msg="channel injection - slotUpdateSchema"):
             self._test_channel_injection(dev_id, "slotUpdateSchema")
 
-        # with self.subTest(msg="channel injection - slotAppendSchema"):
-        #    self._test_channel_injection(dev_id, "slotAppendSchema")
+        with self.subTest(msg="channel injection - slotAppendSchema"):
+            self._test_channel_injection(dev_id, "slotAppendSchema")
 
         with self.subTest(msg="change output schema  - slotUpdateSchema"):
             self._test_change_output_schema(dev_id, "slotUpdateSchema")
 
-        # with self.subTest(msg="change output schema  - slotAppendSchema"):
-        #    self._test_change_output_schema(dev_id, "slotAppendSchema")
+        with self.subTest(msg="change output schema  - slotAppendSchema"):
+            self._test_change_output_schema(dev_id, "slotAppendSchema")
 
     def _test_channel_injection(self, dev_id, updateSlot):
         # Test that input and output channels are created if
@@ -160,7 +160,9 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
                 with connectionChangesLock:
                     connectionChanges.append(h.get("input.missingConnections"))
 
-        # Note: maybe run into problem with slot name when run twice
+        # Note: Better create independent slots for each test run to avoid that
+        #       in second run same slot has two functions registered
+        slotConnectionChanged.__name__ += updateSlot  # used by registerSlot
         self.sigSlot.registerSlot(slotConnectionChanged)
         connected = self.sigSlot.connect(receiver_id, "signalChanged",
                                          "", slotConnectionChanged.__name__)
