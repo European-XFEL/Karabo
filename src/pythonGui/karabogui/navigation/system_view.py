@@ -13,9 +13,12 @@ from qtpy.QtWidgets import (
 from karabo.common.api import Capabilities
 from karabo.native import Timestamp
 from karabogui import icons
+from karabogui import messagebox
 from karabogui.enums import AccessRole
 from karabogui.globals import access_role_allowed
+from karabogui.dialogs.configuration_from_name import ConfigurationFromName
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
+from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.enums import NavigationItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.navigation.system_filter_model import TopologyFilterModel
@@ -98,14 +101,30 @@ class SystemTreeView(QTreeView):
         self.acOpenFromFile.triggered.connect(self.onOpenFromFile)
         self.mDeviceItem.addAction(self.acOpenFromFile)
 
-        self.mDeviceItem.addSeparator()
-
         text = "Save configuration as (*.xml)"
         self.acSaveToFile = QAction(icons.saveAs, text, self)
         self.acSaveToFile.setStatusTip(text)
         self.acSaveToFile.setToolTip(text)
         self.acSaveToFile.triggered.connect(self.onSaveToFile)
         self.mDeviceItem.addAction(self.acSaveToFile)
+
+        self.mDeviceItem.addSeparator()
+
+        text = "Get Configuration (Time)"
+        self.ac_config_past = QAction(icons.clock, text, self)
+        self.ac_config_past.setStatusTip(text)
+        self.ac_config_past.setToolTip(text)
+        self.ac_config_past.triggered.connect(self.onGetConfigurationFromPast)
+        self.mDeviceItem.addAction(self.ac_config_past)
+
+        text = "Get Configuration (Name)"
+        self.ac_config_name = QAction(text, self)
+        self.ac_config_name.setStatusTip(text)
+        self.ac_config_name.setToolTip(text)
+        self.ac_config_name.triggered.connect(self.onGetConfigurationFromName)
+        self.mDeviceItem.addAction(self.ac_config_name)
+
+        self.mDeviceItem.addSeparator()
 
         text = "Shutdown device"
         self.acKillDevice = QAction(icons.delete, text, self)
@@ -122,15 +141,16 @@ class SystemTreeView(QTreeView):
         self.acOpenScene.triggered.connect(self.onOpenDeviceScene)
         self.mDeviceItem.addAction(self.acOpenScene)
 
+        self.mDeviceItem.addSeparator()
+
         text = "Documentation"
         self.acDocu = QAction(icons.weblink, text, self)
         self.acDocu.triggered.connect(self.onGetDocumenation)
         self.acDocu.setVisible(False)  # Classes don't have documentation
 
-        self.mDeviceItem.addSeparator()
+        self.mDeviceItem.addAction(self.acTimeInformation)
         self.mDeviceItem.addAction(self.acAbout)
         self.mDeviceItem.addAction(self.acDocu)
-        self.mDeviceItem.addAction(self.acTimeInformation)
 
     def currentIndex(self):
         return self.model().currentIndex()
@@ -191,6 +211,38 @@ class SystemTreeView(QTreeView):
         pos.setY(pos.y() + 10)
         self.popupWidget.move(pos)
         self.popupWidget.show()
+
+    @Slot()
+    def onGetConfigurationFromPast(self):
+        info = self.indexInfo()
+        archive = info['attributes'].get('archive', False)
+        if not archive:
+            # Display a hint for the operator that currently the device is not
+            # archived/logged if so.
+            messagebox.show_warning(
+                f"The device {info.get('deviceId')} is currently NOT "
+                f"archived! If it was not archived at the requested point in "
+                f"time but before that, you will receive an outdated "
+                f"configuration.")
+
+        device_id = info.get('deviceId')
+        dialog = ConfigurationFromPastDialog(instance_id=device_id,
+                                             parent=self)
+        dialog.move(QCursor.pos())
+        dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
+
+    @Slot()
+    def onGetConfigurationFromName(self):
+        info = self.indexInfo()
+        device_id = info.get('deviceId')
+        dialog = ConfigurationFromName(instance_id=device_id,
+                                       parent=self)
+        dialog.move(QCursor.pos())
+        dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
 
     @Slot()
     def onTimeInformation(self):
