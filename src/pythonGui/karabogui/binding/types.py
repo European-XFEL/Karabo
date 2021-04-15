@@ -401,6 +401,20 @@ class Uint64Binding(UnsignedIntBinding):
 class VectorBinding(BaseBinding):
     """The base class for all vector binding types"""
 
+    def check(self, value):
+        value = super().check(value)
+        # Karabo attribute check for minSize and maxSize
+        attributes = self.attributes
+        minSize = attributes.get(const.KARABO_SCHEMA_MIN_SIZE)
+        if minSize is not None and len(value) < minSize:
+            raise TraitError(f"Vector with size {len(value)} is shorter than "
+                             f"the allowed size of {minSize}")
+        maxSize = attributes.get(const.KARABO_SCHEMA_MAX_SIZE)
+        if maxSize is not None and len(value) > maxSize:
+            raise TraitError(f"Vector with size {len(value)} is larger than "
+                             f"the allowed size of {maxSize}")
+        return value
+
 
 class VectorNumberBinding(VectorBinding):
     """The base class for all vector binding types which contain types
