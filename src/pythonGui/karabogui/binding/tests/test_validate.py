@@ -2,8 +2,8 @@ import numpy as np
 
 from karabo.common.const import (
     KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MAX_INC,
-    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MIN_SIZE,
-    KARABO_SCHEMA_OPTIONS)
+    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_SIZE,
+    KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_OPTIONS)
 from karabo.native import (
     AccessMode, Bool, Configurable, Hash, HashList, String, UInt8)
 
@@ -370,6 +370,23 @@ def test_validate_value_vectordouble():
     assert validate_value(binding, 1.0) is None
     assert validate_value(binding, "foo") is None
     assert validate_value(binding, HashList([Hash(), Hash()])) is None
+
+
+def test_validate_value_vector_size():
+    attributes = {KARABO_SCHEMA_MIN_SIZE: 3, KARABO_SCHEMA_MAX_SIZE: 5}
+    binding = types.VectorDoubleBinding(attributes=attributes)
+    array = np.array([-1, 0, 1])
+    _assert_array(binding, array, dtype=np.float64)
+    array = np.array([-1, 0, 1, 25, 100])
+    _assert_array(binding, array, dtype=np.float64)
+
+    # Check valid values, minimum size
+    array = np.array([-1, 0])
+    assert validate_value(binding, array) is None
+
+    # Check valid values, maximum size
+    array = np.array([-1, 0, 1, 25, 100, 129])
+    assert validate_value(binding, array) is None
 
 
 def test_validate_vector_hash():
