@@ -35,6 +35,7 @@ from karabogui.singletons.api import (
 from karabogui.util import process_qt_events
 from karabogui.wizards import TipsTricksWizard
 
+SERVER_INFO_WIDTH = 250
 
 CONSOLE_TITLE = 'Console'
 LOG_TITLE = 'Log'
@@ -450,11 +451,11 @@ class MainWindow(QMainWindow):
 
         # More information ...
         self.serverInfo = QLabel(self)
-        status_bar.addPermanentWidget(self.serverInfo)
-        self.serverInfo = QLabel(self)
+        self.serverInfo.setMinimumWidth(SERVER_INFO_WIDTH)
+        self.serverInfo.setAlignment(Qt.AlignCenter)
         status_bar.addPermanentWidget(self.serverInfo)
 
-        get_logger().info("Ready ...")
+        get_logger().info("Started Karabo GUI application ...")
 
     def _setupPanelAreas(self):
         """Build the main splitter structure of the main window
