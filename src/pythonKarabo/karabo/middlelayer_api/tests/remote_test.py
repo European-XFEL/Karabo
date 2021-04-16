@@ -1036,7 +1036,7 @@ class Tests(DeviceTest):
 
     @async_tst
     async def test_alarm(self):
-        self.remote.signalAlarmUpdate.connect("local", "slotAlarmUpdate")
+        await self.remote.signalAlarmUpdate.connect("local", "slotAlarmUpdate")
         self.remote.alarm = 3
         self.remote.update()
         self.local.alarm_future = Future()
@@ -1066,7 +1066,7 @@ class Tests(DeviceTest):
             ah["toAdd.global.alarm.description"], "")
         self.assertTrue(
             ah["toAdd.global.alarm.needsAcknowledging"])
-        self.remote.signalAlarmUpdate.disconnect("local", "slotAlarmUpdate")
+        await self.remote.signalAlarmUpdate.disconnect("local", "slotAlarmUpdate")
         self.remote.globalAlarmCondition = AlarmCondition.NONE
 
     @async_tst
