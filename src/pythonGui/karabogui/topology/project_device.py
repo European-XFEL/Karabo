@@ -80,6 +80,11 @@ class ProjectDeviceInstance(HasStrictTraits):
             return new_config
         return Hash()
 
+    def get_class_proxy(self):
+        """Retrieve a class schema for this project device instance"""
+        topology = get_topology()
+        return topology.get_class(self.server_id, self.class_id)
+
     def get_schema_default_configuration(self):
         """Extract the ``default`` configuration derived from a schema
 
@@ -209,7 +214,7 @@ class ProjectDeviceInstance(HasStrictTraits):
 
         if self._offline_proxy is not None:
             topology.remove_project_device_proxy(
-                 self.device_id, self.server_id, self.class_id
+                self.device_id, self.server_id, self.class_id
             )
 
         self._online_proxy = topology.get_device(device_id)

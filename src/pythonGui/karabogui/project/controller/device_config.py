@@ -6,7 +6,7 @@
 from functools import partial
 
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QAction, QDialog, QMenu, QTextEdit, QVBoxLayout
+from qtpy.QtWidgets import QAction, QDialog, QMenu
 from traits.api import Instance, Int
 
 from karabo.common.project.api import (
@@ -16,48 +16,17 @@ from karabogui import messagebox
 from karabogui.enums import AccessRole, ProjectItemTypes
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.globals import access_role_allowed
+from karabogui.project.dialog.device_configuration import (
+    DeviceConfigurationDialog)
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.utils import check_device_config_exists
 from karabogui.util import move_to_cursor
-from karabo.native import create_html_hash, Hash
+from karabo.native import Hash
 
 from .bases import BaseProjectController, ProjectControllerUiData
 from .device import DeviceInstanceController
 
 DEFAULT = 'default'
-
-
-class ConfigurationDialog(QDialog):
-    def __init__(self, model=None, parent=None):
-        super(ConfigurationDialog, self).__init__(parent)
-        self.setModal(False)
-
-        config_name = model.simple_name
-        self.setWindowTitle("Stored changes in configuration {} from "
-                            "device default".format(config_name))
-
-        flags = Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint
-        self.setWindowFlags(self.windowFlags() | flags)
-
-        self._text_info = QTextEdit(self)
-        self._text_info.setReadOnly(True)
-        self._text_info.setMinimumWidth(500)
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(1, 1, 1, 1)
-        main_layout.addWidget(self._text_info)
-
-        config = model.configuration
-        # XXX: Protect as well against a `None` configuration!
-        if config is None or config.empty():
-            html_string = ("<center>No changes in configuration!</center>")
-        else:
-            html_string = create_html_hash(config)
-
-        scroll_bar = self._text_info.verticalScrollBar()
-        pos = scroll_bar.sliderPosition()
-        self._text_info.setHtml(html_string)
-        self._text_info.adjustSize()
-        scroll_bar.setValue(pos)
 
 
 class DeviceConfigurationController(BaseProjectController):
@@ -121,8 +90,15 @@ class DeviceConfigurationController(BaseProjectController):
     # QAction handlers
 
     def _show_config(self, project_controller, parent=None):
+        device_controller = find_parent_object(self, project_controller,
+                                               DeviceInstanceController)
+        project_device = device_controller.project_device
+
         model = self.model
-        dialog = ConfigurationDialog(model=model, parent=parent)
+        config = model.configuration
+        dialog = DeviceConfigurationDialog(
+            name=model.simple_name, configuration=config,
+            project_device=project_device, parent=parent)
         move_to_cursor(dialog)
         dialog.exec_()
 
