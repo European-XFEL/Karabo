@@ -34,4 +34,5 @@ from .util import (
     get_binding_value, get_editor_value, get_min_max, get_min_max_size,
     get_native_min_max, has_min_max_attributes, has_min_max_attributes)
 from .validate import (
-    convert_string, validate_value, validate_table_value, get_default_value)
+    convert_string, validate_binding_configuration, validate_value,
+    validate_table_value, get_default_value)
