@@ -77,10 +77,25 @@ class BoundSignal(object):
         self.connected = {}
         self.args = signal.args
 
-    def connect(self, target, slot):
+    async def connect(self, target, slot):
+        if not self.device._ss.needSubscribe:
+            self.make_connected(target, slot)
+            return
+        await self.device._ss.request(target, 'slotConnectRemoteSignal',
+                                      self.device.deviceId, self.name,
+                                      target, slot)
+
+    async def disconnect(self, target, slot):
+        if not self.device._ss.needSubscribe:
+            return self.make_disconnected(target, slot)
+        await self.device._ss.request(target, 'slotDisconnectRemoteSignal',
+                                      self.device.deviceId, self.name,
+                                      target, slot)
+
+    def make_connected(self, target, slot):
         self.connected.setdefault(target, set()).add(slot)
 
-    def disconnect(self, target, slot):
+    def make_disconnected(self, target, slot):
         s = self.connected.get(target, None)
         if s is None:
             return False
@@ -353,6 +368,25 @@ class SignalSlotable(Configurable):
         """
         get_event_loop().stop()
 
+    @coslot
+    async def slotConnectRemoteSignal(self, sigId, sigName, slotId, slotName):
+        if self.deviceId != slotId:
+            return
+        slot = getattr(self, slotName, None)
+        if slot is None:
+            return
+        await self._ss.async_connect(sigId, sigName, slot)
+
+    @coslot
+    async def slotDisconnectRemoteSignal(self, sigId, sigName, slotId,
+                                         slotName):
+        if self.deviceId != slotId:
+            return
+        slot = getattr(self, slotName, None)
+        if slot is None:
+            return
+        await self._ss.async_disconnect(sigId, sigName, slot)
+
     @slot
     def slotConnectToSignal(self, signalFunction, slotInstanceId,
                             slotFunction):
@@ -371,7 +405,7 @@ class SignalSlotable(Configurable):
                 rc = False
                 continue
             else:
-                signalObj.connect(slotInstanceId, slotFunction)
+                signalObj.make_connected(slotInstanceId, slotFunction)
         return rc
 
     @slot
@@ -391,7 +425,7 @@ class SignalSlotable(Configurable):
                 rc = False
                 continue
             else:
-                signalObj.disconnect(target, slot)
+                signalObj.make_disconnected(target, slot)
         return rc
 
     @slot
