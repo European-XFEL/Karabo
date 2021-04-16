@@ -305,13 +305,14 @@ class JmsBroker(Broker):
         fire-and-forget style to the signal side to register a slot
         NOTE: In case of many signals we send multiple messages (same slot)
         """
-        signals = []
         if isinstance(signal, (list, tuple)):
             signals = list(signal)
         else:
-            signals.append(signal)
-        self.emit("call", {deviceId: ["slotConnectToSignal"]}, signals,
-                  slot.__self__.deviceId, slot.__name__)
+            signals = [signal]
+
+        for s in signals:
+            self.emit("call", {deviceId: ["slotConnectToSignal"]}, s,
+                      slot.__self__.deviceId, slot.__name__)
 
     async def async_connect(self, deviceId, signal, slot):
         """Asynchronous signalslot connection in case JMS broker uses
@@ -320,13 +321,14 @@ class JmsBroker(Broker):
         self.connect(deviceId, signal, slot)
 
     def disconnect(self, deviceId, signal, slot):
-        signals = []
         if isinstance(signal, (list, tuple)):
             signals = list(signal)
         else:
-            signals.append(signal)
-        self.emit("call", {deviceId: ["slotDisconnectFromSignal"]}, signals,
-                  slot.__self__.deviceId, slot.__name__)
+            signals = [signal]
+
+        for s in signals:
+            self.emit("call", {deviceId: ["slotDisconnectFromSignal"]}, s,
+                      slot.__self__.deviceId, slot.__name__)
 
     async def async_disconnect(self, deviceId, signal, slot):
         self.disconnect(deviceId, signal, slot)
@@ -760,11 +762,10 @@ class MqttBroker(Broker):
         NOTE: Optimization: we can connect many signals to the same alot
         at once
         """
-        signals = []
         if isinstance(signal, (list, tuple)):
             signals = list(signal)
         else:
-            signals.append(signal)
+            signals = [signal]
         topics = []
         for s in signals:
             topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
@@ -774,8 +775,10 @@ class MqttBroker(Broker):
                 topics.append((topic, 1))
         if topics:
             await self.client.subscribe(topics)
-        self.emit("call", {deviceId: ["slotConnectToSignal"]},
-                  signals, slot.__self__.deviceId, slot.__name__)
+
+        for s in signals:
+            self.emit("call", {deviceId: ["slotConnectToSignal"]},
+                      s, slot.__self__.deviceId, slot.__name__)
 
     def disconnect(self, deviceId, signal, slot):
         self.loop.call_soon_threadsafe(self.loop.create_task,
@@ -787,8 +790,9 @@ class MqttBroker(Broker):
         if isinstance(signal, (list, tuple)):
             signals = list(signal)
         else:
-            signals.append(signal)
+            signals = [signal]
         topics = []
+
         for s in signals:
             topic = (self.domain + "/signals/" + deviceId.replace('/', '|')
                      + "/" + s)
@@ -797,8 +801,9 @@ class MqttBroker(Broker):
                 topics.append(topic)
         if topics:
             await self.client.unsubscribe(topics)
-        self.emit("call", {deviceId: ["slotDisconnectFromSignal"]},
-                  signals, slot.__self__.deviceId, slot.__name__)
+        for s in signals:
+            self.emit("call", {deviceId: ["slotDisconnectFromSignal"]},
+                      s, slot.__self__.deviceId, slot.__name__)
 
     async def async_unsubscribe_all(self):
         await self.client.unsubscribe([t for t in self.subscriptions])
