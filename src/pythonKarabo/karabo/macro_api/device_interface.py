@@ -119,6 +119,30 @@ def listCameras(matchPattern=None):
     return ret
 
 
+def listDeviceInstantiators(matchPattern=None):
+    """List all the DeviceInstantiators from the systemTopology
+
+    Parameters
+    ----------
+    matchPattern: Optionally provide a string pattern to find the
+                  deviceId's containing the matchPattern.
+
+    Interface
+    ---------
+    A device described by a device instantiator interface that is capable of
+    instantiating devices.
+
+    - Commands: startInstantiate
+
+    Returns
+    -------
+    List of found deviceId's of device instantiators in the system topology
+    """
+    ret = _get_interface_device(Interfaces.DeviceInstantiator, matchPattern)
+
+    return ret
+
+
 def listTriggers(matchPattern=None):
     """List all the Triggers from the systemTopology
 

@@ -72,9 +72,10 @@ namespace karabo {
             Trigger = (1u << 2),
             Camera = (1u << 3),
             Processor = (1u << 4),
+            DeviceInstantiator = (1u << 5),
 
             // add future interfaces as bitmask:
-            // SOME_OTHER_INTERFACE = (1u << 5),
+            // SOME_OTHER_INTERFACE = (1u << 6),
         };
 
 
@@ -1668,6 +1669,7 @@ namespace karabo {
                         else if (desc == "Trigger") interfaces |= Interfaces::Trigger;
                         else if (desc == "Camera") interfaces |= Interfaces::Camera;
                         else if (desc == "Processor") interfaces |= Interfaces::Processor;
+                        else if (desc == "DeviceInstantiator") interfaces |= Interfaces::DeviceInstantiator;
                         else {
                             throw KARABO_LOGIC_EXCEPTION("Provided interface is not supported: " + desc);
                         }
