@@ -161,7 +161,7 @@ class TestDevice(PythonDevice):
             VECTOR_STRING_ELEMENT(expected).key("interfaces")
             .displayedName("Interfaces")
             .assignmentOptional().defaultValue(
-                ["Motor", "Camera", "Processor"])
+                ["Motor", "Camera", "Processor", "DeviceInstantiator"])
             .commit(),
         )
 
