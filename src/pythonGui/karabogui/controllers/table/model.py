@@ -74,8 +74,8 @@ class TableModel(QAbstractTableModel):
     def _build_tooltip(self, attributes):
         """Build a tooltip according to the attributes"""
         selection = ["displayedName", "defaultValue", "valueType",
-                     "unitSymbol", "metricPrefixSymbol", "minInc", "maxInc",
-                     "minExc", "maxExc", "options"]
+                     "description", "unitSymbol", "metricPrefixSymbol",
+                     "minInc", "maxInc", "minExc", "maxExc", "options"]
         info = {}
         for akey in selection:
             avalue = attributes.get(akey)
@@ -100,7 +100,8 @@ class TableModel(QAbstractTableModel):
             key = self._header[section]
             binding = self._bindings[key]
             units = binding.unit_label
-            displayed = binding.displayed_name
+            # Make sure to always show a header!
+            displayed = binding.displayed_name or key
 
             return f"{displayed} [{units}]" if units else displayed
 
