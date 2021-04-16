@@ -122,6 +122,11 @@ class BaseBinding(HasStrictTraits):
 
     def check(self, value):
         """Check and validate the value of this binding"""
+        options = self.attributes.get(const.KARABO_SCHEMA_OPTIONS, None)
+        if options is not None and value not in options:
+            raise TraitError(f"The value {value} is not in the allowed options"
+                             f"{options}")
+
         return self.validate_trait("value", value)
 
 
