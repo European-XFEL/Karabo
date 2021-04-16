@@ -13,6 +13,10 @@
 
 #include "Exception.hh"
 
+#if defined(__GNUC__) || defined(__clang__)
+#include <cxxabi.h>
+#endif
+
 using namespace std;
 
 namespace karabo {
@@ -124,6 +128,15 @@ namespace karabo {
                 myException.filename = "";
                 myException.function = "";
                 myException.lineNumber = "";
+#if defined(__GNUC__) || defined(__clang__)
+                // See https://stackoverflow.com/questions/561997/determining-exception-type-after-the-exception-is-caught
+                int status = 42; // Better init with a non-zero value...
+                char* txt = abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), 0, 0, &status);
+                if (status == 0 && txt) {
+                    (myException.type += " - type is: ") += txt;
+                    free(txt);
+                }
+#endif
                 Exception::addToTrace(myException);
             }
         }
