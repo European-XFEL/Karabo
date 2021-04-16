@@ -44,18 +44,10 @@ namespace karathon {
 
         static int startAsync(const karabo::net::Connection::Pointer& connection, const bp::object& connectionHandler);
 
-        static void clear() {
-        }
-
     private:
 
-        static void proxyConnectionHandler(const karabo::net::ErrorCode& code, const bp::object& connectionHandler, karabo::net::Channel::Pointer channel);
+        static void proxyConnectionHandler(const karabo::net::ErrorCode& code, const bp::object& connectionHandler, const karabo::net::Channel::Pointer& channel);
 
-        // I've taken this helper function from Burkhard
-
-        static bool hasattr(bp::object obj, const std::string& attrName) {
-            return PyObject_HasAttrString(obj.ptr(), const_cast<char*> (attrName.c_str()));
-        }
     };
 }
 
