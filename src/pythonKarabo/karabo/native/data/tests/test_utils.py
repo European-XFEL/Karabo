@@ -43,23 +43,46 @@ class HashHtmlParser(HTMLParser):
         self.cells_data.append(data)
 
 
-def test_numpy_int32_dtype():
+def test_numpy_number():
+    dtype = dtype_from_number(1)
+    assert dtype == np.bool
+    dtype = dtype_from_number(2)
+    assert dtype == np.object
+    dtype = dtype_from_number(3)
+    assert dtype == np.object
+    dtype = dtype_from_number(4)
+    assert dtype == np.int8
+    dtype = dtype_from_number(5)
+    assert dtype == np.int8
+    dtype = dtype_from_number(6)
+    assert dtype == np.uint8
+    dtype = dtype_from_number(7)
+    assert dtype == np.uint8
+    dtype = dtype_from_number(8)
+    assert dtype == np.int16
+    dtype = dtype_from_number(9)
+    assert dtype == np.int16
+    dtype = dtype_from_number(10)
+    assert dtype == np.uint16
+    dtype = dtype_from_number(11)
+    assert dtype == np.uint16
     dtype = dtype_from_number(12)
     assert dtype == np.int32
-
-
-def test_numpy_object_dtype():
-    dtype = dtype_from_number(55)
-    assert dtype == np.object_
-
-
-def test_numpy_int64_dtype():
+    dtype = dtype_from_number(13)
+    assert dtype == np.int32
+    dtype = dtype_from_number(14)
+    assert dtype == np.uint32
+    dtype = dtype_from_number(15)
+    assert dtype == np.uint32
     dtype = dtype_from_number(16)
     assert dtype == np.int64
-
-
-def test_numpy_unknwon():
-    dtype = dtype_from_number(39)
+    dtype = dtype_from_number(17)
+    assert dtype == np.int64
+    dtype = dtype_from_number(18)
+    assert dtype == np.uint64
+    dtype = dtype_from_number(19)
+    assert dtype == np.uint64
+    dtype = dtype_from_number(55)
     assert dtype == np.object_
 
 
@@ -149,8 +172,8 @@ def test_create_hash_html():
     float_val_idx = parser.cells_data.index('6.4')
     assert float_val_idx == float_key_idx + 1
 
-    int_key_idx = parser.cells_data.index('int', float_val_idx+1)
-    int_val_idx = parser.cells_data.index('8', float_val_idx+1)
+    int_key_idx = parser.cells_data.index('int', float_val_idx + 1)
+    int_val_idx = parser.cells_data.index('8', float_val_idx + 1)
     assert int_val_idx == int_key_idx + 1
 
     hashlist_key_idx = parser.cells_data.index('hashlist', int_val_idx + 1)
