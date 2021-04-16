@@ -7,9 +7,12 @@ from karabo.common.const import (
 from karabo.native import (
     AccessMode, Bool, Configurable, Hash, HashList, String, UInt8)
 
+from karabogui.binding.builder import build_binding
 from karabogui.binding.validate import (
     get_default_value, sanitize_table_value, validate_value,
-    validate_table_value)
+    validate_binding_configuration, validate_table_value)
+from .schema import get_simple_props_schema
+
 import karabogui.binding.types as types
 
 
@@ -775,3 +778,43 @@ def test_default_value_vector_minsize():
     binding = types.VectorStringBinding(attributes=attributes)
     value = get_default_value(binding, force=True)
     assert value == ["", "", "", ""]
+
+
+def test_validate_binding_configuration():
+    schema = get_simple_props_schema()
+    binding = build_binding(schema)
+
+    # Note: validate binding configuration uses `validate_value`, which is
+    # extensively tested. We check that the iteration works
+
+    # 1. Leaf element testing
+    config = Hash("boolProperty", False)
+    fails = validate_binding_configuration(binding, config)
+    # Boolean is fine
+    assert fails.empty()
+
+    config = Hash("intProperty", 2)
+    fails = validate_binding_configuration(binding, config)
+    assert fails.empty()
+
+    config = Hash("intProperty", 2.0)
+    fails = validate_binding_configuration(binding, config)
+    assert "intProperty" in fails
+
+    config = Hash("NOTINSCHEMA", False)
+    # Right now, properties that are not in the schema, are not in fails
+    # This might change in the future
+    fails = validate_binding_configuration(binding, config)
+    # Boolean is fine
+    assert fails.empty()
+
+    # 2. Node element testing
+    # Test that elements in nodes are validated
+    config = Hash("node.foo", "XFEL")
+    fails = validate_binding_configuration(binding, config)
+    assert "node.foo" not in fails
+
+    config = Hash("node.bar", np.array([]), "node.charlie", 2)
+    fails = validate_binding_configuration(binding, config)
+    assert "node.bar" in fails
+    assert "node.charlie" not in fails
