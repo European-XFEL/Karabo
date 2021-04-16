@@ -7,8 +7,10 @@ The **most relevant improvements**, fixes and changes are:
 - MDL API CHANGE: The method `onInitialization` will not shutdown the instance anymore on exception.
 - All API: The slot call ``slotGetTime`` takes an input argument now and provides the ``timeServerId``
   and the last reference timestamp.
-- C++: Input channels of devices now have a property that shows the output
+- C++/Bound: Input channels of devices now have a property that shows the output
   channels that are configured to be connected but are not.
+
+- C++/Bound: If an injected schema contains input or output channels or changes for the schema of an output channel, the respective channels are automatically (re-)created and need (re-)connection. That will happen automatically, but may need a few seconds.
 
 - MDL API: New functions **hashToDict** and **dictToHash** are available. These function converts either nested dictionaries or hashes to their counterpart.
 
