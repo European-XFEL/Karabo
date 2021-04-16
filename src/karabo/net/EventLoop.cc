@@ -11,6 +11,10 @@
 #include "EventLoop.hh"
 #include "karabo/log/Logger.hh"
 
+#if defined(__GNUC__) || defined(__clang__)
+#include <cxxabi.h>
+#endif
+
 namespace karabo {
     namespace net {
 
@@ -214,7 +218,18 @@ namespace karabo {
                 } catch (std::exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "Standard exception" << fullMessage << ": " << e.what();
                 } catch (...) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception" << fullMessage << ".";
+                    std::string extraInfo;
+#if defined(__GNUC__) || defined(__clang__)
+                    // See https://stackoverflow.com/questions/561997/determining-exception-type-after-the-exception-is-caught
+                    int status = 42; // Better init with a non-zero value...
+                    char* txt = abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), 0, 0, &status);
+                    if (status == 0 && txt) {
+                        extraInfo = ": ";
+                        extraInfo += txt;
+                        free(txt);
+                    }
+#endif
+                    KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception" << fullMessage << extraInfo << ".";
                 }
                 boost::this_thread::sleep(boost::posix_time::milliseconds(100));
             }
