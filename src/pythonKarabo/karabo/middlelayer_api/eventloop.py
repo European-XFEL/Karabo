@@ -36,8 +36,8 @@ _NUM_THREADS = 200
 
 
 class Broker(ABC):
-    def __init__(self):
-        pass
+    def __init__(self, need_subscribe):
+        self.needSubscribe = need_subscribe
 
     @abstractmethod
     def send(self, p, args):
@@ -156,7 +156,7 @@ class Broker(ABC):
 
 class JmsBroker(Broker):
     def __init__(self, loop, deviceId, classId, broadcast=True):
-        super(JmsBroker, self).__init__()
+        super(JmsBroker, self).__init__(False)
         self.loop = loop
         self.connection = loop.connection
         self.session = openmq.Session(self.connection, False, 1, 0)
@@ -551,7 +551,7 @@ class JmsBroker(Broker):
 
 class MqttBroker(Broker):
     def __init__(self, loop, deviceId, classId, broadcast=True):
-        super(MqttBroker, self).__init__()
+        super(MqttBroker, self).__init__(True)
         self.domain = loop.topic
         self.loop = loop
         self.clientId = str(uuid.uuid4())
