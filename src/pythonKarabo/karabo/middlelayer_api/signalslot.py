@@ -388,45 +388,26 @@ class SignalSlotable(Configurable):
         await self._ss.async_disconnect(sigId, sigName, slot)
 
     @slot
-    def slotConnectToSignal(self, signalFunction, slotInstanceId,
-                            slotFunction):
+    def slotConnectToSignal(self, signal, target, slot):
         """This helper slot is used to finalize the signalslot connection
-        procedure, namely, registration 'slotFunction' on signal side
+        procedure, namely, registration 'slot' on signal side
         """
-        signals = []
-        if isinstance(signalFunction, str):
-            signals.append(signalFunction)
-        else:
-            signals = list(signalFunction)
-        rc = True
-        for s in signals:
-            signalObj = getattr(self, s, None)
-            if signalObj is None:
-                rc = False
-                continue
-            else:
-                signalObj.make_connected(slotInstanceId, slotFunction)
-        return rc
+        signalObj = getattr(self, signal, None)
+        if signalObj is None:
+            return False
+        signalObj.make_connected(target, slot)
+        return True
 
     @slot
     def slotDisconnectFromSignal(self, signal, target, slot):
         """This helper slot is used to finalize the signalslot disconnection
-        procedure, namely, de-registration 'slotFunction' on signal side
+        procedure, namely, de-registration 'slot' on signal side
         """
-        signals = []
-        if isinstance(signal, str):
-            signals.append(signal)
+        signalObj = getattr(self, signal, None)
+        if signalObj is None:
+            return False
         else:
-            signals = list(signal)
-        rc = True
-        for s in signals:
-            signalObj = getattr(self, s, None)
-            if signalObj is None:
-                rc = False
-                continue
-            else:
-                signalObj.make_disconnected(target, slot)
-        return rc
+            return signalObj.make_disconnected(target, slot)
 
     @slot
     def slotHasSlot(self, slot):
