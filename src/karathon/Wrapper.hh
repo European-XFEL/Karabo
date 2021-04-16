@@ -489,7 +489,6 @@ namespace karathon {
                 std::string errstr = "";
                 if (PyErr_Occurred()) errstr = getPythonExceptionAsString();
                 const std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
-                const std::string whichStr(which ? which : "undefined");
                 std::ostringstream oss;
                 oss << "Python " << (which ? which : "undefined") << " handler '" << funcName
                         << "' has thrown an exception ...\n...\n" << errstr << "...";
