@@ -218,6 +218,10 @@ namespace karabo {
             const std::string& getInstanceId() const;
 
             /**
+             *  Concatenation of instance id and name
+             */
+            std::string getInstanceIdName() const;
+            /**
              * Check whether an InputChannel with given id is registered to receive all data
              *
              * i.e. an InputChannel with "dataDistribution == copy"
