@@ -126,7 +126,7 @@ def apply_project_configuration(config, binding, base=''):
     namespace = binding.value
     assert isinstance(namespace, BindingNamespace)
 
-    fails = {}
+    fails = Hash()
     base = base + '.' if base else ''
 
     for key, value, attrs in config.iterall():
