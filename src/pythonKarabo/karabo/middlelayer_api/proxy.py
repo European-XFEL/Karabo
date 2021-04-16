@@ -455,11 +455,9 @@ class DeviceClientProxyFactory(ProxyFactory):
                         self._deviceId, "signalSchemaUpdated",
                         self._device.slotSchemaUpdated)
             if self._used > 0:
+                signals = ["signalChanged", "signalStateChanged"]
                 await self._device._ss.async_connect(
-                        self._deviceId, "signalChanged",
-                        self._device.slotChanged)
-                await self._device._ss.async_connect(
-                        self._deviceId, "signalStateChanged",
+                        self._deviceId, signals,
                         self._device.slotChanged)
             schema, _ = await self._device.call(
                 self._deviceId, "slotGetSchema", False)
