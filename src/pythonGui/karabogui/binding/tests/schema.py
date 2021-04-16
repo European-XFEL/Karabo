@@ -31,6 +31,10 @@ def get_all_props_schema():
     return AllProperties.getClassSchema()
 
 
+def get_simple_props_schema():
+    return SimpleProperties.getClassSchema()
+
+
 def get_pipeline_schema():
     return PipelineData.getClassSchema()
 
@@ -80,6 +84,7 @@ class Simple(Configurable):
     """
     foo = Bool(defaultValue=True)
     bar = String()
+    charlie = Int32()
 
 
 class PipelineData(Configurable):
@@ -175,3 +180,22 @@ class Recursive(Configurable):
 
 class VectorAttr(Configurable):
     vec = VectorBool(defaultValue=np.array([True, True]))
+
+
+class SimpleProperties(Configurable):
+    """A `Configurable` with every type of property
+    """
+    boolProperty = Bool(defaultValue=True)
+    doubleProperty = Double(unitSymbol=Unit.METER)
+    floatProperty = Float()
+    intProperty = Int16()
+    stringProperty = String(options=['foo', 'bar', 'baz', 'qux'])
+    vectorProperty = VectorDouble()
+    vectorStringProperty = VectorString()
+    node = Node(Simple)
+    i1 = ChoiceOfNodes(Multi)
+    j1 = ListOfNodes(Multi)
+
+    @Slot(allowedStates=[State.INTERLOCKED, State.ACTIVE])
+    def anySlot(self):
+        pass
