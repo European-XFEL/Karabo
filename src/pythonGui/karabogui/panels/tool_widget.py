@@ -34,6 +34,7 @@ class SearchBar(QWidget):
     def reset(self, enable=False):
         """Reset the model search bar"""
         self.ui_filter.setText("")
+        self.ui_filter.setPlaceholderText("")
         self.ui_filter.setEnabled(enable)
         self.ui_search.setEnabled(enable)
         self.ui_clear.setEnabled(enable)
@@ -45,6 +46,7 @@ class SearchBar(QWidget):
     def _search_clicked(self):
         with wait_cursor():
             pattern = str(self.ui_filter.text())
+            self.ui_filter.setPlaceholderText(pattern)
             tree_view = self.tree_view()
             proxy_model = tree_view.model()
             proxy_model.setFilterFixedString(pattern)
@@ -55,11 +57,12 @@ class SearchBar(QWidget):
         with wait_cursor():
             pattern = ''
             self.ui_filter.setText(pattern)
+            self.ui_filter.setPlaceholderText(pattern)
             tree_view = self.tree_view()
             proxy_model = tree_view.model()
             proxy_model.setFilterFixedString(pattern)
-            # After search, the operator can clear and maintain his selection!
-            # Note: Maybe expand tree view
+            # Collapse whole tree and scroll / expand the selection
+            tree_view.collapseAll()
             index = proxy_model.currentIndex()
             if index.isValid():
                 tree_view.scrollTo(index)
@@ -88,6 +91,7 @@ class InterfaceBar(QWidget):
     def reset(self, enable=False):
         """Reset the model search bar"""
         self.ui_filter.setText("")
+        self.ui_filter.setPlaceholderText("")
         self.ui_filter.setEnabled(enable)
         self.ui_search.setEnabled(enable)
         self.ui_clear.setEnabled(enable)
@@ -100,6 +104,7 @@ class InterfaceBar(QWidget):
     def _search_clicked(self):
         with wait_cursor():
             pattern = str(self.ui_filter.text())
+            self.ui_filter.setPlaceholderText(pattern)
             tree_view = self.tree_view()
             proxy_model = tree_view.model()
             proxy_model.setInterface(self.ui_interface.currentText())
@@ -112,12 +117,13 @@ class InterfaceBar(QWidget):
             pattern = ''
             self.ui_interface.setCurrentIndex(0)
             self.ui_filter.setText(pattern)
+            self.ui_filter.setPlaceholderText(pattern)
             tree_view = self.tree_view()
             proxy_model = tree_view.model()
             proxy_model.setInterface(self.ui_interface.currentText())
             proxy_model.setFilterFixedString(pattern)
-            # After search, the operator can clear and maintain his selection!
-            # Note: Maybe expand tree view
+            # Collapse whole tree and scroll / expand the selection
+            tree_view.collapseAll()
             index = proxy_model.currentIndex()
             if index.isValid():
                 tree_view.scrollTo(index)
