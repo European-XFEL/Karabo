@@ -275,6 +275,10 @@ namespace karabo {
         }
 
 
+        std::string OutputChannel::getInstanceIdName() const {
+            return (m_instanceId + ":") += m_channelName;
+        }
+
         bool OutputChannel::hasRegisteredCopyInputChannel(const std::string& instanceId) const {
             boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
             return (m_registeredCopyInputs.find(instanceId) != m_registeredCopyInputs.end());
@@ -419,13 +423,13 @@ namespace karabo {
                 }
                 onInputAvailable(instanceId); // Immediately register for reading
                 updateConnectionTable();
-                KARABO_LOG_FRAMEWORK_INFO << "OutputChannel " << getInstanceId() << ": handshake (hello)... from InputChannel : \"" << instanceId
+                KARABO_LOG_FRAMEWORK_INFO << getInstanceIdName() << ": handshake (hello)... from InputChannel : \"" << instanceId
                         << "\", \"" << dataDistribution << "\", \"" << onSlowness << "\"";
             } else if (reason == "update") {
 
                 if (message.has("instanceId")) {
                     const std::string& instanceId = message.get<std::string > ("instanceId");
-                    KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT of '" << this->getInstanceId() << "': instanceId "
+                    KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT of '" << this->getInstanceIdName() << "': instanceId "
                             << instanceId << " has updated...";
                     onInputAvailable(instanceId);
                 }
@@ -633,7 +637,7 @@ namespace karabo {
                     // Cleaning expired or specific channels only
                     if (!tcpChannel || tcpChannel == channel) {
                         const std::string& instanceId = it->first;
-                        KARABO_LOG_FRAMEWORK_INFO << m_instanceId << " : Shared input channel '" << instanceId
+                        KARABO_LOG_FRAMEWORK_INFO << getInstanceIdName() << " : Shared input channel '" << instanceId
                                 << "' (ip/port " << (tcpChannel ? tcpAddress : "?") << ") disconnected since '"
                                 << error.message() << "' (#" << error.value() << ").";
 
@@ -671,7 +675,7 @@ namespace karabo {
 
                         const std::string& instanceId = it->first;
 
-                        KARABO_LOG_FRAMEWORK_INFO << m_instanceId << " : Copy input channel '" << instanceId
+                        KARABO_LOG_FRAMEWORK_INFO << getInstanceIdName() << " : Copy input channel '" << instanceId
                                 << "' (ip/port " << (tcpChannel ? tcpAddress : "?") << ") disconnected since '"
                                 << error.message() << "' (#" << error.value() << ").";
                         // Release any queued chunks:
@@ -691,10 +695,10 @@ namespace karabo {
                 // Erase from container that keeps channel alive - and warn about inconsistencies:
                 boost::mutex::scoped_lock lock(m_inputNetChannelsMutex);
                 if (m_inputNetChannels.erase(channel) < 1u) {
-                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId << " : Failed to remove channel with address " << channel.get();
+                    KARABO_LOG_FRAMEWORK_WARN << getInstanceIdName() << " : Failed to remove channel with address " << channel.get();
                 }
                 if (m_inputNetChannels.size() != inputsLeft) {
-                    KARABO_LOG_FRAMEWORK_WARN << m_instanceId << " : Inconsistent number of channels left: "
+                    KARABO_LOG_FRAMEWORK_WARN << getInstanceIdName() << " : Inconsistent number of channels left: "
                             << m_inputNetChannels.size() << " / " << inputsLeft;
                 }
             }
@@ -799,7 +803,7 @@ namespace karabo {
         void OutputChannel::update() {
 
             // m_channelId is unique per _process_...
-            KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT " << m_channelId << " of '" << this->getInstanceId() << "' update()";
+            KARABO_LOG_FRAMEWORK_TRACE << "OUTPUT " << m_channelId << " of '" << this->getInstanceIdName() << "' update()";
 
             // If no data was written and not endOfStream: nothing to do
             if (Memory::size(m_channelId, m_chunkId) == 0 && !Memory::isEndOfStream(m_channelId, m_chunkId)) return;
@@ -1487,7 +1491,7 @@ namespace karabo {
 
         std::string OutputChannel::debugId() const {
             // m_channelId is unique per process and not per instance
-            return std::string((("OUTPUT " + util::toString(m_channelId) += " of '") += this->getInstanceId()) += "'");
+            return std::string((("OUTPUT " + util::toString(m_channelId) += " of '") += this->getInstanceIdName()) += "'");
         }
 
 
@@ -1497,7 +1501,7 @@ namespace karabo {
 
 
         void OutputChannel::write(const karabo::util::Hash& data, bool copyAllData) {
-            OutputChannel::MetaData meta(/*source*/ m_instanceId + ":" + m_channelName, /*timestamp*/ karabo::util::Timestamp());
+            OutputChannel::MetaData meta(/*source*/ getInstanceIdName(), /*timestamp*/ karabo::util::Timestamp());
             Memory::write(data, m_channelId, m_chunkId, meta, copyAllData);
         }
 
