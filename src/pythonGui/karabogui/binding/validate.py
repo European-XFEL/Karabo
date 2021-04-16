@@ -9,15 +9,15 @@ from karabogui.binding.compare import realign_hash, has_array_changes
 from karabogui.binding.recursive import (
     ListOfNodesBinding, ChoiceOfNodesBinding)
 from karabogui.binding.types import (
-    BoolBinding, ByteArrayBinding, CharBinding, ComplexBinding, FloatBinding,
-    IntBinding, NodeBinding, StringBinding, VectorBinding, VectorDoubleBinding,
-    VectorFloatBinding, VectorHashBinding, VectorNumberBinding,
-    VectorStringBinding)
+    BoolBinding, BindingRoot, ByteArrayBinding, CharBinding, ComplexBinding,
+    FloatBinding, IntBinding, NodeBinding, SlotBinding, StringBinding,
+    VectorBinding, VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
+    VectorNumberBinding, VectorStringBinding)
 from karabogui.binding.util import get_numpy_binding
 
 VECTOR_FLOAT_BINDINGS = (VectorFloatBinding, VectorDoubleBinding)
-RECURSIVE_BINDINGS = (NodeBinding, ListOfNodesBinding,
-                      ChoiceOfNodesBinding)
+NODE_BINDINGS = (NodeBinding, ListOfNodesBinding,
+                 ChoiceOfNodesBinding)
 
 
 def sanitize_table_value(binding, value):
@@ -103,7 +103,7 @@ def validate_value(binding, value):
         elif isinstance(binding, VectorHashBinding):
             # VectorHashBinding is not a valid value
             value = None
-        elif isinstance(binding, RECURSIVE_BINDINGS):
+        elif isinstance(binding, NODE_BINDINGS):
             # Nothing to do here! We automatically return the value
             pass
         else:
@@ -288,3 +288,32 @@ def validate_binding_minimum(binding, value):
         return low
 
     return value
+
+
+def validate_binding_configuration(binding, config):
+    """Validate a configuration against a `binding` from a class schema"""
+    assert isinstance(binding, BindingRoot)
+
+    def _iter_binding(node, base=''):
+        _recursive_types = (ChoiceOfNodesBinding, ListOfNodesBinding)
+        namespace = node.value
+        base = base + '.' if base else ''
+        for name in namespace:
+            subname = base + name
+            subnode = getattr(namespace, name)
+            if isinstance(subnode, NodeBinding):
+                yield from _iter_binding(subnode, base=subname)
+            elif isinstance(subnode, _recursive_types):
+                # cannot validate recursive types ...
+                continue
+            elif not isinstance(subnode, SlotBinding):
+                yield subname, subnode
+
+    fails = Hash()
+    for key, node in _iter_binding(binding):
+        if key in config:
+            value = config[key]
+            if validate_value(node, value) is None:
+                fails.update({key: value})
+
+    return fails
