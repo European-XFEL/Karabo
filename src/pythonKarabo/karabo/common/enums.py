@@ -17,9 +17,10 @@ class Interfaces(IntEnum):
     Trigger = 4
     Camera = 8
     Processor = 16
+    DeviceInstantiator = 32
     # add future interfaces as bit maskable properties:
-    # FUTURE_INTERFACE = 32
-    # SOME_OTHER_INTERFACE = 64
+    # FUTURE_INTERFACE = 64
+    # SOME_OTHER_INTERFACE = 128
     # ...
 
 
