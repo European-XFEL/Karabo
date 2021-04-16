@@ -531,7 +531,14 @@ class KaraboPlotView(QWidget):
                             'symbolPen': pen,
                             'symbolBrush': mkBrush(pen.color())})
 
-        return self.plotItem.plot(name=name, pen=pen, **options)
+        item = self.plotItem.plot(name=name, pen=pen, **options)
+        if hasattr(item, 'setDynamicRangeLimit'):
+            # DynamicRangeLimit was introduced in pyqtgraph 0.11.1 and
+            # contains a lot of bugs, e.g. curve won't show initial values
+            # until pyqtgraph >= 0.12.1
+            # Setting it to `None` disables it!
+            item.setDynamicRangeLimit(None)
+        return item
 
     def add_scatter_item(self, pen=mkPen(None), cycle=True, **options):
         """Add a scatter item to the built-in plotItem
