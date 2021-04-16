@@ -392,6 +392,23 @@ def test_validate_value_vector_size():
     assert validate_value(binding, array) is None
 
 
+def test_validate_value_options():
+    attributes = {KARABO_SCHEMA_OPTIONS: [3, 4, 5]}
+    binding = types.Uint8Binding(attributes=attributes)
+    assert validate_value(binding, "3") == 3
+    assert validate_value(binding, 4) == 4
+    # Not in options!
+    assert validate_value(binding, 2) is None
+    assert validate_value(binding, 6) is None
+
+    attributes = {KARABO_SCHEMA_OPTIONS: ["ham", "eggs"]}
+    binding = types.StringBinding(attributes=attributes)
+    assert validate_value(binding, "ham") == "ham"
+    assert validate_value(binding, "eggs") == "eggs"
+    assert validate_value(binding, 2) is None
+    assert validate_value(binding, "XFEL") is None
+
+
 def test_validate_vector_hash():
     """Test vector hash binding validation.
     It returns both valid and invalid values in the form of a HashList([]) for
