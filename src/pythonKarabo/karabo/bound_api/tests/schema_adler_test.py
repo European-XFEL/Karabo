@@ -28,6 +28,6 @@ class Tests(unittest.TestCase):
             stdout=subprocess.PIPE)
         schema = process.communicate()[0]
         print("\nCross schema test: schema length is {}".format(len(schema)))
-        self.assertEqual(adler32(schema), 601171167,
+        self.assertEqual(adler32(schema), 403254360,
                          "The generated schema changed. If this is "
                          "desired, change the checksum in the code.")
