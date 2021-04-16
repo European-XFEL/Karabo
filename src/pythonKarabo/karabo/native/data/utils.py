@@ -32,7 +32,7 @@ def numpy_from_number(number, default=np.object_):
         HashType.VectorInt8: np.int8,
         HashType.VectorUInt8: np.uint8,
         HashType.VectorInt16: np.int16,
-        HashType.VectorUInt8: np.uint16,
+        HashType.VectorUInt16: np.uint16,
         HashType.VectorInt32: np.int32,
         HashType.VectorUInt32: np.uint32,
         HashType.VectorInt64: np.int64,
