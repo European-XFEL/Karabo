@@ -972,7 +972,7 @@ namespace karabo {
 
 
             // Listener for heartbeats
-            KARABO_SLOT3(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
+            KARABO_SLOT(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
 
             KARABO_SYSTEM_SIGNAL("signalInstanceNew", string, Hash);
 
@@ -981,41 +981,41 @@ namespace karabo {
             KARABO_SYSTEM_SIGNAL("signalInstanceUpdated", string, Hash);
 
             // Global ping listener
-            KARABO_SLOT3(slotPing, string /*callersInstanceId*/, int /*replyIfSame*/, bool /*trackPingedInstance*/)
+            KARABO_SLOT(slotPing, string /*callersInstanceId*/, int /*replyIfSame*/, bool /*trackPingedInstance*/)
 
             // Global instance new notification
-            KARABO_SLOT2(slotInstanceNew, string /*instanceId*/, Hash /*instanceInfo*/)
+            KARABO_SLOT(slotInstanceNew, string /*instanceId*/, Hash /*instanceInfo*/)
 
             // Global slot instance gone
-            KARABO_SLOT2(slotInstanceGone, string /*instanceId*/, Hash /*instanceInfo*/)
+            KARABO_SLOT(slotInstanceGone, string /*instanceId*/, Hash /*instanceInfo*/)
 
             // Global slot instance updated
             KARABO_SLOT(slotInstanceUpdated, string /*instanceId*/, Hash /*instanceInfo*/)
 
             // Listener for ping answers
-            KARABO_SLOT2(slotPingAnswer, string /*instanceId*/, Hash /*instanceInfo*/)
+            KARABO_SLOT(slotPingAnswer, string /*instanceId*/, Hash /*instanceInfo*/)
 
             // Connects signal to slot from signal instance side
-            KARABO_SLOT3(slotConnectToSignal, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
+            KARABO_SLOT(slotConnectToSignal, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
 
             // Replies whether slot exists on this instance
-            KARABO_SLOT1(slotHasSlot, string /*slotFunction*/)
+            KARABO_SLOT(slotHasSlot, string /*slotFunction*/)
 
             // Subscribe from slot instance side
-            KARABO_SLOT2(slotSubscribeRemoteSignal, string /*signalInstanceId*/, string /*signalFunction*/)
-            KARABO_SLOT2(slotUnsubscribeRemoteSignal, string /*signalInstanceId*/, string /*signalFunction*/)
+            KARABO_SLOT(slotSubscribeRemoteSignal, string /*signalInstanceId*/, string /*signalFunction*/)
+            KARABO_SLOT(slotUnsubscribeRemoteSignal, string /*signalInstanceId*/, string /*signalFunction*/)
 
             // Disconnects signal from slot
-            KARABO_SLOT3(slotDisconnectFromSignal, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
+            KARABO_SLOT(slotDisconnectFromSignal, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
 
             // Function request
-            KARABO_SLOT1(slotGetAvailableFunctions, string /*functionType*/)
+            KARABO_SLOT(slotGetAvailableFunctions, string /*functionType*/)
 
             // Provides information about pipeline connectivity
-            KARABO_SLOT2(slotGetOutputChannelInformation, string /*ioChannelId*/, int /*pid*/)
+            KARABO_SLOT(slotGetOutputChannelInformation, string /*ioChannelId*/, int /*pid*/)
             KARABO_SLOT(slotGetOutputChannelInformationFromHash, karabo::util::Hash /*hash*/)  // wrapper for generic calls, that encapsulate arguments in Hash
 
-            KARABO_SLOT0(slotGetOutputChannelNames)
+            KARABO_SLOT(slotGetOutputChannelNames)
         }
 
 
