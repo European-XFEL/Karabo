@@ -12,6 +12,7 @@
 #include "Strand.hh"
 
 #include "karabo/util/MetaTools.hh"  // for bind_weak
+#include "karabo/log/Logger.hh"      // for KARABO_LOG_FRAMEWORK_XXX
 
 #include <utility>  // for std::move
 
@@ -80,7 +81,13 @@ namespace karabo {
                 }
             }
             // Actually run the task without lock
-            nextTask();
+            // Catch exceptions, otherwise this Strand would completely stop functioning:
+            // run not posted anymore, but m_tasksRunning still true.
+            try {
+                nextTask();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Caught exception in posted method: " << e.what();
+            }
             // Repost to eventually run next task - see comment in startRunningIfNeeded about use of bind_weak.
             m_ioService.post(karabo::util::bind_weak(&Strand::run, this));
         }
