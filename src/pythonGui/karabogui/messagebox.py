@@ -8,6 +8,7 @@ from textwrap import dedent
 from qtpy.QtWidgets import QMessageBox
 
 from karabogui.dialogs.messagebox import KaraboMessageBox
+from karabogui.singletons.api import get_panel_wrangler
 
 
 def show_alarm(text, title="Alarm", details=None, parent=None):
@@ -33,6 +34,11 @@ def show_warning(text, title="Warning", details=None, parent=None):
 def _show_message_box(icon, text, title, details=None, parent=None):
     """A wrapper to simplify the different message box styles defined below.
     """
+    if parent is None:
+        # If no parent is provided, we can place it in the center of the
+        # main window if available!
+        parent = get_panel_wrangler().main_window
+
     message_box = KaraboMessageBox(parent=parent)
     message_box.setWindowTitle(title)
     message_box.setIcon(icon)
