@@ -114,10 +114,11 @@ class Configuration(QObject):
     log_panel = Item(default=panel_default(), q_set=True, group=PANEL)
 
     # ----------------------------------------------
-    # Wizard and DPI
+    # MainWindow, Wizard and DPI
 
     wizard = Item(default=True, q_set=True, group=USER)
     highDPI = Item(default=True, q_set=True, group=USER)
+    main_geometry = Item(q_set=True, group=USER)
 
     # ----------------------------------------------
     # Project db interface

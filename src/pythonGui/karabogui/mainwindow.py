@@ -32,7 +32,7 @@ from karabogui.panels.api import (
     ProjectPanel, ScriptingPanel, TopologyPanel)
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
-from karabogui.util import process_qt_events
+from karabogui.util import generateObjectName, process_qt_events
 from karabogui.wizards import TipsTricksWizard
 
 SERVER_INFO_WIDTH = 250
@@ -172,6 +172,8 @@ class MainWindow(QMainWindow):
         }
         register_for_broadcasts(event_map)
 
+        self.readSettings()
+
     # -----------------------------------------------------------------------
     # Karabo Events
 
@@ -250,6 +252,11 @@ class MainWindow(QMainWindow):
             model.conflict = True
 
     # -----------------------------------------------------------------------
+
+    def readSettings(self):
+        window_geometry = get_config()["main_geometry"]
+        if window_geometry:
+            self.restoreGeometry(window_geometry)
 
     def update_server_connection(self, data=None):
         """Update the status bar with our broker connection information
@@ -408,6 +415,11 @@ class MainWindow(QMainWindow):
         self.acEnableHighDPI.triggered.connect(self._store_dpi_setting)
         mSettingsMenu.addAction(self.acEnableHighDPI)
 
+        self.acStoreMainWindowGeometry = QAction('Store Geometry', self)
+        self.acStoreMainWindowGeometry.triggered.connect(
+            self.onStoreMainWindowGeometry)
+        mSettingsMenu.addAction(self.acStoreMainWindowGeometry)
+
         mHelpMenu = menuBar.addMenu("&Links")
         mHelpMenu.addAction(self.acGrafana)
         mHelpMenu.addAction(self.acGuiDocumentation)
@@ -422,7 +434,8 @@ class MainWindow(QMainWindow):
 
     def _setupToolBar(self):
 
-        toolbar = self.addToolBar('Standard')
+        toolbar = self.addToolBar("Standard")
+        toolbar.setObjectName(generateObjectName(toolbar))
         toolbar.addAction(self.acExit)
 
         toolbar.addSeparator()
@@ -602,6 +615,10 @@ class MainWindow(QMainWindow):
     @Slot()
     def onConfiguration(self):
         ConfigurationDialog(parent=self).open()
+
+    @Slot()
+    def onStoreMainWindowGeometry(self):
+        get_config()['main_geometry'] = self.saveGeometry()
 
     @Slot()
     def onHelpAbout(self):
