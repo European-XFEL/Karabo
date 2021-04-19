@@ -23,7 +23,7 @@ class TestConfiguration(GuiTestCase):
         config['domain'] = 'CAS_INTERNAL'
         config['db_token'] = 'admin'
 
-        self.assertEqual(len(config), 14)
+        self.assertEqual(len(config), 15)
         self.assertEqual(config['db_token'], 'admin')
         self.assertEqual(config['domain'], 'CAS_INTERNAL')
 
@@ -31,7 +31,8 @@ class TestConfiguration(GuiTestCase):
                          ['alarm_panel', 'broker_topic', 'config_dir',
                           'console_panel', 'db_token', 'documentation',
                           'domain', 'gui_servers', 'highDPI', 'log_panel',
-                          'macro_dir', 'scene_dir', 'username', 'wizard'])
+                          'macro_dir', 'main_geometry', 'scene_dir',
+                          'username', 'wizard'])
 
     def test_set_wrong_key(self):
         config = Configuration()
@@ -56,7 +57,10 @@ class TestConfiguration(GuiTestCase):
         groups = config.groups()
         self.assertEqual(len(groups), 6)
         user_group = [item.name for item in groups[USER]]
-        self.assertEqual(len(user_group), 2)
+        self.assertEqual(len(user_group), 3)
+        self.assertIn('wizard', user_group)
+        self.assertIn('main_geometry', user_group)
+        self.assertIn('highDPI', user_group)
         network_group = [item.name for item in groups[NETWORK]]
         self.assertEqual(len(network_group), 2)
         self.assertIn('username', network_group)
