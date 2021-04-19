@@ -98,10 +98,43 @@ void Strand_Test::testSequential() {
 }
 
 
+void Strand_Test::testThrowing() {
+    // Test that a std::exception thrown in posted handler does not stop the Strand to work
+    // but goes on with next handler
+
+    auto strand = boost::make_shared<karabo::net::Strand>(EventLoop::getIOService());
+    const int size = 10;
+    std::vector<int> vec(size, -1); // initialize all entries with -1
+    bool done = false;
+    boost::function<void(int) > handler = [&vec, &done](int i) {
+        if (i == 2) {
+            throw std::runtime_error("trouble");
+        } else {
+            vec[i] = i;
+            if (i == size - 1) done = true;
+        }
+    };
+    for (int i = 0; i < size; ++i) {
+        strand->post(boost::bind(handler, i));
+    }
+    while (!done) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+    }
+
+    for (int i = 0; i < size; ++i) {
+        if (i == 2) {
+            // vector element untouched by handler
+            CPPUNIT_ASSERT_EQUAL(-1, vec[i]);
+        } else {
+            CPPUNIT_ASSERT_EQUAL(i, vec[i]);
+        }
+    }
+}
+
 void Strand_Test::testStrandDies() {
 
     // We stop the test before all posts have been processed - in principle the Strand could have posted
-    // to the the event loop before it died and then the handler is called when the test function is done and
+    // to the event loop before it died and then the handler is called when the test function is done and
     // its scope is cleaned.
     // By using (copies of) shared pointers inside the handler we avoid any crash potential of that.
     auto aMutexPtr = boost::make_shared<boost::mutex>();
