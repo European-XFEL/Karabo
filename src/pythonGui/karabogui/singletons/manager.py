@@ -576,8 +576,10 @@ class Manager(QObject):
             # Create KaraboBroadcastEvent
             broadcast_event(KaraboEvent.DeviceInitReply, data)
             if not success:
-                text = ("The instance <b>{}</b> could not be "
-                        "instantiated.".format(deviceId))
+                text = (f'The instance <b>{deviceId}</b> could not be '
+                        f'instantiated.. <br><br>The reason is probably: <br>'
+                        f'<i>{get_error_message(message)}</i><br><br>'
+                        'Click "Show Details..." for more information.')
                 messagebox.show_error(text, details=message)
 
     def handle_alarmInit(self, instanceId, rows):
