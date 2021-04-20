@@ -192,6 +192,7 @@ class SimpleProperties(Configurable):
     stringProperty = String(options=['foo', 'bar', 'baz', 'qux'])
     vectorProperty = VectorDouble()
     vectorStringProperty = VectorString()
+    table = VectorHash(Simple)
     node = Node(Simple)
     i1 = ChoiceOfNodes(Multi)
     j1 = ListOfNodes(Multi)
