@@ -188,7 +188,7 @@ namespace karabo {
                     .displayedName("Minimum Client Version")
                     .description("If this variable does not respect the N.N.N(.N) convention,"
                                  " the Server will not enforce a version check")
-                    .assignmentOptional().defaultValue("2.9.0")
+                    .assignmentOptional().defaultValue("2.10.4")
                     .reconfigurable()
                     .adminAccess()
                     .commit();
@@ -227,6 +227,12 @@ namespace karabo {
                     .reconfigurable()
                     .adminAccess()
                     .commit();
+
+            SLOT_ELEMENT(expected).key("slotDumpToLog")
+                    .displayedName("Dump Debug to Log")
+                    .description("Dumps info about connections to log file (care - can be huge)")
+                    .expertAccess()
+                    .commit();
         }
 
 
@@ -242,6 +248,7 @@ namespace karabo {
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
             KARABO_SLOT(slotAlarmSignalsUpdate, std::string, std::string, karabo::util::Hash);
             KARABO_SLOT(slotProjectUpdate, karabo::util::Hash, std::string);
+            KARABO_SLOT(slotDumpToLog);
             KARABO_SLOT(slotDumpDebugInfo, karabo::util::Hash);
             KARABO_SLOT(slotDisconnectClient, std::string);
 
@@ -1745,9 +1752,21 @@ namespace karabo {
         }
 
 
+        void GuiServerDevice::slotDumpToLog() {
+            // Empty Hash as argument ==> complete info. 
+            // Can be HUGE: full topology and complete cache of monitored devices...
+            // Note: This will leave no trace if logging level is WARN or above.
+            KARABO_LOG_FRAMEWORK_INFO << "Debug info requested by slotDumpToLog:\n" << getDebugInfo(karabo::util::Hash());
+        }
+
+
         void GuiServerDevice::slotDumpDebugInfo(const karabo::util::Hash& info) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "slotDebugInfo : info ...\n" << info;
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotDumpDebugInfo : info ...\n" << info;
+            reply(getDebugInfo(info));
+        }
+
+
+        karabo::util::Hash GuiServerDevice::getDebugInfo(const karabo::util::Hash& info) {
 
                 Hash data;
 
@@ -1813,14 +1832,9 @@ namespace karabo {
                 if (info.empty() || info.has("topology")) {
                     // system topology
                     data.set("systemTopology", remote().getSystemTopology());
-                }
-
-                // reply to the caller
-                reply(data);
-
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in slotDebugInfo(): " << e.userFriendlyMsg();
             }
+
+            return data;
         }
 
 
