@@ -54,35 +54,35 @@ class GuiTestCase(unittest.TestCase):
 def alarm_data():
     data = OrderedDict()
     data['entry1'] = {'uptype1': {
-            ALARM_ID: 0,
-            PROPERTY: 'choochability',
-            DESCRIPTION: 'choochability unsufficient',
-            ACKNOWLEDGEABLE: True,
-            ALARM_TYPE: ALARM_HIGH,
-            DEVICE_ID: 'Bobby',
-            NEEDS_ACKNOWLEDGING: True,
-            TIME_OF_OCCURENCE: '2017-04-20T10:32:22 UTC',
-            TIME_OF_FIRST_OCCURENCE: '2017-04-20T09:32:22 UTC'}}
+        ALARM_ID: 0,
+        PROPERTY: 'choochability',
+        DESCRIPTION: 'choochability unsufficient',
+        ACKNOWLEDGEABLE: True,
+        ALARM_TYPE: ALARM_HIGH,
+        DEVICE_ID: 'Bobby',
+        NEEDS_ACKNOWLEDGING: True,
+        TIME_OF_OCCURENCE: '2017-04-20T10:32:22 UTC',
+        TIME_OF_FIRST_OCCURENCE: '2017-04-20T09:32:22 UTC'}}
     data['entry2'] = {'uptype1': {
-            ALARM_ID: 1,
-            PROPERTY: 'choochness',
-            DESCRIPTION: 'choochness over 90000',
-            ACKNOWLEDGEABLE: False,
-            ALARM_TYPE: ALARM_HIGH,
-            DEVICE_ID: 'Jenny',
-            NEEDS_ACKNOWLEDGING: False,
-            TIME_OF_OCCURENCE: '2017-04-20T10:12:22 UTC',
-            TIME_OF_FIRST_OCCURENCE: '2017-04-20T09:12:22 UTC'}}
+        ALARM_ID: 1,
+        PROPERTY: 'choochness',
+        DESCRIPTION: 'choochness over 90000',
+        ACKNOWLEDGEABLE: False,
+        ALARM_TYPE: ALARM_HIGH,
+        DEVICE_ID: 'Jenny',
+        NEEDS_ACKNOWLEDGING: False,
+        TIME_OF_OCCURENCE: '2017-04-20T10:12:22 UTC',
+        TIME_OF_FIRST_OCCURENCE: '2017-04-20T09:12:22 UTC'}}
     data['entry3'] = {'uptype1': {
-            ALARM_ID: 1,
-            PROPERTY: 'choochness',
-            DESCRIPTION: 'choochness over 90000',
-            ACKNOWLEDGEABLE: False,
-            ALARM_TYPE: ALARM_NONE,
-            DEVICE_ID: 'Frank',
-            NEEDS_ACKNOWLEDGING: False,
-            TIME_OF_OCCURENCE: '2017-04-20T10:12:22 UTC',
-            TIME_OF_FIRST_OCCURENCE: '2017-04-20T09:12:22 UTC'}}
+        ALARM_ID: 1,
+        PROPERTY: 'choochness',
+        DESCRIPTION: 'choochness over 90000',
+        ACKNOWLEDGEABLE: False,
+        ALARM_TYPE: ALARM_NONE,
+        DEVICE_ID: 'Frank',
+        NEEDS_ACKNOWLEDGING: False,
+        TIME_OF_OCCURENCE: '2017-04-20T10:12:22 UTC',
+        TIME_OF_FIRST_OCCURENCE: '2017-04-20T09:12:22 UTC'}}
     return data
 
 
@@ -219,6 +219,44 @@ def system_hash():
         'serverId': '__none__',
         'classId': 'Parentless',
         'status': 'noserver'
+    }
+
+    return h
+
+
+def device_hash():
+    """Generate a device hash which will be built into a device tree
+    """
+    h = Hash()
+
+    h['device.XFEL/FOO/1'] = None
+    h['device.XFEL/FOO/1', ...] = {
+        'host': 'BIG_IRON',
+        'visibility': AccessLevel.OBSERVER,
+        'capabilities': Capabilities.PROVIDES_SCENES,
+        'serverId': 'swerver',
+        'classId': 'FooClass',
+        'status': 'ok'
+    }
+
+    h['device.XFEL/FOO/2'] = None
+    h['device.XFEL/FOO/2', ...] = {
+        'host': 'BIG_IRON',
+        'visibility': AccessLevel.OBSERVER,
+        'capabilities': Capabilities.PROVIDES_SCENES,
+        'serverId': 'swerver',
+        'classId': 'FooClass',
+        'status': 'ok'
+    }
+
+    h['device.XFEL/BAR/1'] = None
+    h['device.XFEL/BAR/1', ...] = {
+        'host': 'BIG_IRON',
+        'visibility': AccessLevel.OBSERVER,
+        'capabilities': Capabilities.PROVIDES_SCENES,
+        'serverId': 'swerver',
+        'classId': 'BarClass',
+        'status': 'error'
     }
 
     return h
