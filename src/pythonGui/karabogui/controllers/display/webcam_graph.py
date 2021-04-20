@@ -20,7 +20,7 @@ class DisplayWebCamGraph(BaseBindingController):
     _image_node = Instance(KaraboImageNode, args=())
 
     def create_widget(self, parent):
-        widget = KaraboImageView()
+        widget = KaraboImageView(parent=parent)
         widget.stateChanged.connect(self._change_model)
 
         self._plot = widget.plot()
