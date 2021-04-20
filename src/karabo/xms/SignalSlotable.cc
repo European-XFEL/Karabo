@@ -638,7 +638,6 @@ namespace karabo {
                 const std::string& signalInstanceId = (header->has("signalInstanceId") ? // const ref is essential!
                                                        header->get<std::string>("signalInstanceId") :
                                                        std::string("unknown"));
-
                 // Check whether this message is an async reply
                 if (header->has("replyFrom")) {
                     // replies are never broadcasted, so use normal event strand
@@ -1995,7 +1994,7 @@ namespace karabo {
 
             // Prepare lambdas as handlers for async request to slotDisconnectFromSignal:
             const std::string instanceId(this->getInstanceId()); // copy for lambda since that should not copy a bare 'this'
-            const std::string errorMsg(signalInstanceId + " failed to disconnect slot '" + slotInstanceId + "." + slotFunction
+            const std::string errorMsg(instanceId + " failed to disconnect slot '" + slotInstanceId + "." + slotFunction
                                        + "' from signal '" + signalInstanceId + "." + signalFunction + "'");
             auto innerSuccessHandler = [ = ] (bool disconnected){// '[ = ]' to copy all stuff by value
                 if (disconnected) {
@@ -2025,6 +2024,9 @@ namespace karabo {
             requestor.receiveAsync<bool>(innerSuccessHandler, failureHandler ? failureHandler : [errorMsg]() {
                 try {
                     throw;
+                } catch (const karabo::util::TimeoutException&) {
+                    Exception::clearTrace();
+                    KARABO_LOG_FRAMEWORK_WARN << errorMsg << " - timeout";
                 } catch (const std::exception& e) {
                     KARABO_LOG_FRAMEWORK_WARN << errorMsg << " - " << e.what();
                 }
@@ -2286,9 +2288,9 @@ namespace karabo {
         }
 
 
-        std::vector<std::string> SignalSlotable::slotGetOutputChannelNames() {
-            reply(getOutputChannelNames());
-            return getOutputChannelNames();
+        void SignalSlotable::slotGetOutputChannelNames() {
+            const std::vector<std::string>& ret = getOutputChannelNames();
+            reply(ret);
         }
 
 
@@ -2399,12 +2401,16 @@ namespace karabo {
                             << "' to " << numOutputs - numOutputsToIgnore << " output channel(s)";
                 }
             } else {
+                std::string msg;
                 try {
                     throw;
+                } catch (const karabo::util::TimeoutException&) {
+                    msg = "timeout";
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << " failed to connect InputChannel '" << channelName
-                            << "' to some of its " << numOutputs - numOutputsToIgnore << " output channels: " << e.what();
+                    msg = e.what();
                 }
+                KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << " failed to connect InputChannel '" << channelName
+                        << "' to some of its " << numOutputs - numOutputsToIgnore << " output channels: " << msg;
             }
 
             boost::mutex::scoped_lock lock(*mut);
@@ -2512,16 +2518,20 @@ namespace karabo {
          unsigned int counter, const std::string& outputChannelString, bool singleSuccess) {
 
             if (!singleSuccess) {
+                std::string msg;
                 try {
                     throw;
+                } catch (const karabo::util::TimeoutException&) {
+                    msg = "timeout";
+                    Exception::clearTrace();
                 } catch (const std::exception& e) {
-                    std::string why(e.what());
-                    if (why.find("Transport endpoint is already connected") != std::string::npos) {
-                        why = "Already connected"; // Do not spam log with exception printout
+                    msg = e.what();
+                    if (msg.find("Transport endpoint is already connected") != std::string::npos) {
+                        msg = "Already connected"; // Do not spam log with exception printout
                     }
-                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << " failed to connect InputChannel to '"
-                            << outputChannelString << "': " << why;
                 }
+                KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << " failed to connect InputChannel to '"
+                        << outputChannelString << "': " << msg;
             }
 
             const boost::function<void(bool)>& allReadyHandler = std::get<2>(*status);
