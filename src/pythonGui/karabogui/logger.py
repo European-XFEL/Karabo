@@ -8,7 +8,7 @@ import karabogui.icons as icons
 
 # The main status bar logger entity
 _logger = logging.getLogger('KaraboGUI')
-_logger.setLevel(logging.DEBUG)
+_logger.setLevel(logging.INFO)
 
 LOG_HEIGHT = 75
 CLEAR_BUTTON_SIZE = 25

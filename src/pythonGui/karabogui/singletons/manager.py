@@ -17,6 +17,7 @@ from karabogui.binding.api import (
     apply_fast_data, extract_attribute_modifications, extract_configuration)
 from karabogui.events import broadcast_event, KaraboEvent
 from karabogui.globals import KARABO_CLIENT_ID
+from karabogui.logger import get_logger
 from karabogui import messagebox
 from karabogui.singletons.api import get_alarm_model, get_network, get_topology
 from karabogui.util import move_to_cursor, show_wait_cursor
@@ -211,6 +212,10 @@ class Manager(QObject):
                     f'<i>{get_error_message(reason)}</i><br><br>'
                     'Click "Show Details..." for more information.')
 
+            # Provide a text for the logger!
+            log_text = (f"Device reconfiguration of <b>{deviceId}</b> with "
+                        f"properties <b>{', '.join(paths)}</b> failed")
+            get_logger().error(log_text)
             messagebox.show_error(text, details=reason)
         else:
             device_proxy = self._waiting_devices.pop(deviceId, None)
@@ -418,10 +423,12 @@ class Manager(QObject):
                 device_proxy = self._topology.get_device(deviceId)
                 device_proxy.publish_historic_data(key, data)
         else:
-            # XXX: Forward compatibility!
-            # The GUI server of future Karabo versions (> 2.6.X) will report
-            # here about failed history request and their reason.
-            pass
+            # Provide a logger message on failure for developers
+            deviceId = info["deviceId"]
+            key = info["property"]
+            text = (f"Historic data request for property <b>{key}</b> and "
+                    f"of device <b>{deviceId}</b> failed.")
+            get_logger().debug(text)
 
     def handle_runConfigSourcesInGroup(self, **info):
         # This is DEPRECATED
