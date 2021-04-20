@@ -951,8 +951,14 @@ namespace karabo {
                     // Save injected
                     m_injectedSchema.merge(schema);
 
-                    // Stores paths in current full_schema to avoid sending them again later.
-                    const std::vector<std::string> prevFullSchemaPaths = m_fullSchema.getPaths();
+                    // Stores leaves in current full_schema to avoid sending them again later.
+                    // Empty nodes must not enter here since otherwise leaves injected into them would not be sent, either.
+                    std::vector<std::string> prevFullSchemaLeaves = m_fullSchema.getPaths();
+                    const auto itEnd = std::remove_if(prevFullSchemaLeaves.begin(), prevFullSchemaLeaves.end(),
+                                                      [this] (const std::string & p) {
+                                                          return m_fullSchema.isNode(p);
+                                                      });
+                    prevFullSchemaLeaves.resize(itEnd - prevFullSchemaLeaves.begin()); // remove_if did not alter length
 
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
@@ -960,8 +966,9 @@ namespace karabo {
                     // Notify the distributed system
                     emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
 
-                    // Keep new paths only. This hash is then set, to avoid re-sending updates with the same values.
-                    for (const std::string& p : prevFullSchemaPaths) {
+                    // Keep new leaves only (to avoid re-sending updates with the same values), i.e.
+                    // removes all leaves from validated that are in previous full schema.
+                    for (const std::string& p : prevFullSchemaLeaves) {
                         validated.erasePath(p);
                     }
 
@@ -1008,14 +1015,32 @@ namespace karabo {
                     // to update attributes like alarm levels, min/max values, size, etc. of existing properties.
                     for (const std::string& path : m_injectedSchema.getPaths()) {
                         if (!(m_staticSchema.has(path) || schema.has(path))) {
-                            m_parameters.erase(path);
+                            m_parameters.erasePath(path);
+                            // Now we might have removed 'n.m.l.c' completely although 'n.m' is in static schema:
+                            // need to restore (empty) node 'n.m':
+                            size_t pos = path.rfind('.'); // Last dot to cut path
+                            while (pos != std::string::npos) {
+                                const std::string& p = path.substr(0, pos); // first 'n.m.l', then 'n.m' (without break below then 'n')
+                                if (m_staticSchema.has(p) && !m_parameters.has(p)) {
+                                    m_parameters.set(p, karabo::util::Hash());
+                                    break; // 'n.m' added added back (after 'n.m.l' failed)
+                                }
+                                pos = p.rfind('.');
+                            }
                         }
                     }
 
                     // Clear cache
                     m_stateDependentSchema.clear();
 
-                    const std::vector<std::string> prevFullSchemaPaths = m_fullSchema.getPaths();
+                    // Stores leaves in current full_schema to avoid sending them again later.
+                    // Empty nodes must not enter here since otherwise leaves injected into them would not be sent, either.
+                    std::vector<std::string> prevFullSchemaLeaves = m_fullSchema.getPaths();
+                    const auto itEnd = std::remove_if(prevFullSchemaLeaves.begin(), prevFullSchemaLeaves.end(),
+                                                      [this] (const std::string & p) {
+                                                          return m_fullSchema.isNode(p);
+                                                      });
+                    prevFullSchemaLeaves.resize(itEnd - prevFullSchemaLeaves.begin()); // remove_if did not alter length
 
                     // Erase any previously injected InputChannels
                     for (const auto& inputNameChannel : getInputChannels()) {
@@ -1062,9 +1087,9 @@ namespace karabo {
                     // Notify the distributed system
                     emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
 
-                    // Keep new paths only. This hash is then set, to avoid re-sending updates with the same values.
-                    // Removes all paths from validated that are in previous full schema.
-                    for (const std::string& p : prevFullSchemaPaths) {
+                    // Keep new leaves only (to avoid re-sending updates with the same values), i.e.
+                    // removes all leaves from validated that are in previous full schema.
+                    for (const std::string& p : prevFullSchemaLeaves) {
                         validated.erasePath(p);
                     }
                     setNoLock(validated, stamp);
