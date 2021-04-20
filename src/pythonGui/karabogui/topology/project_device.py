@@ -192,8 +192,9 @@ class ProjectDeviceInstance(HasStrictTraits):
             fails = apply_project_configuration(
                 self._offline_config, self._offline_proxy.binding)
             if fails:
+                number = len(fails.paths(intermediate=False))
                 text = (f"Apply offline configuration for <b>{device_id}</b> "
-                        f"reported <b>{len(fails)}</b> problem(s)")
+                        f"reported <b>{number}</b> problem(s)")
                 get_logger().error(text)
 
     @on_trait_change('_offline_proxy.status', post_init=True)
