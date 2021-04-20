@@ -7,8 +7,7 @@ import warnings
 
 from qtpy.QtCore import Slot, QLocale, Qt
 from qtpy.QtGui import QFont, QFontDatabase, QIcon, QPalette, QPixmap
-from qtpy.QtWidgets import (
-    QApplication, QMessageBox, QSplashScreen, QStyleFactory)
+from qtpy.QtWidgets import QApplication, QSplashScreen, QStyleFactory
 from pyqtgraph import setConfigOptions
 
 from karabo.common.scenemodel.api import (
@@ -16,6 +15,7 @@ from karabo.common.scenemodel.api import (
 from karabogui.background import create_background_timer
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.fonts import FONT_FILENAMES, get_font_size_from_dpi
+from karabogui.logger import get_logger
 from karabogui.singletons.api import (
     get_config, get_manager, get_network, get_panel_wrangler)
 from karabogui.util import process_qt_events
@@ -23,15 +23,8 @@ from karabogui.util import process_qt_events
 
 def excepthook(exc_type, value, traceback):
     print_exception(exc_type, value, traceback)
-    icon = getattr(value, "icon", QMessageBox.Critical)
-    title = getattr(value, "title", exc_type.__name__)
-    message = getattr(value, "message",
-                      "{}: {}".format(exc_type.__name__, value))
-    mb = QMessageBox(icon, title, "{}\n{}\n\n".format(message, " " * 300))
     text = "".join(format_exception(exc_type, value, traceback))
-    mb.setDetailedText(text)
-    # NOTE: Uncomment to show exceptions in a message box
-    # mb.exec_()
+    get_logger().error(f"Application encountered exception: {text}")
     try:
         network = get_network()
         network.onError(text)

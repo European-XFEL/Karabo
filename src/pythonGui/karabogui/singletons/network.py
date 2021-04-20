@@ -311,6 +311,10 @@ class Network(QObject):
     def onReconfigure(self, device_id, configuration):
         """Set values in a device
         """
+        logger = get_logger()
+        props = ", ".join(configuration.keys())
+        logger.info(f"Request to reconfigure the properties <b>{props}</b> "
+                    f" of device <b>{device_id}</b>")
         h = Hash("type", "reconfigure")
         h["deviceId"] = device_id
         h["configuration"] = configuration
@@ -342,6 +346,9 @@ class Network(QObject):
         self._write_hash(h)
 
     def onExecuteGeneric(self, instanceId, slot_name, params):
+        logger = get_logger()
+        logger.info(f"Executing slot <b>{slot_name}</b> "
+                    f"of device <b>{instanceId}</b>")
         h = Hash("type", "requestGeneric")
         h["instanceId"] = instanceId
         h["slot"] = slot_name
@@ -408,6 +415,9 @@ class Network(QObject):
         self._write_hash(h)
 
     def onListConfigurationFromName(self, device_id, name=""):
+        logger = get_logger()
+        logger.info("Requesting list of configuration from name for"
+                    f"device <b>{device_id}</b>")
         h = Hash("type", "requestGeneric")
         args = Hash(
             "name", name,
