@@ -101,7 +101,8 @@ def validate_value(binding, value):
             else:
                 value = None
         elif isinstance(binding, VectorHashBinding):
-            # VectorHashBinding is not a valid value
+            # VectorHashBinding is not a valid value and has to be explicitly
+            # handled elsewhere, e.g. `validate_binding_configuration`
             value = None
         elif isinstance(binding, NODE_BINDINGS):
             # Nothing to do here! We automatically return the value
@@ -313,7 +314,15 @@ def validate_binding_configuration(binding, config):
     for key, node in _iter_binding(binding):
         if key in config:
             value = config[key]
-            if validate_value(node, value) is None:
+            if isinstance(node, VectorHashBinding):
+                if value is None:
+                    # Validate table expects a HashList
+                    fails.update({key: value})
+                else:
+                    _, invalid = validate_table_value(node, value)
+                    if invalid:
+                        fails.update({key: value})
+            elif validate_value(node, value) is None:
                 fails.update({key: value})
 
     return fails

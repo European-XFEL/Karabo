@@ -835,3 +835,20 @@ def test_validate_binding_configuration():
     fails = validate_binding_configuration(binding, config)
     assert "node.bar" in fails
     assert "node.charlie" not in fails
+
+    # 3. Table element testing
+    # A valid config
+    config = Hash("table", [Hash("foo", False, "bar", "XFEL", "charlie", 2),
+                            Hash("foo", True, "bar", "laser", "charlie", 0)])
+    fails = validate_binding_configuration(binding, config)
+    assert "table" not in fails
+
+    # Invalid, charlie becomes a float although integer
+    config = Hash("table", [Hash("foo", False, "bar", "XFEL", "charlie", 3.0)])
+    fails = validate_binding_configuration(binding, config)
+    assert "table" in fails
+
+    # Put None table
+    config = Hash("table", None)
+    fails = validate_binding_configuration(binding, config)
+    assert "table" in fails
