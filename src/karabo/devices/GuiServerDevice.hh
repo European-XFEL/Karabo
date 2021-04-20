@@ -704,7 +704,20 @@ namespace karabo {
              */
             void slotProjectUpdate(const karabo::util::Hash& info, const std::string& instanceId);
 
+            /**
+             * Slot to dump complete debug info to log file
+             *
+             * Same info as received from 'slotDumpDebugInfo' with empty input Hash
+             */
+            void slotDumpToLog();
+
             void slotDumpDebugInfo(const karabo::util::Hash& info);
+
+
+            /**
+             * Helper for 'slotDumpToLog' and 'slotDumpDebugInfo'
+             */
+            karabo::util::Hash getDebugInfo(const karabo::util::Hash& info);
 
             /**
              * Slot to force disconnection of client. Reply is whether specified client found.
