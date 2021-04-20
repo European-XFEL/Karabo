@@ -1104,7 +1104,7 @@ namespace karabo {
                                               karabo::util::Hash::Pointer& body, int timeout);
             long long getEpochMillis() const;
 
-            std::vector<std::string> slotGetOutputChannelNames();
+            void slotGetOutputChannelNames();
 
             // TODO This is a helper function during multi-topic refactoring
             void setTopic(const std::string& topic = "");
