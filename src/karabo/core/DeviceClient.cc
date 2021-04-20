@@ -662,11 +662,16 @@ namespace karabo {
                 if (p) p->requestNoWait(instanceId, "slotGetSchema", "", "_slotSchemaUpdated", false);
             };
             auto failureHandler = [instanceId] () {
+                std::string msg;
                 try {
                     throw; // to get access to the original exception
+                } catch (const karabo::util::TimeoutException&) {
+                    msg = "timeout";
+                    Exception::clearTrace();
                 } catch (const std::exception& e) {
-                    KARABO_LOG_FRAMEWORK_WARN << "getDeviceSchemaNoWait failed to connect to '" << instanceId << "': " << e.what();
+                    msg = e.what();
                 }
+                KARABO_LOG_FRAMEWORK_WARN << "getDeviceSchemaNoWait failed to connect to '" << instanceId << "': " << msg;
             };
             stayConnected(instanceId, successHandler, failureHandler);
 
