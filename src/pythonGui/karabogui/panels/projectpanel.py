@@ -14,6 +14,7 @@ from karabogui.enums import AccessRole
 from karabogui.globals import access_role_allowed
 from karabogui.actions import build_qaction, KaraboAction
 from karabogui.events import KaraboEvent, register_for_broadcasts
+from karabogui.logger import get_logger
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
     load_project, maybe_save_modified_project, reload_project, save_object,
@@ -170,6 +171,7 @@ class ProjectPanel(BasePanelWidget):
             if qaction.objectName() in ("new", "save", "declare"):
                 qaction.setEnabled(enable)
 
+
 # ------------------------------------------------------------------------
 # Helper functions
 
@@ -207,6 +209,9 @@ def _project_reload_handler(project_view):
     # We created a new project object!
     if project is not None:
         item_model.root_model = project
+        text = (f"Reloading project <b>{root_model.simple_name}</b> from "
+                "project database")
+        get_logger().info(text)
 
 
 def _project_new_handler(project_view):
@@ -229,6 +234,8 @@ def _project_new_handler(project_view):
         model = ProjectModel(simple_name=dialog.simple_name, initialized=True,
                              modified=True)
         item_model.root_model = model
+        text = f"Creating new project <b>{dialog.simple_name}</b>"
+        get_logger().info(text)
 
 
 def _project_save_handler(project_view):
@@ -241,6 +248,9 @@ def _project_save_handler(project_view):
     root_model = item_model.root_model
     if root_model is not None:
         save_object(root_model)
+        text = (f"Request to save project <b>{root_model.simple_name}</b> in "
+                "the project database")
+        get_logger().info(text)
 
 
 def _project_trash_handler(project_view):
@@ -254,3 +264,6 @@ def _project_trash_handler(project_view):
     if root_model is not None:
         project_view.update_is_trashed(project=root_model,
                                        project_controller=None)
+        text = ("Changing the <b>trash</b> attribute of the project "
+                f"<b>{root_model.simple_name}</b>")
+        get_logger().warning(text)
