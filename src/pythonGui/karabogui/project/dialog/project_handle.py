@@ -18,6 +18,7 @@ from karabogui import messagebox
 from karabogui.events import (
     register_for_broadcasts, unregister_from_broadcasts, KaraboEvent,
 )
+from karabogui.logger import get_logger
 from karabogui.project.utils import show_trash_project_message
 from karabogui.singletons.api import get_config, get_db_conn
 from karabogui.util import InputValidator, SignalBlocker, utc_to_local
@@ -238,6 +239,11 @@ class LoadProjectDialog(QDialog):
         """
         # Make sure loading of trashed projects is not possible
         if self._selected_item_loadable():
+            index = index.siblingAtColumn(0)
+            simple_name = self.model.data(index, Qt.DisplayRole)
+            text = (f"Loading project <b>{simple_name}</b> from project "
+                    "database")
+            get_logger().info(text)
             self.accept()
 
     @Slot(str)
