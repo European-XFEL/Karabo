@@ -152,6 +152,10 @@ public:
         // Schema less input channel...
         INPUT_CHANNEL(expected).key("input")
                 .commit();
+
+        // Not channel related, but for test that empty node does not get erased
+        NODE_ELEMENT(expected).key("emptyNode")
+                .commit();
     }
 
 
@@ -1122,6 +1126,12 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
     OVERWRITE_ELEMENT(schema).key("injectedInput.connectedOutputChannels")
             .setNewDefaultValue<std::vector < std::string >> ({"TestDevice:injectedOutput", "TestDevice:output"})
     .commit();
+    NODE_ELEMENT(schema).key("emptyNode") // Already in static schema - but without leaves
+            .commit();
+    INT32_ELEMENT(schema).key("emptyNode.anInt32")
+            .readOnly()
+            .initialValue(42)
+            .commit();
 
     CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", updateSlot, schema)
                             .timeout(requestTimeoutMs)
@@ -1137,7 +1147,7 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
     CPPUNIT_ASSERT(std::find(outputChannels.begin(), outputChannels.end(), "injectedOutput") != outputChannels.end());
 
     // Check that, after some time, the injected input is connected to both, the injected and the static output
-    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get("TestDevice")), waitForCondition([this] () {
+    bool ok = waitForCondition([this] () {
         const Hash cfg(m_deviceClient->get("TestDevice"));
         if (cfg.has("output.connections") && cfg.has("injectedOutput.connections")) {
             std::vector<Hash> tableStatic, tableInjected;
@@ -1145,13 +1155,16 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
             cfg.get("injectedOutput.connections", tableInjected);
             if (tableStatic.size() == 1ul && tableInjected.size() == 1ul
                 && tableStatic[0].get<std::string>("remoteId") == "TestDevice:injectedInput"
-                && tableInjected[0].get<std::string>("remoteId") == "TestDevice:injectedInput") {
+                && tableInjected[0].get<std::string>("remoteId") == "TestDevice:injectedInput"
+                // Also ensure the injected property is there
+                && cfg.has("emptyNode.anInt32")) {
                 return true;
             }
         }
         return false;
-    }, cacheUpdateWaitMs * 20)); // longer timeout: automatic connection tries happen only every 5 seconds
+    }, cacheUpdateWaitMs * 20); // longer timeout: automatic connection tries happen only every 5 seconds
 
+    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get("TestDevice")), ok);
     // Remove the channels again:
     CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotUpdateSchema", Schema())
                             .timeout(requestTimeoutMs)
@@ -1169,10 +1182,11 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
     Hash cfg;
     std::string dummy;
     sigSlot->request("TestDevice", "slotGetConfiguration").timeout(requestTimeoutMs).receive(cfg, dummy);
-    // FIXME: Should check for !cfg.has("injectedOutput") &&  !cfg.has("injectedInput"),
-    //        but for not yet understood reasons, empty nodes at "injectedOutput.schema" and "injectedInput.schema" stay...
-    CPPUNIT_ASSERT_MESSAGE(toString(cfg), !cfg.has("injectedOutput.distributionMode"));
-    CPPUNIT_ASSERT_MESSAGE(toString(cfg), !cfg.has("injectedInput.connectedOutputChannels"));
+    CPPUNIT_ASSERT_MESSAGE(toString(cfg), !cfg.has("injectedOutput"));
+    CPPUNIT_ASSERT_MESSAGE(toString(cfg), !cfg.has("injectedInput"));
+    // Not channel related - 'emptyNode' kept, but injected anInt32 not:
+    CPPUNIT_ASSERT_MESSAGE(toString(cfg), !cfg.has("emptyNode.anInt32"));
+    CPPUNIT_ASSERT_MESSAGE(toString(cfg), cfg.has("emptyNode"));
 
     std::clog << "OK." << std::endl;
 }
