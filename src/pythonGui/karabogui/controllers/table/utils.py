@@ -4,15 +4,12 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from karabo.common.api import (
-    KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_DISPLAY_TYPE_STATE)
+from karabo.common.api import KARABO_SCHEMA_DISPLAY_TYPE_STATE
 
 
 def is_state_display_type(binding):
     """Return if the display type belongs to a state element"""
-    dtype = binding.attributes.get(KARABO_SCHEMA_DISPLAY_TYPE, '')
-
-    return dtype == KARABO_SCHEMA_DISPLAY_TYPE_STATE
+    return binding.display_type == KARABO_SCHEMA_DISPLAY_TYPE_STATE
 
 
 def convert_string_list(value: str) -> list:
