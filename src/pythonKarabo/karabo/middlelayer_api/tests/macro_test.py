@@ -2,7 +2,7 @@ from asyncio import ensure_future, Future, TimeoutError
 from contextlib import contextmanager
 import sys
 import time
-from unittest import main
+from unittest import main, skipIf
 import weakref
 
 from karabo.common.states import State
@@ -21,6 +21,7 @@ from karabo.middlelayer_api.synchronization import background, sleep
 
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, sync_tst, async_tst)
+from .compat import mqtt
 
 
 class Superslot(Slot):
@@ -81,7 +82,10 @@ class Remote(Device):
         self.state = State.INCREASING
         for i in range(30):
             self.counter = i
-            await sleep(0.05)
+            if mqtt:
+                await sleep(0.065)
+            else:
+                await sleep(0.05)
         self.state = State.UNKNOWN
 
     @Slot()
@@ -175,6 +179,7 @@ class Tests(DeviceTest):
             d.changeit()
         self.assertEqual(self.remote.value, 3)
 
+    @skipIf(mqtt, "not supported")
     @sync_tst
     def test_disconnect(self):
         """check that we don't get updates when we're not connected"""
@@ -201,7 +206,10 @@ class Tests(DeviceTest):
         with getDevice("remote") as d:
             self.assertEqual(d.value, 7)
             d.value = 10
-            time.sleep(0.1)
+            if mqtt:
+                updateDevice(d)
+            else:
+                time.sleep(0.1)
             self.assertEqual(d.value, 10)
             d.changeit()
             self.assertEqual(d.value, 6)
@@ -220,7 +228,10 @@ class Tests(DeviceTest):
         self.remote.value = 7
         with getDevice("remote") as d:
             d.other = 102
-        time.sleep(0.1)
+        if mqtt:
+            updateDevice(d)
+        else:
+            time.sleep(0.1)
         self.assertEqual(self.remote.value, 102)
 
     @sync_tst
@@ -261,7 +272,10 @@ class Tests(DeviceTest):
         setNoWait(d, value=200, counter=300)
         self.assertEqual(self.remote.value, 0)
         self.assertEqual(self.remote.counter, 0)
-        time.sleep(0.1)
+        if mqtt:
+            updateDevice(d)
+        else:
+            time.sleep(0.1)
         self.assertEqual(self.remote.value, 200)
         self.assertEqual(self.remote.counter, 300)
 
@@ -269,7 +283,10 @@ class Tests(DeviceTest):
         setNoWait(d, "value", 0, "counter", 0)
         self.assertEqual(self.remote.value, 200)
         self.assertEqual(self.remote.counter, 300)
-        time.sleep(0.1)
+        if mqtt:
+            updateDevice(d)
+        else:
+            time.sleep(0.1)
         self.assertEqual(self.remote.value, 0)
         self.assertEqual(self.remote.counter, 0)
         with self.assertRaises(RuntimeError):
@@ -278,7 +295,10 @@ class Tests(DeviceTest):
         setNoWait(d, "deep.value", 400, "deep.counter", 400)
         self.assertEqual(self.remote.deep.counter, 0)
         self.assertEqual(self.remote.deep.value, 0)
-        time.sleep(0.1)
+        if mqtt:
+            updateDevice(d)
+        else:
+            time.sleep(0.1)
         self.assertEqual(self.remote.deep.counter, 400)
         self.assertEqual(self.remote.deep.value, 400)
 
@@ -287,6 +307,8 @@ class Tests(DeviceTest):
         """test the waitUntil function"""
         with getDevice("remote") as d:
             d.counter = 0
+            if mqtt:
+                updateDevice(d)
             self.assertEqual(d.counter, 0)
             executeNoWait(d, "count")
             waitUntil(lambda: d.counter > 10)
@@ -299,15 +321,20 @@ class Tests(DeviceTest):
         """test the waitWhile function"""
         with getDevice("remote") as d:
             d.counter = 0
+            if mqtt:
+                updateDevice(d)
             self.assertEqual(d.counter, 0)
             executeNoWait(d, "count")
             waitWhile(lambda: d.counter <= 10)
             self.assertGreaterEqual(d.counter, 10)
 
+    @skipIf(mqtt, "temprarily disable: timing problems")
     @sync_tst
     def test_waituntilnew(self):
         """test the waitUntilNew function"""
         with getDevice("remote") as d:
+            if mqtt:
+                updateDevice(d)
             d.counter = 0
             executeNoWait(d, "count")
             # Note: This is the previous set to 0
@@ -338,6 +365,8 @@ class Tests(DeviceTest):
         """test calling a slot"""
         with getDevice("remote") as d:
             d.value = 0
+            if mqtt:
+                updateDevice(d)
             self.assertEqual(d.value, 0)
             call("remote", "changeit")
             self.assertEqual(d.value, -4)
@@ -391,6 +420,7 @@ class Tests(DeviceTest):
         await fut
         self.assertEqual(fut.result(), "NewToken")
 
+    @skipIf(mqtt, 'missing support')
     @sync_tst
     def test_queue(self):
         """test change queues of properties"""
@@ -436,6 +466,7 @@ class Tests(DeviceTest):
         del self.local.exception
         del self.local.traceback
 
+    @skipIf(mqtt, "not supported for current MQTT client")
     @async_tst
     async def test_cancel(self):
         """test proper cancellation of slots
@@ -535,33 +566,49 @@ class Tests(DeviceTest):
         with getDevice("remote") as d:
             d.value = 22
             d.lockedBy = "whoever"
+            if mqtt:
+                updateDevice(d)
             try:
                 with self.assertRaisesRegex(KaraboError, "lock"):
                     d.value = 7
+                    if mqtt:
+                        updateDevice(d)
                 self.assertEqual(d.value, 22)
             finally:
                 self.remote.lockedBy = ""
             d.value = 3
+            if mqtt:
+                updateDevice(d)
             self.assertEqual(d.value, 3)
 
     @sync_tst
     def test_lock(self):
         with getDevice("remote") as d:
+            if mqtt:
+                updateDevice(d)
             with lock(d):
                 self.assertEqual(d.lockedBy, "local")
                 with lock(d):
                     self.assertEqual(d.lockedBy, "local")
                     d.value = 33
+                    if mqtt:
+                        updateDevice(d)
                     self.assertEqual(d.value, 33)
                 self.assertEqual(d.lockedBy, "local")
+            if mqtt:
+                updateDevice(d)
             self.assertEqual(d.lockedBy, "")
 
     @sync_tst
     def test_lock_nowait(self):
         with getDevice("remote") as d:
+            if mqtt:
+                updateDevice(d)
             with lock(d, wait_for_release=False):
                 self.assertEqual(d.lockedBy, "local")
                 d.value = 33
+                if mqtt:
+                    updateDevice(d)
                 self.assertEqual(d.value, 33)
             self.assertEqual(d.lockedBy, "local")
             waitUntil(lambda: d.lockedBy == "")
