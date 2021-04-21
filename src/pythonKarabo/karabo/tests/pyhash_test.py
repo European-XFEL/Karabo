@@ -148,6 +148,7 @@ class Hash_TestCase(unittest.TestCase):
         h["chars"] = b"bla"
         h["emptystringlist"] = []
         h["char"] = HashByte("c")
+        h["none"] = None
         if use_bound:
             restore_stdVector = False
             if isStdVectorDefaultConversion(Types.NUMPY):
@@ -162,6 +163,8 @@ class Hash_TestCase(unittest.TestCase):
             h["vector"] = [i for i in range(7)]
             h["emptyvector"] = []
             h["vectorbool"] = [True, False, True]
+            # VECTOR_NONE serialisation not supported in MDL (and funny anyway)
+            #  h["vectornone"] = [None] * 3
             h["hash"] = BoundHash("a", 3, "b", 7.1)
             h["hashlist"] = [BoundHash("a", 3), BoundHash()]
             h["emptyhashlist"] = BoundVectorHash()
@@ -223,7 +226,7 @@ class Hash_TestCase(unittest.TestCase):
         This method is simple enough that it works for both C++ and
         Python-only hashes."""
         keys = ["bool", "int", "string", "complex", "stringlist", "chars",
-                "emptystringlist", "char", "vector", "emptyvector",
+                "emptystringlist", "char", "none", "vector", "emptyvector",
                 "vectorbool", "hash", "hashlist", "emptyhashlist", "schema"]
         self.assertEqual(list(h.keys()), keys)
         self.assertIs(h["bool"], True)
@@ -232,6 +235,7 @@ class Hash_TestCase(unittest.TestCase):
                          "bla ä < / \\ \"' > ]]> & <![CDATA[ =_! (|}")
         self.assertTrue(isinstance(h["string"], str))
         self.assertEqual(h["complex"], complex(1.0, 0.42))
+        self.assertIs(h["none"], None)
         self.assertEqual(h["stringlist"], ["bla", "blub"])
         self.assertEqual(h["chars"], b"bla")
         self.assertEqual(h["hash.a"], 3)
@@ -282,7 +286,7 @@ class Hash_TestCase(unittest.TestCase):
     def test_binary(self):
         s = encodeBinary(self.create_hash())
         self.check_hash(decodeBinary(s))
-        self.assertEqual(adler32(s), 2931125705)
+        self.assertEqual(adler32(s), 3448598433)
 
     def test_bin_roundtrip(self):
         """Tests compatibility between the Binary Serializers for MDL and Bound
@@ -382,7 +386,7 @@ class Hash_TestCase(unittest.TestCase):
     def test_paths(self):
         h = self.create_hash()
         paths = h.paths(intermediate=False)
-        self.assertEqual(len(paths), 16)
+        self.assertEqual(len(paths), 17, paths)
         self.assertIn('bool', paths)
         self.assertIn('hash.a', paths)
         self.assertNotIn('hash', paths)
@@ -392,7 +396,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertNotIn('schema.blub', paths)
 
         all_paths = h.paths(intermediate=True)
-        self.assertEqual(len(all_paths), 17)
+        self.assertEqual(len(all_paths), 18, paths)
         self.assertIn('hash', all_paths)
 
 
