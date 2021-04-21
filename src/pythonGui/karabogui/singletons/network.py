@@ -26,6 +26,7 @@ ACCESS_LEVEL_MAP = {
     "god": 5}
 
 MAX_GUI_SERVER_HISTORY = 5
+logger = get_logger()
 
 
 class Network(QObject):
@@ -294,11 +295,13 @@ class Network(QObject):
     # Protocol methods
 
     def onKillDevice(self, device_id):
+        logger.info(f"Sending request to shutdown device <b>{device_id}</b>")
         h = Hash("type", "killDevice")
         h["deviceId"] = device_id
         self._write_hash(h)
 
     def onKillServer(self, server_id):
+        logger.info(f"Sending request to shutdown server <b>{server_id}</b>")
         h = Hash("type", "killServer")
         h["serverId"] = server_id
         self._write_hash(h)
@@ -311,7 +314,6 @@ class Network(QObject):
     def onReconfigure(self, device_id, configuration):
         """Set values in a device
         """
-        logger = get_logger()
         props = ", ".join(configuration.keys())
         logger.info(f"Request to reconfigure the properties <b>{props}</b> "
                     f" of device <b>{device_id}</b>")
@@ -334,7 +336,6 @@ class Network(QObject):
         self._write_hash(h)
 
     def onExecute(self, device_id, slot_name, ignore_timeouts):
-        logger = get_logger()
         logger.info(f"Executing slot <b>{slot_name}</b> "
                     f"of device <b>{device_id}</b>")
         h = Hash("type", "execute")
@@ -346,7 +347,6 @@ class Network(QObject):
         self._write_hash(h)
 
     def onExecuteGeneric(self, instanceId, slot_name, params):
-        logger = get_logger()
         logger.info(f"Executing slot <b>{slot_name}</b> "
                     f"of device <b>{instanceId}</b>")
         h = Hash("type", "requestGeneric")
@@ -391,7 +391,6 @@ class Network(QObject):
     # Current Configuration Interface
 
     def onGetConfigurationFromPast(self, device_id, time):
-        logger = get_logger()
         logger.info(f"Requesting configuration for device "
                     f"<b>{device_id}</b> at time point {time}")
         h = Hash("type", "getConfigurationFromPast")
@@ -400,7 +399,6 @@ class Network(QObject):
         self._write_hash(h)
 
     def onGetConfigurationFromName(self, device_id, name):
-        logger = get_logger()
         logger.info(f"Requesting named configuration {name} "
                     f"for device <b>{device_id}</b>")
         h = Hash("type", "requestGeneric")
@@ -415,7 +413,6 @@ class Network(QObject):
         self._write_hash(h)
 
     def onListConfigurationFromName(self, device_id, name=""):
-        logger = get_logger()
         logger.info("Requesting list of configuration from name for"
                     f"device <b>{device_id}</b>")
         h = Hash("type", "requestGeneric")
@@ -431,7 +428,6 @@ class Network(QObject):
 
     def onSaveConfigurationFromName(self, name, deviceIds, description='',
                                     priority=1, update=False):
-        logger = get_logger()
         logger.info(f"Saving configuration by name {name} for devices "
                     f"<b>{deviceIds}</b> with priority {priority}")
         h = Hash("type", "requestGeneric")
