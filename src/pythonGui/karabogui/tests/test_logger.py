@@ -25,4 +25,4 @@ class TestCase(GuiTestCase):
         log_widget.clear()
         assert log_widget.toPlainText().count('\n') == 0
         logger.debug(msg)
-        assert "DEBUG" in log_widget.toPlainText()
+        assert "DEBUG" not in log_widget.toPlainText()
