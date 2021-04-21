@@ -10,6 +10,7 @@ import weakref
 from dateutil.parser import parse as from_isoformat
 from flaky import flaky
 from pint import DimensionalityError
+from unittest import skipIf
 
 from karabo.middlelayer import (
     AlarmCondition, background, Bool, Configurable, connectDevice,
@@ -21,6 +22,7 @@ from karabo.middlelayer import (
 from karabo.middlelayer_api import openmq
 
 from .eventloop import DeviceTest, async_tst
+from .compat import mqtt
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 FLAKY_MAX_RUNS = 7
@@ -123,7 +125,7 @@ class Remote(Device):
     async def count(self):
         for i in range(30):
             self.counter = i
-            await sleep(0.02)
+            await sleep(0.03)
 
     generic = Superslot()
     generic_int = SuperInteger()
@@ -206,6 +208,8 @@ class Tests(DeviceTest):
         """test the execution of remote slots"""
         self.remote.done = False
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             await d.doit()
         self.assertTrue(self.remote.done)
 
@@ -219,6 +223,8 @@ class Tests(DeviceTest):
     async def test_set_remote(self):
         """test setting of values"""
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             d.string = "bla"
             d.unit_int = 3 * unit.meter
             d.unit_float = 7.5 * unit.millisecond
@@ -255,6 +261,8 @@ class Tests(DeviceTest):
             self.assertEqual(a, b)
 
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             with self.assertRaises(DimensionalityError):
                 d.unit_int = 3 * unit.second
             with self.assertRaises(DimensionalityError):
@@ -319,6 +327,8 @@ class Tests(DeviceTest):
         self.remote.string_list = ["z", "bla"]
 
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             self.assertEqual(d.string, "blub")
             self.assertLess(abs(d.string.timestamp.toTimestamp() -
                                 time.time()), 1)
@@ -337,6 +347,8 @@ class Tests(DeviceTest):
             self.assertEqual(a, b)
 
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             self.remote.unit_int = 5 * unit.kilometer
             self.remote.unit_float = 2 * unit.millisecond
             self.remote.unit_vector_int = [2, 3, 4] * unit.meter / unit.second
@@ -368,6 +380,8 @@ class Tests(DeviceTest):
         """test changing a remote parameter"""
         self.remote.value = 7
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             await d.changeit()
         self.assertEqual(self.remote.value, 3)
 
@@ -375,12 +389,16 @@ class Tests(DeviceTest):
     async def test_state(self):
         self.remote.state = State.UNKNOWN
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             self.assertEqual(d.state, State.UNKNOWN)
             self.assertEqual(d.alarmCondition, AlarmCondition.NONE)
 
     @async_tst
     async def test_remotetag_proxy(self):
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             descriptors = filterByTags(d, "AString")
             paths = [k.longkey for k in descriptors]
             self.assertEqual(["string"], paths)
@@ -409,7 +427,11 @@ class Tests(DeviceTest):
         self.assertLess(d.counter - tmp, 2,
                         "to many messages arrived after disconnecting")
         with d:
-            await sleep(0.5)
+            if mqtt:
+                await updateDevice(d)
+                await sleep(0.7)
+            else:
+                await sleep(0.5)
             self.assertEqual(d.counter, 29)
         await task
 
@@ -418,9 +440,14 @@ class Tests(DeviceTest):
         """test setting of remote values works"""
         self.remote.value = 7
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             self.assertEqual(d.value, 7)
-            d.value = 10
-            await sleep(0.1)
+            if mqtt:
+                await setWait(d, value=10)
+            else:
+                d.value = 10
+                await sleep(0.1)
             self.assertEqual(d.value, 10)
             await d.changeit()
             self.assertEqual(d.value, 6)
@@ -446,6 +473,8 @@ class Tests(DeviceTest):
     async def test_setter(self):
         """test setting a property with a setter method"""
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             d.other = 102
         await sleep(0.5)
         self.assertEqual(self.remote.value, 102)
@@ -475,6 +504,8 @@ class Tests(DeviceTest):
     async def test_waituntil(self):
         """test the waitUntil coroutine"""
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             d.counter = 0
             await waitUntil(lambda: d.counter == 0)
             self.assertEqual(d.counter, 0)
@@ -526,6 +557,8 @@ class Tests(DeviceTest):
         self.assertEqual(proxy.state, State.ON)
         # We kill the device to see the desired state transition
         await moriturus.slotKillDevice()
+        if mqtt:
+            await sleep(0.5)
         self.assertFalse(isAlive(proxy))
         self.assertEqual(proxy.state, State.UNKNOWN)
 
@@ -544,6 +577,8 @@ class Tests(DeviceTest):
         # Can be cured with async with which is not possible at the moment.
         await sleep(0.1)
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             d.counter = 0
             # we test that d.counter and d.nested.val are still None (it
             # must be, no await since last line). This asserts that
@@ -551,7 +586,8 @@ class Tests(DeviceTest):
             # had been a bug before
             self.assertEqual(d.counter, None)
             self.assertEqual(d.nested.val, None)
-            await waitUntilNew(d.value, d.counter, d.nested.val)
+            if not mqtt:
+                await waitUntilNew(d.value, d.counter, d.nested.val)
             task = ensure_future(d.count())
             try:
                 for i in range(30):
@@ -569,8 +605,11 @@ class Tests(DeviceTest):
         working in the eventloop as it has to be.
         """
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             d.counter = 0
-            await sleep(0.1)
+            if not mqtt:
+                await sleep(0.05)
             task = ensure_future(d.count())
             try:
                 for i in range(30):
@@ -583,6 +622,8 @@ class Tests(DeviceTest):
     async def test_collect(self):
         """test that multiple settings are gathered into one"""
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             d.once = 3
             d.once = 7
             d.once = 10
@@ -596,11 +637,14 @@ class Tests(DeviceTest):
         with self.assertRaises(KaraboError):
             await d.doit()
 
+    @skipIf(mqtt, "not supported with current MQTT client")
     @async_tst
     async def test_disallow(self):
         """test that values cannot be set if in wrong state"""
         self.assertEqual(self.remote.state, State.UNKNOWN)
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             d.value = 7
             await waitUntil(lambda: d.value == 7)
             # disallowed_int is normally not allowed
@@ -639,6 +683,7 @@ class Tests(DeviceTest):
             await d.allow()
             self.assertEqual(d.value, 777)
 
+    @skipIf(mqtt, "not supported with current MQTT client")
     @async_tst
     async def test_log(self):
         """test the logging of warnings and exceptions"""
@@ -655,6 +700,8 @@ class Tests(DeviceTest):
                     delta.microseconds * 1e-6)
 
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             t = ensure_future(d.read_log())
             await sleep(0.1)
             self.local.logger.warning("this is an info")
@@ -666,6 +713,8 @@ class Tests(DeviceTest):
         self.assertEqual(hash["category"], "local")
         self.assertLessEqual(_absolute_delta_to_now(hash["timestamp"]), 10)
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             t = ensure_future(d.read_log())
             await sleep(0.1)
             try:
@@ -706,6 +755,8 @@ class Tests(DeviceTest):
     async def test_queue(self):
         """test queues of properties"""
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             task = ensure_future(d.count())
             await waitUntil(lambda: d.counter == 0)
             try:
@@ -728,6 +779,8 @@ class Tests(DeviceTest):
         self.remote.nested.nestnest.value = 7 * unit.meter
         ts2 = self.remote.nested.nestnest.value.timestamp
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             self.assertEqual(d.nested.val, 3 * unit.second)
             self.assertEqual(d.nested.val.timestamp, ts1)
             self.assertEqual(d.nested.nestnest.value, 7 * unit.meter)
@@ -746,9 +799,11 @@ class Tests(DeviceTest):
         """test error reporting and calling of error methods"""
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR"):
-            with (await getDevice("local")) as d, \
-                    self.assertRaises(KaraboError):
-                await d.error()
+            with (await getDevice("local")) as d:
+                if mqtt:
+                    await updateDevice(d)
+                with self.assertRaises(KaraboError):
+                    await d.error()
         self.assertTrue(self.remote.done)
         self.remote.done = False
         self.assertIs(self.local.exc_slot, Local.error)
@@ -763,9 +818,11 @@ class Tests(DeviceTest):
         """test what happens if an error happens in an error method"""
         self.remote.done = False
         with self.assertLogs(logger="local", level="ERROR") as logs:
-            with (await getDevice("local")) as d, \
-                    self.assertRaises(KaraboError):
-                await d.error_in_error()
+            with (await getDevice("local")) as d:
+                if mqtt:
+                    await updateDevice(d)
+                with self.assertRaises(KaraboError):
+                    await d.error_in_error()
         self.assertEqual(logs.records[-1].msg, "error in error handler")
         self.assertFalse(self.remote.done)
         self.assertIs(self.local.exc_slot, Local.error_in_error)
@@ -782,6 +839,9 @@ class Tests(DeviceTest):
         with self.assertLogs(logger="local", level="ERROR"):
             with (await getDevice("local")) as local, \
                     (await getDevice("remote")) as remote:
+                if mqtt:
+                    await updateDevice(local)
+                    await updateDevice(remote)
                 await local.task_error()
                 self.assertFalse(remote.done)
                 await waitUntil(lambda: remote.done)
@@ -793,11 +853,15 @@ class Tests(DeviceTest):
         del self.local.exception
         del self.local.traceback
 
+    @skipIf(mqtt, "not supported with current MQTT client")
     @async_tst
     async def test_task_error_background_coro(self):
         """test that errors of background tasks are properly reported"""
         with (await getDevice("local")) as local, \
                 (await getDevice("remote")) as remote:
+            if mqtt:
+                await updateDevice(local)
+                await updateDevice(remote)
             t = ensure_future(remote.read_log())
             await sleep(0.1)
             await local.task_background_error_coro()
@@ -815,11 +879,15 @@ class Tests(DeviceTest):
         del self.local.exception
         del self.local.traceback
 
+    @skipIf(mqtt, "not supported with current MQTT client")
     @async_tst
     async def test_task_error_background_no_coro(self):
         """test that errors of background tasks are properly reported"""
         with (await getDevice("local")) as local, \
                 (await getDevice("remote")) as remote:
+            if mqtt:
+                await updateDevice(local)
+                await updateDevice(remote)
             t = ensure_future(remote.read_log())
             await sleep(0.1)
             await local.task_background_error_no_coro()
@@ -876,6 +944,8 @@ class Tests(DeviceTest):
             self.assertEqual(self.remote.value, 5)
 
             with (await getDevice("devicenode")) as d:
+                if mqtt:
+                    await updateDevice(d)
                 self.assertEqual(d.lockedBy, "")
                 self.assertEqual(d.dn.value, 5)
                 self.assertEqual(d.dn.counter, -1)
@@ -991,6 +1061,8 @@ class Tests(DeviceTest):
     @async_tst
     async def test_lock(self):
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             with (await lock(d)):
                 self.assertEqual(d.lockedBy, "local")
                 with (await lock(d)):
@@ -1004,6 +1076,8 @@ class Tests(DeviceTest):
     @async_tst
     async def test_lock_concurrence(self):
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             await setWait(d, value=40, lockedBy="NoDevice")
             self.assertEqual(d.lockedBy, "NoDevice")
             self.assertEqual(d.value, 40)
@@ -1034,6 +1108,7 @@ class Tests(DeviceTest):
         finally:
             await node_device.slotKillDevice()
 
+    @skipIf(mqtt, "not supported with current MQTT client")
     @async_tst
     async def test_alarm(self):
         await self.remote.signalAlarmUpdate.connect("local", "slotAlarmUpdate")
@@ -1089,6 +1164,8 @@ class Tests(DeviceTest):
     @async_tst
     async def test_inject(self):
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             self.remote.__class__.injected = String()
             self.remote.__class__.injected_node = Node(Nested)
             self.remote.__class__.changeit = Overwrite(
@@ -1145,6 +1222,8 @@ class Tests(DeviceTest):
         a = A({"_deviceId_": "testinject"})
         await a.startInstance()
         with (await getDevice("testinject")) as proxy:
+            if mqtt:
+                await updateDevice(proxy)
             self.assertEqual(proxy.number, 3)
 
     @async_tst
@@ -1178,6 +1257,8 @@ class Tests(DeviceTest):
     @async_tst
     async def test_set_archive_fails(self):
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             with self.assertRaises(KaraboError):
                 new_archive = not d.archive.value
                 await setWait(d, archive=new_archive)
@@ -1190,6 +1271,8 @@ class Tests(DeviceTest):
             h.merge(change)
 
         with (await getDevice("remote")) as d:
+            if mqtt:
+                await updateDevice(d)
             d.counter = -1
             # subscribe to changes
             d.setConfigHandler(updates)
