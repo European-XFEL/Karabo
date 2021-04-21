@@ -9,7 +9,7 @@ from karabo.middlelayer import (
     AccessMode, background, getDevice, KaraboError, setWait, waitUntil,
     waitWhile)
 from karabo.middlelayer_api.device import Device
-from karabo.middlelayer_api.device_client import call, getSchema
+from karabo.middlelayer_api.device_client import call, getSchema, updateDevice
 from karabo.native import (
     Bool, Configurable, Float, Hash, Int32, Node, Slot, Timestamp, VectorHash)
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
@@ -18,6 +18,7 @@ from karabo.middlelayer_api.utils import get_property
 from karabo import __version__ as karaboVersion
 
 from .eventloop import async_tst, DeviceTest, sync_tst
+from .compat import mqtt
 
 
 class RowSchema(Configurable):
@@ -198,6 +199,8 @@ class Tests(DeviceTest):
     async def test_lastCommand(self):
         self.assertEqual(self.myDevice.lastCommand, "")
         with (await getDevice("MyDevice")) as d:
+            if mqtt:
+                await updateDevice(d)
             await d.start()
         self.assertEqual(self.myDevice.lastCommand, "start")
         await getSchema("MyDevice")
@@ -207,6 +210,8 @@ class Tests(DeviceTest):
     async def test_two_calls_concurrent(self):
         self.assertEqual(self.myDevice.counter, 0)
         with (await getDevice("MyDevice")) as d:
+            if mqtt:
+                await updateDevice(d)
             await d.increaseCounter()
             await waitUntil(lambda: d.state != State.ON)
             await waitWhile(lambda: d.state == State.ACQUIRING)
@@ -221,6 +226,8 @@ class Tests(DeviceTest):
     @async_tst
     async def test_clear_table_external(self):
         with (await getDevice("MyDevice")) as d:
+            if mqtt:
+                await updateDevice(d)
             dtype = d.table.descriptor.dtype
             current_value = np.array((2.0, 5.6), dtype=dtype)
             self.assertEqual(d.table[0].value, current_value)
@@ -243,6 +250,8 @@ class Tests(DeviceTest):
     @async_tst
     async def test_allowed_state_reconfigure_nodes(self):
         with (await getDevice("MyDevice")) as d:
+            if mqtt:
+                await updateDevice(d)
             self.assertEqual(d.noded.floatProperty, 10.0)
             await setWait(d, 'noded.floatProperty', 27.0)
             self.assertEqual(d.noded.floatProperty, 27.0)
