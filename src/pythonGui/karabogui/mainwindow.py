@@ -262,13 +262,23 @@ class MainWindow(QMainWindow):
         """Update the status bar with our broker connection information
         """
         if data is not None:
-            topic = data['topic']
+            topic = data["topic"]
             # Store this information in the config singleton!
             get_config()["broker_topic"] = topic
-            hostname = data['hostname']
-            hostport = data['hostport']
-            info = f'<b>{hostname}:{hostport} ({topic})</b>'
+            hostname = data["hostname"]
+            hostport = data["hostport"]
+            info = f"<b>{hostname}:{hostport} ({topic})</b>"
             self.serverInfo.setText(info)
+
+            # Place some user log info messages
+            logger = get_logger()
+            text = f"Successfully connected to gui server (topic): {info}"
+            logger.info(text)
+            # If the server is read only, we notify as well
+            read_only = data.get("readOnly", False)
+            if read_only:
+                text = "The gui server device is configured as <b>readOnly</b>"
+                logger.info(text)
         else:
             self.serverInfo.setText("")
 
