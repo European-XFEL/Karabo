@@ -392,9 +392,13 @@ class KaraboPlotView(QWidget):
 
         self.reset_range()
 
-        # Set the view configuration!
-        self.set_background(config['background'])
-        self.set_title(config['title'])
+        # Set the view configuration! Some widgets, e.g. external extensions
+        # might not define `background` and `title`.
+        # Note: This was added in karabo 2.11!
+        if 'background' in config:
+            self.set_background(config['background'])
+        if 'title' in config:
+            self.set_title(config['title'])
 
     # ----------------------------------------------------------------
     # Toolbar functions Events
