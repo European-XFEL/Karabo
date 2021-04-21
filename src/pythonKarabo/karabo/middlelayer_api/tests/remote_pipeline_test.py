@@ -5,9 +5,10 @@ from unittest import main
 from karabo.middlelayer import (
     AccessMode, AccessLevel, Assignment,  Bool, call, Configurable, coslot,
     Device, getDevice, Hash, isAlive, InputChannel, Int32, Overwrite,
-    OutputChannel, setWait, Slot, State, Timestamp, UInt32,
+    OutputChannel, setWait, Slot, State, Timestamp, UInt32, updateDevice,
     waitUntil)
 from .eventloop import DeviceTest, async_tst
+from .compat import mqtt
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 
@@ -186,6 +187,8 @@ class RemotePipelineTest(DeviceTest):
         await output_device.startInstance()
 
         with (await getDevice("outputdevice")) as proxy:
+            if mqtt:
+                await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             received = False
             connected = False
@@ -268,6 +271,8 @@ class RemotePipelineTest(DeviceTest):
 
         NUM_DATA = 5
         with (await getDevice("outputdevice")) as proxy:
+            if mqtt:
+                await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             self.assertEqual(receiver.received, 0)
             for data in range(NUM_DATA):
@@ -310,6 +315,8 @@ class RemotePipelineTest(DeviceTest):
 
         NUM_DATA = 5
         with (await getDevice("outputdevice")) as proxy:
+            if mqtt:
+                await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             self.assertEqual(receiver.received, 0)
             for data in range(NUM_DATA):
@@ -346,6 +353,8 @@ class RemotePipelineTest(DeviceTest):
         await output_device.startInstance()
 
         with (await getDevice("outputdevice")) as proxy:
+            if mqtt:
+                await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             proxy.output.connect()
             # Send more often as our proxy has a drop setting and we are busy
@@ -392,6 +401,8 @@ class RemotePipelineTest(DeviceTest):
             connected_name = channel_name
 
         with (await getDevice("outputdevice")) as proxy:
+            if mqtt:
+                await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             proxy.output.setConnectHandler(connect_handler)
             proxy.output.setCloseHandler(close_handler)
@@ -408,12 +419,12 @@ class RemotePipelineTest(DeviceTest):
                 ts2 = proxy.output.schema.data.timestamp
 
             self.assertGreater(ts2, ts1)
-            # No we kill the sender and verify our closed handler is called
-            await output_device.slotKillDevice()
-            self.assertEqual(closed, True)
-            self.assertEqual(closed_name, "outputdevice:output")
 
         del proxy
+        # No we kill the sender and verify our closed handler is called
+        await output_device.slotKillDevice()
+        self.assertEqual(closed, True)
+        self.assertEqual(closed_name, "outputdevice:output")
 
     @async_tst
     async def test_multi_shared_pipelines(self):
@@ -453,6 +464,8 @@ class RemotePipelineTest(DeviceTest):
         self.assertEqual(delta.received, 0)
         proxy = await getDevice("alice")
         with proxy:
+            if mqtt:
+                await updateDevice(proxy)
             await proxy.sendData()
             await waitUntil(lambda: self.bob.received == 1)
             await proxy.sendData()

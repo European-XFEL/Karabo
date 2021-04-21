@@ -1,8 +1,12 @@
 import unittest
 import threading
 import time
+import os
 
+from unittest import skipIf
 from karabo.bound import SignalSlotable, EventLoop
+
+jms = os.environ["KARABO_BROKER"].startswith("tcp://")
 
 
 class Xms_TestCase(unittest.TestCase):
@@ -58,6 +62,7 @@ class Xms_TestCase(unittest.TestCase):
         EventLoop.stop()
         self._eventLoopThread.join()
 
+    @skipIf(jms, "not supported for JMS case")
     def test_xms_request(self):
         with self.subTest(msg="async receive"):
             self.assertEqual(-1, self.called)  # initial value
