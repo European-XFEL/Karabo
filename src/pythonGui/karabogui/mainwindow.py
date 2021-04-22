@@ -8,7 +8,7 @@ from functools import partial
 import os.path
 import webbrowser
 
-from qtpy.QtCore import Qt, Slot
+from qtpy.QtCore import Slot, QSize, Qt
 from qtpy.QtWidgets import (
     QAction, QActionGroup, QFrame, QLabel, QMainWindow, QMenu, QMessageBox,
     QSizePolicy, QSplitter, QToolButton, QWidget, qApp)
@@ -149,7 +149,6 @@ class MainWindow(QMainWindow):
 
         title = "European XFEL - Karabo GUI " + krb_globals.GUI_VERSION_LONG
         self.setWindowTitle(title)
-        self.resize(1200, 800)
 
         # Connect to some important network signals
         network = get_network()
@@ -257,6 +256,8 @@ class MainWindow(QMainWindow):
         window_geometry = get_config()["main_geometry"]
         if window_geometry:
             self.restoreGeometry(window_geometry)
+        else:
+            self.adjustSize()
 
     def update_server_connection(self, data=None):
         """Update the status bar with our broker connection information
@@ -284,6 +285,9 @@ class MainWindow(QMainWindow):
 
     # --------------------------------------
     # Qt virtual methods
+
+    def sizeHint(self):
+        return QSize(1200, 800)
 
     def closeEvent(self, event):
         if not self._quit():
