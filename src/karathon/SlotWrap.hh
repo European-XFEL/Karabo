@@ -12,29 +12,22 @@
 #define	KARATHON_SLOTWRAP_HH
 
 #include "HashWrap.hh"
+
 #include "karabo/xms/Slot.hh"
-#include "ScopedGILAcquire.hh"
+
 #include <boost/python.hpp>
 
+#include <memory>
+
 namespace bp = boost::python;
-
-namespace karabo {
-
-    namespace xms {
-        // Forward SignalSlotable
-        class SignalSlotable;
-    }
-}
 
 namespace karathon {
 
     class SlotWrap : public karabo::xms::Slot {
 
-
-        bp::object m_slotFunction;
+        // unique_ptr seems more light weight than shared_ptr (no thread guarantees)
+        std::unique_ptr<bp::object> m_slotFunction;
         size_t m_arity; // arity of position arguments, except *args
-        bool m_varargs; // flag of *args
-        bool m_varkeywords; // flag of **kwargs
 
     public:
 
