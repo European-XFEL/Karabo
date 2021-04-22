@@ -221,7 +221,7 @@ namespace karathon {
                                              const bp::object& onDataHandler, const bp::object& onInputHandler,
                                              const bp::object& onEndOfStreamHandler) {
         // Basically just call createInputChannel from C++, but take care that data and input handlers
-        // stay empty if their input is empty (C++ tolerates only one of them), although the proxies are able
+        // stay empty if their input is empty, although the proxies are able
         // to deal with 'None' Python handlers (as we make use of for the end of stream handler).
         DataHandler dataHandler = DataHandler();
         InputHandler inputHandler = InputHandler();
