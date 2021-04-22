@@ -206,19 +206,20 @@ class PanelWrangler(QObject):
             # Finish splash
             process_qt_events(timeout=1000)
 
+        # Show main window and process events!
         self.main_window.show()
-        # Show the connection dialog after processing all pending events since
-        # the main window needs to render and update its geometry first.
-        # Gently give the main window some render cycles
-        for _ in range(10):
-            process_qt_events(timeout=1000)
+        process_qt_events(timeout=1000)
+        self.main_window.activateWindow()
+        process_qt_events(timeout=1000)
 
         show_wizard = get_config()['wizard']
         if show_wizard:
             wizard = TipsTricksWizard(parent=self.main_window)
             # We can show the wizard if needed and block!
             wizard.exec()
+            process_qt_events(timeout=1000)
 
+        # Show the connection dialog after processing all pending events
         self.main_window.acServerConnect.trigger()
 
     def _open_macro(self, model):
