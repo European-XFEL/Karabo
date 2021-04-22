@@ -1,5 +1,7 @@
 #include <Python.h>
+
 #include "SlotWrap.hh"
+#include "ScopedGILAcquire.hh"
 
 namespace bp = boost::python;
 
@@ -11,6 +13,8 @@ namespace karathon {
 
 
     SlotWrap::~SlotWrap() {
+        ScopedGILAcquire gil; // for bp:object destructor
+        m_slotFunction.reset();
     }
 
 
@@ -19,25 +23,25 @@ namespace karathon {
         if (!PyCallable_Check(slotHandler.ptr()))
             throw KARABO_PARAMETER_EXCEPTION("The argument is not callable.  Function or method is expected.");
 
-        m_slotFunction = slotHandler;
+        // Note: In C++ there is a list of slot handlers to which is appended - here we overwrite any previous handler.
+        // Note 2: Create pointer to be able to ensure that deletion can be done with GIL acquired.
+        std::unique_ptr<bp::object> newHandler(new bp::object(slotHandler));
+        m_slotFunction.swap(newHandler);
         m_arity = 0;
-        m_varargs = false;
-        m_varkeywords = false;
 
         PyObject* function_object = NULL;
         // We expect either the function or the method to be given...
-        if (PyFunction_Check(m_slotFunction.ptr()))
-            function_object = m_slotFunction.ptr();
-        else if (PyMethod_Check(m_slotFunction.ptr())) {
-            function_object = PyMethod_Function(m_slotFunction.ptr());
+        if (PyFunction_Check(m_slotFunction->ptr())) {
+            function_object = m_slotFunction->ptr();
+        } else if (PyMethod_Check(m_slotFunction->ptr())) {
+            function_object = PyMethod_Function(m_slotFunction->ptr());
             m_arity = 1; // Argument self counted
-        } else
-            throw KARABO_PARAMETER_EXCEPTION("The argument is neither the function not the method.");
+        } else {
+            throw KARABO_PARAMETER_EXCEPTION("The argument is neither a function nor a method.");
+        }
         PyCodeObject* pycode = reinterpret_cast<PyCodeObject*> (PyFunction_GetCode(function_object));
         if (pycode) {
             m_arity = pycode->co_argcount - m_arity; // Subtract "self" if any
-            if (pycode->co_flags && CO_VARARGS) m_varargs = true;
-            if (pycode->co_flags && CO_VARKEYWORDS) m_varkeywords = true;
         }
     }
 
@@ -69,7 +73,7 @@ namespace karathon {
 
     void SlotWrap::callFunction0(const karabo::util::Hash& body) {
         try {
-            m_slotFunction();
+            (*m_slotFunction)();
         } catch (const bp::error_already_set&) {
             rethrowPythonException();
         }
@@ -79,7 +83,7 @@ namespace karathon {
     void SlotWrap::callFunction1(const karabo::util::Hash& body) {
         bp::object a1 = HashWrap::get(body, "a1");
         try {
-            m_slotFunction(a1);
+            (*m_slotFunction)(a1);
         } catch (const bp::error_already_set&) {
             rethrowPythonException();
         }
@@ -90,7 +94,7 @@ namespace karathon {
         bp::object a1 = HashWrap::get(body, "a1");
         bp::object a2 = HashWrap::get(body, "a2");
         try {
-            m_slotFunction(a1, a2);
+            (*m_slotFunction)(a1, a2);
         } catch (const bp::error_already_set&) {
             rethrowPythonException();
         }
@@ -102,7 +106,7 @@ namespace karathon {
         bp::object a2 = HashWrap::get(body, "a2");
         bp::object a3 = HashWrap::get(body, "a3");
         try {
-            m_slotFunction(a1, a2, a3);
+            (*m_slotFunction)(a1, a2, a3);
         } catch (const bp::error_already_set&) {
             rethrowPythonException();
         }
@@ -115,7 +119,7 @@ namespace karathon {
         bp::object a3 = HashWrap::get(body, "a3");
         bp::object a4 = HashWrap::get(body, "a4");
         try {
-            m_slotFunction(a1, a2, a3, a4);
+            (*m_slotFunction)(a1, a2, a3, a4);
         } catch (const bp::error_already_set&) {
             rethrowPythonException();
         }
