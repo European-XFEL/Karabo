@@ -74,7 +74,7 @@ class DeviceTreeView(QTreeView):
         self.ac_config_past.setToolTip(text)
         self.ac_config_past.triggered.connect(self.onGetConfigurationFromPast)
 
-        text = "Get Configuration (Name)"
+        text = "Get && Save Configuration (Name)"
         self.ac_config_name = QAction(text, self)
         self.ac_config_name.setStatusTip(text)
         self.ac_config_name.setToolTip(text)
