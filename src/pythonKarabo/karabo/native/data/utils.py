@@ -146,18 +146,25 @@ def create_html_hash(hsh):
                 yield ('<tr><td style="padding-left:{}em">{}</td><td>'
                        .format(nest + 1, key))
                 if value:
-                    yield "<table>"
-                    yield "<tr>"
-                    header_row = value[0]
-                    for k in header_row.keys():
-                        yield f"<th>{escape(str(k))}</th>"
-                    yield "</tr>"
-                    for row in value:
+                    list_format = hashlist_format(value)
+                    if list_format is HashListFormat.Unknown:
+                        yield "HashList[Unknown Format]"
+                    elif list_format is HashListFormat.Table:
+                        yield "<table>"
                         yield "<tr>"
-                        for _, v in row.items():
-                            yield f"<td>{escape(str(v))}</td>"
+                        header_row = value[0]
+                        for k in header_row.keys():
+                            yield f"<th>{escape(str(k))}</th>"
                         yield "</tr>"
-                    yield "</table>"
+                        for row in value:
+                            yield "<tr>"
+                            for _, v in row.items():
+                                yield f"<td>{escape(str(v))}</td>"
+                            yield "</tr>"
+                        yield "</table>"
+                    elif list_format is HashListFormat.ListOfNodes:
+                        for hsh in value:
+                            yield from _html_hash_generator(hsh, nest + 1)
                 else:
                     yield "[]"
                 yield '</td></tr>'
@@ -211,3 +218,50 @@ def hashToDict(h):
         else:
             d[k] = v
     return d
+
+
+class HashListFormat:
+    Unknown = 0
+    Table = 1
+    ListOfNodes = 2
+
+
+def hashlist_format(hash_list):
+    """Check the format of a HashList if it is compliant with the Karabo values
+
+    The known formats in Karabo that use a HashList are Tables and ListOfNodes
+
+    A Table has a header and each Hash contains a value for each header key
+    ListOfNodes must have a single key for each Hash and the value is a Hash
+    """
+    # Taking a first item is valid as indicator in Karabo. This is used
+    # elsewhere in projects, dict conversions and in the serializer
+    hsh = hash_list[0]
+    if hsh.empty():
+        # Hash is empty that must never happen!
+        return HashListFormat.Unknown
+
+    def equal(iterator):
+        iterator = iter(iterator)
+        try:
+            first = next(iterator)
+        except StopIteration:
+            return True
+        return all(first == x for x in iterator)
+
+    equal_sizes = equal([len(hsh.keys()) for hsh in hash_list])
+    if not equal_sizes:
+        return HashListFormat.Unknown
+
+    value = hsh[next(iter(hsh))]
+    hash_value = isinstance(value, Hash)
+    from_lon = hash_value and len(hsh) == 1
+    if from_lon:
+        return HashListFormat.ListOfNodes
+
+    equal_keys = equal([hsh.keys() for hsh in hash_list])
+    from_table = not hash_value and equal_keys
+    if from_table:
+        return HashListFormat.Table
+
+    return HashListFormat.Unknown
