@@ -25,34 +25,29 @@ class DeviceNode(String):
     instantiation, a device node just looks like a string, where the
     id of the target device can be entered.
 
-    Sometimes it is advisable that some of the properties of the target
-    device are also made available to outside users. To this end, a list of
-    properties and commands to be copied can be given::
-
-        class Stage(Device):
-            motor = DeviceNode(properties=["position", "speed"],
-                               commands=["start"])
-
     A timeout in seconds can be specified via::
 
         class Stage(Device):
             motor = DeviceNode(timeout=1.5)
 
-    The DeviceNode will try to connect to the device within this time frame. If
-    the connection could not be established, an error is raised.
+    The DeviceNode will try to connect to the device within this time frame.
+    If the connection could not be established within the time interval,
+    an error is raised. The default timeout is 2 seconds and a maximum
+    timeout of 5 seconds can be set. A timeout of 0 times out immediately!
     """
 
     def __init__(self, properties=(), commands=(), timeout=None, **kwargs):
         super().__init__(**kwargs)
-
+        if timeout is None:
+            timeout = 2
         self.properties = properties
         self.commands = commands
-        self.timeout = timeout
+        self.timeout = min(timeout, 5)
         if self.properties or self.commands:
             import warnings
             warnings.warn(
                 "Using `properties` or `commands` in a DeviceNode is "
-                "deprecated and will be removed in Karabo 2.13",
+                "deprecated and will be removed in Karabo 2.12",
                 DeprecationWarning, stacklevel=2)
             for default in ("deviceId", "state", "alarmCondition"):
                 if default not in self.properties:
