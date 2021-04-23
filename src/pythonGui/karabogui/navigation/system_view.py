@@ -117,7 +117,7 @@ class SystemTreeView(QTreeView):
         self.ac_config_past.triggered.connect(self.onGetConfigurationFromPast)
         self.mDeviceItem.addAction(self.ac_config_past)
 
-        text = "Get Configuration (Name)"
+        text = "Get && Save Configuration (Name)"
         self.ac_config_name = QAction(text, self)
         self.ac_config_name.setStatusTip(text)
         self.ac_config_name.setToolTip(text)
