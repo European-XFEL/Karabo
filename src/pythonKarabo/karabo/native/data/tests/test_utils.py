@@ -4,8 +4,8 @@ from html.parser import HTMLParser
 
 from ..hash import Hash, HashList
 from ..utils import (
-    create_html_hash, dtype_from_number, dictToHash, hashToDict,
-    get_array_data, get_image_data)
+    create_html_hash, dtype_from_number, dictToHash, hashlist_format,
+    HashListFormat, hashToDict, get_array_data, get_image_data)
 
 
 class HashHtmlParser(HTMLParser):
@@ -139,6 +139,9 @@ def test_create_hash_html():
     h["int"] = 2
     h["hash"] = Hash("float", 6.4, "int", 8)
     h["hashlist"] = HashList([Hash("float", 5.2, "int", 6)])
+    h["goofylist"] = HashList([Hash("float", 5.2),
+                               Hash("int", 6, "hash", Hash("hidden", -1))])
+    h["lon"] = HashList([Hash("NetworkHandler", Hash("file", "none"))])
 
     html = create_html_hash(h)
 
@@ -183,6 +186,16 @@ def test_create_hash_html():
     assert parser.cells_data[hashlist_key_idx + 3] == '5.2'
     assert parser.cells_data[hashlist_key_idx + 4] == '6'
 
+    goofy_idx = parser.cells_data.index('goofylist', hashlist_key_idx + 5)
+    assert parser.cells_data[goofy_idx] == 'goofylist'
+    assert parser.cells_data[goofy_idx + 1] == 'HashList[Unknown Format]'
+
+    lon_idx = parser.cells_data.index('lon', goofy_idx + 2)
+    assert parser.cells_data[lon_idx] == 'lon'
+    assert parser.cells_data[lon_idx + 1] == 'NetworkHandler'
+    assert parser.cells_data[lon_idx + 2] == 'file'
+    assert parser.cells_data[lon_idx + 3] == 'none'
+
 
 def test_dict_hash():
     """Test that a dict can be moved to a Hash and vice versa"""
@@ -204,3 +217,22 @@ def test_dict_hash():
 
     new_d = hashToDict(h)
     assert new_d == d
+
+
+def test_hashlist_format():
+    h = HashList([Hash()])
+    f = hashlist_format(h)
+    assert f is HashListFormat.Unknown
+
+    h = HashList([Hash("float", 5.2, "int", 6)])
+    f = hashlist_format(h)
+    assert f is HashListFormat.Table
+
+    h = HashList([Hash("float", 5.2),
+                  Hash("int", 6, "hash", Hash("hidden", -1))])
+    f = hashlist_format(h)
+    assert f is HashListFormat.Unknown
+
+    h = HashList([Hash("NetworkHandler", Hash())])
+    f = hashlist_format(h)
+    assert f is HashListFormat.ListOfNodes
