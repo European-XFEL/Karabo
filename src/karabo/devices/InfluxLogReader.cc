@@ -524,15 +524,27 @@ namespace karabo {
                 return;
             }
 
-            unsigned long long lastLoginBeforeTime = 0UL;
+            try {
+                unsigned long long lastLoginBeforeTime = 0UL;
 
-            nl::json respObj = nl::json::parse(valueResp.payload);
-            auto value = respObj["results"][0]["series"][0]["values"][0][0];
-            if (!value.is_null()) {
-                // Db has a Login event before time.
-                lastLoginBeforeTime = value.get<unsigned long long>();
+                nl::json respObj = nl::json::parse(valueResp.payload);
+                auto value = respObj["results"][0]["series"][0]["values"][0][0];
+                if (!value.is_null()) {
+                    // Db has a Login event before time.
+                    lastLoginBeforeTime = value.get<unsigned long long>();
+                }
+                ctxt->lastLoginBeforeTime = lastLoginBeforeTime;
+            } catch (const std::exception &e) {
+                std::ostringstream oss;
+                oss << "Error retrieving timestamp of last instantiation of device '"
+                    << ctxt->deviceId << "' before '" << ctxt->atTime.toIso8601Ext()
+                    << "' as part of operation getConfigurationFromPast: "
+                    << e.what();
+                const std::string &errMsg = oss.str();
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                ctxt->aReply.error(errMsg);
+                return;
             }
-            ctxt->lastLoginBeforeTime = lastLoginBeforeTime;
 
             asyncLastLogoutBeforeTime(ctxt);
         }
@@ -570,15 +582,27 @@ namespace karabo {
                 return;
             }
 
-            unsigned long long lastLogoutBeforeTime = 0UL;
+            try {
+                unsigned long long lastLogoutBeforeTime = 0UL;
 
-            nl::json respObj = nl::json::parse(valueResp.payload);
-            auto value = respObj["results"][0]["series"][0]["values"][0][0];
-            if (!value.is_null()) {
-                // Db has a Logout event before time.
-                lastLogoutBeforeTime = value.get<unsigned long long>();
+               nl::json respObj = nl::json::parse(valueResp.payload);
+                auto value = respObj["results"][0]["series"][0]["values"][0][0];
+                if (!value.is_null()) {
+                    // Db has a Logout event before time.
+                    lastLogoutBeforeTime = value.get<unsigned long long>();
+                }
+                ctxt->lastLogoutBeforeTime = lastLogoutBeforeTime;
+            } catch (const std::exception &e) {
+                std::ostringstream oss;
+                oss << "Error retrieving timestamp of last deactivation of device '"
+                    << ctxt->deviceId << "' before '" << ctxt->atTime.toIso8601Ext()
+                    << "' as part of operation getConfigurationFromPast: "
+                    << e.what();
+                const std::string &errMsg = oss.str();
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                ctxt->aReply.error(errMsg);
+                return;
             }
-            ctxt->lastLogoutBeforeTime = lastLogoutBeforeTime;
 
             asyncLastSchemaDigestBeforeTime(ctxt);
         }
@@ -616,17 +640,30 @@ namespace karabo {
                 return;
             }
 
-            // If no digest is found returns an empty config and schema from this point.
-            // Otherwise proceeds to schema retrieval.
-            nl::json respObj = nl::json::parse(valueResp.payload);
-            auto value = respObj["results"][0]["series"][0]["values"][0][1];
-            if (value.is_null()) {
-                // No digest has been found - it's not possible to go ahead.
-                ctxt->aReply.error("Failed to query schema digest");
-            } else {
-                const std::string digest = value.get<std::string>();
-                asyncSchemaForDigest(digest, ctxt);
+            std::string digest;
+            try {
+                nl::json respObj = nl::json::parse(valueResp.payload);
+                auto value = respObj["results"][0]["series"][0]["values"][0][1];
+                if (value.is_null()) {
+                    // No digest has been found - it's not possible to go ahead.
+                    ctxt->aReply.error("Failed to query schema digest");
+                    return;
+                } else {
+                    digest = value.get<std::string>();
+                }
+            } catch (const std::exception &e) {
+                std::ostringstream oss;
+                oss << "Error retrieving schema that was active for device '"
+                    << ctxt->deviceId << "' at '" << ctxt->atTime.toIso8601Ext()
+                    << "' as part of operation getConfigurationFromPast: "
+                    << e.what();
+                const std::string &errMsg = oss.str();
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                ctxt->aReply.error(errMsg);
+                return;
             }
+
+            asyncSchemaForDigest(digest, ctxt);
         }
 
 
@@ -662,53 +699,67 @@ namespace karabo {
                 return;
             }
 
-            nl::json respObj = nl::json::parse(schemaResp.payload);
-            const auto &value = respObj["results"][0]["series"][0]["values"][0][1];
-            if (value.is_null()) {
-                // No schema corresponding to the digest has been found - it's not possible to go ahead.
-                ctxt->aReply.error("Failed to query schema");
-            } else {
-                // A schema has been found - processing it means base64 decoding it, deserializing it and
-                // then traverse it capturing all the properties keys and their types for further processing.
-                try {
-                    const std::string encodedSch = value.get<std::string>();
-                    std::vector<unsigned char> base64Decoded;
-                    base64Decode(encodedSch, base64Decoded);
-                    const char* decoded = reinterpret_cast<const char *> (base64Decoded.data());
-                    m_schemaSerializer->load(ctxt->configSchema, decoded, base64Decoded.size());
-                    const Schema &schema = ctxt->configSchema;
-
-                    // Stores the properties keys and types in the context.
-                    ctxt->propNamesAndTypes.clear();
-                    std::vector<std::string> schPaths = schema.getDeepPaths();
-                    for (const std::string &path : schPaths) {
-                        if (schema.isLeaf(path) &&
-                            !(schema.hasArchivePolicy(path) && schema.getArchivePolicy(path) == Schema::NO_ARCHIVING)) {
-                            // Current path is for a leaf node that set is to archive (more literally, not set to not
-                            // archive).
-                            const Types::ReferenceType valType = schema.getValueType(path);
-                            ctxt->propNamesAndTypes.push_back(make_pair(path, valType));
-                        }
-                    }
-
-                    // Triggers the sequence of configuration value retrievals. The configuration
-                    // values retrievals are an interplay between asyncPropValueBeforeTime and
-                    // onAsyncPropValueBeforeTime - they will both consume the propNamesAndTypes
-                    // vector, sending a response back to the slotGetConfigurationFromPast caller
-                    // when the last property value is retrieved.
-                    asyncPropValueBeforeTime(ctxt, false);
-
-                } catch (const std::exception &e) {
-                    std::ostringstream oss;
-                    oss << "Error retrieving schema for digest while getting configuration of device '"
-                            << ctxt->deviceId << "' at '" << ctxt->atTime.toIso8601Ext()
-                            << "':\n" << e.what()
-                            << "Encoded schema had '" << value.get<std::string>().size() << "' bytes.";
-                    const std::string &errMsg = oss.str();
-                    KARABO_LOG_FRAMEWORK_ERROR << errMsg;
-                    ctxt->aReply.error(errMsg);
+            std::string encodedSch;
+            try {
+                nl::json respObj = nl::json::parse(schemaResp.payload);
+                const auto &value = respObj["results"][0]["series"][0]["values"][0][1];
+                if (value.is_null()) {
+                    // No schema corresponding to the digest has been found - it's not possible to go ahead.
+                    ctxt->aReply.error("Failed to query schema");
+                    return;
+                } else {
+                    encodedSch = value.get<std::string>();
                 }
+            }  catch (const std::exception &e) {
+                std::ostringstream oss;
+                oss << "Error retrieving schema by digest for device '"
+                    << ctxt->deviceId << "' at '" << ctxt->atTime.toIso8601Ext()
+                    << "': " << e.what();
+                const std::string &errMsg = oss.str();
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                ctxt->aReply.error(errMsg);
+                return;
             }
+
+            // A schema has been found - processing it means base64 decoding it, deserializing it and
+            // then traverse it capturing all the properties keys and their types for further processing.
+            try {
+                std::vector<unsigned char> base64Decoded;
+                base64Decode(encodedSch, base64Decoded);
+                const char* decoded = reinterpret_cast<const char *> (base64Decoded.data());
+                m_schemaSerializer->load(ctxt->configSchema, decoded, base64Decoded.size());
+                const Schema &schema = ctxt->configSchema;
+
+                // Stores the properties keys and types in the context.
+                ctxt->propNamesAndTypes.clear();
+                std::vector<std::string> schPaths = schema.getDeepPaths();
+                for (const std::string &path : schPaths) {
+                    if (schema.isLeaf(path) &&
+                        !(schema.hasArchivePolicy(path) && schema.getArchivePolicy(path) == Schema::NO_ARCHIVING)) {
+                        // Current path is for a leaf node that set is to archive (more literally, not set to not
+                        // archive).
+                        const Types::ReferenceType valType = schema.getValueType(path);
+                        ctxt->propNamesAndTypes.push_back(make_pair(path, valType));
+                    }
+                }
+            } catch (const std::exception &e) {
+                std::ostringstream oss;
+                oss << "Error processing schema retrieved for device '"
+                    << ctxt->deviceId << "' at '" << ctxt->atTime.toIso8601Ext()
+                    << "': " << e.what();
+                const std::string &errMsg = oss.str();
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                ctxt->aReply.error(errMsg);
+                return;
+            }
+
+            // Triggers the sequence of configuration value retrievals. The configuration
+            // values retrievals are an interplay between asyncPropValueBeforeTime and
+            // onAsyncPropValueBeforeTime - they will both consume the propNamesAndTypes
+            // vector, sending a response back to the slotGetConfigurationFromPast caller
+            // when the last property value is retrieved.
+            asyncPropValueBeforeTime(ctxt, false);
+
         }
 
 
@@ -727,8 +778,11 @@ namespace karabo {
                 ctxt->propNamesAndTypes.pop_front();
             }
             std::ostringstream iqlQuery;
+
             iqlQuery << "SELECT LAST(\"" << fieldKey << "\") FROM \""
-                    << ctxt->deviceId << "\" WHERE time <= " << epochAsMicrosecString(ctxt->atTime) << m_durationUnit;
+                    << ctxt->deviceId
+                    << "\" WHERE time <= "
+                    << epochAsMicrosecString(ctxt->atTime) << m_durationUnit;
             const std::string queryStr = iqlQuery.str();
 
             try {
@@ -757,19 +811,19 @@ namespace karabo {
                 return;
             }
 
-            nl::json respObj = nl::json::parse(propValueResp.payload);
-            const auto &value = respObj["results"][0]["series"][0]["values"][0][1];
-            if (!value.is_null()) {
-                auto timeObj = respObj["results"][0]["series"][0]["values"][0][0];
-                unsigned long long time = timeObj.get<unsigned long long>();
-                unsigned long long timeSec = time / kSecConversionFactor;
-                unsigned long long timeFrac = (time % kSecConversionFactor) * kFracConversionFactor;
-                Epochstamp timeEpoch(timeSec, timeFrac);
-                if (timeEpoch > ctxt->configTimePoint) {
-                    ctxt->configTimePoint = timeEpoch;
-                }
-                const boost::optional<std::string> valueAsString = jsonValueAsString(value);
-                try {
+            try {
+                nl::json respObj = nl::json::parse(propValueResp.payload);
+                const auto &value = respObj["results"][0]["series"][0]["values"][0][1];
+                if (!value.is_null()) {
+                    auto timeObj = respObj["results"][0]["series"][0]["values"][0][0];
+                    unsigned long long time = timeObj.get<unsigned long long>();
+                    unsigned long long timeSec = time / kSecConversionFactor;
+                    unsigned long long timeFrac = (time % kSecConversionFactor) * kFracConversionFactor;
+                    Epochstamp timeEpoch(timeSec, timeFrac);
+                    if (timeEpoch > ctxt->configTimePoint) {
+                        ctxt->configTimePoint = timeEpoch;
+                    }
+                    const boost::optional<std::string> valueAsString = jsonValueAsString(value);
                     if (valueAsString) {
                         if (!ctxt->configHash.has(propName)) {
                             // The normal case - the result is not yet there
@@ -788,22 +842,25 @@ namespace karabo {
                             }
                         }
                     }
-                } catch (const std::exception &e) {
-                    // Do not bail out, but just go on with other properties (Is that the correct approach?)
-                    KARABO_LOG_FRAMEWORK_ERROR << "Error adding node to hash:"
-                            << "\nValue type: " << propType
-                            << "\nValue (as string): " << *valueAsString
-                            << "\nTimestamp: " << timeEpoch.toIso8601Ext()
-                            << "\nError: " << e.what();
+                } else {
+                    // No value means the query returns "empty" result ...
+                    // FLOAT and DOUBLE should be tested for nan and +-inf if not tested yet...
+                    // ... if tested already (infinite==true) then just skip and go for the next parameter
+                    if (!infinite && (propType == Types::DOUBLE || propType == Types::FLOAT)) {
+                        asyncPropValueBeforeTime(ctxt, true);
+                        return;
+                    }
                 }
-            } else {
-                // No value means the query returns "empty" result ...
-                // FLOAT and DOUBLE should be tested for nan and +-inf if not tested yet...
-                // ... if tested already (infinite==true) then just skip and go for the next parameter
-                if (!infinite && (propType == Types::DOUBLE || propType == Types::FLOAT)) {
-                    asyncPropValueBeforeTime(ctxt, true);
-                    return;
-                }
+            } catch (std::exception &e) {
+                std::ostringstream oss;
+                oss << "Error retrieving value of property '" << propName
+                    << "' of type '" << Types::to<ToLiteral>(propType)
+                    << "' for device '" << ctxt->deviceId << "': " << e.what()
+                    << "\nRemaining property value(s) to retrieve: "
+                    << ctxt->propNamesAndTypes.size() << ".";
+                const std::string &errMsg = oss.str();
+                KARABO_LOG_FRAMEWORK_ERROR << errMsg;
+                // Go on with the remaining properties.
             }
 
             if (ctxt->propNamesAndTypes.size() > 0) {
