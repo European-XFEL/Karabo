@@ -43,6 +43,39 @@ class Macro(Macro):
         print("Hello {}!".format(self.name))
 """
 
+CANCEL_MACRO = """
+from karabo.middlelayer import Macro, Slot, String
+class Macro(Macro):
+    name = String()
+    @Slot()
+    def cancel(self):
+        print("Hello {}!".format(self.name))
+"""
+
+ASYNC_CANCEL_MACRO = """
+from karabo.middlelayer import Macro, Slot, String
+class Macro(Macro):
+    name = String()
+    @Slot()
+    async def cancel(self):
+        print("Hello {}!".format(self.name))
+"""
+
+REGISTER_MACRO = """
+from karabo.middlelayer import Macro
+class Macro(Macro):
+    def register(self):
+        pass
+"""
+
+ASYNC_REGISTER_MACRO = """
+from karabo.middlelayer import Macro
+class Macro(Macro):
+    name = String()
+    async def register(self):
+        pass
+"""
+
 
 class Tests(TestCase):
 
@@ -125,4 +158,16 @@ class Tests(TestCase):
         res = validate_macro(ASYNC_UPDATE_MACRO)
         self.assertEqual(len(res), 1)
         res = validate_macro(UPDATE_MACRO)
+        self.assertEqual(len(res), 1)
+
+    def test_cancel_function(self):
+        res = validate_macro(CANCEL_MACRO)
+        self.assertEqual(len(res), 1)
+        res = validate_macro(ASYNC_CANCEL_MACRO)
+        self.assertEqual(len(res), 1)
+
+    def test_register_function(self):
+        res = validate_macro(REGISTER_MACRO)
+        self.assertEqual(len(res), 1)
+        res = validate_macro(ASYNC_REGISTER_MACRO)
         self.assertEqual(len(res), 1)

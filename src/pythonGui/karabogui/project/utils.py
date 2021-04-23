@@ -428,8 +428,10 @@ def run_macro(macro_model):
 
     report = validate_macro(macro_model.code)
     if report:
-        html = "<ul>" + "".join(["<li>" + issue + "</li>"
-                                 for issue in report]) + "</ul>"
+        fails = "<ul>" + "".join(["<li>" + issue + "</li>"
+                                  for issue in report]) + "</ul>"
+        html = ("Please check the macro validation report and rename function "
+                f"names or remove forbidden imports:{fails}")
         messagebox.show_error(html, title="The Macro cannot be started")
         return
 
