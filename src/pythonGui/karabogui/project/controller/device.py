@@ -111,7 +111,7 @@ class DeviceInstanceController(BaseProjectGroupController):
             self._get_configuration_from_past, parent=parent))
         conf_action.setEnabled(can_get_conf)
 
-        conf_action_name = QAction('Get Configuration (Name)', menu)
+        conf_action_name = QAction('Get && Save Configuration (Name)', menu)
         can_get_conf_name = (server_online and
                              proj_device_status not in NO_CONFIG_STATUSES)
         conf_action_name.triggered.connect(partial(
