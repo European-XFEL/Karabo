@@ -28,7 +28,8 @@ Deprecations
 
 - MDL API: ``Injectable`` class is not required for Schema injection and deprecated. It will be removed with Karabo 2.13.
 
-- MDL API: ``DeviceNode`` `properties` and `commands` are deprecated and scheduled for removal with Karabo 2.13.
+- MDL API: ``DeviceNode`` `properties` and `commands` are deprecated and scheduled for removal with Karabo 2.12.
+- MDL API: ``DeviceNode`` timeout is default 2 seconds. A maximum of 5 seconds can be configured.
 
 - FW: The attribute configuration of the **unitSymbol** and **metricPrefixSymbol** in the graphical user interface has been deprecated and remvoved.
   For further details and future deprecations please have a look at the Karabo newsletter 25 (https://rtd.xfel.eu/docs/newsletter/en/latest/ticker_25.html).
