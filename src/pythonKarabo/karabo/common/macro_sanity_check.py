@@ -11,7 +11,13 @@ def validate_macro(code):
     lines = _has_imports(tree, "time", "sleep")
     if lines:
         ret.extend(lines)
-    lines = _has_methods(tree, "update", "clear_namespace")
+
+    # - Update is the `update` method of a device
+    # - register is a function of a `Configurable` to register descriptors
+    # - cancel is the native cancel function of a macro
+    # - clear_namespace is the gui binding clear command
+    lines = _has_methods(tree, "update", "clear_namespace", "register",
+                         "cancel")
     if lines:
         ret.extend(lines)
 
