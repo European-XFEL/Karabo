@@ -35,7 +35,7 @@ namespace karathon {
 
         virtual ~SlotWrap();
 
-        void registerSlotFunction(const bp::object& slotHandler);
+        void registerSlotFunction(const bp::object& slotHandler, int numArgs);
 
     private: // function
 
