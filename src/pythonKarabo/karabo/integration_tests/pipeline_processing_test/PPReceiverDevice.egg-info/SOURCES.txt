@@ -1,5 +1,0 @@
-PPReceiverDevice.egg-info/PKG-INFO
-PPReceiverDevice.egg-info/SOURCES.txt
-PPReceiverDevice.egg-info/entry_points.txt
-__init__.py
-ppreceiver.py

@@ -109,8 +109,8 @@ class TestDevice(PythonDevice):
             .commit(),
 
             INT32_ELEMENT(expected).key("maxSizeSchema")
-            .assignmentOptional()
-            .defaultValue(0)
+            .readOnly()
+            .initialValue(0)
             .commit(),
 
             SLOT_ELEMENT(expected).key("setA")
@@ -271,3 +271,4 @@ class TestDevice(PythonDevice):
         schema = remote.getDeviceSchema(instance_id)
         max_size = schema.getMaxSize("vectorMaxSize")
         self.set("maxSizeSchema", max_size)
+        self.reply(max_size)
