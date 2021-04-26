@@ -59,13 +59,15 @@ class BoundDeviceTestCase(TestCase):
     dc = None
 
     def start_server(self, api, server_id, class_ids, plugin_dir='',
-                     logLevel='FATAL'):
+                     logLevel='FATAL', namespace=None):
         """
         Start a server in its own process.
         api: "bound", "cpp" or "mdl"
         class_ids: list of required device classes for this server
         plugin_dir: where extra plugins are looked for (default: empty)
         logLevel: log level of server (default: 'FATAL', i.e. no logging)
+        namespace: if not None, it will set the `pluginNamespace` option
+                   in the `bound` and `mdl` apis.
         """
 
         if server_id in self.serverProcesses:
@@ -81,6 +83,8 @@ class BoundDeviceTestCase(TestCase):
             'visibility=1'
         ]
         if api == "bound":
+            if namespace is not None:
+                server_args = [f"pluginNamespace={namespace}"] + server_args
             server_args.append('Logger.priority={}'.format(logLevel))
             serverProcess = start_bound_server(server_id, server_args,
                                                plugin_dir=plugin_dir)
@@ -89,6 +93,8 @@ class BoundDeviceTestCase(TestCase):
             serverProcess = start_cpp_server(server_id, server_args,
                                              plugin_dir=plugin_dir)
         elif api == "mdl":
+            if namespace is not None:
+                server_args = [f"pluginNamespace={namespace}"] + server_args
             server_args.append(f'log.level={logLevel}')
             serverProcess = start_mdl_server(server_id, server_args,
                                              plugin_dir=plugin_dir)

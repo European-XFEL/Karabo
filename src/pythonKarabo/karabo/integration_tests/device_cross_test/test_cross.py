@@ -221,8 +221,10 @@ class Tests(DeviceTest):
         with proxy:
             self.assertEqual(proxy.maxSizeSchema, 0)
             # Test the maxSize from a vector property!
-            await proxy.compareSchema()
+            # and the reply of a slot.
+            reply = await proxy.compareSchema()
             self.assertEqual(proxy.maxSizeSchema, 4)
+            self.assertEqual(reply, 4)
 
             await proxy.setA()
             self.assertEqual(proxy.a, 22.7 * unit.milliampere,
