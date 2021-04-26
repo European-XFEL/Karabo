@@ -12,7 +12,13 @@
 #include <karabo/xms/SignalSlotable.hh>
 #include <karabo/util/karaboDll.hh>
 
+#include <string>
+
 namespace karabo {
+    namespace util {
+        class Schema;
+        class State;
+    }
     namespace core {
 
         /**

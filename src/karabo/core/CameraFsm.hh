@@ -12,11 +12,17 @@
 #ifndef KARABO_CORE_CAMERAFSM_HH
 #define	KARABO_CORE_CAMERAFSM_HH
 
-#include <karabo/core/BaseFsm.hh>
 #include "Device.hh"
-#include <karabo/util/State.hh>
+
+#include "karabo/core/BaseFsm.hh"
+#include "karabo/util/State.hh"
+#include "karabo/util/VectorElement.hh"
+#include "karabo/xms/SlotElement.hh"
 
 namespace karabo {
+    namespace util {
+        class Schema;
+    }
     namespace core {
 
         /**

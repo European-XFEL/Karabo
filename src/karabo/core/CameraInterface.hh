@@ -8,8 +8,19 @@
 #ifndef KARABO_CORE_CAMERAINTERFACE_HH
 #define	KARABO_CORE_CAMERAINTERFACE_HH
 
-#include <karabo/xms/SlotElement.hh>
 #include "Device.hh"
+
+#include "karabo/util/OverwriteElement.hh"
+#include "karabo/util/NodeElement.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
+
+#include "karabo/util/Schema.hh"
+#include "karabo/util/State.hh"
+#include "karabo/xms/ImageData.hh"
+#include "karabo/xms/OutputChannel.hh"
+#include "karabo/xms/SignalSlotable.hh"
+#include "karabo/xms/SlotElement.hh"
 
 namespace karabo {
     namespace core {
