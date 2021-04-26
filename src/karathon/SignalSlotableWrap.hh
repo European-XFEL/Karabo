@@ -178,7 +178,7 @@ namespace karathon {
             return Wrapper::fromStdVectorToPyList(this->getAvailableSlots(instanceId));
         }
 
-        void registerSlotPy(const bp::object& slotFunction);
+        void registerSlotPy(const bp::object& slotFunction, std::string slotName, int numArg);
 
         template<typename ...Args>
         void registerSignalPy(const std::string& funcName, const Args&... args) {
