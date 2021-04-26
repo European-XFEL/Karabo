@@ -1,6 +1,5 @@
-from karabo.bound import (KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
-                          PythonDevice, Schema, State, Hash,
-                          STRING_ELEMENT, TABLE_ELEMENT)
+from karabo.bound import (
+    Hash, KARABO_CLASSINFO, PythonDevice, Schema, STRING_ELEMENT, TABLE_ELEMENT)
 
 
 @KARABO_CLASSINFO("DeviceWithTableElementParam", "1.0")

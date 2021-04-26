@@ -1,5 +1,0 @@
-PPSenderDevice.egg-info/PKG-INFO
-PPSenderDevice.egg-info/SOURCES.txt
-PPSenderDevice.egg-info/entry_points.txt
-__init__.py
-ppsender.py
