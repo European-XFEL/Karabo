@@ -18,30 +18,40 @@ namespace karathon {
     }
 
 
-    void SlotWrap::registerSlotFunction(const bp::object& slotHandler) {
+    void SlotWrap::registerSlotFunction(const bp::object& slotHandler, int numArgs) {
         // We accept ONLY the python callable
-        if (!PyCallable_Check(slotHandler.ptr()))
-            throw KARABO_PARAMETER_EXCEPTION("The argument is not callable.  Function or method is expected.");
+        if (!PyCallable_Check(slotHandler.ptr())) {
+            throw KARABO_PARAMETER_EXCEPTION("The argument is not callable.");
+        }
 
         // Note: In C++ there is a list of slot handlers to which is appended - here we overwrite any previous handler.
         // Note 2: Create pointer to be able to ensure that deletion can be done with GIL acquired.
-        std::unique_ptr<bp::object> newHandler(new bp::object(slotHandler));
+        std::unique_ptr<bp::object> newHandler(std::make_unique<bp::object>(slotHandler));
         m_slotFunction.swap(newHandler);
-        m_arity = 0;
-
-        PyObject* function_object = NULL;
-        // We expect either the function or the method to be given...
-        if (PyFunction_Check(m_slotFunction->ptr())) {
-            function_object = m_slotFunction->ptr();
-        } else if (PyMethod_Check(m_slotFunction->ptr())) {
-            function_object = PyMethod_Function(m_slotFunction->ptr());
-            m_arity = 1; // Argument self counted
+        if (numArgs >= 0) {
+            m_arity = numArgs;
         } else {
-            throw KARABO_PARAMETER_EXCEPTION("The argument is neither a function nor a method.");
-        }
-        PyCodeObject* pycode = reinterpret_cast<PyCodeObject*> (PyFunction_GetCode(function_object));
-        if (pycode) {
-            m_arity = pycode->co_argcount - m_arity; // Subtract "self" if any
+            // Undefined number of arguments, try to figure out
+            size_t numSelfArgs = 0ul;
+
+            PyObject* function_object = NULL;
+            // We expect either the function or the method to be given...
+            if (PyFunction_Check(m_slotFunction->ptr())) {
+                function_object = m_slotFunction->ptr();
+            } else if (PyMethod_Check(m_slotFunction->ptr())) {
+                function_object = PyMethod_Function(m_slotFunction->ptr());
+                numSelfArgs = 1;
+            } else {
+                throw KARABO_PARAMETER_EXCEPTION("The argument is neither function nor method, please specify number of arguments.");
+            }
+            PyCodeObject* pycode = reinterpret_cast<PyCodeObject*> (PyFunction_GetCode(function_object));
+            if (pycode) {
+                // Note: co_argcount includes arguments with defaults, see nice figure from 'Hzzkygcs' at
+                // https://stackoverflow.com/questions/847936/how-can-i-find-the-number-of-arguments-of-a-python-function
+                m_arity = pycode->co_argcount - numSelfArgs; // Subtract "self" if any
+            } else { // Can we get here?
+                throw KARABO_PARAMETER_EXCEPTION("Failed to access PyCode object to deduce number of arguments.");
+            }
         }
     }
 

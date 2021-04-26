@@ -121,7 +121,11 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (string const & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceId)
                  , bp::return_value_policy< bp::copy_const_reference > ())
 
-            .def("registerSlot", (&SignalSlotableWrap::registerSlotPy), (bp::arg("slotFunction")))
+            .def("registerSlot", (&SignalSlotableWrap::registerSlotPy), (bp::arg("slotFunction"), bp::arg("slotName") = std::string(), bp::arg("numArgs") = -1),
+                 "Register a callable as slot function.\n"
+                 "If slotName empty (default), it is registered under slotFunction.__name__, else under slotName\n"
+                 "If numArg < 0 (default), try to deduce number of arguments that the function should take\n"
+                 "   - that is known to work for functions and methods without '*args'. Otherwise use numArgs.")
 
 
             .def("registerSignal", &SignalSlotableWrap::registerSignalPy<>,
