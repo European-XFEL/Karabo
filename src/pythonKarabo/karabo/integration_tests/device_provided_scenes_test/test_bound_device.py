@@ -1,4 +1,3 @@
-import os.path as op
 from time import sleep
 
 from karabo.bound import Hash
@@ -11,9 +10,9 @@ SERVER_ID = "testServerSceneProviders"
 class TestDeviceProvidedScenes(BoundDeviceTestCase):
     def setUp(self):
         super(TestDeviceProvidedScenes, self).setUp()
-        own_dir = op.dirname(op.abspath(__file__))
         class_ids = ['SceneProvidingDevice', 'NonSceneProvidingDevice']
-        self.start_server("bound", SERVER_ID, class_ids, plugin_dir=own_dir)
+        self.start_server("bound", SERVER_ID, class_ids,
+                          namespace="karabo.bound_device_test")
 
     def test_in_sequence(self):
         # Complete setup - do not do it in setup to ensure that even in case of

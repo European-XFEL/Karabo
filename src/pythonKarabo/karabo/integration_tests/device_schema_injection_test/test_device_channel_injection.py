@@ -1,5 +1,4 @@
-from karabo.integration_tests.utils import BoundDeviceTestCase
-
+import threading
 
 from karabo.bound import (
     Hash, Schema,
@@ -10,9 +9,7 @@ from karabo.bound import (
     OVERWRITE_ELEMENT,
     SignalSlotable
 )
-
-import os.path as op
-import threading
+from karabo.integration_tests.utils import BoundDeviceTestCase
 
 max_timeout = 20    # in seconds
 max_timeout_ms = max_timeout * 1000
@@ -29,9 +26,8 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
 
         self.devClass = "DeviceChannelInjection"
         self.server_id = "server/channelInjection"
-        own_dir = op.dirname(op.abspath(__file__))
-        self.start_server("bound", self.server_id, [self.devClass],
-                          plugin_dir=own_dir)  # , logLevel="INFO")
+        self.start_server("bound", self.server_id, [self.devClass],  # , logLevel="INFO"
+                          namespace="karabo.bound_device_test")
 
         dev_id = "device/channelInjection"
         cfg = Hash("deviceId", dev_id)
@@ -104,11 +100,12 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
 
                 tableSt = cfg.get("output.connections")
                 tableIn = cfg.get("injectedOutput.connections")
+                expected_id = f"{dev_id}:injectedInput"
                 if (len(tableSt) == 1 and len(tableIn) == 1
-                    and tableSt[0].get("remoteId") == f"{dev_id}:injectedInput"
-                    and tableIn[0].get("remoteId") == f"{dev_id}:injectedInput"
-                    and cfg.has("node.anInt32")):
-                        return True
+                        and tableSt[0].get("remoteId") == expected_id
+                        and tableIn[0].get("remoteId") == expected_id
+                        and cfg.has("node.anInt32")):
+                    return True
             return False
 
         res = self.waitUntilTrue(condition, max_timeout, 100)

@@ -1,3 +1,0 @@
-[karabo.bound_device]
-SceneProvidingDevice = scene_providing_device:SceneProvidingDevice
-NonSceneProvidingDevice = non_scene_providing_device:NonSceneProvidingDevice
