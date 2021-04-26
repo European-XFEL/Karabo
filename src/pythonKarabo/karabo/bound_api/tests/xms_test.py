@@ -1,12 +1,26 @@
+from functools import partial
 import unittest
 import threading
 import time
-import os
 
-from unittest import skipIf
 from karabo.bound import SignalSlotable, EventLoop
+# To switch on debugging, also import these:
+# from karabo.bound import Logger, Hash
 
-jms = os.environ["KARABO_BROKER"].startswith("tcp://")
+
+class SignalSlotableWithSlots(SignalSlotable):
+    def slotOneArg(self, a):
+        pass
+
+    def slotVarArgs(self, *args):
+        self.reply(len(args))
+
+    def slotTwoArgDef(self, a, b, c=42):
+        self.reply(a + b + c)
+
+    # A keyword only argument with default
+    def slotKwargs(self, *args, a=77):
+        self.reply(len(args), a)
 
 
 class Xms_TestCase(unittest.TestCase):
@@ -14,10 +28,242 @@ class Xms_TestCase(unittest.TestCase):
     alice_id = "alice"
 
     def setUp(self):
+        # To switch on logging to debug:
+        # Logger.configure(Hash("priority", "DEBUG"))
+        # Logger.useOstream()
+
         # start event loop
         self._eventLoopThread = threading.Thread(target=EventLoop.work)
         self._eventLoopThread.daemon = True
         self._eventLoopThread.start()
+
+    def tearDown(self):
+        # Stop the event loop
+        EventLoop.stop()
+        self._eventLoopThread.join()
+        del self._eventLoopThread
+
+    def test_xms_slotRegistration(self):
+        timeout = 2000  # timeout in ms
+
+        sigSlot = SignalSlotableWithSlots("sigSlot")
+        sigSlot.start()
+
+        with self.subTest(msg="register function"):
+            def funcOneArg(a):
+                pass
+
+            def funcVarArgs(*args):
+                sigSlot.reply(len(args))
+
+            def funcTwoArgDef(a, b, c=42):
+                sigSlot.reply(a + b + c)
+
+            # A keyword only argument with default
+            def funcKwargs(*args, a=77):
+                sigSlot.reply(len(args), a)
+
+            # Ordinary registration - register under <function>.__name__
+            sigSlot.registerSlot(funcOneArg)
+            # "" => self messaging!
+            sigSlot.request("", "funcOneArg", 1).waitForReply(timeout)
+
+            # Register under defined name (and test '/' as part of name)
+            sigSlot.registerSlot(funcOneArg, "func/oneArg1")
+            req = sigSlot.request("", "func/oneArg1", "no_matter")
+            req.waitForReply(timeout)
+
+            # Register function with variable number of arguments.
+            # Automatic number of argument detection gives zero:
+            sigSlot.registerSlot(funcVarArgs)
+            req = sigSlot.request("", "funcVarArgs")
+            (nArg, ) = req.waitForReply(timeout)
+            self.assertEqual(0, nArg)
+            # TODO: Do we want to guarantee this 'feature' of ignored
+            #       extra arguments? It's in underlying C++ code.
+            req = sigSlot.request("", "funcVarArgs", 1)
+            (nArg, ) = req.waitForReply(timeout)
+            self.assertEqual(0, nArg)  # i.e. input argument ignored!
+
+            # We can register '*args' function with fixed number
+            # (Also test that '_' can be requested as '.' as needed
+            #  for nested slots in Schema)
+            sigSlot.registerSlot(funcVarArgs, "func_varArgs1", 1)
+            req = sigSlot.request("", "func.varArgs1", "no_matter2")
+            (nArg, ) = req.waitForReply(timeout)
+            self.assertEqual(1, nArg)
+
+            # Then we must not miss to sent argument
+            # FIXME: Not yet 2.11. - interface change
+            # req = sigSlot.request("", "func_varArgs1")
+            # with self.assertRaises(RuntimeError):
+            #     req.waitForReply(timeout)
+
+            #
+            # Register function with default argument.
+            #
+            # Automatic number of argument detection includes the default
+            # (cannot change that for backward compatibility...).
+            sigSlot.registerSlot(funcTwoArgDef, "funcTwoArgDef3")
+            req = sigSlot.request("", "funcTwoArgDef3", 1, 2, 3)
+            (theSum, ) = req.waitForReply(timeout)
+            self.assertEqual(6, theSum)
+
+            # But it is OK to register with less args to get default
+            sigSlot.registerSlot(funcTwoArgDef, numArgs=2)
+            req = sigSlot.request("", "funcTwoArgDef", 2, 3)
+            (theSum, ) = req.waitForReply(timeout)
+            self.assertEqual(47, theSum)  # 2 + 3 + 42
+
+            # Still, we must not miss to sent required arguments
+            # FIXME: Not yet 2.11. - interface change
+            # req = sigSlot.request("", "funcTwoArgDef", 1)
+            # with self.assertRaises(RuntimeError):
+            #     req.waitForReply(timeout)
+
+            #
+            # Register function with default keyword only argument.
+            #
+            # Automatic number of argument detection excludes the default
+            sigSlot.registerSlot(funcKwargs)
+            req = sigSlot.request("", "funcKwargs")
+            (length, a) = req.waitForReply(timeout)
+            self.assertEqual(0, length)
+            self.assertEqual(77, a)
+
+            # Can specify whatever number of args, but keyword only arg is fix:
+            sigSlot.registerSlot(funcKwargs, "funcKwargs1", 1)
+            req = sigSlot.request("", "funcKwargs1", -77)
+            (length, a) = req.waitForReply(timeout)
+            self.assertEqual(1, length)
+            self.assertEqual(77, a)
+
+            sigSlot.registerSlot(funcKwargs, "funcKwargs2", 2)
+            req = sigSlot.request("", "funcKwargs2", 111, 222)
+            (length, a) = req.waitForReply(timeout)
+            self.assertEqual(2, length)
+            self.assertEqual(77, a)
+
+        with self.subTest(msg="register member method"):
+            #
+            # Ordinary registration - register under <method>.__name__
+            #
+            sigSlot.registerSlot(sigSlot.slotOneArg)
+            sigSlot.request("", "slotOneArg", 1).waitForReply(timeout)
+
+            # Register under defined name
+            sigSlot.registerSlot(sigSlot.slotOneArg, "slotOneArg1")
+            req = sigSlot.request("", "slotOneArg1", "no_matter")
+            req.waitForReply(timeout)
+
+            #
+            # Register method with variable number of arguments.
+            #
+            # Automatic number of argument detection gives zero:
+            sigSlot.registerSlot(sigSlot.slotVarArgs)
+            req = sigSlot.request("", "slotVarArgs")
+            (nArg, ) = req.waitForReply(timeout)
+            self.assertEqual(0, nArg)
+            # TODO: Do we want to guarantee this 'feature' of ignored
+            #       extra arguments? It's in underlying C++ code.
+            req = sigSlot.request("", "slotVarArgs", "extra_arg")
+            (nArg, ) = req.waitForReply(timeout)
+            self.assertEqual(0, nArg)  # i.e. input argument ignored!
+
+            # We can register '*args' function with fixed number
+            sigSlot.registerSlot(sigSlot.slotVarArgs, "slotVarArgs1", 2)
+            req = sigSlot.request("", "slotVarArgs1", "no", "matter")
+            (nArg, ) = req.waitForReply(timeout)
+            self.assertEqual(2, nArg)
+
+            # Then we must not miss to sent argument
+            # FIXME: Not yet 2.11. - interface change
+            # req = sigSlot.request("", "slotVarArgs1", "not_enough")
+            # with self.assertRaises(RuntimeError):
+            #     req.waitForReply(timeout)
+
+            #
+            # Register method with default argument.
+            #
+            # Automatic number of argument detection includes the default
+            # (cannot change that for backward compatibility...).
+            sigSlot.registerSlot(sigSlot.slotTwoArgDef, "slotTwoArgDef3")
+            req = sigSlot.request("", "slotTwoArgDef3", 1, 2, 3)
+            (theSum, ) = req.waitForReply(timeout)
+            self.assertEqual(6, theSum)
+
+            # But it is OK to register with less args to get default
+            sigSlot.registerSlot(sigSlot.slotTwoArgDef, numArgs=2)
+            req = sigSlot.request("", "slotTwoArgDef", 1, 2)
+            (theSum, ) = req.waitForReply(timeout)
+            self.assertEqual(45, theSum)  # 1 + 2 + 42
+
+            # Still, we must not miss to sent required arguments
+            # FIXME: Not yet 2.11. - interface change
+            # req = sigSlot.request("", "slotTwoArgDef", 1)
+            # with self.assertRaises(RuntimeError):
+            #     req.waitForReply(timeout)
+
+            #
+            # Register method with default keyword only argument.
+            #
+            # Automatic number of argument detection excludes the default
+            sigSlot.registerSlot(sigSlot.slotKwargs)
+            req = sigSlot.request("", "slotKwargs")
+            (length, a) = req.waitForReply(timeout)
+            self.assertEqual(0, length)
+            self.assertEqual(77, a)
+
+            # Can specify whatever number of args, but keyword only arg is fix:
+            sigSlot.registerSlot(sigSlot.slotKwargs, "slotKwargs1", 1)
+            req = sigSlot.request("", "slotKwargs1", -77)
+            (length, a) = req.waitForReply(timeout)
+            self.assertEqual(1, length)
+            self.assertEqual(77, a)
+
+            sigSlot.registerSlot(sigSlot.slotKwargs, "slotKwargs2", 2)
+            req = sigSlot.request("", "slotKwargs2", 111, 222)
+            (length, a) = req.waitForReply(timeout)
+            self.assertEqual(2, length)
+            self.assertEqual(77, a)
+
+        with self.subTest(msg="register partial, lambda"):
+
+            # Lambdas have a (not so unique) __name__, taken by default.
+            # Auto detection of num(arguments) works, default arg don't harm.
+            sigSlot.registerSlot(lambda a, b, c, d=55: sigSlot.reply(a, b,
+                                                                     c, d))
+            req = sigSlot.request("", "<lambda>", 1, 2, 3, 5)
+            l, m, n, o = req.waitForReply(timeout)
+            self.assertEqual(1, l)
+            self.assertEqual(2, m)
+            self.assertEqual(3, n)
+            self.assertEqual(5, o)
+
+            # Make actually use of lambda's default argument
+            sigSlot.registerSlot(lambda a, b, c, d=55: sigSlot.reply(a, b,
+                                                                     c, d),
+                                 "lam", 3)
+            req = sigSlot.request("", "lam", 8, 13, 21)
+            l, m, n, o = req.waitForReply(timeout)
+            self.assertEqual(8, l)
+            self.assertEqual(13, m)
+            self.assertEqual(21, n)
+            self.assertEqual(55, o)
+
+            # Test that 'partial' works for slots - they have no __name__
+            def forPartial(a, b):
+                sigSlot.reply(a, b)
+
+            part = partial(forPartial, 42)  # 'default' for a
+            # Need to define slotName and numArgs, auto detection fails
+            sigSlot.registerSlot(part, "partial", 1)
+            req = sigSlot.request("", "partial", 43)
+            a, b = req.waitForReply(timeout)
+            self.assertEqual(42, a)
+            self.assertEqual(43, b)
+
+    def setUpAliceBob(self):
 
         # setup bob SignalSlotable with slots for 0-4 arguments
         # that also reply 0-4 values
@@ -54,16 +300,12 @@ class Xms_TestCase(unittest.TestCase):
         self.alice = SignalSlotable(self.alice_id)
         self.alice.start()
 
-    def tearDown(self):
+    def tearDownAliceBob(self):
         self.alice = None
         self.bob = None
 
-        # Stop the event loop
-        EventLoop.stop()
-        self._eventLoopThread.join()
-
-    @skipIf(jms, "not supported for JMS case")
     def test_xms_request(self):
+        self.setUpAliceBob()
         with self.subTest(msg="async receive"):
             self.assertEqual(-1, self.called)  # initial value
 
@@ -187,3 +429,4 @@ class Xms_TestCase(unittest.TestCase):
 
             del req
             self.called = -1
+        self.tearDownAliceBob()
