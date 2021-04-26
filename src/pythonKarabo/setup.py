@@ -69,12 +69,6 @@ else:
         ],
         'karabo.middlelayer_api.tests': ['*.xml'],
         'karabo.project_db': ['config_stubs/*.*'],
-        'karabo.integration_tests': [
-            'device_comm_test/CommTestDevice.egg-info/*.*',
-            'device_provided_scenes_test/SceneProvidingDevice.egg-info/*.*',
-            'device_schema_injection_test/DeviceChannelInjection.egg-info/*.*',
-            'pipeline_processing_test/PPReceiverDevice.egg-info/*.*',
-            'pipeline_processing_test/PPSenderDevice.egg-info/*.*'],
         'karabo.interactive': [
             'jupyter_spec/kernel.json',
             'static/*.css',
@@ -117,12 +111,24 @@ else:
             'ConfigurationManager=karabo.middlelayer_devices.configuration_manager:ConfigurationManager',
             'DaemonManager=karabo.middlelayer_devices.daemon_manager:DaemonManager',
         ],
+        'karabo.middlelayer_device_test': [
+            'MiddlelayerDevice=karabo.integration_tests.device_cross_test.test_cross:MiddlelayerDevice',
+        ],
         'karabo.macro_device': [
             'IPythonKernel=karabo.macro_devices.ipython:IPythonKernel',
             'MetaMacro=karabo.macro_devices.metamacro:MetaMacro'
         ],
         'karabo.bound_device_test': [
-            'TestDevice=karabo.bound_api.tests.boundDevice:TestDevice'
+            'TestDevice=karabo.bound_api.tests.boundDevice:TestDevice',
+            'CommTestDevice=karabo.integration_tests.device_comm_test.commtestdevice:CommTestDevice',
+            'SceneProvidingDevice=karabo.integration_tests.device_provided_scenes_test.scene_providing_device:SceneProvidingDevice',
+            'NonSceneProvidingDevice=karabo.integration_tests.device_provided_scenes_test.non_scene_providing_device:NonSceneProvidingDevice',
+            'DeviceWithAlarm=karabo.integration_tests.device_schema_injection_test.device_with_alarm:DeviceWithAlarm',
+            'DeviceWithTableElementParam=karabo.integration_tests.device_schema_injection_test.device_with_table_parameter:DeviceWithTableElementParam',
+            'DeviceChannelInjection=karabo.integration_tests.device_schema_injection_test.device_channel_injection:DeviceChannelInjection',
+            'PPSenderDevice=karabo.integration_tests.pipeline_processing_test.ppsender:PPSenderDevice',
+            'PPReceiverDevice=karabo.integration_tests.pipeline_processing_test.ppreceiver:PPReceiverDevice',
+            'UnstoppedThreadDevice=karabo.integration_tests.device_comm_test.unstoppedThreadDevice:UnstoppedThreadDevice',
         ],
         'karabo.project_db': [
             'exist_db=karabo.project_db.exist_db.node:DbConnectionNode',

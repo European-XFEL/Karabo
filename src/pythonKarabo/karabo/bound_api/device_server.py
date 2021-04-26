@@ -29,7 +29,7 @@ from .fsm import (
     KARABO_FSM_STATE, KARABO_FSM_STATE_E,
     KARABO_FSM_CREATE_MACHINE, KARABO_FSM_STATE_MACHINE
 )
-from .plugin_loader import PluginLoader
+from .plugin_loader import DEFAULT_NAMESPACE, PluginLoader
 from .runner import Runner
 
 
@@ -96,7 +96,7 @@ class DeviceServer(object):
             .displayedName("Device Classes")
             .description("The device classes the server will manage")
             .assignmentOptional()
-            .defaultValue(PythonDevice.getRegisteredClasses())
+            .defaultValue([])
             .expertAccess()
             .commit(),
 
@@ -110,7 +110,7 @@ class DeviceServer(object):
             STRING_ELEMENT(expected).key("pluginNamespace")
             .displayedName("Plugin Namespace")
             .description("Namespace to search for plugins")
-            .assignmentOptional().defaultValue("karabo.bound_device")
+            .assignmentOptional().defaultValue(DEFAULT_NAMESPACE)
             .expertAccess()
             .commit(),
 
@@ -198,6 +198,7 @@ class DeviceServer(object):
             self.hostname = socket.gethostname().partition('.')[0]
         self.autoStart = config.get("autoStart")
         self.deviceClasses = config.get("deviceClasses")
+        self.pluginNamespace = config.get("pluginNamespace")
         self.timeServerId = config.get("timeServerId")
 
         if 'serverId' in config:
@@ -218,7 +219,7 @@ class DeviceServer(object):
         info["host"] = self.hostname
         info["visibility"] = self.visibility
         info["lang"] = "bound"
-        devicesInfo, scanLogs = self.scanPlugins(config["pluginNamespace"])
+        devicesInfo, scanLogs = self.scanPlugins(self.pluginNamespace)
         info.merge(devicesInfo)
 
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -308,7 +309,7 @@ class DeviceServer(object):
 
         logs = []
         for ep in entrypoints:
-            if ep.name in self.deviceClasses or not self.deviceClasses:
+            if not self.deviceClasses or ep.name in self.deviceClasses:
                 try:
                     deviceClass = ep.load()
                 except ImportError as e:
@@ -423,6 +424,9 @@ class DeviceServer(object):
         # Add connection type and parameters used by device server for
         # connecting to broker.  This was added AFTER 'validate' intentionally!
         config['_connection_'] = self.connectionParameters
+
+        # Add temporary namespace variable
+        config['_pluginNamespace_'] = self.pluginNamespace
 
         # Add time server ID configured for device server. This was added AFTER
         # 'validate' intentionally!
