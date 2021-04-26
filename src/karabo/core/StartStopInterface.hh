@@ -8,7 +8,10 @@
 #ifndef KARABO_CORE_STARTSTOPINTERFACE_HH
 #define	KARABO_CORE_STARTSTOPINTERFACE_HH
 
-#include <karabo/xms/SlotElement.hh>
+#include "karabo/util/OverwriteElement.hh"
+#include "karabo/xms/SlotElement.hh"
+#include "karabo/xms/SignalSlotable.hh"
+
 #include "Device.hh"
 
 namespace karabo {

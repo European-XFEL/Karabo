@@ -11,11 +11,14 @@
 #include <vector>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <karabo/xms/SlotElement.hh>
 #include <karabo/util/ClassInfo.hh>
-#include <karabo/util/Schema.hh>
 
 namespace karabo {
+
+    namespace util {
+        class Schema;
+    }
+
     namespace core {
 
         /**
