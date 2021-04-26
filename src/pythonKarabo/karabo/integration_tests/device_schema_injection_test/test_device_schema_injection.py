@@ -5,6 +5,7 @@ from karabo.bound import (
     DOUBLE_ELEMENT, INT32_ELEMENT, PythonDevice, VectorHash
 )
 
+# import the device classes to trigger their registration in the Configurator
 from .device_with_alarm import DeviceWithAlarm
 from .device_with_table_parameter import DeviceWithTableElementParam
 
@@ -177,6 +178,8 @@ class Schema_Injection_TestCase(unittest.TestCase):
         """Tests that updateSchema preserves TABLE_ELEMENTs in the static schema."""
         device = Configurator(PythonDevice).create(
                         "DeviceWithTableElementParam", self.deviceCfg)
+
+        assert isinstance(device, DeviceWithTableElementParam)
         device.startFsm()
 
         self.assertIn("deviceTable",
@@ -411,4 +414,3 @@ class Schema_Injection_TestCase(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             device.setVectorUpdate("vector", [0], "typo", t)
-
