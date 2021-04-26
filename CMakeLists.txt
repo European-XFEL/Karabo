@@ -67,6 +67,8 @@ endif()
 # Makefile that would clash with the one from the root directory.
 add_subdirectory(src/karabo ${CMAKE_BINARY_DIR}/karabo)
 
+# if the variable CONDA_BUILD is defined, we should not mess with the conda environment.
+if (NOT(DEFINED ENV{CONDA_BUILD}))
 # Updates the Conda Environment with the Framework C++ dependencies whenever
 # its yml definition file changes.
 #
@@ -81,43 +83,44 @@ add_subdirectory(src/karabo ${CMAKE_BINARY_DIR}/karabo)
 # Some sanity checks, like finding the conda cli and the environment of the yml
 # file are performed before doing the update. Some build environments, like the
 # CI, may use a different Conda setup.
-find_program(
-    CONDA_CLI "conda"
-    HINT $ENV{HOME}/miniconda3/bin
-)
-if (CONDA_CLI)
-  execute_process(
-      COMMAND ${CONDA_CLI} env list
-      RESULT_VARIABLE result
-      OUTPUT_VARIABLE CONDA_ENV_LIST
-      ERROR_QUIET
-  )
-  if (result)
-    message(FATAL_ERROR "Error listing Conda envs: ${result}")
-  endif()
-  string(FIND ${CONDA_ENV_LIST} "karabo-cpp" DEPEND_ENV_POS)
-  if (NOT DEPEND_ENV_POS EQUAL -1)
-    # The Conda env with the dependencies has been found - perform an update
-    # if needed at build time.
-    add_custom_command(OUTPUT DependEnvUpdateWitness.txt
-       COMMAND ${CONDA_CLI} devenv -f ${PROJECT_SOURCE_DIR}/conda-recipes/karabo-cpp/environment.devenv.yml
-       COMMAND touch DependEnvUpdateWitness.txt
-       DEPENDS ${PROJECT_SOURCE_DIR}/conda-recipes/karabo-cpp/environment.devenv.yml
+    find_program(
+        CONDA_CLI "conda"
+        HINT $ENV{HOME}/miniconda3/bin
     )
-    add_custom_target(UpdateDependenciesEnv ALL
-       DEPENDS DependEnvUpdateWitness.txt
+    if (CONDA_CLI)
+    execute_process(
+        COMMAND ${CONDA_CLI} env list
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE CONDA_ENV_LIST
+        ERROR_QUIET
     )
-    add_dependencies(${KARABO_LIB_TARGET_NAME} UpdateDependenciesEnv)
-    message(STATUS "Conda environment update from environment file will be suported!")
-  endif()  # if (DEPEND_ENV_POS != 1)
-else ()
-  message(
-    WARNING
-    "Conda not found - update from environment file disabled! \
-     If you're using an IDE connected to a remote server, \
-     please try to configure the CMake project from a terminal session."
-  )
-endif()  # if (CONDA_CLI_FOUND)
+    if (result)
+        message(FATAL_ERROR "Error listing Conda envs: ${result}")
+    endif()
+    string(FIND ${CONDA_ENV_LIST} "karabo-cpp" DEPEND_ENV_POS)
+    if (NOT DEPEND_ENV_POS EQUAL -1)
+        # The Conda env with the dependencies has been found - perform an update
+        # if needed at build time.
+        add_custom_command(OUTPUT DependEnvUpdateWitness.txt
+        COMMAND ${CONDA_CLI} devenv -f ${PROJECT_SOURCE_DIR}/conda-recipes/karabo-cpp/environment.devenv.yml
+        COMMAND touch DependEnvUpdateWitness.txt
+        DEPENDS ${PROJECT_SOURCE_DIR}/conda-recipes/karabo-cpp/environment.devenv.yml
+        )
+        add_custom_target(UpdateDependenciesEnv ALL
+        DEPENDS DependEnvUpdateWitness.txt
+        )
+        add_dependencies(${KARABO_LIB_TARGET_NAME} UpdateDependenciesEnv)
+        message(STATUS "Conda environment update from environment file will be suported!")
+    endif()  # if (DEPEND_ENV_POS != 1)
+    else ()
+    message(
+        WARNING
+        "Conda not found - update from environment file disabled! \
+        If you're using an IDE connected to a remote server, \
+        please try to configure the CMake project from a terminal session."
+    )
+    endif()  # if (CONDA_CLI_FOUND)
+endif()  # if(not DEFINED ENV{CONDA_BUILD})
 
 # The build of the Karabo C++ Device Server (karabo-cppserver).
 add_subdirectory(src/deviceServer ${CMAKE_BINARY_DIR}/karabo/deviceServer)
