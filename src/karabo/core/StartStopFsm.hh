@@ -18,6 +18,9 @@
 #include <karabo/util/State.hh>
 
 namespace karabo {
+    namespace util {
+        class Schema;
+    }
     namespace core {
 
         /**
