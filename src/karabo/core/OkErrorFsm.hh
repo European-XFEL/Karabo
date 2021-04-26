@@ -9,15 +9,20 @@
 #define	KARABO_CORE_OK_ERROR_FSM_HH
 
 
-#include <karabo/util/Configurator.hh>
-#include <karabo/xms/SlotElement.hh>
-#include <karabo/core/BaseFsm.hh>
-#include <karabo/util/karaboDll.hh>
-#include <karabo/util/State.hh>
+#include "karabo/util/Configurator.hh"
+#include "karabo/xms/SignalSlotable.hh"  // for SLOT_ELEMENT
+#include "karabo/xms/SlotElement.hh"
+#include "karabo/core/BaseFsm.hh"
+#include "karabo/util/karaboDll.hh"
+#include "karabo/util/State.hh"
 
 #include "BaseFsm.hh"
 
 namespace karabo {
+    namespace util {
+        class Schema;
+    }
+
     namespace core {
 
         /**
