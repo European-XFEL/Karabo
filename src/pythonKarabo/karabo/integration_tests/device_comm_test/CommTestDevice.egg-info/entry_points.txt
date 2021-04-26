@@ -1,6 +1,0 @@
-[karabo.bound_device]
-CommTestDevice = commtestdevice:CommTestDevice
-UnstoppedThreadDevice = unstoppedThreadDevice:UnstoppedThreadDevice
-
-[karabo.middlelayer_device]
-MiddleLayerTestDevice = middlelayertestdevice:MiddleLayerTestDevice

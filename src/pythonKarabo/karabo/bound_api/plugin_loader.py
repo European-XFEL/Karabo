@@ -3,6 +3,8 @@ from pkg_resources import WorkingSet
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karathon import STRING_ELEMENT
 
+DEFAULT_NAMESPACE = "karabo.bound_device"
+
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonPluginLoader", "1.0")
@@ -14,7 +16,7 @@ class PluginLoader(object):
         e = STRING_ELEMENT(expected).key("pluginNamespace")
         e.displayedName("Plugin Namespace")
         e.description("Namespace to search for plugins")
-        e.assignmentOptional().defaultValue("karabo.bound_device")
+        e.assignmentOptional().defaultValue(DEFAULT_NAMESPACE)
         e.expertAccess().commit()
 
     def __init__(self, config):
