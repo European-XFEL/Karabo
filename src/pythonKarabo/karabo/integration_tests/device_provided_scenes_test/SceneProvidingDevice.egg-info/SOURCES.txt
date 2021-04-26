@@ -1,6 +1,0 @@
-SceneProvidingDevice.egg-info/PKG-INFO
-SceneProvidingDevice.egg-info/SOURCES.txt
-SceneProvidingDevice.egg-info/entry_points.txt
-__init__.py
-scene_providing_device.py
-non_scene_providing_device.py
