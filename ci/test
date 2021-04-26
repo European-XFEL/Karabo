@@ -6,7 +6,9 @@ __deps_build_tests() {
 }
 
 __cmake_tests() {
+    source ci/utils/enable_internet.sh
     source build_conda_env.sh clean install karabo-cpp
+    source ci/utils/disable_internet.sh
 }
 
 __unit_tests() {
