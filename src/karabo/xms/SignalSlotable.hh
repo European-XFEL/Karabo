@@ -17,6 +17,7 @@
 #include "Slot.hh"
 
 #include "karabo/util/Configurator.hh"
+#include "karabo/util/Hash.hh"
 #include "karabo/util/PackParameters.hh"
 #include "karabo/util/MetaTools.hh"
 #include "karabo/log/Logger.hh"
