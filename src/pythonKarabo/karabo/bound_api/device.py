@@ -1352,8 +1352,15 @@ class PythonDevice(NoFsm):
         :return:
         """
 
-    def KARABO_SLOT(self, slot):
+    def KARABO_SLOT(self, slot, slotName=None, numArgs=None):
         """Register a slot in the distributed system.
+
+        :param slot is the callable to register
+        :param slotname is used to call the slot, 'None' means slot.__name__,
+                        note that a '_' can also be called as '.' as needed
+                        for nested slots in the Schema like 'node.slotInNode'
+        :param numArgs number of arguments that the slot has,
+                       'None' means to (try to) deduce from 'slot'
 
         Note that a slot is only connected with a SLOT_ELEMENT if the key of
         the SLOT_ELEMENT matches the slot name provided to this function.
@@ -1366,12 +1373,32 @@ class PythonDevice(NoFsm):
 
             .....
 
-            def slotDoSomethin(self):
+            def slotDoSomething(self):
                 pass
 
+        For slots under a node, the method name needs to replace '.' by '_'.
+
+            SLOT_ELEMENT(expected).key("node.slotOther")
+
+            ....
+
+            self.KARABO_SLOT(node_slotOther)
+
+            ....
+
+            def node_slotOther(self):
+                pass
         """
 
-        self._ss.registerSlot(slot)
+        if slotName is None:
+            if numArgs is None:
+                self._ss.registerSlot(slot)
+            else:
+                self._ss.registerSlot(slot, numArgs=numArgs)
+        elif numArgs is None:
+            self._ss.registerSlot(slot, slotName)
+        else:
+            self._ss.registerSlot(slot, slotName, numArgs)
 
     def _initDeviceSlots(self):
         # Register intrinsic signals
