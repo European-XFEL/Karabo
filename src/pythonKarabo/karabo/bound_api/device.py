@@ -2018,10 +2018,11 @@ class PythonDevice(NoFsm):
 
 
 def launchPythonDevice():
-    from .plugin_loader import PluginLoader
+    from .plugin_loader import DEFAULT_NAMESPACE, PluginLoader
 
     # NOTE: The first argument is '-c'
     _, modname, classid, xmlfile = tuple(sys.argv)
+    namespace = DEFAULT_NAMESPACE
     config = PythonDevice.loadConfiguration(xmlfile)
     if '_connection_' in config:
         # Inject broker connection parameters into PythonDevice class, so
@@ -2033,6 +2034,10 @@ def launchPythonDevice():
         # Inject timeServerId from the server
         PythonDevice.timeServerId = copy.copy(config['timeServerId'])
         config.erase('timeServerId')
+    if '_pluginNamespace_' in config:
+        # get the namespace from the server if present
+        namespace = str(config['_pluginNamespace_'])
+        config.erase('_pluginNamespace_')
 
     # If log filename not specified, make use of device name to avoid
     # that different processes write to the same file.
@@ -2045,7 +2050,7 @@ def launchPythonDevice():
         defaultLog = "device-" + deviceId.replace(os.path.sep, "_") + ".log"
         config["Logger.file.filename"] = defaultLog
     loader = PluginLoader.create(
-        "PythonPluginLoader", Hash("pluginNamespace", "karabo.bound_device"))
+        "PythonPluginLoader", Hash("pluginNamespace", namespace))
     loader.update()
 
     try:

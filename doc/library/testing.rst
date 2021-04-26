@@ -166,17 +166,10 @@ properly terminate these processes after each test.
 If the test case includes a new Bound Python device (like in the case of the
 *device_comm_test*), the code for that class can be put into a file in the
 test sub-directory.
-To make it available as a plugin for the bound Python server, one needs to do
-the following:
-
-* Create an *\*.egg-info* directory in the test sub-directory.
-* Inside *\*.egg-info*, create the files *entry_points.txt*,
-  *PKG-INFO* and *SOURCES.txt* and fill properly - e.g. have a look at
-  *device_comm_test/CommTestDevice.egg-info*
-* Add the egg info to the *src/pythonKarabo/setup.py* file.
-* Specify the *plugin_dir* keyword argument when starting the server using the
-  *start_server* method inherited from *BoundDeviceTestCase*.
-
-Note that this egg info stuff might not be needed when karabo has been built
-using *./auto_build_all.sh* with the *--pyDevelop* flag. But it is needed
-without this flag and therefore for the continuous integration run on GitLab.
+To make it available as a plugin for the bound Python server, one has to add
+this class as an entry point of the ``karabo.bound_device_test`` in the
+*src/pythonKarabo/setup.py* file.
+If one uses the recommended ``BoundDeviceTestCase.startServer`` to start the
+bound Python server, this entry point has to be given as ``namespace`` argument.
+Similarly, the same applies to middlelayer test devices with the corresponding
+``karabo.middlelayer_device_test`` entry point.

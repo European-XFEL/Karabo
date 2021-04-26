@@ -1,4 +1,3 @@
-import os.path as op
 import os
 from time import sleep
 
@@ -97,9 +96,9 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
     def test_in_sequence(self):
         SERVER_ID = "testServer"
-        own_dir = op.dirname(op.abspath(__file__))
         class_ids = ['CommTestDevice', 'UnstoppedThreadDevice']
-        self.start_server("bound", SERVER_ID, class_ids, plugin_dir=own_dir)
+        self.start_server("bound", SERVER_ID, class_ids,
+                          namespace="karabo.bound_device_test")
         # Complete setup - do not do it in setup to ensure that even in case of
         # exceptions 'tearDown' is called and stops Python processes.
 

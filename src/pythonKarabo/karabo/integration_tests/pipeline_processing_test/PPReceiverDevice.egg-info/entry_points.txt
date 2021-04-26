@@ -1,3 +1,0 @@
-[karabo.bound_device]
-PPReceiverDevice = ppreceiver:PPReceiverDevice
-
