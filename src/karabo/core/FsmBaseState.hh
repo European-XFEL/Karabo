@@ -8,6 +8,8 @@
 #ifndef FSMBASESTATE_HH
 #define	FSMBASESTATE_HH
 
+#include <string>
+
 #include <boost/shared_ptr.hpp>
 // back-end
 #include <boost/msm/back/state_machine.hpp>
@@ -22,7 +24,8 @@
 #include <boost/msm/front/euml/state_grammar.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/arithmetic/sub.hpp>
-#include <karabo/util/State.hh>
+#include "karabo/util/State.hh"
+
 #include "Worker.hh"
 
 // Allow boost msm names appear globally in karabo namespace
