@@ -1,5 +1,5 @@
 from karabo.common.enums import Capabilities, Interfaces
-from karabo.middlelayer_api.device_client import get_instance
+from karabo.middlelayer_api.device_client import getTopology
 
 DEVICE = "device"
 
@@ -24,7 +24,7 @@ def _get_interface_device(interfaces, matchPattern=None):
     :type matchPattern: str
     """
     ret = []
-    topology = get_instance().systemTopology[DEVICE]
+    topology = getTopology()[DEVICE]
     for k, v, a in topology.iterall():
         has_interfaces = _test_word(a["capabilities"],
                                     Capabilities.PROVIDES_INTERFACES)
