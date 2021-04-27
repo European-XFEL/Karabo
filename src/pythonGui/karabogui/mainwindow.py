@@ -22,6 +22,7 @@ from karabogui.dialogs.configuration import ConfigurationDialog
 from karabogui.dialogs.dialogs import AboutDialog
 from karabogui.dialogs.update_dialog import UpdateDialog
 from karabogui.indicators import get_processing_color
+from karabogui.const import IS_MAC_SYSTEM
 from karabogui.enums import AccessRole
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
@@ -30,6 +31,7 @@ from karabogui import messagebox
 from karabogui.panels.api import (
     AlarmPanel, ConfigurationPanel, DevicePanel, PanelContainer, LoggingPanel,
     ProjectPanel, ScriptingPanel, TopologyPanel)
+from karabogui.programs.register_protocol import register_protocol
 from karabogui.singletons.api import (
     get_config, get_db_conn, get_network, get_project_model)
 from karabogui.util import generateObjectName, process_qt_events
@@ -434,6 +436,12 @@ class MainWindow(QMainWindow):
             self.onStoreMainWindowGeometry)
         mSettingsMenu.addAction(self.acStoreMainWindowGeometry)
 
+        self.acRegisterApplication = QAction('Register Application', self)
+        self.acRegisterApplication.triggered.connect(
+            self.onRegisterApplication)
+        if not IS_MAC_SYSTEM:
+            mSettingsMenu.addAction(self.acRegisterApplication)
+
         mHelpMenu = menuBar.addMenu("&Links")
         mHelpMenu.addAction(self.acGrafana)
         mHelpMenu.addAction(self.acGuiDocumentation)
@@ -619,6 +627,13 @@ class MainWindow(QMainWindow):
         text = ("Changing the high dpi settings requires a restart of the "
                 "client application of the setting to become active.")
         messagebox.show_information(text)
+
+    @Slot()
+    def onRegisterApplication(self):
+        register_protocol()
+        get_logger().info("Registered the Karabo client application with "
+                          f"version <b>{krb_globals.GUI_VERSION_LONG}</b> "
+                          "for the <b>URL scheme</b> protocol.")
 
     @Slot()
     def _store_panel_configuration(self):
