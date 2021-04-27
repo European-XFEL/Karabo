@@ -66,7 +66,7 @@ class SystemTreeNode(HasStrictTraits):
             return {'type': NavigationItemTypes.DEVICE,
                     'classId': self.parent.node_id,
                     'deviceId': self.node_id,
-                    'attributes': self.attributes,
+                    'archive': self.attributes.get("archive", False),
                     'capabilities': self.capabilities}
 
     def row(self):
