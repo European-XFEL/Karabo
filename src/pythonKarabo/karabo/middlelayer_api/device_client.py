@@ -11,7 +11,7 @@ proxy. """
 import asyncio
 from asyncio import gather, get_event_loop, sleep
 from contextlib import contextmanager
-from copy import copy
+from copy import deepcopy
 from weakref import ref
 from time import time
 
@@ -839,7 +839,7 @@ def getTopology():
     NOTE: We provide a copy here as the topology might change while working
     with it.
     """
-    return copy(get_instance().systemTopology)
+    return deepcopy(get_instance().systemTopology)
 
 
 def findServers(matchPattern, visibility=3):
