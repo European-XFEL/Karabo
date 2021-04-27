@@ -8,7 +8,6 @@ from xml.etree import ElementTree
 
 from karabo.common.scenemodel.api import SCENE_DEFAULT_DPI, SCENE_MAC_DPI
 
-
 ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 
 # GUI PROPERTIES
@@ -27,3 +26,5 @@ REQUEST_REPLY_TIMEOUT = 5  # in seconds
 
 GUI_DPI_FACTOR = (
     SCENE_DEFAULT_DPI / SCENE_MAC_DPI if system() == "Darwin" else 1)
+
+IS_MAC_SYSTEM = system() == "Darwin"
