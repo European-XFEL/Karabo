@@ -534,7 +534,7 @@ namespace karabo {
             } catch (const std::exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLoginMessage(): " << e.what();
             }
-            
+
             // Read the next Hash from the client
             channel->readAsyncHash(bind_weak(&karabo::devices::GuiServerDevice::onLoginMessage, this, _1, channel, _2));
         }
@@ -591,7 +591,7 @@ namespace karabo {
                         // not allowed, bail out and inform client
                         const std::string message("Action '" + type + "' is not allowed on this GUI client version. Please upgrade your GUI client");
                         const Hash h("type", "notification", "message", message);
-                        safeClientWrite(channel, h);                    
+                        safeClientWrite(channel, h);
                     } else if (type == "requestFromSlot") {
                         onRequestFromSlot(channel, info);
                     } else if (type == "reconfigure") {
@@ -1222,8 +1222,10 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGetConfigurationFromPast: " << deviceId << " @ " << time;
 
                 const std::string & readerId(getDataReaderId(deviceId));
+                const bool& preview(info.has("preview") ? info.get<bool>("preview"): false);
+
                 auto handler = bind_weak(&karabo::devices::GuiServerDevice::configurationFromPast, this,
-                                         channel, deviceId, time, _1, _2, _3, _4);
+                                         channel, deviceId, time, preview, _1, _2, _3, _4);
                 auto failureHandler = bind_weak(&karabo::devices::GuiServerDevice::configurationFromPastError, this,
                                                 channel, deviceId, time);
                 // Two minutes timeout since current implementation of slotGetConfigurationFromPast:
@@ -1248,6 +1250,7 @@ namespace karabo {
 
         void GuiServerDevice::configurationFromPast(WeakChannelPointer channel,
                                                     const std::string& deviceId, const std::string& time,
+                                                    const bool& preview,
                                                     const karabo::util::Hash& config, const karabo::util::Schema& /*schema*/,
                                                     const bool configAtTimepoint,
                                                     const std::string &configTimepoint) {
@@ -1255,7 +1258,7 @@ namespace karabo {
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting configuration from past: " << deviceId << " @ " << time;
 
-                Hash h("type", "configurationFromPast", "deviceId", deviceId, "time", time);
+                Hash h("type", "configurationFromPast", "deviceId", deviceId, "time", time, "preview", preview);
                 if (config.empty()) {
                     // Currently (Oct 2018) DataLogReader::getConfigurationFromPast does not reply errors, but empty
                     // configuration if it could not fulfill the request, e.g. because the device was not online at the
@@ -1753,7 +1756,7 @@ namespace karabo {
 
 
         void GuiServerDevice::slotDumpToLog() {
-            // Empty Hash as argument ==> complete info. 
+            // Empty Hash as argument ==> complete info.
             // Can be HUGE: full topology and complete cache of monitored devices...
             // Note: This will leave no trace if logging level is WARN or above.
             KARABO_LOG_FRAMEWORK_INFO << "Debug info requested by slotDumpToLog:\n" << getDebugInfo(karabo::util::Hash());
