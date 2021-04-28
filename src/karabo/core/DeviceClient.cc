@@ -626,7 +626,9 @@ namespace karabo {
             // Request schema
             Schema schema;
             try {
-                p->request(instanceId, "slotGetSchema", false).timeout(m_internalTimeout).receive(schema); // Retrieves full schema
+                std::string dummy;
+                p->request(instanceId, "slotGetSchema", false) // Retrieves full schema
+                        .timeout(m_internalTimeout).receive(schema, dummy); // 2nd "return value" is deviceId
             } catch (const TimeoutException&) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Schema request for instance \"" << instanceId << "\" timed out";
                 Exception::clearTrace();
@@ -719,7 +721,9 @@ namespace karabo {
             // Request schema
             Schema schema;
             try {
-                m_signalSlotable.lock()->request(instanceId, "slotGetSchema", true).timeout(m_internalTimeout).receive(schema); // Retrieves active schema
+                std::string dummy;
+                m_signalSlotable.lock()->request(instanceId, "slotGetSchema", true) // Retrieves active schema
+                        .timeout(m_internalTimeout).receive(schema, dummy); // 2nd "return value" is deviceId
             } catch (const TimeoutException&) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Schema request for instance \"" << instanceId << "\" timed out";
                 Exception::clearTrace();
@@ -1039,7 +1043,9 @@ namespace karabo {
                 // Request configuration
                 Hash hash;
                 try {
-                    m_signalSlotable.lock()->request(deviceId, "slotGetConfiguration").timeout(m_internalTimeout).receive(hash);
+                    std::string dummy;
+                    m_signalSlotable.lock()->request(deviceId, "slotGetConfiguration")
+                            .timeout(m_internalTimeout).receive(hash, dummy); // 2nd "return value" is deviceId
                 } catch (const TimeoutException&) {
                     KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Configuration request for device \"" + deviceId + "\" timed out"));
                     return result; // empty Hash
