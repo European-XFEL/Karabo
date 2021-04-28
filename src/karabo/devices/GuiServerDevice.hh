@@ -250,7 +250,7 @@ namespace karabo {
             void onConnect(const karabo::net::ErrorCode& e, karabo::net::Channel::Pointer channel);
 
             /** Creates the internal ChannelData entry and update the device Configuration
-             */ 
+             */
             void registerConnect(const karabo::util::Version& version, const karabo::net::Channel::Pointer& channel);
 
             /** handles incoming data in the Hash  ``info`` from ``channel``
@@ -368,23 +368,23 @@ namespace karabo {
              *  - replyType (optional): the value of the key ``type`` in the reply to the client
              *  - timeout (optional) [s]: account for the slot call a specified timeout in seconds!
              *  - args: The Hash containing the parameters for the slot call
-             * 
-             *  Geneeric interface to call slots that take a single Hash as argument and reply 
+             *
+             *  Generic interface to call slots that take a single Hash as argument and reply
              *  with a single Hash.
-             * 
+             *
              *  The `forwardHashReply` method is used to relay information to the gui client.
-             *  
+             *
              *  Returns:
              *  --------
-             * 
+             *
              *  In the default case, the return Hash is composed as follows::
-             *  
+             *
              *  - success: boolean to indicate if the generic request was successful
              *  - reason: information on the error if not succesful otherwise empty
              *  - type: if specified in the input Hash, the `replyType` is used otherwise `requestGeneric`
              *  - request: the full input Hash information, including `args`
              *  - reply: The reply Hash of the instanceId
-             *  
+             *
              *  .. note: If the info Hash from the client provides a `empty` property, an empty
              *           Hash is send back to the client instead of the input Hash.
              */
@@ -574,6 +574,7 @@ namespace karabo {
 
             /**
              * Request configuration for a ``device`` at point in time ``time`` as specified in ``info``.
+             * The ``info`` hash can as well have a ``preview`` boolean which is send back to the client.
              * The request is asynchronously sent to the device logger logging information for ``deviceId``.
              * The reply from the logger is then forwarded to the client on ``channel``
              * using the ``configurationFromPast`` history callback in case of success or ``configurationFromPastError``
@@ -585,7 +586,8 @@ namespace karabo {
              * Success callback for ``onGetDeviceConfiguration``
              */
             void configurationFromPast(WeakChannelPointer channel, const std::string& deviceId, const std::string& time,
-                                       const karabo::util::Hash& config, const karabo::util::Schema& /*schema*/,
+                                       const bool& preview, const karabo::util::Hash& config,
+                                       const karabo::util::Schema& /*schema*/,
                                        const bool configAtTimepoint, const std::string &configTimepoint);
 
             /**
@@ -666,7 +668,7 @@ namespace karabo {
 
             /**
              * Handles events related to instances: new instance, instance updated, instance gone.
-             * 
+             *
              * @Note: Its signature matches karabo::core::InstanceChangeThrottler::InstanceChangeHandler).
              */
             void instanceChangeHandler(const karabo::util::Hash& instChangeData);
