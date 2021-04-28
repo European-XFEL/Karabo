@@ -185,8 +185,8 @@ def request_daemon_action(serverId, hostId, action, parent):
     # logic as the device scene link!
     if device is not None and device.status not in ONLINE_STATUSES:
         parent = parent()
-        messagebox.show_warning("Device is not online!", "Warning",
-                                parent=parent)
+        messagebox.show_warning(f"Device <b>{device_id}</b> is not online!",
+                                "Warning", parent=parent)
         return
 
     handler = partial(handle_daemon_from_server, serverId, action, parent)
