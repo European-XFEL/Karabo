@@ -3,7 +3,8 @@ from .builder import build_binding
 from .config import (
     apply_configuration, apply_default_configuration, apply_fast_data,
     apply_project_configuration, extract_attribute_modifications,
-    extract_configuration, extract_edits, extract_sparse_configurations
+    extract_configuration, extract_init_configuration,
+    extract_edits, extract_sparse_configurations
 )
 from .compare import (attr_fast_deepcopy, get_table_changes, has_changes,
                       has_array_changes, has_floating_changes,
