@@ -2,9 +2,9 @@ from traits.api import TraitError, Undefined
 
 from karabo.common import const
 from karabo.native import (
-    AccessMode, Hash, MetricPrefix, Unit, Timestamp)
+    AccessMode, Hash, is_equal, MetricPrefix, Unit, Timestamp)
 
-from .compare import attr_fast_deepcopy, is_equal
+from .compare import attr_fast_deepcopy
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
@@ -366,3 +366,47 @@ def extract_sparse_configurations(proxies, devices=None):
         hsh[key] = _get_value(proxy)
 
     return devices
+
+
+def extract_init_configuration(binding, config):
+    """Extract an init configuration from `config` with `binding`
+
+    This function will filter out read only properties without runtime
+    attributes from the configuration
+s    """
+
+    def _iter_binding(node, base=''):
+        """Flat iterate over the binding namespace to yield `key` and `binding`
+
+        Note: Remove recursive binding iteration in future
+        """
+        namespace = node.value
+        base = base + '.' if base else ''
+        for name in namespace:
+            subname = base + name
+            subnode = getattr(namespace, name)
+            if isinstance(subnode, NodeBinding):
+                yield from _iter_binding(subnode, base=subname)
+            elif not isinstance(subnode, SlotBinding):
+                yield subname, subnode
+
+    ret = Hash()
+
+    for key, node in _iter_binding(binding):
+        # key must be in configuration for processing!
+        if key in config:
+            value, attrs = config.getElement(key)
+            # We only want reconfigurable properties, but in Karabo 2.11
+            # read only parameter can still have attributes.
+            read_only = node.access_mode is AccessMode.READONLY
+            run_attr = attr_fast_deepcopy(attrs, {})
+            if read_only and not run_attr:
+                continue
+
+            default = node.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
+            if is_equal(default, value) and not run_attr:
+                continue
+            # We make use of and also filter the runtime attributes
+            ret.setElement(key, value, run_attr)
+
+    return ret

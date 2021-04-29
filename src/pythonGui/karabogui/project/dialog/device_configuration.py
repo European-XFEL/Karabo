@@ -3,22 +3,27 @@
 # Created on April 15, 2021
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
+from copy import deepcopy
 from pathlib import Path
 
 from qtpy import uic
 from qtpy.QtCore import Slot, Qt
-from qtpy.QtWidgets import QDialog
+from qtpy.QtWidgets import QDialogButtonBox, QDialog
 
-from karabogui.binding.api import validate_binding_configuration
-from karabo.native import create_html_hash
+from karabo.common.enums import ProxyStatus
+from karabogui.binding.api import (
+    extract_init_configuration, validate_binding_configuration)
+from karabo.native import create_html_hash, Hash
+
+_NO_SCHEMA_STATUS = (ProxyStatus.MISSING, ProxyStatus.NOSERVER,
+                     ProxyStatus.NOPLUGIN)
 
 
 class DeviceConfigurationDialog(QDialog):
     """The basic device configuration dialog for a project device
 
     This QDialog shows the `Hash` configuration in a html format and can
-    show the conflicts on request
+    show the conflicts on request.
     """
 
     def __init__(self, name, configuration, project_device=None, parent=None):
@@ -32,50 +37,126 @@ class DeviceConfigurationDialog(QDialog):
         flags = Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint
         self.setWindowFlags(self.windowFlags() | flags)
 
-        self.ui_show.clicked.connect(self.check_button_clicked)
+        apply_button = self.ui_buttonBox.button(QDialogButtonBox.Apply)
+        apply_button.clicked.connect(self.accept)
+        discard_button = self.ui_buttonBox.button(QDialogButtonBox.Discard)
+        discard_button.clicked.connect(self.reject)
+        discard_button.setFocus()
+
+        self._invalid_paths = []
+
+        self.ui_erase_path.clicked.connect(self._erase_path)
+        self.ui_erase_all.clicked.connect(self._erase_config)
+        self.ui_erase_attributes.clicked.connect(self._erase_attributes)
+        self.ui_sanitize.clicked.connect(self._sanitize_config)
+        if project_device.status in _NO_SCHEMA_STATUS:
+            self.ui_sanitize.setEnabled(False)
+            text = "Sanitize is only available with a class schema"
+            self.ui_sanitize.setToolTip(text)
         self.project_device = project_device
-        self.configuration = configuration
-        self._show_config = True
-        self.show_configuration()
+        # Make sure we deepcopy for manipulations!
+        self.configuration = deepcopy(configuration)
+        self._show_configuration()
 
     @Slot()
-    def check_button_clicked(self):
-        self._show_config = not self._show_config
-        text = ("Check Configuration" if self._show_config
-                else "Show Configuration")
-        self.ui_show.setText(text)
-        self.show_configuration()
+    def _sanitize_config(self):
+        config = Hash()
+        for k, v, a in Hash.flat_iterall(self.configuration, empty=False):
+            if k in self._invalid_paths:
+                continue
+            config.setElement(k, v, a)
 
-    def show_configuration(self):
-        """Show the desired configuration, which can be either the existing
-         `configuration` or the checked `conflicts` configuration.
+        proxy = self.project_device.get_class_proxy()
+        binding = proxy.binding
+        # Schema is available, filter out read only properties without
+        # run time attributes and remove attrs that are not runtime attributes
+        if len(binding.value):
+            config = extract_init_configuration(
+                binding=binding, config=config)
 
-         The conflicts are visualized by creating a fresh binding from a
-         schema and applying a configuration.
-         """
-        if self._show_config:
-            config = self.configuration
-            # Note: Protect as well against a `None` configuration!
-            if config is None or config.empty():
-                html = "<center>No changes in configuration!</center>"
+        self.configuration = config
+        self._show_configuration()
+
+    @Slot()
+    def _erase_attributes(self):
+        config = Hash()
+        for k, v, _ in Hash.flat_iterall(self.configuration, empty=True):
+            config[k] = v
+        self.configuration = config
+        self._show_configuration()
+
+    @Slot()
+    def _erase_empty_nodes(self):
+        config = Hash()
+        for k, v, a in Hash.flat_iterall(self.configuration, empty=False):
+            config.setElement(k, v, a)
+        self.configuration = config
+        self._show_configuration()
+
+    @Slot()
+    def _erase_config(self):
+        """Clear the full configuration"""
+        self.configuration = Hash()
+        self._show_configuration()
+
+    @Slot()
+    def _erase_path(self):
+        path = self.ui_paths.currentText()
+        index = self.ui_paths.currentIndex()
+        if path in self.configuration:
+            self.configuration.erase(path)
+        self._show_configuration()
+        if self.ui_paths.count() > index:
+            self.ui_paths.setCurrentIndex(index)
+
+    @Slot()
+    def _show_configuration(self):
+        self._update_configuration_view()
+        self._update_validation_view()
+
+    def _update_configuration_view(self):
+        widget = self.ui_text_info
+        config = self.configuration
+        # Note: Protect as well against a `None` configuration!
+        if config is None or config.empty():
+            html = "<center>No changes in configuration!</center>"
+            self.ui_paths.clear()
+            self.ui_paths.setEnabled(False)
+            self.ui_erase_path.setEnabled(False)
+            self.ui_num_paths.setText("# 0")
+        else:
+            html = create_html_hash(config)
+            # Enable to erase all path, broken and valid ones!
+            self.ui_paths.clear()
+            self.ui_paths.setEnabled(True)
+            self.ui_erase_path.setEnabled(True)
+            paths = config.paths(intermediate=True)
+            self.ui_num_paths.setText(f"# {len(paths)}")
+            self.ui_paths.addItems(paths)
+
+        widget.setHtml(html)
+        scroll_bar = widget.verticalScrollBar()
+        scroll_bar.setValue(scroll_bar.sliderPosition())
+
+    def _update_validation_view(self):
+        widget = self.ui_valid_info
+        proxy = self.project_device.get_class_proxy()
+        binding = proxy.binding
+        # No schema arrived yet!
+        if not len(binding.value):
+            html = "<center>No schema available!</center>"
+            invalid = []
+        else:
+            config = validate_binding_configuration(
+                binding=binding, config=self.configuration)
+            if config.empty():
+                html = "<center>No conflicts in configuration!</center>"
+                invalid = []
             else:
                 html = create_html_hash(config)
-        else:
-            # Get a conflict configuration
-            proxy = self.project_device.get_class_proxy()
-            binding = proxy.binding
-            # No schema arrived yet!
-            if not len(binding.value):
-                html = "<center>No schema available!</center>"
-            else:
-                config = validate_binding_configuration(
-                    binding=binding, config=self.configuration)
-                if config.empty():
-                    html = "<center>No conflicts in configuration!</center>"
-                else:
-                    html = create_html_hash(config)
+                invalid = config.paths(intermediate=False)
 
-        self.ui_text_info.setHtml(html)
-        self.ui_text_info.adjustSize()
-        scroll_bar = self.ui_text_info.verticalScrollBar()
+        self._invalid_paths = invalid
+        widget.setHtml(html)
+        scroll_bar = widget.verticalScrollBar()
         scroll_bar.setValue(scroll_bar.sliderPosition())
