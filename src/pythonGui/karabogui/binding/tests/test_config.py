@@ -15,9 +15,11 @@ from karabo.native import (
 from ..api import (
     apply_configuration, apply_project_configuration,
     apply_default_configuration, apply_fast_data, build_binding,
-    extract_attribute_modifications, extract_configuration, extract_edits)
+    extract_attribute_modifications, extract_configuration, extract_edits,
+    extract_reconfigurable_configuration)
 from .schema import (
-    ALL_PROPERTIES_MAP, get_all_props_schema, get_vectorattr_schema)
+    ALL_PROPERTIES_MAP, get_all_props_schema, get_simple_props_schema,
+    get_vectorattr_schema)
 
 TEST_DATA_DIR = op.join(op.dirname(__file__), 'data')
 
@@ -270,3 +272,32 @@ def test_extract_attribute_modifications_vectorattr():
     ret = extract_attribute_modifications(schema, binding)
     # XXX: middlelayer Hash can't compare np array either
     assert all(ret[0]['value'] == newv)
+
+
+def test_extract_reconfigurable_configuration():
+    schema = get_simple_props_schema()
+    binding = build_binding(schema)
+    config = Hash(
+        "boolProperty", False,
+        "falseProperty", False,  # Same as default
+        "doubleProperty", 2.1,
+        "floatProperty", 1.0,  # ReadOnly, but we apply alarm attr
+        "intProperty", 0,  # ReadOnly
+        "stringProperty", "",
+        "table", [],
+        "node.charlie", 27,  # Readonly integer
+        "node.foo", False,
+        "node.bar", "default"  # Same as default
+    )
+    config["floatProperty", ...].update({"alarmLow": 2})
+    extracted = extract_reconfigurable_configuration(binding, config)
+    assert "boolProperty" in extracted
+    assert "doubleProperty" in extracted
+    assert "falseProperty" not in extracted
+    assert "floatProperty" in extracted
+    assert "intProperty" not in extracted
+    assert "stringProperty" in extracted
+    assert "table" in extracted
+    assert "node.charlie" not in extracted
+    assert "node.foo" in extracted
+    assert "node.bar" not in extracted
