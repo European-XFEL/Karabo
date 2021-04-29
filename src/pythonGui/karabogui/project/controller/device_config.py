@@ -100,7 +100,15 @@ class DeviceConfigurationController(BaseProjectController):
             name=model.simple_name, configuration=config,
             project_device=project_device, parent=parent)
         move_to_cursor(dialog)
-        dialog.exec_()
+        if dialog.exec_() == QDialog.Accepted:
+            self.model.configuration = dialog.configuration
+            project_device.set_project_config_hash(dialog.configuration)
+            proxy = project_device.proxy
+            if proxy.online:
+                return
+            # Show the device configuration if online and already showing
+            broadcast_event(KaraboEvent.UpdateDeviceConfigurator,
+                            {'proxy': proxy})
 
     def _load_config(self, project_controller, parent=None):
         """Send a configuration to the configurator
