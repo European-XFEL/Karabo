@@ -83,8 +83,8 @@ class Simple(Configurable):
     """A configurable with a few properties
     """
     foo = Bool(defaultValue=True)
-    bar = String()
-    charlie = Int32()
+    bar = String(defaultValue="default")
+    charlie = Int32(accessMode=AccessMode.READONLY)
 
 
 class PipelineData(Configurable):
@@ -186,15 +186,16 @@ class SimpleProperties(Configurable):
     """A `Configurable` with every type of property
     """
     boolProperty = Bool(defaultValue=True)
+    falseProperty = Bool(defaultValue=False)
     doubleProperty = Double(unitSymbol=Unit.METER)
-    floatProperty = Float()
-    intProperty = Int16()
+    floatProperty = Float(accessMode=AccessMode.READONLY)
+    intProperty = Int16(accessMode=AccessMode.READONLY)
     stringProperty = String(options=['foo', 'bar', 'baz', 'qux'])
     vectorProperty = VectorDouble()
     vectorStringProperty = VectorString()
     table = VectorHash(Simple)
     node = Node(Simple)
-    i1 = ChoiceOfNodes(Multi)
+    i1 = ChoiceOfNodes(Multi, accessMode=AccessMode.READONLY)
     j1 = ListOfNodes(Multi)
 
     @Slot(allowedStates=[State.INTERLOCKED, State.ACTIVE])
