@@ -8,21 +8,27 @@ import json
 
 from qtpy.QtCore import QPoint
 from qtpy.QtWidgets import QBoxLayout
-from traits.api import ABCHasStrictTraits
+from traits.api import ABCHasStrictTraits, Undefined
 
 from karabogui.binding.api import ImageBinding, SlotBinding
+from karabo.common.enums import Capabilities
 from karabo.common.scenemodel.api import (
-    BoxLayoutModel, LabelModel, SceneLinkModel)
+    BoxLayoutModel, DeviceSceneLinkModel, LabelModel, SceneLinkModel)
 from karabo.common.scenemodel.const import SceneTargetWindow
 from karabo.native import AccessMode
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
-from karabogui.enums import ProjectItemTypes
+from karabogui.enums import NavigationItemTypes, ProjectItemTypes
+from karabogui.fonts import get_font_metrics
+from karabogui import messagebox
 from karabogui.sceneview.utils import round_down_to_grid
 from karabogui.sceneview.widget.utils import get_proxy
+from karabogui.singletons.api import get_topology
 
 _STACKED_WIDGET_OFFSET = 30
 _NO_LABEL_BINDINGS = (ImageBinding, SlotBinding)
+_LINK_MARGIN = 10
+_LINK_SIZE_HIT = 30
 
 
 class SceneDnDHandler(ABCHasStrictTraits):
@@ -149,6 +155,102 @@ class ProjectDropHandler(SceneDnDHandler):
 
     def _extract_items(self, mime_data):
         known_types = (ProjectItemTypes.DEVICE, ProjectItemTypes.SCENE)
+        items_data = mime_data.data('treeItems').data()
+        if items_data:
+            items = json.loads(items_data.decode())
+            return [it for it in items if it['type'] in known_types]
+        return []
+
+
+class NavigationDropHandler(SceneDnDHandler):
+    """Scene D&D handler for drops originating from the project view"""
+
+    def can_handle(self, event):
+        # We can handle a drop if it contains at least one item
+        items = self._extract_items(event.mimeData())
+        if not len(items):
+            return False
+
+        from_device = items[0].get('type') == NavigationItemTypes.DEVICE
+        capa = Capabilities.PROVIDES_SCENES
+        has_scene = items[0].get('capabilities') & capa == capa
+        return from_device and has_scene
+
+    def handle(self, scene_view, event):
+        dropped_items = self._extract_items(event.mimeData())
+        if len(dropped_items) == 0:
+            return
+
+        item = dropped_items[0]
+        if item.get('type') == NavigationItemTypes.DEVICE:
+            device_id = item['deviceId']
+
+            def attach_device_link(scene_name):
+                """Attach a device scene link"""
+                nonlocal event, device_id, scene_view
+
+                fm = get_font_metrics()
+                width = max(fm.width(device_id) + _LINK_MARGIN, _LINK_SIZE_HIT)
+                height = max(fm.height() + _LINK_MARGIN, _LINK_SIZE_HIT)
+
+                position = event.pos()
+                model = DeviceSceneLinkModel(
+                    text=device_id,
+                    keys=[f"{device_id}.availableScenes"],
+                    target=scene_name,
+                    target_window=SceneTargetWindow.Dialog,
+                    x=position.x(), y=position.y(),
+                    width=width, height=height)
+                scene_view.add_models(model, initialize=True)
+
+            def _config_handler():
+                """Act on the arrival of the configuration"""
+                proxy.on_trait_change(_config_handler, 'config_update',
+                                      remove=True)
+                scenes = proxy.binding.value.availableScenes.value
+                if scenes is Undefined or not len(scenes):
+                    messagebox.show_warning(
+                        "The device <b>{}</b> does not specify a scene "
+                        "name!".format(device_id))
+                else:
+                    scene_name = scenes[0]
+                    attach_device_link(scene_name)
+
+            def _schema_handler():
+                """Act on the arrival of the schema"""
+                proxy.on_trait_change(_schema_handler, 'schema_update',
+                                      remove=True)
+                scenes = proxy.binding.value.availableScenes.value
+                if scenes is Undefined:
+                    proxy.on_trait_change(_config_handler, 'config_update')
+                elif not len(scenes):
+                    messagebox.show_warning(
+                        "The device <b>{}</b> does not specify a scene "
+                        "name!".format(device_id))
+                else:
+                    scene_name = scenes[0]
+                    attach_device_link(scene_name)
+
+            proxy = get_topology().get_device(device_id)
+            if not len(proxy.binding.value):
+                # We completely miss our schema and wait for it.
+                proxy.on_trait_change(_schema_handler, 'schema_update')
+            elif proxy.binding.value.availableScenes.value is Undefined:
+                # The configuration did not yet arrive and we cannot get
+                # a scene name from the availableScenes.
+                proxy.on_trait_change(_config_handler, 'config_update')
+            else:
+                scenes = proxy.binding.value.availableScenes.value
+                if not len(scenes):
+                    messagebox.show_warning(
+                        "The device <b>{}</b> does not specify a scene "
+                        "name!".format(device_id))
+                else:
+                    scene_name = scenes[0]
+                    attach_device_link(scene_name)
+
+    def _extract_items(self, mime_data):
+        known_types = (NavigationItemTypes.DEVICE,)
         items_data = mime_data.data('treeItems').data()
         if items_data:
             items = json.loads(items_data.decode())

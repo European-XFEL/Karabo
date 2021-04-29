@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from qtpy.QtGui import QFont
+from qtpy.QtGui import QFont, QFontMetrics
 
 from karabo.common.scenemodel.api import SCENE_FONT_FAMILY, SCENE_FONT_SIZE
 from karabogui.const import GUI_DPI_FACTOR
@@ -28,6 +28,12 @@ def get_qfont(font_string='', adjust_size=True):
         q_font.setFamily(font)
 
     return q_font
+
+
+def get_font_metrics():
+    """Return the FontMetric for the default QFont"""
+    q_font = get_qfont()
+    return QFontMetrics(q_font)
 
 
 def substitute_font(model):

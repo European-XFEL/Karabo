@@ -10,6 +10,6 @@ from .clipboard import (SceneCopyAction, SceneCutAction, SceneDeleteAction,
 from .drawing import (ArrowSceneTool, LineSceneTool, RectangleSceneTool,
                       SceneLinkTool, StickerTool, TextSceneTool, WebLinkTool)
 from .scenedndhandler import (
-    ConfigurationDropHandler, ProjectDropHandler)
+    ConfigurationDropHandler, NavigationDropHandler, ProjectDropHandler)
 from .selection import is_resizable, ProxySelectionTool, SceneSelectionTool
 from .widgethandler import SceneControllerHandler, SceneToolHandler

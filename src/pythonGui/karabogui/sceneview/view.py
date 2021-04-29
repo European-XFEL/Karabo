@@ -30,7 +30,7 @@ from .const import QT_CURSORS, SELECTION_COLOR
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import (
-    ConfigurationDropHandler, ProxySelectionTool,
+    ConfigurationDropHandler, NavigationDropHandler, ProxySelectionTool,
     ProjectDropHandler, SceneControllerHandler, SceneSelectionTool,
     SceneToolHandler)
 from .utils import save_painter_state
@@ -89,6 +89,7 @@ class SceneView(QWidget):
 
         # List of scene drag n drop handlers
         self.scene_handler_list = [ConfigurationDropHandler(),
+                                   NavigationDropHandler(),
                                    ProjectDropHandler()]
         self.current_scene_handler = None
 
