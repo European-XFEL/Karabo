@@ -1,5 +1,6 @@
 import os
 from tempfile import TemporaryDirectory
+from pathlib import Path
 from unittest import TestCase, main
 from zlib import adler32
 
@@ -160,6 +161,11 @@ class TestSerializers(TestCase):
         with self.assertRaises(Exception):
             saveToFile(None, FILENAME)
 
+        # Test with a Path object
+        filename = Path('path_hash.xml')
+        saveToFile(HASH, filename)
+        self.assertTrue(filename.exists())
+
     def test_loadFromFile(self):
         # Test valid xml
         with open("hash.xml", "w") as fout:
@@ -180,6 +186,11 @@ class TestSerializers(TestCase):
             fout.write(BOUND_HASH_XML)
 
         h = loadFromFile("bash.xml")
+        self.assertEqual(h, HASH)
+
+        # Test with a Path object
+        filename = Path('bash.xml')
+        h = loadFromFile(filename)
         self.assertEqual(h, HASH)
 
     def test_xml_VectorHash_load_bin(self):

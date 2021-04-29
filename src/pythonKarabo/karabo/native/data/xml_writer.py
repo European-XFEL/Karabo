@@ -1,6 +1,6 @@
-import os
-
 import base64
+
+from pathlib import Path
 from xml.sax.saxutils import escape, quoteattr
 
 from .typenums import HashType, HASH_TYPE_TO_XML_TYPE
@@ -142,9 +142,9 @@ def saveToFile(hash_, filename):
     """
 
     assert isinstance(hash_, Hash), "Expected Hash, not {}".format(type(hash_))
-    directory = os.path.dirname(filename)
-    if directory:
-        os.makedirs(directory, exist_ok=True)
+    filename = Path(filename)
+    directory = filename.parent.absolute()
+    directory.mkdir(parents=True, exist_ok=True)
 
-    with open(filename, "w") as fout:
+    with filename.open('w') as fout:
         fout.write(encodeXML(hash_))
