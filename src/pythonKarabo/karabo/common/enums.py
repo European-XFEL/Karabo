@@ -51,13 +51,14 @@ class ProxyStatus(Enum):
     INCOMPATIBLE = 'incompatible'
     MISSING = 'missing'
     ERROR = 'error'
+    UNKNOWN = 'unknown'
 
 
 # The device is online in these status
 ONLINE_STATUSES = (
     ProxyStatus.OK, ProxyStatus.ONLINE, ProxyStatus.ALIVE,
     ProxyStatus.ONLINEREQUESTED, ProxyStatus.MONITORING,
-    ProxyStatus.SCHEMA, ProxyStatus.ERROR
+    ProxyStatus.SCHEMA, ProxyStatus.ERROR, ProxyStatus.UNKNOWN
 )
 
 
