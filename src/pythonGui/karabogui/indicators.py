@@ -149,7 +149,7 @@ def get_state_icon_for_status(status):
         return None
 
     state = State.ERROR if status is ProxyStatus.ERROR else State.ACTIVE
-    # XXX: Maybe show more color options in the future
+    # Note: Maybe show more color options in the future
     return get_state_icon(state)
 
 
