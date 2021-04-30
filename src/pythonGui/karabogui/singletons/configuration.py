@@ -47,6 +47,9 @@ class Item:
         if self.q_set:
             self.default = QSettings().value(self.path) or self.default
 
+    def erase(self):
+        QSettings().remove(self.path)
+
     def __str__(self):
         return self.name
 
@@ -180,6 +183,12 @@ class Configuration(QObject):
             group = getattr(self.__class__, key).group
             ret[group].add(getattr(self.__class__, key))
         return ret
+
+    def __delitem__(self, key):
+        """Convenient shortcut to erase configuration information"""
+        assert key in self._memory
+        item = getattr(self.__class__, key)
+        item.erase()
 
     def __len__(self):
         return len(self._memory)
