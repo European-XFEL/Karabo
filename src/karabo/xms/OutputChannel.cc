@@ -404,6 +404,7 @@ namespace karabo {
                 info.set("bytesRead", 0ull);
                 info.set("bytesWritten", 0ull);
 
+                std::string finalSlownessForLog = info.get<std::string>("onSlowness");
                 {
                     // Need to lock both mutexes since eraseOldChannel has to look into both m_registered*Inputs
                     // since a "shared" input could become a "copy" one and vice versa. And removal and adding
@@ -414,17 +415,20 @@ namespace karabo {
                     eraseOldChannel(m_registeredCopyInputs, instanceId, channel);
 
                     if (dataDistribution == "shared") {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Registering shared-input channel of instance: " << instanceId;
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Registering shared-input channel '" << instanceId << "'";
                         m_registeredSharedInputs[instanceId] = info;
                     } else {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel of instance: " << instanceId;
+                        if (boost::algorithm::starts_with(finalSlownessForLog, "queue")) {
+                            (finalSlownessForLog += ", max. length ") += info.getAs<std::string>("maxQueueLength");
+                        }
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Registering copy-input channel '" << instanceId << "'";
                         m_registeredCopyInputs[instanceId] = info;
                     }
                 }
                 onInputAvailable(instanceId); // Immediately register for reading
                 updateConnectionTable();
                 KARABO_LOG_FRAMEWORK_INFO << getInstanceIdName() << ": handshake (hello)... from InputChannel : \"" << instanceId
-                        << "\", \"" << dataDistribution << "\", \"" << onSlowness << "\"";
+                        << "\", \"" << dataDistribution << "\", \"" << finalSlownessForLog << "\"";
             } else if (reason == "update") {
 
                 if (message.has("instanceId")) {
@@ -567,7 +571,7 @@ namespace karabo {
                     if (!individualQueue.empty()) {
                         KARABO_LOG_FRAMEWORK_TRACE << this->debugId()
                                 << " Writing queued (shared) data to instance " << instanceId;
-                        sendFromQueue(channelInfo, individualQueue);
+                        sendFromQueue(channelInfo, individualQueue, lock); // unlocks lock!
                         return;
                     }
                     if (m_distributionMode == "load-balanced" && !m_sharedLoadBalancedQueuedChunks.empty()) {
@@ -585,7 +589,7 @@ namespace karabo {
                                 }
                             }
                         }
-                        sendFromQueue(channelInfo, m_sharedLoadBalancedQueuedChunks);
+                        sendFromQueue(channelInfo, m_sharedLoadBalancedQueuedChunks, lock); // unlocks lock!
                         return;
                     }
                     lock.unlock();
@@ -603,7 +607,7 @@ namespace karabo {
                 std::deque<int>& queue = channelInfo.get<std::deque<int> >("queuedChunks");
                 if (!queue.empty()) {
                     KARABO_LOG_FRAMEWORK_TRACE << debugId() << " Writing queued (copied) data to instance " << instanceId;
-                    sendFromQueue(channelInfo, queue);
+                    sendFromQueue(channelInfo, queue, lock); // unlocks lock!
                     return;
                 }
                 // Be safe and unlock before pushCopyNext locks another mutex.
@@ -723,9 +727,11 @@ namespace karabo {
         }
 
 
-        void OutputChannel::sendFromQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds) {
+        void OutputChannel::sendFromQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds,
+                                          boost::mutex::scoped_lock& lock) {
             int chunkId = chunkIds.front();
             chunkIds.pop_front();
+            lock.unlock();
             KARABO_LOG_FRAMEWORK_DEBUG << "Sending chunk " << chunkId << " from queue, "
                     << chunkIds.size() << " queue items left ";
             sendOne(chunkId, channelInfo);
@@ -774,15 +780,9 @@ namespace karabo {
         }
 
 
-        bool OutputChannel::hasCopyInput(const std::string& instanceId) {
+        bool OutputChannel::eraseCopyInput(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
-            return (m_copyNext.count(instanceId) > 0);
-        }
-
-
-        void OutputChannel::eraseCopyInput(const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_nextInputMutex);
-            m_copyNext.erase(instanceId);
+            return (m_copyNext.erase(instanceId) > 0);
         }
 
 
@@ -1302,8 +1302,10 @@ namespace karabo {
         void OutputChannel::copy(unsigned int chunkId) {
 
             InputChannels waitingInstances;
+            std::vector<Hash> toSendImmediately;
             {
                 boost::mutex::scoped_lock lock(m_registeredCopyInputsMutex);
+                toSendImmediately.reserve(m_registeredCopyInputs.size());
                 for (auto& idChannelInfo : m_registeredCopyInputs) { // not const since queue might be extended
 
                     InputChannelInfo& channelInfo = idChannelInfo.second;
@@ -1317,9 +1319,10 @@ namespace karabo {
                     } else {
                         m_toUnregisterCopyInputs.erase(unregisterIter); // We care about it!
                     }
-                    if (hasCopyInput(instanceId)) {
-                        eraseCopyInput(instanceId);
-                        sendOne(chunkId, channelInfo);
+                    if (eraseCopyInput(instanceId)) {
+                        // Ready for data - can call sendOne, but better do that without mutex lock, especially since
+                        // m_registeredCopyInputsMutex is locked also when readiness is stored in onInputAvailable.
+                        toSendImmediately.push_back(channelInfo);
                         continue;
                     }
                     if (Memory::isEndOfStream(m_channelId, chunkId)) {
@@ -1351,6 +1354,13 @@ namespace karabo {
                 }
             } // end of mutex lock
 
+            // Now send data to those that are ready immediately
+            for (const Hash& channelInfo : toSendImmediately) {
+                sendOne(chunkId, channelInfo);
+            }
+
+            // Finally care for those not ready yet, but so eager that we must wait:
+            // onSlowness "wait" and onSlowness "queue" with maximum queue size reached.
             for (const InputChannels::value_type& idChannelInfo : waitingInstances) {
                 const std::string& instanceId = idChannelInfo.first;
                 const Hash& channelInfo = idChannelInfo.second;
@@ -1371,8 +1381,8 @@ namespace karabo {
                                 break;
                             }
                         }
-                    } else { // i.e. wait
-                        if (hasCopyInput(instanceId)) break;
+                    } else { // !isQueue (i.e. wait)
+                        if (eraseCopyInput(instanceId)) break;
                     }
                     boost::this_thread::sleep(boost::posix_time::millisec(1));
                     if (!hasRegisteredCopyInputChannel(instanceId)) { // might have disconnected meanwhile...
@@ -1388,7 +1398,6 @@ namespace karabo {
                 }
                 if (!isQueue) {
                     KARABO_LOG_FRAMEWORK_DEBUG << this->debugId() << " found (copied) input channel after waiting, copying now";
-                    eraseCopyInput(instanceId);
                     const Hash& channelInfo = idChannelInfo.second;
                     sendOne(chunkId, channelInfo);
                 } else {
