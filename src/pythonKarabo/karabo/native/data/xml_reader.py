@@ -1,8 +1,8 @@
-from functools import partial
-import os
-
 import base64
 import numpy as np
+from functools import partial
+from pathlib import Path
+
 from xml.sax import make_parser, SAXException
 from xml.sax.saxutils import unescape
 from xml.sax.handler import ContentHandler
@@ -257,10 +257,11 @@ def loadFromFile(filename):
 
     If the file does not exist, then return None
     """
-    if not os.path.exists(filename):
+    filename = Path(filename)
+    if not filename.exists():
         return
 
-    with open(filename) as fin:
+    with filename.open('r') as fin:
         try:
             hash_ = decodeXML(fin.read())
             return hash_
