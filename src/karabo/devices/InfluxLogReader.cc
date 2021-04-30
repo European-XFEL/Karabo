@@ -204,10 +204,6 @@ namespace karabo {
 
             std::ostringstream iqlQuery;
 
-            /* The query for data count, differently from the query for the property values (or samples) that will
-               be executed later,  doesn't select the '_tid' field. The goal of this query is to count how many
-               entries will exist in the property history and '_tid' field entries only make into the resulting
-               property history as attributes of entries. */
             iqlQuery << "SELECT COUNT(/^" << ctxt->property << "-.*/) FROM \""
                     << ctxt->deviceId << "\" WHERE time >= " << epochAsMicrosecString(ctxt->from) << m_durationUnit
                     << " AND time <= " << epochAsMicrosecString(ctxt->to) << m_durationUnit;
@@ -272,6 +268,13 @@ namespace karabo {
                 const auto &columns = respObj["results"][0]["series"][0]["columns"];
                 for (const auto &column : columns) {
                     const std::string& columnStr = column.get<std::string>();
+                    if (columnStr == "time") {
+                        // "time" column in Influx response should not be type
+                        // checked - it is always a numeric data type, won't be
+                        // averaged by and does not follow the data type suffix
+                        // convention.
+                        continue;
+                    }
                     const std::string::size_type typeSeparatorPos = columnStr.rfind("-");
                     if (typeSeparatorPos != std::string::npos) {
                         const std::string typeName = columnStr.substr(typeSeparatorPos + 1);
