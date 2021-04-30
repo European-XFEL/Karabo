@@ -30,6 +30,8 @@ _NO_LABEL_BINDINGS = (ImageBinding, SlotBinding)
 _LINK_MARGIN = 10
 _LINK_SIZE_HIT = 30
 
+_DEVICE_TYPES = (NavigationItemTypes.DEVICE, ProjectItemTypes.DEVICE)
+
 
 class SceneDnDHandler(ABCHasStrictTraits):
     @abstractmethod
@@ -171,7 +173,7 @@ class NavigationDropHandler(SceneDnDHandler):
         if not len(items):
             return False
 
-        from_device = items[0].get('type') == NavigationItemTypes.DEVICE
+        from_device = items[0].get('type') in _DEVICE_TYPES
         capa = Capabilities.PROVIDES_SCENES
         has_scene = items[0].get('capabilities') & capa == capa
         return from_device and has_scene
@@ -182,7 +184,7 @@ class NavigationDropHandler(SceneDnDHandler):
             return
 
         item = dropped_items[0]
-        if item.get('type') == NavigationItemTypes.DEVICE:
+        if item.get('type') in _DEVICE_TYPES:
             device_id = item['deviceId']
 
             def attach_device_link(scene_name):
@@ -250,9 +252,8 @@ class NavigationDropHandler(SceneDnDHandler):
                     attach_device_link(scene_name)
 
     def _extract_items(self, mime_data):
-        known_types = (NavigationItemTypes.DEVICE,)
         items_data = mime_data.data('treeItems').data()
         if items_data:
             items = json.loads(items_data.decode())
-            return [it for it in items if it['type'] in known_types]
+            return [it for it in items if it['type'] in _DEVICE_TYPES]
         return []
