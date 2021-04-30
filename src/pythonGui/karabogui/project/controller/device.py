@@ -164,9 +164,13 @@ class DeviceInstanceController(BaseProjectGroupController):
         return menu
 
     def info(self):
+        topology_node = self.project_device.device_node
+        capabilities = topology_node.capabilities if topology_node else 0
+
         return {'type': ProjectItemTypes.DEVICE,
                 'classId': self.model.class_id,
-                'deviceId': self.model.instance_id}
+                'deviceId': self.model.instance_id,
+                'capabilities': capabilities}
 
     def create_ui_data(self):
         ui_data = ProjectControllerUiData()
