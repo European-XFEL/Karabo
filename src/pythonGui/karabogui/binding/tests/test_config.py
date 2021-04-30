@@ -16,7 +16,7 @@ from ..api import (
     apply_configuration, apply_project_configuration,
     apply_default_configuration, apply_fast_data, build_binding,
     extract_attribute_modifications, extract_configuration, extract_edits,
-    extract_reconfigurable_configuration)
+    extract_init_configuration)
 from .schema import (
     ALL_PROPERTIES_MAP, get_all_props_schema, get_simple_props_schema,
     get_vectorattr_schema)
@@ -290,7 +290,7 @@ def test_extract_reconfigurable_configuration():
         "node.bar", "default"  # Same as default
     )
     config["floatProperty", ...].update({"alarmLow": 2})
-    extracted = extract_reconfigurable_configuration(binding, config)
+    extracted = extract_init_configuration(binding, config)
     assert "boolProperty" in extracted
     assert "doubleProperty" in extracted
     assert "falseProperty" not in extracted
