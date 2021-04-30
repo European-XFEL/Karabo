@@ -101,6 +101,7 @@ _PANELS = {
 
 SETTINGS_TITLE = '&Settings'
 PANEL_MENU_TITLE = '&Panels'
+GEOMETRY_TITLE = "&Window Geometry"
 GRAFANA_LINK = "https://ctrend.xfel.eu/"
 RTD_GUI_LINK = "https://rtd.xfel.eu/docs/howtogui/en/latest/"
 RTD_FW_LINK = "https://rtd.xfel.eu/docs/karabo/en/latest/"
@@ -431,10 +432,16 @@ class MainWindow(QMainWindow):
         self.acEnableHighDPI.triggered.connect(self._store_dpi_setting)
         mSettingsMenu.addAction(self.acEnableHighDPI)
 
-        self.acStoreMainWindowGeometry = QAction('Store Geometry', self)
+        mGeometryMenu = mSettingsMenu.addMenu(GEOMETRY_TITLE)
+        self.acStoreMainWindowGeometry = QAction('Store', self)
         self.acStoreMainWindowGeometry.triggered.connect(
             self.onStoreMainWindowGeometry)
-        mSettingsMenu.addAction(self.acStoreMainWindowGeometry)
+        mGeometryMenu.addAction(self.acStoreMainWindowGeometry)
+
+        self.acEraseMainWindowGeometry = QAction('Erase', self)
+        self.acEraseMainWindowGeometry.triggered.connect(
+            self.onEraseMainWindowGeometry)
+        mGeometryMenu.addAction(self.acEraseMainWindowGeometry)
 
         self.acRegisterApplication = QAction('Register Application', self)
         self.acRegisterApplication.triggered.connect(
@@ -648,6 +655,10 @@ class MainWindow(QMainWindow):
     @Slot()
     def onStoreMainWindowGeometry(self):
         get_config()['main_geometry'] = self.saveGeometry()
+
+    @Slot()
+    def onEraseMainWindowGeometry(self):
+        del get_config()['main_geometry']
 
     @Slot()
     def onHelpAbout(self):
