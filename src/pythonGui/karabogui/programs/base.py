@@ -15,7 +15,6 @@ from karabo.common.scenemodel.api import (
 from karabogui.background import create_background_timer
 from karabogui.controllers.api import populate_controller_registry
 from karabogui.fonts import FONT_FILENAMES, get_font_size_from_dpi
-from karabogui.logger import get_logger
 from karabogui.singletons.api import (
     get_config, get_manager, get_network, get_panel_wrangler)
 from karabogui.util import process_qt_events
@@ -24,7 +23,6 @@ from karabogui.util import process_qt_events
 def excepthook(exc_type, value, traceback):
     print_exception(exc_type, value, traceback)
     text = "".join(format_exception(exc_type, value, traceback))
-    get_logger().error(f"Application encountered exception: {text}")
     try:
         network = get_network()
         network.onError(text)
