@@ -124,6 +124,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="ui_preview">
+       <property name="text">
+        <string>Preview Full</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QDialogButtonBox" name="buttonBox">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
