@@ -98,7 +98,9 @@ class ConfigurationPanel(BasePanelWidget):
         deviceId = data['deviceId']
         configuration = data['configuration']
         name = data['name']
-        self._apply_configuration_from_name(deviceId, configuration, name)
+        preview = data['preview']
+        self._apply_configuration_from_name(deviceId, configuration, name,
+                                            preview)
 
     def _event_network(self, data):
         connected = data['status']
@@ -266,17 +268,25 @@ class ConfigurationPanel(BasePanelWidget):
 
         return True
 
-    def _apply_configuration_from_name(self, deviceId, config, name):
+    def _apply_configuration_from_name(self, deviceId, config, name, preview):
         """Apply the retrieved configuration from getConfigurationFromPast"""
         validated = self._check_configuration(deviceId, config)
         if not validated:
             return
 
         proxy = self._showing_proxy
-        title = f"Showing configuration {name} for device {proxy.device_id}"
-        dialog = ConfigPreviewDialog(title, None, config, proxy, parent=self)
-        if dialog.exec() == QDialog.Accepted:
+        if preview:
+            title = (f"Showing configuration {name} for device "
+                     f"{proxy.device_id}")
+            dialog = ConfigPreviewDialog(title, None, config, proxy,
+                                         parent=self)
+            if dialog.exec() == QDialog.Accepted:
+                self._set_proxy_configuration(proxy, config)
+        else:
             self._set_proxy_configuration(proxy, config)
+            text = (f"Configuration with name <b>{name}</b> has arrived "
+                    f"for <b>{deviceId}</b>.\n")
+            messagebox.show_information(text, parent=self)
 
     def _apply_configuration_from_past(self, deviceId, config, req_time,
                                        config_time, match, preview):
