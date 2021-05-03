@@ -432,7 +432,9 @@ class ConfigurationFromPastDialog(QDialog):
         time_point = self.ui_timepoint.dateTime().toUTC()
         # Explicitly specifiy ISODate!
         time = str(time_point.toString(Qt.ISODate))
-        get_network().onGetConfigurationFromPast(self.instance_id, time=time)
+        preview = self.ui_preview.isChecked()
+        get_network().onGetConfigurationFromPast(self.instance_id, time=time,
+                                                 preview=preview)
 
     def done(self, result):
         """Stop listening for broadcast events"""
