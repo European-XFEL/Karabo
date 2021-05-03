@@ -214,7 +214,9 @@ class ConfigurationFromName(QDialog):
             return
         model = index.model()
         name = model.index(index.row(), NAME_FIELD).data()
-        get_network().onGetConfigurationFromName(self.instance_id, name)
+        preview = self.ui_preview.isChecked()
+        get_network().onGetConfigurationFromName(self.instance_id, name,
+                                                 preview)
 
     @Slot()
     def on_ui_button_refresh_clicked(self):
