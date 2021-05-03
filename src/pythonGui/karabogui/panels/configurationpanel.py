@@ -6,7 +6,7 @@
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QPalette
 from qtpy.QtWidgets import (
-    QAction, QHBoxLayout, QPushButton, QScrollArea, QStackedWidget,
+    QAction, QDialog, QHBoxLayout, QPushButton, QScrollArea, QStackedWidget,
     QVBoxLayout, QWidget)
 
 from karabo.native import AccessMode, Hash
@@ -18,6 +18,7 @@ from karabogui.binding.api import (
     has_changes, has_table_changes,
     validate_table_value, validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
+from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
 from karabogui.enums import AccessRole
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.globals import access_role_allowed
@@ -89,8 +90,9 @@ class ConfigurationPanel(BasePanelWidget):
         req_time = data['time']
         config_time = data['config_time']
         time_match = data['time_match']
+        preview = data['preview']
         self._apply_configuration_from_past(deviceId, configuration, req_time,
-                                            config_time, time_match)
+                                            config_time, time_match, preview)
 
     def _event_config_name(self, data):
         deviceId = data['deviceId']
@@ -271,21 +273,19 @@ class ConfigurationPanel(BasePanelWidget):
             return
 
         proxy = self._showing_proxy
-        self._set_proxy_configuration(proxy, config)
-        # Show a nice information for the user!
-        text = "Configuration with name '{}' has arrived for '{}'.\n".format(
-            name, deviceId)
-        messagebox.show_information(text, parent=self)
+        title = f"Showing configuration {name} for device {proxy.device_id}"
+        dialog = ConfigPreviewDialog(title, None, config, proxy, parent=self)
+        if dialog.exec() == QDialog.Accepted:
+            self._set_proxy_configuration(proxy, config)
 
     def _apply_configuration_from_past(self, deviceId, config, req_time,
-                                       config_time, match):
+                                       config_time, match, preview):
         """Apply the retrieved configuration from getConfigurationFromPast"""
         validated = self._check_configuration(deviceId, config)
         if not validated:
             return
 
         proxy = self._showing_proxy
-        self._set_proxy_configuration(proxy, config)
         # Show a nice information for the user!
         matched_text = ("The configuration has been retrieved for the "
                         "requested time point!")
@@ -295,7 +295,15 @@ class ConfigurationPanel(BasePanelWidget):
         text = "Configuration from '{}' has arrived for '{}'.\n{}".format(
             config_time, deviceId, time_text)
 
-        messagebox.show_information(text, parent=self)
+        if preview:
+            title = f"Showing configuration for device {proxy.device_id}"
+            dialog = ConfigPreviewDialog(title, text, config, proxy,
+                                         parent=self)
+            if dialog.exec() == QDialog.Accepted:
+                self._set_proxy_configuration(proxy, config)
+        else:
+            self._set_proxy_configuration(proxy, config)
+            messagebox.show_information(text, parent=self)
 
     def _apply_loaded_configuration(self, proxy, configuration):
         """Apply a configuration loaded from a file to a proxy
