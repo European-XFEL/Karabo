@@ -123,7 +123,7 @@ def get_image_data(data):
         return _build_ndarray(data["image"], path="pixels")
 
 
-def create_html_hash(hsh):
+def create_html_hash(hsh, include_attributes=True):
     """Create the HTML representation of a Hash"""
     assert isinstance(hsh, Hash), "An input of type ``Hash`` is required!"
 
@@ -168,12 +168,14 @@ def create_html_hash(hsh):
                 else:
                     yield "[]"
                 yield '</td></tr>'
-                yield from _html_attributes(nest + 1, attr)
+                if include_attributes:
+                    yield from _html_attributes(nest + 1, attr)
             else:
                 yield ('<tr><td style="padding-left:{}em">{}</td><td>'
                        .format(nest + 1, key))
                 yield escape(str(value))
-                yield from _html_attributes(nest + 1, attr)
+                if include_attributes:
+                    yield from _html_attributes(nest + 1, attr)
                 yield '</td></tr>'
         if nest == 0:
             yield "</table>"
