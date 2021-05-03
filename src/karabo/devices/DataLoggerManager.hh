@@ -83,8 +83,9 @@ namespace karabo {
 
             /**
              * Assemble summary from m_checkStatus and clear for next use.
+             * The boolean returned tells whether the status requires operator attention.
              */
-            std::string checkSummary();
+            std::pair<bool, std::string> checkSummary();
 
             void topologyCheck(const boost::system::error_code& e);
 
