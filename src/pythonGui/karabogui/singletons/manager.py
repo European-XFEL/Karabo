@@ -273,14 +273,18 @@ class Manager(QObject):
                    "was not retrieved!".format(deviceId, time))
             messagebox.show_error(msg, details=reason)
             return
+
         config = info['config']
         config_time = info['configTimepoint']
         config_time = Timestamp(config_time).toLocal()
         time_match = info['configAtTimepoint']
+
+        # We might deal with old gui server < 2.11
+        preview = info.get('preview', False)
         broadcast_event(KaraboEvent.ShowConfigurationFromPast,
                         {'deviceId': deviceId, 'configuration': config,
                          'time': time, 'config_time': config_time,
-                         'time_match': time_match})
+                         'preview': preview, 'time_match': time_match})
 
     def handle_brokerInformation(self, **info):
         self._set_server_information(info)

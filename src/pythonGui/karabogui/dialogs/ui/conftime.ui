@@ -112,6 +112,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="ui_preview">
+       <property name="text">
+        <string>Preview Full</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="ui_show_device">
        <property name="text">
         <string>Show Device</string>
