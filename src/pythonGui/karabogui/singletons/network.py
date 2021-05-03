@@ -326,6 +326,8 @@ class Network(QObject):
 
     def onInitDevice(self, server_id, class_id, device_id, config,
                      attrUpdates=None):
+        logger.info(f"Requesting to instantiate device <b>{device_id}</b> "
+                    f"with <b>{class_id}</b> on server <b>{server_id}</b>")
         h = Hash("type", "initDevice")
         h["serverId"] = server_id
         h["classId"] = class_id
@@ -400,7 +402,7 @@ class Network(QObject):
         self._write_hash(h)
 
     def onGetConfigurationFromName(self, device_id, name, preview):
-        logger.info(f"Requesting named configuration {name} "
+        logger.info(f"Requesting named configuration <b>{name}</b> "
                     f"for device <b>{device_id}</b>")
         h = Hash("type", "requestGeneric")
         args = Hash(
@@ -415,7 +417,7 @@ class Network(QObject):
         self._write_hash(h)
 
     def onListConfigurationFromName(self, device_id, name=""):
-        logger.info("Requesting list of configuration from name for"
+        logger.info("Requesting list of named configurations for "
                     f"device <b>{device_id}</b>")
         h = Hash("type", "requestGeneric")
         args = Hash(
@@ -506,6 +508,8 @@ class Network(QObject):
     # ---------------------------------------------------------------------
 
     def onAcknowledgeAlarm(self, instanceId, rowId):
+        logger.info(f"Acknowledging alarm with ID <b>{rowId}</b> "
+                    f"of alarm service <b>{instanceId}</b>")
         h = Hash("type", "acknowledgeAlarm")
         h["alarmInstanceId"] = instanceId
         h["acknowledgedRows"] = Hash(rowId, True)
