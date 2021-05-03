@@ -390,12 +390,13 @@ class Network(QObject):
     # ---------------------------------------------------------------------
     # Current Configuration Interface
 
-    def onGetConfigurationFromPast(self, device_id, time):
+    def onGetConfigurationFromPast(self, device_id, time, preview):
         logger.info(f"Requesting configuration for device "
                     f"<b>{device_id}</b> at time point {time}")
         h = Hash("type", "getConfigurationFromPast")
         h["deviceId"] = device_id
         h["time"] = time
+        h["preview"] = preview
         self._write_hash(h)
 
     def onGetConfigurationFromName(self, device_id, name):
