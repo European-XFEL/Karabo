@@ -399,7 +399,7 @@ class Network(QObject):
         h["preview"] = preview
         self._write_hash(h)
 
-    def onGetConfigurationFromName(self, device_id, name):
+    def onGetConfigurationFromName(self, device_id, name, preview):
         logger.info(f"Requesting named configuration {name} "
                     f"for device <b>{device_id}</b>")
         h = Hash("type", "requestGeneric")
@@ -409,6 +409,7 @@ class Network(QObject):
         h["args"] = args
         h["timeout"] = REQUEST_REPLY_TIMEOUT
         h["instanceId"] = KARABO_CONFIG_MANAGER
+        h["preview"] = preview
         h["slot"] = "slotGetConfigurationFromName"
         h["replyType"] = "getConfigurationFromName"
         self._write_hash(h)
