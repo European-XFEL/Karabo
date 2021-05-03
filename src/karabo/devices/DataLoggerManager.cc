@@ -227,6 +227,15 @@ namespace karabo {
                     .allowedStates(State::NORMAL)
                     .commit();
 
+            INT8_ELEMENT(expected).key("topologyCheck.loggingProblem")
+                    .displayedName("Logging problem")
+                    .description("Non-zero if topology check discovered a problem")
+                    .readOnly().initialValue(0)
+                    .alarmHigh(0) // i.e. alarm if value > 0... (grr, should be >= 1)
+                    .info("Likely something not logged, see 'Check result' field and contact experts.")
+                    .needsAcknowledging(false)
+                    .commit();
+
             STRING_ELEMENT(expected).key("topologyCheck.lastCheckStartedUtc")
                     .displayedName("Check started (UTC)")
                     .description("Last time a check was initiated")
@@ -381,10 +390,11 @@ namespace karabo {
         void DataLoggerManager::launchTopologyCheck() {
             // Publish last results except if in INIT (because then there was no last run!):
             if (getState() != State::INIT) {
-                const std::string result(checkSummary());
-                KARABO_LOG_FRAMEWORK_INFO << "Check finished - " << result;
+                const std::pair<bool, std::string> badAndStatus(checkSummary());
+                KARABO_LOG_FRAMEWORK_INFO << "Check finished - " << badAndStatus.second;
                 set(Hash("topologyCheck", Hash("lastCheckDoneUtc", Epochstamp().toFormattedString(),
-                                               "lastCheckResult", result)));
+                                               "loggingProblem", static_cast<signed char> (badAndStatus.first),
+                                               "lastCheckResult", badAndStatus.second)));
             }
 
             updateState(State::NORMAL);
@@ -393,7 +403,7 @@ namespace karabo {
         }
 
 
-        std::string DataLoggerManager::checkSummary() {
+        std::pair<bool, std::string> DataLoggerManager::checkSummary() {
             std::stringstream checkResult;
             Hash newCheckStatus;
 
@@ -459,7 +469,7 @@ namespace karabo {
             if (!bad) {
                 prefix += (checkResultStr.empty() ? "." : ", just note:");
             }
-            return (prefix += checkResultStr);
+            return std::make_pair(bad, prefix += checkResultStr);
         }
 
         void DataLoggerManager::topologyCheck(const boost::system::error_code& e) {
