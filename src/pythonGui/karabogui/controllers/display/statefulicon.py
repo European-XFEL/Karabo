@@ -34,11 +34,16 @@ class StatefulIconWidget(BaseBindingController):
     def create_widget(self, parent):
         # show a list to pick the icon from if it is not set
         widget = QSvgWidget(parent)
-        icon = ICONS.get(self.model.icon_name, None)
-        if icon is None:
+        if not self.model.icon_name:
+            # This is the creation phase, and the picker will set the icon
+            # on the model
             self._show_icon_picker(widget)
         else:
+            # Note: We might have an icon that is not supported. In this case
+            # we do not modify the traits model!
+            icon = ICONS.get(self.model.icon_name, ICONS["icon_default"])
             self._icon = icon
+
         return widget
 
     def value_update(self, proxy):
@@ -49,10 +54,6 @@ class StatefulIconWidget(BaseBindingController):
 
         svg = self._icon.with_color(color)
         self.widget.load(bytearray(svg, encoding='UTF-8'))
-
-    def __icon_changed(self, icon):
-        """Update the scene model when the icon changes"""
-        self.model.icon_name = icon.name
 
     def _show_icon_picker(self, widget):
         dialog = QDialog(widget)
@@ -81,9 +82,12 @@ class StatefulIconWidget(BaseBindingController):
         # double clicking an entry will select it and close the dialog
         def handleDoubleClick(index):
             self._icon = index.data(Qt.UserRole + 1)
+            self.model.icon_name = self._icon.name
             dialog.close()
 
         iconlist.doubleClicked.connect(handleDoubleClick)
         dialog.exec_()
         if self._icon is None:
+            # Operator bailed out of the dialog! Set a default icon!
             self._icon = non_selection
+            self.model.icon_name = self._icon.name
