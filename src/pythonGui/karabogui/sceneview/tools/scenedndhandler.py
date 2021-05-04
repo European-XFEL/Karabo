@@ -150,9 +150,16 @@ class ProjectDropHandler(SceneDnDHandler):
             simple_name = item.get('simple_name')
             target = '{}:{}'.format(simple_name, uuid)
             position = event.pos()
+
+            fm = get_font_metrics()
+            width = max(fm.width(simple_name) + _LINK_MARGIN, _LINK_SIZE_HIT)
+            height = max(fm.height() + _LINK_MARGIN, _LINK_SIZE_HIT)
+
             model = SceneLinkModel(target=target,
+                                   text=simple_name,
                                    target_window=SceneTargetWindow.Dialog,
-                                   x=position.x(), y=position.y())
+                                   x=position.x(), y=position.y(),
+                                   width=width, height=height)
             scene_view.add_models(model, initialize=True)
 
     def _extract_items(self, mime_data):
