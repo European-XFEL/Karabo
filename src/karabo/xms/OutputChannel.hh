@@ -337,7 +337,14 @@ namespace karabo {
 
             void onInputGone(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode& error);
 
-            void sendFromQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds);
+            /**
+             * Send data to channel from queue
+             * @param channelInfo is all information about channel to sent data to
+             * @param chunkIds id queue to operate on (take from front)
+             * @param lock will be unlocked after operating on chunkIds, but before using sendOne(chunkId, channelInfo)
+             */
+            void sendFromQueue(karabo::util::Hash& channelInfo, std::deque<int>& chunkIds,
+                               boost::mutex::scoped_lock& lock);
 
             void pushShareNext(const std::string& instanceId);
 
@@ -351,9 +358,12 @@ namespace karabo {
 
             void pushCopyNext(const std::string& info);
 
-            bool hasCopyInput(const std::string& instanceId);
-
-            void eraseCopyInput(const std::string& instanceId);
+            /**
+             * Erase instance from container of copy channels that are ready to receive data
+             * @param instanceId
+             * @return whether instanceId could be removed (i.e. was actually ready to receive)
+             */
+            bool eraseCopyInput(const std::string& instanceId);
 
             /**
              *  helper to set new m_chunkId
