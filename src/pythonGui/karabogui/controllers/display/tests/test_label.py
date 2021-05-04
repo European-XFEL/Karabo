@@ -14,6 +14,8 @@ class Object(Configurable):
     alarms = Float(alarmLow=-2.0, alarmHigh=2.0,
                    warnLow=-1.0, warnHigh=1.0)
     absolute = Float(absoluteError=0.1)
+    absZero = Float(absoluteError=0.0)
+    absNeg = Float(absoluteError=-0.1)
     relative = Float(relativeError=0.5)
 
 
@@ -28,6 +30,8 @@ class TestDisplayLabel(GuiTestCase):
         self.string = PropertyProxy(root_proxy=device, path='string')
         self.alarms = PropertyProxy(root_proxy=device, path='alarms')
         self.absolute = PropertyProxy(root_proxy=device, path='absolute')
+        self.absZero = PropertyProxy(root_proxy=device, path='absZero')
+        self.absNeg = PropertyProxy(root_proxy=device, path='absNeg')
         self.relative = PropertyProxy(root_proxy=device, path='relative')
 
     def test_basics(self):
@@ -49,6 +53,18 @@ class TestDisplayLabel(GuiTestCase):
         controller.create(None)
         set_proxy_value(self.absolute, 'absolute', 0.25)
         assert controller._internal_widget.text() == '0.2'
+
+    def test_set_abs_err_zero(self):
+        controller = DisplayLabel(proxy=self.absZero)
+        controller.create(None)
+        set_proxy_value(self.absZero, 'absZero', 0.25555)
+        assert controller._internal_widget.text() == '0.25555'
+
+    def test_set_abs_err_neg(self):
+        controller = DisplayLabel(proxy=self.absNeg)
+        controller.create(None)
+        set_proxy_value(self.absNeg, 'absNeg', 0.25555)
+        assert controller._internal_widget.text() == '0.25555'
 
     def test_set_rel_err(self):
         controller = DisplayLabel(proxy=self.relative)
