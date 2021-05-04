@@ -14,9 +14,13 @@ class Object(Configurable):
     alarms = Float(alarmLow=-2.0, alarmHigh=2.0,
                    warnLow=-1.0, warnHigh=1.0)
     absolute = Float(absoluteError=0.1)
-    absZero = Float(absoluteError=0.0)
-    absNeg = Float(absoluteError=-0.1)
     relative = Float(relativeError=0.5)
+
+    # Bypass validation and modify class for testing
+    absZero = Float()
+    absZero.absoluteError = 0.0
+    absNeg = Float()
+    absNeg.absoluteError = -0.1
 
 
 class TestDisplayLabel(GuiTestCase):
