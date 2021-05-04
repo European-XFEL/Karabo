@@ -36,9 +36,13 @@ class BaseToolsetController(HasStrictTraits):
         self.current_tool = tool
 
     def add(self, tool):
+        """Add an optional tool to the existing controller set"""
+        assert tool not in self.tools
         button = self.factory(tool)
         if button is not None:
             self.buttons[tool] = button
+            button.clicked.connect(partial(self.select, tool=tool))
+            self.tools.append(tool)
         return button
 
     def check(self, tool):

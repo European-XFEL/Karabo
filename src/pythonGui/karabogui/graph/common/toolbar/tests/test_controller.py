@@ -59,3 +59,16 @@ class TestToolbarController(GuiTestCase):
         # Check if there is no changes.
         self.assertEqual(len(self.toolbar.toolsets), 2)
         self.assertEqual(len(widget.actions()), num_actions)
+
+    def test_add_optional_tool(self):
+        # Add optional tool to toolbar with MouseMode toolset
+        self.toolbar.add_tool(MouseMode.Picker)
+        self.assertEqual(len(self.toolbar.toolsets), 1)
+        # Count the number of buttons in the toolbar
+        controller = self.toolbar.toolsets[MouseMode]
+        self.assertTrue(isinstance(controller, MouseModeToolset))
+        buttons = controller.buttons
+        self.assertEqual(len(buttons), 4)
+        self.assertEqual(set(buttons.keys()),
+                         {MouseMode.Pointer, MouseMode.Zoom, MouseMode.Move,
+                          MouseMode.Picker})
