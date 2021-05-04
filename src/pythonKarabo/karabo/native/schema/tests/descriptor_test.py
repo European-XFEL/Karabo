@@ -751,6 +751,34 @@ class Tests(TestCase):
         self.assertNotIn("alias", attrs)
         self.assertIsNone(d.attributes.get('alias'))
 
+    def test_error_attributes(self):
+        d = Double(
+            absoluteError=0.2, relativeError=0.3)
+        self.assertIsNotNone(d)
+
+        # Negative abs error not allowed
+        with self.assertRaises(KaraboError):
+            d = Double(absoluteError=-0.2)
+
+        # zero abs error not allowed
+        with self.assertRaises(KaraboError):
+            d = Double(absoluteError=0.0)
+
+        # neg rel error not allowed
+        with self.assertRaises(KaraboError):
+            d = Double(relativeError=-0.1)
+
+        # zero rel error not allowed
+        with self.assertRaises(KaraboError):
+            d = Double(relativeError=0.0)
+
+        # Test string input for errors
+        with self.assertRaises(TypeError):
+            d = Double(relativeError="StringIsWrong")
+
+        with self.assertRaises(TypeError):
+            d = Double(absoluteError="StringIsWrong")
+
     def test_attributes_nodefault(self):
         d = Double(
             minExc=22, maxExc=33, minInc=11, maxInc=23,
