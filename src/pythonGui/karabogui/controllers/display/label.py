@@ -95,7 +95,10 @@ class DisplayLabel(BaseBindingController):
                      relerr * value > abserr)):
                 fmt = "{{:.{}g}}".format(-int(log10(relerr)))
             elif abserr is not None:
-                if abserr < 1:
+                if abserr <= 0:
+                    # Note: to be removed in future ...
+                    fmt = "{}"
+                elif abserr < 1:
                     fmt = "{{:.{}f}}".format(-int(log10(abserr)))
                 elif (isinstance(value, (Number, number)) and
                         abs(value) > abserr):
