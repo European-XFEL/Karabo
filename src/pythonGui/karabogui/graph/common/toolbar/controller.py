@@ -48,7 +48,8 @@ class ToolbarController(HasStrictTraits):
             # We add the tool as a separate button.
             button = tool_factory(tool)
             self.buttons[tool] = button
-            self.widget.add_button(button)
+        self.widget.add_button(button)
+
         return button
 
     def add_button(self, button, key=None, separator=False):
