@@ -330,6 +330,17 @@ class Number(Simple):
     absoluteError = Attribute()
     relativeError = Attribute()
 
+    def __init__(self, strict=True, **kwargs):
+        super().__init__(strict=strict, **kwargs)
+        abs_err = self.absoluteError
+        if abs_err is not None and abs_err <= 0:
+            raise KaraboError(f"Wrong absolute error specified {abs_err} "
+                              f"for {self.key}")
+        rel_err = self.relativeError
+        if rel_err is not None and rel_err <= 0:
+            raise KaraboError(f"Wrong relative error specified {rel_err} "
+                              f"for {self.key}")
+
     def getMinMax(self):
         info = np.finfo(self.numpy)
         min = self.minExc
