@@ -9,7 +9,7 @@ from karabo.native import Configurable, String
 from karabogui.indicators import STATE_COLORS
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
-from ..statefulicon import StatefulIconWidget
+from ..statefulicon import StatefulIconWidget, ICONS
 
 ICON_NAME = 'icon_bdump'
 
@@ -83,3 +83,31 @@ class TestStatefulIconWidget(GuiTestCase):
             icon = item_index.data(Qt.UserRole + 1)  # QIcon
             assert controller._icon is icon
             assert model.icon_name == icon.name
+
+    def test_pick_icon_bailout(self):
+        """Test the bail out of an icon dialog"""
+        target = 'karabogui.controllers.display.statefulicon.QDialog'
+        with patch(target, new=MockDialog):
+            model = StatefulIconWidgetModel()
+            controller = StatefulIconWidget(proxy=self.proxy, model=model)
+            assert controller._icon is None
+            controller.create(None)
+            assert MockDialog.singleton is not None
+            no_selection = ICONS["icon_default"]
+            assert controller._icon == no_selection
+            assert model.icon_name == no_selection.name
+
+    def test_pick_not_supported_icon(self):
+        """Test that we maintain a not supported icon"""
+        target = ('karabogui.controllers.display.statefulicon.'
+                  'StatefulIconWidget._show_icon_picker')
+        with patch(target) as picker:
+            model = StatefulIconWidgetModel(icon_name="NoStateFullIcon")
+            controller = StatefulIconWidget(proxy=self.proxy, model=model)
+            controller.create(None)
+            # dialog was not launched since we have an icon name!
+            picker.assert_not_called()
+            # The icon name is not found, the widget shows default icon
+            assert controller._icon == ICONS["icon_default"]
+            # However, model is not changed and keep icon name
+            assert model.icon_name == "NoStateFullIcon"
