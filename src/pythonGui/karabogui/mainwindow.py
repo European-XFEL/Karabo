@@ -390,7 +390,7 @@ class MainWindow(QMainWindow):
         self.acCheckUpdates = QAction("Check for Updates", self)
         self.acCheckUpdates.triggered.connect(self.onCheckUpdates)
 
-        self.acGrafana = QAction(icons.weblink, "Grafana", self)
+        self.acGrafana = QAction(icons.grafana, "Grafana", self)
         self.acGrafana.triggered.connect(self.onGrafana)
         self.acGrafana.setCheckable(False)
 
