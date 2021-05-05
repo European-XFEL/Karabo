@@ -3,9 +3,10 @@
 # Created on February 12, 2019
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import json
 from weakref import WeakValueDictionary
 
-from qtpy.QtCore import QAbstractItemModel, QModelIndex, Qt
+from qtpy.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
 
 from karabo.common.api import ProxyStatus
 from karabogui import globals as krb_globals, icons
@@ -148,6 +149,7 @@ class DeviceTreeModel(QAbstractItemModel):
         ret = Qt.ItemIsEnabled | Qt.ItemIsSelectable
         if node.level == 2:
             ret |= Qt.ItemNeverHasChildren
+            ret |= Qt.ItemIsDragEnabled
         return ret
 
     def headerData(self, section, orientation, role):
@@ -156,6 +158,26 @@ class DeviceTreeModel(QAbstractItemModel):
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal and section == 0:
                 return "Domain - Type - Name"
+
+    def mimeData(self, indices):
+        """Reimplemented function of QAbstractItemModel.
+
+        Provide data for Drag & Drop operations.
+        """
+        # Get one selection per row
+        rows = {idx.row(): idx for idx in indices if idx.isValid()}
+        # Extract info() dictionaries from SystemTreeNode instances
+        data = []
+        for idx in rows.values():
+            n = self.index_ref(idx)
+            if n is None:
+                continue
+            data.append(n.info())
+
+        mimeData = QMimeData()
+        mimeData.setData('treeItems', bytearray(json.dumps(data),
+                                                encoding='UTF-8'))
+        return mimeData
 
     def indexInfo(self, index):
         if not index.isValid():
