@@ -18,6 +18,7 @@
 #include "karabo/net/utils.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/util/AlarmConditionElement.hh"
+#include "karabo/util/Epochstamp.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/HashFilter.hh"
 #include "karabo/util/MetaTools.hh"
@@ -27,6 +28,8 @@
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/StackTrace.hh"
 #include "karabo/util/StateElement.hh"
+#include "karabo/util/Timestamp.hh"
+#include "karabo/util/Trainstamp.hh"
 #include "karabo/util/Validator.hh"
 #include "karabo/util/Version.hh"
 #include "karabo/xms/SlotElement.hh"
@@ -104,11 +107,13 @@ namespace karabo {
              *
              * @param connection The broker connection for the device.
              * @param consumeBroadcasts If true, listen directly to broadcast messages (addressed to '*'), as usually expected.
-             *                          Whoever sets this to false has to enure that broadcast messages reach the Device
+             *                          Whoever sets this to false has to ensure that broadcast messages reach the Device
              *                          in some other way, otherwise the device will not work correctly.
+             * @param timeServerId The id of the time server to be used by the device - usually set by the DeviceServer.
              */
             virtual void finalizeInternalInitialization(const karabo::net::Broker::Pointer& connection,
-                                                        bool consumeBroadcasts) = 0;
+                                                        bool consumeBroadcasts,
+                                                        const std::string& timeServerId) = 0;
 
             // public since called by DeviceServer
             /**
@@ -184,6 +189,8 @@ namespace karabo {
             std::string m_classId;
             std::string m_serverId;
             std::string m_deviceId;
+            // To be injected at initialization time; for internal use only.
+            std::string m_timeServerId;
 
             // Regular expression for error detection in state word
             boost::regex m_errorRegex;
@@ -461,7 +468,7 @@ namespace karabo {
                 if (configuration.has("_deviceId_")) configuration.get("_deviceId_", m_deviceId);
                 else m_deviceId = "__none__";
 
-                // Make the configuration the initial state of the device
+                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
 
                 m_timeId = 0;
@@ -1614,10 +1621,13 @@ namespace karabo {
              *
              * @param connection The broker connection for the device.
              * @param consumeBroadcasts If false, do not listen directly to broadcast messages (addressed to '*').
-             *                          Whoever sets this to true has to enure that broadcast messages reach the Device
+             *                          Whoever sets this to false has to ensure that broadcast messages reach the Device
              *                          in some other way.
+             *  @param timeServerId The id of the time server to be used by the device - usually set by the DeviceServer.
              */
-            void finalizeInternalInitialization(const karabo::net::Broker::Pointer& connection, bool consumeBroadcasts) {
+            void finalizeInternalInitialization(const karabo::net::Broker::Pointer& connection,
+                                                bool consumeBroadcasts,
+                                                const std::string& timeServerId) {
 
                 using namespace karabo::util;
                 using namespace karabo::net;
@@ -1634,6 +1644,8 @@ namespace karabo {
                 bool hasAvailableScenes = false;
                 bool hasAvailableMacros = false;
                 bool hasAvailableInterfaces = false;
+
+                m_timeServerId = timeServerId;
 
                 int heartbeatInterval = 0;
                 {
@@ -1803,7 +1815,7 @@ namespace karabo {
 
                 KARABO_SLOT(slotClearLock);
 
-                KARABO_SLOT(slotGetTime);
+                KARABO_SLOT(slotGetTime, karabo::util::Hash /* UNUSED */);
             }
 
             /**
@@ -2306,17 +2318,42 @@ namespace karabo {
             }
 
             /**
-             * Return the actual time information of this device
+             * Returns the actual time information of this device.
              *
-             * This slot returns a Hash with key ``time`` and the attributes
-             * provide an actual timestamp with train Id information.
+             * @param info an unused (at least for now) Hash parameter that
+             *        has been added to fit the generic slot call
+             *        (Hash in, Hash out) of the GUI server/client protocol.
+             *
+             * This slot reply is a Hash with the following keys:
+             *   - ``time`` and its attributes provide an actual timestamp
+             *     with train Id information.
+             *   - ``timeServerId`` the id of the time server configured for
+             *     the DeviceServer of this device; "None" when there's no time
+             *     server configured.
+             *   - ``reference`` and its attributes provide the latest
+             *     timestamp information received from the timeserver.
              */
-            void slotGetTime() {
+            void slotGetTime(const karabo::util::Hash& /* unused */) {
+                using namespace karabo::util;
+
                 karabo::util::Hash result;
 
                 karabo::util::Hash::Node& node = result.set("time", true);
                 const karabo::util::Timestamp stamp(getActualTimestamp());
                 stamp.toHashAttributes(node.getAttributes());
+
+                result.set("timeServerId",
+                           m_timeServerId.empty() ? "None" : m_timeServerId);
+
+                Hash::Node& refNode = result.set("reference", true);
+                auto& attrs = refNode.getAttributes();
+                {
+                    boost::mutex::scoped_lock lock(m_timeChangeMutex);
+                    const Epochstamp epoch(m_timeSec, m_timeFrac);
+                    const Trainstamp train(m_timeId);
+                    const Timestamp stamp(epoch, train);
+                    stamp.toHashAttributes(attrs);
+                }
 
                 reply(result);
             }

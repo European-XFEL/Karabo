@@ -644,7 +644,8 @@ namespace karabo {
 
                 // This will throw an exception if it can't be started (because of duplicated name for example)
                 device->finalizeInternalInitialization(getConnection()->clone(deviceId), // use clone to potentially share
-                                                       false); // DeviceServer will forward broadcasts!
+                                                       false, // DeviceServer will forward broadcasts!
+                                                       m_timeServerId);
 
                 {
                     boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
