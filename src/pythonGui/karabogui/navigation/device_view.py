@@ -50,6 +50,7 @@ class DeviceTreeView(QTreeView):
         self.expanded = False
         self.popupWidget = None
         self.header().sectionDoubleClicked.connect(self.onDoubleClickHeader)
+        self.setDragEnabled(True)
 
         # Setup the context menu
         self._setup_context_menu()
@@ -175,7 +176,7 @@ class DeviceTreeView(QTreeView):
     @Slot()
     def onGetConfigurationFromPast(self):
         info = self.indexInfo()
-        archive = info['attributes'].get('archive', False)
+        archive = info['archive']
         if not archive:
             # Display a hint for the operator that currently the device is not
             # archived/logged if so. Do not see a parent here to block!
@@ -185,7 +186,7 @@ class DeviceTreeView(QTreeView):
                 f"time but before that, you will receive an outdated "
                 f"configuration.")
 
-        device_id = info.get('deviceId')
+        device_id = info['deviceId']
         dialog = ConfigurationFromPastDialog(instance_id=device_id,
                                              parent=self)
         dialog.move(QCursor.pos())
