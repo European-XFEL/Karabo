@@ -204,7 +204,11 @@ namespace karabo {
 
             std::ostringstream iqlQuery;
 
-            iqlQuery << "SELECT COUNT(/^" << ctxt->property << "-.*/) FROM \""
+            /* The query for data count, differently from the query for the property values (or samples) that will
+               be executed later,  doesn't select the '_tid' field. The goal of this query is to count how many
+               entries will exist in the property history and '_tid' field entries only make into the resulting
+               property history as attributes of entries. */
+            iqlQuery << "SELECT COUNT(/^" << ctxt->property << "-.[A-Z0-9_]+/) FROM \""
                     << ctxt->deviceId << "\" WHERE time >= " << epochAsMicrosecString(ctxt->from) << m_durationUnit
                     << " AND time <= " << epochAsMicrosecString(ctxt->to) << m_durationUnit;
 
@@ -313,7 +317,7 @@ namespace karabo {
         void InfluxLogReader::asyncGetPropertyValues(const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
             std::ostringstream iqlQuery;
 
-            iqlQuery << "SELECT /^" << ctxt->property << "-.*/ FROM \""
+            iqlQuery << "SELECT /^" << ctxt->property << "-[A-Z0-9_]+$/ FROM \""
                     << ctxt->deviceId << "\" WHERE time >= " << epochAsMicrosecString(ctxt->from) << m_durationUnit
                     << " AND time <= " << epochAsMicrosecString(ctxt->to) << m_durationUnit;
 
@@ -333,7 +337,7 @@ namespace karabo {
 
             std::ostringstream iqlQuery;
 
-            iqlQuery << "SELECT SAMPLE(/^" << ctxt->property << "-.*/, " << ctxt->maxDataPoints << ") FROM \""
+            iqlQuery << "SELECT SAMPLE(/^" << ctxt->property << "-[A-Z0-9_]+$/, " << ctxt->maxDataPoints << ") FROM \""
                     << ctxt->deviceId << "\" WHERE time >= " << epochAsMicrosecString(ctxt->from) << m_durationUnit
                     << " AND time <= " << epochAsMicrosecString(ctxt->to) << m_durationUnit;
 
@@ -386,7 +390,7 @@ namespace karabo {
         void InfluxLogReader::asyncGetPropertyValuesMean(const boost::shared_ptr<PropertyHistoryContext> &ctxt) {
 
             std::ostringstream iqlQuery;
-            iqlQuery << "SELECT MEAN(/^" << ctxt->property << "-.*/) FROM \""
+            iqlQuery << "SELECT MEAN(/^" << ctxt->property << "-[A-Z0-9_]+$/) FROM \""
                     << ctxt->deviceId << "\" WHERE time >= " <<  epochAsMicrosecString(ctxt->from) << m_durationUnit
                     << " AND time <= " << epochAsMicrosecString(ctxt->to) << m_durationUnit
                     << " GROUP BY time(" << toString(ctxt->getInterval()) << m_durationUnit << ") fill(none)";
