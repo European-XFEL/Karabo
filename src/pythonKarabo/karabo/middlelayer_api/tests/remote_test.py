@@ -139,6 +139,13 @@ class Remote(Device):
             None, consumer.receiveMessage, 1000)
         self.logmessage = message.data
 
+    got_config = 0
+
+    @slot
+    def slotGetConfiguration(self):
+        self.got_config += 1
+        return super().slotGetConfiguration()
+
 
 class Local(Device):
     alarmhash = None
@@ -1293,6 +1300,43 @@ class Tests(DeviceTest):
             finally:
                 await task
             d.counter = -1
+
+    @async_tst
+    async def test_async_disconnect(self):
+        self.remote.counter = -1
+        d = await getDevice("remote")
+        task = background(d.count())
+        self.assertEqual(d.counter, -1,
+                         "we're not connected still seeing changes")
+        async with d:
+            await waitUntil(lambda: d.counter == 10)
+            self.assertEqual(d.counter, 10)
+
+        # We are not connected anymore!
+        counter = d.counter
+        for i in range(20):
+            # Cycle and spin the eventloop like crazy! But we do not
+            # receive updates anymore!
+            await sleep(0.01)
+            self.assertEqual(d.counter, counter)
+        await task
+        async with d:
+            self.assertEqual(d.counter, 29)
+
+    @async_tst
+    async def test_async_with(self):
+        self.remote.counter = -1
+        got_config = self.remote.got_config
+        async with getDevice("remote") as d:
+            task = background(d.count())
+            await waitUntil(lambda: d.counter == 10)
+            self.assertEqual(d.counter, 10)
+
+        self.assertEqual(self.remote.got_config, got_config + 1)
+        self.assertTrue(d.counter < 29)
+        await task
+        async with d:
+            self.assertEqual(d.counter, 29)
 
 
 if __name__ == "__main__":
