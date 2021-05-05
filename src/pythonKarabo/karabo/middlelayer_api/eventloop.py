@@ -299,16 +299,14 @@ class JmsBroker(Broker):
             type(exception), exception, exception.__traceback__))
         self.reply(message, trace, error=True)
 
-    def connect(self, deviceId, signal, slot):
+    def connect(self, deviceId, signals, slot):
         """This is an interface for establishing connection netween local slot
         and remote signal.  In JMS case we simply send a message in
         fire-and-forget style to the signal side to register a slot
         NOTE: In case of many signals we send multiple messages (same slot)
         """
-        if isinstance(signal, (list, tuple)):
-            signals = list(signal)
-        else:
-            signals = [signal]
+        if not isinstance(signals, (list, tuple)):
+            signals = [signals]
 
         for s in signals:
             self.emit("call", {deviceId: ["slotConnectToSignal"]}, s,
@@ -320,11 +318,9 @@ class JmsBroker(Broker):
         """
         self.connect(deviceId, signal, slot)
 
-    def disconnect(self, deviceId, signal, slot):
-        if isinstance(signal, (list, tuple)):
-            signals = list(signal)
-        else:
-            signals = [signal]
+    def disconnect(self, deviceId, signals, slot):
+        if not isinstance(signals, (list, tuple)):
+            signals = [signals]
 
         for s in signals:
             self.emit("call", {deviceId: ["slotDisconnectFromSignal"]}, s,
