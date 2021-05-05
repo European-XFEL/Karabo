@@ -61,7 +61,7 @@ class DeviceTreeNode(HasStrictTraits):
                     'deviceId': self.node_id,
                     'serverId': self.server_id,
                     'capabilities': self.capabilities,
-                    'attributes': self.attributes}
+                    'archive': self.attributes.get('archive', False)}
 
     def row(self):
         if self.parent is None:
