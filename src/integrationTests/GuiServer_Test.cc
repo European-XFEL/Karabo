@@ -369,12 +369,13 @@ void GuiVersion_Test::testExecute() {
     // Request execution of existing slot of existing device (the GuiServerDevice itself...)
     //
     {
-        // Note that "slotGetTime" replies a Hash - but that does not matter, it is ignored.
+        // Note that "slotGetConfiguration" replies with a Hash carrying the configuration and a string
+        // with the deviceId - but that does not matter, they are ignored.
         // Also, "execute" is meant for slots listed as SLOT_ELEMENTS - but it works for any argument less slot
-        // as slotGetTime is one...
+        // as slotGetConfiguration is one...
         const Hash h("type", "execute",
                      "deviceId", "testGuiServerDevice",
-                     "command", "slotGetTime",
+                     "command", "slotGetConfiguration",
                      "reply", true,
                      "timeout", 1);
         karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("executeReply", 1, [&] {
