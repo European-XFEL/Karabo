@@ -485,19 +485,19 @@ namespace karabo {
                 const int leafType = masterNode.getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE);
 
                 if (leafType == karabo::util::Schema::STATE && !workNode.hasAttribute(KARABO_INDICATE_STATE_SET)) {
-                    report << "State element at " << scope << " may only be set using predefined states" << endl;
+                    report << "Setting State element at " << scope << " requires '" << KARABO_INDICATE_STATE_SET << "' attribute" << endl;
                 }
 
                 if (leafType != karabo::util::Schema::STATE && workNode.hasAttribute(KARABO_INDICATE_STATE_SET)) {
-                    report << "Tried setting non-state element at " << scope << " with state object" << endl;
+                    report << "Tried setting non-state element at " << scope << " with state indication attribute" << endl;
                 }
 
                 if (leafType == karabo::util::Schema::ALARM_CONDITION && !workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)) {
-                    report << "Alarm Condition element at " << scope << " may only be set using predefined alarm conditions" << endl;
+                    report << "Setting Alarm Condition element at " << scope << " requires '" << KARABO_INDICATE_ALARM_SET << "' attribute" << endl;
                 }
 
                 if (leafType != karabo::util::Schema::ALARM_CONDITION && workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)) {
-                    report << "Tried setting non-alarm condition element at " << scope << " with alarm condition object" << endl;
+                    report << "Tried setting non-alarm condition element at " << scope << " with alarm indication attribute" << endl;
                 }
             }
 
