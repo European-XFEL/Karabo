@@ -606,8 +606,29 @@ async def waitWhile(condition):
         await loop.waitForChanges()
 
 
+class DeviceFuture:
+    proxy = None
+    base = None
+    entered = False
+
+    def __await__(self):
+        return self.base.__await__()
+
+    def __bool__(self):
+        return self.entered
+
+    async def __aenter__(self):
+        self.entered = True
+        self.proxy = await self
+        return (await self.proxy.__aenter__())
+
+    async def __aexit__(self, etype, value, tb):
+        if self.proxy is not None:
+            return (await self.proxy.__aexit__(etype, value, tb))
+
+
 @synchronize
-async def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
+async def _getDevice(deviceId, sync, lazy, factory=DeviceClientProxyFactory):
     instance = get_instance()
     proxy = instance._proxies.get(deviceId)
     if proxy is not None:
@@ -615,7 +636,8 @@ async def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
             raise KaraboError(
                 "do not mix getDevice with connectDevice!\n"
                 '(deleting the old proxy with "del proxy" may help)')
-        await updateDevice(proxy)
+        if not lazy:
+            await updateDevice(proxy)
         return proxy
 
     futures = instance._proxy_futures
@@ -680,7 +702,8 @@ async def _getDevice(deviceId, sync, factory=DeviceClientProxyFactory):
                     closure_proxy._disconnectSchemaUpdated()
 
         instance._ss.enter_context(connectSchemaUpdated())
-        await updateDevice(proxy)
+        if not lazy:
+            await updateDevice(proxy)
         return proxy
 
     future = asyncio.ensure_future(create())
@@ -707,7 +730,14 @@ def getDevice(deviceId, *, sync=None, timeout=5):
     """
     if sync is None:
         sync = get_event_loop().sync_set
-    return _getDevice(deviceId, sync=sync, timeout=timeout)
+
+    lazy = DeviceFuture()
+    ret = _getDevice(deviceId, lazy=lazy, sync=sync, timeout=timeout)
+    if asyncio.iscoroutine(ret):
+        lazy.base = ret
+        return lazy
+    else:
+        return ret
 
 
 @synchronize
@@ -731,6 +761,7 @@ async def connectDevice(device, *, autodisconnect=None, timeout=5):
         else:
             factory = AutoDisconnectProxyFactory
         device = await _getDevice(device, sync=get_event_loop().sync_set,
+                                  lazy=None,
                                   timeout=timeout, factory=factory)
     if autodisconnect is None:
         ret = device.__enter__()

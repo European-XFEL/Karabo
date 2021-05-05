@@ -516,6 +516,9 @@ class DeviceClientProxyFactory(ProxyFactory):
                 signals = ["signalChanged", "signalStateChanged"]
                 await self._device._ss.async_connect(
                         self._deviceId, signals, self._device.slotChanged)
+                conf, _ = await self._device.call(self._deviceId,
+                                                  "slotGetConfiguration")
+                self._onChanged(conf)
             return self
 
         async def __aexit__(self, exc_type, exc_value, traceback):
