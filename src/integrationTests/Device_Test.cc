@@ -417,25 +417,34 @@ void Device_Test::testGetTimestamp() {
     // Also slotGetTime has zero train id
     Epochstamp now;
     Hash timeHash;
-    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotGetTime").timeout(timeOutInMs).receive(timeHash));
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotGetTime", Hash()).timeout(timeOutInMs).receive(timeHash));
     CPPUNIT_ASSERT(timeHash.has("time"));
     CPPUNIT_ASSERT(timeHash.get<bool>("time"));
     const Timestamp stamp(Timestamp::fromHashAttributes(timeHash.getAttributes("time")));
     CPPUNIT_ASSERT_EQUAL(0ull, stamp.getTrainId());
     CPPUNIT_ASSERT(stamp.getEpochstamp() > now);
+    CPPUNIT_ASSERT(timeHash.has("reference"));
+    CPPUNIT_ASSERT(timeHash.get<bool>("reference"));
+    CPPUNIT_ASSERT(timeHash.has("timeServerId"));
+    CPPUNIT_ASSERT_EQUAL(std::string("None"), timeHash.get<std::string>("timeServerId"));
 
     // Now send a time tick...
     const unsigned long long seconds = 1559600000ull; // About June 3rd, 2019, 10 pm GMT
     const unsigned long long startId = 100ull;
+    const unsigned long long fracAttoSecs = 2ull * periodInAttoSec + 1100ull;
     CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotTimeTick",
-                                              // id,     sec,    frac (attosec), period (microsec)
-                                              startId, seconds, 2ull * periodInAttoSec + 1100ull, periodInMicroSec)
+                                              // id,     sec,   frac(attosec), period(microsec)
+                                              startId, seconds, fracAttoSecs, periodInMicroSec)
                             .timeout(timeOutInMs).receive());
 
     timeHash.clear();
-    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotGetTime").timeout(timeOutInMs).receive(timeHash));
+    CPPUNIT_ASSERT_NO_THROW(sigSlotA->request("TestDevice", "slotGetTime", Hash()).timeout(timeOutInMs).receive(timeHash));
     const Timestamp stamp2(Timestamp::fromHashAttributes(timeHash.getAttributes("time")));
+    const Timestamp refStamp(Timestamp::fromHashAttributes(timeHash.getAttributes("reference")));
     CPPUNIT_ASSERT_GREATEREQUAL(startId, stamp2.getTrainId());
+    CPPUNIT_ASSERT_EQUAL(startId, refStamp.getTrainId());
+    CPPUNIT_ASSERT_EQUAL(seconds, refStamp.getSeconds());
+    CPPUNIT_ASSERT_EQUAL(fracAttoSecs, refStamp.getFractionalSeconds());
 
     // ...and test real calculations of id
     // 1) exact match
