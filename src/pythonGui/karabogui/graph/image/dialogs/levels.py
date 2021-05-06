@@ -1,7 +1,7 @@
 import os
 
 from qtpy import uic
-from qtpy.QtCore import Slot, Qt
+from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import QDialog
 
 from karabogui.graph.common.utils import float_to_string

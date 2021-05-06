@@ -6,7 +6,6 @@ from .macropanel import MacroPanel
 from .scenepanel import ScenePanel
 from .scriptingpanel import ScriptingPanel
 
-
 PANEL_ICONS = {
     AlarmPanel: icons.alarmWarning,
     LoggingPanel: icons.logMenu,

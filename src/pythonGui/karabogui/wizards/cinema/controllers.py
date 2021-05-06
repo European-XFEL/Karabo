@@ -3,6 +3,7 @@ from traits.api import (
     Constant, DelegatesTo, HasStrictTraits, Instance, on_trait_change)
 
 from karabogui.access import ACCESS_LEVELS
+
 from .pages import ConfigurePage, LinkPage, SelectScenesPage
 
 

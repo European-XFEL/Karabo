@@ -1,6 +1,6 @@
 import numpy as np
 from pyqtgraph import AxisItem, ColorMap, GraphicsWidget, ImageItem, ViewBox
-from qtpy.QtCore import Signal, Slot, QPoint, Qt
+from qtpy.QtCore import QPoint, Qt, Signal, Slot
 from qtpy.QtGui import QTransform
 from qtpy.QtWidgets import QDialog, QGraphicsGridLayout, QMenu
 

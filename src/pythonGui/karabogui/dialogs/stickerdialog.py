@@ -4,13 +4,12 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from qtpy import uic
-from qtpy.QtCore import Slot, QSize, Qt
+from qtpy.QtCore import QSize, Qt, Slot
 from qtpy.QtGui import QColor, QIcon, QPixmap, QTextFormat
 from qtpy.QtWidgets import QApplication, QColorDialog, QDialog, QTextEdit
 
-from karabogui.fonts import (
-    get_alias_from_font, get_qfont, substitute_font)
 from karabogui.dialogs.font_dialog import FontDialog
+from karabogui.fonts import get_alias_from_font, get_qfont, substitute_font
 
 from .utils import get_dialog_ui
 

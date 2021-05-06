@@ -3,8 +3,8 @@
 # Created on May 10, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from collections import OrderedDict, namedtuple
 import os.path as op
+from collections import OrderedDict, namedtuple
 
 from qtpy.QtGui import QColor
 

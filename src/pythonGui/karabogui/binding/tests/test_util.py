@@ -1,16 +1,16 @@
 import sys
 
 from karabo.common.api import (
-    KARABO_SCHEMA_VALUE_TYPE, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
+    KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MAX_SIZE,
     KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_SIZE,
-    KARABO_SCHEMA_MAX_SIZE)
+    KARABO_SCHEMA_VALUE_TYPE)
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
     Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    VectorBoolBinding, VectorInt8Binding, VectorInt16Binding,
-    VectorInt32Binding, VectorInt64Binding, VectorUint8Binding,
-    VectorUint16Binding, VectorUint32Binding, VectorUint64Binding,
-    VectorFloatBinding, get_native_min_max, get_min_max, get_min_max_size,
+    VectorBoolBinding, VectorFloatBinding, VectorInt8Binding,
+    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
+    VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
+    VectorUint64Binding, get_min_max, get_min_max_size, get_native_min_max,
     has_min_max_attributes)
 
 

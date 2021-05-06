@@ -1,19 +1,17 @@
 from pytest import raises as assert_raises
 
 from ..api import (
-    BindingNamespace,
-    BoolBinding, ByteArrayBinding, CharBinding, ChoiceOfNodesBinding,
-    ComplexBinding, FloatBinding, HashBinding, Int8Binding, Int16Binding,
-    Int32Binding, Int64Binding, ListOfNodesBinding, NDArrayBinding,
-    NodeBinding, NoneBinding, SchemaBinding, SlotBinding, StringBinding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
+    BindingNamespace, BoolBinding, ByteArrayBinding, CharBinding,
+    ChoiceOfNodesBinding, ComplexBinding, FloatBinding, HashBinding,
+    Int8Binding, Int16Binding, Int32Binding, Int64Binding, ListOfNodesBinding,
+    NDArrayBinding, NodeBinding, NoneBinding, SchemaBinding, SlotBinding,
+    StringBinding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
     VectorBoolBinding, VectorCharBinding, VectorComplexDoubleBinding,
     VectorComplexFloatBinding, VectorDoubleBinding, VectorFloatBinding,
     VectorHashBinding, VectorInt8Binding, VectorInt16Binding,
     VectorInt32Binding, VectorInt64Binding, VectorNoneBinding,
     VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding
-)
+    VectorUint32Binding, VectorUint64Binding)
 
 ALL_BINDINGS = (
     BoolBinding, ByteArrayBinding, CharBinding, ChoiceOfNodesBinding,

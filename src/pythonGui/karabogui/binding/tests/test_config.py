@@ -1,20 +1,18 @@
+import os.path as op
 from contextlib import contextmanager
 from glob import glob
-import os.path as op
 
 import numpy as np
 from traits.api import Undefined
 
-from karabo.common.api import (
-    KARABO_SCHEMA_DAQ_POLICY, KARABO_ALARM_LOW, State
-)
+from karabo.common.api import KARABO_ALARM_LOW, KARABO_SCHEMA_DAQ_POLICY, State
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, decodeBinary, Hash, HashList,
-    Schema, Timestamp
-)
+    AccessLevel, AccessMode, Assignment, Hash, HashList, Schema, Timestamp,
+    decodeBinary)
+
 from ..api import (
-    apply_configuration, apply_project_configuration,
-    apply_default_configuration, apply_fast_data, build_binding,
+    apply_configuration, apply_default_configuration, apply_fast_data,
+    apply_project_configuration, build_binding,
     extract_attribute_modifications, extract_configuration, extract_edits,
     extract_init_configuration)
 from .schema import (

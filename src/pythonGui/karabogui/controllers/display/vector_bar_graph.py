@@ -6,14 +6,13 @@
 from qtpy.QtWidgets import QAction, QInputDialog
 from traits.api import Instance, WeakRef
 
-from karabogui.binding.api import (NDArrayBinding, VectorNumberBinding)
+from karabo.common.scenemodel.api import (
+    VectorBarGraphModel, build_model_config)
+from karabogui.binding.api import NDArrayBinding, VectorNumberBinding
 from karabogui.controllers.api import (
     BaseBindingController, get_array_data, register_binding_controller)
-
-from karabo.common.scenemodel.api import (
-    build_model_config, VectorBarGraphModel)
 from karabogui.graph.plots.api import (
-    generate_down_sample, get_view_range, KaraboPlotView, VectorBarGraphPlot)
+    KaraboPlotView, VectorBarGraphPlot, generate_down_sample, get_view_range)
 
 MAX_WIDTH = 100
 MAX_BARS = 3000

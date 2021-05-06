@@ -1,7 +1,7 @@
 import numpy as np
+from pyqtgraph import GraphicsWidget, ViewBox
 from qtpy.QtCore import QPoint, Qt, Signal
 from qtpy.QtWidgets import QMenu
-from pyqtgraph import GraphicsWidget, ViewBox
 
 from .enums import MouseMode
 

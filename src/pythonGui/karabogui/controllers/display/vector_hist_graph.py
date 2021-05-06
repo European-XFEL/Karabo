@@ -8,12 +8,12 @@ from qtpy.QtWidgets import QAction
 from traits.api import Instance, WeakRef
 
 from karabo.common.scenemodel.api import (
-    build_model_config, VectorHistGraphModel)
+    VectorHistGraphModel, build_model_config)
+from karabogui import icons
 from karabogui.binding.api import NDArrayBinding, VectorNumberBinding
 from karabogui.controllers.api import (
     BaseBindingController, get_array_data, register_binding_controller)
 from karabogui.graph.plots.api import HistogramDialog, KaraboPlotView
-from karabogui import icons
 
 
 @register_binding_controller(

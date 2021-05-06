@@ -5,30 +5,30 @@
 #############################################################################
 from weakref import WeakValueDictionary
 
-from qtpy.QtCore import Signal, QAbstractItemModel, QModelIndex, Qt
+from qtpy.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from qtpy.QtGui import QBrush, QColor
 
-from karabo.native import AccessLevel, AccessMode, Assignment
-from karabo.common.api import (
-    State, KARABO_SCHEMA_ALLOWED_STATES, KARABO_WARN_LOW, KARABO_WARN_HIGH,
-    KARABO_ALARM_LOW, KARABO_ALARM_HIGH)
-from karabogui.binding.api import (
-    BaseBinding, BindingRoot, ChoiceOfNodesBinding,
-    DeviceClassProxy, DeviceProxy, ImageBinding, ListOfNodesBinding,
-    NDArrayBinding, NodeBinding, ProjectDeviceProxy, PropertyProxy,
-    SlotBinding, get_binding_value, has_changes, WidgetNodeBinding)
-from karabogui.fonts import get_qfont
 import karabogui.globals as krb_globals
+from karabo.common.api import (
+    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_SCHEMA_ALLOWED_STATES,
+    KARABO_WARN_HIGH, KARABO_WARN_LOW, State)
+from karabo.native import AccessLevel, AccessMode, Assignment
+from karabogui.binding.api import (
+    BaseBinding, BindingRoot, ChoiceOfNodesBinding, DeviceClassProxy,
+    DeviceProxy, ImageBinding, ListOfNodesBinding, NDArrayBinding, NodeBinding,
+    ProjectDeviceProxy, PropertyProxy, SlotBinding, WidgetNodeBinding,
+    get_binding_value, has_changes)
+from karabogui.fonts import get_qfont
 from karabogui.indicators import (
-    OK_COLOR, ERROR_COLOR_ALPHA, get_state_color, LOCKED_COLOR,
-    PROPERTY_ALARM_COLOR, PROPERTY_ALARM_COLOR_MAP, PROPERTY_READONLY_COLOR,
-    PROPERTY_WARN_COLOR, STATE_COLORS)
+    ERROR_COLOR_ALPHA, LOCKED_COLOR, OK_COLOR, PROPERTY_ALARM_COLOR,
+    PROPERTY_ALARM_COLOR_MAP, PROPERTY_READONLY_COLOR, PROPERTY_WARN_COLOR,
+    STATE_COLORS, get_state_color)
 from karabogui.request import send_property_changes
+
 from .utils import (
     dragged_configurator_items, get_attr_icon, get_child_names,
     get_device_locked_string, get_device_state_string, get_icon,
     get_proxy_value, is_mandatory, threshold_triggered)
-
 
 SPECIAL_BINDINGS = (SlotBinding, ImageBinding,
                     NDArrayBinding, WidgetNodeBinding)

@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from karabogui.globals import HIDDEN_KARABO_FOLDER
 import karabogui.icons as icons
+from karabogui.globals import HIDDEN_KARABO_FOLDER
 
 LOGO_PATH = str(Path(icons.__file__).parent / "splash.png")
 LOGO_WIDTH = 50

@@ -2,10 +2,10 @@ from qtpy.QtCore import Qt
 
 from karabo.common.api import ProxyStatus, State
 from karabo.native import (
-    Bool, Configurable, Float, Int32, Slot, String, VectorFloat, VectorHash
-)
+    Bool, Configurable, Float, Int32, Slot, String, VectorFloat, VectorHash)
 from karabogui.binding.api import ProjectDeviceProxy, build_binding
 from karabogui.testing import GuiTestCase
+
 from ..qt_item_model import ConfigurationTreeModel
 
 

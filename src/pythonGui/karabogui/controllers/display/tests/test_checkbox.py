@@ -1,9 +1,10 @@
 from xml.etree.ElementTree import parse
 
-from karabo.native import Configurable, Bool
+from karabo.native import Bool, Configurable
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
-from ..checkbox import DisplayCheckBox, CHECKED, UNCHECKED
+
+from ..checkbox import CHECKED, UNCHECKED, DisplayCheckBox
 
 
 class Object(Configurable):

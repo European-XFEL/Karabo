@@ -3,17 +3,18 @@
 # Created on January 12, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from contextlib import contextmanager
 import re
+from contextlib import contextmanager
 
-from traits.api import (HasStrictTraits, Bool, Dict, Enum, Event, Instance,
-                        Int, List, String, WeakRef)
+from traits.api import (
+    Bool, Dict, Enum, Event, HasStrictTraits, Instance, Int, List, String,
+    WeakRef)
 
+import karabogui.globals as krb_globals
 from karabo.common.api import ProxyStatus
 from karabo.native import AccessLevel
 from karabogui.alarms.api import AlarmInfo
 from karabogui.enums import NavigationItemTypes
-import karabogui.globals as krb_globals
 
 HOST_LEVEL = 0
 SERVER_LEVEL = 1

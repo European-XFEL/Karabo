@@ -1,14 +1,14 @@
+import unittest
 from datetime import datetime
 from platform import system
-import unittest
 
-from karabo.native import Configurable, Bool
+from karabo.native import Bool, Configurable
 from karabogui.controllers.trendmodel import UPTIME
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 
-from .data import build_historic_data_float
 from ..time_graphs import DisplayTrendGraph
+from .data import build_historic_data_float
 
 
 class Object(Configurable):

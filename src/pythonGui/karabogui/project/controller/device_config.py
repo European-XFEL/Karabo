@@ -9,19 +9,19 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QAction, QDialog, QMenu
 from traits.api import Instance, Int
 
+import karabogui.icons as icons
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, find_parent_object)
-import karabogui.icons as icons
+from karabo.native import Hash
 from karabogui import messagebox
 from karabogui.enums import AccessRole, ProjectItemTypes
-from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.globals import access_role_allowed
 from karabogui.project.dialog.device_configuration import (
     DeviceConfigurationDialog)
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.utils import check_device_config_exists
 from karabogui.util import move_to_cursor
-from karabo.native import Hash
 
 from .bases import BaseProjectController, ProjectControllerUiData
 from .device import DeviceInstanceController

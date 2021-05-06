@@ -5,6 +5,7 @@ from karabo.common.scenemodel.api import DisplayTextLogModel
 from karabo.native import Configurable, String
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
 from ..textlog import DisplayTextLog
 
 

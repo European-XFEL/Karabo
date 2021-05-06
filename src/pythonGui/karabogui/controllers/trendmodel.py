@@ -2,18 +2,18 @@ import datetime
 import os.path as op
 
 import numpy
+from pyqtgraph import PlotDataItem
 from qtpy import uic
 from qtpy.QtCore import QDateTime
 from qtpy.QtWidgets import QDialog
-from pyqtgraph import PlotDataItem
 from traits.api import (
-    HasStrictTraits, Array, Constant, Float, Instance, Int, List,
-    on_trait_change, WeakRef)
+    Array, Constant, Float, HasStrictTraits, Instance, Int, List, WeakRef,
+    on_trait_change)
 
+from karabo.native import Timestamp
 from karabogui.binding.api import PropertyProxy
 from karabogui.const import MAX_NUMBER_LIMIT
 from karabogui.graph.common.const import ALARM_INTEGER_MAP, STATE_INTEGER_MAP
-from karabo.native import Timestamp
 
 ONE_WEEK = "One Week"
 ONE_DAY = "One Day"

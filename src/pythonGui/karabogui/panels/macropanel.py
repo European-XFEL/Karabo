@@ -3,7 +3,7 @@
 # Created in June 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from qtpy.QtCore import Slot, Qt, QEvent, QPoint
+from qtpy.QtCore import QEvent, QPoint, Qt, Slot
 from qtpy.QtGui import QTextCursor
 from qtpy.QtWidgets import QMenu, QPlainTextEdit, QSplitter
 
@@ -12,19 +12,20 @@ try:
 except ImportError:
     from IPython.qt.console.pygments_highlighter import PygmentsHighlighter
 
+import karabogui.globals as krb_globals
 from karabo.common.project.api import write_macro
-from karabogui.events import (
-    KaraboEvent, broadcast_event, register_for_broadcasts,
-    unregister_from_broadcasts)
 from karabogui import icons, messagebox
 from karabogui.binding.api import PropertyProxy
 from karabogui.enums import AccessRole
-import karabogui.globals as krb_globals
+from karabogui.events import (
+    KaraboEvent, broadcast_event, register_for_broadcasts,
+    unregister_from_broadcasts)
 from karabogui.project.utils import run_macro
 from karabogui.singletons.api import get_topology
+from karabogui.util import getSaveFileName
 from karabogui.widgets.codeeditor import CodeEditor
 from karabogui.widgets.toolbar import ToolBar
-from karabogui.util import getSaveFileName
+
 from .base import BasePanelWidget
 
 

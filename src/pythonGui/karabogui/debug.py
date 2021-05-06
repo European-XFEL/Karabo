@@ -1,7 +1,7 @@
-from functools import wraps
 import inspect
 import os.path as op
 import pdb
+from functools import wraps
 from time import perf_counter
 
 from qtpy.QtCore import pyqtRemoveInputHook

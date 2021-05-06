@@ -1,11 +1,11 @@
 import numpy as np
-from qtpy.QtCore import Signal, Slot, QPointF, QRectF, Qt
-from qtpy.QtGui import QColor, QImage, qRgb, QTransform
-from pyqtgraph import (
-    functions as fn, GraphicsObject, getConfigOption, Point)
+from pyqtgraph import GraphicsObject, Point, functions as fn, getConfigOption
+from qtpy.QtCore import QPointF, QRectF, Qt, Signal, Slot
+from qtpy.QtGui import QColor, QImage, QTransform, qRgb
 from scipy.ndimage import zoom
 
 from karabogui.graph.common.api import MouseMode
+
 from .utils import bytescale, map_rect_to_transform, rescale
 
 DIMENSION_DOWNSAMPLE = [(500, 1.5), (1000, 2)]  # [(dimension, min downsample)]

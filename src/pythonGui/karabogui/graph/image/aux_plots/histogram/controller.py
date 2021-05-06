@@ -1,10 +1,10 @@
 from qtpy.QtWidgets import QAction, QMenu
-from traits.api import Bool, Dict, Instance, on_trait_change, Property, Type
+from traits.api import Bool, Dict, Instance, Property, Type, on_trait_change
 
+from ..base.controller import BaseController, ControllerAggregator
 from .analyzer import HistogramAnalyzer
 from .plot import HistogramPlot
 from .stats import HistogramStats
-from ..base.controller import BaseController, ControllerAggregator
 
 
 class HistogramController(BaseController):

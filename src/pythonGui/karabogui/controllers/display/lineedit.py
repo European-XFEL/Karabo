@@ -8,7 +8,7 @@ from qtpy.QtWidgets import QLineEdit
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import LineEditModel
-from karabogui.binding.api import get_binding_value, StringBinding
+from karabogui.binding.api import StringBinding, get_binding_value
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)

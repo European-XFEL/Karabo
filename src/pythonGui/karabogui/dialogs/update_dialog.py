@@ -1,17 +1,17 @@
-from argparse import ArgumentParser
-from contextlib import contextmanager
-from functools import partial
 import importlib
 import os
 import re
-import requests
-from subprocess import check_output, STDOUT, CalledProcessError
 import sys
+from argparse import ArgumentParser
+from contextlib import contextmanager
+from functools import partial
+from subprocess import STDOUT, CalledProcessError, check_output
 
-from lxml import etree
 import pkg_resources
+import requests
+from lxml import etree
 from qtpy import uic
-from qtpy.QtCore import QProcess, Slot, Qt
+from qtpy.QtCore import QProcess, Qt, Slot
 from qtpy.QtWidgets import QDialog
 
 from karabogui import icons
