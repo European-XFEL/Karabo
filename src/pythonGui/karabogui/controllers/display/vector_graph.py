@@ -10,7 +10,7 @@ from qtpy.QtWidgets import QAction
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
-    build_graph_config, restore_graph_config, VectorGraphModel)
+    VectorGraphModel, build_graph_config, restore_graph_config)
 from karabo.common.scenemodel.widgets.graph_plots import NDArrayGraphModel
 from karabogui.binding.api import VectorNumberBinding
 from karabogui.binding.types import NDArrayBinding
@@ -19,8 +19,8 @@ from karabogui.controllers.api import (
 from karabogui.controllers.arrays import get_array_data
 from karabogui.graph.common.api import get_pen_cycler
 from karabogui.graph.plots.api import (
-    KaraboPlotView, generate_down_sample, generate_baseline, get_view_range,
-    TransformDialog)
+    KaraboPlotView, TransformDialog, generate_baseline, generate_down_sample,
+    get_view_range)
 
 
 class BaseArrayGraph(BaseBindingController):

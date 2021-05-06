@@ -6,18 +6,18 @@
 import os.path as op
 
 from qtpy import uic
-from qtpy.QtCore import QDateTime, Slot, QPoint, QSize, Qt
-from qtpy.QtGui import QPixmap, QPen, QPainter, QIcon
+from qtpy.QtCore import QDateTime, QPoint, QSize, Qt, Slot
+from qtpy.QtGui import QIcon, QPainter, QPen, QPixmap
 from qtpy.QtWidgets import (
     QColorDialog, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
     QTableWidgetItem)
 
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
-from karabogui.events import (
-    broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
-    KaraboEvent)
 from karabogui import icons
+from karabogui.events import (
+    KaraboEvent, broadcast_event, register_for_broadcasts,
+    unregister_from_broadcasts)
 from karabogui.singletons.api import (
     get_manager, get_network, get_project_model)
 

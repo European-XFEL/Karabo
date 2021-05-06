@@ -5,12 +5,12 @@
 
 from traits.api import Instance, WeakRef
 
+from karabo.common.scenemodel.api import (
+    VectorFillGraphModel, build_model_config)
 from karabogui.binding.api import VectorNumberBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabo.common.scenemodel.api import (
-    build_model_config, VectorFillGraphModel)
-from karabogui.graph.plots.api import generate_down_sample, KaraboPlotView
+from karabogui.graph.plots.api import KaraboPlotView, generate_down_sample
 
 
 @register_binding_controller(ui_name='Vector Fill Graph',

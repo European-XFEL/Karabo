@@ -1,8 +1,8 @@
 import operator
 import os
-from platform import system
 import subprocess
 import sys
+from platform import system
 from urllib.parse import parse_qs, urlparse
 
 GUI = "gui"

@@ -1,7 +1,7 @@
-from qtpy.QtCore import Qt
-from qtpy.QtGui import QColor
 from pyqtgraph import LabelItem, mkBrush, mkPen
 from pyqtgraph.graphicsItems.LegendItem import ItemSample, LegendItem
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QColor
 
 SYMBOL_COLUMN = 0
 TEXT_COLUMN = 1

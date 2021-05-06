@@ -1,4 +1,5 @@
 import unittest
+
 from ..util import _get_invalid_chars
 
 

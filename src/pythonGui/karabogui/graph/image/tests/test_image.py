@@ -1,9 +1,9 @@
+import numpy as np
 from qtpy.QtCore import QPointF
+
 from karabogui.graph.common.api import ImageROIController, ROITool
 from karabogui.graph.image.plot import KaraboImagePlot
 from karabogui.testing import GuiTestCase
-
-import numpy as np
 
 
 class TestKaraboImagePlotROIController(GuiTestCase):

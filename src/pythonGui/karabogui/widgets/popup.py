@@ -5,7 +5,7 @@
 #############################################################################
 from xml.sax.saxutils import escape
 
-from qtpy.QtCore import Slot, Qt
+from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import QPushButton, QTextEdit, QVBoxLayout, QWidget
 
 

@@ -1,7 +1,7 @@
-from qtpy.QtWidgets import QMenu
 from pyqtgraph import PlotItem
+from qtpy.QtWidgets import QMenu
 from traits.api import (
-    Bool, Event, Dict, HasStrictTraits, Instance, Property, String, Type)
+    Bool, Dict, Event, HasStrictTraits, Instance, Property, String, Type)
 
 from .analyzer import BaseAnalyzer
 from .plot import BasePlot

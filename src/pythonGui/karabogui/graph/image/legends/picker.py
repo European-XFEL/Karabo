@@ -1,9 +1,9 @@
-from qtpy.QtCore import Qt
-from qtpy.QtGui import QBrush, QPen, QColor
 from pyqtgraph import LabelItem
 from pyqtgraph.graphicsItems.LegendItem import ItemSample
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QBrush, QColor, QPen
 
-from karabogui.graph.common.api import float_to_string, KaraboLegend
+from karabogui.graph.common.api import KaraboLegend, float_to_string
 
 
 class PickerLegend(KaraboLegend):

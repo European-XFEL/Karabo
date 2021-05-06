@@ -1,11 +1,10 @@
-from itertools import zip_longest
 import numbers
+from itertools import zip_longest
 
 import numpy as np
 
 from karabo.common import const
-from karabo.native import (
-    AccessMode, Hash, HashList, is_equal, simple_deepcopy)
+from karabo.native import AccessMode, Hash, HashList, is_equal, simple_deepcopy
 
 FLOAT_TOLERANCE = 1e-7
 ZERO_FLOAT_TOLERANCE = 1e-9

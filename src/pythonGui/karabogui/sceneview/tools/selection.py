@@ -3,13 +3,12 @@ from qtpy.QtGui import QColor, QPen
 from traits.api import Any, Enum, HasStrictTraits, Instance, String
 
 from karabogui.binding.api import DeviceProxy
-from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.sceneview.bases import BaseSceneTool
 from karabogui.sceneview.const import HOVER_COLOR
 from karabogui.sceneview.layout.layouts import GroupLayout
 from karabogui.sceneview.utils import (
     round_down_to_grid, round_up_to_grid, save_painter_state)
-
 
 NONRESIZABLE_OBJECTS = (GroupLayout, )
 

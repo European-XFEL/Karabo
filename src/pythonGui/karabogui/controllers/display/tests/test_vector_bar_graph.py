@@ -2,12 +2,12 @@ from unittest.mock import patch
 
 import numpy as np
 
-from ..vector_bar_graph import DisplayVectorBarGraph
 from karabo.common.scenemodel.api import VectorBarGraphModel
-
 from karabo.native import Configurable, Hash, Int32, NDArray, VectorInt32
-from karabogui.testing import (GuiTestCase, get_class_property_proxy,
-                               set_proxy_value)
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_value)
+
+from ..vector_bar_graph import DisplayVectorBarGraph
 
 
 class Object(Configurable):

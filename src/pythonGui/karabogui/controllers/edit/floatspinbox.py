@@ -5,11 +5,10 @@ from traits.api import Instance, on_trait_change
 
 from karabo.common.api import KARABO_SCHEMA_ABSOLUTE_ERROR
 from karabo.common.scenemodel.api import FloatSpinBoxModel
-from karabogui.binding.api import (
-    FloatBinding, get_editor_value, get_min_max)
+from karabogui.binding.api import FloatBinding, get_editor_value, get_min_max
 from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.controllers.api import (
-    add_unit_label, BaseBindingController, is_proxy_allowed,
+    BaseBindingController, add_unit_label, is_proxy_allowed,
     register_binding_controller)
 from karabogui.util import MouseWheelEventBlocker, SignalBlocker
 

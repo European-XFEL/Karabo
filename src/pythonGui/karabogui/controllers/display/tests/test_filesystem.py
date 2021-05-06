@@ -2,6 +2,7 @@ from karabo.common.scenemodel.api import DirectoryModel
 from karabo.native import Configurable, String
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
 from ..filesystem import DisplayDirectory
 
 

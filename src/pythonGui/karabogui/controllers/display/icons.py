@@ -1,15 +1,14 @@
 from qtpy.QtWidgets import QAction, QDialog
-from traits.api import Instance, on_trait_change, Type
+from traits.api import Instance, Type, on_trait_change
 
 from karabo.common.scenemodel.api import (
     DigitIconsModel, SelectionIconsModel, TextIconsModel)
 from karabogui.binding.api import (
-    BaseBinding, FloatBinding, get_binding_value, IntBinding, StringBinding)
+    BaseBinding, FloatBinding, IntBinding, StringBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, has_options, register_binding_controller)
 from karabogui.controllers.icons_dialogs import (
-    DigitDialog, SelectionDialog, TextDialog, IconItem, IconLabel
-)
+    DigitDialog, IconItem, IconLabel, SelectionDialog, TextDialog)
 
 NUMERICAL_BINDINGS = (FloatBinding, IntBinding)
 MINIMUM_SIZE = (24, 24)

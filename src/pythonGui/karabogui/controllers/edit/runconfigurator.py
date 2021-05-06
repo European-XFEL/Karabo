@@ -4,8 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from qtpy.QtCore import QModelIndex, Qt
-from qtpy.QtGui import QStandardItemModel, QStandardItem
-from qtpy.QtWidgets import QAbstractItemView, QTreeView, QHeaderView
+from qtpy.QtGui import QStandardItem, QStandardItemModel
+from qtpy.QtWidgets import QAbstractItemView, QHeaderView, QTreeView
 from traits.api import Bool, Instance, List
 
 from karabo.common.scenemodel.api import RunConfiguratorModel

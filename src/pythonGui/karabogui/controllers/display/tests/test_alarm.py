@@ -7,6 +7,7 @@ from karabo.native import Configurable, String
 from karabogui.alarms.api import get_alarm_svg
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
 from ..alarm import DisplayAlarm
 
 

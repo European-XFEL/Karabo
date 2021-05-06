@@ -6,6 +6,7 @@ from karabo.native import Configurable, VectorString
 from karabogui.binding.api import apply_default_configuration
 from karabogui.dialogs.listedit import ListEditDialog
 from karabogui.testing import GuiTestCase, get_class_property_proxy
+
 from ..strlist import EditableListElement
 
 

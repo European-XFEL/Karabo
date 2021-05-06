@@ -1,23 +1,21 @@
 from functools import partial
 
-from qtpy.QtCore import Signal, Slot, QSize
+from pyqtgraph import GraphicsView, PlotItem, mkBrush, mkPen
+from qtpy.QtCore import QSize, Signal, Slot
 from qtpy.QtGui import QColor, QPalette
 from qtpy.QtWidgets import QAction, QGridLayout, QSizePolicy, QWidget
-from pyqtgraph import GraphicsView, mkPen, PlotItem, mkBrush
 
-from karabogui.actions import build_qaction, KaraboAction
 from karabogui import icons
-
+from karabogui.actions import KaraboAction, build_qaction
 from karabogui.graph.common.api import (
-    AxesLabelsDialog, AxisType, BaseROIController, create_axis_items,
-    ExportTool, get_default_brush, get_default_pen, make_pen,
-    ImageExporter, MouseMode, KaraboLegend, KaraboViewBox, PlotDataExporter,
-    PointCanvas, ROITool, safe_log10, ToolbarController)
+    AxesLabelsDialog, AxisType, BaseROIController, ExportTool, ImageExporter,
+    KaraboLegend, KaraboViewBox, MouseMode, PlotDataExporter, PointCanvas,
+    ROITool, ToolbarController, create_axis_items, get_default_brush,
+    get_default_pen, make_pen, safe_log10)
 from karabogui.graph.common.const import (
-    AXIS_ITEMS, ACTION_ITEMS, CHECK_ACTIONS, DEFAULT_BAR_WIDTH,
-    EMPTY_SYMBOL_OPTIONS, DEFAULT_SYMBOL, SYMBOL_SIZE, WIDGET_MIN_HEIGHT,
-    WIDGET_MIN_WIDTH, WIDGET_WIDTH_HINT, WIDGET_HEIGHT_HINT)
-
+    ACTION_ITEMS, AXIS_ITEMS, CHECK_ACTIONS, DEFAULT_BAR_WIDTH, DEFAULT_SYMBOL,
+    EMPTY_SYMBOL_OPTIONS, SYMBOL_SIZE, WIDGET_HEIGHT_HINT, WIDGET_MIN_HEIGHT,
+    WIDGET_MIN_WIDTH, WIDGET_WIDTH_HINT)
 from karabogui.graph.plots.dialogs import GraphViewDialog, RangeDialog
 from karabogui.graph.plots.items import (
     ScatterGraphPlot, VectorBarGraphPlot, VectorFillGraphPlot)

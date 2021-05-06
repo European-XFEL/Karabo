@@ -5,7 +5,8 @@ from karabo.native import Configurable, Float, Int8
 from karabogui.binding.api import build_binding
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
-from ..progressbar import DisplayProgressBar, NULL_RANGE, PROGRESS_MAX
+
+from ..progressbar import NULL_RANGE, PROGRESS_MAX, DisplayProgressBar
 
 
 class Object(Configurable):

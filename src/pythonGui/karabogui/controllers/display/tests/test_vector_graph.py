@@ -1,19 +1,18 @@
+import warnings
 from platform import system
 from unittest import mock, skipIf
-import warnings
 
 import numpy as np
 
 from karabo.common.scenemodel.api import VectorGraphModel
-from karabo.native import Configurable, VectorBool, VectorFloat, VectorInt32
-from karabo.native import Hash, NDArray, UInt32
+from karabo.native import (
+    Configurable, Hash, NDArray, UInt32, VectorBool, VectorFloat, VectorInt32)
 from karabogui.binding.proxy import PropertyProxy
 from karabogui.controllers.display.vector_graph import (
     DisplayNDArrayGraph, DisplayVectorGraph)
 from karabogui.graph.plots.utils import generate_baseline
 from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy, set_proxy_value)
-from karabogui.testing import set_proxy_hash
+    GuiTestCase, get_class_property_proxy, set_proxy_hash, set_proxy_value)
 
 
 class ArrayObject(Configurable):

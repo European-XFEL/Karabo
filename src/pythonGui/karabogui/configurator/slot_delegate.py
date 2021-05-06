@@ -5,11 +5,11 @@
 #############################################################################
 from qtpy.QtCore import QEvent, QRect, Qt
 from qtpy.QtWidgets import (
-    QApplication, QStyle, QStyleOptionButton, QStyledItemDelegate
-)
+    QApplication, QStyle, QStyledItemDelegate, QStyleOptionButton)
 
 from karabogui import icons
 from karabogui.binding.api import DeviceProxy, SlotBinding
+
 from .utils import (
     ButtonState, get_device_state_string, handle_default_state, set_fill_rect)
 

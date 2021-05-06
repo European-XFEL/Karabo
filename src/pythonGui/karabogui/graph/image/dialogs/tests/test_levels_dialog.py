@@ -1,8 +1,8 @@
 import numpy as np
 
+from karabogui.graph.image.plot import KaraboImagePlot
 from karabogui.testing import GuiTestCase
 
-from karabogui.graph.image.plot import KaraboImagePlot
 from ..levels import LevelsDialog
 
 

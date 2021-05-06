@@ -1,9 +1,10 @@
-from traits.api import push_exception_handler, pop_exception_handler
+from traits.api import pop_exception_handler, push_exception_handler
 
 from karabo.common.api import ProxyStatus
 from karabo.native import AccessLevel
 from karabogui.enums import NavigationItemTypes
 from karabogui.testing import system_hash, system_hash_server_and_plugins
+
 from ..system_tree import SystemTree, SystemTreeNode
 
 

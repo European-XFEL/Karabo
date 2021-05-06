@@ -1,9 +1,9 @@
 import numpy as np
 from qtpy.QtCore import QPointF
 
+from karabogui.graph.common.api import AuxPlots, ROITool
 from karabogui.testing import GuiTestCase
 
-from karabogui.graph.common.api import AuxPlots, ROITool
 from ..base import KaraboImageView
 
 

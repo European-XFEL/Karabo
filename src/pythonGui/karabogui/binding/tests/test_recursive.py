@@ -3,12 +3,12 @@ from traits.api import TraitError
 
 from karabo.common.api import KARABO_WARN_HIGH
 from karabo.native import Hash
+
 from ..api import (
     BindingNamespace, BindingRoot, ChoiceOfNodesBinding, FloatBinding,
-    Int32Binding, ListOfNodesBinding, NodeBinding,
-    apply_configuration, apply_default_configuration,
-    build_binding, extract_configuration, extract_attribute_modifications,
-)
+    Int32Binding, ListOfNodesBinding, NodeBinding, apply_configuration,
+    apply_default_configuration, build_binding,
+    extract_attribute_modifications, extract_configuration)
 from ..recursive import duplicate_binding
 from .schema import get_recursive_schema
 

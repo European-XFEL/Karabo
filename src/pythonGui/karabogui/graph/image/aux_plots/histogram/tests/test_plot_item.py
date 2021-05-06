@@ -1,10 +1,9 @@
 import numpy as np
 from qtpy.QtCore import QRectF
-from qtpy.QtGui import (
-    QBrush, QColor, QLinearGradient, QPainter, QPen, QPixmap)
+from qtpy.QtGui import QBrush, QColor, QLinearGradient, QPainter, QPen, QPixmap
 
-from karabogui.testing import GuiTestCase
 from karabogui.graph.common.api import COLORMAPS
+from karabogui.testing import GuiTestCase
 
 from ..plot import HistogramPlot
 

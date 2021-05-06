@@ -1,19 +1,18 @@
 from copy import deepcopy
 
 import numpy as np
-from qtpy.QtCore import Signal, Slot, QRectF
-from qtpy.QtGui import QFont
 from pyqtgraph import ColorMap, PlotItem
+from qtpy.QtCore import QRectF, Signal, Slot
+from qtpy.QtGui import QFont
 
 from karabogui.graph.common.api import (
-    ArrayExporter, AspectRatio, COLORMAPS, ExportTool, create_axis_items,
-    ImageExporter)
+    COLORMAPS, ArrayExporter, AspectRatio, ExportTool, ImageExporter,
+    create_axis_items)
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, DEFAULT_LABEL_X, DEFAULT_LABEL_Y,
     DEFAULT_OFFSET_X, DEFAULT_OFFSET_Y, DEFAULT_SCALE_X, DEFAULT_SCALE_Y,
-    DEFAULT_UNITS_X, DEFAULT_UNITS_Y, ROTATION_FACTOR)
-from karabogui.graph.common.const import (
-    TF_FLIPPED, TF_ROTATION, TF_SCALING, TF_TRANSLATION)
+    DEFAULT_UNITS_X, DEFAULT_UNITS_Y, ROTATION_FACTOR, TF_FLIPPED, TF_ROTATION,
+    TF_SCALING, TF_TRANSLATION)
 
 from .item import KaraboImageItem
 from .viewbox import KaraboImageViewBox

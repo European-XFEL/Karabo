@@ -9,7 +9,8 @@ from karabo.native import Configurable, String
 from karabogui.indicators import STATE_COLORS
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
-from ..statefulicon import StatefulIconWidget, ICONS
+
+from ..statefulicon import ICONS, StatefulIconWidget
 
 ICON_NAME = 'icon_bdump'
 
