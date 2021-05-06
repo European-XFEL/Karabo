@@ -1,8 +1,8 @@
 import sys
-
 from os import path as op
-import requests
 from unittest import mock, skip
+
+import requests
 
 from karabogui.dialogs import update_dialog
 from karabogui.dialogs.update_dialog import (

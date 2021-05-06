@@ -6,20 +6,19 @@
 from collections import OrderedDict
 
 import numpy as np
-from qtpy.QtCore import Slot, Qt
+from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QFontMetrics
 from qtpy.QtWidgets import (
-    QDialog, QPushButton, QListWidget, QListWidgetItem, QInputDialog,
-    QHBoxLayout, QVBoxLayout, QApplication)
+    QApplication, QDialog, QHBoxLayout, QInputDialog, QListWidget,
+    QListWidgetItem, QPushButton, QVBoxLayout)
 
-from karabo.common.api import (KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE)
+from karabo.common.api import KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE
+from karabogui import messagebox
 from karabogui.binding.api import (
     VectorBoolBinding, VectorDoubleBinding, VectorFloatBinding,
     VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,
     VectorInt64Binding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding, get_editor_value
-)
-from karabogui import messagebox
+    VectorUint32Binding, VectorUint64Binding, get_editor_value)
 
 FLOAT_BINDINGS = (VectorDoubleBinding, VectorFloatBinding)
 INT_BINDINGS = (VectorInt8Binding, VectorInt16Binding, VectorInt32Binding,

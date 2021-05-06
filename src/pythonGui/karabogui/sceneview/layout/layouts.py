@@ -7,6 +7,7 @@ from qtpy.QtCore import QRect, QSize
 from qtpy.QtWidgets import QBoxLayout, QGridLayout, QLayout, QWidgetItem
 
 from karabogui.sceneview.utils import calc_bounding_rect
+
 from .base import BaseLayout
 
 

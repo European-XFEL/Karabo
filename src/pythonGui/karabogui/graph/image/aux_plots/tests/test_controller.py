@@ -1,9 +1,9 @@
 from pyqtgraph import GraphicsLayoutWidget
 
-from karabogui.testing import GuiTestCase
 from karabogui.graph.common.api import AuxPlots
+from karabogui.testing import GuiTestCase
 
-from ..controller import AuxPlotsController, AGGREGATOR_MAP
+from ..controller import AGGREGATOR_MAP, AuxPlotsController
 
 
 class TestAuxPlots(GuiTestCase):

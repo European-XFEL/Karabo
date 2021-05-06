@@ -2,6 +2,7 @@ from karabo.common.scenemodel.api import DaemonManagerModel
 from karabo.native import Configurable, Hash, String, VectorHash
 from karabogui.binding.config import apply_configuration
 from karabogui.testing import GuiTestCase, get_class_property_proxy
+
 from ..daemon import DisplayDaemonService
 
 

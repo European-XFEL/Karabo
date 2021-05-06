@@ -1,6 +1,7 @@
-from karabo.native import Configurable, Bool, ChoiceOfNodes
+from karabo.native import Bool, ChoiceOfNodes, Configurable
 from karabogui.binding.api import apply_default_configuration
 from karabogui.testing import GuiTestCase, get_class_property_proxy
+
 from ..choiceelement import EditableChoiceElement
 
 

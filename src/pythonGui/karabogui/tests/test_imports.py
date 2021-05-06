@@ -1,9 +1,9 @@
 from functools import partial
 
 import karabogui as gui_pkg
-from karabo.testing.import_checker import (check_for_disallowed_module_imports,
-                                           check_for_star_imports,
-                                           run_checker_on_package)
+from karabo.testing.import_checker import (
+    check_for_disallowed_module_imports, check_for_star_imports,
+    run_checker_on_package)
 
 
 def test_no_star_imports():

@@ -11,15 +11,15 @@ import numpy as np
 from qtpy.QtWidgets import QWidget
 from traits.api import Bool, Callable, Dict, Instance, List
 
+import karabogui.icons as icons
 from karabo.common.scenemodel.api import MultiCurveGraphModel
 from karabogui.binding.api import (
-    PropertyProxy, BoolBinding, FloatBinding, IntBinding)
+    BoolBinding, FloatBinding, IntBinding, PropertyProxy)
 from karabogui.const import MAXNUMPOINTS
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.graph.common.api import create_button, get_pen_cycler
 from karabogui.graph.plots.api import KaraboPlotView
-import karabogui.icons as icons
 
 NUMERICAL_BINDINGS = (BoolBinding, FloatBinding, IntBinding)
 

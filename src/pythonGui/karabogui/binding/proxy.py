@@ -1,17 +1,18 @@
 from collections import Counter
 
 from traits.api import (
-    HasStrictTraits, Any, Bool, DelegatesTo, Enum, Event,
-    Instance, Int, Property, String, Tuple, WeakRef, on_trait_change)
+    Any, Bool, DelegatesTo, Enum, Event, HasStrictTraits, Instance, Int,
+    Property, String, Tuple, WeakRef, on_trait_change)
 
 from karabo.common import const
-from karabo.common.api import ProxyStatus, ONLINE_STATUSES, SCHEMA_STATUSES
-from karabogui.events import broadcast_event, KaraboEvent
+from karabo.common.api import ONLINE_STATUSES, SCHEMA_STATUSES, ProxyStatus
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_network, get_topology
+
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
-    BaseBinding, BindingRoot, FloatBinding, PipelineOutputBinding,
-    VectorBinding, SlotBinding)
+    BaseBinding, BindingRoot, FloatBinding, PipelineOutputBinding, SlotBinding,
+    VectorBinding)
 
 _RECURSIVE_BINDINGS = (ChoiceOfNodesBinding, ListOfNodesBinding)
 _NOCAST_BINDINGS = (FloatBinding, VectorBinding)

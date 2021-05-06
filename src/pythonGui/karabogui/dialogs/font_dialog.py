@@ -4,7 +4,6 @@ from qtpy.QtGui import QFont, QFontDatabase
 from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.const import SCENE_FONT_SIZES
-
 from karabogui.fonts import (
     FONT_ALIAS, get_alias_from_font, get_font_from_alias,
     get_font_size_from_dpi)

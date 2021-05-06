@@ -2,7 +2,6 @@
 
 from ..util import get_error_message
 
-
 CPP_SLOT_ERROR_MESSAGE = """
 Request to execute 'execute2' on device 'Macro-test1-ec6d56fe-a5ca-445f-ad45-a295c7e16450-Test' failed, details:
 1. Exception =====>  {

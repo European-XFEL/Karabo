@@ -3,7 +3,7 @@
 # Created on February 27, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from traits.api import HasStrictTraits, Bool, Event, Instance, List, Property
+from traits.api import Bool, Event, HasStrictTraits, Instance, List, Property
 
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import BaseProjectObjectModel, ProjectModel

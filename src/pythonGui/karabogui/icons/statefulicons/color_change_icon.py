@@ -5,7 +5,7 @@
 #############################################################################
 from collections import OrderedDict
 from os import listdir
-from os.path import join, isfile, splitext
+from os.path import isfile, join, splitext
 from xml.etree.ElementTree import Element, parse, tostring
 
 from karabo.common.scenemodel.const import NS_SVG

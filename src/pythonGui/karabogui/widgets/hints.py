@@ -12,7 +12,6 @@ from qtpy.QtWidgets import QFrame, QLabel, QLineEdit
 from karabogui.const import WIDGET_MIN_HEIGHT, WIDGET_MIN_WIDTH
 from karabogui.fonts import substitute_font
 
-
 CONTENT_MARGIN = 10
 MAX_SVG_SIZE = 24
 SIZE_HINT_SVG = 20

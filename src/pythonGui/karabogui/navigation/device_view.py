@@ -4,25 +4,23 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from qtpy.QtCore import Slot, Qt, QPoint
+from qtpy.QtCore import QPoint, Qt, Slot
 from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import (
     QAbstractItemView, QAction, QHeaderView, QMenu, QTreeView)
 
-from karabogui import icons
-from karabogui import messagebox
-from karabogui.enums import AccessRole, NavigationItemTypes
-from karabogui.globals import access_role_allowed
-from karabogui.events import broadcast_event, KaraboEvent
+from karabogui import icons, messagebox
 from karabogui.dialogs.configuration_from_name import ConfigurationFromName
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
-from karabogui.singletons.api import (
-    get_manager, get_selection_tracker)
+from karabogui.enums import AccessRole, NavigationItemTypes
+from karabogui.events import KaraboEvent, broadcast_event
+from karabogui.globals import access_role_allowed
+from karabogui.singletons.api import get_manager, get_selection_tracker
 from karabogui.util import open_documentation_link
 from karabogui.widgets.popup import PopupWidget
 
-from .device_model import DeviceTreeModel
 from .device_filter_model import DeviceFilterModel
+from .device_model import DeviceTreeModel
 from .tools import DeviceSceneHandler
 
 

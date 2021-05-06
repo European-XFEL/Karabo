@@ -5,8 +5,8 @@ from qtpy.QtWidgets import QBoxLayout
 from traits.api import Callable, Int
 
 from karabo.common.scenemodel.api import (
-    BaseLayoutModel, BoxLayoutModel, FixedLayoutModel,
-    GridLayoutChildData, GridLayoutModel)
+    BaseLayoutModel, BoxLayoutModel, FixedLayoutModel, GridLayoutChildData,
+    GridLayoutModel)
 from karabogui.sceneview.bases import BaseSceneAction
 from karabogui.sceneview.utils import calc_bounding_rect
 

@@ -8,19 +8,18 @@ from enum import Enum
 from qtpy.QtCore import QEvent, QRect, QSize, Qt
 from qtpy.QtGui import QBrush, QColor, QDoubleValidator, QPalette, QValidator
 from qtpy.QtWidgets import (
-    QApplication, QAbstractItemDelegate, QComboBox, QDialog, QHBoxLayout,
-    QLineEdit, QStyle, QStyleOptionButton, QStyledItemDelegate, QWidget
-)
+    QAbstractItemDelegate, QApplication, QComboBox, QDialog, QHBoxLayout,
+    QLineEdit, QStyle, QStyledItemDelegate, QStyleOptionButton, QWidget)
 
 from karabo.common.api import KARABO_EDITABLE_ATTRIBUTES, State
 from karabo.native import DaqPolicy, MetricPrefix, Unit
-from karabogui.binding.api import (
-    IntBinding, PropertyProxy, VectorHashBinding)
+from karabogui.binding.api import IntBinding, PropertyProxy, VectorHashBinding
 from karabogui.controllers.api import get_compatible_controllers
 from karabogui.indicators import STATE_COLORS
+
 from .dialog.table_view import TableDialog
 from .utils import (
-    ButtonState, handle_default_state, set_fill_rect, FIXED_ROW_HEIGHT)
+    FIXED_ROW_HEIGHT, ButtonState, handle_default_state, set_fill_rect)
 
 TABLE_BUTTON_TEXT = 'Table Element'
 BUTTON_LABEL_PADDING = 5

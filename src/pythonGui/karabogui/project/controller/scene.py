@@ -3,10 +3,10 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from functools import partial
-from io import StringIO
 import os.path as op
 import re
+from functools import partial
+from io import StringIO
 
 from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance
@@ -17,13 +17,13 @@ from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.native import read_project_model
 from karabogui import icons, messagebox
 from karabogui.enums import AccessRole, ProjectItemTypes
-from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.globals import access_role_allowed
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
-from karabogui.singletons.api import get_db_conn, get_panel_wrangler
+from karabogui.singletons.api import (
+    get_config, get_db_conn, get_panel_wrangler)
 from karabogui.util import getOpenFileName, getSaveFileName, move_to_cursor
-from karabogui.singletons.api import get_config
 from karabogui.wizards.api import CinemaWizardController
 
 from .bases import BaseProjectController, ProjectControllerUiData

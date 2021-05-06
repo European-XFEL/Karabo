@@ -4,14 +4,13 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from qtpy.QtCore import Qt, QRectF
+from qtpy.QtCore import QRectF, Qt
 from qtpy.QtGui import QColor, QPainter, QPainterPath, QPen
 from qtpy.QtWidgets import QWidget
 from traits.api import Instance
 
 from karabo.common.api import (
-    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH,
-    KARABO_WARN_LOW)
+    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW)
 from karabo.common.scenemodel.api import AnalogModel
 from karabogui import messagebox
 from karabogui.alarms.api import ALARM_COLOR, NORM_COLOR, WARN_COLOR

@@ -1,8 +1,8 @@
 from enum import Enum
 from functools import total_ordering
-from heapq import heappush, heappop
+from heapq import heappop, heappush
 
-from qtpy.QtCore import Slot, QTimer
+from qtpy.QtCore import QTimer, Slot
 
 
 @total_ordering

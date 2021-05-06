@@ -1,16 +1,15 @@
-from traits.api import push_exception_handler, pop_exception_handler
+from traits.api import pop_exception_handler, push_exception_handler
 
 from karabo.common.project.api import (
-    DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
-    MacroModel, ProjectModel, PROJECT_OBJECT_CATEGORIES
-)
+    PROJECT_OBJECT_CATEGORIES, DeviceConfigurationModel, DeviceInstanceModel,
+    DeviceServerModel, MacroModel, ProjectModel)
 from karabo.common.scenemodel.api import SceneModel
 from karabogui.singletons.project_model import ProjectViewItemModel
 from karabogui.testing import GuiTestCase
+
 from ..controller.build import (
-    create_device_server_controller, create_project_controller,
-    create_macro_controller, destroy_project_controller
-)
+    create_device_server_controller, create_macro_controller,
+    create_project_controller, destroy_project_controller)
 from ..controller.scene import SceneController
 
 

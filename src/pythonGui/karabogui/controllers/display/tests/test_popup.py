@@ -1,14 +1,15 @@
 from platform import system
-from unittest.mock import patch, Mock
 from unittest import skipIf
+from unittest.mock import Mock, patch
 
 from qtpy.QtWidgets import QMessageBox
 
 from karabo.common.api import State
-from karabo.native import Configurable, String, Slot
+from karabo.native import Configurable, Slot, String
 from karabogui.binding.api import (
     DeviceProxy, PropertyProxy, apply_default_configuration, build_binding)
 from karabogui.testing import GuiTestCase, set_proxy_value, singletons
+
 from ..popup import PopUp
 
 

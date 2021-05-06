@@ -7,13 +7,12 @@ from karabo.common.api import ProxyStatus, State
 from karabo.native import (
     AccessMode, Configurable, Float, Hash, HashList, String, UInt32,
     VectorBool, VectorHash, VectorUInt32)
-
 from karabogui.binding.api import (
-    apply_configuration, build_binding, DeviceProxy, ProjectDeviceProxy,
-    validate_value, validate_table_value, VectorHashBinding)
+    DeviceProxy, ProjectDeviceProxy, VectorHashBinding, apply_configuration,
+    build_binding, validate_table_value, validate_value)
 from karabogui.testing import GuiTestCase
 
-from ..configurationpanel import ConfigurationPanel, CONFIGURATION_PAGE
+from ..configurationpanel import CONFIGURATION_PAGE, ConfigurationPanel
 
 CONFIG_PANEL_PATH = "karabogui.panels.configurationpanel.ConfigurationPanel"
 SHOW_NOT_LOADED_PROPERTIES_PATH = (CONFIG_PANEL_PATH

@@ -3,13 +3,13 @@
 # Created on July 23, 2013
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from os import environ, getpid, path
 import socket
+from os import environ, getpid, path
 from sys import platform
 
-from karabogui.enums import AccessRole
 from karabo.common.packaging import utils
 from karabo.native import AccessLevel
+from karabogui.enums import AccessRole
 
 try:
     from karabogui import _version
