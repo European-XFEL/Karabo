@@ -1,6 +1,6 @@
+from karabogui.graph.common.enums import MouseMode, ROITool
 from karabogui.testing import GuiTestCase
 
-from karabogui.graph.common.enums import MouseMode, ROITool
 from ..controller import ToolbarController
 from ..toolsets import MouseModeToolset
 

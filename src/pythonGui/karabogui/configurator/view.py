@@ -6,33 +6,33 @@
 from collections import OrderedDict
 from functools import partial
 
-from qtpy.QtCore import Signal, Slot, QRect, Qt, QModelIndex, QPoint
+from qtpy.QtCore import QModelIndex, QPoint, QRect, Qt, Signal, Slot
 from qtpy.QtGui import QCursor
-from qtpy.QtWidgets import (QAbstractItemDelegate, QAbstractItemView, QAction,
-                            QMenu, QTreeView)
+from qtpy.QtWidgets import (
+    QAbstractItemDelegate, QAbstractItemView, QAction, QMenu, QTreeView)
 
 from karabo.common.api import (
-    KARABO_SCHEMA_ALIAS, KARABO_SCHEMA_DESCRIPTION,
-    KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MAX_INC,
-    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC,
-    KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_MAX_SIZE,
-    KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL,
-    KARABO_SCHEMA_TAGS, KARABO_SCHEMA_DAQ_POLICY)
+    KARABO_SCHEMA_ALIAS, KARABO_SCHEMA_DAQ_POLICY, KARABO_SCHEMA_DEFAULT_VALUE,
+    KARABO_SCHEMA_DESCRIPTION, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
+    KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
+    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MIN_SIZE,
+    KARABO_SCHEMA_TAGS, KARABO_SCHEMA_UNIT_SYMBOL)
 from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui import icons
-from karabogui.alarms.api import ALARM_LOW, ALARM_HIGH, WARN_LOW, WARN_HIGH
+from karabogui.alarms.api import ALARM_HIGH, ALARM_LOW, WARN_HIGH, WARN_LOW
 from karabogui.binding.api import (
     BaseBinding, DeviceProxy, PropertyProxy, VectorHashBinding)
 from karabogui.events import (
-    broadcast_event, KaraboEvent, register_for_broadcasts,
+    KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
 from karabogui.generic_scenes import get_generic_scene
 from karabogui.widgets.popup import PopupWidget
+
 from .edit_delegate import EditDelegate
 from .qt_item_model import ConfigurationTreeModel
 from .slot_delegate import SlotButtonDelegate
-from .value_delegate import ValueDelegate
 from .utils import get_proxy_value
+from .value_delegate import ValueDelegate
 
 
 class ConfigurationTreeView(QTreeView):

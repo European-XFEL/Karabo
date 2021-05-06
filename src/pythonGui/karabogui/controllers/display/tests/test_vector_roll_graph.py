@@ -4,14 +4,14 @@ from unittest import mock, skipIf
 import numpy as np
 from qtpy.QtWidgets import QGraphicsTextItem
 
-from ..vector_roll_graph import ArrayRollGraph
 from karabo.common.scenemodel.api import VectorRollGraphModel
 from karabo.native import (
     Configurable, Hash, Int32, NDArray, Timestamp, VectorInt32)
+from karabogui.graph.common.api import AuxPlots
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_hash, set_proxy_value)
 
-from karabogui.graph.common.api import AuxPlots
+from ..vector_roll_graph import ArrayRollGraph
 
 
 class Object(Configurable):

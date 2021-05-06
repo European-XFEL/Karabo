@@ -1,7 +1,8 @@
 from karabo.native import Configurable, Int8, String
-from karabogui.binding.api import build_binding, apply_default_configuration
+from karabogui.binding.api import apply_default_configuration, build_binding
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
 from ..combobox import DisplayComboBox
 
 

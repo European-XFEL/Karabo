@@ -1,6 +1,6 @@
 import numpy as np
-from qtpy.QtCore import QRectF, QSizeF
 from pyqtgraph import Point
+from qtpy.QtCore import QRectF, QSizeF
 
 from .base import KaraboROI
 from .utils import ImageRegion

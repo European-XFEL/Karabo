@@ -1,8 +1,7 @@
 import numpy as np
 
 from karabo.native import Configurable, Hash, NDArray, UInt32, VectorDouble
-from karabogui.testing import (
-    get_class_property_proxy, set_proxy_hash)
+from karabogui.testing import get_class_property_proxy, set_proxy_hash
 
 from ..arrays import get_array_data
 

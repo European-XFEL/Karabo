@@ -1,6 +1,6 @@
 import json
 
-from qtpy.QtCore import Qt, QModelIndex
+from qtpy.QtCore import QModelIndex, Qt
 from qtpy.QtWidgets import QTableView
 
 from karabogui.binding.api import StringBinding

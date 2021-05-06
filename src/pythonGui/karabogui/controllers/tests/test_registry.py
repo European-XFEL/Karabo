@@ -1,10 +1,10 @@
 from traits.api import Enum, Instance
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
-from karabo.native import (
-    Configurable, Int8, Int16, UInt32, UInt64, String)
-from karabogui.binding.api import StringBinding, IntBinding, build_binding
+from karabo.native import Configurable, Int8, Int16, String, UInt32, UInt64
+from karabogui.binding.api import IntBinding, StringBinding, build_binding
 from karabogui.testing import GuiTestCase, flushed_registry
+
 from ..api import (
     BaseBindingController, get_class_const_trait, get_compatible_controllers,
     get_model_controller, register_binding_controller)
@@ -143,6 +143,7 @@ def test_scene_model_registry():
 def test_display_edit_overlap():
     # IntLineEdit should be returned for both edit and non-edit widgets
     from karabo.common.scenemodel.api import IntLineEditModel
+
     from ..edit.lineedit import IntLineEdit
 
     model = IntLineEditModel(parent_component='DisplayComponent')

@@ -1,12 +1,11 @@
 import numpy as np
 from scipy.optimize import curve_fit
 from traits.api import (
-    Any, Array, ArrayOrNone, Bool, cached_property, Dict, Function, Property)
+    Any, Array, ArrayOrNone, Bool, Dict, Function, Property, cached_property)
 
 from karabogui.graph.common.api import ImageRegion
 
 from ..base.analyzer import BaseAnalyzer
-
 
 FWHM_COEFF = 2 * np.sqrt(2 * np.log(2))
 

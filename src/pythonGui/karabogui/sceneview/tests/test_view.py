@@ -3,32 +3,32 @@
 # Created on June 9, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from contextlib import contextmanager
 import os.path as op
+from contextlib import contextmanager
 from unittest import mock
 
 from qtpy.QtCore import QPoint
 from qtpy.QtGui import QRegion
 from qtpy.QtWidgets import QBoxLayout, QDialog
 
-from karabo.common.api import (
-    ProxyStatus, set_initialized_flag, set_modified_flag)
 import karabo.common.scenemodel.api as sm
 import karabo.common.scenemodel.tests as sm_tests
+from karabo.common.api import (
+    ProxyStatus, set_initialized_flag, set_modified_flag)
 from karabo.common.scenemodel.tests.utils import single_model_round_trip
-
 from karabogui.binding.api import (
-    build_binding, DeviceProxy, ImageBinding, IntBinding, Int8Binding,
-    NDArrayBinding, NodeBinding, PipelineOutputBinding, PropertyProxy,
-    SignedIntBinding, StringBinding, TableBinding, Uint8Binding,
-    UnsignedIntBinding, VectorBinding, VectorHashBinding, VectorNoneBinding,
-    VectorNumberBinding, VectorUint8Binding, WidgetNodeBinding)
+    DeviceProxy, ImageBinding, Int8Binding, IntBinding, NDArrayBinding,
+    NodeBinding, PipelineOutputBinding, PropertyProxy, SignedIntBinding,
+    StringBinding, TableBinding, Uint8Binding, UnsignedIntBinding,
+    VectorBinding, VectorHashBinding, VectorNoneBinding, VectorNumberBinding,
+    VectorUint8Binding, WidgetNodeBinding, build_binding)
 from karabogui.binding.tests.schema import (
     ALL_PROPERTIES_MAP, get_all_props_schema)
 from karabogui.controllers.registry import get_model_controller
 from karabogui.testing import GuiTestCase
-from ..layout.api import GroupLayout
+
 from ..api import SceneView
+from ..layout.api import GroupLayout
 from ..tools.clipboard import (
     SceneCopyAction, SceneCutAction, ScenePasteAction, ScenePasteReplaceAction)
 from ..utils import add_offset, calc_relative_pos

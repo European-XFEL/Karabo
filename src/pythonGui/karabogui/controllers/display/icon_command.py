@@ -1,14 +1,14 @@
-from qtpy.QtCore import Slot, QModelIndex, QSize, Qt
-from qtpy.QtGui import QIcon, QStandardItemModel, QStandardItem
+from qtpy.QtCore import QModelIndex, QSize, Qt, Slot
+from qtpy.QtGui import QIcon, QStandardItem, QStandardItemModel
 from qtpy.QtWidgets import (
-    QAction, QDialog, QHBoxLayout,  QListView, QToolButton, QWidget)
+    QAction, QDialog, QHBoxLayout, QListView, QToolButton, QWidget)
 from traits.api import Instance
 
+import karabogui.icons as icons
 from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayIconCommandModel
 from karabogui import globals as krb_globals
-import karabogui.icons as icons
-from karabogui.binding.api import get_binding_value, SlotBinding
+from karabogui.binding.api import SlotBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 

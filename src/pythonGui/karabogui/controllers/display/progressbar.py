@@ -12,7 +12,7 @@ from karabo.common.api import (
     KARABO_SCHEMA_MIN_INC)
 from karabo.common.scenemodel.api import DisplayProgressBarModel
 from karabogui.binding.api import (
-    has_min_max_attributes, FloatBinding, IntBinding)
+    FloatBinding, IntBinding, has_min_max_attributes)
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)

@@ -1,7 +1,7 @@
 import re
 
 from qtpy import uic
-from qtpy.QtCore import Slot, Qt
+from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QPalette, QValidator
 from qtpy.QtWidgets import QDialog, QDialogButtonBox
 

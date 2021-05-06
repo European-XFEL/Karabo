@@ -8,9 +8,9 @@ from enum import Enum
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QColor, QIcon, QPainter, QPixmap
 
-from karabo.common.api import State, ProxyStatus
-from . import icons
+from karabo.common.api import ProxyStatus, State
 
+from . import icons
 
 # --------------------------------------------------------------------------
 # Mapping states to colors

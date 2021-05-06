@@ -7,10 +7,9 @@ from traits.api import Instance
 
 from karabo.common.api import KARABO_SCHEMA_ROW_SCHEMA
 from karabo.common.scenemodel.api import TableElementModel
-
-from karabogui.controllers.table.api import BaseTableController
 from karabogui.binding.api import VectorHashBinding
 from karabogui.controllers.api import register_binding_controller
+from karabogui.controllers.table.api import BaseTableController
 
 
 def _is_compatible(binding):

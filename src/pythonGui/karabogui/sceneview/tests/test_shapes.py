@@ -5,10 +5,11 @@
 #############################################################################
 import os.path as op
 
-from karabo.common.scenemodel.api import (
-    LineModel, RectangleModel, PathModel, SceneModel)
 import karabo.common.scenemodel.tests as sm
+from karabo.common.scenemodel.api import (
+    LineModel, PathModel, RectangleModel, SceneModel)
 from karabogui.testing import GuiTestCase
+
 from ..api import SceneView
 
 DATA_DIR = op.join(op.abspath(op.dirname(sm.__file__)), 'data')

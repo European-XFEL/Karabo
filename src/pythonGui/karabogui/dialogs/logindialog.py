@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from qtpy import uic
-from qtpy.QtCore import Slot, Qt
+from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QComboBox, QDialog
 

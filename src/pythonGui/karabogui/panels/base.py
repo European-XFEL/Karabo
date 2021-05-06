@@ -5,11 +5,12 @@
 #############################################################################
 from enum import Enum
 
-from qtpy.QtCore import Signal, Slot, Qt
+from qtpy.QtCore import Qt, Signal, Slot
 from qtpy.QtGui import QPainter
 from qtpy.QtPrintSupport import QPrinter, QPrintPreviewDialog
 from qtpy.QtWidgets import (
     QAction, QFrame, QHBoxLayout, QSizePolicy, QVBoxLayout, QWidget)
+
 from karabogui import icons
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.util import generateObjectName

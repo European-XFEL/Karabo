@@ -3,24 +3,24 @@
 # Created on June 30, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from abc import abstractmethod
 import json
+from abc import abstractmethod
 
 from qtpy.QtCore import QPoint
 from qtpy.QtWidgets import QBoxLayout
 from traits.api import ABCHasStrictTraits, Undefined
 
-from karabogui.binding.api import ImageBinding, SlotBinding
 from karabo.common.enums import Capabilities
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, DeviceSceneLinkModel, LabelModel, SceneLinkModel)
 from karabo.common.scenemodel.const import SceneTargetWindow
 from karabo.native import AccessMode
+from karabogui import messagebox
+from karabogui.binding.api import ImageBinding, SlotBinding
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
 from karabogui.enums import NavigationItemTypes, ProjectItemTypes
 from karabogui.fonts import get_font_metrics
-from karabogui import messagebox
 from karabogui.sceneview.utils import round_down_to_grid
 from karabogui.sceneview.widget.utils import get_proxy
 from karabogui.singletons.api import get_topology

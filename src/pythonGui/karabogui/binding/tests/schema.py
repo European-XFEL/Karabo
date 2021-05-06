@@ -2,29 +2,25 @@ import numpy as np
 
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Bool, ByteArray, Char,
-    ChoiceOfNodes, ComplexDouble, ComplexFloat, Configurable,
-    Double, Float, Int16, Int32, Int64, Int8, ListOfNodes, Node,
-    TypeSchema, Slot, String, TypeHash, UInt16, UInt32, UInt64, UInt8,
-    Unit, VectorBool, VectorChar, VectorComplexDouble, VectorComplexFloat,
-    VectorDouble, VectorFloat, VectorHash, VectorInt16, VectorInt32,
-    VectorInt64, VectorInt8, VectorString, VectorUInt16, VectorUInt32,
-    VectorUInt64, VectorUInt8,
-)
+    AccessLevel, AccessMode, Assignment, Bool, ByteArray, Char, ChoiceOfNodes,
+    ComplexDouble, ComplexFloat, Configurable, Double, Float, Int8, Int16,
+    Int32, Int64, ListOfNodes, Node, Slot, String, TypeHash, TypeSchema, UInt8,
+    UInt16, UInt32, UInt64, Unit, VectorBool, VectorChar, VectorComplexDouble,
+    VectorComplexFloat, VectorDouble, VectorFloat, VectorHash, VectorInt8,
+    VectorInt16, VectorInt32, VectorInt64, VectorString, VectorUInt8,
+    VectorUInt16, VectorUInt32, VectorUInt64)
 
 from ..api import (
     BoolBinding, ByteArrayBinding, CharBinding, ChoiceOfNodesBinding,
-    ComplexBinding, FloatBinding, HashBinding,
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    ListOfNodesBinding, NodeBinding, SchemaBinding, SlotBinding, StringBinding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    VectorBoolBinding, VectorCharBinding, VectorComplexDoubleBinding,
-    VectorComplexFloatBinding, VectorDoubleBinding, VectorFloatBinding,
-    VectorHashBinding, VectorInt8Binding, VectorInt16Binding,
-    VectorInt32Binding, VectorInt64Binding, VectorStringBinding,
-    VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
-    VectorUint64Binding
-)
+    ComplexBinding, FloatBinding, HashBinding, Int8Binding, Int16Binding,
+    Int32Binding, Int64Binding, ListOfNodesBinding, NodeBinding, SchemaBinding,
+    SlotBinding, StringBinding, Uint8Binding, Uint16Binding, Uint32Binding,
+    Uint64Binding, VectorBoolBinding, VectorCharBinding,
+    VectorComplexDoubleBinding, VectorComplexFloatBinding, VectorDoubleBinding,
+    VectorFloatBinding, VectorHashBinding, VectorInt8Binding,
+    VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
+    VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
+    VectorUint32Binding, VectorUint64Binding)
 
 
 def get_all_props_schema():

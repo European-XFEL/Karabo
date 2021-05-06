@@ -1,7 +1,6 @@
 from karabo.native import (
-    Bool, Configurable, EncodingType, Hash, Int8, Node,
-    VectorInt8, VectorInt16, ByteArray)
-
+    Bool, ByteArray, Configurable, EncodingType, Hash, Int8, Node, VectorInt8,
+    VectorInt16)
 
 # Reverse map of controllers.images.
 TYPENUM_MAP = {

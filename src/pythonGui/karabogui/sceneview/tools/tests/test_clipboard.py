@@ -2,7 +2,7 @@ from qtpy.QtCore import QRectF
 from qtpy.QtWidgets import QBoxLayout
 
 from karabo.common.scenemodel.api import (
-    BoxLayoutModel, LabelModel, DisplayLabelModel)
+    BoxLayoutModel, DisplayLabelModel, LabelModel)
 from karabo.common.scenemodel.tests.utils import single_model_round_trip
 from karabogui.testing import GuiTestCase
 

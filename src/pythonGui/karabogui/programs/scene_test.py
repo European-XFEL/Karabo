@@ -1,12 +1,12 @@
 import argparse
-from collections import OrderedDict
 import sys
+from collections import OrderedDict
 
 from qtpy.QtWidgets import QApplication, QBoxLayout
 
+import karabogui.binding.api as bindings
 from karabo.common.scenemodel.api import BoxLayoutModel, LabelModel, SceneModel
 from karabogui import icons
-import karabogui.binding.api as bindings
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class,
     populate_controller_registry)

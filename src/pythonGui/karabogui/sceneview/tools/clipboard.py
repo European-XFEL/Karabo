@@ -9,9 +9,9 @@ from qtpy.QtWidgets import QApplication, QDialog, QMessageBox
 from karabo.common.scenemodel.api import (
     ArrowModel, BaseLayoutModel, BaseWidgetObjectData, SceneModel, read_scene,
     write_scene)
+from karabogui.dialogs.dialogs import ReplaceDialog
 from karabogui.sceneview.bases import BaseSceneAction
 from karabogui.sceneview.utils import add_offset, calc_relative_pos
-from karabogui.dialogs.dialogs import ReplaceDialog
 
 MIME_TYPE = 'image/svg+xml'
 GRID_INC = 10

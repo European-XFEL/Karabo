@@ -4,19 +4,18 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from qtpy.QtCore import Slot, Qt
+from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QPalette
-from qtpy.QtWidgets import QComboBox, QStyledItemDelegate, QLineEdit
+from qtpy.QtWidgets import QComboBox, QLineEdit, QStyledItemDelegate
 
 from karabo.common.api import KARABO_SCHEMA_OPTIONS
+from karabo.native import is_equal
 from karabogui.binding.api import (
-    FloatBinding, get_default_value, IntBinding, VectorBinding)
+    FloatBinding, IntBinding, VectorBinding, get_default_value)
 from karabogui.controllers.validators import (
     BindingValidator as GenericValidator, ListValidator, SimpleValidator)
 from karabogui.logger import get_logger
 from karabogui.util import SignalBlocker
-
-from karabo.native import is_equal
 
 
 def get_table_delegate(binding, parent):

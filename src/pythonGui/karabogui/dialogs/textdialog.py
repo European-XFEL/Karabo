@@ -1,12 +1,12 @@
 from qtpy import uic
-from qtpy.QtCore import Slot, Qt
-from qtpy.QtGui import QColor, QFont, QPixmap, QIcon
+from qtpy.QtCore import Qt, Slot
+from qtpy.QtGui import QColor, QFont, QIcon, QPixmap
 from qtpy.QtWidgets import QColorDialog, QDialog
 
-from karabogui.fonts import get_font_size_from_dpi
 from karabo.common.scenemodel.api import LabelModel
-from karabogui.fonts import get_alias_from_font, get_qfont
 from karabogui.dialogs.font_dialog import FontDialog
+from karabogui.fonts import (
+    get_alias_from_font, get_font_size_from_dpi, get_qfont)
 
 from .utils import get_dialog_ui
 

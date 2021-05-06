@@ -7,13 +7,13 @@ from datetime import datetime
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
-    QFrame, QHBoxLayout, QMenu, QPushButton, QVBoxLayout, QTextEdit)
+    QFrame, QHBoxLayout, QMenu, QPushButton, QTextEdit, QVBoxLayout)
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import DisplayTextLogModel
 from karabo.native import Timestamp
 from karabogui import icons
-from karabogui.binding.api import get_binding_value, StringBinding
+from karabogui.binding.api import StringBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.indicators import ALL_OK_COLOR

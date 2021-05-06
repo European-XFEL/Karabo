@@ -3,19 +3,17 @@
 # Created on May 9, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import uuid
+from functools import partial
+from inspect import signature
 from io import StringIO
 
-from functools import partial
-
-from inspect import signature
-import uuid
 from karabo.common.enums import ONLINE_STATUSES
 from karabo.common.project.macro import read_macro
 from karabo.common.scenemodel.const import SceneTargetWindow
 from karabo.common.scenemodel.io import read_scene
 from karabo.common.services import KARABO_DAEMON_MANAGER
 from karabo.common.traits import walk_traits_object
-
 from karabo.native import Hash
 from karabogui import messagebox
 from karabogui.binding.api import extract_sparse_configurations

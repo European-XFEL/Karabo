@@ -1,9 +1,10 @@
 from qtpy.QtCore import Qt
 
 from karabo.common.scenemodel.api import TableElementModel
-from karabo.native import Configurable, Bool, Hash, Int32, String, VectorHash
+from karabo.native import Bool, Configurable, Hash, Int32, String, VectorHash
 from karabogui.binding.config import apply_configuration
 from karabogui.testing import GuiTestCase, get_class_property_proxy
+
 from ..table import EditableTableElement
 
 

@@ -1,10 +1,11 @@
 from qtpy.QtWidgets import QWidget
 from traits.api import (
-    HasStrictTraits, Bool, Instance, List, Property, on_trait_change)
+    Bool, HasStrictTraits, Instance, List, Property, on_trait_change)
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabogui import background
-from karabogui.binding.api import get_binding_value, PropertyProxy
+from karabogui.binding.api import PropertyProxy, get_binding_value
+
 from .util import get_class_const_trait
 
 

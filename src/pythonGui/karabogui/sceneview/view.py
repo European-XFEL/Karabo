@@ -3,23 +3,23 @@
 # Created on June 6, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from contextlib import contextmanager
 import time
+from contextlib import contextmanager
 
-from qtpy.QtCore import (
-    Signal, Slot, QEvent, QPoint, QRect, QSize, Qt, QTimer)
-from qtpy.QtGui import QBrush, QColor, QPalette, QPainter, QPen
+from qtpy.QtCore import QEvent, QPoint, QRect, QSize, Qt, QTimer, Signal, Slot
+from qtpy.QtGui import QBrush, QColor, QPainter, QPalette, QPen
 from qtpy.QtWidgets import QSizePolicy, QStackedLayout, QWidget
 
 from karabo.common.api import set_initialized_flag
 from karabo.common.scenemodel.api import (
-    FixedLayoutModel, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT, SceneTargetWindow)
+    SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH, FixedLayoutModel, SceneTargetWindow)
 from karabogui import globals as krb_globals
 from karabogui.events import (
-    broadcast_event, KaraboEvent, register_for_broadcasts,
+    KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
 from karabogui.generic_scenes import get_generic_scene
 from karabogui.request import send_property_changes
+
 from .bases import BaseSceneTool
 from .builder import (
     bring_object_to_front, create_object_from_model, fill_root_layout,
@@ -30,8 +30,8 @@ from .const import QT_CURSORS, SELECTION_COLOR
 from .layout.api import GroupLayout
 from .selection_model import SceneSelectionModel
 from .tools.api import (
-    ConfigurationDropHandler, NavigationDropHandler, ProxySelectionTool,
-    ProjectDropHandler, SceneControllerHandler, SceneSelectionTool,
+    ConfigurationDropHandler, NavigationDropHandler, ProjectDropHandler,
+    ProxySelectionTool, SceneControllerHandler, SceneSelectionTool,
     SceneToolHandler)
 from .utils import save_painter_state
 from .widget.api import ControllerContainer, GridView

@@ -3,20 +3,20 @@
 # Created on March 11, 2019
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from datetime import datetime
 import traceback
+from datetime import datetime
 
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QAction, QFrame, QLabel, QInputDialog
+from qtpy.QtWidgets import QAction, QFrame, QInputDialog, QLabel
 from traits.api import Instance, Undefined
 
 from karabo.common.scenemodel.api import DisplayTimeModel
 from karabogui import messagebox
 from karabogui.binding.api import (
-    BaseBinding, ChoiceOfNodesBinding, get_binding_value, NodeBinding)
+    BaseBinding, ChoiceOfNodesBinding, NodeBinding, get_binding_value)
+from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.indicators import ALL_OK_COLOR
 from karabogui.util import generateObjectName
 

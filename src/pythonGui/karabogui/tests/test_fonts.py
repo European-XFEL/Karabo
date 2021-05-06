@@ -2,7 +2,6 @@ from qtpy.QtGui import QFont
 
 from ..fonts import FONT_STYLE_HINTS, get_qfont
 
-
 # This maps the font family to a Qt style hint to ease font replacement
 SUGGESTED_STYLE_HINTS = {
     QFont.AnyStyle: "Sans Serif",

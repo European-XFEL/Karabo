@@ -3,12 +3,12 @@
 # Created on November 23, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from qtpy.QtCore import Slot, QSize, Qt
+from qtpy.QtCore import QSize, Qt, Slot
 from qtpy.QtGui import QFontMetrics
 from qtpy.QtWidgets import QAction, QDialog, QFrame, QLabel
 
-from karabogui.fonts import get_qfont
 from karabogui.dialogs.textdialog import TextDialog
+from karabogui.fonts import get_qfont
 from karabogui.widgets.hints import KaraboSceneWidget
 
 MARGINS = (5, 0, 5, 0)  # left, top, right, bottom

@@ -7,12 +7,12 @@ from qtpy.QtWidgets import QMenu
 from traits.api import Instance, List, on_trait_change
 
 from karabo.common.project.api import ProjectModel
-from karabogui import icons
-from karabogui import messagebox
+from karabogui import icons, messagebox
 from karabogui.enums import ProjectItemTypes
 from karabogui.fonts import get_qfont
+
 from .bases import BaseProjectController
-from .project_groups import ProjectSubgroupController, ProjectControllerUiData
+from .project_groups import ProjectControllerUiData, ProjectSubgroupController
 
 
 class ProjectController(BaseProjectController):

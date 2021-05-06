@@ -1,6 +1,6 @@
 import numpy as np
 from traits.api import (
-    ArrayOrNone, HasStrictTraits, Int, on_trait_change, Property)
+    ArrayOrNone, HasStrictTraits, Int, Property, on_trait_change)
 
 DEFAULT_STACK = 100
 

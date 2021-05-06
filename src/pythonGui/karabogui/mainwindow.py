@@ -3,33 +3,31 @@
 # Created on November 3, 2011
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from enum import Enum
-from functools import partial
 import os.path
 import webbrowser
+from enum import Enum
+from functools import partial
 
-from qtpy.QtCore import Slot, QSize, Qt
+from qtpy.QtCore import QSize, Qt, Slot
 from qtpy.QtWidgets import (
     QAction, QActionGroup, QFrame, QLabel, QMainWindow, QMenu, QMessageBox,
     QSizePolicy, QSplitter, QToolButton, QWidget, qApp)
 
 from karabo.common.project.api import get_project_models
 from karabo.native import AccessLevel
-from karabogui import globals as krb_globals
-from karabogui import icons
+from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.access import ACCESS_LEVELS
+from karabogui.const import IS_MAC_SYSTEM
 from karabogui.dialogs.configuration import ConfigurationDialog
 from karabogui.dialogs.dialogs import AboutDialog
 from karabogui.dialogs.update_dialog import UpdateDialog
-from karabogui.indicators import get_processing_color
-from karabogui.const import IS_MAC_SYSTEM
 from karabogui.enums import AccessRole
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
-from karabogui.logger import get_logger, StatusLogWidget
-from karabogui import messagebox
+from karabogui.indicators import get_processing_color
+from karabogui.logger import StatusLogWidget, get_logger
 from karabogui.panels.api import (
-    AlarmPanel, ConfigurationPanel, DevicePanel, PanelContainer, LoggingPanel,
+    AlarmPanel, ConfigurationPanel, DevicePanel, LoggingPanel, PanelContainer,
     ProjectPanel, ScriptingPanel, TopologyPanel)
 from karabogui.programs.register_protocol import register_protocol
 from karabogui.singletons.api import (

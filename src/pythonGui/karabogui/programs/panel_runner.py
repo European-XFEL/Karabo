@@ -4,16 +4,16 @@ import sys
 from qtpy.QtWidgets import QApplication
 
 from karabo.common.scenemodel.api import (
-    read_scene, DeviceSceneLinkModel, SceneModel)
+    DeviceSceneLinkModel, SceneModel, read_scene)
 from karabogui import icons
 from karabogui.controllers.api import populate_controller_registry
-from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.panels.configurationpanel import ConfigurationPanel
 from karabogui.panels.navigationpanel import TopologyPanel
 from karabogui.panels.projectpanel import ProjectPanel
 from karabogui.panels.scenepanel import ScenePanel
 from karabogui.singletons.api import (
-    get_manager, get_mediator, get_panel_wrangler, get_network, get_topology)
+    get_manager, get_mediator, get_network, get_panel_wrangler, get_topology)
 from karabogui.util import getOpenFileName
 
 
