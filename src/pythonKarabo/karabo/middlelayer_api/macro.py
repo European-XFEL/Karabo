@@ -81,9 +81,9 @@ async def suppress_exception(coro):
         pass
 
 
-def _wrapslot(slot, name):
+def _wrapslot(slot, name, abstract_passive, abstract_active):
     if slot.allowedStates is None:
-        slot.allowedStates = {State.PASSIVE}
+        slot.allowedStates = {abstract_passive}
     themethod = slot.method
 
     # Note: No need to re-raise CancelledErrors, we got cancelled
@@ -94,7 +94,7 @@ def _wrapslot(slot, name):
         async def wrapper(device):
             device._last_action = current_task()
             device.currentSlot = name
-            device.state = State.ACTIVE
+            device.state = abstract_active
             try:
                 return (await themethod(device))
             except CancelledError:
@@ -104,13 +104,13 @@ def _wrapslot(slot, name):
                 loop.create_task(coro, instance=device)
             finally:
                 device.currentSlot = ""
-                device.state = State.PASSIVE
+                device.state = abstract_passive
     else:
         @wraps(themethod)
         def wrapper(device):
             device._last_action = get_event_loop()
             device.currentSlot = name
-            device.state = State.ACTIVE
+            device.state = abstract_active
             try:
                 return themethod(device)
             except CancelledError:
@@ -120,12 +120,16 @@ def _wrapslot(slot, name):
                 loop.create_task(coro, instance=device)
             finally:
                 device.currentSlot = ""
-                device.state = State.PASSIVE
+                device.state = abstract_passive
 
     slot.method = wrapper
 
 
 class Macro(Device):
+
+    abstractPassiveState = State.PASSIVE
+    abstractActiveState = State.ACTIVE
+
     abstract = True
     subclasses = []
     _last_action = None
@@ -181,7 +185,9 @@ class Macro(Device):
         for k, v in dict.items():
             # patch slots for macro state machine behavior
             if isinstance(v, Slot):
-                _wrapslot(v, k)
+                passive_state = cls.abstractPassiveState
+                active_state = cls.abstractActiveState
+                _wrapslot(v, k, passive_state, active_state)
         super().register(name, dict)
         # every macro cls is appended to the subclasses for the macro server
         # to instantiate
@@ -239,7 +245,7 @@ class Macro(Device):
                        if isinstance(v, RemoteDevice)))
         for h in holders:
             ensure_future(h)
-        self.state = State.PASSIVE
+        self.state = self.abstractPassiveState
 
     async def __holdDevice(self, d):
         """keep the connection to a remote device
