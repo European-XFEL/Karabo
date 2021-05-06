@@ -4,10 +4,11 @@ from urllib.request import pathname2url
 
 from karabo.common.scenemodel.api import DisplayIconsetModel
 from karabo.native import Configurable, String
-from karabogui.testing import GuiTestCase, get_class_property_proxy
-from ..iconset import DisplayIconset, DEFAULT_ICON_URL
-
 from karabogui import icons as iconspkg
+from karabogui.testing import GuiTestCase, get_class_property_proxy
+
+from ..iconset import DEFAULT_ICON_URL, DisplayIconset
+
 TEST_ICON_PATH = op.join(op.dirname(iconspkg.__file__), 'add.svg')
 TEST_ICON_URL = 'file://' + pathname2url(TEST_ICON_PATH)
 

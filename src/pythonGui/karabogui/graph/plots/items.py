@@ -1,12 +1,12 @@
 import weakref
 
 import numpy as np
+from pyqtgraph import (
+    BarGraphItem, ScatterPlotItem, arrayToQPath, functions as fn,
+    getConfigOption)
 from qtpy.QtCore import QRectF
 from qtpy.QtGui import QPainter, QPainterPath, QPicture, QTransform
 from qtpy.QtWidgets import QGraphicsPathItem
-from pyqtgraph import (
-    arrayToQPath, BarGraphItem, functions as fn, getConfigOption,
-    ScatterPlotItem)
 
 from karabogui.graph.common.api import make_brush, safe_log10
 

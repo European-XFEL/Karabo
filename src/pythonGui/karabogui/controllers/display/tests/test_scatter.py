@@ -1,14 +1,14 @@
 from platform import system
-from unittest.mock import patch
 from unittest import skipIf
+from unittest.mock import patch
 
-from ..scatter_graph import DisplayScatterGraph
 from karabo.common.scenemodel.api import ScatterGraphModel
-
 from karabo.native import Configurable, Double, Hash, Timestamp
 from karabogui.binding.proxy import PropertyProxy
-from karabogui.testing import (GuiTestCase, get_class_property_proxy,
-                               set_proxy_hash, set_proxy_value)
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, set_proxy_hash, set_proxy_value)
+
+from ..scatter_graph import DisplayScatterGraph
 
 
 class Object(Configurable):

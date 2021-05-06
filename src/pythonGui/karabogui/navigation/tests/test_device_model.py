@@ -1,9 +1,9 @@
 from qtpy.QtCore import QModelIndex, Qt
 
 from karabo.native import AccessLevel, Hash
-from karabogui.testing import GuiTestCase, device_hash
-from karabogui.navigation.device_model import DeviceTreeModel
 from karabogui.navigation.device_filter_model import DeviceFilterModel
+from karabogui.navigation.device_model import DeviceTreeModel
+from karabogui.testing import GuiTestCase, device_hash
 
 
 class TestCase(GuiTestCase):

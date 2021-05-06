@@ -4,21 +4,20 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QAction, QDialog, QFrame, QInputDialog, QLabel
 from traits.api import Callable, Dict, Instance, Str, Tuple
 
+from karabo.common.api import (
+    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW)
 from karabo.common.scenemodel.api import EvaluatorModel
 from karabogui import messagebox
 from karabogui.binding.api import (
-    CharBinding, ComplexBinding, FloatBinding, get_binding_value, IntBinding,
-    StringBinding
-)
+    CharBinding, ComplexBinding, FloatBinding, IntBinding, StringBinding,
+    get_binding_value)
 from karabogui.const import WIDGET_MIN_HEIGHT
+from karabogui.controllers.api import (
+    BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.dialogs.format_label import FormatLabelDialog
 from karabogui.fonts import get_font_size_from_dpi
 from karabogui.indicators import (
     ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
-from karabo.common.api import (
-    KARABO_ALARM_LOW, KARABO_ALARM_HIGH, KARABO_WARN_LOW, KARABO_WARN_HIGH)
-from karabogui.controllers.api import (
-    BaseBindingController, add_unit_label, register_binding_controller)
 from karabogui.util import generateObjectName
 
 BINDING_TYPES = (CharBinding, ComplexBinding, FloatBinding, StringBinding,

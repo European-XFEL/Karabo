@@ -1,12 +1,12 @@
 from qtpy.QtCore import QModelIndex, Qt
-from karabogui.testing import GuiTestCase
 
-from karabogui.alarms.const import (
-    ADD_UPDATE_TYPE, AlarmEntry, ALARM_DATA, ALARM_HIGH,
-    ALARM_WARNING_TYPES, INIT_UPDATE_TYPE, INTERLOCK, INTERLOCK_TYPES,
-    REMOVE_UPDATE_TYPE)
-from karabogui.alarms.filter_model import AlarmFilterModel
 from karabogui.alarms.alarm_model import AlarmModel
+from karabogui.alarms.const import (
+    ADD_UPDATE_TYPE, ALARM_DATA, ALARM_HIGH, ALARM_WARNING_TYPES,
+    INIT_UPDATE_TYPE, INTERLOCK, INTERLOCK_TYPES, REMOVE_UPDATE_TYPE,
+    AlarmEntry)
+from karabogui.alarms.filter_model import AlarmFilterModel
+from karabogui.testing import GuiTestCase
 
 
 def _data(update_type=INIT_UPDATE_TYPE):

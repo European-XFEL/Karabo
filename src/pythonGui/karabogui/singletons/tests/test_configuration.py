@@ -1,8 +1,9 @@
-from unittest.mock import patch, call
+from unittest.mock import call, patch
 
 from karabogui.testing import GuiTestCase
+
 from ..configuration import (
-    BACKBONE, Configuration, DIRECTORIES, NETWORK, PANEL, PROJECT, USER)
+    BACKBONE, DIRECTORIES, NETWORK, PANEL, PROJECT, USER, Configuration)
 
 
 class MockSettings(object):

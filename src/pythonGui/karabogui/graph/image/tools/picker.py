@@ -1,7 +1,7 @@
 import numpy as np
-from qtpy.QtCore import Slot, QObject, QPointF, QRectF, Qt
+from qtpy.QtCore import QObject, QPointF, QRectF, Qt, Slot
 from qtpy.QtGui import QColor, QPen
-from qtpy.QtWidgets import QGraphicsRectItem, QGraphicsObject
+from qtpy.QtWidgets import QGraphicsObject, QGraphicsRectItem
 
 from karabogui.graph.common.api import CoordsLegend
 from karabogui.graph.common.const import TF_SCALING, TF_TRANSLATION

@@ -7,13 +7,13 @@ from copy import deepcopy
 from pathlib import Path
 
 from qtpy import uic
-from qtpy.QtCore import Slot, Qt
-from qtpy.QtWidgets import QDialogButtonBox, QDialog
+from qtpy.QtCore import Qt, Slot
+from qtpy.QtWidgets import QDialog, QDialogButtonBox
 
 from karabo.common.enums import ProxyStatus
+from karabo.native import Hash, create_html_hash
 from karabogui.binding.api import (
     extract_init_configuration, validate_binding_configuration)
-from karabo.native import create_html_hash, Hash
 
 _NO_SCHEMA_STATUS = (ProxyStatus.MISSING, ProxyStatus.NOSERVER,
                      ProxyStatus.NOPLUGIN)

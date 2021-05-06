@@ -1,9 +1,8 @@
 import numpy as np
-from qtpy.QtCore import Qt, Slot, QPoint
+from pyqtgraph import ROI, Point, TextItem, functions as fn
+from qtpy.QtCore import QPoint, Qt, Slot
 from qtpy.QtGui import QTransform
-from qtpy.QtWidgets import (
-    QAction, QInputDialog, QLabel, QMenu, QWidgetAction)
-from pyqtgraph import ROI, TextItem, functions as fn, Point
+from qtpy.QtWidgets import QAction, QInputDialog, QLabel, QMenu, QWidgetAction
 
 from karabogui import icons
 from karabogui.graph.common.utils import float_to_string

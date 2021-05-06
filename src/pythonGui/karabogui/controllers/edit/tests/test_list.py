@@ -5,11 +5,12 @@ from qtpy.QtWidgets import QDialog
 from karabo.common.scenemodel.api import (
     EditableListModel, EditableRegexListModel)
 from karabo.native import (
-    Configurable, VectorInt32, VectorInt8, VectorRegexString)
+    Configurable, VectorInt8, VectorInt32, VectorRegexString)
 from karabogui.binding.api import apply_default_configuration, get_min_max_size
 from karabogui.dialogs.listedit import ListEditDialog
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
 from ..list import EditableList, EditableRegexList
 
 

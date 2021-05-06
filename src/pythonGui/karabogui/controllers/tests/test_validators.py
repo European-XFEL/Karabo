@@ -1,6 +1,6 @@
 from qtpy.QtGui import QValidator
 
-from karabo.common.const import KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MAX_EXC
+from karabo.common.const import KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MIN_INC
 from karabogui.binding.api import (
     FloatBinding, Uint8Binding, VectorFloatBinding, VectorUint8Binding)
 

@@ -1,4 +1,5 @@
 from karabogui.testing import alarm_data
+
 from .. import utils
 
 

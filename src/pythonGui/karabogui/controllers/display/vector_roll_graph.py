@@ -6,15 +6,15 @@ from qtpy.QtWidgets import QAction, QInputDialog
 from traits.api import Instance, WeakRef
 
 from karabo.common.scenemodel.api import (
-    restore_graph_config, build_graph_config, VectorRollGraphModel)
+    VectorRollGraphModel, build_graph_config, restore_graph_config)
 from karabo.native import Timestamp
-from karabogui.graph.common.api import AuxPlots, create_button
-from karabogui.graph.image.api import (
-    KaraboImagePlot, KaraboImageView, RollImage)
+from karabogui import icons
 from karabogui.binding.api import NDArrayBinding, VectorNumberBinding
 from karabogui.controllers.api import (
     BaseBindingController, get_array_data, register_binding_controller)
-from karabogui import icons
+from karabogui.graph.common.api import AuxPlots, create_button
+from karabogui.graph.image.api import (
+    KaraboImagePlot, KaraboImageView, RollImage)
 
 MAX_NUM_VECTORS = 500
 

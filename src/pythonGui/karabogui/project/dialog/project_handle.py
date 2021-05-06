@@ -3,21 +3,20 @@
 # Created on October 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import os.path as op
 from collections import OrderedDict, namedtuple
 from operator import attrgetter
-import os.path as op
 
 from qtpy import uic
 from qtpy.QtCore import (
-    Slot, QAbstractTableModel, QItemSelection, QModelIndex,
-    QSortFilterProxyModel, Qt)
+    QAbstractTableModel, QItemSelection, QModelIndex, QSortFilterProxyModel,
+    Qt, Slot)
 from qtpy.QtWidgets import (
     QAbstractButton, QButtonGroup, QDialog, QDialogButtonBox)
 
 from karabogui import messagebox
 from karabogui.events import (
-    register_for_broadcasts, unregister_from_broadcasts, KaraboEvent,
-)
+    KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.logger import get_logger
 from karabogui.project.utils import show_trash_project_message
 from karabogui.singletons.api import get_config, get_db_conn

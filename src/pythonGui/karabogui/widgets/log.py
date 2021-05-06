@@ -5,16 +5,16 @@
 #############################################################################
 from collections import namedtuple
 
-from qtpy.QtCore import (QAbstractTableModel, QDate, QDateTime,
-                         QModelIndex, QPoint, Slot, Qt)
-from qtpy.QtGui import QColor, QClipboard
-from qtpy.QtWidgets import (QAbstractItemView, QApplication, QDateTimeEdit,
-                            QFormLayout, QFrame, QGroupBox, QHBoxLayout,
-                            QLabel, QLineEdit, QMenu, QPushButton, QTableView,
-                            QToolButton, QVBoxLayout, QWidget)
+from qtpy.QtCore import (
+    QAbstractTableModel, QDate, QDateTime, QModelIndex, QPoint, Qt, Slot)
+from qtpy.QtGui import QClipboard, QColor
+from qtpy.QtWidgets import (
+    QAbstractItemView, QApplication, QDateTimeEdit, QFormLayout, QFrame,
+    QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMenu, QPushButton, QTableView,
+    QToolButton, QVBoxLayout, QWidget)
 
 from karabogui import icons
-from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.util import getSaveFileName
 
 DEVICE_COLUMN = 3

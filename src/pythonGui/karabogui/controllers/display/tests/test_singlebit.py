@@ -8,6 +8,7 @@ from karabo.native import Configurable, Int32
 from karabogui.indicators import STATE_COLORS
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
 from ..singlebit import SingleBit
 
 COLORS = {s: str(STATE_COLORS[s]) for s in (State.ACTIVE, State.PASSIVE)}
