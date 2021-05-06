@@ -6,14 +6,14 @@
 from qtpy.QtWidgets import QAction, QInputDialog
 from traits.api import ArrayOrNone, Instance, WeakRef
 
-from karabogui.binding.api import (
-    get_binding_value, PropertyProxy, VectorNumberBinding)
 from karabo.common.scenemodel.api import (
-    build_model_config, VectorScatterGraphModel)
+    VectorScatterGraphModel, build_model_config)
+from karabogui import icons
+from karabogui.binding.api import (
+    PropertyProxy, VectorNumberBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.graph.plots.api import KaraboPlotView, ScatterGraphPlot
-from karabogui import icons
 
 MIN_POINT_SIZE = 0.1
 MAX_POINT_SIZE = 10.0

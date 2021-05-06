@@ -1,19 +1,18 @@
 import numpy as np
 
+import karabogui.binding.types as types
 from karabo.common.const import (
-    KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_MIN_INC, KARABO_SCHEMA_MAX_INC,
-    KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_SIZE,
+    KARABO_SCHEMA_DEFAULT_VALUE, KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC,
+    KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_EXC, KARABO_SCHEMA_MIN_INC,
     KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_OPTIONS)
 from karabo.native import (
     AccessMode, Bool, Configurable, Hash, HashList, String, UInt8)
-
 from karabogui.binding.builder import build_binding
 from karabogui.binding.validate import (
-    get_default_value, sanitize_table_value, validate_value,
-    validate_binding_configuration, validate_table_value)
-from .schema import get_simple_props_schema
+    get_default_value, sanitize_table_value, validate_binding_configuration,
+    validate_table_value, validate_value)
 
-import karabogui.binding.types as types
+from .schema import get_simple_props_schema
 
 
 class TableRow(Configurable):

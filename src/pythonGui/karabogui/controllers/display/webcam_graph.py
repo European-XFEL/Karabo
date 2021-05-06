@@ -1,12 +1,11 @@
 from traits.api import Instance, WeakRef
 
 from karabo.common.scenemodel.api import WebCamGraphModel
-
-from karabogui.graph.image.api import (
-    KaraboImagePlot, KaraboImageNode, KaraboImageView)
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
+from karabogui.graph.image.api import (
+    KaraboImageNode, KaraboImagePlot, KaraboImageView)
 
 
 @register_binding_controller(ui_name='WebCam Graph',

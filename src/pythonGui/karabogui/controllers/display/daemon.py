@@ -3,9 +3,9 @@
 # Created on November 6, 2019
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import weakref
 from collections import namedtuple
 from contextlib import contextmanager
-import weakref
 
 from qtpy.QtCore import (
     QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt, Slot)
@@ -13,7 +13,6 @@ from qtpy.QtGui import QBrush, QColor
 from qtpy.QtWidgets import (
     QHBoxLayout, QHeaderView, QLineEdit, QMessageBox, QPushButton, QStyle,
     QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
-
 from traits.api import Instance, WeakRef
 
 from karabo.common.scenemodel.api import DaemonManagerModel

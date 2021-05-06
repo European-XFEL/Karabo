@@ -3,11 +3,11 @@
 # Created on February 12, 2019
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from contextlib import contextmanager
 import re
+from contextlib import contextmanager
 
-from traits.api import (HasStrictTraits, Bool, Dict, Enum, Instance,
-                        Int, List, String, WeakRef)
+from traits.api import (
+    Bool, Dict, Enum, HasStrictTraits, Instance, Int, List, String, WeakRef)
 
 import karabogui.globals as krb_globals
 from karabo.common.api import ProxyStatus

@@ -1,6 +1,6 @@
 from itertools import cycle
 
-from pyqtgraph import mkPen, mkBrush
+from pyqtgraph import mkBrush, mkPen
 
 from karabogui.graph.common.const import DEFAULT_PEN_WIDTH
 

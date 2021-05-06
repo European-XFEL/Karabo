@@ -1,12 +1,13 @@
-from collections import OrderedDict
 import contextlib
 import sys
 import unittest
+from collections import OrderedDict
 
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QApplication
 from qtpy.QtTest import QTest
+from qtpy.QtWidgets import QApplication
 
+import karabogui.singletons.api as singletons_mod
 from karabo.common.api import Capabilities, ProxyStatus
 from karabo.native import AccessLevel, Hash
 from karabogui.alarms.api import (
@@ -18,7 +19,6 @@ from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, PropertyProxy, apply_configuration,
     build_binding)
 from karabogui.controllers.api import populate_controller_registry
-import karabogui.singletons.api as singletons_mod
 from karabogui.util import process_qt_events
 
 

@@ -1,5 +1,5 @@
-from math import sqrt
 import re
+from math import sqrt
 
 from qtpy.QtCore import QPointF
 from qtpy.QtGui import QPainterPath

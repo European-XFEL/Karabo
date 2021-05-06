@@ -1,7 +1,7 @@
 from collections import defaultdict
 
-from qtpy.QtCore import QObject, Signal, Slot
 from pyqtgraph import Point
+from qtpy.QtCore import QObject, Signal, Slot
 
 from karabogui.graph.common.enums import ROITool
 from karabogui.graph.common.roi.crosshair import CrosshairROI

@@ -6,14 +6,14 @@
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QPalette, QValidator
 from qtpy.QtWidgets import QAction, QInputDialog, QLineEdit
-from traits.api import Instance, Int, on_trait_change, Str
+from traits.api import Instance, Int, Str, on_trait_change
 
 from karabo.common.api import KARABO_SCHEMA_REGEX
 from karabo.common.scenemodel.api import (
     DoubleLineEditModel, EditableRegexModel, HexadecimalModel,
     IntLineEditModel)
 from karabogui.binding.api import (
-    get_editor_value, get_min_max, FloatBinding, IntBinding, StringBinding)
+    FloatBinding, IntBinding, StringBinding, get_editor_value, get_min_max)
 from karabogui.controllers.api import (
     BaseBindingController, add_unit_label, is_proxy_allowed,
     register_binding_controller)

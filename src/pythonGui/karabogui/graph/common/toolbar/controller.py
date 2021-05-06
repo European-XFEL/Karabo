@@ -1,10 +1,10 @@
 from qtpy.QtWidgets import QToolBar
-from traits.api import HasStrictTraits, Dict, Instance
+from traits.api import Dict, HasStrictTraits, Instance
 
-from .factory import tool_factory
-from .widgets import ToolBar
-from .toolsets import get_toolset, register_toolset
 from ..enums import MouseMode
+from .factory import tool_factory
+from .toolsets import get_toolset, register_toolset
+from .widgets import ToolBar
 
 
 class ToolbarController(HasStrictTraits):

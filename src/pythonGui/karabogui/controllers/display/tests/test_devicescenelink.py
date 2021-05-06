@@ -7,8 +7,8 @@ from karabo.common.scenemodel.api import (
     DeviceSceneLinkModel, SceneTargetWindow)
 from karabo.native import Configurable, VectorString
 from karabogui.singletons.api import get_topology
-from karabogui.testing import (
-    GuiTestCase, get_class_property_proxy)
+from karabogui.testing import GuiTestCase, get_class_property_proxy
+
 from ..devicescenelink import DisplayDeviceSceneLink
 
 

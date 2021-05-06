@@ -3,12 +3,12 @@
 # Created on February 18, 2020
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from qtpy.QtCore import Slot, QRect
+from qtpy.QtCore import QRect, Slot
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QAction, QDialog, QPlainTextEdit
 
-from karabogui.fonts import get_qfont
 from karabogui.dialogs.stickerdialog import GREY, StickerDialog
+from karabogui.fonts import get_qfont
 from karabogui.widgets.hints import KaraboSceneWidget
 
 

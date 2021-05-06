@@ -6,16 +6,16 @@ from qtpy.QtWidgets import (
     QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget)
 from traits.api import Instance, Int
 
+from karabo.common.api import KARABO_SCHEMA_REGEX
 from karabo.common.scenemodel.api import (
     DisplayListModel, EditableListModel, EditableRegexListModel)
-from karabo.common.api import KARABO_SCHEMA_REGEX
 from karabogui import icons
 from karabogui.binding.api import (
-    get_editor_value, get_min_max_size, VectorBinding, VectorCharBinding,
-    VectorHashBinding, VectorNoneBinding, VectorStringBinding)
+    VectorBinding, VectorCharBinding, VectorHashBinding, VectorNoneBinding,
+    VectorStringBinding, get_editor_value, get_min_max_size)
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
-    BaseBindingController, is_proxy_allowed, ListValidator,
+    BaseBindingController, ListValidator, is_proxy_allowed,
     register_binding_controller)
 from karabogui.dialogs.listedit import ListEditDialog
 from karabogui.util import SignalBlocker

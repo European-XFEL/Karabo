@@ -4,13 +4,13 @@ from traits.api import Undefined
 
 from karabo.common.api import ProxyStatus
 from karabo.native import Hash
+from karabogui.binding.api import (
+    DeviceClassProxy, DeviceProxy, ImageBinding, PropertyProxy,
+    apply_default_configuration, build_binding, extract_sparse_configurations,
+    get_editor_value)
 from karabogui.testing import (
     assert_trait_change, get_class_property_proxy, singletons)
-from karabogui.binding.api import (
-    ImageBinding, DeviceProxy, DeviceClassProxy, PropertyProxy,
-    apply_default_configuration, build_binding, extract_sparse_configurations,
-    get_editor_value
-)
+
 from .schema import (
     get_all_props_schema, get_pipeline_schema, get_simple_schema,
     get_slotted_schema)

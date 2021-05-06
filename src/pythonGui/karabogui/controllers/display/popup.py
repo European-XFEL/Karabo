@@ -7,7 +7,7 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import PopUpModel
 from karabo.native import Timestamp
 from karabogui.binding.api import (
-    get_binding_value, PropertyProxy, SlotBinding, StringBinding)
+    PropertyProxy, SlotBinding, StringBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 

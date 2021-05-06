@@ -11,17 +11,16 @@ from karabo.common.project.api import (
     BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
     DeviceServerModel, MacroModel, ProjectModel, device_config_exists,
     device_instance_exists, device_server_exists, macro_exists,
-    recursive_save_object, read_lazy_object)
+    read_lazy_object, recursive_save_object)
 from karabo.common.scenemodel.api import (
-    BaseWidgetObjectData, SceneLinkModel, SceneModel
-)
+    BaseWidgetObjectData, SceneLinkModel, SceneModel)
 from karabo.native import Hash, read_project_model
 from karabogui import messagebox
 from karabogui.enums import AccessRole
-from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.globals import access_role_allowed
 from karabogui.singletons.api import (
-    get_db_conn, get_project_model, get_network)
+    get_db_conn, get_network, get_project_model)
 from karabogui.topology.util import get_macro_servers
 
 
@@ -248,6 +247,7 @@ def save_as_object(obj):
     :param obj A project model object
     """
     from karabogui.project.dialog.project_handle import NewProjectDialog
+
     # Map old scene UUIDs to new UUIDs
     scene_uuids = {}
     # Map old macro UUIDs to new UUIDs

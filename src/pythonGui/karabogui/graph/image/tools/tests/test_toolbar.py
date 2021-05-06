@@ -1,11 +1,10 @@
 from qtpy.QtCore import Slot
 
-from karabogui.testing import GuiTestCase
 from karabogui.graph.common.api import (
     AuxPlots, ExportTool, ExportToolset, ROITool, ROIToolset,
     ToolbarController)
-
 from karabogui.graph.image.tools.toolbar import AuxPlotsToolset
+from karabogui.testing import GuiTestCase
 
 
 class TestCase(GuiTestCase):

@@ -4,7 +4,7 @@ import numpy as np
 from qtpy.QtCore import QPointF, QRectF
 from qtpy.QtGui import (
     QBrush, QColor, QIcon, QLinearGradient, QPainter, QPixmap)
-from qtpy.QtWidgets import QActionGroup, QAction, QMenu
+from qtpy.QtWidgets import QAction, QActionGroup, QMenu
 
 from karabogui.graph.common.api import COLORMAPS
 from karabogui.graph.common.const import ICON_SIZE

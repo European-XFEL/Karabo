@@ -1,12 +1,12 @@
-from contextlib import closing
 import os.path as op
 import re
 import sys
 import urllib.request
+from contextlib import closing
 from urllib.error import URLError
 
 from qtpy import uic
-from qtpy.QtCore import Signal, Slot, QBuffer, QByteArray, Qt
+from qtpy.QtCore import QBuffer, QByteArray, Qt, Signal, Slot
 from qtpy.QtGui import QPixmap, QPixmapCache
 from qtpy.QtWidgets import QApplication, QDialog, QLabel
 from traits.api import Instance, Property
@@ -15,7 +15,6 @@ from karabo.common.scenemodel.api import IconData
 from karabogui import icons, messagebox
 from karabogui.binding.api import FloatBinding, get_min_max
 from karabogui.util import getOpenFileName, temp_file
-
 
 ICON_FILE_SIZE_LIMIT = 102400  # 100 KB
 

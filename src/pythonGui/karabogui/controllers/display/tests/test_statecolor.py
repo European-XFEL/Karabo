@@ -1,11 +1,12 @@
 from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayStateColorModel
 from karabo.native import Configurable, String
+from karabogui.controllers.util import get_class_const_trait
 from karabogui.indicators import STATE_COLORS
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
 from ..statecolor import DisplayStateColor
-from karabogui.controllers.util import get_class_const_trait
 
 
 class Object(Configurable):

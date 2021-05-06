@@ -1,9 +1,9 @@
+from pyqtgraph import PlotDataItem
 from qtpy.QtCore import QPointF, Qt
 from qtpy.QtGui import QBrush, QColor, QLinearGradient, QPen
-from pyqtgraph import PlotDataItem
 from traits.api import (
-    Array, cached_property, Constant, Instance, on_trait_change, Property,
-    String)
+    Array, Constant, Instance, Property, String, cached_property,
+    on_trait_change)
 
 from karabogui.graph.common.api import COLORMAPS
 from karabogui.graph.image.utils import rescale

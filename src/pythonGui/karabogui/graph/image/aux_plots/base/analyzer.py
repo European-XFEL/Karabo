@@ -1,4 +1,5 @@
 from abc import abstractmethod
+
 from traits.api import ABCHasStrictTraits, Dict, Property
 
 

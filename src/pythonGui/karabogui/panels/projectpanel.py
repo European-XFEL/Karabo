@@ -10,10 +10,10 @@ from qtpy.QtWidgets import QDialog, QVBoxLayout, QWidget
 
 from karabo.common.project.api import ProjectModel
 from karabogui import icons
+from karabogui.actions import KaraboAction, build_qaction
 from karabogui.enums import AccessRole
-from karabogui.globals import access_role_allowed
-from karabogui.actions import build_qaction, KaraboAction
 from karabogui.events import KaraboEvent, register_for_broadcasts
+from karabogui.globals import access_role_allowed
 from karabogui.logger import get_logger
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (

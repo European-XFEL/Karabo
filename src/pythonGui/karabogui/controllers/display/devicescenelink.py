@@ -5,12 +5,12 @@ from qtpy.QtGui import QColor, QPainter, QPen
 from qtpy.QtWidgets import QAction, QDialog, QPushButton, QSizePolicy
 from traits.api import Instance, Undefined
 
-from karabogui import messagebox
 from karabo.common.enums import ONLINE_STATUSES
 from karabo.common.scenemodel.api import (
     DeviceSceneLinkModel, SceneTargetWindow)
+from karabogui import messagebox
 from karabogui.alarms.api import NORM_COLOR
-from karabogui.binding.api import get_binding_value, VectorStringBinding
+from karabogui.binding.api import VectorStringBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.dialogs.device_scenelink_dialog import DeviceSceneLinkDialog
