@@ -148,6 +148,17 @@ class Local(Macro):
         await sleep(1)
 
 
+class LocalAbstract(Macro):
+    abstractPassiveState = State.ON
+    abstractActiveState = State.MOVING
+
+    @Slot()
+    def start(self):
+        """Just sleep a bit for state change"""
+        sleep(0.1)
+
+
+
 class Tests(DeviceTest):
     @classmethod
     @contextmanager
@@ -636,6 +647,34 @@ class Tests(DeviceTest):
             await d.cancel()
             self.assertEqual(self.local.cancelled_slot, Local.asyncSleep)
             self.assertEqual(d.state, State.PASSIVE)
+
+
+class AbstractMacroTest(DeviceTest):
+    @classmethod
+    @contextmanager
+    def lifetimeManager(cls):
+        cls.local = LocalAbstract(_deviceId_="local_abstract", project="test", module="test")
+        with cls.deviceManager(lead=cls.local):
+            yield
+
+    @async_tst
+    async def test_state_machine(self):
+        """test the execution of abstract macro with new state machine"""
+        with await getDevice("local_abstract") as d:
+            self.assertEqual(d.state, State.ON)
+
+            seen = False
+            async def show_active():
+                nonlocal d, seen
+                await waitUntil(lambda: d.state == State.MOVING)
+                seen = True
+
+            task = background(show_active())
+            # Give background a chance to post on loop!
+            await sleep(0.05)
+            await d.start()
+            await task
+            self.assertTrue(seen)
 
 
 if __name__ == "__main__":
