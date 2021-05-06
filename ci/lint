@@ -45,26 +45,19 @@ __lint_cpp_fast() {
     __run_lint_command "cppcheck $CPPCHECKOPTIONS $SCANNEDFOLDER"
 }
 
-__lint_python_gui() {
-    KARABOGUIPATH="src/pythonGui/karabogui"
-    OUTPUT="--output-file=${FUNCNAME[0]}_report_$SCANNAME.txt"
-
-    echo "Flake8 for $KARABOGUIPATH.."
-    __run_lint_command "flake8 $FLAKE8OPTIONS $OUTPUT $CI_PROJECT_DIR/$KARABOGUIPATH"
-}
-
-__lint_python_karabo() {
-    PYTHONKARABOPATH="src/pythonKarabo/karabo"
-    OUTPUT="--output-file=${FUNCNAME[0]}_report_$SCANNAME.txt"
-
-    echo "Flake8 for $PYTHONKARABOPATH.."
-    __run_lint_command "flake8 $FLAKE8OPTIONS $OUTPUT $CI_PROJECT_DIR/$PYTHONKARABOPATH"
-}
-
-__lint_python() {
+__lint_flake8() {
     FLAKE8OPTIONS="--exclude=*tests* --tee"
-    __lint_python_gui && \
-    __lint_python_karabo
+    __run_lint_command "flake8 $FLAKE8OPTIONS $CI_PROJECT_DIR/src/pythonKarabo/karabo"
+    __run_lint_command "flake8 $FLAKE8OPTIONS $CI_PROJECT_DIR/src/pythonGui/karabogui"
+}
+
+__lint_isort() {
+    source $CI_PROJECT_DIR/ci/utils/enable_internet.sh
+    conda install isort
+    source $CI_PROJECT_DIR/ci/utils/disable_internet.sh
+    pushd $CI_PROJECT_DIR/src/pythonGui/
+    __run_lint_command "isort . --check"
+    popd
 }
 
 # -- main
@@ -98,12 +91,16 @@ case $SCANNAME in
         __lint_cpp_fast
         ;;
     "FLAKE8")
-        __lint_python
+        __lint_flake8
+        ;;
+    "ISORT")
+        __lint_isort
         ;;
     *)
         echo "Running a scan with default settings.."
         __lint_cpp_fast && \
-        __lint_python
+        __lint_flake8 && \
+        __lint_isort
         ;;
 esac
 echo "Linter scan complete"
