@@ -288,8 +288,15 @@ def test_extract_reconfigurable_configuration():
         "node.bar", "default"  # Same as default
     )
     config["floatProperty", ...].update({"alarmLow": 2})
+
+    # DaqPolicy runattr check
+    config["boolProperty", ...].update({"daqPolicy": -1})
+    config["node.foo", ...].update({"daqPolicy": 1})
+
     extracted = extract_init_configuration(binding, config)
     assert "boolProperty" in extracted
+    bool_attrs = extracted["boolProperty", ...]
+    assert "daqPolicy" not in bool_attrs
     assert "doubleProperty" in extracted
     assert "falseProperty" not in extracted
     assert "floatProperty" in extracted
@@ -298,4 +305,6 @@ def test_extract_reconfigurable_configuration():
     assert "table" in extracted
     assert "node.charlie" not in extracted
     assert "node.foo" in extracted
+    foo_attr = extracted["node.foo", ...]
+    assert foo_attr["daqPolicy"] == 1
     assert "node.bar" not in extracted
