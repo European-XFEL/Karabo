@@ -8,9 +8,8 @@ from abc import abstractmethod
 from qtpy.QtCore import QAbstractItemModel, Qt
 from qtpy.QtGui import QBrush, QFont, QIcon
 from traits.api import (
-    ABCHasStrictTraits, HasStrictTraits, Bool, Callable, Dict, Enum, Instance,
-    Int, List, Property, String, WeakRef, on_trait_change
-)
+    ABCHasStrictTraits, Bool, Callable, Dict, Enum, HasStrictTraits, Instance,
+    Int, List, Property, String, WeakRef, on_trait_change)
 
 from karabo.common.api import ProxyStatus
 from karabo.common.project.api import BaseProjectObjectModel

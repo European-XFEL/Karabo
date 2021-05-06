@@ -1,11 +1,10 @@
 from qtpy.QtWidgets import QBoxLayout
 
-from karabo.common.scenemodel.api import (
-    BoxLayoutModel, LabelModel, SceneModel)
+from karabo.common.scenemodel.api import BoxLayoutModel, LabelModel, SceneModel
 from karabogui.testing import GuiTestCase
 
-from ..actions import BoxVSceneAction, BoxHSceneAction
 from ...view import SceneView
+from ..actions import BoxHSceneAction, BoxVSceneAction
 
 
 class TestLayoutActions(GuiTestCase):

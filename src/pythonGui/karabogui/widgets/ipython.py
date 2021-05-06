@@ -9,8 +9,8 @@ import socket
 
 try:
     from ipykernel.inprocess.client import InProcessKernelClient
+    from qtconsole import inprocess, kernel_mixins
     from qtconsole.rich_jupyter_widget import RichJupyterWidget
-    from qtconsole import kernel_mixins, inprocess
 except ImportError:
     from IPython.kernel.inprocess.client import InProcessKernelClient
     from IPython.qt.console.rich_ipython_widget import RichIPythonWidget \
@@ -20,7 +20,7 @@ except ImportError:
 from karabo.common.states import State
 from karabo.native import Hash
 from karabogui import messagebox
-from karabogui.binding.api import get_binding_value, PropertyProxy
+from karabogui.binding.api import PropertyProxy, get_binding_value
 from karabogui.request import send_property_changes
 from karabogui.singletons.api import get_network, get_topology
 from karabogui.topology.api import get_macro_servers

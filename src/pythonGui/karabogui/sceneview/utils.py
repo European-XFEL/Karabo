@@ -3,8 +3,8 @@
 # Created on June 7, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from contextlib import contextmanager
 import math
+from contextlib import contextmanager
 
 from qtpy.QtCore import QPoint
 from qtpy.QtGui import QFontMetrics

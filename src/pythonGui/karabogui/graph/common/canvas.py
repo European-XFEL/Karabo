@@ -1,4 +1,4 @@
-from qtpy.QtCore import Signal, QPointF, QRectF, QSizeF, Qt
+from qtpy.QtCore import QPointF, QRectF, QSizeF, Qt, Signal
 from qtpy.QtGui import QColor, QPen
 from qtpy.QtWidgets import QGraphicsObject
 

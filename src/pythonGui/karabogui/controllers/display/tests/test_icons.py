@@ -8,6 +8,7 @@ from karabo.common.scenemodel.api import (
 from karabo.native import Configurable, Int32, String
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
 from ..icons import DigitIcons, SelectionIcons, TextIcons
 
 NUM_OPTIONS = [1, 2, 3, 4]

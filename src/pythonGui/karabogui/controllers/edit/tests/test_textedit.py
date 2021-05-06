@@ -2,6 +2,7 @@ from karabo.common.scenemodel.api import LineEditModel
 from karabo.native import Char, Configurable, String
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
 from ..textedit import EditableLineEdit
 
 

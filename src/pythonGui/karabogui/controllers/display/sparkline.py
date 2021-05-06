@@ -1,12 +1,12 @@
 import datetime
-from functools import partial
 import time
+from functools import partial
 
 import numpy as np
 from qtpy.QtCore import QPoint, Qt
 from qtpy.QtGui import QColor, QPainter, QPainterPath, QPen
-from qtpy.QtWidgets import (QAction, QActionGroup, QHBoxLayout,
-                            QInputDialog, QLineEdit, QWidget)
+from qtpy.QtWidgets import (
+    QAction, QActionGroup, QHBoxLayout, QInputDialog, QLineEdit, QWidget)
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import SparklineModel
@@ -14,7 +14,7 @@ from karabo.native import Timestamp
 from karabogui.alarms.api import (
     ALARM_COLOR, ALARM_HIGH, ALARM_LOW, WARN_COLOR, WARN_GLOBAL, WARN_HIGH,
     WARN_LOW)
-from karabogui.binding.api import FloatBinding, get_binding_value, IntBinding
+from karabogui.binding.api import FloatBinding, IntBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.util import SignalBlocker

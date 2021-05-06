@@ -1,6 +1,6 @@
 import numpy as np
-from qtpy.QtGui import QBrush, QPen
 from pyqtgraph import PlotDataItem
+from qtpy.QtGui import QBrush, QPen
 from traits.api import Constant, Instance
 
 from karabogui.graph.common.api import make_brush, make_pen

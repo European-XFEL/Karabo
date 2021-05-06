@@ -1,8 +1,8 @@
-from qtpy.QtCore import Slot, QObject
 from pyqtgraph import InfiniteLine, SignalProxy
+from qtpy.QtCore import QObject, Slot
 
-from karabogui.graph.common.api import CoordsLegend, create_button
 from karabogui import icons
+from karabogui.graph.common.api import CoordsLegend, create_button
 
 
 class CrossTargetController(QObject):

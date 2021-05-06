@@ -1,5 +1,4 @@
-from karabogui.logger import get_logger, StatusLogWidget
-
+from karabogui.logger import StatusLogWidget, get_logger
 from karabogui.testing import GuiTestCase
 
 

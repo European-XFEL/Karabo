@@ -7,15 +7,14 @@
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont
 from qtpy.QtWidgets import QFrame, QLabel
-
 from traits.api import Instance
 
 from karabo.common.scenemodel.api import WidgetNodeModel
 from karabogui.binding.api import WidgetNodeBinding
 from karabogui.const import WIDGET_MIN_HEIGHT
-from karabogui.indicators import ALL_OK_COLOR
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
+from karabogui.indicators import ALL_OK_COLOR
 from karabogui.util import generateObjectName
 
 

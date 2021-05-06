@@ -6,9 +6,10 @@
 from qtpy.QtCore import QDateTime
 
 from karabo.native import Timestamp
-from .const import (ACKNOWLEDGEABLE, ALARM_DATA, ALARM_NONE, ALARM_TYPE,
-                    NEEDS_ACKNOWLEDGING, TIME_OF_FIRST_OCCURENCE,
-                    TIME_OF_OCCURENCE, AlarmEntry)
+
+from .const import (
+    ACKNOWLEDGEABLE, ALARM_DATA, ALARM_NONE, ALARM_TYPE, NEEDS_ACKNOWLEDGING,
+    TIME_OF_FIRST_OCCURENCE, TIME_OF_OCCURENCE, AlarmEntry)
 
 
 def extract_alarms_data(instanceId, rows):

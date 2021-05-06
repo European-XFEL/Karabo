@@ -5,6 +5,7 @@ from karabo.native import Configurable, Double
 from karabogui.binding.api import build_binding
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
 from ..floatspinbox import FloatSpinBox
 
 

@@ -1,6 +1,6 @@
+import datetime
 import os.path as op
 from collections import OrderedDict
-import datetime
 from itertools import cycle
 
 from qtpy import uic
@@ -9,15 +9,15 @@ from qtpy.QtWidgets import QAction, QDialog, QVBoxLayout, QWidget
 from traits.api import Bool, Dict, Instance, Int, Set, String, WeakRef
 
 from karabo.common.scenemodel.api import (
-    build_graph_config, restore_graph_config, AlarmGraphModel, StateGraphModel,
-    TrendGraphModel)
+    AlarmGraphModel, StateGraphModel, TrendGraphModel, build_graph_config,
+    restore_graph_config)
 from karabogui import icons
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, IntBinding, StringBinding)
 from karabogui.const import MAX_NUMBER_LIMIT
 from karabogui.controllers.api import (
-    BaseBindingController, Curve, get_start_end_date_time, ONE_DAY, ONE_HOUR,
-    ONE_WEEK, register_binding_controller, TEN_MINUTES, UPTIME,
+    ONE_DAY, ONE_HOUR, ONE_WEEK, TEN_MINUTES, UPTIME, BaseBindingController,
+    Curve, get_start_end_date_time, register_binding_controller,
     with_display_type)
 from karabogui.graph.common.api import AxisType, create_button, get_pen_cycler
 from karabogui.graph.common.const import ALARM_INTEGER_MAP, STATE_INTEGER_MAP

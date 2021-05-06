@@ -1,14 +1,15 @@
 from pathlib import Path
 
 from qtpy import uic
-from qtpy.QtCore import Signal, Slot, Qt
+from qtpy.QtCore import Qt, Signal, Slot
 from qtpy.QtGui import QClipboard, QIntValidator, QPixmap
 from qtpy.QtWidgets import (
     QApplication, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QListWidget,
     QListWidgetItem, QPushButton, QRadioButton, QSizePolicy, QSpacerItem,
-    QVBoxLayout, QWizardPage, QWizard)
+    QVBoxLayout, QWizard, QWizardPage)
 
 from karabogui.util import SignalBlocker
+
 from .const import LOGO_PATH, LOGO_WIDTH
 
 LABEL_HEIGHT = 20

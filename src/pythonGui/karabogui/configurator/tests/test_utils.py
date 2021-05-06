@@ -5,9 +5,10 @@ from karabo.native import (
     AccessMode, Assignment, Configurable, Int8, Node, String, Unit)
 from karabogui import icons
 from karabogui.testing import GuiTestCase, get_class_property_proxy
+
 from ..utils import (
-    dragged_configurator_items, get_child_names, get_icon,
-    is_mandatory, threshold_triggered)
+    dragged_configurator_items, get_child_names, get_icon, is_mandatory,
+    threshold_triggered)
 
 
 class MandatoryNode(Configurable):

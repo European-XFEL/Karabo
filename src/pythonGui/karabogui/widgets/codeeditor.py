@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from qtpy.QtCore import Slot, QRect, QSize, Qt
+from qtpy.QtCore import QRect, QSize, Qt, Slot
 from qtpy.QtGui import QColor, QFontMetrics, QPainter, QTextFormat
 from qtpy.QtWidgets import QPlainTextEdit, QTextEdit, QWidget
 

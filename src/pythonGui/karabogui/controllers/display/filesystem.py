@@ -9,7 +9,7 @@ from traits.api import Instance
 
 from karabo.common.scenemodel.api import (
     DirectoryModel, FileInModel, FileOutModel)
-from karabogui.binding.api import get_binding_value, StringBinding
+from karabogui.binding.api import StringBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 

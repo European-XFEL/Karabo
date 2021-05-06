@@ -1,5 +1,4 @@
 from karabo.common.states import State
-
 from karabogui.graph.common.const import ALL_STATES
 
 

@@ -7,18 +7,17 @@ from functools import partial
 
 from qtpy.QtCore import QObject
 
-from karabo.common.api import set_modified_flag, KARABO_PROJECT_MANAGER
+from karabo.common.api import KARABO_PROJECT_MANAGER, set_modified_flag
 from karabo.common.project.api import (
     MemCacheWrapper, get_user_cache, read_lazy_object)
 from karabo.common.scenemodel.api import SceneModel
 from karabo.native import (
-    get_item_type, Hash, read_project_model, write_project_model)
+    Hash, get_item_type, read_project_model, write_project_model)
 from karabogui import messagebox
 from karabogui.events import (
-    broadcast_event, KaraboEvent, register_for_broadcasts
-)
-from karabogui.singletons.api import get_config, get_network
+    KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.request import call_device_slot, handle_scene_from_server
+from karabogui.singletons.api import get_config, get_network
 
 # This matches the batch size used in the project database
 MAX_BUFFER_ITEMS = 50

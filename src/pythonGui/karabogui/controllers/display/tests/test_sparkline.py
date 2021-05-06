@@ -1,13 +1,13 @@
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from karabo.common.scenemodel.api import SparklineModel
 from karabo.native import Configurable, Float
 from karabogui.testing import (
-    GuiTestCase, get_property_proxy, get_class_property_proxy, set_proxy_value,
+    GuiTestCase, get_class_property_proxy, get_property_proxy, set_proxy_value,
     singletons)
-from .data import build_historic_data_float
-from ..sparkline import DisplaySparkline
 
+from ..sparkline import DisplaySparkline
+from .data import build_historic_data_float
 
 TIMEBASES = {'60s': 60, '10m': 600, '10h': 36000}
 

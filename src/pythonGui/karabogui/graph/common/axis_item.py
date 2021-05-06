@@ -1,12 +1,12 @@
 import time
 
-from qtpy.QtCore import Qt, Signal
 from pyqtgraph import AxisItem as PgAxisItem, DateAxisItem
+from qtpy.QtCore import Qt, Signal
 
-from karabogui.graph.common.const import (
-    AXIS_ITEMS, AXIS_X, AXIS_Y, X_AXIS_HEIGHT, Y_AXIS_WIDTH, INTEGER_ALARM_MAP,
-    INTEGER_STATE_MAP)
 from karabogui.fonts import get_qfont
+from karabogui.graph.common.const import (
+    AXIS_ITEMS, AXIS_X, AXIS_Y, INTEGER_ALARM_MAP, INTEGER_STATE_MAP,
+    X_AXIS_HEIGHT, Y_AXIS_WIDTH)
 from karabogui.graph.common.enums import AxisType
 
 

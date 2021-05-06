@@ -2,13 +2,13 @@ from unittest.mock import patch
 
 import numpy as np
 
-from ..vector_scatter_graph import DisplayVectorScatterGraph
 from karabo.common.scenemodel.api import VectorScatterGraphModel
-
 from karabo.native import Configurable, VectorFloat, VectorInt32
 from karabogui.binding.proxy import PropertyProxy
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
+from ..vector_scatter_graph import DisplayVectorScatterGraph
 
 
 class Object(Configurable):

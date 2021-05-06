@@ -1,21 +1,19 @@
 from unittest import mock
 
 from numpy.testing import assert_array_equal
-from qtpy.QtWidgets import QGraphicsTextItem
 from pyqtgraph import ColorMap
+from qtpy.QtWidgets import QGraphicsTextItem
 
+from karabo.common.scenemodel.api import (
+    CrossROIData, ImageGraphModel, RectROIData)
 from karabo.native import EncodingType
-
 from karabogui.binding.builder import build_binding
 from karabogui.binding.config import apply_configuration
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
-from karabo.common.scenemodel.api import (
-    ImageGraphModel, CrossROIData, RectROIData)
 from karabogui.controllers.display.tests.image import (
     get_image_hash, get_pipeline_schema)
 from karabogui.graph.common.api import COLORMAPS
-from karabogui.graph.common.enums import MouseMode
-from karabogui.graph.common.enums import AuxPlots, ROITool
+from karabogui.graph.common.enums import AuxPlots, MouseMode, ROITool
 from karabogui.testing import GuiTestCase
 
 from ..image_graph import DisplayImageGraph

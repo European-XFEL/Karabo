@@ -1,5 +1,5 @@
 from qtpy import uic
-from qtpy.QtCore import Slot, QPoint, QSize, Qt, QTimer
+from qtpy.QtCore import QPoint, QSize, Qt, QTimer, Slot
 from qtpy.QtWidgets import QApplication, QDialog, QMenu, QMessageBox, QStyle
 
 from .utils import get_dialog_ui

@@ -1,4 +1,5 @@
 from karabo.common.api import AlarmCondition
+
 from ..info import AlarmInfo
 
 

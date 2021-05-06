@@ -3,8 +3,8 @@ import pytest
 from traits.api import TraitError
 
 from ..api import (
-    Int8Binding, Int16Binding, Int32Binding, Int64Binding, Uint8Binding,
-    Uint16Binding, Uint32Binding, Uint64Binding, FloatBinding)
+    FloatBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
+    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding)
 
 
 def test_validate_integers():

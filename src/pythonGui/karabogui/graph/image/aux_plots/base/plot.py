@@ -1,15 +1,14 @@
 from abc import abstractmethod
 
+from pyqtgraph import GraphicsWidget, PlotItem, ViewBox
 from qtpy.QtCore import QPoint
 from qtpy.QtGui import QTransform
 from qtpy.QtWidgets import QMenu
-from pyqtgraph import GraphicsWidget, PlotItem, ViewBox
-from traits.api import (
-    ABCHasStrictTraits, Constant, Instance, Property, String)
+from traits.api import ABCHasStrictTraits, Constant, Instance, Property, String
 
+from karabogui.graph.common.api import create_axis_items
 from karabogui.graph.common.const import (
     AXIS_ITEMS, AXIS_X, AXIS_Y, ROTATION_FACTOR)
-from karabogui.graph.common.api import create_axis_items
 from karabogui.graph.common.enums import AxisType
 
 LABEL_STYLE = {'color': '#000000', 'font-size': '12px'}
