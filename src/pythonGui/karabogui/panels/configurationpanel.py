@@ -13,10 +13,9 @@ from karabo.native import AccessMode, Hash
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy, ListOfNodesBinding,
-    ProjectDeviceProxy, VectorHashBinding, attr_fast_deepcopy,
-    apply_configuration, extract_configuration, get_binding_value,
-    has_changes, has_table_changes,
-    validate_table_value, validate_value)
+    ProjectDeviceProxy, VectorHashBinding, apply_configuration,
+    attr_fast_deepcopy, extract_configuration, get_binding_value, has_changes,
+    has_table_changes, validate_table_value, validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
 from karabogui.enums import AccessRole
@@ -24,9 +23,9 @@ from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.globals import access_role_allowed
 from karabogui.singletons.api import get_manager
 from karabogui.util import (
-    get_spin_widget, load_configuration_from_file, save_configuration_to_file
-)
+    get_spin_widget, load_configuration_from_file, save_configuration_to_file)
 from karabogui.widgets.toolbar import ToolBar
+
 from .base import BasePanelWidget
 from .utils import format_property_details, format_vector_hash_details
 

@@ -1,20 +1,19 @@
-from enum import Enum
 import json
+from enum import Enum
 
 from qtpy.QtCore import QMimeData, Qt
 from qtpy.QtGui import QPalette
 from qtpy.QtWidgets import QStyle
 
 from karabo.common.api import (
-    KARABO_SCHEMA_DAQ_POLICY, KARABO_SCHEMA_METRIC_PREFIX_SYMBOL,
-    KARABO_SCHEMA_UNIT_SYMBOL, KARABO_EDITABLE_ATTRIBUTES)
+    KARABO_EDITABLE_ATTRIBUTES, KARABO_SCHEMA_DAQ_POLICY,
+    KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL)
 from karabo.native import AccessMode, Assignment
 from karabogui import globals as krb_globals, icons
 from karabogui.binding.api import (
-    BindingRoot, BoolBinding, CharBinding, ChoiceOfNodesBinding,
-    ImageBinding, IntBinding, FloatBinding, ListOfNodesBinding, NodeBinding,
-    StringBinding, VectorHashBinding, WidgetNodeBinding, get_binding_value,
-    get_editor_value)
+    BindingRoot, BoolBinding, CharBinding, ChoiceOfNodesBinding, FloatBinding,
+    ImageBinding, IntBinding, ListOfNodesBinding, NodeBinding, StringBinding,
+    VectorHashBinding, WidgetNodeBinding, get_binding_value, get_editor_value)
 from karabogui.controllers.api import get_compatible_controllers
 
 # The fixed height of rows in the configurator

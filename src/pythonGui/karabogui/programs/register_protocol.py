@@ -1,15 +1,15 @@
 import os
-from pathlib import Path
-from platform import system
 import shutil
 import subprocess
 import sys
+from pathlib import Path
+from platform import system
 
 from qtpy.QtCore import QSettings
 
+import karabogui.icons as icons
 from karabogui.globals import HIDDEN_KARABO_FOLDER
 from karabogui.programs.utils import create_linux_desktop_file
-import karabogui.icons as icons
 
 ON_WINDOWS = system() == "Windows"
 PYTHON_SHEBANG = f"#!{sys.executable}"

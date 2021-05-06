@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from traits.api import push_exception_handler, pop_exception_handler
+from traits.api import pop_exception_handler, push_exception_handler
 
 from karabo.common.api import ProxyStatus
 from karabogui.testing import GuiTestCase, singletons, system_hash

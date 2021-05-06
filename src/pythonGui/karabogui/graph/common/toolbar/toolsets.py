@@ -3,8 +3,8 @@ from functools import partial
 from traits.api import (
     Any, Callable, Constant, Dict, Enum, Event, HasStrictTraits, List)
 
-from .factory import export_factory, mouse_mode_factory, roi_factory
 from ..enums import ExportTool, MouseMode, ROITool
+from .factory import export_factory, mouse_mode_factory, roi_factory
 
 
 class BaseToolsetController(HasStrictTraits):

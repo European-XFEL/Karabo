@@ -5,7 +5,7 @@
 #############################################################################
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QAction
-from traits.api import HasStrictTraits, Bool, Callable, Instance, String
+from traits.api import Bool, Callable, HasStrictTraits, Instance, String
 
 
 class KaraboAction(HasStrictTraits):

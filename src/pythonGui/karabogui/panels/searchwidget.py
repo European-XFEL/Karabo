@@ -4,9 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from collections import deque
 import os.path as op
 import weakref
+from collections import deque
 
 from qtpy import uic
 from qtpy.QtCore import Slot

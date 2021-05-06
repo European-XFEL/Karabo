@@ -5,6 +5,7 @@ from itertools import chain
 from traits.api import Constant
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
+
 from .base import BaseBindingController
 from .util import get_class_const_trait
 

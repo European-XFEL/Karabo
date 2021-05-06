@@ -6,16 +6,14 @@
 import os.path as op
 
 from qtpy import uic
-from qtpy.QtCore import Slot, Qt
-from qtpy.QtWidgets import QDialogButtonBox, QDialog
+from qtpy.QtCore import Qt, Slot
+from qtpy.QtWidgets import QDialog, QDialogButtonBox
 
-from karabo.native import create_html_hash, Hash, is_equal, writeXML
-
-from karabogui import icons
-from karabogui import messagebox
+from karabo.native import Hash, create_html_hash, is_equal, writeXML
+from karabogui import icons, messagebox
 from karabogui.binding.api import extract_configuration
-from karabogui.util import getSaveFileName
 from karabogui.singletons.api import get_config
+from karabogui.util import getSaveFileName
 
 from .utils import get_dialog_ui
 

@@ -1,10 +1,10 @@
 import numpy as np
 
-from ..vector_hist_graph import VectorHistogramGraph
-
-from karabo.native import Configurable, Double, Hash, VectorFloat, NDArray
+from karabo.native import Configurable, Double, Hash, NDArray, VectorFloat
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
+from ..vector_hist_graph import VectorHistogramGraph
 
 
 class VectorObject(Configurable):

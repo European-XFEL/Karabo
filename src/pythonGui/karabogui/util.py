@@ -1,26 +1,26 @@
-from contextlib import contextmanager
-from datetime import datetime
 import os
 import os.path as op
 import re
+import weakref
+import webbrowser
+from contextlib import contextmanager
+from datetime import datetime
 from tempfile import mkstemp
 from types import MethodType
 from uuid import uuid4
-import webbrowser
-import weakref
 
 from dateutil.tz import tzlocal, tzutc
-from qtpy.QtCore import QEvent, QEventLoop, QObject, Qt, QSize
+from qtpy.QtCore import QEvent, QEventLoop, QObject, QSize, Qt
+from qtpy.QtGui import QCursor, QMovie, QValidator
 from qtpy.QtWidgets import (
     QApplication, QDialog, QFileDialog, QHeaderView, QLabel)
-from qtpy.QtGui import QCursor, QMovie, QValidator
 
-from karabo.native import decodeXML, Hash, writeXML
+from karabo.native import Hash, decodeXML, writeXML
 from karabogui import globals as krb_globals, icons, messagebox
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, extract_configuration)
 from karabogui.const import PANEL_ICON_SIZE
-from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_config, get_db_conn
 
 

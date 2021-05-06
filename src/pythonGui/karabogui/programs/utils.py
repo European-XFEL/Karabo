@@ -1,5 +1,5 @@
-from pathlib import Path
 import re
+from pathlib import Path
 
 LINUX_DESKTOP_FILE_TEMPLATE = """\
 [Desktop Entry]

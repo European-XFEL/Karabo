@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from qtpy.QtCore import Qt
-from qtpy.QtGui import QPixmap, QStandardItemModel, QStandardItem, QIcon
+from qtpy.QtGui import QIcon, QPixmap, QStandardItem, QStandardItemModel
 from qtpy.QtSvg import QSvgWidget
 from qtpy.QtWidgets import QDialog, QListView
 from traits.api import Instance

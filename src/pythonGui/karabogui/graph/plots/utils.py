@@ -1,6 +1,5 @@
-import numpy as np
-
 import lttbc
+import numpy as np
 
 from karabogui.graph.common.api import clip_array
 

@@ -1,11 +1,11 @@
 from qtpy.QtWidgets import QAction, QMenu
 from traits.api import (
-    ArrayOrNone, Bool, Dict, Instance, on_trait_change, Property, Type)
+    ArrayOrNone, Bool, Dict, Instance, Property, Type, on_trait_change)
 
+from ..base.controller import BaseController, ControllerAggregator
 from .analyzer import ProfileAnalyzer
 from .plot import ProfilePlot
 from .stats import ProfileStats
-from ..base.controller import BaseController, ControllerAggregator
 
 
 class ProfileController(BaseController):

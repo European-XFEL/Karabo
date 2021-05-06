@@ -1,21 +1,21 @@
-from unittest.mock import patch
-from unittest import skipIf
 from platform import system
+from unittest import skipIf
+from unittest.mock import patch
 
 import numpy as np
 
-from karabo.common.states import State
 from karabo.common.scenemodel.api import (
     DoubleLineEditModel, EditableRegexModel)
 from karabo.common.scenemodel.widgets.simple import IntLineEditModel
+from karabo.common.states import State
 from karabo.native import (
-    Configurable, Double, Float, Int32, String, UInt8, RegexString)
+    Configurable, Double, Float, Int32, RegexString, String, UInt8)
 from karabogui.binding.api import build_binding
 from karabogui.binding.util import get_editor_value
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
-from ..lineedit import (
-    DoubleLineEdit, Hexadecimal, IntLineEdit, EditRegex)
+
+from ..lineedit import DoubleLineEdit, EditRegex, Hexadecimal, IntLineEdit
 
 
 class IntObject(Configurable):

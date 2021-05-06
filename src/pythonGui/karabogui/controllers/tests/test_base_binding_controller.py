@@ -3,14 +3,14 @@ from unittest import mock
 from qtpy.QtWidgets import QLabel
 from traits.api import Dict, Instance, Int, Str, Undefined
 
-from karabo.common.api import ProxyStatus, State, KARABO_SCHEMA_DISPLAYED_NAME
+from karabo.common.api import KARABO_SCHEMA_DISPLAYED_NAME, ProxyStatus, State
 from karabo.common.scenemodel.api import BaseWidgetObjectData
-from karabo.native import (
-    Bool, Configurable, Hash, Node, String, AccessMode)
+from karabo.native import AccessMode, Bool, Configurable, Hash, Node, String
 from karabogui.binding.api import (
     DeviceClassProxy, NodeBinding, PropertyProxy, StringBinding,
     apply_configuration, build_binding, get_binding_value)
 from karabogui.testing import GuiTestCase, flushed_registry, set_proxy_value
+
 from ..base import BaseBindingController
 from ..registry import register_binding_controller
 from ..util import with_display_type

@@ -2,14 +2,13 @@ from traits.api import TraitError, Undefined
 
 from karabo.common import const
 from karabo.native import (
-    AccessMode, Hash, is_equal, MetricPrefix, Unit, Timestamp)
+    AccessMode, Hash, MetricPrefix, Timestamp, Unit, is_equal)
 
 from .compare import attr_fast_deepcopy
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
-    BindingNamespace, BindingRoot, NodeBinding, SlotBinding,
-    VectorHashBinding)
+    BindingNamespace, BindingRoot, NodeBinding, SlotBinding, VectorHashBinding)
 from .validate import sanitize_table_value
 
 

@@ -1,7 +1,7 @@
 from karabogui import icons
 
-from .widgets import create_action, create_button, create_dropdown_button
 from ..enums import ExportTool, MouseMode, ROITool
+from .widgets import create_action, create_button, create_dropdown_button
 
 
 def tool_factory(tool):

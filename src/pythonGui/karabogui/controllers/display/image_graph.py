@@ -2,14 +2,14 @@ from qtpy.QtWidgets import QAction
 from traits.api import Bool, Instance, WeakRef
 
 from karabo.common.scenemodel.api import (
-    build_graph_config, restore_graph_config, ImageGraphModel)
+    ImageGraphModel, build_graph_config, restore_graph_config)
 from karabo.native import EncodingType, Timestamp
-from karabogui.graph.common.api import AuxPlots
-from karabogui.graph.image.api import (
-    KaraboImagePlot, KaraboImageNode, KaraboImageView)
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
+from karabogui.graph.common.api import AuxPlots
+from karabogui.graph.image.api import (
+    KaraboImageNode, KaraboImagePlot, KaraboImageView)
 
 
 @register_binding_controller(ui_name='Image Graph',

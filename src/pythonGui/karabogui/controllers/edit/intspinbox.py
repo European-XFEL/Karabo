@@ -11,7 +11,7 @@ from karabo.common.scenemodel.api import EditableSpinBoxModel
 from karabogui.binding.api import IntBinding, get_editor_value, get_min_max
 from karabogui.const import WIDGET_MIN_HEIGHT
 from karabogui.controllers.api import (
-    add_unit_label, BaseBindingController, is_proxy_allowed,
+    BaseBindingController, add_unit_label, is_proxy_allowed,
     register_binding_controller)
 from karabogui.util import MouseWheelEventBlocker, SignalBlocker
 

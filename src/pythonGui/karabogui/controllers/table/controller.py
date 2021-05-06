@@ -1,12 +1,11 @@
-from qtpy.QtCore import Qt, QModelIndex
+from qtpy.QtCore import QModelIndex, Qt
 from qtpy.QtWidgets import QAbstractItemView, QMenu
 from traits.api import Bool, Dict, Undefined, WeakRef
 
-from karabo.common.api import KARABO_SCHEMA_MIN_SIZE, KARABO_SCHEMA_MAX_SIZE
-from karabogui.binding.api import get_editor_value, get_default_value
-from karabogui.controllers.api import BaseBindingController
-
 import karabogui.icons as icons
+from karabo.common.api import KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE
+from karabogui.binding.api import get_default_value, get_editor_value
+from karabogui.controllers.api import BaseBindingController
 
 from .edit_delegates import get_table_delegate
 from .model import TableModel

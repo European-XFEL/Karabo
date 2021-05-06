@@ -1,9 +1,8 @@
-from qtpy.QtCore import Slot, Qt, QTimer
-from qtpy.QtGui import QPainter, QPen, QColor, QPixmap
+from qtpy.QtCore import Qt, QTimer, Slot
+from qtpy.QtGui import QColor, QPainter, QPen, QPixmap
 from qtpy.QtWidgets import QWidget
 
 from karabogui.sceneview.const import GRID_STEP
-
 
 GRID_COLOR = (200, 200, 200, 100)
 RESIZE_THROTTLE = 100

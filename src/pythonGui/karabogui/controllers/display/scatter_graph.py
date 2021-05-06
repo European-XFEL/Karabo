@@ -9,14 +9,13 @@ from functools import partial
 from qtpy.QtWidgets import QAction, QInputDialog
 from traits.api import Any, Callable, Instance, WeakRef
 
-
-from karabo.common.scenemodel.api import build_model_config, ScatterGraphModel
+from karabo.common.scenemodel.api import ScatterGraphModel, build_model_config
 from karabo.native import Timestamp
+from karabogui import icons
 from karabogui.binding.api import (
-    get_binding_value, BoolBinding, FloatBinding, IntBinding, PropertyProxy)
+    BoolBinding, FloatBinding, IntBinding, PropertyProxy, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui import icons
 from karabogui.graph.common.api import create_button
 from karabogui.graph.plots.api import KaraboPlotView, ScatterGraphPlot
 

@@ -2,7 +2,7 @@ import argparse
 import sys
 
 from karabo.common.scenemodel.api import SceneTargetWindow
-from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.programs.base import create_gui_app, init_gui
 from karabogui.singletons.api import get_db_conn, get_network, get_topology
 
