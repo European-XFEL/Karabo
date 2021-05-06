@@ -23,6 +23,21 @@ C++ API
   infra-structure. In such a scenario, intervals in the order of minutes could
   be observed for the data to be ready for reading.
 
+- For the ``getConfigurationFromPast`` operation, the ``InfluxLogReader`` will
+  return the values of all properties that were in the full device schema(*) at
+  the requested timepoint. This is implemented to make sure that properties whose
+  timestamps are set by an external source will be retrieved. This requirement
+  clashes with some corner cases in which properties appear in the static schema
+  for historic reasons and are never meant to be set. For those properties,
+  the returned value is set to the latest recorded value earlier than the requested
+  timepoint. Configurations that include such historic "frozen" properties
+  constitute an imperfect record and could be not directly applicable to the device.
+  Given the conflicting requirements, the latest recorded value is kept in the
+  record returned by the ``getConfigurationFromPast`` operation and the possible
+  removal of the historic "frozen" property is left to the user.
+
+  (*) The static device schema is merged with any schema injection that occurs
+  during the lifetime of the device to yield its full device schema.
 
 Bound Python API
 ================
