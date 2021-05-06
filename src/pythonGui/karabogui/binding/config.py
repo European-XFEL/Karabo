@@ -2,7 +2,7 @@ from traits.api import TraitError, Undefined
 
 from karabo.common import const
 from karabo.native import (
-    AccessMode, Hash, MetricPrefix, Timestamp, Unit, is_equal)
+    AccessMode, DaqPolicy, Hash, MetricPrefix, Timestamp, Unit, is_equal)
 
 from .compare import attr_fast_deepcopy
 from .proxy import PropertyProxy
@@ -399,6 +399,9 @@ s    """
             # read only parameter can still have attributes.
             read_only = node.access_mode is AccessMode.READONLY
             run_attr = attr_fast_deepcopy(attrs, {})
+            # Unspecified daqPolicy can be removed as well!
+            if run_attr.get("daqPolicy") == DaqPolicy.UNSPECIFIED:
+                run_attr.pop("daqPolicy")
             if read_only and not run_attr:
                 continue
 
