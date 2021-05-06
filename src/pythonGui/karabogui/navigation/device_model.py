@@ -12,6 +12,7 @@ from karabo.common.api import ProxyStatus
 from karabogui import globals as krb_globals, icons
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.singletons.api import get_topology
+
 from .context import _UpdateContext
 
 

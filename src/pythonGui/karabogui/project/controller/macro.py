@@ -3,10 +3,10 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from functools import partial
-from io import StringIO
 import os.path as op
 import re
+from functools import partial
+from io import StringIO
 
 from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, String, on_trait_change
@@ -16,8 +16,8 @@ from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabogui import icons, messagebox
 from karabogui.enums import AccessRole, ProjectItemTypes
 from karabogui.events import (
-    broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
-    KaraboEvent)
+    KaraboEvent, broadcast_event, register_for_broadcasts,
+    unregister_from_broadcasts)
 from karabogui.globals import access_role_allowed
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.project.dialog.object_handle import (
@@ -26,8 +26,9 @@ from karabogui.project.topo_listener import SystemTopologyListener
 from karabogui.project.utils import run_macro
 from karabogui.singletons.api import get_config, get_manager, get_topology
 from karabogui.util import getSaveFileName, move_to_cursor
-from .bases import (BaseProjectGroupController, BaseProjectController,
-                    ProjectControllerUiData)
+
+from .bases import (
+    BaseProjectController, BaseProjectGroupController, ProjectControllerUiData)
 
 
 class MacroInstanceController(BaseProjectController):

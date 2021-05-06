@@ -8,16 +8,16 @@ from functools import partial
 
 from qtpy.QtCore import QPoint, QRect
 from qtpy.QtWidgets import QAction, QDialog, QMenu
-from traits.api import Any, ABCHasStrictTraits
+from traits.api import ABCHasStrictTraits, Any
 
 from karabo.common.enums import ONLINE_STATUSES
 from karabo.common.scenemodel.api import BaseWidgetObjectData
+from karabogui import icons
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
-from karabogui import icons
 from karabogui.dialogs.dialogs import SceneItemDialog
-from karabogui.sceneview.widget.api import ControllerContainer
 from karabogui.sceneview.tools.api import send_to_back, send_to_front, ungroup
+from karabogui.sceneview.widget.api import ControllerContainer
 
 
 class SceneWidgetHandler(ABCHasStrictTraits):

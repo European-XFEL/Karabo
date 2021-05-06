@@ -1,9 +1,9 @@
 from qtpy.QtCore import QModelIndex, Qt
 
 from karabo.native import AccessLevel, Hash
-from karabogui.testing import GuiTestCase, system_hash
-from karabogui.navigation.system_model import SystemTreeModel
 from karabogui.navigation.system_filter_model import TopologyFilterModel
+from karabogui.navigation.system_model import SystemTreeModel
+from karabogui.testing import GuiTestCase, system_hash
 
 
 class TestCase(GuiTestCase):

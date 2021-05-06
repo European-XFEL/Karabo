@@ -1,14 +1,14 @@
 import os
 import os.path as op
-from platform import system
-from traceback import print_exception, format_exception
 import sys
 import warnings
+from platform import system
+from traceback import format_exception, print_exception
 
-from qtpy.QtCore import Slot, QLocale, Qt
+from pyqtgraph import setConfigOptions
+from qtpy.QtCore import QLocale, Qt, Slot
 from qtpy.QtGui import QFont, QFontDatabase, QIcon, QPalette, QPixmap
 from qtpy.QtWidgets import QApplication, QSplashScreen, QStyleFactory
-from pyqtgraph import setConfigOptions
 
 from karabo.common.scenemodel.api import (
     SCENE_DEFAULT_DPI, SCENE_FONT_FAMILY, SCENE_FONT_SIZE)
@@ -142,8 +142,9 @@ def init_gui(app, use_splash=True):
     process_qt_events(app)
 
     # Start some heavy importing!
-    from karabogui import icons
     import numpy
+
+    from karabogui import icons
 
     numpy.set_printoptions(suppress=True, threshold=10)
     setConfigOptions(background=None, foreground="k")

@@ -1,6 +1,6 @@
 import logging
 
-from qtpy.QtCore import Signal, Slot, QObject, Qt
+from qtpy.QtCore import QObject, Qt, Signal, Slot
 from qtpy.QtWidgets import (
     QFrame, QHBoxLayout, QPushButton, QTextEdit, QVBoxLayout)
 

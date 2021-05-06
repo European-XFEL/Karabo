@@ -3,16 +3,16 @@
 # Created on January 10, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from traits.api import (HasStrictTraits, Bool, Dict, Instance, Property,
-                        on_trait_change, Set)
+from traits.api import (
+    Bool, Dict, HasStrictTraits, Instance, Property, Set, on_trait_change)
 
 from karabo.common.api import ProxyStatus
 from karabo.native import Hash
 from karabogui.alarms.api import ADD_ALARM_TYPES, REMOVE_ALARM_TYPES
 from karabogui.binding.api import (
     BindingRoot, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
-    apply_configuration, apply_default_configuration, build_binding
-)
+    apply_configuration, apply_default_configuration, build_binding)
+
 from .device_tree import DeviceSystemTree
 from .project_device import ProjectDeviceInstance
 from .system_tree import SystemTree

@@ -1,17 +1,17 @@
-from ast import literal_eval
 import re
+from ast import literal_eval
 
-from traits.api import TraitError
 import numpy as np
 from qtpy.QtGui import QValidator
+from traits.api import TraitError
 
 from karabogui.binding.api import (
-    convert_string, get_min_max, get_min_max_size, VectorBoolBinding,
-    VectorComplexDoubleBinding, VectorComplexFloatBinding,
+    VectorBoolBinding, VectorComplexDoubleBinding, VectorComplexFloatBinding,
     VectorDoubleBinding, VectorFloatBinding, VectorInt8Binding,
     VectorInt16Binding, VectorInt32Binding, VectorInt64Binding,
     VectorStringBinding, VectorUint8Binding, VectorUint16Binding,
-    VectorUint32Binding, VectorUint64Binding)
+    VectorUint32Binding, VectorUint64Binding, convert_string, get_min_max,
+    get_min_max_size)
 
 BOOL_REGEX = r"(0|1|[T]rue|[F]alse)"
 INT_REGEX = r"^[-+]?\d+$"

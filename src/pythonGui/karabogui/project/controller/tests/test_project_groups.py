@@ -1,13 +1,13 @@
 from unittest.mock import patch
-from traits.api import push_exception_handler, pop_exception_handler
+
+from traits.api import pop_exception_handler, push_exception_handler
 
 from karabo.common.project.api import MacroModel, ProjectModel
 from karabo.common.scenemodel.api import SceneModel
-
-from karabogui.singletons.project_model import ProjectViewItemModel
-from karabogui.testing import GuiTestCase
 from karabogui.project.controller.project_groups import (
     _load_macro, _load_scene)
+from karabogui.singletons.project_model import ProjectViewItemModel
+from karabogui.testing import GuiTestCase
 
 
 class TestProjectGroupController(GuiTestCase):

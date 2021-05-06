@@ -1,7 +1,7 @@
 import importlib
 import os
-import pkg_resources
 
+import pkg_resources
 from traits.api import Undefined
 
 import karabogui.globals as krb_globals

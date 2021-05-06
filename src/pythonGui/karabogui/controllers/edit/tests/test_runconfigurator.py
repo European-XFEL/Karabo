@@ -2,13 +2,13 @@ from qtpy.QtCore import Qt
 
 from karabo.common.api import (
     KARABO_SCHEMA_DISPLAY_TYPE, KARABO_SCHEMA_ROW_SCHEMA)
-from karabo.native import Configurable, Bool, String, Hash
+from karabo.native import Bool, Configurable, Hash, String
 from karabogui.binding.api import (
     BindingNamespace, BindingRoot, BoolBinding, DeviceClassProxy,
-    ListOfNodesBinding, PropertyProxy, StringBinding, TableBinding,
-)
+    ListOfNodesBinding, PropertyProxy, StringBinding, TableBinding)
 from karabogui.testing import GuiTestCase, set_proxy_value
-from ..runconfigurator import RunConfiguratorEdit, NODE_CLASS_NAME
+
+from ..runconfigurator import NODE_CLASS_NAME, RunConfiguratorEdit
 
 
 class _TableRow(Configurable):

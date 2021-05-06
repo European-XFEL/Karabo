@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from karabo.common.api import ProxyStatus, KARABO_WARN_HIGH
+from karabo.common.api import KARABO_WARN_HIGH, ProxyStatus
 from karabo.native import Configurable, Hash, String
 from karabogui.testing import singletons, system_hash
 from karabogui.topology.system_topology import SystemTopology

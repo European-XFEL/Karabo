@@ -3,8 +3,8 @@
 # Created on October 27, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from functools import partial
 import os.path as op
+from functools import partial
 
 from qtpy.QtWidgets import QAction, QDialog, QMenu
 from traits.api import Instance, Property, String
@@ -14,19 +14,19 @@ from karabo.common.project.api import (
     DeviceServerModel, MacroModel, ProjectModel, read_macro)
 from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabogui import icons, messagebox
+from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.enums import AccessRole, ProjectItemTypes
 from karabogui.globals import access_role_allowed
-from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.utils import (
     check_device_server_exists, check_macro_exists)
 from karabogui.request import (
-    call_device_slot, handle_scene_from_server, handle_macro_from_server)
+    call_device_slot, handle_macro_from_server, handle_scene_from_server)
 from karabogui.singletons.api import get_config
 from karabogui.util import (
-    getOpenFileName, move_to_cursor, show_filename_error,
-    VALID_PROJECT_OBJECT_NAME)
+    VALID_PROJECT_OBJECT_NAME, getOpenFileName, move_to_cursor,
+    show_filename_error)
 from karabogui.wizards.api import CinemaWizardController
 
 from .bases import BaseProjectGroupController, ProjectControllerUiData

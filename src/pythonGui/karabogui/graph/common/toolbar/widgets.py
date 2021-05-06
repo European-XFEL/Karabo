@@ -1,8 +1,7 @@
-from qtpy.QtCore import Signal, Slot, QSize, Qt
-from qtpy.QtWidgets import (
-    QAction, QMenu, QToolBar, QToolButton, QWidgetAction)
+from qtpy.QtCore import QSize, Qt, Signal, Slot
+from qtpy.QtWidgets import QAction, QMenu, QToolBar, QToolButton, QWidgetAction
 
-from ..const import ICON_SIZE, BUTTON_SIZE
+from ..const import BUTTON_SIZE, ICON_SIZE
 
 
 class ToolBar(QToolBar):

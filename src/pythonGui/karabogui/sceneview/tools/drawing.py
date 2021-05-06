@@ -11,7 +11,7 @@ from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
 from karabogui.pathparser import Parser
 from karabogui.sceneview.bases import BaseSceneTool
-from karabogui.sceneview.utils import calc_snap_pos, calc_rotated_point
+from karabogui.sceneview.utils import calc_rotated_point, calc_snap_pos
 
 
 class TextSceneTool(BaseSceneTool):

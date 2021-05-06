@@ -4,16 +4,17 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from qtpy.QtCore import Slot, QModelIndex
+from qtpy.QtCore import QModelIndex, Slot
 from qtpy.QtWidgets import (
     QAbstractButton, QAbstractItemView, QButtonGroup, QHBoxLayout, QHeaderView,
     QPushButton, QRadioButton, QStyle, QStyledItemDelegate, QTableView,
     QVBoxLayout, QWidget)
+
 from karabogui import icons
 from karabogui.alarms.api import (
-    ACKNOWLEDGE, ALARM_DATA, ALARM_ID, ALARM_WARNING_TYPES, AlarmFilterModel,
-    INTERLOCK_TYPES, get_alarm_key_index)
-from karabogui.events import broadcast_event, KaraboEvent
+    ACKNOWLEDGE, ALARM_DATA, ALARM_ID, ALARM_WARNING_TYPES, INTERLOCK_TYPES,
+    AlarmFilterModel, get_alarm_key_index)
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_alarm_model, get_network
 
 from .base import BasePanelWidget

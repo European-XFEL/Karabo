@@ -3,9 +3,8 @@ from traits.api import Dict, Enum, HasStrictTraits, Instance
 
 from karabogui.graph.common.api import AuxPlots, ImageRegion
 
-from .profiling.controller import ProfileAggregator
 from .histogram.controller import HistogramAggregator
-
+from .profiling.controller import ProfileAggregator
 
 # Map of the enum and the aux plot aggregator
 AGGREGATOR_MAP = {

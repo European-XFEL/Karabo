@@ -1,16 +1,14 @@
 import numpy as np
 
 from karabo.common.api import (
-    KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_WARN_LOW,
-    KARABO_SCHEMA_RELATIVE_ERROR,
-    KARABO_SCHEMA_DISPLAYED_NAME
-)
+    KARABO_SCHEMA_ABSOLUTE_ERROR, KARABO_SCHEMA_DISPLAYED_NAME,
+    KARABO_SCHEMA_RELATIVE_ERROR, KARABO_WARN_LOW)
 from karabo.native import (
-    Configurable, Bool, Hash, HashList, Schema, String, UInt8, VectorHash)
+    Bool, Configurable, Hash, HashList, Schema, String, UInt8, VectorHash)
 from karabogui.binding.api import (
-    attr_fast_deepcopy, FloatBinding, get_table_changes, has_changes,
-    has_array_changes, Int8Binding, realign_hash, table_row_changes,
-    VectorInt32Binding, VectorHashBinding)
+    FloatBinding, Int8Binding, VectorHashBinding, VectorInt32Binding,
+    attr_fast_deepcopy, get_table_changes, has_array_changes, has_changes,
+    realign_hash, table_row_changes)
 
 
 def test_attr_fast_deepcopy():
