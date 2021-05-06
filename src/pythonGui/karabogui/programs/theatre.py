@@ -8,8 +8,8 @@ from qtpy.QtWidgets import qApp
 from karabo.common.api import Capabilities
 from karabogui import messagebox
 from karabogui.programs.base import create_gui_app, init_gui
-from karabogui.singletons.api import get_network, get_topology
 from karabogui.request import get_scene_from_server
+from karabogui.singletons.api import get_network, get_topology
 
 DEVSCENE_PROG = re.compile(r"([0-9a-zA-Z/_\-]+)\|(.+)")
 CAPA = Capabilities.PROVIDES_SCENES

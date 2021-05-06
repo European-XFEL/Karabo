@@ -1,12 +1,11 @@
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
-from qtpy.QtWidgets import QToolButton, QMessageBox
-from unittest.mock import MagicMock
+from qtpy.QtWidgets import QMessageBox, QToolButton
 
 from karabo.common.states import State
 from karabo.native import AccessLevel, Configurable, Slot, String
 from karabogui.binding.api import (
-    DeviceProxy, PropertyProxy, build_binding, apply_default_configuration)
+    DeviceProxy, PropertyProxy, apply_default_configuration, build_binding)
 from karabogui.testing import GuiTestCase, set_proxy_value, singletons
 from karabogui.topology.system_tree import SystemTreeNode
 

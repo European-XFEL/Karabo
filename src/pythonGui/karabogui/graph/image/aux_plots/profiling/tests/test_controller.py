@@ -1,10 +1,10 @@
 import numpy as np
 
-from karabogui.testing import GuiTestCase
 from karabogui.graph.common.api import ImageRegion
+from karabogui.testing import GuiTestCase
 
 from ..controller import (
-    ProfileAnalyzer, ProfileAggregator, ProfilePlot, ProfileController)
+    ProfileAggregator, ProfileAnalyzer, ProfileController, ProfilePlot)
 
 X_LENGTH, Y_LENGTH = (5, 4)
 

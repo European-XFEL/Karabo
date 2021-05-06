@@ -1,11 +1,10 @@
 import numpy as np
 
-from karabogui.testing import GuiTestCase
 from karabogui.graph.common.api import ImageRegion
+from karabogui.testing import GuiTestCase
 
 from ..controller import (
-    HistogramAggregator, HistogramPlot, HistogramController,
-    HistogramAnalyzer)
+    HistogramAggregator, HistogramAnalyzer, HistogramController, HistogramPlot)
 
 
 class TestHistogramAggregator(GuiTestCase):

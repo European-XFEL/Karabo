@@ -5,6 +5,7 @@ from karabo.common import const
 from karabo.common.api import (
     KARABO_SCHEMA_MAX_EXC, KARABO_SCHEMA_MAX_INC, KARABO_SCHEMA_MIN_EXC,
     KARABO_SCHEMA_MIN_INC)
+
 from . import types
 
 

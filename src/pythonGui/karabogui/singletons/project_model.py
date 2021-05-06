@@ -3,9 +3,9 @@
 # Created on October 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from contextlib import contextmanager
 import json
 import re
+from contextlib import contextmanager
 from weakref import WeakValueDictionary
 
 from qtpy.QtCore import (
@@ -16,16 +16,17 @@ from karabo.common.api import walk_traits_object
 from karabo.common.project.api import MacroModel
 from karabo.common.scenemodel.api import SceneModel
 from karabogui.alarms.api import get_alarm_icon
-from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.indicators import get_state_icon_for_status
 from karabogui.project.controller.build import (
     create_project_controller, destroy_project_controller)
+from karabogui.project.controller.device import DeviceInstanceController
 from karabogui.project.controller.device_config import (
     DeviceConfigurationController)
-from karabogui.project.controller.device import DeviceInstanceController
 from karabogui.project.controller.project import ProjectController
 from karabogui.project.utils import show_no_configuration
 from karabogui.singletons.api import get_topology
+
 TABLE_HEADER_LABELS = ["Projects", "", ""]
 
 PROJECT_COLUMN = 0

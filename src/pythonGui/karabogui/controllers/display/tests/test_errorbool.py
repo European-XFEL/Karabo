@@ -1,12 +1,13 @@
 from unittest.mock import patch
 
 from qtpy.QtWidgets import QWidget
+
 from karabo.common.scenemodel.api import ErrorBoolModel
-from karabo.native import Configurable, Bool, Hash
+from karabo.native import Bool, Configurable, Hash
 from karabogui.binding.api import apply_configuration
 from karabogui.testing import GuiTestCase, get_class_property_proxy
 
-from ..errorbool import DisplayErrorBool, OK_BOOL, ERROR_BOOL
+from ..errorbool import ERROR_BOOL, OK_BOOL, DisplayErrorBool
 
 
 class MockQSvgWidget(QWidget):

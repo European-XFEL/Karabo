@@ -5,17 +5,17 @@
 #############################################################################
 import webbrowser
 
-from qtpy.QtCore import Slot, QPoint, QRect, QRectF, QSize, Qt
+from qtpy.QtCore import QPoint, QRect, QRectF, QSize, Qt, Slot
 from qtpy.QtGui import QColor, QPainter, QPen
 from qtpy.QtWidgets import QAction, QDialog, QPushButton
 
+from karabogui import messagebox
 from karabogui.dialogs.dialogs import SceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.dialogs.webdialog import WebDialog
-from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.fonts import get_qfont
 from karabogui.widgets.hints import KaraboSceneWidget
-from karabogui import messagebox
 
 
 class SceneLinkWidget(KaraboSceneWidget, QPushButton):

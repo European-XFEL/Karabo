@@ -6,10 +6,9 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import BitfieldModel
 from karabogui.binding.api import (
     Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding,
-    UnsignedIntBinding, get_editor_value
-)
+    UnsignedIntBinding, get_editor_value)
 from karabogui.controllers.api import (
-    add_unit_label, BaseBindingController, register_binding_controller)
+    BaseBindingController, add_unit_label, register_binding_controller)
 
 
 class BitfieldWidget(QWidget):

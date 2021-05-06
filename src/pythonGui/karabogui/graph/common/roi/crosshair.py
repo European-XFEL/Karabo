@@ -1,7 +1,7 @@
 import numpy as np
-from qtpy.QtCore import Slot, QRectF
-from qtpy.QtGui import QPainterPathStroker, QPainterPath
 from pyqtgraph import Point
+from qtpy.QtCore import QRectF, Slot
+from qtpy.QtGui import QPainterPath, QPainterPathStroker
 
 from karabogui.graph.common.utils import float_to_string
 

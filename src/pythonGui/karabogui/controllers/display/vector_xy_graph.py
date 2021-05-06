@@ -7,9 +7,9 @@ from weakref import WeakValueDictionary
 
 from traits.api import Instance
 
-from karabo.common.scenemodel.api import build_model_config, VectorXYGraphModel
+from karabo.common.scenemodel.api import VectorXYGraphModel, build_model_config
 from karabogui.binding.api import (
-    get_binding_value, VectorBoolBinding, VectorNumberBinding)
+    VectorBoolBinding, VectorNumberBinding, get_binding_value)
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.graph.common.api import get_pen_cycler

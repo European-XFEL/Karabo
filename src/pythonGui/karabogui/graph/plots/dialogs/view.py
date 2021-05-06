@@ -1,8 +1,8 @@
 import os
 
 from qtpy import uic
-from qtpy.QtCore import Slot, Qt
-from qtpy.QtGui import QColor, QPixmap, QIcon
+from qtpy.QtCore import Qt, Slot
+from qtpy.QtGui import QColor, QIcon, QPixmap
 from qtpy.QtWidgets import QColorDialog, QDialog
 
 

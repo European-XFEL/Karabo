@@ -2,10 +2,11 @@ from unittest.mock import Mock, patch
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QToolButton
+
 from karabo.common.states import State
 from karabo.native import AccessLevel, Configurable, Slot, String
 from karabogui.binding.api import (
-    DeviceProxy, PropertyProxy, build_binding, apply_default_configuration)
+    DeviceProxy, PropertyProxy, apply_default_configuration, build_binding)
 from karabogui.testing import GuiTestCase, set_proxy_value, singletons
 
 
@@ -89,7 +90,7 @@ class TestDisplayIconCommand(GuiTestCase):
         assert controller._button.isEnabled()
 
     def test_icon_change(self):
-        from ..icon_command import DisplayIconCommand, BUTTON_ICONS
+        from ..icon_command import BUTTON_ICONS, DisplayIconCommand
 
         slot_proxy = get_slot_proxy()
         controller = DisplayIconCommand(proxy=slot_proxy)

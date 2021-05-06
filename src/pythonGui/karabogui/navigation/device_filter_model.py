@@ -4,8 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from qtpy.QtCore import (
-    Signal, Slot, Qt, QItemSelection, QItemSelectionModel,
-    QSortFilterProxyModel)
+    QItemSelection, QItemSelectionModel, QSortFilterProxyModel, Qt, Signal,
+    Slot)
 
 from karabo.common.enums import Interfaces
 from karabogui.singletons.api import get_topology

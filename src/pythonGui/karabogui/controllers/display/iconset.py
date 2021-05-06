@@ -1,9 +1,8 @@
-import re
 import os.path as op
+import re
 import urllib.request
 from xml.etree.ElementTree import (
-    Element, ElementTree, TreeBuilder, XMLParser, register_namespace
-)
+    Element, ElementTree, TreeBuilder, XMLParser, register_namespace)
 
 from qtpy.QtCore import QBuffer
 from qtpy.QtSvg import QSvgWidget
@@ -11,7 +10,7 @@ from qtpy.QtWidgets import QAction, QInputDialog
 from traits.api import Instance, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayIconsetModel
-from karabogui.binding.api import get_binding_value, StringBinding
+from karabogui.binding.api import StringBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.util import getOpenFileName

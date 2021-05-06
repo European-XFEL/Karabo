@@ -4,8 +4,8 @@ from qtpy.QtCore import QSize
 from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.api import SceneModel
-
 from karabogui.testing import GuiTestCase
+
 from ..scenepanel import ScenePanel
 
 DIALOG_PATH = "karabogui.panels.scenepanel.ResizeSceneDialog"

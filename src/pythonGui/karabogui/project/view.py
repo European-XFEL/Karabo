@@ -5,24 +5,24 @@
 #############################################################################
 from functools import partial
 
-from qtpy.QtCore import Slot, Qt, QModelIndex, QItemSelection
+from qtpy.QtCore import QItemSelection, QModelIndex, Qt, Slot
 from qtpy.QtGui import QClipboard, QCursor, QKeySequence
 from qtpy.QtWidgets import (
-    QApplication, QAction, QDialog, QMessageBox, QTreeView)
+    QAction, QApplication, QDialog, QMessageBox, QTreeView)
 
+import karabogui.icons as icons
 from karabo.common.project.api import find_parent_object
 from karabogui import messagebox
 from karabogui.enums import AccessRole
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.globals import access_role_allowed
 from karabogui.project.dialog.project_handle import NewProjectDialog
-from karabogui.project.utils import (
-    maybe_save_modified_project, save_object)
-from karabogui.singletons.api import (get_db_conn, get_project_model,
-                                      get_selection_tracker)
+from karabogui.project.utils import maybe_save_modified_project, save_object
+from karabogui.singletons.api import (
+    get_db_conn, get_project_model, get_selection_tracker)
 from karabogui.util import (
     is_database_processing, move_to_cursor, set_treeview_header)
-import karabogui.icons as icons
+
 from .controller.bases import BaseProjectGroupController
 from .controller.device import DeviceInstanceController
 from .controller.macro import get_project_macros

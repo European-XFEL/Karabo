@@ -1,6 +1,6 @@
 import os
-from platform import system
 import random
+from platform import system
 from unittest import mock, skipIf
 
 from qtpy.QtCore import QPoint, QSize
@@ -9,18 +9,17 @@ from qtpy.QtWidgets import QWidget
 
 from karabo.common.api import ProxyStatus
 from karabo.common.scenemodel.api import (
-    DeviceSceneLinkModel, LabelModel, SCENE_DEFAULT_DPI, SCENE_FONT_SIZE,
-    SceneLinkModel, SCENE_MAC_DPI, SceneModel, StickerModel, WebLinkModel)
+    SCENE_DEFAULT_DPI, SCENE_FONT_SIZE, SCENE_MAC_DPI, DeviceSceneLinkModel,
+    LabelModel, SceneLinkModel, SceneModel, StickerModel, WebLinkModel)
 from karabo.common.scenemodel.tests.utils import single_model_round_trip
 from karabo.native import Configurable, VectorString
-
-from karabogui.binding.api import build_binding, DeviceProxy, PropertyProxy
-from karabogui.fonts import (
-    FONT_FAMILIES, get_qfont, get_font_size_from_dpi)
+from karabogui.binding.api import DeviceProxy, PropertyProxy, build_binding
+from karabogui.fonts import FONT_FAMILIES, get_font_size_from_dpi, get_qfont
 from karabogui.programs.base import create_gui_app
 from karabogui.testing import GuiTestCase
-from ..widget.container import ControllerContainer
+
 from ..view import SceneView
+from ..widget.container import ControllerContainer
 
 NUM_TESTED_FONTS = 20
 DEVICE_NAME = "Device"

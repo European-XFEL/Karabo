@@ -5,12 +5,11 @@
 #############################################################################
 import copy
 
-from qtpy.QtCore import Qt, QAbstractTableModel, QModelIndex
+from qtpy.QtCore import QAbstractTableModel, QModelIndex, Qt
 from qtpy.QtGui import QBrush, QColor
 
-from karabogui.binding.api import (
-    BoolBinding, get_default_value, VectorBinding)
 from karabo.native import AccessMode, Hash
+from karabogui.binding.api import BoolBinding, VectorBinding, get_default_value
 from karabogui.indicators import get_state_color
 
 from .utils import convert_string_list, is_state_display_type

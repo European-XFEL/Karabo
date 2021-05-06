@@ -1,21 +1,21 @@
 from functools import partial
 from struct import calcsize, pack, unpack
 
+from qtpy.QtCore import QByteArray, QObject, Signal, Slot
 from qtpy.QtNetwork import QAbstractSocket, QTcpSocket
-from qtpy.QtCore import Signal, Slot, QByteArray,  QObject
 from qtpy.QtWidgets import QDialog, QMessageBox, qApp
 
+import karabogui.globals as krb_globals
 from karabo.common.api import KARABO_CONFIG_MANAGER
 from karabo.native import (
-    AccessLevel, decodeBinary, encodeBinary, Hash, Timestamp)
+    AccessLevel, Hash, Timestamp, decodeBinary, encodeBinary)
 from karabogui import background
 from karabogui.const import REQUEST_REPLY_TIMEOUT
 from karabogui.dialogs.logindialog import LoginDialog
-from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.logger import get_logger
 from karabogui.singletons.api import get_config
 from karabogui.util import process_qt_events
-import karabogui.globals as krb_globals
 
 ACCESS_LEVEL_MAP = {
     "observer": 0,

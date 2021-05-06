@@ -6,6 +6,7 @@ from qtpy.QtWidgets import QVBoxLayout, QWidget
 
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.navigation.device_view import DeviceTreeView
+
 from .base import BasePanelWidget
 from .tool_widget import InterfaceBar
 

@@ -1,9 +1,9 @@
-from io import StringIO
-from lxml import etree
-from pathlib import Path
 import random
+from io import StringIO
+from pathlib import Path
 
-from qtpy.QtCore import Slot, QSize, Qt
+from lxml import etree
+from qtpy.QtCore import QSize, Qt, Slot
 from qtpy.QtGui import QPixmap
 from qtpy.QtWidgets import (
     QCheckBox, QLabel, QPushButton, QVBoxLayout, QWizard, QWizardPage)

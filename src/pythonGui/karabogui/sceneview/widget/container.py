@@ -3,10 +3,11 @@ from qtpy.QtWidgets import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
 from karabo.common.api import ProxyStatus, State
 from karabogui import globals as krb_globals
-from karabogui.indicators import get_device_status_pixmap, STATE_COLORS
+from karabogui.indicators import STATE_COLORS, get_device_status_pixmap
 from karabogui.request import send_property_changes
 from karabogui.util import generateObjectName
 from karabogui.widgets.hints import KaraboSceneWidget
+
 from .utils import get_proxy
 
 

@@ -1,14 +1,14 @@
+import unittest
 from datetime import datetime
 from platform import system
-import unittest
 
 from karabo.native import Configurable, String
 from karabogui.controllers.trendmodel import UPTIME
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
 
-from .data import build_historic_state_string
 from ..time_graphs import DisplayStateGraph
+from .data import build_historic_state_string
 
 
 class Object(Configurable):

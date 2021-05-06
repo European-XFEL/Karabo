@@ -10,17 +10,17 @@ from qtpy.QtCore import (
 from qtpy.QtGui import QBrush, QColor, QPainterPath, QPen, QTransform
 from qtpy.QtWidgets import QDialog
 from traits.api import (
-    ABCHasStrictTraits, cached_property, Bool, Constant, Float, Instance,
-    List, on_trait_change, Property, Tuple)
+    ABCHasStrictTraits, Bool, Constant, Float, Instance, List, Property, Tuple,
+    cached_property, on_trait_change)
 
 from karabo.common.scenemodel.api import BaseShapeObjectData, XMLElementModel
 from karabogui.dialogs.dialogs import PenDialog
 from karabogui.pathparser import Parser
-from .const import (GRID_STEP, QT_PEN_CAP_STYLE_FROM_STR,
-                    QT_PEN_CAP_STYLE_TO_STR, QT_PEN_JOIN_STYLE_FROM_STR,
-                    QT_PEN_JOIN_STYLE_TO_STR, SCREEN_MAX_VALUE)
-from .utils import calc_rotated_point
 
+from .const import (
+    GRID_STEP, QT_PEN_CAP_STYLE_FROM_STR, QT_PEN_CAP_STYLE_TO_STR,
+    QT_PEN_JOIN_STYLE_FROM_STR, QT_PEN_JOIN_STYLE_TO_STR, SCREEN_MAX_VALUE)
+from .utils import calc_rotated_point
 
 _BRUSH_ATTRS = ('fill', 'fill_opacity')
 _PEN_ATTRS = ('stroke', 'stroke_opacity', 'stroke_linecap',

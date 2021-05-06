@@ -1,14 +1,13 @@
 from functools import partial
 
-from qtpy.QtCore import Signal, Slot, QEvent, QSize, Qt
+from pyqtgraph import GraphicsLayoutWidget
+from qtpy.QtCore import QEvent, QSize, Qt, Signal, Slot
 from qtpy.QtGui import QPalette
 from qtpy.QtWidgets import QAction, QGridLayout, QWidget
-from pyqtgraph import GraphicsLayoutWidget
 
 from karabogui import icons
-
 from karabogui.graph.common.api import (
-    AxesLabelsDialog, AuxPlots, COLORMAPS, ExportTool, ImageROIController,
+    COLORMAPS, AuxPlots, AxesLabelsDialog, ExportTool, ImageROIController,
     MouseMode, PointCanvas, RectCanvas, ROITool, ToolbarController)
 from karabogui.graph.common.const import TF_SCALING, X_AXIS_HEIGHT
 

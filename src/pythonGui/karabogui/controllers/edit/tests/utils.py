@@ -1,4 +1,4 @@
-from karabo.native import Configurable, Float, Int32, Int8
+from karabo.native import Configurable, Float, Int8, Int32
 
 
 class Other(Configurable):

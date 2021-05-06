@@ -5,27 +5,28 @@
 #############################################################################
 from functools import partial
 
-from qtpy.QtCore import Slot, QEvent, QSize, Qt
+from qtpy.QtCore import QEvent, QSize, Qt, Slot
 from qtpy.QtGui import QKeySequence, QPalette
 from qtpy.QtWidgets import (
     QAction, QActionGroup, QApplication, QDialog, QMenu, QScrollArea)
 
 from karabogui import icons
-from karabogui.events import broadcast_event, KaraboEvent
-from karabogui.indicators import get_topic_color
 from karabogui.dialogs.dialogs import ResizeSceneDialog
+from karabogui.events import KaraboEvent, broadcast_event
+from karabogui.indicators import get_topic_color
 from karabogui.sceneview.api import SceneView
 from karabogui.sceneview.const import QT_CURSORS, SCENE_BORDER_WIDTH
 from karabogui.sceneview.tools.api import (
-    ArrowSceneTool, BoxVSceneAction, BoxHSceneAction, CreateToolAction,
-    GroupEntireSceneAction, GroupSceneAction,
-    UngroupSceneAction, LineSceneTool,  TextSceneTool, RectangleSceneTool,
-    SceneBringToFrontAction, SceneCopyAction, SceneCutAction,
-    SceneDeleteAction, SceneMoveAction, SceneLinkTool, ScenePasteAction,
-    ScenePasteReplaceAction, SceneSelectAllAction, SceneSendToBackAction,
-    SceneSelectionTool, StickerTool, WebLinkTool)
-from karabogui.widgets.toolbar import ToolBar
+    ArrowSceneTool, BoxHSceneAction, BoxVSceneAction, CreateToolAction,
+    GroupEntireSceneAction, GroupSceneAction, LineSceneTool,
+    RectangleSceneTool, SceneBringToFrontAction, SceneCopyAction,
+    SceneCutAction, SceneDeleteAction, SceneLinkTool, SceneMoveAction,
+    ScenePasteAction, ScenePasteReplaceAction, SceneSelectAllAction,
+    SceneSelectionTool, SceneSendToBackAction, StickerTool, TextSceneTool,
+    UngroupSceneAction, WebLinkTool)
 from karabogui.util import move_to_cursor
+from karabogui.widgets.toolbar import ToolBar
+
 from .base import BasePanelWidget
 
 # NOTE: This is the amount of padding added by ScenePanel's QFrame parent

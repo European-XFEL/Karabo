@@ -3,16 +3,16 @@
 # Created on January 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from functools import partial
 from collections import defaultdict
+from functools import partial
 
 from qtpy.QtWidgets import QAction, QDialog, QMenu
 from traits.api import Instance, List, on_trait_change
 
+import karabogui.icons as icons
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import (
     DeviceInstanceModel, ProjectModel, device_instance_exists)
-import karabogui.icons as icons
 from karabogui import messagebox
 from karabogui.enums import AccessRole
 from karabogui.globals import access_role_allowed
@@ -21,6 +21,7 @@ from karabogui.project.loading_watcher import ProjectLoadingWatcher
 from karabogui.project.utils import load_project
 from karabogui.singletons.api import get_project_model
 from karabogui.util import move_to_cursor
+
 from .project_groups import ProjectSubgroupController
 
 

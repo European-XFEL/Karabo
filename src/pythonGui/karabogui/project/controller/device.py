@@ -6,26 +6,24 @@
 from functools import partial
 from io import StringIO
 
-from traits.api import Undefined
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
-from traits.api import Instance, Property, on_trait_change
+from traits.api import Instance, Property, Undefined, on_trait_change
 
-from karabo.common.api import Capabilities, NO_CONFIG_STATUSES
+import karabogui.icons as icons
+from karabo.common.api import NO_CONFIG_STATUSES, Capabilities
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     find_parent_object)
-from karabo.native import (
-    Hash, read_project_model, write_project_model)
-import karabogui.icons as icons
+from karabo.native import Hash, read_project_model, write_project_model
 from karabogui import messagebox
 from karabogui.binding.api import extract_configuration
-from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.dialogs.configuration_from_name import ConfigurationFromName
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
+from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
 from karabogui.enums import AccessRole, ProjectItemTypes
-from karabogui.events import broadcast_event, KaraboEvent
+from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.globals import access_role_allowed
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.project.dialog.device_handle import DeviceHandleDialog
@@ -33,11 +31,12 @@ from karabogui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabogui.project.utils import (
     check_device_config_exists, check_device_instance_exists)
 from karabogui.request import (
-    call_device_slot, get_scene_from_server, handle_scene_from_server,
-    handle_macro_from_server)
+    call_device_slot, get_scene_from_server, handle_macro_from_server,
+    handle_scene_from_server)
 from karabogui.singletons.api import get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from karabogui.util import move_to_cursor, open_documentation_link
+
 from .bases import BaseProjectGroupController, ProjectControllerUiData
 from .server import DeviceServerController
 

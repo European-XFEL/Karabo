@@ -1,9 +1,9 @@
 import argparse
-from glob import glob
 import os.path as op
 import time
+from glob import glob
 
-from karabo.native import decodeBinary, Schema
+from karabo.native import Schema, decodeBinary
 from karabogui.binding.api import apply_configuration, build_binding
 
 TEST_DATA_DIR = op.join(op.dirname(__file__), 'data')

@@ -6,7 +6,6 @@ from qtpy.QtWidgets import QApplication
 
 from karabo.common.project.api import ProjectModel
 from karabo.common.scenemodel.api import SceneModel
-
 from karabogui.testing import GuiTestCase
 from karabogui.util import SignalBlocker
 

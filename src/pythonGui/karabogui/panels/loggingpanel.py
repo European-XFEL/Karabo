@@ -7,10 +7,10 @@ from qtpy.QtWidgets import QAction, QVBoxLayout, QWidget
 
 from karabogui import icons
 from karabogui.events import (
-    register_for_broadcasts, KaraboEvent, unregister_from_broadcasts
-)
+    KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.widgets.log import LogWidget
 from karabogui.widgets.toolbar import ToolBar
+
 from .base import BasePanelWidget
 
 

@@ -1,7 +1,8 @@
-from karabo.native import Configurable, Bool, Int32
+from karabo.native import Bool, Configurable, Int32
 from karabogui.binding.api import PropertyProxy
 from karabogui.testing import (
     GuiTestCase, get_class_property_proxy, set_proxy_value)
+
 from ..multicurvegraph import DisplayMultiCurveGraph
 
 

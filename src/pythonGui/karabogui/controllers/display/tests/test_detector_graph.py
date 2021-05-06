@@ -1,14 +1,14 @@
-from qtpy.QtWidgets import QGraphicsTextItem
 from unittest import mock, skip
 
-from karabo.native import EncodingType
+from qtpy.QtWidgets import QGraphicsTextItem
 
-from karabogui.graph.common.api import Axes
+from karabo.native import EncodingType
 from karabogui.binding.builder import build_binding
 from karabogui.binding.config import apply_configuration
 from karabogui.binding.proxy import DeviceProxy, PropertyProxy
 from karabogui.controllers.display.tests.image import (
     get_image_hash, get_pipeline_schema)
+from karabogui.graph.common.api import Axes
 from karabogui.testing import GuiTestCase
 
 from ..detector_graph import DisplayDetectorGraph, FrameSlider

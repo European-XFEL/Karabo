@@ -6,16 +6,15 @@ from qtpy.QtWidgets import QWidget
 from traits.api import Enum, Instance, Int, WeakRef
 
 from karabo.common.scenemodel.api import (
-    build_graph_config, restore_graph_config, DetectorGraphModel)
+    DetectorGraphModel, build_graph_config, restore_graph_config)
 from karabo.native import EncodingType, Timestamp
-
 from karabogui.binding.api import ImageBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
-from karabogui.util import SignalBlocker
-from karabogui.graph.common.api import Axes, AuxPlots
+from karabogui.graph.common.api import AuxPlots, Axes
 from karabogui.graph.image.api import (
-    KaraboImagePlot, KaraboImageNode, KaraboImageView)
+    KaraboImageNode, KaraboImagePlot, KaraboImageView)
+from karabogui.util import SignalBlocker
 
 
 class FrameSlider(QWidget):

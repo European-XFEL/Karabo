@@ -4,12 +4,12 @@ import numpy as np
 from traits.api import TraitError
 
 from karabo.common import const
-from karabo.native import HashList, Hash
-from karabogui.binding.compare import realign_hash, has_array_changes
+from karabo.native import Hash, HashList
+from karabogui.binding.compare import has_array_changes, realign_hash
 from karabogui.binding.recursive import (
-    ListOfNodesBinding, ChoiceOfNodesBinding)
+    ChoiceOfNodesBinding, ListOfNodesBinding)
 from karabogui.binding.types import (
-    BoolBinding, BindingRoot, ByteArrayBinding, CharBinding, ComplexBinding,
+    BindingRoot, BoolBinding, ByteArrayBinding, CharBinding, ComplexBinding,
     FloatBinding, IntBinding, NodeBinding, SlotBinding, StringBinding,
     VectorBinding, VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
     VectorNumberBinding, VectorStringBinding)

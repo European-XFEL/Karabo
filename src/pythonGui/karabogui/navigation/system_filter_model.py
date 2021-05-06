@@ -4,8 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from qtpy.QtCore import (
-    Signal, Slot, Qt, QItemSelection, QItemSelectionModel,
-    QSortFilterProxyModel)
+    QItemSelection, QItemSelectionModel, QSortFilterProxyModel, Qt, Signal,
+    Slot)
 
 from karabogui import globals as krb_globals
 from karabogui.events import KaraboEvent, register_for_broadcasts

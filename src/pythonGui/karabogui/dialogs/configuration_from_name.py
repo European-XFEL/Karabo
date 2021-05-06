@@ -2,15 +2,15 @@ from collections import namedtuple
 
 from qtpy import uic
 from qtpy.QtCore import (
-    Slot, QAbstractTableModel, QItemSelection, QSortFilterProxyModel, Qt)
+    QAbstractTableModel, QItemSelection, QSortFilterProxyModel, Qt, Slot)
 from qtpy.QtGui import QPalette
-from qtpy.QtWidgets import QDialog, QHeaderView, QDialogButtonBox
+from qtpy.QtWidgets import QDialog, QDialogButtonBox, QHeaderView
 
-from karabogui.events import (
-    broadcast_event, register_for_broadcasts, unregister_from_broadcasts,
-    KaraboEvent)
-from karabogui import messagebox
 import karabogui.icons as icons
+from karabogui import messagebox
+from karabogui.events import (
+    KaraboEvent, broadcast_event, register_for_broadcasts,
+    unregister_from_broadcasts)
 from karabogui.singletons.api import get_network, get_topology
 from karabogui.validators import RegexValidator
 
