@@ -8,8 +8,8 @@ from traits.api import Instance, List, on_trait_change
 
 from karabo.common.project.api import ProjectModel
 from karabogui import icons, messagebox
-from karabogui.enums import ProjectItemTypes
 from karabogui.fonts import get_qfont
+from karabogui.itemtypes import ProjectItemTypes
 
 from .bases import BaseProjectController
 from .project_groups import ProjectControllerUiData, ProjectSubgroupController

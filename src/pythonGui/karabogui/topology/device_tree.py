@@ -12,7 +12,7 @@ from traits.api import (
 import karabogui.access as krb_access
 from karabo.common.api import ProxyStatus
 from karabo.native import AccessLevel
-from karabogui.enums import NavigationItemTypes
+from karabogui.itemtypes import NavigationItemTypes
 
 BLACKLIST_CLASSES = ('DataLogger', 'DataLogReader', 'GuiServerDevice',
                      'LogAggregator', 'ProjectManager')

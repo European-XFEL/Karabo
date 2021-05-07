@@ -4,7 +4,7 @@ from qtpy.QtCore import QModelIndex, Qt
 from qtpy.QtWidgets import QTableView
 
 from karabogui.binding.api import StringBinding
-from karabogui.enums import NavigationItemTypes, ProjectItemTypes
+from karabogui.itemtypes import NavigationItemTypes, ProjectItemTypes
 
 
 class KaraboTableView(QTableView):
