@@ -8,7 +8,7 @@ from weakref import WeakValueDictionary
 from qtpy.QtCore import QAbstractItemModel, QModelIndex, Qt, Signal
 from qtpy.QtGui import QBrush, QColor
 
-import karabogui.globals as krb_globals
+import karabogui.access as krb_access
 from karabo.common.api import (
     KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_SCHEMA_ALLOWED_STATES,
     KARABO_WARN_HIGH, KARABO_WARN_LOW, State)
@@ -613,7 +613,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
     def _attribute_flags(self, binding):
         """flags() implementation for property attributes"""
-        if krb_globals.GLOBAL_ACCESS_LEVEL >= AccessLevel.USER:
+        if krb_access.GLOBAL_ACCESS_LEVEL >= AccessLevel.USER:
             return Qt.ItemIsEditable
 
         return 0
