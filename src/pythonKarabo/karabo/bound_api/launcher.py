@@ -1,5 +1,4 @@
 import ctypes
-import os.path
 import signal
 import sys
 import threading
@@ -7,9 +6,9 @@ import copy
 
 from pkg_resources import working_set
 
-from karabo.bound import (EventLoop, Hash, TextSerializerHash,
+from karabo.bound import (Configurator, EventLoop, Hash, TextSerializerHash,
                           BinarySerializerHash, OVERWRITE_ELEMENT,
-                          PythonDevice)
+                          PluginLoader, PythonDevice)
 
 
 def main():
@@ -30,17 +29,6 @@ def main():
              .setNewDefaultValue("UNKNOWN")
              .commit(),
              )
-            h = schema.getParameterHash()
-            for key in h["Logger.network.connection"]:
-                (OVERWRITE_ELEMENT(schema)
-                 .key(f"Logger.network.connection.{key}.brokers")
-                 .setNewDefaultValue("tcp://localhost:7777")
-                 .commit(),
-                 OVERWRITE_ELEMENT(schema)
-                 .key(f"Logger.network.connection.{key}.domain")
-                 .setNewDefaultValue("karabo")
-                 .commit(),
-                 )
         h = Hash()
         h[name] = schema
         ser = BinarySerializerHash.create("Bin")
@@ -60,23 +48,26 @@ def main():
         libc = ctypes.cdll.LoadLibrary("libc.so.6")
         libc.prctl(PR_SET_PDEATHSIG, signal.SIGTERM)
 
-        # If log filename not specified, make use of device name to avoid
-        # that different processes write to the same file.
-        # TODO:
-        # "karabo.log" is default from RollingFileAppender::expectedParameters
-        # Unfortunately, the GUI sends full config, including defaults.
-        if ("Logger.file.filename" not in config
-                or config["Logger.file.filename"] == "karabo.log"):
-            deviceId = config["_deviceId_"]
-            defaultLog = "device-{}.log".format(
-                deviceId.replace(os.path.sep, "_"))
-            config["Logger.file.filename"] = defaultLog
+        if "_logger_" in config:
+            # Yet unused when started from MDL, but equivalent to
+            # bound_api.device.launchPythonDevice()
+            PythonDevice._loggerCfg = copy.copy(config['_logger_'])
+            config.erase('_logger_')
 
-        # Load the module containing classid so that it gets registered.
+        if "timeServerId" in config:
+            PythonDevice.timeServerId = copy.copy(config["timeServerId"])
+            config.erase("timeServerId")
+        # PluginLoader registers device classes so Configurator knows them
+        loader = PluginLoader.create("PythonPluginLoader",
+                                     Hash("pluginNamespace", namespace))
+        loader.update()
+
         t = threading.Thread(target=EventLoop.work)
         t.start()
         try:
-            device = entrypoint.load().create(name, config)
+            # Creating device via Configurator runs config validation and thus
+            # ensures that defaults are available.
+            device = Configurator(PythonDevice).create(name, config)
             device._finalizeInternalInitialization()
         except BaseException:
             EventLoop.stop()

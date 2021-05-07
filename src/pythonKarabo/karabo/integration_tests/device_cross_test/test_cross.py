@@ -146,7 +146,7 @@ class Tests(DeviceTest):
             "run", "karabo.bound_device_test", "TestDevice",
             stdin=PIPE, stderr=PIPE, stdout=PIPE)
         # Logging set to FATAL to swallow the misleading ERROR that comes
-        # if we try (and fail as expected) to set a readOly property on
+        # if we try (and fail as expected) to set a readOnly property on
         # For debugging you may switch to INFO or DEBUG.
         self.process.stdin.write(b"""\
             <root KRB_Artificial="">
