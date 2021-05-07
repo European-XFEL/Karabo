@@ -10,11 +10,11 @@ from qtpy.QtWidgets import (
     QAbstractItemView, QAction, QHeaderView, QMenu, QTreeView)
 
 from karabogui import icons, messagebox
+from karabogui.access import AccessRole, access_role_allowed
 from karabogui.dialogs.configuration_from_name import ConfigurationFromName
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
-from karabogui.enums import AccessRole, NavigationItemTypes
+from karabogui.enums import NavigationItemTypes
 from karabogui.events import KaraboEvent, broadcast_event
-from karabogui.globals import access_role_allowed
 from karabogui.singletons.api import get_manager, get_selection_tracker
 from karabogui.util import open_documentation_link
 from karabogui.widgets.popup import PopupWidget

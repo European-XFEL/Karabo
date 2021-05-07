@@ -18,13 +18,13 @@ from karabo.common.project.api import (
     find_parent_object)
 from karabo.native import Hash, read_project_model, write_project_model
 from karabogui import messagebox
+from karabogui.access import AccessRole, access_role_allowed
 from karabogui.binding.api import extract_configuration
 from karabogui.dialogs.configuration_from_name import ConfigurationFromName
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
-from karabogui.enums import AccessRole, ProjectItemTypes
+from karabogui.enums import ProjectItemTypes
 from karabogui.events import KaraboEvent, broadcast_event
-from karabogui.globals import access_role_allowed
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.project.dialog.device_handle import DeviceHandleDialog
 from karabogui.project.dialog.object_handle import ObjectDuplicateDialog
