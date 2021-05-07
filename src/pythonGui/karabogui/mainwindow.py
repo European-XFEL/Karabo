@@ -16,9 +16,8 @@ from qtpy.QtWidgets import (
 import karabogui.access as krb_access
 from karabo.common.project.api import get_project_models
 from karabo.native import AccessLevel
-from karabogui import globals as krb_globals, icons, messagebox
+from karabogui import const, icons, messagebox
 from karabogui.access import ACCESS_LEVELS, AccessRole
-from karabogui.const import IS_MAC_SYSTEM
 from karabogui.dialogs.configuration import ConfigurationDialog
 from karabogui.dialogs.dialogs import AboutDialog
 from karabogui.dialogs.update_dialog import UpdateDialog
@@ -114,8 +113,8 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
 
         # Create projects folder, if not exists
-        if not os.path.exists(krb_globals.KARABO_PROJECT_FOLDER):
-            os.makedirs(krb_globals.KARABO_PROJECT_FOLDER, exist_ok=True)
+        if not os.path.exists(const.KARABO_PROJECT_FOLDER):
+            os.makedirs(const.KARABO_PROJECT_FOLDER, exist_ok=True)
 
         self._setupActions()
         self._setupMenuBar()
@@ -148,7 +147,7 @@ class MainWindow(QMainWindow):
             if visible:
                 self._open_closable_panel(name)
 
-        title = "European XFEL - Karabo GUI " + krb_globals.GUI_VERSION_LONG
+        title = "European XFEL - Karabo GUI " + const.GUI_VERSION_LONG
         self.setWindowTitle(title)
 
         # Connect to some important network signals
@@ -444,7 +443,7 @@ class MainWindow(QMainWindow):
         self.acRegisterApplication = QAction('Register Application', self)
         self.acRegisterApplication.triggered.connect(
             self.onRegisterApplication)
-        if not IS_MAC_SYSTEM:
+        if not const.IS_MAC_SYSTEM:
             mSettingsMenu.addAction(self.acRegisterApplication)
 
         mHelpMenu = menuBar.addMenu("&Links")
@@ -637,7 +636,7 @@ class MainWindow(QMainWindow):
     def onRegisterApplication(self):
         register_protocol()
         get_logger().info("Registered the Karabo client application with "
-                          f"version <b>{krb_globals.GUI_VERSION_LONG}</b> "
+                          f"version <b>{const.GUI_VERSION_LONG}</b> "
                           "for the <b>URL scheme</b> protocol.")
 
     @Slot()
