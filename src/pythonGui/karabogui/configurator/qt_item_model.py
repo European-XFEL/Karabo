@@ -16,8 +16,8 @@ from karabo.native import AccessLevel, AccessMode, Assignment
 from karabogui.binding.api import (
     BaseBinding, BindingRoot, ChoiceOfNodesBinding, DeviceClassProxy,
     DeviceProxy, ImageBinding, ListOfNodesBinding, NDArrayBinding, NodeBinding,
-    ProjectDeviceProxy, PropertyProxy, SlotBinding, WidgetNodeBinding,
-    get_binding_value, has_changes)
+    ProjectDeviceProxy, PropertyProxy, SlotBinding, StringBinding,
+    WidgetNodeBinding, get_binding_value, has_changes)
 from karabogui.fonts import get_qfont
 from karabogui.indicators import (
     ERROR_COLOR_ALPHA, LOCKED_COLOR, OK_COLOR, PROPERTY_ALARM_COLOR,
@@ -555,22 +555,23 @@ class ConfigurationTreeModel(QAbstractItemModel):
         value = get_binding_value(binding)
         if value is None:
             return None  # indicate no color
-        alarm_low = attributes.get(KARABO_ALARM_LOW)
-        alarm_high = attributes.get(KARABO_ALARM_HIGH)
-        if threshold_triggered(value, alarm_low, alarm_high):
-            return PROPERTY_ALARM_COLOR
 
-        warn_low = attributes.get(KARABO_WARN_LOW)
-        warn_high = attributes.get(KARABO_WARN_HIGH)
-        if threshold_triggered(value, warn_low, warn_high):
-            return PROPERTY_WARN_COLOR
+        if isinstance(binding, StringBinding):
+            if binding.display_type == 'State':
+                return get_state_color(value) + (128,)
 
-        if binding.display_type == 'State':
-            return get_state_color(value) + (128,)
+            if binding.display_type == 'AlarmCondition':
+                return PROPERTY_ALARM_COLOR_MAP.get(value)
+        else:
+            alarm_low = attributes.get(KARABO_ALARM_LOW)
+            alarm_high = attributes.get(KARABO_ALARM_HIGH)
+            if threshold_triggered(value, alarm_low, alarm_high):
+                return PROPERTY_ALARM_COLOR
 
-        if binding.display_type == 'AlarmCondition':
-            return PROPERTY_ALARM_COLOR_MAP.get(value)
-
+            warn_low = attributes.get(KARABO_WARN_LOW)
+            warn_high = attributes.get(KARABO_WARN_HIGH)
+            if threshold_triggered(value, warn_low, warn_high):
+                return PROPERTY_WARN_COLOR
         return None  # indicate no color
 
     def _proxy_data(self, index, proxy, role, column):
