@@ -13,15 +13,15 @@ from qtpy.QtWidgets import (
     QAction, QActionGroup, QFrame, QLabel, QMainWindow, QMenu, QMessageBox,
     QSizePolicy, QSplitter, QToolButton, QWidget, qApp)
 
+import karabogui.access as krb_access
 from karabo.common.project.api import get_project_models
 from karabo.native import AccessLevel
 from karabogui import globals as krb_globals, icons, messagebox
-from karabogui.access import ACCESS_LEVELS
+from karabogui.access import ACCESS_LEVELS, AccessRole
 from karabogui.const import IS_MAC_SYSTEM
 from karabogui.dialogs.configuration import ConfigurationDialog
 from karabogui.dialogs.dialogs import AboutDialog
 from karabogui.dialogs.update_dialog import UpdateDialog
-from karabogui.enums import AccessRole
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_processing_color
@@ -610,7 +610,7 @@ class MainWindow(QMainWindow):
         project = get_project_model().root_model
         if project is None:
             return False
-        allowed = krb_globals.access_role_allowed(AccessRole.PROJECT_EDIT)
+        allowed = krb_access.access_role_allowed(AccessRole.PROJECT_EDIT)
         if get_db_conn().is_writing() or (project.modified and allowed):
             ask = ('Unsaved changes on project \"<b>{}</b>\" will be '
                    'permanently lost.<br /> Continue action?'
@@ -696,7 +696,7 @@ class MainWindow(QMainWindow):
     def onChangeAccessLevel(self, action):
         level = action.data()
         assert isinstance(level, AccessLevel), 'Garbage access level value!'
-        krb_globals.GLOBAL_ACCESS_LEVEL = level
+        krb_access.GLOBAL_ACCESS_LEVEL = level
 
         # Tell the world
         broadcast_event(KaraboEvent.AccessLevelChanged, {})
@@ -764,7 +764,7 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def onUpdateAccessLevel(self):
-        global_access_level = krb_globals.GLOBAL_ACCESS_LEVEL
+        global_access_level = krb_access.GLOBAL_ACCESS_LEVEL
 
         # Build the access level menu
         self.mAccessLevel.clear()

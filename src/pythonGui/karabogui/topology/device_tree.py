@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from traits.api import (
     Bool, Dict, Enum, HasStrictTraits, Instance, Int, List, String, WeakRef)
 
-import karabogui.globals as krb_globals
+import karabogui.access as krb_access
 from karabo.common.api import ProxyStatus
 from karabo.native import AccessLevel
 from karabogui.enums import NavigationItemTypes
@@ -40,7 +40,7 @@ class DeviceTreeNode(HasStrictTraits):
     is_visible = Bool(True)
 
     def _is_visible_default(self):
-        return not (self.visibility > krb_globals.GLOBAL_ACCESS_LEVEL)
+        return not (self.visibility > krb_access.GLOBAL_ACCESS_LEVEL)
 
     def child(self, node_id):
         for child in self.children:
@@ -241,8 +241,9 @@ class DeviceSystemTree(HasStrictTraits):
         :param use_reg_ex: Defines the given string as a regular expression
         :return list of found nodes (which could be empty)
         """
-        access_level = (krb_globals.GLOBAL_ACCESS_LEVEL if access_level is None
-                        else access_level)
+        access_level = (
+            krb_access.GLOBAL_ACCESS_LEVEL if access_level is None
+            else access_level)
 
         found_nodes = []
         pattern = node_id if use_reg_ex else ".*{}".format(re.escape(node_id))

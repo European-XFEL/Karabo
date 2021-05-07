@@ -14,8 +14,7 @@ from karabo.common.api import walk_traits_object
 from karabo.common.project.api import (
     DeviceInstanceModel, ProjectModel, device_instance_exists)
 from karabogui import messagebox
-from karabogui.enums import AccessRole
-from karabogui.globals import access_role_allowed
+from karabogui.access import AccessRole, access_role_allowed
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.loading_watcher import ProjectLoadingWatcher
 from karabogui.project.utils import load_project

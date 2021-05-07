@@ -4,10 +4,10 @@ from qtpy.QtWidgets import (
     QAction, QDialog, QHBoxLayout, QListView, QToolButton, QWidget)
 from traits.api import Instance
 
+import karabogui.access as krb_access
 import karabogui.icons as icons
 from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayIconCommandModel
-from karabogui import globals as krb_globals
 from karabogui.binding.api import SlotBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
@@ -135,6 +135,6 @@ class DisplayIconCommand(BaseBindingController):
         binding = proxy.binding
         state = State(value)
         is_allowed = binding.is_allowed(state)
-        is_accessible = (krb_globals.GLOBAL_ACCESS_LEVEL >=
+        is_accessible = (krb_access.GLOBAL_ACCESS_LEVEL >=
                          binding.required_access_level)
         self._button.setEnabled(is_allowed and is_accessible)

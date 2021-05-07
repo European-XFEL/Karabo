@@ -9,8 +9,10 @@ from qtpy.QtWidgets import (
     QAction, QDialog, QHBoxLayout, QPushButton, QScrollArea, QStackedWidget,
     QVBoxLayout, QWidget)
 
+import karabogui.access as krb_access
 from karabo.native import AccessMode, Hash
-from karabogui import globals as krb_globals, icons, messagebox
+from karabogui import icons, messagebox
+from karabogui.access import AccessRole, access_role_allowed
 from karabogui.binding.api import (
     ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy, ListOfNodesBinding,
     ProjectDeviceProxy, VectorHashBinding, apply_configuration,
@@ -18,9 +20,7 @@ from karabogui.binding.api import (
     has_table_changes, validate_table_value, validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
-from karabogui.enums import AccessRole
 from karabogui.events import KaraboEvent, register_for_broadcasts
-from karabogui.globals import access_role_allowed
 from karabogui.singletons.api import get_manager
 from karabogui.util import (
     get_spin_widget, load_configuration_from_file, save_configuration_to_file)
@@ -356,7 +356,7 @@ class ConfigurationPanel(BasePanelWidget):
         """
         # Load the configuration into PropertyProxy instances
         invalid_prop = {}
-        access_level = krb_globals.GLOBAL_ACCESS_LEVEL
+        access_level = krb_access.GLOBAL_ACCESS_LEVEL
         state = proxy.state_binding.value
 
         editor = self._stacked_tree_widgets.widget(CONFIGURATION_PAGE)
