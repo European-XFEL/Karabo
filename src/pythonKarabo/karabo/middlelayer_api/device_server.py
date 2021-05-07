@@ -620,6 +620,13 @@ class BoundDeviceServer(DeviceServerBase):
                     .startDevice(classId, deviceId, config))
         if "Logger.priority" not in config:
             config["Logger.priority"] = self.log.level
+        # Logger settings for the three appenders (ostream, file, network)
+        # would have to be passed via config["_logger_"], as a copy of the
+        # settings of the server. But there are no such parameters for the mdl
+        # server, so we let the bound device choose the defaults...
+
+        config["timeServerId"] = self.timeServerId
+
         # Would be nice to inject _conncetion_ config here from what the
         # server uses, i.e. domain, brokers and the broker type.
         # Since that is not easily available (except domain via
