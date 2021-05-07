@@ -4,9 +4,9 @@ from qtpy.QtWidgets import (
     QAction, QMessageBox, QStackedLayout, QToolButton, QWidget)
 from traits.api import Instance, List
 
+import karabogui.access as krb_access
 from karabo.common.api import State
 from karabo.common.scenemodel.api import DisplayCommandModel
-from karabogui import globals as krb_globals
 from karabogui.binding.api import SlotBinding, get_binding_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
@@ -103,7 +103,7 @@ class DisplayCommand(BaseBindingController):
             item_binding = item.proxy.binding
             if item_dev is updated_dev:
                 is_allowed = item_binding.is_allowed(state)
-                is_accessible = (krb_globals.GLOBAL_ACCESS_LEVEL >=
+                is_accessible = (krb_access.GLOBAL_ACCESS_LEVEL >=
                                  item_binding.required_access_level)
                 item.action.setEnabled(is_allowed and is_accessible)
 
@@ -136,10 +136,10 @@ class DisplayCommand(BaseBindingController):
             message_box = QMessageBox()
             message_box.setModal(False)
             confirmation = message_box.question(
-                                    self.widget, 'Confirmation',
-                                    'Continue with this operation?',
-                                    QMessageBox.No,
-                                    QMessageBox.Yes)
+                self.widget, 'Confirmation',
+                'Continue with this operation?',
+                QMessageBox.No,
+                QMessageBox.Yes)
 
             if confirmation == QMessageBox.No:
                 return

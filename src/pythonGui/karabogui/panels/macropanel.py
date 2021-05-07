@@ -7,16 +7,16 @@ from qtpy.QtCore import QEvent, QPoint, Qt, Slot
 from qtpy.QtGui import QTextCursor
 from qtpy.QtWidgets import QMenu, QPlainTextEdit, QSplitter
 
+import karabogui.access as krb_access
+
 try:
     from qtconsole.pygments_highlighter import PygmentsHighlighter
 except ImportError:
     from IPython.qt.console.pygments_highlighter import PygmentsHighlighter
 
-import karabogui.globals as krb_globals
 from karabo.common.project.api import write_macro
 from karabogui import icons, messagebox
 from karabogui.binding.api import PropertyProxy
-from karabogui.enums import AccessRole
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
@@ -184,10 +184,11 @@ class MacroPanel(BasePanelWidget):
 
     @Slot()
     def on_run(self):
-        allowed = krb_globals.access_role_allowed(AccessRole.SERVICE_EDIT)
+        allowed = krb_access.access_role_allowed(
+            krb_access.AccessRole.SERVICE_EDIT)
         if not allowed:
             msg = (f"The current access level "
-                   f"'{krb_globals.GLOBAL_ACCESS_LEVEL}' "
+                   f"'{krb_access.GLOBAL_ACCESS_LEVEL}' "
                    f"is not sufficient to run the macro! Please contact a "
                    f"controls expert.")
             messagebox.show_information(msg)

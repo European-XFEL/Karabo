@@ -8,10 +8,9 @@ from functools import partial
 from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QAction, QVBoxLayout, QWidget
 
-from karabogui.enums import AccessRole
+from karabogui.access import AccessRole, access_role_allowed
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
-from karabogui.globals import access_role_allowed
 from karabogui.widgets.ipython import IPythonWidget
 from karabogui.widgets.toolbar import ToolBar
 

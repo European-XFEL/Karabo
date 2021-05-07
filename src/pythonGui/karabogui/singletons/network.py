@@ -5,6 +5,7 @@ from qtpy.QtCore import QByteArray, QObject, Signal, Slot
 from qtpy.QtNetwork import QAbstractSocket, QTcpSocket
 from qtpy.QtWidgets import QDialog, QMessageBox, qApp
 
+import karabogui.access as krb_access
 import karabogui.globals as krb_globals
 from karabo.common.api import KARABO_CONFIG_MANAGER
 from karabo.native import (
@@ -545,7 +546,7 @@ class Network(QObject):
             default = AccessLevel(ACCESS_LEVEL_MAP.get(
                 self.username, AccessLevel.ADMIN))
 
-        krb_globals.GLOBAL_ACCESS_LEVEL = default
+        krb_access.GLOBAL_ACCESS_LEVEL = default
         # Inform the GUI to change correspondingly the allowed
         # level-downgrade
         broadcast_event(KaraboEvent.LoginUserChanged, {})
