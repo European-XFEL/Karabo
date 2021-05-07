@@ -4,7 +4,7 @@ import os
 import pkg_resources
 from traits.api import Undefined
 
-import karabogui.globals as krb_globals
+import karabogui.access as krb_access
 
 
 def axis_label(proxy):
@@ -90,6 +90,6 @@ def is_proxy_allowed(proxy):
 
     binding = proxy.binding
     is_allowed = binding.is_allowed(value)
-    is_accessible = (krb_globals.GLOBAL_ACCESS_LEVEL >=
+    is_accessible = (krb_access.GLOBAL_ACCESS_LEVEL >=
                      binding.required_access_level)
     return is_accessible and is_allowed

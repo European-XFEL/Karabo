@@ -11,10 +11,10 @@ from traits.api import Bool, Instance, Property, on_trait_change
 import karabogui.icons as icons
 from karabo.common.api import ProxyStatus, walk_traits_object
 from karabo.common.project.api import DeviceServerModel
-from karabogui.enums import AccessRole, ProjectItemTypes
+from karabogui.access import AccessRole, access_role_allowed
+from karabogui.enums import ProjectItemTypes
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
-from karabogui.globals import access_role_allowed
 from karabogui.indicators import get_project_server_status_icon
 from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.topo_listener import SystemTopologyListener
