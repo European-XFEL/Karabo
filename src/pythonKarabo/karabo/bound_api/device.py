@@ -60,6 +60,7 @@ class PythonDevice(NoFsm):
     instanceCountLock = threading.Lock()
     connectionParams = Hash(Broker.brokerTypeFromEnv(), Hash())
     timeServerId = None
+    _loggerCfg = None
 
     @staticmethod
     def expectedParameters(expected):
@@ -272,13 +273,24 @@ class PythonDevice(NoFsm):
             .readOnly().initialValue(0)
             .commit(),
 
+            # Logging config:
+            # Expose only the non-appender specific part (only 'priority' now).
+            # Would like to use NODE_ELEMENT(..)...appendParametersOf(Logger)
+            # and then remove again "ostream", "file" and "network" from
+            # expected["Logger"], but Schema.getParameterHash() returns a copy.
             NODE_ELEMENT(expected).key("Logger")
             .description("Logging settings")
             .displayedName("Logger")
-            .appendParametersOf(Logger)
             .expertAccess()
             .commit(),
 
+            # Keep in sync with 'priority' in C++ Logger::expectedParameters
+            STRING_ELEMENT(expected).key("Logger.priority")
+            .displayedName("Priority")
+            .description("The default log priority")
+            .options("DEBUG INFO WARN ERROR FATAL")
+            .assignmentOptional().defaultValue("INFO")
+            .commit(),
         )
 
     log = None  # make always available, at least as None
@@ -476,34 +488,35 @@ class PythonDevice(NoFsm):
     def loadLogger(self):
         """Load the distributed logger
 
-        Uses config in self._parameters["Logger"]
+        Uses config in self._parameters["Logger"] and PythonDevice._loggerCfg
         """
-        config = self._parameters["Logger"]
+        # Take cfg as passed from server and merge device specific settings
+        if PythonDevice._loggerCfg is None:  # for now if started from MDL
+            config = self._parameters["Logger"]
+        else:
+            config = copy.copy(PythonDevice._loggerCfg)
+            config.merge(self._parameters["Logger"])
 
-        stamp = self.getActualTimestamp()
-
-        # cure the network part of the logger config
-        config.set("network.connection", PythonDevice.connectionParams)
-        typeKey = PythonDevice.connectionParams.getKeys()[0]
-        # Avoid name clash with any SignalSlotable since there ':' is not
-        # allowed as instanceId:
+        # Set unique instance id for network logging: Using ':' in name avoids
+        # name clash with any SignalSlotable since there ':' is not allowed.
+        # Note that the config for a choice element has a single key only.
+        if "network.connection" not in config:
+            config["network.connection"] = PythonDevice.connectionParams
+        typeKey = config["network.connection"].getKeys()[0]
         config.set("network.connection." + typeKey + ".instanceId",
                    self.deviceid + ":logger")
-        # Since manipulating self._parameters, add timestamps:
-        for key in config["network.connection"].getPaths():
-            pathNode = config.getNode("network.connection." + key)
-            stamp.toHashAttributes(pathNode.getAttributes())
 
-        # cure the file part of the logger config
-        path = os.path.join(os.environ['KARABO'], "var", "log", self.serverid,
-                            self.deviceid)
+        # Cure the file name of file logger: own dir inside server's log dir:
+        if 'file.filename' in config:
+            serverLogDir = os.path.dirname(config['file.filename'])
+            path = os.path.join(serverLogDir, self.deviceid)
+        else:  # Again, for now if started from MDL
+            path = os.path.join(os.environ["KARABO"], "var", "log",
+                                self.serverid, self.deviceid)
         if not os.path.isdir(path):
             os.makedirs(path)
         path = os.path.join(path, 'device.log')
         config.set('file.filename', path)
-        # Since manipulating self._parameters, add timestamp:
-        pathAttrs = config.getNode('file.filename').getAttributes()
-        stamp.toHashAttributes(pathAttrs)
 
         # finally configure the logger
         Logger.configure(config)
@@ -2061,21 +2074,16 @@ def launchPythonDevice():
         # Inject timeServerId from the server
         PythonDevice.timeServerId = copy.copy(config['timeServerId'])
         config.erase('timeServerId')
+    if '_logger_' in config:
+        # Also most logger settings are taken from server and not configurable:
+        PythonDevice._loggerCfg = copy.copy(config['_logger_'])
+        config.erase('_logger_')
+
     if '_pluginNamespace_' in config:
         # get the namespace from the server if present
         namespace = str(config['_pluginNamespace_'])
         config.erase('_pluginNamespace_')
 
-    # If log filename not specified, make use of device name to avoid
-    # that different processes write to the same file.
-    # TODO:
-    # "karabo.log" is default from RollingFileAppender::expectedParameters.
-    # Unfortunately, GUI sends full config, including defaults.
-    if ("Logger.file.filename" not in config
-            or config["Logger.file.filename"] == "karabo.log"):
-        deviceId = config["_deviceId_"]
-        defaultLog = "device-" + deviceId.replace(os.path.sep, "_") + ".log"
-        config["Logger.file.filename"] = defaultLog
     loader = PluginLoader.create(
         "PythonPluginLoader", Hash("pluginNamespace", namespace))
     loader.update()
