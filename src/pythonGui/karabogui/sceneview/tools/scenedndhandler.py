@@ -19,8 +19,8 @@ from karabogui import messagebox
 from karabogui.binding.api import ImageBinding, SlotBinding
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
-from karabogui.enums import NavigationItemTypes, ProjectItemTypes
 from karabogui.fonts import get_font_metrics
+from karabogui.itemtypes import NavigationItemTypes, ProjectItemTypes
 from karabogui.sceneview.utils import round_down_to_grid
 from karabogui.sceneview.widget.utils import get_proxy
 from karabogui.singletons.api import get_topology
