@@ -177,6 +177,8 @@ release build ubuntu16:
 
 release build miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
+  before_script:
+    - source ci/utils/enable_internet.sh
   <<: *release-build-conda
   
 release build miniconda-osx64:
@@ -197,6 +199,8 @@ release build miniconda-win64:
 
 prerelease build miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
+  before_script:
+    - source ci/utils/enable_internet.sh
   <<: *prerelease-build-conda
 
 prerelease build miniconda-osx64:
@@ -251,6 +255,8 @@ nightly build miniconda-win64:
           
 nightly build miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
+  before_script:
+    - source ci/utils/enable_internet.sh
   <<: *nightly-build-conda
 
 # Dependencies build
@@ -321,6 +327,8 @@ unit tests ubuntu16:
 
 unit tests miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
+  before_script:
+    - source ci/utils/enable_internet.sh
   <<: *unit-tests-conda
 
 unit tests miniconda-osx64:
