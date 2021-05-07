@@ -5,7 +5,7 @@
 
 DEPENDENCIES_BASE=( bzip2 libpng jpeg tiff python lapack cmake boost freetype hdf5
 log4cpp cppunit openmq nss openmqc patchelf gmock libxml2 libxslt
-daemontools libzmq nlohmann_json pugixml mqtt)
+daemontools libzmq nlohmann_json pugixml mqtt redisclient)
 
 DEPENDENCIES_PYTHON=( setuptools setuptools_scm pip wheel cython pybind numpy scipy
 six nose py pyparsing packaging toml more-itertools zipp importlib-metadata pluggy
@@ -17,7 +17,7 @@ jsonschema ecdsa tzlocal httplib2 traits pint nbformat isort
 notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml certifi
 chardet idna urllib3 requests ply psutil pycodestyle pyflakes mccabe flake8
 msgpack msgpack-numpy flaky pyyaml coverage matplotlib eulxml eulexist
-mqtt_python peewee)
+mqtt_python peewee asyncio_redis)
 
 ##############################################################################
 # Important constants

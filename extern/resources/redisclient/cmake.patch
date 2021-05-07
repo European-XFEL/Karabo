@@ -1,0 +1,18 @@
+diff --git a/cmake/Dependencies.cmake b/cmake/Dependencies.cmake
+index 20bb5bb..33a29d2 100644
+--- a/cmake/Dependencies.cmake
++++ b/cmake/Dependencies.cmake
+@@ -11,9 +11,12 @@ set(boost_components system)
+ if (NOT RedisClientInstall)
+   set(boost_components ${boost_components}
+                        program_options
+-                       unit_test_framework
+                        date_time)
+ endif()
++if (BUILD_TEST)
++  set(boost_components ${boost_components}
++                       unit_test_framework)
++endif()
+ 
+ find_package(Boost
+   COMPONENTS
