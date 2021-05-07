@@ -16,7 +16,7 @@ from karabo.common.scenemodel.api import SceneModel, read_scene
 from karabogui import icons, messagebox
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
-from karabogui.enums import ProjectItemTypes
+from karabogui.itemtypes import ProjectItemTypes
 from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.utils import (
