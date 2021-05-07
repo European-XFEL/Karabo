@@ -121,7 +121,8 @@ class DeviceServer(object):
             .commit(),
 
             OVERWRITE_ELEMENT(expected).key("Logger.file.filename")
-            .setNewDefaultValue("device-server.log")
+            # Will be assembled programmatically from environment and serverId
+            .setNewAssignmentInternal()
             .commit(),
 
             STRING_ELEMENT(expected).key("timeServerId")
@@ -210,6 +211,7 @@ class DeviceServer(object):
         self.visibility = config.get("visibility")
 
         self.connectionParameters = copy.copy(config['connection'])
+        self.loggerParameters = None  # assemble in loadLogger
         self.pid = os.getpid()
         self.seqnum = 0
 
@@ -262,21 +264,24 @@ class DeviceServer(object):
         return self.hostname + "_Server_" + str(os.getpid())
 
     def loadLogger(self, inputCfg):
-        config = copy.copy(inputCfg["Logger"])
+        self.loggerParameters = copy.copy(inputCfg["Logger"])
+        # The file logger filename is completely specified here.
         path = os.path.join(os.environ['KARABO'], "var", "log", self.serverid)
         if not os.path.isdir(path):
             os.makedirs(path)
         path = os.path.join(path, 'device-server.log')
-        config.set('file.filename', path)
+        self.loggerParameters.set('file.filename', path)
 
-        config.set("network.connection", self.connectionParameters)
+        # Re-use connection parameters for network logging. Need to specify
+        # network instanceId - by using ':' we avoid a name clash with any
+        # SignalSlotable since there ':' is not allowed as instanceId:
+        self.loggerParameters.set("network.connection",
+                                  self.connectionParameters)
         typeKey = self.connectionParameters.getKeys()[0]
-        # Avoid name clash with any SignalSlotable since there ':' is not
-        # allowed as instanceId:
-        config.set("network.connection." + typeKey + ".instanceId",
-                   self.serverid + ":logger")
+        networkIdKey = "network.connection." + typeKey + ".instanceId"
+        self.loggerParameters.set(networkIdKey, self.serverid + ":logger")
 
-        Logger.configure(config)
+        Logger.configure(self.loggerParameters)
         Logger.useOstream()
         Logger.useFile()
         Logger.useNetwork()
@@ -409,7 +414,7 @@ class DeviceServer(object):
 
         # If not explicitely specified, let device inherit logger priority
         if not config.has("Logger.priority"):
-            config["Logger.priority"] = Logger.getPriority()
+            config["Logger.priority"] = self.loggerParameters["priority"]
 
         # Before starting device process, validate config
         schema = Configurator(PythonDevice).getSchema(classid)
@@ -421,16 +426,21 @@ class DeviceServer(object):
             self.ss.reply(ok, msg)
             return
 
+        # Now few config manipulation intentionally AFTER 'validate':
         # Add connection type and parameters used by device server for
-        # connecting to broker.  This was added AFTER 'validate' intentionally!
+        # connecting to broker.
         config['_connection_'] = self.connectionParameters
 
         # Add temporary namespace variable
         config['_pluginNamespace_'] = self.pluginNamespace
 
-        # Add time server ID configured for device server. This was added AFTER
-        # 'validate' intentionally!
+        # Add time server ID configured for device server.
         config['timeServerId'] = self.timeServerId
+
+        # Also add config for Logger appenders
+        for appender in ["ostream", "file", "network"]:
+            config["_logger_." + appender] = self.loggerParameters[appender]
+
         try:
             if "_deviceId_" in config:
                 deviceid = config["_deviceId_"]
@@ -572,6 +582,8 @@ class DeviceServer(object):
         Logger.setPriority(newprio)
         self.log.INFO(
             "Logger Priority changed : {} ==> {}".format(oldprio, newprio))
+        # Also devices started in future get the new priority by default:
+        self.loggerParameters["priority"] = newprio
 
     def processEvent(self, event):
         with self.processEventLock:
