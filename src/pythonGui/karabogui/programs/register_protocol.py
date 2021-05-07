@@ -8,7 +8,7 @@ from platform import system
 from qtpy.QtCore import QSettings
 
 import karabogui.icons as icons
-from karabogui.globals import HIDDEN_KARABO_FOLDER
+from karabogui.const import HIDDEN_KARABO_FOLDER
 from karabogui.programs.utils import create_linux_desktop_file
 
 ON_WINDOWS = system() == "Windows"

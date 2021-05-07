@@ -6,11 +6,10 @@ from qtpy.QtNetwork import QAbstractSocket, QTcpSocket
 from qtpy.QtWidgets import QDialog, QMessageBox, qApp
 
 import karabogui.access as krb_access
-import karabogui.globals as krb_globals
 from karabo.common.api import KARABO_CONFIG_MANAGER
 from karabo.native import (
     AccessLevel, Hash, Timestamp, decodeBinary, encodeBinary)
-from karabogui import background
+from karabogui import background, const
 from karabogui.const import REQUEST_REPLY_TIMEOUT
 from karabogui.dialogs.logindialog import LoginDialog
 from karabogui.events import KaraboEvent, broadcast_event
@@ -441,7 +440,7 @@ class Network(QObject):
             "deviceIds", deviceIds,
             "description", description,
             "priority", priority,
-            "client", krb_globals.KARABO_CLIENT_ID)
+            "client", const.KARABO_CLIENT_ID)
         h["args"] = args
         h["update"] = update
         h["timeout"] = REQUEST_REPLY_TIMEOUT
@@ -496,7 +495,7 @@ class Network(QObject):
         h["projectManager"] = project_manager
         h["token"] = get_config()["db_token"]
         h["items"] = items
-        h["client"] = krb_globals.KARABO_CLIENT_ID
+        h["client"] = const.KARABO_CLIENT_ID
         self._write_hash(h)
 
     def onProjectUpdateAttribute(self, project_manager, items):
@@ -590,6 +589,6 @@ class Network(QObject):
 
     def _send_login_information(self):
         login_info = Hash("type", "login")
-        login_info["username"] = krb_globals.KARABO_CLIENT_ID
-        login_info["version"] = krb_globals.GUI_VERSION
+        login_info["username"] = const.KARABO_CLIENT_ID
+        login_info["version"] = const.GUI_VERSION
         self._write_hash(login_info)
