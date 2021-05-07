@@ -7,7 +7,7 @@ from qtpy.QtCore import (
     QItemSelection, QItemSelectionModel, QSortFilterProxyModel, Qt, Signal,
     Slot)
 
-from karabogui import globals as krb_globals
+import karabogui.access as krb_access
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.singletons.api import get_topology
 
@@ -155,5 +155,5 @@ class TopologyFilterModel(QSortFilterProxyModel):
 
     def findNodes(self, node_id, **kwargs):
         if kwargs.get('access_level') is None:
-            kwargs['access_level'] = krb_globals.GLOBAL_ACCESS_LEVEL
+            kwargs['access_level'] = krb_access.GLOBAL_ACCESS_LEVEL
         return self.sourceModel().tree.find(node_id, **kwargs)

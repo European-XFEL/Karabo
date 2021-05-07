@@ -8,8 +8,6 @@ from os import environ, getpid, path
 from sys import platform
 
 from karabo.common.packaging import utils
-from karabo.native import AccessLevel
-from karabogui.enums import AccessRole
 
 try:
     from karabogui import _version
@@ -25,24 +23,6 @@ try:
 except (ImportError, AttributeError):
     print('Version file not found! Please generate the _version.py file.')
     exit(1)
-
-# The globally defined access level variable which is verified and set by the
-# GUI server eventually
-
-GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
-
-ACCESS_LEVEL_ROLES = {
-    AccessRole.SCENE_EDIT: AccessLevel.EXPERT,
-    AccessRole.MACRO_EDIT: AccessLevel.OPERATOR,
-    AccessRole.PROJECT_EDIT: AccessLevel.OPERATOR,
-    AccessRole.SERVICE_EDIT: AccessLevel.OPERATOR,
-    AccessRole.CONSOLE_EDIT: AccessLevel.EXPERT}
-
-
-def access_role_allowed(role):
-    """Return on runtime if action in the GUI are allowed"""
-    return GLOBAL_ACCESS_LEVEL >= ACCESS_LEVEL_ROLES[role]
-
 
 # Hidden karabo folder which includes certain karabo related files
 if platform.startswith('win'):
