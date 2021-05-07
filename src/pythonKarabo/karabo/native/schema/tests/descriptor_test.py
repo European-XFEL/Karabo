@@ -103,6 +103,11 @@ class Tests(TestCase):
         with self.assertRaises(TypeError):
             Int8(enum=E, options=[F.a])
 
+    def test_descriptor_attrs_name(self):
+        d = Int8(options=[1, 2], displayedName="Display")
+        self.assertEqual(d.__class__.options.name, "options")
+        self.assertEqual(d.__class__.displayedName.name, "displayedName")
+
     def test_bool(self):
         d = Bool()
         v = d.toKaraboValue(3)
