@@ -16,10 +16,9 @@ from qtpy.QtWidgets import (
     QApplication, QDialog, QFileDialog, QHeaderView, QLabel)
 
 from karabo.native import Hash, decodeXML, writeXML
-from karabogui import globals as krb_globals, icons, messagebox
+from karabogui import const, icons, messagebox
 from karabogui.binding.api import (
     DeviceClassProxy, DeviceProxy, extract_configuration)
-from karabogui.const import PANEL_ICON_SIZE
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_config, get_db_conn
 
@@ -86,7 +85,7 @@ def generateObjectName(widget):
 def getOpenFileName(parent=None, caption="", filter="", directory=""):
     """ Return `filename` of the Qt file open dialog.
     """
-    directory = directory or krb_globals.HIDDEN_KARABO_FOLDER
+    directory = directory or const.HIDDEN_KARABO_FOLDER
 
     filename, _ = QFileDialog.getOpenFileName(
         parent=parent,
@@ -100,7 +99,7 @@ def getOpenFileName(parent=None, caption="", filter="", directory=""):
 
 def getSaveFileName(parent=None, caption="", filter="", directory="",
                     suffix="", selectFile=""):
-    directory = directory or krb_globals.HIDDEN_KARABO_FOLDER
+    directory = directory or const.HIDDEN_KARABO_FOLDER
 
     dialog = QFileDialog(parent, caption, directory, filter)
     dialog.selectFile(selectFile)
@@ -269,6 +268,7 @@ def set_treeview_header(header):
     header.setSectionResizeMode(1, QHeaderView.Fixed)
     header.setSectionResizeMode(2, QHeaderView.Fixed)
     header.setStretchLastSection(False)
+    PANEL_ICON_SIZE = 26
     header.setMaximumSectionSize(PANEL_ICON_SIZE)
     header.resizeSection(1, PANEL_ICON_SIZE)
     header.resizeSection(2, PANEL_ICON_SIZE)
