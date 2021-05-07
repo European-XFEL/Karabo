@@ -13,9 +13,8 @@ from qtpy.QtWidgets import (
 import karabogui.icons as icons
 from karabo.common.project.api import find_parent_object
 from karabogui import messagebox
-from karabogui.enums import AccessRole
+from karabogui.access import AccessRole, access_role_allowed
 from karabogui.events import KaraboEvent, broadcast_event
-from karabogui.globals import access_role_allowed
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import maybe_save_modified_project, save_object
 from karabogui.singletons.api import (

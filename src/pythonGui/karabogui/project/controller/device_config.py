@@ -14,9 +14,9 @@ from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, find_parent_object)
 from karabo.native import Hash
 from karabogui import messagebox
-from karabogui.enums import AccessRole, ProjectItemTypes
+from karabogui.access import AccessRole, access_role_allowed
+from karabogui.enums import ProjectItemTypes
 from karabogui.events import KaraboEvent, broadcast_event
-from karabogui.globals import access_role_allowed
 from karabogui.project.dialog.device_configuration import (
     DeviceConfigurationDialog)
 from karabogui.project.dialog.object_handle import ObjectEditDialog

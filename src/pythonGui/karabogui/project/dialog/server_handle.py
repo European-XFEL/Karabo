@@ -9,8 +9,8 @@ from qtpy import uic
 from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QDialog, QDialogButtonBox
 
+import karabogui.access as krb_access
 from karabo.native import AccessLevel
-from karabogui import globals as krb_globals
 from karabogui.singletons.api import get_topology
 from karabogui.util import InputValidator
 
@@ -57,7 +57,7 @@ class ServerHandleDialog(QDialog):
                 return
 
             visibility = AccessLevel(node.attributes['visibility'])
-            if visibility < krb_globals.GLOBAL_ACCESS_LEVEL:
+            if visibility < krb_access.GLOBAL_ACCESS_LEVEL:
                 available_servers.add(node.node_id)
 
         get_topology().visit_system_tree(visitor)

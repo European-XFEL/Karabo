@@ -33,8 +33,8 @@ class GuiTestCase(unittest.TestCase):
         self.app = app
         create_background_timer()
         # AFTER the QApplication is created!
-        from karabogui import globals
-        globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OPERATOR
+        import karabogui.access as krb_access
+        krb_access.GLOBAL_ACCESS_LEVEL = AccessLevel.OPERATOR
         from karabogui import icons
         icons.init()
         populate_controller_registry()

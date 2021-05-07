@@ -16,9 +16,8 @@ from karabo.common.scenemodel.api import (
     BaseWidgetObjectData, SceneLinkModel, SceneModel)
 from karabo.native import Hash, read_project_model
 from karabogui import messagebox
-from karabogui.enums import AccessRole
+from karabogui.access import AccessRole, access_role_allowed
 from karabogui.events import KaraboEvent, broadcast_event
-from karabogui.globals import access_role_allowed
 from karabogui.singletons.api import (
     get_db_conn, get_network, get_project_model)
 from karabogui.topology.util import get_macro_servers
