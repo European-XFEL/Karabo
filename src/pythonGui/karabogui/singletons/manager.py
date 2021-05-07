@@ -16,8 +16,8 @@ from karabogui.alarms.api import extract_alarms_data
 from karabogui.background import Priority, executeLater
 from karabogui.binding.api import (
     apply_fast_data, extract_attribute_modifications, extract_configuration)
+from karabogui.const import KARABO_CLIENT_ID
 from karabogui.events import KaraboEvent, broadcast_event
-from karabogui.globals import KARABO_CLIENT_ID
 from karabogui.logger import get_logger
 from karabogui.singletons.api import get_alarm_model, get_network, get_topology
 from karabogui.util import move_to_cursor, show_wait_cursor
