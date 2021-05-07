@@ -14,7 +14,7 @@ import karabogui.access as krb_access
 from karabo.common.api import ProxyStatus
 from karabo.native import AccessLevel
 from karabogui.alarms.api import AlarmInfo
-from karabogui.enums import NavigationItemTypes
+from karabogui.itemtypes import NavigationItemTypes
 
 HOST_LEVEL = 0
 SERVER_LEVEL = 1
