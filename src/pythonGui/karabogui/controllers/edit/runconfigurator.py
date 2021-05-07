@@ -60,9 +60,12 @@ class RunConfiguratorEdit(BaseBindingController):
         def _build(group_node, parent_item):
             name = group_node.value.groupId.value or 'NONAME'
             group_item = QStandardItem(name)
+            # Group items are only checkable, not editable
+            group_item.setEditable(False)
             group_item.setCheckable(True)
             if group_node.value.use.value:
                 group_item.setCheckState(Qt.Checked)
+
             parent_item.appendRow(group_item)
             row, column = 0, 0
             for src in group_node.value.sources.value:
