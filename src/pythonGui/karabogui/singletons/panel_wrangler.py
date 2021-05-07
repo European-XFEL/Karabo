@@ -8,8 +8,8 @@ from qtpy.QtCore import QObject, Slot
 from karabo.common.api import walk_traits_object
 from karabo.common.scenemodel.api import SceneModel, SceneTargetWindow
 from karabogui import messagebox
+from karabogui.access import AccessRole, access_role_allowed
 from karabogui.events import KaraboEvent, register_for_broadcasts
-from karabogui.globals import AccessRole, access_role_allowed
 from karabogui.mainwindow import MainWindow, PanelAreaEnum
 from karabogui.panels.api import MacroPanel, ScenePanel
 from karabogui.singletons.api import get_config, get_db_conn, get_project_model

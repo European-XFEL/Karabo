@@ -16,9 +16,9 @@ from karabo.common.project.api import get_user_cache
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
 from karabo.native import read_project_model
 from karabogui import icons, messagebox
-from karabogui.enums import AccessRole, ProjectItemTypes
+from karabogui.access import AccessRole, access_role_allowed
+from karabogui.enums import ProjectItemTypes
 from karabogui.events import KaraboEvent, broadcast_event
-from karabogui.globals import access_role_allowed
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)
 from karabogui.singletons.api import (

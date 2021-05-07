@@ -9,8 +9,8 @@ from qtpy import uic
 from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QDialog, QDialogButtonBox
 
+import karabogui.access as krb_access
 from karabo.native import AccessLevel
-from karabogui import globals as krb_globals
 from karabogui.singletons.api import get_topology
 from karabogui.util import InputValidator
 
@@ -117,7 +117,7 @@ class DeviceHandleDialog(QDialog):
             for class_id, visibility in zip(attrs.get('deviceClasses', []),
                                             attrs.get('visibilities', [])):
                 # Only show accessible plugins depending on global access level
-                if AccessLevel(visibility) > krb_globals.GLOBAL_ACCESS_LEVEL:
+                if AccessLevel(visibility) > krb_access.GLOBAL_ACCESS_LEVEL:
                     continue
                 available_plugins.add(class_id)
 

@@ -5,11 +5,12 @@ from qtpy.QtCore import QMimeData, Qt
 from qtpy.QtGui import QPalette
 from qtpy.QtWidgets import QStyle
 
+import karabogui.access as krb_access
 from karabo.common.api import (
     KARABO_EDITABLE_ATTRIBUTES, KARABO_SCHEMA_DAQ_POLICY,
     KARABO_SCHEMA_METRIC_PREFIX_SYMBOL, KARABO_SCHEMA_UNIT_SYMBOL)
 from karabo.native import AccessMode, Assignment
-from karabogui import globals as krb_globals, icons
+from karabogui import icons
 from karabogui.binding.api import (
     BindingRoot, BoolBinding, CharBinding, ChoiceOfNodesBinding, FloatBinding,
     ImageBinding, IntBinding, ListOfNodesBinding, NodeBinding, StringBinding,
@@ -71,7 +72,7 @@ def get_child_names(proxy):
     For others, this is a list of attribute names.
     """
     ret = []
-    level = krb_globals.GLOBAL_ACCESS_LEVEL
+    level = krb_access.GLOBAL_ACCESS_LEVEL
 
     binding = proxy.binding
     if isinstance(binding, RECURSIVE_BINDING):
