@@ -8,8 +8,9 @@ from weakref import WeakValueDictionary
 
 from qtpy.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
 
+import karabogui.access as krb_access
 from karabo.common.api import ProxyStatus
-from karabogui import globals as krb_globals, icons
+from karabogui import icons
 from karabogui.alarms.api import get_alarm_icon
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.indicators import get_state_icon_for_status
@@ -275,7 +276,7 @@ class SystemTreeModel(QAbstractItemModel):
         """Clear the tree and reset the model to account visibility
         """
         self.layoutAboutToBeChanged.emit()
-        access = krb_globals.GLOBAL_ACCESS_LEVEL
+        access = krb_access.GLOBAL_ACCESS_LEVEL
 
         def visitor(node):
             node.is_visible = not (node.visibility > access)

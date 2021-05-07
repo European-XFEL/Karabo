@@ -1,8 +1,8 @@
 from qtpy.QtCore import QRect, QSize, Qt
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QStackedLayout, QWidget
 
+import karabogui.access as krb_access
 from karabo.common.api import ProxyStatus, State
-from karabogui import globals as krb_globals
 from karabogui.indicators import STATE_COLORS, get_device_status_pixmap
 from karabogui.request import send_property_changes
 from karabogui.util import generateObjectName
@@ -39,7 +39,7 @@ class ControllerContainer(KaraboSceneWidget, QWidget):
         proxy = self.widget_controller.proxy.root_proxy
         self._proxy_status_changed("status", proxy.status)
         # ... and the access level check
-        self.update_global_access_level(krb_globals.GLOBAL_ACCESS_LEVEL)
+        self.update_global_access_level(krb_access.GLOBAL_ACCESS_LEVEL)
 
     def add_proxies(self, proxies):
         """Add more proxies to a controller which allows more than one proxy.

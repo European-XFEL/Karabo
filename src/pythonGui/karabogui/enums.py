@@ -3,17 +3,6 @@
 # Created on February 21, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from enum import Enum
-
-
-class AccessRole(Enum):
-    """The AccessRole Enum describes eventually validated action in the
-    karabo GUI"""
-    SCENE_EDIT = 'scene_edit'
-    MACRO_EDIT = 'macro_edit'
-    PROJECT_EDIT = 'project_edit'
-    SERVICE_EDIT = 'service_edit'
-    CONSOLE_EDIT = 'console_edit'
 
 
 class NavigationItemTypes(object):

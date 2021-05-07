@@ -13,12 +13,12 @@ from qtpy.QtWidgets import (
 from karabo.common.api import Capabilities
 from karabo.native import Timestamp
 from karabogui import icons, messagebox
+from karabogui.access import AccessRole, access_role_allowed
 from karabogui.dialogs.configuration_from_name import ConfigurationFromName
 from karabogui.dialogs.device_capability import DeviceCapabilityDialog
 from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
-from karabogui.enums import AccessRole, NavigationItemTypes
+from karabogui.enums import NavigationItemTypes
 from karabogui.events import KaraboEvent, broadcast_event
-from karabogui.globals import access_role_allowed
 from karabogui.navigation.system_filter_model import TopologyFilterModel
 from karabogui.request import call_device_slot, handle_scene_from_server
 from karabogui.singletons.api import get_manager, get_selection_tracker

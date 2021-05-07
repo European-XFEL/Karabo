@@ -14,11 +14,11 @@ from traits.api import Instance, String, on_trait_change
 from karabo.common.api import ProxyStatus, walk_traits_object
 from karabo.common.project.api import MacroModel, read_macro, write_macro
 from karabogui import icons, messagebox
-from karabogui.enums import AccessRole, ProjectItemTypes
+from karabogui.access import AccessRole, access_role_allowed
+from karabogui.enums import ProjectItemTypes
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
-from karabogui.globals import access_role_allowed
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.project.dialog.object_handle import (
     ObjectDuplicateDialog, ObjectEditDialog)

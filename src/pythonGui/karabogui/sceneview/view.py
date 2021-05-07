@@ -10,10 +10,10 @@ from qtpy.QtCore import QEvent, QPoint, QRect, QSize, Qt, QTimer, Signal, Slot
 from qtpy.QtGui import QBrush, QColor, QPainter, QPalette, QPen
 from qtpy.QtWidgets import QSizePolicy, QStackedLayout, QWidget
 
+import karabogui.access as krb_access
 from karabo.common.api import set_initialized_flag
 from karabo.common.scenemodel.api import (
     SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH, FixedLayoutModel, SceneTargetWindow)
-from karabogui import globals as krb_globals
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts,
     unregister_from_broadcasts)
@@ -652,7 +652,7 @@ class SceneView(QWidget):
         """The global access level has changed. Notify all widgets in the
         scene.
         """
-        level = krb_globals.GLOBAL_ACCESS_LEVEL
+        level = krb_access.GLOBAL_ACCESS_LEVEL
         for obj in self._scene_obj_cache.values():
             if is_widget(obj):
                 obj.update_global_access_level(level)
