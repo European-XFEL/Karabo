@@ -8,17 +8,18 @@ from collections import namedtuple
 from contextlib import contextmanager
 
 from qtpy.QtCore import (
-    QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt, Slot)
+    QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt)
 from qtpy.QtGui import QBrush, QColor
 from qtpy.QtWidgets import (
-    QHBoxLayout, QHeaderView, QLineEdit, QMessageBox, QPushButton, QStyle,
-    QStyledItemDelegate, QTableView, QVBoxLayout, QWidget)
+    QHBoxLayout, QHeaderView, QLineEdit, QMessageBox, QPushButton, QTableView,
+    QVBoxLayout, QWidget)
 from traits.api import Instance, WeakRef
 
 from karabo.common.scenemodel.api import DaemonManagerModel
 from karabogui.binding.api import VectorHashBinding, get_editor_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
+from karabogui.controllers.table.api import TableButtonDelegate
 from karabogui.request import request_daemon_action
 from karabogui.util import move_to_cursor
 
@@ -67,88 +68,35 @@ def get_duration_brush(service_duration):
     return None if time > 1 else QBrush(QColor(255, 0, 0))
 
 
-class ButtonDelegate(QStyledItemDelegate):
-    def __init__(self, parent=None):
-        super(ButtonDelegate, self).__init__(parent)
-        self.clickable = True
+class DaemonServiceButton(TableButtonDelegate):
 
-        self._button = QPushButton("")
-        self._button.hide()
-        parent.clicked.connect(self.cellClicked)
+    def get_button_text(self, index):
+        """Reimplemented function of `TableButtonDelegate` to display text"""
+        return COLUMN_TEXT[index.column()]
 
-    def _is_relevant_column(self, index):
-        column = index.column()
-        if column in [START_COLUMN, STOP_COLUMN, KILL_COLUMN]:
-            return True, COLUMN_TEXT[column]
-
-        return False, ""
-
-    def createEditor(self, parent, option, index):
-        """This method is called whenever the delegate is in edit mode."""
-        relevant, text = self._is_relevant_column(index)
-        if relevant:
-            # This button is for the highlighting effect when clicking/editing
-            button = QPushButton(parent)
-            button.setText(text)
-            return button
-        else:
-            return super(ButtonDelegate, self).createEditor(parent, option,
-                                                            index)
-
-    def updateEditorGeometry(self, button, option, index):
-        relevant, text = self._is_relevant_column(index)
-        if relevant:
-            button.setGeometry(option.rect)
-            button.setText(text)
-
-    def setEditorData(self, button, index):
-        relevant, text = self._is_relevant_column(index)
-        if relevant:
-            button.setText(text)
-        else:
-            super(ButtonDelegate, self).setEditorData(button, index)
-
-    def paint(self, painter, option, index):
-        relevant, text = self._is_relevant_column(index)
-        if relevant:
-            self._button.setGeometry(option.rect)
-            self._button.setText(text)
-            if option.state == QStyle.State_Selected:
-                painter.fillRect(option.rect, option.palette.highlight())
-            pixmap = self._button.grab()
-            self._button.setEnabled(self.clickable)
-            painter.drawPixmap(option.rect.x(), option.rect.y(), pixmap)
-        else:
-            super(ButtonDelegate, self).paint(painter, option, index)
-
-    @Slot(QModelIndex)
-    def cellClicked(self, index):
-        if not index.isValid() or not self.clickable:
+    def click_action(self, index):
+        """Reimplemented function of `TableButtonDelegate`"""
+        if not index.isValid():
             return
-        relevant, _ = self._is_relevant_column(index)
-        if relevant:
-            model = index.model()
-            cmd = COMMANDS[index.column()]
-            serviceId = model.index(index.row(), SERVER_COLUMN).data()
-            hostId = model.index(index.row(), HOST_COLUMN).data()
+        model = index.model()
+        cmd = COMMANDS[index.column()]
+        serviceId = model.index(index.row(), SERVER_COLUMN).data()
+        hostId = model.index(index.row(), HOST_COLUMN).data()
 
-            if cmd in ['down', 'kill']:
-                text = ('Are you sure you want to <b>{}</b> the service '
-                        '<b>{}</b> on host <b>{}</b>?'.format(cmd,
-                                                              serviceId,
-                                                              hostId))
-                msg_box = QMessageBox(QMessageBox.Question, 'Daemon action',
-                                      text,
-                                      QMessageBox.Yes | QMessageBox.Cancel,
-                                      parent=self.parent())
-                msg_box.setDefaultButton(QMessageBox.Cancel)
-                msg_box.setModal(False)
-                move_to_cursor(msg_box)
-                if msg_box.exec_() != QMessageBox.Yes:
-                    return
+        if cmd in ['down', 'kill']:
+            text = (f'Are you sure you want to <b>{cmd}</b> the service '
+                    f'<b>{serviceId}</b> on host <b>{hostId}</b>?')
+            msg_box = QMessageBox(QMessageBox.Question, 'Daemon action',
+                                  text, QMessageBox.Yes | QMessageBox.Cancel,
+                                  parent=self.parent())
+            msg_box.setDefaultButton(QMessageBox.Cancel)
+            msg_box.setModal(False)
+            move_to_cursor(msg_box)
+            if msg_box.exec_() != QMessageBox.Yes:
+                return
 
-            parent = weakref.ref(self.parent())
-            request_daemon_action(serviceId, hostId, cmd, parent)
+        parent = weakref.ref(self.parent())
+        request_daemon_action(serviceId, hostId, cmd, parent=parent)
 
 
 class DaemonTableModel(QAbstractTableModel):
@@ -241,7 +189,7 @@ _is_compatible = with_display_type('DaemonManager')
 class DisplayDaemonService(BaseBindingController):
     model = Instance(DaemonManagerModel, args=())
     table_model = WeakRef(QAbstractTableModel)
-    delegate = WeakRef(ButtonDelegate)
+    delegate = WeakRef(TableButtonDelegate)
 
     def create_widget(self, parent):
         widget = QWidget(parent)
@@ -262,7 +210,7 @@ class DisplayDaemonService(BaseBindingController):
         filter_model.setFilterKeyColumn(0)
 
         table_view.setModel(filter_model)
-        btn_delegate = ButtonDelegate(parent=table_view)
+        btn_delegate = DaemonServiceButton(parent=table_view)
         table_view.setItemDelegateForColumn(START_COLUMN, btn_delegate)
         table_view.setItemDelegateForColumn(STOP_COLUMN, btn_delegate)
         table_view.setItemDelegateForColumn(KILL_COLUMN, btn_delegate)
@@ -299,6 +247,6 @@ class DisplayDaemonService(BaseBindingController):
 
         We enable and disable the action button on access level change!
         """
-        if self.delegate and self.delegate.clickable != enable:
+        if self.delegate and self.delegate.isEnabled() != enable:
             with self.table_model.reset_context():
-                self.delegate.clickable = enable
+                self.delegate.setEnabled(enable)
