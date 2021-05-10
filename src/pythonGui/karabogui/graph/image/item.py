@@ -183,7 +183,7 @@ class KaraboImageItem(GraphicsObject):
     # ---------------------------------------------------------------------
     # Render patches
 
-    def set_qimage(self, image=None, autoLevels=True, **kwargs):
+    def set_qimage(self, image=None, autoLevels=None, **kwargs):
         """Update the image displayed by this item."""
         new_data = False
         if image is None:
@@ -250,80 +250,70 @@ class KaraboImageItem(GraphicsObject):
 
     def render(self):
         """Reimplementing for performance improvements patches"""
-
         # Check if image is valid
         image = self.image
         if is_image_invalid(image):
             return
 
         if image.ndim == 2:
-            self.qimage = self._create_indexed_qimage(image)
-        else:
-            self.qimage = self._create_rgb_qimage(image)
-
-    def _create_rgb_qimage(self, image):
-        """Rearrange RGB image to be usable with QImage"""
-
-        # Determine the image format based on the dimensions
-        if image.shape[-1] == 3:
-            # Add an opaque alpha channel to be QImage compatible
-            img_format = QImage.Format_RGB888
-        elif image.shape[-1] == 4:
-            img_format = QImage.Format_ARGB32
-        else:
-            raise NotImplementedError(f"Formatting for image with shape "
-                                      f"{image.shape} is not supported")
-
-        # Convert data type to uint8 if otherwise
-        if image.dtype != np.uint8:
-            image = image.astype(np.uint8)
-
-        self._slice_rect = QRectF(0, 0, *image.shape[:2])
-        # Swap the RGB values to BGR. Seems like Qt uses BGR color space
-        return self._create_qimage(image, img_format)
-
-    def _create_indexed_qimage(self, image):
-        # 1. Get image according to view geometry
-        image = self._slice(image)
-        if is_image_invalid(image):
-            return
-
-        # 2. Downsample image according to the image geometry ratio
-        #  and interpolation order
-        if self.autoDownsample:
-            image = self._downsample(image)
+            # 1. Get image according to view geometry
+            image = self._slice(image)
             if is_image_invalid(image):
                 return
 
-        # 3. Clip values according to levels
-        low, high = (0.0, 255.0)  # default color range
-        if self.levels is None:
-            image_min, image_max = image.min(), image.max()
+            # 2. Downsample image according to the image geometry ratio
+            #  and interpolation order
+            if self.autoDownsample:
+                image = self._downsample(image)
+                if is_image_invalid(image):
+                    return
+
+            # 3. Clip values according to levels
+            low, high = (0.0, 255.0)  # default color range
+            if self.levels is None:
+                image_min, image_max = image.min(), image.max()
+            else:
+                level_min, level_max = self.levels
+                image = np.clip(image, level_min, level_max)
+                image_min, image_max = image.min(), image.max()
+                # Calculate new color ranges with the ratio of the image
+                # extrema and the preset levels.
+                low, high = rescale(np.array([image_min, image_max]),
+                                    min_value=level_min, max_value=level_max,
+                                    low=low, high=high)
+
+            # 4. Rescale values to 0-255 relative to the image min/max
+            # for the QImage
+            image = bytescale(image, cmin=image_min, cmax=image_max,
+                              low=low, high=high)
+
+            # 6. Create QImage
+            qimage = self._build_qimage(image,
+                                        img_format=QImage.Format_Indexed8)
+
+            # 7. Set color table
+            if self._qlut is not None:
+                qimage.setColorTable(self._qlut)
+            self.qimage = qimage
         else:
-            level_min, level_max = self.levels
-            image = np.clip(image, level_min, level_max)
-            image_min, image_max = image.min(), image.max()
-            # Calculate new color ranges with the ratio of the image extrema
-            # and the preset levels.
-            low, high = rescale(np.array([image_min, image_max]),
-                                min_value=level_min, max_value=level_max,
-                                low=low, high=high)
+            if image.shape[-1] == 3:
+                # Add an opaque alpha channel to be QImage compatible
+                img_format = QImage.Format_RGB888
+            elif image.shape[-1] == 4:
+                img_format = QImage.Format_ARGB32
+            else:
+                raise NotImplementedError(f"Formatting for image with shape "
+                                          f"{image.shape} is not supported")
 
-        # 4. Rescale values to 0-255 relative to the image min/max
-        # for the QImage
-        image = bytescale(image, cmin=image_min, cmax=image_max,
-                          low=low, high=high)
+            # Convert data type to uint8 if otherwise
+            # Note: Convert with QImage
+            if image.dtype != np.uint8:
+                image = image.astype(np.uint8)
 
-        # 6. Create QImage
-        qimage = self._create_qimage(image, img_format=QImage.Format_Indexed8)
+            self._slice_rect = QRectF(0, 0, *image.shape[:2])
+            self.qimage = self._build_qimage(image, img_format)
 
-        # 7. Set color table
-        if self._qlut is not None:
-            qimage.setColorTable(self._qlut)
-
-        return qimage
-
-    def _create_qimage(self, image, img_format):
+    def _build_qimage(self, image, img_format):
         # Transpose image array to match axis orientation.
         if self.axisOrder == 'col-major':
             image = image.transpose((1, 0, 2)[:image.ndim]).copy()
@@ -335,6 +325,7 @@ class KaraboImageItem(GraphicsObject):
 
         qimage = QImage(image, nx, ny, img_format)
         if img_format == QImage.Format_ARGB32:
+            # Swap the RGB values to BGR. Seems like Qt uses BGR color space
             qimage = qimage.rgbSwapped()
         return qimage
 
@@ -451,7 +442,6 @@ class KaraboImageItem(GraphicsObject):
         return xds, yds
 
     def setLevels(self, levels, update=True):
-        """Reimplemented function for version conflict"""
         if levels is not None:
             levels = np.asarray(levels)
         if not fn.eq(levels, self.levels):
