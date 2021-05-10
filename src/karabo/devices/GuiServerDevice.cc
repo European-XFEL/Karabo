@@ -678,8 +678,8 @@ namespace karabo {
             } else if (type == "requestFromSlot" && info.has("slot") && info.get<string>("slot") != "requestScene" && info.get<string>("slot") != "slotGetScene") {
                 // requestFromSlot must have a 'slot' argument. If not, it should fail somewhere else.
                 return true;
-            } else if (type == "requestGeneric" && info.has("slot") && info.get<string>("slot") == "slotSaveConfigurationFromName") {
-                // slotSaveConfigurationFromName is not allowed in read-only mode.
+            } else if (type == "requestGeneric" && info.has("slot") && info.get<string>("slot") != "requestScene" && info.get<string>("slot") != "slotGetScene") {
+                // Requesting scenes are allowed in read-only mode. Configuration Management is not
                 return true;
             } else {
                 return false;
