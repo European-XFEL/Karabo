@@ -721,7 +721,7 @@ class QuantityValue(KaraboValue, Quantity):
             # XXX: the following string always return [0], regardless of the
             #  size of the initial array
             # TODO: this branch is not covered by tests
-            ret = "{{:~{}}}".format(fmt).format(0)
+            ret = "{{:~{}}}".format(fmt).format(0 * value)
         return ret
 
     def _repr_pretty_(self, p, cycle):
