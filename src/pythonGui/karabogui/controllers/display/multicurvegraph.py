@@ -15,13 +15,13 @@ import karabogui.icons as icons
 from karabo.common.scenemodel.api import MultiCurveGraphModel
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, IntBinding, PropertyProxy)
-from karabogui.const import MAXNUMPOINTS
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller)
 from karabogui.graph.common.api import create_button, get_pen_cycler
 from karabogui.graph.plots.api import KaraboPlotView
 
 NUMERICAL_BINDINGS = (BoolBinding, FloatBinding, IntBinding)
+MAXNUMPOINTS = 1000
 
 
 @register_binding_controller(ui_name='Multi-Curve Graph',
