@@ -450,6 +450,8 @@ class SystemTopology(HasStrictTraits):
         # Only the system tree takes an instance update at the moment
         # for the instanceInfo
         self.system_tree.instance_update(server_hash)
+        # And the device tree!
+        self.device_tree.instance_update(server_hash)
         # Note: Check if this is really needed!
         self._update_online_device_status()
 
