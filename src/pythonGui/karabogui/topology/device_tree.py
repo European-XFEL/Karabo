@@ -102,6 +102,8 @@ class DeviceSystemTree(HasStrictTraits):
         if node is None:
             return False
 
+        self._device_nodes.pop(instance_id)
+
         type_node = node.parent
         with self.update_context.removal_context(node):
             type_node.children.remove(node)
@@ -110,8 +112,6 @@ class DeviceSystemTree(HasStrictTraits):
             domain_node = type_node.parent
             with self.update_context.removal_context(type_node):
                 domain_node.children.remove(type_node)
-
-        self._device_nodes.pop(instance_id)
 
         return True
 
