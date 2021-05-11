@@ -25,6 +25,7 @@ class DeviceTreeModel(QAbstractItemModel):
         # Our hierarchy tree
         self.tree = get_topology().device_tree
         self.tree.update_context = _UpdateContext(item_model=self)
+        self.tree.on_trait_change(self._status_update, 'status_update')
 
         event_map = {
             KaraboEvent.AccessLevelChanged: self._event_access_level,
@@ -190,6 +191,14 @@ class DeviceTreeModel(QAbstractItemModel):
             return {}
 
         return node.info()
+
+    def _status_update(self, node_ids):
+        """Triggered from the status_update Event from the device tree"""
+        for node_id in node_ids:
+            node = self.tree.get_instance_node(node_id)
+            if node is not None:
+                index = self.createIndex(node.row(), 0, node)
+                self.dataChanged.emit(index, index, [Qt.DecorationRole])
 
     def _clear_tree_cache(self):
         """Clear the tree and reset the model to account visibility
