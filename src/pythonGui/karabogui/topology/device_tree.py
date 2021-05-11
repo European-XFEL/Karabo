@@ -7,7 +7,8 @@ import re
 from contextlib import contextmanager
 
 from traits.api import (
-    Bool, Dict, Enum, HasStrictTraits, Instance, Int, List, String, WeakRef)
+    Bool, Dict, Enum, Event, HasStrictTraits, Instance, Int, List, String,
+    WeakRef)
 
 import karabogui.access as krb_access
 from karabo.common.api import ProxyStatus
@@ -73,6 +74,9 @@ class DeviceSystemTree(HasStrictTraits):
     # Base node for the whole tree
     root = Instance(DeviceTreeNode, args=())
 
+    # An event which is triggered the device statuses where updated
+    status_update = Event
+
     # A context manager to enter when manipulating the tree
     update_context = Instance(object)
 
@@ -120,6 +124,24 @@ class DeviceSystemTree(HasStrictTraits):
             nodes = self._handle_device_data('device', system_hash)
 
         return nodes
+
+    def instance_update(self, system_hash):
+        if "device" not in system_hash:
+            return
+
+        device_status = set()
+        for device_id, _, attrs in system_hash['device'].iterall():
+            device_node = self._device_nodes.get(device_id)
+            if device_node is None:
+                continue
+
+            status = ProxyStatus(attrs.get('status', 'ok'))
+            device_node.status = status
+            device_node.attributes = attrs
+            device_status.add(device_id)
+
+        if device_status:
+            self.status_update = device_status
 
     def visit(self, visitor):
         """Walk each node of the device tree until visitor returns true
