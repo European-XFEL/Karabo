@@ -7,13 +7,13 @@
 from qtpy.QtCore import QModelIndex, Slot
 from qtpy.QtWidgets import (
     QAbstractButton, QAbstractItemView, QButtonGroup, QHBoxLayout, QHeaderView,
-    QPushButton, QRadioButton, QStyle, QStyledItemDelegate, QTableView,
-    QVBoxLayout, QWidget)
+    QRadioButton, QTableView, QVBoxLayout, QWidget)
 
 from karabogui import icons
 from karabogui.alarms.api import (
     ACKNOWLEDGE, ALARM_DATA, ALARM_ID, ALARM_WARNING_TYPES, INTERLOCK_TYPES,
     AlarmFilterModel, get_alarm_key_index)
+from karabogui.controllers.table.api import TableButtonDelegate
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import get_alarm_model, get_network
 
@@ -96,86 +96,25 @@ class AlarmPanel(BasePanelWidget):
         broadcast_event(KaraboEvent.ShowDevice, {'deviceId': deviceId})
 
 
-class ButtonDelegate(QStyledItemDelegate):
-    def __init__(self, parent=None):
-        super(ButtonDelegate, self).__init__(parent)
-        # Fake button used for later rendering
-        self.pbClick = QPushButton("")
-        self.pbClick.hide()
-        parent.clicked.connect(self.cellClicked)
+class ButtonDelegate(TableButtonDelegate):
 
-    def _isRelevantColumn(self, index):
-        """ This methods checks whether the column of the given ``index``
-            belongs to either the acknowledging or show device column.
-
-            Returns tuple:
-            [0] - states whether this is a relevant column
-            [1] - the text which needs to be shown on the button
-            [2] - states whether this is clickable
-            Otherwise ``False``, an empty string and ``False`` is returned.
-        """
-        column = index.column()
-        if column != ACKNOWLEDGE_COLUMN:
-            return (False, 'None', False)
-
+    def get_button_text(self, index):
+        """Reimplemented function of `TableButtonDelegate`"""
         text = ALARM_DATA[ACKNOWLEDGE]
+        return text
+
+    def isEnabled(self, index):
+        """Reimplemented function of `TableButtonDelegate`"""
         needsAck, ack = index.data()
-        clickable = needsAck and ack
+        return needsAck and ack
 
-        return (True, text, clickable)
-
-    def _updateButton(self, button, text, enabled):
-        """Update button with given ``text`` and set whether the button is
-        ``enabled``.
-        """
-        button.setText(text)
-        button.setEnabled(enabled)
-
-    def createEditor(self, parent, option, index):
-        """ This method is called whenever the delegate is in edit mode."""
-        isRelevant, text, clickable = self._isRelevantColumn(index)
-        if isRelevant:
-            # This button is for the highlighting effect when clicking/editing
-            button = QPushButton(parent)
-            self._updateButton(button, text, clickable)
-            return button
-        else:
-            return super(ButtonDelegate, self).createEditor(parent, option,
-                                                            index)
-
-    def setEditorData(self, button, index):
-        isRelevant, text, clickable = self._isRelevantColumn(index)
-        if isRelevant:
-            self._updateButton(button, text, clickable)
-        else:
-            super(ButtonDelegate, self).setEditorData(button, index)
-
-    def paint(self, painter, option, index):
-        isRelevant, text, clickable = self._isRelevantColumn(index)
-        if isRelevant:
-            self.pbClick.setGeometry(option.rect)
-            self._updateButton(self.pbClick, text, clickable)
-            if option.state == QStyle.State_Selected:
-                painter.fillRect(option.rect, option.palette.highlight())
-            pixmap = self.pbClick.grab()
-            painter.drawPixmap(option.rect.x(), option.rect.y(), pixmap)
-        else:
-            super(ButtonDelegate, self).paint(painter, option, index)
-
-    def updateEditorGeometry(self, button, option, index):
-        isRelevant, text, clickable = self._isRelevantColumn(index)
-        if isRelevant:
-            button.setGeometry(option.rect)
-            self._updateButton(button, text, clickable)
-
-    @Slot(QModelIndex)
-    def cellClicked(self, index):
+    def click_action(self, index):
+        """Reimplemented function of `TableButtonDelegate`"""
         if not index.isValid():
             return
-        isRelevant, text, clickable = self._isRelevantColumn(index)
-        if isRelevant and clickable:
-            # Send signal to acknowledge alarm
-            id_index = get_alarm_key_index(ALARM_ID)
-            model = index.model()
-            alarm_id = model.index(index.row(), id_index).data()
-            get_network().onAcknowledgeAlarm(model.instanceId, alarm_id)
+
+        # Send a signal to acknowledge alarm
+        id_index = get_alarm_key_index(ALARM_ID)
+        model = index.model()
+        alarm_id = model.index(index.row(), id_index).data()
+        get_network().onAcknowledgeAlarm(model.instanceId, alarm_id)
