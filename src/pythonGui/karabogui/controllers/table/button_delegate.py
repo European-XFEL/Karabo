@@ -61,7 +61,7 @@ class TableButtonDelegate(QStyledItemDelegate):
             event, model, option, index)
 
     def _draw_button(self, painter, option, index):
-        if not self._enabled:
+        if not self.isEnabled(index):
             state = ButtonState.DISABLED
         else:
             key = (index.row(), index.column())
@@ -74,7 +74,7 @@ class TableButtonDelegate(QStyledItemDelegate):
         QApplication.style().drawControl(QStyle.CE_PushButton, button, painter)
 
     def _handle_event_state(self, event, option, index):
-        if not self._enabled:
+        if not self.isEnabled(index):
             # We are disabled but still clickable. We prevent that our action
             # is executed here!
             return
@@ -98,10 +98,15 @@ class TableButtonDelegate(QStyledItemDelegate):
     # -----------------------------------------------------------------------
     # Public interface
 
-    def isEnabled(self):
+    def isEnabled(self, index=None):
+        """Return if the ButtonDelegate is enabled for `index`
+
+        This method can be used to subclass for a specific index
+        """
         return self._enabled
 
     def setEnabled(self, enable):
+        """Set globally if the ButtonDelegate is enabled"""
         self._enabled = enable
         self._button_states = {}
 
