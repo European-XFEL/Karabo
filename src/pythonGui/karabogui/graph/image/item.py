@@ -110,8 +110,7 @@ class KaraboImageItem(GraphicsObject):
            no qimage or the selected pixel is out of view."""
         qimage = self._get_qimage()
         color = NULL_COLOR
-
-        if qimage is None or self._lastDownsample is None:
+        if qimage is None:
             return color
 
         # Map coords to qimage coords
@@ -120,11 +119,12 @@ class KaraboImageItem(GraphicsObject):
         y -= int(diff.y())
 
         # Account downsampling (shrunk qimage)
-        xds, yds = self._lastDownsample
-        if xds != 1:
-            x = np.ceil(x / xds)
-        if yds != 1:
-            y = np.ceil(y / yds)
+        if self._lastDownsample is not None:
+            xds, yds = self._lastDownsample
+            if xds != 1:
+                x = np.ceil(x / xds)
+            if yds != 1:
+                y = np.ceil(y / yds)
 
         # Check if calculated coord is inside the qimage
         if qimage.rect().contains(x, y):
