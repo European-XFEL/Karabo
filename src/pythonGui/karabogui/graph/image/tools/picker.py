@@ -10,8 +10,8 @@ from karabogui.graph.image.legends.picker import PickerLegend
 
 class PickerController(QObject):
 
-    def __init__(self, plotItem):
-        super(PickerController, self).__init__()
+    def __init__(self, plotItem, parent=None):
+        super(PickerController, self).__init__(parent=parent)
 
         self.plotItem = plotItem
         self._selected_pixel = None
