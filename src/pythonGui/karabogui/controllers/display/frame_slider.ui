@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>231</width>
+    <width>195</width>
     <height>551</height>
    </rect>
   </property>
@@ -37,6 +37,12 @@
      </item>
      <item>
       <widget class="QComboBox" name="cb_axis">
+       <property name="minimumSize">
+        <size>
+         <width>60</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="toolTip">
         <string>Sets the axis over which the cell/pulse indexing is performed</string>
        </property>
@@ -66,7 +72,14 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="sb_cell"/>
+      <widget class="QSpinBox" name="sb_cell">
+       <property name="minimumSize">
+        <size>
+         <width>60</width>
+         <height>0</height>
+        </size>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -76,6 +89,9 @@
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Minimum</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -102,6 +118,9 @@
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Minimum</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
