@@ -548,6 +548,10 @@ class BoundDeviceServer(DeviceServerBase):
                 except BaseException:
                     process.kill()
                     raise
+                if process.returncode != 0:
+                    # the parsing failed. raise an error so we do not repeat
+                    msg = f"schema conversion returned {process.returncode}"
+                    raise RuntimeError(msg)
                 self.bounds[ep.name] = decodeBinary(schema)[ep.name]
                 changes = True
             except BaseException:
