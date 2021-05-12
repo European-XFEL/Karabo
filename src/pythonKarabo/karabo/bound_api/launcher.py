@@ -1,8 +1,10 @@
+from contextlib import redirect_stdout
+import copy
 import ctypes
+from io import StringIO
 import signal
 import sys
 import threading
-import copy
 
 from pkg_resources import working_set
 
@@ -20,7 +22,13 @@ def main():
 
     if command == "schema" or command == "schemaOverwriteVersion":
         # print the schema of a device class to stdout
-        schema = entrypoint.load().getSchema(entrypoint.name)
+        f = StringIO()
+        # plugin loading might print something to stdout
+        # this will ruin the binary integrity of the schema output.
+        # To be safe, we cache it and output it to stderr.
+        with redirect_stdout(f):
+            schema = entrypoint.load().getSchema(entrypoint.name)
+        sys.stderr.buffer.write(f.getvalue().encode('utf-8'))
         if command != "schema":  # i.e. schemaOverwriteVersion
             # manipulate for unit test: use fixed karabo version
             # and fixed connection defaults (not from environment variables)
