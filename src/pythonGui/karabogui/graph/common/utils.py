@@ -4,7 +4,8 @@ MAX_PRECISION = -24
 
 
 def float_to_string(f):
-    return "{:.2f}".format(f).rstrip('0').rstrip('.')
+    """Create pretty floats for legend items"""
+    return "{:.2f}".format(f).rstrip("0").rstrip(".")
 
 
 def safe_log10(value):

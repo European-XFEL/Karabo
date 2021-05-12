@@ -25,7 +25,11 @@ class PickerLegend(KaraboLegend):
         self.hide()
 
     def set_value(self, x, y, value, color):
-        x, y, value = [float_to_string(num) for num in [x, y, value]]
+        # Note: The value of a picked pixel can be either an rgb (array) or
+        # a lut value (scalar).
+        x = float_to_string(x)
+        y = float_to_string(y)
+        value = float_to_string(value) if type(value) is float else str(value)
         self._label.setText("x: {}<br>y: {}<br>value: {}".format(x, y, value))
         self._color_box.setBrush(QBrush(color))
         self.updateSize()
