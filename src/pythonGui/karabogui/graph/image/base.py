@@ -189,7 +189,7 @@ class KaraboImageView(QWidget):
 
     def add_picker(self, enable=True):
         if enable and self._picker is None:
-            self._picker = PickerController(self.plotItem)
+            self._picker = PickerController(self.plotItem, parent=self)
         elif not enable and self._picker is not None:
             self._picker.destroy()
             self._picker = None
