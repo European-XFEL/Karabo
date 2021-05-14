@@ -203,14 +203,17 @@ class DeviceTreeModel(QAbstractItemModel):
     def _clear_tree_cache(self):
         """Clear the tree and reset the model to account visibility
         """
-        self.layoutAboutToBeChanged.emit()
-        access = krb_access.GLOBAL_ACCESS_LEVEL
+        self.beginResetModel()
+        try:
+            access = krb_access.GLOBAL_ACCESS_LEVEL
 
-        def visitor(node):
-            node.is_visible = not (node.visibility > access)
+            def visitor(node):
+                node.is_visible = not (node.visibility > access)
 
-        self.tree.visit(visitor)
-        self.layoutChanged.emit()
+            self.tree.visit(visitor)
+            self._model_index_refs.clear()
+        finally:
+            self.endResetModel()
 
     def currentIndex(self):
         return self.selectionModel.currentIndex()
