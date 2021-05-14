@@ -3,8 +3,8 @@ from unittest.mock import Mock
 from traits.api import pop_exception_handler, push_exception_handler
 
 from karabo.common.api import ProxyStatus
+from karabogui.singletons.api import get_topology
 from karabogui.testing import GuiTestCase, singletons, system_hash
-from karabogui.topology.system_topology import SystemTopology
 
 
 def setUp():
@@ -20,11 +20,9 @@ class TestSystemTopology(GuiTestCase):
     def test_get_class_simple(self):
         network = Mock()
         with singletons(network=network):
-            topology = SystemTopology()
-            topology.update(system_hash())
-
-            klass = topology.get_class('swerver', 'divvy')
-
+            topology = get_topology()
+            topology.initialize(system_hash())
+            klass = topology.get_class('swerver', 'NoClass')
             # server with name 'swerver' don't have the requested class
             assert klass.status is ProxyStatus.NOPLUGIN
             # GUI's system topology won't request for schema if the devic
@@ -35,8 +33,8 @@ class TestSystemTopology(GuiTestCase):
     def test_get_device_simple(self):
         network = Mock()
         with singletons(network=network):
-            topology = SystemTopology()
-            topology.update(system_hash())
+            topology = get_topology()
+            topology.initialize(system_hash())
             klass = topology.get_class('swerver', 'divvy')
 
             assert klass.status is ProxyStatus.NOPLUGIN
@@ -49,8 +47,8 @@ class TestSystemTopology(GuiTestCase):
 
     def test_get_project_device_simple(self):
         network = Mock()
-        topology = SystemTopology()
-        topology.update(system_hash())
+        topology = get_topology()
+        topology.initialize(system_hash())
         with singletons(network=network, topology=topology):
             device_id = 'divvy'
             server_id = 'swerver'
@@ -58,7 +56,7 @@ class TestSystemTopology(GuiTestCase):
 
             device = topology.get_project_device(device_id,
                                                  server_id=server_id,
-                                                 class_id=class_id,)
+                                                 class_id=class_id, )
             # Mocked network is not providing online proxy its schema
             device._online_proxy.status = ProxyStatus.OFFLINE
             assert device._online_proxy is topology.get_device(device_id)
@@ -67,7 +65,8 @@ class TestSystemTopology(GuiTestCase):
             assert device._offline_proxy is project_proxy
             assert device._offline_proxy.device_id == device_id
             assert device._offline_proxy.binding.class_id == class_id
-            network.onGetDeviceSchema.assert_called_with(device_id)
+            # No schema is requested for the online device
+            assert network.onGetDeviceSchema.call_count == 0
 
             device.rename(device_id='davey')
             key = (server_id, class_id)
