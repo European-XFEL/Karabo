@@ -182,6 +182,14 @@ class DeviceSystemTree(HasStrictTraits):
             def layout_context(self):
                 yield
 
+            @contextmanager
+            def insert_root_context(self, first, last):
+                yield
+
+            @contextmanager
+            def removal_children_context(self, tree_node):
+                yield
+
         return Dummy()
 
     def _append_child_node(self, parent_node, child_node):
@@ -194,6 +202,16 @@ class DeviceSystemTree(HasStrictTraits):
 
     def _set_child_node(self, parent_node, child_node):
         parent_node.children.append(child_node)
+
+    def _set_root_children(self, domain_node, append):
+        """Set the a domain node in the root element"""
+        first = len(self.root.children)
+        last = first
+        if append:
+            with self.update_context.insert_root_context(first, last):
+                self.root.children.append(domain_node)
+        else:
+            self.root.children.append(domain_node)
 
     # ------------------------------------------------------------------
 
@@ -226,7 +244,7 @@ class DeviceSystemTree(HasStrictTraits):
                 domain_node = DeviceTreeNode(node_id=domain,
                                              parent=self.root,
                                              level=DOMAIN_LEVEL)
-                handler(self.root, domain_node)
+                self._set_root_children(domain_node, append)
 
             type_node = domain_node.child(dev_type)
             if type_node is None:
