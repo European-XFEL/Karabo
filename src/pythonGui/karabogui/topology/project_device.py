@@ -218,7 +218,7 @@ class ProjectDeviceInstance(HasStrictTraits):
                 self.device_id, self.server_id, self.class_id
             )
 
-        self._online_proxy = topology.get_device(device_id)
+        self._online_proxy = topology.get_device(device_id, request=False)
         self._offline_proxy = topology.get_project_device_proxy(
             device_id, server_id, class_id)
 
