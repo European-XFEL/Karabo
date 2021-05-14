@@ -78,6 +78,19 @@ class _UpdateContext(HasStrictTraits):
             yield
 
     @contextlib.contextmanager
+    def insert_root_context(self, first, last):
+        """Provide a context for the addition of a children under the root"""
+
+        def gen():
+            try:
+                self.item_model.beginInsertRows(QModelIndex(), first, last)
+                yield
+            finally:
+                self.item_model.endInsertRows()
+
+        yield from gen()
+
+    @contextlib.contextmanager
     def removal_children_context(self, tree_node):
         """Provide a context for the removal of a single item from the model.
         """

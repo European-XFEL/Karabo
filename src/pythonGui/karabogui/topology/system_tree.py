@@ -340,6 +340,10 @@ class SystemTree(HasStrictTraits):
                 yield
 
             @contextmanager
+            def insert_root_context(self, first, last):
+                yield
+
+            @contextmanager
             def removal_children_context(self, tree_node):
                 yield
 
@@ -370,6 +374,16 @@ class SystemTree(HasStrictTraits):
 
         parent_node.children.append(child_node)
 
+    def _set_root_children(self, host_node, append=True):
+        """Set the a host node in the root element"""
+        first = len(self.root.children)
+        last = first
+        if append:
+            with self.update_context.insert_root_context(first, last):
+                self.root.children.append(host_node)
+        else:
+            self.root.children.append(host_node)
+
     # ------------------------------------------------------------------
 
     def _handle_server_data(self, system_hash, append=True):
@@ -394,7 +408,7 @@ class SystemTree(HasStrictTraits):
                 host_node = SystemTreeNode(node_id=host, path=host,
                                            parent=self.root,
                                            level=HOST_LEVEL)
-                handler(self.root, host_node)
+                self._set_root_children(host_node, append)
 
             # Create node for server
             server_node = host_node.child(server_id)
@@ -403,7 +417,7 @@ class SystemTree(HasStrictTraits):
                                              path=server_id, parent=host_node,
                                              visibility=visibility,
                                              level=SERVER_LEVEL)
-                self._append_child_node(host_node, server_node)
+                handler(host_node, server_node)
             server_node.attributes = attrs
 
     def _handle_device_data(self, device_type, system_hash, append=True):
@@ -436,7 +450,7 @@ class SystemTree(HasStrictTraits):
                 host_node = SystemTreeNode(node_id=host, path=host,
                                            parent=self.root,
                                            level=HOST_LEVEL)
-                handler(self.root, host_node)
+                self._set_root_children(host_node, append)
 
             # Server node
             server_node = host_node.child(server_id)
