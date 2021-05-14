@@ -221,21 +221,41 @@ class DeviceInstanceController(BaseProjectGroupController):
                 scene_name = scenes[0]
                 get_scene_from_server(device_id, scene_name)
 
+        def _schema_handler():
+            """Act on the arrival of the schema
+            """
+            proxy.on_trait_change(_schema_handler, 'schema_update',
+                                  remove=True)
+            scenes = proxy.binding.value.availableScenes.value
+            if scenes is Undefined:
+                proxy.on_trait_change(_config_handler, 'config_update')
+            elif not len(scenes):
+                messagebox.show_warning(
+                    "The device <b>{}</b> does not specify a scene "
+                    "name!".format(device_id), parent=parent)
+            else:
+                scene_name = scenes[0]
+                get_scene_from_server(device_id, scene_name)
+
         proxy = project_device.proxy
-        scenes = proxy.binding.value.availableScenes.value
-        if scenes is Undefined:
+        if not len(proxy.binding.value):
+            # We completely miss our schema and wait for it.
+            proxy.on_trait_change(_schema_handler, 'schema_update')
+        elif proxy.binding.value.availableScenes.value is Undefined:
             # The configuration did not yet arrive and we cannot get
             # a scene name from the availableScenes. We wait for the
             # configuration to arrive and install a handler.
             proxy.on_trait_change(_config_handler, 'config_update')
-        elif not len(scenes):
-            # The device might not have a scene name in property
-            messagebox.show_warning(
-                "The device <b>{}</b> does not specify a scene "
-                "name!".format(device_id), parent=parent)
         else:
-            scene_name = scenes[0]
-            get_scene_from_server(device_id, scene_name)
+            scenes = proxy.binding.value.availableScenes.value
+            if not len(scenes):
+                # The device might not have a scene name in property
+                messagebox.show_warning(
+                    "The device <b>{}</b> does not specify a scene "
+                    "name!".format(device_id), parent=parent)
+            else:
+                scene_name = scenes[0]
+                get_scene_from_server(device_id, scene_name)
 
     def _get_display_name(self):
         """Traits property getter for ``display_name``
