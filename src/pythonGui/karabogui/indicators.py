@@ -164,6 +164,7 @@ def get_device_status_icon(status, error=False):
         ProxyStatus.OK: icons.deviceAlive,
         ProxyStatus.ALIVE: icons.deviceAlive,
         ProxyStatus.REQUESTED: icons.device_requested,
+        ProxyStatus.ONLINEREQUESTED: icons.device_requested,
         ProxyStatus.SCHEMA: icons.device_schema,
         ProxyStatus.DEAD: icons.device_dead,
         ProxyStatus.NOSERVER: icons.deviceOfflineNoServer,

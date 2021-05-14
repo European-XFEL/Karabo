@@ -88,7 +88,6 @@ class SystemTopology(HasStrictTraits):
         """
         if self._system_hash is None:
             return None
-
         try:
             return self._system_hash[topology_path, ...]
         except KeyError:
@@ -118,8 +117,12 @@ class SystemTopology(HasStrictTraits):
 
         return proxy
 
-    def get_device(self, device_id):
+    def get_device(self, device_id, request=True):
         """Return the online version proxy (DeviceProxy) for a given device
+
+        :param request: Request a schema for the freshly created online proxy
+                        This is not required for lazy building, however, the
+                        default is `True`.
         """
         proxy = self._device_proxies.get(device_id)
         if proxy is None:
@@ -129,10 +132,17 @@ class SystemTopology(HasStrictTraits):
 
             attrs = self._get_device_attributes(device_id)
             if attrs is not None:
-                proxy.refresh_schema()
+                # We are dealing with an online device. Hence we assign
+                # the class id and server id from the system hash and
+                # if desired, request a schema.
                 binding.class_id = attrs.get('classId', '')
                 proxy.server_id = attrs.get('serverId', '')
-
+                if request:
+                    proxy.refresh_schema()
+                elif proxy.status is ProxyStatus.OFFLINE:
+                    # We did not request a schema, but we have been freshly
+                    # created and are ONLINE
+                    proxy.status = ProxyStatus.ONLINE
             # Get the system topology node, if it's there
             node = self.system_tree.get_instance_node(device_id)
             if node:
