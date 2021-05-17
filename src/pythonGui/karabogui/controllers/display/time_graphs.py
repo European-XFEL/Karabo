@@ -26,7 +26,8 @@ from karabogui.graph.plots.base import KaraboPlotView
 FILE_PATH = op.dirname(__file__)
 
 # NOTE: We limit ourselves to selected karabo actions!
-ALLOWED_ACTIONS = ['x_grid', 'y_grid', 'y_invert', 'y_log', 'axes', 'y_range']
+ALLOWED_ACTIONS = ['x_grid', 'y_grid', 'y_invert', 'y_log', 'axes', 'y_range',
+                   'view']
 MIN_TIMESTAMP = datetime.datetime(1970, 1, 31).timestamp()
 MAX_TIMESTAMP = datetime.datetime(2038, 12, 31).timestamp()
 
@@ -46,8 +47,7 @@ def curve_to_axis(value):
 
 
 class BaseSeriesGraph(BaseBindingController):
-    # The scene model class used by this controller
-
+    """The BaseClass for all trendline controllers"""
     _plot = WeakRef(KaraboPlotView)
     _timer = Instance(QTimer)
     _start_time = Instance(QDateTime)
