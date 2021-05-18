@@ -370,60 +370,6 @@ class SystemTopology(HasStrictTraits):
 
         return proxy
 
-    def instance_gone(self, instance_id, instance_type):
-        """A device or server was removed
-        """
-        devices, servers = [], []
-
-        # Get the attributes of the instance which is now gone
-        path = instance_type + '.' + instance_id
-        attributes = self.get_attributes(path)
-        if attributes is None:
-            return devices, servers
-
-        # Remove instance from system hash
-        if self._system_hash is not None and path in self._system_hash:
-            del self._system_hash[path]
-
-        if instance_type in ('device', 'macro'):
-            # Set the DeviceProxy to offline, but keep it.
-            proxy = self._device_proxies.get(instance_id)
-            if proxy is not None:
-                proxy.status = ProxyStatus.OFFLINE
-                # XXX: We used to clear the configuration tree widget here
-
-            # Update system tree
-            self.system_tree.remove_device(instance_id)
-
-            self.device_tree.remove_device(instance_id)
-
-            # Use pop() for removal in case there's nothing there
-            self._device_schemas.pop(instance_id, None)
-
-            # Note the details of what device is gone
-            class_id = attributes.get('classId', 'unknown-class')
-            devices.append((instance_id, class_id, 'offline'))
-
-        elif instance_type == 'server':
-            self.system_tree.remove_server(instance_id)
-            for key in self._class_proxies.keys():
-                if key[0] == instance_id:
-                    # Clear the class proxy binding values when device server
-                    # goes offline
-                    self._class_proxies[key].binding.value.clear_namespace()
-
-            # Update the status of all online devices (device proxies)
-            self._update_online_device_status()
-
-            # Update the status of all offline devices (project device proxies)
-            self._project_device_proxies_server_update(instance_id)
-
-            # Note the details of what device is gone
-            host = attributes.get('host', 'UNKNOWN')
-            servers.append((instance_id, host, 'offline'))
-
-        return devices, servers
-
     def instance_new(self, server_hash):
         """Called when an `instanceNew` message is received from the server
         """
@@ -553,7 +499,7 @@ class SystemTopology(HasStrictTraits):
 
         gone = changes['gone']
         if not gone.empty():
-            devices, servers = self.topology_gone(gone)
+            devices, servers = self.instance_gone(gone)
         new = changes['new']
         if not new.empty():
             self.instance_new(new)
@@ -563,7 +509,7 @@ class SystemTopology(HasStrictTraits):
 
         return devices, servers
 
-    def topology_gone(self, system_hash):
+    def instance_gone(self, system_hash):
         """Remove servers, devices and macros from the system topology
 
         This function will return the devices and servers which have been
