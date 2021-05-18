@@ -133,13 +133,13 @@ find_package(Boost 1.68 REQUIRED
              COMPONENTS chrono date_time filesystem regex system thread)
 list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${Boost_INCLUDE_DIRS})
 
-function(add_dep LIBNAME INCLUDE_PATH)
+macro(add_dep LIBNAME INCLUDE_PATH)
     find_library(${LIBNAME}_LIB ${LIBNAME})
     find_path(${LIBNAME}_INC_PATH ${INCLUDE_PATH})
     list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${${LIBNAME}_INC_PATH})
     message(STATUS "${LIBNAME}_INC_PATH = ${${LIBNAME}_INC_PATH}")
     message(STATUS "${LIBNAME}_LIB = ${${LIBNAME}_LIB}")
-endfunction()
+endmacro()
 
 add_dep(log4cpp krb_log4cpp)
 add_dep(pugixml pugixml.hpp)
