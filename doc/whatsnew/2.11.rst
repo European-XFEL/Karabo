@@ -4,21 +4,94 @@ What's New in Karabo 2.11.0
 
 The **most relevant improvements**, fixes and changes are:
 
-- MDL API CHANGE: The method `onInitialization` will not shutdown the instance anymore on exception.
-- All API: The slot call ``slotGetTime`` takes an input argument now and provides the ``timeServerId``
-  and the last reference timestamp.
+- GUI: Major refactoring of the topology processing and filtering for performance improvements.
+- GUI: Continue consolidation of the table element widgets. Editing changes are validated on user input
+  and highlighted with a red color if invalid. Furthermore, configurations are validated on project loading.
+- GUI: The graphical user interface gets an application log to show outgoing commands and messaging
+  as well as to notify errors.
+- GUI: It is possible to store and restore the geometry of the application.
+- GUI: Significant layout improvements for the plot widgets. Removed the implicit QLayout margins and spacing
+  whenever and whereever possible.
+- GUI: Message boxes are modal again and moved to the center of the main application if no position has been specified.
+- GUI: The library **PyQt** was upgraded from 5.9.7 to **5.12.3**
+- GUI: Configuration from name and from past offer now a preview dialog to investigate read only properties and changes
+- GUI: The Configuration dialog of a project device offers now the manipulation of the stored configuration
+- GUI: Devices that provide scenes can be dragged from the navigation and project panels to create device scene links
+
 - C++/Bound: Input channels of devices now have a property that shows the output
   channels that are configured to be connected but are not.
 
 - C++/Bound: If an injected schema contains input or output channels or changes for the schema of an output channel, the respective channels are automatically (re-)created and need (re-)connection. That will happen automatically, but may need a few seconds.
 
-- MDL API: New functions **hashToDict** and **dictToHash** are available. These function converts either nested dictionaries or hashes to their counterpart.
+- MDL: Servers can have heartbeat tracking of the topology. Start a server with the property *track=True* to enable instance tracking and receive notifications about connected devices that go down in an unclean way.
+- MDL: Attributes of numeric properties in devices (e.g. `minInc`, ...) are now validated and eventually
+  casted with a numpy dtype.
+- MDL: Enumable attributes (`AccessLevel`, ...) or boolean attributes (`needsAck`, ...) of properties in devices are now validated
+- MDL: It is possible to `start` and `cancel` asynchronous macros (*async def*).
 
-- The ``ProjectManager`` device is now compatible with a file backend. See :ref:`below <211_projectmanager>`.
+- MDL: New functions **hashToDict** and **dictToHash** are available. These function converts either
+  nested dictionaries or hashes to their counterpart.
+- MDL: The function **create_hash_html(hash)** can be used to create the html presentation of a `Hash`
+- MDL: An InputChannel always (re)connects to its configured output channels independent of the `slotInstanceNew` signal.
+- MDL: An OutputChannel can now be closed with the method *output.close()* if desired.
+- MDL: The proxy creating function *getDevice* can now be used with an asynchronous context (async with)
+
+- MDL: It is now possible to inject a new output channel schema on an existing channel during runtime. Please use the device method
+  **setOutputSchema(key, schema)** for this. An example is also provided in the *HowToMiddlelayer* documentation.
+- MDL FIX: The *deepcopy* and *fullyEqual* methods of a `Hash` are now working properly.
 
 - MAJOR: **Python** was upgraded to version **3.8**. In this process more dependencies were added or upgraded, see :ref:`below <211_deps>`.
 
+- Core Device: The ``ProjectManager`` device is now compatible with a file backend. See :ref:`below <211_projectmanager>`.
+- Core Device: The InfluxDataLogReader now returns data downsampled using the arithmetic mean
+  instead of random down sampling if the data available is larger than the maximum requested.
+
 - Compilation of device packages requires at least gcc version 7. Note that the default compiler on all supported platforms except Ubuntu16 fulfils that.
+
+Known Regressions or API Changes
+++++++++++++++++++++++++++++++++
+
+- GUI: The plotting library *PyQtGraph* removed the transparent background of the plot widgets. This was done for performance
+  reasons. Karabo reintroduces the transparent background for images. For plot widgets, the background can now be
+  configured with a new widget action and a title can be set.
+
+- MDL CHANGE: The method `onInitialization` will not shutdown the instance anymore on exception. The method is not awaited anymore,
+  but instead launched in a background task.
+
+- MDL CHANGE: The `ListOfNodes` property for the device logger property was replace with normal Node.
+
+- MDL CHANGE: ``DeviceNode`` timeout is default set to 2 seconds. A maximum of 5 seconds can be configured.
+  The timeout was introduced due to the interference with a foreseen online to offline configuration saving feature in an upcoming release.
+
+- Bound devices: The logging configuration (except the log level) is now always inherited from the device server and cannot be configured anymore.
+
+- All API: The slot call ``slotGetTime`` takes an input argument now and provides the ``timeServerId``
+  and the last reference timestamp.
+
+Performance Improvements
+++++++++++++++++++++++++
+
+Several performance improvements are bundled in this release.
+
+- GUI: Topology processing is 3 times faster
+- GUI: Lazy loading of project devices which have an online counterpart. This typically results in a factor > 2
+  faster project loading in operation
+- GUI: The label widget, the fairly most used widget, is painting around 15 times faster
+- GUI: Trendline plot performance increased by a factor of 2
+- GUI: Image display performance improved by up to ~20 %
+- MDL: Binary Hash serialization is up to 15 % faster
+- MDL: XML Hash serialization is up to 20 % faster
+
+
+Experimental features
+++++++++++++++++++++++
+
+All APIs support a broker with the MQTT protocol instead of JMS.
+The protocol specified in the `KARABO_BROKER` environment variable defines which broker type to use:
+- *tcp*: JMS is used as usual,
+- *mqtt*: MQTT is used.
+This is an experimental feature, i.e. version compatibility is not guaranteed.
+
 
 Deprecations
 ++++++++++++
@@ -29,9 +102,8 @@ Deprecations
 - MDL API: ``Injectable`` class is not required for Schema injection and deprecated. It will be removed with Karabo 2.13.
 
 - MDL API: ``DeviceNode`` `properties` and `commands` are deprecated and scheduled for removal with Karabo 2.12.
-- MDL API: ``DeviceNode`` timeout is default 2 seconds. A maximum of 5 seconds can be configured.
 
-- FW: The attribute configuration of the **unitSymbol** and **metricPrefixSymbol** in the graphical user interface has been deprecated and remvoved.
+- FW: The attribute configuration of the **unitSymbol** and **metricPrefixSymbol** in the graphical user interface has been deprecated and removed.
   For further details and future deprecations please have a look at the Karabo newsletter 25 (https://rtd.xfel.eu/docs/newsletter/en/latest/ticker_25.html).
   Further attribute settings from the graphical user interface have been deprecated and are scheduled for removal in Karabo 2.12.
 
