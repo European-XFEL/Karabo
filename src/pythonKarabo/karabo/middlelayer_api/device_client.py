@@ -329,7 +329,8 @@ def getHistory(prop, begin,
     assumed.
 
     Another parameter, *maxNumData*, may be given, which gives the maximum
-    number of data points to be returned. It defaults to 10000. The returned
+    number of data points to be returned. Acceptable values for *maxNumData*
+    are in the range [1, 10_000], the default being 10_000. The returned
     data will be reduced appropriately to still span the full timespan.
 
     An shorthand syntax can be used with the `minutesAgo` and `hourseAgo`
