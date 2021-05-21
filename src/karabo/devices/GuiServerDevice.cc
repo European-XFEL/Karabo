@@ -776,7 +776,7 @@ namespace karabo {
                 // Failure, so can get access to exception causing it:
                 std::set<std::string> paths;
                 input.get<Hash>("configuration").getPaths(paths);
-                std::string& failTxt = h.set("failureReason", "Failure on request to reconfigure '" + toString(paths) += "' of "
+                std::string& failTxt = h.set("reason", "Failure on request to reconfigure '" + toString(paths) += "' of "
                                              "device '" + input.get<std::string>("deviceId") + "'")
                         .getValue<std::string>();
                 try {
@@ -835,7 +835,7 @@ namespace karabo {
                    "input", input);
             if (!success) {
                 // Failure, so can get access to exception causing it:
-                std::string& failTxt = h.set("failureReason", "Failure on request to execute '" + input.get<std::string>("command")
+                std::string& failTxt = h.set("reason", "Failure on request to execute '" + input.get<std::string>("command")
                                              + "' on device '" + input.get<std::string>("deviceId") + "'")
                         .getValue<std::string>();
                 try {
@@ -1191,7 +1191,7 @@ namespace karabo {
 
                 Hash h("type", "propertyHistory", "deviceId", deviceId,
                        "property", property, "data", data, "success", success);
-                std::string& reason = h.bindReference<std::string>("failureReason");
+                std::string& reason = h.bindReference<std::string>("reason");
 
                 if (success) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting property history: "
