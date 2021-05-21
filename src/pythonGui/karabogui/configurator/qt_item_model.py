@@ -338,8 +338,12 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if is_special or (binding is not None and not is_node):
             flags |= Qt.ItemIsDragEnabled
 
+        column = index.column()
+        if column in (1, 2):
+            flags |= Qt.ItemNeverHasChildren
+
         # Below are the value flags. Ignore the first and second column
-        if index.column() in (0, 1):
+        if column in (0, 1):
             return flags
 
         # Value-specific flags
