@@ -335,7 +335,7 @@ void GuiVersion_Test::testExecute() {
 
         CPPUNIT_ASSERT_EQUAL(std::string("Failure on request to execute 'does.not.matter' on device 'not_there'. Request "\
                                          "not answered within 1 seconds."),
-                             replyMessage.get<std::string>("failureReason"));
+                             replyMessage.get<std::string>("reason"));
     }
 
 
@@ -358,11 +358,11 @@ void GuiVersion_Test::testExecute() {
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
         // First part of fail message is fixed, details contain 'Remote Exception':
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(replyMessage.get<std::string>("failureReason"), 0ul,
-                                     replyMessage.get<std::string>("failureReason")
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(replyMessage.get<std::string>("reason"), 0ul,
+                                     replyMessage.get<std::string>("reason")
                                      .find("Failure on request to execute 'not.existing' on device 'testGuiServerDevice', details:\n"));
-        CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("failureReason"),
-                               replyMessage.get<std::string>("failureReason").find("Remote Exception") != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("reason"),
+                               replyMessage.get<std::string>("reason").find("Remote Exception") != std::string::npos);
     }
 
     //
@@ -386,7 +386,7 @@ void GuiVersion_Test::testExecute() {
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(replyMessage.get<bool>("success"));
-        CPPUNIT_ASSERT(!replyMessage.has("failureReason"));
+        CPPUNIT_ASSERT(!replyMessage.has("reason"));
     }
 
     //
@@ -570,8 +570,8 @@ void GuiVersion_Test::testSlowSlots() {
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
-        CPPUNIT_ASSERT(replyMessage.has("failureReason"));
-        const std::string& failureMsg = replyMessage.get<std::string>("failureReason");
+        CPPUNIT_ASSERT(replyMessage.has("reason"));
+        const std::string& failureMsg = replyMessage.get<std::string>("reason");
         CPPUNIT_ASSERT_MESSAGE(failureMsg, failureMsg.find("Request not answered within 1 seconds") != std::string::npos);
     }
 
@@ -593,9 +593,9 @@ void GuiVersion_Test::testSlowSlots() {
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
-        std::string message = (replyMessage.has("failureReason"))? replyMessage.get<std::string>("failureReason") : "NO REASON";
+        std::string message = (replyMessage.has("reason"))? replyMessage.get<std::string>("reason") : "NO REASON";
         CPPUNIT_ASSERT_MESSAGE(message, replyMessage.get<bool>("success"));
-        CPPUNIT_ASSERT(!replyMessage.has("failureReason"));
+        CPPUNIT_ASSERT(!replyMessage.has("reason"));
     }
     //
     // Test that the server will handle timeout after removing "PropertyTest" from the list of bad guys
@@ -615,8 +615,8 @@ void GuiVersion_Test::testSlowSlots() {
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
-        CPPUNIT_ASSERT(replyMessage.has("failureReason"));
-        const std::string& failureMsg = replyMessage.get<std::string>("failureReason");
+        CPPUNIT_ASSERT(replyMessage.has("reason"));
+        const std::string& failureMsg = replyMessage.get<std::string>("reason");
         CPPUNIT_ASSERT_MESSAGE(failureMsg, failureMsg.find("Request not answered within 1 seconds") != std::string::npos);
     }
 
@@ -639,9 +639,9 @@ void GuiVersion_Test::testSlowSlots() {
         Hash replyMessage;
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
-        std::string message = (replyMessage.has("failureReason")) ? replyMessage.get<std::string>("failureReason") : "NO REASON";
+        std::string message = (replyMessage.has("reason")) ? replyMessage.get<std::string>("reason") : "NO REASON";
         CPPUNIT_ASSERT_MESSAGE(message, replyMessage.get<bool>("success"));
-        CPPUNIT_ASSERT(!replyMessage.has("failureReason"));
+        CPPUNIT_ASSERT(!replyMessage.has("reason"));
     }
     //
     // Test that the server will handle timeout after  resetting the "timeout" property.
@@ -660,8 +660,8 @@ void GuiVersion_Test::testSlowSlots() {
         messageQ->pop(replyMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("executeReply"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
-        CPPUNIT_ASSERT(replyMessage.has("failureReason"));
-        const std::string& failureMsg = replyMessage.get<std::string>("failureReason");
+        CPPUNIT_ASSERT(replyMessage.has("reason"));
+        const std::string& failureMsg = replyMessage.get<std::string>("reason");
         CPPUNIT_ASSERT_MESSAGE(failureMsg, failureMsg.find("Request not answered within 1 seconds") != std::string::npos);
     }
 
@@ -700,7 +700,7 @@ void GuiVersion_Test::testReconfigure() {
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
         CPPUNIT_ASSERT_EQUAL(std::string("Failure on request to reconfigure 'whatever' of device 'not_there'. Request not answered within 1 seconds."),
-                             replyMessage.get<std::string>("failureReason"));
+                             replyMessage.get<std::string>("reason"));
     }
 
     //
@@ -723,11 +723,11 @@ void GuiVersion_Test::testReconfigure() {
         CPPUNIT_ASSERT(!replyMessage.get<bool>("success"));
 
         // Start of fail message is well defined, details contain 'Remote Exception':
-        CPPUNIT_ASSERT_EQUAL_MESSAGE(replyMessage.get<std::string>("failureReason"), 0ul,
-                                     replyMessage.get<std::string>("failureReason")
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(replyMessage.get<std::string>("reason"), 0ul,
+                                     replyMessage.get<std::string>("reason")
                                      .find("Failure on request to reconfigure 'whatever' of device 'testGuiServerDevice', details:\n"));
-        CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("failureReason"),
-                               replyMessage.get<std::string>("failureReason").find("Remote Exception") != std::string::npos);
+        CPPUNIT_ASSERT_MESSAGE(replyMessage.get<std::string>("reason"),
+                               replyMessage.get<std::string>("reason").find("Remote Exception") != std::string::npos);
     }
 
     //
@@ -749,7 +749,7 @@ void GuiVersion_Test::testReconfigure() {
         CPPUNIT_ASSERT_EQUAL(std::string("reconfigureReply"), replyMessage.get<std::string>("type"));
         CPPUNIT_ASSERT_MESSAGE(toString(replyMessage.get<Hash>("input")), h.fullyEquals(replyMessage.get<Hash>("input")));
         CPPUNIT_ASSERT(replyMessage.get<bool>("success"));
-        CPPUNIT_ASSERT(!replyMessage.has("failureReason"));
+        CPPUNIT_ASSERT(!replyMessage.has("reason"));
         // Just assure that it really happened:
         CPPUNIT_ASSERT_EQUAL(newTarget, m_deviceClient->get<int>("testGuiServerDevice", "networkPerformance.sampleInterval"));
 
