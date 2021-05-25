@@ -285,7 +285,8 @@ class ProjectViewItemModel(QAbstractItemModel):
         flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled
         controller = self.controller_ref(index)
         if isinstance(controller, DeviceConfigurationController):
-            # We only allow the configurations to be checkable for offline
+            flags |= Qt.ItemNeverHasChildren
+            # We only allow the configurations to be checked for offline
             # devices!
             parent_controller = self.controller_ref(index.parent())
             if (parent_controller is not None
