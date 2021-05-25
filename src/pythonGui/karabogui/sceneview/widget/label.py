@@ -5,7 +5,7 @@
 #############################################################################
 from qtpy.QtCore import QSize, Qt, Slot
 from qtpy.QtGui import QFontMetrics
-from qtpy.QtWidgets import QAction, QDialog, QFrame, QLabel
+from qtpy.QtWidgets import QAction, QDialog, QFrame, QLabel, QSizePolicy
 
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.fonts import get_qfont
@@ -23,6 +23,8 @@ class LabelWidget(KaraboSceneWidget, QLabel):
     def __init__(self, model, parent=None):
         super(LabelWidget, self).__init__(model.text,
                                           model=model, parent=parent)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding,
+                           QSizePolicy.Minimum)
         self.setFrameShape(QFrame.Box)
         self.fm = None
         self.set_model(model)
