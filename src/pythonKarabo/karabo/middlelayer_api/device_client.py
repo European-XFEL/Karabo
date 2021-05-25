@@ -627,6 +627,8 @@ class DeviceFuture:
         if self.proxy is not None:
             return (await self.proxy.__aexit__(etype, value, tb))
 
+    __iter__ = __await__
+
 
 @synchronize
 async def _getDevice(deviceId, sync, lazy, factory=DeviceClientProxyFactory):
