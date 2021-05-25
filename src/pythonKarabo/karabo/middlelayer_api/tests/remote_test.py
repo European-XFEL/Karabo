@@ -1,5 +1,5 @@
 from asyncio import (
-    ensure_future, Future, gather, get_event_loop, sleep, wait_for,
+    coroutine, ensure_future, Future, gather, get_event_loop, sleep, wait_for,
     TimeoutError)
 from contextlib import contextmanager
 from datetime import datetime
@@ -1336,6 +1336,54 @@ class Tests(DeviceTest):
         self.assertTrue(d.counter < 29)
         await task
         async with d:
+            self.assertEqual(d.counter, 29)
+
+    @async_tst
+    @coroutine
+    def test_async_yield_from_connectDevice(self):
+        """Test the old syntax for connectDevice"""
+        self.remote.counter = -1
+        d = yield from connectDevice("remote")
+        self.assertEqual(d.counter, -1)
+        task = background(d.count())
+        yield from waitUntil(lambda: d.counter == 10)
+        self.assertEqual(d.counter, 10)
+        yield from task
+        self.assertEqual(d.counter, 29)
+
+    @async_tst
+    @coroutine
+    def test_async_yield_from_getDevice(self):
+        """Test the old syntax for getDevice"""
+        self.remote.counter = -1
+        d = yield from getDevice("remote")
+        self.assertEqual(d.counter, -1)
+        counter = d.counter
+        for i in range(20):
+            yield from sleep(0.01)
+            self.assertEqual(d.counter, counter)
+        task = background(d.count())
+        self.assertEqual(d.counter, -1)
+        yield from task
+        with d:
+            yield from updateDevice(d)
+            self.assertEqual(d.counter, 29)
+
+    @async_tst
+    @coroutine
+    def test_async_with_yield_from_getDevice(self):
+        """Test the old syntax for getDevice"""
+        self.remote.counter = -1
+        with (yield from getDevice("remote")) as d:
+            self.assertEqual(d.counter, -1)
+            task = background(d.count())
+        counter = d.counter
+        for i in range(20):
+            yield from sleep(0.01)
+            self.assertEqual(d.counter, counter)
+        yield from task
+        with d:
+            yield from updateDevice(d)
             self.assertEqual(d.counter, 29)
 
 
