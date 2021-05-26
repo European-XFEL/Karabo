@@ -631,6 +631,10 @@ namespace karabo {
              * follow exactly the data schema as defined in the expected parameters.
              * @param channelName The output channel name
              * @param data Hash with the data
+             *
+             * Thread safety:
+             * The 'writeChannel(..)' methods and 'signalEndOfStream(..)' must not be called concurrently
+             * for the same 'channelName'.
              */
             void writeChannel(const std::string& channelName, const karabo::util::Hash& data) {
                 this->writeChannel(channelName, data, this->getActualTimestamp());
@@ -642,6 +646,10 @@ namespace karabo {
              * @param channelName The output channel name
              * @param data Hash with the data
              * @param timestamp A user provided timestamp (if e.g. retrieved from h/w)
+             *
+             * Thread safety:
+             * The 'writeChannel(..)' methods and 'signalEndOfStream(..)' must not be called concurrently
+             * for the same 'channelName'.
              */
             void writeChannel(const std::string& channelName, const karabo::util::Hash& data,
                               const karabo::util::Timestamp& timestamp) {
@@ -657,6 +665,10 @@ namespace karabo {
              * Signals an end-of-stream event (EOS) on the output channel identified
              * by channelName
              * @param channelName: the name of the output channel.
+             *
+             * Thread safety:
+             * The 'writeChannel(..)' methods and 'signalEndOfStream(..)' must not be called concurrently
+             * for the same 'channelName'.
              */
             void signalEndOfStream(const std::string& channelName) {
                 this->getOutputChannel(channelName)->signalEndOfStream();
