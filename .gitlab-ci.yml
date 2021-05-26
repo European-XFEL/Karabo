@@ -175,47 +175,6 @@ release build ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
   <<: *release-build
 
-release build miniconda:
-  image: europeanxfel/karabo-ci:miniconda-3
-  before_script:
-    - source ci/utils/enable_internet.sh
-  <<: *release-build-conda
-  
-release build miniconda-osx64:
-  before_script:
-    - ci/miniconda/cleanup.sh
-  tags:
-    - macos
-  <<: *release-build-conda
-
-release build miniconda-win64:
-  before_script:
-    - ci/miniconda/cleanup.cmd
-  tags:
-    - Win10
-  <<: *release-build-conda
-
-# prerelease build for conda
-
-prerelease build miniconda:
-  image: europeanxfel/karabo-ci:miniconda-3
-  before_script:
-    - source ci/utils/enable_internet.sh
-  <<: *prerelease-build-conda
-
-prerelease build miniconda-osx64:
-  before_script:
-    - ci/miniconda/cleanup.sh
-  tags:
-    - macos
-  <<: *prerelease-build-conda
-
-prerelease build miniconda-win64:
-  before_script:
-    - ci/miniconda/cleanup.cmd
-  tags:
-    - Win10
-  <<: *prerelease-build-conda
 
 # nightly release build
 
@@ -324,32 +283,6 @@ unit tests ubuntu20:
 unit tests ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
   <<: *unit-tests
-
-unit tests miniconda:
-  image: europeanxfel/karabo-ci:miniconda-3
-  before_script:
-    - source ci/utils/enable_internet.sh
-  <<: *unit-tests-conda
-
-unit tests miniconda-osx64:
-  before_script:
-    - ci/miniconda/cleanup.sh
-  tags:
-    - macos
-  <<: *unit-tests-conda
-
-unit tests miniconda-win64:
-  before_script:
-    - ci/miniconda/cleanup.cmd
-  tags:
-    - Win10
-  <<: *unit-tests-conda
-
-#unit tests miniconda-cmake:
-#  image: europeanxfel/karabo-ci:miniconda-3
-#  <<: *unit-tests
-
-# Post-merge integration test builds
 
 integration tests centos8:
   image: europeanxfel/karabo-ci:centos-8
