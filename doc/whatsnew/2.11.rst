@@ -114,6 +114,542 @@ Deprecations
 
 - C++ when a devices updates its properties via the ``set`` function, but the update is invalid, now an exception is thrown (as in Bound).
 
+
+Detailed Merge-Log
+==================
+
+
+Dependencies - Tests - CI (DevOPS)
+++++++++++++++++++++++++++++++++++
+
+- CI: flake8 pythonKarabo in lint stage !5064
+- CI: check the GUI with isort !5530
+- CI: Run integration tests on master !5106
+- CI: move all linting code outside yml file !5085
+- CI: add correct paths for common for GUI tests !5052
+- CI: execute tests on changes !4970
+- CI: temporary disable linting task !4950
+- CI: Include the run packages on conda build requirements !5086
+- CI: Launch python unit and integration tests !5104
+- CI: Add example .gitlab-ci.yml !5319
+- CI: run tests on changes !5312
+- CI: fix lint script to run with default parameters !5161
+- CI: Prerelease upload !5202
+- FIX: Clean up comment from left-over test changes !5527
+- FIX: fix polymorphic exception warnings !4942
+- FIX: fix integration cross test for JMS !5439
+- FIX: Add Class Name to package version definition !5475
+- DEPS: add asyncio-mqtt package !5307
+- DEPS: remove documentation tooling !5203
+- DEPS: OpenMQ from the latest glassfish !4425
+- DEPS: use aioredis instead of async-redis !5563
+- DEPS: Add redis dependencies !5536
+- DEPS: re-enable cmake build !4941
+- DEPS: Update tornado, jupyter_client !5036
+- DEPS: add dependency to conda recipe !5187
+- DEPS: Add isort !5529
+- DEPS: Update traits to 6.0.0 !5007
+- DEPS: add MQTT clients and dependencies
+- DEPS: Upgrade boost from 1.66 to 1.68 and add MQTT clients !4948
+- DEPS: Add peewee 3.14.0. !5015
+- DEPS: Update Boost dependency to version 1.68 package from XFEL Conda Channel. !5192
+- CONDA: move tests code in own script !5327
+- CONDA: use alternative proxy installation !5337
+- CONDA: enable karabo-mdl conda environment !5066
+- CONDA: Explicitly make qtpy a dependency !5249
+- CMAKE: KARABO env var for running built artifacts from the CMake build tree. !5209.
+- CMAKE: Dynamic "resolve-lib-karabo-target" macro. !5199
+- CMAKE: Fix CMake Release builds of Cpp Framework
+- CMAKE: build of C++ Karabo Framework executables !5164
+- CMAKE: support for building and testing of CPP components of the Framework.libkarabo itself, the CPP unit tests, and the CPP integration tests.
+- FIX: Shield InfluxLogReader from hyphen in keys !5495
+- FIX: do not check conda environment in conda-build !5476
+- FIX: Report failures of 'karabo uninstall' with hints for reasonsXFEL-CLOSED #83212
+- TEST: Hash, Replace assertEquals with assertEqual !5425
+- TEST: Remove cpp long tests again !4983
+- TEST: AssertEquals is deprecated in device comm test !5113
+- TEST: Enable Artifacts on GUI CIs !4946
+- TEST: Add testing of serialisation of None in API round trip`None` can well be serialised - in all APIs.
+- TEST: workaround for order guarantee Bound
+
+- Tools: karabo-brokerrates optionally per server
+
+
+Influx DB
++++++++++
+
+- INFLUX: Fix for line protocols that only have timestamp. !5304
+- INFLUX: Fix for non-responsive log reader issue. !5277
+- INFLUX: Protect blocks where results returned from Influx in JSON format are parsed. !5465
+- INFLUX: remove python device prototypes !4960
+
+
+Core Devices
+++++++++++++
+
+- Core: Implement device instantiator interface !5397
+- GUI Server: Extend requestGeneric validation !5541
+- GUI Server: Return preview boolean if possible !5474
+
+- DataLogReader: Logger returns Mean on number types !4968
+- Datalog Reader: Skip "time" column datatype check on GetPropertyHistory. !5497
+- Configuration DB: Support for overwritable named device configurations. !4937
+- Configuration DB: Move Configuration Manager back in the framework
+- Project Manager: add project_db file Backend !5140
+- Project Manager: create an injectable project_db node !5162
+- Property Test: add options for PropertyTestMDL !5259
+
+
+Bound/cpp core
+++++++++++++++
+
+- Bound: enable namespace definition on server !5375
+- Bound: Expose InputChannel ConnectionStatus to DeviceClient interface !4984
+- Bound: only minimal configurability of device logging
+- Bound: More flexible slot registration
+- Bound: Fix missing GIL when destructing SlotWrap's Python object !5453
+- Bound: Explicit test for SignalSlotable request !5392
+- Bound: appendSchema creates input/output channes like updateSchema
+- Bound: Create pipeline channels on schema injection
+- Bound: Track missing input channel connections XFEL-CLOSED 84545 XFEL-CLOSED R-83109
+- Bound: Add setVectorUpdate(..) to PythonDevice XFEL-CLOSED R-84546
+- Bound: DeviceClient extension !5042
+- Bound: Clarify hash key length validation error message !4924
+- Bound: use BaseException when generic !5075
+- Bound: Extend information on slotGetTime from bound !5264
+- Bound: Fix adler ctrl sum: 'deadline' property in MqttBroker !5294
+- Karathon: minor cleaningsRemove unused, const ref, ...
+- C++/bound: Avoid mqtt crashes
+- C++/bound: Do not use KARABO_BROKER in JmsConnection
+- C++/bound: Proper tables for framework (and test) devices
+- C++/bound: gcc 7 is required now, Ubuntu16 deprecated
+- C++/Bound: remove progress variable !4938
+- C++/Bound: Remove useTimeServer and timeServerId from base device !5056
+- C++/Bound: Validate table element cardinality. !5370
+- C++ Add reference timestamp and timeServerId to the reply of Device::slotGetTime. !5520
+- C++: ParameterException for unfixable missing default values for table columns. !5391
+- C++: Add check for default values of simple and vector elements (and tests). !5390
+- C++: Sanitize Table Element !5382
+- C++: remove old BOOST_FOREACH calls !5256
+- C++: place configuration macros out of namespaces !4954
+- C++: Order DetectorGeometry initializer list !5258
+- C++: allow fine grained version protection !5065
+- C++: Use Initializer Lists and avoid postIncrement !5092
+- C++:  Better validation failure messages for state and alarms !5507
+- C++: Add missing include in MetaTools.hh !5506
+- C++: Add warning to data logger manager
+- C++: Do not send pipeline data under mutex lock* take care that synchronous tcp writing is not done when `m_registeredCopyInputsMutex` is locked
+- C++: Get rid of DEBUG messages...about ignoring arguments of response.
+- C++: Fix missing interface imports XFEL_CLOSED 89943
+- C++: GuiServerDevice "debug to log" slot, require 2.10 client* clean a bit our logs from timeout noise (single line is enough) * add a gui server device debug slot that dumps the result of `slotDumpDebugInfo`
+- C++: Fix treatment of empty nodes after schema 'subtraction' !5454
+- C++: Protect Strand against exception in posted handler !5452
+- C++: Clean some slot registrations
+- C++: More info on unknown exceptions
+- C++: Better logs of output channel
+- C++: fix occasional CI failure due to Mqtt
+- C++: partial include clean-up, avoiding karabo/*.hpp !5343
+- C++: Invalid internal device updates should throw
+- Enable MQTT broker in karabo-brokermessagelogger XFEL-CLOSED 28421
+- C++: More robust input channel (re-)connection
+- C++: Minor fix input channel disconnect
+- C++: Add debug output in SignalSlotable_TestRecently seen rare crashes without clue whether in JMS or MQTT part.
+- C++: Clean MqttClient test, i.e. use proper source of default domain !5235
+- C++ test:  Robust DeviceClient::registerChannelMonitor
+- C++: Proper broadcast handling in Broker classes
+- C++: Output channel disconnection for schema changes
+- C++ tests: Increase timeouts in InputOutputChannel_Test.cc !5197
+- C++: Get rid of Hash copy when writing to JMS broker !5194
+- C++: Input channels of devices show their connected output channels XFEL-CLOSED #83108
+- C++: Concurrency safe manipulation of vector properties
+- C++ JMS reading: respect handler setting order
+- C++: Proper typedef names for async handlers for broker and influx !5009
+- C++: Alarm signal with priority to ensure order
+- C++: MQTT: Provide some message ordering guarantees !5217
+- C++: MQTT integration - no order guarantees !5182
+- C++: Fix and clean Broker API !4990
+- C++: Expose input channel status tracking to DeviceClient interface
+- C++:  InputChannel connection tracker
+- C++: Clean input channel
+- C++: Schema injection automatically creates Input-/OutputChannel
+- C++: Fix EOS handling and its test for many-to-one pipeline !4944
+- C++: Remove shortcut destinations before signal is sent to broker
+- C++: Ensure signals have a non-empty signalInstanceId
+- Document known issues for bound !5314
+
+
+Middlelayer Core
+++++++++++++++++
+
+- MACRO: add tests for coroutines !5205
+- MACRO: adapt jupyter notebook to 3.8 !5183
+- MDL: a proxy changeHandler can be subscribed !5011
+- FIX: ipykernel installation relative path !5134
+- MDL: MQTT: Signalslot connection from signal side
+- MDL:  MQTT: Refactor to hide paho client details !5230
+- MDL: Adapt MDL tests and MQTT API !5429
+- MDL: Replace ExitStack by AsyncExitStack and remove ordering !5325
+- MDL: MQTT integration !5148
+- MDL: separate exist_db in a submodule !5116
+- ALL APIs: Do not wait for broker to acknowledge acknowledgements !4786
+- MDL: chatty bound plugin loading does not fail !5554
+- MDL: Format QuantityValue for small values !5540
+- MDL: adapt projectManager run file !5179
+- MDL: File Based ProjectManager !5062
+- MDL: jupyter-notebook install in develop mode !5180
+- MDL: deprecate ancient getHistory syntax !5228
+- MDL: Implement async with for proxies !5511
+- MDL: Protect against badly assigned relative and absolute errors !5517
+- MDL: Use deepcopy for getTopology !5477
+- MDL: Protect macros from register and cancel !5443
+- MDL: Set a default timeout for DeviceNode !5445
+- MDL: Deprecate DeviceNode Properties and Commands !5427
+- MDL: InputChannel provide handlers for connected events !5248
+- MDL: Provide defaults for options, minIncs, and minSizes !5387
+- MDL: Rename karabo_hash to data folder !5376
+- MDL: Send empty rowSchema for empty Hashlist !5374
+- MDL: Enhance sanitize of the table element !5368
+- MDL: Change exception appearance to be more user friendly !5373
+- MDL: This adds a faulty Slot to the property test mdl !5362
+- MDL: Deprecation announcement for Injectable !5265
+- MDL: Add isSet to cli namespace !5305
+- MDL: Tables provide their rowSchema as bindings !5245
+- MDL: Spend an attributes dict to a descriptor !5238
+- MDL: Implement verbose output when developers try to iterate over singletons !5226
+- MDL: Also catch cancelled error when cancelling a macro thread !5121
+- MDL: Native code style check and new syntax in test !5101
+- MDL: Proxy del exception protection !5110
+- MDL: Fix Hash paths !5135
+- MDL: Provide wrapper to change output schema !5022
+- MDL: Provide a wrapper for get_array_data !5145
+- MDL: Add close handler to pipeline proxy and test !5143
+- MDL: use updateDevice everywhere !5122
+- MDL: Raise on death for proxy refactor !5120
+- MDL: Future compatibility of Slot descriptor !5102
+- MDL: Remove preInitialization !5119
+- MDL: More public imports and doc adjustment !5118
+- MDL: Sync daemon error !5188
+- Heartbeats in Middlelayer !3874
+- MDL: Document dependency changes !5117
+- MDL: Align queue and lock for future upgrades !5109
+- MDL: Expose newest_timestamp in mdl !5115
+- MDL: Use async with for pipeline locks !5111
+- MDL: Interfaces test of macro API to new syntax !5112
+- MDL: Provide async macro slots !5099
+- MDL: Ensure synchronized coroutines !5100
+- MDL: Properly close output channels !5020
+- MDL: Remove ListOfNodes in logger !5010
+- MDL: Use hash setElement when sending changes for performance !5016
+- MDL: Fix vector hash return type !5014
+- Upgrade Python to 3.8 !5079
+- MDL: Expose timeServer information and meta reference via slotGetTime !5058
+- MDL: Convert to async syntax !5061
+- MDL: Extend attributes with validation on Enums and booleans !5057
+- MDL: Provide lazy alarm attributes !5055
+- MDL: Attributes cast, validate in regions and have correct dtype !5049
+- MDL: Float point attribute have at least 64 bit - Follow up !5053
+- MDL: Align property test mdl devices !5054
+- MDL: Enhance schema injection of parameters !5025
+- MDL Remove unused open mq code !5038
+- MDL: Pipelines always reconnect independent from instanceNew !5021
+- MDL: Fix output channel names with underscores !5019
+- MDL: Increase hash test coverage for vectors and serializations !4981
+- MDL: Align heartbeats with c++ for server and devices !4986
+- MDL: Make JSON encoder Middlelayer independent !4957
+- MDL: Protect MDL pipelines with regex !4949
+- MDL: Separate onInitialization from instantiation !4947
+- MDL: Move configurable test to native and keep injectable/devicenode !4980
+- Native: Import Iterable from collections.abc !5254
+- Native: Support hashlist html !5418
+- Native: Make use of pathlib when serializing python hash !5491
+- Native: provide a little test for attr names !5532
+- Native: Be restrictive on HashLists !5463
+- Native: Fix numpy numbers !5416
+- Native: Sanitize table element row schemas with default values !5279
+- Native: More mutable Hash tests !5290
+- Native: Provide a getElement in analogon to setElement !5278
+- Macro API: Code quality checker active again !5103
+- Native: Extend tests for Hash file writers (Bin/XML) !5028
+- Native: Increase configurable test coverage !5035
+- Native: Add a function to get descriptors from data !5045
+- Native: Replace fromstring on descriptors !5046
+- Native: Fix Hash deepcopy of Upper Hash Attributes !5029
+- Native: Provide a hashToDict function !5027
+- Native: Rudimentary hash html test !5030
+- Native: String converters !5037
+- Native: Add structure and content checks for the html generated by karabo.native.karabo_hash.utils.create_html_hash. !5044
+- Native: Increase test coverage for alarms, minmax and casts of descriptors !5034
+- Native: Add base types test for karabo values !5017
+- Native: Test class schema hash types !4992
+- Native: Speed up XML serialization !4994
+- Native: Benchmark XML and Binary for python api !4993
+- Native: Fix cyclic modules !4988
+- Native: Recreate the table hash test !4982
+- Native: Plugin new structure !4967
+- Native: Separate Hash integration !4963
+- Native: Cleanup the import situation !4961
+- Native: Create a Hash package, split network !4955
+- Macro: Provide a way to define abstract macro state machine !5523
+- ikarabo: Fix regex for device instances !5063
+
+
+Graphical User Interface
+++++++++++++++++++++++++
+
+- GUI: add protocol registration utility !5215
+- GUI: make protocol registration robust !5200
+- Common: Fix macro ast parsing with import time and different call !5422
+- GUI: remove protocol registration at application start !5280
+- GUI: adapt weblink widget to karabo url scheme !5274
+- GUI: fix installation path for protocol handler !5166
+- GUI: Add karabo:// URL protocol
+- GUI: Fix copy paste models !5000
+- GUI: Use traits Event on export current tool !5026
+- GUI: Add WaitForEvents flag for processEvents !5005
+- GUI: Resize scene dialog !4958
+- GUI: Add an offset on pasted scene objects !4916
+- GUI: Scale font size with the operating system !4945
+- GUI: Change trait setting to trait_set !4951
+- GUI: Include view option also for trendlines !5568
+- GUI: Speed up project loading for online devices !5555
+- GUI: Fix topology context !5559
+- GUI: Account for missing schema in scene retrieval for project devices !5560
+- GUI: Reset topology models !5556
+- GUI: Fix picker tool for pseudocolor images !5551
+- GUI: Place a picker parent !5553
+- GUI: Fix Frameslider SizePolicy !5552
+- GUI: Use table button delegate in alarm panel !5549
+- GUI: Fix runconfigurator widget parenting !5548
+- GUI: Protect against race condition in device tree !5547
+- GUI: Instance Info update correctly for device tree !5546
+- GUI: Move max num points to the multi curve graph !5542
+- GUI: Fix colorbar same levels !5545
+- GUI: Daemon delegate !5539
+- GUI: Image cleanup and merge !5544
+- GUI: Double click note !5538
+- GUI: Remove globals file !5537
+- GUI: Create itemtypes module !5535
+- GUI: Add note about scene link creation !5505
+- GUI: Access related code at single place !5534
+- GUI: Boost up configurator performance by checking display type only for strings !5487
+- GUI: RunConfigurator widget groups are not editable !5531
+- GUI: Add a project conflict note !5503
+- GUI: Add high dpi note !5499
+- GUI: DaqPolicy filter in config sanitize !5518
+- GUI: Add isort and sort dependencies !5524
+- GUI: Enable drag&drop from device tree !5501
+- GUI: Add a rotated gate valve icon !5516
+- GUI: Align error tests with the latest native changes !5519
+- GUI: Fix absolute error check for label widget !5515
+- GUI: Provide a scene text and size hint when dragging a scene !5509
+- GUI: Fix the image toolbar for single optional tools, e.g. picker !5513
+- GUI: Use Grafana Icon for action !5514
+- GUI: A new camera icon !5508
+- GUI: Move app error to logger debug and add more !5502
+- GUI: Add note about device dragging !5504
+- GUI: Preview configuration from name !5500
+- GUI: Provide a configuration preview for configuration from past and name !5471
+- GUI: Add a note for window geometry !5498
+- GUI: Add option to erase existing geometry !5494
+- GUI: Enable drag of project devices on scene !5492
+- GUI: Fix the GUI tests !5493
+- GUI: Provide dialog to erase and purge properties of configurations !5466
+- GUI: Forward compatibility of unknown status in topology !5469
+- GUI: Drag devices from navigation on scene !5480
+- GUI: Show a better error message when device is not online in device scene link !5485
+- GUI: Move message boxes only to main window center if not minimized !5468
+- GUI: Enable to register protocol from the gui client !5462
+- GUI: Fix tree item data for drag & drop !5479
+- GUI: Use Get and Save for configuration from name !5470
+- GUI: Startup of GUI application with size and rendering !5449
+- GUI: Implement the next chunk of logs in the gui client !5460
+- GUI: Make plot properties like background and title optional !5461
+- GUI: Include table in validate value !5456
+- GUI: Provide tests for device model and filter model !5426
+- GUI: Add a parent to the webcam graph !5455
+- GUI: Use paths to report problems for configuration !5459
+- GUI: Provide first chunk of logger messages !5450
+- GUI: Optimize display type check in table element !5457
+- GUI: Fix reset search bar on disconnect and make harmonize !5451
+- GUI: Enable to save geometry of main window on request !5448
+- GUI: Message box tries to get main window if no parent is passed !5447
+- GUI: Init Reply can provide directly a reason !5446
+- GUI: Expose BaseTableController to the world !5420
+- GUI: Patch the dynamicRangeLimit of plot items !5431
+- GUI: Validate options in bindings !5404
+- GUI: Images can have transparent background !5440
+- GUI: DeviceConfigurationDialog can highlight violations !5434
+- GUI: Show description for attributes in table and always a header !5438
+- GUI: Improve tree view search / clear !5430
+- GUI: Reserve some space for the server info and different startup message !5432
+- GUI: Increase daemon controller performance !5221
+- GUI: Implement vector size check in binding check !5403
+- GUI: Implement configuration dialogs in system topology !5428
+- GUI: More tests for topology !5424
+- GUI: Device interface filtering -- Performance !5396
+- GUI: Use QtFilterModel for topology !5059
+- GUI: Remove unused globals !5413
+- GUI: Fix the default image graph scaling !5419
+- GUI: Add qucik link for documentation !5410
+- GUI: Increase processing wait time before executing function in timeit !5408
+- GUI: Align about dialog, RTD change and 2021 !5412
+- GUI: Remove unused options edit dialog !5415
+- GUI: Device tree model performance increase !5406
+- GUI: Performance increase system topology !5405
+- GUI: Performance update configurator !5401
+- GUI: Add tests for simple validator and fix string conversion !5402
+- GUI: Set uniformRowHeights in the runconfigurator widget !5243
+- GUI: Clean a bit the image graph !5384
+- GUI: Remove adjustSize when move to cursor !5378
+- GUI: Allow to copy information from the log widget to clipboard !5389
+- GUI: Include minSize in the binding default value calculation !5386
+- GUI: Fix the GUI CI test !5385
+- GUI: Improve array handling !5379
+- GUI: Take into account the minimum or options when taking default value !5354
+- GUI: Cleanup server (broker) info !5380
+- GUI: Table split of model view !5377
+- GUI: Implement daylight saving time in graph !5383
+- GUI: Move GUI to qtpy !5381
+- GUI: LevelsDialog can work with same levels and is always on top !5365
+- GUI: Move cinema wizard to wizards !5356
+- GUI: Also show Karabo Errors as user friendly error messages !5364
+- GUI: Integerbindings account for overflows !5371
+- GUI: Fix manager tests with magic mock message boxes !5369
+- GUI: Include limits in binding checks !5340
+- GUI: Patch viewboxes for performance reasons !5366
+- GUI: Enable message box select and copy test !5363
+- GUI: Show a user friendly message box on reconfigure error !5361
+- GUI: Improve levels dialog and colorbar widget parenting !5352
+- GUI: Refactor and clean array controllers !5357
+- GUI: Popup the daemon boxes with parent !5358
+- GUI: Substitute fonts coming from devices !5360
+- GUI: Implement view on column attributes in table !5347
+- GUI: Enhance move to cursor function !5351
+- GUI: Message box requires operator interaction again !5348
+- GUI: Use the fast path validate in sanitize table element !5346
+- GUI: Implement generic binding delegate !5345
+- GUI: Support units in the table element !5344
+- GUI: Implement minSize and maxSize in table element !5339
+- GUI: Little cleanup for the table role !5342
+- GUI: Binding None protection in fast data on disconnect !5303
+- GUI: Move binding based validator to validattors !5341
+- Lib: Table contract manifesto !5315
+- GUI: Fix setting of empty vector in table !5336
+- GUI: Vector delegate for tables !5329
+- GUI: Code quality in validator test !5338
+- GUI: Enhance list validator for scientific notation and tests !5328
+- GUI: Enhance the combobox delegate !5320
+- GUI: Enhance simple delegate with min max validation !5321
+- GUI: Enable setting of plot background and title !5252
+- FW: No unit modification from the GUI and config manager !5317
+- GUI: Enable Select All and Copy in text log widget with context menu !5233
+- GUI: Add a get native vector min max !5313
+- GUI: Simplify project load dialog !5301
+- GUI: Better log handling the GUI, enable colors !5284
+- GUI: Set UnitLabel layout spacing to zero !5333
+- GUI: Greatly enhance number deleagte, only change table on changes !5295
+- GUI: Fix table element context menu handling !5302
+- GUI: Greatly enhance number deleagte, only change table on changes !5295
+- GUI: Use check as validate_trait wrapper for binding !5310
+- GUI: Create a place for wizards !5291
+- GUI: Increase realign Hash performance !5300
+- GUI: Rename a few menus in the menu bar !5293
+- GUI: Split validate functions from config !5297
+- GUI: QDateTime.fromTime_t is deprecated !5286
+- GUI: Separate compare function from binding utils !5263
+- GUI: Remove table partial functions !5289
+- GUI: Remove unnecessary autoscale patch in plot base !5219
+- GUI: Fix table style, options debug and delegate readOnly !5288
+- GUI: Increase the priority for the array graph for NDArrays !5251
+- GUI: Fix cinema typo in wizard !5292
+- GUI: Move request related code to request !5287
+- GUI: Provide feedback for corrupted tables !5255
+- GUI: Cinema Weblink configurator
+- GUI: Table validate simple !5239
+- GUI: Enable cinema to run with multiple scenes !5275
+- GUI: Prevent sigterm in cinema and theatre !5260
+- GUI: Enable request time information in GUI client !5060
+- GUI: Cleanup image utils !5268
+- GUI: Validate readOnly columns properly in tables !5262
+- GUI: Work on numpy clip performance !5266
+- GUI: Fix project load dialog flickering !5231
+- GUI: Move back to Python 3.6 !5267
+- GUI: Spray some parent in graph images !5261
+- GUI: Clean the has_changes with floating points !5246
+- GUI: Use flat iter all from the Hash !5244
+- GUI: Fix state color widget alpha setting !5223
+- GUI: Move the Table element completely on bindings !5237
+- GUI: Allow NDArray bindings to be double clicked !5250
+- GUI: Performance increase of Label !5218
+- GUI: Significantly speed up tree views !5240
+- GUI: Use apply project configuration for project devices and their offline configurations !5224
+- GUI: Manually create background timer for parent setting !5222
+- GUI: Sanitize table configuration from projects !5211
+- GUI: Compatibility with MacOS 11 for new Qt version !5220
+- GUI: QApplication can listen to palette changes !5208
+- GUI: Fix table changes and validation !5214
+- GUI: Upgrade to Python 38 and PyQt5.12 !5213
+- GUI: Generate corresponding default values on demand !5184
+- GUI: Temporary downgrade lttbc !5210
+- GUI: Remove first patches of ROI !5149
+- GUI: Add a logger place to the karabo gui !5150
+- GUI: Fix background color setting where no alpha is specified !5158
+- GUI: Fix trendline latest timestamp having numpy type !5186
+- GUI: More safe on future protocols !5172
+- GUI: Slightly refactor table validation for overview !5177
+- GUI: Fix datetime appearance on trendline on windows !5146
+- GUI: Rollimage test increase and future compatibility with numpy !5159
+- GUI: Process events on main window render !5169
+- GUI: Remove transparency of image layout !5170
+- GUI: Fix multiple plots in vector graph !5171
+- GUI: Remove transparent graphics view !5168
+- GUI: Fix Image Item flip axis !5147
+- GUI: Forward compatibility of property history requests !5157
+- GUI: setResizeMode is deprecated, use setSectionResizeMode !5156
+- GUI: Allow to completely disable high dpi !5160
+- GUI: Fix Crosshair ROI on plots !5141
+- GUI: Cleanup more the axis item and remove patches !5129
+- GUI: Implement own image item !5125
+- GUI: Setup a generic binding validator !5133
+- GUI: Fix table element configuration on init only tables !5126
+- GUI: Unify array handling !5108
+- GUI: Provide coerce functionality to trait types !5132
+- GUI: Table uses binding for row schema !5130
+- GUI: Fix scatter plot item initial parameter and cleanup !5128
+- GUI: Update PyQtGraph and  adjustments for plots !5076
+- GUI: Fix pendialog !5090
+- GUI-Common: Rewrite yield tests and a few modifications !5105
+- GUI: Image adjustments for pyqtgraph update !5068
+- GUI: Axis item double click !5083
+- GUI: Enhance Image Layout - Remove unnecessary margins !5069
+- GUI: Remove margins from trendline layout !5071
+- GUI: One more margin for the image layout !5072
+- GUI: Fixes graphs viewbox menu !5088
+- GUI: Use bytescale in images !5074
+- GUI: Protect VectorXY from device intstantiations !5067
+- GUI: Only use reason for request failures !5048
+- GUI: Invisible Eye icon !5078
+- GUI: setContentsMagins to 0 for plot widgets !5070
+- GUI: Dialogs get an own ui folder !5050
+- GUI: Move line model slighly up in generic scene !5051
+- GUI: Remove requestFromSlot calls and use requestGeneric !5047
+- GUI: Set widget to None in table element on destroy !5043
+- GUI: Take the int of the localDotsPerInch !5040
+- GUI: document GUI upgrade path
+- GUI: Significantly decrease margins in trendline layout !5031
+- GUI: Prevent float casting in line edit controller !4999
+- GUI: Benchmark the binding !5004
+- GUI: Provide a float binding preserving float type !4998
+- GUI: Configuration has_changes with 0.0 values !5001
+- GUI: Prevent wrong float casting in display label !5002
+- GUI: Improve widget dragging from configurator for Slots and Images !4952
+- GUI: Fix plot widget references !4900
+- GUI: Add NumpyRange trait !4943
+- GUI: Provide quick grafana link in the karaboGUI !4940
+- GUI: Use native axis item pyqtgraph !4897
+- GUI: Protect histogram graph against booleans !4936
+
+
 .. _211_deps:
 
 Table of changed dependencies
