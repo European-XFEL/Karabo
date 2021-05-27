@@ -291,4 +291,4 @@ from the build tree:
   issuing the command from the right internal terminal session - the one with
   `CMake/Launch` title in the terminal toolbar (picture below).
 
-  .. image:: img/source_ativateKarabo.png
+  .. image:: img/source_activateKarabo.png
