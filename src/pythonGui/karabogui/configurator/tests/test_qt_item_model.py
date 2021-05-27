@@ -63,7 +63,8 @@ class TestConfiguratorModel(GuiTestCase):
         assert daq_index.data() == '-1'
 
         max_inc_index = bar_index.child(1, 2)
-        flags = Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
+        flags = (Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsEditable
+                 | Qt.ItemNeverHasChildren)
         assert max_inc_index.flags() == flags
 
         # ------------------------------------
