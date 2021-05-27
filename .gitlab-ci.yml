@@ -155,10 +155,6 @@
 
 # release build
 
-release build centos8:
-  image: europeanxfel/karabo-ci:centos-8
-  <<: *release-build
-
 release build centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
   <<: *release-build
@@ -177,10 +173,6 @@ release build ubuntu16:
 
 
 # nightly release build
-
-nightly build centos8:
-  image: europeanxfel/karabo-ci:centos-8
-  <<: *nightly-build
 
 nightly build centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
@@ -220,10 +212,6 @@ nightly build miniconda:
 
 # Dependencies build
 
-deps build centos8:
-  image: europeanxfel/karabo-ci:centos-8
-  <<: *deps-build
-
 deps build centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
   <<: *deps-build
@@ -241,10 +229,6 @@ deps build ubuntu16:
   <<: *deps-build
 
 # Dependencies build tests
-
-deps tests centos8:
-  image: europeanxfel/karabo-ci:centos-8
-  <<: *deps-build-tests
 
 deps tests centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
@@ -264,10 +248,6 @@ deps tests ubuntu16:
 
 # MR test builds
 
-#unit tests centos8:
-#  image: europeanxfel/karabo-ci:centos-8
-#  <<: *unit-tests
-
 unit tests centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
   <<: *unit-tests
@@ -283,10 +263,6 @@ unit tests ubuntu20:
 unit tests ubuntu16:
   image: europeanxfel/karabo-ci:ubuntu-16
   <<: *unit-tests
-
-integration tests centos8:
-  image: europeanxfel/karabo-ci:centos-8
-  <<: *integration-tests
 
 integration tests centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
@@ -313,10 +289,6 @@ coverage tests centos7:
     - schedules
 
 # Scheduled long tests
-
-long tests centos8:
-  image: europeanxfel/karabo-ci:centos-8
-  <<: *long-tests
 
 long tests centos7:
   image: europeanxfel/karabo-ci:centos-7gcc7
