@@ -12,7 +12,7 @@ from karabo.native import AccessMode, Hash
 from karabogui.binding.api import BoolBinding, VectorBinding, get_default_value
 from karabogui.indicators import get_state_color
 
-from .utils import convert_string_list, is_state_display_type
+from .utils import is_state_display_type, list2string, string2list
 
 
 class TableModel(QAbstractTableModel):
@@ -51,9 +51,7 @@ class TableModel(QAbstractTableModel):
             value = self._data[row][key]
             binding = self._bindings[key]
             if isinstance(binding, VectorBinding):
-                # Guard against None values
-                value = [] if value is None else value
-                return ", ".join(str(v) for v in value)
+                value = list2string(value)
             return str(value)
 
         elif role == Qt.BackgroundRole:
@@ -150,7 +148,7 @@ class TableModel(QAbstractTableModel):
             key = self._header[column]
             binding = self._bindings[key]
             if isinstance(binding, VectorBinding) and not from_device:
-                value = convert_string_list(value)
+                value = string2list(value)
                 # Before Karabo 2.2 the value was cast here...
 
             self._data[row][key] = value
