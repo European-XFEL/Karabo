@@ -45,20 +45,16 @@ def _show_message_box(icon, text, title, details=None, parent=None):
     if parent is not None:
         return message_box.open()
 
-    # If no parent is provided, we can place it in the center of the
-    # main window if available!
-    main_window = get_panel_wrangler().main_window
-    if main_window is not None:
-        move_to_widget(main_window, message_box)
+    move_main_window(message_box)
     return message_box.exec()
 
 
-def move_to_widget(reference_widget, widget):
-    """Move a widget to the center of reference widget"""
-    if reference_widget.windowState() & Qt.WindowMinimized:
+def move_main_window(msg_box):
+    """Move a message box to the center of main window if available"""
+    main_window = get_panel_wrangler().main_window
+    if main_window is None or main_window.windowState() & Qt.WindowMinimized:
         return
-    main_center = reference_widget.rect().center()
-    widget_ref = QPoint(widget.width() / 2, widget.height() / 2)
-
-    global_center = reference_widget.mapToGlobal(main_center - widget_ref)
-    widget.move(global_center)
+    main_center = main_window.rect().center()
+    msg_box_ref = QPoint(msg_box.width() / 2, msg_box.height() / 2)
+    global_center = main_window.mapToGlobal(main_center - msg_box_ref)
+    msg_box.move(global_center)
