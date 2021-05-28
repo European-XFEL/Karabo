@@ -90,13 +90,11 @@ namespace karabo {
 
             Derived& key(const std::string& name) override {
                 if (name.find('_') != std::string::npos) {
-                    // Would like to forbid any such slot - but some Beckhoff devices prohibit that
-                    // throw KARABO_PARAMETER_EXCEPTION("Slot must not contain '_' since internally reserved for slots under a node.");
                     if (name == "clear_namespace") {
                         throw KARABO_PARAMETER_EXCEPTION("Slot 'clear_namespace' prohibited since reserved got internal usage in GUI client.");
                     }
                     KARABO_LOG_FRAMEWORK_WARN_C("SlotElementBase") << "Slot '" << name
-                            << "' should not contain '_' since internally reserved for slots under a node";
+                            << "' contains a '_'. This might lead to unexpected behaviour since the `_` is internally used for slots inside a nodes";
                 }
                 return karabo::util::GenericElement<Derived>::key(name);
             }
