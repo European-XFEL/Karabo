@@ -73,12 +73,12 @@ def test_tree_basics():
     assert len(tree.find('anything')) == 0
 
     sys_hash = system_hash()
-    names = ('swerver', 'divvy', 'macdonald', 'orphan', '__none__')
+    names = ('swerver', 'divvy', 'macdonald')
 
     for node_id in names:
         assert len(tree.find(node_id)) == 0
 
-    tree.update(sys_hash)
+    tree.initialize(sys_hash)
     for node_id in names:
         assert len(tree.find(node_id)) > 0
 
