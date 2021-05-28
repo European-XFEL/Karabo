@@ -12,7 +12,8 @@ from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Instance, Property, Undefined, on_trait_change
 
 import karabogui.icons as icons
-from karabo.common.api import NO_CONFIG_STATUSES, Capabilities
+from karabo.common.api import (
+    NO_CLASS_STATUSES, NO_CONFIG_STATUSES, Capabilities)
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     find_parent_object)
@@ -123,9 +124,10 @@ class DeviceInstanceController(BaseProjectGroupController):
 
         instantiate_action = QAction(icons.run, 'Instantiate', menu)
         can_instantiate = (server_online and not proj_device_online and
-                           proj_device_status not in NO_CONFIG_STATUSES)
+                           proj_device_status not in NO_CLASS_STATUSES)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
-                                                     project_controller))
+                                                     project_controller,
+                                                     parent=parent))
         instantiate_action.setEnabled(can_instantiate and service_allowed)
 
         shutdown_action = QAction(icons.kill, 'Shutdown', menu)
@@ -376,8 +378,17 @@ class DeviceInstanceController(BaseProjectGroupController):
         self._broadcast_item_click()
 
     def _broadcast_item_click(self):
+        """Broadcast the request to view the project device
+
+        This is not a lazy action. The device can be either online or offline
+        and must be shown with a schema.
+        """
+        proxy = self.project_device.proxy
+        if not self.project_device.online:
+            get_topology().ensure_proxy_class_schema(proxy)
+
         broadcast_event(KaraboEvent.ShowConfiguration,
-                        {'proxy': self.project_device.proxy})
+                        {'proxy': proxy})
 
     def _update_icon(self, ui_data):
         # Get current status of device
@@ -564,10 +575,10 @@ class DeviceInstanceController(BaseProjectGroupController):
                 dev_inst.initialized = dev_inst.modified = True
                 server_model.devices.append(dev_inst)
 
-    def _instantiate_device(self, project_controller):
+    def _instantiate_device(self, project_controller, parent=None):
         server = find_parent_object(self.model, project_controller.model,
                                     DeviceServerModel)
-        self.instantiate(server)
+        self.instantiate(server, parent)
 
     def _load_macro_from_device(self, project_controller, parent=None):
         """Request a scene directly from a device
@@ -647,7 +658,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         dialog.raise_()
         dialog.activateWindow()
 
-    def instantiate(self, server):
+    def instantiate(self, server, parent=None):
         """ Instantiate this device instance on the given `server`
 
         :param server: The server this device belongs to
@@ -655,11 +666,26 @@ class DeviceInstanceController(BaseProjectGroupController):
         if self.project_device.online:
             return
 
-        prj_dev = self.project_device
-        config = extract_configuration(prj_dev.proxy.binding)
+        device = self.project_device
+        classId = device.class_id
+        serverId = device.server_id
+        if device.status in NO_CLASS_STATUSES:
+            msg = ('Please install device plugin {} on server {} '
+                   'first.'.format(classId, serverId))
+            messagebox.show_warning(msg, title='Unknown device schema',
+                                    parent=parent)
+            return
 
-        get_manager().initDevice(prj_dev.server_id, prj_dev.class_id,
-                                 prj_dev.device_id, config=config)
+        if len(device.proxy.binding.value) > 0:
+            # We have a schema and can extract a configuration
+            config = extract_configuration(device.proxy.binding)
+        else:
+            # We don't have a schema but can use a not validated offline
+            # configuration
+            config = self.project_device.configuration
+
+        deviceId = device.device_id
+        get_manager().initDevice(serverId, classId, deviceId, config=config)
 
     def shutdown_device(self, show_confirm=True, parent=None):
         device = self.model
