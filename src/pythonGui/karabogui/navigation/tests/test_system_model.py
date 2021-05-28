@@ -30,10 +30,10 @@ class TestCase(GuiTestCase):
         self.assertEqual(self.model.columnCount(), 3)
 
     def test_rowCount_filter_model(self):
-        self.assertEqual(self.model.rowCount(), 2)
+        self.assertEqual(self.model.rowCount(), 1)
 
     def test_rowCount_root(self):
-        self.assertEqual(self.system_model.rowCount(), 2)
+        self.assertEqual(self.system_model.rowCount(), 1)
 
     def test_update_topo(self):
         """Add a device to the system model"""
@@ -70,7 +70,8 @@ class TestCase(GuiTestCase):
             'status': 'online'
         }
         self.system_model.tree.update(h)
-        assert self.system_model.rowCount() == 2
+        # __none__ server is not accounted anymore ...
+        assert self.system_model.rowCount() == 1
 
         host_index = self.system_model.index(0, 0)
         assert host_index.isValid()
