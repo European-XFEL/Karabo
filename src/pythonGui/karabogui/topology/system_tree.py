@@ -444,25 +444,14 @@ class SystemTree(HasStrictTraits):
             class_id = attrs.get('classId', 'unknown-class')
             status = ProxyStatus(attrs.get('status', 'ok'))
 
-            # Host node
+            # A device must have a server added before with host!
             host_node = self.root.child(host)
             if host_node is None:
-                host_node = SystemTreeNode(node_id=host, path=host,
-                                           parent=self.root,
-                                           level=HOST_LEVEL)
-                self._set_root_children(host_node, append)
+                continue
 
-            # Server node
             server_node = host_node.child(server_id)
             if server_node is None:
-                if server_id == "__none__":
-                    server_node = SystemTreeNode(node_id=server_id,
-                                                 path=server_id,
-                                                 parent=host_node,
-                                                 level=SERVER_LEVEL)
-                    handler(host_node, server_node)
-                else:
-                    continue
+                continue
 
             # Class node
             class_node = server_node.child(class_id)
