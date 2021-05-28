@@ -61,13 +61,15 @@ ONLINE_STATUSES = (
     ProxyStatus.SCHEMA, ProxyStatus.ERROR, ProxyStatus.UNKNOWN
 )
 
-
 SCHEMA_STATUSES = (
     ProxyStatus.ALIVE, ProxyStatus.MONITORING, ProxyStatus.SCHEMA,
 )
 
-
 # The device is not able to receive configuration
 NO_CONFIG_STATUSES = (
     ProxyStatus.NOPLUGIN, ProxyStatus.NOSERVER, ProxyStatus.REQUESTED
+)
+
+NO_CLASS_STATUSES = (
+    ProxyStatus.NOPLUGIN, ProxyStatus.NOSERVER
 )
