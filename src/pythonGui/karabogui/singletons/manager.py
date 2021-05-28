@@ -79,12 +79,27 @@ class Manager(QObject):
 
     def initDevice(self, serverId, classId, deviceId, config=None):
         schema = self._topology.get_schema(serverId, classId)
-
-        # if we do not have a schema, notify the user and return
         if schema is None:
-            msg = ('Please install device plugin {} on server {} '
-                   'first.'.format(classId, serverId))
-            messagebox.show_warning(msg, title='Unknown device schema')
+            # There is no schema, but we can still instantiate the device
+            # if requested. Since we do not have sanitized configurations
+            # and in < 2.12 still attributes, we provide a message box to
+            # confirm
+            # Note: With 2.12 and sanitization of the configuration the
+            # message box will be removed!
+            ask = (f"Do you want to instantiate the device <b>{deviceId}</b> "
+                   "without Schema comparison?")
+            msg_box = QMessageBox(
+                QMessageBox.Question, 'Instantiate device', ask,
+                QMessageBox.Yes | QMessageBox.No)
+            msg_box.setModal(False)
+            msg_box.setDefaultButton(QMessageBox.No)
+            msg_box.resize(460, 200)
+            messagebox.move_main_window(msg_box)
+            if msg_box.exec() == QMessageBox.No:
+                return
+
+            get_network().onInitDevice(serverId, classId, deviceId, config,
+                                       attrUpdates=None)
             return
 
         # Use standard configuration for server/classId
@@ -92,15 +107,13 @@ class Manager(QObject):
         if config is None:
             config = extract_configuration(class_proxy.binding)
 
-        # XXX: Temporary fix - due to the state changes
-        # Old projects save all parameters, even invalid ones. This fix
-        # removes them from the initial configuration to not stop the validator
-        # from instantiating
+        # Remove all obsolete paths which are not anymore in the schema
         obsolete_paths = [pth for pth, _, _ in Hash.flat_iterall(config)
                           if pth not in schema.hash]
         for key in obsolete_paths:
             config.erase(key)
 
+        # Remove all read only and assignment internal paths
         readonly_paths = [pth for pth, _, _ in Hash.flat_iterall(config)
                           if schema.hash[pth, "accessMode"] ==
                           AccessMode.READONLY.value or
@@ -113,7 +126,7 @@ class Manager(QObject):
         # unmodified copy of the device class schema.
         attr_updates = None
         project_dev_proxy = self._topology.get_project_device_proxy(
-            deviceId, serverId, classId, create_instance=False)
+            deviceId, serverId, classId)
         if project_dev_proxy is not None:
             # This feature only works with named devices!
             attr_updates = extract_attribute_modifications(
