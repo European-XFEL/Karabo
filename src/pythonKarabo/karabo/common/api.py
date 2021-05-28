@@ -58,7 +58,7 @@ from .display_types import (
     KARABO_SCHEMA_DISPLAY_TYPE_STATE
 )
 from .enums import (Capabilities, ProxyStatus, Interfaces, ONLINE_STATUSES,
-                    NO_CONFIG_STATUSES, SCHEMA_STATUSES)
+                    NO_CLASS_STATUSES, NO_CONFIG_STATUSES, SCHEMA_STATUSES)
 from .module import create_module
 from .savable import (
     BaseSavableModel, set_initialized_flag, set_modified_flag)

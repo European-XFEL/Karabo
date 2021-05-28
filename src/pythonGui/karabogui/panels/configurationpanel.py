@@ -21,7 +21,7 @@ from karabogui.binding.api import (
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
 from karabogui.events import KaraboEvent, register_for_broadcasts
-from karabogui.singletons.api import get_manager
+from karabogui.singletons.api import get_manager, get_topology
 from karabogui.util import (
     get_spin_widget, load_configuration_from_file, save_configuration_to_file)
 from karabogui.widgets.toolbar import ToolBar
@@ -646,8 +646,13 @@ class ConfigurationPanel(BasePanelWidget):
         class_id, server_id, dev_id = _get_ids(proxy)
         if (server_id == cur_server_id and class_id == cur_class_id and
                 dev_id == cur_dev_id):
-            # Iff current showing device proxy matches the updated one,
+            # If current showing device proxy matches the updated one,
             # refresh the view.
+            # The device might have been gone from online to offline. In case
+            # of a project device, make sure we have a schema!
+            if isinstance(proxy, ProjectDeviceProxy):
+                get_topology().ensure_proxy_class_schema(proxy)
+
             self._show_configuration(proxy)
 
     # -----------------------------------------------------------------------
