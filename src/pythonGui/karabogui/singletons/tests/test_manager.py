@@ -276,12 +276,12 @@ class TestManager(GuiTestCase):
             cfg = Hash('init_prop', 42, 'ro_prop', -1)
             topology.get_schema.return_value = None
 
-            target = 'karabogui.singletons.manager.messagebox'
+            target = 'karabogui.singletons.manager.QMessageBox'
             with patch(target) as msg_box:
                 cfg = Hash('init_prop', 42, 'ro_prop', -1)
                 manager.initDevice('swerver', 'PrettyDevice', 'dev',
                                    config=cfg)
-                assert msg_box.show_warning.call_count == 1
+                assert msg_box.call_count == 1
 
     def test_project_db_handler(self):
         bad_result = Hash('success', False, 'value', 1, 'reason', 'error_msg')
