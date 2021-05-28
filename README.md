@@ -16,10 +16,6 @@ The GUI application is furthermore available under:
 > Windows 7/10
 > MacOSX
 
-Available but not supported, since long-term support will expire soon:
-
-> Ubuntu 16.04 LTS
-
 # Building
 
 ## Building from command-line ###
