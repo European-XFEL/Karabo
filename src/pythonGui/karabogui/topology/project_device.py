@@ -60,6 +60,8 @@ class ProjectDeviceInstance(HasStrictTraits):
     status = Property(depends_on=['_online_proxy.online', 'error',
                                   '_offline_proxy.status'])
 
+    configuration = Property
+
     def __init__(self, device_id, server_id, class_id):
         super(ProjectDeviceInstance, self).__init__()
 
@@ -145,6 +147,10 @@ class ProjectDeviceInstance(HasStrictTraits):
     # ---------------------------------------------------------------------
     # Traits Handlers
 
+    def _get_configuration(self):
+        """Return the configured configuration (`offline`) for this device"""
+        return self._offline_config
+
     def __online_proxy_changed(self, old, new):
         """Keep _monitor_count in sync with _online_proxy."""
         if old is not None and self._monitor_count > 0:
@@ -209,14 +215,12 @@ class ProjectDeviceInstance(HasStrictTraits):
     # utils
 
     def _init_object_state(self, device_id, server_id, class_id):
-        """Initialize the object for a given device_id/server_id/class_id.
-        """
+        """Initialize the object for a given device_id/server_id/class_id"""
         topology = get_topology()
 
         if self._offline_proxy is not None:
             topology.remove_project_device_proxy(
-                self.device_id, self.server_id, self.class_id
-            )
+                self.device_id, self.server_id, self.class_id)
 
         self._online_proxy = topology.get_device(device_id, request=False)
         self._offline_proxy = topology.get_project_device_proxy(

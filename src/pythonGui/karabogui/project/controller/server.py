@@ -67,7 +67,9 @@ class DeviceServerController(BaseProjectGroupController):
         instantiate_all_action = QAction(
             icons.run, 'Instantiate all devices', menu)
         instantiate_all_action.setEnabled(online and service_allowed)
-        instantiate_all_action.triggered.connect(self.instantiate_devices)
+        instantiate_all_action.triggered.connect(
+            partial(self.instantiate_devices,
+                    parent=parent))
 
         shutdown_all_action = QAction(
             icons.kill, 'Shutdown all devices', menu)
@@ -189,12 +191,10 @@ class DeviceServerController(BaseProjectGroupController):
             self.model.server_id = dialog.server_id
             self.model.description = dialog.description
 
-    # @Slot()
     def _shutdown_server(self, parent=None):
         server = self.model
         get_manager().shutdownServer(server.server_id, parent=parent)
 
-    # @Slot()
     def _delete_all_devices(self, parent=None):
         server = self.model
         ask = ('Do you really want to delete all devices of <br> server '
@@ -209,17 +209,15 @@ class DeviceServerController(BaseProjectGroupController):
 
         server.devices[:] = []
 
-    # @Slot()
-    def instantiate_devices(self):
+    def instantiate_devices(self, parent=None):
         """Public action handler to instantiate all devices from this server
 
         This action handler is also publicly used by the project controller
         """
         server = self.model
         for dev_inst_item in self.children:
-            dev_inst_item.instantiate(server)
+            dev_inst_item.instantiate(server, parent)
 
-    # @Slot()
     def _shutdown_devices(self, parent=None):
         server = self.model
         ask = ('Do you really want to shutdown all devices of <br> server '

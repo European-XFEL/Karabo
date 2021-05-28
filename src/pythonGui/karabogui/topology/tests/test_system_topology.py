@@ -78,6 +78,7 @@ class TestSystemTopology(GuiTestCase):
                           class_id='NotValieEither')
             assert network.onGetDeviceSchema.call_count == 0
 
+            assert len(topology._project_device_proxies) == 1
             topology.remove_project_device_proxy(device_id='junk',
                                                  server_id='notthere',
                                                  class_id='NotValieEither')
