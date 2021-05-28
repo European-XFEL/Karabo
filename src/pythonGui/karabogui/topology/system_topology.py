@@ -6,7 +6,7 @@
 from traits.api import (
     Bool, Dict, HasStrictTraits, Instance, Property, Set, on_trait_change)
 
-from karabo.common.api import ProxyStatus
+from karabo.common.api import NO_CLASS_STATUSES, ProxyStatus
 from karabo.native import Hash
 from karabogui.alarms.api import ADD_ALARM_TYPES, REMOVE_ALARM_TYPES
 from karabogui.binding.api import (
@@ -184,46 +184,21 @@ class SystemTopology(HasStrictTraits):
     def delete_project_device(self, device_id):
         return self._project_devices.pop(device_id, None)
 
-    def get_project_device_proxy(self, device_id, server_id, class_id,
-                                 create_instance=True):
+    def get_project_device_proxy(self, device_id, server_id, class_id):
         """Return the project device proxy (offline version of a device in a
         certain project) for a given class on a given server
 
-        If `create_instance` is False, avoid creating the project device and
-        return None.
+        Offline devices are always created lazily with an empty `BindingRoot`.
         """
         key = (server_id, class_id)
         mapping = self._project_device_proxies.setdefault(key, {})
         proxy = mapping.get(device_id)
-        if proxy is None and create_instance:
-            schema = self._class_schemas.get(key)
-            binding = (BindingRoot(class_id=class_id) if schema is None
-                       else build_binding(schema))
+        if proxy is None:
+            binding = BindingRoot(class_id=class_id)
             proxy = ProjectDeviceProxy(device_id=device_id,
                                        server_id=server_id,
                                        binding=binding)
             mapping[device_id] = proxy
-
-            # Only fetch the schema if it's not already cached and server
-            # exists and device plugin is installed
-            if schema is None:
-                if proxy.status not in (ProxyStatus.NOSERVER,
-                                        ProxyStatus.NOPLUGIN):
-                    # We only request if it was not previously requested!
-                    request = key not in self._requested_class_schemas
-                    if request:
-                        self._requested_class_schemas.add(key)
-                        proxy.refresh_schema()
-                    else:
-                        proxy.status = ProxyStatus.REQUESTED
-                else:
-                    # The device class is not installed on the server, but
-                    # requested from the project, we create an empty
-                    # DeviceClassProxy in the system topology and wait for
-                    # a server restart. Once the device plugin is installed
-                    # on the server, requesting schema and building bindings
-                    # will be triggered automatically
-                    self.get_class(*key)
 
         return proxy
 
@@ -232,6 +207,27 @@ class SystemTopology(HasStrictTraits):
         """
         key = (server_id, class_id)
         return self._class_schemas.get(key)
+
+    def ensure_proxy_class_schema(self, proxy):
+        """Ensure the class schema of a project device proxy if necessary"""
+        assert isinstance(proxy, ProjectDeviceProxy)
+
+        if not len(proxy.binding.value) > 0:
+            server_id = proxy.server_id
+            class_id = proxy.binding.class_id
+            key = (server_id, class_id)
+            schema = self._class_schemas.get(key)
+            if schema is None:
+                # We only request if it was not previously requested!
+                if proxy.status not in NO_CLASS_STATUSES:
+                    request = key not in self._requested_class_schemas
+                    if request:
+                        self._requested_class_schemas.add(key)
+                        proxy.refresh_schema()
+                    else:
+                        proxy.status = ProxyStatus.REQUESTED
+            else:
+                build_binding(schema, existing=proxy.binding)
 
     def remove_project_device_proxy(self, device_id, server_id, class_id):
         """Remove the project device proxy for a given instance.
@@ -316,15 +312,18 @@ class SystemTopology(HasStrictTraits):
             self._class_proxies[key] = proxy
             apply_default_configuration(proxy.binding)
         else:
+            # Make sure we update our class proxies for the topology!
             proxies = [self._class_proxies[key]]
-        proxies.extend(self._project_device_proxies.get(key, {}).values())
 
+        proxies.extend(self._project_device_proxies.get(key, {}).values())
         for proxy in proxies:
-            # If the class schema has already arrived in the past, then we
+            # 1. If the class schema has already arrived in the past, then we
             # should take no further action. We don't expect the schema of a
             # class on a running server to change. Device _instances_, however,
             # will change, but anyhow don't arrive in this handler.
-            if len(proxy.binding.value) > 0:
+            # 2. Only proxies are updated where we requested this!
+            if (len(proxy.binding.value) > 0
+                    or proxy.status != ProxyStatus.REQUESTED):
                 continue
             build_binding(schema, existing=proxy.binding)
             if proxy is self._class_proxies.get(key, None):
