@@ -1,4 +1,15 @@
 ****************************
+What's New in Karabo 2.10.5
+****************************
+
+This release backports two improvements in the C++ framework.
+
+- Influx logger warning in rare situations !5304
+- C++: Avoid data drop when OutputChannel writes big data to busy receiver !5496
+
+
+
+****************************
 What's New in Karabo 2.10.4
 ****************************
 
