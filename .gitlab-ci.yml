@@ -249,10 +249,6 @@ release build ubuntu18:
   image: europeanxfel/karabo-ci:ubuntu-18
   <<: *release-build
 
-release build ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16gcc7
-  <<: *release-build
-
 release build miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
   before_script:
@@ -285,10 +281,6 @@ prerelease build ubuntu20:
 
 prerelease build ubuntu18:
   image: europeanxfel/karabo-ci:ubuntu-18
-  <<: *prerelease-build
-
-prerelease build ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16gcc7
   <<: *prerelease-build
 
 prerelease build miniconda:
@@ -325,10 +317,6 @@ nightly build ubuntu18:
   image: europeanxfel/karabo-ci:ubuntu-18
   <<: *nightly-build
 
-nightly build ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16gcc7
-  <<: *nightly-build
-
 nightly build miniconda-osx64:
   before_script:
     - ci/miniconda/cleanup.sh
@@ -363,10 +351,6 @@ deps build ubuntu18:
   image: europeanxfel/karabo-ci:ubuntu-18
   <<: *deps-build
 
-deps build ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16gcc7
-  <<: *deps-build
-
 # Dependencies build tests
 
 deps tests centos7:
@@ -381,10 +365,6 @@ deps tests ubuntu18:
   image: europeanxfel/karabo-ci:ubuntu-18
   <<: *deps-tests
 
-deps tests ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16gcc7
-  <<: *deps-tests
-
 # MR test builds
 
 unit tests centos7:
@@ -397,10 +377,6 @@ unit tests ubuntu20:
 
 unit tests ubuntu18:
   image: europeanxfel/karabo-ci:ubuntu-18
-  <<: *unit-tests
-
-unit tests ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16gcc7
   <<: *unit-tests
 
 unit tests miniconda:
@@ -443,10 +419,6 @@ integration tests ubuntu18:
   image: europeanxfel/karabo-ci:ubuntu-18
   <<: *integration-tests
 
-integration tests ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16gcc7
-  <<: *integration-tests
-
 # Scheduled coverage tests
 
 coverage tests centos7:
@@ -467,8 +439,4 @@ long tests ubuntu20:
 
 long tests ubuntu18:
   image: europeanxfel/karabo-ci:ubuntu-18
-  <<: *long-tests
-
-long tests ubuntu16:
-  image: europeanxfel/karabo-ci:ubuntu-16gcc7
   <<: *long-tests
