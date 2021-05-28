@@ -132,6 +132,7 @@ class Macro(Device):
 
     abstract = True
     subclasses = []
+    _has_server = True
     _last_action = None
 
     project = String(
@@ -213,7 +214,7 @@ class Macro(Device):
 
     def _initInfo(self):
         info = super(Macro, self)._initInfo()
-        info["type"] = "macro"
+        info["type"] = "macro" if self._has_server else "client"
         info["project"] = self.project
         info["module"] = self.module
         return info
@@ -305,6 +306,10 @@ class Macro(Device):
                 cls.__name__, bareHostName, os.getpid())
 
         macro = cls(args)
+        # We are run from a shell and don't have a device server!
+        # Hence, we set this internal variable, which will declare this macro
+        # as client in the instanceInfo if `_has_server` is `False`!
+        macro._has_server = False
 
         async def run():
             # Starting a macro from command line should receive broadcasts!
