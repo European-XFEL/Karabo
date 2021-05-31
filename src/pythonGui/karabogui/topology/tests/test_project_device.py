@@ -2,8 +2,8 @@ from unittest.mock import Mock
 
 from karabo.common.api import KARABO_WARN_HIGH, ProxyStatus
 from karabo.native import Configurable, Hash, String
+from karabogui.singletons.api import get_topology
 from karabogui.testing import singletons, system_hash
-from karabogui.topology.system_topology import SystemTopology
 
 
 class FooClass(Configurable):
@@ -15,8 +15,9 @@ def test_project_device():
     network = Mock()
     with singletons(network=network):
         network = Mock()
-        topology = SystemTopology()
-        topology.update(system_hash())
+        topology = get_topology()
+        topology.clear()
+        topology.initialize(system_hash())
         with singletons(network=network, topology=topology):
             device = topology.get_project_device('divvy',
                                                  server_id='swerver',
