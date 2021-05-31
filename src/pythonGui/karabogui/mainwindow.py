@@ -18,6 +18,7 @@ from karabo.common.project.api import get_project_models
 from karabo.native import AccessLevel
 from karabogui import const, icons, messagebox
 from karabogui.access import ACCESS_LEVELS, AccessRole
+from karabogui.dialogs.client_topology import ClientTopologyDialog
 from karabogui.dialogs.configuration import ConfigurationDialog
 from karabogui.dialogs.dialogs import AboutDialog
 from karabogui.dialogs.update_dialog import UpdateDialog
@@ -375,6 +376,9 @@ class MainWindow(QMainWindow):
         self.acHelpAbout = QAction("About", self)
         self.acHelpAbout.triggered.connect(self.onHelpAbout)
 
+        self.acClientTopology = QAction("Client Topology", self)
+        self.acClientTopology.triggered.connect(self.onClientTopology)
+
         self.acConfig = QAction("Configuration", self)
         self.acConfig.triggered.connect(self.onConfiguration)
 
@@ -409,15 +413,15 @@ class MainWindow(QMainWindow):
         mFileMenu.addAction(self.acExit)
 
         # Display actions to reopen panels
-        mViewMenu = menuBar.addMenu(PANEL_MENU_TITLE)
+        mPanelMenu = menuBar.addMenu(PANEL_MENU_TITLE)
         # reference to view menu and its submenus {menuName: QMenu}
-        self.viewMenus = {PANEL_MENU_TITLE: mViewMenu}
+        self.viewMenus = {PANEL_MENU_TITLE: mPanelMenu}
 
         # As basic action, no extra sub menu is required and we directly insert
         panelAction = QAction(icons.save, 'Save panel configuration', self)
         panelAction.triggered.connect(self._store_panel_configuration)
-        mViewMenu.addAction(panelAction)
-        mViewMenu.addSeparator()
+        mPanelMenu.addAction(panelAction)
+        mPanelMenu.addSeparator()
 
         mSettingsMenu = menuBar.addMenu(SETTINGS_TITLE)
         self.settingsMenus = {SETTINGS_TITLE: mSettingsMenu}
@@ -454,9 +458,12 @@ class MainWindow(QMainWindow):
         mHelpMenu = menuBar.addMenu("&Help")
         mHelpMenu.addAction(self.acHelpAbout)
         mHelpMenu.addAction(self.acHelpAboutQt)
-        mHelpMenu.addAction(self.acConfig)
         mHelpMenu.addAction(self.acWizard)
         mHelpMenu.addAction(self.acCheckUpdates)
+
+        mViewMenu = menuBar.addMenu("&View")
+        mViewMenu.addAction(self.acConfig)
+        mViewMenu.addAction(self.acClientTopology)
 
     def _setupToolBar(self):
 
@@ -656,6 +663,10 @@ class MainWindow(QMainWindow):
     @Slot()
     def onEraseMainWindowGeometry(self):
         del get_config()['main_geometry']
+
+    @Slot()
+    def onClientTopology(self):
+        ClientTopologyDialog(parent=self).open()
 
     @Slot()
     def onHelpAbout(self):

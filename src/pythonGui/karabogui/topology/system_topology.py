@@ -548,6 +548,14 @@ class SystemTopology(HasStrictTraits):
             # Update the status of all online devices (device proxies)
             self._update_online_device_status()
 
+        if 'client' in system_hash:
+            for instance_id, _, attr in system_hash['client'].iterall():
+                path = 'client' + '.' + instance_id
+                attrs = self.get_attributes(path)
+                if attrs is None:
+                    continue
+                del self._system_hash[path]
+
         return devices, servers
 
     def topology_device_gone(self, instance_type, system_hash, devices):
