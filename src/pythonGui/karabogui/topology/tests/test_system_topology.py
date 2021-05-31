@@ -21,6 +21,7 @@ class TestSystemTopology(GuiTestCase):
         network = Mock()
         with singletons(network=network):
             topology = get_topology()
+            topology.clear()
             topology.initialize(system_hash())
             klass = topology.get_class('swerver', 'NoClass')
             # server with name 'swerver' don't have the requested class
@@ -34,6 +35,7 @@ class TestSystemTopology(GuiTestCase):
         network = Mock()
         with singletons(network=network):
             topology = get_topology()
+            topology.clear()
             topology.initialize(system_hash())
             klass = topology.get_class('swerver', 'divvy')
 
@@ -48,6 +50,7 @@ class TestSystemTopology(GuiTestCase):
     def test_get_project_device_simple(self):
         network = Mock()
         topology = get_topology()
+        topology.clear()
         topology.initialize(system_hash())
         with singletons(network=network, topology=topology):
             device_id = 'divvy'
