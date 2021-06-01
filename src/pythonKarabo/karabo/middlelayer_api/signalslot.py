@@ -314,35 +314,22 @@ class SignalSlotable(Configurable):
                 # add deviceId to the instance map of the server
                 server.addChild(self.deviceId, self)
             await super(SignalSlotable, self)._run(**kwargs)
+            await get_event_loop().run_coroutine_or_thread(
+                self.onInitialization)
             self.__initialized = True
         except CancelledError:
             pass
+            # NOTE: onInitialization might still be active and creating proxies
+            # and we simply catch the CancelledError. There is no need
+            # to additionally kill the device, as this will be called
+            # by the device server. Calling twice slotKillDevice will
+            # deal with cyclic references and crash the server
+            #
             # NOTE: Initializers for device nodes might still be active and the
             # Cancellation is caught here.
         except Exception:
             await self.slotKillDevice()
             raise
-        else:
-            ensure_future(self._initialize_instance())
-
-    async def _initialize_instance(self):
-        """Method to execute the `onInitialization method"""
-        try:
-            await get_event_loop().run_coroutine_or_thread(
-                self.onInitialization)
-        except CancelledError:
-            raise
-        except Exception as e:
-            try:
-                logger = logging.getLogger(self.deviceId)
-            except BaseException:
-                # Make absolutely sure that this log message is done!
-                logger = logging.getLogger()
-            logger.exception("Error in onInitialization ...")
-            try:
-                self.status = f"Error in onInitialization: {e}"
-            except BaseException:
-                pass
 
     @coslot
     async def slotKillDevice(self):

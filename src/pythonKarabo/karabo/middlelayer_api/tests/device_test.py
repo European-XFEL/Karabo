@@ -354,16 +354,8 @@ class Tests(DeviceTest):
     @async_tst
     async def test_initialization(self):
         alice = MyDevice({"_deviceId_": "alice", "initError": True})
-        try:
+        with self.assertRaises(RuntimeError):
             await alice.startInstance()
-        finally:
-            status = alice.status
-            self.assertIn(
-                "Error in onInitialization: Status must not be empty", status)
-            self.assertFalse(alice.isDown)
-            self.assertEqual(alice.state, State.ON)
-            await alice.slotKillDevice()
-            self.assertTrue(alice.isDown)
 
 
 if __name__ == '__main__':
