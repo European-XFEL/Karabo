@@ -90,8 +90,15 @@ namespace karathon {
     }
 
 
+    bp::object SlotWrap::getBodyArgument(const karabo::util::Hash& body, const char* key) const {
+        // Avoid using HashWrap::get: it returns None if key missing (but we want the exception!).
+        // Since get uses internally this getRef with the same const_cast, that is safe here as well
+        return HashWrap::getRef(const_cast<karabo::util::Hash&> (body), bp::object(key));
+    }
+
+
     void SlotWrap::callFunction1(const karabo::util::Hash& body) {
-        bp::object a1 = HashWrap::get(body, "a1");
+        bp::object a1 = getBodyArgument(body, "a1");
         try {
             (*m_slotFunction)(a1);
         } catch (const bp::error_already_set&) {
@@ -101,8 +108,8 @@ namespace karathon {
 
 
     void SlotWrap::callFunction2(const karabo::util::Hash& body) {
-        bp::object a1 = HashWrap::get(body, "a1");
-        bp::object a2 = HashWrap::get(body, "a2");
+        bp::object a1 = getBodyArgument(body, "a1");
+        bp::object a2 = getBodyArgument(body, "a2");
         try {
             (*m_slotFunction)(a1, a2);
         } catch (const bp::error_already_set&) {
@@ -112,9 +119,9 @@ namespace karathon {
 
 
     void SlotWrap::callFunction3(const karabo::util::Hash& body) {
-        bp::object a1 = HashWrap::get(body, "a1");
-        bp::object a2 = HashWrap::get(body, "a2");
-        bp::object a3 = HashWrap::get(body, "a3");
+        bp::object a1 = getBodyArgument(body, "a1");
+        bp::object a2 = getBodyArgument(body, "a2");
+        bp::object a3 = getBodyArgument(body, "a3");
         try {
             (*m_slotFunction)(a1, a2, a3);
         } catch (const bp::error_already_set&) {
@@ -124,10 +131,10 @@ namespace karathon {
 
 
     void SlotWrap::callFunction4(const karabo::util::Hash& body) {
-        bp::object a1 = HashWrap::get(body, "a1");
-        bp::object a2 = HashWrap::get(body, "a2");
-        bp::object a3 = HashWrap::get(body, "a3");
-        bp::object a4 = HashWrap::get(body, "a4");
+        bp::object a1 = getBodyArgument(body, "a1");
+        bp::object a2 = getBodyArgument(body, "a2");
+        bp::object a3 = getBodyArgument(body, "a3");
+        bp::object a4 = getBodyArgument(body, "a4");
         try {
             (*m_slotFunction)(a1, a2, a3, a4);
         } catch (const bp::error_already_set&) {
