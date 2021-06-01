@@ -94,10 +94,9 @@ class Xms_TestCase(unittest.TestCase):
             self.assertEqual(1, nArg)
 
             # Then we must not miss to sent argument
-            # FIXME: Not yet 2.11. - interface change
-            # req = sigSlot.request("", "func_varArgs1")
-            # with self.assertRaises(RuntimeError):
-            #     req.waitForReply(timeout)
+            req = sigSlot.request("", "func_varArgs1")  # here access with '_'
+            with self.assertRaises(RuntimeError):
+                req.waitForReply(timeout)
 
             #
             # Register function with default argument.
@@ -116,10 +115,9 @@ class Xms_TestCase(unittest.TestCase):
             self.assertEqual(47, theSum)  # 2 + 3 + 42
 
             # Still, we must not miss to sent required arguments
-            # FIXME: Not yet 2.11. - interface change
-            # req = sigSlot.request("", "funcTwoArgDef", 1)
-            # with self.assertRaises(RuntimeError):
-            #     req.waitForReply(timeout)
+            req = sigSlot.request("", "funcTwoArgDef", 1)
+            with self.assertRaises(RuntimeError):
+                req.waitForReply(timeout)
 
             #
             # Register function with default keyword only argument.
@@ -177,10 +175,9 @@ class Xms_TestCase(unittest.TestCase):
             self.assertEqual(2, nArg)
 
             # Then we must not miss to sent argument
-            # FIXME: Not yet 2.11. - interface change
-            # req = sigSlot.request("", "slotVarArgs1", "not_enough")
-            # with self.assertRaises(RuntimeError):
-            #     req.waitForReply(timeout)
+            req = sigSlot.request("", "slotVarArgs1", "not_enough")
+            with self.assertRaises(RuntimeError):
+                req.waitForReply(timeout)
 
             #
             # Register method with default argument.
@@ -199,10 +196,9 @@ class Xms_TestCase(unittest.TestCase):
             self.assertEqual(45, theSum)  # 1 + 2 + 42
 
             # Still, we must not miss to sent required arguments
-            # FIXME: Not yet 2.11. - interface change
-            # req = sigSlot.request("", "slotTwoArgDef", 1)
-            # with self.assertRaises(RuntimeError):
-            #     req.waitForReply(timeout)
+            req = sigSlot.request("", "slotTwoArgDef", 1)
+            with self.assertRaises(RuntimeError):
+                req.waitForReply(timeout)
 
             #
             # Register method with default keyword only argument.

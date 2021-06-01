@@ -1,0 +1,10 @@
+***************************
+What's New in Karabo 2.12.0
+***************************
+
+Change of behaviour
++++++++++++++++++++
+
+Since 2.12.0, slots of Bound Python devices called with fewer arguments than
+expected return an error reply to the caller. Before 2.12.0, the slot function
+was called anyway, using `None` for the missing arguments.
