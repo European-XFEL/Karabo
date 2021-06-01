@@ -51,6 +51,10 @@ namespace karathon {
 
         void callFunction4(const karabo::util::Hash& body);
 
+        /// Helper for callFunction<N> to get argument with given key ("a1", ..., or "a4") out of body.
+        /// Throws if that key is missing.
+        bp::object getBodyArgument(const karabo::util::Hash& body, const char* key) const;
+
         void rethrowPythonException();
     };
 }
