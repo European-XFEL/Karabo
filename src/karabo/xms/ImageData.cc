@@ -348,6 +348,11 @@ namespace karabo {
         }
 
 
+        karabo::util::NDArray& ImageData::getData() {
+            return get<karabo::util::NDArray >("pixels");
+        }
+
+
         const karabo::util::NDArray& ImageData::getData() const {
             return get<karabo::util::NDArray >("pixels");
         }
