@@ -108,10 +108,13 @@ class DeviceSystemTree(HasStrictTraits):
         with self.update_context.removal_context(node):
             type_node.children.remove(node)
 
-        if not len(type_node.children):
+        if not type_node.children:
             domain_node = type_node.parent
             with self.update_context.removal_context(type_node):
                 domain_node.children.remove(type_node)
+
+            if not domain_node.children:
+                self._remove_root_children(domain_node)
 
         return True
 
@@ -187,6 +190,10 @@ class DeviceSystemTree(HasStrictTraits):
                 yield
 
             @contextmanager
+            def remove_root_context(self, first, last):
+                yield
+
+            @contextmanager
             def removal_children_context(self, tree_node):
                 yield
 
@@ -203,15 +210,22 @@ class DeviceSystemTree(HasStrictTraits):
     def _set_child_node(self, parent_node, child_node):
         parent_node.children.append(child_node)
 
-    def _set_root_children(self, domain_node, append):
+    def _set_root_children(self, node, append):
         """Set the a domain node in the root element"""
-        first = len(self.root.children)
-        last = first
         if append:
+            first = len(self.root.children)
+            last = first
             with self.update_context.insert_root_context(first, last):
-                self.root.children.append(domain_node)
+                self.root.children.append(node)
         else:
-            self.root.children.append(domain_node)
+            self.root.children.append(node)
+
+    def _remove_root_children(self, node):
+        """Set a node in the root element"""
+        first = node.row()
+        last = first
+        with self.update_context.remove_root_context(first, last):
+            self.root.children.remove(node)
 
     # ------------------------------------------------------------------
 
