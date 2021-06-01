@@ -64,8 +64,7 @@ class SystemTopology(HasStrictTraits):
         super(SystemTopology, self).__init__()
 
     def clear(self):
-        """Clear all saved devices and classes
-        """
+        """Clear all saved devices and classes"""
         self.clear_project_devices()
         self.system_tree.clear_all()
         self.device_tree.clear_all()
@@ -78,14 +77,12 @@ class SystemTopology(HasStrictTraits):
         self._requested_class_schemas = set()
 
     def clear_project_devices(self):
-        """Called by project model on closing project
-        """
+        """Called by project model on closing project"""
         self._project_devices.clear()
         self._project_device_proxies.clear()
 
     def get_attributes(self, topology_path):
-        """Return the attributes of a given node in the `_system_hash`.
-        """
+        """Return the attributes of a given node in the `_system_hash`"""
         if self._system_hash is None:
             return None
         try:
@@ -96,6 +93,8 @@ class SystemTopology(HasStrictTraits):
     def get_class(self, server_id, class_id):
         """Return the class proxy (DeviceClassProxy) for a given
         class on a given server
+
+        This function will request the class schema if not available
         """
         key = (server_id, class_id)
         proxy = self._class_proxies.get(key)
@@ -173,8 +172,7 @@ class SystemTopology(HasStrictTraits):
         else:
             instance = self._project_devices[device_id]
             instance.rename(
-                device_id=device_id, class_id=class_id, server_id=server_id
-            )
+                device_id=device_id, class_id=class_id, server_id=server_id)
         attrs = self._get_device_attributes(device_id)
         if attrs is not None:
             instance.error = (attrs.get('status', '') == 'error')
@@ -483,14 +481,8 @@ class SystemTopology(HasStrictTraits):
             self._topology_device_gone('macro', system_hash, devices)
         if 'server' in system_hash:
             self._topology_server_gone(system_hash, servers)
-
         if 'client' in system_hash:
-            for instance_id, _, attr in system_hash['client'].iterall():
-                path = 'client' + '.' + instance_id
-                attrs = self.get_attributes(path)
-                if attrs is None:
-                    continue
-                del self._system_hash[path]
+            self._topology_client_gone(system_hash)
 
         return devices, servers
 
@@ -558,6 +550,14 @@ class SystemTopology(HasStrictTraits):
             # Note the details of what device is gone
             class_id = attributes.get('classId', 'unknown-class')
             devices.append((instance_id, class_id, 'offline'))
+
+    def _topology_client_gone(self, system_hash):
+        for instance_id, _, attr in system_hash['client'].iterall():
+            path = 'client' + '.' + instance_id
+            attrs = self.get_attributes(path)
+            if attrs is None:
+                continue
+            del self._system_hash[path]
 
     # ---------------------------------------------------------------------
     # Utilities
