@@ -203,8 +203,14 @@ class SystemTree(HasStrictTraits):
         if node is None:
             return False
 
+        class_node = node.parent
         with self.update_context.removal_context(node):
-            node.parent.children.remove(node)
+            class_node.children.remove(node)
+
+        if not class_node.children:
+            server_node = class_node.parent
+            with self.update_context.removal_context(class_node):
+                server_node.children.remove(class_node)
 
         self._device_nodes.pop(instance_id)
         return True
@@ -234,6 +240,8 @@ class SystemTree(HasStrictTraits):
         with self.update_context.removal_context(server_node):
             host_node.children.remove(server_node)
 
+        if not host_node.children:
+            self._remove_root_children(host_node)
         self._server_nodes.pop(instance_id)
 
         return server_class_keys
@@ -344,6 +352,10 @@ class SystemTree(HasStrictTraits):
                 yield
 
             @contextmanager
+            def remove_root_context(self, first, last):
+                yield
+
+            @contextmanager
             def removal_children_context(self, tree_node):
                 yield
 
@@ -376,13 +388,20 @@ class SystemTree(HasStrictTraits):
 
     def _set_root_children(self, host_node, append=True):
         """Set the a host node in the root element"""
-        first = len(self.root.children)
-        last = first
         if append:
+            first = len(self.root.children)
+            last = first
             with self.update_context.insert_root_context(first, last):
                 self.root.children.append(host_node)
         else:
             self.root.children.append(host_node)
+
+    def _remove_root_children(self, node):
+        """Remove a node in the root element"""
+        first = node.row()
+        last = first
+        with self.update_context.remove_root_context(first, last):
+            self.root.children.remove(node)
 
     # ------------------------------------------------------------------
 
