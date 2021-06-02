@@ -37,7 +37,7 @@ def test_project_device():
             # Now remove the schema for test purposes
             topology._class_schemas.pop(('swerver', 'FooClass'))
             # Refresh schema!
-            topology.ensure_proxy_class_schema(device._offline_proxy)
+            topology.ensure_proxy_class_schema('divvy', 'swerver', 'FooClass')
             # The request is sent out but no schema is available
             network.onGetClassSchema.assert_called_with('swerver', 'FooClass')
             # Schema arrives and we have a proxy!
