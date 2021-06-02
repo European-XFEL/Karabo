@@ -985,6 +985,11 @@ class Tests(DeviceTest):
                 d.dn.othr = 111
                 await updateDevice(d)
                 self.assertFalse(isSet(d.dn.other))
+                schema = a.getDeviceSchema(False)
+                self.assertEqual(
+                    schema.hash["dn", "displayType"], "deviceNode")
+                self.assertEqual(
+                    schema.hash["dnEmpty", "displayType"], "deviceNode")
         finally:
             await a.slotKillDevice()
 
