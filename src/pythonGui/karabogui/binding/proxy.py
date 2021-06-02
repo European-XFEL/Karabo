@@ -233,6 +233,12 @@ class ProjectDeviceProxy(DeviceClassProxy):
         """
         self.status = self._status_default()
 
+    def ensure_class_schema(self):
+        """Ensure the class schema of the project device proxy"""
+        topology = get_topology()
+        topology.ensure_proxy_class_schema(
+            self.device_id, self.server_id, self.binding.class_id)
+
 
 class PropertyProxy(HasStrictTraits):
     """A proxy for a single device property
