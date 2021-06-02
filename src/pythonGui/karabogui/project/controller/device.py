@@ -385,10 +385,9 @@ class DeviceInstanceController(BaseProjectGroupController):
         """
         proxy = self.project_device.proxy
         if not self.project_device.online:
-            get_topology().ensure_proxy_class_schema(proxy)
+            proxy.ensure_class_schema()
 
-        broadcast_event(KaraboEvent.ShowConfiguration,
-                        {'proxy': proxy})
+        broadcast_event(KaraboEvent.ShowConfiguration, {'proxy': proxy})
 
     def _update_icon(self, ui_data):
         # Get current status of device
