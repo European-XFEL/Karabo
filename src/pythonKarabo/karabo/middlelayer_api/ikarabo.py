@@ -11,6 +11,7 @@ from . import device_client
 from .device_client import DeviceClientBase, getDevice
 from .eventloop import NoEventLoop
 from .macro import EventThread, Macro
+from .signalslot import coslot
 from karabo._version import version
 
 
@@ -33,6 +34,14 @@ class DeviceClient(Macro, DeviceClientBase):
         info["lang"] = "python"
         info["type"] = "client"
         return info
+
+    @coslot
+    async def slotKillDevice(self):
+        """Subclass the `slotKillDevice` to exit the IPython console"""
+        await super().slotKillDevice()
+        ip = IPython.get_ipython()
+        if ip is not None:
+            ip.ask_exit()
 
 
 @functools.wraps(device_client.connectDevice)
