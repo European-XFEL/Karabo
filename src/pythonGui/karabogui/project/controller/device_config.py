@@ -86,6 +86,19 @@ class DeviceConfigurationController(BaseProjectController):
                 'classId': self.model.class_id,
                 'configuration': self.model.configuration}
 
+    def single_click(self, project_controller, parent=None):
+        """The configuration is selected in the panel
+
+        For further configuration processing we make sure to have a schema
+        in the future. This must always be requested, even if we have an
+        online device.
+        """
+        device_controller = find_parent_object(self, project_controller,
+                                               DeviceInstanceController)
+        project_device = device_controller.project_device
+        proxy = project_device._offline_proxy
+        proxy.ensure_class_schema()
+
     # ----------------------------------------------------------------------
     # QAction handlers
 
