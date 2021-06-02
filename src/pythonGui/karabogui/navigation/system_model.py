@@ -4,7 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import json
-from weakref import WeakValueDictionary
 
 from qtpy.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
 
@@ -24,9 +23,6 @@ class SystemTreeModel(QAbstractItemModel):
 
     def __init__(self, parent=None):
         super(SystemTreeModel, self).__init__(parent)
-
-        self._model_index_refs = WeakValueDictionary()
-
         # Our hierarchy tree
         self.tree = get_topology().system_tree
         self.tree.update_context = _UpdateContext(item_model=self)
@@ -53,34 +49,6 @@ class SystemTreeModel(QAbstractItemModel):
         node_id = data['device_id']
         self._update_device_info(node_id)
 
-    def index_ref(self, model_index):
-        """Get the system node object for a ``QModelIndex``. This is
-        essentially equivalent to a weakref and might return None.
-
-        NOTE: We're doing a rather complicated dance here with `internalId` to
-        avoid PyQt's behaviour of casting pointers into Python objects, because
-        those objects might now be invalid.
-        """
-        key = model_index.internalId()
-        return self._model_index_refs.get(key)
-
-    def createIndex(self, row, column, node):
-        """Prophylaxis for QModelIndex.internalPointer...
-
-        We need a nice way to get back to our node objects from a QModelIndex.
-        So, we store node instances in model indices, but indirectly. This is
-        because QModelIndex is not a strong reference AND these objects will
-        tend to outlive the node objects which they reference. So the solution
-        is to use a WeakValueDictionary as indirection between Qt and our model
-        layer.
-
-        Awesome. QAbstractItemModel can go DIAF.
-        """
-        key = id(node)
-        if key not in self._model_index_refs:
-            self._model_index_refs[key] = node
-        return super(SystemTreeModel, self).createIndex(row, column, key)
-
     def clear(self):
         self.tree.clear_all()
 
@@ -93,7 +61,7 @@ class SystemTreeModel(QAbstractItemModel):
         if not parent.isValid():
             parent_node = self.tree.root
         else:
-            parent_node = self.index_ref(parent)
+            parent_node = parent.internalPointer()
             if parent_node is None:
                 return QModelIndex()
 
@@ -106,7 +74,7 @@ class SystemTreeModel(QAbstractItemModel):
         if not index.isValid():
             return QModelIndex()
 
-        child_node = self.index_ref(index)
+        child_node = index.internalPointer()
         if child_node is None:
             return QModelIndex()
 
@@ -130,7 +98,7 @@ class SystemTreeModel(QAbstractItemModel):
         if not parent.isValid():
             parent_node = self.tree.root
         else:
-            parent_node = self.index_ref(parent)
+            parent_node = parent.internalPointer()
             if parent_node is None:
                 return 0
 
@@ -145,7 +113,7 @@ class SystemTreeModel(QAbstractItemModel):
         if not index.isValid():
             return {}
 
-        node = self.index_ref(index)
+        node = index.internalPointer()
         if node is None:
             return {}
 
@@ -157,7 +125,7 @@ class SystemTreeModel(QAbstractItemModel):
         if not index.isValid():
             return
 
-        node = self.index_ref(index)
+        node = index.internalPointer()
         if node is None:
             return
 
@@ -197,7 +165,7 @@ class SystemTreeModel(QAbstractItemModel):
         if not index.isValid():
             return Qt.NoItemFlags
 
-        node = self.index_ref(index)
+        node = index.internalPointer()
         if node is None:
             return Qt.NoItemFlags
 
@@ -226,7 +194,7 @@ class SystemTreeModel(QAbstractItemModel):
         # Extract info() dictionaries from SystemTreeNode instances
         data = []
         for idx in rows.values():
-            n = self.index_ref(idx)
+            n = idx.internalPointer()
             if n is None:
                 continue
             data.append(n.info())
@@ -283,6 +251,5 @@ class SystemTreeModel(QAbstractItemModel):
                 node.is_visible = not (node.visibility > access)
 
             self.tree.visit(visitor)
-            self._model_index_refs.clear()
         finally:
             self.endResetModel()

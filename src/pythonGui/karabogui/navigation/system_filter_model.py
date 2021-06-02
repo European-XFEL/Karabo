@@ -61,7 +61,7 @@ class TopologyFilterModel(QSortFilterProxyModel):
         source_index = self.mapToSource(index)
         if not source_index.isValid():
             return None
-        return self.sourceModel().index_ref(source_index)
+        return source_index.internalPointer()
 
     def currentIndex(self):
         """Retrieve the current index for context menu actions"""
