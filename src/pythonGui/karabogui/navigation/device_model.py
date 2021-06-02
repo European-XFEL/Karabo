@@ -4,7 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import json
-from weakref import WeakValueDictionary
 
 from qtpy.QtCore import QAbstractItemModel, QMimeData, QModelIndex, Qt
 
@@ -21,7 +20,6 @@ class DeviceTreeModel(QAbstractItemModel):
 
     def __init__(self, parent=None):
         super(DeviceTreeModel, self).__init__(parent)
-        self._model_index_refs = WeakValueDictionary()
         # Our hierarchy tree
         self.tree = get_topology().device_tree
         self.tree.update_context = _UpdateContext(item_model=self)
@@ -38,21 +36,6 @@ class DeviceTreeModel(QAbstractItemModel):
     def _event_access_level(self, data):
         self._clear_tree_cache()
 
-    def index_ref(self, model_index):
-        """Get the system node object for a ``QModelIndex``. This is
-        essentially equivalent to a weakref and might return None.
-        """
-        key = model_index.internalId()
-        return self._model_index_refs.get(key)
-
-    def createIndex(self, row, column, node):
-        """Prophylaxis for QModelIndex.internalPointer...
-        """
-        key = id(node)
-        if key not in self._model_index_refs:
-            self._model_index_refs[key] = node
-        return super(DeviceTreeModel, self).createIndex(row, column, key)
-
     def clear(self):
         self.tree.clear_all()
 
@@ -65,7 +48,7 @@ class DeviceTreeModel(QAbstractItemModel):
         if not parent.isValid():
             parent_node = self.tree.root
         else:
-            parent_node = self.index_ref(parent)
+            parent_node = parent.internalPointer()
             if parent_node is None:
                 return QModelIndex()
 
@@ -78,7 +61,7 @@ class DeviceTreeModel(QAbstractItemModel):
         if not index.isValid():
             return QModelIndex()
 
-        child_node = self.index_ref(index)
+        child_node = index.internalPointer()
         if child_node is None:
             return QModelIndex()
 
@@ -103,7 +86,7 @@ class DeviceTreeModel(QAbstractItemModel):
         if not parent.isValid():
             parent_node = self.tree.root
         else:
-            parent_node = self.index_ref(parent)
+            parent_node = parent.internalPointer()
             if parent_node is None:
                 return 0
 
@@ -120,7 +103,7 @@ class DeviceTreeModel(QAbstractItemModel):
         if not index.isValid():
             return
 
-        node = self.index_ref(index)
+        node = index.internalPointer()
         if node is None:
             return
 
@@ -145,7 +128,7 @@ class DeviceTreeModel(QAbstractItemModel):
         if not index.isValid():
             return Qt.NoItemFlags
 
-        node = self.index_ref(index)
+        node = index.internalPointer()
         if node is None:
             return Qt.NoItemFlags
 
@@ -172,7 +155,7 @@ class DeviceTreeModel(QAbstractItemModel):
         # Extract info() dictionaries from SystemTreeNode instances
         data = []
         for idx in rows.values():
-            n = self.index_ref(idx)
+            n = idx.internalPointer()
             if n is None:
                 continue
             data.append(n.info())
@@ -186,7 +169,7 @@ class DeviceTreeModel(QAbstractItemModel):
         if not index.isValid():
             return {}
 
-        node = self.index_ref(index)
+        node = index.internalPointer()
         if node is None:
             return {}
 
@@ -211,7 +194,6 @@ class DeviceTreeModel(QAbstractItemModel):
                 node.is_visible = not (node.visibility > access)
 
             self.tree.visit(visitor)
-            self._model_index_refs.clear()
         finally:
             self.endResetModel()
 
