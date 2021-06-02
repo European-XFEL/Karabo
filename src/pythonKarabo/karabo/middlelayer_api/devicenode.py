@@ -28,21 +28,19 @@ class DeviceNode(String):
     A timeout in seconds can be specified via::
 
         class Stage(Device):
-            motor = DeviceNode(timeout=1.5)
+            motor = DeviceNode(timeout=2.5)
 
     The DeviceNode will try to connect to the device within this time frame.
     If the connection could not be established within the time interval,
-    an error is raised. The default timeout is 2 seconds and a maximum
-    timeout of 5 seconds can be set. A timeout of 0 times out immediately!
+    an error is raised. The default timeout is `None` and the DeviceNode will
+    wait until the proxy connectiion has been established!
     """
 
     def __init__(self, properties=(), commands=(), timeout=None, **kwargs):
         super().__init__(**kwargs)
-        if timeout is None:
-            timeout = 2
         self.properties = properties
         self.commands = commands
-        self.timeout = min(timeout, 5)
+        self.timeout = timeout
         if self.properties or self.commands:
             import warnings
             warnings.warn(
