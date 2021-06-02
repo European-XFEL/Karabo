@@ -144,8 +144,12 @@ namespace karabo {
             /**
              * Get a reference to the underlying image data structure.
              * Interpretation depends on ImageData::getEncoding().
-             *
-             * @param array
+             */
+            karabo::util::NDArray& getData();
+
+            /**
+             * Get a reference to the underlying image data structure.
+             * Interpretation depends on ImageData::getEncoding().
              */
             const karabo::util::NDArray& getData() const;
 
