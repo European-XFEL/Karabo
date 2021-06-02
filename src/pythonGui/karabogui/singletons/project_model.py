@@ -33,6 +33,9 @@ PROJECT_COLUMN = 0
 STATUS_COLUMN = 1
 ALARM_COLUMN = 2
 
+ROLES = [Qt.CheckStateRole, Qt.DisplayRole, Qt.DecorationRole,
+         Qt.ForegroundRole, Qt.FontRole, Qt.ToolTipRole]
+
 
 class ProjectViewItemModel(QAbstractItemModel):
     """ A QAbstractItemModel which mediates between our Traits-based data model
@@ -100,11 +103,12 @@ class ProjectViewItemModel(QAbstractItemModel):
                 finally:
                     self.endRemoveRows()
 
-    def controller_data_update(self, controller, column=PROJECT_COLUMN):
+    def controller_data_update(self, controller, column=PROJECT_COLUMN,
+                               roles=ROLES):
         index_row = self._controller_row(controller)
         index = self.createIndex(index_row, column, controller)
         if index.isValid():
-            self.dataChanged.emit(index, index)
+            self.dataChanged.emit(index, index, roles)
 
     @property
     def root_controller(self):
@@ -188,6 +192,7 @@ class ProjectViewItemModel(QAbstractItemModel):
         """Walk every controller in the model and run a `visitor` function on
         each item.
         """
+
         def _iter_tree_node(node):
             yield node
             for child in getattr(node, 'children', []):
@@ -201,11 +206,11 @@ class ProjectViewItemModel(QAbstractItemModel):
         """
         if index is None:
             self.q_selection_model.selectionChanged.emit(
-                    QItemSelection(), QItemSelection())
+                QItemSelection(), QItemSelection())
             return
 
         self.q_selection_model.setCurrentIndex(
-                index, QItemSelectionModel.ClearAndSelect)
+            index, QItemSelectionModel.ClearAndSelect)
 
         treeview = super(ProjectViewItemModel, self).parent()
         treeview.scrollTo(index)
@@ -215,8 +220,8 @@ class ProjectViewItemModel(QAbstractItemModel):
         """
         if controller is not None:
             index = self.createIndex(
-                    self._controller_row(controller),
-                    PROJECT_COLUMN, controller)
+                self._controller_row(controller),
+                PROJECT_COLUMN, controller)
         else:
             # Select nothing
             index = None
