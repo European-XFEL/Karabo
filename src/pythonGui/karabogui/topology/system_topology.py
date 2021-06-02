@@ -206,11 +206,12 @@ class SystemTopology(HasStrictTraits):
         key = (server_id, class_id)
         return self._class_schemas.get(key)
 
-    def ensure_proxy_class_schema(self, proxy):
+    def ensure_proxy_class_schema(self, device_id, server_id, class_id):
         """Ensure the class schema of a project device proxy if necessary"""
-        assert isinstance(proxy, ProjectDeviceProxy)
-
-        if not len(proxy.binding.value) > 0:
+        key = (server_id, class_id)
+        mapping = self._project_device_proxies.setdefault(key, {})
+        proxy = mapping.get(device_id)
+        if proxy is not None and not len(proxy.binding.value) > 0:
             server_id = proxy.server_id
             class_id = proxy.binding.class_id
             key = (server_id, class_id)
