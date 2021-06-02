@@ -115,26 +115,28 @@ class BaseProjectController(ABCHasStrictTraits):
     @on_trait_change('model.simple_name')
     def _update_label(self):
         """ Whenever ``simple_name`` is modified the UI should repaint
-
-        XXX: Maybe merge later ...
         """
         if self._qt_model is not None:
-            self._qt_model.controller_data_update(self)
+            self._qt_model.controller_data_update(self, roles=[Qt.DisplayRole])
 
     @on_trait_change('ui_data.icon,ui_data.brush,ui_data.check_state')
     def _request_repaint(self):
         if self._qt_model is not None:
-            self._qt_model.controller_data_update(self)
+            self._qt_model.controller_data_update(
+                self, roles=[Qt.DecorationRole, Qt.FontRole, Qt.ForegroundRole,
+                             Qt.CheckStateRole])
 
     @on_trait_change('ui_data.status')
     def _update_status(self):
         if self._qt_model is not None:
-            self._qt_model.controller_data_update(self, column=1)
+            self._qt_model.controller_data_update(
+                self, column=1, roles=[Qt.DecorationRole])
 
     @on_trait_change('ui_data.alarm_type,ui_data.conflict_icon')
     def _update_alarm(self):
         if self._qt_model is not None:
-            self._qt_model.controller_data_update(self, column=2)
+            self._qt_model.controller_data_update(
+                self, column=2, roles=[Qt.DecorationRole])
 
     def _get_display_name(self):
         """Traits property getter for ``display_name``
