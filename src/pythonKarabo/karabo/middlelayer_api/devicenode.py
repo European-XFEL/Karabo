@@ -157,6 +157,7 @@ class DeviceNode(String):
         if device is None or (not self.properties and not self.commands):
             attrs["accessMode"] = AccessMode.INITONLY.value
             attrs["assignment"] = Assignment.MANDATORY.value
+            attrs["displayType"] = "deviceNode"
             return h, attrs
         attrs["nodeType"] = NodeType.Node
         attrs["displayType"] = "deviceNode"
