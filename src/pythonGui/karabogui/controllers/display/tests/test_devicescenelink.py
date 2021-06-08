@@ -6,8 +6,9 @@ from karabo.common.enums import ProxyStatus
 from karabo.common.scenemodel.api import (
     DeviceSceneLinkModel, SceneTargetWindow)
 from karabo.native import Configurable, VectorString
-from karabogui.singletons.api import get_topology
-from karabogui.testing import GuiTestCase, get_class_property_proxy
+from karabogui.testing import (
+    GuiTestCase, get_class_property_proxy, singletons, system_hash)
+from karabogui.topology.system_topology import SystemTopology
 
 from ..devicescenelink import DisplayDeviceSceneLink
 
@@ -47,17 +48,23 @@ class TestDisplayDeviceSceneLink(GuiTestCase):
         assert self.controller.widget is None
 
     def test_clicked(self):
-        device = get_topology().get_device('deviceUno')
-        device.status = ProxyStatus.ONLINE
+        topology = SystemTopology()
+        topology.initialize(system_hash())
+        with singletons(topology=topology):
+            device = topology.get_device('deviceUno')
+            device.status = ProxyStatus.ONLINE
 
-        with patch(self.target) as caller:
-            self.controller.widget._handle_click()
-            assert caller.call_count == 1
+            with patch(self.target) as caller:
+                self.controller.widget._handle_click()
+                assert caller.call_count == 1
 
     def test_clicked_device_off(self):
-        device = get_topology().get_device('deviceUno')
-        device.status = ProxyStatus.OFFLINE
+        topology = SystemTopology()
+        topology.initialize(system_hash())
+        with singletons(topology=topology):
+            device = topology.get_device('deviceUno')
+            device.status = ProxyStatus.OFFLINE
 
-        with patch(self.target) as caller, patch(self.mbox, new=MockBox):
-            self.controller.widget._handle_click()
-            assert caller.call_count == 0
+            with patch(self.target) as caller, patch(self.mbox, new=MockBox):
+                self.controller.widget._handle_click()
+                assert caller.call_count == 0

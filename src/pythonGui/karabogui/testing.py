@@ -1,7 +1,9 @@
 import contextlib
+import os
 import sys
 import unittest
 from collections import OrderedDict
+from platform import system
 
 from qtpy.QtCore import Qt
 from qtpy.QtTest import QTest
@@ -27,6 +29,9 @@ class GuiTestCase(unittest.TestCase):
     """
 
     def setUp(self):
+        os.environ["KARABO_TEST_GUI"] = "1"
+        if system() == 'Darwin' and 'QT_MAC_WANTS_LAYER' not in os.environ:
+            os.environ['QT_MAC_WANTS_LAYER'] = '1'
         app = QApplication.instance()
         if app is None:
             app = QApplication(sys.argv)
@@ -40,12 +45,11 @@ class GuiTestCase(unittest.TestCase):
         populate_controller_registry()
 
     def tearDown(self):
-        self.process_qt_events()
-        self.app.deleteLater()
+        pass
 
     def process_qt_events(self, ms=10):
         # Give the event loop 10ms to process its events
-        process_qt_events(self.app, timeout=ms)
+        process_qt_events(timeout=ms)
 
     def click(self, button_widget, button=Qt.LeftButton):
         QTest.mouseClick(button_widget, button)
