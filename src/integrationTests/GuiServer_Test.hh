@@ -44,6 +44,7 @@ private:
     void testRequestGeneric();
     void testRequestFailProtocol();
     void testRequestFailOldVersion();
+    void testLogMute();
 
     /**
      * Checks that messages of type 'deviceConfigurations' sent by
