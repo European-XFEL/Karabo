@@ -97,9 +97,11 @@ If needed, one can safely remove this environment with no fear with corrupting
 the base environment.
 
 * Create a target environment for KaraboGUI with any name you want.
-    * ``conda create -n karabogui<version> --yes``
-* Activate the environment you created
-    * ``conda activate karabogui<version>``
+    * ``conda create -n karabogui<version> karabogui=<version> --yes``
+
+* Or Run this to get the latest version (recommended)
+    * ``conda create -n karaboguilatest karabogui --yes``
+
 * Install your application
     * ``conda install karabogui=<version> --yes``
         * Leave the version out to get the latest one: ``conda install karabogui --yes``
