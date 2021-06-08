@@ -52,11 +52,16 @@ namespace karabo {
                 // key in map is the serverId, values in set are classIds
                 std::map<std::string, std::set<std::string>> requestedClassSchemas;
                 karabo::util::Version clientVersion;
+                bool sendLogs;
 
-                ChannelData(): clientVersion("0.0.0") {
+                ChannelData()
+                    : clientVersion("0.0.0"),
+                    sendLogs(true) {
                 };
 
-                ChannelData(const karabo::util::Version& version): clientVersion(version) {
+                ChannelData(const karabo::util::Version& version)
+                    : clientVersion(version),
+                    sendLogs(clientVersion <= karabo::util::Version("2.11.1")) {
                 };
             };
 
@@ -257,10 +262,14 @@ namespace karabo {
              *
              * When the client has connected, only the ``login`` ``type`` is
              * allowed.
+             * The expected hash must contain a ``version`` string and a ``user`` string.
+             * The ``version`` string is verified against the minimum client version.
+             * The ``user`` string is required but currently not used.
              *
              * Upon successful completion of the login request the ``onRead``
              * function is bound to the channel, allowing normal operation.
              * In case of failure the ```onLoginMessage` is bound again to the channel.
+             *
              * @param e holds an error code if the eventloop cancel this task or the channel is closed
              * @param channel
              * @param info
@@ -316,6 +325,8 @@ namespace karabo {
              *      projectListItems            onProjectListItems
              *      projectListDomains          onProjectListDomains
              *      requestGeneric              onRequestGeneric
+             *      subscribeLogs               onSubscribeLogs
+             *      setLogPriority              onSetLogPriority
              *      =======================     =========================
              *
              * \endverbatim
@@ -616,13 +627,41 @@ namespace karabo {
              * is maintained, even if multiple gui-clients listen to it. The gui-server
              * thus acts as a kind of hub for pipe-lined processing onto gui-clients.
              *
-             * If subscribe is set to False, the connection is removed from the list of
+             * If ``subscribe`` is set to false, the connection is removed from the list of
              * registered connections, but is kept open.
              *
              * @param channel
              * @param info
              */
             void onSubscribeNetwork(WeakChannelPointer channel, const karabo::util::Hash& info);
+
+            /**
+             * registers the client connected on ``channel`` to the system logs
+             * in case ``subscribe`` is true.
+             * If ``subscribe`` is set to false, the logs will not be sent to the client.
+             *
+             * @param channel
+             * @param info
+             */
+            void onSubscribeLogs(WeakChannelPointer channel, const karabo::util::Hash& info);
+
+            /**
+             * sets the Log priority on a server. The ``info`` hash should contain a ``priority``
+             * string and a ``instanceId`` string.
+             *
+             * @param channel
+             * @param info
+             */
+            void onSetLogPriority(WeakChannelPointer channel, const karabo::util::Hash& info);
+
+            /**
+             * Callback helper for ``onSetLogPriority``
+             *
+             * @param success whether call succeeded
+             * @param channel who requested the call
+             * @param input will be copied to the key ``input`` of the reply message
+             */
+            void forwardSetLogReply(bool success, WeakChannelPointer channel, const karabo::util::Hash& input);
 
             /**
              * Receives a message from the GUI client that it processed network data from
