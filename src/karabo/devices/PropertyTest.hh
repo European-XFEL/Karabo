@@ -89,6 +89,8 @@ namespace karabo {
 
             void slowSlot();
 
+            void logSomething(const karabo::util::Hash& input);
+
             bool m_writingOutput;
             boost::asio::deadline_timer m_writingOutputTimer;
         };
