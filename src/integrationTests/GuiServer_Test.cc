@@ -12,6 +12,7 @@
 
 using namespace std;
 
+#define LOG_LEVEL "FATAL"
 #define KRB_TEST_MAX_TIMEOUT 5
 
 USING_KARABO_NAMESPACES
@@ -44,7 +45,7 @@ void GuiVersion_Test::setUp() {
     // Start central event-loop
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
     // Create and start server
-    Hash config("serverId", "testGuiVersionServer", "scanPlugins", false, "Logger.priority", "FATAL");
+    Hash config("serverId", "testGuiVersionServer", "scanPlugins", false, "Logger.priority", LOG_LEVEL);
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
@@ -67,6 +68,7 @@ void GuiVersion_Test::appTestRunner() {
                                                                        Hash("deviceId", "testGuiServerDevice",
                                                                             "port", 44450,
                                                                             "minClientVersion", "2.2.3",
+                                                                            "forwardLogInterval", 500,
                                                                             "timeout", 0),
                                                                        KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
@@ -86,6 +88,7 @@ void GuiVersion_Test::appTestRunner() {
     testRequestGeneric();
     testRequestFailProtocol();
     testRequestFailOldVersion();
+    testLogMute();
 
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
@@ -1022,4 +1025,97 @@ void GuiVersion_Test::testDisconnect() {
     }
     CPPUNIT_ASSERT(!m_tcpAdapter->connected());
     std::clog << "OK" << std::endl;
+}
+
+
+void GuiVersion_Test::testLogMute() {
+    std::clog << "testLogMute: " << std::flush;
+    const Hash log_command("type", "requestFromSlot",
+                           "deviceId", "PropTest_LOG",
+                           "slot", "logSomething",
+                           "args", Hash("priority", "INFO", "message", "log me"),
+                           "token", "superSecretPassword");
+    // Instantiate a property test device
+    std::pair<bool, std::string> success = m_deviceClient->instantiate("testGuiVersionServer", "PropertyTest",
+                                                                       Hash("deviceId", "PropTest_LOG"),
+                                                                       KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    {
+        const Hash h("type", "setLogPriority",
+                     "instanceId", "testGuiVersionServer",
+                     "priority", "INFO");
+        // the change of logging will generate a log message. Here we wait for this log message
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("log", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        }, 1000);
+        Hash nextMessage;
+        messageQ->pop(nextMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("log"), nextMessage.get<std::string>("type"));
+    }
+    {
+        // subscribe to the logs. Log subscription is version dependent.
+        // This makes the test version independent.
+        const Hash h("type", "subscribeLogs",
+                     "subscribe", true);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("subscribeLogsReply", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        }, 100);
+        Hash nextMessage;
+        messageQ->pop(nextMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("subscribeLogsReply"), nextMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT(nextMessage.get<bool>("success"));
+    }
+    {
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("log", 1, [&] {
+            m_tcpAdapter->sendMessage(log_command);
+        }, 1000);
+        // clean the queue to be sure
+        m_tcpAdapter->clearAllMessages("requestFromSlot");
+        Hash nextMessage;
+        messageQ->pop(nextMessage);
+        for (auto log: nextMessage.get<std::vector<Hash>>("messages")) {
+            if (log.get<std::string>("category") == "PropTest_LOG") {
+                CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected log message: " + toString(log), std::string("log me"), log.get<std::string>("message"));
+            }
+        }
+    }
+    {
+        // unsubscribe to the logs
+        const Hash h("type", "subscribeLogs",
+                     "subscribe", false);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("subscribeLogsReply", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        }, 100);
+        Hash nextMessage;
+        messageQ->pop(nextMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("subscribeLogsReply"), nextMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT(nextMessage.get<bool>("success"));
+        m_tcpAdapter->clearAllMessages("log");
+    }
+    {
+        for (int i=0; i< 5; i++) {
+            karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("requestFromSlot", 1, [&] {
+                m_tcpAdapter->sendMessage(log_command);
+            }, 100);
+            Hash nextMessage;
+            messageQ->pop(nextMessage);
+            CPPUNIT_ASSERT(nextMessage.get<bool>("success"));
+        }
+        // sleep for twice the `forwardLogInterval`
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+        CPPUNIT_ASSERT_EQUAL(0ul, m_tcpAdapter->getAllMessages("log").size());
+    }
+    {
+        // put everythin back as we found it
+        const Hash h("type", "setLogPriority",
+                     "instanceId", "testGuiVersionServer",
+                     "priority", LOG_LEVEL);
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("setLogPriorityReply", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        }, 100);
+        Hash nextMessage;
+        messageQ->pop(nextMessage);
+        CPPUNIT_ASSERT_EQUAL(std::string("setLogPriorityReply"), nextMessage.get<std::string>("type"));
+    }
+    std::clog << " OK" << std::endl;
 }
