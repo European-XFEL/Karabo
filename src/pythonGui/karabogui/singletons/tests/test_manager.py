@@ -450,6 +450,14 @@ class TestManager(GuiTestCase):
             assert event_data['message'] == 'wubbalubbadubdub'
             assert isinstance(event_data['device'], DeviceProxy)
 
+    def test_handle_broker_information(self):
+        network = Mock()
+        with singletons(network=network):
+            manager = Manager()
+            manager.handle_serverInformation(readOnly=True)
+            network.set_server_information.assert_called_once_with(
+                read_only=True)
+
     def test_handle_alarm_update(self):
         topology = Mock()
         with singletons(topology=topology):
@@ -463,14 +471,6 @@ class TestManager(GuiTestCase):
             manager = Manager()
             manager.handle_alarmInit('AlarmService', Hash(alarm_data()))
             assert topology.update_alarms_info.call_count == 1
-
-    def test_handle_broker_information(self):
-        network = Mock()
-        with singletons(network=network):
-            manager = Manager()
-            manager.handle_brokerInformation(readOnly=True)
-            network.set_server_information.assert_called_once_with(
-                read_only=True)
 
     def test_handle_property_history(self):
         topology, device_proxy = Mock(), Mock()
