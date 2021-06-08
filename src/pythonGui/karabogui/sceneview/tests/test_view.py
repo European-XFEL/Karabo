@@ -5,7 +5,6 @@
 #############################################################################
 import os.path as op
 from contextlib import contextmanager
-from platform import system
 from unittest import mock, skipIf
 
 from qtpy.QtCore import QPoint
@@ -25,6 +24,7 @@ from karabogui.binding.api import (
     VectorUint8Binding, WidgetNodeBinding, build_binding)
 from karabogui.binding.tests.schema import (
     ALL_PROPERTIES_MAP, get_all_props_schema)
+from karabogui.const import IS_MAC_SYSTEM
 from karabogui.controllers.registry import get_model_controller
 from karabogui.testing import GuiTestCase
 
@@ -83,150 +83,148 @@ REIMPLEMENTED_BINDINGS = {
     WidgetNodeBinding: NodeBinding}
 
 
-class BaseTestCases:
+class BaseSceneViewTest(GuiTestCase):
 
-    class BaseSceneViewTest(GuiTestCase):
+    def setUp(self):
+        super().setUp()
+        # Setup device
+        schema = get_all_props_schema()
+        binding = build_binding(schema)
+        device = DeviceProxy(binding=binding,
+                             server_id='Fake',
+                             device_id=DEVICE_NAME,
+                             status=ProxyStatus.OFFLINE)
 
-        def setUp(self):
-            super(BaseTestCases.BaseSceneViewTest, self).setUp()
-            # Setup device
-            schema = get_all_props_schema()
-            binding = build_binding(schema)
-            device = DeviceProxy(binding=binding,
-                                 server_id='Fake',
-                                 device_id=DEVICE_NAME,
-                                 status=ProxyStatus.OFFLINE)
+        self.proxy_map = {name: PropertyProxy(root_proxy=device, path=name)
+                          for name in ALL_PROPS_BINDINGS.values()}
 
-            self.proxy_map = {name: PropertyProxy(root_proxy=device, path=name)
-                              for name in ALL_PROPS_BINDINGS.values()}
+        # Setup scene view
+        self.scene_view = SceneView()
+        self.scene_model = sm.SceneModel()
 
-            # Setup scene view
-            self.scene_view = SceneView()
-            self.scene_model = sm.SceneModel()
+    def tearDown(self):
+        super().tearDown()
+        self.scene_view.destroy()
+        self.scene_view = None
+        self.scene_model = None
 
-        def tearDown(self):
-            super(BaseTestCases.BaseSceneViewTest, self).tearDown()
-            self.scene_view.destroy()
-            self.scene_view = None
-            self.scene_model = None
+    def assert_model(self, actual, expected):
+        pass
 
-        def assert_model(self, actual, expected):
-            pass
+    def assert_widget(self, model):
+        pass
 
-        def assert_widget(self, model):
-            pass
+    def assert_scene_element(self, actual, expected, modified=None):
+        self._assert_element(actual, expected, modified=modified)
 
-        def assert_scene_element(self, actual, expected, modified=None):
-            self._assert_element(actual, expected, modified=modified)
+        # Save and reread the model
+        read_model = single_model_round_trip(actual)
+        self.set_models_to_scene(read_model)
+        self._assert_element(read_model, expected, modified=False)
 
-            # Save and reread the model
-            read_model = single_model_round_trip(actual)
-            self.set_models_to_scene(read_model)
-            self._assert_element(read_model, expected, modified=False)
+        # Revert back the original model
+        self.set_models_to_scene(actual)
 
-            # Revert back the original model
-            self.set_models_to_scene(actual)
+    def _assert_element(self, actual, expected, modified=False):
+        # Check model traits
+        self.assert_model(actual, expected)
 
-        def _assert_element(self, actual, expected, modified=False):
-            # Check model traits
-            self.assert_model(actual, expected)
+        # Check if model is modified
+        if modified is None:
+            modified = expected.modified
+        self.assertEqual(actual.modified, modified)
 
-            # Check if model is modified
-            if modified is None:
-                modified = expected.modified
-            self.assertEqual(actual.modified, modified)
+        # Check widget
+        self.assert_widget(actual)
 
-            # Check widget
-            self.assert_widget(actual)
+        # Iterate over children
+        if self._has_children(actual) and self._has_children(expected):
+            iter_children = zip(actual.children, expected.children)
+            for act_child, exp_child in iter_children:
+                self._assert_element(act_child, exp_child,
+                                     modified=modified)
 
-            # Iterate over children
-            if self._has_children(actual) and self._has_children(expected):
-                iter_children = zip(actual.children, expected.children)
-                for act_child, exp_child in iter_children:
-                    self._assert_element(act_child, exp_child,
-                                         modified=modified)
+    def _assign_key(self, model):
+        controller = get_model_controller(model)
+        if controller is None:
+            return None
 
-        def _assign_key(self, model):
-            controller = get_model_controller(model)
-            if controller is None:
-                return None
+        # Specify the binding of the flaky model
+        exceptions = {sm.PopUpModel: StringBinding}
+        if type(model) in exceptions:
+            binding = exceptions[type(model)]
+        else:
+            # Use a compatible binding
+            ctrait = controller.class_traits().get("_binding_type")
+            binding = self._get_binding(ctrait.default_value()[1])
 
-            # Specify the binding of the flaky model
-            exceptions = {sm.PopUpModel: StringBinding}
-            if type(model) in exceptions:
-                binding = exceptions[type(model)]
-            else:
-                # Use a compatible binding
-                ctrait = controller.class_traits().get("_binding_type")
-                binding = self._get_binding(ctrait.default_value()[1])
+        model.keys = [f"{DEVICE_NAME}.{ALL_PROPS_BINDINGS[binding]}"]
 
-            model.keys = [f"{DEVICE_NAME}.{ALL_PROPS_BINDINGS[binding]}"]
+    def copy_model(self, model):
+        copied = model.clone_traits(copy="deep")
+        set_initialized_flag(copied, value=model.initialized)
+        set_modified_flag(copied, value=model.modified)
+        return copied
 
-        def copy_model(self, model):
-            copied = model.clone_traits(copy="deep")
-            set_initialized_flag(copied, value=model.initialized)
-            set_modified_flag(copied, value=model.modified)
-            return copied
+    def _get_widget(self, model):
+        return self.scene_view._scene_obj_cache.get(model)
 
-        def _get_widget(self, model):
-            return self.scene_view._scene_obj_cache.get(model)
+    def set_models_to_scene(self, *models):
+        # Check if there are defs in the the models
+        self.scene_model = sm.SceneModel(children=list(models))
+        with mock.patch(GET_PROXY_PATH, new=self._get_proxy):
+            self.scene_view.update_model(self.scene_model)
+            self.scene_view.update()
+        return self.scene_model
 
-        def set_models_to_scene(self, *models):
-            # Check if there are defs in the the models
-            self.scene_model = sm.SceneModel(children=list(models))
-            with mock.patch(GET_PROXY_PATH, new=self._get_proxy):
-                self.scene_view.update_model(self.scene_model)
-                self.scene_view.update()
-            return self.scene_model
+    def _get_layout_model(self, model, x=10, y=10, modified=False):
+        # Initialize children models
+        height = 30
+        label_model = sm.LabelModel(width=100, height=height, text="bar")
+        display_model = sm.DisplayLabelModel(width=200, height=height)
+        model.trait_set(width=300, height=height)
+        children_model = [label_model, display_model, model]
 
-        def _get_layout_model(self, model, x=10, y=10, modified=False):
-            # Initialize children models
-            height = 30
-            label_model = sm.LabelModel(width=100, height=height, text="bar")
-            display_model = sm.DisplayLabelModel(width=200, height=height)
-            model.trait_set(width=300, height=height)
-            children_model = [label_model, display_model, model]
+        # Initialize layout model
+        hbox_model = sm.BoxLayoutModel(x=x, y=y, children=children_model,
+                                       direction=QBoxLayout.LeftToRight)
 
-            # Initialize layout model
-            hbox_model = sm.BoxLayoutModel(x=x, y=y, children=children_model,
-                                           direction=QBoxLayout.LeftToRight)
+        # Correct the position from the initial position and width
+        x0, y0 = (x, y)
+        for child in children_model:
+            self._assign_key(child)
+            child.trait_set(x=x0, y=y0)
+            # Add child width for the next iteration
+            x0 += child.width
+        hbox_model.height = height
+        hbox_model.width = sum([child.width for child in children_model])
+        set_initialized_flag(hbox_model, value=True)
+        set_modified_flag(hbox_model, value=modified)
+        return hbox_model
 
-            # Correct the position from the initial position and width
-            x0, y0 = (x, y)
-            for child in children_model:
-                self._assign_key(child)
-                child.trait_set(x=x0, y=y0)
-                # Add child width for the next iteration
-                x0 += child.width
-            hbox_model.height = height
-            hbox_model.width = sum([child.width for child in children_model])
-            set_initialized_flag(hbox_model, value=True)
-            set_modified_flag(hbox_model, value=modified)
-            return hbox_model
+    def _get_binding(self, bindings):
+        for binding in bindings:
+            if binding in ALL_PROPS_BINDINGS:
+                return binding
 
-        def _get_binding(self, bindings):
-            for binding in bindings:
-                if binding in ALL_PROPS_BINDINGS:
-                    return binding
+            binding = REIMPLEMENTED_BINDINGS.get(binding)
 
-                binding = REIMPLEMENTED_BINDINGS.get(binding)
+            # We found a compatible binding
+            if binding in ALL_PROPS_BINDINGS:
+                return binding
 
-                # We found a compatible binding
-                if binding in ALL_PROPS_BINDINGS:
-                    return binding
+    def _get_proxy(self, _, name):
+        """Return a `PropertyProxy` instance for a given device and
+        property path. This mocks the get_proxy called by
+        ControllerContainer."""
+        return self.proxy_map.get(name)
 
-        def _get_proxy(self, _, name):
-            """Return a `PropertyProxy` instance for a given device and
-            property path. This mocks the get_proxy called by
-            ControllerContainer."""
-            return self.proxy_map.get(name)
-
-        @staticmethod
-        def _has_children(model):
-            return "children" in model.trait_names()
+    @staticmethod
+    def _has_children(model):
+        return "children" in model.trait_names()
 
 
-class TestSceneView(BaseTestCases.BaseSceneViewTest):
+class TestSceneView(BaseSceneViewTest):
 
     def test_basics(self):
         self.scene_view.update_model(self.scene_model)
@@ -235,17 +233,10 @@ class TestSceneView(BaseTestCases.BaseSceneViewTest):
         self.assertEqual(scene_geom.height(), self.scene_model.height)
 
 
-class TestLoadSceneModel(BaseTestCases.BaseSceneViewTest):
-
-    @skipIf(system() in ("Darwin"), reason="modified flag fails on mac")
-    def test_text_widgets(self):
-        """These are standalone widgets that are not bound to any devices."""
-        self._assert_geometry(sm.LabelModel)
-        self._assert_geometry(sm.SceneLinkModel)
-        self._assert_geometry(sm.StickerModel)
-        self._assert_geometry(sm.WebLinkModel)
+class TestLoadSceneModel(BaseSceneViewTest):
 
     def test_display_widgets(self):
+        """Testing the loading of display widgets"""
         self._assert_geometry(sm.AnalogModel)
         self._assert_geometry(sm.CheckBoxModel)
         self._assert_geometry(sm.ChoiceElementModel)
@@ -275,8 +266,9 @@ class TestLoadSceneModel(BaseTestCases.BaseSceneViewTest):
         self._assert_geometry(sm.TableElementModel)
         self._assert_geometry(sm.WidgetNodeModel)
 
-    @skipIf(system() in ("Darwin"), reason="segfault on mac ")  # FIXME
+    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
     def test_editable_widgets(self):
+        """Testing the geometry loading of editable widgets"""
         self._assert_geometry(sm.CheckBoxModel, klass="EditableCheckBox")
         self._assert_geometry(sm.ChoiceElementModel,
                               klass="EditableChoiceElement")
@@ -295,31 +287,46 @@ class TestLoadSceneModel(BaseTestCases.BaseSceneViewTest):
                               klass="EditableTableElement")
         self._assert_geometry(sm.TickSliderModel)
 
-    @skipIf(system() in ("Darwin"), reason="segfault on mac ")  # FIXME
-    def test_graph_widgets(self):
-        self._assert_geometry(sm.AlarmGraphModel)
-        self._assert_geometry(sm.DetectorGraphModel)
-        self._assert_geometry(sm.ImageGraphModel)
-        self._assert_geometry(sm.MultiCurveGraphModel)
-        self._assert_geometry(sm.NDArrayGraphModel)
-        self._assert_geometry(sm.ScatterGraphModel)
-        self._assert_geometry(sm.SelectionIconsModel)
-        self._assert_geometry(sm.StateGraphModel)
-        self._assert_geometry(sm.TrendGraphModel)
-        self._assert_geometry(sm.VectorGraphModel)
-        self._assert_geometry(sm.VectorHistGraphModel)
-        self._assert_geometry(sm.VectorBarGraphModel)
-        self._assert_geometry(sm.VectorFillGraphModel)
-        self._assert_geometry(sm.VectorRollGraphModel)
-        self._assert_geometry(sm.VectorScatterGraphModel)
-        self._assert_geometry(sm.VectorXYGraphModel)
-        self._assert_geometry(sm.WebCamGraphModel)
-
     def test_icon_widgets(self):
         self._assert_geometry(sm.DigitIconsModel)
         self._assert_geometry(sm.DisplayIconsetModel, data=b"<svg></svg>")
         self._assert_geometry(sm.SelectionIconsModel)
         self._assert_geometry(sm.TextIconsModel)
+
+    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
+    def test_image_graph_widgets(self):
+        self._assert_geometry(sm.DetectorGraphModel)
+        self._assert_geometry(sm.ImageGraphModel)
+        self._assert_geometry(sm.WebCamGraphModel)
+        self._assert_geometry(sm.VectorRollGraphModel)
+
+    def test_scatter_graph_widgets(self):
+        self._assert_geometry(sm.ScatterGraphModel)
+        self._assert_geometry(sm.VectorScatterGraphModel)
+
+    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
+    def test_text_widgets(self):
+        """These are standalone widgets that are not bound to any devices."""
+        self._assert_geometry(sm.LabelModel)
+        self._assert_geometry(sm.SceneLinkModel)
+        self._assert_geometry(sm.StickerModel)
+        self._assert_geometry(sm.WebLinkModel)
+
+    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
+    def test_trend_graph_widgets(self):
+        self._assert_geometry(sm.AlarmGraphModel)
+        self._assert_geometry(sm.StateGraphModel)
+        self._assert_geometry(sm.TrendGraphModel)
+
+    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
+    def test_vector_graph_widgets(self):
+        self._assert_geometry(sm.MultiCurveGraphModel)
+        self._assert_geometry(sm.NDArrayGraphModel)
+        self._assert_geometry(sm.VectorGraphModel)
+        self._assert_geometry(sm.VectorHistGraphModel)
+        self._assert_geometry(sm.VectorBarGraphModel)
+        self._assert_geometry(sm.VectorFillGraphModel)
+        self._assert_geometry(sm.VectorXYGraphModel)
 
     # ----------------------------------------------------------------------
     # Assertions
@@ -429,8 +436,9 @@ VISIBLE_REGION_PATH = SCENE_VIEW_PATH + ".visibleRegion"
 REPLACE_DIALOG_PATH = "karabogui.sceneview.tools.clipboard.ReplaceDialog"
 
 
-class TestClipboardActions(BaseTestCases.BaseSceneViewTest):
+class TestClipboardActions(BaseSceneViewTest):
 
+    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
     def test_widgets(self):
         """These are standalone widgets that are not bound to any devices."""
         # Test single model selection
@@ -449,7 +457,7 @@ class TestClipboardActions(BaseTestCases.BaseSceneViewTest):
         another_layout = self._get_layout_model(another_label, x=10, y=10)
         self._assert_clipboard_action(layout_model, another_layout)
 
-    @skipIf(system() in ("Darwin"), reason="segfault on mac ")  # FIXME
+    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
     def test_shapes(self):
         # Test single line shape
         line_model = sm.LineModel(x1=10, y1=20, x2=100, y2=100)
