@@ -452,9 +452,12 @@ namespace karabo {
 
                 Hash h("type", "log");
                 std::vector<Hash>& messages = h.bindReference<std::vector < Hash >> ("messages");
-                messages = std::move(m_logCache); // use r-value assignment operator to avoid a copy
-                m_logCache.clear(); // because std::move left it in a valid, but undefined state
-                safeAllClientsWrite(h, REMOVE_OLDEST);
+                messages.swap(m_logCache);
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    if (it->second.sendLogs && it->first && it->first->isOpen()) it->first->writeAsync(h, REMOVE_OLDEST);
+                }
             }
             startForwardingLogs();
         }
@@ -648,6 +651,10 @@ namespace karabo {
                         onProjectUpdateAttribute(channel, info);
                     } else if (type == "requestGeneric") {
                         onRequestGeneric(channel, info);
+                    } else if (type == "subscribeLogs") {
+                        onSubscribeLogs(channel, info);
+                    } else if (type == "setLogPriority") {
+                        onSetLogPriority(channel, info);
                     } else {
                         // Inform the client that he is using a non compatible protocol
                         const std::string message("The gui server with version " + get<string>("classVersion") +
@@ -1380,6 +1387,70 @@ namespace karabo {
             } catch (const std::exception &e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onSubscribeNetwork(): " << e.what();
             }
+        }
+
+
+        void GuiServerDevice::onSubscribeLogs(WeakChannelPointer channel, const karabo::util::Hash& info) {
+            Hash h("type", "subscribeLogsReply",
+                   "success", false);
+            try {
+                const bool subscribe = info.get<bool>("subscribe");
+                KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeLogs : " << (subscribe ? "subscribe" : "unsubscribe");
+                auto chan = channel.lock();
+                if (chan) {
+                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    ChannelIterator itChannelData = m_channels.find(chan);
+                    if (itChannelData != m_channels.end()){
+                        itChannelData->second.sendLogs = subscribe;
+                        h.set<bool>("success", true);
+                    } else {
+                        std::string& failTxt = h.set("reason", "Channel missing its ChannelData. It should never happen.")
+                            .getValue<std::string>();
+                        KARABO_LOG_FRAMEWORK_WARN << failTxt;
+                    }
+                }
+            } catch (const std::exception &e) {
+                std::string& failTxt = h.set("reason",  std::string("Problem in onSubscribeLogs(): ") += e.what())
+                    .getValue<std::string>();
+                KARABO_LOG_FRAMEWORK_ERROR << failTxt;
+
+            }
+            safeClientWrite(channel, h);
+        }
+
+
+        void GuiServerDevice::onSetLogPriority(WeakChannelPointer channel, const karabo::util::Hash& info) {
+            try {
+                const std::string& priority = info.get<std::string>("priority");
+                const std::string& instanceId = info.get<std::string>("instanceId");
+                KARABO_LOG_FRAMEWORK_DEBUG << "onSetLogPriority : '" << instanceId << "' to '" << priority << "'";
+
+                auto requestor = request(instanceId, "slotLoggerPriority", priority);
+                auto successHandler = bind_weak(&GuiServerDevice::forwardSetLogReply, this, true, channel, info);
+                auto failureHandler = bind_weak(&GuiServerDevice::forwardSetLogReply, this, false, channel, info);
+                requestor.receiveAsync(successHandler, failureHandler);
+            } catch (const std::exception &e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onSubscribeLogs(): " << e.what();
+            }
+        }
+
+
+        void GuiServerDevice::forwardSetLogReply(bool success, WeakChannelPointer channel, const Hash& input) {
+            Hash h("type", "setLogPriorityReply",
+                   "success", success,
+                   "input", input);
+            if (!success) {
+                // Failure, so can get access to exception causing it:
+                try {
+                    throw;
+                } catch (const std::exception& e) {
+                    std::string& failTxt = h.set("reason", "Failure on setLogPriority on server '" + input.get<std::string>("instanceId") + "'")
+                            .getValue<std::string>();
+                    (failTxt += ", details:\n") += e.what();
+                    KARABO_LOG_FRAMEWORK_WARN << failTxt;
+                }
+            }
+            safeClientWrite(channel, h);
         }
 
 

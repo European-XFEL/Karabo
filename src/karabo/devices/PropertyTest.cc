@@ -696,6 +696,7 @@ namespace karabo {
             KARABO_SLOT(slotUpdateSchema);
             KARABO_SLOT(node_increment);
             KARABO_SLOT(node_reset);
+            KARABO_SLOT(logSomething, Hash);
             // do not add this slot to the Schema.
             KARABO_SLOT(slowSlot);
         }
@@ -886,6 +887,24 @@ namespace karabo {
             // it would be better to use a deadline timer and an AsyncReply instead of blocking within
             // a slot.
             boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+        }
+
+        void PropertyTest::logSomething(const Hash& input) {
+            const std::string message = (input.has("message"))? input.get<std::string>("message") : "message missing";
+            const std::string priority = (input.has("priority"))? input.get<std::string>("priority") : "DEBUG";
+            if (priority == "ERROR") {
+                KARABO_LOG_ERROR << message;
+            } else if (priority == "WARN") {
+                KARABO_LOG_WARN << message;
+            } else if (priority == "INFO") {
+                KARABO_LOG_INFO << message;
+            } else if (priority == "DEBUG") {
+                KARABO_LOG_DEBUG << message;
+            } else {
+                KARABO_LOG_ERROR << "Unknown priority: " << message;
+            }
+            // need to reply a Hash
+            reply(Hash("success", true));
         }
     }
 }
