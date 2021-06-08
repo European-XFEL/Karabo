@@ -8,8 +8,8 @@ from karabo.native import AccessLevel, Hash
 from karabogui.project.controller.device import DeviceInstanceController
 from karabogui.project.controller.device_config import (
     DeviceConfigurationController)
-from karabogui.singletons.api import get_topology
 from karabogui.testing import singletons, system_hash
+from karabogui.topology.system_topology import SystemTopology
 
 IPATH = 'karabogui.project.controller.device.get_project_device_status_icon'
 
@@ -19,8 +19,7 @@ class TestDeviceConfigController(TestCase):
     @patch('karabogui.project.controller.device_config.find_parent_object')
     def test_configuration_schema(self, patch_func):
         network = Mock()
-        topology = get_topology()
-        topology.clear()
+        topology = SystemTopology()
         topology.initialize(system_hash())
         with singletons(network=network, topology=topology):
             config = Hash()
