@@ -1,4 +1,4 @@
-from unittest.mock import call, patch
+from unittest.mock import patch
 
 from karabogui.testing import GuiTestCase
 
@@ -7,6 +7,9 @@ from ..configuration import (
 
 
 class MockSettings(object):
+
+    def __init__(self):
+        self.last_path = None
 
     @classmethod
     def value(cls, path):
@@ -17,7 +20,10 @@ class MockSettings(object):
         setattr(cls, name, value)
 
     def remove(self, key):
-        pass
+        self.last_path = key
+
+    def __call__(self, *args, **kwargs):
+        return self
 
 
 class TestConfiguration(GuiTestCase):
@@ -58,17 +64,13 @@ class TestConfiguration(GuiTestCase):
 
     def test_erase_value(self):
         target = 'karabogui.singletons.configuration.QSettings'
-        with patch(target) as settings:
+        mock = MockSettings()
+        with patch(target, new=mock):
             config = Configuration()
             self.assertEqual(config["wizard"], True)
             config["wizard"] = False
             del config["wizard"]
-
-            calls = settings.mock_calls
-
-            expected = [call(), call().setValue('user/wizard', 'false'),
-                        call(), call().remove('user/wizard')]
-            assert calls == expected
+            assert mock.last_path == "user/wizard"
 
     def test_configuration_groups(self):
         config = Configuration()

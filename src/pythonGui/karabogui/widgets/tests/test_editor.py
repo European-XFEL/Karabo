@@ -1,16 +1,8 @@
-import os
-
-from karabogui.programs.base import create_gui_app
 from karabogui.testing import GuiTestCase
 from karabogui.widgets.codeeditor import CodeEditor
 
 
 class TestConst(GuiTestCase):
-
-    def setUp(self):
-        os.environ["KARABO_TEST_GUI"] = "1"
-        self.app = create_gui_app([])
-        super(TestConst, self).setUp()
 
     def test_numbers(self):
         widget = CodeEditor(None)
