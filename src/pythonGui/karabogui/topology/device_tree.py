@@ -98,11 +98,9 @@ class DeviceSystemTree(HasStrictTraits):
     def remove_device(self, instance_id):
         """Remove the entry for a device from the tree
         """
-        node = self._device_nodes.get(instance_id)
+        node = self._device_nodes.pop(instance_id, None)
         if node is None:
             return False
-
-        self._device_nodes.pop(instance_id)
 
         type_node = node.parent
         with self.update_context.removal_context(node):
