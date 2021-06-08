@@ -3,8 +3,8 @@ from unittest.mock import Mock
 from traits.api import pop_exception_handler, push_exception_handler
 
 from karabo.common.api import ProxyStatus
-from karabogui.singletons.api import get_topology
 from karabogui.testing import GuiTestCase, singletons, system_hash
+from karabogui.topology.system_topology import SystemTopology
 
 
 def setUp():
@@ -19,10 +19,9 @@ class TestSystemTopology(GuiTestCase):
 
     def test_get_class_simple(self):
         network = Mock()
-        with singletons(network=network):
-            topology = get_topology()
-            topology.clear()
-            topology.initialize(system_hash())
+        topology = SystemTopology()
+        topology.initialize(system_hash())
+        with singletons(network=network, topology=topology):
             klass = topology.get_class('swerver', 'NoClass')
             # server with name 'swerver' don't have the requested class
             assert klass.status is ProxyStatus.NOPLUGIN
@@ -33,10 +32,9 @@ class TestSystemTopology(GuiTestCase):
 
     def test_get_device_simple(self):
         network = Mock()
-        with singletons(network=network):
-            topology = get_topology()
-            topology.clear()
-            topology.initialize(system_hash())
+        topology = SystemTopology()
+        topology.initialize(system_hash())
+        with singletons(network=network, topology=topology):
             klass = topology.get_class('swerver', 'divvy')
 
             assert klass.status is ProxyStatus.NOPLUGIN
@@ -49,8 +47,7 @@ class TestSystemTopology(GuiTestCase):
 
     def test_get_project_device_simple(self):
         network = Mock()
-        topology = get_topology()
-        topology.clear()
+        topology = SystemTopology()
         topology.initialize(system_hash())
         with singletons(network=network, topology=topology):
             device_id = 'divvy'
