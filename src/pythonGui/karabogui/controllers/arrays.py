@@ -8,6 +8,13 @@ from traits.api import Undefined
 
 from karabo.native import EncodingType, Timestamp
 
+try:
+    import cv2
+
+    has_open_cv = True
+except ImportError:
+    has_open_cv = False
+
 # Ensure correct mapping of reference type to numpy dtype.
 REFERENCE_TYPENUM_TO_DTYPE = {
     0: 'bool',
@@ -32,19 +39,27 @@ DIMENSIONS = {
 }
 
 
-def get_image_data(image_node, dimX, dimY, dimZ):
-    """ Calculate a numpy array from the given ``image_node`` depending on the
-    given dimensions and return it to use for image display.
-    In case no data is included, a ``NoneType`` is returned.
-    """
+def _extract_npy_data(image_node):
+    """Internal method to extract npy data from an image node"""
     pixels = image_node.pixels.value
     if pixels.data.value is None:
         return None
     if len(pixels.data.value) == 0:
         return None
-
     arr_type = REFERENCE_TYPENUM_TO_DTYPE[pixels.type.value]
     npy = np.frombuffer(pixels.data.value, dtype=arr_type)
+    return npy
+
+
+def get_image_data(image_node, dimX, dimY, dimZ):
+    """ Calculate a numpy array from the given ``image_node`` depending on the
+    given dimensions and return it to use for image display.
+    In case no data is included, a ``NoneType`` is returned.
+    """
+    npy = _extract_npy_data(image_node)
+    if npy is None:
+        return
+
     if dimZ:
         try:
             npy.shape = dimY, dimX, dimZ
@@ -59,6 +74,27 @@ def get_image_data(image_node, dimX, dimY, dimZ):
             msg = 'Image has improper shape ({}, {}, {}) for size {}'.format(
                 dimX, dimY, dimZ, len(npy))
             raise RuntimeError(msg)
+
+    return npy
+
+
+def get_jpeg_data(image_node, dimZ):
+    """ Calculate a numpy array from the given ``image_node`` depending on the
+    given dimensions for a jpeg encoded stream
+    """
+    if not has_open_cv:
+        return None
+
+    npy = _extract_npy_data(image_node)
+    if npy is None:
+        return
+
+    if dimZ == 3:
+        npy = cv2.imdecode(npy, cv2.IMREAD_COLOR)
+        # Default decode is BGR ...
+        npy = cv2.cvtColor(npy, cv2.COLOR_BGR2RGB)
+    else:
+        npy = cv2.imdecode(npy, cv2.IMREAD_GRAYSCALE)
 
     return npy
 
