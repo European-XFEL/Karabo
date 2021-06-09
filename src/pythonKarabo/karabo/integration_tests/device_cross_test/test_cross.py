@@ -13,7 +13,7 @@ from unittest import main
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, background, call, Configurable,
-    DeviceClientBase, getDevice, getHistory, isSet, InputChannel,
+    DeviceClientBase, getDevice, getHistory, Hash, isSet, InputChannel,
     Int32, KaraboError, MetricPrefix, NDArray, Node,
     OutputChannel, setWait, shutdown, sleep, Slot, State, String,
     unit, Unit, UInt32, updateDevice, VectorDouble, waitUntil, waitUntilNew)
@@ -295,7 +295,7 @@ class Tests(DeviceTest):
         ####################################
         # check slotGetTime of bound device
         ####################################
-        hTime = await call("boundDevice", "slotGetTime")
+        hTime = await call("boundDevice", "slotGetTime", Hash())
         self.assertIsNotNone(hTime)
         self.assertTrue(hTime["time"])
         sec = hTime.getAttributes("time")["sec"]
@@ -309,7 +309,7 @@ class Tests(DeviceTest):
                    # id sec       frac periodInMicroSec
                    100, 1559600000, 0, 100000)
         # ask again, now non-zero tid and a later point in time
-        hTime = await call("boundDevice", "slotGetTime")
+        hTime = await call("boundDevice", "slotGetTime", Hash())
         sec = hTime.getAttributes("time")["sec"]
         frac = hTime.getAttributes("time")["frac"]
         t2 = sec + frac / 1.e18
