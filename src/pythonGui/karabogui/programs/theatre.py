@@ -139,6 +139,8 @@ def run_theatre(ns):
         success = get_network().connectToServer()
     if not success:
         app.quit()
+    else:
+        get_network().onSubscribeLogs(False)
 
     waiter = DeviceWaiter(ns.scene_id, ns.timeout)
 
