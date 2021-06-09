@@ -147,6 +147,11 @@ mkdir -p $KARABO/var/log
 mkdir -p $KARABO/var/data
 # 3. plugins (existence assumed e.g. by karabo script)
 mkdir -p $KARABO/plugins
+# 4. var/data/env_scripts as placeholder for custom activate scripts
+mkdir -p $KARABO/var/data/env_scripts
+echo "On Karabo's ``activate`` and ``deactivate`` actions" > $KARABO/var/data/env_scripts/README.md
+echo "the scripts ``activate.sh`` and a ``deactivate.sh``" >> $KARABO/var/data/env_scripts/README.md
+echo "in this folder will be sourced respectively if present." >> $KARABO/var/data/env_scripts/README.md
 
 echo
 echo " Karabo framework was successfully installed to: $KARABO"
