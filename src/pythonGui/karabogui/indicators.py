@@ -131,9 +131,16 @@ def _create_state_icon(color):
         return QIcon(pix)
 
 
-def get_state_icon_for_status(status):
-    """Return a state icon which reflects the given `ProxyStatus`
+# --------------------------------------------------------------------------
+# Mapping device status to icons
+
+
+def get_instance_info_icon(status):
+    """Return an instance info icon which reflects the given `ProxyStatus`
     """
+    if not isinstance(status, ProxyStatus):
+        status = ProxyStatus(status)
+
     unknown_statuses = (ProxyStatus.OFFLINE,
                         ProxyStatus.REQUESTED,
                         ProxyStatus.DEAD,
@@ -142,19 +149,17 @@ def get_state_icon_for_status(status):
                         ProxyStatus.INCOMPATIBLE,
                         ProxyStatus.MISSING)
 
-    if not isinstance(status, ProxyStatus):
-        status = ProxyStatus(status)
+    if status is ProxyStatus.OK:
+        return icons.statusOk
+    elif status is ProxyStatus.ERROR:
+        return icons.statusError
+    elif status is ProxyStatus.UNKNOWN:
+        return icons.statusUnknown
+    elif status not in unknown_statuses:
+        return icons.statusUnknown
+    # No icon!
+    return None
 
-    if status in unknown_statuses:
-        return None
-
-    state = State.ERROR if status is ProxyStatus.ERROR else State.ACTIVE
-    # Note: Maybe show more color options in the future
-    return get_state_icon(state)
-
-
-# --------------------------------------------------------------------------
-# Mapping device status to icons
 
 def get_device_status_icon(status, error=False):
     """A `QIcon` for the given `status` is returned.
@@ -288,7 +293,6 @@ PROPERTY_ALARM_COLOR = (255, 125, 125, 128)
 PROPERTY_WARN_COLOR = (255, 255, 125, 128)
 PROPERTY_INTERLOCK_COLOR = (51, 51, 255, 128)
 LOCKED_COLOR = (255, 145, 255, 128)
-
 
 # --------------------------------------------------------------------------
 # Mapping alarms to colors
