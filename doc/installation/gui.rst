@@ -99,13 +99,24 @@ the base environment.
 * Create a target environment for KaraboGUI with any name you want.
     * ``conda create -n karabogui<version> karabogui=<version> --yes``
 
-* Or Run this to get the latest version (recommended)
-    * ``conda create -n karaboguilatest karabogui --yes``
+* Or run this to get the latest version (recommended)
+    * ``conda create -n karabogui_latest karabogui --yes``
+  To upgrade this environement, run these commands:
+    * ``conda env remove -n karabogui_latest``
+    * ``conda create -n karabogui_latest karabogui --yes``
 
-* Install your application
+* Or, if you have an existing conda environment, install the package directly:
     * ``conda install karabogui=<version> --yes``
         * Leave the version out to get the latest one: ``conda install karabogui --yes``
-* ``conda search karabogui`` will show you all the available versions
+    NOTE: Dependencies might clash with your environment, use at your risk
+
+
+Helpful commands are available below:
+
+* ``conda search karabogui`` will show you all the available versions in the channels
+  you have configured
+
+* ``conda env remove -n your_karabo_environment`` will remove the environment called ``your_karabo_environment``.
 
 Running KaraboGUI
 =================
