@@ -37,6 +37,11 @@ deactivate () {
         unset _OLD_KARABO_PYTHONHOME
     fi
 
+    # run the custom deactivate script if present
+    if [ -e "$KARABO/var/data/env_scripts/deactivate.sh" ] ; then
+        source $KARABO/var/data/env_scripts/deactivate.sh
+    fi
+
     # remove .karabo/karaboFramework file
     if [ -e "$HOME/.karabo/karaboFramework" ] ; then
         rm -f "$HOME/.karabo/karaboFramework"
@@ -99,6 +104,11 @@ echo $KARABO > $HOME/.karabo/karaboFramework
 if [ -n "$PYTHONHOME" ] ; then
     _OLD_KARABO_PYTHONHOME="$PYTHONHOME"
     unset PYTHONHOME
+fi
+
+# run the custom activate script if present
+if [ -e "$KARABO/var/data/env_scripts/activate.sh" ] ; then
+    source $KARABO/var/data/env_scripts/activate.sh
 fi
 
 # This should detect bash and zsh, which have a hash command that must
