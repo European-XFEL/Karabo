@@ -2,9 +2,22 @@
 What's New in Karabo 2.12.0
 ***************************
 
+This section shows the new features in Karabo 2.12.0, compared to 2.11.0. The planned release date of Karabo 2.12 is November 5, 2021.
+
+Summary – Release highlights
+++++++++++++++++++++++++++++
+
+- GUI: Project devices can be moved up and down with a context menu action
+- GUI: Added context menu action on the device server to sort its devices alphabetically, or by either domain, type or member
+- GUI: Offline project devices are now loaded lazily giving a significant project loading boost
+- GUI: View of Karabo Clients added to the application menu (i.e. command line interfaces and DOOCS bridges).
+- MDL: Forward slotInstanceUpdated signal to device children
+
 Change of behaviour
 +++++++++++++++++++
 
-Since 2.12.0, slots of Bound Python devices called with fewer arguments than
-expected return an error reply to the caller. Before 2.12.0, the slot function
-was called anyway, using `None` for the missing arguments.
+- Since 2.12.0, slots of Bound Python devices called with fewer arguments than
+  expected return an error reply to the caller. Before 2.12.0, the slot function
+  was called anyway, using ``None`` for the missing arguments.
+
+- MDL: Macros started from command line are now declared as **clients** in the instanceInfo and will therefore not appear in the **SystemTopology** of the GUI
