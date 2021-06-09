@@ -90,6 +90,33 @@ class DeviceServerController(BaseProjectGroupController):
         menu.addAction(instantiate_all_action)
         menu.addAction(shutdown_all_action)
         menu.addAction(remove_all_action)
+
+        # Sub menu for device sorting
+        sort_menu = menu.addMenu("&Sort options")
+        sort_menu.setIcon(icons.edit)
+        sort_alpha = QAction(
+            icons.stringAttribute, 'Sort devices alphabetically', menu)
+        sort_alpha.triggered.connect(partial(self._sort_alphabetically,
+                                             parent=parent))
+
+        sort_domain = QAction(icons.folderDomain,
+                              'Sort devices by Domain', menu)
+        sort_domain.triggered.connect(partial(self._sort_devices_naming,
+                                              level=0, parent=parent))
+        sort_type = QAction(icons.folderType,
+                            'Sort devices by Type', menu)
+        sort_type.triggered.connect(partial(self._sort_devices_naming,
+                                            level=1, parent=parent))
+        sort_member = QAction(icons.deviceInstance,
+                              'Sort devices by Member', menu)
+        sort_member.triggered.connect(partial(self._sort_devices_naming,
+                                              level=2, parent=parent))
+
+        sort_menu.addAction(sort_alpha)
+        sort_menu.addAction(sort_domain)
+        sort_menu.addAction(sort_type)
+        sort_menu.addAction(sort_member)
+
         return menu
 
     def create_ui_data(self):
@@ -157,7 +184,6 @@ class DeviceServerController(BaseProjectGroupController):
     # ----------------------------------------------------------------------
     # action handlers
 
-    # @Slot()
     def _add_device(self, parent=None):
         """Add a device instance to the server
         """
@@ -182,7 +208,6 @@ class DeviceServerController(BaseProjectGroupController):
             if server in project.servers:
                 project.servers.remove(server)
 
-    # @Slot()
     def _edit_server(self, parent=None):
         dialog = ServerHandleDialog(self.model, parent=parent)
         move_to_cursor(dialog)
@@ -233,6 +258,26 @@ class DeviceServerController(BaseProjectGroupController):
 
         for dev_inst_item in self.children:
             dev_inst_item.shutdown_device(show_confirm=False)
+
+    def _sort_alphabetically(self, parent=None):
+        server_model = self.model
+        devices = list(server_model.devices)
+        devices = sorted(devices, key=lambda device: device.instance_id)
+        del server_model.devices[:]
+        server_model.devices.extend(devices)
+
+    def _sort_devices_naming(self, level=0, parent=None):
+        server_model = self.model
+        devices = list(server_model.devices)
+
+        def sort_func(device):
+            device_id = device.instance_id
+            karabo_name = device_id.split("/")
+            return device_id if len(karabo_name) != 3 else karabo_name[level]
+
+        devices = sorted(devices, key=sort_func)
+        del server_model.devices[:]
+        server_model.devices.extend(devices)
 
 
 # ----------------------------------------------------------------------
