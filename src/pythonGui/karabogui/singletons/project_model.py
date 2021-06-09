@@ -17,7 +17,7 @@ from karabo.common.project.api import MacroModel
 from karabo.common.scenemodel.api import SceneModel
 from karabogui.alarms.api import get_alarm_icon
 from karabogui.events import KaraboEvent, broadcast_event
-from karabogui.indicators import get_state_icon_for_status
+from karabogui.indicators import get_instance_info_icon
 from karabogui.project.controller.build import (
     create_project_controller, destroy_project_controller)
 from karabogui.project.controller.device import DeviceInstanceController
@@ -335,7 +335,7 @@ class ProjectViewItemModel(QAbstractItemModel):
                 return ui_data.conflict_icon
         elif column == STATUS_COLUMN and role == Qt.DecorationRole:
             if isinstance(controller, DeviceInstanceController):
-                return get_state_icon_for_status(ui_data.status)
+                return get_instance_info_icon(ui_data.status)
 
     def setData(self, index, value, role):
         """Reimplemented function of QAbstractItemModel.
