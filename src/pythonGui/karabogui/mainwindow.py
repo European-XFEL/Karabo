@@ -587,6 +587,7 @@ class MainWindow(QMainWindow):
         assert panel.allow_closing
 
         self.addPanel(panel, area_enum)
+        self.onPanelOpen(name)
         panel.signalPanelClosed.connect(self.onPanelClose)
         action = self.panelActions.get(name)
         if action is not None:
@@ -626,6 +627,10 @@ class MainWindow(QMainWindow):
             msg_box.setDefaultButton(QMessageBox.Cancel)
             return msg_box.exec() != QMessageBox.Yes
         return False
+
+    def onPanelOpen(self, name):
+        if name == LOG_TITLE:
+            get_network().onSubscribeLogs(True)
 
     # --------------------------------------
     # Qt slots
@@ -729,6 +734,9 @@ class MainWindow(QMainWindow):
         action = self.panelActions.get(name)
         if action is not None:
             action.setEnabled(True)
+        if name == LOG_TITLE:
+            get_network().onSubscribeLogs(False)
+
         self._active_closable_panels.pop(name)
 
     @Slot(float, bool)
