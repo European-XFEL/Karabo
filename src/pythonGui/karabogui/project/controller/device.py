@@ -144,6 +144,14 @@ class DeviceInstanceController(BaseProjectGroupController):
         docu_action = QAction(icons.weblink, 'Documentation', menu)
         docu_action.triggered.connect(self._get_documentation_device)
 
+        up_action = QAction(icons.arrowFancyUp, 'Move Up', menu)
+        up_action.triggered.connect(partial(self._move_up,
+                                            project_controller))
+
+        down_action = QAction(icons.arrowFancyDown, 'Move Down', menu)
+        down_action.triggered.connect(partial(self._move_down,
+                                              project_controller))
+
         menu.addAction(edit_action)
         menu.addMenu(config_menu)
         menu.addSeparator()
@@ -161,6 +169,8 @@ class DeviceInstanceController(BaseProjectGroupController):
         menu.addSeparator()
         menu.addAction(about_action)
         menu.addAction(docu_action)
+        menu.addAction(up_action)
+        menu.addAction(down_action)
 
         return menu
 
@@ -512,6 +522,38 @@ class DeviceInstanceController(BaseProjectGroupController):
                       "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
                               format(*p) for p in info.items()) + "</table>")
         messagebox.show_information(htmlString, parent=parent)
+
+    def _move_up(self, project_controller):
+        device = self.model
+        server_model = find_parent_object(device, project_controller.model,
+                                          DeviceServerModel)
+
+        if device in server_model.devices:
+            index = server_model.devices.index(device)
+            new_index = index - 1
+            if new_index < 0:
+                return
+            devices = list(server_model.devices)
+            del server_model.devices[:]
+            devices.remove(device)
+            devices.insert(new_index, device)
+            server_model.devices.extend(devices)
+
+    def _move_down(self, project_controller):
+        device = self.model
+        server_model = find_parent_object(device, project_controller.model,
+                                          DeviceServerModel)
+
+        if device in server_model.devices:
+            index = server_model.devices.index(device)
+            new_index = index + 1
+            if new_index > len(server_model.devices):
+                return
+            devices = list(server_model.devices)
+            del server_model.devices[:]
+            devices.remove(device)
+            devices.insert(new_index, device)
+            server_model.devices.extend(devices)
 
     def _get_documentation_device(self):
         deviceId = self.model.instance_id
