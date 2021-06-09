@@ -12,7 +12,7 @@ from karabo.common.api import ProxyStatus
 from karabogui import icons
 from karabogui.alarms.api import get_alarm_icon
 from karabogui.events import KaraboEvent, register_for_broadcasts
-from karabogui.indicators import get_state_icon_for_status
+from karabogui.indicators import get_instance_info_icon
 from karabogui.singletons.api import get_topology
 
 from .context import _UpdateContext
@@ -150,7 +150,7 @@ class SystemTreeModel(QAbstractItemModel):
                 return icons.host
         elif column == 1 and role == Qt.DecorationRole:
             if hierarchyLevel == 3:
-                return get_state_icon_for_status(node.status)
+                return get_instance_info_icon(node.status)
             elif hierarchyLevel == 1:
                 return get_language_icon(node)
         elif column == 2 and role == Qt.DecorationRole:
