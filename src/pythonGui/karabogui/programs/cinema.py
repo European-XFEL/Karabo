@@ -23,6 +23,7 @@ def run_cinema(ns):
             trigger_scenes, 'initialized', remove=True)
         domain = ns.domain
         get_db_conn().default_domain = domain
+        get_network().onSubscribeLogs(False)
         for uuid in ns.scene_uuid:
             db_scene = {'name': f'{domain}-{uuid}',
                         'target_window': SceneTargetWindow.MainWindow,
