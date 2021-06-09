@@ -2,7 +2,7 @@ from traits.api import Any, ArrayOrNone, Enum, HasStrictTraits, Int
 
 from karabo.native import EncodingType
 from karabogui.controllers.arrays import (
-    DIMENSIONS, get_dimensions_and_encoding, get_image_data)
+    DIMENSIONS, get_dimensions_and_encoding, get_image_data, get_jpeg_data)
 from karabogui.graph.common.api import Axes
 
 # Special image dimensions
@@ -27,8 +27,11 @@ class KaraboImageNode(HasStrictTraits):
         self.dim_y = dim_y if dim_y is not None else 0
         self.dim_z = dim_z if dim_z is not None else 0
         self.encoding = encoding
-        self._data = get_image_data(image_node,
-                                    self.dim_x, self.dim_y, self.dim_z)
+        if encoding == EncodingType.JPEG:
+            self._data = get_jpeg_data(image_node, self.dim_z)
+        else:
+            self._data = get_image_data(image_node,
+                                        self.dim_x, self.dim_y, self.dim_z)
 
         stack_axis = None
         if "stackAxis" in image_node:
