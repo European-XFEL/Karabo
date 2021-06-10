@@ -455,15 +455,15 @@ class MainWindow(QMainWindow):
         mHelpMenu.addAction(self.acGuiDocumentation)
         mHelpMenu.addAction(self.acKaraboDocumentation)
 
+        mViewMenu = menuBar.addMenu("&View")
+        mViewMenu.addAction(self.acConfig)
+        mViewMenu.addAction(self.acClientTopology)
+
         mHelpMenu = menuBar.addMenu("&Help")
         mHelpMenu.addAction(self.acHelpAbout)
         mHelpMenu.addAction(self.acHelpAboutQt)
         mHelpMenu.addAction(self.acWizard)
         mHelpMenu.addAction(self.acCheckUpdates)
-
-        mViewMenu = menuBar.addMenu("&View")
-        mViewMenu.addAction(self.acConfig)
-        mViewMenu.addAction(self.acClientTopology)
 
     def _setupToolBar(self):
 
