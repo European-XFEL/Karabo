@@ -156,7 +156,7 @@ def get_instance_info_icon(status):
     elif status is ProxyStatus.UNKNOWN:
         return icons.statusUnknown
     elif status not in unknown_statuses:
-        return icons.statusUnknown
+        return icons.statusOk
     # No icon!
     return None
 
