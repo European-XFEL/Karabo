@@ -235,9 +235,12 @@ class TestSceneView(BaseSceneViewTest):
 
 class TestLoadSceneModel(BaseSceneViewTest):
 
+    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
+    def test_display_widget_problematic(self):
+        self._assert_geometry(sm.AnalogModel)
+
     def test_display_widgets(self):
         """Testing the loading of display widgets"""
-        self._assert_geometry(sm.AnalogModel)
         self._assert_geometry(sm.CheckBoxModel)
         self._assert_geometry(sm.ChoiceElementModel)
         self._assert_geometry(sm.ColorBoolModel)
@@ -266,7 +269,6 @@ class TestLoadSceneModel(BaseSceneViewTest):
         self._assert_geometry(sm.TableElementModel)
         self._assert_geometry(sm.WidgetNodeModel)
 
-    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
     def test_editable_widgets(self):
         """Testing the geometry loading of editable widgets"""
         self._assert_geometry(sm.CheckBoxModel, klass="EditableCheckBox")
@@ -293,7 +295,6 @@ class TestLoadSceneModel(BaseSceneViewTest):
         self._assert_geometry(sm.SelectionIconsModel)
         self._assert_geometry(sm.TextIconsModel)
 
-    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
     def test_image_graph_widgets(self):
         self._assert_geometry(sm.DetectorGraphModel)
         self._assert_geometry(sm.ImageGraphModel)
@@ -312,13 +313,11 @@ class TestLoadSceneModel(BaseSceneViewTest):
         self._assert_geometry(sm.StickerModel)
         self._assert_geometry(sm.WebLinkModel)
 
-    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
     def test_trend_graph_widgets(self):
         self._assert_geometry(sm.AlarmGraphModel)
         self._assert_geometry(sm.StateGraphModel)
         self._assert_geometry(sm.TrendGraphModel)
 
-    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
     def test_vector_graph_widgets(self):
         self._assert_geometry(sm.MultiCurveGraphModel)
         self._assert_geometry(sm.NDArrayGraphModel)
@@ -438,7 +437,6 @@ REPLACE_DIALOG_PATH = "karabogui.sceneview.tools.clipboard.ReplaceDialog"
 
 class TestClipboardActions(BaseSceneViewTest):
 
-    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
     def test_widgets(self):
         """These are standalone widgets that are not bound to any devices."""
         # Test single model selection
@@ -457,7 +455,6 @@ class TestClipboardActions(BaseSceneViewTest):
         another_layout = self._get_layout_model(another_label, x=10, y=10)
         self._assert_clipboard_action(layout_model, another_layout)
 
-    @skipIf(IS_MAC_SYSTEM, reason="Segfault on MacOS")  # FIXME
     def test_shapes(self):
         # Test single line shape
         line_model = sm.LineModel(x1=10, y1=20, x2=100, y2=100)
