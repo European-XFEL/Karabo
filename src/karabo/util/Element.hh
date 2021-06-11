@@ -60,11 +60,13 @@ namespace karabo {
             boost::any m_value;
 
             /**
-             * Helper struct adding a classId attribute for classes inheriting Hash.
-             * See also its specialisations.
+             * Helper struct adding a classId attribute for classes inheriting (but not being) Hash.
+             * See also its specialisation for isHashTheBase and ValueType.
              */
             template <typename ValueType, typename isHashTheBase>
             struct SetClassIdAttribute {
+                // This generic implementation is for isHashTheBase = boost::true_type and ValueType != Hash,
+                // see specialisations for false_type and Hash below.
                 /**
                  * Set the classId attribute as given by value.getClassInfo()
                  * @param value of classId to set
@@ -72,6 +74,23 @@ namespace karabo {
                  */
                 SetClassIdAttribute(const ValueType& value, Element& e) {
                     e.setAttribute(KARABO_HASH_CLASS_ID, value.getClassInfo().getClassId());
+                }
+
+                /**
+                 * Helper to hack rvalue reference 'value' (which is Hash derived) back into a valid state
+                 */
+                void resetHashDerivedMoved(ValueType&& value) {
+                    // Where SetClassIdAttribute was used, 'value' got moved from as a Hash. The Hash move semantics
+                    // clears the Hash - which leaves the Hash-derived ValueType likely in an invalid state (missing keys).
+                    // Cure that here by (move-)assigning a default contructed object.
+                    // (Which means that Hash-derived objects have to have a default constructor...)
+                    value = ValueType();
+                }
+
+                /**
+                 * No-op for lvalue reference
+                 */
+                void resetHashDerivedMoved(ValueType& value) {
                 }
             };
 
@@ -81,12 +100,18 @@ namespace karabo {
             template <typename ValueType>
             struct SetClassIdAttribute<ValueType, boost::false_type> {
                 /**
-                 * For non Hash(-derived) types this is a no-op
+                 * For non Hash-derived types this is a no-op
                  * @param value
                  * @param e
                  */
                 SetClassIdAttribute(const ValueType& value, Element& e) {
                     // Do nothing on purpose!
+                }
+
+                /**
+                 * No-op
+                 */
+                void resetHashDerivedMoved(const ValueType& value) {
                 }
             };
 
@@ -105,6 +130,9 @@ namespace karabo {
                 SetClassIdAttribute(const Hash& value, Element& e) {
                     // Do nothing on purpose!
                 }
+
+                void resetHashDerivedMoved(const Hash& value) {
+                }
             };
 
         public:
@@ -119,7 +147,14 @@ namespace karabo {
              * @param key identifies the element
              * @param value of the element
              */
-            Element(const KeyType& key, boost::any value);
+            Element(const KeyType& key, const boost::any& value);
+
+            /**
+             * Construct a Hash element from a boost::any value
+             * @param key identifies the element
+             * @param value of the element
+             */
+            Element(const KeyType& key, boost::any&& value);
 
             /**
              * Construct a Hash element from an arbitrary value type
@@ -128,6 +163,14 @@ namespace karabo {
              */
             template <class ValueType>
             Element(const KeyType& key, const ValueType& value);
+
+            /**
+             * Construct a Hash element from an arbitrary value type
+             * @param key identifies the element
+             * @param value of the element
+             */
+            template <class ValueType>
+            Element(const KeyType& key, ValueType&& value);
 
             // TODO Constructor with attributes container ??
 
@@ -147,17 +190,18 @@ namespace karabo {
             inline void setValue(const ValueType& value);
 
             /**
+             * Set a value of arbitrary type to this Element
+             * @param value
+             */
+            template<class ValueType>
+            inline void setValue(ValueType&& value);
+
+            /**
              * Set the value to a boost::shared_ptr of ValueType
              * @param value
              */
             template<class ValueType>
             inline void setValue(const boost::shared_ptr<ValueType>& value);
-
-            /**
-             * This overload specializes the behavior for inserting plain Hashes
-             * Objects derived from Hash are treated differently
-             */
-            void setValue(const Hash& value);
 
             /**
              *  For downward compatibility we allow insertion of
@@ -171,27 +215,40 @@ namespace karabo {
              * element will hold a std::string.
              * @param value
              */
-            void setValue(const char* const& value);
+            void setValue(const char* value);
 
             /**
              * Overload for setting char pointers (c-strings). Internally, the
              * element will hold a std::string.
              * @param value
              */
-            void setValue(const wchar_t* const& value);
+            void setValue(char* value);
 
             /**
-             * Overload for setting char pointers (c-strings). Internally, the
-             * element will hold a std::string.
+             * Overload for setting wide char pointers (c-strings). Internally, the
+             * element will hold a std::wstring.
              * @param value
              */
-            void setValue(wchar_t* const& value);
+            void setValue(const wchar_t* value);
+
+            /**
+             * Overload for setting wide char pointers (c-strings). Internally, the
+             * element will hold a std::wstring.
+             * @param value
+             */
+            void setValue(wchar_t* value);
 
             /**
              * Set a boost::any value to the Element
              * @param value
              */
             void setValue(const boost::any& value);
+
+            /**
+             * Set a boost::any value to the Element
+             * @param value
+             */
+            void setValue(boost::any&& value);
 
             /**
              * Set the value and key of another element to this Element
@@ -448,6 +505,10 @@ namespace karabo {
             void setValue(const ValueType& value);
 
 
+            template<class ValueType, typename is_hash_the_base>
+            void setValue(ValueType&& value);
+
+
             template<class ValueType>
             inline const ValueType& getValue(boost::true_type /*is_hash_the_base*/) const;
 
@@ -470,18 +531,25 @@ namespace karabo {
 
         template<class KeyType, typename AttributeType>
         Element<KeyType, AttributeType>::Element() {
-            //            if (typeid (m_attributes) == typeid (bool)) {
-            //                *reinterpret_cast<bool*> (&m_attributes) = false;
-            //            }
         }
 
         template<class KeyType, typename AttributeType>
-        Element<KeyType, AttributeType>::Element(const KeyType& key, boost::any value) : m_key(key), m_value(value) {
+        Element<KeyType, AttributeType>::Element(const KeyType& key, const boost::any& value) : m_key(key), m_value(value) {
+        }
+
+        template<class KeyType, typename AttributeType>
+        Element<KeyType, AttributeType>::Element(const KeyType& key, boost::any&& value) : m_key(key), m_value(value) {
         }
 
         template <class KeyType, typename AttributeType>
         template <class ValueType>
         Element<KeyType, AttributeType>::Element(const KeyType& key, const ValueType& value) : m_key(key) {
+            this->setValue(value);
+        }
+
+        template <class KeyType, typename AttributeType>
+        template <class ValueType>
+        Element<KeyType, AttributeType>::Element(const KeyType& key, ValueType&& value) : m_key(key) {
             this->setValue(value);
         }
 
@@ -496,6 +564,7 @@ namespace karabo {
 
         template<class KeyType, typename AttributeType>
         void Element<KeyType, AttributeType>::setKey(const KeyType& key) {
+            // could overload for 'KeyType&& key'
             m_key = key;
         }
 
@@ -533,6 +602,14 @@ namespace karabo {
 
         template<class KeyType, typename AttributeType>
         template<class ValueType>
+        inline void Element<KeyType, AttributeType>::setValue(ValueType&& value) { // 'ValueType&&' is a universal reference!
+            // forward returns either 'ValueType&&', 'ValueType&', or 'const ValueType&'
+            this->setValue<decltype(std::forward<ValueType>(value)),
+                           typename boost::is_base_of<Hash, std::remove_const_t<std::remove_reference_t<ValueType>>>::type>(std::forward<ValueType>(value));
+        }
+
+        template<class KeyType, typename AttributeType>
+        template<class ValueType>
 
         inline void Element<KeyType, AttributeType>::setValue(const boost::shared_ptr<ValueType>& value) {
             this->setValue < boost::shared_ptr<ValueType>, typename boost::is_base_of<Hash, ValueType>::type > (value);
@@ -543,15 +620,22 @@ namespace karabo {
         void Element<KeyType, AttributeType>::setValue(const ValueType& value) {
             m_value = conditional_hash_cast<is_hash_the_base>::cast(value);
             // When ValueType is derived from Hash, this sets the attribute __classId to the class id name.
-            // If ValueType _is_ Hash [this can only happen when called as setValue<Hash>(Hash(...))
-            // since setValue(Hash(...)) uses the overload and not the template specialisation] or any other class,
-            // nothing is done.
-            SetClassIdAttribute<ValueType, is_hash_the_base>(value, *this);
+            // If ValueType _is_ Hash or any class not inheriting from Hash, nothing is done.
+            SetClassIdAttribute<std::remove_reference_t<ValueType>, is_hash_the_base>(value, *this);
         }
 
-        template<class KeyType, class AttributeType>
-        inline void Element<KeyType, AttributeType>::setValue(const Hash& value) {
-            m_value = value;
+        template<class KeyType, typename AttributeType>
+        template<class ValueType, typename is_hash_the_base>
+        void Element<KeyType, AttributeType>::setValue(ValueType&& value) {
+            m_value = conditional_hash_cast<is_hash_the_base>::cast(std::forward<ValueType>(value));
+            // When ValueType is derived from Hash, this sets the attribute __classId to the class id name.
+            // If ValueType _is_ Hash or any class not inheriting from Hash, nothing is done.
+            SetClassIdAttribute<std::remove_reference_t<ValueType>, is_hash_the_base> helper(value, *this);
+            // If value is a Hash derived non-Hash class and we forward it as a real lvalue reference,
+            // the move assignment to Hash clears the Hash container of 'value'. Very likely 'value' is NOT anymore
+            // in a valid state: if 'value' is an NDArray, value.getShape() will throw since key "shape" is missing!
+            // This is fixed here:
+            helper.resetHashDerivedMoved(std::forward<ValueType>(value));
         }
 
         template<class KeyType, class AttributeType>
@@ -560,23 +644,33 @@ namespace karabo {
         }
 
         template<class KeyType, class AttributeType>
-        inline void Element<KeyType, AttributeType>::setValue(const char* const& value) {
+        inline void Element<KeyType, AttributeType>::setValue(const char* value) {
             m_value = std::string(value ? value : "");
         }
 
         template<class KeyType, class AttributeType>
-        inline void Element<KeyType, AttributeType>::setValue(const wchar_t* const& value) {
+        inline void Element<KeyType, AttributeType>::setValue(char* value) {
+            m_value = std::string(value ? value : "");
+        }
+
+        template<class KeyType, class AttributeType>
+        inline void Element<KeyType, AttributeType>::setValue(const wchar_t* value) {
             m_value = std::wstring(value);
         }
 
         template<class KeyType, class AttributeType>
-        inline void Element<KeyType, AttributeType>::setValue(wchar_t* const& value) {
+        inline void Element<KeyType, AttributeType>::setValue(wchar_t* value) {
             m_value = std::wstring(value);
         }
 
         template<class KeyType, class AttributeType>
-        inline void Element<KeyType, AttributeType>::setValue(const boost::any & value) {
+        inline void Element<KeyType, AttributeType>::setValue(const boost::any& value) {
             m_value = value;
+        }
+
+        template<class KeyType, class AttributeType>
+        inline void Element<KeyType, AttributeType>::setValue(boost::any&& value) {
+            m_value = std::move(value);
         }
 
         template<class KeyType, typename AttributeType>
