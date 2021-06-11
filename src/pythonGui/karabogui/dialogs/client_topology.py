@@ -97,7 +97,7 @@ class ClientTopologyDialog(QDialog):
     @Slot()
     def onKillInstance(self):
         index = self.tree_view.selectionModel().currentIndex()
-        deviceId = index.siblingAtColumn(0).data()
+        deviceId = index.sibling(index.row(), 0).data()
         manager = get_manager()
         manager.shutdownDevice(deviceId, parent=self)
 
