@@ -147,7 +147,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
     signalSchemaUpdated = Signal(TypeSchema(), String())
 
     def __init__(self, configuration):
-        self.timeServerId = configuration.pop("timeServerId", "None")
+        self.__timeServerId = configuration.pop("__timeServerId", "None")
         super(Device, self).__init__(configuration)
         if not isSet(self.serverId):
             self.serverId = self._serverId_
@@ -220,7 +220,7 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
         """
         h = Hash("time", True)
         h["time", ...] = get_timestamp().toDict()
-        h["timeServerId"] = self.timeServerId
+        h["timeServerId"] = self.__timeServerId
         h["reference"] = True
         h["reference", ...] = TimeMixin.toDict()
 
