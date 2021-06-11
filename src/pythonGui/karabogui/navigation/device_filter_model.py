@@ -19,7 +19,6 @@ class DeviceFilterModel(QSortFilterProxyModel):
         self.setSourceModel(source_model)
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.setFilterRole(Qt.DisplayRole)
-        self.setRecursiveFilteringEnabled(True)
         self.setFilterKeyColumn(0)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
@@ -33,23 +32,33 @@ class DeviceFilterModel(QSortFilterProxyModel):
         # We expect a QModelIndex to have a node behind. But these nodes
         # are stored weak and might vanish. The original Qt C++ code
         # returns `True` for invalid QModelIndex (`None` object on Pointer).
-        node = source_index.internalPointer()
-        if node is None:
-            return True
-        if not node.is_visible:
-            return False
+        if source_index.isValid():
+            node = source_index.internalPointer()
+            if node is None:
+                return True
+            if not node.is_visible:
+                return False
 
-        if self._interface is None:
-            return super(DeviceFilterModel, self).filterAcceptsRow(
-                source_row, source_parent)
-        else:
-            interface = self._check_interface(node.interfaces, self._interface)
-            if self.filterRegExp().isEmpty():
-                return interface
+            if self._interface is None:
+                if self.filterRegExp().isEmpty():
+                    return True
+                row_count = model.rowCount(source_index)
+                for row in range(row_count):
+                    if self.filterAcceptsRow(row, source_index):
+                        return True
+            else:
+                row_count = model.rowCount(source_index)
+                for row in range(row_count):
+                    if self.filterAcceptsRow(row, source_index):
+                        return True
 
-            match = super(DeviceFilterModel, self).filterAcceptsRow(
-                source_row, source_parent)
-            return interface and match
+                interface = self._check_interface(node.interfaces,
+                                                  self._interface)
+                if not interface:
+                    return False
+
+        return super(DeviceFilterModel, self).filterAcceptsRow(
+            source_row, source_parent)
 
     def _check_interface(self, mask, bit):
         return (mask & bit) == bit
