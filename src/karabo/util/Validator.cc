@@ -7,6 +7,7 @@
  */
 
 #include "AlarmConditions.hh"
+#include "State.hh"
 #include "Validator.hh"
 #include "Schema.hh"
 #include "FromLiteral.hh"
@@ -483,20 +484,39 @@ namespace karabo {
             }
             if (masterNode.hasAttribute(KARABO_SCHEMA_LEAF_TYPE)) {
                 const int leafType = masterNode.getAttribute<int>(KARABO_SCHEMA_LEAF_TYPE);
-
-                if (leafType == karabo::util::Schema::STATE && !workNode.hasAttribute(KARABO_INDICATE_STATE_SET)) {
-                    report << "Setting State element at " << scope << " requires '" << KARABO_INDICATE_STATE_SET << "' attribute" << endl;
-                }
-
-                if (leafType != karabo::util::Schema::STATE && workNode.hasAttribute(KARABO_INDICATE_STATE_SET)) {
+                if (leafType == karabo::util::Schema::STATE) {
+                    // this node is a state, we will validate the string against the allowed states
+                    const std::string& value = workNode.getValue<std::string>();
+                    try {
+                        State::fromString(value);
+                        // if the KARABO_INDICATE_STATE_SET is missing, we add it since the string is valid
+                        if (!workNode.hasAttribute(KARABO_INDICATE_STATE_SET)) {
+                            workNode.setAttribute(KARABO_INDICATE_STATE_SET, true);
+                        }
+                    } catch (const LogicException& e) {
+                        report << "Value " << value << " for parameter \"" << scope << "\" is not a valid state string" << endl;
+                        Exception::clearTrace();
+                    }
+                } else if (workNode.hasAttribute(KARABO_INDICATE_STATE_SET)) {
+                    // the KARABO_INDICATE_STATE_SET attribute is being set on an element that is NOT an state element
                     report << "Tried setting non-state element at " << scope << " with state indication attribute" << endl;
                 }
 
-                if (leafType == karabo::util::Schema::ALARM_CONDITION && !workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)) {
-                    report << "Setting Alarm Condition element at " << scope << " requires '" << KARABO_INDICATE_ALARM_SET << "' attribute" << endl;
-                }
-
-                if (leafType != karabo::util::Schema::ALARM_CONDITION && workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)) {
+                if (leafType == karabo::util::Schema::ALARM_CONDITION) {
+                    // this node is an alarm condition, we will validate the string against the allowed alarm strings
+                    const std::string& value = workNode.getValue<std::string>();
+                    try {
+                        AlarmCondition::fromString(value);
+                        // if the KARABO_INDICATE_ALARM_SET is missing, we add it since the string is valid
+                        if (!workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)) {
+                            workNode.setAttribute(KARABO_INDICATE_ALARM_SET, true);
+                        }
+                    } catch (const LogicException& e) {
+                        report << "Value " << value << " for parameter \"" << scope << "\" is not a valid alarm string" << endl;
+                        Exception::clearTrace();
+                    }
+                } else if (workNode.hasAttribute(KARABO_INDICATE_ALARM_SET)) {
+                    // the KARABO_INDICATE_ALARM_SET attribute is being set on an element that is NOT an alarm condition element
                     report << "Tried setting non-alarm condition element at " << scope << " with alarm indication attribute" << endl;
                 }
             }

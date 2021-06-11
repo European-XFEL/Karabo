@@ -1091,7 +1091,7 @@ void Schema_Test::testStateAndAlarmSets() {
     n.setAttribute(KARABO_INDICATE_STATE_SET, true);
     r = val.validate(schema, h, h_out);
     CPPUNIT_ASSERT(r.first == true); //should validate as we faked updateState
-    Hash::Node& n2 = h2.set("alarm", "None");
+    Hash::Node& n2 = h2.set("alarm", "none");
     n2.setAttribute(KARABO_INDICATE_ALARM_SET, true);
     r = val.validate(schema, h2, h_out);
     CPPUNIT_ASSERT(r.first == true); //should validate as we faked setAlarmCondition
