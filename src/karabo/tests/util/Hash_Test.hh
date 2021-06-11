@@ -18,6 +18,7 @@ class Hash_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST(testConstructors);
     CPPUNIT_TEST(testGetSet);
+    CPPUNIT_TEST(testSetMoveSemantics);
     CPPUNIT_TEST(testGetAs);
     CPPUNIT_TEST(testFind);
     CPPUNIT_TEST(testIteration);
@@ -49,6 +50,7 @@ private:
     void testConstructors();
     void testGetSet();
     void testGetAs();
+    void testSetMoveSemantics();
     void testFind();
     void testAttributes();
     void testGetPaths();

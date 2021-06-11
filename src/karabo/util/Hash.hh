@@ -37,7 +37,7 @@ namespace karabo {
         /**
          * @class Hash
          * @brief A generic key value container that supports ordering and attributes.
-         * 
+         *
          * Hash container:
          * - The Hash is a heterogeneous generic key/value container that associates a string key to a value of any type.<br>
          * - The Hash is a core data structure in Karabo software framework, and is widely used in the karabo system.<br>
@@ -208,12 +208,12 @@ namespace karabo {
             /**
              * Move constructor
              */
-            Hash(Hash&& other) = default;
+            Hash(Hash&& other) noexcept = default; // noexcept: http://thbecker.net/articles/rvalue_references/section_09.html
 
             /**
              * Assignment of "rvalue"
              */
-            Hash& operator=(Hash&& other) = default;
+            Hash& operator=(Hash&& other) noexcept = default; // noexcept: http://thbecker.net/articles/rvalue_references/section_09.html
 
             /**
              * Merge the current hash with another one
@@ -305,7 +305,7 @@ namespace karabo {
             void getPaths(container<std::string>& result, const char separator = '.') const;
 
             void getPaths(std::set<std::string>& result, const char separator = '.') const;
-            
+
             template<template<class T, class All = std::allocator<T> > class container >
             void getDeepPaths(container<std::string>& result, const char separator = '.') const;
 
@@ -337,8 +337,17 @@ namespace karabo {
              * hash.set("myFloat", float(12.44));
              * @endcode
              */
+            // Looks like the 'const ValueType&' version has to stay to ensure that explicit type specifications like
+            //    std::string value("v");
+            //    aHash.set<std::string>(path, value);
+            // still compile. Just
+            //    aHash.set(path, value);
+            // seems to work correctly even with only the 'ValueType&&' version.
             template<typename ValueType>
             inline Node& set(const std::string& path, const ValueType& value, const char separator = '.');
+
+            template<typename ValueType>
+            inline Node& set(const std::string& path, ValueType&& value, const char separator = '.');
 
             /**
              * Clone the content (key, value, attributes) of another elements.
@@ -582,7 +591,7 @@ namespace karabo {
              *
              * @param other the Hash this Hash will be compared to.
              * @return true if both hashes are similar.
-             * 
+             *
              * @note: this is not the full equality operator as the
              * values of the elements are not considered.
              */
@@ -625,7 +634,15 @@ namespace karabo {
 
             template<class Visitor>
             static bool visit2(karabo::util::Hash::Node& node, Visitor& visitor);
-        private:
+
+            /**
+             * Internal helper to avoid code duplication for template specialisations of set(path, hashValue, separator).
+             *
+             * HashType shall be const reference or lvalue reference of Hash or Hash derived classes: 'const Hash&', 'Hash&&', 'const NDArray&', etc.
+             */
+            template<typename HashType>
+            inline Node& setHash(const std::string& path, HashType value, const char separator = '.');
+
             /**
              *  Out of 'paths' select those that belong to child with 'childKey',
              * e.g. out of ["a", "b.c", "b.d.e"] return ["c", "d.e"] if childKey == "b" and separator == '.'.
@@ -657,7 +674,7 @@ namespace karabo {
              */
             static void mergeAttributes(Hash::Node& targetNode, const Hash::Attributes& attrs, Hash::MergePolicy policy);
 
-            /** 
+            /**
              * Merge two vector<Hash> nodes that represent table elements, i.e. the content of 'source' replaces
              * the content of 'target'. The 'selectedPaths' with their 'separator' are respected.
              * Note that the 'selectedPaths' are those that selected 'source' for merging, i.e. begin with
@@ -777,7 +794,7 @@ namespace karabo {
 
         template<typename ValueType>
         inline Hash::Node& Hash::set(const std::string& path, const ValueType& value, const char separator) {
-
+            // Be aware of code duplication with 'ValueType&& value' overload...
             std::vector<std::string> tokens;
             karabo::util::tokenize(path, tokens, separator);
 
@@ -793,10 +810,43 @@ namespace karabo {
             }
         }
 
+        template<typename ValueType>
+        inline Hash::Node& Hash::set(const std::string& path, ValueType&& value, const char separator) {
+            // Be aware of code duplication with 'const ValueType& value' overload...
+            std::vector<std::string> tokens;
+            karabo::util::tokenize(path, tokens, separator);
+
+            Hash* leaf = this->setNodesAsNeeded(tokens, separator);
+
+            // Set last token
+            std::string& token = tokens.back();
+            int index = karabo::util::getAndCropIndex(token);
+            if (index == -1) // No vector
+                return leaf->m_container.set(token, std::forward<ValueType>(value));
+            else {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("Only Hash objects may be assigned to a leaf node of array type");
+            }
+        }
+
         template<>
         inline Hash::Node& Hash::set(const std::string& path, const Hash& value, const char separator) {
-            // TODO: To reduce code in header, move implementation to setHash or sth. like that...
+            return setHash<const Hash&>(path, value, separator);
+        }
 
+        template<>
+        inline Hash::Node& Hash::set(const std::string& path, Hash& value, const char separator) {
+            // Avoid that the 'ValueType&&' code path is taken
+            return set(path, const_cast<const Hash&>(value), separator);
+        }
+
+        template<>
+        inline Hash::Node& Hash::set(const std::string& path, Hash&& value, const char separator) {
+            return setHash(path, std::forward<Hash>(value), separator);
+        }
+
+        template <typename HashType>
+        inline Hash::Node& Hash::setHash(const std::string& path, HashType hashValue, const char separator) {
+            // HashType should be 'const Hash&' or 'Hash&&'
             std::vector<std::string> tokens;
             karabo::util::tokenize(path, tokens, separator);
 
@@ -805,24 +855,24 @@ namespace karabo {
             std::string& token = tokens.back();
             int index = karabo::util::getAndCropIndex(token);
             if (index == -1) // No vector of hashes
-                return leaf->m_container.set(token, value);
+                return leaf->m_container.set(token, std::forward<HashType>(hashValue));
             else { // vector of hashes
                 if (leaf->m_container.has(token)) { // node exists
                     Hash::Node* node = &(leaf->m_container.getNode(token));
                     if (!node->is<std::vector<Hash> >()) { // Node is not std::vector<Hash>
                         std::vector<Hash> hashes(index + 1);
-                        hashes[index] = value;
-                        node->setValue(std::vector<Hash > (hashes)); // Force it to be one
+                        hashes[index] = std::forward<HashType>(hashValue);
+                        node->setValue(std::move(hashes)); // Force it to be one
                     } else {
                         std::vector<Hash>& hashes = node->getValue<std::vector<Hash> >();
                         if (index >= static_cast<int> (hashes.size())) hashes.resize(index + 1);
-                        hashes[index] = value;
+                        hashes[index] = std::forward<HashType>(hashValue);
                     }
                     return *node;
                 } else { // node does not exist
                     std::vector<Hash> hashes(index + 1);
-                    hashes[index] = value;
-                    return leaf->m_container.set(token, hashes);
+                    hashes[index] = std::forward<HashType>(hashValue);
+                    return leaf->m_container.set(token, std::move(hashes));
                 }
             }
         }
@@ -890,7 +940,7 @@ namespace karabo {
             if (this->empty()) return;
             getPaths(*this, result, "", separator, false);
         }
-        
+
         template<template<class ValueType, class All = std::allocator<ValueType> > class container >
         void Hash::getDeepPaths(container<std::string>& result, const char separator) const {
             if (this->empty()) return;

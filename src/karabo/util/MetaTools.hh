@@ -11,7 +11,8 @@
 #include <boost/type_traits/is_virtual_base_of.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/bind/bind.hpp>
-
+#include <iostream>
+#include <utility>
 namespace karabo {
     namespace util {
 
@@ -29,13 +30,15 @@ namespace karabo {
 
         /**
          * Conditionally cast a type to Hash, if Hash is a base class, but
-         * disallow this for shared pointers of these types. Will result in 
+         * disallow this for shared pointers of these types. Will result in
          * a compiler error if this is attempted.
-         * 
+         *
          * Any type not derived from Hash is simply returned as is.
          */
         template<typename is_hash_base>
         struct conditional_hash_cast {
+            // Here is for T deriving from Hash or Hash itself,
+            // below is the specialisation for is_hash_base = boost::false_type.
 
             template<typename T>
             static const Hash& cast(const T& v) {
@@ -43,6 +46,33 @@ namespace karabo {
             }
 
             template<typename T>
+            static Hash&& cast(T&& v) {
+                // Following line works fine in Ubuntu20 (gcc9.3), but does not compile on CentOS7gcc7 and Ubuntu18 (also gcc7) with
+                // "invalid cast of an rvalue expression of type ‘karabo::util::NDArray’ to type ‘karabo::util::Hash&&’"
+                // from 'Hash::set(somekey, NDArray(..)) in PropertyTest::writeOutput(..).
+                // return reinterpret_cast<Hash&&> (std::forward<T>(v));
+                T&& vTemp = static_cast<T&&>(std::forward<T>(v));
+                return reinterpret_cast<Hash&&> (vTemp);
+            }
+
+            template<typename T>
+            static Hash& cast(T& v) {
+                return reinterpret_cast<Hash&> (v);
+            }
+
+            static Hash& cast(Hash& v) {
+                return v;
+            }
+
+            static Hash&& cast(Hash&& v) {
+                return std::move(v);
+            }
+
+            static const Hash& cast(const Hash& v) {
+                return v;
+            }
+
+            template <typename T>
             static const boost::shared_ptr<T> cast(const boost::shared_ptr<T>& v) {
                 //if the compiler ever reaches this point compilation is to fail on purpose, as
                 //we only support explicit setting of Hash::Pointer to the Hash
@@ -54,21 +84,14 @@ namespace karabo {
             void inserting_derived_hash_classes_as_pointers_is_not_supported();
         };
 
-      
+
         template<>
         struct conditional_hash_cast<boost::false_type> {
 
             template<typename T>
-            static T& cast(T& v) {
-                return v;
+            static T&& cast(T&& v) {
+                return std::forward<T>(v);
             }
-
-            template<typename T>
-            static const T& cast(const T& v) {
-                return v;
-            }
-
-
 
         };
 
