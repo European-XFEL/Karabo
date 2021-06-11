@@ -240,12 +240,17 @@ class LogWidget(QWidget):
         index = self.table.selectionModel().currentIndex()
         if index.isValid():
             model = self.table.model()
-            time = model.data(index.siblingAtColumn(1), Qt.DisplayRole)
+            time = model.data(index.sibling(index.row(), 1),
+                              Qt.DisplayRole)
             time = time.toString("dd.MM.yyyy hh:mm:ss.z")
-            logtype = model.data(index.siblingAtColumn(2), Qt.DisplayRole)
-            instance_id = model.data(index.siblingAtColumn(3), Qt.DisplayRole)
-            exception = model.data(index.siblingAtColumn(4), Qt.DisplayRole)
-            description = model.data(index.siblingAtColumn(5), Qt.DisplayRole)
+            logtype = model.data(index.sibling(index.row(), 2),
+                                 Qt.DisplayRole)
+            instance_id = model.data(index.sibling(index.row(), 3),
+                                     Qt.DisplayRole)
+            exception = model.data(index.sibling(index.row(), 4),
+                                   Qt.DisplayRole)
+            description = model.data(index.sibling(index.row(), 5),
+                                     Qt.DisplayRole)
             log = (f"- {time} --- {logtype} --- {instance_id} -\n\n-----\n"
                    f"{exception}\n{description}")
             clipboard = QApplication.clipboard()
