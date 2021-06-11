@@ -238,7 +238,7 @@ class LoadProjectDialog(QDialog):
         """
         # Make sure loading of trashed projects is not possible
         if self._selected_item_loadable():
-            index = index.siblingAtColumn(0)
+            index = index.sibling(index.row(), 0)
             simple_name = self.model.data(index, Qt.DisplayRole)
             text = (f"Loading project <b>{simple_name}</b> from project "
                     "database")
