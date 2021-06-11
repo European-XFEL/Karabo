@@ -189,14 +189,14 @@ namespace karabo {
              * @param other
              * @return 
              */
-            OrderedMap(OrderedMap<KeyType, MappedType>&& other);
+            OrderedMap(OrderedMap<KeyType, MappedType>&& other) noexcept; // noexcept: http://thbecker.net/articles/rvalue_references/section_09.html
 
             /**
              * Move assignment. Moves the entries of other to this map, other is then empty
              * @param other
              * @return 
              */
-            OrderedMap<KeyType, MappedType>& operator=(OrderedMap<KeyType, MappedType>&& other);
+            OrderedMap<KeyType, MappedType>& operator=(OrderedMap<KeyType, MappedType>&& other) noexcept; // noexcept: http://thbecker.net/articles/rvalue_references/section_09.html
 
             /**
              * Return an iterator iterating from the first element over elements in insertion order
@@ -286,6 +286,9 @@ namespace karabo {
              */
             template<class T>
             inline Node& set(const KeyType& key, const T& value);
+
+            template<class T>
+            inline Node& set(const KeyType& key, T&& value);
 
             /**
              * Return the element identified by key. Raises an exception if
@@ -475,7 +478,7 @@ namespace karabo {
         }
 
         template<class KeyType, class MappedType>
-        OrderedMap<KeyType, MappedType>::OrderedMap(OrderedMap<KeyType, MappedType>&& other)
+        OrderedMap<KeyType, MappedType>::OrderedMap(OrderedMap<KeyType, MappedType>&& other) noexcept
             : m_listNodes(std::move(other.m_listNodes))
             , m_mapNodes(std::move(other.m_mapNodes)) {
             other.m_listNodes.clear();
@@ -483,7 +486,7 @@ namespace karabo {
         }
 
         template<class KeyType, class MappedType>
-        OrderedMap<KeyType, MappedType>& OrderedMap<KeyType, MappedType>::operator=(OrderedMap<KeyType, MappedType>&& other) {
+        OrderedMap<KeyType, MappedType>& OrderedMap<KeyType, MappedType>::operator=(OrderedMap<KeyType, MappedType>&& other) noexcept {
             if (this != &other) {
                 m_listNodes.clear();
                 m_mapNodes.clear();
@@ -588,7 +591,7 @@ namespace karabo {
         template<class KeyType, class MappedType>
         template<class T>
         inline MappedType& OrderedMap<KeyType, MappedType>::set(const KeyType& key, const T& value) {
-            // COUT("__set T");
+            // Take care - any code change is likely to be done to the overload with 'T&& value' argument as well.
             map_iterator it;
             if (((it = find(key)) != m_mapNodes.end())) {
                 MappedType& node = it->second;
@@ -599,6 +602,25 @@ namespace karabo {
                 MappedType& node = (m_mapNodes[/*hash*/(key)] = local);
                 node.setKey(key);
                 node.setValue(value);
+                m_listNodes.push_back(&node);
+                return node;
+            }
+        }
+
+        template<class KeyType, class MappedType>
+        template<class T>
+        inline MappedType& OrderedMap<KeyType, MappedType>::set(const KeyType& key, T&& value) {
+            // Take care - any code change is likely to be done to the overload with 'const T& value' argument as well.
+            map_iterator it;
+            if (((it = find(key)) != m_mapNodes.end())) {
+                MappedType& node = it->second;
+                node.setValue(std::forward<T>(value));
+                return node;
+            } else {
+                static MappedType local;
+                MappedType& node = (m_mapNodes[/*hash*/(key)] = local);
+                node.setKey(key);
+                node.setValue(std::forward<T>(value));
                 m_listNodes.push_back(&node);
                 return node;
             }
