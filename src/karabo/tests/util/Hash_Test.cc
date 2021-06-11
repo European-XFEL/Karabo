@@ -160,6 +160,7 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<std::vector<unsigned long long> >("e.f.g.h")[0] == 5);
         CPPUNIT_ASSERT(h.get<Hash > ("F.f.f.f.f").get<int>("x.y.z") == 99);
         CPPUNIT_ASSERT(h.get<int>("F.f.f.f.f.x.y.z") == 99);
+        // Internally, Hash-derived classes are stored as Hash
         CPPUNIT_ASSERT(h.getType("foo.array") == karabo::util::Types::HASH);
 
         // Check 'flatten'
@@ -174,6 +175,7 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(flat.get<string > ("d.e", 0) == "4");
         CPPUNIT_ASSERT(flat.get<std::vector<unsigned long long> >("e.f.g.h", 0)[0] == 5);
         CPPUNIT_ASSERT(flat.get<int>("F.f.f.f.f.x.y.z", 0) == 99);
+        // Internally, Hash-derived classes are stored as Hash
         CPPUNIT_ASSERT(flat.getType("foo.array", 0) == karabo::util::Types::HASH);
 
         Hash tree;
@@ -188,6 +190,7 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(tree.get<std::vector<unsigned long long> >("e.f.g.h")[0] == 5);
         CPPUNIT_ASSERT(tree.get<Hash > ("F.f.f.f.f").get<int>("x.y.z") == 99);
         CPPUNIT_ASSERT(tree.get<int>("F.f.f.f.f.x.y.z") == 99);
+        // Internally, Hash-derived classes are stored as Hash
         CPPUNIT_ASSERT(flat.getType("foo.array", 0) == karabo::util::Types::HASH);
 
     }
@@ -347,19 +350,13 @@ void Hash_Test::testGetSet() {
         // test that correct exceptions  are thrown
         Hash h("a", 77, "b[1].c", 88);
         // no exceptions:
-        h.get<int>("a");
-        h.get<Hash>("b[0]");
-        h.get<Hash>("b[1]");
-        h.get<int>("b[1].c");
+        CPPUNIT_ASSERT_NO_THROW(h.get<int>("a"));
+        CPPUNIT_ASSERT_NO_THROW(h.get<Hash>("b[0]"));
+        CPPUNIT_ASSERT_NO_THROW(h.get<Hash>("b[1]"));
+        CPPUNIT_ASSERT_NO_THROW(h.get<int>("b[1].c"));
 
         // non-existing "normal" path
-        bool caught1 = false;
-        try {
-            h.get<int>("c");
-        } catch (karabo::util::ParameterException const& e) {
-            caught1 = true;
-        }
-        CPPUNIT_ASSERT(caught1 == true);
+        CPPUNIT_ASSERT_THROW(h.get<int>("c"), karabo::util::ParameterException);
 
         // non-existing index of vector that is last item
         CPPUNIT_ASSERT(h.get<vector<Hash> >("b").size() == 2);
@@ -379,6 +376,348 @@ void Hash_Test::testGetSet() {
             caught3 = true;
         }
         CPPUNIT_ASSERT(caught3 == true);
+    }
+}
+
+/**
+ * A helper class tracing move and copy construction to test Hash::set move-assignment.
+ */
+struct TraceCopies {
+
+    explicit TraceCopies(int v = 0) : value(v) {}
+    TraceCopies(const TraceCopies& other) : value(other.value) { ++countCopyConstr;}
+    // Move constructor, leaving the source in a valid (but other) state,
+    // noexcept needed to get used in std::vector<TraceCopies>::resize(n)
+    TraceCopies(TraceCopies&& other) noexcept : value(other.value) { ++countMoveConstr; other.value = -1;}
+
+    int value;
+
+    static int counts() { return (countCopyConstr + countMoveConstr);}
+    static void reset() { countCopyConstr = countMoveConstr = 0;}
+
+    static int countCopyConstr;
+    static int countMoveConstr;
+};
+int TraceCopies::countCopyConstr = 0;
+int TraceCopies::countMoveConstr = 0;
+
+
+class TraceCopiesHash : protected Hash {
+    // A Hash derived object tracing its copies.
+    // Since inside the Hash it is stored like a Hash,
+    // tracing has to be indirect via its TraceCopies member
+
+    public:
+    // Class info needed for these Hash-inheriting objects
+    KARABO_CLASSINFO(TraceCopiesHash, "TraceCopiesHash", "2.11");
+
+    TraceCopiesHash() { set("v", TraceCopies(0));}
+    explicit TraceCopiesHash(const TraceCopies& v) { set("v", v);}
+    TraceCopiesHash(const TraceCopiesHash& other) : Hash(other) {}
+    TraceCopiesHash(TraceCopiesHash&& other) noexcept : Hash(other) {
+        // Put back into a valid state - Hash(other) just cleared (i.e. removed key "v").
+        // This will not be called inside Hash where this object is stored as Hash and not as TraceCopiesHash...
+        other.setValue(TraceCopies(-1));
+    }
+
+    TraceCopiesHash& operator=(TraceCopiesHash&& rhs) noexcept {
+        *static_cast<Hash*>(this) = static_cast<Hash&&>(rhs);
+        return *this;
+    }
+
+    const TraceCopies& getValue() const { return get<TraceCopies>("v");}
+    void setValue(TraceCopies&& v)  { set("v", std::move(v));}
+    void setValue(int v)  { get<TraceCopies>("v").value = v;}
+};
+
+void Hash_Test::testSetMoveSemantics() {
+
+    {
+        // test Hash::set of normal non-const object
+        TraceCopies ta(2);
+        Hash h;
+        // Normal set
+        h.set("ta", ta);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // copied into Hash
+        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("ta").value);
+        // Normal set to the now existing node
+        ta.value = 4;
+        h.set("ta", ta);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // ta copied again into Hash
+        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopies>("ta").value);
+
+        // 'moving' set
+        h.set("tb", std::move(ta));
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // unchanged
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr); // since now it is moved
+        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopies>("tb").value);
+        // 'moving' set to the now existing node
+        ta.value = 8; // get back into a defined state after object "behind" was moved away from 'ta'
+        h.set("tb", std::move(ta));
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // again unchanged
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countMoveConstr); // since moved
+        CPPUNIT_ASSERT_EQUAL(8, h.get<TraceCopies>("tb").value);
+
+        // set of const
+        const TraceCopies tc(3);
+        h.set("tc", tc);
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countCopyConstr); // copied...
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countMoveConstr); // ...and not moved
+        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopies>("tc").value);
+        // set of const to the now existing node
+        h.get<TraceCopies>("tc").value = 42;
+        CPPUNIT_ASSERT_EQUAL(42, h.get<TraceCopies>("tc").value);
+        h.set("tc", tc);
+        CPPUNIT_ASSERT_EQUAL(4, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopies>("tc").value);
+
+        TraceCopies::reset(); // Start next round from zero
+    }
+
+    {
+        // test set of Hash
+        TraceCopies ta(11);
+        Hash h;
+        Hash hInner;
+        hInner.set("ta", ta);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
+        // We set a non-const Hash: It gets copied, so the contained TraceCopies does.
+        h.set("h", hInner);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::counts()); // i.e. not moved
+        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h.ta").value);
+        // same again to now existing node
+        h.get<TraceCopies>("h.ta").value = 22;
+        CPPUNIT_ASSERT_EQUAL(22, h.get<TraceCopies>("h.ta").value);
+        h.set("h", hInner);
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::counts());
+        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h.ta").value);
+
+        // We move-set a Hash: It gets empty and - since content is just moved - no copy/assignment of TraceCopies
+        h.set("h2", std::move(hInner));
+        CPPUNIT_ASSERT(hInner.empty());
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::counts()); // no change
+        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h2.ta").value);
+        // same again to now existing node
+        hInner.set("ta", TraceCopies(17));
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(4, TraceCopies::counts()); // just the three copies from before and now a move
+        h.set("h2", std::move(hInner));
+        CPPUNIT_ASSERT(hInner.empty());
+        CPPUNIT_ASSERT_EQUAL(4, TraceCopies::counts()); // no change
+        CPPUNIT_ASSERT_EQUAL(17, h.get<TraceCopies>("h2.ta").value);
+
+        // We set a const Hash: As for the non-const, it gets copied, so the contained TraceCopies does.
+        const Hash hInner2("ta2", ta);
+        CPPUNIT_ASSERT_EQUAL(5, TraceCopies::counts());
+        h.set("h3", hInner2);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr); // unchanged number of moves
+        CPPUNIT_ASSERT_EQUAL(5, TraceCopies::countCopyConstr);
+        // same again to now existing node
+        h.get<TraceCopies>("h3.ta2").value = 22;
+        CPPUNIT_ASSERT_EQUAL(22, h.get<TraceCopies>("h3.ta2").value);
+        h.set("h3", hInner2);
+        CPPUNIT_ASSERT_EQUAL(6, TraceCopies::countCopyConstr); // another copy
+        CPPUNIT_ASSERT_EQUAL(7, TraceCopies::counts()); // ...and still one move
+        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h3.ta2").value);
+
+        TraceCopies::reset();
+    }
+
+    {
+        // test set of Hash, but now to path with index
+        // same test as above, extended to set also to non-existing index
+        TraceCopies ta(11);
+        Hash h;
+        Hash hInner;
+        hInner.set("ta", ta);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
+        // We set a non-const Hash: It gets copied, so the contained TraceCopies does.
+        h.set("h[0]", hInner);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::counts());
+        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h[0].ta").value);
+        // same again to now existing node
+        h.get<TraceCopies>("h[0].ta").value = 22;
+        CPPUNIT_ASSERT_EQUAL(22, h.get<TraceCopies>("h[0].ta").value);
+        h.set("h[0]", hInner);
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::counts());
+        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h[0].ta").value);
+        // and now to non-existing index
+        h.set("h[1]", hInner);
+        CPPUNIT_ASSERT_EQUAL(4, TraceCopies::countCopyConstr); // 5 without noexcept in Hash::Hash(Hash&&) etc.!
+        CPPUNIT_ASSERT_EQUAL(4, TraceCopies::counts());
+        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h[1].ta").value);
+
+        // We move-set a Hash: It gets empty and - since content is just moved - no copy/assignment of TraceCopies
+        h.set("h2[0]", std::move(hInner));
+        CPPUNIT_ASSERT(hInner.empty());
+        CPPUNIT_ASSERT_EQUAL(4, TraceCopies::counts()); // no change
+        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h2[0].ta").value);
+        // same again to now existing node
+        hInner.set("ta", TraceCopies(18));
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(5, TraceCopies::counts());
+        h.set("h2[0]", std::move(hInner));
+        CPPUNIT_ASSERT(hInner.empty());
+        CPPUNIT_ASSERT_EQUAL(5, TraceCopies::counts()); // no change
+        CPPUNIT_ASSERT_EQUAL(18, h.get<TraceCopies>("h2[0].ta").value);
+        // now to not yet existing index
+        hInner.set("ta", TraceCopies(19));
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(6, TraceCopies::counts());
+        h.set("h2[1]", std::move(hInner));
+        CPPUNIT_ASSERT(hInner.empty());
+        CPPUNIT_ASSERT_EQUAL(6, TraceCopies::counts()); // no change
+        CPPUNIT_ASSERT_EQUAL(19, h.get<TraceCopies>("h2[1].ta").value);
+
+        // We set a const Hash: As for the non-const, it gets copied, so the contained TraceCopies does.
+        const Hash hInner2("ta2", ta);
+        CPPUNIT_ASSERT_EQUAL(5, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(7, TraceCopies::counts());
+        h.set("h3[0]", hInner2);
+        CPPUNIT_ASSERT_EQUAL(6, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(8, TraceCopies::counts());
+        // same again to now existing node
+        h.get<TraceCopies>("h3[0].ta2").value = 22;
+        CPPUNIT_ASSERT_EQUAL(22, h.get<TraceCopies>("h3[0].ta2").value);
+        h.set("h3[0]", hInner2);
+        CPPUNIT_ASSERT_EQUAL(7, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(9, TraceCopies::counts());
+        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h3[0].ta2").value);
+        // same now to non-existing index
+        h.set("h3[1]", hInner2);
+        CPPUNIT_ASSERT_EQUAL(8, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(10, TraceCopies::counts());
+        CPPUNIT_ASSERT_EQUAL(11, h.get<TraceCopies>("h3[1].ta2").value);
+
+        TraceCopies::reset();
+    }
+
+    {
+        // test Hash::set of Hash derived object like NDArray
+        TraceCopiesHash ta(TraceCopies(2));
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // TraceCopiesHash ctr. takes it by rerefence, so copies
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::counts());
+        Hash h;
+        // Normal set
+        h.set("ta", ta);
+        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopiesHash>("ta").getValue().value);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::counts());
+        // Normal set to the now existing node
+        ta.setValue(4); // set inner value, no construction
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::counts());
+        h.set("ta", ta);
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::counts());
+        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopiesHash>("ta").getValue().value);
+
+        // 'moving' set - since the TraceCopiesHash object is moved (as a Hash!),
+        //                this leaves no trace, so we cannot really test :-(
+        h.set("tb", std::move(ta));
+        // Moving ta indeed leaves no trace of TraceCopies construction,
+        // but to leave 'ta' in a valid state (with existing key "v"), a default constructed TraceCopiesHash
+        // is assigned to it and the default construction move-assigns the TraceCopies object inside.
+        CPPUNIT_ASSERT_EQUAL(4, TraceCopies::counts());
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopiesHash>("tb").getValue().value);
+        CPPUNIT_ASSERT_NO_THROW(ta.getValue()); // Ensure that 'ta' is in a valid state after moving from it.
+        ta.setValue(42);
+        // 'moving' set to the now existing node
+        h.set("tb", std::move(ta));
+        // Same counting as above: one move construction expected
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(h), 42, h.get<TraceCopiesHash>("tb").getValue().value);
+
+        // set of const
+        const TraceCopiesHash tc(TraceCopies(3));
+        CPPUNIT_ASSERT_EQUAL(4, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countMoveConstr);
+        h.set("tc", tc);
+        CPPUNIT_ASSERT_EQUAL(5, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopiesHash>("tc").getValue().value);
+        // set of const to the now existing node
+        h.get<TraceCopiesHash>("tc").setValue(-42);
+        CPPUNIT_ASSERT_EQUAL(-42, h.get<TraceCopiesHash>("tc").getValue().value);
+        h.set("tc", tc);
+        CPPUNIT_ASSERT_EQUAL(6, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopiesHash>("tc").getValue().value);
+
+        TraceCopies::reset();
+    }
+
+    {
+        // Test Hash::set(path, boost::any)
+        Hash h;
+        boost::any a(TraceCopies(4));
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr); // moved temporary to internal place of any
+        h.set("a", a);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // a and thus its TraceCopies got copied
+        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopies>("a").value);
+
+        const boost::any& a2 = a;
+        h.set("a2", a2);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // a and thus its TraceCopies get copied
+        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopies>("a2").value);
+
+        h.set("a3", std::move(a));
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // copied
+        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopies>("a3").value);
+    }
+
+    // The remaining tests are not fitting well into testSetMoveSemantics() since they have nothing
+    // to do with move semantics - but with the special overloads of Element::setValue for 'char*' etc.,
+    // so they are closely related.
+    {
+        // test Hash::set of various strings,
+        Hash h;
+        h.set("const_char_pointer", "a");
+        CPPUNIT_ASSERT_EQUAL(std::string("a"), h.get<std::string>("const_char_pointer"));
+
+        char cText[] = "a2and3";
+        h.set("char_array", cText);
+        CPPUNIT_ASSERT_EQUAL(std::string("a2and3"), h.get<std::string>("char_array"));
+
+        char* cPtr = cText;
+        h.set("char_ptr", cPtr);
+        CPPUNIT_ASSERT_EQUAL(std::string("a2and3"), h.get<std::string>("char_ptr"));
+
+        h.set("tmp_string", std::string("b"));
+        CPPUNIT_ASSERT_EQUAL(std::string("b"), h.get<std::string>("tmp_string"));
+
+        const std::string b1("b1");
+        h.set("const_string", b1);
+        CPPUNIT_ASSERT_EQUAL(std::string("b1"), h.get<std::string>("const_string"));
+
+        std::string b2("b2");
+        h.set("string", b2);
+        CPPUNIT_ASSERT_EQUAL(std::string("b2"), h.get<std::string>("string"));
+    }
+
+    {
+        // test wide characters
+        // Shouldn't be used much in Karabo since there is no serialisation support,
+        // but there is treament in Element::setValue to convert to wstring
+        Hash h;
+        h.set("const_wchart_pointer", L"a");
+        // CPPUNIT_ASSERT_EQUAL does not support std::wstring...
+        CPPUNIT_ASSERT(std::wstring(L"a") == h.get<std::wstring>("const_wchart_pointer"));
+
+        wchar_t cText[] = L"a2and3";
+        h.set("wchart_array", cText);
+        CPPUNIT_ASSERT(std::wstring(L"a2and3") == h.get<std::wstring>("wchart_array"));
+
+        wchar_t* cPtr = cText;
+        h.set("wchart_ptr", cPtr);
+        CPPUNIT_ASSERT(std::wstring(L"a2and3") == h.get<std::wstring>("wchart_ptr"));
     }
 }
 
@@ -839,7 +1178,7 @@ void Hash_Test::testGetPaths() {
         h.set("b.array", NDArray(Dims(10,10)));
         std::vector<std::string> paths;
         h.getDeepPaths(paths);
-        CPPUNIT_ASSERT(paths.size() == 6);
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(paths) += "\n" + toString(h), 6ul, paths.size());
     }
 }
 
@@ -945,7 +1284,7 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(h1.has(".i[2].k.l"));
     CPPUNIT_ASSERT(h1.has(".i[3]"));
     CPPUNIT_ASSERT(h1.has("j.k"));
-    CPPUNIT_ASSERT(h1.has("array"));
+    CPPUNIT_ASSERT_MESSAGE(toString(h1), h1.has("array"));
     CPPUNIT_ASSERT(h1.has("array.data"));
     CPPUNIT_ASSERT(h1.has("array2"));
     CPPUNIT_ASSERT(h1.has("array2.data"));
