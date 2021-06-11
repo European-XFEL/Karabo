@@ -16,7 +16,6 @@
 #include "StringTools.hh"
 #include "ToLiteral.hh"
 #include "Units.hh"
-#include "AlarmConditions.hh"
 
 #include "karaboDll.hh"
 #include "Timestamp.hh"
@@ -32,6 +31,7 @@ namespace karabo {
 
         // Forward declaration
         class Dims;
+        class AlarmCondition;
 
         /**
          * @class Validator
@@ -234,9 +234,9 @@ namespace karabo {
 
             void assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval);
 
-            bool checkAndSetThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
+            bool checkAndSetThresholdedAlarmCondition(const AlarmCondition& alarmCond, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
 
-            bool checkAndSetThresholdedAlarmCondition(const karabo::util::AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
+            bool checkAndSetThresholdedAlarmCondition(const AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
 
         };
     }
