@@ -60,6 +60,10 @@ class BaseSearchBar(QWidget):
             proxy_model = tree_view.model()
             proxy_model.setFilterFixedString(pattern)
             tree_view.expandAll()
+            # Expand whole tree and scroll try to keep the selection
+            index = proxy_model.currentIndex()
+            if index.isValid():
+                tree_view.scrollTo(index)
 
     @Slot()
     def _clear_clicked(self):
