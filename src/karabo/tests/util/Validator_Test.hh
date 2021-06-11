@@ -17,6 +17,8 @@ class Validator_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testTableMandatoryColumn);
     CPPUNIT_TEST(testTableMinMaxRows);
     CPPUNIT_TEST(testColumnMinMaxAttrs);
+    CPPUNIT_TEST(testState);
+    CPPUNIT_TEST(testAlarms);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -66,6 +68,18 @@ private:
      * table cells (elements in the RowSchema) are enforced.
      */
     void testColumnMinMaxAttrs();
+
+    /**
+     * @brief Checks that the validator rejects non standard states
+     * and sets the indicate attribute
+     */
+    void testState();
+
+    /**
+     * @brief Checks that the validator rejects non standard alarm strings
+     * and sets the indicate attribute
+     */
+    void testAlarms();
 };
 
 #endif	/* VALIDATOR_TEST_HH */
