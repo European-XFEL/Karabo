@@ -279,12 +279,6 @@ class Network(QObject):
         # Save to singleton!
         get_config()['username'] = self.username
         get_config()['gui_servers'] = self.gui_servers
-
-        # If some requests got piled up, because of no server connection,
-        # now these get handled
-        for r in self._request_queue:
-            self._write_hash(r)
-        self._request_queue = []
         self._data_reader = self._network_generator()
 
     @Slot()
@@ -554,6 +548,7 @@ class Network(QObject):
         # level-downgrade
         broadcast_event(KaraboEvent.LoginUserChanged, {})
         self._send_login_information()
+        self._empty_request_queue()
 
     # --------------------------------------------------------------------------
     # private functions
@@ -596,3 +591,10 @@ class Network(QObject):
         login_info["username"] = const.KARABO_CLIENT_ID
         login_info["version"] = const.GUI_VERSION
         self._write_hash(login_info)
+
+    def _empty_request_queue(self):
+        """If some requests got piled up, because of no server connection,
+        now these get handled after the login"""
+        for r in self._request_queue:
+            self._write_hash(r)
+        self._request_queue = []
