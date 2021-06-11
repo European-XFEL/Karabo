@@ -16,11 +16,15 @@
 #include "karabo/util/Validator.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/TableElement.hh"
+#include "karabo/util/AlarmConditionElement.hh"
+#include "karabo/util/StateElement.hh"
 
 using namespace karabo;
 using util::TABLE_ELEMENT;
 using util::INT32_ELEMENT;
 using util::STRING_ELEMENT;
+using util::STATE_ELEMENT;
+using util::ALARM_ELEMENT;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Validator_Test);
 
@@ -324,5 +328,64 @@ void Validator_Test::testColumnMinMaxAttrs() {
             "Expected error with 'Value 21 for parameter' substring.\nGot: "
             + res.second,
             res.second.find("Value 21 for parameter") != std::string::npos);
+    validated.clear();
+}
+
+
+void Validator_Test::testState() {
+
+    util::Validator validator;
+    util::Hash validated;
+
+    util::Schema schema;
+    STATE_ELEMENT(schema).key("goofyState")
+        .initialValue(util::State::UNKNOWN)
+        .commit();
+
+    // Test to reject a state that is set with a bad state.
+    std::pair<bool, std::string> res = validator.validate(schema,
+                                                          util::Hash("goofyState", "NotAState"),
+                                                          validated);
+    CPPUNIT_ASSERT_MESSAGE(std::string("Validation succeeded unexpectedly :") + util::toString(validated), !res.first);
+    CPPUNIT_ASSERT_MESSAGE(res.second, res.second.find("is not a valid state string") != std::string::npos);
+    validated.clear();
+
+    // Test to allow a state that is set with a good state.
+    res = validator.validate(schema,
+                             util::Hash("goofyState", "ERROR"),
+                             validated);
+    CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    // Test the validated hash should have the attribute set.
+    CPPUNIT_ASSERT(validated.getAttributes("goofyState").has(KARABO_INDICATE_STATE_SET));
+
+    validated.clear();
+}
+
+
+void Validator_Test::testAlarms() {
+
+    util::Validator validator;
+    util::Hash validated;
+
+    util::Schema schema;
+    ALARM_ELEMENT(schema).key("goofyAlarm")
+        .commit();
+
+    // Test to reject a state that is set with a bad alarm string
+    std::pair<bool, std::string> res = validator.validate(schema,
+                                                          util::Hash("goofyAlarm", "LondonIsBurningCallTheEngines"),
+                                                          validated);
+    CPPUNIT_ASSERT_MESSAGE(std::string("Validation succeeded unexpectedly :") + util::toString(validated), !res.first);
+    CPPUNIT_ASSERT_MESSAGE(res.second, res.second.find("is not a valid alarm string") != std::string::npos);
+    validated.clear();
+
+    // Test to allow a state that is set with a good alarm string
+    res = validator.validate(schema,
+                             util::Hash("goofyAlarm", "alarm"),
+                             validated);
+    CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    // Test the validated hash should have the attribute set.
+    CPPUNIT_ASSERT(validated.getAttributes("goofyAlarm").has(KARABO_INDICATE_ALARM_SET));
+
     validated.clear();
 }
