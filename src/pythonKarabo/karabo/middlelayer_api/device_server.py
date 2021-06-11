@@ -463,7 +463,7 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         if "log.level" not in config:
             config["log.level"] = self.log.level
         if isSet(self.timeServerId):
-            config["timeServerId"] = self.timeServerId
+            config["__timeServerId"] = self.timeServerId
         obj = cls(config)
         task = obj.startInstance(self, broadcast=False)
         await task
