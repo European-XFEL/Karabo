@@ -52,7 +52,7 @@ namespace karabo {
              * @param type
              * @param isBigEndian
              */
-            NDArray(const Dims& shape,
+            explicit NDArray(const Dims& shape = Dims(),
                     const karabo::util::Types::ReferenceType& type = karabo::util::Types::DOUBLE,
                     const bool isBigEndian = karabo::util::isBigEndian());
 
