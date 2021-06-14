@@ -838,11 +838,6 @@ namespace karabo {
         }
 
 
-        void Hash::setAttribute(const std::string& path, const std::string& attribute, const char* value, const char separator) {
-            getNode(path, separator).setAttribute(attribute, value);
-        }
-
-
         void Hash::setAttributes(const std::string& path, const Hash::Attributes& attributes, const char separator) {
             return getNode(path, separator).setAttributes(attributes);
         }
