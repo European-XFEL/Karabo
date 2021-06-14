@@ -1,0 +1,96 @@
+/*
+ * Author: __EMAIL__
+ *
+ * Created on __DATE__
+ *
+ * Copyright (c) European XFEL GmbH Hamburg. All rights reserved.
+ */
+
+#ifndef __CLASS_NAME_ALL_CAPS___HH
+#define __CLASS_NAME_ALL_CAPS___HH
+
+#include "karabo/core/Device.hh"
+#include "karabo/util/Configurator.hh"
+#include "karabo/util/Hash.hh"
+#include "karabo/util/Schema.hh"
+
+#include "version.hh"  // provides PACKAGE_VERSION
+
+
+namespace karabo {
+
+    class __CLASS_NAME__ final: public karabo::core::Device<> {
+
+    public:
+
+        // Add reflection information and Karabo framework compatibility to
+        // this class.
+        KARABO_CLASSINFO(__CLASS_NAME__, "__CLASS_NAME__",
+                         __PACKAGE_NAME___PACKAGE_VERSION)
+
+        /**
+         * @brief Necessary method as part of the factory/configuration system
+         *
+         * @param expected Will contain a description of expected parameters
+         * for a device of this class.
+         */
+        static void expectedParameters(karabo::util::Schema& expected);
+
+        /**
+         * @brief Constructs a device with the initial configuration given by a
+         * Hash.
+         *
+         * @param config the initial device configuration.
+         *
+         * If this class is constructed using the configuration system, the
+         * Hash object will already have been validated using the resulting
+         * schema of the expectedParameters function.
+         */
+        __CLASS_NAME__(const karabo::util::Hash& config);
+
+        /**
+         * @brief Called in case the device gets killed.
+         */
+        virtual ~__CLASS_NAME__();
+
+        /**
+         * @brief Acts as a hook and is called after an reconfiguration request
+         * was received, but BEFORE the reconfiguration request is actually
+         * merged into this device's state.
+         *
+         * @param incomingReconfiguration The reconfiguration information as
+         * triggered externally. You can change the content of this Hash before
+         * it is merged into the device's current state.
+         *
+         * @note (a) The incomingReconfiguration was validated before
+         *       (b) If you do not need to handle the reconfigured data, there
+         *           is no need to implement this function. The reconfiguration
+         *           will automatically be applied to the current state.
+         *
+         */
+        virtual void preReconfigure(
+            karabo::util::Hash& incomingReconfiguration) override;
+
+        /**
+         * @brief Acts as a hook and is called after an reconfiguration request
+         * was received, and AFTER this reconfiguration request got merged into
+         * this device's current state.
+         *
+         * @note You may access any (updated or not) parameters using the usual
+         * getters and setters:
+         *
+         * @code
+         * int i = get<int>("myParam");
+         * @endcode
+         */
+        virtual void postReconfigure() override;
+
+    private:
+
+         void initialize();
+
+    }; // class __CLASS_NAME__
+
+} // namespace karabo
+
+#endif
