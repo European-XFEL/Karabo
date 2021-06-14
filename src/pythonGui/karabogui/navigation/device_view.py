@@ -235,6 +235,10 @@ class DeviceTreeView(QTreeView):
         else:
             self.expandAll()
 
+        index = self.model().currentIndex()
+        if index.isValid():
+            self.scrollTo(index)
+
     @Slot()
     def resetExpand(self):
         self.expanded = False
