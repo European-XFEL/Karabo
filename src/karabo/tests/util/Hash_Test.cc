@@ -432,6 +432,7 @@ class TraceCopiesHash : protected Hash {
 
 void Hash_Test::testSetMoveSemantics() {
 
+    TraceCopies::reset(); // Ensure that nothing yet - e.g. when other test that ran before failed
     {
         // test Hash::set of normal non-const object
         TraceCopies ta(2);
@@ -671,9 +672,11 @@ void Hash_Test::testSetMoveSemantics() {
         CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr);
         CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // copied
         CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopies>("a3").value);
+
+        TraceCopies::reset();
     }
 
-    // The remaining tests are not fitting well into testSetMoveSemantics() since they have nothing
+    // The next tests are not fitting well into testSetMoveSemantics() since they have nothing
     // to do with move semantics - but with the special overloads of Element::setValue for 'char*' etc.,
     // so they are closely related.
     {
@@ -719,8 +722,149 @@ void Hash_Test::testSetMoveSemantics() {
         h.set("wchart_ptr", cPtr);
         CPPUNIT_ASSERT(std::wstring(L"a2and3") == h.get<std::wstring>("wchart_ptr"));
     }
+
+    // Some final checks
+    {
+        // Ensure that setting still works when type is not deduced, but explicitely specified
+        // (as was allowed before introducing move semantics).
+        Hash h;
+
+        h.set<int>("int", 1);
+        CPPUNIT_ASSERT_EQUAL(1, h.get<int>("int"));
+
+        h.set<Hash>("hash", Hash("a", "b"));
+        CPPUNIT_ASSERT_MESSAGE(toString(h), h.get<Hash>("hash").fullyEquals(Hash("a", "b")));
+
+        h.set<NDArray>("ndarray", NDArray(Dims({20}), 5));
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(h), 20ul, h.get<NDArray>("ndarray").size());
+
+        h.set<TraceCopies>("trace", TraceCopies (77));
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr); // even this syntax does proper move
+        CPPUNIT_ASSERT_EQUAL(77, h.get<TraceCopies>("trace").value);
+
+        // Test also Element::setValue<typename>(..) directly
+        h.getNode("int").setValue<int>(42);
+        CPPUNIT_ASSERT_EQUAL(42, h.get<int>("int"));
+
+        h.getNode("hash").setValue<Hash>(Hash("b", "c"));
+        CPPUNIT_ASSERT_MESSAGE(toString(h), h.get<Hash>("hash").fullyEquals(Hash("b", "c")));
+
+        h.getNode("ndarray").setValue<NDArray>(NDArray(Dims({10}), 6));
+        CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(h), 10ul, h.get<NDArray>("ndarray").size());
+
+        h.getNode("trace").setValue<TraceCopies>(TraceCopies (88));
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countMoveConstr); // even this syntax does proper move
+        CPPUNIT_ASSERT_EQUAL(88, h.get<TraceCopies>("trace").value);
+
+        TraceCopies::reset();
+    }
 }
 
+void Hash_Test::testSetAttributeMoveSemantics() {
+
+    TraceCopies::reset(); // Ensure that nothing yet - e.g. when other test that ran before failed
+    {
+        // test Hash::setAttribute of normal non-const object
+        TraceCopies ta(2);
+        Hash h("a", 1);
+        // Normal set
+        h.setAttribute("a", "ta", ta);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // copied into Hash
+        CPPUNIT_ASSERT_EQUAL(2, h.getAttribute<TraceCopies>("a", "ta").value);
+        // Normal set to the now existing node
+        ta.value = 4;
+        h.setAttribute("a", "ta", ta);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // again copied into Hash
+        CPPUNIT_ASSERT_EQUAL(4, h.getAttribute<TraceCopies>("a", "ta").value);
+
+        // 'moving' set
+        h.setAttribute("a", "tb", std::move(ta));
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // unchanged
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr); // since now it is moved
+        CPPUNIT_ASSERT_EQUAL(4, h.getAttribute<TraceCopies>("a", "tb").value);
+        CPPUNIT_ASSERT_EQUAL(-1, ta.value); // the moved-from object gets -1 assigned to value in the move constructor
+        // 'moving' set to the now existing node
+        ta.value = 8; // in general, a moved-from object is in a valid state, but we do not necessarily know which...
+        h.setAttribute("a", "tb", std::move(ta));
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // again unchanged
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countMoveConstr); // since moved
+        CPPUNIT_ASSERT_EQUAL(8, h.getAttribute<TraceCopies>("a", "tb").value);
+        CPPUNIT_ASSERT_EQUAL(-1, ta.value); // as before: the moved-from object gets -1 assigned to value in the move constructor
+        ta.value = 9;
+        h.setAttribute<TraceCopies>("a", "tb", std::move(ta));
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // again unchanged
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countMoveConstr); // since moved
+        CPPUNIT_ASSERT_EQUAL(9, h.getAttribute<TraceCopies>("a", "tb").value);
+
+        // set of const
+        const TraceCopies tc(3);
+        h.setAttribute("a", "tc", tc);
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countCopyConstr); // copied...
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countMoveConstr); // ...and not moved
+        CPPUNIT_ASSERT_EQUAL(3, h.getAttribute<TraceCopies>("a", "tc").value);
+        // set of const to the now existing node
+        h.getAttribute<TraceCopies>("a", "tc").value = 42;
+        CPPUNIT_ASSERT_EQUAL(42, h.getAttribute<TraceCopies>("a", "tc").value);
+        h.setAttribute("a", "tc", tc);
+        CPPUNIT_ASSERT_EQUAL(4, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(3, h.getAttribute<TraceCopies>("a", "tc").value);
+        h.setAttribute<TraceCopies>("a", "tc", tc);
+        CPPUNIT_ASSERT_EQUAL(5, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(3, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(3, h.getAttribute<TraceCopies>("a", "tc").value);
+
+        TraceCopies::reset(); // Start next round from zero
+    }
+
+    {
+        // Test Hash::setAttribute(path, attr, boost::any)
+        Hash h("a", 2);
+        boost::any a(TraceCopies(4));
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr); // moved temporary to internal place of any
+        h.setAttribute("a", "attr", a);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // a and thus its TraceCopies got copied
+        CPPUNIT_ASSERT_EQUAL(4, h.getAttribute<TraceCopies>("a", "attr").value);
+
+        const boost::any& a2 = a;
+        h.setAttribute("a", "attr2", a2);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // a and thus its TraceCopies get copied
+        CPPUNIT_ASSERT_EQUAL(4, h.getAttribute<TraceCopies>("a", "attr2").value);
+
+        h.setAttribute("a", "attr3", std::move(a));
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(4, h.getAttribute<TraceCopies>("a", "attr3").value);
+
+        TraceCopies::reset();
+    }
+    // test setting of various strings as also at the end of testSetMoveSemantics
+    {
+        // test Hash::set of various strings,
+        Hash h("a", 1);
+        h.setAttribute("a", "const_char_pointer", "a");
+        CPPUNIT_ASSERT_EQUAL(std::string("a"), h.getAttribute<std::string>("a", "const_char_pointer"));
+
+        char cText[] = "a2and3";
+        h.setAttribute("a", "char_array", cText);
+        CPPUNIT_ASSERT_EQUAL(std::string("a2and3"), h.getAttribute<std::string>("a", "char_array"));
+
+        char* cPtr = cText;
+        h.setAttribute("a", "char_ptr", cPtr);
+        CPPUNIT_ASSERT_EQUAL(std::string("a2and3"), h.getAttribute<std::string>("a", "char_ptr"));
+
+        h.setAttribute("a", "tmp_string", std::string("b"));
+        CPPUNIT_ASSERT_EQUAL(std::string("b"), h.getAttribute<std::string>("a", "tmp_string"));
+
+        const std::string b1("b1");
+        h.setAttribute("a", "const_string", b1);
+        CPPUNIT_ASSERT_EQUAL(std::string("b1"), h.getAttribute<std::string>("a", "const_string"));
+
+        std::string b2("b2");
+        h.setAttribute("a", "string", b2);
+        CPPUNIT_ASSERT_EQUAL(std::string("b2"), h.getAttribute<std::string>("a", "string"));
+    }
+}
 
 void Hash_Test::testGetAs() {
 
