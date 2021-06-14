@@ -565,7 +565,16 @@ namespace karabo {
              */
             template <typename ValueType>
             void setAttribute(const std::string& path, const std::string& attribute, const ValueType& value, const char separator = '.');
-            void setAttribute(const std::string& path, const std::string& attribute, const char* value, const char separator = '.');
+
+            /**
+             * Set the value of an attribute called "attribute" of the element identified by "path"
+             * @param path
+             * @param attribute
+             * @param value
+             * @param separator
+             */
+            template <typename ValueType>
+            void setAttribute(const std::string& path, const std::string& attribute, ValueType&& value, const char separator = '.');
 
             /**
              * Assign of list of attributes (i.e. Hash::Attributes container) to the element identified by "path"
@@ -974,6 +983,11 @@ namespace karabo {
         template <typename ValueType>
         void Hash::setAttribute(const std::string& path, const std::string& attribute, const ValueType& value, const char separator) {
             getNode(path, separator).setAttribute(attribute, value);
+        }
+
+        template <typename ValueType>
+        void Hash::setAttribute(const std::string& path, const std::string& attribute, ValueType&& value, const char separator) {
+            getNode(path, separator).setAttribute(attribute, std::forward<ValueType>(value));
         }
 
         /*
