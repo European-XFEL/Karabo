@@ -335,12 +335,12 @@ namespace karabo {
             inline void setAttribute(const std::string& key, const T& value);
 
             /**
-             * Set an attribute to this Element, identified by key. Overload for
-             * boost::any values
+             * Set an attribute to this Element, identified by key
              * @param key
              * @param value
              */
-            inline void setAttribute(const std::string& key, const boost::any& value);
+            template<class T>
+            inline void setAttribute(const std::string& key, T&& value);
 
             /**
              * Return the attribute cast to ValueType. Strict casting is applied,
@@ -847,8 +847,9 @@ namespace karabo {
         }
 
         template<typename KeyType, typename AttributeType>
-        inline void Element<KeyType, AttributeType>::setAttribute(const std::string& key, const boost::any& value) {
-            m_attributes.set(key, value);
+        template<class T>
+        inline void Element<KeyType, AttributeType>::setAttribute(const std::string& key, T&& value) {
+            m_attributes.set(key, std::forward<T>(value));
         }
 
         template<typename KeyType, typename AttributeType>
