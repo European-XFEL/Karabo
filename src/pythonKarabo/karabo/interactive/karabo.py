@@ -72,6 +72,14 @@ def parse_commandline():
                             help='Force creation of device, may override '
                                  'existing')
 
+    parser_new.add_argument('-t', '--template',
+                            type=str,
+                            default='minimal',
+                            help='The name of the set of template files to use'
+                                 ' for scaffolding the new device project. '
+                                 'Defaults to "minimal" (supported by all '
+                                 'APIs).')
+
     parser_chk = sps.add_parser('checkout',
                                 help='Checks out a device (sources) from the '
                                      'repository')
@@ -219,10 +227,23 @@ def new(args):
                 print('Device {} already exists.'
                       .format(args.device))
                 return
+        tpath = os.path.join('templates', args.api, args.template)
+        if not os.path.isdir(tpath):
+            print(
+                f'Template set "{args.template}" not available for API '
+                f'"{args.api}".')
+            troot = os.path.join('templates', args.api)
+            avail_sets = [
+                f'"{d}"' for d in os.listdir(troot)
+                if os.path.isdir(os.path.join(troot, d))]
+            print(f'    - available set(s): {", ".join(avail_sets)}.')
+            return
         run_cmd('mkdir -p {}'.format(path))
-        tpath = os.path.join('templates', args.api, 'minimal')
         run_cmd('cp -rf {} {}'.format(os.path.join(tpath, '*'), path))
-        run_cmd('cp -f {} {}'.format(os.path.join(tpath, '.gitignore'), path))
+        # '.[gi]*' matches '.gitignore', '.install.sh' and '.gitlab-ci.yml',
+        # but neither '.' nor '..', which would generate an error on the cp
+        # command and interrupt the script.
+        run_cmd('cp -f {} {}'.format(os.path.join(tpath, '.[gi]*'), path))
         email = os.environ.get('USER', 'Unknown')
         configure_template(path, args.device, class_name, email)
         os.chdir(path)
