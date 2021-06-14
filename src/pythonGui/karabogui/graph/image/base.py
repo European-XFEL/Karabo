@@ -43,7 +43,7 @@ class KaraboImageView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-        self.image_layout = GraphicsLayoutWidget(self)
+        self.image_layout = GraphicsLayoutWidget()
         self.layout().addWidget(self.image_layout, 0, 0, 1, 1)
 
         # Image can have transparent background!
