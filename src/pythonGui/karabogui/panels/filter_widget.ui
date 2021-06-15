@@ -88,7 +88,7 @@
       <string>Case sensitive</string>
      </property>
      <property name="text">
-      <string>Search</string>
+      <string>Filter</string>
      </property>
      <property name="checkable">
       <bool>false</bool>
@@ -99,7 +99,7 @@
     <widget class="QPushButton" name="ui_clear">
      <property name="maximumSize">
       <size>
-       <width>40</width>
+       <width>100</width>
        <height>27</height>
       </size>
      </property>
@@ -107,7 +107,7 @@
       <string>Regular expression</string>
      </property>
      <property name="text">
-      <string>Clear</string>
+      <string>Clear Filter</string>
      </property>
      <property name="checkable">
       <bool>false</bool>
