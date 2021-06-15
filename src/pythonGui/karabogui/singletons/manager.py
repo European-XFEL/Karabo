@@ -212,11 +212,12 @@ class Manager(QObject):
             reason = info.get('failureReason') or info.get('reason')
             # clear the waiting queue
             device = self._waiting_devices.pop(deviceId, None)
+            if device is None:
+                return
             props = self._waiting_properties.pop(device, [])
             paths = set(input_info['configuration'].paths())
-            pending = [prop_proxy
-                       for prop_proxy in props
-                       if prop_proxy.path not in paths]
+            pending = [property_proxy for property_proxy in props
+                       if property_proxy.path not in paths]
             if pending:
                 # in case multiple updates are sent and only few failed
                 self.expect_properties(device, pending)
