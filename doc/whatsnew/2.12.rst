@@ -8,7 +8,8 @@ Summary – Release highlights
 ++++++++++++++++++++++++++++
 
 - GUI: Project devices can be moved up and down with a context menu action
-- GUI: Added context menu action on the device server to sort its devices alphabetically, or by either domain, type or member
+- GUI: Due to segmentation faults on Ubuntu 20, the library Qt is downgraded to 5.9
+- GUI: Added context menu action on the project device server to sort its devices alphabetically, or by either domain, type or member
 - GUI: Offline project devices are now loaded lazily giving a significant project loading boost
 - GUI: View of Karabo Clients added to the application menu (i.e. command line interfaces and DOOCS bridges).
 - MDL: Forward slotInstanceUpdated signal to device children
