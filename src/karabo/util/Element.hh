@@ -604,8 +604,10 @@ namespace karabo {
         template<class ValueType>
         inline void Element<KeyType, AttributeType>::setValue(ValueType&& value) { // 'ValueType&&' is a universal reference!
             // forward returns either 'ValueType&&', 'ValueType&', or 'const ValueType&'
+            using removed_reference = typename std::remove_reference<ValueType>::type;
+            using removed_const_and_ref = typename std::remove_const<removed_reference>::type;
             this->setValue<decltype(std::forward<ValueType>(value)),
-                           typename boost::is_base_of<Hash, std::remove_const_t<std::remove_reference_t<ValueType>>>::type>(std::forward<ValueType>(value));
+                           typename boost::is_base_of<Hash, removed_const_and_ref>::type>(std::forward<ValueType>(value));
         }
 
         template<class KeyType, typename AttributeType>
@@ -621,7 +623,7 @@ namespace karabo {
             m_value = conditional_hash_cast<is_hash_the_base>::cast(value);
             // When ValueType is derived from Hash, this sets the attribute __classId to the class id name.
             // If ValueType _is_ Hash or any class not inheriting from Hash, nothing is done.
-            SetClassIdAttribute<std::remove_reference_t<ValueType>, is_hash_the_base>(value, *this);
+            SetClassIdAttribute<typename std::remove_reference<ValueType>::type, is_hash_the_base>(value, *this);
         }
 
         template<class KeyType, typename AttributeType>
@@ -630,7 +632,7 @@ namespace karabo {
             m_value = conditional_hash_cast<is_hash_the_base>::cast(std::forward<ValueType>(value));
             // When ValueType is derived from Hash, this sets the attribute __classId to the class id name.
             // If ValueType _is_ Hash or any class not inheriting from Hash, nothing is done.
-            SetClassIdAttribute<std::remove_reference_t<ValueType>, is_hash_the_base> helper(value, *this);
+            SetClassIdAttribute<typename std::remove_reference<ValueType>::type, is_hash_the_base> helper(value, *this);
             // If value is a Hash derived non-Hash class and we forward it as a real lvalue reference,
             // the move assignment to Hash clears the Hash container of 'value'. Very likely 'value' is NOT anymore
             // in a valid state: if 'value' is an NDArray, value.getShape() will throw since key "shape" is missing!
