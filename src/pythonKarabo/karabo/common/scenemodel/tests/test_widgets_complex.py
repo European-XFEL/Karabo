@@ -1,3 +1,7 @@
+from pytest import raises as assert_raises
+
+from traits.api import TraitError
+
 from .. import api
 from .utils import (assert_base_traits, base_widget_traits,
                     single_model_round_trip)
@@ -118,6 +122,21 @@ def test_display_state_color_widget():
     read_model = single_model_round_trip(model)
     assert_base_traits(read_model)
     assert read_model.show_string
+
+    assert model.font_size == api.SCENE_FONT_SIZE
+    assert model.font_weight == api.SCENE_FONT_WEIGHT
+
+    # Check valid input
+    input_size = 7
+    input_weight = 'bold'
+    model = api.DisplayLabelModel(font_size=input_size,
+                                  font_weight=input_weight)
+    assert model.font_size == input_size
+    assert model.font_weight == input_weight
+
+    # Check invalid input
+    assert_raises(TraitError, api.DisplayLabelModel, font_size=1)
+    assert_raises(TraitError, api.DisplayLabelModel, font_weight='foo')
 
 
 def test_evaluator_widget():
