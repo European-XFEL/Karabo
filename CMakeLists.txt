@@ -22,6 +22,16 @@
 #       -DBUILD_UNIT_TESTING=1 -DBUILD_INTEGRATION_TESTING=1 ../Framework
 #
 
+# TODO: Add a BUILD_KARATHON variable that when true (the default) will build
+#       the Karathon library.
+
+# TODO: Move the logic that updates the Conda environment with the requirements
+#       for the Karabo library to the CMakeLists.txt at the src/karabo directory.
+
+# TODO: Add logic to update the Conda environment with the requirements for the
+#       Karathon library to the CMakeLists.txt at the src/karathon directory
+#       (the Karathon requirements Conda environment will be created).
+
 cmake_minimum_required(VERSION 3.12)
 
 project(
@@ -121,6 +131,9 @@ if (NOT(DEFINED ENV{CONDA_BUILD}))
     )
     endif()  # if (CONDA_CLI_FOUND)
 endif()  # if(not DEFINED ENV{CONDA_BUILD})
+
+# The build of the Karathon Library (used by the Bound Python API).
+add_subdirectory(src/karathon ${CMAKE_BINARY_DIR}/karathon)
 
 # The build of the Karabo C++ Device Server (karabo-cppserver).
 add_subdirectory(src/deviceServer ${CMAKE_BINARY_DIR}/karabo/deviceServer)
