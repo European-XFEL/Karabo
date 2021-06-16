@@ -64,7 +64,7 @@ class DisplayProgressBarModel(BaseWidgetObjectData):
     is_vertical = Bool(False)
 
 
-class DisplayStateColorModel(BaseWidgetObjectData):
+class DisplayStateColorModel(DisplayLabelModel):
     """ A model for DisplayStateColor
     """
     # The state shown on the widget
@@ -253,6 +253,7 @@ def _display_progress_bar_writer(model, parent):
 @register_scene_reader('DisplayStateColor', version=1)
 def _display_state_color_reader(element):
     traits = read_base_widget_data(element)
+    traits.update(read_font_format_data(element))
     value = element.get(NS_KARABO + 'show_string', '')
     traits['show_string'] = (value.lower() == 'true')
     return DisplayStateColorModel(**traits)
@@ -262,6 +263,7 @@ def _display_state_color_reader(element):
 def _display_state_color_writer(model, parent):
     element = SubElement(parent, WIDGET_ELEMENT_TAG)
     write_base_widget_data(model, element, 'DisplayStateColor')
+    write_font_format_data(model, element)
     element.set(NS_KARABO + 'show_string', str(model.show_string).lower())
     return element
 
