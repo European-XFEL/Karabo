@@ -1,12 +1,13 @@
 from qtpy import uic
-from qtpy.QtCore import Slot
-from qtpy.QtGui import QFont, QFontDatabase
+from qtpy.QtCore import Qt, Slot
+from qtpy.QtGui import QFont, QFontDatabase, QPalette, QValidator
 from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.const import SCENE_FONT_SIZES
 from karabogui.fonts import (
     FONT_ALIAS, get_alias_from_font, get_font_from_alias,
     get_font_size_from_dpi)
+from karabogui.validators import IntValidator
 
 from .utils import get_dialog_ui
 
@@ -33,6 +34,13 @@ class FontDialog(QDialog):
         font_size_cb.addItems(sizes_string)
         font_size = qfont.pointSize()
         font_size_cb.setCurrentText(str(font_size))
+
+        self._font_validator = IntValidator(min=6, max=300)
+        self._normal_palette = self.font_size_combobox.palette()
+        self._error_palette = QPalette(self._normal_palette)
+        self._error_palette.setColor(QPalette.Text, Qt.red)
+        # attach validator for basic string protection
+        self.font_size_combobox.setValidator(self._font_validator)
 
         # Update effects
         self.bold_checkbox.setChecked(qfont.bold())
@@ -64,8 +72,13 @@ class FontDialog(QDialog):
 
     @Slot(str)
     def _update_font_size(self, size):
-        self.qfont.setPointSize(int(size))
-        self._preview()
+        out, _, _ = self._font_validator.validate(size, None)
+        validated = out is QValidator.Acceptable
+        palette = (self._normal_palette if validated else self._error_palette)
+        self.font_size_combobox.setPalette(palette)
+        if validated:
+            self.qfont.setPointSize(int(size))
+            self._preview()
 
     @Slot(str)
     def _update_font_style(self, style):
