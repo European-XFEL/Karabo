@@ -42,7 +42,11 @@ def get_error_message(failure_reason):
                 verbose_message = f"{exception}: {message}"
                 break
         else:
-            # Only KaraboErrors, show it!
-            verbose_message = f"{message}"
+            if python_exceptions:
+                # Only KaraboErrors, show it!
+                verbose_message = f"{message}"
+            else:
+                # XXX: No exception found ...
+                verbose_message = "Unknown exception"
 
     return verbose_message
