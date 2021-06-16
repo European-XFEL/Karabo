@@ -1,10 +1,12 @@
-from qtpy.QtWidgets import QAction
+from qtpy.QtWidgets import QAction, QDialog
 from traits.api import Instance, Str, on_trait_change
 
 from karabo.common.scenemodel.api import DisplayStateColorModel
 from karabogui.binding.api import StringBinding
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
+from karabogui.dialogs.format_label import FormatLabelDialog
+from karabogui.fonts import get_font_size_from_dpi
 from karabogui.indicators import get_state_color
 from karabogui.util import generateObjectName
 from karabogui.widgets.hints import FrameWidget
@@ -35,6 +37,13 @@ class DisplayStateColor(BaseBindingController):
         textAction.setCheckable(True)
         textAction.setChecked(self.model.show_string)
         widget.addAction(textAction)
+
+        # Add an action for formatting options
+        format_action = QAction("Format field..", widget)
+        format_action.triggered.connect(self._format_field)
+        widget.addAction(format_action)
+        self._apply_format(widget)
+
         return widget
 
     def value_update(self, proxy):
@@ -56,3 +65,27 @@ class DisplayStateColor(BaseBindingController):
 
     def _show_state_string(self):
         self.model.show_string = not self.model.show_string
+
+    # -----------------------------------------------------------------------
+    # Formatting methods
+
+    def _format_field(self):
+        dialog = FormatLabelDialog(font_size=self.model.font_size,
+                                   font_weight=self.model.font_weight,
+                                   parent=self.widget)
+        if dialog.exec_() == QDialog.Accepted:
+            self.model.trait_set(font_size=dialog.font_size,
+                                 font_weight=dialog.font_weight)
+            self._apply_format()
+
+    def _apply_format(self, widget=None):
+        """The widget is passed as an argument in create_widget as it is not
+           yet bound to self.widget then"""
+        if widget is None:
+            widget = self.widget
+
+        # Apply font formatting
+        font = widget.font()
+        font.setPointSize(get_font_size_from_dpi(self.model.font_size))
+        font.setBold(self.model.font_weight == "bold")
+        widget.setFont(font)
