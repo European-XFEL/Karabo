@@ -134,7 +134,7 @@ foreach(testTarget IN LISTS INTEGRATION_TEST_TARGETS)
 
     target_link_libraries(
         ${testTarget}
-        "karabo"
+        ${KARABO_LIB_TARGET_NAME}
         ${CPPUNIT}
     )
     message(STATUS "Added integration test executable ${testTarget}")
