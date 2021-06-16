@@ -37,6 +37,7 @@ requirements:
     - icu
     # - sip
     - nlohmann_json
+    - numpy=1.13.3
     - libtiff
     - pugixml=1.2=xfel
     - cppunit
