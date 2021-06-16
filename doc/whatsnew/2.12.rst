@@ -12,6 +12,7 @@ Summary – Release highlights
 - GUI: Added context menu action on the project device server to sort its devices alphabetically, or by either domain, type or member
 - GUI: Offline project devices are now loaded lazily giving a significant project loading boost
 - GUI: View of Karabo Clients added to the application menu (i.e. command line interfaces and DOOCS bridges).
+- GUI: It is now possible to format (weight, size) the device state string on the `StateColor Field`
 - MDL: Forward slotInstanceUpdated signal to device children
 
 Change of behaviour
