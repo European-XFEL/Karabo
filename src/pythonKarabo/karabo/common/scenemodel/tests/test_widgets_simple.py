@@ -110,6 +110,8 @@ def test_label_model():
     traits['foreground'] = '#000000'
     traits['background'] = '#ffffff'
     traits['frame_width'] = 0
+    traits['alignh'] = 2
+
     model = api.LabelModel(**traits)
     read_model = single_model_round_trip(model)
     _assert_geometry_traits(read_model)
@@ -118,6 +120,10 @@ def test_label_model():
     assert read_model.foreground == '#000000'
     assert read_model.background == '#ffffff'
     assert read_model.frame_width == 0
+    assert read_model.alignh == 2
+
+    assert_raises(TraitError, api.LabelModel, alignh=3)
+    assert_raises(TraitError, api.LabelModel, alignh=5)
 
 
 def test_scene_link_model():
