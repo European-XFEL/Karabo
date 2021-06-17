@@ -866,6 +866,73 @@ void Hash_Test::testSetAttributeMoveSemantics() {
     }
 }
 
+void Hash_Test::testConstructorMoveSemantics() {
+
+    TraceCopies::reset(); // Clean start
+
+    // First test setting single value as specially treated
+    {
+        // test ctr with normal non-const object
+        TraceCopies ta(2);
+        Hash h("ta", ta);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // copied into Hash
+        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("ta").value);
+    }
+    {
+        // 'moving' set
+        Hash h("tb", TraceCopies(4));
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // unchanged
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr); // since now it is moved
+        CPPUNIT_ASSERT_EQUAL(4, h.get<TraceCopies>("tb").value);
+    }
+    {
+        // set of const
+        const TraceCopies tc(3);
+        Hash h("tc", tc);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // copied...
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr); // ...and not moved
+        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopies>("tc").value);
+    }
+    {
+        // Now set of many of various const/ref types in one go, also Hash
+        TraceCopies ta(1);
+        const TraceCopies tb(2);
+        Hash ha("a", ta, "b", tb);
+        const Hash hb("a", ta, "b", tb);
+        TraceCopies::reset(); // Only count for the following constructor(s)
+        Hash h("int", 0, // for first do not test TraceCopies since that is tested above
+               "ta", ta, "tb", tb, "tc", TraceCopies(3),
+               "ha", ha, "hb", hb, "hc", Hash("a", ta, "b", tb));
+
+        CPPUNIT_ASSERT_EQUAL(8, TraceCopies::countCopyConstr); // ta, tb, 4x when ha and hb are copied into h and 2x when ta/tb are copied into hc
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr); // tc
+
+        CPPUNIT_ASSERT_EQUAL(1, h.get<TraceCopies>("ta").value);
+        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("tb").value);
+        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopies>("tc").value);
+        CPPUNIT_ASSERT_EQUAL(1, h.get<TraceCopies>("ha.a").value);
+        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("ha.b").value);
+        CPPUNIT_ASSERT_EQUAL(1, h.get<TraceCopies>("hb.a").value);
+        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("hb.b").value);
+        CPPUNIT_ASSERT_EQUAL(1, h.get<TraceCopies>("hc.a").value);
+        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("hc.b").value);
+
+        // Verify insertion order
+        // (was wrong in first attempt to have move semantics in Hash constructor)
+        Hash::const_iterator it = h.begin();
+        CPPUNIT_ASSERT_EQUAL(std::string("int"), it->getKey());
+        CPPUNIT_ASSERT_EQUAL(std::string("ta"), (++it)->getKey());
+        CPPUNIT_ASSERT_EQUAL(std::string("tb"), (++it)->getKey());
+        CPPUNIT_ASSERT_EQUAL(std::string("tc"), (++it)->getKey());
+        CPPUNIT_ASSERT_EQUAL(std::string("ha"), (++it)->getKey());
+        CPPUNIT_ASSERT_EQUAL(std::string("hb"), (++it)->getKey());
+        CPPUNIT_ASSERT_EQUAL(std::string("hc"), (++it)->getKey());
+        CPPUNIT_ASSERT(++it == h.end());
+    }
+
+    TraceCopies::reset(); // Start next round from zero
+}
+
 void Hash_Test::testGetAs() {
 
     {
