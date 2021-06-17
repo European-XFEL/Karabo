@@ -127,7 +127,12 @@ class DoubleLineEdit(BaseLineEdit):
             # Note: Avoid numpy to float casting here using the str value
             format_str = ('{}' if self.model.decimals == -1
                           else '{{:.{}f}}'.format(self.model.decimals))
-            displayed = format_str.format(float(self._internal_value))
+            try:
+                displayed = format_str.format(float(self._internal_value))
+            except ValueError:
+                # Note: This can happen for example if a float becomes a
+                # vector but controller was not mutated
+                displayed = self._internal_value
         with SignalBlocker(self._internal_widget):
             self._display_value = displayed
             self._internal_widget.setText(self._display_value)
