@@ -16,7 +16,7 @@ class KaraboMessageBox(QDialog):
     """A pop up message box which will automatically close after
     `MESSAGE_POPUP` seconds!
     """
-    existing = []
+    existing = set()
 
     def __init__(self, parent=None):
         super(KaraboMessageBox, self).__init__(parent)
@@ -44,7 +44,7 @@ class KaraboMessageBox(QDialog):
         self._ticker.timeout.connect(self.close)
         # We already start ticking here!
         self._ticker.start()
-        self.existing.append(self)
+        self.existing.add(self)
 
     # ----------------------------------------------------------------------
     # Qt methods
@@ -53,7 +53,8 @@ class KaraboMessageBox(QDialog):
         """Close the ticker before closing the dialog"""
         if self._ticker.isActive():
             self._ticker.stop()
-        self.existing.remove(self)
+        # Graceful unregister with discard!
+        self.existing.discard(self)
         super(KaraboMessageBox, self).closeEvent(event)
 
     def sizeHint(self):
