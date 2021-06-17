@@ -30,7 +30,6 @@ namespace karabo {
     namespace util {
 
         // Forward declaration
-        class Dims;
         class AlarmCondition;
 
         /**
