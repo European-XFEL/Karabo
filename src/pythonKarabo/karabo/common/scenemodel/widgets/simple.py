@@ -139,6 +139,8 @@ class LabelModel(BaseWidgetObjectData):
     background = String('transparent')
     # The line width of a frame around the text
     frame_width = Int(0)
+    # Horizontal alignment... default is align left (0x0001)
+    alignh = Enum([1, 2, 4])
 
 
 class LampModel(BaseWidgetObjectData):
@@ -245,6 +247,7 @@ def __label_reader(element):
     traits['text'] = element.get(NS_KARABO + 'text', '')
     traits['font'] = element.get(NS_KARABO + 'font', '')
     traits['foreground'] = element.get(NS_KARABO + 'foreground', 'black')
+    traits['alignh'] = int(element.get(NS_KARABO + 'alignh', 1))
 
     bg = element.get(NS_KARABO + 'background')
     if bg is not None:
@@ -269,6 +272,8 @@ def __label_writer(model, parent):
     element.set(NS_KARABO + 'frameWidth', str(model.frame_width))
     if model.background != '':
         element.set(NS_KARABO + 'background', model.background)
+    if model.alignh != 1:
+        element.set(NS_KARABO + 'alignh', str(model.alignh))
 
     return element
 
