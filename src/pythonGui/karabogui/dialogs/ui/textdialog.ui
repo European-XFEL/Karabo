@@ -139,6 +139,32 @@
        </property>
       </widget>
      </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="laAlignment">
+       <property name="text">
+        <string>Alignment</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QComboBox" name="cbAlignment">
+       <item>
+        <property name="text">
+         <string>AlignLeft</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>AlignRight</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>AlignHCenter</string>
+        </property>
+       </item>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
