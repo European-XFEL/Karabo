@@ -146,49 +146,22 @@ namespace karabo {
             explicit Hash(const std::string& path);
 
             /**
-             * Constructors with different number of key-value pairs as arguments
-             * Create and initialize a hash with multiple key-value pairs in a single call
-             * @param key1 A string hash key
-             * @param value1 Any object as value
-             * @param key2 A string hash key
-             * @param value2 Any object as value
-             * @param key3 A string hash key
-             * @param value3 Any object as value
-             * @param key4 A string hash key
-             * @param value4 Any object as value
-             * @param key5 A string hash key
-             * @param value5 Any object as value
-             * @param key6 A string hash key
-             * @param value6 Any object as value
+             * Constructor for different numbers of key-value pairs as arguments
+             * Create and initialize a hash with multiple key-value pairs in a single call,
+             * supporting also move semantics
              *
+             * @param key1 A string hash key
+             * @param value1 Any object as (r- or l-)value
+             * @param key2 Optionally another key
+             * @param value2 Optionally another object as (r- or l-)value
+             * ...
              * <b>Example:</b>
              * @code
              * Hash hash("firstKey", 1, "secondKey", 2, "thirdKey", 3, "fourthKey", 4, "fifthKey", 5, "sixthKey", 6);
              * @endcode
              */
-            template <typename V1>
-            Hash(const std::string& path1, const V1& value1);
-
-            template <typename V1, typename V2>
-            Hash(const std::string& path1, const V1& value1, const std::string& path2, const V2& value2);
-
-            template <typename V1, typename V2, typename V3>
-            Hash(const std::string& path1, const V1& value1, const std::string& path2, const V2& value2,
-                 const std::string& path3, const V3& value3);
-
-            template <typename V1, typename V2, typename V3, typename V4>
-            Hash(const std::string& path1, const V1& value1, const std::string& path2, const V2& value2,
-                 const std::string& path3, const V3& value3, const std::string& path4, const V4& value4);
-
-            template <typename V1, typename V2, typename V3, typename V4, typename V5>
-            Hash(const std::string& path1, const V1& value1, const std::string& path2, const V2& value2,
-                 const std::string& path3, const V3& value3, const std::string& path4, const V4& value4,
-                 const std::string& path5, const V5& value5);
-
-            template <typename V1, typename V2, typename V3, typename V4, typename V5, typename V6>
-            Hash(const std::string& path1, const V1& value1, const std::string& path2, const V2& value2,
-                 const std::string& path3, const V3& value3, const std::string& path4, const V4& value4,
-                 const std::string& path5, const V5& value5, const std::string& path6, const V6& value6);
+            template <typename V1, typename... Args>
+            Hash(const std::string& path1, V1&& value1, Args&&... args);
 
             /**
              * Destructor
@@ -348,6 +321,12 @@ namespace karabo {
 
             template<typename ValueType>
             inline Node& set(const std::string& path, ValueType&& value, const char separator = '.');
+
+            /**
+             * Set an arbitray number of key/value pairs, internally using Hash::set(..) with the default separator
+             */
+            template<typename ValueType, typename... Args>
+            inline void setMulti(const std::string& key, ValueType&& value, Args&&... args);
 
             /**
              * Clone the content (key, value, attributes) of another elements.
@@ -653,6 +632,11 @@ namespace karabo {
             inline Node& setHash(const std::string& path, HashType value, const char separator = '.');
 
             /**
+             * End point for setMulti(..) with variadic templates
+             */
+            inline void setMulti() const {}
+
+            /**
              *  Out of 'paths' select those that belong to child with 'childKey',
              * e.g. out of ["a", "b.c", "b.d.e"] return ["c", "d.e"] if childKey == "b" and separator == '.'.
              */
@@ -722,55 +706,10 @@ namespace karabo {
 
     namespace util {
 
-        template <typename V1>
-        Hash::Hash(const std::string& path1, const V1& value1) {
-            this->set(path1, value1);
-        }
-
-        template <typename V1, typename V2>
-        Hash::Hash(const std::string& path1, const V1& value1, const std::string& path2, const V2& value2) {
-            this->set(path1, value1);
-            this->set(path2, value2);
-        }
-
-        template <typename V1, typename V2, typename V3>
-        Hash::Hash(const std::string& path1, const V1& value1, const std::string& path2, const V2& value2,
-                   const std::string& path3, const V3& value3) {
-            this->set(path1, value1);
-            this->set(path2, value2);
-            this->set(path3, value3);
-        }
-
-        template <typename V1, typename V2, typename V3, typename V4>
-        Hash::Hash(const std::string& path1, const V1& value1, const std::string& path2, const V2& value2,
-                   const std::string& path3, const V3& value3, const std::string& path4, const V4& value4) {
-            this->set(path1, value1);
-            this->set(path2, value2);
-            this->set(path3, value3);
-            this->set(path4, value4);
-        }
-
-        template <typename V1, typename V2, typename V3, typename V4, typename V5>
-        Hash::Hash(const std::string& path1, const V1& value1, const std::string& path2, const V2& value2,
-                   const std::string& path3, const V3& value3, const std::string& path4, const V4& value4,
-                   const std::string& path5, const V5& value5) {
-            this->set(path1, value1);
-            this->set(path2, value2);
-            this->set(path3, value3);
-            this->set(path4, value4);
-            this->set(path5, value5);
-        }
-
-        template <typename V1, typename V2, typename V3, typename V4, typename V5, typename V6>
-        Hash::Hash(const std::string& path1, const V1& value1, const std::string& path2, const V2& value2,
-                   const std::string& path3, const V3& value3, const std::string& path4, const V4& value4,
-                   const std::string& path5, const V5& value5, const std::string& path6, const V6& value6) {
-            this->set(path1, value1);
-            this->set(path2, value2);
-            this->set(path3, value3);
-            this->set(path4, value4);
-            this->set(path5, value5);
-            this->set(path6, value6);
+        template <typename V1, typename... Args>
+        Hash::Hash(const std::string& path1, V1&& value1, Args&&... args) : Hash() {
+            set(path1, std::forward<V1>(value1));
+            setMulti(std::forward<Args>(args)...);
         }
 
         template<> inline const boost::any& Hash::get(const std::string& path, const char separator) const {
@@ -884,6 +823,14 @@ namespace karabo {
                     return leaf->m_container.set(token, std::move(hashes));
                 }
             }
+        }
+
+        template<typename ValueType, typename... Args>
+        inline void Hash::setMulti(const std::string& key, ValueType&& value, Args&&... args) {
+            // The first...
+            set(key, std::forward<ValueType>(value));
+            // ...and the rest if any
+            setMulti(std::forward<Args>(args)...); // does not compile if the args pack has an odd number of elements
         }
 
         template <typename ValueType >
