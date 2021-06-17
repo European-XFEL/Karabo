@@ -30,6 +30,7 @@ class TextDialog(QDialog):
         self.set_text_font_button()
         self.set_text_color_button()
         self.set_text_background_button()
+        self.set_alignment_combo()
 
         if self.label_model.frame_width > 0:
             self.cbFrameWidth.setChecked(True)
@@ -37,6 +38,16 @@ class TextDialog(QDialog):
 
         self.cbBackground.setChecked(
             self.label_model.background != 'transparent')
+
+    def set_alignment_combo(self):
+        """Set the combobox according to the alignment"""
+        alignment = Qt.AlignmentFlag(self.label_model.alignh)
+        if alignment == Qt.AlignLeft:
+            self.cbAlignment.setCurrentIndex(0)
+        elif alignment == Qt.AlignRight:
+            self.cbAlignment.setCurrentIndex(1)
+        elif alignment == Qt.AlignHCenter:
+            self.cbAlignment.setCurrentIndex(2)
 
     def set_text_font_button(self):
         qfont = QFont(self.text_font)
@@ -59,6 +70,18 @@ class TextDialog(QDialog):
         if state != Qt.Checked:
             self.label_model.background = 'transparent'
             self.set_text_background_button()
+
+    @Slot(int)
+    def on_cbAlignment_currentIndexChanged(self, index):
+        if index == 0:
+            alignment = Qt.AlignLeft
+        elif index == 1:
+            alignment = Qt.AlignRight
+        elif index == 2:
+            alignment = Qt.AlignHCenter
+
+        # Store the int cast of the enum flag
+        self.label_model.alignh = int(alignment)
 
     @Slot(str)
     def on_leText_textChanged(self, text):
