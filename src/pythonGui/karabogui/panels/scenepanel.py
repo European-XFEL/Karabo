@@ -115,13 +115,15 @@ class ScenePanel(BasePanelWidget):
     def closeEvent(self, event):
         super(ScenePanel, self).closeEvent(event)
         if event.isAccepted():
-            # Tell the scene view to destruct
-            self.scene_view.setParent(None)
-            self.scene_view.destroy()
-            self.scene_view = None
-            self.scroll_widget.setParent(None)
-            self.scroll_widget.destroy()
-            self.scroll_widget = None
+            # Tell the scene view and scroll widget to destruct
+            if self.scene_view is not None:
+                self.scene_view.setParent(None)
+                self.scene_view.destroy()
+                self.scene_view = None
+            if self.scroll_widget is not None:
+                self.scroll_widget.setParent(None)
+                self.scroll_widget.destroy()
+                self.scroll_widget = None
             # Remove the window title handler
             self.model.on_trait_change(self.set_title, 'simple_name',
                                        remove=True)
