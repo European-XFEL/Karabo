@@ -262,7 +262,9 @@ class BaseSeriesGraph(BaseBindingController):
 
         x_range = self._get_start_end_date_secs()
 
-        self._plot.plotItem.setRange(xRange=x_range)
+        # From a deferred call the plot might have been deleted!
+        if self._plot is not None:
+            self._plot.plotItem.setRange(xRange=x_range)
 
     def _get_start_end_date_secs(self):
         """Returns the start and end date based on the selected button"""
