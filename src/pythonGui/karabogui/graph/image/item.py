@@ -6,7 +6,7 @@ from scipy.ndimage import zoom
 
 from karabogui.graph.common.api import MouseMode
 
-from .utils import bytescale, map_rect_to_transform, rescale
+from .utils import bytescale, map_rect_to_transform
 
 DIMENSION_DOWNSAMPLE = [(500, 1.5), (1000, 2)]  # [(dimension, min downsample)]
 NULL_COLOR = QColor(255, 255, 255, 70)
@@ -277,7 +277,7 @@ class KaraboImageItem(GraphicsObject):
                     return
 
             # 3. Clip values according to levels
-            low, high = (0.0, 255.0)  # default color range
+            low, high = 0, 255  # default color range
             if self.levels is None:
                 image_min, image_max = image.min(), image.max()
             else:
@@ -286,10 +286,9 @@ class KaraboImageItem(GraphicsObject):
                 image_min, image_max = image.min(), image.max()
                 # Calculate new color ranges with the ratio of the image
                 # extrema and the preset levels.
-                low, high = rescale(np.array([image_min, image_max]),
-                                    min_value=level_min, max_value=level_max,
-                                    low=low, high=high)
-
+                low, high = bytescale(np.array([image_min, image_max]),
+                                      cmin=level_min, cmax=level_max,
+                                      low=low, high=high)
             # 4. Rescale values to 0-255 relative to the image min/max
             # for the QImage
             image = bytescale(image, cmin=image_min, cmax=image_max,
