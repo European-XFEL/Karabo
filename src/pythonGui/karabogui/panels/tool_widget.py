@@ -11,6 +11,7 @@ from qtpy.QtCore import Slot
 from qtpy.QtGui import QValidator
 from qtpy.QtWidgets import QWidget
 
+import karabogui.icons as icons
 from karabo.common.enums import Interfaces
 from karabogui.util import wait_cursor
 
@@ -114,6 +115,24 @@ class BaseSearchBar(QWidget):
 
 class SearchBar(BaseSearchBar):
     ui_file = "filter_widget.ui"
+
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.ui_status.setItemIcon(1, icons.statusOk)
+        self.ui_status.setItemIcon(2, icons.statusError)
+        self.ui_status.setItemIcon(3, icons.statusUnknown)
+
+    # -----------------------------------------
+    # Qt Slots
+
+    def on_search(self):
+        model = self.tree_view().model()
+        model.setFilterStatus(self.ui_status.currentText())
+
+    def on_clear(self):
+        self.ui_status.setCurrentIndex(0)
+        model = self.tree_view().model()
+        model.setFilterStatus(self.ui_status.currentText())
 
 
 class InterfaceBar(BaseSearchBar):
