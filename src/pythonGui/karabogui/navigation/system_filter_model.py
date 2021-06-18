@@ -8,6 +8,7 @@ from qtpy.QtCore import (
     Slot)
 
 import karabogui.access as krb_access
+from karabo.common.api import ProxyStatus
 from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.singletons.api import get_topology
 
@@ -28,6 +29,7 @@ class TopologyFilterModel(QSortFilterProxyModel):
         self.setFilterKeyColumn(0)
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
+        self._filter_status = None
         event_map = {
             KaraboEvent.ShowDevice: self._event_show_device
         }
@@ -50,16 +52,39 @@ class TopologyFilterModel(QSortFilterProxyModel):
                 return True
             if not node.is_visible:
                 return False
-            # Fast path action!
-            if self.filterRegExp().isEmpty():
-                return True
-            row_count = model.rowCount(source_index)
-            for row in range(row_count):
-                if self.filterAcceptsRow(row, source_index):
+
+            if self._filter_status is None:
+                if self.filterRegExp().isEmpty():
                     return True
+                row_count = model.rowCount(source_index)
+                for row in range(row_count):
+                    if self.filterAcceptsRow(row, source_index):
+                        return True
+            else:
+                row_count = model.rowCount(source_index)
+                for row in range(row_count):
+                    if self.filterAcceptsRow(row, source_index):
+                        return True
+
+                status = node.status is self._filter_status
+                if not status:
+                    return False
 
         return super(TopologyFilterModel, self).filterAcceptsRow(
             source_row, source_parent)
+
+    def setFilterStatus(self, text):
+        """Set a filter status for the filtering"""
+        if text == "No Status Filtering":
+            self._filter_status = None
+        elif text == "Health Status [OK]":
+            self._filter_status = ProxyStatus.OK
+        elif text == "Health Status [ERROR]":
+            self._filter_status = ProxyStatus.ERROR
+        elif text == "Health Status [UNKNOWN]":
+            self._filter_status = ProxyStatus.UNKNOWN
+        else:
+            self._filter_status = None
 
     # --------------------------------------------------------------------
     # Index Methods
