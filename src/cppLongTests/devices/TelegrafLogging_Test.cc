@@ -12,6 +12,8 @@
 #include "karabo/util/Schema.hh"
 #include "karabo/util/StringTools.hh"
 
+#include <sstream>
+
 USING_KARABO_NAMESPACES;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(TelegrafLogging_Test);
@@ -24,16 +26,22 @@ TelegrafLogging_Test::TelegrafLogging_Test() {
     NUM_RETRY = 2200;
     FLUSH_INTERVAL_SEC = 20;
     WAIT_WRITES = 8000;
+}
 
-    setupTelegrafEnv();
+
+void TelegrafLogging_Test::setUp() {
+    BaseLogging_Test::setUp();
+    auto result = setupTelegrafEnv();
+    m_telegrafEnvOk = result.first;
+    if (!m_telegrafEnvOk) {
+        std::clog << result.second << std::endl;
+    }
 }
 
 
 void TelegrafLogging_Test::testInfluxDbNotAvailableTelegraf() {
-    if (!::getenv("KARABO_TEST_TELEGRAF")) {
-        std::clog << "==== Test only executed for Telegraf environment. Skipping test..." << std::endl;
-        std::clog << "     (requires environment where db cannot be created on-the-fly)" << std::endl;
-        std::clog << "====" << std::endl;
+    if (!::getenv("KARABO_TEST_TELEGRAF") || !m_telegrafEnvOk) {
+        std::clog << "==== Skip Telegraf availability test ====" << std::endl;
         return;
     }
 
@@ -76,22 +84,39 @@ void TelegrafLogging_Test::testInfluxDbNotAvailableTelegraf() {
 }
 
 
-void TelegrafLogging_Test::setupTelegrafEnv() {
-    //   InfluxDB cluster with telegraf front-end and 2 InfluxDB cpus as a backend
-    ::setenv("KARABO_INFLUXDB_DBNAME",
-             ::getenv("KARABO_TEST_TELEGRAF_DBNAME"), 1);
-    ::setenv("KARABO_INFLUXDB_QUERY_USER",
-             ::getenv("KARABO_TEST_TELEGRAF_QUERY_USER"), 1);
-    ::setenv("KARABO_INFLUXDB_QUERY_PASSWORD",
-             ::getenv("KARABO_TEST_TELEGRAF_QUERY_PASSWORD"), 1);
-    ::setenv("KARABO_INFLUXDB_QUERY_URL",
-             ::getenv("KARABO_TEST_TELEGRAF_QUERY_URL"), 1);
-    ::setenv("KARABO_INFLUXDB_WRITE_USER",
-             ::getenv("KARABO_TEST_TELEGRAF_WRITE_USER"), 1);
-    ::setenv("KARABO_INFLUXDB_WRITE_PASSWORD",
-             ::getenv("KARABO_TEST_TELEGRAF_WRITE_PASSWORD"), 1);
-    ::setenv("KARABO_INFLUXDB_WRITE_URL",
-             ::getenv("KARABO_TEST_TELEGRAF_WRITE_URL"), 1);
+std::pair<bool, std::string> TelegrafLogging_Test::setupTelegrafEnv() {
+
+    const std::vector<std::string> varEnds {
+        "_DBNAME", "_QUERY_USER", "_QUERY_PASSWORD", "_QUERY_URL",
+        "_WRITE_USER", "_WRITE_PASSWORD", "_WRITE_URL"
+    };
+
+    const std::string telegrafPrefix {"KARABO_TEST_TELEGRAF"};
+    const std::string influxPrefix {"KARABO_INFLUXDB"};
+
+    std::vector<std::string> missingVars;
+
+    for (const std::string& varEnd : varEnds) {
+        const std::string reqVar {telegrafPrefix + varEnd};
+        if (!::getenv(reqVar.c_str())) {
+            missingVars.push_back(reqVar);
+        } else {
+            const std::string influxVar {influxPrefix + varEnd};
+            ::setenv(influxVar.c_str(), ::getenv(reqVar.c_str()), 1);
+        }
+    }
+
+    if (missingVars.size() > 0) {
+        std::ostringstream ostr;
+        ostr << "\n=== Telegraf connection parameters not fully defined ==="
+             << "\nMissing environment variables:\n";
+        for (const std::string& missingVar : missingVars) {
+            ostr << "\t" << missingVar << "\n";
+        }
+        return std::make_pair(false, ostr.str());
+    }
+
+    return std::make_pair(true, "");
 }
 
 
@@ -203,7 +228,7 @@ void TelegrafLogging_Test::influxAllTestRunnerWithTelegraf() {
     // delete logger directory after this test
     m_keepLoggerDirectory = false;
 
-    if (!::getenv("KARABO_TEST_TELEGRAF")) {
+    if (!::getenv("KARABO_TEST_TELEGRAF") || !m_telegrafEnvOk) {
         std::clog << "==== Skip sequence of Telegraf Logging tests ====" << std::endl;
         return;
     }
