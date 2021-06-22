@@ -248,7 +248,7 @@ class SystemTreeModel(QAbstractItemModel):
             node = self.tree.get_instance_node(node_id)
             if node is not None:
                 index = self.createIndex(node.row(), 0, node)
-                index = index.sibling(node.row(), 1)
+                index = index.sibling(node.row(), 2)
                 self.dataChanged.emit(index, index, [Qt.DecorationRole])
 
     def _status_update(self, node_ids):
