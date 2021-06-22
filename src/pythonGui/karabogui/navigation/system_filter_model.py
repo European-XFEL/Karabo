@@ -50,7 +50,9 @@ class TopologyFilterModel(QSortFilterProxyModel):
                 return True
             if not node.is_visible:
                 return False
-
+            # Fast path action!
+            if self.filterRegExp().isEmpty():
+                return True
             row_count = model.rowCount(source_index)
             for row in range(row_count):
                 if self.filterAcceptsRow(row, source_index):
