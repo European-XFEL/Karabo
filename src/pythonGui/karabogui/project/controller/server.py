@@ -13,7 +13,8 @@ from karabo.common.api import ProxyStatus, walk_traits_object
 from karabo.common.project.api import DeviceServerModel
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.events import (
-    KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
+    KaraboEvent, broadcast_event, register_for_broadcasts,
+    unregister_from_broadcasts)
 from karabogui.indicators import get_project_server_status_icon
 from karabogui.itemtypes import ProjectItemTypes
 from karabogui.project.dialog.server_handle import ServerHandleDialog
@@ -80,6 +81,10 @@ class DeviceServerController(BaseProjectGroupController):
                                                     parent=parent))
         remove_all_action.setEnabled(project_allowed)
 
+        show_action = QAction(icons.yes, 'Select in topology', menu)
+        show_action.triggered.connect(self._show_server)
+        show_action.setVisible(self.online)
+
         menu.addAction(edit_action)
         menu.addAction(delete_action)
         menu.addAction(shutdown_action)
@@ -88,6 +93,8 @@ class DeviceServerController(BaseProjectGroupController):
         menu.addAction(instantiate_all_action)
         menu.addAction(shutdown_all_action)
         menu.addAction(remove_all_action)
+        menu.addAction(show_action)
+
         return menu
 
     def create_ui_data(self):
@@ -155,7 +162,11 @@ class DeviceServerController(BaseProjectGroupController):
     # ----------------------------------------------------------------------
     # action handlers
 
-    # @Slot()
+    def _show_server(self):
+        serverId = self.model.server_id
+        broadcast_event(KaraboEvent.ShowDevice,
+                        {'deviceId': serverId, 'showTopology': True})
+
     def _add_device(self, parent=None):
         """Add a device instance to the server
         """
