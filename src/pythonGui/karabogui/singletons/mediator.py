@@ -50,7 +50,6 @@ class Mediator(QObject):
             # Note: We should not ask to remove a handler that is there ...
             # However, in mocking tests and not graceful stops of the GUI we
             # protect here!
-            if handler in self._listeners[event]:
-                self._listeners[event].remove(handler)
-                if not self._listeners[event]:
-                    del self._listeners[event]
+            self._listeners[event].discard(handler)
+            if not self._listeners[event]:
+                del self._listeners[event]
