@@ -12,6 +12,9 @@
 # BUILD_INTEGRATION_TESTING: if true (default is false), integration tests are
 #                            generated.
 #
+# BUILD_LONG_RUN_TESTING: if true (default is false), long running integration
+#                         tests are generated.
+#
 # CMAKE_PREFIX_PATH: this is used by the project that builds the karabo library.
 #                    Please take a look at "./src/karabo/CMakeLists.txt" for
 #                    further details.
@@ -19,7 +22,8 @@
 # Example of command line to configure and generate the build:
 #
 # cmake -DCMAKE_PREFIX_PATH=/home/user/miniconda3/envs/karabo-cpp
-#       -DBUILD_UNIT_TESTING=1 -DBUILD_INTEGRATION_TESTING=1 ../Framework
+#       -DBUILD_UNIT_TESTING=1 -DBUILD_INTEGRATION_TESTING=1
+#       -DBUILD_LONG_RUN_TESTING=1 ../Framework
 #
 
 # TODO: Add a BUILD_KARATHON variable that when true (the default) will build
@@ -42,7 +46,14 @@ project(
 include("cmake/cxx-options.cmake")
 include("cmake/karabo-lib-target-name.cmake")
 
-if (BUILD_UNIT_TESTING OR BUILD_INTEGRATION_TESTING)
+# Sets the default values for the build configuration variables.
+# The settings below are overridden by any previously set value (e.g. defined by
+# the user in the command line).
+set(BUILD_UNIT_TESTING ON CACHE BOOL "Should build Framework unit tests?")
+set(BUILD_INTEGRATION_TESTING OFF CACHE BOOL "Should build Framework integration tests?")
+set(BUILD_LONG_RUNNING_TESTING OFF CACHE BOOL "Should build Framework long running tests?")
+
+if (BUILD_UNIT_TESTING OR BUILD_INTEGRATION_TESTING OR BUILD_LONG_RUN_TESTING)
     enable_testing()
 endif()
 
@@ -98,37 +109,37 @@ if (NOT(DEFINED ENV{CONDA_BUILD}))
         HINT $ENV{HOME}/miniconda3/bin
     )
     if (CONDA_CLI)
-    execute_process(
-        COMMAND ${CONDA_CLI} env list
-        RESULT_VARIABLE result
-        OUTPUT_VARIABLE CONDA_ENV_LIST
-        ERROR_QUIET
-    )
-    if (result)
-        message(FATAL_ERROR "Error listing Conda envs: ${result}")
-    endif()
-    string(FIND ${CONDA_ENV_LIST} "karabo-cpp" DEPEND_ENV_POS)
-    if (NOT DEPEND_ENV_POS EQUAL -1)
-        # The Conda env with the dependencies has been found - perform an update
-        # if needed at build time.
-        add_custom_command(OUTPUT DependEnvUpdateWitness.txt
-        COMMAND ${CONDA_CLI} devenv -f ${PROJECT_SOURCE_DIR}/conda-recipes/karabo-cpp/environment.devenv.yml
-        COMMAND touch DependEnvUpdateWitness.txt
-        DEPENDS ${PROJECT_SOURCE_DIR}/conda-recipes/karabo-cpp/environment.devenv.yml
+        execute_process(
+            COMMAND ${CONDA_CLI} env list
+            RESULT_VARIABLE result
+            OUTPUT_VARIABLE CONDA_ENV_LIST
+            ERROR_QUIET
         )
-        add_custom_target(UpdateDependenciesEnv ALL
-        DEPENDS DependEnvUpdateWitness.txt
-        )
-        add_dependencies(${KARABO_LIB_TARGET_NAME} UpdateDependenciesEnv)
-        message(STATUS "Conda environment update from environment file will be suported!")
-    endif()  # if (DEPEND_ENV_POS != 1)
+        if (result)
+            message(FATAL_ERROR "Error listing Conda envs: ${result}")
+        endif()
+        string(FIND ${CONDA_ENV_LIST} "karabo-cpp" DEPEND_ENV_POS)
+        if (NOT DEPEND_ENV_POS EQUAL -1)
+            # The Conda env with the dependencies has been found - perform an update
+            # if needed at build time.
+            add_custom_command(OUTPUT DependEnvUpdateWitness.txt
+                COMMAND ${CONDA_CLI} devenv -f ${PROJECT_SOURCE_DIR}/conda-recipes/karabo-cpp/environment.devenv.yml
+                COMMAND touch DependEnvUpdateWitness.txt
+                DEPENDS ${PROJECT_SOURCE_DIR}/conda-recipes/karabo-cpp/environment.devenv.yml
+            )
+            add_custom_target(UpdateDependenciesEnv ALL
+                DEPENDS DependEnvUpdateWitness.txt
+            )
+            add_dependencies(${KARABO_LIB_TARGET_NAME} UpdateDependenciesEnv)
+            message(STATUS "Conda environment update from environment file will be suported!")
+        endif()  # if (DEPEND_ENV_POS != 1)
     else ()
-    message(
-        WARNING
-        "Conda not found - update from environment file disabled! \
-        If you're using an IDE connected to a remote server, \
-        please try to configure the CMake project from a terminal session."
-    )
+        message(
+            WARNING
+            "Conda not found - update from environment file disabled! \
+            If you're using an IDE connected to a remote server, \
+            please try to configure the CMake project from a terminal session."
+        )
     endif()  # if (CONDA_CLI_FOUND)
 endif()  # if(not DEFINED ENV{CONDA_BUILD})
 
@@ -158,6 +169,7 @@ ${KARABO_PATH}/dataLoggerIndex:\
 ${KARABO_PATH}/deviceServer:\
 ${KARABO_PATH}/tests:\
 ${KARABO_PATH}/integrationTests\
+${KARABO_PATH}/cppLongTests\
 ")
 configure_file(
     "${CMAKE_SOURCE_DIR}/src/karabo/activateKarabo.in"
@@ -173,5 +185,12 @@ if (BUILD_INTEGRATION_TESTING)
     add_subdirectory(
         src/integrationTests
         ${CMAKE_BINARY_DIR}/karabo/integrationTests
+    )
+endif()
+
+if (BUILD_LONG_RUN_TESTING)
+    add_subdirectory(
+        src/cppLongTests
+        ${CMAKE_BINARY_DIR}/karabo/cppLongTests
     )
 endif()
