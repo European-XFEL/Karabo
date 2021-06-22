@@ -199,20 +199,19 @@ class SystemTree(HasStrictTraits):
     def remove_device(self, instance_id):
         """Remove the entry for a device from the tree
         """
-        node = self._device_nodes.get(instance_id)
+        node = self._device_nodes.pop(instance_id, None)
         if node is None:
             return False
 
         with self.update_context.removal_context(node):
             node.parent.children.remove(node)
 
-        self._device_nodes.pop(instance_id)
         return True
 
     def remove_server(self, instance_id):
         """Remove the entry for a server from the tree
         """
-        server_node = self._server_nodes.get(instance_id)
+        server_node = self._server_nodes.pop(instance_id, None)
         server_class_keys = []
 
         if server_node is None:
@@ -220,9 +219,9 @@ class SystemTree(HasStrictTraits):
 
         # Take care of removing all children from bottom to top
         for class_node in server_node.children:
+            for device_node in class_node.children:
+                self._device_nodes.pop(device_node.node_id, None)
             with self.update_context.removal_children_context(class_node):
-                for device_node in class_node.children:
-                    self._device_nodes.pop(device_node.node_id)
                 class_node.children = []
 
         with self.update_context.removal_children_context(server_node):
@@ -233,8 +232,6 @@ class SystemTree(HasStrictTraits):
         host_node = server_node.parent
         with self.update_context.removal_context(server_node):
             host_node.children.remove(server_node)
-
-        self._server_nodes.pop(instance_id)
 
         return server_class_keys
 
