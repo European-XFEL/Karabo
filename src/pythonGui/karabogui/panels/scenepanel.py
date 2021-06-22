@@ -143,7 +143,8 @@ class ScenePanel(BasePanelWidget):
         if not self.is_docked:
             width, height = self._compute_panel_size()
             self.resize(width, height)
-            self.scroll_widget.setWidgetResizable(True)
+            if self.scroll_widget is not None:
+                self.scroll_widget.setWidgetResizable(True)
 
     def set_toolbar_style(self, karabo_topic):
         color = get_topic_color(karabo_topic)
