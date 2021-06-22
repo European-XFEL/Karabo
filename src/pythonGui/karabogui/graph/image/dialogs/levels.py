@@ -48,6 +48,10 @@ class LevelsDialog(QDialog):
 
     @property
     def levels(self):
-        levels = None if self.automatic_checkbox.isChecked() else \
-            [self.min_spinbox.value(), self.max_spinbox.value()]
+        if self.automatic_checkbox.isChecked():
+            return None
+
+        min_level = min([self.min_spinbox.value(), self.max_spinbox.value()])
+        max_level = max([self.min_spinbox.value(), self.max_spinbox.value()])
+        levels = [min_level, max_level]
         return levels
