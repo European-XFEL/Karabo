@@ -9,6 +9,9 @@
 
 #include "BaseLogging_Test.hh"
 
+#include <string>
+#include <utility>
+
 class TelegrafLogging_Test : public BaseLogging_Test {
 
     CPPUNIT_TEST_SUITE(TelegrafLogging_Test);
@@ -20,6 +23,7 @@ class TelegrafLogging_Test : public BaseLogging_Test {
 
 public:
     TelegrafLogging_Test();
+    void setUp();
 
 private:
     void influxAllTestRunnerWithTelegraf();
@@ -41,8 +45,14 @@ private:
     /**
      * Sets up an InfluxDB cluster with telegraf front-end and 2 InfluxDB cpus
      * as a backend.
+     *
+     * @return a pair with first as boolean to indicate if the setup completed
+     *         successfuly and second as a string describing the error in case
+     *         of failure.
      */
-    void setupTelegrafEnv();
+    std::pair<bool, std::string> setupTelegrafEnv();
+
+    bool m_telegrafEnvOk;
 };
 
 #endif	/* TELEGRAFLOGGING_TEST_HH */
