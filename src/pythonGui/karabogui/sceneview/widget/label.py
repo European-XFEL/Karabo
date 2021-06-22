@@ -39,9 +39,11 @@ class LabelWidget(KaraboSceneWidget, QLabel):
         """
         self.model.trait_set(text=model.text, frame_width=model.frame_width,
                              font=model.font, background=model.background,
-                             foreground=model.foreground)
+                             foreground=model.foreground,
+                             alignh=model.alignh)
         font = get_qfont(model.font)
         self.setFont(font)
+        self.setAlignment(Qt.AlignmentFlag(model.alignh) | Qt.AlignVCenter)
         self.fm = QFontMetrics(font)
         self.setLineWidth(model.frame_width)
         self.setToolTip(model.text)
