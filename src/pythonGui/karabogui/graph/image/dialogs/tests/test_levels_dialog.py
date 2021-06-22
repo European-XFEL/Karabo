@@ -117,3 +117,24 @@ class TestLevelsDialog(GuiTestCase):
 
         # Check if changes are saved
         np.testing.assert_array_equal(dialog.levels, input_levels)
+
+    def test_accepted_not_autolevel_false_input(self):
+        # Setup levels dialog
+        image = np.random.randint(-100, 100, (100, 100))
+        image_range = image.min(), image.max()
+
+        self.imageItem.setImage(image)
+
+        # Instantiate dialog
+        dialog = LevelsDialog(self.imageItem.levels, image_range,
+                              self.imageItem.auto_levels)
+
+        # Change the values then accept the dialog
+        input_levels = [-50, 50]
+        dialog.automatic_checkbox.setChecked(False)
+        dialog.min_spinbox.setValue(input_levels[1])
+        dialog.max_spinbox.setValue(input_levels[0])
+        dialog.accept()
+
+        # Check if changes are saved
+        np.testing.assert_array_equal(dialog.levels, input_levels)
