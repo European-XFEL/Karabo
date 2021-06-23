@@ -65,7 +65,7 @@ PROJECT = "project"
 BACKBONE = "backbone"
 DIRECTORIES = "dir"
 PANEL = "panel"
-DOCU = "https://in.xfel.eu/readthedocs/docs/deployed-controls-{topic}/en/latest/{deviceId}.html"  # noqa
+DOCU = "https://rtd.xfel.eu/docs/deployed-controls-{topic}/en/latest/{deviceId}.html"  # noqa
 USER = "user"
 
 
