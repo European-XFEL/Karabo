@@ -21,6 +21,7 @@ from karabogui.binding.api import (
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
 from karabogui.events import KaraboEvent, register_for_broadcasts
+from karabogui.logger import get_logger
 from karabogui.singletons.api import get_manager
 from karabogui.util import (
     get_spin_widget, load_configuration_from_file, save_configuration_to_file)
@@ -246,7 +247,6 @@ class ConfigurationPanel(BasePanelWidget):
 
         binding = proxy.binding
         # The check we can provide is to check the deviceId and classId
-        # NOTE: Schema evolution should not be a problem!
         classId = config.get('classId', None)
         if classId is None:
             # XXX: We might still get an invalid configuration without classId
@@ -260,10 +260,14 @@ class ConfigurationPanel(BasePanelWidget):
                                    deviceId, proxy.device_id), parent=self)
             return False
         if binding.class_id != classId:
-            messagebox.show_error("A configuration for classId '{}' arrived, "
-                                  "but device in editor is a '{}'".format(
-                                   classId, binding.class_id), parent=self)
-            return False
+            # Note: Previously we validated strong here. Since we validate
+            # binding by binding, we continue gracefully but leave a log
+            # message. Schema evolution is not a problem anymore.
+            text = (f"A configuration for classId <b>{classId}</b> arrived, "
+                    f"but the device <b>{deviceId}</b> shown in editor is a "
+                    f"<b>{binding.class_id}</b>")
+            get_logger().error(text)
+            return True
 
         return True
 
