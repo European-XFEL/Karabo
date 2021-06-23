@@ -113,6 +113,9 @@ SIMPLE_ERROR_MESSAGE = """\
 Failure on request to execute 'reset' on device 'plcMonitor. Request not answered within 5 seconds."""
 
 
+UNKNOWN_ERROR_MESSAGE = 42 * "karabo"
+
+
 KARABO_ERROR_MESSAGE = """
 Failure on request to execute 'faultySlot' on device 'XHQ_EG_DG/DATA/PROPERTY_TEST_MDL', details:
 1. Exception =====>  {
@@ -140,8 +143,8 @@ EXPECTED_MESSAGE = {
     PYTHON_SLOT_ERROR_MESSAGE: 'RuntimeError: Problematic execute: ProblematicSlot',
     PYTHON_MULTIPLE_ERROR_MESSAGE: 'RuntimeError: Something went wrong.',
     SIMPLE_ERROR_MESSAGE: SIMPLE_ERROR_MESSAGE,
-    KARABO_ERROR_MESSAGE: "Fauly Slot cannot be executed"
-
+    KARABO_ERROR_MESSAGE: "Fauly Slot cannot be executed",
+    UNKNOWN_ERROR_MESSAGE: "Unknown exception",
 }
 
 
@@ -151,6 +154,7 @@ def test_get_error_message():
     _assert_error_message(PYTHON_MULTIPLE_ERROR_MESSAGE)
     _assert_error_message(SIMPLE_ERROR_MESSAGE)
     _assert_error_message(KARABO_ERROR_MESSAGE)
+    _assert_error_message(UNKNOWN_ERROR_MESSAGE)
 
 
 def _assert_error_message(message):
