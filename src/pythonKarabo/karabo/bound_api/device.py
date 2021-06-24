@@ -396,7 +396,14 @@ class PythonDevice(NoFsm):
         info["serverId"] = self.serverid
         info["visibility"] = self["visibility"]
         info["host"] = self.hostname
-        info["status"] = "ok"
+        currentState = self["state"]
+        if currentState is State.ERROR:
+            status = "error"
+        elif currentState is State.UNKNOWN:
+            status = "unknown"
+        else:
+            status = "ok"
+        info["status"] = status
         info["archive"] = self.get("archive")
 
         # device capabilities are encoded in a bit mask field
@@ -1319,8 +1326,11 @@ class PythonDevice(NoFsm):
             self.set("state", currentState)
             if currentState is State.ERROR:
                 self._ss.updateInstanceInfo(Hash("status", "error"))
+            elif currentState is State.UNKNOWN:
+                self._ss.updateInstanceInfo(Hash("status", "unknown"))
             else:
-                if self._ss.getInstanceInfo()["status"] == "error":
+                statuses = ("error", "unknown")
+                if self._ss.getInstanceInfo()["status"] in statuses:
                     self._ss.updateInstanceInfo(Hash("status", "ok"))
         # reply new state to interested event initiators
         self._ss.reply(stateName)
