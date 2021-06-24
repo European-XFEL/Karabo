@@ -32,6 +32,7 @@ dependencies:
   - numpy=1.19.5
   - scipy=1.4.1
   - lttbc=0.2.0
+  - natsort=6.2.0
   # Other
   - cycler=0.10.0
   - traits=6.0.0

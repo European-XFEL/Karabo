@@ -22,7 +22,7 @@ from karabogui.logger import get_logger
 from karabogui.singletons.api import get_alarm_model, get_network, get_topology
 from karabogui.util import move_to_cursor, show_wait_cursor
 
-from .util import get_error_message
+from .util import get_error_message, realign_topo_hash
 
 
 def project_db_handler(fall_through=False):
@@ -309,6 +309,8 @@ class Manager(QObject):
 
     @show_wait_cursor
     def handle_systemTopology(self, systemTopology):
+        systemTopology["server"] = realign_topo_hash(
+            systemTopology["server"], "host")
         self._topology.initialize(systemTopology)
 
         devices, servers = _extract_topology_devices(systemTopology)
