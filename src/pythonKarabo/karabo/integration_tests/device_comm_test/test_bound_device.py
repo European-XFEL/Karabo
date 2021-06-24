@@ -94,6 +94,64 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         self.assertTrue(ok, "Problem killing device '{}': {}.".format(deviceId,
                                                                       msg))
 
+    def test_instance_info_status(self):
+        """Test the instanceInfo status setting of bound devices"""
+        SERVER_ID = "testServerInstanceInfo"
+        class_ids = ['CommTestDevice']
+        self.start_server("bound", SERVER_ID, class_ids,
+                          namespace="karabo.bound_device_test")
+
+        config = Hash("remote", "NoRemoteNeeded")
+        classConfig = Hash("classId", "CommTestDevice",
+                           "deviceId", "testStateInfo",
+                           "configuration", config)
+
+        ok, msg = self.dc.instantiate(SERVER_ID, classConfig, 30)
+        self.assertTrue(ok, msg)
+
+        sigSlotInfo = SignalSlotable("sigSlotInfo")
+        sigSlotInfo.start()
+
+        timeOutInMs = 500
+        state = "ON"
+        ret = sigSlotInfo.request("testStateInfo", "slotRequestStateUpdate",
+                                  state).waitForReply(timeOutInMs)
+        self.assertEqual(ret[0], state)
+
+        ret = sigSlotInfo.request("testStateInfo", "slotPing",
+                                  "testStateInfo", 1, False
+                                  ).waitForReply(timeOutInMs)
+        self.assertEqual(ret[0]["status"], "ok")
+
+        state = "ERROR"
+        ret = sigSlotInfo.request("testStateInfo", "slotRequestStateUpdate",
+                                  state).waitForReply(timeOutInMs)
+        self.assertEqual(ret[0], state)
+        ret = sigSlotInfo.request("testStateInfo", "slotPing",
+                                  "testStateInfo", 1, False
+                                  ).waitForReply(timeOutInMs)
+        self.assertEqual(ret[0]["status"], "error")
+
+        state = "UNKNOWN"
+        ret = sigSlotInfo.request("testStateInfo", "slotRequestStateUpdate",
+                                  state).waitForReply(timeOutInMs)
+        self.assertEqual(ret[0], state)
+        ret = sigSlotInfo.request("testStateInfo", "slotPing",
+                                  "testStateInfo", 1, False
+                                  ).waitForReply(timeOutInMs)
+        self.assertEqual(ret[0]["status"], "unknown")
+
+        state = "NORMAL"
+        ret = sigSlotInfo.request("testStateInfo", "slotRequestStateUpdate",
+                                  state).waitForReply(timeOutInMs)
+        self.assertEqual(ret[0], state)
+        ret = sigSlotInfo.request("testStateInfo", "slotPing",
+                                  "testStateInfo", 1, False
+                                  ).waitForReply(timeOutInMs)
+        self.assertEqual(ret[0]["status"], "ok")
+
+        del sigSlotInfo
+
     def test_in_sequence(self):
         SERVER_ID = "testServer"
         class_ids = ['CommTestDevice', 'UnstoppedThreadDevice']
@@ -156,7 +214,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
         # tests are run in sequence as sub tests
         # device server thus is only instantiated once
         with self.subTest(msg="Test unique id"):
-            sigSlotTmp = SignalSlotable("testComm1") # id of running device
+            sigSlotTmp = SignalSlotable("testComm1")  # id of running device
             self.assertRaises(RuntimeError, sigSlotTmp.start)
             del sigSlotTmp
 
