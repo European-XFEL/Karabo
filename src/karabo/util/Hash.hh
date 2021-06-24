@@ -558,11 +558,18 @@ namespace karabo {
             /**
              * Assign of list of attributes (i.e. Hash::Attributes container) to the element identified by "path"
              * @param path
-             * @param attribute
-             * @param value
+             * @param attributes
              * @param separator
              */
             void setAttributes(const std::string& path, const Attributes& attributes, const char separator = '.');
+
+            /**
+             * Assign of list of attributes (i.e. Hash::Attributes container) to the element identified by "path"
+             * @param path
+             * @param attributes to move from
+             * @param separator
+             */
+            void setAttributes(const std::string& path, Attributes&& attributes, const char separator = '.');
 
             /**
              * Serialize a hash to standard std::ostream object
