@@ -1,6 +1,7 @@
 # flake8: noqa
+from karabo.native import Hash
 
-from ..util import get_error_message
+from ..util import get_error_message, realign_topo_hash
 
 CPP_SLOT_ERROR_MESSAGE = """
 Request to execute 'execute2' on device 'Macro-test1-ec6d56fe-a5ca-445f-ad45-a295c7e16450-Test' failed, details:
@@ -46,7 +47,6 @@ karabo.native.exceptions.KaraboError: 1. Exception =====>  {
 }
 """
 
-
 PYTHON_SLOT_ERROR_MESSAGE = """
 Request to execute 'hello' on device 'Macro-PROBLEMATIC_SLOT-98984c38-9428-4054-9f6d-cc428c6e6e13-ProblematicSlot' failed, details:
 1. Exception =====>  {
@@ -73,7 +73,6 @@ RuntimeError: Problematic execute: ProblematicSlot
     Timestamp.........:  2020-Sep-07 13:28:20.319395
 }
 """
-
 
 PYTHON_MULTIPLE_ERROR_MESSAGE = """
 Request to execute 'hello' on device 'Macro-PROBLEMATIC_SLOT-98984c38-9428-4054-9f6d-cc428c6e6e13-ProblematicSlot' failed, details:
@@ -108,13 +107,10 @@ RuntimeError: Something went wrong.
 }
 """
 
-
 SIMPLE_ERROR_MESSAGE = """\
 Failure on request to execute 'reset' on device 'plcMonitor. Request not answered within 5 seconds."""
 
-
 UNKNOWN_ERROR_MESSAGE = 42 * "karabo"
-
 
 KARABO_ERROR_MESSAGE = """
 Failure on request to execute 'faultySlot' on device 'XHQ_EG_DG/DATA/PROPERTY_TEST_MDL', details:
@@ -137,7 +133,6 @@ karabo.native.exceptions.KaraboError: Fauly Slot cannot be executed
 }
 """
 
-
 EXPECTED_MESSAGE = {
     CPP_SLOT_ERROR_MESSAGE: 'Command "move" is not allowed in current state "ERROR" of device "MOV_TEST/MOTOR/SERVO_1".',
     PYTHON_SLOT_ERROR_MESSAGE: 'RuntimeError: Problematic execute: ProblematicSlot',
@@ -159,3 +154,32 @@ def test_get_error_message():
 
 def _assert_error_message(message):
     assert get_error_message(message) == EXPECTED_MESSAGE[message]
+
+
+def test_realign_topo_hash():
+    h = Hash()
+
+    h['server.server1'] = None
+    h['server.server1', ...] = {
+        'host': 'BIG_IRON',
+        'deviceClasses': ['FooClass', 'BarClass'],
+    }
+    h['server.server2'] = None
+    h['server.server2', ...] = {  # None host
+        'deviceClasses': ['FooClass', 'BarClass'],
+    }
+    h['server.server3'] = None
+    h['server.server3', ...] = {
+        'host': 'AN_IRON',
+        'deviceClasses': ['FooClass', 'BarClass'],
+    }
+
+    servers = realign_topo_hash(h["server"], "host")
+
+    n = iter(servers)
+    item = next(n)
+    assert item == "server2"
+    item = next(n)
+    assert item == "server3"
+    item = next(n)
+    assert item == "server1"

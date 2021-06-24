@@ -1,6 +1,8 @@
 import re
 
-from karabo.native.exceptions import KaraboError
+import natsort
+
+from karabo.native import Hash, KaraboError
 
 MESSAGE_TAG = "Message...........:"
 PYTHON_TRACEBACK_HEADER = "Traceback (most recent call last):"
@@ -50,3 +52,15 @@ def get_error_message(failure_reason):
                 verbose_message = "Unknown exception"
 
     return verbose_message
+
+
+def realign_topo_hash(topo_hash, attr):
+    """Realign the topo hash `topo_hash` according to the attribute `attr`"""
+    sorted_attrs = natsort.natsorted(
+        [(k, v, a) for k, v, a in topo_hash.iterall()],
+        key=lambda ele: ele[2].get(attr))
+    ret = Hash()
+    for k, v, a in sorted_attrs:
+        ret.setElement(k, v, a)
+
+    return ret
