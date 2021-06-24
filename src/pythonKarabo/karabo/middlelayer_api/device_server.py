@@ -106,7 +106,6 @@ class DeviceServerBase(SignalSlotable):
 
     def __init__(self, configuration):
         super().__init__(configuration)
-        self.needScanPlugins = True
         if not isSet(self.hostName):
             self.hostName = socket.gethostname().partition('.')[0]
         if not isSet(self.serverId):
