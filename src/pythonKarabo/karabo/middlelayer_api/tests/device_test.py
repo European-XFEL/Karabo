@@ -113,6 +113,9 @@ class MyDevice(Device):
         self.isDown = True
         await super().slotKillDevice()
 
+    async def setState(self, state):
+        self.state = state
+
 
 class Tests(DeviceTest):
     @classmethod
@@ -266,6 +269,20 @@ class Tests(DeviceTest):
         self.assertEqual(self.myDevice.slotHasSlot("increaseCounter"), True)
         self.assertEqual(self.myDevice.slotHasSlot("output"), False)
         self.assertEqual(self.myDevice.slotHasSlot("doesNotExist"), False)
+
+    @async_tst
+    async def test_instance_info(self):
+        device = self.myDevice
+        self.assertEqual(device._ss.info["status"], "ok")
+        await device.setState(State.ERROR)
+        await sleep(0)
+        self.assertEqual(device._ss.info["status"], "error")
+        await device.setState(State.UNKNOWN)
+        await sleep(0)
+        self.assertEqual(device._ss.info["status"], "unknown")
+        await device.setState(State.ON)
+        await sleep(0)
+        self.assertEqual(device._ss.info["status"], "ok")
 
     @async_tst
     async def test_output_information(self):
