@@ -10,37 +10,34 @@ class CommTestDevice(PythonDevice):
 
         (
             SLOT_ELEMENT(expected).key("slotWithoutArguments")
-                .commit()
-            ,
+            .commit(),
             SLOT_ELEMENT(expected).key("slotRequestArgs")
-                .commit()
-            ,
+            .commit(),
             STRING_ELEMENT(expected).key("remote")
-                .assignmentMandatory()
-                .commit()
-            ,
+            .assignmentMandatory()
+            .commit(),
             STRING_ELEMENT(expected).key("someString")
             # As reconfigurable() it will be sent with priority 4
             # (like commands and replies) and thus order is guaranteed by JMS
             # (as readOnly() [that is sent in C++/bound with priority 3]
             #  it failed e.g. in
             #  https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/183917)
-                .assignmentOptional().defaultValue("")
-                .reconfigurable()
-                .commit()
-            ,
+            .assignmentOptional().defaultValue("")
+            .reconfigurable()
+            .commit(),
             VECTOR_INT32_ELEMENT(expected).key("vectorInt32")
-                .reconfigurable()
-                .minSize(1)
-                .maxSize(10)
-                .assignmentOptional().defaultValue([1, 2, 3])
-                .commit()
-            ,
+            .reconfigurable()
+            .minSize(1)
+            .maxSize(10)
+            .assignmentOptional().defaultValue([1, 2, 3])
+            .commit(),
         )
 
     def __init__(self, config):
-        super(CommTestDevice,self).__init__(config)
+        super(CommTestDevice, self).__init__(config)
         self.KARABO_SLOT(self.slotRequestArgs)
+        self.KARABO_SLOT(self.slotRequestStateUpdate)
+
         self.registerSlot(self.slotWithoutArguments)
         self.registerSlot(self.slotWithArguments)
         self.registerSlot(self.slotEmitToSlotWithoutArgs)
@@ -58,6 +55,10 @@ class CommTestDevice(PythonDevice):
 
     def initialize(self):
         self.updateState(State.NORMAL)
+
+    def slotRequestStateUpdate(self, state):
+        # Note: `updateState` replies slot call with state
+        self.updateState(State(state))
 
     def slotWithoutArguments(self):
         self.set("someString", "slotWithoutArguments was called")
