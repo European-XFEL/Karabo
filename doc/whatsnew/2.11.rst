@@ -1,4 +1,72 @@
 ***************************
+What's New in Karabo 2.11.2
+***************************
+
+This hotfix release is directed to the karabo gui. The Qt version is downgraded to 5.9 due
+to problems on Ubuntu 20. Furthermore, this release contains major stability
+enhancements (images, gui-server reply notifications) and extra features have been backported from 2.12.0:
+
+1. Configure horizontal alignment of labels
+2. State color field string formatting
+
+This gui client version is **strongly recommended**.
+
+Detailed Merge-Log
+==================
+
+- C++: Validate states and alarm values !5654
+- MDL: allow timeServerId on devices !5653
+
+- GUI: Fix images not showing properly if ROI is selected !5658
+- GUI: Maintain selection on header double click !5660
+- GUI: Adjust topology to latest review !5651
+- GUI: Protect against not found exceptions !5671
+- GUI: Graceful discard in messagebox unregister !5684
+- GUI: Protect line edit from wrong input !5682
+- GUI: Protect deferred trend graph updates !5686
+- GUI: Protect unregister from mediator events !5679
+- GUI: Fix weakref handling in reconfigure reply !5666
+- GUI: Enable state color field to have font formatting !5687
+- GUI: Protect font sizes on the field from editing faulty values !5674
+- GUI: Protect show event of scene panel !5700
+- GUI: Show server in topology if requested !5705
+- GUI: Protect scene view delete on close event from races !5685
+- GUI: Qt version independent GUI code !5652
+- GUI: Pop early in the topology !5689
+- GUI: Add horizontal alignment to label widgets !5688
+- GUI: Enable to show uint16 images (bpp12) !5692
+- GUI: Mediator test and discard in event map !5704
+- GUI: Update alarm column on alarm update !5707
+- GUI: Downgrade Qt on hotfix branch !5706
+- GUI: Protect levels dialog from false input !5703
+- GUI: Add fast path filter in SystemTopology !5710
+- GUI: Redirect official RTD documentation !5713
+- GUI: Remove classId check on configuration retrieval !5717
+
+
+***************************
+What's New in Karabo 2.11.1
+***************************
+
+This release reverts the DeviceNode timeout and onInitialization background move
+as temporary help to migrate devices.
+The *slotInstanceUpdated* is forwarded to the devices for the Karabo-DOOCS bridge.
+
+Detailed Merge-Log
+==================
+
+- MDL: Support yield from getDevice and add tests !5587
+- MDL: Forward slotInstanceUpdated to device children !5602
+- MDL: revert !5119 and !4947 !5612
+- MDL: Change the default timeout in the DeviceNode !5614
+- MDL: Make sure DeviceNode has a displayType !5613
+
+- GUI: Enhance vector display in the table, remove white spaces !5584
+- GUI: Add size policy to label widgets !5586
+- CI: make the GUI tests fails when necessary !5603
+
+
+***************************
 What's New in Karabo 2.11.0
 ***************************
 
