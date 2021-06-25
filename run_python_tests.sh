@@ -262,12 +262,13 @@ runPythonIntegrationTests() {
     # TODO: Needs to be uncommented when the bound_device_test integration test is added.
     #safeRunTests "karabo.integration_tests.bound_device_test"
     safeRunTests "karabo.integration_tests.all_api_alarm_test"
-    safeRunTests "karabo.integration_tests.device_comm_test"
-    safeRunTests "karabo.integration_tests.device_provided_scenes_test"
-    safeRunTests "karabo.integration_tests.pipeline_processing_test"
-    safeRunTests "karabo.integration_tests.device_cross_test"
-    safeRunTests "karabo.integration_tests.device_schema_injection_test"
     safeRunTests "karabo.integration_tests.config_manager_cross_test"
+    safeRunTests "karabo.integration_tests.device_comm_test"
+    safeRunTests "karabo.integration_tests.device_cross_test"
+    safeRunTests "karabo.integration_tests.device_provided_scenes_test"
+    safeRunTests "karabo.integration_tests.device_schema_injection_test"
+    safeRunTests "karabo.integration_tests.pipeline_processing_test"
+    safeRunTests "karabo.integration_tests.signal_slot_order_test"
     echo
     echo Karabo Python integration tests complete
     echo
