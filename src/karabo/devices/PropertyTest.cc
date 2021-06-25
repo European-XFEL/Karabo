@@ -678,12 +678,46 @@ namespace karabo {
                     .assignmentOptional()
                     .defaultValue(0u)
                     .commit();
+
+            NODE_ELEMENT(expected).key("orderTest")
+                    .displayedName("Order Test")
+                    .commit();
+
+            SLOT_ELEMENT(expected).key("orderTest.slotStart")
+                    .displayedName("Start")
+                    .description("Start test that signals and direct slot calls from another instance "
+                                 "are received in order. 'Other' PropertyTest instance is defined via "
+                                 "'stringProperty' and number of messages via 'int32Property'."
+                                 "Results are stored in properties below.")
+                    .allowedStates(State::NORMAL)
+                    .commit();
+
+            VECTOR_INT32_ELEMENT(expected).key("orderTest.nonConsecutiveCounts")
+                    .displayedName("Non Consecutive Counts")
+                    // If all fine for N received counts: 0
+                    // If 3 and 4 where switched: 0, 4, 3, 5
+                    // If 3 is missing: 0, 4,
+                    .description("All received counts N whose predecessor was not N-1")
+                    .maxSize(1000)
+                    .readOnly().initialValue({})
+                    .commit();
+
+            UINT32_ELEMENT(expected).key("orderTest.receivedCounts")
+                    .displayedName("Received Counts")
+                    .description("Number of counts received in test cycle")
+                    .readOnly().initialValue(0u)
+                    .commit();
         }
 
 
         PropertyTest::PropertyTest(const Hash& input)
             : Device<>(input),
             m_writingOutput(false), m_writingOutputTimer(karabo::net::EventLoop::getIOService()) {
+
+            // Signal for test of order between emitted signal and direct slot calls.
+            // Note that (using JMS broker) the order is NOT guaranteed for KARABO_SIGNAL since that has
+            // lower priority - seen that a slot call overtook few hundred messages triggered by signals!
+            KARABO_SYSTEM_SIGNAL("signalCount", int); // KARABO_SYSTEM_SIGNAL guaranties order with slot calls...
 
             KARABO_INITIAL_FUNCTION(initialize);
             KARABO_SLOT(setAlarm);
@@ -699,6 +733,11 @@ namespace karabo {
             KARABO_SLOT(logSomething, Hash);
             // do not add this slot to the Schema.
             KARABO_SLOT(slowSlot);
+
+            // Three slots for slot order test
+            KARABO_SLOT(orderTest_slotStart);
+            KARABO_SLOT(slotStartCount); // Do not expose to Schema although no arguments...
+            KARABO_SLOT(slotCount, int);
         }
 
 
@@ -906,5 +945,116 @@ namespace karabo {
             // need to reply a Hash
             reply(Hash("success", true));
         }
+
+
+        void PropertyTest::orderTest_slotStart() {
+            updateState(State::STARTING);
+
+            // Since starting requires communication with another device,
+            // this should not be done inside the slot call to keep that short.
+            // That we are done is communicated via reaching the State STARTED.
+            EventLoop::getIOService().post(bind_weak(&PropertyTest::startOrderTest, this));
+        }
+
+        void PropertyTest::startOrderTest() {
+
+            // Tell 'other' to call us and how often to do so, then connect to its signal
+            const std::string other(get<std::string>("stringProperty"));
+            const Hash updates("stringProperty", getInstanceId(),
+                               "int32Property", get<int>("int32Property"));
+            // Better than synchronously reconfiguring and connecting would be an async call chain.
+            // But that is hard to write (and to read) and considered overdoing here.
+            try {
+                request(other, "slotReconfigure", updates).timeout(2000).receive();
+                if (!connect(other, "signalCount", "", "slotCount")) {
+                        throw KARABO_INIT_EXCEPTION("Failed to connect as needed for order test");
+                }
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << getInstanceId() << " failed starting order test: " << e.what();
+                updateState(State::ERROR, Hash("status", "Failed starting order test"));
+                return;
+            }
+            // Finally we can start - update State and clear any previous result
+            updateState(State::STARTED,
+                        Hash("orderTest", Hash("nonConsecutiveCounts", std::vector<int>(),
+                                               "receivedCounts", 0u)));
+
+            call(other, "slotStartCount"); // fire and forget...
+        }
+
+        void PropertyTest::slotStartCount() {
+            updateState(State::STARTING);
+
+            const std::string other(get<std::string>("stringProperty"));
+            int numCounts = get<int>("int32Property");
+            KARABO_LOG_INFO << "Start calling '" << other << "' and emit 'signalCount' " << numCounts << " times";
+
+            // To allow this device to die softly if the number of calls is too large,
+            // we do not use bind_weak, but use a lambda that controls lifetime directly.
+            auto countViaSlotAndSignal = [this, weakThis = weak_from_this(), other, numCounts]() {
+
+                SignalSlotable::Pointer me(weakThis.lock());
+                this->updateState(State::STARTED);
+                for (int i = 0; i < numCounts && me; i += 2) {
+                    if (!me) break;
+
+                    // Alternate slot calls and emitting signal (which should lead to the same slot call)
+                    call(other, "slotCount", i);
+                    emit("signalCount", i + 1);
+
+                    // From time to time, give a chance to die if requested
+                    if ((i % 1000) == 0) {
+                        me.reset();
+                        boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+                        boost::this_thread::yield();
+                        me = weakThis.lock();
+                    }
+                }
+
+                if (me) {
+                   KARABO_LOG_INFO << "Done messaging '" << other << "'";
+                   call(other, "slotCount", -1); // Tell that loop is done
+                   updateState(State::NORMAL);
+                }
+            };
+
+            EventLoop::getIOService().post(countViaSlotAndSignal); // stop slot call, so post
+        }
+
+
+        void PropertyTest::slotCount(int count) {
+            // m_counts is only touched in this slot, so no need for protection against parallel access
+            if (count >= 0) {
+                if (m_counts.empty()) {
+                    // first call - prepare memory for caching
+                    m_counts.reserve(get<int>("int32Property"));
+                }
+                m_counts.push_back(count);
+                if (m_counts.size() % 10000 == 0) {
+                    set("orderTest.receivedCounts", static_cast<unsigned int>(m_counts.size()));
+                    KARABO_LOG_FRAMEWORK_INFO << "slotCount received " << m_counts.size() << " counts so far.";
+                }
+            } else {
+                // Loop of calls and signals is done - publish result
+                Hash update("orderTest.receivedCounts", static_cast<unsigned int>(m_counts.size()));
+                std::vector<int>& result = update.bindReference<std::vector<int>>("orderTest.nonConsecutiveCounts");
+
+                for (size_t i = 0; i < m_counts.size(); ++i) {
+                    if (i == 0 || m_counts[i] != m_counts[i - 1] + 1) {
+                        if (result.size() < 1000ul) { // limit output size as defined in schema
+                            result.push_back(m_counts[i]);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
+                m_counts.clear();
+                KARABO_LOG_FRAMEWORK_INFO << "slotCount summary: At least " << result.size() - 1 // -1 for count 0
+                                          << " messages out of order!";
+                updateState(State::NORMAL, update);
+            }
+        }
+
     }
 }
