@@ -14,6 +14,8 @@ Summary – Release highlights
 - GUI: View of Karabo Clients added to the application menu (i.e. command line interfaces and DOOCS bridges).
 - GUI: It is now possible to format (weight, size) the device state string on the `StateColor Field`
 - MDL: Forward slotInstanceUpdated signal to device children
+- GUI: State color field string formatting
+- GUI: Configurable horizontal label alignment
 
 Change of behaviour
 +++++++++++++++++++
