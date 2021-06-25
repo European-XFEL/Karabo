@@ -91,8 +91,31 @@ namespace karabo {
 
             void logSomething(const karabo::util::Hash& input);
 
+            /**
+             * The order test started with this slot works as follows:
+             * - 'stringProperty' defines the 'other' PropertyTest device supposed to send messages to us
+             * - 'int32Property' defines how many messages it should send
+             * - the number of messages and our own id are transferred to the other device
+             * - we connect our 'slotCount' to the other's 'signalCount'
+             * - we call the other's 'slotStartCount' which will trigger sending messages to us, alternating
+             *   between direct calls to our 'slotCount' and emitting 'signalCount' with count arguments starting from 0
+             * - we keep track of all counts received and their order (so do not run with billions of counts!)
+             * - end of messaging is signaled to us via a call with count = -1
+             * - we publish the number of received messages and those counts (well, up to 1000 only) that are not
+             *   in order as "orderTest.receivedCounts" and "orderTest.nonConsecutiveCounts", respectively.
+             */
+            void orderTest_slotStart();
+
+            void startOrderTest();
+
+            void slotStartCount();
+
+            void slotCount(int count);
+
             bool m_writingOutput;
             boost::asio::deadline_timer m_writingOutputTimer;
+
+            std::vector<int> m_counts; // used for message order test
         };
     } 
 }
