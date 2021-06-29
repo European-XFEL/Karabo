@@ -144,14 +144,15 @@ namespace karabo {
             TimeDuration& operator*=(long long illegalSignedFactor);
 
             /**
-             * Division, i.e. how many time one time duration is bigger/smaller than another one
+             * Division, i.e. how many times one time duration is bigger/smaller than another one
              * @param other TimeDuration
              * @return long double
              */
             long double operator/(const TimeDuration& other) const;
 
             operator double() const {
-                return boost::lexical_cast<double>(this->format(TimeDuration::DEFAULT_FORMAT));
+                // Double has a precision of 16 digits, so e.g. for 1 sec + 1 attosec the attosec is lost.
+                return getTotalSeconds() + (getFractions(ATTOSEC) * 1.e-18);
             }
 
             /**
@@ -197,6 +198,9 @@ namespace karabo {
              * Set the output format. This parameter is class variable, 
              * thus, having a global effect on future output.
              * The default format is seconds[dot]fractions, with nanoseconds resolution.
+             * CAVEAT: 'seconds' is the total number of seconds modulo 60,
+             *         i.e. anything that goes beyond a full minute is ignored!
+             *
              * @param format string object
              */
             static void setDefaultFormat(const std::string& fmt);
