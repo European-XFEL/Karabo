@@ -137,7 +137,7 @@ void TimeClasses_Test::testTimeDuration() {
     CPPUNIT_ASSERT(durZero.getFractions() == 0ull);
 
     const TimeValue seconds = 3600ull; // one hour
-    const TimeValue fractionsAtto = 4565460000000ull; // 456.546 micro seconds
+    const TimeValue fractionsAtto = 456546'000'000ull; // 456.546 micro seconds
 
     const TimeDuration dur1(seconds, fractionsAtto);
     CPPUNIT_ASSERT(dur1.getSeconds() == 0ull);
@@ -254,6 +254,33 @@ void TimeClasses_Test::testTimeDuration() {
     const TimeDuration durL(222ull, 222222222222222ull);
     const TimeDuration durM(444ull, 444444444444444ull);
     CPPUNIT_ASSERT(std::abs(durM / durL) - 2.L < 1.e-18L);
+
+    // Testing operator double()
+    {
+        const TimeDuration dur10(1ull, 45'000'000'000'000ull); // 1 second and 45 micro seconds
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.000045, static_cast<double>(dur10), 1.e-18);
+
+        const TimeDuration dur11(1ull, 456'546'000'000ull); // 1 second and 456.546 nano seconds
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.000000456546, static_cast<double>(dur11), 1.e-18);
+
+        const TimeDuration dur12(60ull, 0ull);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(60., static_cast<double>(dur12), 1.e-18);
+
+        const TimeDuration dur13(1, 1, 1, 10ull, 1'000'000'000'000'000); // 1 day, 1 hour, 1 minute, 10 seconds, 1 ms
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(((25 * 60) + 1) * 60ull + 10ull + 1.e-3, static_cast<double>(dur13), 1.e-12);
+
+        // Can keep attosec precision if enough digits available in double
+        const TimeDuration dur14(0ull, 1ull);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.e-18, static_cast<double>(dur14), 1.e-30);
+
+        // Loss of precision for double that has about 16 digits only
+        const TimeDuration dur15(1ull, 1ull);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(1., static_cast<double>(dur15), 1.e-18);
+
+        // 16 digits precision can be reached
+        const TimeDuration dur16(12345678ull, 12'345'670'000'000'000ull);
+        CPPUNIT_ASSERT_DOUBLES_EQUAL(1.234567801234567e7, static_cast<double>(dur16), 1.e-8);
+    }
 }
 
 
