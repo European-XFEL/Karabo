@@ -445,6 +445,12 @@ namespace karabo {
             inline void setAttributes(const AttributesType& attributes);
 
             /**
+             * Batch set attributes to this element
+             * @param attributes to move from
+             */
+            inline void setAttributes(AttributesType&& attributes);
+
+            /**
              * Batch get attributes of this element
              * @return 
              */
@@ -840,6 +846,11 @@ namespace karabo {
         template<class KeyType, typename AttributeType>
         inline void Element<KeyType, AttributeType>::setAttributes(const AttributeType& attributes) {
             m_attributes = attributes;
+        }
+
+        template<class KeyType, typename AttributeType>
+        inline void Element<KeyType, AttributeType>::setAttributes(AttributeType&& attributes) {
+            m_attributes = std::move(attributes);
         }
 
         template<typename KeyType, typename AttributeType>
