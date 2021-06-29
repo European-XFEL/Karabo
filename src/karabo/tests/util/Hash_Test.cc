@@ -838,6 +838,32 @@ void Hash_Test::testSetAttributeMoveSemantics() {
 
         TraceCopies::reset();
     }
+    // test bulk setting of attributes
+    {
+        Hash::Attributes attrs;
+        attrs.set("attr", TraceCopies(7));
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(0, TraceCopies::countCopyConstr);
+        Hash h("a", 1, "b", 2);
+
+        // copy case
+        h.setAttributes("a", attrs);
+        CPPUNIT_ASSERT_EQUAL(7, h.getAttribute<TraceCopies>("a", "attr").value);
+        CPPUNIT_ASSERT_EQUAL(1ul, h.getAttributes("a").size());
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
+
+        // move case
+        h.setAttributes("b", std::move(attrs));
+        CPPUNIT_ASSERT_EQUAL(7, h.getAttribute<TraceCopies>("b", "attr").value);
+        CPPUNIT_ASSERT_EQUAL(1ul, h.getAttributes("b").size());
+        // Neither moved nor copied since entire 'attrs' now moved inside the Hash
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT(attrs.empty()); // since entirely 'moved away'
+
+        TraceCopies::reset();
+    }
     // test setting of various strings as also at the end of testSetMoveSemantics
     {
         // test Hash::set of various strings,
