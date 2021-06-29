@@ -11,10 +11,14 @@ enhancements (images, gui-server reply notifications) and extra features have be
 
 This gui client version is **strongly recommended**.
 
+In addition, an important fix for reading data from InfluxDB is integrated.
+
+
 Detailed Merge-Log
 ==================
 
 - C++: Validate states and alarm values !5654
+- C++: Fix TimeDuration::operator double() !5728
 - MDL: allow timeServerId on devices !5653
 
 - GUI: Fix images not showing properly if ROI is selected !5658
