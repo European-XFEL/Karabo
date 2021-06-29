@@ -843,6 +843,11 @@ namespace karabo {
         }
 
 
+        void Hash::setAttributes(const std::string& path, Hash::Attributes&& attributes, const char separator) {
+            return getNode(path, separator).setAttributes(std::move(attributes));
+        }
+
+
         Hash* Hash::setNodesAsNeeded(const std::vector<std::string>& tokens, char separator) {
             // Loop all but last token
             Hash* tmp = this;
