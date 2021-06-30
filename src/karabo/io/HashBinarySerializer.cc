@@ -432,7 +432,7 @@ namespace karabo {
                 Types::ReferenceType type = readType(is);
                 boost::any value;
                 readAny(value, type, is);
-                attributes.set(name, value);
+                attributes.set(name, std::move(value));
             }
         }
 
