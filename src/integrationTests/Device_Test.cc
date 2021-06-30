@@ -63,7 +63,7 @@ public:
     static void expectedParameters(karabo::util::Schema& expected) {
 
         OVERWRITE_ELEMENT(expected).key("state")
-                .setNewOptions(State::UNKNOWN, State::NORMAL)
+                .setNewOptions(State::UNKNOWN, State::NORMAL, State::ERROR)
                 .commit();
 
         Schema rowSchema;
@@ -215,7 +215,7 @@ public:
         const Epochstamp& stampCountToggles = Epochstamp::fromHashAttributes(otherIn.getAttributes("stampCountToggles"));
         const Epochstamp& stampState = Epochstamp::fromHashAttributes(otherIn.getAttributes("stampState"));
 
-        const State& newState = (getState() == State::UNKNOWN ? State::NORMAL : State::UNKNOWN);
+        const State& newState = State::fromString(otherIn.get<std::string>("state"));
 
         Hash otherOut("valueWithAlarm", -1.);
         Hash::Attributes& attrs = otherOut.set("countStateToggles", get<unsigned int>("countStateToggles") + 1).getAttributes();
@@ -1251,26 +1251,56 @@ void Device_Test::testUpdateState() {
     CPPUNIT_ASSERT_EQUAL(0u, m_deviceClient->get<unsigned int>(deviceId, "countStateToggles"));
     CPPUNIT_ASSERT(std::abs(-1. - m_deviceClient->get<double>(deviceId, "valueWithAlarm")) > 1.e-7);
 
+    const int timeOutInMs = 1000 * KRB_TEST_MAX_TIMEOUT;
+    Hash hash;
+    m_deviceServer->request(deviceId, "slotPing", deviceId, 1, false).timeout(timeOutInMs).receive(hash);
+    CPPUNIT_ASSERT_EQUAL(std::string("unknown"), hash.get<std::string>("status"));
+
     // Prepare Hash argument to slotToggleState with two different time stamps
     const Epochstamp stampToggle(1575296000ull, 1111ull);
     const Epochstamp stampState(1575297000ull, 2222ull);
     Hash msg;
     stampToggle.toHashAttributes(msg.set("stampCountToggles", 0).getAttributes());
     stampState.toHashAttributes(msg.set("stampState", 0).getAttributes());
+    msg.set("state", "NORMAL");
 
     // Send state update request and...
     // ... test its (implicit) reply value,
     std::string reply;
-    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(5000).receive(reply));
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(timeOutInMs).receive(reply));
     CPPUNIT_ASSERT_EQUAL(std::string("NORMAL"), reply);
+    m_deviceServer->request(deviceId, "slotPing", deviceId, 1, false).timeout(timeOutInMs).receive(hash);
+    CPPUNIT_ASSERT_EQUAL(std::string("ok"), hash.get<std::string>("status"));
 
     // ... test that the state was switched,
-    const State stateNew(m_deviceClient->get<State>(deviceId, "state"));
-    CPPUNIT_ASSERT_MESSAGE("State is " + stateNew.name(), stateNew == State::NORMAL);
+    const State state1(m_deviceClient->get<State>(deviceId, "state"));
+    CPPUNIT_ASSERT_MESSAGE("State is " + state1.name(), state1 == State::NORMAL);
 
     // ... test that other values updated as well,
     CPPUNIT_ASSERT_EQUAL(1u, m_deviceClient->get<unsigned int>(deviceId, "countStateToggles"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(-1., m_deviceClient->get<double>(deviceId, "valueWithAlarm"), 1.e-7);
+
+    reply = "";
+    msg.set("state", "ERROR");
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(timeOutInMs).receive(reply));
+    CPPUNIT_ASSERT_EQUAL(std::string("ERROR"), reply);
+    m_deviceServer->request(deviceId, "slotPing", deviceId, 1, false).timeout(timeOutInMs).receive(hash);
+    CPPUNIT_ASSERT_EQUAL(std::string("error"), hash.get<std::string>("status"));
+
+    // ... test that the state was switched,
+    const State state2 = m_deviceClient->get<State>(deviceId, "state");
+    CPPUNIT_ASSERT_MESSAGE("State is " + state2.name(), state2 == State::ERROR);
+
+    reply = "";
+    msg.set("state", "NORMAL");
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotToggleState", msg).timeout(timeOutInMs).receive(reply));
+    CPPUNIT_ASSERT_EQUAL(std::string("NORMAL"), reply);
+    m_deviceServer->request(deviceId, "slotPing", deviceId, 1, false).timeout(timeOutInMs).receive(hash);
+    CPPUNIT_ASSERT_EQUAL(std::string("ok"), hash.get<std::string>("status"));
+
+    // ... test that the state was switched,
+    const State state3 = m_deviceClient->get<State>(deviceId, "state");
+    CPPUNIT_ASSERT_MESSAGE("State is " + state3.name(), state3 == State::NORMAL);
 
     // ... and finally test the desired timestamps:
     //     * state and valueWithAlarm get the same as given explicitly to updateState
