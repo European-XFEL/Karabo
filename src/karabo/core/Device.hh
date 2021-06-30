@@ -192,9 +192,6 @@ namespace karabo {
             // To be injected at initialization time; for internal use only.
             std::string m_timeServerId;
 
-            // Regular expression for error detection in state word
-            boost::regex m_errorRegex;
-
             unsigned long long m_timeId;
             unsigned long long m_timeSec; // seconds
             unsigned long long m_timeFrac; // attoseconds
@@ -456,8 +453,7 @@ namespace karabo {
              * @param configuration
              */
             Device(const karabo::util::Hash& configuration)
-                : m_errorRegex(".*error.*", boost::regex::icase)
-                , m_globalAlarmCondition(karabo::util::AlarmCondition::NONE)
+                : m_globalAlarmCondition(karabo::util::AlarmCondition::NONE)
                 , m_lastBrokerErrorStamp(0ull, 0ull) {
 
                 // Set serverId
@@ -1240,11 +1236,11 @@ namespace karabo {
              *
              * Will also update the instanceInfo describing this device instance (if new or old State are ERROR).
              *
-             * @param cs: the state to update to
+             * @param currentState: the state to update to
              */
             // Note that for inheritance from BaseFsm (in contrast to NoFsm), this overrides a virtual function!
-            void updateState(const karabo::util::State& cs) {
-                updateState(cs, karabo::util::Hash(), getActualTimestamp());
+            void updateState(const karabo::util::State& currentState) {
+                updateState(currentState, karabo::util::Hash(), getActualTimestamp());
             }
 
             /**
@@ -1252,12 +1248,12 @@ namespace karabo {
              *
              * Will also update the instanceInfo describing this device instance (if new or old State are ERROR).
              *
-             * @param cs: the state to update to
+             * @param currentState: the state to update to
              * @param other: a Hash to set other properties in the same state update message,
              *               time stamp attributes to its paths have precedence over the actual timestamp
              */
-            void updateState(const karabo::util::State& cs, const karabo::util::Hash& other) {
-                updateState(cs, other, getActualTimestamp());
+            void updateState(const karabo::util::State& currentState, const karabo::util::Hash& other) {
+                updateState(currentState, other, getActualTimestamp());
             }
 
             /**
@@ -1265,13 +1261,13 @@ namespace karabo {
              *
              * Will also update the instanceInfo describing this device instance (if new or old State are ERROR).
              *
-             * @param cs: the state to update to
+             * @param currentState: the state to update to
              * @param timestamp: time stamp to assign to the state property and the properties in 'other'
              *                   (if the latter do not have specified timestamp attributes)
              *
              */
-            void updateState(const karabo::util::State& cs, const karabo::util::Timestamp& timestamp) {
-                updateState(cs, karabo::util::Hash(), timestamp);
+            void updateState(const karabo::util::State& currentState, const karabo::util::Timestamp& timestamp) {
+                updateState(currentState, karabo::util::Hash(), timestamp);
             }
 
             /**
@@ -1279,27 +1275,30 @@ namespace karabo {
              *
              * Will also update the instanceInfo describing this device instance (if new or old State are ERROR).
              *
-             * @param cs: the state to update to
+             * @param currentState: the state to update to
              * @param other: a Hash to set other properties in the same state update message,
              *               time stamp attributes to its paths have precedence over the given 'timestamp'
              * @param timestamp: time stamp to assign to the state property and the properties in 'other'
              *                   (if the latter do not have specified timestamp attributes)
              *
              */
-            void updateState(const karabo::util::State& cs, karabo::util::Hash other, const karabo::util::Timestamp& timestamp) {
+            void updateState(const karabo::util::State& currentState, karabo::util::Hash other, const karabo::util::Timestamp& timestamp) {
                 try {
-                    const std::string& currentState = cs.name();
-                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ".updateState: \"" << currentState << "\".";
-                    if (getState().name() != currentState) {
+                    const std::string& stateName = currentState.name();
+                    KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << ".updateState: \"" << stateName << "\".";
+                    if (getState() != currentState) {
                         // Set state as string, but add state marker attribute KARABO_INDICATE_STATE_SET
-                        other.set("state", currentState)
-                                .setAttribute(KARABO_INDICATE_STATE_SET, true);
-                        if (boost::regex_match(currentState, m_errorRegex)) {
+                        other.set("state", stateName)
+                                  .setAttribute(KARABO_INDICATE_STATE_SET, true);
+                        // Compare with state enum
+                        if (currentState == karabo::util::State::ERROR) {
                             updateInstanceInfo(karabo::util::Hash("status", "error"));
+                        } else if (currentState == karabo::util::State::UNKNOWN) {
+                            updateInstanceInfo(karabo::util::Hash("status", "unknown"));
                         } else {
                             // Reset the error status - protect against non-initialised instanceInfo
                             const karabo::util::Hash info(getInstanceInfo());
-                            if (!info.has("status") || info.get<std::string>("status") == "error") {
+                            if (!info.has("status") || info.get<std::string>("status") == "error"  || info.get<std::string>("status") == "unknown") {
                                 updateInstanceInfo(karabo::util::Hash("status", "ok"));
                             }
                         }
@@ -1310,7 +1309,7 @@ namespace karabo {
                     // This is intended for lazy device programmers: A slot call should reply any new state. If the
                     // slot does not call reply(..) again after updateState, the slot will implicitly take this here.
                     // Note that in case of asynchronous slot completion the AsyncReply has to be instructed explicitly.
-                    reply(currentState);
+                    reply(stateName);
 
                 } catch (const karabo::util::Exception& e) {
                     KARABO_RETHROW
@@ -1697,7 +1696,16 @@ namespace karabo {
                 instanceInfo.set("serverId", m_serverId);
                 instanceInfo.set("visibility", this->get<int >("visibility"));
                 instanceInfo.set("host", this->get<std::string>("hostName"));
-                instanceInfo.set("status", "ok");
+                std::string status;
+                const karabo::util::State state = this->getState();
+                if (state == State::ERROR) {
+                    status = "error";
+                } else if (state == State::UNKNOWN) {
+                    status = "unknown";
+                } else {
+                    status = "ok";
+                }
+                instanceInfo.set("status", status);
                 instanceInfo.set("archive", this->get<bool>("archive"));
 
                 // the capabilities field specifies the optional capabilities a device provides.
