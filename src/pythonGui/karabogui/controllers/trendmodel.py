@@ -1,18 +1,14 @@
 import datetime
-import os.path as op
 
 import numpy
 from pyqtgraph import PlotDataItem
-from qtpy import uic
 from qtpy.QtCore import QDateTime
-from qtpy.QtWidgets import QDialog
 from traits.api import (
     Array, Constant, Float, HasStrictTraits, Instance, Int, List, WeakRef,
     on_trait_change)
 
 from karabo.native import Timestamp
 from karabogui.binding.api import PropertyProxy
-from karabogui.const import MAX_NUMBER_LIMIT
 from karabogui.graph.common.const import ALARM_INTEGER_MAP, STATE_INTEGER_MAP
 
 ONE_WEEK = "One Week"
@@ -24,29 +20,7 @@ HIDDEN = "Hidden"
 
 DEFAULT_MIN = -0.5
 DEFAULT_MAX = 0.5
-
-
-class Timespan(QDialog):
-    def __init__(self, parent):
-        super(Timespan, self).__init__(parent)
-        uic.loadUi(op.join(op.dirname(__file__), "timespan.ui"), self)
-
-    def _set_beginning_end_date_time(self, selected_time_span):
-        start_dt, end_dt = get_start_end_date_time(selected_time_span)
-        self.dt_beginning.setDateTime(start_dt)
-        self._dt_end.setDateTime(end_dt)
-
-    def on_pb_one_week_clicked(self):
-        self._set_beginning_end_date_time(ONE_WEEK)
-
-    def on_pb_one_day_clicked(self):
-        self._set_beginning_end_date_time(ONE_DAY)
-
-    def on_pb_one_hour_clicked(self):
-        self._set_beginning_end_date_time(ONE_HOUR)
-
-    def on_pb_ten_minutes_clicked(self):
-        self._set_beginning_end_date_time(TEN_MINUTES)
+MAX_NUMBER_LIMIT = 1e30
 
 
 def get_start_end_date_time(selected_time_span):
