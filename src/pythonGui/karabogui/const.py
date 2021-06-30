@@ -18,9 +18,6 @@ ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 WIDGET_MIN_WIDTH = 40
 WIDGET_MIN_HEIGHT = 18
 
-# PLOT PROPERTIES
-MAX_NUMBER_LIMIT = 1e30
-
 # COMMUNICATION
 REQUEST_REPLY_TIMEOUT = 5  # in seconds
 
