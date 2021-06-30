@@ -14,11 +14,10 @@ from karabo.common.scenemodel.api import (
 from karabogui import icons
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, IntBinding, StringBinding)
-from karabogui.const import MAX_NUMBER_LIMIT
 from karabogui.controllers.api import (
-    ONE_DAY, ONE_HOUR, ONE_WEEK, TEN_MINUTES, UPTIME, BaseBindingController,
-    Curve, get_start_end_date_time, register_binding_controller,
-    with_display_type)
+    MAX_NUMBER_LIMIT, ONE_DAY, ONE_HOUR, ONE_WEEK, TEN_MINUTES, UPTIME,
+    BaseBindingController, Curve, get_start_end_date_time,
+    register_binding_controller, with_display_type)
 from karabogui.graph.common.api import AxisType, create_button, get_pen_cycler
 from karabogui.graph.common.const import ALARM_INTEGER_MAP, STATE_INTEGER_MAP
 from karabogui.graph.plots.base import KaraboPlotView
