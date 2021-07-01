@@ -366,7 +366,7 @@ namespace karabo {
 
             std::ostringstream oss;
             oss << "InfluxDbClient : connection to \"" << m_url << "\" established";
-            KARABO_LOG_FRAMEWORK_DEBUG << oss.str();
+            KARABO_LOG_FRAMEWORK_INFO << oss.str();
 
             if (hook) hook(true); // true means connected successfuly.
 
