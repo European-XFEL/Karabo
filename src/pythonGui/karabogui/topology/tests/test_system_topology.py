@@ -3,7 +3,9 @@ from unittest.mock import Mock
 from traits.api import pop_exception_handler, push_exception_handler
 
 from karabo.common.api import ProxyStatus
-from karabogui.testing import GuiTestCase, singletons, system_hash
+from karabo.native import Hash
+from karabogui.testing import (
+    GuiTestCase, get_device_schema, singletons, system_hash)
 from karabogui.topology.system_topology import SystemTopology
 
 
@@ -17,6 +19,13 @@ def tearDown():
 
 class TestSystemTopology(GuiTestCase):
 
+    def test_cleanup_topology(self):
+        topology = SystemTopology()
+        topology.initialize(system_hash())
+        assert topology.online
+        topology.clear()
+        assert not topology.online
+
     def test_get_class_simple(self):
         network = Mock()
         topology = SystemTopology()
@@ -29,6 +38,15 @@ class TestSystemTopology(GuiTestCase):
             # class is not in the deviceClasses list of the server, this
             # solves the race condition in MDL
             assert network.onGetClassSchema.call_count == 0
+
+            # Test a class that is available, request multiple times, but
+            # only a single schema is requested
+            foo_klass = topology.get_class('swerver', 'FooClass')
+            assert foo_klass.status == ProxyStatus.REQUESTED
+            assert network.onGetClassSchema.call_count == 1
+            more_foo_klass = topology.get_class('swerver', 'FooClass')
+            assert more_foo_klass.status == ProxyStatus.REQUESTED
+            assert network.onGetClassSchema.call_count == 1
 
     def test_get_device_simple(self):
         network = Mock()
@@ -44,6 +62,9 @@ class TestSystemTopology(GuiTestCase):
 
             assert dev.status is ProxyStatus.ONLINEREQUESTED
             network.onGetDeviceSchema.assert_called_with('divvy')
+            assert not len(dev.binding.value)
+            topology.device_schema_updated('divvy', get_device_schema())
+            assert len(dev.binding.value)
 
     def test_get_project_device_simple(self):
         network = Mock()
@@ -83,3 +104,154 @@ class TestSystemTopology(GuiTestCase):
                                                  server_id='notthere',
                                                  class_id='NotValieEither')
             assert len(topology._project_device_proxies) == 0
+
+    def test_system_topology_gone(self):
+        network = Mock()
+        topology = SystemTopology()
+        topology.initialize(system_hash())
+        with singletons(network=network, topology=topology):
+            # 1. Plainly test a faulty changes Hash
+            assert topology.get_attributes("device.divvy") is not None
+            changes = Hash("new", Hash(), "update", Hash(), "gone", Hash())
+            topology.topology_update(changes)
+            assert topology.get_attributes("device.divvy") is not None
+
+            # 2. Instance gone device
+            dev = topology.get_device('divvy')
+            assert dev.status is not ProxyStatus.OFFLINE
+            gone_hash = Hash("device", Hash("divvy", None))
+            changes = Hash("new", Hash(), "update", Hash(), "gone", gone_hash)
+            topology.topology_update(changes)
+            assert topology.get_attributes("device.divvy") is None
+            # 2.1 A second time to be sure
+            topology.topology_update(changes)
+            assert topology.get_attributes("device.divvy") is None
+            assert dev.status is ProxyStatus.OFFLINE
+
+            # 3. instance gone macro
+            assert topology.get_attributes("macro.macdonald") is not None
+            gone_hash = Hash("macro", Hash("macdonald", None))
+            changes = Hash("new", Hash(), "update", Hash(), "gone", gone_hash)
+            topology.topology_update(changes)
+            assert topology.get_attributes("macro.macdonald") is None
+            # 3.1 A second time to be sure
+            topology.topology_update(changes)
+            assert topology.get_attributes("macro.macdonald") is None
+
+            # 4. instance gone server
+            assert topology.get_attributes("server.swerver") is not None
+            gone_hash = Hash("server", Hash("swerver", None))
+            changes = Hash("new", Hash(), "update", Hash(), "gone", gone_hash)
+            topology.topology_update(changes)
+            assert topology.get_attributes("server.swerver") is None
+            # 3.1 A second time to be sure
+            topology.topology_update(changes)
+            assert topology.get_attributes("server.swerver") is None
+
+            # 5. Instance gone client
+            assert topology.get_attributes("client.charlie") is not None
+            gone_hash = Hash("client", Hash("charlie", None))
+            changes = Hash("new", Hash(), "update", Hash(), "gone", gone_hash)
+            topology.topology_update(changes)
+            assert topology.get_attributes("client.charlie") is None
+            # 4.1 A second time, stress
+            topology.topology_update(changes)
+            assert topology.get_attributes("client.charlie") is None
+
+    def test_system_topology_update_instance(self):
+        network = Mock()
+        topology = SystemTopology()
+        topology.initialize(system_hash())
+        with singletons(network=network, topology=topology):
+            attrs = topology.get_attributes("device.divvy")
+            assert attrs["status"] != "error"
+
+            h = Hash()
+            h['device.divvy'] = None
+            h['device.divvy', ...] = {
+                'host': 'BIG_IRON',
+                'serverId': 'swerver',
+                'classId': 'FooClass',
+                'status': 'error'
+            }
+
+            dev = topology.get_device('divvy')
+
+            assert dev.status is ProxyStatus.ONLINEREQUESTED
+            network.onGetDeviceSchema.assert_called_with('divvy')
+            assert dev.topology_node.status is not ProxyStatus.ERROR
+
+            # Instance update device
+            changes = Hash("new", Hash(), "update", h, "gone", Hash())
+            topology.topology_update(changes)
+            attrs = topology.get_attributes("device.divvy")
+            assert attrs["status"] == "error"
+            assert dev.topology_node.status is ProxyStatus.ERROR
+
+            # A second time to be sure
+            h['device.divvy', 'status'] = "ok"
+            changes = Hash("new", Hash(), "update", h, "gone", Hash())
+            topology.topology_update(changes)
+            attrs = topology.get_attributes("device.divvy")
+            assert attrs["status"] == "ok"
+            assert dev.topology_node.status is ProxyStatus.OK
+
+    def test_visit_system_topology(self):
+        topology = SystemTopology()
+        topology.initialize(system_hash())
+        with singletons(topology=topology):
+            devices = []
+
+            def device_visitor(node):
+                nonlocal devices
+                # Check for devices, level 3
+                if node.level == 3:
+                    devices.append(node)
+
+            topology.visit_system_tree(device_visitor)
+            assert len(devices) == 2
+            assert devices[0].node_id == "divvy"
+            assert devices[1].node_id == "macdonald"
+
+            servers = []
+
+            def server_visitor(node):
+                nonlocal servers
+                # Check for servers, level 1
+                if node.level == 1:
+                    servers.append(node)
+
+            topology.visit_system_tree(server_visitor)
+            assert len(servers) == 1
+            assert servers[0].node_id == "swerver"
+
+            # Visit the device tree
+            # The system tree is a bit more strict and validates the Karaob
+            # naming convention. Hence, we do not expect any devices
+
+            members = []
+
+            def member_visitor(node):
+                nonlocal members
+                # Check for member, level 2
+                if node.level == 2:
+                    members.append(node)
+
+            topology.visit_device_tree(member_visitor)
+            assert len(members) == 0
+
+            h = Hash()
+            h['device.EG/RR/VIEW'] = None
+            h['device.EG/RR/VIEW', ...] = {
+                'host': 'BIG_IRON',
+                'serverId': 'swerver',
+                'classId': 'FooClass',
+                'status': 'ok'
+            }
+
+            changes = Hash("new", h, "update", Hash(), "gone", Hash())
+            topology.topology_update(changes)
+
+            topology.visit_device_tree(member_visitor)
+            assert len(members) == 1
+            assert members[0].node_id == "EG/RR/VIEW"
