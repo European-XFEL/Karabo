@@ -10,8 +10,9 @@ from qtpy.QtTest import QTest
 from qtpy.QtWidgets import QApplication
 
 import karabogui.singletons.api as singletons_mod
-from karabo.common.api import Capabilities, ProxyStatus
-from karabo.native import AccessLevel, Hash
+from karabo.common.api import Capabilities, ProxyStatus, State
+from karabo.native import (
+    AccessLevel, AccessMode, Configurable, Double, Hash, Int32, String, Unit)
 from karabogui.alarms.api import (
     ACKNOWLEDGEABLE, ALARM_HIGH, ALARM_ID, ALARM_NONE, ALARM_TYPE, DESCRIPTION,
     DEVICE_ID, NEEDS_ACKNOWLEDGING, PROPERTY, TIME_OF_FIRST_OCCURENCE,
@@ -225,6 +226,14 @@ def system_hash():
         'status': 'noserver'
     }
 
+    h['client.charlie'] = None
+    h['client.charlie', ...] = {
+        'visibility': AccessLevel.OBSERVER,
+        'serverId': '__none__',
+        'classId': 'NoClass',
+        'status': 'ok'
+    }
+
     return h
 
 
@@ -315,3 +324,24 @@ def system_hash_server_and_plugins():
     }
 
     return h
+
+
+class SimpleDeviceSchema(Configurable):
+    """A simple device schema"""
+    state = String(
+        defaultValue=State.ON,
+        displayType="State",
+        enum=State)
+    doubleProperty = Double(
+        defaultValue=None,
+        unitSymbol=Unit.METER)
+    stringProperty = String(
+        defaultValue="foo",
+        options=["foo", "bar", "baz", "qux"])
+    readOnlyProperty = Int32(
+        defaultValue=0,
+        accessMode=AccessMode.READONLY)
+
+
+def get_device_schema():
+    return SimpleDeviceSchema.getClassSchema()
