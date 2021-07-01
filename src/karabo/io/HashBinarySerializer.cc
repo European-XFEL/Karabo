@@ -432,7 +432,7 @@ namespace karabo {
                 Types::ReferenceType type = readType(is);
                 boost::any value;
                 readAny(value, type, is);
-                attributes.set(name, value);
+                attributes.set(name, std::move(value));
             }
         }
 
@@ -495,10 +495,13 @@ namespace karabo {
         template<>
         std::string HashBinarySerializer::readSingleValue(std::istream& is) const {
             unsigned size = readSize(is);
-            boost::shared_array<char> buffer(new char[size + 1]);
-            buffer[size] = 0;
-            is.read(buffer.get(), size);
-            return std::string(buffer.get());
+            std::string result;
+            result.resize(size); // unfortunately, all characters are initialised with null although not needed
+            // Further optimisation:
+            // With access to raw character pointers inside 'is', one could directly create the string with
+            // an interator range and get rid of the null initialisation overhead: return string(rawPtr, rawPtr + size);
+            is.read(&(result[0]), size);
+            return result;
         }
 
 
