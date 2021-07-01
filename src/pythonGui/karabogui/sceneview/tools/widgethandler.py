@@ -15,7 +15,7 @@ from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabogui import icons
 from karabogui.controllers.api import (
     get_class_const_trait, get_compatible_controllers, get_scene_model_class)
-from karabogui.dialogs.dialogs import SceneItemDialog
+from karabogui.dialogs.api import SceneItemDialog
 from karabogui.sceneview.tools.api import send_to_back, send_to_front, ungroup
 from karabogui.sceneview.widget.api import ControllerContainer
 

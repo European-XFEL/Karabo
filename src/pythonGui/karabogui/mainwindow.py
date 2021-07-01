@@ -18,10 +18,8 @@ from karabo.common.project.api import get_project_models
 from karabo.native import AccessLevel
 from karabogui import const, icons, messagebox
 from karabogui.access import ACCESS_LEVELS, AccessRole
-from karabogui.dialogs.client_topology import ClientTopologyDialog
-from karabogui.dialogs.configuration import ConfigurationDialog
-from karabogui.dialogs.dialogs import AboutDialog
-from karabogui.dialogs.update_dialog import UpdateDialog
+from karabogui.dialogs.api import (
+    AboutDialog, ClientTopologyDialog, ConfigurationDialog, UpdateDialog)
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
 from karabogui.indicators import get_processing_color
