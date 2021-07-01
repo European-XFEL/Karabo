@@ -10,9 +10,7 @@ from qtpy.QtGui import QColor, QPainter, QPen
 from qtpy.QtWidgets import QAction, QDialog, QPushButton
 
 from karabogui import messagebox
-from karabogui.dialogs.dialogs import SceneLinkDialog
-from karabogui.dialogs.textdialog import TextDialog
-from karabogui.dialogs.webdialog import WebDialog
+from karabogui.dialogs.api import SceneLinkDialog, TextDialog, WebDialog
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.fonts import get_qfont
 from karabogui.widgets.hints import KaraboSceneWidget
