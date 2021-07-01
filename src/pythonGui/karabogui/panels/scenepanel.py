@@ -11,7 +11,7 @@ from qtpy.QtWidgets import (
     QAction, QActionGroup, QApplication, QDialog, QMenu, QScrollArea)
 
 from karabogui import icons
-from karabogui.dialogs.dialogs import ResizeSceneDialog
+from karabogui.dialogs.api import ResizeSceneDialog
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.indicators import get_topic_color
 from karabogui.sceneview.api import SceneView

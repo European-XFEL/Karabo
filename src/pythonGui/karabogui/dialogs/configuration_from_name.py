@@ -89,12 +89,12 @@ class SaveConfigurationDialog(QDialog):
         return self.ui_name.text()
 
 
-class ConfigurationFromName(QDialog):
+class ConfigurationFromNameDialog(QDialog):
     """List configurations by ``name`` from the configuration database
     """
 
     def __init__(self, instance_id, parent=None):
-        super(ConfigurationFromName, self).__init__(parent)
+        super(ConfigurationFromNameDialog, self).__init__(parent)
         uic.loadUi(get_dialog_ui("config_handle.ui"), self)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(False)
@@ -163,7 +163,7 @@ class ConfigurationFromName(QDialog):
     def done(self, result):
         """Stop listening for broadcast events"""
         unregister_from_broadcasts(self.event_map)
-        super(ConfigurationFromName, self).done(result)
+        super(ConfigurationFromNameDialog, self).done(result)
 
     def _check_existing(self):
         if self.ui_table_widget.selectionModel().hasSelection():
@@ -204,7 +204,7 @@ class ConfigurationFromName(QDialog):
     def accept(self):
         """The dialog was accepted and we can request a configuration"""
         self._request_configuration()
-        super(ConfigurationFromName, self).accept()
+        super(ConfigurationFromNameDialog, self).accept()
 
     @Slot()
     def _request_configuration(self):
