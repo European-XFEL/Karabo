@@ -14,7 +14,7 @@ from traits.api import (
     cached_property, on_trait_change)
 
 from karabo.common.scenemodel.api import BaseShapeObjectData, XMLElementModel
-from karabogui.dialogs.dialogs import PenDialog
+from karabogui.dialogs.pen_dialogs import PenDialog
 from karabogui.pathparser import Parser
 
 from .const import (
