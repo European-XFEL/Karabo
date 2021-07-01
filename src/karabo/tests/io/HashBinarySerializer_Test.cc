@@ -24,6 +24,9 @@ using std::vector;
 
 
 HashBinarySerializer_Test::HashBinarySerializer_Test() {
+    // Uncomment for output, e.g. serialisaton speed measurements
+    // karabo::log::Logger::configure(Hash("priority", "DEBUG"));
+    // karabo::log::Logger::useOstream();
 }
 
 
@@ -112,20 +115,44 @@ void HashBinarySerializer_Test::testSerialization() {
     BinarySerializer<Hash>::Pointer p = BinarySerializer<Hash>::create("Bin");
     vector<char> archive1;
     boost::posix_time::ptime tick = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 10; ++i) {
+    const int ntests = 1; // for measurements, better increase...
+    for (int i = 0; i < ntests; ++i) {
         p->save(m_hash, archive1);
     }
     boost::posix_time::time_duration diff = boost::posix_time::microsec_clock::local_time() - tick;
-    float ave = diff.total_milliseconds() / 10.0;
-    KARABO_LOG_FRAMEWORK_DEBUG << "\n Average serialization time: " << ave << " ms for Hash of size: " << archive1.size() / 10.e6 << " MB";
+    float ave = diff.total_milliseconds() / static_cast<double>(ntests);
+    KARABO_LOG_FRAMEWORK_DEBUG << " Average serialization time: " << ave << " ms for Hash of size: " << archive1.size() / 10.e6 << " MB";
+
+    const Hash schemaOnlyHash("schema", s);
+    tick = boost::posix_time::microsec_clock::local_time();
+    std::vector<char> archiveSchema;
+    const int ntestsSchema = ntests * 10;
+    for (int i = 0; i < ntestsSchema; ++i) {
+        archiveSchema.clear();
+        p->save(schemaOnlyHash, archiveSchema);
+    }
+    diff = boost::posix_time::microsec_clock::local_time() - tick;
+    ave = diff.total_milliseconds() / static_cast<double>(ntestsSchema);
+    KARABO_LOG_FRAMEWORK_DEBUG << " Average serialization time schema only: " << ave << " ms";
+
     Hash hash;
     tick = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < ntestsSchema; ++i) {
+        hash.clear();
+        p->load(hash, archiveSchema);
+    }
+    diff = boost::posix_time::microsec_clock::local_time() - tick;
+    ave = diff.total_milliseconds() / static_cast<double>(ntestsSchema);
+    KARABO_LOG_FRAMEWORK_DEBUG << " Average de-serialization time schema only: " << ave << " ms";
+
+    tick = boost::posix_time::microsec_clock::local_time();
+    for (int i = 0; i < ntests; ++i) {
+        hash.clear();
         p->load(hash, archive1);
     }
     diff = boost::posix_time::microsec_clock::local_time() - tick;
-    ave = diff.total_milliseconds() / 10.0;
-    KARABO_LOG_FRAMEWORK_DEBUG << "\n Average de-serialization time: " << ave << " ms";
+    ave = diff.total_milliseconds() / static_cast<double>(ntests);
+    KARABO_LOG_FRAMEWORK_DEBUG << " Average de-serialization time: " << ave << " ms";
     CPPUNIT_ASSERT(karabo::util::similar(hash, m_hash));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(hash.get<Hash>("hash"), "std::vector<char>"));
     CPPUNIT_ASSERT_NO_THROW(hashContentTest(*hash.get<Hash::Pointer>("hash_ptr"), "std::vector<char> ptr"));
