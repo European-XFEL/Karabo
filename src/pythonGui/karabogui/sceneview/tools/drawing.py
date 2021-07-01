@@ -6,9 +6,7 @@ from traits.api import Instance
 from karabo.common.scenemodel.api import (
     ARROW_HEAD, ArrowModel, LineModel, RectangleModel, SceneLinkModel,
     StickerModel, WebLinkModel)
-from karabogui.dialogs.dialogs import SceneLinkDialog
-from karabogui.dialogs.textdialog import TextDialog
-from karabogui.dialogs.webdialog import WebDialog
+from karabogui.dialogs.api import SceneLinkDialog, TextDialog, WebDialog
 from karabogui.pathparser import Parser
 from karabogui.sceneview.bases import BaseSceneTool
 from karabogui.sceneview.utils import calc_rotated_point, calc_snap_pos
