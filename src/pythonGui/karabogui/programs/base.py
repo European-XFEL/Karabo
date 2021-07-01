@@ -45,7 +45,9 @@ def create_gui_app(args):
         os.environ['QT_MAC_WANTS_LAYER'] = '1'
         # PyQt 5.12 onwards provides problems for MacOS11.
         # https://github.com/conda-forge/pyqt-feedstock/issues/98
-    app = QApplication(args)
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication(args)
     # Set directly the QSettings environment to have access
     app.setOrganizationName('XFEL')
     app.setOrganizationDomain('xfel.eu')
