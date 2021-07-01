@@ -14,9 +14,9 @@ from karabo.common.api import Capabilities
 from karabo.native import Timestamp
 from karabogui import icons, messagebox
 from karabogui.access import AccessRole, access_role_allowed
-from karabogui.dialogs.configuration_from_name import ConfigurationFromName
-from karabogui.dialogs.device_capability import DeviceCapabilityDialog
-from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
+from karabogui.dialogs.api import (
+    ConfigurationFromNameDialog, ConfigurationFromPastDialog,
+    DeviceCapabilityDialog)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.itemtypes import NavigationItemTypes
 from karabogui.navigation.system_filter_model import TopologyFilterModel
@@ -236,8 +236,8 @@ class SystemTreeView(QTreeView):
     def onGetConfigurationFromName(self):
         info = self.indexInfo()
         device_id = info.get('deviceId')
-        dialog = ConfigurationFromName(instance_id=device_id,
-                                       parent=self)
+        dialog = ConfigurationFromNameDialog(instance_id=device_id,
+                                             parent=self)
         dialog.move(QCursor.pos())
         dialog.show()
         dialog.raise_()

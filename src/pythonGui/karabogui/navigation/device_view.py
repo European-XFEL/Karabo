@@ -11,8 +11,8 @@ from qtpy.QtWidgets import (
 
 from karabogui import icons, messagebox
 from karabogui.access import AccessRole, access_role_allowed
-from karabogui.dialogs.configuration_from_name import ConfigurationFromName
-from karabogui.dialogs.dialogs import ConfigurationFromPastDialog
+from karabogui.dialogs.api import (
+    ConfigurationFromNameDialog, ConfigurationFromPastDialog)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.itemtypes import NavigationItemTypes
 from karabogui.singletons.api import get_manager, get_selection_tracker
@@ -196,8 +196,8 @@ class DeviceTreeView(QTreeView):
     def onGetConfigurationFromName(self):
         info = self.indexInfo()
         device_id = info.get('deviceId')
-        dialog = ConfigurationFromName(instance_id=device_id,
-                                       parent=self)
+        dialog = ConfigurationFromNameDialog(instance_id=device_id,
+                                             parent=self)
         dialog.move(QCursor.pos())
         dialog.show()
         dialog.raise_()
