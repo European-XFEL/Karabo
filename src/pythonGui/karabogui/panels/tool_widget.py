@@ -2,16 +2,33 @@
 # Author: <dennis.goeries@xfel.eu>
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-
 import os.path as op
+import re
 import weakref
 
 from qtpy import uic
 from qtpy.QtCore import Slot
+from qtpy.QtGui import QValidator
 from qtpy.QtWidgets import QWidget
 
 from karabo.common.enums import Interfaces
 from karabogui.util import wait_cursor
+
+
+class SearchValidator(QValidator):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.pattern = re.compile(pattern=r"^[a-zA-Z0-9\-\/\_]+$")
+
+    def validate(self, input, pos):
+        if not input:
+            return self.Acceptable, input, pos
+
+        if not self.pattern.match(input):
+            return self.Invalid, input, pos
+
+        return self.Acceptable, input, pos
 
 
 class BaseSearchBar(QWidget):
@@ -23,6 +40,8 @@ class BaseSearchBar(QWidget):
         self.ui_filter.returnPressed.connect(self._search_clicked)
         self.ui_search.clicked.connect(self._search_clicked)
         self.ui_clear.clicked.connect(self._clear_clicked)
+        # Test typical instanceId, classId filtering
+        self.ui_filter.setValidator(SearchValidator())
 
         self.tree_view = None
         self._enable_filter()
