@@ -5,9 +5,6 @@
 #############################################################################
 from enum import Enum
 
-from qtpy.QtCore import Qt
-from qtpy.QtGui import QColor, QIcon, QPainter, QPixmap
-
 from karabo.common.api import ProxyStatus, State
 
 from . import icons
@@ -69,66 +66,6 @@ STATE_COLORS = {
     State.ACTIVE: _StateColors.ACTIVE_COLOR.value,
     State.PASSIVE: _StateColors.PASSIVE_COLOR.value
 }
-
-# --------------------------------------------------------------------------
-# Mapping states to icons
-
-# Use a lazily-initialized global. QPixmap needs a QApplication instance...
-_STATE_ICONS = None
-
-
-def get_state_icon(state):
-    """ Return a colored icon for the given ``state``. A ``NoneType`` is
-    returned in case the given ``state`` could not be found.
-    """
-    global _STATE_ICONS
-    if _STATE_ICONS is None:
-        _STATE_ICONS = {k: _create_state_icon(v)
-                        for k, v in STATE_COLORS.items()}
-
-    # Remark: order matters here - tree relation!
-    if state.isDerivedFrom(State.PASSIVE):
-        return _STATE_ICONS[State.PASSIVE]
-    elif state.isDerivedFrom(State.ACTIVE):
-        return _STATE_ICONS[State.ACTIVE]
-    elif state.isDerivedFrom(State.DECREASING):
-        return _STATE_ICONS[State.DECREASING]
-    elif state.isDerivedFrom(State.INCREASING):
-        return _STATE_ICONS[State.INCREASING]
-    elif state.isDerivedFrom(State.STATIC):
-        return _STATE_ICONS[State.STATIC]
-    elif state.isDerivedFrom(State.RUNNING):
-        return _STATE_ICONS[State.RUNNING]
-    elif state.isDerivedFrom(State.CHANGING):
-        return _STATE_ICONS[State.CHANGING]
-    elif state.isDerivedFrom(State.DISABLED):
-        return _STATE_ICONS[State.DISABLED]
-    elif state.isDerivedFrom(State.ERROR):
-        return _STATE_ICONS[State.ERROR]
-    elif state.isDerivedFrom(State.NORMAL):
-        return _STATE_ICONS[State.NORMAL]
-    elif state.isDerivedFrom(State.KNOWN):
-        return _STATE_ICONS[State.KNOWN]
-    elif state.isDerivedFrom(State.UNKNOWN):
-        return _STATE_ICONS[State.UNKNOWN]
-    elif state.isDerivedFrom(State.INIT):
-        return _STATE_ICONS[State.INIT]
-
-
-def _create_state_icon(color):
-    """ An icon from the given ``color`` tuple is returned."""
-    width = 20
-    height = 20
-    pix = QPixmap(width, height)
-    pix.fill(QColor(*color))
-    with QPainter(pix) as painter:
-        pen = painter.pen()
-        pen_width = 1
-        pen.setWidth(pen_width)
-        pen.setColor(Qt.black)
-        painter.setPen(pen)
-        painter.drawRect(0, 0, width - pen_width, height - pen_width)
-        return QIcon(pix)
 
 
 # --------------------------------------------------------------------------
