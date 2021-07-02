@@ -133,7 +133,7 @@ class Configuration(QObject):
     # GUI Server network connection
 
     username = Item(default='operator', q_set=True, group=NETWORK)
-    gui_servers = Item(default=(), q_set=True, group=NETWORK)
+    gui_servers = Item(default=[], q_set=True, group=NETWORK)
 
     def __new__(cls, *args, **kwargs):
         instance = super(Configuration, cls).__new__(cls, *args, **kwargs)
