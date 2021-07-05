@@ -198,6 +198,7 @@ def system_hash():
         'host': 'BIG_IRON',
         'visibility': AccessLevel.OBSERVER,
         'deviceClasses': ['FooClass', 'BarClass'],
+        'type': "server",
         'visibilities': [AccessLevel.OBSERVER, AccessLevel.OBSERVER]
     }
     h['device.divvy'] = None
