@@ -5,10 +5,24 @@ from qtpy.QtWidgets import QBoxLayout
 from traits.api import Callable, Int
 
 from karabo.common.scenemodel.api import (
-    BaseLayoutModel, BoxLayoutModel, FixedLayoutModel, GridLayoutChildData,
-    GridLayoutModel)
+    ArrowModel, BaseLayoutModel, BoxLayoutModel, FixedLayoutModel,
+    GridLayoutChildData, GridLayoutModel)
+from karabogui import messagebox
 from karabogui.sceneview.bases import BaseSceneAction
 from karabogui.sceneview.utils import calc_bounding_rect
+
+_XML_DEFS_MODELS = (ArrowModel,)
+
+
+def _check_xml_defs_model(models, scene_view) -> bool:
+    """Check if there is a special XML defs model"""
+    if any([isinstance(model, _XML_DEFS_MODELS) for model in models]):
+        text = ("Grouping <b>XMLDefsModels</b> models such as the "
+                "<b>Arrow</b> model on the scene view is currently not "
+                "available.")
+        messagebox.show_error(text, parent=scene_view)
+        return True
+    return False
 
 
 class CreateToolAction(BaseSceneAction):
@@ -59,8 +73,11 @@ class BaseLayoutAction(BaseSceneAction):
         except NotImplementedError:
             pass
 
-        # Get the new layout model
         child_models = [obj.model for obj in child_objects]
+        # Check for XML def models, as they are special and cannot be grouped
+        if _check_xml_defs_model(child_models, scene_view):
+            return
+        # Get the new layout model
         selection_rect = calc_bounding_rect(selection_model)
         layout_model = self.create_layout(child_objects, child_models,
                                           selection_rect)
@@ -144,6 +161,7 @@ class GridSceneAction(BaseLayoutAction):
         """Get a list of scene object models with the correct layout data
         attached.
         """
+
         def _reduce(positions):
             positions.sort()
             i = 1
@@ -186,6 +204,7 @@ class GroupSceneAction(BaseLayoutAction):
 
 class GroupEntireSceneAction(BaseSceneAction):
     """Group entirely"""
+
     def perform(self, scene_view):
         """Perform entire window grouping. """
 
@@ -193,18 +212,21 @@ class GroupEntireSceneAction(BaseSceneAction):
 class UngroupSceneAction(BaseSceneAction):
     """Ungroup action
     """
+
     def perform(self, scene_view):
         ungroup(scene_view)
 
 
 class SceneBringToFrontAction(BaseSceneAction):
     """Bring to front action"""
+
     def perform(self, scene_view):
         send_to_front(scene_view)
 
 
 class SceneSendToBackAction(BaseSceneAction):
     """Send to back action"""
+
     def perform(self, scene_view):
         send_to_back(scene_view)
 
