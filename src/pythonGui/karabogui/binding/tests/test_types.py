@@ -1,5 +1,7 @@
 from pytest import raises as assert_raises
 
+from karabo.native import AccessLevel, AccessMode, Assignment
+
 from ..api import (
     BindingNamespace, BoolBinding, ByteArrayBinding, CharBinding,
     ChoiceOfNodesBinding, ComplexBinding, FloatBinding, HashBinding,
@@ -40,6 +42,14 @@ def test_binding_traits():
         obj = binding_factory()
         for trait in obj.copyable_trait_names():
             assert trait in expected_traits
+
+        assert obj.required_access_level is AccessLevel.OBSERVER
+        assert obj.displayed_name == ""
+        assert obj.display_type == ""
+        assert obj.access_mode is AccessMode.UNDEFINED
+        assert obj.assignment is Assignment.OPTIONAL
+        assert not obj.options
+        assert obj.unit_label == ""
 
 
 def test_binding_namespace():
