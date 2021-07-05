@@ -7,16 +7,17 @@ from karabo.common.scenemodel.api import LabelModel
 from karabogui.dialogs.font_dialog import FontDialog
 from karabogui.fonts import (
     get_alias_from_font, get_font_size_from_dpi, get_qfont)
+from karabogui.util import SignalBlocker
 
 from .utils import get_dialog_ui
 
 
 class TextDialog(QDialog):
 
-    def __init__(self, label_model=None, parent=None):
+    def __init__(self, label_model=None, alignment=False, parent=None):
         super(TextDialog, self).__init__(parent)
         uic.loadUi(get_dialog_ui('textdialog.ui'), self)
-
+        self.has_alignment = alignment
         if label_model is None:
             # NOTE: Fonts similar on all OS are Arial, Helvetica, sans-serif!
             self.label_model = LabelModel()
@@ -31,7 +32,6 @@ class TextDialog(QDialog):
         self.set_text_color_button()
         self.set_text_background_button()
         self.set_alignment_combo()
-
         if self.label_model.frame_width > 0:
             self.cbFrameWidth.setChecked(True)
             self.sbFrameWidth.setValue(self.label_model.frame_width)
@@ -41,13 +41,19 @@ class TextDialog(QDialog):
 
     def set_alignment_combo(self):
         """Set the combobox according to the alignment"""
-        alignment = Qt.AlignmentFlag(self.label_model.alignh)
-        if alignment == Qt.AlignLeft:
-            self.cbAlignment.setCurrentIndex(0)
-        elif alignment == Qt.AlignRight:
-            self.cbAlignment.setCurrentIndex(1)
-        elif alignment == Qt.AlignHCenter:
-            self.cbAlignment.setCurrentIndex(2)
+        if self.has_alignment:
+            alignment = Qt.AlignmentFlag(self.label_model.alignh)
+            if alignment == Qt.AlignLeft:
+                self.cbAlignment.setCurrentIndex(0)
+            elif alignment == Qt.AlignRight:
+                self.cbAlignment.setCurrentIndex(1)
+            elif alignment == Qt.AlignHCenter:
+                self.cbAlignment.setCurrentIndex(2)
+        else:
+            # There is no alignment, we are centered
+            with SignalBlocker(self.cbAlignment):
+                self.cbAlignment.setCurrentIndex(2)
+                self.cbAlignment.setEnabled(False)
 
     def set_text_font_button(self):
         qfont = QFont(self.text_font)
