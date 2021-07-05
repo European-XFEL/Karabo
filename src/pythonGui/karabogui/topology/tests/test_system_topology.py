@@ -7,6 +7,7 @@ from karabo.native import Hash
 from karabogui.testing import (
     GuiTestCase, get_device_schema, singletons, system_hash)
 from karabogui.topology.system_topology import SystemTopology
+from karabogui.topology.util import get_macro_servers, is_server_online
 
 
 def setUp():
@@ -31,20 +32,20 @@ class TestSystemTopology(GuiTestCase):
         topology = SystemTopology()
         topology.initialize(system_hash())
         with singletons(network=network, topology=topology):
-            klass = topology.get_class('swerver', 'NoClass')
-            # server with name 'swerver' don't have the requested class
+            klass = topology.get_class("swerver", "NoClass")
+            # server with name "swerver" don"t have the requested class
             assert klass.status is ProxyStatus.NOPLUGIN
-            # GUI's system topology won't request for schema if the devic
+            # GUI"s system topology won"t request for schema if the devic
             # class is not in the deviceClasses list of the server, this
             # solves the race condition in MDL
             assert network.onGetClassSchema.call_count == 0
 
             # Test a class that is available, request multiple times, but
             # only a single schema is requested
-            foo_klass = topology.get_class('swerver', 'FooClass')
+            foo_klass = topology.get_class("swerver", "FooClass")
             assert foo_klass.status == ProxyStatus.REQUESTED
             assert network.onGetClassSchema.call_count == 1
-            more_foo_klass = topology.get_class('swerver', 'FooClass')
+            more_foo_klass = topology.get_class("swerver", "FooClass")
             assert more_foo_klass.status == ProxyStatus.REQUESTED
             assert network.onGetClassSchema.call_count == 1
 
@@ -53,17 +54,17 @@ class TestSystemTopology(GuiTestCase):
         topology = SystemTopology()
         topology.initialize(system_hash())
         with singletons(network=network, topology=topology):
-            klass = topology.get_class('swerver', 'divvy')
+            klass = topology.get_class("swerver", "divvy")
 
             assert klass.status is ProxyStatus.NOPLUGIN
             assert network.onGetClassSchema.call_count == 0
 
-            dev = topology.get_device('divvy')
+            dev = topology.get_device("divvy")
 
             assert dev.status is ProxyStatus.ONLINEREQUESTED
-            network.onGetDeviceSchema.assert_called_with('divvy')
+            network.onGetDeviceSchema.assert_called_with("divvy")
             assert not len(dev.binding.value)
-            topology.device_schema_updated('divvy', get_device_schema())
+            topology.device_schema_updated("divvy", get_device_schema())
             assert len(dev.binding.value)
 
     def test_get_project_device_simple(self):
@@ -71,9 +72,9 @@ class TestSystemTopology(GuiTestCase):
         topology = SystemTopology()
         topology.initialize(system_hash())
         with singletons(network=network, topology=topology):
-            device_id = 'divvy'
-            server_id = 'swerver'
-            class_id = 'FooClass'
+            device_id = "divvy"
+            server_id = "swerver"
+            class_id = "FooClass"
 
             device = topology.get_project_device(device_id,
                                                  server_id=server_id,
@@ -89,20 +90,20 @@ class TestSystemTopology(GuiTestCase):
             # No schema is requested for the online device
             assert network.onGetDeviceSchema.call_count == 0
 
-            device.rename(device_id='davey')
+            device.rename(device_id="davey")
             key = (server_id, class_id)
             assert device_id not in topology._project_device_proxies[key]
-            assert 'davey' in topology._project_device_proxies[key]
+            assert "davey" in topology._project_device_proxies[key]
 
             network.reset_mock()
-            device.rename(device_id='junk', server_id='notthere',
-                          class_id='NotValieEither')
+            device.rename(device_id="junk", server_id="notthere",
+                          class_id="NotValieEither")
             assert network.onGetDeviceSchema.call_count == 0
 
             assert len(topology._project_device_proxies) == 1
-            topology.remove_project_device_proxy(device_id='junk',
-                                                 server_id='notthere',
-                                                 class_id='NotValieEither')
+            topology.remove_project_device_proxy(device_id="junk",
+                                                 server_id="notthere",
+                                                 class_id="NotValieEither")
             assert len(topology._project_device_proxies) == 0
 
     def test_system_topology_gone(self):
@@ -117,7 +118,7 @@ class TestSystemTopology(GuiTestCase):
             assert topology.get_attributes("device.divvy") is not None
 
             # 2. Instance gone device
-            dev = topology.get_device('divvy')
+            dev = topology.get_device("divvy")
             assert dev.status is not ProxyStatus.OFFLINE
             gone_hash = Hash("device", Hash("divvy", None))
             changes = Hash("new", Hash(), "update", Hash(), "gone", gone_hash)
@@ -167,18 +168,18 @@ class TestSystemTopology(GuiTestCase):
             assert attrs["status"] != "error"
 
             h = Hash()
-            h['device.divvy'] = None
-            h['device.divvy', ...] = {
-                'host': 'BIG_IRON',
-                'serverId': 'swerver',
-                'classId': 'FooClass',
-                'status': 'error'
+            h["device.divvy"] = None
+            h["device.divvy", ...] = {
+                "host": "BIG_IRON",
+                "serverId": "swerver",
+                "classId": "FooClass",
+                "status": "error"
             }
 
-            dev = topology.get_device('divvy')
+            dev = topology.get_device("divvy")
 
             assert dev.status is ProxyStatus.ONLINEREQUESTED
-            network.onGetDeviceSchema.assert_called_with('divvy')
+            network.onGetDeviceSchema.assert_called_with("divvy")
             assert dev.topology_node.status is not ProxyStatus.ERROR
 
             # Instance update device
@@ -189,7 +190,7 @@ class TestSystemTopology(GuiTestCase):
             assert dev.topology_node.status is ProxyStatus.ERROR
 
             # A second time to be sure
-            h['device.divvy', 'status'] = "ok"
+            h["device.divvy", "status"] = "ok"
             changes = Hash("new", Hash(), "update", h, "gone", Hash())
             topology.topology_update(changes)
             attrs = topology.get_attributes("device.divvy")
@@ -241,12 +242,12 @@ class TestSystemTopology(GuiTestCase):
             assert len(members) == 0
 
             h = Hash()
-            h['device.EG/RR/VIEW'] = None
-            h['device.EG/RR/VIEW', ...] = {
-                'host': 'BIG_IRON',
-                'serverId': 'swerver',
-                'classId': 'FooClass',
-                'status': 'ok'
+            h["device.EG/RR/VIEW"] = None
+            h["device.EG/RR/VIEW", ...] = {
+                "host": "BIG_IRON",
+                "serverId": "swerver",
+                "classId": "FooClass",
+                "status": "ok"
             }
 
             changes = Hash("new", h, "update", Hash(), "gone", Hash())
@@ -255,3 +256,25 @@ class TestSystemTopology(GuiTestCase):
             topology.visit_device_tree(member_visitor)
             assert len(members) == 1
             assert members[0].node_id == "EG/RR/VIEW"
+
+    def test_topology_utils(self):
+        topology = SystemTopology()
+        topology.initialize(system_hash())
+        with singletons(topology=topology):
+            assert is_server_online("swerver")
+            assert not is_server_online("cppserver/notthere")
+            assert not get_macro_servers()
+
+            h = Hash()
+            h["server.karabo/macroServer"] = None
+            h["server.karabo/macroServer", ...] = {
+                "host": "BIG_IRON",
+                "deviceClasses": ["Macro", "MetaMacro"],
+                "type": "server",
+            }
+
+            changes = Hash("new", h, "update", Hash(), "gone", Hash())
+            topology.topology_update(changes)
+            servers = get_macro_servers()
+            assert len(servers) == 1
+            assert servers[0] == "karabo/macroServer"
