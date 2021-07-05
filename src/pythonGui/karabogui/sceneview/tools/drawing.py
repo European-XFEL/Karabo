@@ -23,7 +23,7 @@ class TextSceneTool(BaseSceneTool):
         """A callback which is fired whenever the user ends a mouse click
         in the SceneView.
         """
-        dialog = TextDialog(parent=scene_view)
+        dialog = TextDialog(alignment=True, parent=scene_view)
         if dialog.exec_() == QDialog.Rejected:
             return
 
