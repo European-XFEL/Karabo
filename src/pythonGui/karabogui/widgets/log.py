@@ -271,11 +271,12 @@ class LogWidget(QWidget):
         self.prune()
 
     def prune(self):
-        """delete the oldest 10000 entries if we have more than 100000"""
-        if len(self.logs) < 100000:
+        """delete the oldest 1000 entries if we have more than 1000"""
+        if len(self.logs) < 1000:
             return
         self.logs.sort(key=lambda l: l.dateTime, reverse=True)
-        self.logs = self.logs[:-10000]
+        self.logs = self.logs[:-1000]
+        self.tailindex = len(self.logs)
         self.onFilterChanged()
 
     @Slot(bool)
@@ -364,6 +365,7 @@ class LogWidget(QWidget):
     @Slot()
     def onClearLog(self):
         self.logs = []
+        self.tailindex = 0
         self.onFilterChanged()
 
 
