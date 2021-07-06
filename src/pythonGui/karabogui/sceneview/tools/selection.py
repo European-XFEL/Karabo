@@ -216,7 +216,8 @@ class SceneSelectionTool(BaseSceneTool):
         """Handles mouse moves when a scene object is being moved.
         """
         mouse_pos = event.pos()
-        og = scene_view.geometry()
+        # Create a rect with scene view size and origin (0, 0)!
+        og = QRect(QPoint(0, 0), scene_view.size())
         if not og.contains(mouse_pos):
             return
         trans = mouse_pos - self._moving_pos
