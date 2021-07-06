@@ -9,7 +9,7 @@ from karabogui.alarms.filter_model import AlarmFilterModel
 from karabogui.testing import GuiTestCase
 
 
-def _data(update_type=INIT_UPDATE_TYPE):
+def create_alarm_data(update_type=INIT_UPDATE_TYPE):
     entries = []
     for i in range(10):
         data = AlarmEntry(
@@ -28,11 +28,35 @@ def _data(update_type=INIT_UPDATE_TYPE):
         id=200,
         timeOfFirstOccurrence='2017-04-20T09:32:22 UTC',
         timeOfOccurrence='2017-04-20T09:32:22 UTC',
-        deviceId='dev{}'.format(i),
+        deviceId='devGauge{}'.format(i),
         property='rent',
         type=INTERLOCK,
         description='rent is too damn high',
         acknowledge=(True, True))
+    entries.append(data)
+
+    # we add one more interlock for ack mixing
+    data = AlarmEntry(
+        id=400,
+        timeOfFirstOccurrence='2017-04-20T09:32:22 UTC',
+        timeOfOccurrence='2017-04-20T09:32:22 UTC',
+        deviceId='devValve{}'.format(i),
+        property='water',
+        type=INTERLOCK,
+        description='water leak detected',
+        acknowledge=(True, False))
+    entries.append(data)
+
+    # we add something that cannot be acknowledged
+    data = AlarmEntry(
+        id=300,
+        timeOfFirstOccurrence='2017-04-20T09:32:22 UTC',
+        timeOfOccurrence='2017-04-20T09:35:22 UTC',
+        deviceId='dev{}'.format(i),
+        property='rent',
+        type=INTERLOCK,
+        description='rent is too damn high',
+        acknowledge=(False, False))
     entries.append(data)
 
     ret = {
@@ -52,7 +76,7 @@ class TestModel(GuiTestCase):
     def setUp(self):
         super(TestModel, self).setUp()
         self.alarm_model = AlarmModel()
-        data = _data(INIT_UPDATE_TYPE)
+        data = create_alarm_data(INIT_UPDATE_TYPE)
         self.alarm_model.init_alarms_info(data)
         self.model = AlarmFilterModel(self.alarm_model)
 
@@ -65,7 +89,7 @@ class TestModel(GuiTestCase):
 
     def test_initAlarms(self):
         mdl = AlarmModel()
-        data = _data([])
+        data = create_alarm_data([])
         mdl.init_alarms_info(data)
         # INIT Does not matter, we plainly initialize with all the info we have
         self.assertNotEqual(mdl.all_entries, [])
@@ -80,7 +104,7 @@ class TestModel(GuiTestCase):
         self.assertEqual(self.alarm_model.columnCount(), 8)
 
     def test_rowCount_alarm(self):
-        self.assertEqual(self.alarm_model.rowCount(), 11)
+        self.assertEqual(self.alarm_model.rowCount(), 13)
 
     def test_headerData(self):
         header = self.alarm_model.headerData(
@@ -91,26 +115,26 @@ class TestModel(GuiTestCase):
 
     def test_update_alarms(self):
         mdl = AlarmModel()
-        data = _data(INIT_UPDATE_TYPE)
+        data = create_alarm_data(INIT_UPDATE_TYPE)
         mdl.init_alarms_info(data)
-        self.assertEqual(mdl.rowCount(), 11)
+        self.assertEqual(mdl.rowCount(), 13)
 
     def test_update_alarms_remove(self):
-        self.assertEqual(self.alarm_model.rowCount(), 11)
-        data = _data(REMOVE_UPDATE_TYPE)
+        self.assertEqual(self.alarm_model.rowCount(), 13)
+        data = create_alarm_data(REMOVE_UPDATE_TYPE)
         self.alarm_model.update_alarms_info(data)
-        self.assertEqual(self.alarm_model.rowCount(), 1)
+        self.assertEqual(self.alarm_model.rowCount(), 3)
 
     def test_update_alarms_realarm(self):
-        self.assertEqual(self.alarm_model.rowCount(), 11)
+        self.assertEqual(self.alarm_model.rowCount(), 13)
 
-        data = _data(REMOVE_UPDATE_TYPE)
+        data = create_alarm_data(REMOVE_UPDATE_TYPE)
         self.alarm_model.update_alarms_info(data)
-        self.assertEqual(self.alarm_model.rowCount(), 1)
+        self.assertEqual(self.alarm_model.rowCount(), 3)
 
-        data = _data(ADD_UPDATE_TYPE)
+        data = create_alarm_data(ADD_UPDATE_TYPE)
         self.alarm_model.update_alarms_info(data)
-        self.assertEqual(self.alarm_model.rowCount(), 11)
+        self.assertEqual(self.alarm_model.rowCount(), 13)
 
     # ------------------------------------------------------------
     # Filter test
@@ -121,7 +145,7 @@ class TestModel(GuiTestCase):
 
     def test_updateFilter_interlocks(self):
         self.model.updateFilter(filter_type=INTERLOCK_TYPES)
-        self.assertEqual(self.model.rowCount(), 1)
+        self.assertEqual(self.model.rowCount(), 3)
 
     # ------------------------------------------------------------
     # Basic alarm model stress test
