@@ -19,6 +19,10 @@ class TestMainApplication(TestCase):
         self.assertEqual(app.organizationDomain(), "xfel.eu")
         self.assertEqual(app.applicationName(), "KaraboGUI")
 
+        # Set a different organization name to not erase the settings in
+        # other tests!
+        app.setOrganizationName("NoXFEL")
+
         # Test standard settings
         font = app.font()
         self.assertEqual(font.family(), "Source Sans Pro")
