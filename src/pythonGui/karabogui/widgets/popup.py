@@ -45,6 +45,10 @@ class PopupWidget(QWidget):
         button_text = "Update" if self.freeze else "Freeze"
         self._ui_freeze_button.setText(button_text)
 
+    @property
+    def text(self):
+        return self._ui_info.toPlainText()
+
     @Slot()
     def toggle_freeze(self):
         self.freeze = not self.freeze
