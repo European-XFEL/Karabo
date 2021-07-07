@@ -203,6 +203,12 @@ class Manager(QObject):
                     False, request=Hash("args.token", token),
                     reason="Karabo GUI Client disconnect. Erasing request.")
 
+    def handle_subscribeLogsReply(self, **info):
+        """Handle the subscribe logs reply of the gui server"""
+        if not info.get('success', True):
+            text = "Could not reconfigure the logs for the gui server"
+            messagebox.show_error(text)
+
     def handle_reconfigureReply(self, **info):
         """Handle the reconfigure reply of the gui server"""
         success = info['success']
