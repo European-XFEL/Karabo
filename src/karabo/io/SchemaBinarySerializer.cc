@@ -38,15 +38,16 @@ namespace karabo {
             os.write((char*) &size, sizeof (size));
             os.write(rootName.c_str(), size);
 
-            std::vector<char> v;
-            m_serializer->save(object.getParameterHash(), v);
             string str = os.str();
             archive.insert(archive.end(), str.c_str(), str.c_str() + str.length());
-            archive.insert(archive.end(), v.begin(), v.end());
+            m_serializer->save2(object.getParameterHash(), archive); // save2(..) just appends to 'archive'!
         } catch (...) {
             std::clog << "Something wrong happend!!!" << std::endl;
         }
 
+        void SchemaBinarySerializer::save2(const karabo::util::Schema& object, std::vector<char>& archive) {
+            save(object, archive);
+        }
 
         void SchemaBinarySerializer::load(karabo::util::Schema& object, const char* archive, const size_t nBytes) {
             std::stringstream is;
@@ -60,7 +61,7 @@ namespace karabo {
             object.setRootName(rootName);
             Hash hash;
             m_serializer->load(hash, archive + sizeof (size) + size, nBytes - sizeof (size) - size);
-            object.setParameterHash(hash);
+            object.setParameterHash(std::move(hash));
             object.updateAliasMap();
         }
     }
