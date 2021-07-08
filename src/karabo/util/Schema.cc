@@ -47,6 +47,11 @@ namespace karabo {
         }
 
 
+        void Schema::setParameterHash(karabo::util::Hash&& parameterDescription) {
+            m_hash = std::move(parameterDescription);
+        }
+
+
         const karabo::util::Hash& Schema::getParameterHash() const {
             return m_hash;
         }
@@ -1208,7 +1213,7 @@ namespace karabo {
             if(!filterTags.empty()) {
                 karabo::util::Hash filteredHash;
                 HashFilter::byTag(sub, subHash, filteredHash, filterTags);
-                sub.setParameterHash(filteredHash);
+                sub.setParameterHash(std::move(filteredHash));
             }
             return sub;
         }
@@ -1249,7 +1254,7 @@ namespace karabo {
                 // Note: 1) Merge policy does not matter since resultHash is empty.
                 //       2) selectedPaths.empty() indicates to ignore this selection and take all!
                 resultHash.merge(getParameterHash(), Hash::REPLACE_ATTRIBUTES, selectedPaths);
-                result.setParameterHash(resultHash);
+                result.setParameterHash(std::move(resultHash));
             }
 
             return result;

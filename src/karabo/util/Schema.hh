@@ -324,9 +324,17 @@ namespace karabo {
             /**
              * Set the parameter hash of the schema. Implicitly alters the schema
              * as this Hash is its underlying description.
-             * @param parameterDescription
+             * @param parameterDescription - must match the structure of the Schema internal Hash
+             *
              */
             void setParameterHash(const karabo::util::Hash& parameterDescription);
+
+            /**
+             * Set (with move semantics) the parameter hash of the schema. Implicitly alters the schema
+             * as this Hash is its underlying description.
+             * @param parameterDescription - must match the structure of the Schema internal Hash
+             */
+            void setParameterHash(karabo::util::Hash&& parameterDescription);
 
             /**
              * This function updates the internal mapping between keys and their aliases
