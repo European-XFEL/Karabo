@@ -35,7 +35,20 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema& expected);
 
+            /**
+             * Save a Schema by appending it to a binary archive
+             * @param object to save
+             * @param archive to append to - no clear() called
+             */
             void save(const karabo::util::Schema& object, std::vector<char>& archive);
+
+            /**
+             * Save a Schema by appending it to a binary archive
+             * @param object to save
+             * @param archive to append to - no clear() called
+             */
+            void save2(const karabo::util::Schema& object, std::vector<char>& archive);
+
             void load(karabo::util::Schema& object, const char* archive, const size_t nBytes);
         };
     }
