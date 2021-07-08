@@ -11,7 +11,8 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <string>
-#include <map>
+#include <mutex>  // for once_flag
+#include <unordered_map>
 #include "ClassInfo.hh"
 #include "Factory.hh"
 
@@ -192,7 +193,9 @@ namespace karabo {
             std::string m_stateName;
             const State* m_parent;
 
-            static std::map<std::string, const State &> m_stateFactory;
+            static std::once_flag m_initFromStringFlag;
+            static void initFromString();
+            static std::unordered_map<std::string, const State &> m_stateFactory;
 
 
         };
