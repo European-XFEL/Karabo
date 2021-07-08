@@ -38,7 +38,19 @@ namespace karabo {
 
             HashBinarySerializer(const karabo::util::Hash& input);
 
+            /**
+             * Save a Hash to a binary archive
+             * @param object to save
+             * @param archive to save to - buffer.clear() will be called first
+             */
             virtual void save(const karabo::util::Hash& object, std::vector<char>& buffer);
+
+            /**
+             * Save a Hash by appending it to a binary archive
+             * @param object to save
+             * @param archive to append to - no clear() called
+             */
+            virtual void save2(const karabo::util::Hash& object, std::vector<char>& buffer);
             
             virtual void save(const karabo::util::Hash& object, BufferSet& buffers);
 

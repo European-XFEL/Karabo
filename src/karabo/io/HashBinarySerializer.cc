@@ -34,7 +34,13 @@ namespace karabo {
             buffer.resize(0);
             writeHash(object, buffer);
         }
-        
+
+
+        void HashBinarySerializer::save2(const karabo::util::Hash& object, std::vector<char>& buffer) {
+            writeHash(object, buffer);
+        }
+
+
         void HashBinarySerializer::save(const karabo::util::Hash& object, BufferSet& buffers) {
             buffers.clear();
             writeHash(object, buffers);
@@ -264,12 +270,23 @@ namespace karabo {
         template<>
         void HashBinarySerializer::writeSingleValue(std::vector<char>& buffer, const Schema& schema) const {
 
-            // TODO !!!! IMPROVE THIS CRAZY COPIES !!!!
             Hash hash;
             SchemaBinarySerializer serializer/* = SchemaBinarySerializer*/(hash);
-            std::vector<char> archive;
-            serializer.save(schema, archive);
-            writeSequenceBulk(buffer, archive);
+
+            // Prepare buffer - old versions of this serialised the schema into a new 'std::vector<char>'
+            // and, instead of just appending it, used writeSequenceBulk to add it to 'buffer'.
+            // That does first write the size of the schema archive. To stay compatible, foresee a size
+            // now and set it later.
+            const size_t oldSize = buffer.size();
+            buffer.resize(buffer.size() + sizeof(unsigned int)); // sizes are stored in unsigned int
+
+            // Directly append to buffer
+            serializer.save2(schema, buffer);
+
+            // Fix-up buffer, i.e. write raw schema size for compatibility with old writeSequenceBulk version
+            const unsigned int rawSchemaSize = static_cast<unsigned int>(buffer.size() - (oldSize + sizeof(unsigned int)));
+            const char* rawSchemaSizeBytes = reinterpret_cast<const char*>(&rawSchemaSize);
+            memcpy(&buffer[oldSize], rawSchemaSizeBytes, sizeof(rawSchemaSize));
         }
 
 

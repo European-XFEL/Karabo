@@ -38,9 +38,16 @@ namespace karabo {
             /**
              * Save an object to a binary archive
              * @param object to save
-             * @param archive to save to
+             * @param archive to save to - some implementations clear() it before appending, some do not
              */
             virtual void save(const T& object, std::vector<char>& archive) = 0;
+
+            /**
+             * Save an object by appending it to a binary archive
+             * @param object to save
+             * @param archive to append to - no clear() called
+             */
+            virtual void save2(const T& object, std::vector<char>& archive) = 0;
 
             /**
              * Save an object to the BufferSet
