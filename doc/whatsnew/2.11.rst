@@ -1,4 +1,31 @@
 ***************************
+What's New in Karabo 2.11.3
+***************************
+
+This hotfix release is directed to the karabo gui. The navigation panel search
+will now validate the input and prevents white spaces.
+The grouping of ``Arrows`` on the scene is prevented. It is not possible to
+open a `Scene` with a grouped `Arrow`.
+The configuration preview dialog (retrieval) now shows the changes of existing and retrieved configuration
+with the **IEEE 754** standard.
+Previously, a long standing bug preventing items on the scene to be moved with mouse interaction
+existed, this is now fixed.
+It is possible again to edit ``Link`` widget properties after creation. This was broken
+in *2.11.2* with the introduction of the *alignment*. Link widgets always have
+horizontal central text alignment.
+
+Detailed Merge-Log
+==================
+
+- GUI: Validate navigation panel search entries !5741
+- GUI: Protect for XMLDefModel grouping !5749
+- GUI: Link widgets use label model but dont have alignment !5748
+- GUI: Test the log panel and log widget !5753
+- GUI: Fix moving items in design mode when scene view is small !5754
+- GUI: Use has_changes in comparison dialog for configurations !5763
+
+
+***************************
 What's New in Karabo 2.11.2
 ***************************
 
