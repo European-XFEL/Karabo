@@ -252,7 +252,7 @@ class ConfigurationTreeView(QTreeView):
         binding = proxy.binding
         if binding is not None:
             default_value = binding.attributes.get(KARABO_SCHEMA_DEFAULT_VALUE)
-            if isinstance(proxy, DeviceProxy):
+            if isinstance(proxy.root_proxy, DeviceProxy):
                 proxy.edit_value = default_value
             else:
                 proxy.value = default_value
