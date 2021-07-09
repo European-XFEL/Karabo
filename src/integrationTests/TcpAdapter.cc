@@ -25,8 +25,8 @@ namespace karabo {
 
     TcpAdapter::TcpAdapter(const karabo::util::Hash& config) : 
             m_deadline(karabo::net::EventLoop::getIOService()),
-            m_MessageId(0) {
-        
+            m_MessageId(0),
+            m_callback() {
         Hash h;
         h.set("port", config.get<unsigned int>("port"));
         h.set("serializationType", "binary");
@@ -99,8 +99,12 @@ namespace karabo {
                     }
                     
                 }
-  
-                
+                {
+                    boost::shared_lock<boost::shared_mutex> lock(m_callbackMutex);
+                    if (m_callback) {
+                        m_callback(info);
+                    }
+                }
             }
              
             if (channel->isOpen()) channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
@@ -184,5 +188,27 @@ namespace karabo {
         m_dataConnection->stop();
     }
     
-   
+    std::future_status TcpAdapter::waitFor(const std::string& type, const std::function<bool(const karabo::util::Hash&)>& callback, unsigned int timeoutInMs) {
+        auto cbPromise = std::promise<void>();
+        auto cbFuture = cbPromise.get_future();
+        {
+            boost::shared_lock<boost::shared_mutex> lock(m_callbackMutex);
+            // create a lambda function to be attached to the m_callback
+            m_callback = [&cbPromise, &type, &callback] (const karabo::util::Hash& newData){
+                if (newData.has("type") && newData.get<std::string>("type") == type) {
+                    if (callback(newData)){
+                        cbPromise.set_value();
+                    }
+                }
+            };
+        }
+        // wait for the future
+        const std::future_status status = cbFuture.wait_for(std::chrono::milliseconds(timeoutInMs));
+        // empty the callback
+        {
+            boost::shared_lock<boost::shared_mutex> lock(m_callbackMutex);
+            m_callback = std::function<void(const karabo::util::Hash&)>();
+        }
+        return status;
+    }
 }
