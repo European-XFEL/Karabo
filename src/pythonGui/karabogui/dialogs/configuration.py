@@ -41,12 +41,6 @@ class ConfigNode(HasStrictTraits):
     def child(self, row):
         return self.children[row]
 
-    def childCount(self):
-        return len(self.children)
-
-    def columnCount(self):
-        return len(HEADER_LABELS)
-
     def row(self):
         if self.parent_node is None:
             return 0
@@ -144,7 +138,7 @@ class ConfigurationModel(QAbstractItemModel):
             parent = self.root
         else:
             parent = parent.internalPointer()
-        return parent.childCount()
+        return len(parent.children)
 
     def _get_model_data(self):
         """Setup the model data from the configuration singleton
