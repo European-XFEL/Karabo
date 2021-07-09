@@ -45,7 +45,7 @@ void GuiVersion_Test::setUp() {
     // Start central event-loop
     m_eventLoopThread = boost::thread(boost::bind(&EventLoop::work));
     // Create and start server
-    Hash config("serverId", "testGuiVersionServer", "scanPlugins", false, "Logger.priority", LOG_LEVEL);
+    Hash config("serverId", "testGuiVersionServer", "scanPlugins", false, "Logger.priority", LOG_LEVEL, "Logger.network.interval", 10);
     m_deviceServer = DeviceServer::create("DeviceServer", config);
     m_deviceServer->finalizeInternalInitialization();
     // Create client
@@ -158,6 +158,7 @@ void GuiVersion_Test::resetClientConnection() {
 
 
 void GuiVersion_Test::testVersionControl() {
+    std::clog << "testVersionControl: " << std::flush;
     Hash loginInfo("type", "login", "username", "mrusp", "password", "12345", "version", "100.1.0");
     // description , client version, server version, should connect
     typedef std::tuple < std::string, std::string, std::string, bool> TestData;
@@ -166,6 +167,7 @@ void GuiVersion_Test::testVersionControl() {
     tests.push_back(TestData("version control unsupported", "0.1.0", "2.11.0", false));
     tests.push_back(TestData("version control disabled", "0.1.0", "", true));
     for (const auto &test : tests) {
+        std::clog << "." << std::flush;
         const std::string& testName = std::get<0>(test);
         const std::string& version = std::get<1>(test);
         const std::string& serverMinVersion = std::get<2>(test);
@@ -198,7 +200,7 @@ void GuiVersion_Test::testVersionControl() {
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Failed :" + testName, connected, m_tcpAdapter->connected());
     }
 
-    std::clog << "testVersionControl: Ok" << std::endl;
+    std::clog << "OK" << std::endl;
 }
 
 
@@ -255,7 +257,7 @@ void GuiVersion_Test::testReadOnly() {
 }
 
 void GuiVersion_Test::testExecuteBeforeLogin() {
-    std::clog << "testExecuteBeforeLogin: ";
+    std::clog << "testExecuteBeforeLogin: " << std::flush;
 
     resetTcpConnection();
     // check if we are connected
@@ -314,6 +316,7 @@ void GuiVersion_Test::testExecuteBeforeLogin() {
 }
 
 void GuiVersion_Test::testExecute() {
+    std::clog << "testExecute: " << std::flush;
     resetClientConnection();
     // check if we are connected
     CPPUNIT_ASSERT(m_tcpAdapter->connected());
@@ -415,7 +418,7 @@ void GuiVersion_Test::testExecute() {
         CPPUNIT_ASSERT(m_deviceClient->get<std::string>("testGuiServerDevice", "lockedBy").empty());
     }
 
-    std::clog << "testExecute: OK" << std::endl;
+    std::clog << "OK" << std::endl;
 }
 
 
@@ -450,7 +453,7 @@ void GuiVersion_Test::testRequestFailOldVersion() {
     // we want to block certain actions to be performed.
     // for example: `projectSaveItems` can be poisonous for the database.
     m_deviceClient->set<std::string>("testGuiServerDevice", "minClientVersion", "2.9.1");
-    std::clog << "testRequestFailOldVersion: " ;
+    std::clog << "testRequestFailOldVersion: " << std::flush;
     // connect again
     resetClientConnection(Hash("type", "login", "username", "mrusp", "password", "12345", "version", "2.9.1"));
 
@@ -1030,7 +1033,7 @@ void GuiVersion_Test::testDisconnect() {
 
 void GuiVersion_Test::testLogMute() {
     std::clog << "testLogMute: " << std::flush;
-    const Hash log_command("type", "requestFromSlot",
+    const Hash logCommand("type", "requestFromSlot",
                            "deviceId", "PropTest_LOG",
                            "slot", "logSomething",
                            "args", Hash("priority", "INFO", "message", "log me"),
@@ -1045,12 +1048,13 @@ void GuiVersion_Test::testLogMute() {
                      "instanceId", "testGuiVersionServer",
                      "priority", "INFO");
         // the change of logging will generate a log message. Here we wait for this log message
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("log", 1, [&] {
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("setLogPriorityReply", 1, [&] {
             m_tcpAdapter->sendMessage(h);
         }, 1000);
         Hash nextMessage;
         messageQ->pop(nextMessage);
-        CPPUNIT_ASSERT_EQUAL(std::string("log"), nextMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT_EQUAL(std::string("setLogPriorityReply"), nextMessage.get<std::string>("type"));
+        CPPUNIT_ASSERT(nextMessage.get<bool>("success"));
     }
     {
         // subscribe to the logs. Log subscription is version dependent.
@@ -1066,18 +1070,24 @@ void GuiVersion_Test::testLogMute() {
         CPPUNIT_ASSERT(nextMessage.get<bool>("success"));
     }
     {
-        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("log", 1, [&] {
-            m_tcpAdapter->sendMessage(log_command);
-        }, 1000);
-        // clean the queue to be sure
-        m_tcpAdapter->clearAllMessages("requestFromSlot");
-        Hash nextMessage;
-        messageQ->pop(nextMessage);
-        for (auto log: nextMessage.get<std::vector<Hash>>("messages")) {
-            if (log.get<std::string>("category") == "PropTest_LOG") {
-                CPPUNIT_ASSERT_EQUAL_MESSAGE("Unexpected log message: " + toString(log), std::string("log me"), log.get<std::string>("message"));
+        m_tcpAdapter->sendMessage(logCommand);
+        const auto callback = [] (const Hash& incoming) {
+            for (auto log: incoming.get<std::vector<Hash>>("messages")) {
+                // if this test is executed in a crowded topic, we might have log messages from other devices
+                // here we look for a message emitted by the propertyTestDevice we instantiated for this test
+                // and return true only when the right message has come.
+                if (log.get<std::string>("category") == "PropTest_LOG") {
+                    return log.get<std::string>("message") == "log me";
+                }
             }
-        }
+            return false;
+        };
+        // The timeout is the `forwardLogInterval` value plus the `Logger.network.interval` of the server plus some change.
+        auto status = m_tcpAdapter->waitFor("log", callback, 520);
+        CPPUNIT_ASSERT_MESSAGE("The correct log message was not received before the timeout", status == std::future_status::ready);
+        // clear the affected queues.
+        m_tcpAdapter->clearAllMessages("requestFromSlot");
+        m_tcpAdapter->clearAllMessages("log");
     }
     {
         // unsubscribe to the logs
@@ -1090,23 +1100,25 @@ void GuiVersion_Test::testLogMute() {
         messageQ->pop(nextMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("subscribeLogsReply"), nextMessage.get<std::string>("type"));
         CPPUNIT_ASSERT(nextMessage.get<bool>("success"));
+        // we successfully unsubscribed from the logs, we do not expect further `log` messages.
+        // Now we clear the `log` message queue from past log messages.
         m_tcpAdapter->clearAllMessages("log");
     }
     {
         for (int i=0; i< 5; i++) {
             karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("requestFromSlot", 1, [&] {
-                m_tcpAdapter->sendMessage(log_command);
+                m_tcpAdapter->sendMessage(logCommand);
             }, 100);
             Hash nextMessage;
             messageQ->pop(nextMessage);
             CPPUNIT_ASSERT(nextMessage.get<bool>("success"));
         }
-        // sleep for twice the `forwardLogInterval`
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+       // Sleep for `forwardLogInterval` value plus the `Logger.network.interval` of the server and some change.
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(520));
         CPPUNIT_ASSERT_EQUAL(0ul, m_tcpAdapter->getAllMessages("log").size());
     }
     {
-        // put everythin back as we found it
+        // put everything back as we found it
         const Hash h("type", "setLogPriority",
                      "instanceId", "testGuiVersionServer",
                      "priority", LOG_LEVEL);
@@ -1116,6 +1128,9 @@ void GuiVersion_Test::testLogMute() {
         Hash nextMessage;
         messageQ->pop(nextMessage);
         CPPUNIT_ASSERT_EQUAL(std::string("setLogPriorityReply"), nextMessage.get<std::string>("type"));
+        // kill test device
+        success = m_deviceClient->killDevice("PropTest_LOG", KRB_TEST_MAX_TIMEOUT);
+        CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
     }
-    std::clog << " OK" << std::endl;
+    std::clog << "OK" << std::endl;
 }
