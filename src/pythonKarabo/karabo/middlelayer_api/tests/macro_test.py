@@ -206,9 +206,11 @@ class Tests(DeviceTest):
         last = d.counter
         time.sleep(0.1)
         self.assertEqual(last, d.counter)
+        self.assertNotEqual(d.counter, 29)
         with d:
+            updateDevice(d)
             waitUntil(lambda: d.counter == 29)
-            self.assertEqual(d.counter, 29)
+        self.assertEqual(d.counter, 29)
 
     @sync_tst
     def test_set(self):
