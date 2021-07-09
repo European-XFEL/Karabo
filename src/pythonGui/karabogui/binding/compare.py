@@ -37,7 +37,7 @@ def is_nonintegral_number(value):
 
 
 def has_changes(binding, old_value, new_value):
-    """Compare old/new values assigned to a binding to determine if there is
+    """Compare old/new values assigned to a `binding` to determine if there is
     a real difference.
     """
     try:
@@ -118,7 +118,12 @@ def has_table_changes(binding, old, new):
 
     :param binding: The `VectorHash` binding
     :param old, new: The `HashLists` to be compared
+
+    If the `binding` is `None`, a normal list comparison is performed
     """
+    if binding is None:
+        return has_list_changes(old, new)
+
     changes = get_table_changes(binding, old, new)
     return changes is not None
 

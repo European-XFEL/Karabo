@@ -56,6 +56,9 @@ def test_has_changes():
     assert not has_changes(binding, 1.0, 1. + 5e-8)
     assert not has_changes(binding, 2.0e10, (2 + 1.0e-7) * 1e10)
     assert has_changes(binding, 2.0, 2.0 + 3e-7)
+    assert has_changes(None, 2.0, 2.0 + 3e-7)
+    assert not has_changes(binding, 2.0, 2.0 + 3e-8)
+    assert not has_changes(None, 2.0, 2.0 + 3e-8)
 
     binding = FloatBinding(attributes={KARABO_SCHEMA_ABSOLUTE_ERROR: 0.5})
     assert not has_changes(binding, 2.0, 2.3)
@@ -121,6 +124,66 @@ def test_get_vector_hash_changes():
     new_list = HashList([bar_hash])  # first hash is deleted
     changes = get_table_changes(binding, old_list, new_list)
     assert changes == new_list
+
+
+def test_table_changes_nobinding():
+    foo_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "boolProperty", True)
+    bar_hash = Hash("stringProperty", "bar",  # changed
+                    "uintProperty", 1,
+                    "boolProperty", True)
+    assert has_changes(None, HashList([foo_hash]), HashList([bar_hash]))
+
+    foo_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "vectorProperty", np.array([1.2, 3.2]),  # changed
+                    "boolProperty", False)
+    bar_hash = Hash("stringProperty", "foo",
+                    "vectorProperty", np.array([1.2, 3.2221222]),
+                    "uintProperty", 1,
+                    "boolProperty", False)
+    assert has_changes(None, HashList([foo_hash]), HashList([bar_hash]))
+
+    foo_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "boolProperty", True)
+    bar_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "boolProperty", True)
+    assert not has_changes(None, HashList([foo_hash]), HashList([bar_hash]))
+
+    foo_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "boolProperty", False)
+    bar_hash = Hash("stringProperty", "foo",
+                    "uintProperty", Hash(),  # change faulty!
+                    "boolProperty", False)
+    assert has_changes(None, HashList([foo_hash]), HashList([bar_hash]))
+
+    foo_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "boolProperty", False)
+    bar_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "boolProperty", True)  # changed
+    assert has_changes(None, HashList([foo_hash]), HashList([bar_hash]))
+
+    foo_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "boolProperty", 2.0)  # changed faulty!
+    bar_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "boolProperty", True)
+    assert has_changes(None, HashList([foo_hash]), HashList([bar_hash]))
+
+    foo_hash = Hash("stringProperty", "foo",
+                    "uintProperty", 1,
+                    "boolProperty", True)
+    bar_hash = Hash("stringProperty", "%%%$$$",  # changed
+                    "uintProperty", 1,
+                    "boolProperty", True)
+    assert has_changes(None, HashList([foo_hash]), HashList([bar_hash]))
 
 
 def test_table_row_changes():
