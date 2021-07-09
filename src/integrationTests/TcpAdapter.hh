@@ -111,7 +111,7 @@ namespace karabo {
          * @param block: if true, block until the onWriteComplete handler has been called
          */
         void sendMessage(const karabo::util::Hash & message, bool block = true);
-        
+
         /**
          * Disconnect adapter
          */
@@ -121,6 +121,17 @@ namespace karabo {
          * Send the default login message and wait for reply
          */
         void login();
+
+        /**
+         * Waits for a callback to return true when executed on messages of a specifc type.
+         * NOTE: the ``callback`` function will be called under a mutex protection.
+         * If the function attempts locking the mutex, this will result in a deadlock!
+         *
+         * @param type: the type of the incoming messages
+         * @param callback: the function to be executed on the messages of type `type`
+         * @param timeoutInMs: timeout in ms.
+         */
+        std::future_status waitFor(const std::string& type, const std::function<bool(const karabo::util::Hash&)>& callback, unsigned int timeoutInMs);
 
     private:
 
@@ -147,6 +158,8 @@ namespace karabo {
         std::atomic_size_t m_writeWaitForId;
         karabo::net::TcpChannel::Pointer m_channel;
         static const karabo::util::Hash k_defaultLoginData;
+        mutable boost::shared_mutex m_callbackMutex;
+        std::function<void(const karabo::util::Hash&)> m_callback;
 
     };
 }
