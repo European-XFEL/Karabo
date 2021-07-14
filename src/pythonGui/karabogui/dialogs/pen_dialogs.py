@@ -101,42 +101,43 @@ class PenDialog(QDialog):
                 self.gbFill.setChecked(False)
             self.slFillOpacity.setValue(self.brush.color().alpha())
 
+    def on_dialog_accepted(self):
+        strokeColor = self.pen.color()
+        strokeColor.setAlpha(self.slStrokeOpacity.value())
+        self.pen.setColor(strokeColor)
+
+        if self.sbStrokeWidth.value() == 0:
+            self.pen.setStyle(Qt.NoPen)
+        else:
+            self.pen.setWidth(self.sbStrokeWidth.value())
+            # Set style first!
+            pen_style = self.wDashType.penStyle()
+            self.pen.setStyle(pen_style)
+
+            if pen_style is not Qt.SolidLine:
+                self.pen.setDashOffset(self.dsbDashOffset.value())
+
+        for k, v in self.linecaps.items():
+            if getattr(self, v + 'Cap').isChecked():
+                self.pen.setCapStyle(k)
+        for k, v in self.linejoins.items():
+            if getattr(self, v + 'Join').isChecked():
+                self.pen.setJoinStyle(k)
+
+        self.pen.setMiterLimit(self.dsbStrokeMiterLimit.value())
+        if self.brush is not None:
+            if not self.gbFill.isChecked():
+                self.brush.setStyle(Qt.NoBrush)
+            else:
+                self.brush.setStyle(Qt.SolidPattern)
+                fillColor = self.brush.color()
+                fillColor.setAlpha(self.slFillOpacity.value())
+                self.brush.setColor(fillColor)
+
     def exec_(self):
         result = QDialog.exec_(self)
         if result == QDialog.Accepted:
-            strokeColor = self.pen.color()
-            strokeColor.setAlpha(self.slStrokeOpacity.value())
-            self.pen.setColor(strokeColor)
-
-            if self.sbStrokeWidth.value() == 0:
-                self.pen.setStyle(Qt.NoPen)
-            else:
-                self.pen.setWidth(self.sbStrokeWidth.value())
-                # Set style first!
-                pen_style = self.wDashType.penStyle()
-                self.pen.setStyle(pen_style)
-
-                if pen_style is not Qt.SolidLine:
-                    self.pen.setDashOffset(self.dsbDashOffset.value())
-
-            for k, v in self.linecaps.items():
-                if getattr(self, v + 'Cap').isChecked():
-                    self.pen.setCapStyle(k)
-            for k, v in self.linejoins.items():
-                if getattr(self, v + 'Join').isChecked():
-                    self.pen.setJoinStyle(k)
-
-            self.pen.setMiterLimit(self.dsbStrokeMiterLimit.value())
-
-            if self.brush is not None:
-                if not self.gbFill.isChecked():
-                    self.brush.setStyle(Qt.NoBrush)
-                else:
-                    self.brush.setStyle(Qt.SolidPattern)
-                    fillColor = self.brush.color()
-                    fillColor.setAlpha(self.slFillOpacity.value())
-                    self.brush.setColor(fillColor)
-
+            self.on_dialog_accepted()
         return result
 
 
