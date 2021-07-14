@@ -19,7 +19,7 @@ HEADER_LABELS = ["Client Id", "Host"]
 
 
 class ClientTopologyTreeView(QTreeView):
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super().__init__(parent)
         model = QStandardItemModel(parent=self)
         model.setHorizontalHeaderLabels(HEADER_LABELS)
@@ -59,7 +59,7 @@ class ClientTopologyTreeView(QTreeView):
 
 
 class ClientTopologyDialog(QDialog):
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setModal(False)
 
