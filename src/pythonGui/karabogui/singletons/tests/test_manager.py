@@ -8,6 +8,7 @@ from karabo.native import (
 from karabogui.binding.api import DeviceClassProxy, DeviceProxy, build_binding
 from karabogui.events import KaraboEvent
 from karabogui.testing import GuiTestCase, alarm_data, singletons, system_hash
+from karabogui.topology.system_topology import SystemTopology
 
 from ..manager import Manager, project_db_handler
 
@@ -123,14 +124,13 @@ class TestManager(GuiTestCase):
 
     def test_handle_instance_new(self):
         network = Mock()
-        with singletons(network=network):
+        topology = SystemTopology()
+        topo_hash = system_hash()
+        topology.initialize(topo_hash)
+        with singletons(network=network, topology=topology):
             manager = Manager()
-
             target = 'karabogui.singletons.manager.broadcast_event'
             with patch(target) as broadcast_event:
-                topo_hash = system_hash()
-                manager._topology.initialize(topo_hash)
-
                 topo_hash = system_hash()
                 del topo_hash['device.divvy']
                 del topo_hash['macro']
