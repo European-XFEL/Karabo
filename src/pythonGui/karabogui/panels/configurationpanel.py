@@ -7,7 +7,7 @@ from qtpy.QtCore import Qt, Slot
 from qtpy.QtGui import QPalette
 from qtpy.QtWidgets import (
     QAction, QDialog, QHBoxLayout, QPushButton, QScrollArea, QStackedWidget,
-    QVBoxLayout, QWidget)
+    QTreeView, QVBoxLayout, QWidget)
 
 import karabogui.access as krb_access
 from karabo.native import AccessMode, Hash
@@ -119,7 +119,7 @@ class ConfigurationPanel(BasePanelWidget):
         # Stacked widget for configuration parameters
         self._stacked_tree_widgets = QStackedWidget(widget)
         # BLANK_PAGE
-        self._stacked_tree_widgets.addWidget(ConfigurationTreeView(widget))
+        self._stacked_tree_widgets.addWidget(QTreeView(widget))
 
         # WAITING_PAGE
         wait_widget = get_spin_widget(icon='wait', parent=widget)
