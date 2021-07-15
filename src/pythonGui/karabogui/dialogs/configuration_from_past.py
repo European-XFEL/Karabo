@@ -50,6 +50,7 @@ class ConfigurationFromPastDialog(QDialog):
         self._request_configuration()
         super(ConfigurationFromPastDialog, self).accept()
 
+    @Slot()
     def _request_configuration(self):
         # Karabo time points are in UTC
         time_point = self.ui_timepoint.dateTime().toUTC()
