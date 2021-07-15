@@ -32,7 +32,7 @@ from .tools import DeviceSceneHandler
 
 
 class SystemTreeView(QTreeView):
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super(SystemTreeView, self).__init__(parent)
         self._selected_proxy = None  # A BaseDeviceProxy
 
@@ -220,9 +220,9 @@ class SystemTreeView(QTreeView):
             # archived/logged if so.
             messagebox.show_warning(
                 f"The device {info.get('deviceId')} is currently NOT "
-                f"archived! If it was not archived at the requested point in "
-                f"time but before that, you will receive an outdated "
-                f"configuration.")
+                "archived! If it was not archived at the requested point in "
+                "time but before that, you will receive an outdated "
+                "configuration.")
 
         device_id = info.get('deviceId')
         dialog = ConfigurationFromPastDialog(instance_id=device_id,
@@ -310,7 +310,7 @@ class SystemTreeView(QTreeView):
             device_id=info.get('deviceId', ''),
             capability=Capabilities.PROVIDES_SCENES,
             parent=self)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:
             device_id = dialog.device_id
             scene_name = dialog.capa_name
             handler = partial(handle_scene_from_server, device_id, scene_name,
@@ -331,12 +331,12 @@ class SystemTreeView(QTreeView):
             self.acKillServer.setEnabled(enable_shutdown)
             self.acAbout.setVisible(True)
             self.acTimeInformation.setVisible(False)
-            self.mServerItem.exec_(QCursor.pos())
+            self.mServerItem.exec(QCursor.pos())
         elif node_type is NavigationItemTypes.CLASS:
             self.acKillDevice.setVisible(False)
             self.acAbout.setVisible(False)
             self.acTimeInformation.setVisible(False)
-            self.mDeviceItem.exec_(QCursor.pos())
+            self.mDeviceItem.exec(QCursor.pos())
         elif node_type is NavigationItemTypes.DEVICE:
             self.acKillDevice.setVisible(True)
             self.acKillDevice.setEnabled(enable_shutdown)
@@ -346,7 +346,7 @@ class SystemTreeView(QTreeView):
             has_scenes = _test_mask(info.get('capabilities', 0),
                                     Capabilities.PROVIDES_SCENES)
             self.acOpenScene.setVisible(has_scenes)
-            self.mDeviceItem.exec_(QCursor.pos())
+            self.mDeviceItem.exec(QCursor.pos())
 
     @Slot(str, object)
     def onSelectionChanged(self, item_type, proxy):
