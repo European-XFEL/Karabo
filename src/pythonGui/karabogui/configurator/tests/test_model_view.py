@@ -256,13 +256,6 @@ class TestConfiguratorDevice(GuiTestCase):
                              ('DAQ Policy', -1)]))
             assert self.view.popup_widget is not None
 
-    def test_closing_of_view(self):
-        """This is the last action for the configurator to close"""
-        path = "karabogui.configurator.view.unregister_from_broadcasts"
-        with mock.patch(path) as broadcast:
-            self.view.close()
-            broadcast.assert_called_once()
-
     def test_modeltester_qt(self):
         from pytestqt.modeltest import ModelTester
         tester = ModelTester(None)
