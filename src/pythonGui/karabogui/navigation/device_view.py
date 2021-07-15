@@ -25,7 +25,7 @@ from .tools import DeviceSceneHandler
 
 
 class DeviceTreeView(QTreeView):
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super(DeviceTreeView, self).__init__(parent)
         self._selected_proxy = None  # A BaseDeviceProxy
 
@@ -211,7 +211,7 @@ class DeviceTreeView(QTreeView):
             # Killing services is access level dependent!
             enable = access_role_allowed(AccessRole.SERVICE_EDIT)
             self.ac_kill_device.setEnabled(enable)
-            self.menu.exec_(QCursor.pos())
+            self.menu.exec(QCursor.pos())
 
     @Slot()
     def onKillInstance(self):
