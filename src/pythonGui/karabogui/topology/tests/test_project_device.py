@@ -2,6 +2,7 @@ from unittest.mock import Mock
 
 from karabo.common.api import KARABO_WARN_HIGH, ProxyStatus
 from karabo.native import Configurable, Hash, String
+from karabogui.singletons.mediator import Mediator
 from karabogui.testing import singletons, system_hash
 from karabogui.topology.system_topology import SystemTopology
 
@@ -11,11 +12,11 @@ class FooClass(Configurable):
 
 
 def test_project_device():
-    schema = FooClass.getClassSchema()
     network = Mock()
+    mediator = Mediator()
     topology = SystemTopology()
     topology.initialize(system_hash())
-    with singletons(network=network, topology=topology):
+    with singletons(network=network, topology=topology, mediator=mediator):
         device = topology.get_project_device('divvy',
                                              server_id='swerver',
                                              class_id='FooClass')
@@ -26,6 +27,7 @@ def test_project_device():
         device.set_project_config_hash(config)
         assert device._offline_config == config
 
+        schema = FooClass.getClassSchema()
         topology.class_schema_updated('swerver', 'FooClass', schema)
         # We are lazy and did not request building although we have a
         # class in the topology
