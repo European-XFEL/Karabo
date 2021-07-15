@@ -205,7 +205,9 @@ def system_hash():
     h['device.divvy'] = None
     h['device.divvy', ...] = {
         'host': 'BIG_IRON',
+        'archive': True,
         'visibility': AccessLevel.OBSERVER,
+        'type': "device",
         'capabilities': Capabilities.PROVIDES_SCENES,
         'serverId': 'swerver',
         'classId': 'FooClass',
@@ -214,6 +216,7 @@ def system_hash():
     h['macro.macdonald'] = None
     h['macro.macdonald', ...] = {
         'host': 'BIG_IRON',
+        'archive': False,
         'visibility': AccessLevel.OBSERVER,
         'serverId': 'swerver',
         'classId': 'BarClass',
@@ -223,6 +226,7 @@ def system_hash():
     h['device.orphan'] = None
     h['device.orphan', ...] = {
         'visibility': AccessLevel.OBSERVER,
+        'archive': True,
         'serverId': '__none__',
         'classId': 'Parentless',
         'status': 'noserver'
@@ -231,6 +235,7 @@ def system_hash():
     h['client.charlie'] = None
     h['client.charlie', ...] = {
         'visibility': AccessLevel.OBSERVER,
+        'archive': False,
         'serverId': '__none__',
         'classId': 'NoClass',
         'status': 'ok'
@@ -247,6 +252,7 @@ def device_hash():
     h['device.XFEL/FOO/1'] = None
     h['device.XFEL/FOO/1', ...] = {
         'host': 'BIG_IRON',
+        'archive': False,
         'visibility': AccessLevel.OBSERVER,
         'capabilities': Capabilities.PROVIDES_SCENES,
         'serverId': 'swerver',
@@ -257,6 +263,7 @@ def device_hash():
     h['device.XFEL/FOO/2'] = None
     h['device.XFEL/FOO/2', ...] = {
         'host': 'BIG_IRON',
+        'archive': True,
         'visibility': AccessLevel.OBSERVER,
         'capabilities': Capabilities.PROVIDES_SCENES,
         'serverId': 'swerver',
@@ -267,6 +274,7 @@ def device_hash():
     h['device.XFEL/BAR/1'] = None
     h['device.XFEL/BAR/1', ...] = {
         'host': 'BIG_IRON',
+        'archive': True,
         'visibility': AccessLevel.OBSERVER,
         'capabilities': Capabilities.PROVIDES_SCENES,
         'serverId': 'swerver',
