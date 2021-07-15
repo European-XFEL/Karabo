@@ -12,7 +12,8 @@ from qtpy.QtWidgets import QApplication
 import karabogui.singletons.api as singletons_mod
 from karabo.common.api import Capabilities, ProxyStatus, State
 from karabo.native import (
-    AccessLevel, AccessMode, Configurable, Double, Hash, Int32, String, Unit)
+    AccessLevel, AccessMode, Configurable, Double, Hash, Int32, String, Unit,
+    VectorString)
 from karabogui.alarms.api import (
     ACKNOWLEDGEABLE, ALARM_HIGH, ALARM_ID, ALARM_NONE, ALARM_TYPE, DESCRIPTION,
     DEVICE_ID, NEEDS_ACKNOWLEDGING, PROPERTY, TIME_OF_FIRST_OCCURENCE,
@@ -342,6 +343,8 @@ class SimpleDeviceSchema(Configurable):
     readOnlyProperty = Int32(
         defaultValue=0,
         accessMode=AccessMode.READONLY)
+    availableScenes = VectorString(
+        defaultValue=["scene"])
 
 
 def get_device_schema():
