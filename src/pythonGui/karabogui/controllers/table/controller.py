@@ -27,7 +27,7 @@ class BaseTableController(BaseBindingController):
     # Internal traits
     _bindings = Dict
     _readonly = Bool(True)
-    _item_model = WeakRef(TableModel)
+    _item_model = WeakRef(TableModel, allow_none=True)
 
     # ---------------------------------------------------------------------
     # Abstract Methods
@@ -109,6 +109,7 @@ class BaseTableController(BaseBindingController):
     def destroy_widget(self):
         if self._item_model is not None:
             self._item_model.setParent(None)
+            self._item_model = None
         if self.widget:
             self.widget.setParent(None)
             self.widget = None
@@ -158,6 +159,8 @@ class BaseTableController(BaseBindingController):
         """
         if self._item_model is not None:
             self._item_model.setParent(None)
+            self._item_model = None
+
         self._bindings = binding.bindings
         self._item_model = TableModel(binding, self._on_user_edit,
                                       parent=self.widget)
