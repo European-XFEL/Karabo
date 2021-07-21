@@ -70,6 +70,7 @@ BASEDIR=$(get_abs_path $(pwd)/../../../)
 EXTRACT_SCRIPT=$(pwd)/.extract.sh
 PYTHON_FIXER_SCRIPT=$(pwd)/.fix-python-scripts.sh
 PYTHONPATH_FIXER_SCRIPT=$(pwd)/.fix-python-path.sh
+PYTHON_BUILD_SCRIPT=$(pwd)/.build-python.sh
 PACKAGEDIR=$BASEDIR/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
 INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 
@@ -95,7 +96,7 @@ cp -rf $BASEDIR/extern/$PLATFORM $PACKAGEDIR/extern
 cp karaboPackageDependencies-${PLATFORM}.pc $PACKAGEDIR/lib/karaboDependencies.pc
 
 # karathon
-cd ../karathon
+pushd ../karathon
 
 # Use karabo embedded python interpretor
 PATH=$PACKAGEDIR/extern/bin:$PATH
@@ -108,33 +109,37 @@ ln -s $SITE_PACKAGES/karathon.so $PACKAGEDIR/lib/libkarathon.so
 
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
 
+popd
+
 # deviceServer
-cd ../deviceServer
+pushd ../deviceServer
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
+popd
 
 # brokerMessageLogger
-cd ../brokerMessageLogger
+pushd ../brokerMessageLogger
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
+popd
 
 # idxview
-cd ../tools/dataLoggerIndex/idxview
+pushd ../tools/dataLoggerIndex/idxview
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
-cd ../..
+popd
 
 #idxbuild
-cd ../tools/dataLoggerIndex/idxbuild
+pushd ../tools/dataLoggerIndex/idxbuild
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
-cd ../..
+popd
 
 # brokerRates
-cd ../tools/brokerRates
+pushd ../tools/brokerRates
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
-cd ../
+popd
 
 # shell scripts - copy directly from src
-cd $BASEDIR/src/tools/scripts/
+pushd $BASEDIR/src/tools/scripts/
 cp -f * $PACKAGEDIR/bin
-cd -
+popd
 
 # Correct python interpreter path for scripts in 'bin' directory
 # <-- replace 1st line by "/usr/bin/env python3" and set PATH
@@ -145,29 +150,20 @@ export PATH=$PACKAGEDIR/extern/bin:$PATH
 safeRunCommand "$PYTHONPATH_FIXER_SCRIPT" $PACKAGEDIR
 
 # pythonKarabo
-cd ../pythonKarabo
-safeRunCommand "./build.sh" $PACKAGEDIR $PYOPT
+safeRunCommand "$PYTHON_BUILD_SCRIPT" $PACKAGEDIR $PYOPT
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 
-# pythonGui
-# MR-3871: disable while karabogui doesn't support Qt5 on the old deps
-#cd ../pythonGui
-#safeRunCommand "./build.sh" $PACKAGEDIR $PYOPT
-#cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-#cp -rf $DISTDIR/$OS/lib $PACKAGEDIR/
-
 # Activation script
-cd $BASEDIR
+pushd $BASEDIR
 sed "s%__VENV_DIR__%$BASEDIR/karabo%g" src/tools/scripts/activate.tmpl > $PACKAGEDIR/activate
 # templates
 cp -rf src/templates $PACKAGEDIR
 # the initial configurations
 cp -rf src/service.in $PACKAGEDIR
 cp -rf src/environment.in $PACKAGEDIR
-cd -
+popd
 
 # bundle scripts for plugin packages
-cd ../karabo
 cp .bundle-cppplugin.sh .bundle-pythonplugin.sh $PACKAGEDIR/bin
 cp .bundle-dependency.sh .bundle-pythondependency.sh $PACKAGEDIR/bin
 cp .extract-cppplugin.sh .extract-pythonplugin.sh $PACKAGEDIR/bin
@@ -182,22 +178,23 @@ safeRunCommand "$PACKAGEDIR/bin/.fix-python-path.sh $PACKAGEDIR"
 
 if [ "$BUNDLE_ACTION" = "package" ]; then
     # ZIP it - but exclude developer's stuff from var, devices, etc.
-    cd $PACKAGEDIR/../
+    pushd $PACKAGEDIR/../
     safeRunCommand "zip -qr ${PACKAGENAME}.zip $PACKAGENAME --exclude $PACKAGENAME/var/\* $PACKAGENAME/devices/\* $PACKAGENAME/installed/\* $PACKAGENAME/plugins/\*"
     # Create installation script
     echo -e '#!/bin/bash\n'"VERSION=$VERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.zip > $INSTALLSCRIPT
     safeRunCommand "zip -A ${INSTALLSCRIPT}"
     chmod a+x $INSTALLSCRIPT
     rm ${PACKAGENAME}.zip
+    popd
 fi
 
 # Make sure the ~/.karabo directory exists
 mkdir -p $HOME/.karabo
 
 # Create a shortcut to the installed karabo bundle
-cd $BASEDIR
+pushd $BASEDIR
 ln -sf $PACKAGEDIR karabo
-
+popd
 
 echo
 echo "Created karaboFramework bundle under: $PACKAGEDIR"
