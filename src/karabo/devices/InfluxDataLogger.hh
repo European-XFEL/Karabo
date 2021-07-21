@@ -52,7 +52,8 @@ namespace karabo {
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
 
             std::vector<char> m_archive;
-
+            int m_maxTimeAdvance;
+            bool m_hasRejectedData;
         };
 
 
@@ -101,6 +102,7 @@ namespace karabo {
             const std::string m_dbName;
             std::string m_urlWrite;
             std::string m_urlQuery;
+            int m_maxTimeAdvance;
             static const unsigned int k_httpResponseTimeoutMs;
 
         };

@@ -77,6 +77,8 @@ public:
     DataLogTestDevice(const karabo::util::Hash& input) : karabo::core::Device<>(input) {
         KARABO_SLOT(slotIncreaseValue);
         KARABO_SLOT(slotUpdateSchema, const karabo::util::Schema);
+        // NOTE: this is a terrible idea. Never do this in the field.
+        KARABO_SLOT(slotUpdateConfigGeneric, const karabo::util::Hash);
         KARABO_INITIAL_FUNCTION(initialize);
     }
 
@@ -97,6 +99,11 @@ private:
         set("value", get<int>("value") + 1);
     }
 
+    void slotUpdateConfigGeneric(const Hash conf) {
+        // this is a terrible idea, but is helpful in this test.
+        // Do NOT use this pattern in any production system!
+        set(conf);
+    }
 
     void slotUpdateSchema(const Schema sch) {
         updateSchema(sch);
@@ -570,6 +577,78 @@ void BaseLogging_Test::testMaxNumDataHistory() {
     std::clog << "... OK" << std::endl;
 }
 
+void BaseLogging_Test::testDropFutureData() {
+    std::clog << "Testing that the logger drops future data ... " << std::flush;
+
+    const std::string deviceId(getDeviceIdPrefix() + "deviceWithFutureStamp");
+    const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    auto success = m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId),
+                                               KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    CPPUNIT_ASSERT_MESSAGE("Test device missing from 'devicesToBeLogged' :" + toString(m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged")),
+                           waitForCondition([this, &loggerId, &deviceId]() {
+                               auto loggedIds = m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged");
+                                            return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
+                           },
+                                            KRB_TEST_MAX_TIMEOUT * 1000)
+                           );
+
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    unsigned int numCycles = 5;
+    const Epochstamp inAlmostAFortnite = Epochstamp() + TimeDuration(13,0,0,0,0);
+    const Epochstamp inAFortnite = inAlmostAFortnite + TimeDuration(1,0,0,0,0);
+    const Trainstamp noTrainId;
+    Hash cfg;
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
+    CPPUNIT_ASSERT_MESSAGE("'value' is missing from the configuration", cfg.has("value"));
+    const Epochstamp originalEpoch = Epochstamp::fromHashAttributes(cfg.getAttributes("value"));
+    const int originalValue = cfg.get<int>("value");
+
+    for (unsigned int i = 0; i < numCycles; ++i) {
+        Hash update("value", 10000 + i);
+        const Timestamp muchLater(inAlmostAFortnite, Trainstamp());
+        inAlmostAFortnite.toHashAttributes(update.getAttributes("value"));
+        // trainId must be set. Epochstamp information alone will not be kept in `Device::set(Hash)`.
+        noTrainId.toHashAttributes(update.getAttributes("value"));
+        CPPUNIT_ASSERT_NO_THROW(
+            m_sigSlot->request(deviceId, "slotUpdateConfigGeneric", update)
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
+        // Get configuration, check expected values, check (static) time stamp of "oldValue" and store stamp of "value"
+        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
+        CPPUNIT_ASSERT_MESSAGE("'value' is missing from the configuration", cfg.has("value"));
+        CPPUNIT_ASSERT_EQUAL(static_cast<int> (i) + 10000, cfg.get<int>("value"));
+        const Epochstamp stamp = Epochstamp::fromHashAttributes(cfg.getAttributes("value"));
+        // thi
+        CPPUNIT_ASSERT_MESSAGE("'value' has wrong time stamp: " + stamp.toIso8601() + " instead of " + inAlmostAFortnite.toIso8601(), stamp == inAlmostAFortnite);
+
+        // Flush Data
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                                .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+        // small sleep to make sure the data is on the DB
+        boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+
+        Schema schema;
+        bool configAtTimepoint;
+        std::string configTimepoint;
+        try {
+            m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
+                            deviceId, inAFortnite.toIso8601())
+                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                    .receive(cfg, schema, configAtTimepoint, configTimepoint);
+        } catch (const std::exception& e) {
+            CPPUNIT_ASSERT_MESSAGE(string("Unexpected exception: ") += e.what(), false);
+        }
+        CPPUNIT_ASSERT_MESSAGE("'value' is missing from the configuration", cfg.has("value"));
+        const Epochstamp received = Epochstamp::fromHashAttributes(cfg.getAttributes("value"));
+        // the data is stored in the influxDB and has lower resolution (microsecond) what Epochstamp offers (attosecond).
+        // We therefore compare the time difference. TimeDuration will always be positive (sic).
+        const double dt = received - originalEpoch;
+        CPPUNIT_ASSERT_MESSAGE("'value' has wrong time stamp: " + received.toIso8601() + " - difference is : " + toString(dt),
+                               dt < 1e-6);
+        CPPUNIT_ASSERT_EQUAL(cfg.get<int>("value"), originalValue);
+    }
+    std::clog << "... OK" << std::endl;
+}
 
 void BaseLogging_Test::testAllInstantiated(bool waitForLoggerReady) {
     std::clog << "Testing logger and readers instantiations ... " << std::flush;
@@ -780,7 +859,7 @@ void BaseLogging_Test::testCfgFromPastRestart() {
     auto success = m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId),
                                                KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
-    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged")),
+    CPPUNIT_ASSERT_MESSAGE("Test device missing from 'devicesToBeLogged' :" + toString(m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged")),
                            waitForCondition([this, &loggerId, &deviceId]() {
                                auto loggedIds = m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged");
                                             return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
@@ -815,7 +894,7 @@ void BaseLogging_Test::testCfgFromPastRestart() {
                                 .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
         CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "slotTagDeviceToBeDiscontinued", "D", deviceId)
                                 .timeout(KRB_TEST_MAX_TIMEOUT * 1000).receive());
-        CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged")),
+        CPPUNIT_ASSERT_MESSAGE("Test device still present in 'devicesToBeLogged' :" + toString(m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged")),
                                waitForCondition([this, &loggerId, &deviceId]() {
                                    auto loggedIds = m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged");
                                                 // NOT in there anymore
@@ -827,7 +906,7 @@ void BaseLogging_Test::testCfgFromPastRestart() {
         // Restart again (and validate it is logging) - file based logger will gather the complete config again on disk
         CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(loggerId, "slotAddDevicesToBeLogged", vector<string>(1, deviceId))
                                 .timeout(KRB_TEST_MAX_TIMEOUT * 1000).receive());
-        CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged")),
+        CPPUNIT_ASSERT_MESSAGE("Test device missing from 'devicesToBeLogged' :" + toString(m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged")),
                                waitForCondition([this, &loggerId, &deviceId]() {
                                    auto loggedIds = m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged");
                                                 return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
@@ -1609,7 +1688,7 @@ void BaseLogging_Test::testSchemaEvolution() {
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // Checks that the instantiated device is being logged.
-    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged")),
+    CPPUNIT_ASSERT_MESSAGE("Test device missing from 'devicesToBeLogged' :" + toString(m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged")),
                            waitForCondition([this, &loggerId, &deviceId]() {
                                auto loggedIds =
                                        m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged");

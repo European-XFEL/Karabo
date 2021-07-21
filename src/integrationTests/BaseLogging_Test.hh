@@ -90,6 +90,12 @@ protected:
     void testMaxNumDataHistory();
 
     /**
+     * Checks that the InfluxLogger is properly dropping values
+     * too far ahead in the future.
+     */
+    void testDropFutureData();
+
+    /**
      * Sets PropertyTestDevice Schema
      *
      * circumvent min/max limits and vector size specification
