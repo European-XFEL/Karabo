@@ -141,14 +141,6 @@ bundle: build
 	cd ../tools/dataLoggerIndex/idxview; $(MAKE) CONF=$(CONF)
 	cd ../tools/dataLoggerIndex/idxbuild; $(MAKE) CONF=$(CONF)
 
-# DEPRECATE!
-package: bundle-package
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(PYOPT)
-
-# DEPRECATE!
-install: bundle-install
-	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) install $(PYOPT)
-
 bundle-package: bundle
 	@./.bundle.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF)) package $(PYOPT)
 
