@@ -194,6 +194,16 @@ namespace karabo {
                     .init()
                     .commit();
 
+            INT32_ELEMENT(expected).key("logger.InfluxDataLogger.maxTimeAdvance")
+                    .displayedName("Max Time Advance")
+                    .description("Maximum time advance allowed for data. "
+                                 "Data too far ahead in the future will be dropped. "
+                                 "Negative values or 0 means no limit.")
+                    .assignmentOptional().defaultValue(7200)
+                    .unit(Unit::SECOND)
+                    .init()
+                    .commit();
+
             VECTOR_STRING_ELEMENT(expected).key("serverList")
                     .displayedName("Server list")
                     .description("List of device server IDs where the DataLogger instance run. "
