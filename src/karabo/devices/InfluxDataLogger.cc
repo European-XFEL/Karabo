@@ -30,7 +30,9 @@ namespace karabo {
             , m_dbClientRead(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientReadPointer"))
             , m_dbClientWrite(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientWritePointer"))
             , m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin"))
-            , m_archive() {
+            , m_archive()
+            , m_maxTimeAdvance(input.get<int>("maxTimeAdvance"))
+            , m_hasRejectedData(false) {
         }
 
 
@@ -73,6 +75,9 @@ namespace karabo {
             }
             const std::string& deviceId = m_deviceToBeLogged;
 
+            // store the local unix timestamp to compare the time difference w.r.t. incoming data.
+            Epochstamp nowish;
+            std::vector<std::string> rejectedPaths;
             // To write log I need schema - but that has arrived before connecting signal[State]Changed to slotChanged
             // and thus before any data can arrive here in handleChanged.
             std::vector<std::string> paths;
@@ -111,6 +116,16 @@ namespace karabo {
                 }
 
                 if (noArchive) continue; // Bail out after updating time stamp!
+
+                // no check needed if the maxTimeDifference is negative or 0
+                if (m_maxTimeAdvance > 0 && t.getEpochstamp() > nowish) {
+                    // substract the 2 Epochstamp to get a TimeDuration.
+                    const double dt = t.getEpochstamp() - nowish;
+                    if ( dt > m_maxTimeAdvance) {
+                        rejectedPaths.push_back(path);
+                        continue;
+                    }
+                }
                 std::string value; // "value" should be a string, so convert depending on type ...
                 bool isFinite = true; // false for nan and inf DOUBLE/FLOAT
                 Types::ReferenceType type = leafNode.getType();
@@ -200,6 +215,12 @@ namespace karabo {
                 // isFinite matters only for FLOAT/DOUBLE
                 logValue(query, deviceId, path, value, leafNode.getType(), isFinite);
             }
+
+            if (!m_hasRejectedData && rejectedPaths.size() != 0ul) {
+                KARABO_LOG_FRAMEWORK_WARN << "Skip properties '" << toString(rejectedPaths) << "' of '" << deviceId
+                    << "' - Since they are too far in the future.";
+            }
+            m_hasRejectedData = rejectedPaths.size() != 0ul;
 
             terminateQuery(query, lineTimestamp);
 
@@ -427,12 +448,24 @@ namespace karabo {
                     .assignmentOptional().defaultValue(200)
                     .init()
                     .commit();
+
+            INT32_ELEMENT(expected).key("maxTimeAdvance")
+                    .displayedName("Max Time Advance")
+                    .description("Maximum time advance allowed for data. "
+                                 "Data too far ahead in the future will be dropped. "
+                                 "Negative values or 0 means no limit.")
+                    .assignmentOptional().defaultValue(7200)
+                    .unit(Unit::SECOND)
+                    .init()
+                    .commit();
+
         }
 
 
         InfluxDataLogger::InfluxDataLogger(const karabo::util::Hash& input)
             : DataLogger(input)
-            , m_dbName(input.get<std::string>("dbname")) {
+            , m_dbName(input.get<std::string>("dbname"))
+            , m_maxTimeAdvance(input.get<int>("maxTimeAdvance")) {
 
             // We have to work in cluster environment where we have 2 nodes and proxy
             // that runs 'telegraf' working as a proxy and load balancer
@@ -525,6 +558,7 @@ namespace karabo {
             Hash config = cfg;
             config.set("dbClientReadPointer", m_clientRead);
             config.set("dbClientWritePointer", m_clientWrite);
+            config.set("maxTimeAdvance", m_maxTimeAdvance);
             DeviceData::Pointer deviceData =
                     Factory<DeviceData>::create<karabo::util::Hash>("InfluxDataLoggerDeviceData", config);
             return deviceData;
