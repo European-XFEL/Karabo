@@ -18,9 +18,25 @@ import sys
 import subprocess
 import os
 import os.path
+from unittest.mock import MagicMock, Mock
 
 sys.path.append(os.path.abspath('../src/pythonKarabo'))
-sys.path.append(os.path.abspath('/usr/src/app/breath-4.2.0'))
+
+MOCK_MODULES = [
+    'traits.traits_listener', 'lxml', 'paho',
+    'paho.mqtt', 'paho.mqtt.client']
+
+sys.modules.update((mod_name, MagicMock()) for mod_name in MOCK_MODULES)
+
+LOCAL_MODULES = [
+    'karabo', 'karabo.bound',
+    'karabo.common', 'karabo.middlelayer', 'karabo.native',
+    'karabo.middlelayer_api', 'karabo.bound_api',
+    'karabo.project_db', 'karabo.gui', 'karabo.common.api',
+    'karabo.common.scenemodel', 'karabo.common.scenemodel.api']
+
+for mod_name in LOCAL_MODULES:
+    sys.modules.pop(mod_name)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -37,11 +53,12 @@ sys.path.append(os.path.abspath('/usr/src/app/breath-4.2.0'))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.mathjax',
+    'sphinx.ext.graphviz',
     'sphinx.ext.intersphinx',
     'sphinx.ext.inheritance_diagram',
     'sphinx.ext.ifconfig',
-    'sphinx.ext.graphviz',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.todo',
     'breathe',
 ]
 
@@ -264,7 +281,7 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 intersphinx_mapping = {
-    'python': ('http://docs.python.org/3.4', None),
+    'python': ('http://docs.python.org/', None),
     'pint': ('http://pint.readthedocs.org/en/0.7.2', None),
     'dateutil': ('http://dateutil.readthedocs.org/en/2.3', None),
     'numpy': ('http://docs.scipy.org/doc/numpy/', None)
