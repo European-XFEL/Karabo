@@ -10,8 +10,6 @@ The core functionality of the middle layer is to access other devices.
 This can also be done from the command line. Accessing other devices
 is done via *proxies*:
 
-.. autoclass:: karabo.middlelayer.Proxy()
-
 .. autofunction:: karabo.middlelayer.getDevice(deviceId)
 
 .. autofunction:: karabo.middlelayer.connectDevice(deviceId)
