@@ -10,7 +10,6 @@ Contents:
    run/index
    library/index
    tools/index
-   documentation
    concepts/index
    whatsnew/index
    :maxdepth: 1

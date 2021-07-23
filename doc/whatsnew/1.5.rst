@@ -11,8 +11,7 @@ Shell Environment Changes
 The ``~/.karabo`` directory is no longer being relied up for locating the currently
 installed Karabo framework. Instead, an activation script is created when
 building or installing Karabo which makes necessary modifications to the shell
-environment so that Karabo can run. A more in-depth description is available at
-:ref:`run-scripts`.
+environment so that Karabo can run.
 
 
 Data Logging
