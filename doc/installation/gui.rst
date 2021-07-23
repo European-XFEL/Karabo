@@ -107,8 +107,8 @@ the base environment.
 
 * Or, if you have an existing conda environment, install the package directly:
     * ``conda install karabogui=<version> --yes``
-        * Leave the version out to get the latest one: ``conda install karabogui --yes``
-    NOTE: Dependencies might clash with your environment, use at your risk
+        Leave the version out to get the latest one: ``conda install karabogui --yes``
+        NOTE: Dependencies might clash with your environment, use at your risk
 
 
 Helpful commands are available below:
