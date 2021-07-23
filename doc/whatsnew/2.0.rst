@@ -385,7 +385,7 @@ represented by an object of the class `State`. The specific states are accessed
  via that class as well, i.e. for the `INIT` state one just uses `State::INIT`
   in C++ and `State.INIT` in Python (both bound and middlelayer).
 
-The list of available states can e.g. be looked in :ref:`karabo::util::States`
+The list of available states can e.g. be looked in :ref:`states`
 
 Defining the List of States for a Specific Device
 +++++++++++++++++++++++++++++++++++++++++++++++++

@@ -65,7 +65,7 @@ repository optionally (if C++) compile it and subsequently install it to Karabo.
    "dataGenerator" and "DataGenerator" as a package name will lead to different results. 
 
 Directly after, you can start start it with the corresponding server as explained
-:ref:`here <run/server>`.
+:ref:`here <run/servers>`.
 
 .. note::
 

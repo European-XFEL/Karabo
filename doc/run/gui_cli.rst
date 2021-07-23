@@ -13,7 +13,6 @@ control (given your access persmissions allow it) devices that are currently
 online.
 
 
-
 Starting the command line
 =========================
 
@@ -22,7 +21,6 @@ Having Karabo installed properly type::
   ikarabo
 
 Using the command line interface is described :ref:`here <concepts-ikarabo>`.
-
 
 For Karabo framework developers another command line interface exists::
 
