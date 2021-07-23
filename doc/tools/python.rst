@@ -69,7 +69,7 @@ Use Karabo's Python as Interpreter
 Navigate to File->Default Settings. Click on "Default Project", "Project
 Interpreter". Then next to the top drop-down menu, click on the little gear
 symbol and "Add Local". Now navigate to your Karabo installation folder, and
-there into "extern/bin" and select python3.4.
+there into "extern/bin" and select ``python``.
 
 ************************
 Getting Started - Flake8

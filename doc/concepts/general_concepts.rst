@@ -149,7 +149,7 @@ method may be called in two different ways:
 In C++ the syntax is slightly different and the callbacks are bound in runtime,
 using ``karabo::util::bind_weak``:
 
-.. code-block:: C++
+.. code-block:: c++
 
     string txt(“The answer is: ”);
     request(“some/device/1”, “slotFoo”, 21)

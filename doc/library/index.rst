@@ -8,6 +8,7 @@ bindings, the native Python package and the pyQt-based GUI.
 
 .. toctree::
    known_issues
+   policies
    cppApi
    pythonApiBound
    pythonApiMiddlelayer
@@ -20,6 +21,7 @@ bindings, the native Python package and the pyQt-based GUI.
    alarmService
    gui_widget_development
    gui_scene_development
+   gui_scene_files_v1
    device_version
    performances
    ciAtXFEL
