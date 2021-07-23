@@ -1,8 +1,8 @@
 .. _karaboApiCpp:
 
-******************
- Karabo API - C++
-******************
+*******
+C++ API
+*******
 
 The karabo::core Namespace
 ==========================
@@ -15,7 +15,7 @@ The karabo::core Namespace
 
 
 The karabo::devices Namespace
-==========================
+=============================
 
 .. doxygennamespace:: karabo::devices
    :project: KARABO
@@ -25,7 +25,7 @@ The karabo::devices Namespace
 
 
 The karabo::io Namespace
-==========================
+========================
 
 .. doxygennamespace:: karabo::io
    :project: KARABO
@@ -34,7 +34,7 @@ The karabo::io Namespace
    :private-members:
 
 The karabo::net Namespace
-==========================
+=========================
 
 .. doxygennamespace:: karabo::net
    :project: KARABO
@@ -43,7 +43,7 @@ The karabo::net Namespace
    :private-members:
 
 The karabo::xms Namespace
-==========================
+=========================
 
 .. doxygennamespace:: karabo::xms
    :project: KARABO
