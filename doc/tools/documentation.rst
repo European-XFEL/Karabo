@@ -143,7 +143,7 @@ Links
 
 Use `Link text <http://xfel.eu>`_ for inline web links.
 
-Internal links should look like this :ref:`framework/howto_document`,
+Internal links should look like this ``:ref:`framework/howto_document```,
 which refers to the own section.
 
 .. code::
@@ -298,15 +298,18 @@ Images and Figures
 
 To add an image use:
 
-.. image:: _images/darthvader.jpg
+.. code:: rst
 
-.. figure:: _images/xfel.jpg
-    :align: center
-    :height: 100px
-    :alt: alternate text
-    :figclass: align-center
+    .. image:: _images/darthvader.jpg
 
-    Figures are like images but with a caption
+    .. figure:: _images/xfel.jpg
+        :align: center
+        :height: 100px
+        :alt: alternate text
+        :figclass: align-center
+
+
+Figures are like images but with a caption
 
 .. code:: rst
 

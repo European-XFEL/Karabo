@@ -5,7 +5,7 @@ Starting a full Karabo system all local
 ***************************************
 
 Here we describe how you can bring up a basic Karabo system on a single host. 
-Make sure you have understood the :ref:`fundamental concepts <fundamentals>` before proceeding here.
+Make sure you have understood the fundamental concepts before proceeding here.
 
 Lets go step by step. The only prerequisit is, that you have installed and 
 **activated** Karabo as described :ref:`here <installation/binary>`.
