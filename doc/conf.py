@@ -22,12 +22,6 @@ from unittest.mock import MagicMock, Mock
 
 sys.path.append(os.path.abspath('../src/pythonKarabo'))
 
-MOCK_MODULES = [
-    'traits.traits_listener', 'lxml', 'paho',
-    'paho.mqtt', 'paho.mqtt.client']
-
-sys.modules.update((mod_name, MagicMock()) for mod_name in MOCK_MODULES)
-
 LOCAL_MODULES = [
     'karabo', 'karabo.bound',
     'karabo.common', 'karabo.middlelayer', 'karabo.native',
@@ -37,6 +31,13 @@ LOCAL_MODULES = [
 
 for mod_name in LOCAL_MODULES:
     sys.modules.pop(mod_name)
+
+MOCK_MODULES = [
+    'traits.traits_listener', 'lxml', 'paho',
+    'paho.mqtt', 'paho.mqtt.client',
+    'karabo._version', 'karabo.common.packaging.utils']
+
+sys.modules.update((mod_name, MagicMock()) for mod_name in MOCK_MODULES)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -291,6 +292,7 @@ intersphinx_mapping = {
 doxydir = '.build/html/reference'
 if not os.path.exists(doxydir):
     os.makedirs(doxydir)
+subprocess.call('doxygen -u', shell=True)
 subprocess.call('doxygen', shell=True)
 
 # we use breathe to include doxygen output into our sphinx documentation
