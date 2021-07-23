@@ -33,7 +33,7 @@ Dependencies binaries
 The dependency system of Karabo is described :ref:`here <installation/dependency_management>`.
 
 For convenience, the dependencies are built for each supported Operating system
-and uploaded to the XFEL internal server `here <http://exflserv05.desy.de/karabo/karaboDevelopmentDeps/>`_.
+and uploaded to the XFEL internal server `here <http://exflserv05.desy.de/karabo/karaboDevelopmentDeps/>`__.
 
 Framework binaries
 ++++++++++++++++++
