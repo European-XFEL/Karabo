@@ -219,18 +219,20 @@ To run the Unit Tests using the Terminal, execute the following scripts:
  
 To run the Unit Tests using Netbeans:
 
-1. Go to Tools > Python Platforms
-2. Make as Default Python the Python under your current KaraboFramework
+#. Go to Tools > Python Platforms
+#. Make as Default Python the Python under your current KaraboFramework
    installation
 
-  1. Select "New"
-  2. Add python available on your current installation extern folder
+  #. Select "New"
 
-    (i.e. /.../your_current_karaboFramework/package/Debug/Ubuntu/14.04/x86_64/karabo/extern/bin/python)
-  3. Choose new Python and make it default, selecting "Make Default"
-  4. Select Close
+  #. Add python available on your current installation extern folder
+     (i.e. /.../your_current_karaboFramework/package/Debug/Ubuntu/14.04/x86_64/karabo/extern/bin/python)
 
-3. Run Python Karabo project
+  #. Choose new Python and make it default, selecting "Make Default"
+
+  #. Select Close
+
+#. Run Python Karabo project
 
 
 Get and install the Karabo framework (all the details)
