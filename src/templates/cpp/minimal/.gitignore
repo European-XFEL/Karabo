@@ -1,8 +1,52 @@
-nbproject/private
-nbproject/Package-*.bash
-nbproject/Makefile-*.mk
-package/
-dist/
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# CMake
+CMakeCache.txt
+CMakeLists.txt.user
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
 build/
-.dep.inc
+build_debug/
+build_release/
+
+# VSCode settings
+.vscode
+
+# clangd specific
+.clangd/
+
+# Karabo version (generated)
 src/version.hh
