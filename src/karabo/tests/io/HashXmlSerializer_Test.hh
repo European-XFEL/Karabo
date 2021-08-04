@@ -8,6 +8,8 @@
 #ifndef HASHXMLSERIALIZER_TEST_HH
 #define	HASHXMLSERIALIZER_TEST_HH
 
+#include <karabo/log/Logger.hh>
+
 #include <cppunit/extensions/HelperMacros.h>
 
 class HashXmlSerializer_Test : public CPPUNIT_NS::TestFixture {
@@ -19,6 +21,9 @@ class HashXmlSerializer_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 public:
+
+    KARABO_CLASSINFO(HashXmlSerializer_Test, "HashXmlSerializer_Test", "1.0");
+
     HashXmlSerializer_Test();
     virtual ~HashXmlSerializer_Test();
     void setUp();
