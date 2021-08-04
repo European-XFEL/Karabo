@@ -6,7 +6,7 @@
  */
 
 #include <vector>
-
+#include <ctime>
 
 #include <karabo/io/HashXmlSerializer.hh>
 #include "HashXmlSerializer_Test.hh"
@@ -158,14 +158,31 @@ void HashXmlSerializer_Test::testSerialization() {
 
 
     {
-        std::string archive1;
+        const int nSave = 1; // increase for measurements, minimum 1
+        std::vector<std::string> archives(nSave); // an individial archive for each save
+        const std::string& archive1 = archives[0];
         std::string archive2;
 
-        p->save(m_bigHash, archive1);
+        std::clock_t c_start = std::clock();
+        for (int i = 0; i < nSave; ++i) {
+            p->save(m_bigHash, archives[i]);
+        }
+        std::clock_t c_end = std::clock();
 
-        Hash h;
-        p->load(h, archive1);
+        double time_elapsed_ms = 1000.0 / nSave * (c_end-c_start) / CLOCKS_PER_SEC;
+        KARABO_LOG_FRAMEWORK_DEBUG << "Average serialization big Hash: " << time_elapsed_ms << " ms";
 
+        std::vector<Hash> vecH(nSave); // A new Hash for each deserialisation
+        c_start = std::clock();
+        for (int i = 0; i < nSave; ++i) {
+            p->load(vecH[i], archive1);
+        }
+        c_end = std::clock();
+
+        time_elapsed_ms = 1000.0 / nSave * (c_end-c_start) / CLOCKS_PER_SEC;
+        KARABO_LOG_FRAMEWORK_DEBUG << "Average de-serialization big Hash: " << time_elapsed_ms << " ms";
+
+        Hash& h = vecH[0];
         CPPUNIT_ASSERT(karabo::util::similar(m_bigHash, h) == true);
 
         p->save(h, archive2);
