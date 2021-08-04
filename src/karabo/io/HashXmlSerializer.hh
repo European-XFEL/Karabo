@@ -100,11 +100,12 @@ namespace karabo {
              * @param hash the hash that will have the attributes added to.
              * @param hashPath the path in the hash where the attributes will be added.
              * @param attrs the vector with the attributes to be added. Each attribute is an element of this vector and
-             * has a single key that corresponds to the attribute name and whose value is the attribute value.
+             *              has a single key that corresponds to the attribute name and whose value is the attribute value.
+             *              This value will be 'moved away' to the attributes to avoid copies.
              */
             void addNonStrConvertibleAttrs(karabo::util::Hash& hash,
-                                       const std::string& hashPath,
-                                       const std::vector<karabo::util::Hash>& attrs) const;
+                                           const std::string& hashPath,
+                                           std::vector<karabo::util::Hash>& attrs) const;
 
             std::pair<std::string, karabo::util::Types::ReferenceType> readXmlAttribute(const std::string& xmlAttribute) const;
 
