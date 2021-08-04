@@ -242,7 +242,8 @@ namespace karabo {
                         // from string available.
                         allAttrsRead = false;
                     } else {
-                        Hash::Attributes::Node& attrNode = attrs.set<std::string > (it->name(), attr.first); // Sets as string
+                        // Sets as string -- can move since `attr.first` not used anymore before it goes out of scope
+                        Hash::Attributes::Node& attrNode = attrs.set(it->name(), std::move(attr.first));
                         if (attr.second != Types::UNKNOWN && m_readDataTypes) {
                             // Shapes it into correct type
                             attrNode.setType(attr.second);
@@ -293,9 +294,9 @@ namespace karabo {
 
         void HashXmlSerializer::addNonStrConvertibleAttrs(karabo::util::Hash& hash,
                                                           const std::string& hashPath,
-                                                          const std::vector<karabo::util::Hash>& attrs) const {
+                                                          std::vector<karabo::util::Hash>& attrs) const {
             if (hash.has(hashPath)) {
-                for (const auto &attrHash : attrs) {
+                for (auto &attrHash : attrs) {
                     vector<string> attrHashKeys;
                     attrHash.getKeys(attrHashKeys);
                     if (attrHashKeys.size() == 1) {
@@ -303,10 +304,10 @@ namespace karabo {
                         Types::ReferenceType attrType = attrHash.getType(attrName);
                         switch (attrType) {
                             case Types::VECTOR_HASH:
-                                hash.setAttribute(hashPath, attrName, attrHash.get<vector < Hash >> (attrName));
+                                hash.setAttribute(hashPath, attrName, std::move(attrHash.get<vector < Hash >> (attrName)));
                                 break;
                             case Types::SCHEMA:
-                                hash.setAttribute(hashPath, attrName, attrHash.get<Schema>(attrName));
+                                hash.setAttribute(hashPath, attrName, std::move(attrHash.get<Schema>(attrName)));
                                 break;
                             default:
                                 KARABO_LOG_FRAMEWORK_ERROR << "Unsupported type for attribute '" << attrName << "'.\n"
@@ -367,6 +368,7 @@ namespace karabo {
                     extractNonStrConvertibleAttrs(nonStrAttrs, node);
                 }
 
+                bool readyForAttrs = true;
                 if (node.first_child().type() == pugi::node_element) {
                     if (node.first_child().name() == m_itemFlag) { // This node describes a vector of Hashes
                         vector<Hash>& tmp = hash.bindReference<vector<Hash> >(nodeName);
@@ -374,15 +376,11 @@ namespace karabo {
                         while (string(itemNode.name()) == m_itemFlag) {
                             Hash h;
                             this->createHash(h, itemNode.first_child());
-                            tmp.push_back(h);
+                            tmp.push_back(std::move(h));
                             itemNode = itemNode.next_sibling();
                         }
-                        hash.setAttributes(nodeName, attrs);
-                        addNonStrConvertibleAttrs(hash, nodeName, nonStrAttrs);
                     } else { // Regular Hash
                         hash.set(nodeName, Hash());
-                        hash.setAttributes(nodeName, attrs);
-                        addNonStrConvertibleAttrs(hash, nodeName, nonStrAttrs);
                         this->createHash(hash.get<Hash > (nodeName), node.first_child());
                     }
                 } else if (node.first_child().type() == pugi::node_pcdata) {
@@ -396,7 +394,7 @@ namespace karabo {
                                 TextSerializer<Schema>::Pointer p = TextSerializer<Schema>::create("Xml", Hash("indentation", -1));
                                 Schema s;
                                 p->load(s, hashNode.getValue<string>());
-                                hashNode.setValue(s);
+                                hashNode.setValue(std::move(s));
                             } else {
                                 try {
                                     hashNode.setType(Types::from<FromLiteral > (attributeValue));
@@ -407,9 +405,6 @@ namespace karabo {
                             }
                         }
                     }
-                    hashNode.setAttributes(attrs);
-                    addNonStrConvertibleAttrs(hash, nodeName, nonStrAttrs);
-
                 } else if (node.first_child().type() == pugi::node_null) {
                     if (m_readDataTypes) {
                         pugi::xml_attribute attr = node.attribute(m_typeFlag.c_str());
@@ -434,7 +429,12 @@ namespace karabo {
                     } else {
                         hash.set(nodeName, string());
                     }
-                    hash.setAttributes(nodeName, attrs);
+                } else {
+                    readyForAttrs = false;
+                    KARABO_LOG_FRAMEWORK_WARN << "Failed to prepare attributes for '" << nodeName << "'";
+                }
+                if (readyForAttrs) {
+                    hash.setAttributes(nodeName, std::move(attrs));
                     addNonStrConvertibleAttrs(hash, nodeName, nonStrAttrs);
                 }
 
