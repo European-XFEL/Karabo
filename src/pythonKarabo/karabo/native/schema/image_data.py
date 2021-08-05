@@ -253,6 +253,14 @@ class Image(Type):
                            HashElement(data.shape, attrs))
         pixels._setelement("data",
                            HashElement(data.value.data, attrs))
-        h["pixels"] = pixels
 
-        return h, attrs
+        # set the `__classId` attribute to allow the C++ API to decode the
+        # `pixels` Hash as an NDArray object.
+        # XXX: This is a code duplication of NDArray.toDataAndAttrs
+        array_attrs = {"__classId": "NDArray"}
+        h._setelement("pixels", HashElement(pixels, array_attrs))
+
+        # set the `__classId` attribute to allow the C++ API to decode this
+        # Hash node into an ImageData Object.
+        image_attrs = {"__classId": "ImageData"}
+        return h, image_attrs
