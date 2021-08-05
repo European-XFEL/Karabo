@@ -145,4 +145,8 @@ class NDArray(Type):
         h._setelement("data",
                       HashElement(data.value.data, attrs))
 
-        return h, attrs
+        # set the `__classId` attribute to allow the C++ API to decode the
+        # `h` Hash as an NDArray object.
+        array_attrs = {"__classId": "NDArray"}
+        array_attrs.update(**attrs)
+        return h, array_attrs
