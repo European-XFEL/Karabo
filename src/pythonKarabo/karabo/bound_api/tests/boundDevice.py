@@ -163,6 +163,35 @@ class TestDevice(PythonDevice):
             .assignmentOptional().defaultValue(
                 ["Motor", "Camera", "Processor", "DeviceInstantiator"])
             .commit(),
+
+            INPUT_CHANNEL(expected).key("imageInput")
+            .dataSchema(Schema())
+            .commit(),
+
+            STRING_ELEMENT(expected).key("imagePath")
+            .displayedName("Image Path")
+            .assignmentOptional().defaultValue("data.image")
+            .expertAccess()
+            .init()
+            .commit(),
+
+            STRING_ELEMENT(expected).key("ndarrayPath")
+            .displayedName("NDArray Path")
+            .assignmentOptional().defaultValue("data.array")
+            .expertAccess()
+            .init()
+            .commit(),
+
+            INT32_ELEMENT(expected).key("imagesReceived")
+            .readOnly()
+            .initialValue(0)
+            .commit(),
+
+            INT32_ELEMENT(expected).key("ndarraysReceived")
+            .readOnly()
+            .initialValue(0)
+            .commit(),
+
         )
 
     def __init__(self, configuration):
@@ -176,6 +205,7 @@ class TestDevice(PythonDevice):
         self.registerSlot(self.compareSchema)
         self.KARABO_ON_DATA("input", self.onData)
         self.KARABO_ON_EOS("input", self.onEndOfStream)
+        self.KARABO_ON_DATA("imageInput", self.onImageData)
         self.word_no = 1
 
     def initialize(self):
@@ -262,6 +292,23 @@ class TestDevice(PythonDevice):
 
     def onEndOfStream(self, channel):
         self.set("eosReceived", True)
+
+    def checkData(self, data, update, dataPrefix, klass):
+        prop_path = self[f"{dataPrefix}Path"]
+        if data.has(prop_path) and isinstance(data[prop_path], klass):
+            count = self[f"{dataPrefix}sReceived"] + 1
+            update.set(f"{dataPrefix}sReceived", count)
+        else:
+            update.set("status", "unexpected data type"
+                       f" '{type(data[prop_path])}'"
+                       f" instead of '{str(klass)}'"
+                       f" for path '{prop_path}'")
+
+    def onImageData(self, data, metaData):
+        h = Hash()
+        self.checkData(data, h, "image", ImageData)
+        self.checkData(data, h, "ndarray", numpy.ndarray)
+        self.set(h)
 
     def compareSchema(self):
         """This function tries to get the maxSize of a middlelayer device
