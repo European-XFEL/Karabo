@@ -1,21 +1,25 @@
 """This tests the communication between bound API and middlelayer API"""
 
 from asyncio import (
-    create_subprocess_exec, ensure_future, get_event_loop)
+    create_subprocess_exec, ensure_future, get_event_loop, TimeoutError,
+    wait_for)
 from contextlib import contextmanager
 from datetime import datetime
 import os
 import shutil
 from subprocess import PIPE
 import sys
+import time
 from unittest import main
+
+import numpy as np
 
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.middlelayer import (
     AccessLevel, AlarmCondition, Assignment, background, call, Configurable,
-    DeviceClientBase, getDevice, getHistory, Hash, isSet, InputChannel,
-    Int32, KaraboError, MetricPrefix, NDArray, Node,
-    OutputChannel, setWait, shutdown, sleep, Slot, State, String,
+    DaqDataType, DeviceClientBase, encodeXML, getDevice, getHistory, Hash,
+    isSet, Image, InputChannel, Int32, KaraboError, MetricPrefix, NDArray,
+    Node, OutputChannel, setWait, shutdown, sleep, Slot, State, String,
     unit, Unit, UInt32, updateDevice, VectorDouble, waitUntil, waitUntilNew)
 
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
@@ -23,6 +27,24 @@ from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
 class Child(Configurable):
     number = Int32()
+
+
+class DataNode(Configurable):
+    daqDataType = DaqDataType.TRAIN
+
+    image = Image(
+        shape=(10, 10),
+        dtype=UInt32,
+        displayedName="Image")
+
+    array = NDArray(
+        displayedName="NDArray",
+        dtype=UInt32,
+        shape=(10, 10))
+
+
+class ImageChannel(Configurable):
+    data = Node(DataNode)
 
 
 class MiddlelayerDevice(DeviceClientBase):
@@ -74,6 +96,7 @@ class MiddlelayerDevice(DeviceClientBase):
         self.rawchannelmeta = meta
 
     output = OutputChannel(Child)
+    imageOutput = OutputChannel(ImageChannel)
     rawoutput = OutputChannel()
 
     @Slot()
@@ -90,6 +113,13 @@ class MiddlelayerDevice(DeviceClientBase):
     @Slot()
     async def sendOutputEOS(self):
         await self.output.writeEndOfStream()
+
+    @Slot()
+    async def sendImageOutput(self):
+        array = np.random.randint(1000, size=(10, 10), dtype=np.uint32)
+        self.imageOutput.schema.data.array = array
+        self.imageOutput.schema.data.image = array
+        await self.imageOutput.writeData()
 
 
 class Tests(DeviceTest):
@@ -377,6 +407,7 @@ class Tests(DeviceTest):
         proxy.output1.connect()
         task = background(waitUntilNew(proxy.output1.schema.s))
         while not task.done():
+            # TODO: wait for connection by listening to `input.missingConnections`
             # unfortunately, connecting takes time and nobody knows how much
             await proxy.send()
         await task
@@ -391,6 +422,57 @@ class Tests(DeviceTest):
         # Wait a few seconds for the broker message
         await sleep(2)
         self.assertEqual(self.device.channelclose, "boundDevice:output1")
+
+    @async_tst(timeout=90)
+    async def test_cross_image(self):
+        config = Hash(
+            "Logger.priority", "FATAL",
+            "_deviceId_", "boundDevice2",
+            "deviceId", "boundDevice2",
+            "middlelayerDevice", "middlelayerDevice",
+            "imageInput.connectedOutputChannels", "middlelayerDevice:imageOutput",
+            "imageInput.onSlowness", "wait",
+            "imagePath", "data.image",
+            "ndarrayPath", "data.array"
+        )
+        self.process = await create_subprocess_exec(
+            sys.executable, "-m", "karabo.bound_api.launcher",
+            "run", "karabo.bound_device_test", "TestDevice",
+            stdin=PIPE, stdout=PIPE)
+        self.process.stdin.write(encodeXML(config).encode('utf8'))
+        self.process.stdin.close()
+        # it takes typically 2 s for the bound device to start
+        bound_proxy = await getDevice("boundDevice2")
+        mdl_proxy = await getDevice("middlelayerDevice")
+
+        ###################################################
+        # Send data from middlelayer and receive from bound
+        ###################################################
+        with bound_proxy:
+            try:
+                await wait_for(
+                    waitUntil(lambda: bound_proxy.imageInput.missingConnections == []),
+                    timeout=5
+                )
+            except TimeoutError:
+                assert False, "bound proxy did not connect in time"
+
+            task = background(waitUntilNew(bound_proxy.imagesReceived))
+            await mdl_proxy.sendImageOutput()
+            try:
+                await wait_for(task, timeout=15)
+                assert task.done()
+            except (AssertionError, TimeoutError):
+                assert False, f"bound proxy did not update in time. status : {bound_proxy.status}"
+
+            self.assertGreater(bound_proxy.imagesReceived, 0)
+            self.assertGreater(bound_proxy.ndarraysReceived, 0)
+
+        ####################################
+        # clean up
+        ####################################
+        await shutdown(bound_proxy)
+        await self.process.wait()
 
     @async_tst(timeout=90)
     async def test_history(self):
