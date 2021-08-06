@@ -148,6 +148,10 @@ development directly from the distributed platform:
 ==================== ================= =========================================================== ===================== =========================
 **library**          **version**       **license**                                                 **Karabo linked**     **KaraboGUI linked**
 ==================== ================= =========================================================== ===================== =========================
+aio-pika             6.8.0             APL2.0                                                      yes                   no
+aioredis             1.3.1             MIT                                                         yes                   no
+aiormq               3.3.1             APL2.0                                                      yes                   no
+AMQP-CPP             4.3.12            APL2.0                                                      yes                   no
 asyncio-mqtt         0.8.1             BSD-3                                                       yes                   yes
 atomicwrites         1.4.0             MIT                                                         yes                   yes
 attrs                20.3.0            MIT                                                         yes                   yes
@@ -192,6 +196,7 @@ jsonschema           2.3.0             MIT                                      
 jupyter-client       6.1.6             BSD                                                         yes                   no
 jupyter-core         4.6.3             BSD                                                         yes                   no
 lapack               3.6.0             BSD                                                         yes                   no
+libev-git            4.33dev           BSD/GPLv2                                                   yes                   no
 libpng               1.6.8             libpng (MIT like)                                           yes                   yes
 libxml2              2.9.10            MIT                                                         yes                   yes
 libxslt              1.1.38            MIT                                                         yes                   yes
@@ -201,19 +206,19 @@ lxml                 3.6.4             BSD                                      
 MarkupSafe           0.18              BSD                                                         no                    no
 matplotlib           2.1.1             PSFL                                                        no                    no
 more-itertools       8.6.0             MIT                                                         yes                   no
-mqtt_cpp             8.0.0             Boost SL 1                                                  yes                   no
+mqtt_cpp             10.0.0            Boost SL 1                                                  yes                   no
 msgpack              0.5.6             APL2                                                        no                    no
 msgpack-numpy        0.4.3             BSD                                                         no                    no
+multidict            1.5.0             APL2.0                                                      yes                   no
 nbformat             4.1.0             BSD                                                         yes                   yes
 nose                 1.3.0             LGPL                                                        no                    no
 notebook             4.2.2             BSD                                                         yes                   yes
 nss                  ?                 MPL                                                         yes                   no
 numpy                01.11.01          BSD                                                         yes                   yes
 openmq               5.0.1             EPL/GPLv2                                                   yes                   yes
-paho.mqtt.c          1.3.6             EPLv1                                                       yes                   no
-paho.mqtt.cpp        1.1               EPLv1                                                       yes                   no
 paho.mqtt.python     1.5.1             EPLv1/EDLv1                                                 yes                   no
-packaging            20.8              apache/BSD                                                  yes                    no
+packaging            20.8              apache/BSD                                                  yes                   no
+pamqp                2.3.0             BSD-3-Clause                                                yes                   no
 parse                1.6.3             BSD                                                         no                    no
 parso                0.7.1             MIT                                                         no                    no
 patchelf             0.8               GPLv3                                                       no                    no
@@ -244,6 +249,7 @@ pytz                 2013.9            MIT                                      
 PyYAML               3.12              MIT                                                         no                    no
 pyzmq                17.0.0            LGPL+BSD                                                    yes                   yes
 qtconsole            4.2.1             BSD                                                         yes                   yes
+redisclient          1.0.2dev          MIT                                                         no                    no
 requests             2.19.1            APLv2                                                       yes                   no
 rpathology           0.0.1             MIT                                                         no                    no
 scikit-learn         0.14.1            BSD                                                         no                    no
@@ -261,6 +267,7 @@ tzlocal              1.1.1             MIT                                      
 urllib3              1.23              MIT                                                         yes                   no
 wcwidth              0.2.5             MIT                                                         yes                   yes
 wheel                0.24.0            MIT                                                         yes                   yes
+yarl                 1.6.3             APL2.0                                                      yes                   no
 zipp                 1.0.0             MIT                                                         yes                   no
 ==================== ================= =========================================================== ===================== =========================
 
@@ -290,10 +297,16 @@ Here are the dependencies of the ``karabo-cpp`` python module:
     "karabo-cpp" -> "openmq"
     "karabo-cpp" -> "boost"
     "karabo-cpp" -> "hdf5"
+    "karabo-cpp" -> "redisclient"
+    "karabo-cpp" -> "amqpcpp"
+    "karabo-cpp" -> "mqtt_cpp"
+    "mqtt_cpp" -> "boost"
+    "redisclient" -> "boost"
     "boost" -> "libxml2"
     "boost" -> "libxslt"
     "libxml2" -> "bzip2"
     "libxslt" -> "bzip2"
+    "amqpcpp" -> "libev"
 
 Here are the dependencies of the ``karabo.common`` python module:
 
@@ -337,6 +350,13 @@ the ``ipython``, ``numpy`` and ``jupyter_client`` modules are not expanded in th
     "karabo.middlelayer" -> "lxml"
     "karabo.middlelayer" -> "IPython"
     "karabo.middlelayer" -> "jupyter_client"
+    "karabo.middlelayer" -> "aio-pika"
+    "karabo.middlelayer" -> "paho.mqtt.python"
+    "karabo.middlelayer" -> "aioredis"
+    "aio-pika" -> "aiormq"
+    "aiormq" -> "pamqp"
+    "aiormq" -> "yarl"
+    "yarl" -> "multidict"
 
 Here are the dependencies of the ``karabogui`` python sub-module, for the sake of clarity,
 the ``ipython``, ``numpy`` and ``jupyter_client`` modules are not expanded in their dependencies:
