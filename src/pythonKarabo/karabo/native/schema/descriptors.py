@@ -674,7 +674,7 @@ class Slot(Descriptor):
                 await device._onException(self, exc, tb)
                 device._ss.replyException(message, e)
 
-        return ensure_future(wrapper())
+        return get_event_loop().create_task(wrapper(), instance=device)
 
     def _initialize(self, instance, value=None):
         return []  # nothing to initialize in a Slot
