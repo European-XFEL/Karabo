@@ -20,7 +20,7 @@
 # cmake -DCMAKE_PREFIX_PATH=$CONDA_PREFIX {{Karabo Framework Repository local working dir}}/src/tools/brokerRates
 #
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.14)
 
 project(
     "karabo-broker-rates"
@@ -49,18 +49,12 @@ target_link_libraries(
     ${KARABO_LIB_TARGET_NAME}
 )
 
-# The second value for RPATH is needed to find the libs
-# that libkarabo itself links against (like libboost)
-# when libkarabo and the device server executable
-# are installed on a tree that's not the same as the
-# tree that hosts the libkarabo dependencies.
-# This can happen while developing the Framework itself,
-# when the developer can have an environment with
-# the libkarabo dependencies installed without having the
-# Framework as an installed package.
+# $ORIGIN/../lib is needed by the loader to find 'libkarabo.so' in the install
+# tree. $ORIGIN/../extern/lib is needed to find third-party dependencies like
+# 'libboost_*.so'.
 set_target_properties(
     ${BROKER_RATES_EXECUTABLE} PROPERTIES
-    INSTALL_RPATH "$ORIGIN/../lib;${CMAKE_PREFIX_PATH}/lib"
+    INSTALL_RPATH "$ORIGIN/../lib;$ORIGIN/../extern/lib"
 )
 
 install(TARGETS ${BROKER_RATES_EXECUTABLE}
