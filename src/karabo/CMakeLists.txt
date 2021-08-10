@@ -18,7 +18,7 @@
 #                    environment in this repository at the path
 #                    "../../conda-recipes/karabo-cpp/environment.devenv.yml".
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.14)
 
 # Returns a list with all the paths in the input list modified so
 # the current value of CMAKE_PREFIX_PATH in the input path is replaced
@@ -36,6 +36,116 @@ function(make_relative_to_cmake_prefix_path INPUT_LIST OUTPUT_LIST)
     endforeach()
     set(${OUTPUT_LIST} "${AUX_LIST}" PARENT_SCOPE)
 endfunction()
+
+
+# Updates the Conda Environment with the Framework C++ dependencies whenever
+# its yml definition file, "conda-recipes/karabo-cpp/environment.devenv.yml",
+# changes. Only does the update if the Conda env with the dependencies exists,
+# is used by the build (its path is in CMAKE_PREFIX_PATH) and the build is not
+# part of a Conda Build execution (environment var CONDA_BUILD is not defined).
+#
+# The update relies on a custom command that depends on the environment yml
+# and that leaves a "witness" file when it runs. There's also a custom target
+# that depends on the output of the custom command (hence, on the custom
+# command). The custom target triggers the custom command on every build, but
+# the custom command only updates the Conda environment when the last change to
+# the yml environment definition file is more recent than the last change of the
+# "witness" file produced by the custom command.
+#
+# NOTE: Assumes the KARABO_LIB_TARGET_NAME is a known target at config time.
+macro (updateDependenciesCondaEnvironment)
+  if (NOT DEFINED ENV{CONDA_BUILD})
+      # This is not being run as part of a Conda Build.
+      # Perform some additional checks, like finding the Conda CLI, the Conda
+      # environment of the yml and checking that the directory of the Conda
+      # environment is contained in CMAKE_PREFIX_PATH are performed before doing
+      # the update.
+      find_program(
+          CONDA_CLI "conda"
+          HINT $ENV{HOME}/miniconda3/bin
+      )
+      if (CONDA_CLI)
+          execute_process(
+              COMMAND ${CONDA_CLI} env list
+              RESULT_VARIABLE result
+              OUTPUT_VARIABLE CONDA_ENV_LIST
+              ERROR_QUIET
+          )
+          if (result)
+              message(FATAL_ERROR "Error listing Conda envs: ${result}")
+          endif()
+          # Checks if the environment created to host the dependencies,
+          # "karabo-cpp", is among the known Conda environments.
+          set(KARABO_CPP_ENV_NAME "karabo-cpp")
+          string(LENGTH KARABO_CPP_ENV_NAME KARABO_CPP_ENV_NAME_LENGTH)
+          string(FIND ${CONDA_ENV_LIST} ${KARABO_CPP_ENV_NAME} DEPEND_ENV_POS)
+          if (NOT DEPEND_ENV_POS EQUAL -1)
+              # The dependencies environment is known - checks if its path
+              # is contained in CMAKE_PREFIX_PATH.
+              math(EXPR
+                  AFTER_ENV_NAME_POS
+                  "${DEPEND_ENV_POS}+${KARABO_CPP_ENV_NAME_LENGTH}"
+              )
+              string(SUBSTRING
+                  ${CONDA_ENV_LIST}
+                  ${AFTER_ENV_NAME_POS}
+                  -1
+                  CONDA_ENV_KARABO_CPP)
+              string(STRIP ${CONDA_ENV_KARABO_CPP} CONDA_ENV_KARABO_CPP_STRIPPED)
+              string(FIND ${CONDA_ENV_KARABO_CPP_STRIPPED} "\n" ENV_EOLN_POS)
+              string(SUBSTRING
+                  ${CONDA_ENV_KARABO_CPP_STRIPPED}
+                  0
+                  ${ENV_EOLN_POS}-1
+                  CONDA_ENV_KARABO_CPP_DIR)
+              string(FIND ${CMAKE_PREFIX_PATH} ${CONDA_ENV_KARABO_CPP_DIR} ENV_DIR_POS)
+
+              if (NOT ENV_DIR_POS EQUAL -1)
+                  # The Conda env with the dependencies has been found and will
+                  # be used to find dependencies - perform an update if needed at
+                  # build time.
+                  set(
+                      CONDA_ENV_YML_FILE
+                      "${CMAKE_CURRENT_SOURCE_DIR}/../../conda-recipes/karabo-cpp/environment.devenv.yml"
+                  )
+                  set(
+                    CONDA_ENV_UPDATE_CMD
+                    ${CONDA_CLI} devenv -f ${CONDA_ENV_YML_FILE}
+                  )
+                  add_custom_command(OUTPUT DependEnvUpdateWitness.txt
+                      COMMAND ${CONDA_ENV_UPDATE_CMD}
+                      COMMAND touch DependEnvUpdateWitness.txt
+                      DEPENDS ${CONDA_ENV_YML_FILE}
+                  )
+                  add_custom_target(UpdateDependenciesEnv ALL
+                      DEPENDS DependEnvUpdateWitness.txt
+                  )
+                  add_dependencies(${KARABO_LIB_TARGET_NAME} UpdateDependenciesEnv)
+                  message(STATUS "Dependencies Conda environment update at build time will be supported!")
+                  # Perform an update of the Conda env with the dependencies at
+                  # config time if needed. To decide whether an update is needed,
+                  # a witness file, '.DependEnvUpdateWitness.txt' is used. This
+                  # file, differently from the one used at build time, is added
+                  # to the source tree (and plainly git ignored by the current
+                  # settings in the source tree).
+                  set(UPDATE_CFGTIME_WITNESS "${CMAKE_CURRENT_SOURCE_DIR}/.DependEnvUpdateWitness.txt")
+                  if (NOT EXISTS ${UPDATE_CFGTIME_WITNESS} OR ${CONDA_ENV_YML_FILE} IS_NEWER_THAN ${UPDATE_CFGTIME_WITNESS})
+                      execute_process(COMMAND ${CONDA_ENV_UPDATE_CMD})
+                      file(TOUCH ${UPDATE_CFGTIME_WITNESS})
+                      message(STATUS "Dependencies Conda environment updated at config time.")
+                  endif()
+              endif()  # if (NOT ENV_DIR_POS EQUAL - 1)
+          endif()  # if (NOT DEPEND_ENV_POS EQUAL -1)
+      else ()
+          message(
+              WARNING
+              "Conda not found - update from environment file disabled! \
+              If you're using an IDE connected to a remote server, \
+              please try to configure the CMake project from a terminal session."
+          )
+      endif()  # if (CONDA_CLI_FOUND)
+  endif()  # if(not DEFINED ENV{CONDA_BUILD})
+endmacro()
 
 include("../../cmake/cxx-options.cmake")
 include("../../cmake/karabo-lib-target-name.cmake")
@@ -103,6 +213,34 @@ project(
     LANGUAGES C CXX
 )
 
+# Define the libkarabo target
+set(EXCLUDE_DIR "/tests/")
+
+# collect the source files excluding the ones in the `tests` folder
+file(GLOB_RECURSE SOURCE_FILES "*.cc")
+foreach (TMP_PATH ${SOURCE_FILES})
+    string (FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
+    if (NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
+        list (REMOVE_ITEM SOURCE_FILES ${TMP_PATH})
+    endif ()
+endforeach()
+
+# collect the header files excluding the ones in the `tests` folder
+file(GLOB_RECURSE HDR_FILES "*.hh")
+foreach (TMP_PATH ${HDR_FILES})
+    string (FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
+    if (NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
+        list (REMOVE_ITEM HDR_FILES ${TMP_PATH})
+    endif ()
+endforeach()
+
+add_library(
+        ${KARABO_LIB_TARGET_NAME} SHARED
+        ${SOURCE_FILES}
+)
+
+updateDependenciesCondaEnvironment()
+
 # finding dependencies
 set(EXTERN_DEPS_INCLUDE "" )
 
@@ -129,6 +267,13 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${HDF5_INCLUDE_DIRS} 
 find_package(OpenSSL REQUIRED)
 list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${OpenSSL_INCLUDE_DIRS})
 
+# Force cmake to ignore any BoostConfig.cmake and boost-config.cmake that can
+# be found on the system when the local system already has Boost installed and
+# this locally installed Boost has version 1.70+ or has been compiled with the
+# boost-cmake project (details at https://cmake.org/cmake/help/latest/module/FindBoost.html).
+# For this project, we always want to find the Boost installation in the
+# CMAKE_PREFIX_PATH tree.
+set(Boost_NO_BOOST_CMAKE 1)
 find_package(Boost 1.68 EXACT REQUIRED
              COMPONENTS chrono date_time filesystem regex system thread)
 list(APPEND EXTERN_DEPS_INCLUDE_DIRS ${Boost_INCLUDE_DIRS})
@@ -150,35 +295,11 @@ list(REMOVE_DUPLICATES EXTERN_DEPS_INCLUDE_DIRS)
 
 message(STATUS "OPENSSL_INCLUDE_DIR = ${OPENSSL_INCLUDE_DIR}")
 
-set(EXCLUDE_DIR "/tests/")
-
-# collect the source files excluding the ones in the `tests` folder
-file(GLOB_RECURSE SOURCE_FILES "*.cc")
-foreach (TMP_PATH ${SOURCE_FILES})
-    string (FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-    if (NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-        list (REMOVE_ITEM SOURCE_FILES ${TMP_PATH})
-    endif ()
-endforeach()
-
-# collect the header files excluding the ones in the `tests` folder
-file(GLOB_RECURSE HDR_FILES "*.hh")
-foreach (TMP_PATH ${HDR_FILES})
-    string (FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-    if (NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-        list (REMOVE_ITEM HDR_FILES ${TMP_PATH})
-    endif ()
-endforeach()
-
-add_library(
-        ${KARABO_LIB_TARGET_NAME} SHARED
-        ${SOURCE_FILES}
-)
-
 set_target_properties(
         ${KARABO_LIB_TARGET_NAME} PROPERTIES
         VERSION ${KARABO_VERSION_MAJOR}.${KARABO_VERSION_MINOR}.${KARABO_VERSION_PATCH}
         SOVERSION ${KARABO_VERSION_MAJOR}
+        INSTALL_RPATH "$ORIGIN/../extern/lib"
 )
 
 target_compile_definitions(
@@ -204,13 +325,6 @@ target_include_directories(
 target_include_directories(
     ${KARABO_LIB_TARGET_NAME} SYSTEM
     PUBLIC "${EXTERN_DEPS_INCLUDE_DIRS}"
-)
-
-# Adding flags to the compiler regarding the RPATH
-set_target_properties(
-    ${KARABO_LIB_TARGET_NAME}
-    PROPERTIES
-    LINK_FLAGS "-Wl,-rpath,${CMAKE_LIBRARY_PATH}"
 )
 
 # Adding dependecy libraries into the karabo project
@@ -323,3 +437,4 @@ install(EXPORT "karaboLib"
 )
 
 file(WRITE "${CMAKE_BINARY_DIR}/VERSION" ${KARABO_VERSION})
+install(FILES "${CMAKE_BINARY_DIR}/VERSION" DESTINATION .)
