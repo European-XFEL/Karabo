@@ -15,9 +15,13 @@
 # BUILD_LONG_RUN_TESTING: if true (default is false), long running integration
 #                         tests are generated.
 #
-# CMAKE_PREFIX_PATH: this is used by the project that builds the karabo library.
-#                    Please take a look at "./src/karabo/CMakeLists.txt" for
-#                    further details.
+# CMAKE_PREFIX_PATH: this is used by the projects to find their external
+#                    dependencies - e.g. libkarabo depends on Boost and the
+#                    tests depend on CppUnit. The variable should point to the
+#                    directory(ies) that host the includes and libs for the
+#                    required dependencies (most likely it will be the path to
+#                    a Conda environment with all the dependencies installed as
+#                    packages).
 #
 # Example of command line to configure and generate the build:
 #
@@ -29,18 +33,20 @@
 # TODO: Add a BUILD_KARATHON variable that when true (the default) will build
 #       the Karathon library.
 
-# TODO: Move the logic that updates the Conda environment with the requirements
-#       for the Karabo library to the CMakeLists.txt at the src/karabo directory.
-
 # TODO: Add logic to update the Conda environment with the requirements for the
 #       Karathon library to the CMakeLists.txt at the src/karathon directory
 #       (the Karathon requirements Conda environment will be created).
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.14)
 
 project(
     "karabo-cpp"
     LANGUAGES C CXX
+)
+
+message(
+    STATUS
+    "Using cmake ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}"
 )
 
 include("cmake/cxx-options.cmake")
@@ -87,61 +93,6 @@ endif()
 # current CMAKE_BINARY_DIR directly because it will also output its own
 # Makefile that would clash with the one from the root directory.
 add_subdirectory(src/karabo ${CMAKE_BINARY_DIR}/karabo)
-
-# if the variable CONDA_BUILD is defined, we should not mess with the conda environment.
-if (NOT(DEFINED ENV{CONDA_BUILD}))
-# Updates the Conda Environment with the Framework C++ dependencies whenever
-# its yml definition file changes.
-#
-# This update relies on a custom command that depends on the environment yml
-# and that leaves a "witness" file when it runs. There's also a custom target
-# that depends on the output of the custom command (hence, on the custom
-# command). The custom target triggers the custom command on every build, but
-# the custom command only updates the Conda environment when the last change to
-# the yml environment definition file is more recent than the last change of the
-# "witness" file produced by the custom command.
-#
-# Some sanity checks, like finding the conda cli and the environment of the yml
-# file are performed before doing the update. Some build environments, like the
-# CI, may use a different Conda setup.
-    find_program(
-        CONDA_CLI "conda"
-        HINT $ENV{HOME}/miniconda3/bin
-    )
-    if (CONDA_CLI)
-        execute_process(
-            COMMAND ${CONDA_CLI} env list
-            RESULT_VARIABLE result
-            OUTPUT_VARIABLE CONDA_ENV_LIST
-            ERROR_QUIET
-        )
-        if (result)
-            message(FATAL_ERROR "Error listing Conda envs: ${result}")
-        endif()
-        string(FIND ${CONDA_ENV_LIST} "karabo-cpp" DEPEND_ENV_POS)
-        if (NOT DEPEND_ENV_POS EQUAL -1)
-            # The Conda env with the dependencies has been found - perform an update
-            # if needed at build time.
-            add_custom_command(OUTPUT DependEnvUpdateWitness.txt
-                COMMAND ${CONDA_CLI} devenv -f ${PROJECT_SOURCE_DIR}/conda-recipes/karabo-cpp/environment.devenv.yml
-                COMMAND touch DependEnvUpdateWitness.txt
-                DEPENDS ${PROJECT_SOURCE_DIR}/conda-recipes/karabo-cpp/environment.devenv.yml
-            )
-            add_custom_target(UpdateDependenciesEnv ALL
-                DEPENDS DependEnvUpdateWitness.txt
-            )
-            add_dependencies(${KARABO_LIB_TARGET_NAME} UpdateDependenciesEnv)
-            message(STATUS "Conda environment update from environment file will be suported!")
-        endif()  # if (DEPEND_ENV_POS != 1)
-    else ()
-        message(
-            WARNING
-            "Conda not found - update from environment file disabled! \
-            If you're using an IDE connected to a remote server, \
-            please try to configure the CMake project from a terminal session."
-        )
-    endif()  # if (CONDA_CLI_FOUND)
-endif()  # if(not DEFINED ENV{CONDA_BUILD})
 
 # The build of the Karathon Library (used by the Bound Python API).
 add_subdirectory(src/karathon ${CMAKE_BINARY_DIR}/karathon)
