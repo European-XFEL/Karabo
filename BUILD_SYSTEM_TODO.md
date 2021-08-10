@@ -7,7 +7,7 @@ Next Steps to remove Netbeans as a build system
 
 3. [X] Add device template based on `cmake`.
 
-4. [ ] add the cmake to the `auto_build_all` script. Introduce a side script, `cmake_auto_build_all` for cmake and start deprecation period for Netbeans based builds.
+4. [X] add the cmake to the `auto_build_all` script. Introduce a side script, `cmake_auto_build_all` for cmake and start deprecation period for Netbeans based builds.
 
 5. [ ] implement code coverage for CMake based builds.
 
