@@ -2,7 +2,7 @@ from asyncio import ensure_future, Future, TimeoutError
 from contextlib import contextmanager
 import sys
 import time
-from unittest import main, skipIf
+from unittest import main
 import weakref
 
 from karabo.common.states import State
@@ -21,7 +21,7 @@ from karabo.middlelayer_api.synchronization import background, sleep
 
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, sync_tst, async_tst)
-from .compat import mqtt
+from karabo.middlelayer_api.tests.compat import jms
 
 
 class Superslot(Slot):
@@ -82,10 +82,7 @@ class Remote(Device):
         self.state = State.INCREASING
         for i in range(30):
             self.counter = i
-            if mqtt:
-                await sleep(0.065)
-            else:
-                await sleep(0.05)
+            await sleep(0.05)
         self.state = State.UNKNOWN
 
     @Slot()
@@ -158,7 +155,6 @@ class LocalAbstract(Macro):
         sleep(0.1)
 
 
-
 class Tests(DeviceTest):
     @classmethod
     @contextmanager
@@ -190,13 +186,16 @@ class Tests(DeviceTest):
             d.changeit()
         self.assertEqual(self.remote.value, 3)
 
-    @skipIf(mqtt, "not supported")
     @sync_tst
     def test_disconnect(self):
         """check that we don't get updates when we're not connected"""
+        if not jms:
+            self.remote.counter = -1
+            sleep(1)
         d = getDevice("remote")
         executeNoWait(d, "count")
-        time.sleep(0.1)
+        if jms:
+            time.sleep(0.1)
         self.assertEqual(d.counter, -1)
         with updateDevice(d):
             self.assertNotEqual(d.counter, -1)
@@ -219,7 +218,7 @@ class Tests(DeviceTest):
         with getDevice("remote") as d:
             self.assertEqual(d.value, 7)
             d.value = 10
-            if mqtt:
+            if not jms:
                 updateDevice(d)
             else:
                 time.sleep(0.1)
@@ -241,7 +240,7 @@ class Tests(DeviceTest):
         self.remote.value = 7
         with getDevice("remote") as d:
             d.other = 102
-        if mqtt:
+        if not jms:
             updateDevice(d)
         else:
             time.sleep(0.1)
@@ -285,7 +284,7 @@ class Tests(DeviceTest):
         setNoWait(d, value=200, counter=300)
         self.assertEqual(self.remote.value, 0)
         self.assertEqual(self.remote.counter, 0)
-        if mqtt:
+        if not jms:
             updateDevice(d)
         else:
             time.sleep(0.1)
@@ -296,7 +295,7 @@ class Tests(DeviceTest):
         setNoWait(d, "value", 0, "counter", 0)
         self.assertEqual(self.remote.value, 200)
         self.assertEqual(self.remote.counter, 300)
-        if mqtt:
+        if not jms:
             updateDevice(d)
         else:
             time.sleep(0.1)
@@ -308,7 +307,7 @@ class Tests(DeviceTest):
         setNoWait(d, "deep.value", 400, "deep.counter", 400)
         self.assertEqual(self.remote.deep.counter, 0)
         self.assertEqual(self.remote.deep.value, 0)
-        if mqtt:
+        if not jms:
             updateDevice(d)
         else:
             time.sleep(0.1)
@@ -318,9 +317,11 @@ class Tests(DeviceTest):
     @sync_tst
     def test_waituntil(self):
         """test the waitUntil function"""
+        if not jms:
+            sleep(1)
         with getDevice("remote") as d:
             d.counter = 0
-            if mqtt:
+            if not jms:
                 updateDevice(d)
             self.assertEqual(d.counter, 0)
             executeNoWait(d, "count")
@@ -334,23 +335,23 @@ class Tests(DeviceTest):
         """test the waitWhile function"""
         with getDevice("remote") as d:
             d.counter = 0
-            if mqtt:
+            if not jms:
                 updateDevice(d)
             self.assertEqual(d.counter, 0)
             executeNoWait(d, "count")
             waitWhile(lambda: d.counter <= 10)
             self.assertGreaterEqual(d.counter, 10)
 
-    @skipIf(mqtt, "temprarily disable: timing problems")
     @sync_tst
     def test_waituntilnew(self):
         """test the waitUntilNew function"""
+        if not jms:
+            sleep(1)
         with getDevice("remote") as d:
-            if mqtt:
+            if not jms:
                 updateDevice(d)
             d.counter = 0
             executeNoWait(d, "count")
-            # Note: This is the previous set to 0
             waitUntil(lambda: d.counter == 0)
             for i in range(30):
                 waitUntilNew(d.counter)
@@ -359,6 +360,9 @@ class Tests(DeviceTest):
     @async_tst
     async def test_print(self):
         """test that macros can print via expected parameters"""
+        if not jms:
+            self.local.doNotCompressEvents = 0
+            await sleep(1)
         sys.stdout = KaraboStream(sys.stdout)
         try:
             self.assertEqual(self.local.currentSlot, "")
@@ -378,7 +382,7 @@ class Tests(DeviceTest):
         """test calling a slot"""
         with getDevice("remote") as d:
             d.value = 0
-            if mqtt:
+            if not jms:
                 updateDevice(d)
             self.assertEqual(d.value, 0)
             call("remote", "changeit")
@@ -433,11 +437,12 @@ class Tests(DeviceTest):
         await fut
         self.assertEqual(fut.result(), "NewToken")
 
-    @skipIf(mqtt, 'missing support')
     @sync_tst
     def test_queue(self):
         """test change queues of properties"""
         with getDevice("remote") as d:
+            if not jms:
+                updateDevice(d)
             executeNoWait(d, "count")
             waitUntil(lambda: d.counter == 0)
             q = Queue(d.counter)
@@ -479,7 +484,6 @@ class Tests(DeviceTest):
         del self.local.exception
         del self.local.traceback
 
-    @skipIf(mqtt, "not supported for current MQTT client")
     @async_tst
     async def test_cancel(self):
         """test proper cancellation of slots
@@ -490,6 +494,8 @@ class Tests(DeviceTest):
           * the task gets properly marked done
         Test that for both if the slot is stuck in a karabo function, or not.
         """
+        if not jms:
+            await sleep(1)
         # Rename sleep to make it clean which sleep is being used
         karabo_sleep = sleep
         d = await getDevice("local")
@@ -542,16 +548,24 @@ class Tests(DeviceTest):
                 counter -= 1
             self.assertEqual(self.local.slept_count, 2)
             self.assertEqual(self.local.cancelled_slot, Local.sleepalot)
-            assert task.done()
+            if jms:
+                assert task.done()
 
     @sync_tst
     def test_connectdevice(self):
+        if not jms:
+            sleep(1)
         self.remote.value = 123
         d = connectDevice("remote")
+        if not jms:
+            updateDevice(d)
         try:
             self.assertEqual(d.value, 123)
             self.remote.value = 456
-            waitUntil(lambda: d.value == 456, timeout=0.1)  # noqa
+            if jms:
+                waitUntil(lambda: d.value == 456, timeout=0.1)  # noqa
+            else:
+                waitUntil(lambda: d.value == 456, timeout=1.0)  # noga
         finally:
             # check that the proxy gets collected when not used anymore
             weak = weakref.ref(d)
@@ -579,48 +593,48 @@ class Tests(DeviceTest):
         with getDevice("remote") as d:
             d.value = 22
             d.lockedBy = "whoever"
-            if mqtt:
+            if not jms:
                 updateDevice(d)
             try:
                 with self.assertRaisesRegex(KaraboError, "lock"):
                     d.value = 7
-                    if mqtt:
+                    if not jms:
                         updateDevice(d)
                 self.assertEqual(d.value, 22)
             finally:
                 self.remote.lockedBy = ""
             d.value = 3
-            if mqtt:
+            if not jms:
                 updateDevice(d)
             self.assertEqual(d.value, 3)
 
     @sync_tst
     def test_lock(self):
         with getDevice("remote") as d:
-            if mqtt:
+            if not jms:
                 updateDevice(d)
             with lock(d):
                 self.assertEqual(d.lockedBy, "local")
                 with lock(d):
                     self.assertEqual(d.lockedBy, "local")
                     d.value = 33
-                    if mqtt:
+                    if not jms:
                         updateDevice(d)
                     self.assertEqual(d.value, 33)
                 self.assertEqual(d.lockedBy, "local")
-            if mqtt:
+            if not jms:
                 updateDevice(d)
             self.assertEqual(d.lockedBy, "")
 
     @sync_tst
     def test_lock_nowait(self):
         with getDevice("remote") as d:
-            if mqtt:
+            if not jms:
                 updateDevice(d)
             with lock(d, wait_for_release=False):
                 self.assertEqual(d.lockedBy, "local")
                 d.value = 33
-                if mqtt:
+                if not jms:
                     updateDevice(d)
                 self.assertEqual(d.value, 33)
             self.assertEqual(d.lockedBy, "local")
@@ -655,7 +669,8 @@ class AbstractMacroTest(DeviceTest):
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
-        cls.local = LocalAbstract(_deviceId_="local_abstract", project="test", module="test")
+        cls.local = LocalAbstract(_deviceId_="local_abstract",
+                                  project="test", module="test")
         with cls.deviceManager(lead=cls.local):
             yield
 
@@ -664,8 +679,8 @@ class AbstractMacroTest(DeviceTest):
         """test the execution of abstract macro with new state machine"""
         with await getDevice("local_abstract") as d:
             self.assertEqual(d.state, State.ON)
-
             seen = False
+
             async def show_active():
                 nonlocal d, seen
                 await waitUntil(lambda: d.state == State.MOVING)

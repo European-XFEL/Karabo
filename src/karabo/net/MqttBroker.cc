@@ -41,21 +41,21 @@ namespace karabo {
 
 
         MqttBroker::MqttBroker(const karabo::util::Hash& config)
-            : Broker(config)
-            , m_client()
-            , m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService()))
-            , m_messageHandler()
-            , m_errorNotifier()
-            , m_producerMap()
-            , m_producerMapMutex()
-            , m_consumerMap()
-            , m_consumerTimestamp()
-            , m_consumerMapMutex()
-            , m_store()
-            , m_deadlines()
-            , m_deadlineTimeout(config.get<unsigned int>("deadline"))
-            , m_timestamp(double(std::chrono::duration_cast<std::chrono::milliseconds>(
-                          std::chrono::system_clock::now().time_since_epoch()).count())) {
+                : Broker(config)
+                , m_client()
+                , m_handlerStrand(boost::make_shared<Strand>(EventLoop::getIOService()))
+                , m_messageHandler()
+                , m_errorNotifier()
+                , m_producerMap()
+                , m_producerMapMutex()
+                , m_consumerMap()
+                , m_consumerTimestamp()
+                , m_consumerMapMutex()
+                , m_store()
+                , m_deadlines()
+                , m_deadlineTimeout(config.get<unsigned int>("deadline"))
+                , m_timestamp(double(std::chrono::duration_cast<std::chrono::milliseconds>(
+                              std::chrono::system_clock::now().time_since_epoch()).count())) {
             Hash mqttConfig("brokers", m_availableBrokerUrls);
             mqttConfig.set("instanceId", m_instanceId);
             mqttConfig.set("domain", m_topic);
@@ -176,7 +176,8 @@ namespace karabo {
             }
             std::string topic = m_topic + "/signals/" + boost::replace_all_copy(signalInstanceId, "/", "|") + "/" + signalFunction;
             auto readHandler = bind_weak(&MqttBroker::mqttReadHashHandler, this, _1, _2, _3, m_messageHandler, m_errorNotifier);
-            constexpr SubOpts subopts = SubQos::AtLeastOnce;
+            // SubQos::AtLeastOnce results in performance drop.
+            constexpr SubOpts subopts = SubQos::AtMostOnce;
             m_client->subscribeAsync(topic, subopts, readHandler, completionHandler);
         }
 
@@ -251,10 +252,10 @@ namespace karabo {
             }
 
             PubOpts pubopts = PubQos::AtMostOnce;
-            if (priority >= 4) pubopts = PubQos::AtLeastOnce;
+            if (priority >= 4) pubopts = PubQos::AtLeastOnce;  // Strange but it has no influence onto performance 
 
-            KARABO_LOG_FRAMEWORK_TRACE << "*** write TARGET = \"" << target << "\", topic=\"" << m_topic
-                    << "\"...\n... and HEADER is \n" << *header;
+            KARABO_LOG_FRAMEWORK_TRACE << "*** write TARGET = \"" << target << "\", topic=\""
+                    << m_topic << "\"...\n... and HEADER is \n" << *header;
 
             boost::mutex::scoped_lock lock(m_producerMapMutex);
 
@@ -347,9 +348,7 @@ namespace karabo {
                     }
                     topic = m_topic + "/slots/" + boost::replace_all_copy(slotInstanceId, "/", "|");
 
-                    if (pubopts.getPubQos() != PubQos::AtMostOnce) {
-                        setOrderNumbers(slotInstanceId, header);
-                    }
+                    setOrderNumbers(slotInstanceId, header);
 
                 } else {
                     // ************************** emit **************************
@@ -363,10 +362,7 @@ namespace karabo {
 
                     topic = m_topic + "/signals/" + boost::replace_all_copy(signalInstanceId, "/", "|") + "/" + signalFunction;
 
-                    if (pubopts.getPubQos() != PubQos::AtMostOnce) {
-                        // slotInstanceIds here is stripped: DataLogger-karabo/dataLogger||dataAggregator1
-                        setOrderNumbers(slotInstanceIds, header);
-                    }
+                    setOrderNumbers(slotInstanceIds, header);
 
                 }
             }
@@ -470,10 +466,10 @@ namespace karabo {
             std::vector<std::string> topics;
             std::vector<SubOpts> options;
             topics.push_back(m_topic + "/slots/" + id);
-            options.push_back(SubQos::AtLeastOnce);
+            options.push_back(SubQos::AtMostOnce);
             if (m_consumeBroadcasts) {
                 topics.push_back(m_topic + "/global_slots");
-                options.push_back(SubQos::AtLeastOnce);
+                options.push_back(SubQos::ExactlyOnce);
             }
             registerMqttTopics(topics, options, handler, errorNotifier);
         }
@@ -582,30 +578,15 @@ namespace karabo {
 
             } else if (recvNumber > (m_consumerMap[producerId] + 1)) {
 
+                // special case ... 1st message is out-of-order? No... previous incarnation ...
+                if (m_consumerMap[producerId] == 0) {
+                    m_consumerMap[producerId] = recvNumber;
+                    m_handlerStrand->post(callback);
+                    return;
+                }
+
                 // Put to 'm_store' of pending messages for reordering
                 m_store[producerId][recvNumber] = std::make_pair(producerTimestamp, callback);
-                // special case ... 1st message is out-of-order
-                if (m_consumerMap[producerId] == 0) {
-                    // GF:
-                    // First message that our current incarnation receives from producer that communicated with a
-                    // previous incarnation of us. Wait a little in case it is out-of-order and a previous message
-                    // is still going to come.
-
-                    // report to the log ...
-                    const std::string& signal = header->get<std::string>("signalFunction");
-                    const boost::optional<Hash::Node&> slotFuncNode = header->find("slotFunctions");
-                    const std::string& slotFunctions = (slotFuncNode ? slotFuncNode->getValue<std::string>() : "");
-                    KARABO_LOG_FRAMEWORK_INFO << "1st message from \"" << producerId
-                            << ":" << signal << "\" via topic: \"" << topic << "\" to \""
-                            << slotFunctions << "\"";
-                    // NOTE: questionable optimization (observation), but currently works in karabo
-                    if (topic.find("/slots/") != std::string::npos) {
-                        m_consumerMap[producerId] = m_store[producerId].begin()->first - 1;
-                    } else {
-                        // wait for other messages to reorder via 'm_store' or force to synchronize
-                        setDeadline(producerId);        // arm deadline timer if not armed yet
-                    }
-                }
 
 	    } else {
 
@@ -615,29 +596,36 @@ namespace karabo {
 
             }
 
-            handleStore(producerId);
+            handleStore(producerId, recvNumber);
         }
 
 
-        void MqttBroker::handleStore(const std::string& producerId) {
+        void MqttBroker::handleStore(const std::string& producerId, long long recvNumber) {
             // Try to resolve possible ordering problem
             for (auto it = m_store[producerId].begin(); it != m_store[producerId].end(); ) {
                 // Check if timestamp is valid ...
-                if (it->second.first != m_consumerTimestamp[producerId]) {
-                    ++it;
-                    continue;
-                }
-                if (it->first > (m_consumerMap[producerId] + 1)) {
-                    auto ri = m_store[producerId].rbegin();
-                    KARABO_LOG_FRAMEWORK_WARN << "*** JAM in \"" << m_instanceId << "\" for \"" << producerId
-                            << "\", store size: "
-                            << m_store[producerId].size() << ", low #" << it->first << ", high #" << ri->first
-                            << ", waited order number=" << (m_consumerMap[producerId] + 1);
-                    break;
-                }
-                if (it->first == (m_consumerMap[producerId] + 1)) {
-                    m_consumerMap[producerId] = it->first;
-                    m_handlerStrand->post(std::move(it->second.second)); // dispatch callback
+                if (it->second.first == m_consumerTimestamp[producerId]) {
+                    long long currentNumber = it->first;
+                    if (currentNumber > (m_consumerMap[producerId] + 1)) {
+                        // Maximal number in store
+                        long long maxNumber = m_store[producerId].rbegin()->first;
+                        // Last inserted number is not max number ...
+                        if (maxNumber != recvNumber) break;
+                        size_t size = m_store[producerId].size();
+                        if (size < 2) {
+                            KARABO_LOG_FRAMEWORK_WARN << "*** JAM in \""
+                                    << m_instanceId << "\" for \"" << producerId
+                                    << "\", store size: " << size << ", low #"
+                                    << currentNumber << ", high #" << maxNumber
+                                    << ", awaited order number=" << (m_consumerMap[producerId] + 1);
+                            break;
+                        }
+                        m_consumerMap[producerId] = currentNumber - 1;
+                    }
+                    if (currentNumber == (m_consumerMap[producerId] + 1)) {
+                        m_consumerMap[producerId] = currentNumber;
+                        m_handlerStrand->post(std::move(it->second.second)); // dispatch callback
+                    }
                 }
                 it = m_store[producerId].erase(it);
             }
@@ -652,36 +640,6 @@ namespace karabo {
                     it = m_store[producerId].erase(it);
                 }
             }
-        }
-
-
-        void MqttBroker::setDeadline(const std::string& producerId) {
-            // Check if deadline timer is set for producerId ....
-            if (m_deadlines.find(producerId) != m_deadlines.end()) return;
-            auto dl = boost::make_shared<boost::asio::deadline_timer>(EventLoop::getIOService());
-            m_deadlines[producerId] = dl;
-            dl->expires_from_now(boost::posix_time::milliseconds(m_deadlineTimeout));
-            auto wself = weak_from_this();
-            dl->async_wait([wself, this, producerId](const boost::system::error_code& ec) {
-                auto self = wself.lock();
-                if (!self) return;
-                // It runs on EventLoop so needs to be protected...
-                boost::mutex::scoped_lock lock(m_consumerMapMutex);
-                if (ec) {
-                    // "Operation cancelled"
-                    m_deadlines.erase(producerId);
-                    return;
-                }
-                if (!m_store[producerId].empty()) {
-                    // Still need to be synchronized?
-                    if (m_consumerMap[producerId] == 0) {
-                        // try to synchronize with producer
-                        m_consumerMap[producerId] = m_store[producerId].begin()->first - 1;
-                        handleStore(producerId);
-                    }
-                }
-                m_deadlines.erase(producerId);
-            });
         }
 
 

@@ -506,6 +506,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             """
             self._used -= 1
             if self._used == 0:
+                self._disconnectSchemaUpdated()
                 signals = ["signalChanged", "signalStateChanged"]
                 self._device._ss.disconnect(self._deviceId, signals,
                                             self._device.slotChanged)
@@ -526,6 +527,7 @@ class DeviceClientProxyFactory(ProxyFactory):
             """
             self._used -= 1
             if self._used == 0:
+                await self._async_disconnectSchemaUpdated()
                 signals = ["signalChanged", "signalStateChanged"]
                 await self._device._ss.async_disconnect(
                         self._deviceId, signals, self._device.slotChanged)
@@ -537,6 +539,13 @@ class DeviceClientProxyFactory(ProxyFactory):
                     self._device.slotSchemaUpdated)
             self._schemaUpdateConnected = False
 
+        async def _async_disconnectSchemaUpdated(self):
+            if self._schemaUpdateConnected:
+                await self._device._ss.async_disconnect(
+                    self._deviceId, ["signalSchemaUpdated"],
+                    self._device.slotSchemaUpdated)
+            self._schemaUpdateConnected = False
+
         def __del__(self):
             # Note: In rare cases, e.g. command line, the broker connection
             # is already gone when we are collected, hence we do not throw
@@ -544,8 +553,6 @@ class DeviceClientProxyFactory(ProxyFactory):
             outputs = list(self._remote_output_channel)
             for channel in outputs:
                 channel.disconnect()
-            with suppress(OMQError):
-                self._disconnectSchemaUpdated()
             if self._used > 0:
                 # set the used variable to 1 for a clean disconnect in exit
                 self._used = 1
