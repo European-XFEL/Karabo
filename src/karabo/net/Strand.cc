@@ -41,7 +41,7 @@ namespace karabo {
         void Strand::post(boost::function<void()>&& handler) {
 
             boost::mutex::scoped_lock lock(m_tasksMutex);
-            m_tasks.push(std::move(handler));
+            m_tasks.push(std::move(handler)); // actually forward the rvalue-ness
 
             startRunningIfNeeded(); // needs mutex to be locked!
         }
