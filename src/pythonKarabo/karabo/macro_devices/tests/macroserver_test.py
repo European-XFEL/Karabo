@@ -2,8 +2,9 @@ from contextlib import closing
 from unittest import TestCase, main
 import uuid
 
-from karabo.middlelayer import call, getDevice, sleep
+from karabo.middlelayer import call, getDevice, sleep, updateDevice
 from karabo.middlelayer_api.tests.eventloop import setEventLoop
+from karabo.middlelayer_api.tests.compat import jms
 from karabo.native import Hash
 
 from ..macro_server import MacroServer
@@ -55,6 +56,8 @@ class Tests(TestCase):
         await server.call(TEST_MACROSERVER, "slotStartDevice", h)
         proxy = await getDevice(f"bla-{uuid_}-TestMacro")
         with proxy:
+            if not jms:
+                await updateDevice(proxy)
             await proxy.do()
             self.assertEqual(proxy.s.value, expected)
         await server.call(proxy.deviceId, "slotKillDevice")
