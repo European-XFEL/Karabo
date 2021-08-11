@@ -1,7 +1,7 @@
 """ This module contains the type hierarchy implied by the Karabo hash.
 """
 from asyncio import (
-    ensure_future, get_event_loop, iscoroutinefunction)
+    get_event_loop, iscoroutinefunction)
 from enum import Enum
 from functools import partial, wraps
 import numbers

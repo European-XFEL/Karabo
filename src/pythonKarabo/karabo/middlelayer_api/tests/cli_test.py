@@ -17,6 +17,7 @@ from karabo.middlelayer_api.ikarabo import (
 from karabo.middlelayer_api.macro import Macro, EventThread, RemoteDevice
 
 from karabo.middlelayer_api.tests.eventloop import setEventLoop
+from karabo.middlelayer_api.tests.compat import amqp
 
 
 class Remote(Macro):
@@ -81,7 +82,7 @@ class Tests(TestCase):
             self.assertTrue(Remote.destructed)
         finally:
             thread.stop()
-            thread.join(0.1)
+            thread.join(0.5)
             self.assertFalse(thread.is_alive())
 
     def test_main(self):
@@ -132,7 +133,7 @@ class Tests(TestCase):
             del self.other
         finally:
             thread.stop()
-            thread.join(0.1)
+            thread.join(0.5)
             self.assertFalse(thread.is_alive())
     test_autodisconnect.slow = 1
 
@@ -142,7 +143,10 @@ class Tests(TestCase):
         self.assertNotIn("other", getClients())
         self.assertNotIn("other", getDevices("tserver"))
         await other.startInstance()
-        await sleep(0.1)
+        if amqp:
+            await sleep(2.0)
+        else:
+            await sleep(0.1)
         self.assertIn("other", getDevices())
         self.assertIn("other", getDevices("tserver"))
         self.assertNotIn("other", findDevices("beep"))
@@ -161,6 +165,7 @@ class Tests(TestCase):
         await shutdown("other")
         self.assertNotIn("other", getDevices())
 
+    # @skipIf(amqp, "fails for amqp")
     def test_topology(self):
         loop = setEventLoop()
         with closing(loop):
@@ -182,7 +187,7 @@ class Tests(TestCase):
         finally:
             if thread is not None:
                 thread.stop()
-                thread.join(0.1)
+                thread.join(0.5)
                 self.assertFalse(thread.is_alive())
 
 

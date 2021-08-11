@@ -160,10 +160,10 @@ namespace karabo {
                         [this, h {std::move(handler)}] (const boost::system::error_code ec) {
                             // Direct call looking more reasonable fails to work so ...
                             // ... call via event loop ...
-                            m_ios->post(boost::bind(h, ec));
+                            post(boost::bind(h, ec));
                     }));
                 } else {
-                    m_ios->post(boost::bind(handler, KARABO_ERROR_CODE_NOT_CONNECTED));
+                    post(boost::bind(handler, KARABO_ERROR_CODE_NOT_CONNECTED));
                 }
             }
 

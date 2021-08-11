@@ -7,7 +7,8 @@ from karabo.middlelayer_api.device import Device
 from karabo.native import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro, Monitor, RemoteDevice
 
-from .eventloop import DeviceTest, sync_tst
+from karabo.middlelayer_api.tests.eventloop import DeviceTest, sync_tst
+from karabo.middlelayer_api.tests.compat import amqp
 
 
 class Remote(Device):
@@ -63,7 +64,10 @@ class Tests(DeviceTest):
     def test_count(self):
         self.local.startA()
         self.local.startB()
-        time.sleep(0.2)
+        if amqp:
+            time.sleep(1.0)
+        else:
+            time.sleep(0.3)
         for i in range(30):
             self.assertEqual(self.local.division,
                              self.remA.counter // self.remB.counter)
