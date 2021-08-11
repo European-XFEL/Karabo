@@ -558,15 +558,6 @@ namespace karabo {
              */
             virtual std::vector<ReadHashHandler> getSubscribeHandler(const std::string& topic) const = 0;
 
-            /**
-             * Posting on internal event loop if needed asynchronous behavior
-             * @param token
-             */
-            template<typename CompletionToken>
-            void post(CompletionToken&& token) {
-                m_ios->post(token);
-            }
-
             static std::string getUuidAsString();
 
         protected:
@@ -641,6 +632,20 @@ namespace karabo {
                 publishAsync(topic, msg, options, onComplete);
             }
 
+            /**
+             * Dispatch functor on MQTT event loop
+             * @param token
+             */
+            template<typename CompletionToken>
+            void dispatch(CompletionToken&& token) {
+                m_ios->dispatch(token);
+            }
+
+            template<typename CompletionToken>
+            void post(CompletionToken&& token) {
+                m_ios->post(token);
+            }
+
 
         private:
 
@@ -649,7 +654,6 @@ namespace karabo {
         protected:
 
             boost::shared_ptr<boost::asio::io_context> m_ios;
-            boost::shared_ptr<boost::asio::io_context::work> m_work;
             boost::shared_ptr<boost::thread> m_thread;
             std::vector<std::string> m_brokerUrls;
             std::string m_domain;
