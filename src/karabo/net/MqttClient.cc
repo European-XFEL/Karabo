@@ -1,5 +1,6 @@
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/VectorElement.hh"
+#include "karabo/net/EventLoop.hh"
 #include "MqttClient.hh"
 
 using namespace karabo::util;
@@ -60,7 +61,6 @@ namespace karabo {
 
         MqttClient::MqttClient(const karabo::util::Hash& input)
             : m_ios(boost::make_shared<boost::asio::io_context>())
-            , m_work()
             , m_thread()
             , m_brokerUrls()
             , m_domain()
@@ -86,10 +86,10 @@ namespace karabo {
             // refactored, i.e. the CPPUNIT_ASSERT have to be moved from handlers
             // to the test function (since the Karabo event loop threads catch exceptions).
 
-            m_work = boost::make_shared<boost::asio::io_context::work>(*m_ios);
             m_thread = boost::make_shared<boost::thread>(
                     [this]
                     () {
+                        boost::asio::io_context::work work(*m_ios);
                         m_ios->run();
                     });
         }

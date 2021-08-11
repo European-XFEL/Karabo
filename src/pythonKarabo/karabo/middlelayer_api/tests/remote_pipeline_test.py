@@ -1,14 +1,14 @@
-from asyncio import Future, sleep, wait_for
+from asyncio import Future, sleep
 from contextlib import contextmanager
-from unittest import main
+from unittest import main, skipIf
 
 from karabo.middlelayer import (
     AccessMode, AccessLevel, Assignment,  Bool, call, Configurable, coslot,
     Device, getDevice, Hash, isAlive, InputChannel, Int32, Overwrite,
     OutputChannel, setWait, Slot, State, Timestamp, UInt32, updateDevice,
     waitUntil)
-from .eventloop import DeviceTest, async_tst
-from .compat import mqtt
+from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
+from karabo.middlelayer_api.tests.compat import jms, amqp
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 
@@ -179,6 +179,7 @@ class RemotePipelineTest(DeviceTest):
             await waitUntil(lambda: self.bob.received == 3)
             self.assertEqual(self.bob.received, 3)
 
+    @skipIf(amqp, "no support yet")
     @async_tst
     async def test_output_reconnect(self):
         """Test the output reconnect of a proxy"""
@@ -187,7 +188,7 @@ class RemotePipelineTest(DeviceTest):
         await output_device.startInstance()
 
         with (await getDevice("outputdevice")) as proxy:
-            if mqtt:
+            if not jms:
                 await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             received = False
@@ -260,6 +261,7 @@ class RemotePipelineTest(DeviceTest):
 
         await output_device.slotKillDevice()
 
+    @skipIf(amqp, "no support yet")
     @async_tst
     async def test_output_reconnect_device(self):
         """Test the output reconnect of a device"""
@@ -271,7 +273,7 @@ class RemotePipelineTest(DeviceTest):
 
         NUM_DATA = 5
         with (await getDevice("outputdevice")) as proxy:
-            if mqtt:
+            if not jms:
                 await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             self.assertEqual(receiver.received, 0)
@@ -304,6 +306,7 @@ class RemotePipelineTest(DeviceTest):
         await output_device.slotKillDevice()
         await receiver.slotKillDevice()
 
+    @skipIf(amqp, "no support yet")
     @async_tst
     async def test_output_change_schema(self):
         """Test the output schema change of a device"""
@@ -315,7 +318,7 @@ class RemotePipelineTest(DeviceTest):
 
         NUM_DATA = 5
         with (await getDevice("outputdevice")) as proxy:
-            if mqtt:
+            if not jms:
                 await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             self.assertEqual(receiver.received, 0)
@@ -345,6 +348,7 @@ class RemotePipelineTest(DeviceTest):
         await output_device.slotKillDevice()
         await receiver.slotKillDevice()
 
+    @skipIf(amqp, "no support yet")
     @async_tst
     async def test_output_timestamp(self):
         """Test the meta data timestamp of a proxy"""
@@ -353,7 +357,7 @@ class RemotePipelineTest(DeviceTest):
         await output_device.startInstance()
 
         with (await getDevice("outputdevice")) as proxy:
-            if mqtt:
+            if not jms:
                 await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             proxy.output.connect()
@@ -377,6 +381,7 @@ class RemotePipelineTest(DeviceTest):
         del proxy
         await output_device.slotKillDevice()
 
+    @skipIf(amqp, "no support yet")
     @async_tst
     async def test_output_proxy_connected_close_handler(self):
         """Test the output connected and close handler of a proxy"""
@@ -401,7 +406,7 @@ class RemotePipelineTest(DeviceTest):
             connected_name = channel_name
 
         with (await getDevice("outputdevice")) as proxy:
-            if mqtt:
+            if not jms:
                 await updateDevice(proxy)
             self.assertTrue(isAlive(proxy))
             proxy.output.setConnectHandler(connect_handler)
@@ -426,6 +431,7 @@ class RemotePipelineTest(DeviceTest):
         self.assertEqual(closed, True)
         self.assertEqual(closed_name, "outputdevice:output")
 
+    @skipIf(amqp, "no support yet")
     @async_tst
     async def test_multi_shared_pipelines(self):
         """Test the shared queue for multiple shared consumers"""
@@ -464,7 +470,7 @@ class RemotePipelineTest(DeviceTest):
         self.assertEqual(delta.received, 0)
         proxy = await getDevice("alice")
         with proxy:
-            if mqtt:
+            if not jms:
                 await updateDevice(proxy)
             await proxy.sendData()
             await waitUntil(lambda: self.bob.received == 1)
