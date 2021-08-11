@@ -91,6 +91,7 @@ namespace karabo {
             m_client->set_keep_alive_sec_ping_ms(m_keepAlive, size_t(m_pingInterval));
             m_client->set_will(*m_will);
 
+            m_client->set_auto_pub_response(true);
             // Register broker "handshake" handler 'handleConnect'
             m_client->set_connack_handler(bind_weak(&MqttCppClient::handleConnect, this, _1, _2, onConnect));
             m_client->set_error_handler(bind_weak(&MqttCppClient::handleError, this, _1));
@@ -114,19 +115,18 @@ namespace karabo {
             //"async_connect" requires that "set" functions are called above
             // Establish physical TCP connection to the broker...
             m_client->async_connect(
-                [wptr{weak_from_this()}, onConnect{std::move(onConnect)}]
+                [this, wptr{weak_from_this()}, onConnect{std::move(onConnect)}]
                 (const MQTT_NS::error_code& ec) {
                     auto ptr = wptr.lock();
                     if (!ptr) return;
-                    auto that = boost::static_pointer_cast<MqttCppClient>(ptr);
                     // Check if physical TCP connection is established
                     if (ec) {
-                        if (that->m_brokerIndex < that->m_brokerUrls.size() - 1) {
+                        if (m_brokerIndex < m_brokerUrls.size() - 1) {
                             // Fail to connect ... try the next broker in the list
-                            that->createClientForUrl(that->m_brokerUrls[++that->m_brokerIndex], onConnect);
+                            createClientForUrl(m_brokerUrls[++m_brokerIndex], onConnect);
                         } else {
                             // Fail to connect after checking all brokers
-                            that->m_ios->post(boost::bind(onConnect, ec));
+                            dispatch(boost::bind(onConnect, ec));
                         }
                     }
                     // Success! Nothing to do here ... the "handshake" handler
@@ -143,7 +143,7 @@ namespace karabo {
             // If the client is already connected, calls the m_onConnect handler
             if (this->isConnected()) {
                 if (onConnect) {
-                    m_ios->post(boost::bind(onConnect, KARABO_ERROR_CODE_ALREADY_CONNECTED));
+                    dispatch(boost::bind(onConnect, KARABO_ERROR_CODE_ALREADY_CONNECTED));
                 }
                 return;
             }
@@ -242,10 +242,10 @@ namespace karabo {
                     // Replace ReadHashHandler only in the tuple ...
                     // The tuple (it->second) is 0 - wildcard flag, 1 - subscription flag, 2 - ReadHashHandler
                     std::get<1>(it->second) = std::move(onRead);
-                    if (onComplete) m_ios->post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                    if (onComplete) dispatch(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
                 }
             } else {
-                if (onComplete) m_ios->post(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
+                if (onComplete) dispatch(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
             }
         }
 
@@ -275,7 +275,7 @@ namespace karabo {
 
         void MqttCppClient::subscribeAsync(const TopicSubOptions& params, const AsyncHandler& onComplete) {
             if (!isConnected()) {
-                if (onComplete) m_ios->post(boost::bind(onComplete,KARABO_ERROR_CODE_NOT_CONNECTED));
+                if (onComplete) dispatch(boost::bind(onComplete,KARABO_ERROR_CODE_NOT_CONNECTED));
                 return;
             }
 
@@ -308,7 +308,7 @@ namespace karabo {
                 // Subscription
                 auto handler = bind_weak(&MqttCppClient::handleManySubscriptions,
                                          this, KARABO_ERROR_CODE_SUCCESS, onComplete, params);
-                m_ios->post(handler);
+                dispatch(handler);
             }
         }
 
@@ -330,7 +330,7 @@ namespace karabo {
 
         void MqttCppClient::unsubscribeAsync(const std::string& topic, const AsyncHandler& onComplete) {
             if (!isConnected()) {
-                if (onComplete) m_ios->post(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
+                if (onComplete) dispatch(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
                 return;
             }
             std::lock_guard<std::mutex> lock(m_subscriptionsMutex);
@@ -347,7 +347,7 @@ namespace karabo {
                 auto handler = bind_weak(&MqttCppClient::handleUnsubscription, this, _1, onComplete, topic);
                 performAsyncOperation(op, handler);
             } else {
-                if (onComplete) m_ios->post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                if (onComplete) dispatch(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
             }
         }
 
@@ -370,7 +370,7 @@ namespace karabo {
         void MqttCppClient::unsubscribeAsync(const std::vector<std::string>& topics, const AsyncHandler& onComplete) {
             if (!isConnected()) {
                 if (onComplete) {
-                    m_ios->post(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
+                    dispatch(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
                 }
                 return;
             }
@@ -402,7 +402,7 @@ namespace karabo {
                 performAsyncOperation(op, handler);
             } else {
                 // Nothing to un-subscribe
-                if (onComplete) m_ios->post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                if (onComplete) dispatch(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
             }
         }
 
@@ -424,7 +424,7 @@ namespace karabo {
 
         void MqttCppClient::unsubscribeAllAsync(const AsyncHandler& onComplete) {
             if (!isConnected()) {
-                if (onComplete) m_ios->post(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
+                if (onComplete) dispatch(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
                 return;
             }
             std::vector<std::string> allsubscriptions;
@@ -488,14 +488,20 @@ namespace karabo {
 
             if (packetId) {
                 auto op = [this, spTopic, spPayload, pubopts{std::move(pubopts)}, packetId] {
-                    m_client->async_publish(packetId, buffer(*spTopic), buffer(*spPayload), pubopts,
-                                            std::make_pair(spTopic, spPayload));
+                    m_client->async_publish(packetId, buffer(*spTopic), buffer(*spPayload),
+                                            pubopts, std::make_pair(spTopic, spPayload));
                     return packetId;
                 };
                 performAsyncOperation(op, onComplete);
             } else {
-                m_client->async_publish(0, buffer(*spTopic), buffer(*spPayload), pubopts,
-                                        std::make_pair(spTopic, spPayload), onComplete);
+                dispatch
+                (
+                    [this, spTopic, spPayload, pubopts, onComplete]
+                    () {
+                        m_client->async_publish(0, buffer(*spTopic), buffer(*spPayload), pubopts,
+                                                std::make_pair(spTopic, spPayload), onComplete);
+                    }
+                );
             }
         }
 
@@ -538,7 +544,7 @@ namespace karabo {
             };
             auto ec = errc::make_error_code(ecode);
             if (onConnect) {
-                m_ios->post(boost::bind(onConnect, ec));
+                dispatch(boost::bind(onConnect, ec));
             }
             if (!ec) {
                 resetRequestTimeoutTimer();
@@ -673,7 +679,7 @@ namespace karabo {
             if (it != m_subscriptionsMap.end()) {
                 if (std::get<1>(it->second)) {
                     auto hash = deserializeFrom(contents);
-                    m_ios->post(
+                    post(
                         [handler{std::get<1>(it->second)}, topic{std::move(topic)}, hash{std::move(hash)}]
                         () {
                             if (handler) handler(errc::make_error_code(errc::success), topic, hash);
@@ -686,7 +692,7 @@ namespace karabo {
                 if (mqtttools::topicMatches(kv.first, topic)) {
                     if (std::get<1>(kv.second)) {
                         auto hash = deserializeFrom(contents);
-                        m_ios->post(
+                        post(
                             [handler{std::get<1>(kv.second)}, topic{std::move(topic)}, hash{std::move(hash)}]
                             () {
                                 if (handler) handler(errc::make_error_code(errc::success), topic, hash);
