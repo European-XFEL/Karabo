@@ -179,7 +179,7 @@ namespace karabo {
 
             void setOrderNumbers(const std::string& consumers, const karabo::util::Hash::Pointer& header);
 
-            void handleStore(const std::string& producerId);
+            void handleStore(const std::string& producerId, long long lastReceivedNumber);
 
             /**
              * Remove all entries in m_store[producerId] that have timestamp field
@@ -188,8 +188,6 @@ namespace karabo {
              * @param validTimestamp
              */
             void cleanObsolete(const std::string& producerId, const double validTimestamp);
-
-            void setDeadline(const std::string& producerId);
 
         protected:
 
