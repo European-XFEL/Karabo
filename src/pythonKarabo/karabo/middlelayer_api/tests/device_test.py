@@ -1,6 +1,6 @@
 from asyncio import sleep
 from contextlib import contextmanager
-from unittest import main
+from unittest import main, skipIf
 
 import numpy as np
 
@@ -17,8 +17,10 @@ from karabo.middlelayer_api.utils import get_property
 
 from karabo import __version__ as karaboVersion
 
-from .eventloop import async_tst, DeviceTest, sync_tst
-from .compat import mqtt
+from karabo.middlelayer_api.tests.eventloop import (
+        async_tst, DeviceTest, sync_tst
+        )
+from karabo.middlelayer_api.tests.compat import mqtt, jms, redis
 
 
 class RowSchema(Configurable):
@@ -202,7 +204,7 @@ class Tests(DeviceTest):
     async def test_lastCommand(self):
         self.assertEqual(self.myDevice.lastCommand, "")
         with (await getDevice("MyDevice")) as d:
-            if mqtt:
+            if not jms:
                 await updateDevice(d)
             await d.start()
         self.assertEqual(self.myDevice.lastCommand, "start")
@@ -213,7 +215,7 @@ class Tests(DeviceTest):
     async def test_two_calls_concurrent(self):
         self.assertEqual(self.myDevice.counter, 0)
         with (await getDevice("MyDevice")) as d:
-            if mqtt:
+            if not jms:
                 await updateDevice(d)
             await d.increaseCounter()
             await waitUntil(lambda: d.state != State.ON)
@@ -229,7 +231,7 @@ class Tests(DeviceTest):
     @async_tst
     async def test_clear_table_external(self):
         with (await getDevice("MyDevice")) as d:
-            if mqtt:
+            if not jms:
                 await updateDevice(d)
             dtype = d.table.descriptor.dtype
             current_value = np.array((2.0, 5.6), dtype=dtype)
@@ -253,7 +255,7 @@ class Tests(DeviceTest):
     @async_tst
     async def test_allowed_state_reconfigure_nodes(self):
         with (await getDevice("MyDevice")) as d:
-            if mqtt:
+            if not jms:
                 await updateDevice(d)
             self.assertEqual(d.noded.floatProperty, 10.0)
             await setWait(d, 'noded.floatProperty', 27.0)
@@ -322,9 +324,12 @@ class Tests(DeviceTest):
         with self.assertRaises(KeyError):
             await device.slotGetOutputChannelInformationFromHash(info)
 
+    @skipIf(redis or mqtt, "not supported")
     @async_tst
     async def test_applyRunTimeUpdates(self):
         with (await getDevice("MyDevice")) as d:
+            if not jms:
+                await updateDevice(d)
             self.assertEqual(d.counter.descriptor.minInc, 0)
             self.assertEqual(d.counter.descriptor.maxInc, 2000)
 
@@ -335,6 +340,8 @@ class Tests(DeviceTest):
         self.assertTrue(reply['success'])
 
         with (await getDevice("MyDevice")) as d:
+            if not jms:
+                await updateDevice(d)
             self.assertEqual(d.counter.descriptor.minInc, 0)
             self.assertEqual(d.counter.descriptor.maxInc, 100)
 
