@@ -146,7 +146,7 @@ development directly from the distributed platform:
 
 
 ==================== ================= =========================================================== ===================== =========================
-**library**          **version**       **license**                                                 **Karabo linked**     **KaraboGUI linked**
+**library**          **version**       **license**                                                 **Karabo depends**    **KaraboGUI depends**
 ==================== ================= =========================================================== ===================== =========================
 aio-pika             6.8.0             APL2.0                                                      yes                   no
 aioredis             1.3.1             MIT                                                         yes                   no
@@ -171,8 +171,8 @@ daemontools-encore   1.10-karabo3      MIT                                      
 dateutil             2.8.1             apache/BSD                                                  no                    yes
 decorator            4.4.2             BSDv2                                                       yes                   yes
 dill                 0.2.5             BSD-3                                                       yes                   yes
-eulexistdb           0.21.1            APL2.0                                                      yes                   no
-eulxml               1.1.3             APL2.0                                                      yes                   no
+eulexistdb           0.21.1            APL2.0                                                      no                    no
+eulxml               1.1.3             APL2.0                                                      no                    no
 eXistDB              2.2               LGPL                                                        no                    no
 flake8               3.8.4             MIT                                                         no                    no
 flaky                3.7.0             APL2.0                                                      no                    no
@@ -249,8 +249,8 @@ pytz                 2013.9            MIT                                      
 PyYAML               3.12              MIT                                                         no                    no
 pyzmq                17.0.0            LGPL+BSD                                                    yes                   yes
 qtconsole            4.2.1             BSD                                                         yes                   yes
-redisclient          1.0.2dev          MIT                                                         no                    no
-requests             2.19.1            APLv2                                                       yes                   no
+redisclient          1.0.2dev          MIT                                                         yes                   no
+requests             2.19.1            APLv2                                                       no                    no
 rpathology           0.0.1             MIT                                                         no                    no
 scikit-learn         0.14.1            BSD                                                         no                    no
 scipy                1.5.4             BSD                                                         no                    no
