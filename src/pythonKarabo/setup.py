@@ -131,10 +131,16 @@ else:
             'UnstoppedThreadDevice=karabo.integration_tests.device_comm_test.unstoppedThreadDevice:UnstoppedThreadDevice',
         ],
         'karabo.project_db': [
-            'exist_db=karabo.project_db.exist_db.node:DbConnectionNode',
             'file_db=karabo.project_db.file_db.node:DbConnectionNode',
         ],
     }
+    try:
+        import eulexistdb
+        install_args['entry_points']['karabo.project_db'].append(
+            'exist_db=karabo.project_db.exist_db.node:DbConnectionNode'
+        )
+    except ImportError:
+        pass
 
     from setuptools.command.install import install
     from setuptools.command.develop import develop
