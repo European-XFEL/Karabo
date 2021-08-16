@@ -594,8 +594,9 @@ void PipelinedProcessing_Test::testPipeQueueAtLimit() {
     testPipeQueueAtLimit(2, 0, "queue", maxLengthCfg, false, true);
 
     // If sender delay time much higher than the receiver processing time, no data loss despite the queueDrop option
-    // (the 'slowReceiver == false' test fails sometimes with delay = 2, so choose 4)
-    testPipeQueueAtLimit(0, 4, "queueDrop", maxLengthCfg, false, false);
+    // (the 'slowReceiver == false' test fails sometimes with delay = 2, so 4 was choosen - but even that failed in
+    //  https://git.xfel.eu/gitlab/Karabo/Framework/-/jobs/238881)
+    testPipeQueueAtLimit(0, 5, "queueDrop", maxLengthCfg, false, false);
 
      // 2) Test overall limit from Memory, no effective queue length limit (queue can be as big as the whole Memory buffer of the Output Channel).
 
