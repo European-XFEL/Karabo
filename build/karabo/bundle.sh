@@ -53,6 +53,7 @@ EXTERN_DEPS_DIR=$5
 OS=$(uname -s)
 MACHINE=$(uname -m)
 PACKAGENAME=karabo
+VERSION=$(git describe --exact-match --tags HEAD 2>/dev/null)
 
 NUM_CORES=2  # default
 if [ "$OS" = "Linux" ]; then
