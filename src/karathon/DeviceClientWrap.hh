@@ -258,16 +258,16 @@ namespace karathon {
             InputChannelHandlers handlers;
 
             if (!dataHandler.is_none()) {
-                handlers.dataHandler = boost::bind(&InputChannelWrap::proxyDataHandler, dataHandler, _1, _2);
+                handlers.dataHandler = InputChannelWrap::DataHandlerWrap(dataHandler, "data");
             }
             if (!eosHandler.is_none()) {
-                handlers.eosHandler = boost::bind(&InputChannelWrap::proxyEndOfStreamEventHandler, eosHandler, _1);
+                handlers.eosHandler = HandlerWrap<const karabo::xms::InputChannel::Pointer&>(eosHandler, "EOS");
             }
             if (!inputHandler.is_none()) {
-                handlers.inputHandler = boost::bind(&InputChannelWrap::proxyInputHandler, inputHandler, _1);
+                handlers.inputHandler = HandlerWrap<const karabo::xms::InputChannel::Pointer&>(inputHandler, "input");
             }
             if (!statusTracker.is_none()) {
-                handlers.statusTracker = boost::bind(&proxyChannelStatusTracker, statusTracker, _1);
+                handlers.statusTracker = HandlerWrap<karabo::net::ConnectionStatus>(statusTracker, "channelStatusTracker");
             }
 
             return this->DeviceClient::registerChannelMonitor(channelName, handlers, inputChannelCfg);

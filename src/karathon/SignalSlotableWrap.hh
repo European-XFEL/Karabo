@@ -280,9 +280,10 @@ namespace karathon {
         createOutputChannelPy(const std::string& channelName,
                               const karabo::util::Hash& config,
                               const bp::object& onOutputPossibleHandler = bp::object()) {
+            using Wrap = HandlerWrap<const karabo::xms::OutputChannel::Pointer&>;
             return createOutputChannel(channelName,
                                        config,
-                                       boost::bind(&OutputChannelWrap::proxyIOEventHandler, onOutputPossibleHandler, _1));
+                                       Wrap(onOutputPossibleHandler, "IOEvent"));
         }
 
         karabo::xms::InputChannel::Pointer
@@ -314,15 +315,15 @@ namespace karathon {
         }
 
         void registerDataHandlerPy(const std::string& channelName, const bp::object& handler) {
-            registerDataHandler(channelName, boost::bind(&InputChannelWrap::proxyDataHandler, handler, _1, _2));
+            registerDataHandler(channelName, InputChannelWrap::DataHandlerWrap(handler, "data"));
         }
 
         void registerInputHandlerPy(const std::string& channelName, const bp::object& handler) {
-            registerInputHandler(channelName, boost::bind(&InputChannelWrap::proxyInputHandler, handler, _1));
+            registerInputHandler(channelName, HandlerWrap<const karabo::xms::InputChannel::Pointer&>(handler, "input"));
         }
 
         void registerEndOfStreamHandlerPy(const std::string& channelName, const bp::object& handler) {
-            registerEndOfStreamHandler(channelName, boost::bind(&InputChannelWrap::proxyEndOfStreamEventHandler, handler, _1));
+            registerEndOfStreamHandler(channelName, HandlerWrap<const karabo::xms::InputChannel::Pointer&>(handler, "EOS"));
         }
 
     private:
