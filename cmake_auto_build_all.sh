@@ -145,7 +145,7 @@ runPythonLongTests() {
     fi
 }
 
-produceCodeCoverageReport() {
+producePythonCodeCoverageReport() {
     echo "### Producing code coverage reports for Python tests ..."
     echo
 
@@ -158,10 +158,10 @@ produceCodeCoverageReport() {
 
     runPythonUnitTests
     runPythonIntegrationTests
-    runPythonLongTests
-
-    # Most recent zip file - there mightbe others from previous runs
-    # local ZIP_FILE_NAME=`ls -t ./ci/coverage/report/*.zip | head -1`
+    # To include long running Python tests in the coverage report, uncomment
+    # the following line - they currently don't influence the coverage metrics
+    # significantly and add a long time to the CI job execution.
+    # runPythonLongTests
 
     # produce initial Python coverage information
     safeRunCommand $scriptDir/run_python_tests.sh \
@@ -170,7 +170,6 @@ produceCodeCoverageReport() {
         --reportDir $scriptDir/ci/coverage
 
     echo
-
 }
 
 # Make sure the script runs in the correct directory
@@ -200,10 +199,9 @@ Available flags:
 Note: "Clean" cleans all Karabo code (src folder)
       "Clean-All" additionally cleans all external dependencies (extern folder)
       "CodeCoverage" builds the Karabo framework with CodeCoverage configuration,
-                     but also implicitly runs the unit, integration and long tests
+                     but also implicitly runs the unit and integration tests
                      and produces code coverage reports. The CodeCoverage configuration
-                     also disables --pyDevelop option. For now, CodeCoverage is
-                     only supported for the python codebase.
+                     also disables --pyDevelop option.
       The environment variable "KARABO_TEST_BROKER" can be set to force the unit
       tests to run on the broker set in this variable.
       Please note that tests will activate the Karabo installation currently
@@ -212,6 +210,20 @@ End-of-help
 
     exit 0
 fi
+
+# Get some information about our system
+MACHINE=$(uname -m)
+OS=$(uname -s)
+if [ "$OS" = "Linux" ]; then
+    DISTRO_ID=( $(lsb_release -is) )
+    DISTRO_RELEASE=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
+fi
+
+# External dependencies have to be outside the source tree. This is
+# required by CMake since it doesn't allow a path in CMAKE_PREFIX_PATH to
+# be internal to the source tree.
+EXTERN_DEPS_BASE_DIR="/tmp/karabo-extern-deps"
+EXTERN_DEPS_DIR="$EXTERN_DEPS_BASE_DIR/$DISTRO_ID-$DISTRO_RELEASE-$MACHINE"
 
 # Get some information about our system
 MACHINE=$(uname -m)
@@ -355,6 +367,17 @@ if [ "$RUNLONGTESTS" = "y" ]; then
 else
     BUILD_LONG_RUN_TESTING="0"
 fi
+if [ "$CODECOVERAGE" = "y" ]; then
+    GEN_CODE_COVERAGE="1"
+    # For CodeCoverage, the long running tests are disabled due to the Telegraf
+    # based tests, that are currently unreliable. Setting BUILD_LONG_RUN_TESTING
+    # to 1 below will include the long running tests in the coverage report.
+    BUILD_UNIT_TESTING="1"
+    BUILD_INTEGRATION_TESTING="1"
+    BUILD_LONG_RUN_TESTING="0"
+else
+    GEN_CODE_COVERAGE="0"
+fi
 
 echo "### Now building and packaging Karabo... ###";
 
@@ -368,6 +391,23 @@ FRAMEWORK_INSTALL_DIR="$scriptDir/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACH
 
 cd $FRAMEWORK_BUILD_DIR
 
+if [ -d $FRAMEWORK_INSTALL_DIR ]; then
+    # Preserve any installed device, plugin and all contents under var dir.
+    PRESERV_DIR=`mktemp -d`
+    if [ -d $FRAMEWORK_INSTALL_DIR/devices ]; then
+        safeRunCommand mv $FRAMEWORK_INSTALL_DIR/devices $PRESERV_DIR/devices
+    fi
+    if [ -d $FRAMEWORK_INSTALL_DIR/installed ]; then
+        safeRunCommand mv $FRAMEWORK_INSTALL_DIR/installed $PRESERV_DIR/installed
+    fi
+    if [ -d $FRAMEWORK_INSTALL_DIR/plugins ]; then
+        safeRunCommand mv $FRAMEWORK_INSTALL_DIR/plugins $PRESERV_DIR/plugins
+    fi
+    if [ -d $FRAMEWORK_INSTALL_DIR/var ]; then
+        safeRunCommand mv $FRAMEWORK_INSTALL_DIR/var $PRESERV_DIR/var
+    fi
+fi
+
 # Use the cmake from the EXTERN_DEPS_DIR - cmake is an external dependency
 # of Karabo as it is used to compile some other dependencies, like the
 # MQTT client lib.
@@ -375,19 +415,41 @@ safeRunCommand $EXTERN_DEPS_DIR/bin/cmake -DCMAKE_PREFIX_PATH=$EXTERN_DEPS_DIR \
       -DBUILD_UNIT_TESTING=$BUILD_UNIT_TESTING \
       -DBUILD_INTEGRATION_TESTING=$BUILD_INTEGRATION_TESTING \
       -DBUILD_LONG_RUN_TESTING=$BUILD_LONG_RUN_TESTING \
+      -DGEN_CODE_COVERAGE=$GEN_CODE_COVERAGE \
       -DCMAKE_INSTALL_PREFIX=$FRAMEWORK_INSTALL_DIR \
       -DCMAKE_BUILD_TYPE=$CMAKE_CONF \
       ..
 
 if [ $? -ne 0 ]; then
+    # Have to restore any preserved directory that might have been moved before
+    # exiting the script.
+    if [[  -n $PRESERV_DIR && -d $PRESERV_DIR ]]; then
+        mv $PRESERV_DIR/* $FRAMEWORK_INSTALL_DIR
+        if [ $? -ne 0 ]; then
+            echo "WARNING: Failed to restore content from \"$PRESERVE_DIR\" into \"$FRAMEWORK_INSTALL_DIR\"."
+            echo "         Please try to restore it manually."
+        else
+            rmdir $PRESERV_DIR
+        fi
+    fi
     echo
     echo "#### Error on cmake project configuration phase. Exiting. ####"
     exit 1
 fi
 
-# Cleans-up the installation dir
+# Cleans-up the installation dir, restoring any previously existing device,
+# plugin and all contents under var.
 rm -rf $FRAMEWORK_INSTALL_DIR
 mkdir -p $FRAMEWORK_INSTALL_DIR
+if [[  -n $PRESERV_DIR && -d $PRESERV_DIR ]]; then
+    mv $PRESERV_DIR/* $FRAMEWORK_INSTALL_DIR
+    if [ $? -ne 0 ]; then
+        echo "WARNING: Failed to restore content from \"$PRESERVE_DIR\" into \"$FRAMEWORK_INSTALL_DIR\"."
+        echo "         Please try to restore it manually."
+    else
+        rmdir $PRESERV_DIR
+    fi
+fi
 
 # Builds libkarabo, libkarathon, karabo-* utilities and install them
 # in FRAMEWORK_INSTALL_DIR.
@@ -408,6 +470,16 @@ if [ "$BUNDLE" = "y" ]; then
 fi
 safeRunCommand $scriptDir/build/karabo/bundle.sh dist $CONF $PLATFORM $BUNDLE_ACTION $PYOPT $EXTERN_DEPS_DIR
 
+# Installs the components of the Karabo Framework that are not built
+# with CMake into FRAMEWORK_INSTALL_DIR - the Python tests must be
+# run from the activated Karabo environment hosted in the install
+# tree.
+BUNDLE_ACTION="install"
+if [ "$BUNDLE" = "y" ]; then
+    BUNDLE_ACTION="package"
+fi
+safeRunCommand $scriptDir/build/karabo/bundle.sh dist $CONF $PLATFORM $BUNDLE_ACTION $PYOPT $EXTERN_DEPS_DIR
+
 # enable prints from now on.
 if [ ! -z "$KARABO_CI_QUIET" ]; then
     unset KARABO_CI_QUIET
@@ -415,8 +487,23 @@ fi
 
 echo "### Successfully finished building of karaboFramework ###"
 
-# Run tests - All C++ built tests run first with ctest; then the Python tests
-# are explicitly invoked.
+if [ "$GEN_CODE_COVERAGE" = "1" ]; then
+    echo
+    echo Running Karabo C++ tests and generating coverage report ...
+    echo
+    # Activate the karabo environment to allow tests to be run from the
+    # build tree.
+    source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
+    # When GEN_CODE_COVERAGE is true, the cmake configuration phase generates
+    # a 'test_coverage_report' target, than when built runs the tests and
+    # generates the coverage report.
+    $EXTERN_DEPS_DIR/bin/cmake --build . -j $NUM_JOBS --target test_coverage_report
+    deactivateKarabo
+    # Generate the coverage report for the Python tests - all of them.
+    producePythonCodeCoverageReport
+    exit 0
+fi
+
 if [ "$BUILD_UNIT_TESTING" = "1" ] || [ "$BUILD_INTEGRATION_TESTING" = "1" ] || [ "$BUILD_LONG_RUN_TESTING" = "1" ]; then
     echo
     echo Running Karabo C++ tests ...
@@ -438,10 +525,6 @@ fi
 
 if [ "$RUNLONGTESTS" = "y" ]; then
     runPythonLongTests
-fi
-
-if [ "$CODECOVERAGE" = "y" ]; then
-    produceCodeCoverageReport
 fi
 
 echo "### Successfully finished building and packaging of karaboFramework ###"
