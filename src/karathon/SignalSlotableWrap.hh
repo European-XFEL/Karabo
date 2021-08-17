@@ -254,26 +254,23 @@ namespace karathon {
         }
 
         void registerInstanceNewHandlerPy(const bp::object& handler) {
-            registerInstanceNewHandler(boost::bind(&SignalSlotableWrap::proxyInstanceNewHandler,
-                                                   this, handler, _1, _2));
+            registerInstanceNewHandler(HandlerWrap<const std::string&, const karabo::util::Hash&>(handler, "instanceNew"));
         }
 
         void registerInstanceGoneHandlerPy(const bp::object& handler) {
-            registerInstanceGoneHandler(boost::bind(&SignalSlotableWrap::proxyInstanceGoneHandler,
-                                                    this, handler, _1, _2));
+            registerInstanceGoneHandler(HandlerWrap<const std::string&, const karabo::util::Hash&>(handler, "instanceGone"));
         }
 
         void registerSlotCallGuardHandlerPy(const bp::object& handler) {
-            registerSlotCallGuardHandler(boost::bind(&SignalSlotableWrap::proxySlotCallGuardHandler, this, handler, _1, _2));
+            registerSlotCallGuardHandler(HandlerWrap<const std::string&, const std::string&>(handler, "slot call guard"));
         }
 
         void registerPerformanceStatisticsHandlerPy(const bp::object& handler) {
-            registerPerformanceStatisticsHandler(boost::bind(&SignalSlotableWrap::proxyUpdatePerformanceStatisticsHandler,
-                                                             this, handler, _1));
+            registerPerformanceStatisticsHandler(HandlerWrap<const karabo::util::Hash::Pointer&>(handler, "performance measurement"));
         }
 
         void registerBrokerErrorHandlerPy(const bp::object& handler) {
-            registerBrokerErrorHandler(boost::bind(&SignalSlotableWrap::proxyBrokerErrorHandler, this, handler, _1));
+            registerBrokerErrorHandler(HandlerWrap<const std::string&>(handler, "broker error"));
         }
 
         karabo::xms::OutputChannel::Pointer
@@ -325,20 +322,6 @@ namespace karathon {
         void registerEndOfStreamHandlerPy(const std::string& channelName, const bp::object& handler) {
             registerEndOfStreamHandler(channelName, HandlerWrap<const karabo::xms::InputChannel::Pointer&>(handler, "EOS"));
         }
-
-    private:
-
-        void proxyInstanceNewHandler(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo);
-
-        void proxyInstanceGoneHandler(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo);
-
-        void proxyExceptionHandler(const bp::object& handler, const karabo::util::Exception& e);
-
-        void proxySlotCallGuardHandler(const bp::object&, const std::string&, const std::string&);
-
-        void proxyUpdatePerformanceStatisticsHandler(const bp::object&, const karabo::util::Hash::Pointer&);
-
-        void proxyBrokerErrorHandler(const bp::object&, const std::string&);
 
     };
 }

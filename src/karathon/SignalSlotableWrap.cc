@@ -239,42 +239,4 @@ namespace karathon {
                                         dataHandler, inputHandler,
                                         HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onEndOfStreamHandler, "EOS"));
     }
-
-
-    void SignalSlotableWrap::proxyInstanceGoneHandler(const bp::object& handler,
-                                                      const std::string& instanceId,
-                                                      const karabo::util::Hash& instanceInfo) {
-        Wrapper::proxyHandler(handler, "instance gone", instanceId, instanceInfo);
-    }
-
-
-    void SignalSlotableWrap::proxyInstanceNewHandler(const bp::object& handler,
-                                                     const std::string& instanceId,
-                                                     const karabo::util::Hash& instanceInfo) {
-        Wrapper::proxyHandler(handler, "instanceNew", instanceId, instanceInfo);
-    }
-
-
-    void SignalSlotableWrap::proxyExceptionHandler(const bp::object& handler,
-                                                   const karabo::util::Exception& e) {
-        Wrapper::proxyHandler(handler, "exception", e.userFriendlyMsg(), e.detailedMsg());
-    }
-
-
-    void SignalSlotableWrap::proxySlotCallGuardHandler(const bp::object& handler, const std::string& slotFunction, const std::string& callee) {
-        Wrapper::proxyHandler(handler, "slot call guard", slotFunction, callee);
-    }
-
-
-    void SignalSlotableWrap::proxyUpdatePerformanceStatisticsHandler(const bp::object& handler,
-                                                                     const karabo::util::Hash::Pointer& performanceMeasures) {
-        Wrapper::proxyHandler(handler, "performance measurement", performanceMeasures);
-    }
-
-
-    void SignalSlotableWrap::proxyBrokerErrorHandler(const bp::object& handler, const std::string& message) {
-
-        Wrapper::proxyHandler(handler, "broker error", message);
-    }
-
 }
