@@ -146,24 +146,26 @@ namespace karathon {
     struct OutputChannelWrap {
 
         static void registerIOEventHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler);
-        static void proxyIOEventHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::OutputChannel>& self);
         static void writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data, const bp::object& meta, bool copyAllData);
         static void updatePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self);
         static void signalEndOfStreamPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self);
         static void registerShowConnectionsHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler);
-        static void proxyShowConnectionsHandler(const bp::object& handler, const std::vector<karabo::util::Hash>& connections);
     };
 
     struct InputChannelWrap {
 
+        // Special handler wrap to cast in operator()
+        class DataHandlerWrap : public HandlerWrap<const karabo::util::Hash&, const karabo::xms::InputChannel::MetaData&> {
+        public:
+            DataHandlerWrap(const bp::object& handler, char const * const where);
+
+            void operator() (const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta);
+        };
+
         static void registerDataHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
-        static void proxyDataHandler(const bp::object& handler, const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta);
         static void registerInputHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
-        static void proxyInputHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& self);
         static void registerEndOfStreamEventHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
-        static void proxyEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& self);
         static void registerConnectionTrackerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
-        static void proxyChannelStatusTracker(const bp::object& handler, const std::string& name, karabo::net::ConnectionStatus status);
         static bp::object getConnectedOutputChannelsPy(const boost::shared_ptr<karabo::xms::InputChannel>& self);
         static bp::object readPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, size_t idx);
         static void connectPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const karabo::util::Hash& outputChannelInfo);

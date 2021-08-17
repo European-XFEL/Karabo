@@ -206,50 +206,20 @@ namespace karathon {
 
 
     void OutputChannelWrap::registerIOEventHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler) {
-        self->registerIOEventHandler(boost::bind(OutputChannelWrap::proxyIOEventHandler, handler, _1));
-    }
-
-
-    void OutputChannelWrap::proxyIOEventHandler(const bp::object& handler, const boost::shared_ptr<karabo::xms::OutputChannel>& outputChannel) {
-        Wrapper::proxyHandler(handler, "IOEvent", outputChannel);
+        using Wrap = HandlerWrap<const karabo::xms::OutputChannel::Pointer&>;
+        self->registerIOEventHandler(Wrap(handler, "IOEvent"));
     }
 
 
     void OutputChannelWrap::registerShowConnectionsHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler) {
 
-        // A functor to wrap the handler such that the handler's destructor is called under GIL
-        struct WrapForGilDestructor {
 
-
-            WrapForGilDestructor(karabo::xms::ShowConnectionsHandler&& handler)
-                : m_handler(new karabo::xms::ShowConnectionsHandler(handler)) {
-            }
-
-
-            ~WrapForGilDestructor() {
-                ScopedGILAcquire gil;
-                m_handler.reset();
-            }
-
-
-            void operator()(const std::vector<karabo::util::Hash>& arg) {
-                // Assume that m_handler will acquire GIL if needed
-                (*m_handler)(arg);
-            }
-
-            std::shared_ptr<karabo::xms::ShowConnectionsHandler> m_handler;
-        };
-
-        // Setting the handler might overwrite and thus destruct a previous handler.
-        // That one's destruction might acquire the GIL via WrapForGilDestructor, see above.
-        // So better release the GIL here (although the deadlock has not been seen without releasing).
+        HandlerWrap<const std::vector<karabo::util::Hash>&> wrappedHandler(handler, "show connections");
         ScopedGILRelease noGil;
-        self->registerShowConnectionsHandler(WrapForGilDestructor(boost::bind(OutputChannelWrap::proxyShowConnectionsHandler, handler, _1)));
-    }
-
-
-    void OutputChannelWrap::proxyShowConnectionsHandler(const bp::object& handler, const std::vector<karabo::util::Hash>& v) {
-        Wrapper::proxyHandler(handler, "show connections", v);
+        // Setting the handler might overwrite and thus destruct a previous handler.
+        // That one's destruction might acquire the GIL via the destructor of HandlerWrap.
+        // So better release the GIL here (although the deadlock has not been seen without releasing).
+        self->registerShowConnectionsHandler(std::move(wrappedHandler)); // move for once when handler registration will take rvalue reference...
     }
 
 
@@ -282,45 +252,24 @@ namespace karathon {
 
 
     void InputChannelWrap::registerInputHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
-        self->registerInputHandler(boost::bind(InputChannelWrap::proxyInputHandler, handler, _1));
-    }
-
-
-    void InputChannelWrap::proxyInputHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& input) {
-        Wrapper::proxyHandler(handler, "input", input);
-    }
-
-
-    void InputChannelWrap::proxyChannelStatusTracker(const bp::object& handler, const std::string& name, karabo::net::ConnectionStatus status) {
-        Wrapper::proxyHandler(handler, "channelStatusTracker", name, status);
+        self->registerInputHandler(HandlerWrap<const karabo::xms::InputChannel::Pointer&>(handler, "input"));
     }
 
 
     void InputChannelWrap::registerConnectionTrackerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self,
                                                        const bp::object& statusTracker) {
-        auto trackerWrap = boost::bind(&proxyChannelStatusTracker, statusTracker, _1, _2);
-        self->registerConnectionTracker(trackerWrap);
+        using Wrap = HandlerWrap<const std::string&, karabo::net::ConnectionStatus>;
+        self->registerConnectionTracker(Wrap(statusTracker, "channelStatusTracker"));
     }
 
 
     void InputChannelWrap::registerDataHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
-        self->registerDataHandler(boost::bind(InputChannelWrap::proxyDataHandler, handler, _1, _2));
-    }
-
-
-    void InputChannelWrap::proxyDataHandler(const bp::object& handler, const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
-        //TODO: wrap MetaData to expose full interface, right now this makes it look like a Hash within Python
-        Wrapper::proxyHandler(handler, "data", data, *(reinterpret_cast<const karabo::util::Hash*> (&meta)));
+        self->registerDataHandler(InputChannelWrap::DataHandlerWrap(handler, "data"));
     }
 
 
     void InputChannelWrap::registerEndOfStreamEventHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
-        self->registerEndOfStreamEventHandler(boost::bind(InputChannelWrap::proxyEndOfStreamEventHandler, handler, _1));
-    }
-
-
-    void InputChannelWrap::proxyEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& input) {
-        Wrapper::proxyHandler(handler, "EOS", input);
+        self->registerEndOfStreamEventHandler(HandlerWrap<const karabo::xms::InputChannel::Pointer&>(handler, "EOS"));
     }
 
 
@@ -371,6 +320,27 @@ namespace karathon {
         return bp::object(ret);
     }
 
+
+    InputChannelWrap::DataHandlerWrap::DataHandlerWrap(const bp::object& handler, char const * const where)
+        : HandlerWrap<const karabo::util::Hash&, const karabo::xms::InputChannel::MetaData&>(handler, where) {
+    }
+
+
+    void InputChannelWrap::DataHandlerWrap::operator() (const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
+        ScopedGILAcquire gil;
+        try {
+            if (*m_handler) {
+                //TODO: wrap MetaData to expose full interface, right now this makes it look like a Hash within Python
+                //      (Then one can get rid of InputChannelWrap::DataHandlerWrap and directly
+                //       use HandlerWrap<const karabo::util::Hash&, const karabo::xms::InputChannel::MetaData&>)
+                (*m_handler)(data, *(reinterpret_cast<const karabo::util::Hash*> (&meta)));
+            }
+        } catch (const bp::error_already_set& e) {
+            karathon::detail::treatError_already_set(*m_handler, m_where); // from Wrapper.hh
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
 }
 
 
