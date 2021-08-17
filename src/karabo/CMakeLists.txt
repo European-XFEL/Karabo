@@ -405,17 +405,19 @@ install(
 install(CODE "message(STATUS \"Created symlink: ${HDF5_SYMLINK_PATH} -> ${HDF5_SYMLINK_DEST}\")")
 
 # Adding headers with the same tree directory of the project.
+set(SRC_INCLUDE_PATH_PREFIX "/src/karabo/")
+string(LENGTH ${SRC_INCLUDE_PATH_PREFIX} SRC_INCLUDE_PATH_PREFIX_LEN)
 foreach (FILE_PATH ${INCLUDE_FILES})
     get_filename_component(DIR_PART ${FILE_PATH} DIRECTORY)
     get_filename_component(NAME_PART ${FILE_PATH} NAME)
     # the directory for the installed header should keep the relative path of the source tree
-    # e.g ".../karabo/core/Device.hh" should go to "include/karabo/core/Device.hh".
-    string(FIND ${DIR_PART} "/karabo/" COMMON_BASE_DIR_POS)
+    # e.g ".../src/karabo/core/Device.hh" should go to "include/karabo/core/Device.hh".
+    string(FIND ${DIR_PART} ${SRC_INCLUDE_PATH_PREFIX} COMMON_BASE_DIR_POS)
     if (${COMMON_BASE_DIR_POS} EQUAL -1)
         # No intermediary "karabo" directory in the path; no subdir to be added to install path.
         install(FILES ${FILE_PATH} DESTINATION "include/karabo")
     else ()
-        math(EXPR INCLUDE_SUBDIR_POS "${COMMON_BASE_DIR_POS} + 8")  # 8 is the length of "/karabo/"
+        math(EXPR INCLUDE_SUBDIR_POS "${COMMON_BASE_DIR_POS} + ${SRC_INCLUDE_PATH_PREFIX_LEN}")
         string(LENGTH ${DIR_PART} DIR_PART_LENGTH)
         string(SUBSTRING ${DIR_PART} ${INCLUDE_SUBDIR_POS} ${DIR_PART_LENGTH} INCLUDE_SUBDIR)
         install(FILES ${FILE_PATH} DESTINATION "include/karabo/${INCLUDE_SUBDIR}")
