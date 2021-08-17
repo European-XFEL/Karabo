@@ -167,7 +167,6 @@ stages:
     changes:
       - "extern/**/*"
 
-# TODO: remove this after reporting support for ctest is working
 .unit_tests_miniconda_cmake: &unit-tests-miniconda-cmake
   <<: *test-miniconda-cmake
   only:
