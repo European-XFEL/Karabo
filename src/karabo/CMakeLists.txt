@@ -139,9 +139,7 @@ macro (updateDependenciesCondaEnvironment)
       else ()
           message(
               WARNING
-              "Conda not found - update from environment file disabled! \
-              If you're using an IDE connected to a remote server, \
-              please try to configure the CMake project from a terminal session."
+              "Conda not found - update of Conda environment with dependencies disabled!"
           )
       endif()  # if (CONDA_CLI_FOUND)
   endif()  # if(not DEFINED ENV{CONDA_BUILD})
