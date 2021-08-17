@@ -470,16 +470,6 @@ if [ "$BUNDLE" = "y" ]; then
 fi
 safeRunCommand $scriptDir/build/karabo/bundle.sh dist $CONF $PLATFORM $BUNDLE_ACTION $PYOPT $EXTERN_DEPS_DIR
 
-# Installs the components of the Karabo Framework that are not built
-# with CMake into FRAMEWORK_INSTALL_DIR - the Python tests must be
-# run from the activated Karabo environment hosted in the install
-# tree.
-BUNDLE_ACTION="install"
-if [ "$BUNDLE" = "y" ]; then
-    BUNDLE_ACTION="package"
-fi
-safeRunCommand $scriptDir/build/karabo/bundle.sh dist $CONF $PLATFORM $BUNDLE_ACTION $PYOPT $EXTERN_DEPS_DIR
-
 # enable prints from now on.
 if [ ! -z "$KARABO_CI_QUIET" ]; then
     unset KARABO_CI_QUIET
