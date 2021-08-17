@@ -688,5 +688,21 @@ namespace karathon {
             return obj;
         }
     }
+
+
+    namespace detail {
+        void treatError_already_set(const bp::object& handler, const char* where) {
+
+            const std::string errstr(PyErr_Occurred() ? getPythonExceptionAsString() : std::string());
+            const std::string funcName(Wrapper::hasattr(handler, "__name__")
+                                       ? std::string(bp::extract<std::string>(handler.attr("__name__")))
+                                       : "unknown");  // e.g. 'partial' does not provide __name__
+            std::ostringstream oss;
+            oss << "Python " << (where ? where : "undefined") << " handler '" << funcName
+                << "' has thrown an exception ...\n...\n" << errstr << "...";
+            std::cerr << '\n' << oss.str() << '\n' << std::endl;
+            throw KARABO_PYTHON_EXCEPTION(oss.str());
+        }
+    }
 }
 
