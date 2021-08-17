@@ -15,6 +15,9 @@
 # BUILD_LONG_RUN_TESTING: if true (default is false), long running integration
 #                         tests are generated.
 #
+# GENERATE_CODE_COVERAGE: if true (default is false), generates a test  code
+#                         coverage report for all the tests to be built.
+#
 # CMAKE_PREFIX_PATH: this is used by the projects to find their external
 #                    dependencies - e.g. libkarabo depends on Boost and the
 #                    tests depend on CppUnit. The variable should point to the
@@ -58,16 +61,20 @@ include("cmake/karabo-lib-target-name.cmake")
 set(BUILD_UNIT_TESTING ON CACHE BOOL "Should build Framework unit tests?")
 set(BUILD_INTEGRATION_TESTING OFF CACHE BOOL "Should build Framework integration tests?")
 set(BUILD_LONG_RUNNING_TESTING OFF CACHE BOOL "Should build Framework long running tests?")
+set(GEN_CODE_COVERAGE OFF CACHE BOOL "Generate test code coverage report?")
 
-if (BUILD_UNIT_TESTING OR BUILD_INTEGRATION_TESTING OR BUILD_LONG_RUN_TESTING)
-    enable_testing()
+if (GEN_CODE_COVERAGE)
+    if(NOT DEFINED ENV{LCOV_PATH_HINT})
+        set(ENV{LCOV_PATH_HINT} ${CMAKE_SOURCE_DIR}/ci/coverage/lcov)
+    endif()
+    include("cmake/code-coverage.cmake")
+    append_coverage_compiler_flags()
 endif()
 
 # Defines supported build types and sets the default build type to be "Debug"
 # (the default build type can vary between different platforms/toolchains).
 get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(NOT isMultiConfig)
-    # TODO: investigate how to support CODE_COVERAGE builds.
     set(allowableBuildTypes Debug Release)
     set_property(
         CACHE
@@ -80,7 +87,13 @@ if(NOT isMultiConfig)
     endif()
 endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL Debug)
+if (CMAKE_BUILD_TYPE STREQUAL "Release" AND GEN_CODE_COVERAGE)
+    message(FATAL_ERROR
+        "Code coverage reports cannot be produced by Release builds."
+    )
+endif()
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  # Creates file "compile_commands.json"
                                          # in the build directory. It is useful
                                          # for integrating with external tools
@@ -127,6 +140,36 @@ configure_file(
     "${CMAKE_BINARY_DIR}/activateKarabo.sh"
     @ONLY
 )
+
+if (BUILD_UNIT_TESTING OR BUILD_INTEGRATION_TESTING OR BUILD_LONG_RUN_TESTING)
+    enable_testing()
+    if (GEN_CODE_COVERAGE)
+        set(TEST_COVERAGE_TARGET "test_coverage_report")
+        setup_target_for_coverage_lcov(
+            NAME ${TEST_COVERAGE_TARGET}
+            EXECUTABLE ctest -VV
+            BASE_DIRECTORY ${CMAKE_SOURCE_DIR}/src
+            LCOV_ARGS --no-external --quiet
+            EXCLUDE "/usr/*" "*/boost/*" "*/mqtt/*" "*/cppunit/*" "*/nlohmann/*"
+                    "*/krb_log4cpp/*" "*/tests/*" "*/include/python*"
+                    "*/include/numpy/*" "${CMAKE_SOURCE_DIR}/src/tools/*"
+                    "${CMAKE_SOURCE_DIR}/src/deviceServer/*"
+                    "${CMAKE_SOURCE_DIR}/src/brokerMessageLogger/*"
+                    "${CMAKE_SOURCE_DIR}/src/karathon/*"
+                    "${CMAKE_SOURCE_DIR}/src/integrationTests/*"
+                    "${CMAKE_SOURCE_DIR}/src/cppLongTests/*"
+                    "*/karabo-extern-deps/*"
+        )
+        string(TIMESTAMP ZIP_FILE_TIMESTAMP "%Y-%m-%dT%H-%M-%S")
+        set(REPORT_ZIP_FILE
+            "${CMAKE_BINARY_DIR}/test_coverage_report_${ZIP_FILE_TIMESTAMP}.zip"
+        )
+        add_custom_command(TARGET ${TEST_COVERAGE_TARGET} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E tar "cf" "${REPORT_ZIP_FILE}" --format=zip "${CMAKE_BINARY_DIR}/${TEST_COVERAGE_TARGET}"
+            COMMENT "###\nZipped version of coverage report available at '${REPORT_ZIP_FILE}'\n###"
+        )
+    endif()
+endif()
 
 if (BUILD_UNIT_TESTING)
     add_subdirectory(src/karabo/tests ${CMAKE_BINARY_DIR}/karabo/tests)
