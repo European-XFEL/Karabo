@@ -229,15 +229,15 @@ namespace karathon {
         InputHandler inputHandler = InputHandler();
         if (onDataHandler != bp::object()) {
             // or: if (onDataHandler.ptr() != Py_None) {
-            dataHandler = boost::bind(&InputChannelWrap::proxyDataHandler, onDataHandler, _1, _2);
+            dataHandler = InputChannelWrap::DataHandlerWrap(onDataHandler, "data");
         }
         if (onInputHandler != bp::object()) {
-            inputHandler = boost::bind(&InputChannelWrap::proxyInputHandler, onInputHandler, _1);
+            inputHandler = HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onInputHandler, "input");
         }
 
         return this->createInputChannel(channelName, config,
                                         dataHandler, inputHandler,
-                                        boost::bind(&InputChannelWrap::proxyEndOfStreamEventHandler, onEndOfStreamHandler, _1));
+                                        HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onEndOfStreamHandler, "EOS"));
     }
 
 
