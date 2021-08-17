@@ -50,3 +50,6 @@ build_release/
 
 # Karabo version (generated)
 src/version.hh
+
+# Exception for .install.sh
+!.install.sh
