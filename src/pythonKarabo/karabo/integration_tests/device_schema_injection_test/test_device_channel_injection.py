@@ -26,7 +26,8 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
 
         self.devClass = "DeviceChannelInjection"
         self.server_id = "server/channelInjection"
-        self.start_server("bound", self.server_id, [self.devClass],  # , logLevel="INFO"
+        self.start_server("bound", self.server_id, [self.devClass],
+                          # , logLevel="INFO"
                           namespace="karabo.bound_device_test")
 
         dev_id = "device/channelInjection"
@@ -111,9 +112,28 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         res = self.waitUntilTrue(condition, max_timeout, 100)
         cfg = self.dc.get(dev_id)
         self.assertTrue(res, str(cfg))
-        # Not channel related - injected element under existing note is there:
+        # Not channel related - injected element under existing node is there:
         self.assertTrue(cfg.has("node"))
         self.assertTrue(cfg.has("node.anInt32"), str(cfg))
+
+        # Test that re-injection of input channel works even during input
+        # channel data handling:
+        count = cfg["count"]  # possibly non-zero from previous subtest
+        sch = Schema()
+        INPUT_CHANNEL(sch).key("injectedInput").commit()
+        INT32_ELEMENT(sch).key("new").readOnly().initialValue(count).commit()
+        data = Hash("schema", sch)
+        req = self.sigSlot.request(dev_id, "slotWriteOuput", data)
+        req.waitForReply(max_timeout_ms)
+
+        def condition2():
+            cfg = self.dc.get(dev_id)
+            return (cfg["count"] == count + 1
+                    and "new" in cfg and cfg["new"] == count)
+
+        res = self.waitUntilTrue(condition2, max_timeout, 100)
+        cfg = self.dc.get(dev_id)
+        self.assertTrue(res, str(cfg))
 
         # Remove the channels again:
         req = self.sigSlot.request(dev_id, "slotUpdateSchema", Schema())

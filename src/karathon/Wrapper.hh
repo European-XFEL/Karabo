@@ -286,6 +286,11 @@ namespace karathon {
         }
     };
 
+    namespace detail {
+        /// Helper when catching Python exceptions
+        void treatError_already_set(const bp::object& handler, const char* where);
+    }
+
     struct Wrapper {
 
         struct null_deleter {
@@ -486,20 +491,62 @@ namespace karathon {
                     handler(bp::object(args)...);
                 }
             } catch (const bp::error_already_set& e) {
-                std::string errstr = "";
-                if (PyErr_Occurred()) errstr = getPythonExceptionAsString();
-                const std::string funcName(bp::extract<std::string >(handler.attr("__name__")));
-                std::ostringstream oss;
-                oss << "Python " << (which ? which : "undefined") << " handler '" << funcName
-                        << "' has thrown an exception ...\n...\n" << errstr << "...";
-                std::cerr << '\n' << oss.str() << '\n' << std::endl;
-                throw KARABO_PYTHON_EXCEPTION(oss.str());
+                detail::treatError_already_set(handler, which);
             } catch (...) {
                 KARABO_RETHROW
             }
         }
 
     };
+
+    /** A functor to wrap a Python handler such that
+     *  - handler is called with GIL,
+     *  - exceptions in handler calls are properly treated and forwarded,
+     *  - handler's destructor is called under GIL.
+     *
+     *  Template types are the C++ arguments to be passed to the handler.
+     */
+    template <typename... Args> // if needed, could specify return type of operator() as fixed first template argument
+    class HandlerWrap {
+        public:
+            /**
+             * Construct a wrapper for a Python handler
+             * @param handler the Python callable to wrap
+             * @param where a C string identifying which handler is wrapped,
+             *              for debugging only, i.e. used if a call to the handler raises an exception
+             */
+            HandlerWrap(const bp::object& handler, char const * const where)
+                : m_handler(std::make_shared<bp::object>(handler)), // new object on the heap to control its destruction
+                  m_where(where) {
+            }
+
+
+            ~HandlerWrap() {
+                // Ensure that destructor of Python handler object is called with GIL
+                ScopedGILAcquire gil;
+                m_handler.reset();
+            }
+
+
+            void operator()(Args... args) {
+                ScopedGILAcquire gil;
+                try {
+                    if (*m_handler) {
+                        // Just call handler with individually unpacked arguments:
+                        (*m_handler)(bp::object(args)...); // std::forward(args)?
+                    }
+                } catch (const bp::error_already_set& e) {
+                    karathon::detail::treatError_already_set(*m_handler, m_where);
+                } catch (...) {
+                    KARABO_RETHROW
+                }
+            }
+
+        protected: // not private - needed for InputChannelWrap::DataHandlerWrap::operator()
+            std::shared_ptr<bp::object> m_handler;
+            char const * const m_where;
+        };
+
 
     // Specializations
     template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<bool>& v, bool numpyFlag);
