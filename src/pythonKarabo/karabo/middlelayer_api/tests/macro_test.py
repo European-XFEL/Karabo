@@ -192,7 +192,7 @@ class Tests(DeviceTest):
         if not jms:
             self.remote.counter = -1
             sleep(1)
-        d = getDevice("remote")
+        d = getDevice("remote")    # proxy is not connected
         executeNoWait(d, "count")
         if jms:
             time.sleep(0.1)
@@ -352,10 +352,18 @@ class Tests(DeviceTest):
                 updateDevice(d)
             d.counter = 0
             executeNoWait(d, "count")
-            waitUntil(lambda: d.counter == 0)
-            for i in range(30):
+            waitUntil(lambda: d.counter >= 0)
+            i = 0
+            while i < 30:
                 waitUntilNew(d.counter)
-                self.assertEqual(i, d.counter)
+                # ATTENTION:  test changed!!!
+                # Here we can guarantee only that i <= d.counter
+                # we cannot guarantee strict '==' if ...
+                # ... the network (I think!) or something is getting slow
+                self.assertGreaterEqual(d.counter, i)
+                i = d.counter + 1   # next (expected) remote value
+
+            self.assertEqual(29, d.counter)
 
     @async_tst
     async def test_print(self):
