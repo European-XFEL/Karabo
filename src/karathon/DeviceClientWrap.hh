@@ -174,40 +174,33 @@ namespace karathon {
         }
 
         void registerInstanceNewMonitor(const bp::object& handler) {
-            // boost::bind is safe here because the handler is dispatched
-            // directly and not via the event loop
             this->DeviceClient::registerInstanceNewMonitor(
-                boost::bind(&DeviceClientWrap::proxyPythonCallbackHash, this, handler, _1));
+                HandlerWrap<const karabo::util::Hash&>(handler, "instanceNew monitor"));
         }
 
         void registerInstanceUpdatedMonitor(const bp::object& handler) {
-            // boost::bind is safe here because the handler is dispatched
-            // directly and not via the event loop
             this->DeviceClient::registerInstanceUpdatedMonitor(
-                boost::bind(&DeviceClientWrap::proxyPythonCallbackHash, this, handler, _1));
+                HandlerWrap<const karabo::util::Hash&>(handler, "instanceUpdated monitor"));
         }
 
         void registerInstanceGoneMonitor(const bp::object& handler) {
-            // boost::bind is safe here because the handler is dispatched
-            // directly and not via the event loop
             this->DeviceClient::registerInstanceGoneMonitor(
-                boost::bind(&DeviceClientWrap::proxyPythonCallbackStringHash, this, handler, _1, _2));
+                HandlerWrap<const std::string&, const karabo::util::Hash&>(handler, "instanceGone monitor"));
         }
 
         void registerSchemaUpdatedMonitor(const bp::object& handler) {
-            // boost::bind is safe here because the handler is dispatched
-            // directly and not via the event loop
             this->DeviceClient::registerSchemaUpdatedMonitor(
-                boost::bind(&DeviceClientWrap::proxyPythonCallbackStringSchema, this, handler, _1, _2));
+                HandlerWrap<const std::string&, const karabo::util::Schema&>(handler, "schemaUpdate monitor"));
         }
 
         void registerDeviceMonitor(const std::string& instanceId, const bp::object& handler, const bp::object& userData = bp::object()) {
             if (userData.is_none()) {
                 this->DeviceClient::registerDeviceMonitor(instanceId,
-                    boost::bind(&DeviceClientWrap::proxyPythonCallbackStringHash, this, handler, _1, _2));
+                    HandlerWrap<const std::string&, const karabo::util::Hash&>(handler, "device monitor"));
             } else {
                 this->DeviceClient::registerDeviceMonitor(instanceId,
-                    boost::bind(&DeviceClientWrap::proxyPythonCallbackStringHashAny, this, handler, _1, _2, _3), userData);
+                    HandlerWrap<const std::string&, const karabo::util::Hash&, const boost::any&>(handler, "device monitor 2"),
+                    userData); // TODO: C++ stores this bp::object and might delete it without GIL protection!
             }
         }
 
@@ -225,6 +218,8 @@ namespace karathon {
                 }
 
                 {
+                    // TODO: Handling of callback via storage of bp::object::ptr() inside C++ treated container (m_propertyChangedHandlers)
+                    //       is garbage - it will at least make the Python reference counting wrong...
                     boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
                     if (Wrapper::hasattr(callbackFunction, "__self__")) {
                         const bp::object & selfObject(callbackFunction.attr("__self__"));
@@ -242,10 +237,6 @@ namespace karathon {
             } else {
                 return false;
             }
-        }
-
-        static void proxyChannelStatusTracker(const bp::object& handler, karabo::net::ConnectionStatus status) {
-            Wrapper::proxyHandler(handler, "channelStatusTracker", status);
         }
 
         bool registerChannelMonitorPy(const std::string& channelName,
@@ -270,6 +261,7 @@ namespace karathon {
                 handlers.statusTracker = HandlerWrap<karabo::net::ConnectionStatus>(statusTracker, "channelStatusTracker");
             }
 
+            ScopedGILRelease nogil;
             return this->DeviceClient::registerChannelMonitor(channelName, handlers, inputChannelCfg);
         }
 
@@ -475,22 +467,6 @@ namespace karathon {
                 }
                 if (it->is<karabo::util::Hash>()) callMonitor(instanceId, registered, it->getValue<karabo::util::Hash>(), currentPath);
             }
-        }
-
-        void proxyPythonCallbackHash(const bp::object& handler, const karabo::util::Hash& arg1) {
-            Wrapper::proxyHandler(handler, "ProxyCallbackHash type", arg1);
-        }
-
-        void proxyPythonCallbackStringHash(const bp::object& handler, const std::string& arg1, const karabo::util::Hash& arg2) {
-            Wrapper::proxyHandler(handler, "ProxyCallbackStringHash type", arg1, arg2);
-        }
-
-        void proxyPythonCallbackStringSchema(const bp::object& handler, const std::string& arg1, const karabo::util::Schema& arg2) {
-            Wrapper::proxyHandler(handler, "ProxyCallbackStringSchema type", arg1, arg2);
-        }
-
-        void proxyPythonCallbackStringHashAny(const bp::object& handler, const std::string& arg1, const karabo::util::Hash& arg2, const boost::any& arg3) {
-            Wrapper::proxyHandler(handler, "ProxyCallbackStringHashAny type", arg1, arg2, arg3);
         }
 
     private: // members
