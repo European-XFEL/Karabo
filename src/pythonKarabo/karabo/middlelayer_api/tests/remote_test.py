@@ -8,7 +8,6 @@ import time
 import weakref
 
 from dateutil.parser import parse as from_isoformat
-from flaky import flaky
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
@@ -24,8 +23,6 @@ from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 from karabo.middlelayer_api.tests.compat import jms, mqtt
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
-FLAKY_MAX_RUNS = 7
-FLAKY_MIN_PASSES = 3
 
 
 class Superslot(Slot):
@@ -524,7 +521,7 @@ class Tests(DeviceTest):
                                    timeout=0.1)
 
                 await waitUntil(lambda: d.counter > 10)
-                self.assertEqual(d.counter, 11)
+                self.assertGreaterEqual(d.counter, 11)
 
                 # there are many "while True:" busy loops out there.
                 # assure we don't get stuck if the condition is always true
@@ -571,13 +568,8 @@ class Tests(DeviceTest):
         self.assertEqual(proxy.state, State.UNKNOWN)
 
     @async_tst
-    @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
     async def test_waituntilnew(self):
         """test the waitUntilNew coroutine for properties
-
-        NOTE: This test is declared as flaky as the cycling is sometimes not
-        working in the eventloop as it has to be. See that we have a sleep 0
-        fix here.
         """
         self.remote.counter = None
         self.remote.nested.val = None
@@ -598,21 +590,21 @@ class Tests(DeviceTest):
                 await waitUntilNew(d.value, d.counter, d.nested.val)
             task = ensure_future(d.count())
             try:
-                for i in range(30):
+                i = 0
+                while i < 30:
                     await waitUntilNew(d.counter, d.value)
-                    self.assertEqual(i, d.counter)
+                    self.assertLessEqual(i, d.counter)
+                    i = d.counter + 1
+                self.assertEqual(29, d.counter)
             finally:
                 await task
 
     @async_tst
-    @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
     async def test_waituntildevice(self):
         """test the waitUntilNew coroutine for devices
-
-        NOTE: This test is declared as flaky as the cycling is sometimes not
-        working in the eventloop as it has to be.
         """
-        await sleep(1)
+        self.remote.counter = -1
+        await sleep(2)
         with (await getDevice("remote")) as d:
             if mqtt:
                 await updateDevice(d)
@@ -621,9 +613,12 @@ class Tests(DeviceTest):
                 await sleep(0.1)
             task = ensure_future(d.count())
             try:
-                for i in range(30):
+                i = 0
+                while i < 30:
                     await waitUntilNew(d)
-                    self.assertEqual(i, d.counter)
+                    self.assertLessEqual(i, d.counter)
+                    i = d.counter + 1
+                self.assertEqual(29, d.counter)
             finally:
                 await task
 
