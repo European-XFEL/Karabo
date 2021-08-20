@@ -29,7 +29,7 @@ namespace karabo {
             UINT32_ELEMENT(expected).key("mqttRequestTimeout")
                 .displayedName("MQTT request timeout")
                 .description("MQTT request timeout in seconds")
-                .assignmentOptional().defaultValue(3)
+                .assignmentOptional().defaultValue(100)
                 .unit(Unit::SECOND)
                 .commit();
         }
