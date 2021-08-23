@@ -48,6 +48,7 @@ try:
 
     GUI_VERSION = utils.extract_base_version(version)
     GUI_VERSION_LONG = utils.extract_full_version(version)
+    GUI_VERSION_DETAILED = version
 except (ImportError, AttributeError):
     print('Version file not found! Please generate the _version.py file.')
     exit(1)
