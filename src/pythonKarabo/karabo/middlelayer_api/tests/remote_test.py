@@ -11,8 +11,9 @@ from dateutil.parser import parse as from_isoformat
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    AlarmCondition, background, Bool, Configurable, connectDevice,
-    decodeBinary, Device, DeviceNode, execute, filterByTags, Float, getDevice,
+    AlarmCondition, background, Bool, call, Configurable, connectDevice,
+    coslot, decodeBinary, Device, DeviceNode, execute, filterByTags, Float,
+    getDevice,
     Hash, isAlive, isSet, Int32, KaraboError, lock, MetricPrefix, Node,
     Overwrite, Queue, setNoWait, setWait, Slot, slot, State,
     Timestamp, String, unit, Unit, updateDevice, VectorChar, VectorInt16,
@@ -189,6 +190,14 @@ class Local(Device):
 
     async def onInitialization(self):
         self.state = State.ON
+
+    @coslot
+    async def useSetWait(self, stringValue):
+        """
+        'System' slot with argument (coslot) that uses
+        'setWait' as example from device_client interface
+        """
+        await setWait("remote", "string", stringValue)
 
 
 class Tests(DeviceTest):
@@ -504,6 +513,13 @@ class Tests(DeviceTest):
         await sleep(0.1)
         self.assertEqual(self.remote.value, 200)
         self.assertEqual(self.remote.counter, 300)
+
+    @async_tst
+    async def test_setwait_coslot(self):
+        """Test that setwait can be called in @coslot"""
+        self.remote.string = "none"
+        await call("local", "useSetWait", "string value 42")
+        self.assertEqual(self.remote.string, "string value 42")
 
     @async_tst
     async def test_waituntil(self):
