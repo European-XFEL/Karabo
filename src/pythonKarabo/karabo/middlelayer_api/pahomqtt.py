@@ -108,8 +108,9 @@ class AsyncioMqttHelper:
         if mid in self.pendingEvents:
             raise MqttError("Message ID is in use")
         self.pendingEvents[mid] = value
-        if len(self.pendingEvents) > 10:
-            self.logger.warning('Too many pending events (>10)')
+        if len(self.pendingEvents) > 1000:
+            self.logger.warning("Too many pending events: "
+                                f"{len(self.pendingEvents)}")
         try:
             yield
         finally:
