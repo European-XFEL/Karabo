@@ -64,7 +64,7 @@ def coslot(f, passMessage=False):
                 _log_exception(func, device, message)
         if passMessage:
             args.append(message)
-        ensure_future(inner())
+        get_event_loop().create_task(inner(), instance=device)
 
     f.slot = outer
     return f
