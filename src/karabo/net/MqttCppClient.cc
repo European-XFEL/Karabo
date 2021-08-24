@@ -26,10 +26,18 @@ namespace karabo {
                 .metricPrefix(MetricPrefix::MILLI)
                 .commit();
 
+            unsigned int defTimeout = 100;
+            const char* env = getenv("KARABO_MQTT_TIMEOUT");
+            if (env) {
+                const unsigned int envInt = util::fromString<unsigned int>(env);
+                defTimeout = (envInt > 0 ? envInt : defTimeout);
+                KARABO_LOG_FRAMEWORK_INFO << "MQTT timeout from environment: " << defTimeout;
+            }
+
             UINT32_ELEMENT(expected).key("mqttRequestTimeout")
                 .displayedName("MQTT request timeout")
                 .description("MQTT request timeout in seconds")
-                .assignmentOptional().defaultValue(100)
+                .assignmentOptional().defaultValue(defTimeout)
                 .unit(Unit::SECOND)
                 .commit();
         }
@@ -466,6 +474,7 @@ namespace karabo {
                          });
             auto status = fut.wait_for(std::chrono::seconds(m_mqttRequestTimeout));
             if (status == std::future_status::timeout) {
+                KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Timeout of publishing " << *msg;
                 return KARABO_ERROR_CODE_TIMED_OUT;
             }
             return fut.get();
@@ -735,6 +744,7 @@ namespace karabo {
                     if (duration.getTotalSeconds() >= m_mqttRequestTimeout) {
                         // Call the callback with an timed_out error code and remove the corresponding entry
                         // from the pending requests map
+                        KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": MQTT request " << it->first << "from " << it->second.first  << " timed out at " << now;
                         if (it->second.second) {
                             it->second.second(errc::make_error_code(errc::timed_out));
                         }
