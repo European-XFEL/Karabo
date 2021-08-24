@@ -258,9 +258,11 @@ class Image(Type):
         # `pixels` Hash as an NDArray object.
         # XXX: This is a code duplication of NDArray.toDataAndAttrs
         array_attrs = {"__classId": "NDArray"}
+        array_attrs.update(**attrs)
         h._setelement("pixels", HashElement(pixels, array_attrs))
 
         # set the `__classId` attribute to allow the C++ API to decode this
         # Hash node into an ImageData Object.
         image_attrs = {"__classId": "ImageData"}
+        image_attrs.update(**attrs)
         return h, image_attrs
