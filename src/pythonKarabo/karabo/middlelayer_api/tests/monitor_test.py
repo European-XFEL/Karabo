@@ -8,7 +8,7 @@ from karabo.native import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro, Monitor, RemoteDevice
 
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, sync_tst
-from karabo.middlelayer_api.tests.compat import amqp
+from karabo.middlelayer_api.compat import amqp
 
 
 class Remote(Device):
