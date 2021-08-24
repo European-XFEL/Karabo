@@ -1,8 +1,7 @@
 import numpy
 
 from karabo.native.data import (
-    AccessMode, Hash, HashElement, NodeType, dtype_from_number,
-    numpy_from_number)
+    AccessMode, Hash, NodeType, dtype_from_number, numpy_from_number)
 
 from .basetypes import NoneValue, QuantityValue
 from .configurable import Configurable
@@ -135,15 +134,12 @@ class NDArray(Type):
         # We are using fast-path Hash setting of values and attrs since
         # we don't have nodes in our Hash.
         h = Hash()
-        h._setelement("type",
-                      HashElement(self._gettype(data.dtype), attrs))
-        h._setelement("isBigEndian",
-                      HashElement(data.dtype.str[0] == ">", attrs))
-        h._setelement("shape",
-                      HashElement(numpy.array(data.shape, dtype=numpy.uint64),
-                                  attrs))
-        h._setelement("data",
-                      HashElement(data.value.data, attrs))
+        h.setElement("type", self._gettype(data.dtype), attrs)
+        h.setElement("isBigEndian", data.dtype.str[0] == ">", attrs)
+        h.setElement("shape",
+                     numpy.array(data.shape, dtype=numpy.uint64),
+                     attrs)
+        h.setElement("data", data.value.data, attrs)
 
         # set the `__classId` attribute to allow the C++ API to decode the
         # `h` Hash as an NDArray object.
