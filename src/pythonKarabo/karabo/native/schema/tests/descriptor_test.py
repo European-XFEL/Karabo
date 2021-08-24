@@ -639,6 +639,22 @@ class Tests(TestCase):
         attrs = stringBinding.attributes
         self.assertIs(attrs["metricPrefixSymbol"], MetricPrefix.NONE)
 
+        # Check the sizes of a vector hash
+        d = VectorHash(rowSchema=Schema("rs", hash=rowSchema),
+                       minSize=1, maxSize=2)
+        v = d.toKaraboValue([Hash("int", 3, "string", "hallo"),
+                             Hash("string", "hallo", "int", 20)])
+        data, _ = d.toDataAndAttrs(v)
+        self.assertIsInstance(data, HashList)
+
+        with self.assertRaises(ValueError):
+            v = d.toKaraboValue([])
+
+        with self.assertRaises(ValueError):
+            v = d.toKaraboValue([Hash("int", 3, "string", "hallo"),
+                                 Hash("string", "hallo", "int", 20),
+                                 Hash("string", "now", "int", 30)])
+
     def test_vector_hash(self):
         rowSchema = Hash("int", None, "string", None, "vector", None)
         rowSchema["int", "valueType"] = "INT32"

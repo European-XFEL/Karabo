@@ -1285,6 +1285,8 @@ class VectorHash(Vector):
                     tablerow += (kvalue.value,)
                 table.append(tablerow)
             table = np.array(table, dtype=self.dtype)
+
+        self.check(table)
         return TableValue(table, descriptor=self, units=self.units,
                           timestamp=timestamp)
 
