@@ -101,7 +101,7 @@ class NDArray(Type):
 
     def toKaraboValue(self, data, strict=False):
         if isinstance(data, Hash) and not strict:
-            if data.empty() or len(data["data"]) == 0:
+            if data.empty() or "data" not in data or len(data["data"]) == 0:
                 return NoneValue(descriptor=self)
             dtype = dtype_from_number(data["type"])
             dtype = dtype.newbyteorder(
