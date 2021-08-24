@@ -10,7 +10,7 @@ import shutil
 from subprocess import PIPE
 import sys
 import time
-from unittest import main
+from unittest import main, skipIf
 
 import numpy as np
 
@@ -22,6 +22,7 @@ from karabo.middlelayer import (
     Node, OutputChannel, setWait, shutdown, sleep, Slot, State, String,
     unit, Unit, UInt32, updateDevice, VectorDouble, waitUntil, waitUntilNew)
 
+from karabo.middlelayer_api.compat import jms
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
 
@@ -167,6 +168,7 @@ class Tests(DeviceTest):
         if had_to_kill:
             self.fail("process didn't properly go down")
 
+    @skipIf(not jms, "no support yet")
     @async_tst(timeout=90)
     async def test_cross(self):
         await getDevice("middlelayerDevice")
@@ -423,6 +425,7 @@ class Tests(DeviceTest):
         await sleep(2)
         self.assertEqual(self.device.channelclose, "boundDevice:output1")
 
+    @skipIf(not jms, "no support yet")
     @async_tst(timeout=90)
     async def test_cross_image(self):
         config = Hash(
@@ -474,6 +477,7 @@ class Tests(DeviceTest):
         await shutdown(bound_proxy)
         await self.process.wait()
 
+    @skipIf(not jms, "no support yet")
     @async_tst(timeout=90)
     async def test_history(self):
         before = datetime.now()
