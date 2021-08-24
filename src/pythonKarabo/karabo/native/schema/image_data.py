@@ -2,7 +2,7 @@ import numpy
 
 from karabo.native.data import (
     AccessMode, DaqDataType, dtype_from_number, EncodingType, Hash,
-    HashElement, NodeType, Unit)
+    NodeType, Unit)
 
 from .basetypes import NoneValue, ImageData
 from .configurable import Configurable
@@ -178,7 +178,9 @@ class Image(Type):
 
     def toKaraboValue(self, data, strict=False):
         if isinstance(data, Hash) and not strict:
-            if data.empty() or len(data["pixels"]) == 0:
+            if (data.empty()
+                    or "pixels" not in data
+                    or len(data["pixels"]) == 0):
                 return NoneValue(descriptor=self)
 
             pixels = data["pixels"]
@@ -232,34 +234,30 @@ class Image(Type):
 
         # Set the attributes of the image data!
         h = Hash()
-        h._setelement("dims", HashElement(data.dims, attrs))
-        h._setelement("dimTypes", HashElement(data.dimTypes, attrs))
-        h._setelement("dimScales", HashElement(data.dimScales, attrs))
-        h._setelement("encoding", HashElement(data.encoding, attrs))
-        h._setelement("roiOffsets", HashElement(data.roiOffsets, attrs))
-        h._setelement("binning", HashElement(data.binning, attrs))
-        h._setelement("rotation", HashElement(data.rotation, attrs))
-        h._setelement("bitsPerPixel", HashElement(data.bitsPerPixel, attrs))
-        h._setelement("flipX", HashElement(data.flipX, attrs))
-        h._setelement("flipY", HashElement(data.flipY, attrs))
+        h.setElement("dims", data.dims, attrs)
+        h.setElement("dimTypes", data.dimTypes, attrs)
+        h.setElement("dimScales", data.dimScales, attrs)
+        h.setElement("encoding", data.encoding, attrs)
+        h.setElement("roiOffsets", data.roiOffsets, attrs)
+        h.setElement("binning", data.binning, attrs)
+        h.setElement("rotation", data.rotation, attrs)
+        h.setElement("bitsPerPixel", data.bitsPerPixel, attrs)
+        h.setElement("flipX", data.flipX, attrs)
+        h.setElement("flipY", data.flipY, attrs)
 
         # Finally, set the NDArray Hash!
         pixels = Hash()
-        pixels._setelement("type",
-                           HashElement(convert_dtype(data.dtype), attrs))
-        pixels._setelement("isBigEndian",
-                           HashElement(data.dtype.str[0] == ">", attrs))
-        pixels._setelement("shape",
-                           HashElement(data.shape, attrs))
-        pixels._setelement("data",
-                           HashElement(data.value.data, attrs))
+        pixels.setElement("type", convert_dtype(data.dtype), attrs)
+        pixels.setElement("isBigEndian", data.dtype.str[0] == ">", attrs)
+        pixels.setElement("shape", data.shape, attrs)
+        pixels.setElement("data", data.value.data, attrs)
 
         # set the `__classId` attribute to allow the C++ API to decode the
         # `pixels` Hash as an NDArray object.
         # XXX: This is a code duplication of NDArray.toDataAndAttrs
         array_attrs = {"__classId": "NDArray"}
         array_attrs.update(**attrs)
-        h._setelement("pixels", HashElement(pixels, array_attrs))
+        h.setElement("pixels", pixels, array_attrs)
 
         # set the `__classId` attribute to allow the C++ API to decode this
         # Hash node into an ImageData Object.
