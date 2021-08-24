@@ -4,7 +4,7 @@ import uuid
 
 from karabo.middlelayer import call, getDevice, sleep, updateDevice
 from karabo.middlelayer_api.tests.eventloop import setEventLoop
-from karabo.middlelayer_api.tests.compat import jms
+from karabo.middlelayer_api.compat import jms
 from karabo.native import Hash
 
 from ..macro_server import MacroServer

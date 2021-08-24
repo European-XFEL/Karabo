@@ -20,7 +20,7 @@ from karabo import __version__ as karaboVersion
 from karabo.middlelayer_api.tests.eventloop import (
         async_tst, DeviceTest, sync_tst
         )
-from karabo.middlelayer_api.tests.compat import mqtt, jms, redis
+from karabo.middlelayer_api.compat import mqtt, jms, redis
 
 
 class RowSchema(Configurable):
