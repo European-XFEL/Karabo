@@ -8,7 +8,7 @@ from karabo.middlelayer import (
     OutputChannel, setWait, Slot, State, Timestamp, UInt32, updateDevice,
     waitUntil)
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
-from karabo.middlelayer_api.tests.compat import jms, amqp
+from karabo.middlelayer_api.compat import jms, amqp
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 
