@@ -21,7 +21,7 @@ from karabo.middlelayer import (
 from karabo.middlelayer_api import openmq
 
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
-from karabo.middlelayer_api.tests.compat import jms, mqtt
+from karabo.middlelayer_api.compat import jms, mqtt
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 
