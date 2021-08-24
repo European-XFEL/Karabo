@@ -52,9 +52,6 @@ __lint_flake8() {
 }
 
 __lint_isort() {
-    source $CI_PROJECT_DIR/ci/utils/enable_internet.sh
-    conda install isort
-    source $CI_PROJECT_DIR/ci/utils/disable_internet.sh
     pushd $CI_PROJECT_DIR/src/pythonGui/
     __run_lint_command "isort . --check"
     popd
