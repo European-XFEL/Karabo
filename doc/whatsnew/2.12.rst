@@ -17,6 +17,12 @@ Summary – Release highlights
 - GUI: State color field string formatting
 - GUI: Configurable horizontal label alignment
 
+Breaking Changes
+++++++++++++++++
+
+- MDL: DeviceNodes cannot have *properties* and *commands* anymore
+- MDL: Tables validate now their minSize and maxSize attribute
+
 Change of behaviour
 +++++++++++++++++++
 
