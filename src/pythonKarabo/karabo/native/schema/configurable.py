@@ -106,8 +106,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                 if (state is None or descr.allowedStates is None or
                         state in descr.allowedStates):
                     sub_schema, attrs = descr.toSchemaAndAttrs(device, state)
-                    schema.hash[attr] = sub_schema
-                    schema.hash[attr, ...] = attrs
+                    schema.hash.setElement(attr, sub_schema, attrs)
         return schema
 
     def getDeviceSchema(self, state=None):
@@ -120,8 +119,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
             if isSet(a):
                 v = getattr(type(self), k)
                 value, attrs = v.toDataAndAttrs(a)
-                r[k] = value
-                r[k, ...].update(attrs)
+                r.setElement(k, value, attrs)
         return r
 
     def __dir__(self):
@@ -324,8 +322,7 @@ class Node(Descriptor):
             a = getattr(instance, k, None)
             if isSet(a):
                 value, attrs = getattr(self.cls, k).toDataAndAttrs(a)
-                r[k] = value
-                r[k, ...].update(attrs)
+                r.setElement(k, value, attrs)
         return r, {}
 
     def alarmCondition(self, value):
@@ -366,8 +363,7 @@ class ChoiceOfNodes(Node):
             a = getattr(instance, k, None)
             if a is not None:
                 value, attrs = getattr(t, k).toDataAndAttrs(a)
-                r[k] = value
-                r[k, ...].update(attrs)
+                r.setElement(k, value, attrs)
         return Hash(t.__name__, r), {}
 
 
@@ -416,7 +412,6 @@ class ListOfNodes(Node):
             t = type(v)
             for k in t._allattrs:
                 value, attrs = getattr(t, k).toDataAndAttrs(getattr(v, k))
-                r[k] = value
-                r[k, ...] = attrs
+                r.setElement(k, value, attrs)
             ret.append(Hash(t.__name__, r))
         return ret, {}
