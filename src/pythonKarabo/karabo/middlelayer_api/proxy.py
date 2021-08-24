@@ -13,8 +13,16 @@ from karabo.native import KaraboError
 from karabo.native import get_timestamp
 from karabo.native import Weak
 
-from .eventloop import synchronize
-from .openmq import Error as OMQError
+from karabo.middlelayer_api.eventloop import synchronize
+from karabo.middlelayer_api.compat import jms, mqtt, redis, amqp
+if jms:
+    from karabo.middlelayer_api.openmq import Error as OMQError
+elif mqtt:
+    from karabo.middlelayer_api.pahomqtt import MqttError as OMQError
+elif redis:
+    from aioredis import RedisError as OMQError
+elif amqp:
+    from aio_pika import AMQPException as OMQError
 
 
 class _ProxyBase(object):
@@ -506,7 +514,6 @@ class DeviceClientProxyFactory(ProxyFactory):
             """
             self._used -= 1
             if self._used == 0:
-                self._disconnectSchemaUpdated()
                 signals = ["signalChanged", "signalStateChanged"]
                 self._device._ss.disconnect(self._deviceId, signals,
                                             self._device.slotChanged)
@@ -527,7 +534,6 @@ class DeviceClientProxyFactory(ProxyFactory):
             """
             self._used -= 1
             if self._used == 0:
-                await self._async_disconnectSchemaUpdated()
                 signals = ["signalChanged", "signalStateChanged"]
                 await self._device._ss.async_disconnect(
                         self._deviceId, signals, self._device.slotChanged)
@@ -553,6 +559,8 @@ class DeviceClientProxyFactory(ProxyFactory):
             outputs = list(self._remote_output_channel)
             for channel in outputs:
                 channel.disconnect()
+            with suppress(OMQError):
+                self._disconnectSchemaUpdated()
             if self._used > 0:
                 # set the used variable to 1 for a clean disconnect in exit
                 self._used = 1
