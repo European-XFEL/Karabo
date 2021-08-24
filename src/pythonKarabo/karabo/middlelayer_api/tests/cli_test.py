@@ -17,7 +17,7 @@ from karabo.middlelayer_api.ikarabo import (
 from karabo.middlelayer_api.macro import Macro, EventThread, RemoteDevice
 
 from karabo.middlelayer_api.tests.eventloop import setEventLoop
-from karabo.middlelayer_api.tests.compat import amqp
+from karabo.middlelayer_api.compat import amqp
 
 
 class Remote(Macro):

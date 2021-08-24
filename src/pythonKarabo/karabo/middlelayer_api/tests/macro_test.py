@@ -21,7 +21,7 @@ from karabo.middlelayer_api.synchronization import background, sleep
 
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, sync_tst, async_tst)
-from karabo.middlelayer_api.tests.compat import jms
+from karabo.middlelayer_api.compat import jms
 
 
 class Superslot(Slot):
