@@ -11,7 +11,7 @@ from karabo.native import (
     ByteArray, Char, ComplexFloat, Configurable, Double, decodeBinary,
     encodeBinary, Float, get_descriptor_from_data, Hash, HashList, Image,
     ImageData, Int8, Int16, Int32, Int64, KaraboError, LeafType, MetricPrefix,
-    NDArray, NumpyVector, QuantityValue, RegexString, Schema,
+    NDArray, NoneValue, NumpyVector, QuantityValue, RegexString, Schema,
     Slot, String, Timestamp, Type, TypeHash, TypeNone, TypeSchema, UInt8,
     UInt16, UInt32, UInt64, Unit, unit_registry as unit, VectorBool,
     VectorChar, VectorDouble, VectorComplexFloat, VectorFloat, VectorHash,
@@ -411,6 +411,11 @@ class Tests(TestCase):
         h["data"][0] = 1
         conv = d.toKaraboValue(h)
         self.assertEqual(conv[0, 0], 257)
+
+        # Handle bad data
+        h.pop("data")
+        conv = d.toKaraboValue(h)
+        self.assertTrue(isinstance(conv, NoneValue))
 
     def test_image(self):
         d = Image(dtype=UInt8, shape=(2, 2))
