@@ -944,56 +944,19 @@ class Tests(DeviceTest):
     @async_tst
     async def test_devicenode(self):
         class A(Device):
-            dn = DeviceNode(properties=["value", "counter", "other"],
-                            commands=["doit", "changeit"],
-                            timeout=15.0)
+            dn = DeviceNode(timeout=15.0)
 
-            dnEmpty = DeviceNode()
-
-        a = A({"_deviceId_": "devicenode", "dn": "remote",
-               "dnEmpty": "remote"})
+        a = A({"_deviceId_": "devicenode", "dn": "remote"})
 
         await a.startInstance()
         try:
-            a.dn.value = 5
-            await updateDevice(a.dn)
-            self.assertEqual(self.remote.value, 5)
-
             with (await getDevice("devicenode")) as d:
                 if not jms:
                     await updateDevice(d)
                 self.assertEqual(d.lockedBy, "")
-                self.assertEqual(d.dn.value, 5)
-                self.assertEqual(d.dn.counter, -1)
+                self.assertEqual(d.dn.value, "remote")
+                self.assertIsNotNone(d.dn.timestamp)
                 self.assertEqual(type(d).dn.displayType, "deviceNode")
-                d.dn.value = 8
-                d.dn.counter = 12
-                self.remote.done = False
-                await d.dn.doit()
-                self.assertEqual(d.dn.value, 8)
-                self.assertEqual(d.dn.counter, 12)
-                self.assertEqual(a.dn.value, 8)
-                self.assertEqual(a.dn.counter, 12)
-                self.assertEqual(a.dn.state, State.UNKNOWN)
-
-                # Test here for timestamp behavior
-                self.assertIsNotNone(a.dn.state.timestamp)
-                self.assertIsNotNone(a.dn.counter.timestamp)
-                self.assertIsNotNone(a.dn.value.timestamp)
-
-                self.assertEqual(d.dnEmpty, "remote")
-                self.assertIsNotNone(d.dnEmpty.timestamp)
-
-                self.assertEqual(a.dn.alarmCondition, AlarmCondition.NONE)
-                self.assertTrue(self.remote.done)
-                d.dn.value = 22
-                await d.dn.changeit()
-                self.assertEqual(d.dn.value, 18)
-                self.assertEqual(a.dn.value, 18)
-
-                d.dn.othr = 111
-                await updateDevice(d)
-                self.assertFalse(isSet(d.dn.other))
         finally:
             await a.slotKillDevice()
 
