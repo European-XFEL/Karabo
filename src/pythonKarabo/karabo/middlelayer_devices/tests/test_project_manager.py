@@ -1,13 +1,11 @@
 import os
 from contextlib import contextmanager
 
-from karabo.middlelayer import (
-    call, connectDevice, coslot, Device, Hash, slot, String, updateDevice)
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
+from karabo.middlelayer import Hash
+from karabo.middlelayer_api.tests.eventloop import DeviceTest
 from karabo.middlelayer_devices.project_manager import ProjectManager
 from karabo.project_db.exist_db.database import ProjectDatabase
 from karabo.project_db.exist_db.util import TESTDB_ADMIN_PASSWORD
-from karabo.project_db.tests.util import create_hierarchy
 from karabo.project_db.exist_db.tests.util import stop_local_database
 
 from .projectdb_util import ConsumerDevice, VerificationProjectManager
@@ -32,7 +30,7 @@ class TestProjectManager(VerificationProjectManager, DeviceTest):
         conf = Hash("_deviceId_", "projManTest")
         conf["projectDB"] = Hash("protocol", "exist_db",
                                  "exist_db", Hash("host", host,
-                                                 "port", int(port)),
+                                                  "port", int(port)),
                                  "testMode", True)
         cls.local = ProjectManager(conf)
         cls.consume = ConsumerDevice({"_deviceId_": "consumeTest"})
