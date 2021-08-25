@@ -318,13 +318,13 @@ class TestConfigurationManager(DeviceTest):
         await saveConfigurationFromName(
             ["CHARLIE", dev], name="testConfigClientMixedList",
             description="Mixed", priority=2)
-        l = await listConfigurationFromName("CHARLIE")
-        self.assertEqual(len(l), 3)
-        self.assertIsInstance(l, HashList)
+        li = await listConfigurationFromName("CHARLIE")
+        self.assertEqual(len(li), 3)
+        self.assertIsInstance(li, HashList)
         clist = ["testConfigClient", "testConfigClientList",
                  "testConfigClientMixedList"]
-        self.assertIn(l[0]["name"], clist)
-        self.assertIn(l[1]["name"], clist)
+        self.assertIn(li[0]["name"], clist)
+        self.assertIn(li[1]["name"], clist)
         config = await getConfigurationFromName("CHARLIE",
                                                 "testConfigClientList")
         value = config["value"]
