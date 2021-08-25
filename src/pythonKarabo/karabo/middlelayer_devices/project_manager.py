@@ -174,6 +174,40 @@ class ProjectManager(Device):
         return savedItems, projectUuids
 
     @slot
+    def slotGenericRequest(self, params):
+        """Implements a generic Hash-in/Hash-out interface
+
+        :param params: the input Hash.
+                      it must contain:
+                      - a `dbtoken` string matching an open session
+                      - a `type` string matching a non-generic slot name
+                      - the optional fields required by the non-generic slot
+                        requested.
+        """
+        try:
+            msg = "Input must be a Hash"
+            assert isinstance(params, Hash), msg
+            msg = "'type' must be present in the input hash"
+            assert "type" in params, msg
+            msg = "'dbtoken' must be present in the input hash"
+            assert "dbtoken" in params, msg
+
+            type_ = params["type"]
+            token = params["dbtoken"]  # session token
+            if type_ == "listItems":
+                return self.slotListItems(token,
+                                          params['domain'],
+                                          params.get('item_types', None))
+            elif type_ == "loadItems":
+                return self.slotLoadItems(token, params['items'])
+            elif type_ == "listDomains":
+                return self.slotListDomains(token)
+            else:
+                raise NotImplementedError(f"{type} not implemented")
+        except Exception as e:
+            Hash("success", False, "reason", f"{type(e)}: {e}")
+
+    @slot
     def slotSaveItems(self, token, items, client=None):
         """Save items in project database
 
