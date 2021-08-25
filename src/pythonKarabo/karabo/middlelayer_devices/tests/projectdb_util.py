@@ -4,7 +4,7 @@ import os
 from uuid import uuid4
 
 from karabo.middlelayer import (
-   call, connectDevice, coslot, Device, Hash, slot, String, updateDevice)
+   call, connectDevice, coslot, Device, Hash, String, updateDevice)
 from karabo.middlelayer_api.tests.eventloop import async_tst
 from karabo.project_db.tests.util import create_hierarchy
 
@@ -114,6 +114,34 @@ class VerificationProjectManager():
                 if i.get("item_type") == "scene":
                     scenecnt += 1
             self.assertEqual(scenecnt, 4)
+
+        with self.subTest(msg="Test generic interface"):
+            arg = Hash("type", "listItems",
+                       "dbtoken", "admin",
+                       "domain", "LOCAL")
+            ret = await wait_for(call("projManTest",
+                                      "slotGenericRequest",
+                                      arg),
+                                 timeout=5)
+            self.assertTrue(ret.get("success"), ret.get("reason", "no reason"))
+            items = ret.get('items')
+            self.assertEqual(len(items), 25)
+            scenecnt = 0
+            for i in items:
+                if i.get("item_type") == "scene":
+                    scenecnt += 1
+            self.assertEqual(scenecnt, 4)
+            # add optional argument. Gets only scenes
+            arg["item_types"] = ["scene"]
+            ret = await wait_for(call("projManTest",
+                                      "slotGenericRequest",
+                                      arg),
+                                 timeout=5)
+            self.assertTrue(ret.get("success"), ret.get("reason", "no reason"))
+            items = ret.get('items')
+            self.assertEqual(len(items), 4)
+            for i in items:
+                self.assertEqual(i.get("item_type"), "scene")
 
         with self.subTest(msg="Test saving data"):
             ret = await wait_for(call("consumeTest", "connectProject",
