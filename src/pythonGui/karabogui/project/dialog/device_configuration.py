@@ -47,7 +47,6 @@ class DeviceConfigurationDialog(QDialog):
 
         self.ui_erase_path.clicked.connect(self._erase_path)
         self.ui_erase_all.clicked.connect(self._erase_config)
-        self.ui_erase_attributes.clicked.connect(self._erase_attributes)
         self.ui_sanitize.clicked.connect(self._sanitize_config)
         if project_device.status in _NO_SCHEMA_STATUS:
             self.ui_sanitize.setEnabled(False)
@@ -61,10 +60,14 @@ class DeviceConfigurationDialog(QDialog):
     @Slot()
     def _sanitize_config(self):
         config = Hash()
+        remove_attr = self.ui_remove_attributes.isChecked()
         for k, v, a in Hash.flat_iterall(self.configuration, empty=False):
             if k in self._invalid_paths:
                 continue
-            config.setElement(k, v, a)
+            if remove_attr:
+                config[k] = v
+            else:
+                config.setElement(k, v, a)
 
         proxy = self.project_device.get_class_proxy()
         binding = proxy.binding
@@ -74,22 +77,6 @@ class DeviceConfigurationDialog(QDialog):
             config = extract_init_configuration(
                 binding=binding, config=config)
 
-        self.configuration = config
-        self._show_configuration()
-
-    @Slot()
-    def _erase_attributes(self):
-        config = Hash()
-        for k, v, _ in Hash.flat_iterall(self.configuration, empty=True):
-            config[k] = v
-        self.configuration = config
-        self._show_configuration()
-
-    @Slot()
-    def _erase_empty_nodes(self):
-        config = Hash()
-        for k, v, a in Hash.flat_iterall(self.configuration, empty=False):
-            config.setElement(k, v, a)
         self.configuration = config
         self._show_configuration()
 
