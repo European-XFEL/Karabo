@@ -93,3 +93,6 @@ cmake-*
 /cmake/resolve-karabo-lib-target.cmake
 # Visual Studio Code settings
 .vscode
+# coverage
+htmlcov/
+coverage.xml
