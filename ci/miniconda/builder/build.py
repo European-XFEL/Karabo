@@ -219,8 +219,7 @@ class Builder:
         if not (recipe == KARABOGUI and self.args.test):
             return
         recipe_dir = op.dirname(self.recipe_path(recipe))
-        extension = "sh" if sys_name() != "Windows" else "bat"
-        test_script = op.join(recipe_dir, f"_run_test.{extension}")
+        test_script = op.join(recipe_dir, f"_run_test.py")
         if not op.exists(test_script):
             print(f"Test script '{test_script}' missing")
 
@@ -229,8 +228,13 @@ class Builder:
             self.create_devenv(recipe)
 
         with self.karabo_installed(recipe):
-            cmd = [Commands.RUN, '-n', recipe, test_script]
-            conda_run(*cmd)
+            cmd = [
+                Commands.RUN, '-n', recipe, 'python', '-c',
+                'import sys; print(sys.executable)']
+            output = conda_run(*cmd)
+            executable = output.strip()
+            output = command_run([executable, test_script])
+            print(output.decode())
             print('Tests successful')
 
     # -----------------------------------------------------------------------
