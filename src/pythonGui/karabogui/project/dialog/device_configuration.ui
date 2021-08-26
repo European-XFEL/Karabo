@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
+    <width>650</width>
     <height>650</height>
    </rect>
   </property>
@@ -29,7 +29,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QLabel" name="label_2">
+    <widget class="QLabel" name="label_configuration">
      <property name="font">
       <font>
        <weight>75</weight>
@@ -70,7 +70,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label_3">
+      <widget class="QLabel" name="label_validation">
        <property name="font">
         <font>
          <weight>75</weight>
@@ -104,13 +104,6 @@
     </layout>
    </item>
    <item>
-    <widget class="Line" name="line_2">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QLabel" name="label_4">
      <property name="font">
       <font>
@@ -118,7 +111,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Note: Sanitize removes read only properties without run time attributes and not valid values.</string>
+      <string>Note: Sanitize removes read only properties and not valid values. It will also remove all attributes by default!</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -126,11 +119,21 @@
     </widget>
    </item>
    <item>
+    <widget class="Line" name="line_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QPushButton" name="ui_erase_attributes">
+      <widget class="QCheckBox" name="ui_remove_attributes">
        <property name="text">
-        <string>Erase Attributes</string>
+        <string>Remove attributes</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
