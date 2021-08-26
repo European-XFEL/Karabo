@@ -16,9 +16,12 @@ stages:
     paths:
       - junit*.xml
       - build_debug/junit*.xml
+      - coverage.xml
     reports:
       junit:
         - junit*.xml
+      cobertura:
+        - coverage.xml
 
 .services_template: &services_template
   services:
