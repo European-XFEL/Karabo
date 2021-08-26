@@ -18,6 +18,7 @@ dependencies:
   - isort=5.8.0
   - pytest=6.1.1
   - pytest-qt=3.3.0
+  - pytest-cov=2.12.1
   - setuptools=49.6.0
   - setuptools_scm=5.0.1
   # GUI
