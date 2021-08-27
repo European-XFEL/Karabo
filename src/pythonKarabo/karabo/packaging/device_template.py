@@ -61,6 +61,7 @@ def configure_template(path, package_name, class_name, email):
         re.compile('__DATE__'): date,
         re.compile('__EMAIL__'): email,
         re.compile('__PACKAGE_NAME__'): package_name,
+        re.compile('__PACKAGE_NAME_ALL_CAPS__'): package_name.upper(),
     }
 
     # Do the path renames first
