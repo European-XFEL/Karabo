@@ -8,11 +8,17 @@ SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 # "karabo install" expects the installation directory here
 TARGET_DIR=$SCRIPTPATH/dist/$1/cmake/.
 BUILD_DIR=$SCRIPTPATH/build
-TESTS_DIR=$BUILD_DIR/__PACKAGE_NAME__
 
 mkdir -p $TARGET_DIR
-rm -fr $BUILD_DIR
 mkdir -p $BUILD_DIR
+
+# handle the make -j option from the caller.
+BUILD_OPT="--build ."
+unset MAKEFLAGS
+if [[ "${2}" != "" ]]; then
+  BUILD_OPT="--build . -j ${2}"
+fi
+
 
 cmake \
     -DCMAKE_BUILD_TYPE=$1 \
@@ -22,6 +28,6 @@ cmake \
     -DCMAKE_INSTALL_PREFIX=$TARGET_DIR \
     -B $BUILD_DIR .
 cd $BUILD_DIR
-cmake --build .
-cd $TESTS_DIR
-ctest -VV
+cmake $BUILD_OPT
+$(cp $BUILD_DIR/__PACKAGE_NAME__/lib*.so $TARGET_DIR | true)
+
