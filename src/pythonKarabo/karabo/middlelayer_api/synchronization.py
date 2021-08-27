@@ -66,12 +66,13 @@ async def gather(*args, return_exceptions=False):
     arguments are done. The function returns a list of the return value
     of all functions.
 
-    If one of the futues raises an exception, gather also immediately raises
+    If one of the futures raises an exception, gather also immediately raises
     that exception, unless *return_exceptions* indicates that all futures
     should be waited for, and the exception returned instead.
     """
     assert all(isinstance(f, KaraboFuture) for f in args), \
-        "Arguments must be of type KaraboFuture"
+        "Arguments must be of type KaraboFuture, for `asyncio.Futures` "\
+        " please use `asyncio.gather` instead"
     return (await asyncio.gather(*[f.future for f in args],
                                  return_exceptions=return_exceptions))
 
