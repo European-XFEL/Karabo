@@ -14,7 +14,7 @@
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
 
-#include "version.hh"  // provides PACKAGE_VERSION
+#include "version.hh"  // provides __PACKAGE_NAME_ALL_CAPS___PACKAGE_VERSION
 
 
 namespace karabo {
@@ -26,7 +26,7 @@ namespace karabo {
         // Add reflection information and Karabo framework compatibility to
         // this class.
         KARABO_CLASSINFO(__CLASS_NAME__, "__CLASS_NAME__",
-                         __PACKAGE_NAME___PACKAGE_VERSION)
+                         __PACKAGE_NAME_ALL_CAPS___PACKAGE_VERSION)
 
         /**
          * @brief Necessary method as part of the factory/configuration system
