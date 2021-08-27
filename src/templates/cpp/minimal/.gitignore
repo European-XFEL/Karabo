@@ -33,7 +33,7 @@ CMakeLists.txt.user
 CMakeFiles
 CMakeScripts
 Testing
-Makefile
+#Makefile # using the Makefile to interface with `karabo install`
 cmake_install.cmake
 install_manifest.txt
 compile_commands.json
