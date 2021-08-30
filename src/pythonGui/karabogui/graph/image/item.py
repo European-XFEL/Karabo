@@ -36,6 +36,7 @@ class KaraboImageItem(GraphicsObject):
         self.qimage = None
 
         self.levels = None
+        # We have row-major
         self.axisOrder = getConfigOption('imageAxisOrder')
         self.setImage(image)
 
@@ -134,6 +135,9 @@ class KaraboImageItem(GraphicsObject):
 
     @Slot()
     def reset_downsampling(self, update=True):
+        """Reset the downsampling of the `ImageItem`. The `update` default
+        is triggered externally via a `viewbox` on resize.
+        """
         self._lastDownsample = None
         if update:
             self.updateImage()
@@ -183,8 +187,11 @@ class KaraboImageItem(GraphicsObject):
     # ---------------------------------------------------------------------
     # Render patches
 
-    def set_qimage(self, image=None, autoLevels=None, **kwargs):
-        """Update the image displayed by this item."""
+    def _set_graph_image(self, image=None, autoLevels=None, **kwargs):
+        """The original setImage implementation of `pg.ImageItem`
+
+        Note: This method is modified for lut level improvements!
+        """
         new_data = False
         if image is None:
             if self.image is None:
@@ -233,28 +240,21 @@ class KaraboImageItem(GraphicsObject):
             self.sigImageChanged.emit()
 
     def setImage(self, image=None, **kwargs):
-        """There could be cases that all image pixels have the same value.
-        Since pyqtgraph defaults the levels to (0, 255) for such, we
-        calculate the levels for our own sanity."""
-
-        # Check if the image is valid
+        """Main method to set an `image` on the `KaraboPlotImageItem`"""
         if image is None:
             return
 
-        # Convert single-channel image to 2D array
+        # Convert single-channel image to 2D array if possible
         if image.ndim == 3 and image.shape[-1] == 1:
             image = image[..., 0]
 
-        if image.ndim == 2 and self.auto_levels:
-            # Calculate levels only on pseudocolor images
-            # (single channel or 2D images)
-            image_min, image_max = image.min(), image.max()
-            levels = [image_min, image_max]
-            self.set_qimage(image=image, levels=levels, **kwargs)
+        if image.ndim == 3:
+            # In case of 3 dim images we optimize out the levels calculation
+            # as it is not used
+            autoLevels = False
         else:
-            # No levels calculation needed for pseudocolor images with preset
-            # levels and for RGB images
-            self.set_qimage(image=image, autoLevels=False, **kwargs)
+            autoLevels = self.auto_levels
+        self._set_graph_image(image=image, autoLevels=autoLevels, **kwargs)
 
     def render(self):
         """Reimplementing for performance improvements patches"""
@@ -279,9 +279,14 @@ class KaraboImageItem(GraphicsObject):
             # 3. Clip values according to levels
             low, high = 0, 255  # default color range
             if self.levels is None:
+                # Typically, levels are not `None` due to auto_levels assigning
+                # the levels
                 image_min, image_max = image.min(), image.max()
             else:
+                # Levels are assigned and we have to clip the
+                # image and rescale the minimum and maximum.
                 level_min, level_max = self.levels
+                # XXX: We might not have to clip with autoLevels
                 image = np.clip(image, level_min, level_max)
                 image_min, image_max = image.min(), image.max()
                 # Calculate new color ranges with the ratio of the image
@@ -309,11 +314,10 @@ class KaraboImageItem(GraphicsObject):
             elif image.shape[-1] == 4:
                 img_format = QImage.Format_ARGB32
             else:
-                raise NotImplementedError(f"Formatting for image with shape "
+                raise NotImplementedError("Formatting for image with shape "
                                           f"{image.shape} is not supported")
 
-            # Convert data type to uint8 if otherwise
-            # Note: Convert with QImage
+            # The image formats only work with uint8!
             if image.dtype != np.uint8:
                 image = image.astype(np.uint8)
 
@@ -524,4 +528,5 @@ class KaraboImageItem(GraphicsObject):
 
 
 def is_image_invalid(image):
+    """Convenience function to check if we have a valid `image` with a size"""
     return image is None or image.size == 0
