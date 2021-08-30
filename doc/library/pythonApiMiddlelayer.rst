@@ -59,11 +59,35 @@ The command line, and devices which inherit
 :class:`~karabo.middlelayer.DeviceClientBase`
 keep track of all other running devices:
 
+.. autofunction:: karabo.middlelayer.findDevices
+
+.. autofunction:: karabo.middlelayer.findServers
+
+.. autofunction:: karabo.middlelayer.getClients
+
 .. autofunction:: karabo.middlelayer.getDevices
 
 .. autofunction:: karabo.middlelayer.getServers
 
 .. autofunction:: karabo.middlelayer.getClasses
+
+.. autofunction:: karabo.middlelayer.getTopology
+
+
+Working with Configurations and Timestamps
+------------------------------------------
+
+The command line provides functions to compare device configurations:
+
+.. autofunction:: karabo.middlelayer.compareDeviceWithPast
+
+.. autofunction:: karabo.middlelayer.compareDeviceConfiguration
+
+.. autofunction:: karabo.middlelayer.minutesAgo
+
+.. autofunction:: karabo.middlelayer.hoursAgo
+
+.. autofunction:: karabo.middlelayer.daysAgo
 
 
 Writing a device
@@ -206,6 +230,8 @@ can handle:
 Compound descriptors
 ~~~~~~~~~~~~~~~~~~~~
 
+.. autoclass:: karabo.middlelayer.Image()
+
 .. autoclass:: karabo.middlelayer.Node()
 
 .. autoclass:: karabo.middlelayer.VectorHash()
@@ -215,6 +241,11 @@ Special descriptors
 ~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: karabo.middlelayer.DeviceNode
+
+.. autoclass:: karabo.middlelayer.VectorRegexString()
+
+.. autoclass:: karabo.middlelayer.RegexString()
+
 
 Karabo data types
 -----------------
@@ -234,6 +265,8 @@ Karabo data types
 .. autoclass:: karabo.middlelayer.EnumValue()
 
 .. autoclass:: karabo.middlelayer.BoolValue()
+
+.. autoclass:: karabo.middlelayer.ImageData()
 
 .. autoclass:: karabo.middlelayer.NoneValue()
 
