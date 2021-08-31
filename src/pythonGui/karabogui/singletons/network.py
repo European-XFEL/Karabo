@@ -464,6 +464,15 @@ class Network(QObject):
         h["token"] = get_config()["db_token"]
         self._write_hash(h)
 
+    def onProjectListProjectsWithDevice(self, project_manager,
+                                        domain, device_id):
+        h = Hash("type", "projectListProjectsWithDevice")
+        h["projectManager"] = project_manager
+        h["token"] = get_config()["db_token"]
+        h["domain"] = domain
+        h["device_id"] = device_id
+        self._write_hash(h)
+
     def onListProjectManagers(self):
         h = Hash("type", "projectListProjectManagers")
         h["token"] = get_config()["db_token"]

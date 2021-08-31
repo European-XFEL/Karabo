@@ -382,6 +382,45 @@ class ProjectManager(Device):
             return Hash('domains', res)
 
     @slot
+    def slotListProjectsWithDevice(self, token, domain, device_id):
+        """
+        List projects in domain which have configurations for a given device.
+        :param token: database user token
+        :param domain: domain to list items from
+        :param device_id: device with configurations stored in the projects to
+                          be listed
+        :return: a Hash with key, "projects", with a list of Hashes for its
+                 value. Each Hash in the list has three keys: "uuid",
+                 "name" and "last_modified". "uuid" is the unique id of the
+                 project in the project database, "name" is the project name
+                 and "last_modified" is the UTC imestamp of the projects's most
+                 recent modification in "%Y-%m-%d %H:%M:%S" format.
+                 The returned Hash also has a boolean key "success" that
+                 indicates whether the slot execution has been successful
+                 (True) and a string key "reason", that will contain an error
+                 description when the slot execution fails.
+        """
+        self._checkDbInitialized(token)
+
+        with self.user_db_sessions[token] as db_session:
+            exceptionReason = ""
+            success = True
+            try:
+                res_prjs = []
+                prjs = db_session.get_projects_with_device(domain, device_id)
+                for prj in prjs:
+                    res_prjs.append(
+                        Hash("name", prj["projectname"],
+                             "uuid", prj["uuid"],
+                             "last_modified", prj["date"]))
+            except ProjectDBError as e:
+                exceptionReason = str(e)
+                success = False
+            return Hash('projects', res_prjs,
+                        'success', success,
+                        'reason', exceptionReason)
+
+    @slot
     def slotUpdateAttribute(self, token, items):
         """
         Update any attribute of given ``items`` in the database
