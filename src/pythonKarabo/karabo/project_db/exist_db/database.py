@@ -481,6 +481,40 @@ class ProjectDatabase(DatabaseBase):
                  "instanceid": r.attrib["instanceid"]} for r in
                 res.results[0].getchildren()]
 
+
+    def get_configurations_from_device_name_part(self, domain, device_id_part):
+        """
+        Returns a list of configurations for a given device
+        :param domain: DB domain
+        :param device_id_part: part of device name; search is case-insensitive.
+        :return: a list of dicts:
+            [{"configid": uuid of the configuration,
+              "instanceid": device instance uuid in the DB},
+              ...
+            ]
+        """
+        query = """
+        xquery version "3.0";
+        let $path := "{path}"
+        let $iid := "{instance_id}"
+        return <items>{{
+        for $doc in collection($path)/xml//device_instance
+             [contains(lower-case(@instance_id),lower-case($iid))]
+        let $active := $doc/@active_rev
+        let $configid := $doc/device_config[@revision=$active]/@uuid
+        let $instanceid := $doc/../@uuid
+        return <item configid="{{$configid}}" instanceid="{{$instanceid}}"/>
+        }}</items>
+        """
+        path = "{}/{}".format(self.root, domain)
+        query = query.format(path=path, instance_id=device_id_part)
+
+        res = self.dbhandle.query(query)
+
+        return [{"configid": r.attrib["configid"],
+                 "instanceid": r.attrib["instanceid"]} for r in
+                res.results[0].getchildren()]
+
     def get_projects_from_device(self, domain, uuid):
         """
         Returns the projects which contain a device instance with a given uuid
@@ -523,4 +557,65 @@ class ProjectDatabase(DatabaseBase):
             res = self.dbhandle.query(queryf)
             projects |= set([r.attrib["projectname"] for r in
                              res.results[0].getchildren()])
+        return projects
+
+    def get_projects_data_from_device(self, domain, uuid):
+        """
+        Returns the projects which contain a device instance with a given uuid
+
+        :param domain: DB domain
+        :param uuid: the uuid of the device instance from the database
+        :return: a list containing project names, uuids and last modification
+                 data.
+        """
+        query = """
+        xquery version "3.0";
+        let $path := "{path}"
+        let $iid := "{uuid}"
+        return <items>{{
+        for $doc in collection($path)/xml//device_instance[@uuid=$iid]
+        let $serverid := $doc/../../@uuid
+        return <item serverid="{{$serverid}}"/>
+        }}</items>
+        """
+
+        path = "{}/{}".format(self.root, domain)
+        query = query.format(path=path, uuid=uuid)
+        res = self.dbhandle.query(query)
+
+        servers = [{"serverid": r.attrib["serverid"]} for r in
+                   res.results[0].getchildren()]
+
+        query = """
+        xquery version "3.0";
+        declare namespace functx = "http://www.functx.com";
+        declare function functx:if-absent(
+            $arg as item()* , $value as item()*)  as item()*
+        {{ if (exists($arg)) then $arg else $value }};
+
+        let $path := "{path}"
+        let $iid := "{instance}"
+        return <items>{{
+        for $doc in collection($path)/xml//servers[KRB_Item/uuid=$iid]
+        let $projectname := $doc/../../../@simple_name
+        let $date := functx:if-absent($doc/../../../@date, '')
+        let $uuid := $doc/../../../@uuid
+        return <item projectname="{{$projectname}}"
+                     date="{{$date}}"
+                     uuid="{{$uuid}}" />
+        }}</items>
+        """
+        projects = []
+        for server in servers:
+            queryf = query.format(path=path, instance=server["serverid"])
+            res = self.dbhandle.query(queryf)
+            for r in res.results[0].getchildren():
+                if r.attrib["projectname"] and r.attrib["uuid"]:
+                    # Project data is valid; cases of projects with empty
+                    # names have been found during tests.
+                    projects.append({
+                        "projectname": r.attrib["projectname"],
+                        "date": r.attrib["date"],
+                        "uuid": r.attrib["uuid"]
+                    })
         return projects
