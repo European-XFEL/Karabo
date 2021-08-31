@@ -128,6 +128,9 @@ class Configuration(QObject):
 
     db_token = Item(default='admin', group=PROJECT)
     domain = Item(default='CAS_INTERNAL', q_set=True, group=PROJECT)
+    # The most recently used domain in a successful 'Load Project with
+    # Device' operation. Does not persist accross GUI working sessions.
+    device_domain = Item(default=None, q_set=False, group=PROJECT)
 
     # ----------------------------------------------
     # GUI Server network connection

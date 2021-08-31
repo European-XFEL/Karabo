@@ -145,6 +145,15 @@ class ProjectDatabaseConnection(QObject):
         # Call locally only if necessary
         return self.cache.get_available_project_data(domain, obj_type)
 
+    def get_projects_with_device(self, domain, device_id):
+        """ Find projects which contain configurations for a given device.
+            Don't use the local cache.
+        """
+        self._ensure_login()
+
+        self.network.onProjectListProjectsWithDevice(
+            self.project_manager, domain, device_id)
+
     def retrieve(self, domain, uuid, existing=None):
         """Read an object from the database.
         """
