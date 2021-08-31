@@ -645,6 +645,8 @@ namespace karabo {
                         onProjectListProjectManagers(channel, info);
                     } else if (type == "projectListItems") {
                         onProjectListItems(channel, info);
+                    } else if (type == "projectListProjectsWithDevice") {
+                        onProjectListProjectsWithDevice(channel, info);
                     } else if (type == "projectListDomains") {
                         onProjectListDomains(channel, info);
                     } else if (type == "projectUpdateAttribute") {
@@ -2277,6 +2279,35 @@ namespace karabo {
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListItems", _1));
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListItems(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::onProjectListProjectsWithDevice(
+            WeakChannelPointer channel, const karabo::util::Hash& info) {
+            using namespace std;
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG
+                    << "onProjectListProjectsWithDevice : info ...\n" << info;
+                const string& prjMgr = info.get<string>("projectManager");
+                if (!checkProjectManagerId(
+                    channel, prjMgr, "projectListProjectsWithDevice",
+                    "Project manager does not exist: Project list cannot be retrieved."))
+                    return;
+                const string& token = info.get<string>("token");
+                const string& domain = info.get<string>("domain");
+                const string& dev_id = info.get<string>("device_id");
+                request(prjMgr, "slotListProjectsWithDevice", token, domain, dev_id)
+                    .receiveAsync<Hash>(
+                        util::bind_weak(
+                            &GuiServerDevice::forwardReply,
+                            this, channel, "projectListProjectsWithDevice", _1
+                        )
+                    );
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR
+                    << "Problem at onProjectListProjectsWithDevice(): "
+                    << e.userFriendlyMsg();
             }
         }
 
