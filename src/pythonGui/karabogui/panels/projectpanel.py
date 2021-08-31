@@ -16,8 +16,8 @@ from karabogui.events import KaraboEvent, register_for_broadcasts
 from karabogui.logger import get_logger
 from karabogui.project.dialog.project_handle import NewProjectDialog
 from karabogui.project.utils import (
-    load_project, maybe_save_modified_project, reload_project, save_object,
-    show_modified_project_message)
+    load_project, load_project_with_device, maybe_save_modified_project,
+    reload_project, save_object, show_modified_project_message)
 from karabogui.project.view import ProjectView
 from karabogui.singletons.api import get_db_conn
 from karabogui.util import get_spin_widget
@@ -79,6 +79,12 @@ class ProjectPanel(BasePanelWidget):
             triggered=_project_load_handler,
             name="load"
         )
+        load_with_device = KaraboAction(
+            icon=icons.filein, text="Find and &Load Project with Device",
+            tooltip="Find and Load Project with Device",
+            triggered=_project_with_device_load_handler,
+            name="load_with_device"
+        )
         save = KaraboAction(
             icon=icons.save, text="&Save Project",
             tooltip="Save Project Snapshot",
@@ -99,7 +105,7 @@ class ProjectPanel(BasePanelWidget):
             name="declare"
         )
 
-        for k_action in (new, load, save, reload, trash):
+        for k_action in (new, load, load_with_device, save, reload, trash):
             q_ac = build_qaction(k_action, self)
             q_ac.setEnabled(True)
             q_ac.setVisible(False)
@@ -188,6 +194,23 @@ def _project_load_handler(project_view):
         return
 
     project = load_project(parent=project_view)
+    if project is not None:
+        item_model.root_model = project
+
+
+def _project_with_device_load_handler(project_view):
+    """ Load a project with a user specified device, assigning it to the
+    `ProjectViewItemModel` of the given `project_view`.
+
+    :param project_view: The `ProjectView` of the panel
+    """
+    item_model = project_view.model()
+    # Check for modififications before showing dialog
+    root_model = item_model.root_model
+    if not maybe_save_modified_project(root_model, parent=project_view):
+        return
+
+    project = load_project_with_device(parent=project_view)
     if project is not None:
         item_model.root_model = project
 
