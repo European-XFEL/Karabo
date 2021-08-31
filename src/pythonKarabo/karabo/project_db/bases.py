@@ -163,13 +163,28 @@ class DatabaseBase(ContextDecorator):
 
         Migrates a DB to the latest sane configuration"""
 
-    def get_configurations_from_device_name(self, domain, device_id):
+    def get_configurations_from_device_name(self, domain, instance_id):
         """Returns a list of configurations for a given device
 
         To be implemented in the derived class
 
         :param domain: DB domain
         :param instance_id: instance id of the device
+        :return: a list of dicts:
+            [{"configid": uuid of the configuration,
+              "instanceid": device instance uuid in the DB},
+              ...
+            ]
+        """
+        raise NotImplementedError
+
+    def get_configurations_from_device_name_part(self, domain, device_id_part):
+        """Returns a list of configurations for a given device
+
+        To be implemented in the derived class
+
+        :param domain: DB domain
+        :param device_id_part: part of device name; search is case-insensitive.
         :return: a list of dicts:
             [{"configid": uuid of the configuration,
               "instanceid": device instance uuid in the DB},
@@ -188,6 +203,9 @@ class DatabaseBase(ContextDecorator):
         :param uuid: the uuid of the device instance from the database
         :return: a set containing project names
         """
+        raise NotImplementedError
+
+    def get_projects_data_from_device(self, domain, uuid):
         raise NotImplementedError
 
     def get_projects_with_conf(self, domain, device_id):
@@ -209,6 +227,30 @@ class DatabaseBase(ContextDecorator):
             for project in self.get_projects_from_device(domain,
                                                          instance_id):
                 projects[project] = config["configid"]
+        return projects
+
+    def get_projects_with_device(self, domain, device_id_part):
+        """
+        Returns a dict with data about projects that contain active
+        configurations for a given device.
+
+        :param domain: DB domain
+        :param device_id_part: part of name of devices for which project data
+                               must be returned.
+        :return: a list of dicts:
+            [{"projectname": name of project,
+              "date": last modification timestamp for the project,
+              "uuid": uuid of projecti}, ...]
+        """
+        configs = self.get_configurations_from_device_name_part(domain,
+                                                                device_id_part)
+        projects = []
+        for config in configs:
+            instance_id = config["instanceid"]
+            for prj in self.get_projects_data_from_device(domain,
+                                                          instance_id):
+                if prj not in projects:
+                    projects.append(prj)
         return projects
 
     def save_item(self, domain, uuid, item_xml, overwrite=False):

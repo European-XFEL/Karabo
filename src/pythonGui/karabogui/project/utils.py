@@ -19,7 +19,7 @@ from karabogui import messagebox
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.singletons.api import (
-    get_db_conn, get_network, get_project_model)
+    get_config, get_db_conn, get_network, get_project_model)
 from karabogui.topology.util import get_macro_servers
 
 
@@ -209,6 +209,31 @@ def load_project(is_subproject=False, parent=None):
                 # EVERYTHING gets saved to the database in case the project was
                 # loaded from cache
                 set_modified_flag(model, value=True)
+            return model
+    return None
+
+
+def load_project_with_device(parent=None):
+    """Load a project with a device specified by the user from the project
+    database.
+    """
+    from karabogui.project.dialog.load_project_with_device import (
+        LoadProjectWithDeviceDialog)
+    device_domain = get_config()["device_domain"]
+    dialog = LoadProjectWithDeviceDialog(
+        initial_domain=device_domain, parent=parent)
+    result = dialog.exec_()
+    if result == QDialog.Accepted:
+        domain = dialog.selected_domain()
+        uuid = dialog.selected_project_id()
+        get_config()["device_domain"] = domain
+        if domain is not None and uuid is not None:
+            db_conn = get_db_conn()
+            model = ProjectModel(uuid=uuid)
+            read_lazy_object(domain, uuid, db_conn, read_project_model,
+                             existing=model)
+            db_conn.default_domain = domain
+            db_conn.flush()
             return model
     return None
 
