@@ -524,6 +524,15 @@ class Manager(QObject):
         broadcast_event(KaraboEvent.ProjectItemsList,
                         {'items': reply.get('items', [])})
 
+    @project_db_handler()
+    def handle_projectListProjectsWithDevice(self, reply):
+        # ``reply`` is a Hash containing a lists of project hashes.
+        broadcast_event(
+            KaraboEvent.ProjectFindWithDevice, {
+                'projects': reply.get('projects', [])
+            }
+        )
+
     def handle_projectListProjectManagers(self, reply):
         # ``reply`` is a list of strings
         broadcast_event(KaraboEvent.ProjectManagersList,
