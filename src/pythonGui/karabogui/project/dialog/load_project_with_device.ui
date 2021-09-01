@@ -100,9 +100,9 @@
       <widget class="QTableWidget" name="tbl_projects"/>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <layout class="QHBoxLayout" name="bottom_horizontal_layout">
        <item>
-        <widget class="QLabel" name="lbl_projects">
+        <widget class="QLabel" name="lbl_status">
          <property name="enabled">
           <bool>true</bool>
          </property>
