@@ -102,13 +102,14 @@ class KaraboMessageBox(QDialog):
     def _show_context_menu(self, pos):
         """Show a context menu"""
         menu = QMenu(self)
+        widget = self.details_textedit
         select_action = menu.addAction('Select All')
-        select_action.triggered.connect(self.details_widget.selectAll)
-        enable_select = len(self.details_widget.toPlainText()) > 0
+        select_action.triggered.connect(widget.selectAll)
+        enable_select = len(widget.toPlainText()) > 0
         select_action.setEnabled(enable_select)
 
         copy_action = menu.addAction('Copy Selected')
-        copy_action.triggered.connect(self.details_widget.copy)
-        enable_cp = not self.details_widget.textCursor().selection().isEmpty()
+        copy_action.triggered.connect(widget.copy)
+        enable_cp = not widget.textCursor().selection().isEmpty()
         copy_action.setEnabled(enable_cp)
-        menu.exec_(self.details_widget.viewport().mapToGlobal(pos))
+        menu.exec_(widget.viewport().mapToGlobal(pos))
