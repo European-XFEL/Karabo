@@ -422,6 +422,13 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
 
         return h
 
+    @slot
+    def slotLoggerPriority(self, level: str):
+        """Set the logger priority of the server and all children"""
+        self.log.level = level
+        for device in self.deviceInstanceMap.values():
+            device.log.level = level
+
     async def scanPluginsOnce(self):
         changes = await super(
             MiddleLayerDeviceServer, self).scanPluginsOnce()

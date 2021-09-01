@@ -81,7 +81,7 @@ class ServerTest(TestCase):
 
     @skipIf(amqp, "fails for amqp")
     @async_tst
-    async def test_device_server_plugin_device(self):
+    async def test_device_server_plugin_device_logs(self):
         """Test to instantiate a server with plugins and instantiate"""
         configuration = {"serverId": "testMDLServer",
                          "deviceClasses": ["PropertyTestMDL"],
@@ -96,8 +96,8 @@ class ServerTest(TestCase):
 
             self.assertEqual(len(server.deviceInstanceMap.keys()), 0)
             # Test instantiate a device
-            await server.startDevice("PropertyTestMDL",
-                                     "test-mdlfake-{}".format(uuid.uuid4()),
+            deviceId = "test-mdlfake-{}".format(uuid.uuid4())
+            await server.startDevice("PropertyTestMDL", deviceId,
                                      Hash())
             self.assertEqual(len(server.deviceInstanceMap.keys()), 1)
             vis = server.getVisibilities()
@@ -108,6 +108,14 @@ class ServerTest(TestCase):
             self.assertEqual(serverId, "testMDLServer")
             self.assertEqual(classId, "PropertyTestMDL")
             self.assertIsInstance(schema, Schema)
+
+            self.assertEqual(server.log.level, "INFO")
+            device = list(server.deviceInstanceMap.values())[0]
+            self.assertEqual(device.log.level, "INFO")
+            # Change log level
+            server.slotLoggerPriority("ERROR")
+            self.assertEqual(server.log.level, "ERROR")
+            self.assertEqual(device.log.level, "ERROR")
         finally:
             await self._shutdown_server(server)
 
