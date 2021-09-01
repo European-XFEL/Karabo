@@ -7,14 +7,14 @@
 from pathlib import Path
 
 from qtpy import uic
-from qtpy.QtCore import Qt, Slot
+from qtpy.QtCore import QSize, Qt, Slot
 from qtpy.QtWidgets import (
     QAbstractItemView, QDialog, QDialogButtonBox, QTableWidgetItem)
 
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.singletons.api import get_config, get_db_conn
-from karabogui.util import SignalBlocker
+from karabogui.util import SignalBlocker, get_spin_widget
 
 # Minimum size for a device id substring to be considered searchable.
 MIN_DEVICE_ID_SIZE = 4
@@ -34,6 +34,11 @@ class LoadProjectWithDeviceDialog(QDialog):
         self.button_box.button(QDialogButtonBox.Ok).setText("Load")
         flags = Qt.WindowCloseButtonHint
         self.setWindowFlags(self.windowFlags() | flags)
+
+        self.spin_widget = get_spin_widget(icon='wait-black',
+                                           scaled_size=QSize(16, 16))
+        self.spin_widget.setVisible(False)
+        self.bottom_horizontal_layout.insertWidget(0, self.spin_widget)
 
         # Subscribes for a set of broadcast events.
         self.event_map = {
@@ -83,7 +88,11 @@ class LoadProjectWithDeviceDialog(QDialog):
         self._domains_updated(data.get('items', []))
 
     def _event_find_with_device(self, data):
-        self._projects_with_device_updated(data.get('projects', []))
+        if self.finding_projects:
+            # The results are for the search currently being expected.
+            # A long-running search could have been triggered from a
+            # previous instance of the dialog.
+            self._projects_with_device_updated(data.get('projects', []))
 
     def _domains_updated(self, domains):
         domain_to_select = self.initial_domain
@@ -210,19 +219,25 @@ class LoadProjectWithDeviceDialog(QDialog):
 
         if self.search_domain and self.search_device_id and not loading_data:
             if self.tbl_projects.rowCount() == 0:
-                self.lbl_projects.setText(
+                self.lbl_status.setText(
                     f'No project with "{self.search_device_id}" in '
                     f'"{self.search_domain}"'
                 )
             elif self.tbl_projects.rowCount() == 1:
-                self.lbl_projects.setText(
+                self.lbl_status.setText(
                     f'1 project with "{self.search_device_id}" in '
                     f'"{self.search_domain}"'
                 )
             else:
-                self.lbl_projects.setText(
+                self.lbl_status.setText(
                     f'{self.tbl_projects.rowCount()} projects with '
                     f'"{self.search_device_id}" in "{self.search_domain}"'
                 )
+        elif self.loading_domains:
+            self.lbl_status.setText('Loading domains ...')
+        elif self.finding_projects:
+            self.lbl_status.setText('Finding projects ...')
         else:
-            self.lbl_projects.setText('')
+            self.lbl_status.setText('')
+
+        self.spin_widget.setVisible(loading_data)
