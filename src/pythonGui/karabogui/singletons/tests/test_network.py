@@ -329,6 +329,12 @@ class TestNetwork(GuiTestCase):
                 self.assertEqual(self._last_hash["type"], "subscribeLogs")
                 self.assertEqual(self._last_hash["subscribe"], False)
 
+                network.onSetLogPriority("swerver", "ERROR")
+                _trigger_message_parse()
+                self.assertEqual(self._last_hash["type"], "setLogPriority")
+                self.assertEqual(self._last_hash["instanceId"], "swerver")
+                self.assertEqual(self._last_hash["priority"], "ERROR")
+
             with patch('karabogui.singletons.network.QMessageBox') as mbox, \
                     patch('karabogui.singletons.network.LoginDialog') as dia:
                 call_count = 0

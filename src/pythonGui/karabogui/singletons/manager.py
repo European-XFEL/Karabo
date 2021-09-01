@@ -209,6 +209,18 @@ class Manager(QObject):
             text = "Could not reconfigure the logs for the gui server"
             messagebox.show_error(text)
 
+    def handle_setLogPriorityReply(self, **info):
+        """Handle the log priority reconfiguration reply of the server"""
+        if not info.get("success", True):
+            reason = info.get("reason")
+            input_info = info["input"]
+            instanceId = input_info["instanceId"]
+            priority = input_info["priority"]
+            log_text = (f"Log level reconfiguration of <b>{instanceId}</b>"
+                        f" with priority <b>{priority}</b> failed.")
+            get_logger().error(log_text)
+            messagebox.show_error(log_text, details=reason)
+
     def handle_reconfigureReply(self, **info):
         """Handle the reconfigure reply of the gui server"""
         success = info['success']

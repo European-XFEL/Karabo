@@ -8,7 +8,7 @@ from functools import partial
 from qtpy.QtCore import QPoint, Qt, Slot
 from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import (
-    QAbstractItemView, QAction, QDialog, QMenu, QTreeView)
+    QAbstractItemView, QAction, QDialog, QInputDialog, QMenu, QTreeView)
 
 from karabo.common.api import Capabilities
 from karabo.native import Timestamp
@@ -21,7 +21,8 @@ from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.itemtypes import NavigationItemTypes
 from karabogui.navigation.system_filter_model import TopologyFilterModel
 from karabogui.request import call_device_slot, handle_scene_from_server
-from karabogui.singletons.api import get_manager, get_selection_tracker
+from karabogui.singletons.api import (
+    get_manager, get_network, get_selection_tracker)
 from karabogui.util import (
     load_configuration_from_file, move_to_cursor, open_documentation_link,
     save_configuration_to_file, set_treeview_header)
@@ -77,6 +78,13 @@ class SystemTreeView(QTreeView):
 
         # Device server instance menu
         self.mServerItem = QMenu(self)
+
+        text = "Set Logger Priority"
+        self.acLoggerPriority = QAction(icons.edit, text, self)
+        self.acLoggerPriority.setStatusTip(text)
+        self.acLoggerPriority.setToolTip(text)
+        self.acLoggerPriority.triggered.connect(self.onLoggerPriority)
+        self.mServerItem.addAction(self.acLoggerPriority)
 
         text = "Shutdown server"
         self.acKillServer = QAction(icons.delete, text, self)
@@ -289,6 +297,16 @@ class SystemTreeView(QTreeView):
     def onGetDocumenation(self):
         deviceId = self.indexInfo().get('deviceId')
         open_documentation_link(deviceId)
+
+    @Slot()
+    def onLoggerPriority(self):
+        levels = ["DEBUG", "INFO", "WARN", "ERROR"]
+        level, ok = QInputDialog.getItem(self, "", "", levels, 1, False)
+        if ok:
+            info = self.indexInfo()
+            serverId = info.get('serverId')
+            network = get_network()
+            network.onSetLogPriority(serverId, level)
 
     @Slot()
     def onKillInstance(self):
