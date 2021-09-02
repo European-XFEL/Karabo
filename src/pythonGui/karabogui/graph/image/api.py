@@ -1,5 +1,5 @@
 # flake8: noqa
-
+from .aux_plots.base.plot import SHOWN_AXES, AuxPlotItem
 from .aux_plots.controller import AuxPlotsController
 from .aux_plots.histogram.analyzer import HistogramAnalyzer
 from .aux_plots.histogram.controller import (
