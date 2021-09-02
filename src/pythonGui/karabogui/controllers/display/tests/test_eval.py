@@ -1,3 +1,4 @@
+from unittest import main
 from unittest.mock import patch
 
 from karabo.common.api import ProxyStatus
@@ -5,11 +6,10 @@ from karabo.common.scenemodel.api import EvaluatorModel
 from karabo.native import Configurable, Float
 from karabogui.binding.api import (
     DeviceClassProxy, PropertyProxy, build_binding)
+from karabogui.controllers.display.eval import Evaluator
 from karabogui.indicators import (
     ALL_OK_COLOR, PROPERTY_ALARM_COLOR, PROPERTY_WARN_COLOR)
 from karabogui.testing import GuiTestCase, set_proxy_value
-
-from ..eval import Evaluator
 
 
 class Object(Configurable):
@@ -85,3 +85,7 @@ class TestEvaluator(GuiTestCase):
 
         set_proxy_value(self.alarms, 'alarms', 1.5)
         assert controller._bg_color == PROPERTY_WARN_COLOR
+
+
+if __name__ == "__main__":
+    main()
