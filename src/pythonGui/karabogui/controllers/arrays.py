@@ -4,9 +4,10 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 import numpy as np
-from traits.api import Undefined
 
-from karabo.native import EncodingType, Timestamp
+from karabo.native import EncodingType
+from karabogui.binding.api import (
+    REFERENCE_TYPENUM_TO_DTYPE, get_binding_array_value)
 
 try:
     import cv2
@@ -14,22 +15,6 @@ try:
     has_open_cv = True
 except ImportError:
     has_open_cv = False
-
-# Ensure correct mapping of reference type to numpy dtype.
-REFERENCE_TYPENUM_TO_DTYPE = {
-    0: 'bool',
-    2: 'char',
-    4: 'int8',
-    6: 'uint8',
-    8: 'int16',
-    10: 'uint16',
-    12: 'int32',
-    14: 'uint32',
-    16: 'int64',
-    18: 'uint64',
-    20: 'float32',
-    22: 'float64'
-}
 
 # Maps image physical dimension to ndarray dimension
 DIMENSIONS = {
@@ -141,27 +126,4 @@ def get_array_data(proxy, default=None):
     :returns: data, timestamp
     """
     binding = proxy.binding
-    if binding.__class__.__name__.startswith('Vector'):
-        value = binding.value
-        if value is None or value is Undefined:
-            return default, Timestamp()
-
-        return value, binding.timestamp
-
-    # We now have an `NDArray`
-    node = binding.value
-    if node is Undefined:
-        return default, Timestamp()
-
-    pixels = node.data.value
-    if pixels is None:
-        return default, Timestamp()
-
-    arr_type = REFERENCE_TYPENUM_TO_DTYPE[node.type.value]
-    value = np.frombuffer(pixels, dtype=arr_type)
-    timestamp = node.data.timestamp
-    # Note: Current traits always casts to 1dim
-    if value.ndim == 1:
-        return value, timestamp
-
-    return default, Timestamp()
+    return get_binding_array_value(binding, default)
