@@ -158,6 +158,14 @@ class TestCase(GuiTestCase):
                 # Servers don't have proxies
                 self.assertEqual(device_proxy, None)
 
+        network = mock.Mock()
+        with singletons(network=network):
+            path = "karabogui.navigation.system_view.QInputDialog"
+            with mock.patch(path) as dia:
+                dia.getItem.return_value = "DEBUG", True
+                self.view.onLoggerPriority()
+                network.onSetLogPriority.assert_called_with("swerver", "DEBUG")
+
     def test_context_menu_device_view(self):
         selection_tracker = mock.Mock()
         pos = QPoint(0, 0)
