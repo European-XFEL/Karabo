@@ -4,7 +4,6 @@ import re
 import sys
 from argparse import ArgumentParser
 from contextlib import contextmanager
-from functools import partial
 from subprocess import STDOUT, CalledProcessError, check_output
 
 import pkg_resources
@@ -171,7 +170,6 @@ class UpdateDialog(QDialog):
         # Store the current running process
         self._process = None
         self._wheel_file = None
-
         self._remote_server = EXTENSIONS_URL_TEMPLATE.format(KARABO_CHANNEL)
         self.refresh_versions()
 
@@ -206,7 +204,7 @@ class UpdateDialog(QDialog):
         self.lb_latest.setVisible(True)
         self.lb_latest.setText(latest_version)
 
-    def _start_process(self, cmd, *, is_update):
+    def _start_process(self, cmd):
         """Starts a process with the given arguments"""
         if self._process is not None:
             self._clear_process()
@@ -216,8 +214,7 @@ class UpdateDialog(QDialog):
             self._process = QProcess(self)
             self._process.setProcessChannelMode(QProcess.MergedChannels)
             self._process.readyRead.connect(self._on_output)
-            self._process.finished.connect(partial(
-                self._on_finished, is_update))
+            self._process.finished.connect(self._on_finished)
 
             self._process.start(cmd)
 
@@ -233,12 +230,12 @@ class UpdateDialog(QDialog):
             return None
 
         cmd = 'pip install --upgrade {}'.format(self._wheel_file)
-        self._start_process(cmd, is_update=True)
+        self._start_process(cmd)
 
     def _start_uninstall_process(self):
         """Uninstalls the current GUIExtensions package"""
         cmd = 'pip uninstall --yes {}'.format(_PKG_NAME)
-        self._start_process(cmd, is_update=False)
+        self._start_process(cmd)
 
     def _update_log(self, text):
         self.ed_log.append(text)
@@ -295,16 +292,10 @@ class UpdateDialog(QDialog):
             self._update_log(data)
 
     @Slot()
-    def _on_finished(self, is_update):
+    def _on_finished(self):
         """Called when the uninstall finishes or crashes"""
         self.bt_refresh.setEnabled(True)
         self.bt_stop.setEnabled(False)
-        if is_update:
-            self.bt_update.setEnabled(True)
-        else:
-            # Uninstall clicked
-            self.bt_uninstall.setEnabled(True)
-
         self._clear_process()
         self.refresh_versions()
 
