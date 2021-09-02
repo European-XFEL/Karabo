@@ -104,9 +104,8 @@ class Evaluator(BaseBindingController):
 
         try:
             self.function = eval('lambda x: {}'.format(text), self.globals_ns)
-        except SyntaxError as e:
-            err = traceback.format_exception_only(type(e), e)
-            msg = '<pre>{1}{2}</pre>{3}'.format(*err)
+        except Exception:
+            msg = 'Error in expression: {}'.format(traceback.format_exc())
             messagebox.show_warning(msg, title='Error in expression',
                                     parent=self.widget)
             return
