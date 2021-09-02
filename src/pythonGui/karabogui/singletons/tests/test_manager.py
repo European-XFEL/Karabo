@@ -413,6 +413,21 @@ class TestManager(GuiTestCase):
                 {'items': ['new_stuff']}
             )
 
+    def test_handle_set_log_reply(self):
+        manager = Manager()
+        target = 'karabogui.messagebox.show_error'
+        with patch(target) as mb:
+            h = Hash("success", True)
+            h["input"] = Hash("instanceId", "swerver",
+                              "priority", "DEBUG")
+            manager.handle_setLogPriorityReply(**h)
+            mb.assert_not_called()
+            h = Hash("success", False)
+            h["input"] = Hash("instanceId", "swerver",
+                              "priority", "DEBUG")
+            manager.handle_setLogPriorityReply(**h)
+            mb.assert_called_once()
+
     def test_handle_network_data(self):
         dev_proxy, prop_binding, topology = Mock(), Mock(), Mock()
 
