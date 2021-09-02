@@ -2,8 +2,7 @@
 # NOTE: None of the controller classes are here. They should be acquired from
 # the registry, not directly (tests excluded, of course)
 from .arrays import (
-    DIMENSIONS, REFERENCE_TYPENUM_TO_DTYPE, get_array_data,
-    get_dimensions_and_encoding, get_image_data)
+    DIMENSIONS, get_array_data, get_dimensions_and_encoding, get_image_data)
 from .base import BaseBindingController
 from .registry import (
     get_class_const_trait, get_compatible_controllers, get_model_controller,
