@@ -134,7 +134,8 @@ class DisplayDetectorGraph(BaseBindingController):
 
     def show_timestamp_tooltip(self):
         image_node = self.proxy.value
-        if image_node is None:
+        if image_node is None or getattr(image_node, "pixels", None) is None:
+            # No schema for output channel, pixels not available
             return
         timestamp = image_node.pixels.value.data.timestamp
         if timestamp is None:
