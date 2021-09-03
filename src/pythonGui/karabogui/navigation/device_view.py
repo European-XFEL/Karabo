@@ -174,7 +174,7 @@ class DeviceTreeView(QTreeView):
     @Slot()
     def onGetConfigurationFromPast(self):
         info = self.indexInfo()
-        archive = info['archive']
+        archive = info.get("archive", False)
         if not archive:
             # Display a hint for the operator that currently the device is not
             # archived/logged if so. Do not see a parent here to block!
