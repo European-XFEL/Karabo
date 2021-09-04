@@ -248,6 +248,9 @@ class MainWindow(QMainWindow):
         conflict = [item for item in projects if item.uuid in external_uuids]
         for model in conflict:
             model.conflict = True
+            get_logger().warning(f"The project {model.simple_name} was "
+                                 f"updated externally. Please reload the "
+                                 f"project to synchronize the changes.")
 
     # -----------------------------------------------------------------------
 
