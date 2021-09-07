@@ -46,7 +46,7 @@ namespace karabo {
          * Hash object will already have been validated using the resulting
          * schema of the expectedParameters function.
          */
-        __CLASS_NAME__(const karabo::util::Hash& config);
+        explicit __CLASS_NAME__(const karabo::util::Hash& config);
 
         /**
          * @brief Called in case the device gets killed.
