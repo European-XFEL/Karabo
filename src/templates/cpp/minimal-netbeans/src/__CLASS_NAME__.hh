@@ -38,7 +38,7 @@ namespace karabo {
          * already be validated using the information of the expectedParameters function.
          * The configuration is provided in a key/value fashion.
          */
-        __CLASS_NAME__(const karabo::util::Hash& config);
+        explicit __CLASS_NAME__(const karabo::util::Hash& config);
 
         /**
          * The destructor will be called in case the device gets killed
