@@ -120,7 +120,7 @@ safeRunCommand "$scriptDir/build-pythonKarabo.sh" $PACKAGEDIR $PYOPT
 cd $BASEDIR
 sed "s%__VENV_DIR__%$BASEDIR/karabo%g" src/tools/scripts/activate.tmpl > $PACKAGEDIR/activate
 # templates
-cp -rf src/templates $PACKAGEDIR
+cp -rf --preserve=mode src/templates $PACKAGEDIR
 # the initial configurations
 cp -rf src/service.in $PACKAGEDIR
 cp -rf src/environment.in $PACKAGEDIR
