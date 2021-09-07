@@ -243,7 +243,7 @@ def new(args):
         # '.[gi]*' matches '.gitignore', '.install.sh' and '.gitlab-ci.yml',
         # but neither '.' nor '..', which would generate an error on the cp
         # command and interrupt the script.
-        run_cmd('cp -f {} {}'.format(os.path.join(tpath, '.[gi]*'), path))
+        run_cmd('cp -fp {} {}'.format(os.path.join(tpath, '.[gi]*'), path))
         email = os.environ.get('USER', 'Unknown')
         configure_template(path, args.device, class_name, email)
         os.chdir(path)
