@@ -1,3 +1,7 @@
+from unittest import main, mock
+
+from qtpy.QtCore import QPoint
+
 from karabogui.logger import StatusLogWidget, get_logger
 from karabogui.testing import GuiTestCase
 
@@ -25,3 +29,12 @@ class TestCase(GuiTestCase):
         assert log_widget.toPlainText().count('\n') == 0
         logger.debug(msg)
         assert "DEBUG" not in log_widget.toPlainText()
+
+        with mock.patch("karabogui.logger.QMenu") as m:
+            widget._show_context_menu(QPoint(0, 0))
+            self.process_qt_events()
+            m.assert_called()
+
+
+if __name__ == "__main__":
+    main()
