@@ -18,6 +18,7 @@ from karabo.native.exceptions import KaraboError
 from karabo.native.data.hash import Bool, Hash, Int32, String, VectorString
 from karabo.native.data.schema import Descriptor, Node
 
+from .configuration import validate_init_configuration
 from .compat import HAVE_UVLOOP
 from .eventloop import EventLoopPolicy
 from .logger import Logger
@@ -448,6 +449,12 @@ class MiddleLayerDeviceServer(DeviceServerBase):
         if cls is None:
             return (yield from super(MiddleLayerDeviceServer, self)
                     .startDevice(classId, deviceId, config))
+        # Server validates the configuration of the device
+        invalid = validate_init_configuration(
+            cls.getClassSchema(), config)
+        if invalid:
+            raise RuntimeError(
+                f'Configuration for {deviceId} validation failed: {invalid}"')
         if "log.level" not in config:
             config["log.level"] = self.log.level
         obj = cls(config)
