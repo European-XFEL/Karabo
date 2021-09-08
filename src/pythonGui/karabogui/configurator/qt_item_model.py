@@ -10,8 +10,8 @@ from qtpy.QtGui import QBrush, QColor
 
 import karabogui.access as krb_access
 from karabo.common.api import (
-    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_SCHEMA_ALLOWED_STATES,
-    KARABO_WARN_HIGH, KARABO_WARN_LOW, State)
+    KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW,
+    State)
 from karabo.native import AccessLevel, AccessMode, Assignment
 from karabogui.binding.api import (
     BaseBinding, BindingRoot, ChoiceOfNodesBinding, DeviceClassProxy,
@@ -80,10 +80,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
                                      remove=True)
             oldproxy.on_trait_change(self._schema_update, 'schema_update',
                                      remove=True)
-            if isinstance(oldproxy, DeviceProxy):
-                oldproxy.on_trait_change(self._state_update,
-                                         'state_binding.value', remove=True)
-
         try:
             self.beginResetModel()
             self._property_proxies.clear()
@@ -96,9 +92,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
         if proxy is not None:
             proxy.on_trait_change(self._config_update, 'config_update')
             proxy.on_trait_change(self._schema_update, 'schema_update')
-            if isinstance(proxy, DeviceProxy):
-                proxy.on_trait_change(self._state_update,
-                                      'state_binding.value')
 
     def apply_changes(self):
         """Send all modified properties to the remote device.
@@ -230,27 +223,6 @@ class ConfigurationTreeModel(QAbstractItemModel):
 
         properties = get_child_names(parent)
         return properties.index(proxy_key)
-
-    def _state_update(self, obj, name, value):
-        """Respond to device instance state changes
-        """
-        # The trait handler is for 'state_binding.value'
-        if name != 'value':
-            return
-
-        def recurse(binding, parent):
-            if binding is None:
-                return
-            for row, name in enumerate(binding.value):
-                sub_binding = getattr(binding.value, name)
-                sub_index = self.index(row, 0, parent)
-                attributes = sub_binding.attributes
-                if attributes.get(KARABO_SCHEMA_ALLOWED_STATES, []):
-                    self.dataChanged.emit(sub_index, sub_index)
-                if isinstance(sub_binding, NodeBinding):
-                    recurse(sub_binding, sub_index)
-
-        recurse(self.root, QModelIndex())
 
     # ----------------------------
     # Qt methods
