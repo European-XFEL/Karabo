@@ -1,8 +1,8 @@
 import logging
 
-from qtpy.QtCore import QObject, Qt, Signal, Slot
+from qtpy.QtCore import QObject, QPoint, Qt, Signal, Slot
 from qtpy.QtWidgets import (
-    QFrame, QHBoxLayout, QPushButton, QTextEdit, QVBoxLayout)
+    QFrame, QHBoxLayout, QMenu, QPushButton, QTextEdit, QVBoxLayout)
 
 import karabogui.icons as icons
 
@@ -65,6 +65,9 @@ class StatusLogWidget(QFrame):
         viewport = self.log_widget.viewport()
         viewport.setAutoFillBackground(False)
         self.log_widget.setFocusPolicy(Qt.NoFocus)
+        self.log_widget.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.log_widget.customContextMenuRequested.connect(
+            self._show_context_menu)
 
         horizontal_layout.addWidget(self.log_widget)
         vertical_layout = QVBoxLayout()
@@ -86,6 +89,21 @@ class StatusLogWidget(QFrame):
         self.log_widget.append(s)
         bar = self.log_widget.verticalScrollBar()
         bar.setValue(bar.maximum())
+
+    @Slot(QPoint)
+    def _show_context_menu(self, pos):
+        """Show a context menu"""
+        menu = QMenu(self.log_widget)
+        select_action = menu.addAction('Select All')
+        select_action.triggered.connect(self.log_widget.selectAll)
+        enable_select = len(self.log_widget.toPlainText()) > 0
+        select_action.setEnabled(enable_select)
+
+        copy_action = menu.addAction('Copy Selected')
+        copy_action.triggered.connect(self.log_widget.copy)
+        enable_copy = not self.log_widget.textCursor().selection().isEmpty()
+        copy_action.setEnabled(enable_copy)
+        menu.exec(self.log_widget.viewport().mapToGlobal(pos))
 
 
 def get_logger():
