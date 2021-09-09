@@ -11,15 +11,15 @@ class GraphViewDialog(QDialog):
     def __init__(self, config={}, parent=None):
         super(GraphViewDialog, self).__init__(parent)
         ui_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                               'view.ui')
+                               "view.ui")
         uic.loadUi(ui_path, self)
 
-        self.graph_title = config['title']
+        self.graph_title = config.get("title", "")
         self.ui_title.setText(self.graph_title)
-        self.graph_bg_color = config['background']
+        self.graph_bg_color = config.get("background", "transparent")
         self.set_text_background_button()
         self.ui_cb_background.setChecked(
-            self.graph_bg_color != 'transparent')
+            self.graph_bg_color != "transparent")
 
     def set_text_background_button(self):
         pixmap = QPixmap(24, 16)
@@ -29,13 +29,13 @@ class GraphViewDialog(QDialog):
     @Slot(int)
     def on_ui_cb_background_stateChanged(self, state):
         if state != Qt.Checked:
-            self.graph_bg_color = 'transparent'
+            self.graph_bg_color = "transparent"
 
     @Slot(bool)
     def on_ui_cb_background_toggled(self, checked):
         self.ui_pb_background.setEnabled(checked)
         if not checked:
-            self.graph_bg_color = 'transparent'
+            self.graph_bg_color = "transparent"
 
     @Slot()
     def on_ui_pb_background_clicked(self):
