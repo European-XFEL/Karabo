@@ -1,5 +1,5 @@
 import numpy as np
-from traits.api import BaseFloat, BaseRange
+from traits.api import BaseCBool, BaseFloat, BaseRange
 
 
 class NumpyRange(BaseRange):
@@ -36,3 +36,20 @@ class Float(BaseFloat):
                 return float(value)
             except Exception:
                 self.error(object, name, value)
+
+
+class CBool(BaseCBool):
+    """ A fast-validating trait type who can coerce, but does not accept `None`
+    """
+
+    def validate(self, object, name, value):
+        """Reimplemented validate for `None` strings
+
+        Note: `None` check can be removed when the configs are sanitized
+        """
+        if value in ("None", None):
+            self.error(object, name, value)
+        try:
+            return bool(value)
+        except Exception:
+            self.error(object, name, value)
