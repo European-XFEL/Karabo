@@ -16,8 +16,8 @@ from karabogui.access import AccessRole, access_role_allowed
 from karabogui.binding.api import (
     ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy, ListOfNodesBinding,
     ProjectDeviceProxy, VectorHashBinding, apply_configuration,
-    attr_fast_deepcopy, extract_configuration, get_binding_value, has_changes,
-    has_table_changes, validate_table_value, validate_value)
+    attr_fast_deepcopy, get_binding_value, has_changes, has_table_changes,
+    validate_table_value, validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
 from karabogui.events import KaraboEvent, register_for_broadcasts
@@ -255,9 +255,10 @@ class ConfigurationPanel(BasePanelWidget):
             return False
 
         if proxy.device_id != deviceId:
-            messagebox.show_error("A configuration for '{}' arrived, but is "
-                                  "ignored since '{}' shown in editor.".format(
-                                   deviceId, proxy.device_id), parent=self)
+            messagebox.show_error(
+                "A configuration for '{}' arrived, but is "
+                "ignored since '{}' shown in editor.".format(
+                    deviceId, proxy.device_id), parent=self)
             return False
         if binding.class_id != classId:
             # Note: Previously we validated strong here. Since we validate
@@ -698,14 +699,13 @@ class ConfigurationPanel(BasePanelWidget):
 
     @Slot()
     def _on_init_device(self):
-        config = None
+        """Instantiate a project device from the configurator"""
         proxy = self._showing_proxy
-        server_id = proxy.server_id
-        class_id = proxy.binding.class_id
-        device_id = ''
+        if not isinstance(proxy, ProjectDeviceProxy):
+            # This should not happen, however we protect here.
+            return
 
-        if isinstance(proxy, ProjectDeviceProxy):
-            config = extract_configuration(proxy.binding)
-            device_id = proxy.device_id
-
-        get_manager().initDevice(server_id, class_id, device_id, config=config)
+        serverId = proxy.server_id
+        classId = proxy.binding.class_id
+        deviceId = proxy.device_id
+        get_manager().initDevice(serverId, classId, deviceId)
