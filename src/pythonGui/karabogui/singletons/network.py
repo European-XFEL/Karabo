@@ -79,8 +79,6 @@ class Network(QObject):
             self.startServerConnection()
             connected = True
 
-        # Update MainWindow toolbar
-        self.signalServerConnectionChanged.emit(connected)
         # Allow external runner to see the status of the connection!
         return connected
 
@@ -94,8 +92,6 @@ class Network(QObject):
         self.port = port
         self.startServerConnection()
 
-        # Update MainWindow toolbar
-        self.signalServerConnectionChanged.emit(True)
         # Allow external runner to see the status of the connection!
         return True
 
@@ -280,6 +276,9 @@ class Network(QObject):
         get_config()['username'] = self.username
         get_config()['gui_servers'] = self.gui_servers
         self._data_reader = self._network_generator()
+
+        # Update MainWindow toolbar
+        self.signalServerConnectionChanged.emit(True)
 
     @Slot()
     def onDisconnected(self):
