@@ -1,6 +1,6 @@
 import numpy as np
 from traits.api import (
-    Array, CArray, CBool, Complex, Dict, Either, Enum, Event, HasStrictTraits,
+    Array, CArray, Complex, Dict, Either, Enum, Event, HasStrictTraits,
     Instance, List, Property, String, Trait, TraitError, TraitHandler,
     Undefined, cached_property)
 
@@ -9,7 +9,7 @@ from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Hash, HashList, Timestamp)
 
-from .trait_types import Float, NumpyRange
+from .trait_types import CBool, Float, NumpyRange
 
 KEY_DISPLAYED_NAME = const.KARABO_SCHEMA_DISPLAYED_NAME
 KEY_DISPLAY_TYPE = const.KARABO_SCHEMA_DISPLAY_TYPE
