@@ -46,14 +46,6 @@ stages:
     - source ci/test "$CI_BUILD_NAME"
   <<: *artifacts-spec
 
-# TODO: remove this after reporting support for ctest is working
-.test_template_miniconda_cmake: &test-miniconda-cmake
-  stage: test
-  <<: *services_template
-  script:
-    - source ci/prepare "$CI_BUILD_NAME"
-    - source ci/test "$CI_BUILD_NAME"
-
 .release_build: &release-build
   <<: *build
   only:
@@ -172,23 +164,6 @@ stages:
     changes:
       - "extern/**/*"
 
-.unit_tests_miniconda_cmake: &unit-tests-miniconda-cmake
-  <<: *test-miniconda-cmake
-  only:
-    refs:
-      - merge_requests
-    changes:
-      - "src/karabo/**/*"
-      - "src/karathon/**/*"
-      - "conda-recipes/karabo-cpp/**/*"
-  except:
-    refs:
-      - /^(master)$/  # the changes check will default to true
-      - /^(\d+\.)(\d+\.)(X-hotfix)$/ # the changes check will default to true
-      - schedules
-    changes:
-      - "extern/**/*"
-
 .unit_tests_conda: &unit-tests-conda
   script:
     - >
@@ -255,8 +230,6 @@ release build ubuntu18:
 
 release build miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
-  before_script:
-    - source ci/utils/enable_internet.sh
   <<: *release-build-conda
 
 release build miniconda-osx64:
@@ -289,8 +262,6 @@ prerelease build ubuntu18:
 
 prerelease build miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
-  before_script:
-    - source ci/utils/enable_internet.sh
   <<: *prerelease-build-conda
 
 prerelease build miniconda-osx64:
@@ -337,8 +308,6 @@ nightly build miniconda-win64:
 
 nightly build miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
-  before_script:
-    - source ci/utils/enable_internet.sh
   <<: *nightly-build-conda
 
 # Dependencies build
@@ -385,8 +354,6 @@ unit tests ubuntu18:
 
 unit tests miniconda:
   image: europeanxfel/karabo-ci:miniconda-3
-  before_script:
-    - source ci/utils/enable_internet.sh
   <<: *unit-tests-conda
 
 unit tests miniconda-osx64:
@@ -402,12 +369,6 @@ unit tests miniconda-win64:
   tags:
     - Win10
   <<: *unit-tests-conda
-
-unit tests miniconda-cmake:
-  image: europeanxfel/karabo-ci:miniconda-3
-  before_script:
-    - source ci/utils/enable_internet.sh
-  <<: *unit-tests
 
 # Post-merge integration test builds
 
