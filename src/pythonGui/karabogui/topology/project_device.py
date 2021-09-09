@@ -203,6 +203,9 @@ class ProjectDeviceInstance(HasStrictTraits):
                         f"reported <b>{number}</b> problem(s)")
                 get_logger().error(text)
 
+            # Notify configuration has been applied!
+            self._offline_proxy.config_update = True
+
     @on_trait_change('_offline_proxy.status', post_init=True)
     def _status_changed(self, old, new):
         """Clear the offline proxy binding values when device server goes
