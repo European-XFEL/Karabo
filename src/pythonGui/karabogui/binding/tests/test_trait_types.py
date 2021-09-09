@@ -3,8 +3,8 @@ import pytest
 from traits.api import TraitError
 
 from ..api import (
-    FloatBinding, Int8Binding, Int16Binding, Int32Binding, Int64Binding,
-    Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding)
+    BoolBinding, FloatBinding, Int8Binding, Int16Binding, Int32Binding,
+    Int64Binding, Uint8Binding, Uint16Binding, Uint32Binding, Uint64Binding)
 
 
 def test_validate_integers():
@@ -60,6 +60,34 @@ def test_validate_integers():
             binding.validate_trait("value", str(positive_overflow))
         with pytest.raises(TraitError):
             binding.validate_trait("value", positive_overflow)
+
+
+def test_validate_boolean():
+    """Test if the coerce of the bool binding"""
+
+    binding = BoolBinding()
+    value = binding.validate_trait("value", 23)
+    assert value is True
+    assert type(value) is bool
+    value = binding.validate_trait("value", "23")
+    assert value is True
+    assert type(value) is bool
+    value = binding.validate_trait("value", False)
+    assert value is False
+    assert type(value) is bool
+    value = binding.validate_trait("value", True)
+    assert value is True
+    assert type(value) is bool
+    value = binding.validate_trait("value", 0)
+    assert value is False
+    assert type(value) is bool
+    value = binding.validate_trait("value", 1)
+    assert value is True
+    assert type(value) is bool
+    with pytest.raises(Exception):
+        binding.validate_trait("value", "None")
+    with pytest.raises(Exception):
+        binding.validate_trait("value", None)
 
 
 def test_validate_float():
