@@ -41,11 +41,11 @@ class StatusLogWidget(QFrame):
     The log widget can color the log messages according to their severity.
     """
     COLORS = {
-        logging.DEBUG: 'blue',
-        logging.INFO: 'black',
-        logging.WARNING: 'orange',
-        logging.ERROR: 'red',
-        logging.CRITICAL: 'purple',
+        logging.DEBUG: 'Blue',
+        logging.INFO: 'Black',
+        logging.WARNING: 'DarkOrange',
+        logging.ERROR: 'Red',
+        logging.CRITICAL: 'Purple',
     }
 
     def __init__(self, parent=None):
