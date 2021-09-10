@@ -1,10 +1,10 @@
+from karabo.common import const
 from karabo.common.api import (
     KARABO_SCHEMA_ACCESS_MODE, KARABO_SCHEMA_ASSIGNMENT,
-    KARABO_SCHEMA_OPTIONS, KARABO_SCHEMA_CLASS_ID)
-from karabo.common import const
+    KARABO_SCHEMA_CLASS_ID, KARABO_SCHEMA_OPTIONS)
 from karabo.native import (
-    AccessMode, Assignment, Hash, is_equal, NodeType, Unit, Schema,
-    MetricPrefix)
+    AccessMode, Assignment, Hash, MetricPrefix, NodeType, Schema, Unit,
+    is_equal)
 
 # Broken path accumulated in the history of karabo ...
 # Choice of Nodes connection and Beckhoff properties that will throw!
@@ -254,3 +254,50 @@ def config_changes(a, b):
             changes[key] = [None, b_value]
 
     return changes
+
+
+def validate_init_configuration(schema: Schema, config: Hash) -> str:
+    """Validate an incoming configuration against a schema
+
+    Readonly parameters are removed for the time being. Not existent
+    parameters are declared invalid and reported!
+
+    Returns a text (str) which is empty if no violations are found,
+    otherwise the issues are reported.
+    Hence, an empty string means success!
+
+    :returns: text (str)
+    """
+    text = ""
+    not_available_paths = []
+
+    to_erase = []
+    for path, _, attrs in Hash.flat_iterall(config, empty=False):
+        try:
+            if (schema.hash[path, KARABO_SCHEMA_ACCESS_MODE]
+                    == AccessMode.READONLY.value):
+                # Note: We can still receive configs for read only params,
+                # Extend for read only when attributes are removed.
+                to_erase.append(path)
+                continue
+        except KeyError:
+            not_available_paths.append(path)
+
+    if not_available_paths:
+        text += ("Configuration contains paths that are not "
+                 f"available {not_available_paths}. ")
+
+    to_erase.extend(not_available_paths)
+    for path in to_erase:
+        config.erase(path)
+
+    # Cleanup for left over nodes (empty Hashes)!
+    to_erase = [path for path, v, _ in Hash.flat_iterall(
+        config, empty=True) if isinstance(config[path], Hash)
+        and config[path].empty()]
+
+    for path in to_erase:
+        config.erase(path)
+
+    # Note: If not an empty text is returned, we have invalid paths!
+    return text

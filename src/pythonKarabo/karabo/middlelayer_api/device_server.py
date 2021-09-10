@@ -18,6 +18,7 @@ from karabo.native import (
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, decodeBinary, encodeXML, Hash)
 
+from .configuration import validate_init_configuration
 from .eventloop import EventLoop
 from .heartbeat_mixin import HeartBeatMixin
 from .logger import Logger
@@ -466,6 +467,12 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         if cls is None:
             return (await super(MiddleLayerDeviceServer, self)
                     .startDevice(classId, deviceId, config))
+        # Server validates the configuration of the device
+        invalid = validate_init_configuration(
+            cls.getClassSchema(), config)
+        if invalid:
+            raise RuntimeError(
+                f'Configuration for {deviceId} validation failed: {invalid}"')
         if "log.level" not in config:
             config["log.level"] = self.log.level
         if isSet(self.timeServerId):
