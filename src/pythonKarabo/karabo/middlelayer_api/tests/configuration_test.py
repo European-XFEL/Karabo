@@ -2,14 +2,14 @@ from copy import deepcopy
 
 import numpy as np
 
-from karabo.common.api import (
-    KARABO_SCHEMA_DISPLAYED_NAME, KARABO_WARN_HIGH)
+from karabo.common.api import KARABO_SCHEMA_DISPLAYED_NAME, KARABO_WARN_HIGH
 from karabo.middlelayer_api.configuration import (
-    attr_fast_deepcopy, sanitize_init_configuration, config_changes, is_equal,
-    sanitize_write_configuration, extract_modified_schema_attributes)
+    attr_fast_deepcopy, config_changes, extract_modified_schema_attributes,
+    is_equal, sanitize_init_configuration, sanitize_write_configuration,
+    validate_init_configuration)
 from karabo.native import (
-    AccessMode, Assignment, Configurable, Double, Hash, Int32,
-    MetricPrefix, Node, Overwrite, Schema, Slot, Unit)
+    AccessMode, Assignment, Configurable, Double, Hash, Int32, MetricPrefix,
+    Node, Overwrite, Schema, Slot, Unit)
 
 
 class Nested(Configurable):
@@ -60,6 +60,46 @@ class Object(Configurable):
     @Slot()
     async def move(self):
         """Dummy move slot"""
+
+
+def test_validate_init_configuration():
+    """Test if we can validate a configuration"""
+    obj = Object()
+    config = Hash("double", 2.0, "readOnlyInteger", 5)
+    text = validate_init_configuration(obj.getClassSchema(), config)
+    assert config["double"] == 2.0
+    # Read only is erase
+    assert "readOnlyInteger" not in config
+    assert text == ""
+
+    # Test invalid path in config
+    config = Hash("definatelyNotSchema", 2.0, "double", 1.0)
+    text = validate_init_configuration(obj.getClassSchema(), config)
+    assert "definatelyNotSchema" not in config
+    assert config["double"] == 1.0
+    assert text != ""
+
+    # Nested - read only
+    config = Hash("nested.double", 2.0, "nested.readOnlyInteger", 5)
+    text = validate_init_configuration(obj.getClassSchema(), config)
+    assert config["nested.double"] == 2.0
+    assert "nested.readOnlyInteger" not in config
+    assert text == ""
+
+    # Nested - Test invalid path in config
+    config = Hash("nested.definatelyNotSchema", 2.0, "nested.double", 1.0)
+    text = validate_init_configuration(obj.getClassSchema(), config)
+    assert "nested.definatelyNotSchema" not in config
+    assert config["nested.double"] == 1.0
+    assert text != ""
+
+    # Nested - Test invalid path in config
+    config = Hash("nested.definatelyNotSchema", 2.0, "double", 1.0)
+    text = validate_init_configuration(obj.getClassSchema(), config)
+    assert "nested.definatelyNotSchema" not in config
+    assert "nested" not in config
+    assert config["double"] == 1.0
+    assert text != ""
 
 
 def test_sanitize_init_configuration():
