@@ -2,7 +2,7 @@ import argparse
 import re
 import sys
 
-from qtpy.QtCore import QTimer
+from qtpy.QtCore import QObject, QTimer, Slot
 from qtpy.QtWidgets import qApp
 
 from karabo.common.api import Capabilities
@@ -15,14 +15,15 @@ DEVSCENE_PROG = re.compile(r"([0-9a-zA-Z/_\-]+)\|(.+)")
 CAPA = Capabilities.PROVIDES_SCENES
 
 
-class DeviceWaiter():
+class DeviceWaiter(QObject):
     """
     An helper class that listens to the system topology and acts accordingly.
 
     The constructor will parse the list of sceneIds for the theather as well
     """
 
-    def __init__(self, scene_ids, timeout):
+    def __init__(self, scene_ids, timeout, parent=None):
+        super().__init__(parent=parent)
         # a dictionary of list of scene names indexed by deviceId
         self.device_scenes = {}
         # track if scenes are open
@@ -55,7 +56,7 @@ class DeviceWaiter():
 
     def start(self, timeout):
         topology = get_topology()
-        self.timer = QTimer()
+        self.timer = QTimer(self)
         # start listening to topology
         topology.system_tree.on_trait_change(
             self._topo_update, 'initialized')
@@ -69,6 +70,7 @@ class DeviceWaiter():
             get_scene_from_server(device_id, scene_name)
             self.no_scenes = False
 
+    @Slot()
     def _timeout_handler(self):
         # stop listening to the topology
         topology = get_topology()
@@ -130,20 +132,32 @@ def run_theatre(ns):
     app = create_gui_app(sys.argv)
     init_gui(app, use_splash=not ns.nosplash)
 
+    network = get_network()
+
+    @Slot()
+    def _connect_handler(status):
+        """Connect handler for direct connect attempts without dialog"""
+        network.signalServerConnectionChanged.disconnect(_connect_handler)
+        if not status:
+            messagebox.show_error("Error, could not connect to gui server "
+                                  f"<b>{ns.host}:{ns.port}</b>. "
+                                  "Closing karabo theare.")
+            app.quit()
+
     # We might want to connect directly to the gui server
     if ns.host and ns.port:
+        network.signalServerConnectionChanged.connect(_connect_handler)
         success = get_network().connectToServerDirectly(
             username=ns.username, hostname=ns.host, port=ns.port)
     else:
         # Connect to the GUI Server via dialog
-        success = get_network().connectToServer()
+        success = network.connectToServer()
     if not success:
         app.quit()
     else:
-        get_network().onSubscribeLogs(False)
+        network.onSubscribeLogs(False)
 
     waiter = DeviceWaiter(ns.scene_id, ns.timeout)
-
     if waiter.device_scenes:
         app.exec_()
         app.deleteLater()
