@@ -488,8 +488,9 @@ class ProjectDatabase(DatabaseBase):
         :param domain: DB domain
         :param device_id_part: part of device name; search is case-insensitive.
         :return: a list of dicts:
-            [{"configid": uuid of the configuration,
-              "instanceid": device instance uuid in the DB},
+            [{"config_id": uuid of the configuration,
+              "device_uuid": device instance uuid in the DB,
+              "device_id": device instance id},
               ...
             ]
         """
@@ -501,9 +502,12 @@ class ProjectDatabase(DatabaseBase):
         for $doc in collection($path)/xml//device_instance
              [contains(lower-case(@instance_id),lower-case($iid))]
         let $active := $doc/@active_rev
-        let $configid := $doc/device_config[@revision=$active]/@uuid
-        let $instanceid := $doc/../@uuid
-        return <item configid="{{$configid}}" instanceid="{{$instanceid}}"/>
+        let $config_id := $doc/device_config[@revision=$active]/@uuid
+        let $device_uuid := $doc/../@uuid
+        let $device_id := $doc/@instance_id
+        return <item config_id="{{$config_id}}"
+                device_uuid="{{$device_uuid}}"
+                device_id="{{$device_id}}"/>
         }}</items>
         """
         path = "{}/{}".format(self.root, domain)
@@ -511,8 +515,9 @@ class ProjectDatabase(DatabaseBase):
 
         res = self.dbhandle.query(query)
 
-        return [{"configid": r.attrib["configid"],
-                 "instanceid": r.attrib["instanceid"]} for r in
+        return [{"config_id": r.attrib["config_id"],
+                 "device_uuid": r.attrib["device_uuid"],
+                 "device_id": r.attrib["device_id"]} for r in
                 res.results[0].getchildren()]
 
     def get_projects_from_device(self, domain, uuid):
