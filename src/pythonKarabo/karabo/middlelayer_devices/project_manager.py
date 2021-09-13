@@ -384,17 +384,20 @@ class ProjectManager(Device):
     @slot
     def slotListProjectsWithDevice(self, token, domain, device_id):
         """
-        List projects in domain which have configurations for a given device.
+        List projects in domain which have configurations for at least one
+        device whose id match a given device id part.
         :param token: database user token
         :param domain: domain to list items from
-        :param device_id: device with configurations stored in the projects to
-                          be listed
+        :param device_id: part of ids of devices stored in the projects to be
+                          listed.
         :return: a Hash with key, "projects", with a list of Hashes for its
-                 value. Each Hash in the list has three keys: "uuid",
-                 "name" and "last_modified". "uuid" is the unique id of the
-                 project in the project database, "name" is the project name
-                 and "last_modified" is the UTC imestamp of the projects's most
-                 recent modification in "%Y-%m-%d %H:%M:%S" format.
+                 value. Each Hash in the list has four keys: "uuid",
+                 "name", "last_modified" and "devices". "uuid" is the unique id
+                 of the project in the project database, "name" is the project
+                 name, "last_modified" is the UTC imestamp of the projects's
+                 most recent modification in "%Y-%m-%d %H:%M:%S" format and
+                 "devices" is a list of the device ids in the project that
+                 match the given device_id part passed to the slot.
                  The returned Hash also has a boolean key "success" that
                  indicates whether the slot execution has been successful
                  (True) and a string key "reason", that will contain an error
@@ -412,7 +415,8 @@ class ProjectManager(Device):
                     res_prjs.append(
                         Hash("name", prj["projectname"],
                              "uuid", prj["uuid"],
-                             "last_modified", prj["date"]))
+                             "last_modified", prj["date"],
+                             "devices", prj["devices"]))
             except ProjectDBError as e:
                 exceptionReason = str(e)
                 success = False

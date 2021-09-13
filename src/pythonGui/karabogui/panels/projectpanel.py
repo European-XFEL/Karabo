@@ -9,6 +9,7 @@ from qtpy.QtCore import QSize
 from qtpy.QtWidgets import QDialog, QVBoxLayout, QWidget
 
 from karabo.common.project.api import ProjectModel
+from karabo.common.services import KARABO_PROJECT_MANAGER
 from karabogui import icons
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.actions import KaraboAction, build_qaction
@@ -19,7 +20,7 @@ from karabogui.project.utils import (
     load_project, load_project_with_device, maybe_save_modified_project,
     reload_project, save_object, show_modified_project_message)
 from karabogui.project.view import ProjectView
-from karabogui.singletons.api import get_db_conn
+from karabogui.singletons.api import get_db_conn, get_topology
 from karabogui.util import get_spin_widget
 from karabogui.widgets.toolbar import ToolBar
 
@@ -42,6 +43,7 @@ class ProjectPanel(BasePanelWidget):
             KaraboEvent.ProjectFilterUpdated: self._event_filter_updated,
             KaraboEvent.AccessLevelChanged: self._event_access_level,
             KaraboEvent.LoginUserChanged: self._event_access_level,
+            KaraboEvent.SystemTopologyUpdate: self._event_system_topology,
         }
         register_for_broadcasts(event_map)
 
@@ -113,6 +115,10 @@ class ProjectPanel(BasePanelWidget):
             q_ac.triggered.connect(partial(k_action.triggered,
                                            tree_view))
             self._toolbar_actions.append(q_ac)
+        # The load_with_device action availability depends on the version
+        # of the Project Manager available in the topology - that's the reason
+        # for the special handling.
+        self.load_with_device_action = self._toolbar_actions[2]
 
         toolbar = ToolBar(parent=self)
         for ac in self._toolbar_actions:
@@ -156,6 +162,26 @@ class ProjectPanel(BasePanelWidget):
         self._set_toolbar_visible(status)
         if not status:
             self.sbar.reset(status)
+
+    def _event_system_topology(self, sys_topology):
+        can_load_with_device = False
+        # The load_with_device action will be available when the Project
+        # Manager device in the topology is version 2.12 or newer.
+        attrs = (
+            get_topology().get_attributes(f'device.{KARABO_PROJECT_MANAGER}')
+        )
+        if attrs:
+            mngr_version = attrs.get('karaboVersion', '0.0.0')
+            version_parts = mngr_version.split('.')
+            if len(version_parts) > 1:
+                try:
+                    major = int(version_parts[0])
+                    minor = int(version_parts[1])
+                    if major > 2 or (major == 2 and minor > 11):
+                        can_load_with_device = True
+                except ValueError:
+                    pass
+        self.load_with_device_action.setVisible(can_load_with_device)
 
     # -----------------------------------------------------------------------
 
