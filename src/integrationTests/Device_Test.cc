@@ -125,6 +125,18 @@ public:
                 .description("Device slot under a node, doing nothing")
                 .commit();
 
+        INT32_ELEMENT(expected).key("intInOnData")
+                .description("What onData received")
+                .readOnly()
+                .initialValue(0)
+                .commit();
+
+        INT32_ELEMENT(expected).key("numCallsOnInput")
+                .description("Count calls to onInput")
+                .readOnly()
+                .initialValue(0)
+                .commit();
+
         // Schema for output channel
         Schema dataSchema;
         NODE_ELEMENT(dataSchema).key("data")
@@ -182,6 +194,12 @@ public:
         KARABO_SIGNAL("signalA");
 
         KARABO_SLOT(slotEmitSignalA);
+
+        KARABO_SLOT(slotRegisterOnDataInputEos, const std::string /*inputChannelName*/);
+
+        KARABO_SLOT(slotSendToOutputChannel, const std::string /*channelName*/, int /*intToSend*/);
+
+        KARABO_SLOT(slotSendEos, const std::vector<std::string> /*channelNames*/);
     }
 
 
@@ -257,6 +275,43 @@ public:
 
     void slotEmitSignalA() {
         emit("signalA");
+    }
+
+
+    void slotRegisterOnDataInputEos(const std::string& inputChannelName) {
+        KARABO_ON_DATA(inputChannelName, onData);
+        KARABO_ON_INPUT(inputChannelName, onInput);
+        KARABO_ON_EOS(inputChannelName, onEos);
+    }
+
+
+    void slotSendToOutputChannel(const std::string& channelName, int intToSend) {
+        writeChannel(channelName, Hash("int", intToSend));
+    }
+
+
+    void slotSendEos(const std::vector<std::string>& channelNames) {
+        for (const auto& channelName : channelNames) {
+            signalEndOfStream(channelName);
+        }
+    }
+
+    void onData(const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
+        int received = -1;
+        if (data.has("int")) {
+            received = data.get<int>("int");
+        }
+        set("intInOnData", received);
+    }
+
+    void onInput(const karabo::xms::InputChannel::Pointer& /*input*/) {
+        const int soFar = get<int>("numCallsOnInput");
+        set("numCallsOnInput", soFar + 1);
+    }
+
+    void onEos(const karabo::xms::InputChannel::Pointer& /*input*/) {
+        const int oldValue = get<int>("intInOnData");
+        set("intInOnData", -oldValue); // just flip sign
     }
 };
 
@@ -1156,7 +1211,7 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
     CPPUNIT_ASSERT(std::find(outputChannels.begin(), outputChannels.end(), "injectedOutput") != outputChannels.end());
 
     // Check that, after some time, the injected input is connected to both, the injected and the static output
-    bool ok = waitForCondition([this] () {
+    auto inputsConnected = [this] () {
         const Hash cfg(m_deviceClient->get("TestDevice"));
         if (cfg.has("output.connections") && cfg.has("injectedOutput.connections")) {
             std::vector<Hash> tableStatic, tableInjected;
@@ -1171,9 +1226,79 @@ void Device_Test::testInputOutputChannelInjection(const std::string& updateSlot)
             }
         }
         return false;
-    }, cacheUpdateWaitMs * 20); // longer timeout: automatic connection tries happen only every 5 seconds
+    };
+    bool ok = waitForCondition(inputsConnected, cacheUpdateWaitMs * 20); // longer timeout: automatic connection tries happen only every 5 seconds
 
     CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get("TestDevice")), ok);
+
+    // Now START test that re-injecting an input channel keeps handlers registered with KARABO_ON_DATA.
+    // Register data handler for "injectedInput" channel
+    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotRegisterOnDataInputEos", "injectedInput")
+                            .timeout(requestTimeoutMs)
+                            .receive());
+    // Check that initially "intInOnData" is not one, i.e. ensure that following actions will make it one.
+    // (It is either zero [initial value] or -2 [from previous run of this test with other updateSlot].)
+    CPPUNIT_ASSERT(1 != m_deviceClient->get<int>("TestDevice", "intInOnData"));
+    const int countEosCalls = m_deviceClient->get<int>("TestDevice", "numCallsOnInput");
+
+    // Request data to be sent from "output" to "injectedInput" channel
+    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotSendToOutputChannel", "output", 1)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+    // Check that data arrived and onData/onInput handlers called
+    waitForCondition([this, countEosCalls] () {
+        return (1 == m_deviceClient->get<int>("TestDevice", "intInOnData")
+                && countEosCalls + 1 == m_deviceClient->get<int>("TestDevice", "numCallsOnInput"));
+    }, cacheUpdateWaitMs);
+    CPPUNIT_ASSERT_EQUAL(1, m_deviceClient->get<int>("TestDevice", "intInOnData"));
+    CPPUNIT_ASSERT_EQUAL(countEosCalls + 1, m_deviceClient->get<int>("TestDevice", "numCallsOnInput"));
+
+    // Request EOS to be sent to "injectedInput" channel.
+    // All outputs an input is connected to have to send EOS to get the eos handler called...
+    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotSendEos", std::vector<std::string>({"output", "injectedOutput"}))
+                            .timeout(requestTimeoutMs)
+                            .receive());
+    // Check that EOS arrived and flipped sign
+    waitForCondition([this] () { return (-1 == m_deviceClient->get<int>("TestDevice", "intInOnData"));},
+                     cacheUpdateWaitMs);
+    CPPUNIT_ASSERT_EQUAL(-1, m_deviceClient->get<int>("TestDevice", "intInOnData"));
+
+    // Re-inject input - channel will be recreated and onData handler should be passed to new incarnation
+    Schema inputOnlySchema;
+    INPUT_CHANNEL(inputOnlySchema).key("injectedInput")
+            .dataSchema(dataSchema)
+            .commit();
+    // Note that here we need to use "slotAppendSchema" and not updateSlot since "slotUpdateSchema" would erase "injectedInput".
+    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotAppendSchema", inputOnlySchema)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+    // Wait for connection being re-established
+    // HACK: Without sleep might be fooled, i.e. traces of connection of previous input channel not yet erased...
+     boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+    ok = waitForCondition(inputsConnected, cacheUpdateWaitMs * 20); // longer timeout again, see above
+    CPPUNIT_ASSERT_MESSAGE(toString(m_deviceClient->get("TestDevice")), ok);
+    // Request again data to be sent from "output" to "injectedInput" channel
+    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotSendToOutputChannel", "output", 2)
+                            .timeout(requestTimeoutMs)
+                            .receive());
+    // Check that new data arrived
+    waitForCondition([this, countEosCalls] () {
+        return (2 == m_deviceClient->get<int>("TestDevice", "intInOnData")
+                && countEosCalls + 2 == m_deviceClient->get<int>("TestDevice", "numCallsOnInput"));
+    }, cacheUpdateWaitMs);
+    CPPUNIT_ASSERT_EQUAL(2, m_deviceClient->get<int>("TestDevice", "intInOnData"));
+    CPPUNIT_ASSERT_EQUAL(countEosCalls + 2, m_deviceClient->get<int>("TestDevice", "numCallsOnInput"));
+    // Request EOS to be sent again
+    CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotSendEos", std::vector<std::string>({"output", "injectedOutput"}))
+                            .timeout(requestTimeoutMs)
+                            .receive());
+    // Check that EOS arrived and flipped sign again
+    waitForCondition([this] () { return (-2 == m_deviceClient->get<int>("TestDevice", "intInOnData"));},
+                     cacheUpdateWaitMs);
+    CPPUNIT_ASSERT_EQUAL(-2, m_deviceClient->get<int>("TestDevice", "intInOnData"));
+    //
+    // END test that re-injecting input channels keeps handlers registered with KARABO_ON_DATA/KARABO_ON_EOS!
+
     // Remove the channels again:
     CPPUNIT_ASSERT_NO_THROW(sigSlot->request("TestDevice", "slotUpdateSchema", Schema())
                             .timeout(requestTimeoutMs)

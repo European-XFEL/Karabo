@@ -2207,24 +2207,21 @@ namespace karabo {
         InputChannel::Pointer SignalSlotable::createInputChannel(const std::string& channelName, const karabo::util::Hash& config,
                                                                  const DataHandler& onDataAvailableHandler,
                                                                  const InputHandler& onInputAvailableHandler,
-                                                                 const InputHandler& onEndOfStreamEventHandler) {
+                                                                 const InputHandler& onEndOfStreamEventHandler,
+                                                                 const InputChannel::ConnectionTracker& connectTracker) {
             if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
             Hash channelConfig = config.get<Hash>(channelName);
             if (channelConfig.has("schema")) channelConfig.erase("schema");
             InputChannel::Pointer channel = Configurator<InputChannel>::create("InputChannel", channelConfig);
             channel->setInstanceId(m_instanceId + ":" + channelName);
+            channel->registerDataHandler(onDataAvailableHandler);
+            channel->registerInputHandler(onInputAvailableHandler);
+            channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
+            channel->registerConnectionTracker(connectTracker);
             {
+                // Add to container after setting all handlers - can immediately take part in (auto re-)connection then
                 boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
                 m_inputChannels[channelName] = channel;
-            }
-            if (onDataAvailableHandler) {
-                this->registerDataHandler(channelName, onDataAvailableHandler);
-            }
-            if (onInputAvailableHandler) {
-                this->registerInputHandler(channelName, onInputAvailableHandler);
-            }
-            if (onEndOfStreamEventHandler) {
-                this->registerEndOfStreamHandler(channelName, onEndOfStreamEventHandler);
             }
             return channel;
         }
