@@ -1044,6 +1044,7 @@ s             *
                     : dataHandler(), inputHandler(input), eosHandler(eos), statusTracker(status) {
                 };
 
+                // Could switch to 'karabo::xms::InputChannel::Handlers streamHandlers;', replacing the following three - but that breaks the API...
                 karabo::xms::SignalSlotable::DataHandler dataHandler;
                 karabo::xms::SignalSlotable::InputHandler inputHandler;
                 karabo::xms::SignalSlotable::InputHandler eosHandler;

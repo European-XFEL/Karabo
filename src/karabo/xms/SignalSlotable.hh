@@ -447,13 +447,16 @@ namespace karabo {
              * @param onDataAvailableHandler is a DataHandler called for each data item coming through the pipeline
              * @param onInputAvailableHandler is an InputHandler called when new data arrives - user has to loop over all items
              * @param onEndOfStreamEventHandler is an InputHandler called when EOS is received
+             * @param connectTracker will be called whenever the connection status of the created channel changes
+             *
              * @return the created InputChannel - better do not store it anywhere, it can be received via getInputChannel(channelName)
              */
             virtual InputChannel::Pointer createInputChannel(const std::string& channelName,
                                                              const karabo::util::Hash& config,
                                                              const DataHandler& onDataAvailableHandler = DataHandler(),
                                                              const InputHandler& onInputAvailableHandler = InputHandler(),
-                                                             const InputHandler& onEndOfStreamEventHandler = InputHandler());
+                                                             const InputHandler& onEndOfStreamEventHandler = InputHandler(),
+                                                             const InputChannel::ConnectionTracker& connectTracker = InputChannel::ConnectionTracker());
 
             /**
              * Remove the InputChannel created via createInputChannel
