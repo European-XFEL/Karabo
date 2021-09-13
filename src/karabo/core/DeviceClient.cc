@@ -1589,15 +1589,13 @@ namespace karabo {
             Hash& channelCfg = masterCfg.set(channelName, inputChannelCfg).getValue<Hash>();
             channelCfg.set("connectedOutputChannels", std::vector<std::string>(1, channelName));
             // Create InputChannel with handlers (this also enables auto-reconnect):
+            auto connectionTracker = [tracker = std::move(handlers.statusTracker), channelName] (const std::string& outId,
+                                                                                                 net::ConnectionStatus status){
+                if (tracker && channelName == outId) tracker(status);
+            };
             InputChannel::Pointer input = sigSlotPtr->createInputChannel(channelName, masterCfg, handlers.dataHandler,
-                                                                         handlers.inputHandler, handlers.eosHandler);
-            if (handlers.statusTracker) {
-                // wrap connection tracker to remove redundant channelName as first argument
-                input->registerConnectionTracker([tracker = handlers.statusTracker, channelName]
-                                                 (const std::string& outId, karabo::net::ConnectionStatus status){
-                    if (channelName == outId) tracker(status);
-                });
-            }
+                                                                         handlers.inputHandler, handlers.eosHandler,
+                                                                         connectionTracker);
             // Set an id for the input channel - since we do not allow to connect more than once to the same
             // output channel, our instance id is sufficient.
             const std::string myInstanceId(sigSlotPtr->getInstanceId());
