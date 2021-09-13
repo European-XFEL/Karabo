@@ -167,6 +167,14 @@ namespace karabo {
             m_connectionTracker = tracker;
         }
 
+
+        InputChannel::Handlers InputChannel::getRegisteredHandlers() const {
+            Handlers handlers(m_dataHandler, m_endOfStreamHandler);
+            handlers.inputHandler = m_inputHandler;
+            return handlers;
+        }
+
+
         size_t InputChannel::dataQuantityRead() {
             boost::mutex::scoped_lock lock(m_outputChannelsMutex);
             size_t bytesRead = 0;
