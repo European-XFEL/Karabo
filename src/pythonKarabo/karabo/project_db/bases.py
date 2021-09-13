@@ -179,15 +179,14 @@ class DatabaseBase(ContextDecorator):
         raise NotImplementedError
 
     def get_configurations_from_device_name_part(self, domain, device_id_part):
-        """Returns a list of configurations for a given device
-
-        To be implemented in the derived class
-
+        """
+        Returns a list of configurations for a given device.
         :param domain: DB domain
         :param device_id_part: part of device name; search is case-insensitive.
         :return: a list of dicts:
-            [{"configid": uuid of the configuration,
-              "instanceid": device instance uuid in the DB},
+            [{"config_id": uuid of the configuration,
+              "device_uuid": device instance uuid in the DB,
+              "device_id": device instance id},
               ...
             ]
         """
@@ -240,17 +239,28 @@ class DatabaseBase(ContextDecorator):
         :return: a list of dicts:
             [{"projectname": name of project,
               "date": last modification timestamp for the project,
-              "uuid": uuid of projecti}, ...]
+              "uuid": uuid of projecti
+              "devices": list of ids of prj devices with the given part}, ...]
         """
         configs = self.get_configurations_from_device_name_part(domain,
                                                                 device_id_part)
         projects = []
         for config in configs:
-            instance_id = config["instanceid"]
+            device_uuid = config["device_uuid"]
+            device_id = config["device_id"]
             for prj in self.get_projects_data_from_device(domain,
-                                                          instance_id):
-                if prj not in projects:
+                                                          device_uuid):
+                prj_in_list = next((p for p in projects
+                                    if p["uuid"] == prj["uuid"]), None)
+                if prj_in_list:
+                    # The project is already in the resulting list due to
+                    # another device_id that matched the name part; add the
+                    # device_id to the 'devices' attribute of the project.
+                    prj_in_list["devices"].append(device_id)
+                else:
+                    prj["devices"] = [device_id]
                     projects.append(prj)
+
         return projects
 
     def save_item(self, domain, uuid, item_xml, overwrite=False):
