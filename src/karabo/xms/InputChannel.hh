@@ -70,6 +70,33 @@ namespace karabo {
             typedef boost::function<void (const karabo::util::Hash&, const MetaData&) > DataHandler;
             using ConnectionTracker = boost::function<void(const std::string&, net::ConnectionStatus)>;
 
+            /**
+             * Container for InputChannel handlers that concern data handling.
+             */
+            struct Handlers {
+
+                Handlers() { // members are correctly initialised by their default empty constructors
+                };
+
+                /**
+                 * Construct with data and end-of-stream handlers - input handler could be specified afterwards
+                 */
+                explicit Handlers(const DataHandler& data, const InputHandler& eos = InputHandler())
+                    : dataHandler(data), inputHandler(), eosHandler(eos) {
+                };
+
+                /**
+                 * Construct with input and end-of-stream handlers - data handler could be specified afterwards
+                 */
+                explicit Handlers(const InputHandler& input,  const InputHandler& eos = InputHandler())
+                    : dataHandler(), inputHandler(input), eosHandler(eos) {
+                };
+
+                DataHandler dataHandler;
+                InputHandler inputHandler;
+                InputHandler eosHandler;
+            };
+
             // Default maximum queue length on a connected output channel before
             // it starts dropping data or waiting for sending data. The max
             // queue length only comes into play when the input channel is
@@ -163,13 +190,45 @@ namespace karabo {
 
             const std::string& getInstanceId() const;
 
+            /**
+             * Register handler to be called when new data has arrived.
+             * For each index i from 0 to < size(), data and meta data can be received via read(i, dataHash)
+             * and readMetaData(i, metaData), respectively.
+             *
+             * Note: The internal variable that stores the handler is neither protected against concurrent calls
+             *       to getRegisteredHandlers() nor to concurrent usage of the handler when data arrives, i.e.
+             *       this registration must not be called if (being) connected to any output channel.
+             */
             void registerInputHandler(const InputHandler& ioInputHandler);
 
+            /**
+             * Register handler to be called for each data item that arrives.
+             *
+             * Note: The internal variable that stores the handler is neither protected against concurrent calls
+             *       to getRegisteredHandlers() nor to concurrent usage of the handler when data arrives, i.e.
+             *       this registration must not be called if (being) connected to any output channel.
+             */
             void registerDataHandler(const DataHandler& ioDataHandler);
 
+            /**
+             * Register handler to be called when connected output channels inform about end-of-stream.
+             * If connected to more than one output channel, the handler is called if the last of them sends the
+             * end-of-stream signal.
+             *
+             * Note: The internal variable that stores the handler is neither protected against concurrent calls
+             *       to getRegisteredHandlers() nor to concurrent usage of the handler when the end-of-stream signal arrives,
+             *       i.e. this registration must not be called if (being) connected to any outpu channel.
+             */
             void registerEndOfStreamEventHandler(const InputHandler& endOfStreamEventHandler);
 
             void registerConnectionTracker(const ConnectionTracker& tracker);
+
+            /**
+             * Get handlers registered for data, input and end-of-stream handling.
+             *
+             * Do not call concurrrently with the corresponding register[Data|Input|EndOfStreamEvent]Handler() methods.
+             */
+            Handlers getRegisteredHandlers() const;
 
         private:
             void triggerIOEvent();

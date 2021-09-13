@@ -929,7 +929,11 @@ namespace karabo {
 
             /**
              * Append a schema to the existing device schema
-             * @param schema to be appended - if it contains Input-/OutputChannels, they are created
+             * @param schema to be appended -  may also contain existing elements to overwrite their
+             *                attributes like min/max values/sizes, alarm ranges, etc.
+             *                If it contains Input-/OutputChannels, they are (re-)created.
+             *                If previously an InputChannel existed under the same key, its data/input/endOfStream handlers
+             *                are kept for the recreated InputChannel.
              * @param unused parameter, kept for backward compatibility.
              */
             void appendSchema(const karabo::util::Schema& schema, const bool /*unused*/ = false) {
@@ -1007,7 +1011,9 @@ namespace karabo {
              *
              * @param schema additional, dynamic schema - may also contain existing elements to overwrite their
              *                attributes like min/max values/sizes, alarm ranges, etc.
-             *                If it contains Input-/OutputChannels, they are created (and previously added ones removed)
+             *                If it contains Input-/OutputChannels, they are (re-)created (and previously added ones removed).
+             *                If previously an InputChannel existed under the same key, its data/input/endOfStream handlers
+             *                are kept for the recreated InputChannel.
              * @param unused parameter, kept for backward compatibility.
              */
             void updateSchema(const karabo::util::Schema& schema, const bool /*unused*/ = false) {
@@ -1914,16 +1920,26 @@ namespace karabo {
              */
             void prepareInputChannel(const std::string& path) {
                 KARABO_LOG_FRAMEWORK_INFO << "'" << this->getInstanceId() << "' creates input channel '" << path << "'";
-                karabo::xms::InputChannel::Pointer channel = createInputChannel(path, m_parameters);
+                using karabo::xms::InputChannel;
+                InputChannel::Handlers handlers;
+                // If there was already an InputChannel, "rescue" any registered handlers for new channel
+                InputChannel::Pointer channel = getInputChannelNoThrow(path);
+                if (channel) {
+                    handlers = channel->getRegisteredHandlers();
+                }
+                channel = createInputChannel(path, m_parameters,
+                                             handlers.dataHandler, handlers.inputHandler, handlers.eosHandler,
+                                             util::bind_weak(&Device<FSM>::trackInputChannelConnections, this, path, _1, _2));
                 if (!channel) {
                     KARABO_LOG_FRAMEWORK_ERROR << "*** 'createInputChannel' for channel name '" << path << "' failed to create input channel";
                 } else {
                     // Set configured connections as missing for now
+                    // NOTE: Setting ".missingConnections" here and in trackInputChannelConnections(...) (registered as status tracker
+                    //       above) cannot interfere since here we already have locked m_objectStateChangeMutex that is also required
+                    //       by the setVectorUpdate(..) inside trackInputChannelConnections(...).
                     const util::Hash h(path + ".missingConnections",
                                        m_parameters.get<std::vector < std::string >> (path + ".connectedOutputChannels"));
                     setNoLock(h, getActualTimestamp());
-                    channel->registerConnectionTracker(util::bind_weak(&Device<FSM>::trackInputChannelConnections,
-                                                                       this, path, _1, _2));
                 }
             }
 
