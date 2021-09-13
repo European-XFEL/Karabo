@@ -1,8 +1,11 @@
 import argparse
 import sys
 
+from qtpy.QtCore import Slot
+
 from karabo.common.scenemodel.api import SceneTargetWindow
 from karabogui.events import KaraboEvent, broadcast_event
+from karabogui.messagebox import show_error
 from karabogui.programs.base import create_gui_app, init_gui
 from karabogui.singletons.api import get_db_conn, get_network, get_topology
 
@@ -34,14 +37,27 @@ def run_cinema(ns):
     # Attach to the topology
     topology.system_tree.on_trait_change(
         trigger_scenes, 'initialized')
+    network = get_network()
+
+    @Slot()
+    def _connect_handler(status):
+        """Connect handler for direct connect attempts without dialog"""
+        network.signalServerConnectionChanged.disconnect(_connect_handler)
+        if not status:
+            show_error("Error, could not connect to gui server "
+                       f"<b>{ns.host}:{ns.port}</b>. Closing karabo cinema.")
+            topology.system_tree.on_trait_change(
+                trigger_scenes, 'initialized', remove=True)
+            app.quit()
 
     # We might want to connect directly to the gui server
     if ns.host and ns.port:
-        success = get_network().connectToServerDirectly(
+        network.signalServerConnectionChanged.connect(_connect_handler)
+        success = network.connectToServerDirectly(
             username=ns.username, hostname=ns.host, port=ns.port)
     else:
         # Connect to the GUI Server via dialog
-        success = get_network().connectToServer()
+        success = network.connectToServer()
 
     if success:
         app.exec_()
