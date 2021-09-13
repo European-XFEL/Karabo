@@ -17,7 +17,7 @@ from karabogui.singletons.api import get_config, get_db_conn
 from karabogui.util import SignalBlocker, get_spin_widget
 
 # Minimum size for a device id substring to be considered searchable.
-MIN_DEVICE_ID_SIZE = 4
+MIN_DEVICE_ID_SIZE = 5
 
 
 class LoadProjectWithDeviceDialog(QDialog):
@@ -72,7 +72,10 @@ class LoadProjectWithDeviceDialog(QDialog):
     def selected_project_id(self):
         prj_id = None
         if len(self.tbl_projects.selectedItems()) == 3:
-            prj_id = self.tbl_projects.selectedItems()[2].text()
+            # The project name is the first item and the uuid is its
+            # associated data.
+            prj_name = self.tbl_projects.selectedItems()[0]
+            prj_id = prj_name.data(Qt.UserRole)
         return prj_id
 
     def selected_domain(self):
@@ -174,7 +177,7 @@ class LoadProjectWithDeviceDialog(QDialog):
     # UI Setup and Updating
 
     def setup_table(self):
-        cols = ['Name', 'Last Modified', 'uuid']
+        cols = ['Project', 'Last Modified', 'Matching Devices']
         self.tbl_projects.verticalHeader().setVisible(False)
         self.tbl_projects.setColumnCount(len(cols))
         self.tbl_projects.setHorizontalHeaderLabels(cols)
@@ -195,10 +198,13 @@ class LoadProjectWithDeviceDialog(QDialog):
         self.tbl_projects.setUpdatesEnabled(False)
         self.tbl_projects.setRowCount(len(data))
         for row, rec in enumerate(data):
-            self.tbl_projects.setItem(row, 0, QTableWidgetItem(rec['name']))
+            prj_name = QTableWidgetItem(rec['name'])
+            prj_name.setData(Qt.UserRole, rec['uuid'])
+            self.tbl_projects.setItem(row, 0, prj_name)
             self.tbl_projects.setItem(
                 row, 1, QTableWidgetItem(rec['last_modified']))
-            self.tbl_projects.setItem(row, 2, QTableWidgetItem(rec['uuid']))
+            self.tbl_projects.setItem(
+                row, 2, QTableWidgetItem(", ".join(sorted(rec['devices']))))
         self.tbl_projects.setUpdatesEnabled(True)
         self.tbl_projects.setSortingEnabled(True)
         # The last column is not resized to avoid conflict with its stretch
