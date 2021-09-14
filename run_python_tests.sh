@@ -283,35 +283,34 @@ runPythonUnitTests() {
 #     safeRunTests "karabo.config_db" "_amqp"
 #     safeRunTests "karabo.tests" "_amqp"
 #     safeRunTests "karabo.interactive" "_amqp"
-#
-#     export KARABO_BROKER="redis://exflctrl01:6379"
-#
-#     echo
-#     echo
-#     echo "*************************************************************************************************"
-#     echo "*************************************************************************************************"
-#     echo "**"
-#     echo "**   Running Python unit tests with REDIS broker (server) ... ${KARABO_BROKER}"
-#     echo "**"
-#     echo "*************************************************************************************************"
-#     echo "*************************************************************************************************"
-#     echo
-#     echo
-#
-#     safeRunTests "karabo.bound_api" "_redis"
-#     safeRunTests "karabo.bound_devices" "_redis"
-#     safeRunTests "karabo.middlelayer_api" "_redis"
-#     safeRunTests "karabo.middlelayer_devices" "_redis"
-#     safeRunTests "karabo.config_db" "_redis"
-#     safeRunTests "karabo.common" "_redis"
-#     safeRunTests "karabo.macro_api" "_redis"
-#     safeRunTests "karabo.macro_devices" "_redis"
-#     safeRunTests "karabo.influxdb" "_redis"
-#     safeRunTests "karabo.native" "_redis"
-#     safeRunTests "karabo.project_db" "_redis"
-#     safeRunTests "karabo.config_db" "_redis"
-#     safeRunTests "karabo.tests" "_redis"
-#     safeRunTests "karabo.interactive" "_redis"
+
+    export KARABO_BROKER="redis://exflctrl01:6379"
+
+    echo
+    echo
+    echo "*************************************************************************************************"
+    echo "*************************************************************************************************"
+    echo "**"
+    echo "**   Running Python unit tests with REDIS broker (server) ... ${KARABO_BROKER}"
+    echo "**"
+    echo "*************************************************************************************************"
+    echo "*************************************************************************************************"
+    echo
+    echo
+
+    safeRunTests "karabo.bound_api" "_redis"
+    safeRunTests "karabo.bound_devices" "_redis"
+    safeRunTests "karabo.middlelayer_api" "_redis"
+    safeRunTests "karabo.middlelayer_devices" "_redis"
+    safeRunTests "karabo.common" "_redis"
+    safeRunTests "karabo.macro_api" "_redis"
+    safeRunTests "karabo.macro_devices" "_redis"
+    safeRunTests "karabo.influxdb" "_redis"
+    safeRunTests "karabo.native" "_redis"
+    safeRunTests "karabo.project_db" "_redis"
+    safeRunTests "karabo.config_db" "_redis"
+    safeRunTests "karabo.tests" "_redis"
+    safeRunTests "karabo.interactive" "_redis"
 
     export KARABO_BROKER=${savedBroker}
 
