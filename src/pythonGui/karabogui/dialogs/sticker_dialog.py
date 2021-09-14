@@ -96,7 +96,7 @@ class StickerDialog(QDialog):
     @Slot()
     def on_pbFont_clicked(self):
         dialog = FontDialog(self.text_font, parent=self)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:
             self.text_font = dialog.qfont
             self.model.font = self.text_font.toString()
             self.set_text_font_button()

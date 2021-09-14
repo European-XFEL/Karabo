@@ -16,7 +16,7 @@ from .messagebox import KaraboMessageBox
 from .pen_dialogs import PenDialog
 from .scene_dialogs import ReplaceDialog, ResizeSceneDialog, SceneItemDialog
 from .scene_link_dialog import SceneLinkDialog
-from .stickerdialog import StickerDialog
+from .sticker_dialog import GREY, StickerDialog
 from .textdialog import TextDialog
 from .update_dialog import UpdateDialog
 from .utils import get_dialog_ui
