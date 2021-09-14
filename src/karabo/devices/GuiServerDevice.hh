@@ -975,21 +975,6 @@ namespace karabo {
              */
             void onProjectListItems(WeakChannelPointer channel, const karabo::util::Hash& info);
 
-            /**
-             * Request a list of the projects present in a domain that contain
-             * configurations for a given device.
-             * @param channel from which the request originates
-             * @param info is a Hash that should contain:
-             *          - projectManager: project manager device to forward request to
-             *          - token: token of the database user - identifies the session
-             *          - domain: domain to list projects from
-             *          - device_id: id of device for which the listed projects have
-             *                       configurations stored.
-             * For the reply written to channel see the documentation of
-             * karabo.bound_devices.ProjectManager
-             */
-            void onProjectListProjectsWithDevice(WeakChannelPointer channel,
-                                                 const karabo::util::Hash& info);
 
             /**
              * Request a list of the domains in the database.
