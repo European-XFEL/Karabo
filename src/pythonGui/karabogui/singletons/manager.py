@@ -536,14 +536,27 @@ class Manager(QObject):
         broadcast_event(KaraboEvent.ProjectItemsList,
                         {'items': reply.get('items', [])})
 
-    @project_db_handler()
-    def handle_projectListProjectsWithDevice(self, reply):
-        # ``reply`` is a Hash containing a lists of project hashes.
-        broadcast_event(
-            KaraboEvent.ProjectFindWithDevice, {
-                'projects': reply.get('projects', [])
-            }
-        )
+    # This does not use the "project_db_handler" decorator because it is
+    # handled by the "requestGeneric" protocol of the GUI Server.
+    def handle_projectListProjectsWithDevice(self, success, request,
+                                             reply, reason=''):
+        error_details = None
+        if not success:
+            # An error occurred at the GUI Server level
+            error_details = reason
+        elif not reply['success']:
+            # An error occurred at the Project Manager level
+            error_details = reply['reason']
+        if error_details is not None:
+            broadcast_event(
+                KaraboEvent.ProjectFindWithDevice,
+                {'projects': [], 'error': error_details})
+        else:
+            broadcast_event(
+                KaraboEvent.ProjectFindWithDevice, {
+                    'projects': reply.get('projects', []),
+                    'error': None}
+            )
 
     def handle_projectListProjectManagers(self, reply):
         # ``reply`` is a list of strings
