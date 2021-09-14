@@ -3,6 +3,7 @@
 # Created on February 1, 2012
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
+import uuid
 from functools import wraps
 from weakref import WeakKeyDictionary, WeakValueDictionary
 
@@ -136,18 +137,22 @@ class Manager(QObject):
         get_network().onInitDevice(serverId, classId, deviceId, config,
                                    attrUpdates=attr_updates)
 
-    def callDeviceSlot(self, token, handler, instance_id, slot_name, params):
+    def callDeviceSlot(self, handler, instance_id, slot_name, params):
         """Call a device slot using the `requestGeneric` mechanism.
 
         See karabogui.request for more details.
         """
-        # Set the callback handler
+        # Generate a unique token for the transaction
+        token = uuid.uuid4().hex
         assert token not in self._request_handlers
+
+        # Set the callback handler
         assert callable(handler)
         self._request_handlers[token] = handler
-
         # Call the GUI server
-        get_network().onExecuteGeneric(instance_id, slot_name, params)
+        get_network().onExecuteGeneric(instance_id, slot_name, params,
+                                       token=token)
+        return token
 
     def shutdownDevice(self, deviceId, showConfirm=True, parent=None):
         if showConfirm:
@@ -200,7 +205,7 @@ class Manager(QObject):
             pending = list(self._request_handlers.keys())
             for token in pending:
                 self.handle_requestGeneric(
-                    False, request=Hash("args.token", token),
+                    False, request=Hash("token", token),
                     reason="Karabo GUI Client disconnect. Erasing request.")
 
     def handle_subscribeLogsReply(self, **info):
@@ -277,7 +282,7 @@ class Manager(QObject):
         Unfolding the `token` should provide a request handler
 
         """
-        token = request["args.token"]
+        token = request["token"]
         handler = self._request_handlers.pop(
             token, lambda success, reply: None)
         reply = reply if success is True else reason
