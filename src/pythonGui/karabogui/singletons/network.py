@@ -341,10 +341,12 @@ class Network(QObject):
             h["timeout"] = REQUEST_REPLY_TIMEOUT
         self._write_hash(h)
 
-    def onExecuteGeneric(self, instanceId, slot_name, params):
+    def onExecuteGeneric(self, instanceId, slot_name, params, token=None):
         logger.info(f"Executing slot <b>{slot_name}</b> "
                     f"of device <b>{instanceId}</b>")
         h = Hash("type", "requestGeneric")
+        if token is not None:
+            h["token"] = token
         h["instanceId"] = instanceId
         h["slot"] = slot_name
         h["args"] = params
