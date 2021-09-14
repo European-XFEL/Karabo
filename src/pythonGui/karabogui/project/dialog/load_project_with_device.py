@@ -11,6 +11,7 @@ from qtpy.QtCore import QSize, Qt, Slot
 from qtpy.QtWidgets import (
     QAbstractItemView, QDialog, QDialogButtonBox, QTableWidgetItem)
 
+from karabogui import messagebox
 from karabogui.events import (
     KaraboEvent, register_for_broadcasts, unregister_from_broadcasts)
 from karabogui.singletons.api import get_config, get_db_conn
@@ -95,7 +96,7 @@ class LoadProjectWithDeviceDialog(QDialog):
             # The results are for the search currently being expected.
             # A long-running search could have been triggered from a
             # previous instance of the dialog.
-            self._projects_with_device_updated(data.get('projects', []))
+            self._projects_with_device_updated(data)
 
     def _domains_updated(self, domains):
         domain_to_select = self.initial_domain
@@ -120,10 +121,15 @@ class LoadProjectWithDeviceDialog(QDialog):
         self.loading_domains = False
         self.update_dialog_state()
 
-    def _projects_with_device_updated(self, projects):
+    def _projects_with_device_updated(self, data):
         self.finding_projects = False
-        self.populate_projects_table(projects)
-        self.update_dialog_state()
+        if data['error'] is not None:
+            self.update_dialog_state()
+            messagebox.show_error('Find projects with device failed!',
+                                  details=data['error'])
+        else:
+            self.populate_projects_table(data['projects'])
+            self.update_dialog_state()
 
     # -----------------------------------------------------------------------
     # Widgets Event Handlers
