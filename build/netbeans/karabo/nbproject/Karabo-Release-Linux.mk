@@ -114,6 +114,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103112890/MqttBroker.o \
 	${OBJECTDIR}/_ext/1103112890/MqttClient.o \
 	${OBJECTDIR}/_ext/1103112890/MqttCppClient.o \
+	${OBJECTDIR}/_ext/1103112890/RedisBroker.o \
+	${OBJECTDIR}/_ext/1103112890/RedisClient.o \
 	${OBJECTDIR}/_ext/1103112890/Strand.o \
 	${OBJECTDIR}/_ext/1103112890/TcpChannel.o \
 	${OBJECTDIR}/_ext/1103112890/TcpConnection.o \
@@ -589,6 +591,16 @@ ${OBJECTDIR}/_ext/1103112890/MqttCppClient.o: ../../../src/karabo/net/MqttCppCli
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -Wno-noexcept-type -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/MqttCppClient.o ../../../src/karabo/net/MqttCppClient.cc
+
+${OBJECTDIR}/_ext/1103112890/RedisBroker.o: ../../../src/karabo/net/RedisBroker.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/RedisBroker.o ../../../src/karabo/net/RedisBroker.cc
+
+${OBJECTDIR}/_ext/1103112890/RedisClient.o: ../../../src/karabo/net/RedisClient.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/RedisClient.o ../../../src/karabo/net/RedisClient.cc
 
 ${OBJECTDIR}/_ext/1103112890/Strand.o: ../../../src/karabo/net/Strand.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
@@ -2189,6 +2201,32 @@ ${OBJECTDIR}/_ext/1103112890/MqttCppClient_nomain.o: ${OBJECTDIR}/_ext/110311289
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -Wno-noexcept-type -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/MqttCppClient_nomain.o ../../../src/karabo/net/MqttCppClient.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103112890/MqttCppClient.o ${OBJECTDIR}/_ext/1103112890/MqttCppClient_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/RedisBroker_nomain.o: ${OBJECTDIR}/_ext/1103112890/RedisBroker.o ../../../src/karabo/net/RedisBroker.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/RedisBroker.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/RedisBroker_nomain.o ../../../src/karabo/net/RedisBroker.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/RedisBroker.o ${OBJECTDIR}/_ext/1103112890/RedisBroker_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/RedisClient_nomain.o: ${OBJECTDIR}/_ext/1103112890/RedisClient.o ../../../src/karabo/net/RedisClient.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/RedisClient.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/RedisClient_nomain.o ../../../src/karabo/net/RedisClient.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/RedisClient.o ${OBJECTDIR}/_ext/1103112890/RedisClient_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/Strand_nomain.o: ${OBJECTDIR}/_ext/1103112890/Strand.o ../../../src/karabo/net/Strand.cc 

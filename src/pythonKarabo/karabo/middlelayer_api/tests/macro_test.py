@@ -2,7 +2,7 @@ from asyncio import ensure_future, Future, TimeoutError
 from contextlib import contextmanager
 import sys
 import time
-from unittest import main
+from unittest import main, skipIf
 import weakref
 
 from karabo.common.states import State
@@ -21,7 +21,7 @@ from karabo.middlelayer_api.synchronization import background, sleep
 
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, sync_tst, async_tst)
-from karabo.middlelayer_api.compat import jms
+from karabo.middlelayer_api.compat import jms, mqtt
 
 
 class Superslot(Slot):
@@ -194,8 +194,7 @@ class Tests(DeviceTest):
             sleep(1)
         d = getDevice("remote")    # proxy is not connected
         executeNoWait(d, "count")
-        if jms:
-            time.sleep(0.1)
+        time.sleep(0.1)
         self.assertEqual(d.counter, -1)
         with updateDevice(d):
             self.assertNotEqual(d.counter, -1)
@@ -492,6 +491,7 @@ class Tests(DeviceTest):
         del self.local.exception
         del self.local.traceback
 
+    @skipIf(mqtt, "not supported")
     @async_tst
     async def test_cancel(self):
         """test proper cancellation of slots
@@ -503,7 +503,7 @@ class Tests(DeviceTest):
         Test that for both if the slot is stuck in a karabo function, or not.
         """
         if not jms:
-            await sleep(1)
+            await sleep(2)
         # Rename sleep to make it clean which sleep is being used
         karabo_sleep = sleep
         d = await getDevice("local")

@@ -1,14 +1,14 @@
 from asyncio import ensure_future, sleep
 from contextlib import contextmanager
 import time
-from unittest import main
+from unittest import main, skipIf
 
 from karabo.middlelayer_api.device import Device
 from karabo.native import Int32 as Int, Slot
 from karabo.middlelayer_api.macro import Macro, Monitor, RemoteDevice
 
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, sync_tst
-from karabo.middlelayer_api.compat import amqp
+from karabo.middlelayer_api.compat import amqp, mqtt, redis
 
 
 class Remote(Device):
@@ -60,11 +60,12 @@ class Tests(DeviceTest):
         with cls.deviceManager(cls.remA, cls.remB, lead=cls.local):
             yield
 
+    @skipIf(mqtt, "not supported")
     @sync_tst
     def test_count(self):
         self.local.startA()
         self.local.startB()
-        if amqp:
+        if amqp or redis:
             time.sleep(1.0)
         else:
             time.sleep(0.3)
