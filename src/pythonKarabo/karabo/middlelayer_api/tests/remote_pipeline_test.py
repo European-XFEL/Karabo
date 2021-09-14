@@ -385,6 +385,7 @@ class RemotePipelineTest(DeviceTest):
     @async_tst
     async def test_output_proxy_connected_close_handler(self):
         """Test the output connected and close handler of a proxy"""
+        await sleep(2)
         NUM_DATA = 5
         output_device = Sender({"_deviceId_": "outputdevice"})
         await output_device.startInstance()
