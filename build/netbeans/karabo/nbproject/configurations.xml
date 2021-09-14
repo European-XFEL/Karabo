@@ -193,6 +193,10 @@
         <itemPath>../../../src/karabo/net/MqttClient.hh</itemPath>
         <itemPath>../../../src/karabo/net/MqttCppClient.cc</itemPath>
         <itemPath>../../../src/karabo/net/MqttCppClient.hh</itemPath>
+        <itemPath>../../../src/karabo/net/RedisBroker.cc</itemPath>
+        <itemPath>../../../src/karabo/net/RedisBroker.hh</itemPath>
+        <itemPath>../../../src/karabo/net/RedisClient.cc</itemPath>
+        <itemPath>../../../src/karabo/net/RedisClient.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="Point-2-Point" projectFiles="true">
         <logicalFolder name="f3" displayName="Channel" projectFiles="true">
@@ -1340,6 +1344,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/RedisBroker.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/RedisBroker.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/RedisClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/RedisClient.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Strand.cc" ex="false" tool="1" flavor2="0">
       </item>
@@ -3334,6 +3358,26 @@
       </item>
       <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/net/RedisBroker.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/RedisBroker.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/RedisClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/RedisClient.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/net/Strand.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Strand.hh" ex="false" tool="3" flavor2="0">
@@ -5319,6 +5363,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Queues.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/RedisBroker.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/RedisBroker.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/RedisClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/RedisClient.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Strand.cc" ex="false" tool="1" flavor2="0">
       </item>

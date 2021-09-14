@@ -21,7 +21,7 @@ from karabo.middlelayer import (
 from karabo.middlelayer_api import openmq
 
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
-from karabo.middlelayer_api.compat import jms, mqtt
+from karabo.middlelayer_api.compat import jms, mqtt, redis
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 
@@ -223,7 +223,7 @@ class Tests(DeviceTest):
         """test the execution of remote slots"""
         self.remote.done = False
         with (await getDevice("remote")) as d:
-            if mqtt:
+            if not jms:
                 await updateDevice(d)
             await d.doit()
         self.assertTrue(self.remote.done)
@@ -342,7 +342,7 @@ class Tests(DeviceTest):
         self.remote.string_list = ["z", "bla"]
 
         with (await getDevice("remote")) as d:
-            if mqtt:
+            if not jms:
                 await updateDevice(d)
             self.assertEqual(d.string, "blub")
             self.assertLess(abs(d.string.timestamp.toTimestamp() -
@@ -362,7 +362,7 @@ class Tests(DeviceTest):
             self.assertEqual(a, b)
 
         with (await getDevice("remote")) as d:
-            if mqtt:
+            if not jms:
                 await updateDevice(d)
             self.remote.unit_int = 5 * unit.kilometer
             self.remote.unit_float = 2 * unit.millisecond
@@ -395,7 +395,7 @@ class Tests(DeviceTest):
         """test changing a remote parameter"""
         self.remote.value = 7
         with (await getDevice("remote")) as d:
-            if mqtt:
+            if not jms:
                 await updateDevice(d)
             await d.changeit()
         self.assertEqual(self.remote.value, 3)
@@ -404,7 +404,7 @@ class Tests(DeviceTest):
     async def test_state(self):
         self.remote.state = State.UNKNOWN
         with (await getDevice("remote")) as d:
-            if mqtt:
+            if not jms:
                 await updateDevice(d)
             self.assertEqual(d.state, State.UNKNOWN)
             self.assertEqual(d.alarmCondition, AlarmCondition.NONE)
@@ -412,7 +412,7 @@ class Tests(DeviceTest):
     @async_tst
     async def test_remotetag_proxy(self):
         with (await getDevice("remote")) as d:
-            if mqtt:
+            if not jms:
                 await updateDevice(d)
             descriptors = filterByTags(d, "AString")
             paths = [k.longkey for k in descriptors]
@@ -584,6 +584,7 @@ class Tests(DeviceTest):
         self.assertEqual(proxy.state, State.UNKNOWN)
 
     @async_tst
+    # @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
     async def test_waituntilnew(self):
         """test the waitUntilNew coroutine for properties
         """
@@ -591,7 +592,7 @@ class Tests(DeviceTest):
         self.remote.nested.val = None
         # NOTE: Protect against a race condition in getDevice and cycle once!
         # Can be cured with async with which is not possible at the moment.
-        await sleep(1)
+        await sleep(2)
         with (await getDevice("remote")) as d:
             if not jms:
                 await updateDevice(d)
@@ -616,6 +617,7 @@ class Tests(DeviceTest):
                 await task
 
     @async_tst
+    # @flaky(max_runs=FLAKY_MAX_RUNS, min_passes=FLAKY_MIN_PASSES)
     async def test_waituntildevice(self):
         """test the waitUntilNew coroutine for devices
         """
@@ -642,12 +644,15 @@ class Tests(DeviceTest):
     async def test_collect(self):
         """test that multiple settings are gathered into one"""
         with (await getDevice("remote")) as d:
-            if not jms:
+            if mqtt:
                 await updateDevice(d)
             d.once = 3
             d.once = 7
             d.once = 10
-        await sleep(0.1)
+        if redis:
+            await sleep(0.3)
+        else:
+            await sleep(0.1)
         self.assertEqual(self.remote.once_value, 10)
 
     @async_tst
@@ -918,14 +923,16 @@ class Tests(DeviceTest):
 
     @async_tst
     async def test_connectDevice(self):
-        await sleep(1)
+        self.remote.value = -1
+        if not jms:
+            await sleep(1)
         d = await connectDevice("remote")
         if not jms:
             await updateDevice(d)
         try:
             self.assertNotEqual(d.value, 123)
             self.remote.value = 123
-            await sleep(0.5)
+            await sleep(1.0)
             self.assertEqual(d.value, 123)
         finally:
             # check the proxy gets collected when not used anymore
@@ -1282,6 +1289,8 @@ class Tests(DeviceTest):
         self.remote.counter = -1
         await sleep(1)
         d = await getDevice("remote")
+        if not jms:
+            await updateDevice(d)
         task = background(d.count())
         self.assertEqual(d.counter, -1,
                          "we're not connected still seeing changes")
