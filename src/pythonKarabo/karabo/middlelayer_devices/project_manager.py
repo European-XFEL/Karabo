@@ -382,14 +382,15 @@ class ProjectManager(Device):
             return Hash('domains', res)
 
     @slot
-    def slotListProjectsWithDevice(self, token, domain, device_id):
+    def slotListProjectsWithDevice(self, args):
         """
-        List projects in domain which have configurations for at least one
-        device whose id match a given device id part.
-        :param token: database user token
-        :param domain: domain to list items from
-        :param device_id: part of ids of devices stored in the projects to be
-                          listed.
+        List projects in domain which have configurations for a given device.
+        :param args: a hash that must contain the keys "token", "domain" and
+                     "device_id" with the following meanings: "token" is the
+                     database user token, "domain" is the domain to list
+                     projects from and "device_id" is the part that must be
+                     contained in the ids of the devices with configurations
+                     stored in the projects to be listed.
         :return: a Hash with key, "projects", with a list of Hashes for its
                  value. Each Hash in the list has four keys: "uuid",
                  "name", "last_modified" and "devices". "uuid" is the unique id
@@ -403,6 +404,15 @@ class ProjectManager(Device):
                  (True) and a string key "reason", that will contain an error
                  description when the slot execution fails.
         """
+        for k in ["token", "domain", "device_id"]:
+            if not args.has(k):
+                return Hash('success', False,
+                            'reason', f'Key "{k}" missing in "args" hash.')
+
+        token = args["token"]
+        domain = args["domain"]
+        device_id = args["device_id"]
+
         self._checkDbInitialized(token)
 
         with self.user_db_sessions[token] as db_session:
