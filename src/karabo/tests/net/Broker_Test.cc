@@ -180,14 +180,14 @@ void Broker_Test::testConnectDisconnect() {
 //    m_config.set("amqp.domain", m_domain);
 //    m_config.set("amqp.instanceId", id);
 //    _testConnectDisconnect();
-//
-//    std::clog << "\t" << __FUNCTION__ << " " << REDIS_BROKER << std::endl;
-//    urls = std::string(INVALID_REDIS) + "," + REDIS_BROKER;
-//    m_config.clear();
-//    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
-//    m_config.set("redis.domain", m_domain);
-//    m_config.set("redis.instanceId", id);
-//    _testConnectDisconnect();
+
+    std::clog << "\t" << __FUNCTION__ << " " << REDIS_BROKER << std::endl;
+    urls = std::string(INVALID_REDIS) + "," + REDIS_BROKER;
+    m_config.clear();
+    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
+    m_config.set("redis.domain", m_domain);
+    m_config.set("redis.instanceId", id);
+    _testConnectDisconnect();
 }
 
 
@@ -241,13 +241,13 @@ void Broker_Test::testPublishSubscribe() {
 //    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
 //    m_config.set("amqp.domain", m_domain);
 //    _testPublishSubscribe();
-//
-//    urls = REDIS_BROKER;
-//    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-//    m_config.clear();
-//    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
-//    m_config.set("redis.domain", m_domain);
-//    _testPublishSubscribe();
+
+    urls = REDIS_BROKER;
+    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
+    m_config.clear();
+    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
+    m_config.set("redis.domain", m_domain);
+    _testPublishSubscribe();
 }
 
 
@@ -340,13 +340,13 @@ void Broker_Test::testPublishSubscribeAsync() {
 //    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
 //    m_config.set("amqp.domain", m_domain);
 //    _testPublishSubscribeAsync();
-//
-//    urls = REDIS_BROKER;
-//    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-//    m_config.clear();
-//    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
-//    m_config.set("redis.domain", m_domain);
-//    _testPublishSubscribeAsync();
+
+    urls = REDIS_BROKER;
+    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
+    m_config.clear();
+    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
+    m_config.set("redis.domain", m_domain);
+    _testPublishSubscribeAsync();
 }
 
 
@@ -474,13 +474,13 @@ void Broker_Test::testReadingHeartbeatsAndLogs() {
 //    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
 //    m_config.set("amqp.domain", m_domain);
 //    _testReadingHeartbeatsAndLogs();
-//
-//    urls = REDIS_BROKER;
-//    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-//    m_config.clear();
-//    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
-//    m_config.set("redis.domain", m_domain);
-//    _testReadingHeartbeatsAndLogs();
+
+    urls = REDIS_BROKER;
+    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
+    m_config.clear();
+    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
+    m_config.set("redis.domain", m_domain);
+    _testReadingHeartbeatsAndLogs();
 }
 
 
@@ -661,7 +661,7 @@ void Broker_Test::testReadingGlobalCalls() {
     _testReadingGlobalCalls(JMS_BROKER);
     _testReadingGlobalCalls(MQTT_BROKER);
 //    _testReadingGlobalCalls(AMQP_BROKER);
-//    _testReadingGlobalCalls(REDIS_BROKER);
+    _testReadingGlobalCalls(REDIS_BROKER);
 }
 
 
@@ -892,13 +892,13 @@ void Broker_Test::testProducerRestartConsumerContinues() {
 //    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
 //    m_config.set("amqp.domain", m_domain);
 //    _testProducerRestartConsumerContinues();
-//
-//    urls = REDIS_BROKER;
-//    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-//    m_config.clear();
-//    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
-//    m_config.set("redis.domain", m_domain);
-//    _testProducerRestartConsumerContinues();
+
+    urls = REDIS_BROKER;
+    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
+    m_config.clear();
+    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
+    m_config.set("redis.domain", m_domain);
+    _testProducerRestartConsumerContinues();
 }
 
 
@@ -1038,13 +1038,13 @@ void Broker_Test::testProducerContinuesConsumerRestart() {
 //    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
 //    m_config.set("amqp.domain", m_domain);
 //    _testProducerContinuesConsumerRestart();
-//
-//    urls = REDIS_BROKER;
-//    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-//    m_config.clear();
-//    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
-//    m_config.set("redis.domain", m_domain);
-//    _testProducerContinuesConsumerRestart();
+
+    urls = REDIS_BROKER;
+    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
+    m_config.clear();
+    m_config.set("redis.brokers", fromString<std::string, std::vector>(urls));
+    m_config.set("redis.domain", m_domain);
+    _testProducerContinuesConsumerRestart();
 }
 
 
