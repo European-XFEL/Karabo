@@ -3,7 +3,6 @@
 # Created on May 9, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import uuid
 from functools import partial
 from inspect import signature
 from io import StringIO
@@ -46,11 +45,6 @@ def call_device_slot(handler, instance_id, slot_name, **kwargs):
     NOTE: You had better know what you are doing here. Misuse of this feature
     can seriously degrade performance of devices external to the GUI server.
     """
-    assert "token" not in kwargs, "No `token` in kwargs allowed"
-
-    # Generate a unique token for the transaction
-    token = uuid.uuid4().hex
-
     # Verify that the handler takes the correct number of arguments
     sig = signature(handler)
     if len(sig.parameters) != 2:
@@ -61,14 +55,9 @@ def call_device_slot(handler, instance_id, slot_name, **kwargs):
     for k, v in kwargs.items():
         params.set(k, v)
 
-    # Add token to parameters
-    params["token"] = token
-
-    # Call the slot
-    get_manager().callDeviceSlot(token, handler, instance_id,
-                                 slot_name, params)
-
-    return token
+    # Call the slot and return the token
+    return get_manager().callDeviceSlot(handler, instance_id,
+                                        slot_name, params)
 
 
 def send_property_changes(proxies):
