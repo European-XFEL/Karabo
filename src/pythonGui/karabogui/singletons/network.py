@@ -465,11 +465,16 @@ class Network(QObject):
 
     def onProjectListProjectsWithDevice(self, project_manager,
                                         domain, device_id):
-        h = Hash("type", "projectListProjectsWithDevice")
-        h["projectManager"] = project_manager
-        h["token"] = get_config()["db_token"]
-        h["domain"] = domain
-        h["device_id"] = device_id
+        h = Hash("type", "requestGeneric")
+        args = Hash(
+            "token", get_config()["db_token"],
+            "domain", domain,
+            "device_id", device_id)
+        h["args"] = args
+        h["timeout"] = 120  # 2 minutes as the search can take long.
+        h["instanceId"] = project_manager
+        h["slot"] = "slotListProjectsWithDevice"
+        h["replyType"] = "projectListProjectsWithDevice"
         self._write_hash(h)
 
     def onListProjectManagers(self):
