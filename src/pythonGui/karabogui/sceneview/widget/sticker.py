@@ -7,7 +7,7 @@ from qtpy.QtCore import QRect, Slot
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QAction, QDialog, QPlainTextEdit
 
-from karabogui.dialogs.stickerdialog import GREY, StickerDialog
+from karabogui.dialogs.api import GREY, StickerDialog
 from karabogui.fonts import get_qfont
 from karabogui.widgets.hints import KaraboSceneWidget
 
