@@ -102,15 +102,15 @@ class TestManager(GuiTestCase):
             manager = Manager()
 
             # Call the slot of the 'remote device'
-            manager.callDeviceSlot('token', handler, 'dev', 'slot', params)
+            token = manager.callDeviceSlot(handler, 'dev', 'slot', params)
 
-            assert 'token' in manager._request_handlers
+            assert token in manager._request_handlers
             network.onExecuteGeneric.assert_called_with(
-                'dev', 'slot', params)
+                'dev', 'slot', params, token=token)
 
             # Pretend the reply arrived
             manager.handle_requestGeneric(success=True,
-                                          request=Hash("args.token", 'token'),
+                                          request=Hash("token", token),
                                           reply=reply)
             assert handler_args == (True, reply)
 
@@ -330,7 +330,7 @@ class TestManager(GuiTestCase):
                 manager._request_handlers = {'bob': 'super_request'}
                 manager.onServerConnectionChanged(False)
                 manager.handle_requestGeneric.assert_called_with(
-                    False, request=Hash('args.token', 'bob'),
+                    False, request=Hash('token', 'bob'),
                     reason='Karabo GUI Client disconnect. Erasing request.')
             topology.clear.assert_called_with()
 
