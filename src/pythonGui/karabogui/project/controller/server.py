@@ -151,6 +151,10 @@ class DeviceServerController(BaseProjectGroupController):
                 'serverId': self.model.server_id,
                 'host': self.model.host}
 
+    def delete_press(self, project_controller, parent=None):
+        """Reimplemented function on `BaseProjectController`"""
+        self._delete_server(project_controller, parent)
+
     # ----------------------------------------------------------------------
     # traits handlers
 
