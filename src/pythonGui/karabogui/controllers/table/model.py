@@ -58,7 +58,10 @@ class TableModel(QAbstractTableModel):
             key = self._header[column]
             if is_state_display_type(self._bindings[key]):
                 value = self._data[row][key]
-                color = get_state_color(value)
+                try:
+                    color = get_state_color(value)
+                except ValueError:
+                    color = None
                 if color is not None:
                     return QBrush(QColor(*color))
         elif role == Qt.ToolTipRole:
