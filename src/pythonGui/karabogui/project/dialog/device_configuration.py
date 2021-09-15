@@ -4,7 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 from copy import deepcopy
-from pathlib import Path
 
 from qtpy import uic
 from qtpy.QtCore import Qt, Slot
@@ -14,6 +13,8 @@ from karabo.common.enums import ProxyStatus
 from karabo.native import Hash, create_html_hash
 from karabogui.binding.api import (
     extract_init_configuration, validate_binding_configuration)
+
+from .utils import get_dialog_ui
 
 _NO_SCHEMA_STATUS = (ProxyStatus.MISSING, ProxyStatus.NOSERVER,
                      ProxyStatus.NOPLUGIN)
@@ -30,8 +31,7 @@ class DeviceConfigurationDialog(QDialog):
         super().__init__(parent=parent)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(False)
-        ui_file = str(Path(__file__).parent / "device_configuration.ui")
-        uic.loadUi(ui_file, self)
+        uic.loadUi(get_dialog_ui("device_configuration.ui"), self)
         self.setWindowTitle(f"Configuration {name} "
                             f"- {project_device.device_id}")
         flags = Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint

@@ -3,8 +3,6 @@
 # Created on November 9, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import os.path as op
-
 from qtpy import uic
 from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QDialog, QDialogButtonBox
@@ -13,6 +11,8 @@ import karabogui.access as krb_access
 from karabo.native import AccessLevel
 from karabogui.singletons.api import get_topology
 from karabogui.util import InputValidator
+
+from .utils import get_dialog_ui
 
 
 class DeviceHandleDialog(QDialog):
@@ -32,9 +32,7 @@ class DeviceHandleDialog(QDialog):
         :param parent: The parent of the dialog
         """
         super(DeviceHandleDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'device_handle.ui')
-        uic.loadUi(filepath, self)
+        uic.loadUi(get_dialog_ui('device_handle.ui'), self)
         validator = InputValidator()
         self.leTitle.setValidator(validator)
         self._initUI(server_id, model, add_config, class_id, is_online)
