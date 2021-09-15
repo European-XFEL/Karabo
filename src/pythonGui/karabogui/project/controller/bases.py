@@ -81,6 +81,14 @@ class BaseProjectController(ABCHasStrictTraits):
         :param parent: A QObject which can be passed as a Qt object parent.
         """
 
+    def delete_press(self, project_controller, parent=None):
+        """ Handles a delete key press event on this item.
+
+        :param project_controller: The ProjectController which is the immediate
+                                   parent of the item which was pressed on.
+        :param parent: A QObject which can be passed as a Qt object parent.
+        """
+
     def child(self, index):
         """Returns a child of this controller.
 
