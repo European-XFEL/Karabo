@@ -3,14 +3,14 @@
 # Created on November 29, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import os.path as op
-
 from qtpy import uic
 from qtpy.QtCore import Slot
 from qtpy.QtGui import QValidator
 from qtpy.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QSpinBox
 
 from karabogui.util import InputValidator, SignalBlocker
+
+from .utils import get_dialog_ui
 
 
 class ObjectDuplicateDialog(QDialog):
@@ -22,9 +22,7 @@ class ObjectDuplicateDialog(QDialog):
         :param parent: A parent object
         """
         super(ObjectDuplicateDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'object_duplicate.ui')
-        uic.loadUi(filepath, self)
+        uic.loadUi(get_dialog_ui('object_duplicate.ui'), self)
         self.setWindowTitle('Duplicate object {}'.format(simple_name))
 
         # Add spinboxes with validator
@@ -107,9 +105,7 @@ class UIntSpinbox(QSpinBox):
 class ObjectEditDialog(QDialog):
     def __init__(self, object_type='object', model=None, parent=None):
         super(ObjectEditDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'object_edit.ui')
-        uic.loadUi(filepath, self)
+        uic.loadUi(get_dialog_ui('object_edit.ui'), self)
 
         if model is None:
             title = 'Add {}'.format(object_type)
