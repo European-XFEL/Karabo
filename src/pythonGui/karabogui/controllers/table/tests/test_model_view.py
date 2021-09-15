@@ -225,6 +225,11 @@ class TestTableModelView(GuiTestCase):
         color = brush.color().getRgb()
         self.assertEqual(color, (255, 0, 0, 255))
 
+        # Set wrong state
+        model.setData(index, value=" NOSTATE", role=Qt.EditRole)
+        brush = index.data(role=Qt.BackgroundRole)
+        self.assertIsNone(brush)
+
     def test_set_boolean_data(self):
         model = self.controller._item_model
         index = model.index(0, 1)
