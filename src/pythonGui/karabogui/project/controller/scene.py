@@ -100,6 +100,10 @@ class SceneController(BaseProjectController):
     def double_click(self, project_controller, parent=None):
         broadcast_event(KaraboEvent.ShowSceneView, {'model': self.model})
 
+    def delete_press(self, project_controller, parent=None):
+        """Reimplemented function on `BaseProjectController`"""
+        self._delete_scene(project_controller, parent)
+
     # ----------------------------------------------------------------------
     # action handlers
 
