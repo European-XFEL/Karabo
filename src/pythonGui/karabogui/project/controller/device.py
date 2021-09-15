@@ -269,6 +269,10 @@ class DeviceInstanceController(BaseProjectGroupController):
                 scene_name = scenes[0]
                 get_scene_from_server(device_id, scene_name)
 
+    def delete_press(self, project_controller, parent=None):
+        """Reimplemented function on `BaseProjectController`"""
+        self._delete_device(project_controller, parent)
+
     def _get_display_name(self):
         """Traits property getter for ``display_name``
         """
