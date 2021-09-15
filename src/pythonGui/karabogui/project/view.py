@@ -38,7 +38,7 @@ class ProjectView(QTreeView):
     """
 
     def __init__(self, parent=None):
-        super(ProjectView, self).__init__(parent)
+        super().__init__(parent)
 
         project_model = get_project_model()
         project_model.setParent(self)
@@ -84,8 +84,17 @@ class ProjectView(QTreeView):
                                   mode=QClipboard.Selection)
                 event.accept()
                 return
+        elif event.matches(QKeySequence.Delete):
+            selected_controller = self._get_selected_controller()
+            if selected_controller is not None:
+                project_controller = self._project_controller(
+                    selected_controller)
+                selected_controller.delete_press(project_controller,
+                                                 parent=self)
+                event.accept()
+                return
 
-        super(ProjectView, self).keyPressEvent(event)
+        super().keyPressEvent(event)
 
     def mouseDoubleClickEvent(self, event):
         selected_controller = self._get_selected_controller()
@@ -98,7 +107,7 @@ class ProjectView(QTreeView):
                 event.ignore()
                 return
 
-        super(ProjectView, self).mouseDoubleClickEvent(event)
+        super().mouseDoubleClickEvent(event)
 
     # ----------------------------
     # Slots
@@ -329,8 +338,8 @@ class ProjectView(QTreeView):
 
     def collapseAll(self):
         self.expanded = False
-        super(ProjectView, self).collapseAll()
+        super().collapseAll()
 
     def expandAll(self):
         self.expanded = True
-        super(ProjectView, self).expandToDepth(EXPAND_DEPTH)
+        super().expandToDepth(EXPAND_DEPTH)
