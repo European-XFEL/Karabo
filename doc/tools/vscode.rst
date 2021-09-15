@@ -264,13 +264,17 @@ in either verbose mode (`-V` option) or extra verbose mode (`-VV`). In the examp
 below, `dataLoggingIntegrTestRunner` is the only test run, and in extra verbose
 mode::
 
-   ctest -VV -R dataLogging*
+   ctest -VV -R "dataLogging*"
 
 Verbose and extra verbose modes cause `ctest` to output, among other things,
 one line per successful test case execution. The default verbosity
 level only emits intermediate reports for failed test cases - the number of
 successful test cases executed, without their names, is reported at the end
 of the test execution while in default verbosity level.
+
+To list all the tests that are available for `ctest` to execute::
+
+   ctest -N
 
 `ctest` also supports a `-E` option which is the complement of the `-R` option,
 meaning execute all tests that do not match the given regular expression.
