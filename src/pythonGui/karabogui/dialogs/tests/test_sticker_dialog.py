@@ -4,6 +4,7 @@ from qtpy.QtGui import QColor, QFont
 from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.api import StickerModel
+from karabogui.const import IS_MAC_SYSTEM
 from karabogui.dialogs.api import StickerDialog
 from karabogui.testing import GuiTestCase
 
@@ -27,8 +28,9 @@ class TestStickerDialog(GuiTestCase):
         self.assertEqual(text_widget.height(), self.model.height)
         self.assertEqual(text_widget.toPlainText(), self.model.text)
 
+        psize = 10 if not IS_MAC_SYSTEM else 13
         self.assertEqual(self.dialog.text_font.toString(),
-                         "Source Sans Pro,10,-1,5,50,0,0,0,0,0")
+                         f"Source Sans Pro,{psize},-1,5,50,0,0,0,0,0")
 
         # Only the internal dialog model is modified
         text_widget.setPlainText("XFEL2")
