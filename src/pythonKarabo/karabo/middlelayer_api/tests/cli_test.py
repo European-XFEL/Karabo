@@ -133,7 +133,7 @@ class Tests(TestCase):
             del self.other
         finally:
             thread.stop()
-            thread.join(0.5)
+            thread.join(2.0)
             self.assertFalse(thread.is_alive())
     test_autodisconnect.slow = 1
 
