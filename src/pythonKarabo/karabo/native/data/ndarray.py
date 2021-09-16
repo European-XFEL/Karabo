@@ -1,12 +1,11 @@
 import numpy
 
-from karabo.native.data.basetypes import NoneValue, QuantityValue
-from karabo.native.data.enums import NodeType
-from karabo.native.data.hash import (
-    AccessMode, Bool, ByteArray, Hash, HashElement, Int32, Simple, Type,
-    VectorUInt64)
-from karabo.native.data.schema import Configurable
-from karabo.native.data.utils import dtype_from_number, numpy_from_number
+from .basetypes import NoneValue, QuantityValue
+from .enums import AccessMode, NodeType
+from .hash import (
+    Bool, ByteArray, Hash, HashElement, Int32, Simple, Type, VectorUInt64)
+from .schema import Configurable
+from .utils import dtype_from_number, numpy_from_number
 
 
 class ArraySchema(Configurable):
@@ -98,7 +97,7 @@ class NDArray(Type):
 
     def toKaraboValue(self, data, strict=False):
         if isinstance(data, Hash) and not strict:
-            if data.empty() or len(data["data"]) == 0:
+            if data.empty() or "data" not in data or len(data["data"]) == 0:
                 return NoneValue(descriptor=self)
             dtype = dtype_from_number(data["type"])
             dtype = dtype.newbyteorder(
@@ -142,4 +141,8 @@ class NDArray(Type):
         h._setelement("data",
                       HashElement(data.value.data, attrs))
 
-        return h, attrs
+        # set the `__classId` attribute to allow the C++ API to decode the
+        # `h` Hash as an NDArray object.
+        array_attrs = {"__classId": "NDArray"}
+        array_attrs.update(**attrs)
+        return h, array_attrs
