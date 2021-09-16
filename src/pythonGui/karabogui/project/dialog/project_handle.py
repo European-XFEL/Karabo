@@ -3,7 +3,6 @@
 # Created on October 26, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import os.path as op
 from collections import OrderedDict, namedtuple
 from operator import attrgetter
 
@@ -21,6 +20,8 @@ from karabogui.logger import get_logger
 from karabogui.project.utils import show_trash_project_message
 from karabogui.singletons.api import get_config, get_db_conn
 from karabogui.util import InputValidator, SignalBlocker, utc_to_local
+
+from .utils import get_dialog_ui
 
 SIMPLE_NAME = 'simple_name'
 LAST_MODIFIED = 'last_modified'
@@ -50,9 +51,7 @@ def get_column_index(project_data_key):
 class LoadProjectDialog(QDialog):
     def __init__(self, is_subproject=False, parent=None):
         super(LoadProjectDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'project_handle.ui')
-        uic.loadUi(filepath, self)
+        uic.loadUi(get_dialog_ui('project_handle.ui'), self)
         # set proper window flags
         self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint)
 
@@ -283,9 +282,7 @@ class NewProjectDialog(QDialog):
     def __init__(self, model=None, is_rename=False, default=False,
                  parent=None):
         super(NewProjectDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'project_new.ui')
-        uic.loadUi(filepath, self)
+        uic.loadUi(get_dialog_ui('project_new.ui'), self)
         self.setModal(False)
 
         validator = InputValidator()

@@ -4,8 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from pathlib import Path
-
 from qtpy import uic
 from qtpy.QtCore import QSize, Qt, Slot
 from qtpy.QtWidgets import (
@@ -17,6 +15,8 @@ from karabogui.events import (
 from karabogui.singletons.api import get_config, get_db_conn
 from karabogui.util import SignalBlocker, get_spin_widget
 
+from .utils import get_dialog_ui
+
 # Minimum size for a device id substring to be considered searchable.
 MIN_DEVICE_ID_SIZE = 5
 
@@ -25,8 +25,7 @@ class LoadProjectWithDeviceDialog(QDialog):
 
     def __init__(self, initial_domain=None, parent=None):
         super().__init__(parent=parent)
-        ui_file = str(Path(__file__).parent / "load_project_with_device.ui")
-        uic.loadUi(ui_file, self)
+        uic.loadUi(get_dialog_ui("load_project_with_device.ui"), self)
         self.setWindowTitle("Find and Load Project with Device")
         self.initial_domain = initial_domain
         self.txt_device_id.setPlaceholderText(
