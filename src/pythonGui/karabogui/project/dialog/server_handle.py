@@ -3,8 +3,6 @@
 # Created on November 9, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import os.path as op
-
 from qtpy import uic
 from qtpy.QtCore import Slot
 from qtpy.QtWidgets import QDialog, QDialogButtonBox
@@ -14,13 +12,13 @@ from karabo.native import AccessLevel
 from karabogui.singletons.api import get_topology
 from karabogui.util import InputValidator
 
+from .utils import get_dialog_ui
+
 
 class ServerHandleDialog(QDialog):
     def __init__(self, model=None, parent=None):
         super(ServerHandleDialog, self).__init__(parent)
-        filepath = op.join(op.abspath(op.dirname(__file__)),
-                           'server_handle.ui')
-        uic.loadUi(filepath, self)
+        uic.loadUi(get_dialog_ui('server_handle.ui'), self)
 
         avail_servers = self.get_available_servers()
         for server_id in avail_servers:
