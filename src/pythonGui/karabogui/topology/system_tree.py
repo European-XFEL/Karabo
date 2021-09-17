@@ -253,9 +253,10 @@ class SystemTree(HasStrictTraits):
         Returns a dictionary of ``SystemTreeNode`` instances for newly added
         device instances.
         """
-        self._handle_server_data(system_hash)
-        nodes = self._handle_device_data('device', system_hash)
-        nodes.update(self._handle_device_data('macro', system_hash))
+        with self.update_context.layout_context():
+            self._handle_server_data(system_hash)
+            nodes = self._handle_device_data('device', system_hash)
+            nodes.update(self._handle_device_data('macro', system_hash))
 
         return nodes
 
@@ -338,6 +339,10 @@ class SystemTree(HasStrictTraits):
 
             @contextmanager
             def removal_context(self, tree_node):
+                yield
+
+            @contextmanager
+            def layout_context(self):
                 yield
 
             @contextmanager
