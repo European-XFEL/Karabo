@@ -500,6 +500,14 @@ class MiddleLayerDeviceServer(DeviceServerBase):
         for device in self.deviceInstanceMap.values():
             device.slotInstanceGone(instanceId, info)
 
+    @slot
+    def slotInstanceUpdated(self, instanceId, info):
+        super(MiddleLayerDeviceServer, self).slotInstanceUpdated(
+            instanceId, info)
+        # Forward the broadcast to the device instances!
+        for device in self.deviceInstanceMap.values():
+            device.slotInstanceUpdated(instanceId, info)
+
 
 class BoundDeviceServer(DeviceServerBase):
     boundNamespace = String(
