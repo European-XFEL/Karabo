@@ -121,7 +121,8 @@ class DeviceSystemTree(HasStrictTraits):
             self._handle_device_data('device', system_hash, append=False)
 
     def update(self, system_hash):
-        nodes = self._handle_device_data('device', system_hash)
+        with self.update_context.layout_context():
+            nodes = self._handle_device_data('device', system_hash)
 
         return nodes
 
@@ -176,6 +177,10 @@ class DeviceSystemTree(HasStrictTraits):
 
             @contextmanager
             def removal_context(self, tree_node):
+                yield
+
+            @contextmanager
+            def layout_context(self):
                 yield
 
             @contextmanager
