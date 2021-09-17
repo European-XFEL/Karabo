@@ -114,3 +114,13 @@ class _UpdateContext(HasStrictTraits):
             yield from gen()
         else:
             yield
+
+    @contextlib.contextmanager
+    def layout_context(self):
+        """Provide a context for layout change announcements
+        """
+        try:
+            self.item_model.layoutAboutToBeChanged.emit()
+            yield
+        finally:
+            self.item_model.layoutChanged.emit()
