@@ -22,6 +22,7 @@ Breaking Changes
 
 - MDL: DeviceNodes cannot have *properties* and *commands* anymore
 - MDL: Tables validate now their minSize and maxSize attribute
+- C++: The typedef for ``uint64`` has been removed from `karabo/util/karaboDll.hh` (since incompatible with opencv library headers).
 
 Change of behaviour
 +++++++++++++++++++
