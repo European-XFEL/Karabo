@@ -52,12 +52,6 @@
 #define KARABO_TEMPLATE_DLL
 #endif
 
-#if defined(_WIN32)
-typedef __unit64 uint64
-#else
-typedef unsigned long long uint64;
-#endif
-
 #ifdef __GNUC__
 #define KARABO_DEPRECATED __attribute__((deprecated))
 #elif defined(_MSC_VER)
