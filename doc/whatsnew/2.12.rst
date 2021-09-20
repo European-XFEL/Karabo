@@ -32,3 +32,271 @@ Change of behaviour
   was called anyway, using ``None`` for the missing arguments.
 
 - MDL: Macros started from command line are now declared as **clients** in the instanceInfo and will therefore not appear in the **SystemTopology** of the GUI
+
+
+Detailed Merge-Log
+==================
+
+
+Bound/cpp core
+++++++++++++++
+
+- C++: Tune warning message !5597
+- C++: Add non const ImageData::getData() !5609
+- C++: Validate states and alarm values !5643
+- C++: Boosting Hash::set performance by enabling move semantics !5635
+- C++: Move semantics for Hash::setAttribute !5656
+- C++: Avoid C++14 in header !5669
+- C++: Hash with move semantics in constructor !5664
+- C++: remove unused forward declaration in validator !5655
+- C++: CMake project for CppLongTests. !5678
+- C++: Move semantics for Hash::setAttributes !5720
+- C++: Fix TimeDuration::operator double() !5726
+- C++: broker message order test !5719
+- C++: InstanceInfo unknown !5727
+- C++: Speed-up hash deserialisation !5736
+- C++: Report successful influx connection to log file !5733
+- C++: Fix race in State::fromString initialisationAlso move from `map` to `unordered_map`. !5761
+- C++: speed-up Schema serialisation !5737
+- Improve MQTT support !5790
+- C++: speed up reading Hash from xml !5742
+- C++: Avoid handler copy in Strand !5794
+- C++ integration tests: Increase data delay for more reliable queueDrop test !5802
+- C++ code coverage report generation for cmake based builds. !5785
+- C++: Increase default MQTT timeout !5808
+- C++ MQTT: Timeouts logged, timeout period configurable via environment !5813
+- C++: Fix templates* scripts !5846
+- C++: Keep handlers of InputChannel if re-injected !5852
+- Bound: Properly wrap handlers !5803
+- Bound: Do not provide None if slot is called with too few argsProvide exception instead. !5483
+- Bound: Support Unknown instanceInfo status !5718
+- Bound: Properly wrap all input-/output channel handlers !5797
+
+
+Dependencies and deployment
++++++++++++++++++++++++++++
+
+- DEPS: Fix build of dependencies 'redisclient' and 'pugixml' when there's no system level 'cmake' installation. !5637
+- DEPS: karabo install skips pip dependencies !5702
+- DEPS: Add AMQP dependencies !5789
+- CMake: Fix for add_dep function in cmake Framework project. !5570
+- CMake: Adds EXACT to version requirement for Boost library components. !5600
+- CMake TOOLS: activate actions can launch custom scripts !5615
+- CMake project for building the Karathon library. !5661
+- CMake: Set of template files for CMake-based device projects. !5619
+- CMake: Default cpp template, 'minimal', now based on cmake. !5783
+- CMake: Clean up duplicate code in cmake_auto_build_all.sh and adds missing .install.sh to template. !5804
+- CMake support for auto_build_all (no dependency on build/netbeans) and some fixes to CMake projects. !5711
+- CPP-DEVICE: CMake Device Template fixups !5826
+- BUILD: clean up un-necessary directories !5618
+- BUILD: fix build details !5800
+- FIX: .build-python.sh uses the right path !5788
+- Fix bug for deriving install tree path of header files when the src tree path has more than one 'karabo' directory. !5805
+
+
+Documentation
++++++++++++++
+
+- Document more for 2.11 !5567
+- First version of the mergelog for 2.11 !5589
+- Fix maxNumData parameter info in getHistory docstring. !5575
+- Fix broken reference to image file in vscode.rst. !5594
+- Document 2.10.5 !5512
+- DOC: Document required non-concurrency of writeChannel !5593
+- DOC: Gui installation after user feedback !5634
+- DOC: use a different installation mode !5631
+- DOC: build system refactor steps !5599
+- DOCS: Add a bit more documentation to whats new !5636
+- Document releases of 2.11 !5721
+- DOC: Update 2.11.2 docs !5730
+- DOC: Document 2.11.3 !5768
+- DOC: Document MDL library functions !5828
+- DOCS: fix doc generation !5781
+- DOC: Document breaking MDL changes !5820
+- DOC: Remove formatting and broken links !5782
+- DOC: Fix "miniconda-cmake" build and "vscode" documentation. !5860
+
+
+Tests
++++++
+
+- CI: fix artifact location for cmake !5821
+- CI: do not install isort !5822
+- CI: Output coverage report on GUI tests !5823
+- CI: new path in the report section !5824
+- CI: remove http proxy settings !5847
+- CI: make the GUI tests fails when necessary !5596
+- CI: remove support for Ubuntu 16 !5566
+- Debug GUI CI !5617
+- Bound integration test: fix slotGetTime usage !5640
+- TEST: make the GuiServer test more robust !5644
+- TESTS: Fix intermittent failures of cli_test.test_autodisconnect for JMS. !5868
+
+
+Core Devices
+++++++++++++
+
+- GUI Server: Always use reason instead of failure reason !5581
+- FIX: Drop early data on InfluxDb !5779
+
+
+Middlelayer Core
+++++++++++++++++
+
+- MDL: Support yield from getDevice and add tests !5573
+- MDL: Forward slotInstanceUpdated to device children !5582
+- MDL: Macros are clients if run standalone !5558
+- MDL: Change the default timeout in the DeviceNode !5611
+- MDL: Shutdown IPython console on slotKillDevice !5604
+- MDL: allow timeServerId on devices !5648
+- MDL: Fix for 'waitUntilNew' tests !5798
+- MDL: Fix wrapping in @coslot !5807
+- MDL FIX: Use custom eventloop's create_task !5786
+- MDL: Modify macro disconnect test !5732
+- MDL: Support unknown instance Info !5571
+- MDL: First device server test !5697
+- MDL: add __classId attribute to Hash-like elements !5784
+- MDL: conditional import of the existdb library !5793
+- MDL MQTT: Silence paho client !5809
+- MDL: make NDarray more robust !5810
+- MDL: make image data more robust !5818
+- MDL: optimize node serialization !5815
+- MDL: Enable table size validation !5817
+- MDL: Fix test_cross integration tests for JMS broker !5819
+- MDL: Enable to change log level for device server !5830
+- MDL: Remove device node properties and commands !5769
+- MDL: Implement generic project manager interface !5812
+- MDL: Better inline documentation for gather !5827
+- MDL: Validate paths of startup configuration !5845
+
+
+Graphical User Interface
+++++++++++++++++++++++++
+
+
+- GUI: Remove unused instance gone code !5565
+- GUI: Enhance vector display in the table, remove white spaces !5578
+- GUI: Configurator performance increase !5407
+- GUI: Optimize project with item never has children flag !5564
+- GUI: Add size policy to label widgets !5583
+- GUI: Slightly refactor the move of messageboxes to the mainwindow !5595
+- GUI: Fix attributes test in configurator !5598
+- GUI: Don't allow pirate macro's in the topology !5557
+- GUI: Lazy offline project devices !5561
+- GUI: Enable to view clients in topology dialog and to shut them down !5569
+- GUI: Clean a bit the topology !5601
+- GUI: Minor cleanup for the system topology !5606
+- GUI: Remove all nodes in the topology if not needed anymore !5605
+- GUI: Account for lazy schema loading when clicking on project configurations !5608
+- GUI: Performance update for project, define roles !5400
+- GUI: Remove bookkeeping of model indexes for navigation models !5580
+- GUI: Pop early in the topology !5629
+- GUI server: turn off logs on request !5590
+- GUI: subscribe to logs only if the panel is open !5592
+- GUI: Support jpeg decoding in the GUI (openCV) !5628
+- GUI: Enable to sort devices in the project alphabetically, by domain/type/member !5632
+- GUI: Enable to move devices inside the project !5616
+- GUI: Add instanceInfo icons !5633
+- GUI: Move help to the right in app menu !5641
+- GUI: More separate macos testing !5639
+- GUI: Fix project icon !5638
+- GUI: Remove unnecessary layout change !5627
+- GUI: Postpone request queue after login !5645
+- GUI: Version independent code between 5.9 and 5.12 !5647
+- GUI: Adjust topology to latest review !5650
+- GUI: Downgrade the Qt dependencies (qt, pyqtgraph) !5649
+- GUI: Fix images not showing properly if ROI is selected !5657
+- GUI: Maintain selection on header double click !5659
+- GUI: Fix weakref handling in reconfigure reply !5665
+- GUI: Protect against not found exceptions !5667
+- GUI: Enable state color field to have font formatting !5663
+- GUI: Protect font sizes on the field from editing faulty values !5673
+- GUI: Move pyqtgraph back to 0.11.1 !5672
+- GUI: Protect unregister from mediator events !5677
+- GUI: Protect line edit from wrong input !5681
+- GUI: Add horizontal alignment to label widgets !5579
+- GUI: Graceful discard in messagebox unregister !5680
+- GUI: Protect scene view delete on close event from races !5676
+- GUI: Protect deferred trend graph updates !5675
+- GUI: Enable to show uint16 images (bpp12) !5691
+- GUI: Update alarm column on alarm update !5694
+- GUI: Protect show event of scene panel !5698
+- GUI: Protect levels dialog from false input !5699
+- GUI: Mediator test and discard in event map !5701
+- Common: Increase const coverage definition !5696
+- GUI: Show server in topology if requested !5695
+- GUI: Pop device node graceful in topology !5690
+- GUI: Add fast path filter in SystemTopology !5709
+- GUI: Add unknown exception test case to message parsing !5712
+- GUI: Redirect official RTD documentation !5486
+- GUI: Remove classId check on configuration retrieval !5714
+- GUI: Add project item model test !5708
+- GUI: Realign topology hash according to host names !5670
+- GUI: Remove flake8 warnings from setup !5725
+- GUI: Clean max number limit and move away from const !5731
+- GUI: Add a bunch of topology tests !5735
+- GUI: Provide configuration drop handler test !5729
+- GUI: Refactor and cleanup dialogs !5724
+- GUI: Test the base application !5738
+- GUI: Remove state icon code !5740
+- GUI: Provide unit test for network singleton !5739
+- GUI: Validate navigation panel search entries !5722
+- GUI: Test binding default !5745
+- GUI: Test topology utils !5743
+- GUI: Link widgets use label model but dont have alignment !5746
+- GUI: Protect for XMLDefModel grouping !5723
+- GUI: Protect QSettings during tests !5751
+- GUI: Test the alarm panel !5744
+- GUI: Test the log panel and log widget !5750
+- GUI: Fix moving items in design mode when scene view is small !5577
+- GUI: Handle the subscribe logs reply of the gui server !5755
+- GUI: Test the popup widget !5747
+- GUI: Test the tipps & tricks wizard !5756
+- GUI: Use has_changes in comparison dialog for configurations !5760
+- GUI: Test the login dialog !5764
+- GUI: Test the format label dialog !5766
+- GUI: Test the app configuration dialog !5759
+- GUI: Test the about dialog !5765
+- GUI: Test the configurator more !5762
+- GUI: Test the client topology dialog !5773
+- GUI: Test the pen dialogs !5772
+- GUI: Test list edit dialog !5771
+- GUI: Test the device capability dialog !5774
+- GUI: Table view and model tests for base table controller !5770
+- GUI: Test the configuration from name dialog !5775
+- GUI: Fix configurator blank page !5767
+- GUI: Test the configuration from past dialog !5776
+- GUI: Test the navigation panels more through !5758
+- GUI: Enable to subclass table widgets for filter models !5752
+- GUI: Adds version information to about dialog of Karabo GUI. !5806
+- GUI: Project configuration dialog erase attributes on sanitize !5778
+- GUI: Filter for health status !5693
+- GUI: Image Item carefuly cleaning !5550
+- GUI: Load project with a specified device. !5825
+- GUI: Provide message box test and fix the copy&select option !5829
+- GUI: Fix bug for long-running searches of projects by device_id part. !5831
+- GUI: Enable to configure logs via slotLoggerPriority !5832
+- GUI: Fix button sync in update dialog !5833
+- GUI: Add more imports to graph image api !5834
+- GUI: Refactor the array function for bindings !5835
+- GUI: Protect against missing archive in instanceInfo !5837
+- GUI: Tooltip timestamp protection in detector graph !5839
+- GUI: Change Exception catching in eval widget !5836
+- GUI: Remove explicit state code configurator !5842
+- GUI: Notify in logging panel project conflicts !5840
+- GUI: Enable to copy & paste from application log !5841
+- GUI: Protect graph view configuration from config without items !5838
+- GUI: Add None checks on coercing boolean !5844
+- GUI: Move the signalServerConnectionChanged !5851
+- GUI: Fix direct attempt for karabo cinema !5854
+- GUI: Change the logging colors, make warning more visible !5853
+- GUI: Fix theatre direct connection !5858
+- Display device ids matching a given id part in "find projects with device". !5849
+- GUI: Enable token to be in params in the generic protocol !5859
+- GUI: Test the sticker widget dialog !5843
+- GUI Protocol: use requestGeneric to call ProjectManager's slotListProjectsWithDevice. !5856
+- GUI: Protect against wrong state values in table !5862
+- GUI: Enable quick delete in project with hotkey !5863
+- GUI: Order ui files for project dialogs !5864
+- GUI: Adapt sticker test for macOS !5866
+- GUI: Adapt ui path in setup file !5865
