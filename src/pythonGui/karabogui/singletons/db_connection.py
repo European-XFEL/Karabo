@@ -211,6 +211,20 @@ class ProjectDatabaseConnection(QObject):
     def is_processing(self):
         return self.is_reading() or self.is_writing()
 
+    def get_database_scene(self, name, uuid, target_window):
+        """Directly ask for a scene from the project database
+
+        This method returns the token for the request.
+        """
+        config = get_config()
+        device_id = self.project_manager
+        domain = config['domain']
+        db_token = config['db_token']
+        handler = partial(handle_scene_from_server, device_id, name, None,
+                          target_window)
+        return call_device_slot(handler, device_id, 'slotGetScene',
+                                uuid=uuid, domain=domain, db_token=db_token)
+
     # -------------------------------------------------------------------
     # Broadcast event handlers
 
@@ -364,15 +378,3 @@ class ProjectDatabaseConnection(QObject):
                 obj.modified = False
 
         self._broadcast_is_processing(is_processing)
-
-    def _get_database_scene(self, name, uuid, target_window):
-        """Directly ask for a scene from the project database
-        """
-        config = get_config()
-        device_id = self.project_manager
-        domain = config['domain']
-        db_token = config['db_token']
-        handler = partial(handle_scene_from_server, device_id, name, None,
-                          target_window)
-        call_device_slot(handler, device_id, 'slotGetScene',
-                         uuid=uuid, domain=domain, db_token=db_token)
