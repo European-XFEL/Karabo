@@ -146,9 +146,7 @@ class MainWindow(QMainWindow):
             if visible:
                 self._open_closable_panel(name)
 
-        title = "European XFEL - Karabo GUI " + const.GUI_VERSION_LONG
-        self.setWindowTitle(title)
-
+        self._set_window_title(topic=None)
         # Connect to some important network signals
         network = get_network()
         network.signalServerConnectionChanged.connect(
@@ -190,6 +188,9 @@ class MainWindow(QMainWindow):
             container = self._panel_areas[PanelAreaEnum.Left]
             tab = self._active_panels[SYSTEM_TOPOLOGY_TITLE]
             container.setCurrentIndex(container.indexOf(tab))
+
+            # Set a default title on disconnect
+            self._set_window_title(topic=None)
 
     def _event_big_data(self, data):
         """Show the big data latency including value set in the gui"""
@@ -254,6 +255,14 @@ class MainWindow(QMainWindow):
 
     # -----------------------------------------------------------------------
 
+    def _set_window_title(self, topic=None):
+        if topic is not None:
+            title = (f"European XFEL - Karabo GUI {const.GUI_VERSION_LONG} - "
+                     f"TOPIC: {topic}")
+        else:
+            title = f"European XFEL - Karabo GUI {const.GUI_VERSION_LONG}"
+        self.setWindowTitle(title)
+
     def readSettings(self):
         window_geometry = get_config()["main_geometry"]
         if window_geometry:
@@ -268,6 +277,8 @@ class MainWindow(QMainWindow):
             topic = data["topic"]
             # Store this information in the config singleton!
             get_config()["broker_topic"] = topic
+            self._set_window_title(topic)
+
             hostname = data["hostname"]
             hostport = data["hostport"]
             info = f"<b>{hostname}:{hostport} ({topic})</b>"
