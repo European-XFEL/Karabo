@@ -4,8 +4,8 @@ from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.programs.base import create_gui_app, init_gui
 
 
-def run_gui(args):
-    app = create_gui_app(args)
+def run_gui():
+    app = create_gui_app([])
     # some final initialization
     init_gui(app, use_splash=True)
 
@@ -19,7 +19,7 @@ def run_gui(args):
 
 
 def main():
-    run_gui(sys.argv)
+    run_gui()
 
 
 if __name__ == '__main__':
