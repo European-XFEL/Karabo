@@ -105,7 +105,7 @@ class PanelWrangler(QObject):
             # We found the scene in our project!
             self._open_scene(model, target_window)
         else:
-            get_db_conn()._get_database_scene(name, uuid, target_window)
+            get_db_conn().get_database_scene(name, uuid, target_window)
 
     def _event_remove_model_view(self, data):
         self._close_project_item_panels(data['models'])
