@@ -5,12 +5,18 @@ from qtpy.QtCore import QSize
 from karabo.common.api import ProxyStatus
 from karabo.native import (
     AccessMode, Configurable, Hash, Int32, Schema, Timestamp)
-from karabogui.binding.api import DeviceClassProxy, DeviceProxy, build_binding
+from karabogui.binding.api import (
+    BindingRoot, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
+    build_binding)
 from karabogui.events import KaraboEvent
 from karabogui.testing import GuiTestCase, alarm_data, singletons, system_hash
 from karabogui.topology.system_topology import SystemTopology
 
 from ..manager import Manager, project_db_handler
+
+TEST_SERVER_ID = 'swerver'
+TEST_CLASS_ID = 'PrettyDevice'
+TEST_DEVICE_ID = 'dev'
 
 
 def make_project_db_handler(fall_through):
@@ -30,6 +36,16 @@ class PrettyDevice(Configurable):
 def _get_class_proxy(schema):
     binding = build_binding(schema)
     return DeviceClassProxy(binding=binding)
+
+
+def _get_project_device_proxy(server_id, class_id, device_id):
+    with singletons(topology=SystemTopology()):
+        binding = BindingRoot(class_id=class_id)
+        proxy = ProjectDeviceProxy(device_id=device_id,
+                                   server_id=server_id,
+                                   binding=binding)
+        build_binding(PrettyDevice.getClassSchema(), existing=proxy.binding)
+    return proxy
 
 
 class TestManager(GuiTestCase):
@@ -210,44 +226,38 @@ class TestManager(GuiTestCase):
             manager.handle_deviceSchema('dev', schema)
             topology.device_schema_updated.assert_called_with('dev', schema)
 
-    def test_init_device_empty_class(self):
+    def test_init_device_none(self):
         network, topology = Mock(), Mock()
         with singletons(network=network, topology=topology):
             # instantiate with wrong class def
             manager = Manager()
-            empty_schema = Schema('PrettyDevice', hash=Hash())
-            dkp = _get_class_proxy(empty_schema)
-            topology.get_schema.return_value = empty_schema
-            topology.get_class.return_value = dkp
             topology.get_project_device_proxy.return_value = None
 
             cfg = Hash('init_prop', 42, 'ro_prop', -1)
-            manager.initDevice('swerver', 'PrettyDevice', 'dev', config=cfg)
-            topology.get_schema.assert_called_with('swerver', 'PrettyDevice')
-            topology.get_class.assert_called_with('swerver', 'PrettyDevice')
-            network.onInitDevice.assert_called_with(
-                'swerver', 'PrettyDevice', 'dev',
-                # The configuration hash will be stripped of all keys due to
-                # the PrettyDevice class having an empty schema.
-                Hash(), attrUpdates=None
-            )
+            manager.initDevice(TEST_SERVER_ID, TEST_CLASS_ID, TEST_DEVICE_ID,
+                               config=cfg)
+            # No proxy means, not called!
+            network.onInitDevice.assert_not_called()
 
     def test_init_device_schema_evolution(self):
-        network, topology = Mock(), Mock()
+        network = Mock()
+        topology = Mock()
         with singletons(network=network, topology=topology):
             manager = Manager()
             schema = PrettyDevice.getClassSchema()
-            dkp = _get_class_proxy(schema)
             topology.get_schema.return_value = schema
-            topology.get_class.return_value = dkp
-            topology.get_project_device_proxy.return_value = None
+            proxy = _get_project_device_proxy(TEST_SERVER_ID, TEST_CLASS_ID,
+                                              TEST_DEVICE_ID)
+
+            topology.get_project_device_proxy.return_value = proxy
 
             cfg = Hash('init_prop', 42, 'ro_prop', -1, 'evolved', 43)
-            manager.initDevice('swerver', 'PrettyDevice', 'dev', config=cfg)
-            topology.get_schema.assert_called_with('swerver', 'PrettyDevice')
-            topology.get_class.assert_called_with('swerver', 'PrettyDevice')
+            manager.initDevice(TEST_SERVER_ID, TEST_CLASS_ID, TEST_DEVICE_ID,
+                               config=cfg)
+            topology.get_schema.assert_called_with(TEST_SERVER_ID,
+                                                   TEST_CLASS_ID)
             network.onInitDevice.assert_called_with(
-                'swerver', 'PrettyDevice', 'dev',
+                TEST_SERVER_ID, TEST_CLASS_ID, TEST_DEVICE_ID,
                 # The configuration will be stripped of all the keys
                 # that are read-only or not in the schema
                 Hash('init_prop', 42), attrUpdates=None
@@ -258,29 +268,33 @@ class TestManager(GuiTestCase):
         with singletons(network=network, topology=topology):
             manager = Manager()
             schema = PrettyDevice.getClassSchema()
-            dkp = _get_class_proxy(schema)
             topology.get_schema.return_value = schema
-            topology.get_class.return_value = dkp
-            topology.get_project_device_proxy.return_value = None
+            proxy = _get_project_device_proxy(TEST_SERVER_ID, TEST_CLASS_ID,
+                                              TEST_DEVICE_ID)
+            topology.get_project_device_proxy.return_value = proxy
 
-            manager.initDevice('swerver', 'PrettyDevice', 'dev')
-            topology.get_schema.assert_called_with('swerver', 'PrettyDevice')
-            topology.get_class.assert_called_with('swerver', 'PrettyDevice')
+            manager.initDevice(TEST_SERVER_ID, TEST_CLASS_ID, TEST_DEVICE_ID)
+
+            topology.get_schema.assert_called_with(TEST_SERVER_ID,
+                                                   TEST_CLASS_ID)
             network.onInitDevice.assert_called_with(
-                'swerver', 'PrettyDevice', 'dev', Hash(), attrUpdates=None)
+                TEST_SERVER_ID, TEST_CLASS_ID, TEST_DEVICE_ID,
+                Hash(), attrUpdates=None)
 
     def test_init_device_badschema(self):
         network, topology = Mock(), Mock()
         with singletons(network=network, topology=topology):
             manager = Manager()
-            cfg = Hash('init_prop', 42, 'ro_prop', -1)
             topology.get_schema.return_value = None
+            proxy = _get_project_device_proxy(TEST_SERVER_ID, TEST_CLASS_ID,
+                                              TEST_DEVICE_ID)
+            topology.get_project_device_proxy.return_value = proxy
 
-            target = 'karabogui.singletons.manager.QMessageBox'
+            target = 'karabogui.messagebox.show_error'
             with patch(target) as msg_box:
                 cfg = Hash('init_prop', 42, 'ro_prop', -1)
-                manager.initDevice('swerver', 'PrettyDevice', 'dev',
-                                   config=cfg)
+                manager.initDevice(TEST_SERVER_ID, TEST_CLASS_ID,
+                                   TEST_DEVICE_ID, config=cfg)
                 assert msg_box.call_count == 1
 
     def test_project_db_handler(self):

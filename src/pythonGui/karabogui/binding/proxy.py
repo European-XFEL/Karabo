@@ -227,6 +227,8 @@ class ProjectDeviceProxy(DeviceClassProxy):
     """A device class proxy used in ProjectDeviceInstance
     """
     device_id = String
+    # An event which fires when the configuration has been applied
+    config_update = Event
 
     def update_status(self):
         """Request a recalculating of the device status
