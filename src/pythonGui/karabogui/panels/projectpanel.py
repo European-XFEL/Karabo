@@ -34,6 +34,9 @@ class ProjectPanel(BasePanelWidget):
 
     def __init__(self):
         super(ProjectPanel, self).__init__("Projects")
+        # Bool to set if the project manager version is okay for the
+        # load with device action.
+        self._manager_version = False
 
         # Register for broadcast events.
         # This object lives as long as the app. No need to unregister.
@@ -158,36 +161,44 @@ class ProjectPanel(BasePanelWidget):
         if not status:
             # Don't show projects when there's no server connection
             self.tree_view.destroy()
+            # We lost track about the project manager
+            self._manager_version = False
 
         self._set_toolbar_visible(status)
         if not status:
             self.sbar.reset(status)
 
-    def _event_system_topology(self, sys_topology):
-        can_load_with_device = False
-        # The load_with_device action will be available when the Project
-        # Manager device in the topology is version 2.12 or newer.
-        attrs = (
-            get_topology().get_attributes(f'device.{KARABO_PROJECT_MANAGER}')
-        )
-        if attrs:
-            mngr_version = attrs.get('karaboVersion', '0.0.0')
-            version_parts = mngr_version.split('.')
+    def _event_system_topology(self, data):
+        """The load with device action will be visible when the Project
+           Manager device in the topology is version 2.12 or newer.
+        """
+        visible = False
+        path = f'device.{KARABO_PROJECT_MANAGER}'
+        attributes = get_topology().get_attributes(path)
+
+        if attributes is not None:
+            version = attributes.get('karaboVersion', '0.0.0')
+            version_parts = version.split('.')
             if len(version_parts) > 1:
                 try:
                     major = int(version_parts[0])
                     minor = int(version_parts[1])
                     if major > 2 or (major == 2 and minor > 11):
-                        can_load_with_device = True
+                        visible = True
                 except ValueError:
                     pass
-        self.load_with_device_action.setVisible(can_load_with_device)
+        self._manager_version = visible
+        self.load_with_device_action.setVisible(visible)
 
     # -----------------------------------------------------------------------
 
     def _set_toolbar_visible(self, enable):
         for qaction in self._toolbar_actions:
             qaction.setVisible(enable)
+        # Note: Workaround to synchronize load with device action. Removed in
+        # 2.13.
+        enable = enable and self._manager_version
+        self.load_with_device_action.setVisible(enable)
 
     def _visible_partial_toolbar(self):
         """ Project loading failed, restrict options
