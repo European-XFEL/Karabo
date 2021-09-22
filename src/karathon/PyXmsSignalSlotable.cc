@@ -214,7 +214,8 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("createInputChannel", &SignalSlotableWrap::createInputChannelPy,
                  (bp::arg("channelName"), bp::arg("configuration"),
                   bp::arg("onData") = bp::object(), bp::arg("onInput") = bp::object(),
-                  bp::arg("onEndOfStream") = bp::object()))
+                  bp::arg("onEndOfStream") = bp::object(),
+                  bp::arg("connectionTracker") = bp::object()))
 
             .def("connectInputChannels", &SignalSlotableWrap::connectInputChannelsPy)
 
