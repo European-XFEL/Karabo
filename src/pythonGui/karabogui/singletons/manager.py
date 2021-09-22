@@ -61,6 +61,8 @@ class Manager(QObject):
         # Handler callbacks for `handle_requestGeneric`
         self._request_handlers = {}
 
+        # Awaiting device instantiations
+        self._awaiting_instantiations = set()
         self._show_big_data_proc = False
         network = get_network()
         network.signalServerConnectionChanged.connect(
@@ -79,63 +81,82 @@ class Manager(QObject):
         self._waiting_properties[device_proxy] = proxies
 
     def initDevice(self, serverId, classId, deviceId, config=None):
-        schema = self._topology.get_schema(serverId, classId)
-        if schema is None:
-            # There is no schema, but we can still instantiate the device
-            # if requested. Since we do not have sanitized configurations
-            # and in < 2.12 still attributes, we provide a message box to
-            # confirm
-            # Note: With 2.12 and sanitization of the configuration the
-            # message box will be removed!
-            ask = (f"Do you want to instantiate the device <b>{deviceId}</b> "
-                   "without Schema comparison?")
-            msg_box = QMessageBox(
-                QMessageBox.Question, 'Instantiate device', ask,
-                QMessageBox.Yes | QMessageBox.No)
-            msg_box.setModal(False)
-            msg_box.setDefaultButton(QMessageBox.No)
-            msg_box.resize(460, 200)
-            messagebox.move_main_window(msg_box)
-            if msg_box.exec() == QMessageBox.No:
-                return
-
-            get_network().onInitDevice(serverId, classId, deviceId, config,
-                                       attrUpdates=None)
+        """Instantiate a project device"""
+        proxy = self._topology.get_project_device_proxy(
+            deviceId, serverId, classId)
+        if proxy is None:
+            # This should never happen!
             return
 
-        # Use standard configuration for server/classId
-        class_proxy = self._topology.get_class(serverId, classId)
-        if config is None:
-            config = extract_configuration(class_proxy.binding)
+        def _instantiate_device():
+            """Instantiate a project device"""
+            nonlocal config
 
-        # Remove all obsolete paths which are not anymore in the schema
-        obsolete_paths = [pth for pth, _, _ in Hash.flat_iterall(config)
-                          if pth not in schema.hash]
-        for key in obsolete_paths:
-            config.erase(key)
+            if proxy.online:
+                # Note: Device was instantiated from a different place
+                # and not us, conflict! This can happen especially from an
+                # awaiting instantiation!
+                messagebox.show_error(
+                    f"Aborting instantiation for device {deviceId} because it "
+                    "is already online!")
+                return
 
-        # Remove all read only and assignment internal paths
-        readonly_paths = [pth for pth, _, _ in Hash.flat_iterall(config)
-                          if schema.hash[pth, "accessMode"] ==
-                          AccessMode.READONLY.value or
-                          schema.hash[pth, "assignment"] ==
-                          Assignment.INTERNAL.value]
-        for key in readonly_paths:
-            config.erase(key)
+            if config is None:
+                config = extract_configuration(proxy.binding)
 
-        # Compute a runtime schema from the project device proxy and an
-        # unmodified copy of the device class schema.
-        attr_updates = None
-        project_dev_proxy = self._topology.get_project_device_proxy(
-            deviceId, serverId, classId)
-        if project_dev_proxy is not None:
-            # This feature only works with named devices!
+            schema = self._topology.get_schema(serverId, classId)
+            if schema is None:
+                # XXX: This should not happen anymore. However, we go safe here
+                messagebox.show_error(
+                    f"Aborting instantiation for device {deviceId} due to "
+                    "a missing schema!")
+                return
+
+            # Remove all obsolete paths which are not anymore in the schema
+            # Note: This is supposed to throw on the device server level
+            obsolete_paths = [pth for pth, _, _ in Hash.flat_iterall(config)
+                              if pth not in schema.hash]
+            for key in obsolete_paths:
+                config.erase(key)
+
+            # Remove all read only and assignment internal paths
+            readonly_paths = [pth for pth, _, _ in Hash.flat_iterall(config)
+                              if schema.hash[pth, "accessMode"] ==
+                              AccessMode.READONLY.value or
+                              schema.hash[pth, "assignment"] ==
+                              Assignment.INTERNAL.value]
+            for key in readonly_paths:
+                config.erase(key)
+
+            # Compute a runtime schema from the project device proxy and an
+            # unmodified copy of the device class schema.
             attr_updates = extract_attribute_modifications(
-                schema, project_dev_proxy.binding)
+                schema, proxy.binding)
 
-        # Send signal to network
-        get_network().onInitDevice(serverId, classId, deviceId, config,
-                                   attrUpdates=attr_updates)
+            # Send signal to network
+            get_network().onInitDevice(serverId, classId, deviceId, config,
+                                       attrUpdates=attr_updates)
+
+        if len(proxy.binding.value) > 0:
+            _instantiate_device()
+        else:
+            # We don't have a schema and have to defer the instantiation.
+            # We are sneaky and wait until the offline configuration has
+            # been applied!
+            get_logger().info("Requesting class schema with classId "
+                              f"<b>{classId}</b> for <b>{deviceId}</b> "
+                              "and deferring instantiation")
+
+            def _config_update_handler():
+                proxy.on_trait_change(_config_update_handler, "config_update",
+                                      remove=True)
+                if deviceId in self._awaiting_instantiations:
+                    self._awaiting_instantiations.discard(deviceId)
+                    _instantiate_device()
+
+            self._awaiting_instantiations.add(deviceId)
+            proxy.on_trait_change(_config_update_handler, "config_update")
+            proxy.ensure_class_schema()
 
     def callDeviceSlot(self, handler, instance_id, slot_name, params):
         """Call a device slot using the `requestGeneric` mechanism.
@@ -168,6 +189,11 @@ class Manager(QObject):
             if msg_box.exec() == QMessageBox.No:
                 return
 
+        # We can also shutdown a device with `Shutdown all devices` while
+        # waiting for their instantiation. We make sure to delete our request
+        # here!
+        self._awaiting_instantiations.discard(deviceId)
+
         get_network().onKillDevice(deviceId)
 
     def shutdownServer(self, serverId, parent=None):
@@ -181,6 +207,15 @@ class Manager(QObject):
         if msg_box.exec() == QMessageBox.No:
             return
 
+        # Note: We shutdown a server although we want to instantiate devices
+        # from there.
+        if self._awaiting_instantiations:
+            deviceIds = set(deviceId for deviceId, project_device
+                            in self._topology._project_devices.items()
+                            if project_device.server_id == serverId)
+            discard = deviceIds.intersection(self._awaiting_instantiations)
+            for deviceId in discard:
+                self._awaiting_instantiations.discard(deviceId)
         get_network().onKillServer(serverId)
 
     @Slot(object)
@@ -200,6 +235,9 @@ class Manager(QObject):
         # Clear the system topology
         if not isConnected:
             self._topology.clear()
+
+            # Delete any request of instantiating devices
+            self._awaiting_instantiations.clear()
 
             # Any pending requests are effectively timed-out
             pending = list(self._request_handlers.keys())
