@@ -1,4 +1,5 @@
 import threading
+import time
 
 from karabo.bound import (
     Hash, Schema,
@@ -116,24 +117,112 @@ class Channel_Injection_TestCase(BoundDeviceTestCase):
         self.assertTrue(cfg.has("node"))
         self.assertTrue(cfg.has("node.anInt32"), str(cfg))
 
-        # Test that re-injection of input channel works even during input
-        # channel data handling:
-        count = cfg["count"]  # possibly non-zero from previous subtest
-        sch = Schema()
-        INPUT_CHANNEL(sch).key("injectedInput").commit()
-        INT32_ELEMENT(sch).key("new").readOnly().initialValue(count).commit()
-        data = Hash("schema", sch)
-        req = self.sigSlot.request(dev_id, "slotWriteOuput", data)
+        # Now START test that re-injecting an input channel keeps handlers
+        # registered with KARABO_ON_DATA/KARABO_ON_INPUT/KARABO_ON_EOS.
+        # Register data handler for "injectedInput" channel
+        req = self.sigSlot.request(dev_id, "slotRegisterOnDataInputEos",
+                                   "injectedInput")
+        req.waitForReply(max_timeout_ms)
+        # Check that initially "intInOnData" is not one, i.e. ensure that
+        # following actions will make it one. (It is either zero [initial
+        # value] or -3 [from previous run of this test with other updateSlot].)
+        self.assertTrue(1 != self.dc.get(dev_id, "intInOnData"))
+        countEos = self.dc.get(dev_id, "numCallsOnInput")
+
+        # Request data to be sent from "output" to "injectedInput" channel
+        req = self.sigSlot.request(dev_id, "slotWriteOutput", Hash("int", 1))
         req.waitForReply(max_timeout_ms)
 
-        def condition2():
-            cfg = self.dc.get(dev_id)
-            return (cfg["count"] == count + 1
-                    and "new" in cfg and cfg["new"] == count)
+        # Check that data arrived and onData/onInput handlers called
+        res = self.waitUntilTrue(
+            lambda: (self.dc.get(dev_id, "intInOnData") == 1 and
+                     self.dc.get(dev_id, "numCallsOnInput") == countEos + 1),
+            max_timeout, 100)
+        self.assertEqual(self.dc.get(dev_id, "intInOnData"), 1)
+        self.assertEqual(self.dc.get(dev_id, "numCallsOnInput"), countEos + 1)
 
-        res = self.waitUntilTrue(condition2, max_timeout, 100)
-        cfg = self.dc.get(dev_id)
-        self.assertTrue(res, str(cfg))
+        # Request EOS to be sent to "injectedInput" channel.
+        # All outputs that an input is connected to have to send EOS to get
+        # the eos handler called...
+        req = self.sigSlot.request(dev_id, "slotSendEos",
+                                   ["output", "injectedOutput"])
+        req.waitForReply(max_timeout_ms)
+
+        # Check that EOS arrived and flipped sign
+        res = self.waitUntilTrue(
+            lambda: self.dc.get(dev_id, "intInOnData") == -1,
+            max_timeout, 100)
+        self.assertEqual(self.dc.get(dev_id, "intInOnData"), -1)
+
+        # Re-inject input - channel will be recreated and onData handler should
+        # be passed to new incarnation
+        schema = Schema()
+        INPUT_CHANNEL(schema).key("injectedInput").commit()
+        # Note that here we need to use "slotAppendSchema" and not updateSlot
+        # since "slotUpdateSchema" would erase "injectedOutput", and then
+        # slotSendEos would need a different list of output channels.
+        req = self.sigSlot.request(dev_id, "slotAppendSchema", schema)
+        req.waitForReply(max_timeout_ms)
+        # Wait for connection being re-established
+        # HACK: Without sleep might be fooled, i.e. traces of connection of
+        #       previous input channel not yet erased...
+        time.sleep(1)
+        self.waitUntilTrue(condition, max_timeout, 100)
+        self.assertTrue(res, str(self.dc.get(dev_id)))
+        # Request again data sending from "output" to "injectedInput" channel
+        req = self.sigSlot.request(dev_id, "slotWriteOutput", Hash("int", 2))
+        req.waitForReply(max_timeout_ms)
+
+        # Check that new data arrived
+        self.waitUntilTrue(
+            lambda: (self.dc.get(dev_id, "intInOnData") == 2 and
+                     self.dc.get(dev_id, "numCallsOnInput") == countEos + 2),
+            max_timeout, 100)
+        self.assertEqual(self.dc.get(dev_id, "intInOnData"), 2)
+        self.assertEqual(self.dc.get(dev_id, "numCallsOnInput"),
+                         countEos + 2)
+
+        # Request EOS to be sent again
+        req = self.sigSlot.request(dev_id, "slotSendEos",
+                                   ["output", "injectedOutput"])
+        req.waitForReply(max_timeout_ms)
+        # Check that EOS arrived and flipped sign again
+        res = self.waitUntilTrue(
+            lambda: self.dc.get(dev_id, "intInOnData") == -2,
+            max_timeout, 100)
+        self.assertEqual(self.dc.get(dev_id, "intInOnData"), -2)
+        # END test that re-injecting input channels keeps handlers registered
+        #     with KARABO_ON_DATA/KARABO_ON_INPUT/KARABO_ON_EOS!
+
+        # Test that re-injection of input channel works even during input
+        # channel data handling (crashed in past due to ref-counting bugs):
+        sch = Schema()
+        INPUT_CHANNEL(sch).key("injectedInput").commit()
+        new = "new_" + updateSlot  # work around: dc cash keeps removed props
+        INT32_ELEMENT(sch).key(new).readOnly().initialValue(77).commit()
+        data = Hash("schema", sch, "int", 3)
+        req = self.sigSlot.request(dev_id, "slotWriteOutput", data)
+        req.waitForReply(max_timeout_ms)
+        # See that injection happened...
+        self.waitUntilTrue(
+            lambda: (new in self.dc.get(dev_id)
+                     and self.dc.get(dev_id, new) == 77
+                     and self.dc.get(dev_id, "intInOnData") == 3),
+            max_timeout, 100)
+        self.assertEqual(self.dc.get(dev_id, new), 77)
+        self.assertEqual(self.dc.get(dev_id, "intInOnData"), 3)
+        # ...and that channels are connected again...
+        res = self.waitUntilTrue(condition, max_timeout, 100)
+        self.assertTrue(res, str(self.dc.get(dev_id)))
+        # ... and that data can go through it, i.e. handlers are re-assigned
+        req = self.sigSlot.request(dev_id, "slotSendEos",  # check EOS only...
+                                   ["output", "injectedOutput"])
+        req.waitForReply(max_timeout_ms)
+        # Check that EOS arrived and flipped sign again
+        res = self.waitUntilTrue(
+            lambda: self.dc.get(dev_id, "intInOnData") == -3,
+            max_timeout, 100)
+        self.assertEqual(self.dc.get(dev_id, "intInOnData"), -3)
 
         # Remove the channels again:
         req = self.sigSlot.request(dev_id, "slotUpdateSchema", Schema())

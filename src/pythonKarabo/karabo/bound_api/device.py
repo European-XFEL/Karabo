@@ -444,6 +444,8 @@ class PythonDevice(NoFsm):
 
         # Initialize Device slots and instantiate all channels
         self._initDeviceSlots()
+        self._inputChannelHandlers = {}  # for re-injected InputChannel
+
         self.initChannels()
 
         # Register guard for slot calls
@@ -993,9 +995,10 @@ class PythonDevice(NoFsm):
         Input and output channels will be created if injected and removed again
         in case updateSchema is called again without them.
         An output channel is also recreated if its schema changes.
-        Note that for (re-)created input channels there are no data, input and
-        end-of-stream handlers registered (anymore). This has to be (re-)done
+        Note that for newly created input channels there are no data, input
+        and end-of-stream handlers registered. This has to be done
         via the corresponding self.KARABO_ON_[DATA|INPUT|EOS] methods.
+        If an InputChannel is re-injected, its handlers are kept.
 
         :param schema: to be merged with the static schema
         """
@@ -1031,15 +1034,18 @@ class PythonDevice(NoFsm):
                                     if not self._fullSchema.isNode(p)]
 
             # Erase previously present injected InputChannels
-            # (except if re-injected to change properties).
             for inChannel in self._ss.getInputChannelNames():
                 if self._staticSchema.has(inChannel):
+                    # Do not touch static one
+                    # (even if re-injected to change properties).
                     continue
                 if self._injectedSchema.has(inChannel):
                     self.log.INFO("updateSchema: Remove input channel '"
                                   f"{inChannel}'")
                     self._ss.removeInputChannel(inChannel)
-
+                    if not schema.has(inChannel):
+                        # not re-injected - clear handler back-up
+                        del self._inputChannelHandlers[inChannel]
             # Treat injected OutputChannels
             outChannelsToRecreate = set()
             for outChannel in self._ss.getOutputChannelNames():
@@ -1099,9 +1105,10 @@ class PythonDevice(NoFsm):
         Input and output channels will be created if injected.
         An output channel is also recreated if its schema changes, to make the
         other end aware.
-        Note that for (re-)created input channels there are no data, input and
-        end-of-stream handlers registered (anymore). This has to be (re-)done
+        Note that for newly created input channels there are no data, input
+        and end-of-stream handlers registered. This has to be done
         via the corresponding self.KARABO_ON_[DATA|INPUT|EOS] methods.
+        If an InputChannel is re-injected, its handlers are kept.
 
         :param schema: to append to current full schema
         """
@@ -1513,10 +1520,7 @@ class PythonDevice(NoFsm):
         """
         # Would best be INFO level, but without broadcasting:
         self.log.DEBUG(f"Creating input channel '{path}'")
-        channel = self._ss.createInputChannel(path, self._parameters)
-        h = Hash(path + ".missingConnections",
-                 self._parameters.get(path + ".connectedOutputChannels"))
-        self._setNoStateLock(h)
+        handlers = self._inputChannelHandlers.get(path, [None] * 3)
 
         def tracker(name, status):
             if (status == ConnectionStatus.CONNECTING
@@ -1528,7 +1532,11 @@ class PythonDevice(NoFsm):
             self.setVectorUpdate(path + ".missingConnections",
                                  [name], updateType)
 
-        channel.registerConnectionTracker(tracker)
+        self._ss.createInputChannel(path, self._parameters, handlers[0],
+                                    handlers[1], handlers[2], tracker)
+        h = Hash(path + ".missingConnections",
+                 self._parameters.get(path + ".connectedOutputChannels"))
+        self._setNoStateLock(h)
 
     def KARABO_ON_DATA(self, channelName, handlerPerData):
         """Registers a data handler function
@@ -1542,6 +1550,8 @@ class PythonDevice(NoFsm):
 
         where `data` and `metaData` are both Hashes.
         """
+        self._inputChannelHandlers.setdefault(channelName, [None] * 3)
+        self._inputChannelHandlers[channelName][0] = handlerPerData
         self._ss.registerDataHandler(channelName, handlerPerData)
 
     def KARABO_ON_INPUT(self, channelName, handlerPerInput):
@@ -1557,6 +1567,8 @@ class PythonDevice(NoFsm):
 
         Here `input` is a reference to the input channel.
         """
+        self._inputChannelHandlers.setdefault(channelName, [None] * 3)
+        self._inputChannelHandlers[channelName][1] = handlerPerInput
         self._ss.registerInputHandler(channelName, handlerPerInput)
 
     def KARABO_ON_EOS(self, channelName, handler):
@@ -1568,10 +1580,12 @@ class PythonDevice(NoFsm):
         The handler function should  have the signature
 
              def onEos(input):
-             pass
+                 pass
 
         where `input` is a reference to the input channel.
         """
+        self._inputChannelHandlers.setdefault(channelName, [None] * 3)
+        self._inputChannelHandlers[channelName][2] = handler
         self._ss.registerEndOfStreamHandler(channelName, handler)
 
     @karabo_deprecated
