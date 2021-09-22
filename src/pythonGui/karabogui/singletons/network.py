@@ -59,10 +59,11 @@ class Network(QObject):
         # Listen for the quit notification
         qApp.aboutToQuit.connect(self.onQuitApplication)
 
-    def connectToServer(self, parent=None):
-        """Connection to server via LoginDialog"""
-        connected = False
+    def connectToServer(self, parent=None) -> bool:
+        """Connection to server via LoginDialog
 
+        Returns: Boolean to indicate if the login dialog has been accepted
+        """
         dialog = LoginDialog(username=self.username,
                              password=self.password,
                              hostname=self.hostname,
@@ -70,17 +71,20 @@ class Network(QObject):
                              gui_servers=self.gui_servers,
                              parent=parent)
 
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:
             self.username = dialog.username
             self.password = dialog.password
             self.hostname = dialog.hostname
             self.port = dialog.port
             self.gui_servers = dialog.gui_servers
             self.startServerConnection()
-            connected = True
+            return True
 
-        # Allow external runner to see the status of the connection!
-        return connected
+        # Note: The server connection is not changed and thus we must
+        # notify the main window to untoggle the button
+        self.signalServerConnectionChanged.emit(False)
+
+        return False
 
     def connectToServerDirectly(self, username, hostname, port):
         """Connection to server directly via username, host and port
