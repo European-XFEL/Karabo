@@ -288,7 +288,8 @@ namespace karathon {
                              const karabo::util::Hash& config,
                              const bp::object& onDataHandler = bp::object(),
                              const bp::object& onInputHandler = bp::object(),
-                             const bp::object& onEndOfStreamHandler = bp::object());
+                             const bp::object& onEndOfStreamHandler = bp::object(),
+                             const bp::object& connectionTracker = bp::object());
 
         void connectInputChannelsPy() {
             ScopedGILRelease nogil;
