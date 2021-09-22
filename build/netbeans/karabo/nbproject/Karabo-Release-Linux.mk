@@ -102,6 +102,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103111265/NetworkAppender.o \
 	${OBJECTDIR}/_ext/1103111265/OstreamAppender.o \
 	${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o \
+	${OBJECTDIR}/_ext/1103112890/AmqpBroker.o \
+	${OBJECTDIR}/_ext/1103112890/AmqpClient.o \
 	${OBJECTDIR}/_ext/1103112890/Broker.o \
 	${OBJECTDIR}/_ext/1103112890/Connection.o \
 	${OBJECTDIR}/_ext/1103112890/EventLoop.o \
@@ -531,6 +533,16 @@ ${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o: ../../../src/karabo/log/Roll
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103111265
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o ../../../src/karabo/log/RollingFileAppender.cc
+
+${OBJECTDIR}/_ext/1103112890/AmqpBroker.o: ../../../src/karabo/net/AmqpBroker.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/AmqpBroker.o ../../../src/karabo/net/AmqpBroker.cc
+
+${OBJECTDIR}/_ext/1103112890/AmqpClient.o: ../../../src/karabo/net/AmqpClient.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/AmqpClient.o ../../../src/karabo/net/AmqpClient.cc
 
 ${OBJECTDIR}/_ext/1103112890/Broker.o: ../../../src/karabo/net/Broker.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
@@ -2045,6 +2057,32 @@ ${OBJECTDIR}/_ext/1103111265/RollingFileAppender_nomain.o: ${OBJECTDIR}/_ext/110
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103111265/RollingFileAppender_nomain.o ../../../src/karabo/log/RollingFileAppender.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103111265/RollingFileAppender.o ${OBJECTDIR}/_ext/1103111265/RollingFileAppender_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/AmqpBroker_nomain.o: ${OBJECTDIR}/_ext/1103112890/AmqpBroker.o ../../../src/karabo/net/AmqpBroker.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/AmqpBroker.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/AmqpBroker_nomain.o ../../../src/karabo/net/AmqpBroker.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/AmqpBroker.o ${OBJECTDIR}/_ext/1103112890/AmqpBroker_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103112890/AmqpClient_nomain.o: ${OBJECTDIR}/_ext/1103112890/AmqpClient.o ../../../src/karabo/net/AmqpClient.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103112890
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103112890/AmqpClient.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -DLINUX -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103112890/AmqpClient_nomain.o ../../../src/karabo/net/AmqpClient.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103112890/AmqpClient.o ${OBJECTDIR}/_ext/1103112890/AmqpClient_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103112890/Broker_nomain.o: ${OBJECTDIR}/_ext/1103112890/Broker.o ../../../src/karabo/net/Broker.cc 
