@@ -20,7 +20,6 @@ from karabo.common.project.api import (
 from karabo.native import Hash, read_project_model, write_project_model
 from karabogui import messagebox
 from karabogui.access import AccessRole, access_role_allowed
-from karabogui.binding.api import extract_configuration
 from karabogui.dialogs.api import (
     ConfigurationFromNameDialog, ConfigurationFromPastDialog,
     DeviceCapabilityDialog)
@@ -722,16 +721,9 @@ class DeviceInstanceController(BaseProjectGroupController):
                                     parent=parent)
             return
 
-        if len(device.proxy.binding.value) > 0:
-            # We have a schema and can extract a configuration
-            config = extract_configuration(device.proxy.binding)
-        else:
-            # We don't have a schema but can use a not validated offline
-            # configuration
-            config = self.project_device.configuration
-
-        deviceId = device.device_id
-        get_manager().initDevice(serverId, classId, deviceId, config=config)
+        proxy = device.proxy
+        deviceId = proxy.device_id
+        get_manager().initDevice(serverId, classId, deviceId)
 
     def shutdown_device(self, show_confirm=True, parent=None):
         device = self.model
