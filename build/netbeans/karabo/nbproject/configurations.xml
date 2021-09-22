@@ -177,6 +177,10 @@
     </logicalFolder>
     <logicalFolder name="f5" displayName="net" projectFiles="true">
       <logicalFolder name="f4" displayName="Broker" projectFiles="true">
+        <itemPath>../../../src/karabo/net/AmqpBroker.cc</itemPath>
+        <itemPath>../../../src/karabo/net/AmqpBroker.hh</itemPath>
+        <itemPath>../../../src/karabo/net/AmqpClient.cc</itemPath>
+        <itemPath>../../../src/karabo/net/AmqpClient.hh</itemPath>
         <itemPath>../../../src/karabo/net/Broker.cc</itemPath>
         <itemPath>../../../src/karabo/net/Broker.hh</itemPath>
         <itemPath>../../../src/karabo/net/JmsBroker.cc</itemPath>
@@ -1211,6 +1215,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AmqpBroker.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AmqpBroker.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AmqpClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AmqpClient.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Broker.cc" ex="false" tool="1" flavor2="0">
       </item>
@@ -3228,6 +3252,26 @@
       </item>
       <item path="../../../src/karabo/net.hpp" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/net/AmqpBroker.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AmqpBroker.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AmqpClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AmqpClient.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/net/Broker.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Broker.hh" ex="false" tool="3" flavor2="0">
@@ -5230,6 +5274,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/net.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AmqpBroker.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AmqpBroker.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AmqpClient.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/net/AmqpClient.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/net/Broker.cc" ex="false" tool="1" flavor2="0">
       </item>

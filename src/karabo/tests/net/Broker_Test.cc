@@ -173,13 +173,13 @@ void Broker_Test::testConnectDisconnect() {
     m_config.set("mqtt.instanceId", id);
     _testConnectDisconnect();
 
-//    std::clog << "\t" << __FUNCTION__ << " " << AMQP_BROKER << std::endl;
-//    urls = /*std::string(INVALID_AMQP) + "," +*/ AMQP_BROKER;
-//    m_config.clear();
-//    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
-//    m_config.set("amqp.domain", m_domain);
-//    m_config.set("amqp.instanceId", id);
-//    _testConnectDisconnect();
+    std::clog << "\t" << __FUNCTION__ << " " << AMQP_BROKER << std::endl;
+    urls = /*std::string(INVALID_AMQP) + "," +*/ AMQP_BROKER;
+    m_config.clear();
+    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
+    m_config.set("amqp.domain", m_domain);
+    m_config.set("amqp.instanceId", id);
+    _testConnectDisconnect();
 
     std::clog << "\t" << __FUNCTION__ << " " << REDIS_BROKER << std::endl;
     urls = std::string(INVALID_REDIS) + "," + REDIS_BROKER;
@@ -235,12 +235,12 @@ void Broker_Test::testPublishSubscribe() {
     m_config.set("mqtt.domain", m_domain);
     _testPublishSubscribe();
 
-//    urls = AMQP_BROKER;
-//    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-//    m_config.clear();
-//    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
-//    m_config.set("amqp.domain", m_domain);
-//    _testPublishSubscribe();
+    urls = AMQP_BROKER;
+    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
+    m_config.clear();
+    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
+    m_config.set("amqp.domain", m_domain);
+    _testPublishSubscribe();
 
     urls = REDIS_BROKER;
     std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
@@ -334,12 +334,12 @@ void Broker_Test::testPublishSubscribeAsync() {
     m_config.set("mqtt.domain", m_domain);
     _testPublishSubscribeAsync();
 
-//    urls = AMQP_BROKER;
-//    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-//    m_config.clear();
-//    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
-//    m_config.set("amqp.domain", m_domain);
-//    _testPublishSubscribeAsync();
+    urls = AMQP_BROKER;
+    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
+    m_config.clear();
+    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
+    m_config.set("amqp.domain", m_domain);
+    _testPublishSubscribeAsync();
 
     urls = REDIS_BROKER;
     std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
@@ -468,12 +468,12 @@ void Broker_Test::testReadingHeartbeatsAndLogs() {
     m_config.set("mqtt.domain", m_domain);
     _testReadingHeartbeatsAndLogs();
 
-//    urls = AMQP_BROKER;
-//    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-//    m_config.clear();
-//    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
-//    m_config.set("amqp.domain", m_domain);
-//    _testReadingHeartbeatsAndLogs();
+    urls = AMQP_BROKER;
+    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
+    m_config.clear();
+    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
+    m_config.set("amqp.domain", m_domain);
+    _testReadingHeartbeatsAndLogs();
 
     urls = REDIS_BROKER;
     std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
@@ -660,7 +660,7 @@ void Broker_Test::testReadingGlobalCalls() {
     std::clog << std::endl;
     _testReadingGlobalCalls(JMS_BROKER);
     _testReadingGlobalCalls(MQTT_BROKER);
-//    _testReadingGlobalCalls(AMQP_BROKER);
+    _testReadingGlobalCalls(AMQP_BROKER);
     _testReadingGlobalCalls(REDIS_BROKER);
 }
 
@@ -886,12 +886,12 @@ void Broker_Test::testProducerRestartConsumerContinues() {
     m_config.set("mqtt.domain", m_domain);
     _testProducerRestartConsumerContinues();
 
-//    urls = AMQP_BROKER;
-//    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-//    m_config.clear();
-//    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
-//    m_config.set("amqp.domain", m_domain);
-//    _testProducerRestartConsumerContinues();
+    urls = AMQP_BROKER;
+    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
+    m_config.clear();
+    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
+    m_config.set("amqp.domain", m_domain);
+    _testProducerRestartConsumerContinues();
 
     urls = REDIS_BROKER;
     std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
@@ -1032,12 +1032,12 @@ void Broker_Test::testProducerContinuesConsumerRestart() {
     m_config.set("mqtt.domain", m_domain);
     _testProducerContinuesConsumerRestart();
 
-//    urls = AMQP_BROKER;
-//    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
-//    m_config.clear();
-//    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
-//    m_config.set("amqp.domain", m_domain);
-//    _testProducerContinuesConsumerRestart();
+    urls = AMQP_BROKER;
+    std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;
+    m_config.clear();
+    m_config.set("amqp.brokers", fromString<std::string, std::vector>(urls));
+    m_config.set("amqp.domain", m_domain);
+    _testProducerContinuesConsumerRestart();
 
     urls = REDIS_BROKER;
     std::clog << "\t" << __FUNCTION__ << " " << urls << std::endl;

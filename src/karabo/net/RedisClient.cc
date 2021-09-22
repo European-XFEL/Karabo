@@ -34,10 +34,18 @@ namespace karabo {
                     .assignmentMandatory()
                     .commit();
 
+            unsigned int defTimeout = 10;
+            const char* env = getenv("KARABO_REDIS_TIMEOUT");
+            if (env) {
+                const unsigned int envInt = util::fromString<unsigned int>(env);
+                defTimeout = (envInt > 0 ? envInt : defTimeout);
+                KARABO_LOG_FRAMEWORK_INFO << "REDIS timeout from environment: " << defTimeout;
+            }
+
             UINT32_ELEMENT(expected).key("requestTimeout")
-                .displayedName("Request timeout")
-                .description("Redis request timeout in seconds")
-                .assignmentOptional().defaultValue(10)
+                .displayedName("REDIS request timeout")
+                .description("REDIS request timeout in seconds")
+                .assignmentOptional().defaultValue(defTimeout)
                 .unit(Unit::SECOND)
                 .commit();
         }
