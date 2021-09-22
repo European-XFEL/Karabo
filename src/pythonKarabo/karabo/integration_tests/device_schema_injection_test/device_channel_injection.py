@@ -20,9 +20,13 @@ class DeviceChannelInjection(PythonDevice):
             NODE_ELEMENT(expected).key("node")
             .commit(),
 
-            INT32_ELEMENT(expected).key("count")
+            INT32_ELEMENT(expected).key("intInOnData")
             .readOnly().initialValue(0)
             .commit(),
+
+            INT32_ELEMENT(expected).key("numCallsOnInput")
+            .readOnly().initialValue(0)
+            .commit()
         )
 
     def __init__(self, config):
@@ -30,28 +34,41 @@ class DeviceChannelInjection(PythonDevice):
         # Define the slots
         self.KARABO_SLOT(self.slotAppendSchema)
         self.KARABO_SLOT(self.slotUpdateSchema)
-        self.KARABO_SLOT(self.slotWriteOuput)
+        self.KARABO_SLOT(self.slotWriteOutput)
+        self.KARABO_SLOT(self.slotSendEos)
+        self.KARABO_SLOT(self.slotRegisterOnDataInputEos)
 
     def slotAppendSchema(self, schema):
         self.appendSchema(schema)
-        if "injectedInput" in schema:
-            # Asssign data handler for new input channel
-            self.KARABO_ON_DATA("injectedInput", self.onData)
 
     def slotUpdateSchema(self, schema):
         self.updateSchema(schema)
-        if "injectedInput" in schema:
-            # Asssign data handler for new input channel
-            self.KARABO_ON_DATA("injectedInput", self.onData)
 
-    def slotWriteOuput(self, data):
+    def slotWriteOutput(self, data):
         self.writeChannel("output", data)
+
+    def slotSendEos(self, channelNames):
+        for channelName in channelNames:
+            self.signalEndOfStream(channelName)
+
+    def slotRegisterOnDataInputEos(self, inputChannelName):
+        self.KARABO_ON_DATA(inputChannelName, self.onData)
+        self.KARABO_ON_INPUT(inputChannelName, self.onInput)
+        self.KARABO_ON_EOS(inputChannelName, self.onEos)
 
     def onData(self, data, meta):
         if "schema" in data:
             schema = data["schema"]
             self.appendSchema(schema)
-            # if "injectedInput" in schema: (and if needed in further tests)
-            #    # re-register handler:
-            #    self.KARABO_ON_DATA("injectedInput", self.onData)
-        self["count"] = self["count"] + 1
+        received = -1
+        if data.has("int"):
+            received = data.get("int")
+        self["intInOnData"] = received
+
+    def onInput(self, input):
+        soFar = self.get("numCallsOnInput")
+        self["numCallsOnInput"] = soFar + 1
+
+    def onEos(self, input):
+        oldValue = self.get("intInOnData")
+        self["intInOnData"] = -oldValue  # just flip sign
