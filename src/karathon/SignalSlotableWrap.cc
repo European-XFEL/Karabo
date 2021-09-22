@@ -221,7 +221,8 @@ namespace karathon {
     SignalSlotableWrap::createInputChannelPy(const std::string& channelName,
                                              const karabo::util::Hash& config,
                                              const bp::object& onDataHandler, const bp::object& onInputHandler,
-                                             const bp::object& onEndOfStreamHandler) {
+                                             const bp::object& onEndOfStreamHandler,
+                                             const bp::object& connectionTracker) {
         // Basically just call createInputChannel from C++, but take care that data and input handlers
         // stay empty if their input is empty, although the proxies are able
         // to deal with 'None' Python handlers (as we make use of for the end of stream handler).
@@ -237,6 +238,7 @@ namespace karathon {
 
         return this->createInputChannel(channelName, config,
                                         dataHandler, inputHandler,
-                                        HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onEndOfStreamHandler, "EOS"));
+                                        HandlerWrap<const karabo::xms::InputChannel::Pointer&>(onEndOfStreamHandler, "EOS"),
+                                        HandlerWrap<const std::string&, karabo::net::ConnectionStatus>(connectionTracker, "channelStatusTracker"));
     }
 }
