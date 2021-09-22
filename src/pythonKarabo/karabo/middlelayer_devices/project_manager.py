@@ -205,7 +205,7 @@ class ProjectManager(Device):
             else:
                 raise NotImplementedError(f"{type} not implemented")
         except Exception as e:
-            Hash("success", False, "reason", f"{type(e)}: {e}")
+            return Hash("success", False, "reason", f"{type(e)}: {e}")
 
     @slot
     def slotSaveItems(self, token, items, client=None):
@@ -379,7 +379,7 @@ class ProjectManager(Device):
             if len(self.domainList):
                 res = [domain for domain in res
                        if domain in self.domainList]
-            return Hash('domains', res)
+            return Hash('success', True, 'domains', res)
 
     @slot
     def slotListProjectsWithDevice(self, args):
