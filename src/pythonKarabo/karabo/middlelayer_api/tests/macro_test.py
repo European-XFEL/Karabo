@@ -21,7 +21,7 @@ from karabo.middlelayer_api.synchronization import background, sleep
 
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, sync_tst, async_tst)
-from karabo.middlelayer_api.compat import jms, mqtt
+from karabo.middlelayer_api.compat import jms, mqtt, amqp
 
 
 class Superslot(Slot):
@@ -194,7 +194,8 @@ class Tests(DeviceTest):
             sleep(1)
         d = getDevice("remote")    # proxy is not connected
         executeNoWait(d, "count")
-        time.sleep(0.1)
+        if not amqp:
+            time.sleep(0.1)
         self.assertEqual(d.counter, -1)
         with updateDevice(d):
             self.assertNotEqual(d.counter, -1)
@@ -344,8 +345,7 @@ class Tests(DeviceTest):
     @sync_tst
     def test_waituntilnew(self):
         """test the waitUntilNew function"""
-        if not jms:
-            sleep(1)
+        sleep(1)
         with getDevice("remote") as d:
             if not jms:
                 updateDevice(d)

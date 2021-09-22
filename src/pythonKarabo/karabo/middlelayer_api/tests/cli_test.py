@@ -133,7 +133,7 @@ class Tests(TestCase):
             del self.other
         finally:
             thread.stop()
-            thread.join(2.0)
+            thread.join(5)
             self.assertFalse(thread.is_alive())
     test_autodisconnect.slow = 1
 
@@ -143,13 +143,14 @@ class Tests(TestCase):
         self.assertNotIn("other", getClients())
         self.assertNotIn("other", getDevices("tserver"))
         await other.startInstance()
+        await sleep(0.1)
         if amqp:
-            await sleep(2.0)
-        else:
-            await sleep(0.1)
+            await sleep(5.0)
         self.assertIn("other", getDevices())
         self.assertIn("other", getDevices("tserver"))
         self.assertNotIn("other", findDevices("beep"))
+        if amqp:
+            await sleep(2.0)
         self.assertIn("other", findDevices("other"))
         self.assertIn("other", findDevices("OTHER"))
         self.assertIn("other", findDevices("OT"))
@@ -169,7 +170,7 @@ class Tests(TestCase):
     def test_topology(self):
         loop = setEventLoop()
         with closing(loop):
-            dc = DeviceClient(dict(_deviceId_="dc"))
+            dc = DeviceClient(dict(_deviceId_="ikarabo-test"))
             dc.startInstance()
             task = loop.create_task(self.init_topo(dc), dc)
             loop.run_until_complete(task)
