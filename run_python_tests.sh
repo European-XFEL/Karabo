@@ -256,33 +256,33 @@ runPythonUnitTests() {
     safeRunTests "karabo.tests" "_mqtt"
     safeRunTests "karabo.interactive" "_mqtt"
 
-#     export KARABO_BROKER="amqp://xfel:karabo@exflctrl01:5672"
-#
-#     echo
-#     echo
-#     echo "*************************************************************************************************"
-#     echo "*************************************************************************************************"
-#     echo "**"
-#     echo "**   Running Python unit tests with RabbitMQ (AMQP) broker ... $KARABO_BROKER"
-#     echo "**"
-#     echo "*************************************************************************************************"
-#     echo "*************************************************************************************************"
-#     echo
-#     echo
-#
-#     safeRunTests "karabo.bound_api" "_amqp"
-#     safeRunTests "karabo.bound_devices" "_amqp"
-#     safeRunTests "karabo.middlelayer_api" "_amqp"
-#     safeRunTests "karabo.middlelayer_devices" "_amqp"
-#     safeRunTests "karabo.common" "_amqp"
-#     safeRunTests "karabo.macro_api" "_amqp"
-#     safeRunTests "karabo.macro_devices" "_amqp"
-#     safeRunTests "karabo.influxdb" "_amqp"
-#     safeRunTests "karabo.native" "_amqp"
-#     safeRunTests "karabo.project_db" "_amqp"
-#     safeRunTests "karabo.config_db" "_amqp"
-#     safeRunTests "karabo.tests" "_amqp"
-#     safeRunTests "karabo.interactive" "_amqp"
+    export KARABO_BROKER="amqp://xfel:karabo@exflctrl01:5672"
+
+    echo
+    echo
+    echo "*************************************************************************************************"
+    echo "*************************************************************************************************"
+    echo "**"
+    echo "**   Running Python unit tests with RabbitMQ (AMQP) broker ... $KARABO_BROKER"
+    echo "**"
+    echo "*************************************************************************************************"
+    echo "*************************************************************************************************"
+    echo
+    echo
+
+    safeRunTests "karabo.bound_api" "_amqp"
+    safeRunTests "karabo.bound_devices" "_amqp"
+    safeRunTests "karabo.middlelayer_api" "_amqp"
+    safeRunTests "karabo.middlelayer_devices" "_amqp"
+    safeRunTests "karabo.common" "_amqp"
+    safeRunTests "karabo.macro_api" "_amqp"
+    safeRunTests "karabo.macro_devices" "_amqp"
+    safeRunTests "karabo.influxdb" "_amqp"
+    safeRunTests "karabo.native" "_amqp"
+    safeRunTests "karabo.project_db" "_amqp"
+    safeRunTests "karabo.config_db" "_amqp"
+    safeRunTests "karabo.tests" "_amqp"
+    safeRunTests "karabo.interactive" "_amqp"
 
     export KARABO_BROKER="redis://exflctrl01:6379"
 
