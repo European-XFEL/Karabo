@@ -189,19 +189,28 @@ class ProjectManager(Device):
             assert isinstance(params, Hash), msg
             msg = "'type' must be present in the input hash"
             assert "type" in params, msg
-            msg = "'dbtoken' must be present in the input hash"
-            assert "dbtoken" in params, msg
+            msg = "'token' must be present in the input hash"
+            assert "token" in params, msg
 
-            type_ = params["type"]
-            token = params["dbtoken"]  # session token
-            if type_ == "listItems":
+            action_type = params["type"]
+            token = params["token"]  # session token
+            if action_type == "listItems":
                 return self.slotListItems(token,
                                           params['domain'],
                                           params.get('item_types', None))
-            elif type_ == "loadItems":
+            elif action_type == "loadItems":
                 return self.slotLoadItems(token, params['items'])
-            elif type_ == "listDomains":
+            elif action_type == "listDomains":
                 return self.slotListDomains(token)
+            elif action_type == "updateAttribute":
+                return self.slotUpdateAttribute(token, params['items'])
+            elif action_type == "saveItems":
+                return self.slotSaveItems(token, params['items'],
+                                          params.get('client', None))
+            elif action_type == "beginUserSession":
+                return self.slotBeginUserSession(token)
+            elif action_type == "endUserSession":
+                return self.slotEndUserSession(token)
             else:
                 raise NotImplementedError(f"{type} not implemented")
         except Exception as e:
