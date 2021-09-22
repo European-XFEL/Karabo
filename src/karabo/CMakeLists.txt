@@ -288,6 +288,7 @@ add_dep(log4cpp krb_log4cpp)
 add_dep(pugixml pugixml.hpp)
 add_dep(cppunit cppunit)
 add_dep(openmqc openmqc)
+add_dep(amqpcpp amqpcpp)
 
 list(REMOVE_DUPLICATES EXTERN_DEPS_INCLUDE_DIRS)
 
@@ -338,6 +339,7 @@ target_link_libraries(
         ${HDF5_LIBRARIES}
         ${OPENSSL_LIBRARIES}
         ${openmqc_LIB}
+        ${amqpcpp_LIB}
         ${log4cpp_LIB}
         ${pugixml_LIB}
 )
