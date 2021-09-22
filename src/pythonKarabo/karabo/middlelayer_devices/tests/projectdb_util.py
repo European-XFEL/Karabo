@@ -4,7 +4,7 @@ import os
 from uuid import uuid4
 
 from karabo.middlelayer import (
-   call, connectDevice, coslot, Device, Hash, String, updateDevice)
+    call, connectDevice, coslot, Device, Hash, String, updateDevice)
 from karabo.middlelayer_api.tests.eventloop import async_tst
 from karabo.project_db.tests.util import create_hierarchy
 
@@ -117,7 +117,7 @@ class VerificationProjectManager():
 
         with self.subTest(msg="Test generic interface"):
             arg = Hash("type", "listItems",
-                       "dbtoken", "admin",
+                       "token", "admin",
                        "domain", "LOCAL")
             ret = await wait_for(call("projManTest",
                                       "slotGenericRequest",
