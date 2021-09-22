@@ -79,6 +79,9 @@ private:
     void _testAsyncConnectInputChannel();
 
     std::string m_karaboBrokerBackup;
+    std::string m_mqttTimeoutBackup;
+    std::string m_redisTimeoutBackup;
+    std::string m_amqpTimeoutBackup;
 };
 
 #endif	/* SIGNALSLOTABLE_TEST_HH */
