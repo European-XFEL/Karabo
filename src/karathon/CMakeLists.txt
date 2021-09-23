@@ -5,9 +5,9 @@ project(
     LANGUAGES C CXX
 )
 
-include("../../cmake/cxx-options.cmake")
-include("../../cmake/karabo-lib-target-name.cmake")
-include("../../cmake/resolve-karabo-lib-target.cmake")
+include("../cmake/cxx-options.cmake")
+include("../cmake/karabo-lib-target-name.cmake")
+include("../cmake/resolve-karabo-lib-target.cmake")
 
 resolveKaraboLibTarget()
 
