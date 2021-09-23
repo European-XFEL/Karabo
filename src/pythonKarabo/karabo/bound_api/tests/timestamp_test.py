@@ -5,10 +5,9 @@ import platform
 import time
 import unittest
 
-from karabo.bound import (Epochstamp, Timestamp, Trainstamp,
-                          TimeDuration, Hash, Types,
-                          ATTOSEC, FEMTOSEC, PICOSEC, NANOSEC,
-                          MICROSEC, MILLISEC)
+from karabo.bound import (
+    ATTOSEC, FEMTOSEC, MICROSEC, MILLISEC, NANOSEC, PICOSEC, Epochstamp, Hash,
+    TimeDuration, Timestamp, Trainstamp, Types)
 
 
 class Timestamp_TestCase(unittest.TestCase):

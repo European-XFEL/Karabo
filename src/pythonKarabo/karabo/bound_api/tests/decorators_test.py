@@ -4,9 +4,8 @@
 import unittest
 
 from karabo.bound import (
-    Configurator, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
-    INT32_ELEMENT, STRING_ELEMENT, Hash, Types
-)
+    INT32_ELEMENT, KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS,
+    STRING_ELEMENT, Configurator, Hash, Types)
 from karabo.common.states import State
 
 

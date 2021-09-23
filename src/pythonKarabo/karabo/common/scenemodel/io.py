@@ -2,8 +2,7 @@ from xml.etree.ElementTree import Element, parse, tostring
 
 from .const import NS_KARABO, NS_SVG, SCENE_FILE_VERSION
 from .model import SceneModel
-from .registry import (
-    read_element, set_reader_registry_version, write_element)
+from .registry import read_element, set_reader_registry_version, write_element
 
 
 def read_scene(filename_or_fileobj):

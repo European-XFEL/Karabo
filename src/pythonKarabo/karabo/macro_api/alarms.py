@@ -1,4 +1,4 @@
-from asyncio import wait_for, TimeoutError
+from asyncio import TimeoutError, wait_for
 from collections import OrderedDict, namedtuple
 
 from karabo.middlelayer_api.device_client import call, get_instance

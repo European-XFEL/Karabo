@@ -3,18 +3,17 @@ import base64
 import json
 import os
 import os.path as op
-import numpy as np
 import re
 import struct
 import time
-
 from urllib.parse import urlparse
+
+import numpy as np
 
 from karabo.influxdb.client import InfluxDbClient
 from karabo.influxdb.dlutils import (
-    device_id_from_path, escape_measurement,
-    escape_tag_field_key, format_line_protocol_body
-)
+    device_id_from_path, escape_measurement, escape_tag_field_key,
+    format_line_protocol_body)
 from karabo.native import decodeXML, encodeBinary
 
 PROCESSED_RAWS_FILE_NAME = '.processed_props.txt'

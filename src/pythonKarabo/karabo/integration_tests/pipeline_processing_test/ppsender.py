@@ -1,18 +1,15 @@
-from time import sleep
 from datetime import datetime
 from threading import Thread
+from time import sleep
 
 import numpy as np
 
-from karabo.bound import (BOOL_ELEMENT, ChannelMetaData,
-                          Hash, INT32_ELEMENT, KARABO_CLASSINFO,
-                          launchPythonDevice, MetricPrefix,
-                          NDARRAY_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL,
-                          OVERWRITE_ELEMENT,
-                          PythonDevice, Schema, SLOT_ELEMENT, State,
-                          STRING_ELEMENT, Timestamp, Types, UINT64_ELEMENT,
-                          UINT32_ELEMENT, Unit, VECTOR_INT64_ELEMENT
-                          )
+from karabo.bound import (
+    BOOL_ELEMENT, INT32_ELEMENT, KARABO_CLASSINFO, NDARRAY_ELEMENT,
+    NODE_ELEMENT, OUTPUT_CHANNEL, OVERWRITE_ELEMENT, SLOT_ELEMENT,
+    STRING_ELEMENT, UINT32_ELEMENT, UINT64_ELEMENT, VECTOR_INT64_ELEMENT,
+    ChannelMetaData, Hash, MetricPrefix, PythonDevice, Schema, State,
+    Timestamp, Types, Unit, launchPythonDevice)
 
 
 @KARABO_CLASSINFO("PPSenderDevice", "2.2.4")

@@ -1,23 +1,21 @@
+import time
 from asyncio import CancelledError, shield
 
 import numpy as np
-import time
 
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, CheckBoxModel, DisplayCommandModel, DisplayLabelModel,
     DisplayListModel, DisplayStateColorModel, DoubleLineEditModel,
-    EditableListModel, EditableRegexModel, IntLineEditModel,
-    LabelModel, LineEditModel, LineModel, NDArrayGraphModel, SceneModel,
-    TableElementModel, VectorGraphModel, write_scene)
-
+    EditableListModel, EditableRegexModel, IntLineEditModel, LabelModel,
+    LineEditModel, LineModel, NDArrayGraphModel, SceneModel, TableElementModel,
+    VectorGraphModel, write_scene)
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, AlarmCondition,
-    background, Bool, Configurable, DaqDataType, Device, Double,
-    Float, Hash, InputChannel, Int32, Int64, KaraboError, MetricPrefix,
-    NDArray, Node, OutputChannel, Overwrite, RegexString, UInt32, UInt64,
-    Unit, sleep, Slot, slot, State, String, VectorBool, VectorChar,
-    VectorDouble, VectorFloat, VectorHash, VectorInt32, VectorInt64,
-    VectorUInt32, VectorUInt64, VectorRegexString, VectorString)
+    AccessLevel, AccessMode, AlarmCondition, Bool, Configurable, DaqDataType,
+    Device, Double, Float, Hash, InputChannel, Int32, Int64, KaraboError,
+    MetricPrefix, NDArray, Node, OutputChannel, Overwrite, RegexString, Slot,
+    State, String, UInt32, UInt64, Unit, VectorBool, VectorChar, VectorDouble,
+    VectorFloat, VectorHash, VectorInt32, VectorInt64, VectorRegexString,
+    VectorString, VectorUInt32, VectorUInt64, background, sleep, slot)
 
 VECTOR_MAX_SIZE = 10
 

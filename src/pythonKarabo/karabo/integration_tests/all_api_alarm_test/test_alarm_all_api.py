@@ -1,8 +1,9 @@
 from copy import copy
 
+from karabo.bound import (
+    AlarmCondition, Hash, SignalSlotable, Timestamp, Validator, fullyEqual)
 from karabo.integration_tests.utils import BoundDeviceTestCase
-from karabo.bound import (AlarmCondition, Hash, SignalSlotable,
-                          Timestamp, Validator, fullyEqual)
+
 #from karathon import fullyEqual
 
 max_timeout = 20    # in seconds

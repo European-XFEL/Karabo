@@ -1,12 +1,13 @@
 from unittest import TestCase, main
 from weakref import ref
 
-from karabo.middlelayer import (Hash, isSet, Proxy, ProxyNode, ProxySlot,
-                                Schema, State, SubProxy, Timestamp, Unit, unit)
+from karabo.middlelayer import (
+    Hash, Proxy, ProxyNode, ProxySlot, Schema, State, SubProxy, Timestamp,
+    Unit, isSet, unit)
 from karabo.middlelayer_api.device_client import (
     filterByTags, getAliasFromKey, getDescriptors, getKeyFromAlias)
-from karabo.native import NodeType
 from karabo.middlelayer_api.proxy import ProxyFactory
+from karabo.native import NodeType
 
 
 class Tests(TestCase):

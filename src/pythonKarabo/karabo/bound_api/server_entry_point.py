@@ -1,5 +1,5 @@
-from os.path import basename
 import sys
+from os.path import basename
 
 
 def runSingleDeviceServer(*pluginNames, serverId=""):

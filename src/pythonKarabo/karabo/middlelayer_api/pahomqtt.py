@@ -3,11 +3,12 @@
 # due to middlelayer EventLoop requirements.
 
 import asyncio
-from asyncio import shield, CancelledError, Future
-from contextlib import contextmanager
-import socket
 import logging
+import socket
 import uuid
+from asyncio import CancelledError, Future, shield
+from contextlib import contextmanager
+
 import paho.mqtt.client as mqtt
 
 

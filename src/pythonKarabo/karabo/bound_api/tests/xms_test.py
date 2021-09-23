@@ -1,9 +1,10 @@
-from functools import partial
-import unittest
 import threading
 import time
+import unittest
+from functools import partial
 
-from karabo.bound import SignalSlotable, EventLoop
+from karabo.bound import EventLoop, SignalSlotable
+
 # To switch on debugging, also import these:
 # from karabo.bound import Logger, Hash
 

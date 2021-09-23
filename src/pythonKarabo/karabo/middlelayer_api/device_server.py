@@ -1,22 +1,21 @@
-from asyncio import (create_subprocess_exec, ensure_future, gather,
-                     get_event_loop, set_event_loop, sleep,
-                     TimeoutError, wait, wait_for)
 import copy
-from enum import Enum
 import os
-from json import loads
-import sys
-from signal import SIGTERM
 import socket
+import sys
+from asyncio import (
+    TimeoutError, create_subprocess_exec, ensure_future, gather,
+    get_event_loop, set_event_loop, sleep, wait, wait_for)
+from enum import Enum
+from json import loads
+from signal import SIGTERM
 from subprocess import PIPE
 
 import numpy
 
 from karabo.native import (
-    Bool, Descriptor, get_timestamp, Int32, isSet, KaraboError, Node, String,
-    TimeMixin, VectorString)
-from karabo.native import (
-    AccessLevel, AccessMode, Assignment, decodeBinary, encodeXML, Hash)
+    AccessLevel, AccessMode, Assignment, Bool, Descriptor, Hash, Int32,
+    KaraboError, Node, String, TimeMixin, VectorString, decodeBinary,
+    encodeXML, get_timestamp, isSet)
 
 from .configuration import validate_init_configuration
 from .eventloop import EventLoop
@@ -24,7 +23,7 @@ from .heartbeat_mixin import HeartBeatMixin
 from .logger import Logger
 from .output import KaraboStream
 from .plugin_loader import PluginLoader
-from .signalslot import SignalSlotable, slot, coslot
+from .signalslot import SignalSlotable, coslot, slot
 from .synchronization import background, firstCompleted
 
 INIT_DESCRIPTION = """A JSON object representing the devices to be initialized.

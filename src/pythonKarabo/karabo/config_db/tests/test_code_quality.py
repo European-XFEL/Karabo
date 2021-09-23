@@ -1,7 +1,8 @@
 import os
 import subprocess
-import karabo.config_db
 import unittest
+
+import karabo.config_db
 
 
 def get_python_files():

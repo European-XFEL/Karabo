@@ -1,8 +1,8 @@
 from platform import system
-from unittest import TestCase, main, skipIf
 from time import sleep
+from unittest import TestCase, main, skipIf
 
-from karabo.native import Timestamp, TimeMixin, get_timestamp
+from karabo.native import TimeMixin, Timestamp, get_timestamp
 
 PERIOD = 100000  # microseconds [us]
 

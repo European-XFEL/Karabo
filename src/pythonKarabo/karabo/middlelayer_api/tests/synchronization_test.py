@@ -1,17 +1,16 @@
-from asyncio import (
-    CancelledError, ensure_future, Future, TimeoutError)
 import logging
-from pint import DimensionalityError
-from unittest import main
 import time
+from asyncio import CancelledError, Future, TimeoutError, ensure_future
+from unittest import main
 
-from karabo.middlelayer_api.tests.eventloop import (
-    async_tst, DeviceTest, sync_tst)
+from pint import DimensionalityError
+
 from karabo.middlelayer import (
-    allCompleted, background, firstCompleted, firstException, gather,
-    MetricPrefix, QuantityValue, sleep, synchronous,
-    Unit, unit)
+    MetricPrefix, QuantityValue, Unit, allCompleted, background,
+    firstCompleted, firstException, gather, sleep, synchronous, unit)
 from karabo.middlelayer_api.synchronization import FutureDict
+from karabo.middlelayer_api.tests.eventloop import (
+    DeviceTest, async_tst, sync_tst)
 
 
 class Tests(DeviceTest):

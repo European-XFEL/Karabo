@@ -8,15 +8,15 @@ from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Attribute, Bool,
-    ByteArray, Char, ComplexFloat, Configurable, Double, decodeBinary,
-    encodeBinary, Float, get_descriptor_from_data, Hash, HashList, Image,
-    ImageData, Int8, Int16, Int32, Int64, KaraboError, LeafType, MetricPrefix,
-    NDArray, NoneValue, NumpyVector, QuantityValue, RegexString, Schema,
-    Slot, String, Timestamp, Type, TypeHash, TypeNone, TypeSchema, UInt8,
-    UInt16, UInt32, UInt64, Unit, unit_registry as unit, VectorBool,
-    VectorChar, VectorDouble, VectorComplexFloat, VectorFloat, VectorHash,
-    VectorInt8, VectorInt16, VectorInt32, VectorInt64, VectorRegexString,
-    VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64, VectorString)
+    ByteArray, Char, ComplexFloat, Configurable, Double, Float, Hash, HashList,
+    Image, ImageData, Int8, Int16, Int32, Int64, KaraboError, LeafType,
+    MetricPrefix, NDArray, NoneValue, NumpyVector, QuantityValue, RegexString,
+    Schema, Slot, String, Timestamp, Type, TypeHash, TypeNone, TypeSchema,
+    UInt8, UInt16, UInt32, UInt64, Unit, VectorBool, VectorChar,
+    VectorComplexFloat, VectorDouble, VectorFloat, VectorHash, VectorInt8,
+    VectorInt16, VectorInt32, VectorInt64, VectorRegexString, VectorString,
+    VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64, decodeBinary,
+    encodeBinary, get_descriptor_from_data, unit_registry as unit)
 
 
 class ArrayTestDevice(Configurable):

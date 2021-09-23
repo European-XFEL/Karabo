@@ -1,16 +1,16 @@
-from contextlib import redirect_stdout
 import copy
 import ctypes
-from io import StringIO
 import signal
 import sys
 import threading
+from contextlib import redirect_stdout
+from io import StringIO
 
 from pkg_resources import working_set
 
-from karabo.bound import (Configurator, EventLoop, Hash, TextSerializerHash,
-                          BinarySerializerHash, OVERWRITE_ELEMENT,
-                          PluginLoader, PythonDevice)
+from karabo.bound import (
+    OVERWRITE_ELEMENT, BinarySerializerHash, Configurator, EventLoop, Hash,
+    PluginLoader, PythonDevice, TextSerializerHash)
 
 
 def main():

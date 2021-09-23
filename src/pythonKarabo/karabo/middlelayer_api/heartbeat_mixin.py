@@ -1,7 +1,8 @@
-from asyncio import gather, ensure_future, sleep
+from asyncio import ensure_future, gather, sleep
 
 from karabo.native import (
     AccessMode, Bool, Configurable, Hash, Timestamp, UInt32)
+
 from .signalslot import coslot, slot
 
 SLOT_PING_SLEEP = 2

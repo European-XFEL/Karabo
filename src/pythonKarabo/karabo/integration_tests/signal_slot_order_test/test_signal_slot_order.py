@@ -1,5 +1,5 @@
+from karabo.bound import Hash, State
 from karabo.integration_tests.utils import BoundDeviceTestCase
-from karabo.bound import (Hash, State)
 
 max_timeout = 60    # in seconds
 

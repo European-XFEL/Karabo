@@ -1,28 +1,26 @@
 """ This module contains the type hierarchy implied by the Karabo hash.
 """
-from asyncio import (
-    get_event_loop, iscoroutinefunction)
-from enum import Enum
-from functools import partial, wraps
-import numbers
 import logging
+import numbers
 import re
 import sys
+from asyncio import get_event_loop, iscoroutinefunction
+from enum import Enum
+from functools import partial, wraps
 
 import numpy as np
 
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.states import State
-from karabo.native.data import (
-    AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqPolicy,
-    LeafType, MetricPrefix, NodeType, Unit)
-from karabo.native.data import (
-    Hash, HashByte, HashList, hashtype_from_string, Schema)
 from karabo.native import KaraboError
+from karabo.native.data import (
+    AccessLevel, AccessMode, ArchivePolicy, Assignment, DaqPolicy, Hash,
+    HashByte, HashList, LeafType, MetricPrefix, NodeType, Schema, Unit,
+    hashtype_from_string)
 
 from .basetypes import (
-    BoolValue, EnumValue, isSet, NoneValue, KaraboValue,
-    StringValue, TableValue, VectorCharValue, VectorStringValue, QuantityValue)
+    BoolValue, EnumValue, KaraboValue, NoneValue, QuantityValue, StringValue,
+    TableValue, VectorCharValue, VectorStringValue, isSet)
 from .registry import Registry
 from .utils import sanitize_table_schema
 

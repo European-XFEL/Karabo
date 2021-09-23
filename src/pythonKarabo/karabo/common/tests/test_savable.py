@@ -1,4 +1,4 @@
-from traits.api import HasTraits, HasStrictTraits, Dict, Instance, List
+from traits.api import Dict, HasStrictTraits, HasTraits, Instance, List
 
 from karabo.common.api import BaseSavableModel, set_modified_flag
 

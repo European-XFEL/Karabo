@@ -1,6 +1,6 @@
 import argparse
 
-from karabo.common.scenemodel.api import read_scene, FixedLayoutChildData
+from karabo.common.scenemodel.api import FixedLayoutChildData, read_scene
 
 
 def code_for(model, children=None):

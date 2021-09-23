@@ -36,13 +36,13 @@ to continuously show its output, or `karabo-gterm` which shows the
 same as tabs in a gnome terminal.
 """
 
-from functools import wraps
 import os
 import os.path as osp
 import re
 import shutil
 import subprocess
 import sys
+from functools import wraps
 from tempfile import mkdtemp
 from textwrap import dedent
 from time import sleep

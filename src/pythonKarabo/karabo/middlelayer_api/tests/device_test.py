@@ -4,23 +4,20 @@ from unittest import main, skipIf
 
 import numpy as np
 
+from karabo import __version__ as karaboVersion
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessMode, background, getDevice, KaraboError, setWait, waitUntil,
+    AccessMode, KaraboError, background, getDevice, setWait, waitUntil,
     waitWhile)
+from karabo.middlelayer_api.compat import jms, mqtt, redis
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import call, getSchema, updateDevice
+from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
+from karabo.middlelayer_api.tests.eventloop import (
+    DeviceTest, async_tst, sync_tst)
+from karabo.middlelayer_api.utils import get_property
 from karabo.native import (
     Bool, Configurable, Float, Hash, Int32, Node, Slot, Timestamp, VectorHash)
-from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
-from karabo.middlelayer_api.utils import get_property
-
-from karabo import __version__ as karaboVersion
-
-from karabo.middlelayer_api.tests.eventloop import (
-        async_tst, DeviceTest, sync_tst
-        )
-from karabo.middlelayer_api.compat import mqtt, jms, redis
 
 
 class RowSchema(Configurable):

@@ -1,13 +1,13 @@
-from argparse import ArgumentParser
-from asyncio import ensure_future, gather, get_event_loop, sleep
-from datetime import datetime
 import json
 import os
 import socket
-from struct import unpack
 import sys
 import time
 import urllib
+from argparse import ArgumentParser
+from asyncio import ensure_future, gather, get_event_loop, sleep
+from datetime import datetime
+from struct import unpack
 
 from tornado import httpserver, ioloop, web
 from tornado.concurrent import Future
@@ -17,7 +17,6 @@ from tornado.platform.asyncio import AsyncIOMainLoop, to_asyncio_future
 from tornado.websocket import WebSocketHandler
 
 from .startkarabo import absolute, defaultall, entrypoint
-
 
 EMPTY_RESPONSE = {'version': '1.0.0',
                   'success': False,
