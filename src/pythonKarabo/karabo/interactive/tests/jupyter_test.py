@@ -1,10 +1,9 @@
 import os.path as op
 import sys
 from unittest import TestCase, main
+
 from jupyter_client.kernelspec import (
-    get_kernel_spec, find_kernel_specs,
-    install_kernel_spec
-)
+    find_kernel_specs, get_kernel_spec, install_kernel_spec)
 
 
 class Tests(TestCase):

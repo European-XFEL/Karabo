@@ -3,7 +3,8 @@
 # and open the template in the editor.
 
 import unittest
-from karabo.bound import Epochstamp, Timestamp, Trainstamp, ChannelMetaData
+
+from karabo.bound import ChannelMetaData, Epochstamp, Timestamp, Trainstamp
 
 
 class Metadata_TestCase(unittest.TestCase):

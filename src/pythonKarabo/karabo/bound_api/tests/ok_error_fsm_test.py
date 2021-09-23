@@ -4,7 +4,7 @@
 
 import unittest
 
-from karabo.bound import OkErrorFsm, Hash, Logger, State
+from karabo.bound import Hash, Logger, OkErrorFsm, State
 
 
 class OkErrorUser(OkErrorFsm):

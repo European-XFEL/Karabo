@@ -1,18 +1,19 @@
-from asyncio import set_event_loop
 import atexit
 import functools
 import os
 import re
 import socket
+from asyncio import set_event_loop
 
 import IPython
+
+from karabo._version import version
 
 from . import device_client
 from .device_client import DeviceClientBase, getDevice
 from .eventloop import NoEventLoop
 from .macro import EventThread, Macro
 from .signalslot import coslot
-from karabo._version import version
 
 
 class DeviceClient(Macro, DeviceClientBase):

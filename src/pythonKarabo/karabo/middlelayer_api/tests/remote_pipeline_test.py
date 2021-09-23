@@ -3,12 +3,11 @@ from contextlib import contextmanager
 from unittest import main, skipIf
 
 from karabo.middlelayer import (
-    AccessMode, AccessLevel, Assignment,  Bool, call, Configurable, coslot,
-    Device, getDevice, Hash, isAlive, InputChannel, Int32, Overwrite,
-    OutputChannel, setWait, Slot, State, Timestamp, UInt32, updateDevice,
-    waitUntil)
+    AccessLevel, AccessMode, Assignment, Bool, Configurable, Device, Hash,
+    InputChannel, Int32, OutputChannel, Overwrite, Slot, State, Timestamp,
+    UInt32, call, coslot, getDevice, isAlive, setWait, updateDevice, waitUntil)
+from karabo.middlelayer_api.compat import amqp, jms
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
-from karabo.middlelayer_api.compat import jms, amqp
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 

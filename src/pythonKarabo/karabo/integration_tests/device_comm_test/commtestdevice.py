@@ -1,6 +1,6 @@
-from karabo.bound import (Epochstamp, Hash, KARABO_CLASSINFO, PythonDevice,
-                          State, SLOT_ELEMENT, STRING_ELEMENT,
-                          VECTOR_INT32_ELEMENT, launchPythonDevice)
+from karabo.bound import (
+    KARABO_CLASSINFO, SLOT_ELEMENT, STRING_ELEMENT, VECTOR_INT32_ELEMENT,
+    Epochstamp, Hash, PythonDevice, State, launchPythonDevice)
 
 
 @KARABO_CLASSINFO("CommTestDevice", "2.0")

@@ -7,7 +7,7 @@ from xml.etree.ElementTree import fromstring, tostring
 from IPython.lib.pretty import pretty
 
 from karabo.middlelayer import (
-    Proxy, ProxyNode, Hash, Float, Int32, SubProxy, Unit, VectorString)
+    Float, Hash, Int32, Proxy, ProxyNode, SubProxy, Unit, VectorString)
 
 
 class Node(SubProxy):

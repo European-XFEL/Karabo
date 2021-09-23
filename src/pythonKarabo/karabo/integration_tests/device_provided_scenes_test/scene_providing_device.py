@@ -1,5 +1,5 @@
-from karabo.bound import (KARABO_CLASSINFO, launchPythonDevice, PythonDevice,
-                          VECTOR_STRING_ELEMENT)
+from karabo.bound import (
+    KARABO_CLASSINFO, VECTOR_STRING_ELEMENT, PythonDevice, launchPythonDevice)
 from karabo.common.states import State
 
 

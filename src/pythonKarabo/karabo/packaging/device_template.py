@@ -1,8 +1,8 @@
-from datetime import datetime
 import os
 import os.path as op
 import re
 import tokenize
+from datetime import datetime
 
 
 def rename_files_and_directories(path, class_name, package_name):

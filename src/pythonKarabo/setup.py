@@ -2,7 +2,7 @@ import os
 import os.path as op
 import sys
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 CURRENT_FOLDER = os.path.dirname(os.path.realpath(__file__))
 VERSION_FILE_PATH = os.path.join(CURRENT_FOLDER, 'karabo', '_version.py')
@@ -142,10 +142,9 @@ else:
     except ImportError:
         pass
 
-    from setuptools.command.install import install
-    from setuptools.command.develop import develop
-
     from jupyter_client.kernelspec import install_kernel_spec
+    from setuptools.command.develop import develop
+    from setuptools.command.install import install
 
     class WithJupyter():
         def run(self):

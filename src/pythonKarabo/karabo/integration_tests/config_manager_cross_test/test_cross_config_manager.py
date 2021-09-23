@@ -1,11 +1,11 @@
 import os
 import os.path as op
 import unittest
+
 from karabo.bound import Hash, fullyEqual
 from karabo.integration_tests.utils import BoundDeviceTestCase
 from karabo.middlelayer_devices.configuration_manager import (
-    ConfigurationManager, KARABO_CONFIG_DB_FOLDER
-)
+    KARABO_CONFIG_DB_FOLDER, ConfigurationManager)
 from karabo.native.exceptions import KaraboError
 
 

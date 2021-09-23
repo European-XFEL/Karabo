@@ -1,11 +1,12 @@
-from io import StringIO
 import os
 import os.path as op
+from io import StringIO
 from xml.etree.ElementTree import Element, fromstring, tostring
 
 from pytest import raises as assert_raises
 
 from karabo.testing.utils import temp_cwd, temp_xml_file, xml_is_equal
+
 # Import via the API module so that all the readers/writers get registered
 from .. import api
 from ..io_utils import set_numbers

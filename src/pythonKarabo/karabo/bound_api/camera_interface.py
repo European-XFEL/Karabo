@@ -1,12 +1,14 @@
 from abc import ABCMeta, abstractmethod
 
 from karathon import (
-    OVERWRITE_ELEMENT, SLOT_ELEMENT, IMAGEDATA_ELEMENT, OUTPUT_CHANNEL,
-    DOUBLE_ELEMENT, NODE_ELEMENT, INT32_ELEMENT, DaqDataType, Schema, Unit,
-    VECTOR_STRING_ELEMENT)
+    DOUBLE_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT, NODE_ELEMENT,
+    OUTPUT_CHANNEL, OVERWRITE_ELEMENT, SLOT_ELEMENT, VECTOR_STRING_ELEMENT,
+    DaqDataType, Schema, Unit)
+
+from karabo.common.states import State
+
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .no_fsm import NoFsm
-from karabo.common.states import State
 
 __author__ = "esenov"
 __date__ = "$Apr 22, 2015 4:14:47 PM$"
