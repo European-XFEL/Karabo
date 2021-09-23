@@ -6,7 +6,7 @@ from qtpy.QtNetwork import QAbstractSocket, QTcpSocket
 from qtpy.QtWidgets import QDialog, QMessageBox, qApp
 
 import karabogui.access as krb_access
-from karabo.common.api import KARABO_CONFIG_MANAGER
+from karabo.common.api import KARABO_CONFIG_MANAGER, KARABO_PROJECT_MANAGER
 from karabo.native import (
     AccessLevel, Hash, Timestamp, decodeBinary, dictToHash, encodeBinary)
 from karabogui import background, const
@@ -26,6 +26,8 @@ ACCESS_LEVEL_MAP = {
     "god": 5}
 
 MAX_GUI_SERVER_HISTORY = 5
+PROJECT_DB_TIMEOUT = 10
+
 logger = get_logger()
 
 
@@ -458,72 +460,56 @@ class Network(QObject):
     # ---------------------------------------------------------------------
     # Current Project Interface
 
-    def onProjectBeginSession(self, project_manager):
-        h = Hash("type", "projectBeginUserSession")
-        h["projectManager"] = project_manager
-        h["token"] = get_config()["db_token"]
-        self._write_hash(h)
-
-    def onProjectEndSession(self, project_manager):
-        h = Hash("type", "projectEndUserSession")
-        h["projectManager"] = project_manager
-        h["token"] = get_config()["db_token"]
-        self._write_hash(h)
-
-    def onListProjectDomains(self, project_manager):
-        h = Hash("type", "projectListDomains")
-        h["projectManager"] = project_manager
-        h["token"] = get_config()["db_token"]
-        self._write_hash(h)
-
-    def onProjectListProjectsWithDevice(self, project_manager,
-                                        domain, device_id):
+    def _request_project_message(self, action_type, reply_type, timeout=None,
+                                 **kwargs):
         h = Hash("type", "requestGeneric")
         args = Hash(
             "token", get_config()["db_token"],
-            "domain", domain,
-            "device_id", device_id)
+            "type", action_type)
+        for key, value in kwargs.items():
+            args[key] = value
         h["args"] = args
-        h["timeout"] = 120  # 2 minutes as the search can take long.
-        h["instanceId"] = project_manager
-        h["slot"] = "slotListProjectsWithDevice"
-        h["replyType"] = "projectListProjectsWithDevice"
+        h["empty"] = True
+        h["timeout"] = timeout or PROJECT_DB_TIMEOUT
+        h["instanceId"] = KARABO_PROJECT_MANAGER
+        h["slot"] = "slotGenericRequest"
+        h["replyType"] = reply_type
         self._write_hash(h)
 
-    def onListProjectManagers(self):
-        h = Hash("type", "projectListProjectManagers")
-        h["token"] = get_config()["db_token"]
-        self._write_hash(h)
+    def onProjectBeginSession(self, project_manager):
+        self._request_project_message("beginUserSession",
+                                      "projectBeginUserSession")
+
+    def onProjectEndSession(self, project_manager):
+        self._request_project_message("endUserSession",
+                                      "projectEndUserSession")
+
+    def onListProjectDomains(self, project_manager):
+        self._request_project_message(
+            "listDomains", "projectListDomains")
 
     def onProjectListItems(self, project_manager, domain, item_type):
-        h = Hash("type", "projectListItems")
-        h["projectManager"] = project_manager
-        h["token"] = get_config()["db_token"]
-        h["domain"] = domain
-        h["item_types"] = [item_type]
-        self._write_hash(h)
+        self._request_project_message("listItems", "projectListItems",
+                                      domain=domain, item_types=[item_type])
+
+    def onProjectListProjectsWithDevice(self, project_manager,
+                                        domain, device_id):
+        self._request_project_message(
+            "listProjectsWithDevice", "projectListProjectsWithDevice",
+            timeout=120, device_id=device_id, domain=domain)
 
     def onProjectLoadItems(self, project_manager, items):
-        h = Hash("type", "projectLoadItems")
-        h["projectManager"] = project_manager
-        h["token"] = get_config()["db_token"]
-        h["items"] = items
-        self._write_hash(h)
+        self._request_project_message(
+            "loadItems", "projectLoadItems", items=items)
 
     def onProjectSaveItems(self, project_manager, items):
-        h = Hash("type", "projectSaveItems")
-        h["projectManager"] = project_manager
-        h["token"] = get_config()["db_token"]
-        h["items"] = items
-        h["client"] = const.KARABO_CLIENT_ID
-        self._write_hash(h)
+        self._request_project_message(
+            "saveItems", "projectSaveItems", client=const.KARABO_CLIENT_ID,
+            items=items)
 
     def onProjectUpdateAttribute(self, project_manager, items):
-        h = Hash("type", "projectUpdateAttribute")
-        h["projectManager"] = project_manager
-        h["token"] = get_config()["db_token"]
-        h["items"] = items
-        self._write_hash(h)
+        self._request_project_message("updateAttribute",
+                                      "projectUpdateAttribute", items=items)
 
     # ---------------------------------------------------------------------
 
