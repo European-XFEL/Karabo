@@ -212,6 +212,8 @@ class ProjectManager(Device):
                 return self.slotBeginUserSession(token)
             elif action_type == "endUserSession":
                 return self.slotEndUserSession(token)
+            elif action_type == "listProjectsWithDevice":
+                return self.slotListProjectsWithDevice(params)
             else:
                 raise NotImplementedError(f"{type} not implemented")
         except Exception as e:
@@ -385,11 +387,20 @@ class ProjectManager(Device):
         self._checkDbInitialized(token)
 
         with self.user_db_sessions[token] as db_session:
-            res = db_session.list_domains()
-            if len(self.domainList):
-                res = [domain for domain in res
-                       if domain in self.domainList]
-            return Hash('success', True, 'domains', res)
+            success = True
+            exceptionReason = ""
+            res = []
+            try:
+                res = db_session.list_domains()
+                if len(self.domainList):
+                    res = [domain for domain in res
+                           if domain in self.domainList]
+            except Exception as e:
+                exceptionReason = str(e)
+                success = False
+            return Hash('success', success,
+                        'domains', res,
+                        'reason', exceptionReason)
 
     @slot
     def slotListProjectsWithDevice(self, args):
