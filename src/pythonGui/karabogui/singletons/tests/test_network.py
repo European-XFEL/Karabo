@@ -119,68 +119,63 @@ class TestNetwork(GuiTestCase):
                                  "This is an error")
 
             with self.subTest("Test Network Project Interface"):
-                project_manager = "ThisIsNotAProjectManager"
+                project_manager = "KaraboProjectDB"
 
                 network.onProjectBeginSession(project_manager)
                 _trigger_message_parse()
                 self.assertEqual(self._last_hash["type"],
-                                 "projectBeginUserSession")
-                self.assertEqual(self._last_hash["projectManager"],
+                                 "requestGeneric")
+                self.assertEqual(self._last_hash["instanceId"],
                                  project_manager)
 
                 network.onProjectEndSession(project_manager)
                 _trigger_message_parse()
                 self.assertEqual(self._last_hash["type"],
-                                 "projectEndUserSession")
-                self.assertEqual(self._last_hash["projectManager"],
+                                 "requestGeneric")
+                self.assertEqual(self._last_hash["instanceId"],
                                  project_manager)
 
                 network.onListProjectDomains(project_manager)
                 _trigger_message_parse()
                 self.assertEqual(self._last_hash["type"],
-                                 "projectListDomains")
-                self.assertEqual(self._last_hash["projectManager"],
+                                 "requestGeneric")
+                self.assertEqual(self._last_hash["instanceId"],
                                  project_manager)
-
-                network.onListProjectManagers()
-                _trigger_message_parse()
-                self.assertEqual(self._last_hash["type"],
-                                 "projectListProjectManagers")
 
                 network.onProjectListItems(project_manager, "FXE", "scene")
                 _trigger_message_parse()
                 self.assertEqual(self._last_hash["type"],
-                                 "projectListItems")
-                self.assertEqual(self._last_hash["projectManager"],
+                                 "requestGeneric")
+                self.assertEqual(self._last_hash["instanceId"],
                                  project_manager)
-                self.assertEqual(self._last_hash["domain"], "FXE")
-                self.assertEqual(self._last_hash["item_types"], ["scene"])
+                self.assertEqual(self._last_hash["args.domain"], "FXE")
+                self.assertEqual(self._last_hash["args.item_types"], ["scene"])
 
                 items = [str(uuid4()), str(uuid4())]
                 network.onProjectLoadItems(project_manager, items)
                 _trigger_message_parse()
                 self.assertEqual(self._last_hash["type"],
-                                 "projectLoadItems")
-                self.assertEqual(self._last_hash["projectManager"],
+                                 "requestGeneric")
+                self.assertEqual(self._last_hash["instanceId"],
                                  project_manager)
-                self.assertEqual(self._last_hash["items"], items)
+                self.assertEqual(self._last_hash["args.items"], items)
 
                 network.onProjectSaveItems(project_manager, items)
                 _trigger_message_parse()
                 self.assertEqual(self._last_hash["type"],
-                                 "projectSaveItems")
-                self.assertEqual(self._last_hash["projectManager"],
+                                 "requestGeneric")
+                self.assertEqual(self._last_hash["instanceId"],
                                  project_manager)
-                self.assertEqual(self._last_hash["items"], items)
-                self.assertIsNotNone(self._last_hash["client"])
+                self.assertEqual(self._last_hash["args.items"], items)
+                self.assertIsNotNone(self._last_hash["args.client"])
 
                 network.onProjectUpdateAttribute(project_manager, items)
                 _trigger_message_parse()
                 self.assertEqual(self._last_hash["type"],
-                                 "projectUpdateAttribute")
-                self.assertEqual(self._last_hash["projectManager"],
+                                 "requestGeneric")
+                self.assertEqual(self._last_hash["instanceId"],
                                  project_manager)
-                self.assertEqual(self._last_hash["items"], items)
+                self.assertEqual(self._last_hash["args.items"], items)
 
             with self.subTest("Protocol Methods"):
                 deviceId = "NoDeviceHere"
