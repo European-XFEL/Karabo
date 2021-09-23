@@ -105,22 +105,22 @@ endif()
 # the project contained in the subdirectory. It cannot use the
 # current CMAKE_BINARY_DIR directly because it will also output its own
 # Makefile that would clash with the one from the root directory.
-add_subdirectory(src/karabo ${CMAKE_BINARY_DIR}/karabo)
+add_subdirectory(karabo ${CMAKE_BINARY_DIR}/karabo)
 
 # The build of the Karathon Library (used by the Bound Python API).
-add_subdirectory(src/karathon ${CMAKE_BINARY_DIR}/karathon)
+add_subdirectory(karathon ${CMAKE_BINARY_DIR}/karathon)
 
 # The build of the Karabo C++ Device Server (karabo-cppserver).
-add_subdirectory(src/deviceServer ${CMAKE_BINARY_DIR}/karabo/deviceServer)
+add_subdirectory(deviceServer ${CMAKE_BINARY_DIR}/karabo/deviceServer)
 
 # The build of the Karabo Broker Message Logger utility (karabo-brokermessagelogger)
-add_subdirectory(src/brokerMessageLogger ${CMAKE_BINARY_DIR}/karabo/brokerMessageLogger)
+add_subdirectory(brokerMessageLogger ${CMAKE_BINARY_DIR}/karabo/brokerMessageLogger)
 
 # The build of the Karabo Broker Rates utility (karabo-brokerrates)
-add_subdirectory(src/tools/brokerRates ${CMAKE_BINARY_DIR}/karabo/brokerRates)
+add_subdirectory(tools/brokerRates ${CMAKE_BINARY_DIR}/karabo/brokerRates)
 
 # The build of the Karabo Idx Utilities for file based data logging (karabo-idxbuild and karabo-idxview)
-add_subdirectory(src/tools/dataLoggerIndex ${CMAKE_BINARY_DIR}/karabo/dataLoggerIndex)
+add_subdirectory(tools/dataLoggerIndex ${CMAKE_BINARY_DIR}/karabo/dataLoggerIndex)
 
 # Generates the script to activate an environment for running resulting Karabo artifacts
 # in the project build tree.
@@ -136,7 +136,7 @@ ${KARABO_PATH}/integrationTests\
 ${KARABO_PATH}/cppLongTests\
 ")
 configure_file(
-    "${CMAKE_SOURCE_DIR}/src/karabo/activateKarabo.in"
+    "${CMAKE_SOURCE_DIR}/karabo/activateKarabo.in"
     "${CMAKE_BINARY_DIR}/activateKarabo.sh"
     @ONLY
 )
@@ -152,12 +152,12 @@ if (BUILD_UNIT_TESTING OR BUILD_INTEGRATION_TESTING OR BUILD_LONG_RUN_TESTING)
             LCOV_ARGS --no-external --quiet
             EXCLUDE "/usr/*" "*/boost/*" "*/mqtt/*" "*/cppunit/*" "*/nlohmann/*"
                     "*/krb_log4cpp/*" "*/tests/*" "*/include/python*"
-                    "*/include/numpy/*" "${CMAKE_SOURCE_DIR}/src/tools/*"
-                    "${CMAKE_SOURCE_DIR}/src/deviceServer/*"
-                    "${CMAKE_SOURCE_DIR}/src/brokerMessageLogger/*"
-                    "${CMAKE_SOURCE_DIR}/src/karathon/*"
-                    "${CMAKE_SOURCE_DIR}/src/integrationTests/*"
-                    "${CMAKE_SOURCE_DIR}/src/cppLongTests/*"
+                    "*/include/numpy/*" "${CMAKE_SOURCE_DIR}/tools/*"
+                    "${CMAKE_SOURCE_DIR}/deviceServer/*"
+                    "${CMAKE_SOURCE_DIR}/brokerMessageLogger/*"
+                    "${CMAKE_SOURCE_DIR}/karathon/*"
+                    "${CMAKE_SOURCE_DIR}/integrationTests/*"
+                    "${CMAKE_SOURCE_DIR}/cppLongTests/*"
                     "*/karabo-extern-deps/*"
         )
         string(TIMESTAMP ZIP_FILE_TIMESTAMP "%Y-%m-%dT%H-%M-%S")
@@ -172,19 +172,19 @@ if (BUILD_UNIT_TESTING OR BUILD_INTEGRATION_TESTING OR BUILD_LONG_RUN_TESTING)
 endif()
 
 if (BUILD_UNIT_TESTING)
-    add_subdirectory(src/karabo/tests ${CMAKE_BINARY_DIR}/karabo/tests)
+    add_subdirectory(karabo/tests ${CMAKE_BINARY_DIR}/karabo/tests)
 endif()
 
 if (BUILD_INTEGRATION_TESTING)
     add_subdirectory(
-        src/integrationTests
+        integrationTests
         ${CMAKE_BINARY_DIR}/karabo/integrationTests
     )
 endif()
 
 if (BUILD_LONG_RUN_TESTING)
     add_subdirectory(
-        src/cppLongTests
+        cppLongTests
         ${CMAKE_BINARY_DIR}/karabo/cppLongTests
     )
 endif()
