@@ -1,6 +1,6 @@
 import json
 import uuid
-from asyncio import get_event_loop, set_event_loop, sleep, wait
+from asyncio import get_event_loop, set_event_loop, wait
 from contextlib import ExitStack, contextmanager
 from unittest import TestCase, main
 
