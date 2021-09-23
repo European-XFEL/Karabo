@@ -222,21 +222,7 @@ fi
 # External dependencies have to be outside the source tree. This is
 # required by CMake since it doesn't allow a path in CMAKE_PREFIX_PATH to
 # be internal to the source tree.
-EXTERN_DEPS_BASE_DIR="/tmp/karabo-extern-deps"
-EXTERN_DEPS_DIR="$EXTERN_DEPS_BASE_DIR/$DISTRO_ID-$DISTRO_RELEASE-$MACHINE"
-
-# Get some information about our system
-MACHINE=$(uname -m)
-OS=$(uname -s)
-if [ "$OS" = "Linux" ]; then
-    DISTRO_ID=( $(lsb_release -is) )
-    DISTRO_RELEASE=$(lsb_release -rs | sed -r "s/^([0-9]+).*/\1/")
-fi
-
-# External dependencies have to be outside the source tree. This is
-# required by CMake since it doesn't allow a path in CMAKE_PREFIX_PATH to
-# be internal to the source tree.
-EXTERN_DEPS_BASE_DIR="/tmp/karabo-extern-deps"
+EXTERN_DEPS_BASE_DIR="$scriptDir/extern"
 EXTERN_DEPS_DIR="$EXTERN_DEPS_BASE_DIR/$DISTRO_ID-$DISTRO_RELEASE-$MACHINE"
 
 # Fetch configuration type (Release or Debug)
@@ -265,9 +251,9 @@ elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
     if [[ $1 = "Clean-All" ]]; then
         echo "### Cleaning extern (third-party dependencies) directory ###"
         # Also cleans the extern artifacts
-        if [ -d $EXTERN_DEPS_BASE_DIR ]; then
-            rm -rf $EXTERN_DEPS_BASE_DIR
-            echo "    removed $EXTERN_DEPS_BASE_DIR"
+        if [ -d $EXTERN_DEPS_DIR ]; then
+            rm -rf $EXTERN_DEPS_DIR
+            echo "    removed $EXTERN_DEPS_DIR"
         fi
         git clean -fxd $scriptDir/extern/resources
         echo "    Did git clean -fxd on $scriptDir/extern/resources"
@@ -393,7 +379,7 @@ cd $FRAMEWORK_BUILD_DIR
 
 if [ -d $FRAMEWORK_INSTALL_DIR ]; then
     # Preserve any installed device, plugin and all contents under var dir.
-    PRESERV_DIR=`mktemp -d`
+    PRESERV_DIR=`mktemp -d -p $scriptDir`
     if [ -d $FRAMEWORK_INSTALL_DIR/devices ]; then
         safeRunCommand mv $FRAMEWORK_INSTALL_DIR/devices $PRESERV_DIR/devices
     fi
@@ -418,7 +404,7 @@ safeRunCommand $EXTERN_DEPS_DIR/bin/cmake -DCMAKE_PREFIX_PATH=$EXTERN_DEPS_DIR \
       -DGEN_CODE_COVERAGE=$GEN_CODE_COVERAGE \
       -DCMAKE_INSTALL_PREFIX=$FRAMEWORK_INSTALL_DIR \
       -DCMAKE_BUILD_TYPE=$CMAKE_CONF \
-      ..
+      $scriptDir/src/.
 
 if [ $? -ne 0 ]; then
     # Have to restore any preserved directory that might have been moved before
