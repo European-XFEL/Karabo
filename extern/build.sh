@@ -3,8 +3,8 @@
 ##############################################################################
 # Packages that we know how to build
 
-DEPENDENCIES_BASE=( bzip2 libpng jpeg tiff python lapack cmake boost freetype hdf5
-log4cpp cppunit openmq nss openmqc patchelf gmock libxml2 libxslt
+DEPENDENCIES_BASE=( bzip2 libpng jpeg tiff python lapack cmake boost hdf5
+log4cpp cppunit openmq nss openmqc patchelf googletest libxml2 libxslt
 daemontools libzmq nlohmann_json pugixml mqtt redisclient amqp libev)
 
 DEPENDENCIES_PYTHON=( setuptools setuptools_scm pip wheel cython pybind numpy scipy
@@ -16,7 +16,7 @@ ipython_genutils jedi pickleshare wcwidth backcall prompt_toolkit ipython tabula
 jupyter_core jupyter_client ipykernel simplegeneric dill pkgconfig h5py pyusb
 parse jsonschema ecdsa tzlocal httplib2 traits pint nbformat isort
 notebook ipyparallel ipcluster_tools cycler pyelftools rpathology lxml certifi
-chardet idna urllib3 requests ply psutil pycodestyle pyflakes mccabe flake8
+chardet idna urllib3 requests ply psutil pycodestyle pyflakes flake8
 msgpack msgpack-numpy flaky pyyaml coverage matplotlib eulxml eulexist
 mqtt_python peewee async-timeout hiredis aioredis multidict yarl pamqp aiormq aio-pika
 pg8000 )
