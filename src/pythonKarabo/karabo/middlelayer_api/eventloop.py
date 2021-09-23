@@ -1,20 +1,20 @@
 from __future__ import absolute_import, unicode_literals
+
 import asyncio
-from asyncio import (
-    AbstractEventLoop, CancelledError, ensure_future, Future,
-    get_event_loop, iscoroutinefunction, Queue, set_event_loop,
-    SelectorEventLoop, TimeoutError, wait_for)
-from concurrent.futures import ThreadPoolExecutor
-from functools import wraps
 import getpass
 import os
 import queue
 import threading
 import weakref
 from abc import ABC, abstractmethod
+from asyncio import (
+    AbstractEventLoop, CancelledError, Future, Queue, SelectorEventLoop,
+    TimeoutError, ensure_future, get_event_loop, iscoroutinefunction,
+    set_event_loop, wait_for)
+from concurrent.futures import ThreadPoolExecutor
+from functools import wraps
 
 from karabo.native import KaraboValue, unit_registry as unit
-
 
 # See C++ karabo/xms/Signal.hh for reasoning about the two minutes...
 _MSG_TIME_TO_LIVE = 120000  # in ms - i.e. 2 minutes

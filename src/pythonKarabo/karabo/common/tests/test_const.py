@@ -1,4 +1,5 @@
 from inspect import isfunction
+
 from karabo.common import const as constmod
 
 

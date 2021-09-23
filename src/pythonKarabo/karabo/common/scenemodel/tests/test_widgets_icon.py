@@ -1,8 +1,9 @@
 from pytest import raises as assert_raises
 
 from .. import api
-from .utils import (assert_base_traits, base_widget_traits,
-                    single_model_from_data, single_model_round_trip)
+from .utils import (
+    assert_base_traits, base_widget_traits, single_model_from_data,
+    single_model_round_trip)
 
 VERSION_1_DIGIT_ICONS_SVG = """
 <svg

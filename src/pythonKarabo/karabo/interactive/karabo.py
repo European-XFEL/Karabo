@@ -1,12 +1,12 @@
 import argparse
+import contextlib
 import copy
+import csv
 import glob
+import multiprocessing
+import os
 import subprocess
 import sys
-import os
-import contextlib
-import multiprocessing
-import csv
 
 from pkg_resources import iter_entry_points
 

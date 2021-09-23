@@ -1,5 +1,5 @@
 import asyncio
-from unittest import mock, main, TestCase
+from unittest import TestCase, main, mock
 
 from karabo.native import Hash
 

@@ -1,7 +1,7 @@
-from unittest import TestCase
 import uuid
+from unittest import TestCase
 
-from traits.api import push_exception_handler, pop_exception_handler
+from traits.api import pop_exception_handler, push_exception_handler
 
 from karabo.common.project.api import BaseProjectObjectModel
 

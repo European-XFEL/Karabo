@@ -1,9 +1,9 @@
+import time
 from datetime import datetime
 from unittest import TestCase, main
-import time
 
-from ..timestamp import RESOLUTION, Timestamp
 from ..hash import Hash
+from ..timestamp import RESOLUTION, Timestamp
 
 
 class Tests(TestCase):

@@ -9,8 +9,8 @@ from eulexistdb.db import ExistDB
 from eulexistdb.exceptions import ExistDBException
 
 from ..bases import DatabaseBase
-from .util import assure_running, LIST_DOMAINS_QUERY, ProjectDBError
 from .dbsettings import DbSettings
+from .util import LIST_DOMAINS_QUERY, ProjectDBError, assure_running
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 

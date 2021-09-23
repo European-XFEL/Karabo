@@ -1,7 +1,7 @@
 import argparse
+import copy
 import os
 import threading
-import copy
 
 from pkg_resources import iter_entry_points
 

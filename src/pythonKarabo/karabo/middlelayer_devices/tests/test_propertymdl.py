@@ -1,12 +1,11 @@
 from contextlib import contextmanager
 
-from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
-from karabo.middlelayer_api.compat import jms
 from karabo.middlelayer import (
-    getDevice, get_property, KaraboError, setWait, updateDevice)
+    KaraboError, get_property, getDevice, setWait, updateDevice)
+from karabo.middlelayer_api.compat import jms
+from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
 from ..property_test import PropertyTestMDL
-
 
 conf = {
     "classId": "PropertyTestMDL",

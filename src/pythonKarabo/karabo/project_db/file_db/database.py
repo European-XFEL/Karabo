@@ -1,13 +1,11 @@
 import os
+import xml.etree.ElementTree as ET
 from os import path as op
 from time import strptime
-
-import xml.etree.ElementTree as ET
 
 from karabo.project_db.bases import DatabaseBase, HandleABC
 from karabo.project_db.const import ROOT_COLLECTION, ROOT_COLLECTION_TEST
 from karabo.project_db.util import ProjectDBError
-
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 

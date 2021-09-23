@@ -1,27 +1,27 @@
 """This tests the communication between bound API and middlelayer API"""
 
+import os
+import shutil
+import sys
+import time
 from asyncio import (
-    create_subprocess_exec, ensure_future, get_event_loop, TimeoutError,
+    TimeoutError, create_subprocess_exec, ensure_future, get_event_loop,
     wait_for)
 from contextlib import contextmanager
 from datetime import datetime
-import os
-import shutil
 from subprocess import PIPE
-import sys
-import time
 from unittest import main, skipIf
 
 import numpy as np
 
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.middlelayer import (
-    AccessLevel, AlarmCondition, Assignment, background, call, Configurable,
-    DaqDataType, DeviceClientBase, encodeXML, getDevice, getHistory, Hash,
-    isSet, Image, InputChannel, Int32, KaraboError, MetricPrefix, NDArray,
-    Node, OutputChannel, setWait, shutdown, sleep, Slot, State, String,
-    unit, Unit, UInt32, updateDevice, VectorDouble, waitUntil, waitUntilNew)
-
+    AccessLevel, AlarmCondition, Assignment, Configurable, DaqDataType,
+    DeviceClientBase, Hash, Image, InputChannel, Int32, KaraboError,
+    MetricPrefix, NDArray, Node, OutputChannel, Slot, State, String, UInt32,
+    Unit, VectorDouble, background, call, encodeXML, getDevice, getHistory,
+    isSet, setWait, shutdown, sleep, unit, updateDevice, waitUntil,
+    waitUntilNew)
 from karabo.middlelayer_api.compat import jms
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 

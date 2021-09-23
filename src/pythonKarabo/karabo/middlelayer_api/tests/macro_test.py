@@ -1,27 +1,25 @@
-from asyncio import ensure_future, Future, TimeoutError
-from contextlib import contextmanager
 import sys
 import time
-from unittest import main, skipIf
 import weakref
+from asyncio import Future, TimeoutError, ensure_future
+from contextlib import contextmanager
+from unittest import main, skipIf
 
 from karabo.common.states import State
+from karabo.middlelayer_api.compat import amqp, jms, mqtt
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
-    call, callNoWait, waitUntilNew, waitUntil, waitWhile, setWait, setNoWait,
-    getDevice, getConfiguration, getSchema, executeNoWait, updateDevice,
-    Queue, connectDevice, lock)
+    Queue, call, callNoWait, connectDevice, executeNoWait, getConfiguration,
+    getDevice, getSchema, lock, setNoWait, setWait, updateDevice, waitUntil,
+    waitUntilNew, waitWhile)
 from karabo.middlelayer_api.device_server import KaraboStream
-from karabo.native import (
-    AccessMode, Configurable, KaraboError, Int32 as Int, Node, Slot)
-
 from karabo.middlelayer_api.macro import Macro
 from karabo.middlelayer_api.signalslot import slot
 from karabo.middlelayer_api.synchronization import background, sleep
-
 from karabo.middlelayer_api.tests.eventloop import (
-    DeviceTest, sync_tst, async_tst)
-from karabo.middlelayer_api.compat import jms, mqtt, amqp
+    DeviceTest, async_tst, sync_tst)
+from karabo.native import (
+    AccessMode, Configurable, Int32 as Int, KaraboError, Node, Slot)
 
 
 class Superslot(Slot):

@@ -1,14 +1,14 @@
-from time import sleep
 from datetime import datetime
 from sys import getsizeof
+from time import sleep
 
 import numpy as np
 
-from karabo.bound import (BOOL_ELEMENT, FLOAT_ELEMENT, INPUT_CHANNEL,
-                          INT32_ELEMENT, KARABO_CLASSINFO, launchPythonDevice,
-                          MetricPrefix, NODE_ELEMENT, PythonDevice, Schema,
-                          State, UINT32_ELEMENT, Unit, VECTOR_BOOL_ELEMENT,
-                          VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT)
+from karabo.bound import (
+    BOOL_ELEMENT, FLOAT_ELEMENT, INPUT_CHANNEL, INT32_ELEMENT,
+    KARABO_CLASSINFO, NODE_ELEMENT, UINT32_ELEMENT, VECTOR_BOOL_ELEMENT,
+    VECTOR_STRING_ELEMENT, VECTOR_UINT32_ELEMENT, MetricPrefix, PythonDevice,
+    Schema, State, Unit, launchPythonDevice)
 
 
 @KARABO_CLASSINFO("PPReceiverDevice", "2.2.4")

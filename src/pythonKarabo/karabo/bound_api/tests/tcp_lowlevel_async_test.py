@@ -5,7 +5,7 @@ import sys
 import time
 import unittest
 
-from karabo.bound import (Connection, Hash, EventLoop)
+from karabo.bound import Connection, EventLoop, Hash
 
 
 class Server(object):

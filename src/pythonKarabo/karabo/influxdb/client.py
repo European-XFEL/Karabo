@@ -1,17 +1,17 @@
 import asyncio
 import base64
-from json import loads
 import numbers
 import re
-from textwrap import dedent
 import time
+from json import loads
+from textwrap import dedent
 from urllib.parse import urlencode
 
 from tornado.httpclient import AsyncHTTPClient, HTTPError
 from tornado.platform.asyncio import AsyncIOMainLoop, to_asyncio_future
 
 from karabo.native import (
-    string_from_hashtype, get_hash_type_from_data, Hash, HASH_TYPE_TO_XML_TYPE)
+    HASH_TYPE_TO_XML_TYPE, Hash, get_hash_type_from_data, string_from_hashtype)
 
 from .dlutils import escape_tag_field_key
 

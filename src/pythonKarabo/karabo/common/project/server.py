@@ -3,15 +3,15 @@
 # Created on October 12, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from xml.etree.ElementTree import Element, parse, SubElement, tostring
+from xml.etree.ElementTree import Element, SubElement, parse, tostring
 
 from traits.api import Enum, Instance, List, String
 
 from karabo.common.api import ProxyStatus
+
 from .bases import BaseProjectObjectModel
 from .const import (
-    PROJECT_DB_TYPE_DEVICE_INSTANCE, PROJECT_DB_TYPE_DEVICE_SERVER
-)
+    PROJECT_DB_TYPE_DEVICE_INSTANCE, PROJECT_DB_TYPE_DEVICE_SERVER)
 from .device import DeviceInstanceModel
 
 

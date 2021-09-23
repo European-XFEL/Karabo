@@ -1,4 +1,5 @@
-from karathon import AssemblyRules, AccessType, READ, WRITE, INIT
+from karathon import INIT, READ, WRITE, AccessType, AssemblyRules
+
 from .configurator import Configurator
 
 __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
