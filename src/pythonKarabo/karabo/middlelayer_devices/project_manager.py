@@ -87,7 +87,8 @@ class ProjectManager(Device):
         self.logger.debug('Requesting scene directly from database!')
 
         name = params.get('name', default='')
-        token = params.get('db_token')
+        # Note: Token used for Karabo >=2.13
+        token = params.get('db_token') or params.get('token')
         domain = params.get('domain')
         uuid = [params.get('uuid')]
 
