@@ -145,8 +145,8 @@ macro (updateDependenciesCondaEnvironment)
   endif()  # if(not DEFINED ENV{CONDA_BUILD})
 endmacro()
 
-include("../../cmake/cxx-options.cmake")
-include("../../cmake/karabo-lib-target-name.cmake")
+include("../cmake/cxx-options.cmake")
+include("../cmake/karabo-lib-target-name.cmake")
 
 # Extracts KARABO_VERSION from the appropriate Git tag, writes to
 # a file to be used by the Karabo Framework at build time.
@@ -383,8 +383,8 @@ message(STATUS "${KARABO_LIB_COMPILE_OPTIONS}")
 message(STATUS "LINK_LIBRARIES for libkarabo:")
 message(STATUS "${KARABO_LIB_LINK_LIBRARIES}")
 configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/resolve-karabo-lib-target.in"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/resolve-karabo-lib-target.cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/resolve-karabo-lib-target.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/resolve-karabo-lib-target.cmake"
     @ONLY
 )
 list(POP_BACK CMAKE_MESSAGE_INDENT)
