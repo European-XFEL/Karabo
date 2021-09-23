@@ -1,10 +1,13 @@
 from abc import ABCMeta, abstractmethod
 
-from karathon import (OVERWRITE_ELEMENT, SLOT_ELEMENT, FLOAT_ELEMENT,
-                      INT32_ELEMENT, Unit, MetricPrefix)
-from .decorators import (KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS)
-from .no_fsm import NoFsm
+from karathon import (
+    FLOAT_ELEMENT, INT32_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
+    MetricPrefix, Unit)
+
 from karabo.common.states import State
+
+from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from .no_fsm import NoFsm
 
 __author__ = "esenov"
 __date__ = "$Apr 22, 2015 4:14:47 PM$"

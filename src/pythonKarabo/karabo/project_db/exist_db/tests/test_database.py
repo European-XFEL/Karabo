@@ -1,9 +1,10 @@
 from unittest import TestCase
 
-from .util import stop_local_database
+from karabo.project_db.tests.base import ProjectDatabaseVerification
+
 from ..database import ProjectDatabase
 from ..util import TESTDB_ADMIN_PASSWORD
-from karabo.project_db.tests.base import ProjectDatabaseVerification
+from .util import stop_local_database
 
 
 class TestProjectDatabase(ProjectDatabaseVerification, TestCase):

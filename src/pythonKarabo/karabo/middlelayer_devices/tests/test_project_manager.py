@@ -5,8 +5,8 @@ from karabo.middlelayer import Hash
 from karabo.middlelayer_api.tests.eventloop import DeviceTest
 from karabo.middlelayer_devices.project_manager import ProjectManager
 from karabo.project_db.exist_db.database import ProjectDatabase
-from karabo.project_db.exist_db.util import TESTDB_ADMIN_PASSWORD
 from karabo.project_db.exist_db.tests.util import stop_local_database
+from karabo.project_db.exist_db.util import TESTDB_ADMIN_PASSWORD
 
 from .projectdb_util import ConsumerDevice, VerificationProjectManager
 

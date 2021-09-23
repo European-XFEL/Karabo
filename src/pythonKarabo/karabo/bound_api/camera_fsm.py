@@ -1,17 +1,16 @@
 __author__ = "andrea.parenti@xfel.eu"
 __date__ = "August  7, 2013"
 
-import karabo.bound_api.base_fsm as base
 from karathon import SLOT_ELEMENT, VECTOR_STRING_ELEMENT
+
+import karabo.bound_api.base_fsm as base
+from karabo.common.states import State
+
 from .decorators import KARABO_CLASSINFO
 from .fsm import (
-    KARABO_FSM_EVENT0, KARABO_FSM_EVENT2,
-    KARABO_FSM_ACTION0, KARABO_FSM_ACTION2,
-    KARABO_FSM_GUARD0,
-    KARABO_FSM_STATE_EE, KARABO_FSM_STATE_MACHINE,
-    KARABO_FSM_CREATE_MACHINE)
-
-from karabo.common.states import State
+    KARABO_FSM_ACTION0, KARABO_FSM_ACTION2, KARABO_FSM_CREATE_MACHINE,
+    KARABO_FSM_EVENT0, KARABO_FSM_EVENT2, KARABO_FSM_GUARD0,
+    KARABO_FSM_STATE_EE, KARABO_FSM_STATE_MACHINE)
 
 
 @KARABO_CLASSINFO("CameraFsm", "1.0")

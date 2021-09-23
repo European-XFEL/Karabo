@@ -1,22 +1,23 @@
 from __future__ import unicode_literals
-from asyncio import (CancelledError, coroutine, ensure_future, get_event_loop,
-                     iscoroutinefunction, TimeoutError, wait_for)
-from collections import defaultdict
+
+import inspect
 import logging
 import random
+import re
 import sys
 import weakref
-import inspect
-import re
+from asyncio import (
+    CancelledError, TimeoutError, coroutine, ensure_future, get_event_loop,
+    iscoroutinefunction, wait_for)
+from collections import defaultdict
 
 from karabo.native import (
-    AccessLevel, Assignment, AccessMode,  Hash, DaqPolicy)
-from karabo.native import (
-    Configurable, Descriptor, Int32, KaraboError, Slot, String, TypeHash)
+    AccessLevel, AccessMode, Assignment, Configurable, DaqPolicy, Descriptor,
+    Hash, Int32, KaraboError, Slot, String, TypeHash)
 
-from .synchronization import firstCompleted, FutureDict
 from .pipeline import NetworkOutput, OutputChannel
 from .proxy import DeviceClientProxyFactory
+from .synchronization import FutureDict, firstCompleted
 from .utils import get_karabo_version
 
 

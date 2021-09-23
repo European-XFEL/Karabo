@@ -1,5 +1,5 @@
-from numbers import Integral, Real
 import json
+from numbers import Integral, Real
 
 from numpy import ndarray
 

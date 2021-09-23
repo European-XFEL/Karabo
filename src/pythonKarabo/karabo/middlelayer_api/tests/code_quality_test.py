@@ -5,8 +5,8 @@ There are two exception lists which list the number of expected
 warnings per file. Update as needed.
 """
 import os
-from unittest import TestCase, main
 import sys
+from unittest import TestCase, main
 
 from pycodestyle import Checker
 

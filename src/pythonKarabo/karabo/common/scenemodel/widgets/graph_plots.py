@@ -1,6 +1,7 @@
-from traits.api import Bool, Enum, Float, Int, List, String
 import warnings
 from xml.etree.ElementTree import SubElement
+
+from traits.api import Bool, Enum, Float, Int, List, String
 
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
@@ -10,10 +11,10 @@ from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
 from .graph_utils import (
-    BaseROIData, read_axes_set, read_basic_label, read_baseline,
-    read_range_set, read_roi_info, write_axes_set, write_basic_label,
-    write_baseline, write_range_set, write_roi_info,
-    read_histogram_model, write_histogram_model, read_view_set, write_view_set)
+    BaseROIData, read_axes_set, read_baseline, read_basic_label,
+    read_histogram_model, read_range_set, read_roi_info, read_view_set,
+    write_axes_set, write_baseline, write_basic_label, write_histogram_model,
+    write_range_set, write_roi_info, write_view_set)
 
 
 def write_base_plot(model, element, klass):

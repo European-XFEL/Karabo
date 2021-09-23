@@ -10,7 +10,6 @@ from requests.packages.urllib3.exceptions import HTTPError
 from karabo.project_db.bases import HandleABC
 from karabo.project_db.util import ProjectDBError
 
-
 LIST_DOMAINS_QUERY = """
     xquery version "3.0";
     <collections>{{

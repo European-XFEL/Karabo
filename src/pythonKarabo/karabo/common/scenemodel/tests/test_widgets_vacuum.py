@@ -1,7 +1,7 @@
 from ..api import VacuumWidgetModel
 from ..widgets.vacuum import VACUUM_WIDGETS
-from .utils import (assert_base_traits, base_widget_traits,
-                    single_model_round_trip)
+from .utils import (
+    assert_base_traits, base_widget_traits, single_model_round_trip)
 
 
 def test_vacuum_widget():

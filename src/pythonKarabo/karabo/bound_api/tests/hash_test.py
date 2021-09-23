@@ -11,10 +11,8 @@ import weakref
 import numpy as np
 
 from karabo.bound import (
-    Hash, HashAttributes, HashMergePolicy, Types, VectorHash,
-    isStdVectorDefaultConversion, setStdVectorDefaultConversion, similar,
-    fullyEqual
-)
+    Hash, HashAttributes, HashMergePolicy, Types, VectorHash, fullyEqual,
+    isStdVectorDefaultConversion, setStdVectorDefaultConversion, similar)
 from karabo.testing.utils import compare_ndarray_data_ptrs
 
 

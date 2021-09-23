@@ -1,9 +1,9 @@
 import unittest
 
 from karabo.bound import (
-    BinarySerializerHash, Hash, InputHash, OutputHash,
-    TextSerializerHash, TextSerializerSchema, loadFromFile, saveToFile, similar
-)
+    BinarySerializerHash, Hash, InputHash, OutputHash, TextSerializerHash,
+    TextSerializerSchema, loadFromFile, saveToFile, similar)
+
 from .configuration_example_classes import Shape
 
 

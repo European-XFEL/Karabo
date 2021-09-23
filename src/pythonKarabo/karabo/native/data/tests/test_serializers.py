@@ -1,14 +1,14 @@
 import os
-from tempfile import TemporaryDirectory
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest import TestCase, main
 from zlib import adler32
 
+from ..bin_reader import decodeBinary
+from ..bin_writer import encodeBinary, writeBinary
 from ..hash import Hash, HashList, Schema
 from ..xml_reader import decodeXML, loadFromFile
 from ..xml_writer import encodeXML, saveToFile, writeXML
-from ..bin_reader import decodeBinary
-from ..bin_writer import encodeBinary, writeBinary
 
 # The following XML was generated using the C++ API `saveToFile`
 BOUND_HASH_XML = """<?xml version="1.0"?>
@@ -239,7 +239,7 @@ class TestSerializers(TestCase):
         self.assertTrue(sch_hash['table', 'defaultValue'].startswith("'e1'"))
 
     def test_bin_serialization(self):
-        from .test_hash import create_hash, check_hash
+        from .test_hash import check_hash, create_hash
 
         h = create_hash()
         check_hash(h)
@@ -251,7 +251,7 @@ class TestSerializers(TestCase):
         assert decoded.fullyEqual(h)
 
     def test_xml_serialization(self):
-        from .test_hash import create_hash, check_hash
+        from .test_hash import check_hash, create_hash
 
         h = create_hash()
         check_hash(h)

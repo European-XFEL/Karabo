@@ -1,8 +1,9 @@
-import numpy as np
 from xml.sax.saxutils import escape
 
-from .typenums import HashType
+import numpy as np
+
 from .hash import Hash, HashList
+from .typenums import HashType
 
 __all__ = ['create_html_hash', 'dictToHash', 'dtype_from_number',
            'get_array_data', 'get_image_data', 'hashToDict',

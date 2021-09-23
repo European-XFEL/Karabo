@@ -2,25 +2,26 @@
 # To change this template file, choose Tools | Templates
 # and open the template in the editor.
 from __future__ import absolute_import, unicode_literals
+
 import asyncio
-from asyncio import (
-    ensure_future, Future, gather, get_event_loop, sleep, wait_for)
-from contextlib import AsyncExitStack
 import inspect
 import logging
 import os
 import socket
 import time
 import traceback
-import weakref
 import uuid
-from functools import wraps, partial
+import weakref
+from asyncio import (
+    Future, ensure_future, gather, get_event_loop, sleep, wait_for)
+from contextlib import AsyncExitStack
+from functools import partial, wraps
 from itertools import count
-from .pahomqtt import AsyncioMqttHelper, MqttError
-from .eventloop import Broker
 
-from karabo.native import KaraboError
-from karabo.native import decodeBinary, encodeBinary, Hash
+from karabo.native import Hash, KaraboError, decodeBinary, encodeBinary
+
+from .eventloop import Broker
+from .pahomqtt import AsyncioMqttHelper, MqttError
 
 
 class MqttBroker(Broker):

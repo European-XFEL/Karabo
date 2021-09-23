@@ -1,18 +1,15 @@
 import unittest
 
 from karabo.bound import (
-    Configurator,
-    METER, MICRO, MANDATORY, NODE_ELEMENT, READ, WRITE, INIT,
-    AccessLevel, AccessType, ArchivePolicy, AssemblyRules, AssignmentType,
-    Hash, Logger, MetricPrefix, NodeType, Schema, Types, Unit, Validator,
-    AlarmCondition, DaqDataType, DAQPolicy, State,
-    IMAGEDATA_ELEMENT, INT32_ELEMENT,
-    NDARRAY_ELEMENT, OVERWRITE_ELEMENT, STATE_ELEMENT
-)
+    IMAGEDATA_ELEMENT, INIT, INT32_ELEMENT, MANDATORY, METER, MICRO,
+    NDARRAY_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT, READ, STATE_ELEMENT,
+    WRITE, AccessLevel, AccessType, AlarmCondition, ArchivePolicy,
+    AssemblyRules, AssignmentType, Configurator, DaqDataType, DAQPolicy, Hash,
+    Logger, MetricPrefix, NodeType, Schema, State, Types, Unit, Validator)
+
 from .configuration_example_classes import (
-    Base, GraphicsRenderer, GraphicsRenderer1, GraphicsRenderer2, SomeClass,
-    TestStruct1, ArrayContainer
-)
+    ArrayContainer, Base, GraphicsRenderer, GraphicsRenderer1,
+    GraphicsRenderer2, SomeClass, TestStruct1)
 
 
 class Schema_TestCase(unittest.TestCase):

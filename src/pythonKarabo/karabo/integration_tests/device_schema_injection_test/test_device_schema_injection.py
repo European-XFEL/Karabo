@@ -1,9 +1,8 @@
 import unittest
 
 from karabo.bound import (
-    Configurator, Hash, Schema,
-    DOUBLE_ELEMENT, INT32_ELEMENT, PythonDevice, VectorHash
-)
+    DOUBLE_ELEMENT, INT32_ELEMENT, Configurator, Hash, PythonDevice, Schema,
+    VectorHash)
 
 # import the device classes to trigger their registration in the Configurator
 from .device_with_alarm import DeviceWithAlarm

@@ -2,8 +2,7 @@ from collections import defaultdict
 
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
-    ProjectModel
-)
+    ProjectModel)
 from karabo.common.scenemodel.api import BaseIconsModel, DisplayIconsetModel
 
 

@@ -2,36 +2,32 @@ __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ = "$Jul 30, 2012 9:03:51 PM$"
 
 import copy
-import threading
 import os
-import time
-import sys
-import socket
 import re
 import signal
+import socket
+import sys
+import threading
+import time
 import traceback
 
 from karathon import (
-    ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT,
-    UINT32_ELEMENT, MICROSEC, NODE_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
-    STATE_ELEMENT, STRING_ELEMENT,
-    OBSERVER, WRITE,
-    AccessLevel, AccessType, AssemblyRules, Broker, ChannelMetaData,
-    ConnectionStatus,
-    EventLoop, Epochstamp, Hash, HashFilter, HashMergePolicy,
-    LeafType, loadFromFile, Logger, MetricPrefix,
-    Schema, SignalSlotable, Timestamp, Trainstamp, Unit, Validator,
-    ValidatorValidationRules, VectorHash
-)
-from karabo.common.api import (AlarmCondition, Capabilities, Interfaces, State,
-                               karabo_deprecated)
+    ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, MICROSEC,
+    NODE_ELEMENT, OBSERVER, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
+    STRING_ELEMENT, UINT32_ELEMENT, WRITE, AccessLevel, AccessType,
+    AssemblyRules, Broker, ChannelMetaData, ConnectionStatus, Epochstamp,
+    EventLoop, Hash, HashFilter, HashMergePolicy, LeafType, Logger,
+    MetricPrefix, Schema, SignalSlotable, Timestamp, Trainstamp, Unit,
+    Validator, ValidatorValidationRules, VectorHash, loadFromFile)
 
 from karabo import __version__ as karaboVersion
+from karabo.common.api import (
+    AlarmCondition, Capabilities, Interfaces, State, karabo_deprecated)
 
+from .configurator import Configurator
+from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 # Use patched DeviceClient, not the one directly from karathon:
 from .device_client import DeviceClient
-from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
-from .configurator import Configurator
 from .no_fsm import NoFsm
 
 

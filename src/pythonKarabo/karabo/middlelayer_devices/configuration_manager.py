@@ -3,28 +3,26 @@
 # Created on August 21, 2020, 11:42 AM
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from asyncio import CancelledError, Future, gather, TimeoutError, wait_for
-from collections import defaultdict
 import os
 import os.path as op
 import re
+from asyncio import CancelledError, Future, TimeoutError, gather, wait_for
+from collections import defaultdict
 
 from karabo.common.scenemodel.api import (
     BoxLayoutModel, DisplayCommandModel, DisplayLabelModel,
-    DisplayStateColorModel, DisplayTextLogModel, ErrorBoolModel, LabelModel,
-    LineEditModel, IntLineEditModel, LineModel, SceneModel, TableElementModel,
-    EditableRegexModel, write_scene)
-
-from karabo.middlelayer import (
-    AccessLevel, AccessMode, Assignment, background, Bool, Configurable,
-    coslot, DaqPolicy, DeviceClientBase, dictToHash,
-    extract_modified_schema_attributes, KaraboError, Hash,
-    HashList, Overwrite, RegexString, sanitize_init_configuration, slot, Slot,
-    State, String, Timestamp, UInt32, VectorHash, VectorString)
-
+    DisplayStateColorModel, DisplayTextLogModel, EditableRegexModel,
+    ErrorBoolModel, IntLineEditModel, LabelModel, LineEditModel, LineModel,
+    SceneModel, TableElementModel, write_scene)
 from karabo.config_db import (
     ConfigurationDatabase, DbHandle, hashFromBase64Bin, hashToBase64Bin,
-    schemaToBase64Bin, schemaFromBase64Bin)
+    schemaFromBase64Bin, schemaToBase64Bin)
+from karabo.middlelayer import (
+    AccessLevel, AccessMode, Assignment, Bool, Configurable, DaqPolicy,
+    DeviceClientBase, Hash, HashList, KaraboError, Overwrite, RegexString,
+    Slot, State, String, Timestamp, UInt32, VectorHash, VectorString,
+    background, coslot, dictToHash, extract_modified_schema_attributes,
+    sanitize_init_configuration, slot)
 
 HIDDEN_KARABO_FOLDER = op.join(os.environ['HOME'], '.karabo')
 KARABO_CONFIG_DB_FOLDER = op.join(HIDDEN_KARABO_FOLDER, 'config_db')

@@ -3,6 +3,7 @@ from time import sleep
 from karabo.bound import ConnectionStatus, Hash, InputChannel
 from karabo.integration_tests.utils import BoundDeviceTestCase
 
+
 def call_counter(func):
     def inner(*args, **kwargs):
         inner._calls += 1

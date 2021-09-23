@@ -3,7 +3,7 @@
 # Created on September 9, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from traits.api import cached_property, List, Property, String
+from traits.api import List, Property, String, cached_property
 
 from .bases import BaseProjectObjectModel
 
