@@ -1,12 +1,11 @@
-from collections.abc import Iterable
 import copy
+from collections.abc import Iterable
 from functools import wraps
 
 import numpy as np
 
 from karabo.common.states import StateSignifier as SignifierBase
-from karabo.native import (
-    newest_timestamp, QuantityValue, wrap, wrap_function)
+from karabo.native import QuantityValue, newest_timestamp, wrap, wrap_function
 
 
 @wraps(np.linspace)

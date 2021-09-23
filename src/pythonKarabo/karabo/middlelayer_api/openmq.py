@@ -1,9 +1,9 @@
-from collections.abc import MutableMapping
-from ctypes import (CDLL, CFUNCTYPE, POINTER, byref, c_char,
-                    c_char_p, c_bool, c_byte, c_short, c_int, c_longlong,
-                    c_float, c_double, c_uint, string_at, Structure)
 import logging
 import numbers
+from collections.abc import MutableMapping
+from ctypes import (
+    CDLL, CFUNCTYPE, POINTER, Structure, byref, c_bool, c_byte, c_char,
+    c_char_p, c_double, c_float, c_int, c_longlong, c_short, c_uint, string_at)
 
 _dll = None
 logger = logging.getLogger(__name__)

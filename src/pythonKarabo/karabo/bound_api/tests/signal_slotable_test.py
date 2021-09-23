@@ -1,7 +1,7 @@
-from threading import Thread, Condition, Lock
+from threading import Condition, Lock, Thread
 from unittest import TestCase, main
 
-from karathon import SignalSlotable, EventLoop
+from karathon import EventLoop, SignalSlotable
 
 
 class Tests(TestCase):

@@ -1,24 +1,20 @@
+import os
+import socket
 from asyncio import (
-    CancelledError, Future, gather, get_event_loop,
-    IncompleteReadError, Lock, open_connection, Queue, shield,
-    start_server)
+    CancelledError, Future, IncompleteReadError, Lock, Queue, gather,
+    get_event_loop, open_connection, shield, start_server)
 from collections import deque
 from contextlib import closing
-import os
-from struct import pack, unpack, calcsize
-import socket
+from struct import calcsize, pack, unpack
 from weakref import WeakSet
 
 import numpy
 
 from karabo.middlelayer_api.synchronization import sleep
 from karabo.native import (
-    Assignment, AccessMode, decodeBinary, encodeBinary, Hash, Unit, Schema,
-    MetricPrefix)
-from karabo.native import (
-    Bool, isSet, VectorHash, VectorRegexString, String, UInt16, UInt32)
-from karabo.native import Configurable, Node
-from karabo.native import get_timestamp
+    AccessMode, Assignment, Bool, Configurable, Hash, MetricPrefix, Node,
+    Schema, String, UInt16, UInt32, Unit, VectorHash, VectorRegexString,
+    decodeBinary, encodeBinary, get_timestamp, isSet)
 
 from .proxy import ProxyBase, ProxyFactory, ProxyNodeBase, SubProxyBase
 from .synchronization import background, firstCompleted

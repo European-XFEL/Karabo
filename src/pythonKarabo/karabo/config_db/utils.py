@@ -1,8 +1,8 @@
 import base64
 import hashlib
-
 from datetime import datetime
-from karabo.native import encodeBinary, decodeBinary, Hash
+
+from karabo.native import Hash, decodeBinary, encodeBinary
 
 CONFIG_DB_DEVICE_ID = "deviceId"
 CONFIG_DB_NAME = "name"

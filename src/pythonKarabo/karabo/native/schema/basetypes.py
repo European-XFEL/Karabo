@@ -2,18 +2,19 @@
 
 Karabo keeps some metadata with its values. This module contains the
 classes which have the metadata attached."""
-from enum import Enum
-from functools import wraps
 import inspect
-from itertools import chain
 import numbers
 import re
+from enum import Enum
+from functools import wraps
+from itertools import chain
 from xml.sax.saxutils import escape
 
 import numpy
 import pint
 
 from karabo.native.data import EncodingType, MetricPrefix, Unit
+
 from ..weak import Weak
 
 __all__ = ['BoolValue', 'EnumValue', 'ImageData', 'isSet', 'KaraboValue',

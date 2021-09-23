@@ -6,8 +6,7 @@ from ipykernel.inprocess.channels import InProcessChannel
 from ipykernel.inprocess.client import InProcessKernelClient
 
 from karabo.middlelayer import (
-    background, connectDevice, Device, String, waitUntilNew
-)
+    Device, String, background, connectDevice, waitUntilNew)
 from karabo.middlelayer_api.ipython import IPythonKernel
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 

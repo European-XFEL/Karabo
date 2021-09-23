@@ -1,5 +1,5 @@
-from collections import OrderedDict
 import hashlib
+from collections import OrderedDict
 
 from traits.api import Enum, Instance
 

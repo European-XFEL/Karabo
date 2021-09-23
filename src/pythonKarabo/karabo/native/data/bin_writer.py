@@ -3,8 +3,8 @@ from struct import pack
 
 import numpy as np
 
-from .hash import Hash, get_hash_type_from_data
 from .enums import NodeType
+from .hash import Hash, get_hash_type_from_data
 from .typenums import HashType
 
 __all__ = ['encodeBinary', 'writeBinary']

@@ -2,16 +2,14 @@ from enum import Enum
 from itertools import product
 from unittest import TestCase, main, skipIf
 
-import pint
 import numpy
+import pint
 
 from karabo.native import (
-    NoneValue, QuantityValue, isSet, StringValue, VectorCharValue, BoolValue,
-    EnumValue, ImageData, KaraboValue, TableValue, VectorStringValue, wrap)
-from karabo.native import unit_registry as unit, Int32, Float, VectorFloat
-from karabo.native import EncodingType, Unit, MetricPrefix
-from karabo.native import encodeBinary, Hash, Timestamp
-
+    BoolValue, EncodingType, EnumValue, Float, Hash, ImageData, Int32,
+    KaraboValue, MetricPrefix, NoneValue, QuantityValue, StringValue,
+    TableValue, Timestamp, Unit, VectorCharValue, VectorFloat,
+    VectorStringValue, encodeBinary, isSet, unit_registry as unit, wrap)
 from karabo.native.schema.tests.compat import PINT_INCOMPATIBLE, PINT_REASON
 
 

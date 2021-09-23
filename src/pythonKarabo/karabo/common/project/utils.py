@@ -1,6 +1,7 @@
 from traits.api import Instance, List
 
 from karabo.common.api import walk_traits_object
+
 from .bases import BaseProjectObjectModel
 from .device import DeviceInstanceModel
 from .macro import MacroModel

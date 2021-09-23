@@ -4,7 +4,7 @@
 
 import unittest
 
-from karabo.bound import StartStopFsm, Hash, Logger, State
+from karabo.bound import Hash, Logger, StartStopFsm, State
 
 
 class StartStopUser(StartStopFsm):

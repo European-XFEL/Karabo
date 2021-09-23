@@ -3,8 +3,9 @@ import os
 import tempfile
 from unittest import TestCase
 
-from ..database import ProjectDatabase
 from karabo.project_db.tests.base import ProjectDatabaseVerification
+
+from ..database import ProjectDatabase
 
 
 class TestFileProjectDatabase(ProjectDatabaseVerification, TestCase):
