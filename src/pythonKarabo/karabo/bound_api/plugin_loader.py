@@ -36,7 +36,17 @@ class PluginLoader(object):
 
     def update(self):
         ws = WorkingSet()
-        self._entrypoints = list(ws.iter_entry_points(self.pluginNamespace))
-        for ep in self._entrypoints:
-            ep.load()
+
+        def load(ep):
+            try:
+                ep.load()
+                return True
+            except Exception as e:
+                print(f'Failed to load plugin {ep} for registry: {e}')
+                return False
+
+        self._entrypoints = [
+            ep for ep in ws.iter_entry_points(self.pluginNamespace)
+            if load(ep)
+        ]
         return self._entrypoints
