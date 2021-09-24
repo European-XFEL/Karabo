@@ -3,13 +3,6 @@
 free to use everything defined here, try to avoid doing deep imports
 into the Karabo package, as the internals may change.
 """
-# project
-# native extra
-# native hash serialisers
-# native schema utils
-# native schema
-# native enums
-# native basetypes
 from karabo.native import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Attribute, Bool,
     BoolValue, ByteArray, Char, ChoiceOfNodes, ComplexDouble, ComplexFloat,
@@ -27,11 +20,12 @@ from karabo.native import (
     VectorStringValue, VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64,
     Weak, convert_old_project, daysAgo, decodeBinary, decodeXML, dictToHash,
     dtype_from_number, encodeBinary, encodeXML, get_array_data,
-    get_default_value, get_hash_type_from_data, get_image_data, get_timestamp,
-    hashToDict, hashtype_from_string, hoursAgo, is_equal, isSet, loadFromFile,
-    minutesAgo, newest_timestamp, read_project_model, sanitize_table_schema,
-    saveToFile, simple_deepcopy, string_from_hashtype, unit_registry as unit,
-    write_project_model, writeBinary, writeXML)
+    get_default_value, get_hash_type_from_data, get_image_data,
+    get_instance_parent, get_timestamp, hashToDict, hashtype_from_string,
+    hoursAgo, is_equal, isSet, loadFromFile, minutesAgo, newest_timestamp,
+    read_project_model, sanitize_table_schema, saveToFile, simple_deepcopy,
+    string_from_hashtype, unit_registry as unit, write_project_model,
+    writeBinary, writeXML)
 
 # Common api
 from .common.alarm_conditions import AlarmCondition
