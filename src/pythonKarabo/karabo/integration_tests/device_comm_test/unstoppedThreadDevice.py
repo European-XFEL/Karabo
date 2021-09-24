@@ -2,15 +2,15 @@
 # To change this template file, choose Tools | Templates
 # and open the template in the editor.
 
-import sys
-import time
-import threading
 import os
 import signal
+import sys
+import threading
+import time
 
 from karabo.bound import (
-        PythonDevice, KARABO_CLASSINFO, State, SLOT_ELEMENT, UINT64_ELEMENT,
-)
+    KARABO_CLASSINFO, SLOT_ELEMENT, UINT64_ELEMENT, PythonDevice, State)
+
 
 @KARABO_CLASSINFO("UnstoppedThreadDevice", "2.0")
 class UnstoppedThreadDevice(PythonDevice):

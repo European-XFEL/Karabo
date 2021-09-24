@@ -1,6 +1,6 @@
 import asyncio
-from unittest import TestCase, main
 import string
+from unittest import TestCase, main
 from zlib import adler32
 
 import numpy
@@ -8,15 +8,14 @@ import numpy
 from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Bool, ChoiceOfNodes,
-    Configurable, ComplexDouble, ComplexFloat, DaqDataType, DaqPolicy,
-    decodeBinary, Double, encodeBinary, Float, Hash, Image, ImageData, Int8,
-    Int16, Int32, Int64, isSet, KaraboError, ListOfNodes, MetricPrefix,
-    Node, Overwrite, RegexString, Slot, String, TypeHash, TypeSchema,
-    UInt8, UInt16, UInt32, UInt64, Unit, unit_registry as unit, VectorBool,
+    ComplexDouble, ComplexFloat, Configurable, DaqDataType, DaqPolicy, Double,
+    Float, Hash, Image, ImageData, Int8, Int16, Int32, Int64, KaraboError,
+    ListOfNodes, MetricPrefix, Node, Overwrite, RegexString, Slot, String,
+    TypeHash, TypeSchema, UInt8, UInt16, UInt32, UInt64, Unit, VectorBool,
     VectorChar, VectorComplexDouble, VectorComplexFloat, VectorDouble,
-    VectorHash, VectorFloat, VectorInt8, VectorInt16, VectorInt32,
-    VectorInt64, VectorString, VectorRegexString,
-    VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64)
+    VectorFloat, VectorHash, VectorInt8, VectorInt16, VectorInt32, VectorInt64,
+    VectorRegexString, VectorString, VectorUInt8, VectorUInt16, VectorUInt32,
+    VectorUInt64, decodeBinary, encodeBinary, isSet, unit_registry as unit)
 
 
 class RowSchema(Configurable):

@@ -2,12 +2,11 @@ from contextlib import contextmanager
 from datetime import datetime
 from unittest import mock
 
-from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
 from karabo.middlelayer import (
-    coslot, Device, getConfigurationFromPast, getSchemaFromPast, Schema,
-    Hash, KaraboError)
+    Device, Hash, KaraboError, Schema, coslot, getConfigurationFromPast,
+    getSchemaFromPast)
 from karabo.middlelayer_api.synchronization import synchronize
-
+from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
 DEVICE_ID = "data_logger_device_id"
 

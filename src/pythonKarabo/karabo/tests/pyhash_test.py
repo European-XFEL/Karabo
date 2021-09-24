@@ -5,15 +5,15 @@ import numpy
 from numpy.testing import assert_equal
 
 from karabo.bound import (
-    BinarySerializerHash, TextSerializerHash,
-    Hash as BoundHash, VectorHash as BoundVectorHash, Schema as BoundSchema,
-    NODE_ELEMENT, setStdVectorDefaultConversion,
-    isStdVectorDefaultConversion, Types)
+    NODE_ELEMENT, BinarySerializerHash, Hash as BoundHash,
+    Schema as BoundSchema, TextSerializerHash, Types,
+    VectorHash as BoundVectorHash, isStdVectorDefaultConversion,
+    setStdVectorDefaultConversion)
 from karabo.middlelayer import Configurable
 from karabo.native import (
-    AccessMode, Hash, HashByte, NodeType, decodeXML, decodeBinary,
-    encodeBinary, encodeXML, HashList, Int32, Int64, String, Schema,
-    VectorHash as VectorHash)
+    AccessMode, Hash, HashByte, HashList, Int32, Int64, NodeType, Schema,
+    String, VectorHash as VectorHash, decodeBinary, decodeXML, encodeBinary,
+    encodeXML)
 
 
 class Hash_TestCase(unittest.TestCase):

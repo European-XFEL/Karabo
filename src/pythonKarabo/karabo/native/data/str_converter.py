@@ -3,7 +3,7 @@ from functools import partial
 
 import numpy as np
 
-from .hash import get_hash_type_from_data, Schema
+from .hash import Schema, get_hash_type_from_data
 from .typenums import HashType
 from .xml_reader import decodeXML
 from .xml_writer import yield_xml_hash, yield_xml_vector_hash

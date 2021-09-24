@@ -1,14 +1,13 @@
+import uuid
 from contextlib import closing
 from unittest import TestCase, main
-import uuid
 
 from karabo.middlelayer import call, getDevice, sleep, updateDevice
-from karabo.middlelayer_api.tests.eventloop import setEventLoop
 from karabo.middlelayer_api.compat import jms
+from karabo.middlelayer_api.tests.eventloop import setEventLoop
 from karabo.native import Hash
 
 from ..macro_server import MacroServer
-
 
 TEST_MACROSERVER="Karabo_TestMacroServer"
 

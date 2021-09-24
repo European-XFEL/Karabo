@@ -3,8 +3,9 @@
 # Created on November 30, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from traits.api import (HasStrictTraits, Bool, Dict, List, Instance,
-                        TraitDictEvent, TraitListEvent)
+from traits.api import (
+    Bool, Dict, HasStrictTraits, Instance, List, TraitDictEvent,
+    TraitListEvent)
 
 _CONTAINER_EVENT_SUFFIX = '_items'
 _CONTAINER_EVENT_TYPES = (TraitDictEvent, TraitListEvent)

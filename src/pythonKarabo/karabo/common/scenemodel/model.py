@@ -5,14 +5,15 @@ from traits.api import Constant, Dict, Float, Instance, Int, List, String
 from karabo.common.api import BaseSavableModel, walk_traits_object
 # avoid karabo.common.project.api due to circular imports...
 from karabo.common.project.bases import BaseProjectObjectModel
+
 from .bases import BaseSceneObjectData, BaseWidgetObjectData, XMLElementModel
 from .const import (
-    NS_KARABO, NS_SVG, SCENE_MIN_WIDTH, SCENE_MIN_HEIGHT, SCENE_FILE_VERSION,
+    NS_KARABO, NS_SVG, SCENE_FILE_VERSION, SCENE_MIN_HEIGHT, SCENE_MIN_WIDTH,
     UNKNOWN_WIDGET_CLASS, WIDGET_ELEMENT_TAG)
-from .io_utils import (read_unknown_display_editable_widget, set_numbers,
-                       write_base_widget_data)
+from .io_utils import (
+    read_unknown_display_editable_widget, set_numbers, write_base_widget_data)
 from .registry import (
-    read_element, add_temporary_defs, register_scene_reader,
+    add_temporary_defs, read_element, register_scene_reader,
     register_scene_writer, write_element)
 
 

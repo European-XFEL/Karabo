@@ -1,15 +1,15 @@
-from asyncio import get_event_loop, set_event_loop
 import os
 import socket
 import sys
+from asyncio import get_event_loop, set_event_loop
 
-from tornado.platform.asyncio import AsyncIOMainLoop
-from zmq.asyncio import ZMQEventLoop
 from ipykernel.ipkernel import IPythonKernel
 from ipykernel.jsonutil import json_clean
 from ipykernel.kernelapp import IPKernelApp
+from tornado.platform.asyncio import AsyncIOMainLoop
+from zmq.asyncio import ZMQEventLoop
 
-from karabo.middlelayer import background, DeviceClientBase, Device
+from karabo.middlelayer import Device, DeviceClientBase, background
 from karabo.middlelayer_api import eventloop
 
 

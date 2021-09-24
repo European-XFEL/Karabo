@@ -1,14 +1,13 @@
+import time
 from asyncio import ensure_future, sleep
 from contextlib import contextmanager
-import time
 from unittest import main, skipIf
 
-from karabo.middlelayer_api.device import Device
-from karabo.native import Int32 as Int, Slot
-from karabo.middlelayer_api.macro import Macro, Monitor, RemoteDevice
-
-from karabo.middlelayer_api.tests.eventloop import DeviceTest, sync_tst
 from karabo.middlelayer_api.compat import amqp, mqtt, redis
+from karabo.middlelayer_api.device import Device
+from karabo.middlelayer_api.macro import Macro, Monitor, RemoteDevice
+from karabo.middlelayer_api.tests.eventloop import DeviceTest, sync_tst
+from karabo.native import Int32 as Int, Slot
 
 
 class Remote(Device):

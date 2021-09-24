@@ -3,7 +3,7 @@ from unittest import TestCase, main
 
 from karabo.middlelayer import (
     AccessLevel, AccessMode, Assignment, Configurable, DeviceNode, Double,
-    Float, Int32, MetricPrefix, Node, Overwrite, Slot, State, unit, Unit)
+    Float, Int32, MetricPrefix, Node, Overwrite, Slot, State, Unit, unit)
 from karabo.middlelayer_api.injectable import InjectMixin
 
 

@@ -1,21 +1,19 @@
 import os
 import socket
 
+from karabo import __version__ as karaboVersion
 from karabo.common.enums import Capabilities, Interfaces
 from karabo.common.states import State
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, DaqPolicy, Hash)
-from karabo.native import (
-    Bool, get_timestamp, isSet, Int32, KaraboError, Node,
-    TimeMixin, TypeHash, TypeSchema, Slot, String)
-
-from karabo import __version__ as karaboVersion
+    AccessLevel, AccessMode, Assignment, Bool, DaqPolicy, Hash, Int32,
+    KaraboError, Node, Slot, String, TimeMixin, TypeHash, TypeSchema,
+    get_timestamp, isSet)
 
 from .alarm import AlarmMixin
 from .injectable import InjectMixin
 from .logger import Logger
 from .pipeline import OutputChannel
-from .signalslot import SignalSlotable, Signal, slot, coslot
+from .signalslot import Signal, SignalSlotable, coslot, slot
 
 
 class Device(InjectMixin, AlarmMixin, SignalSlotable):

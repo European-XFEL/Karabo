@@ -1,21 +1,21 @@
-from asyncio import (
-    CancelledError, current_task, ensure_future, gather, get_event_loop,
-    iscoroutinefunction, set_event_loop, TimeoutError, wait_for)
 import atexit
-from contextlib import closing
-from functools import wraps
 import os
 import socket
 import sys
 import threading
+from asyncio import (
+    CancelledError, TimeoutError, current_task, ensure_future, gather,
+    get_event_loop, iscoroutinefunction, set_event_loop, wait_for)
+from contextlib import closing
+from functools import wraps
 
 from karabo.common.states import State
-from karabo.native import AccessLevel, AccessMode, DaqPolicy
-from karabo.native import Descriptor, Int32, Slot, String
+from karabo.native import (
+    AccessLevel, AccessMode, DaqPolicy, Descriptor, Int32, Slot, String)
 
-from .eventloop import EventLoop
 from .device import Device
-from .device_client import waitUntilNew, getDevice
+from .device_client import getDevice, waitUntilNew
+from .eventloop import EventLoop
 
 
 def Monitor():

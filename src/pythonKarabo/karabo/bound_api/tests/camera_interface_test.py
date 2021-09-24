@@ -4,7 +4,7 @@
 
 import unittest
 
-from karabo.bound import CameraInterface, Schema, State, STATE_ELEMENT
+from karabo.bound import STATE_ELEMENT, CameraInterface, Schema, State
 
 
 class CameraUser(CameraInterface):

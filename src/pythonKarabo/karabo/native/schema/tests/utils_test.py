@@ -3,10 +3,10 @@ from unittest import TestCase, main
 import numpy as np
 
 from karabo.native import (
-    AccessMode, Bool, ByteArray, Char, Configurable, Double, Float,
-    get_default_value, Int8, Int32, sanitize_table_schema, RegexString,
-    String, TypeHash, TypeNone, TypeSchema, VectorChar, VectorDouble,
-    VectorHash, VectorUInt8, VectorRegexString, VectorString)
+    AccessMode, Bool, ByteArray, Char, Configurable, Double, Float, Int8,
+    Int32, RegexString, String, TypeHash, TypeNone, TypeSchema, VectorChar,
+    VectorDouble, VectorHash, VectorRegexString, VectorString, VectorUInt8,
+    get_default_value, sanitize_table_schema)
 
 
 def get_test_table(access=AccessMode.READONLY):

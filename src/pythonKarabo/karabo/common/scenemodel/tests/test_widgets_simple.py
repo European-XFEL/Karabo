@@ -1,10 +1,9 @@
 from pytest import raises as assert_raises
-
 from traits.api import TraitError
 
 from .. import api
-from .utils import (assert_base_traits, base_widget_traits,
-                    single_model_round_trip)
+from .utils import (
+    assert_base_traits, base_widget_traits, single_model_round_trip)
 
 UBUNTU_FONT_SPEC = 'Ubuntu,48,-1,5,63,0,0,0,0,0'
 

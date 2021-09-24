@@ -3,6 +3,7 @@ from xml.etree.ElementTree import SubElement
 
 from traits.api import Bool, Float, Int, String
 from traits.trait_types import List
+
 from karabo.common.scenemodel.api import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG
 from karabo.common.scenemodel.io_utils import (
@@ -11,8 +12,8 @@ from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 
 from .graph_utils import (
-    BaseROIData, read_base_karabo_image_model, write_base_karabo_image_model,
-    read_basic_label, read_roi_info, write_basic_label, write_roi_info)
+    BaseROIData, read_base_karabo_image_model, read_basic_label, read_roi_info,
+    write_base_karabo_image_model, write_basic_label, write_roi_info)
 
 
 class KaraboImageModel(BaseWidgetObjectData):

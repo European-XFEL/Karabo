@@ -1,6 +1,6 @@
 from random import randint
 
-from traits.api import Enum, Instance, Int, Float, List, Range, String
+from traits.api import Enum, Float, Instance, Int, List, Range, String
 
 from karabo.common.api import BaseSavableModel
 

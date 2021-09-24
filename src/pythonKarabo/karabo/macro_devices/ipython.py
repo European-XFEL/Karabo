@@ -1,6 +1,6 @@
+import pickle
 from asyncio import ensure_future, get_event_loop
 from queue import Empty
-import pickle
 from textwrap import dedent
 
 from jupyter_client.blocking.channels import ZMQSocketChannel
@@ -11,10 +11,9 @@ from jupyter_client.manager import KernelManager
 
 from karabo.common.states import State
 from karabo.interactive.ikarabo import SCRIPT
-from karabo.native import AccessLevel, AccessMode, Assignment
-from karabo.native import Bool, Int32, Slot, VectorChar
-
-from karabo.middlelayer import coslot, Device
+from karabo.middlelayer import Device, coslot
+from karabo.native import (
+    AccessLevel, AccessMode, Assignment, Bool, Int32, Slot, VectorChar)
 
 
 class ChannelMixin(ZMQSocketChannel, ChannelABC):

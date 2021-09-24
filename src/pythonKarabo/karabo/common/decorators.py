@@ -3,10 +3,10 @@
 # Created on June 13, 2017
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from functools import wraps
 import inspect
-from time import perf_counter
 import warnings
+from functools import wraps
+from time import perf_counter
 
 
 def karabo_deprecated(func):

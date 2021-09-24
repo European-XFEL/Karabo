@@ -1,9 +1,8 @@
-from collections.abc import Sequence
 import re
+from collections.abc import Sequence
 
 from .const import NS_KARABO, SCENE_FONT_SIZE, SCENE_FONT_WEIGHT
 from .exceptions import SceneWriterException
-
 
 SVG_DEF_REGEX = re.compile(r'url\(\#(.*?)\)')
 

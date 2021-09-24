@@ -1,8 +1,7 @@
 from asyncio import gather
 from itertools import chain
 
-from karabo.native import Descriptor
-from karabo.native import Configurable, Overwrite, MetaConfigurable
+from karabo.native import Configurable, Descriptor, MetaConfigurable, Overwrite
 
 
 class MetaInjectable(MetaConfigurable):

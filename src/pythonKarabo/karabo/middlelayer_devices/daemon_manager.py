@@ -3,8 +3,9 @@
 # Created on November, 2019, 01:06 PM
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from asyncio import CancelledError
 import json
+from asyncio import CancelledError
+
 from tornado.httpclient import AsyncHTTPClient
 from tornado.platform.asyncio import AsyncIOMainLoop, to_asyncio_future
 
@@ -13,9 +14,9 @@ from karabo.common.scenemodel.api import (
     DisplayStateColorModel, LabelModel, RectangleModel, SceneModel,
     write_scene)
 from karabo.middlelayer import (
-    AccessMode, AccessLevel, Assignment, background, Configurable, coslot,
-    DaqPolicy, Device, Double, Hash, Overwrite, sleep, slot, State,
-    String, Unit, UInt32, VectorHash, VectorString)
+    AccessLevel, AccessMode, Assignment, Configurable, DaqPolicy, Device,
+    Double, Hash, Overwrite, State, String, UInt32, Unit, VectorHash,
+    VectorString, background, coslot, sleep, slot)
 
 STATUS_PAGE = "{}/status.json"
 
