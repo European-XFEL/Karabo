@@ -2,21 +2,18 @@
 import base64
 import hashlib
 import json
-import numpy as np
 import os
 import os.path as op
 import time
-
 from urllib.parse import urlparse
 
-from karabo.influxdb.client import InfluxDbClient
-from karabo.influxdb.dlutils import (
-    device_id_from_path, escape_measurement
-)
+import numpy as np
 # we use karathon here to ensure serialization compatiblity between
 # the loggers running in C++ and the migration script
 from karathon import BinarySerializerSchema, TextSerializerSchema
 
+from karabo.influxdb.client import InfluxDbClient
+from karabo.influxdb.dlutils import device_id_from_path, escape_measurement
 
 PROCESSED_SCHEMAS_FILE_NAME = '.processed_schemas.txt'
 

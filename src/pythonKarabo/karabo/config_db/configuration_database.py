@@ -1,25 +1,17 @@
-from contextlib import ContextDecorator
-from datetime import datetime
-from peewee import (
-    DoesNotExist, SqliteDatabase, fn
-)
 import hashlib
 import os
+from contextlib import ContextDecorator
+from datetime import datetime
 
-from .models import (
-    ConfigSet, ConfigSchema, DeviceConfig
-)
+from peewee import DoesNotExist, SqliteDatabase, fn
 
+from .models import ConfigSchema, ConfigSet, DeviceConfig
 from .utils import (
-    CONFIG_DB_DATA, CONFIG_DB_DEVICE_ID, CONFIG_DB_DESCRIPTION, CONFIG_DB_NAME,
-    CONFIG_DB_PRIORITY, CONFIG_DB_SCHEMA, CONFIG_DB_TIMEPOINT, CONFIG_DB_USER,
-    CONFIG_DB_MIN_TIMEPOINT, CONFIG_DB_MAX_TIMEPOINT, CONFIG_DB_DIFF_TIMEPOINT,
-    CONFIG_DB_OVERWRITABLE
-)
-from .utils import (
-    ConfigurationDBError, create_config_set_id,
-    ISO8601_FORMAT, datetime_from_string
-)
+    CONFIG_DB_DATA, CONFIG_DB_DESCRIPTION, CONFIG_DB_DEVICE_ID,
+    CONFIG_DB_DIFF_TIMEPOINT, CONFIG_DB_MAX_TIMEPOINT, CONFIG_DB_MIN_TIMEPOINT,
+    CONFIG_DB_NAME, CONFIG_DB_OVERWRITABLE, CONFIG_DB_PRIORITY,
+    CONFIG_DB_SCHEMA, CONFIG_DB_TIMEPOINT, CONFIG_DB_USER, ISO8601_FORMAT,
+    ConfigurationDBError, create_config_set_id, datetime_from_string)
 
 CONFIGURATION_LIMIT = 300
 

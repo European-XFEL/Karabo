@@ -1,13 +1,13 @@
 from asyncio import (
-    Future, get_event_loop, IncompleteReadError, sleep, StreamReader,
-    StreamWriter, WriteTransport)
+    Future, IncompleteReadError, StreamReader, StreamWriter, WriteTransport,
+    get_event_loop, sleep)
+from struct import pack
 from unittest import main
 from unittest.mock import Mock
-from struct import pack
 from zlib import adler32
 
 from karabo.middlelayer import (
-    background, encodeBinary, Hash, Int32, NetworkInput, NetworkOutput, Proxy)
+    Hash, Int32, NetworkInput, NetworkOutput, Proxy, background, encodeBinary)
 from karabo.middlelayer_api.pipeline import Channel, RingQueue
 
 from .eventloop import DeviceTest, async_tst

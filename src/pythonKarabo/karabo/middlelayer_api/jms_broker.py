@@ -2,24 +2,25 @@
 # To change this template file, choose Tools | Templates
 # and open the template in the editor.
 from __future__ import absolute_import, unicode_literals
+
 import asyncio
-from asyncio import (
-    CancelledError, ensure_future, Future, gather, get_event_loop,
-    shield, sleep, wait_for)
-from contextlib import closing, AsyncExitStack
 import inspect
 import logging
 import socket
 import time
 import traceback
 import weakref
+from asyncio import (
+    CancelledError, Future, ensure_future, gather, get_event_loop, shield,
+    sleep, wait_for)
+from contextlib import AsyncExitStack, closing
 from functools import wraps
 from itertools import count
+
+from karabo.native import Hash, KaraboError, decodeBinary, encodeBinary
+
 from . import openmq
 from .eventloop import Broker
-
-from karabo.native import KaraboError
-from karabo.native import decodeBinary, encodeBinary, Hash
 
 # See C++ karabo/xms/Signal.hh for reasoning about the two minutes...
 _MSG_TIME_TO_LIVE = 120000  # in ms - i.e. 2 minutes

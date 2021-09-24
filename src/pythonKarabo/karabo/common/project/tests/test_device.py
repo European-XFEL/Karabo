@@ -5,10 +5,8 @@ from traits.api import pop_exception_handler, push_exception_handler
 from karabo.common.api import walk_traits_object
 from karabo.common.project.api import (
     BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
-    read_device, write_device
-)
+    read_device, write_device)
 from karabo.testing.utils import temp_xml_file, xml_is_equal
-
 
 UUIDS = [str(uuid4()) for i in range(3)]
 DEVICE_XML = """

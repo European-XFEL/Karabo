@@ -1,8 +1,8 @@
-from .. import api
-
+from karabo.common.scenemodel.api import CrossROIData, RectROIData
 from karabo.common.scenemodel.tests.utils import (
     base_widget_traits, single_model_round_trip)
-from karabo.common.scenemodel.api import CrossROIData, RectROIData
+
+from .. import api
 
 
 def _geometry_traits():

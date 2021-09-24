@@ -1,6 +1,4 @@
-from karabo.native import (
-    AccessMode, Configurable, Int32, String, VectorHash
-)
+from karabo.native import AccessMode, Configurable, Int32, String, VectorHash
 
 
 class Row(Configurable):

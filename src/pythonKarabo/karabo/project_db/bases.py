@@ -1,11 +1,10 @@
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from contextlib import ContextDecorator
 from time import gmtime, strftime
 
 from lxml import etree
 
 from .util import ProjectDBError
-
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
 

@@ -3,11 +3,10 @@ from unittest import main
 
 from karabo.common.states import State
 from karabo.macro_api.device_interface import (
-    listMotors, listProcessors, listCameras, listDeviceInstantiators,
+    listCameras, listDeviceInstantiators, listMotors, listProcessors,
     listTriggers)
-from karabo.middlelayer_api.device_client import getDevice, DeviceClientBase
-from karabo.middlelayer_api.tests.eventloop import (
-    DeviceTest, async_tst)
+from karabo.middlelayer_api.device_client import DeviceClientBase, getDevice
+from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 from karabo.native import Int32, VectorString
 
 

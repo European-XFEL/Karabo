@@ -4,31 +4,29 @@
 __author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ = "$Jul 26, 2012 10:06:25 AM$"
 
-import os
-import sys
-import signal
 import copy
+import os
+import signal
 import socket
-from subprocess import Popen, TimeoutExpired
+import sys
 import threading
+from subprocess import Popen, TimeoutExpired
 
 from karathon import (
-    VECTOR_STRING_ELEMENT, INT32_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT,
-    STRING_ELEMENT, LIST_ELEMENT, CHOICE_ELEMENT,
-    AccessLevel, Broker, Hash, Logger,
-    Schema, SignalSlotable, Validator, saveToFile, EventLoop
-)
+    CHOICE_ELEMENT, INT32_ELEMENT, LIST_ELEMENT, NODE_ELEMENT,
+    OVERWRITE_ELEMENT, STRING_ELEMENT, VECTOR_STRING_ELEMENT, AccessLevel,
+    Broker, EventLoop, Hash, Logger, Schema, SignalSlotable, Validator,
+    saveToFile)
 
 from karabo.common.states import State
+
 from .configurator import Configurator
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .device import PythonDevice
 from .fsm import (
-    KARABO_FSM_EVENT0, KARABO_FSM_EVENT2,
-    KARABO_FSM_ACTION2, KARABO_FSM_NO_TRANSITION_ACTION,
-    KARABO_FSM_STATE, KARABO_FSM_STATE_E,
-    KARABO_FSM_CREATE_MACHINE, KARABO_FSM_STATE_MACHINE
-)
+    KARABO_FSM_ACTION2, KARABO_FSM_CREATE_MACHINE, KARABO_FSM_EVENT0,
+    KARABO_FSM_EVENT2, KARABO_FSM_NO_TRANSITION_ACTION, KARABO_FSM_STATE,
+    KARABO_FSM_STATE_E, KARABO_FSM_STATE_MACHINE)
 from .plugin_loader import DEFAULT_NAMESPACE, PluginLoader
 from .runner import Runner
 

@@ -6,6 +6,7 @@
 from traits.api import Bool, Instance, List
 
 from karabo.common.scenemodel.api import SceneModel
+
 from .bases import BaseProjectObjectModel
 from .macro import MacroModel
 from .server import DeviceServerModel

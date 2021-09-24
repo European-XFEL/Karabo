@@ -3,14 +3,13 @@
 # Created on October 12, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from xml.etree.ElementTree import Element, parse, SubElement, tostring
+from xml.etree.ElementTree import Element, SubElement, parse, tostring
 
-from traits.api import Instance, List, on_trait_change, String
+from traits.api import Instance, List, String, on_trait_change
 
 from .bases import BaseProjectObjectModel
 from .const import (
-    PROJECT_DB_TYPE_DEVICE_CONFIG, PROJECT_DB_TYPE_DEVICE_INSTANCE
-)
+    PROJECT_DB_TYPE_DEVICE_CONFIG, PROJECT_DB_TYPE_DEVICE_INSTANCE)
 from .device_config import DeviceConfigurationModel
 
 
