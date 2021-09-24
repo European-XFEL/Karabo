@@ -1,27 +1,25 @@
+import time
+import weakref
 from asyncio import (
-    coroutine, ensure_future, Future, gather, get_event_loop, sleep, wait_for,
-    TimeoutError)
+    Future, TimeoutError, coroutine, ensure_future, gather, get_event_loop,
+    sleep, wait_for)
 from contextlib import contextmanager
 from datetime import datetime
 from unittest import main, skipIf
-import time
-import weakref
 
 from dateutil.parser import parse as from_isoformat
 from pint import DimensionalityError
 
 from karabo.middlelayer import (
-    AlarmCondition, background, Bool, call, Configurable, connectDevice,
-    coslot, decodeBinary, Device, DeviceNode, execute, filterByTags, Float,
-    getDevice,
-    Hash, isAlive, isSet, Int32, KaraboError, lock, MetricPrefix, Node,
-    Overwrite, Queue, setNoWait, setWait, Slot, slot, State,
-    Timestamp, String, unit, Unit, updateDevice, VectorChar, VectorInt16,
-    VectorString, VectorFloat, waitUntil, waitUntilNew)
+    AlarmCondition, Bool, Configurable, Device, DeviceNode, Float, Hash, Int32,
+    KaraboError, MetricPrefix, Node, Overwrite, Queue, Slot, State, String,
+    Timestamp, Unit, VectorChar, VectorFloat, VectorInt16, VectorString,
+    background, call, connectDevice, coslot, decodeBinary, execute,
+    filterByTags, getDevice, isAlive, isSet, lock, setNoWait, setWait, slot,
+    unit, updateDevice, waitUntil, waitUntilNew)
 from karabo.middlelayer_api import openmq
-
+from karabo.middlelayer_api.compat import amqp, jms, mqtt, redis
 from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
-from karabo.middlelayer_api.compat import jms, mqtt, redis, amqp
 
 FIXED_TIMESTAMP = Timestamp("2009-04-20T10:32:22 UTC")
 

@@ -3,18 +3,18 @@
 # Created on August 21, 2020, 11:42 AM
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from contextlib import contextmanager
 import os
+from contextlib import contextmanager
 
 from karabo.common.services import KARABO_CONFIG_MANAGER as MANAGER
 from karabo.config_db import create_config_set_id
-from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
 from karabo.middlelayer import (
-    call, coslot, connectDevice, DaqPolicy, Device, Double,
-    getConfigurationFromName, getLastConfiguration, Hash, HashList,
-    instantiateFromName, KaraboError, listConfigurationFromName,
-    listDevicesWithConfiguration, saveConfigurationFromName, Slot,
-    slot, String)
+    DaqPolicy, Device, Double, Hash, HashList, KaraboError, Slot, String, call,
+    connectDevice, coslot, getConfigurationFromName, getLastConfiguration,
+    instantiateFromName, listConfigurationFromName,
+    listDevicesWithConfiguration, saveConfigurationFromName, slot)
+from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
+
 from ..configuration_manager import ConfigurationManager
 
 DB_NAME = "test_karabo_db"

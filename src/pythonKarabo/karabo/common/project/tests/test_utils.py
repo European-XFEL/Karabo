@@ -1,9 +1,9 @@
+from pytest import raises as assert_raises
+
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     MacroModel, ProjectModel, device_config_exists, device_instance_exists,
-    device_server_exists, get_project_models, macro_exists, find_parent_object
-)
-from pytest import raises as assert_raises
+    device_server_exists, find_parent_object, get_project_models, macro_exists)
 
 
 def test_find_parent_object():

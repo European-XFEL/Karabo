@@ -1,20 +1,16 @@
 import asyncio
+import time
 from collections import defaultdict
 from contextlib import suppress
 from inspect import isfunction
-import time
 from weakref import WeakSet
 
-from karabo.native import KaraboValue, isSet, NoneValue
-from karabo.native import NodeType, Hash, Timestamp
-from karabo.native import Descriptor, Slot, Type
-from karabo.native import NDArray
-from karabo.native import KaraboError
-from karabo.native import get_timestamp
-from karabo.native import Weak
-
+from karabo.middlelayer_api.compat import amqp, jms, mqtt, redis
 from karabo.middlelayer_api.eventloop import synchronize
-from karabo.middlelayer_api.compat import jms, mqtt, redis, amqp
+from karabo.native import (
+    Descriptor, Hash, KaraboError, KaraboValue, NDArray, NodeType, NoneValue,
+    Slot, Timestamp, Type, Weak, get_timestamp, isSet)
+
 if jms:
     from karabo.middlelayer_api.openmq import Error as OMQError
 elif mqtt:

@@ -1,6 +1,6 @@
-from IPython import start_ipython
-
 from threading import Thread
+
+from IPython import start_ipython
 from karathon import EventLoop
 
 

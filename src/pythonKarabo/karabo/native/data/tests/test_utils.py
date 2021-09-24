@@ -1,11 +1,11 @@
-import numpy as np
-
 from html.parser import HTMLParser
+
+import numpy as np
 
 from ..hash import Hash, HashList
 from ..utils import (
-    create_html_hash, dtype_from_number, dictToHash, hashlist_format,
-    HashListFormat, hashToDict, get_array_data, get_image_data)
+    HashListFormat, create_html_hash, dictToHash, dtype_from_number,
+    get_array_data, get_image_data, hashlist_format, hashToDict)
 
 
 class HashHtmlParser(HTMLParser):

@@ -5,7 +5,7 @@ from lxml import etree
 from ..bases import DatabaseBase
 from ..const import DATE_FORMAT
 from ..util import ProjectDBError
-from .util import create_hierarchy, _gen_uuid
+from .util import _gen_uuid, create_hierarchy
 
 
 def create_trashed_project(db, is_trashed=True):

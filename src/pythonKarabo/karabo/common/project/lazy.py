@@ -6,6 +6,7 @@
 from io import StringIO
 
 from karabo.common.api import walk_traits_object
+
 from .bases import BaseProjectObjectModel
 
 

@@ -2,8 +2,8 @@ from collections import namedtuple
 from inspect import signature
 
 from traits.api import (
-    Any, cached_property, Callable, Dict, HasStrictTraits, Instance, Int,
-    Property, String)
+    Any, Callable, Dict, HasStrictTraits, Instance, Int, Property, String,
+    cached_property)
 
 from .const import NS_KARABO, SCENE_FILE_VERSION, UNKNOWN_WIDGET_CLASS
 

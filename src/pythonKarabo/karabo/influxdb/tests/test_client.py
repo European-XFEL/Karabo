@@ -1,19 +1,18 @@
-from asyncio import sleep
 import base64
-from contextlib import contextmanager
 import json
 import os
-import string
-from random import choice
-import time
 import shutil
+import string
+import time
 import unittest
 import uuid
+from asyncio import sleep
+from contextlib import contextmanager
+from random import choice
 
-from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
-
-from karabo.influxdb import get_line_fromdicts, InfluxDbClient, Results
+from karabo.influxdb import InfluxDbClient, Results, get_line_fromdicts
 from karabo.influxdb.dl_migrator import DlMigrator
+from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 from karabo.native import decodeBinary
 
 _host = os.environ.get("KARABO_TEST_INFLUXDB_HOST", "localhost")
@@ -346,6 +345,7 @@ class Influx_TestCase(DeviceTest):
 
         self.assertEqual(len(cols), 2)  # One for time and one for value
         import datetime
+
         # The timestamp returned from Influx is in microseconds.
         dt = datetime.datetime.fromtimestamp(
                 ts/1_000_000, datetime.timezone.utc

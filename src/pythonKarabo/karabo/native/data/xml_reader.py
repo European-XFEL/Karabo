@@ -1,14 +1,14 @@
 import base64
-import numpy as np
 from functools import partial
 from pathlib import Path
-
-from xml.sax import make_parser, SAXException
-from xml.sax.saxutils import unescape
+from xml.sax import SAXException, make_parser
 from xml.sax.handler import ContentHandler
+from xml.sax.saxutils import unescape
+
+import numpy as np
 
 from .hash import Hash, HashList, Schema
-from .typenums import HashType, XML_TYPE_TO_HASH_TYPE
+from .typenums import XML_TYPE_TO_HASH_TYPE, HashType
 
 __all__ = ['decodeXML', 'loadFromFile', 'XMLParser']
 

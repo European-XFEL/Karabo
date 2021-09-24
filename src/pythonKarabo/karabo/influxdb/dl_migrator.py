@@ -1,18 +1,17 @@
 #!/usr/bin/env python
 
 import argparse
-from asyncio import get_event_loop, gather
 import datetime
 import json
 import os
 import re
-import time
 import shutil
+import time
+from asyncio import gather, get_event_loop
 
 from karabo.influxdb import (
-    DlRaw2Influx, DlSchema2Influx, PROCESSED_RAWS_FILE_NAME,
-    PROCESSED_SCHEMAS_FILE_NAME
-)
+    PROCESSED_RAWS_FILE_NAME, PROCESSED_SCHEMAS_FILE_NAME, DlRaw2Influx,
+    DlSchema2Influx)
 
 
 class DlMigrator():

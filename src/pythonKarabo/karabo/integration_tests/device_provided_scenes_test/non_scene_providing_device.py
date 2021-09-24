@@ -1,4 +1,4 @@
-from karabo.bound import (KARABO_CLASSINFO, launchPythonDevice, PythonDevice)
+from karabo.bound import KARABO_CLASSINFO, PythonDevice, launchPythonDevice
 from karabo.common.states import State
 
 

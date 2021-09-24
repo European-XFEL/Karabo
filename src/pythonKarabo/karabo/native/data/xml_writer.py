@@ -1,10 +1,9 @@
 import base64
-
 from pathlib import Path
 from xml.sax.saxutils import escape, quoteattr
 
-from .typenums import HashType, HASH_TYPE_TO_XML_TYPE
 from .hash import Hash, get_hash_type_from_data
+from .typenums import HASH_TYPE_TO_XML_TYPE, HashType
 
 __all__ = ['encodeXML', 'writeXML', 'saveToFile']
 

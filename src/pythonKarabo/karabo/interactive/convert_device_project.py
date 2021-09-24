@@ -1,11 +1,11 @@
 import argparse
-from contextlib import contextmanager
 import copy
 import os
 import os.path as op
 import stat
 import subprocess
 import sys
+from contextlib import contextmanager
 
 from karabo.bound import PythonDevice
 

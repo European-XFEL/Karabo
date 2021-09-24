@@ -3,12 +3,12 @@
 
 import hashlib
 import os.path
-from io import BytesIO, StringIO
-import urllib.request
 import urllib.error
 import urllib.parse
+import urllib.request
+from io import BytesIO, StringIO
 from uuid import uuid4
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from karabo.common.project.api import read_macro
 from karabo.common.scenemodel.api import read_scene

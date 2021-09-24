@@ -6,11 +6,11 @@ from karabo.common.scenemodel.bases import (
     BaseDisplayEditableWidget, BaseEditWidget, BaseWidgetObjectData)
 from karabo.common.scenemodel.const import (
     NS_KARABO, SCENE_FONT_SIZE, SCENE_FONT_SIZES, SCENE_FONT_WEIGHT,
-    SCENE_FONT_WEIGHTS, SceneTargetWindow, WIDGET_ELEMENT_TAG)
+    SCENE_FONT_WEIGHTS, WIDGET_ELEMENT_TAG, SceneTargetWindow)
 from karabo.common.scenemodel.io_utils import (
-    get_numbers, set_numbers, read_base_widget_data,
-    read_empty_display_editable_widget, read_font_format_data,
-    write_base_widget_data, write_font_format_data)
+    get_numbers, read_base_widget_data, read_empty_display_editable_widget,
+    read_font_format_data, set_numbers, write_base_widget_data,
+    write_font_format_data)
 from karabo.common.scenemodel.registry import (
     register_scene_reader, register_scene_writer)
 

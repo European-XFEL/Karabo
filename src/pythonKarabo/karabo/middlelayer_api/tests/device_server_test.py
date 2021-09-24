@@ -5,10 +5,10 @@ from contextlib import ExitStack, contextmanager
 from unittest import TestCase, main, skipIf
 from unittest.mock import Mock
 
+from karabo.middlelayer_api.compat import amqp
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import EventLoop
 from karabo.middlelayer_api.tests.eventloop import async_tst
-from karabo.middlelayer_api.compat import amqp
 from karabo.native import Hash, Schema, Timestamp
 
 

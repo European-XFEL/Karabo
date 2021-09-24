@@ -20,13 +20,11 @@
 # and has been replaced by a dynamic binding to the database from within
 # 'ConfigurationManager.dbHandle.__enter__(self)'.
 #
-from peewee import (
-    Model, SQL, Check,
-    BooleanField, CharField, DateTimeField,
-    ForeignKeyField, IntegerField, TextField
-)
-
 import datetime
+
+from peewee import (
+    SQL, BooleanField, CharField, Check, DateTimeField, ForeignKeyField,
+    IntegerField, Model, TextField)
 
 
 class ConfigSchema(Model):

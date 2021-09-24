@@ -1,8 +1,7 @@
-from karabo.bound import (
-    KARABO_CLASSINFO, PythonDevice,
-    INPUT_CHANNEL, INT32_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL)
-
 from karabo import __version__ as karaboVersion
+from karabo.bound import (
+    INPUT_CHANNEL, INT32_ELEMENT, KARABO_CLASSINFO, NODE_ELEMENT,
+    OUTPUT_CHANNEL, PythonDevice)
 
 
 @KARABO_CLASSINFO("DeviceChannelInjection", karaboVersion)
