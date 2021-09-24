@@ -27,9 +27,9 @@ from .utils import sanitize_table_schema
 __all__ = [
     'Attribute', 'Bool', 'ByteArray', 'Char',  'ComplexFloat',
     'ComplexDouble', 'Descriptor', 'Double', 'Enumable', 'Float',
-    'get_descriptor_from_data', 'Integer', 'Int8', 'Int16', 'Int32',
-    'Int64', 'NumpyVector', 'Number', 'RegexString', 'Simple',
-    'Slot', 'String', 'Type', 'TypeHash', 'TypeNone', 'TypeSchema',
+    'get_descriptor_from_data', 'get_instance_parent', 'Integer', 'Int8',
+    'Int16', 'Int32', 'Int64', 'NumpyVector', 'Number', 'RegexString',
+    'Simple', 'Slot', 'String', 'Type', 'TypeHash', 'TypeNone', 'TypeSchema',
     'UInt8', 'UInt16', 'UInt32', 'UInt64', 'Vector', 'VectorString',
     'VectorFloat', 'VectorBool', 'VectorChar', 'VectorDouble',
     'VectorRegexString', 'VectorComplexFloat', 'VectorComplexDouble',
