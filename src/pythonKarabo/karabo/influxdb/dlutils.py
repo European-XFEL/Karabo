@@ -1,7 +1,6 @@
 import os.path as op
 import re
 
-
 SEC_TO_USEC = 1000000
 USEC_TO_ATTOSEC = 1000000000000
 

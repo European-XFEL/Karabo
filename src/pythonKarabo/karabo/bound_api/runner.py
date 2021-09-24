@@ -5,6 +5,7 @@ import os
 import re
 
 from karathon import Hash, loadFromFile
+
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
 

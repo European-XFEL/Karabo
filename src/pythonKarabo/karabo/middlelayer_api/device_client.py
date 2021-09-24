@@ -12,21 +12,21 @@ import asyncio
 from asyncio import gather, get_event_loop, sleep
 from contextlib import contextmanager
 from copy import deepcopy
-from weakref import ref
 from time import time
+from weakref import ref
 
 import dateutil.parser
 import dateutil.tz
 
 from karabo.common.services import KARABO_CONFIG_MANAGER
-from karabo.native import KaraboError, KaraboValue
-from karabo.native import Hash, Schema, Timestamp
+from karabo.native import Hash, KaraboError, KaraboValue, Schema, Timestamp
 
-from .device import Device
 from .configuration import config_changes, sanitize_init_configuration
+from .device import Device
 from .eventloop import synchronize
-from .proxy import (AutoDisconnectProxyFactory, DeviceClientProxyFactory,
-                    ProxyBase, ProxyNodeBase)
+from .proxy import (
+    AutoDisconnectProxyFactory, DeviceClientProxyFactory, ProxyBase,
+    ProxyNodeBase)
 from .signalslot import coslot, slot
 from .synchronization import firstCompleted
 

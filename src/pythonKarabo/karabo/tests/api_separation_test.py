@@ -2,8 +2,8 @@ from functools import partial
 
 import karabo.bound_api as bound_pkg
 import karabo.common as common_pkg
-import karabo.middlelayer_api as middlelayer_pkg
 import karabo.macro_api as macro_pgk
+import karabo.middlelayer_api as middlelayer_pkg
 from karabo.testing.import_checker import (
     check_for_disallowed_module_imports, check_for_star_imports,
     run_checker_on_package)

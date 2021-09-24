@@ -1,8 +1,8 @@
 from asyncio import get_event_loop
+
 import pkg_resources
 
-from karabo.native import Assignment, AccessLevel
-from karabo.native import Configurable, String
+from karabo.native import AccessLevel, Assignment, Configurable, String
 
 
 class PluginLoader(Configurable):

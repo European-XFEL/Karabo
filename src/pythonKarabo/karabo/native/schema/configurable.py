@@ -1,16 +1,14 @@
-from collections import OrderedDict
 from asyncio import gather
+from collections import OrderedDict
 from weakref import WeakKeyDictionary
 
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
-from karabo.native.data import (
-    AccessLevel, NodeType, Hash, HashList, Schema)
+from karabo.native.data import AccessLevel, Hash, HashList, NodeType, Schema
 from karabo.native.time_mixin import get_timestamp
 
 from .basetypes import KaraboValue, NoneValue, isSet
-from .descriptors import (
-    Attribute, Descriptor, Integer, Slot)
+from .descriptors import Attribute, Descriptor, Integer, Slot
 from .registry import Registry
 
 __all__ = ['Configurable', 'ChoiceOfNodes', 'ListOfNodes', 'MetaConfigurable',

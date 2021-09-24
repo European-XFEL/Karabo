@@ -1,26 +1,23 @@
-from unittest import TestCase
+import os.path as op
 from contextlib import contextmanager
 from functools import partial
 from io import StringIO
-import os.path as op
 from tempfile import TemporaryDirectory
+from unittest import TestCase
 from uuid import uuid4
 
-from traits.api import HasTraits, Bool, Enum, Float, Int, Range, String
+from traits.api import Bool, Enum, Float, HasTraits, Int, Range, String
 
 from karabo.common.api import set_modified_flag, walk_traits_object
 from karabo.common.project.api import (
-    PROJECT_DB_TYPE_PROJECT,
-    BaseProjectObjectModel, DeviceConfigurationModel, DeviceInstanceModel,
-    DeviceServerModel, MacroModel, MemCacheWrapper, ProjectDBCache,
-    ProjectModel, read_lazy_object, recursive_save_object
-)
+    PROJECT_DB_TYPE_PROJECT, BaseProjectObjectModel, DeviceConfigurationModel,
+    DeviceInstanceModel, DeviceServerModel, MacroModel, MemCacheWrapper,
+    ProjectDBCache, ProjectModel, read_lazy_object, recursive_save_object)
 from karabo.common.scenemodel.api import SceneModel
-from karabo.native import encodeXML, Hash
+from karabo.native import Hash, encodeXML
 
 from ..api import (
-    convert_old_project, OldProject, read_project_model, write_project_model
-)
+    OldProject, convert_old_project, read_project_model, write_project_model)
 
 TEST_DOMAIN = 'TESTES'
 

@@ -2,14 +2,8 @@ import threading
 import time
 
 from karabo.bound import (
-    Hash, Schema,
-    INT32_ELEMENT,
-    INPUT_CHANNEL,
-    NODE_ELEMENT,
-    OUTPUT_CHANNEL,
-    OVERWRITE_ELEMENT,
-    SignalSlotable
-)
+    INPUT_CHANNEL, INT32_ELEMENT, NODE_ELEMENT, OUTPUT_CHANNEL,
+    OVERWRITE_ELEMENT, Hash, Schema, SignalSlotable)
 from karabo.integration_tests.utils import BoundDeviceTestCase
 
 max_timeout = 20    # in seconds

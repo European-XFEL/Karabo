@@ -1,5 +1,5 @@
-from time import sleep
 from datetime import datetime
+from time import sleep
 
 from karabo.bound import Hash
 from karabo.common.states import State

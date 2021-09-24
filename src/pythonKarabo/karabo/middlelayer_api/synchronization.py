@@ -1,10 +1,11 @@
 """This module contains some synchronization routines for users"""
 
 import asyncio
-from asyncio import (CancelledError, ensure_future, Future,
-                     get_event_loop, iscoroutine, iscoroutinefunction)
-from functools import wraps
 import logging
+from asyncio import (
+    CancelledError, Future, ensure_future, get_event_loop, iscoroutine,
+    iscoroutinefunction)
+from functools import wraps
 
 from karabo.native import KaraboValue, unit_registry as unit
 

@@ -1,10 +1,10 @@
 from io import StringIO
 
 from ..api import (
-    LinePlotModel, SparklineModel, read_scene, TrendGraphModel,
-    VectorXYGraphModel)
-from .utils import (assert_base_traits, base_widget_traits,
-                    single_model_round_trip)
+    LinePlotModel, SparklineModel, TrendGraphModel, VectorXYGraphModel,
+    read_scene)
+from .utils import (
+    assert_base_traits, base_widget_traits, single_model_round_trip)
 
 OLD_SPARKY = """
 <svg:svg

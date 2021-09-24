@@ -1,14 +1,15 @@
 from io import StringIO
+
 from lxml import etree
 
 from karabo.common.scenemodel.api import write_scene
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessLevel, AccessMode, Device, dictToHash, Hash, Overwrite,
-    slot, Slot, String, TypeHash, VectorString)
+    AccessLevel, AccessMode, Device, Hash, Overwrite, Slot, String, TypeHash,
+    VectorString, dictToHash, slot)
 from karabo.middlelayer_api.signalslot import Signal
 from karabo.native import read_project_model
-from karabo.project_db.util import get_node, get_project, ProjectDBError
+from karabo.project_db.util import ProjectDBError, get_node, get_project
 
 
 class ProjectManager(Device):

@@ -1,16 +1,16 @@
+import pickle
 from asyncio import Future, TimeoutError, wait_for
 from contextlib import contextmanager
 from datetime import datetime, timezone
-import pickle
 
 from flaky import flaky
 
-from karabo.middlelayer_api.tests.eventloop import async_tst, DeviceTest
 from karabo.middlelayer import (
-    background, connectDevice, Device, State, String, waitUntil, waitUntilNew)
-from karabo.middlelayer import sleep
-from ..ipython import IPythonKernel
+    Device, State, String, background, connectDevice, sleep, waitUntil,
+    waitUntilNew)
+from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
+from ..ipython import IPythonKernel
 
 FLAKY_MAX_RUNS = 2
 FLAKY_MIN_PASSES = 1

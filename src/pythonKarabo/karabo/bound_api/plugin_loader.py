@@ -1,7 +1,7 @@
+from karathon import STRING_ELEMENT
 from pkg_resources import WorkingSet
 
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
-from karathon import STRING_ELEMENT
 
 DEFAULT_NAMESPACE = "karabo.bound_device"
 

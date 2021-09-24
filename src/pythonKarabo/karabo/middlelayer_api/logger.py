@@ -1,8 +1,8 @@
+import logging
+import traceback
 from bisect import bisect
 from contextlib import contextmanager
 from datetime import datetime
-import logging
-import traceback
 
 from karabo.native import (
     AccessLevel, AccessMode, Configurable, Hash, String, VectorString)

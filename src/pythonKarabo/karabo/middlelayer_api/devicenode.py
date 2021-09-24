@@ -1,7 +1,6 @@
 from asyncio import TimeoutError, wait_for
 
-from karabo.native import isSet, KaraboError, String
-from karabo.native import AccessMode, Assignment
+from karabo.native import AccessMode, Assignment, KaraboError, String, isSet
 
 from .device_client import getDevice, updateDevice
 

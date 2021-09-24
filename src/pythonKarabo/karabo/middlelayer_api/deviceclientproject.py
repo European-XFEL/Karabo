@@ -12,8 +12,8 @@ import csv
 from datetime import datetime
 from threading import Timer
 
-from karabo.native import decodeXML, encodeXML, Hash
-from karabo.native.project.old import Project, BaseDevice, BaseDeviceGroup
+from karabo.native import Hash, decodeXML, encodeXML
+from karabo.native.project.old import BaseDevice, BaseDeviceGroup, Project
 
 
 class ProjectDevice(BaseDevice):

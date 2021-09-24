@@ -1,8 +1,8 @@
-from functools import partial
-from os import environ
 import os.path as op
 import re
 import subprocess
+from functools import partial
+from os import environ
 
 # NOTE: Only stdlib imports are allowed here! This module is used when
 # installing the karabo package.

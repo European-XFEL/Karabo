@@ -4,6 +4,7 @@ __date__ = "$Jul 26, 2012 16:17:33 PM$"
 import copy
 
 from karabo.common.states import State
+
 from .worker import Worker
 
 # ======================================= Fsm Macros

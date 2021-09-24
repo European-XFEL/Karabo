@@ -1,8 +1,8 @@
-from unittest import main, TestCase
+from unittest import TestCase, main
 
 from karabo.middlelayer import (
-    AccessLevel, AlarmCondition, Configurable, Hash, Int32,
-    MetricPrefix, Node, Unit, unit)
+    AccessLevel, AlarmCondition, Configurable, Hash, Int32, MetricPrefix, Node,
+    Unit, unit)
 from karabo.middlelayer_api.alarm import AlarmMixin
 
 

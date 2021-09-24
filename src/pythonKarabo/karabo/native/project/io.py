@@ -4,15 +4,14 @@ from io import StringIO
 from lxml import etree
 
 from karabo.common.project.api import (
-    PROJECT_DB_TYPE_DEVICE_INSTANCE, PROJECT_DB_TYPE_DEVICE_CONFIG,
+    PROJECT_DB_TYPE_DEVICE_CONFIG, PROJECT_DB_TYPE_DEVICE_INSTANCE,
     PROJECT_DB_TYPE_DEVICE_SERVER, PROJECT_DB_TYPE_MACRO,
     PROJECT_DB_TYPE_PROJECT, PROJECT_DB_TYPE_SCENE, PROJECT_OBJECT_CATEGORIES,
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     MacroModel, ProjectModel, read_device, read_device_server, write_device,
-    write_device_server
-)
+    write_device_server)
 from karabo.common.scenemodel.api import SceneModel, read_scene, write_scene
-from karabo.native.data import decodeXML, encodeXML, Hash
+from karabo.native.data import Hash, decodeXML, encodeXML
 
 _ITEM_TYPES = {
     DeviceConfigurationModel: PROJECT_DB_TYPE_DEVICE_CONFIG,

@@ -1,7 +1,7 @@
 import base64
 from xml.etree.ElementTree import SubElement
 
-from traits.api import HasStrictTraits, Bool, Bytes, Instance, List, String
+from traits.api import Bool, Bytes, HasStrictTraits, Instance, List, String
 
 from karabo.common.scenemodel.bases import BaseWidgetObjectData
 from karabo.common.scenemodel.const import NS_KARABO, WIDGET_ELEMENT_TAG

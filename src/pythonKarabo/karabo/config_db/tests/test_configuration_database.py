@@ -1,10 +1,9 @@
 import os
 import unittest
-from ..configuration_database import (
-    DbHandle, ConfigurationDatabase)
-from ..utils import create_config_set_id
-from ..utils import ConfigurationDBError
 from datetime import datetime
+
+from ..configuration_database import ConfigurationDatabase, DbHandle
+from ..utils import ConfigurationDBError, create_config_set_id
 
 TEST_DB_PATH = 'configManagerTest.db'
 

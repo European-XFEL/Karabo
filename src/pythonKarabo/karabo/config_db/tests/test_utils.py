@@ -1,11 +1,8 @@
 import unittest
 
-from karabo.native import Hash, Schema, NodeType
-
 from karabo.config_db.utils import (
-    hashFromBase64Bin, hashToBase64Bin,
-    schemaToBase64Bin, schemaFromBase64Bin
-)
+    hashFromBase64Bin, hashToBase64Bin, schemaFromBase64Bin, schemaToBase64Bin)
+from karabo.native import Hash, NodeType, Schema
 
 
 class TestUtils(unittest.TestCase):

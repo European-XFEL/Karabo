@@ -4,11 +4,10 @@ import numpy as np
 
 from karabo.common.states import State
 from karabo.native import (
-    Bool, Configurable, Float, Int32, MetricPrefix, String, Timestamp, Unit,
-    unit_registry as unit, QuantityValue, StringValue, BoolValue,
-    VectorDouble)
+    Bool, BoolValue, Configurable, Float, Int32, MetricPrefix, QuantityValue,
+    String, StringValue, Timestamp, Unit, VectorDouble, unit_registry as unit)
 
-from ..unitutil import minimum, maximum, removeQuantity, StateSignifier
+from ..unitutil import StateSignifier, maximum, minimum, removeQuantity
 from ..utils import build_karabo_value
 
 

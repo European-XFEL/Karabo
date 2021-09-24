@@ -1,9 +1,9 @@
 from abc import abstractmethod
+
 import pkg_resources
 
 from karabo.native import (
     AccessLevel, AccessMode, Bool, Configurable, Node, String)
-
 
 DEFAULT_PROTOCOL = "exist_db"
 
