@@ -1,11 +1,10 @@
+import time
 from datetime import datetime
 from functools import total_ordering
 
 import dateutil.parser
 import dateutil.tz
 import numpy
-
-import time
 
 RESOLUTION = 10 ** 18  # current Karabo resolution is attoseconds
 MINUTE_IN_SECONDS = 60

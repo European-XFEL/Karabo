@@ -1,5 +1,6 @@
 import argparse
 import time
+
 import numpy as np
 
 
@@ -63,7 +64,7 @@ def create_deep_hash(hash_factory):
 
 
 def get_bound_funcs_bin():
-    from karabo.bound import Hash, BinarySerializerHash
+    from karabo.bound import BinarySerializerHash, Hash
 
     serializer = BinarySerializerHash.create("Bin")
 
@@ -103,13 +104,13 @@ def get_bound_funcs_xml():
 
 
 def get_middlelayer_funcs_bin():
-    from karabo.native import decodeBinary, encodeBinary, Hash
+    from karabo.native import Hash, decodeBinary, encodeBinary
 
     return (decodeBinary, encodeBinary, Hash)
 
 
 def get_middlelayer_funcs_xml():
-    from karabo.native import decodeXML, encodeXML, Hash
+    from karabo.native import Hash, decodeXML, encodeXML
 
     return (decodeXML, encodeXML, Hash)
 

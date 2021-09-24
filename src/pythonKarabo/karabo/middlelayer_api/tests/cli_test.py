@@ -1,23 +1,22 @@
+import gc
+import time
+import weakref
 from asyncio import (
     ensure_future, get_event_loop, set_event_loop, sleep, wait_for)
 from contextlib import closing
-import gc
 from itertools import count
-import time
 from unittest import TestCase, main, skip
-import weakref
 
+from karabo.middlelayer_api.compat import amqp
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import (
-    getDevice, findDevices, shutdown, getClients, getDevices)
+    findDevices, getClients, getDevice, getDevices, shutdown)
 from karabo.middlelayer_api.eventloop import NoEventLoop
-from karabo.native import KaraboError, Int32 as Int, Slot
 from karabo.middlelayer_api.ikarabo import (
-    connectDevice, DeviceClient, start_device_client)
-from karabo.middlelayer_api.macro import Macro, EventThread, RemoteDevice
-
+    DeviceClient, connectDevice, start_device_client)
+from karabo.middlelayer_api.macro import EventThread, Macro, RemoteDevice
 from karabo.middlelayer_api.tests.eventloop import setEventLoop
-from karabo.middlelayer_api.compat import amqp
+from karabo.native import Int32 as Int, KaraboError, Slot
 
 
 class Remote(Macro):

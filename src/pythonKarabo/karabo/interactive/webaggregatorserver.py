@@ -1,7 +1,7 @@
-from asyncio import ensure_future, get_event_loop, wait_for
 import json
 import os
 from argparse import ArgumentParser
+from asyncio import ensure_future, get_event_loop, wait_for
 
 from tornado import web
 from tornado.httpclient import AsyncHTTPClient

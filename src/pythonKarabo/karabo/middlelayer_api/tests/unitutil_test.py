@@ -2,8 +2,7 @@ from unittest import TestCase, main
 
 from pint import DimensionalityError
 
-from karabo.middlelayer import Int32, unit, QuantityValue
-from karabo.middlelayer import numeric
+from karabo.middlelayer import Int32, QuantityValue, numeric, unit
 
 
 class Tests(TestCase):

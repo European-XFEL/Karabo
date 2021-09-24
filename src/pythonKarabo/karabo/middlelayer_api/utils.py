@@ -1,8 +1,9 @@
-from functools import reduce
 import os
+from functools import reduce
 
 import numpy as np
-from karabo.native import Unit, MetricPrefix, NumpyVector, QuantityValue
+
+from karabo.native import MetricPrefix, NumpyVector, QuantityValue, Unit
 
 
 def get_karabo_version():

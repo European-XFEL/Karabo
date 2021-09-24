@@ -1,12 +1,12 @@
+import numbers
 from collections import OrderedDict
 from collections.abc import Iterable
 from copy import deepcopy
 from enum import Enum
-import numbers
 
 import numpy as np
 
-from .typenums import HashType, XML_TYPE_TO_HASH_TYPE
+from .typenums import XML_TYPE_TO_HASH_TYPE, HashType
 
 __all__ = ['get_hash_type_from_data', 'Hash', 'HashByte', 'HashElement',
            'HashList', 'HashMergePolicy', 'is_equal', 'Schema',

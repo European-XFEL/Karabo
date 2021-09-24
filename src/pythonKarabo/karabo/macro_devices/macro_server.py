@@ -1,7 +1,7 @@
 import sys
 
-from karabo.middlelayer_api.device_server import MiddleLayerDeviceServer
 from karabo.middlelayer import AccessLevel, Overwrite
+from karabo.middlelayer_api.device_server import MiddleLayerDeviceServer
 
 
 class MacroServer(MiddleLayerDeviceServer):

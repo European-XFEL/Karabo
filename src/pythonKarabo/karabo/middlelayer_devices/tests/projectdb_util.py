@@ -1,13 +1,12 @@
+import os
 from abc import abstractmethod
 from asyncio import sleep, wait_for
-import os
 from uuid import uuid4
 
 from karabo.middlelayer import (
-    call, connectDevice, coslot, Device, Hash, String, updateDevice)
+    Device, Hash, String, call, connectDevice, coslot, updateDevice)
 from karabo.middlelayer_api.tests.eventloop import async_tst
 from karabo.project_db.tests.util import create_hierarchy
-
 
 UUIDS = [str(uuid4()) for i in range(5)]
 

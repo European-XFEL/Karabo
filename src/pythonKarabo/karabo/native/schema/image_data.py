@@ -1,10 +1,10 @@
 import numpy
 
 from karabo.native.data import (
-    AccessMode, DaqDataType, dtype_from_number, EncodingType, Hash,
-    NodeType, Unit)
+    AccessMode, DaqDataType, EncodingType, Hash, NodeType, Unit,
+    dtype_from_number)
 
-from .basetypes import NoneValue, ImageData
+from .basetypes import ImageData, NoneValue
 from .configurable import Configurable
 from .descriptors import (
     Bool, Int32, Simple, String, Type, VectorInt32, VectorUInt64)
