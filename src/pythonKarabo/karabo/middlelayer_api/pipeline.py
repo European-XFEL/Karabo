@@ -235,11 +235,10 @@ class NetworkInput(Configurable):
     maxQueueLength = UInt32(
         defaultValue=DEFAULT_MAX_QUEUE_LENGTH,
         minInc=1,
-        maxInc=10,
         displayedName="Max. Queue Length Output Channels",
         description="Maximum number of data items to be queued by connected "
                     "Output Channels (only in copy mode and for "
-                    "queueDrop policies)",
+                    "queueDrop policies - Output may force a stricter limit)",
         accessMode=AccessMode.INITONLY)
 
     delayOnInput = UInt32(
@@ -724,6 +723,14 @@ class NetworkOutput(Configurable):
         description="Table of active connections",
         accessMode=AccessMode.READONLY)
 
+    maxQueueLength = UInt32(
+        defaultValue=DEFAULT_MAX_QUEUE_LENGTH,
+        minInc=2,  # 1 would be equivalent to 'drop' policy
+        displayedName="Max. Queue Length",
+        description="Maximum queue length accepted from 'copy' mode input "
+                    "channels with 'queueDrop' policies",
+        accessMode=AccessMode.INITONLY)
+
     def __init__(self, config):
         super().__init__(config)
         self.copy_queues = []
@@ -759,7 +766,7 @@ class NetworkOutput(Configurable):
                                              DEFAULT_MAX_QUEUE_LENGTH))
             # Protect against unnecessary high values from outside!
             # The MDL does not have a memory queue ...
-            maxQueueLength = min(maxQueueLength, 10)
+            maxQueueLength = min(maxQueueLength, self.maxQueueLength)
             if slowness == "throw":
                 print(f"Throw configuration detected for {channel_name}!")
                 slowness = "drop"

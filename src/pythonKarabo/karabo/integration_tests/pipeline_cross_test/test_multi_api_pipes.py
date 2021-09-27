@@ -383,13 +383,17 @@ class TestCrossPipelining(BoundDeviceTestCase):
         Test single sender with given frequency (Hz) and single receiver with
         given processing time (ms) where receiver is configured to make sender
         queue, queueOpt defines which queue option is used (queue or queueDrop)
-        which makes no difference here since the queue is longer than all we send.
+        which makes no difference here since the configured maximum queue
+        length is longer than all we send.
         """
         sender_cfg = Hash("outputFrequency", sender_freq)
+        if sender_api == "mdl":
+            sender_cfg["output.maxQueueLength"] = 100
         self.start_device(sender_api, 1, "sender", sender_cfg)
 
         receiver_cfg = Hash("input.connectedOutputChannels", ["sender:output"],
                             "input.onSlowness", queueOpt,
+                            "input.maxQueueLength", 100,
                             "processingTime", processing_time)
         self.start_device(receiver_api, 1, "receiver", receiver_cfg)
 
