@@ -158,6 +158,7 @@ directory, create a `settings.json` file with the following content::
 
    {
       "cmake.buildDirectory": "${workspaceFolder}/../[BUILD_DIR]",
+      "cmake.sourceDirectory": "${workspaceFolder}/src",
       "cmake.configureSettings": {
          "CMAKE_PREFIX_PATH": "[CONDA_ENV_DIR]",
          "CMAKE_INSTALL_PREFIX": "[KARABO_FRAMEWORK_INSTALL_DIR]",
@@ -173,7 +174,12 @@ is a reference to a variable kept by VSCode and should be left as is. The parent
 reference is optional, but has been left in the example as a reminder on using build
 directories that are outside the source tree, which is a good practice. If you opt for
 using build directories inside the Framework's source tree, please make sure that
-your choice for build tree is properly configured in `.gitignore`.
+your choice for build tree is properly configured in `.gitignore`. The `cmake.sourceDirectory`
+informs the VSCode CMake extension about the location of the main `CMakeLists.txt` file.
+If this parameter is not specified, VSCode will complain about not finding a
+`CMakeLists.txt` file in the root of the workspace and will prompt you to manually
+chose the main `CMakeLists.txt` among all the `CMakeLists.txt` files it finds in
+the workspace.
 
 [CONDA_ENV_DIR] should be replaced by the directory where the Conda environment
 created in the previous step is located. To get its path, issue the command::
@@ -192,6 +198,7 @@ An example of a configured `settings.json`::
 
    {
       "cmake.buildDirectory": "${workspaceFolder}/../build_debug_karaboCpp",
+      "cmake.sourceDirectory": "${workspaceFolder}/src",
       "cmake.configureSettings": {
             "CMAKE_PREFIX_PATH": "/home/bob/miniconda3/envs/karabo-cpp",
             "CMAKE_INSTALL_PREFIX": "${workspaceFolder}/../install_framework",
@@ -209,7 +216,7 @@ following commands::
    cd [KARABO_FRAMEWORK_DIR]
    code .
 
-VSCode should detect the `CMakeLists.txt` file in the root of the Karabo Framework
+VSCode should find the `CMakeLists.txt` file in the `src` folder of the Karabo Framework
 working folder and ask you if you want to configure the CMake project. Just say
 yes. Once the CMake project has been configured, you should see the following contents
 in the CMake Project Outline view of VSCode:
