@@ -17,6 +17,7 @@ class Validator_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testTableMandatoryColumn);
     CPPUNIT_TEST(testTableMinMaxRows);
     CPPUNIT_TEST(testColumnMinMaxAttrs);
+    CPPUNIT_TEST(testVectorCharVectorByteSize);
     CPPUNIT_TEST(testState);
     CPPUNIT_TEST(testAlarms);
     CPPUNIT_TEST_SUITE_END();
@@ -68,6 +69,14 @@ private:
      * table cells (elements in the RowSchema) are enforced.
      */
     void testColumnMinMaxAttrs();
+
+    /**
+     * @brief Checks that minSize and maxSize attributes are enforced for
+     * vector types VECTOR_CHAR_ELEMENT and VECTOR_UINT8_ELEMENT. Those two
+     * types are Base64 encoded when converted from/to strings, hence
+     * the special test case.
+     */
+    void testVectorCharVectorByteSize();
 
     /**
      * @brief Checks that the validator rejects non standard states

@@ -599,10 +599,30 @@ namespace karabo {
                     }
                 }
             } else if (referenceCategory == Types::SEQUENCE) {
-                int currentSize = workNode.getValueAs<string, vector>().size();
+
+                int currentSize = 0;
+                // "vector<char>" and "vector<unsigned char>" have "toString"
+                // and "fromString" specializations in "StringTools.hh" that
+                // use Base64 encoding.
+                //
+                // Calling specific specializations of "getValueAs" for the
+                // "vector<char>" and "vector<unsigned chars>" makes sure that
+                // the right specializations of "fromString" are used and that
+                // the resulting vector's is correct.
+                //
+                // Base64 enconding is the right way to handle those two types
+                // of vector. It would be possible to remove the Base64
+                // enconding for the "vector<unsigned char>", but that would
+                // break backward compatibility.
+                if (referenceType == Types::VECTOR_CHAR) {
+                    currentSize = workNode.getValueAs<char, vector>().size();
+                } else if (referenceType == Types::VECTOR_UINT8) {
+                    currentSize = workNode.getValueAs<unsigned char, vector>().size();
+                } else {
+                    currentSize = workNode.getValueAs<string, vector>().size();
+                }
 
                 // TODO Check whether we are really going to validate inner elements of a vector for max/min..., maybe not.
-
                 if (masterNode.hasAttribute(KARABO_SCHEMA_MIN_SIZE)) {
                     int minSize = masterNode.getAttribute<unsigned int>(KARABO_SCHEMA_MIN_SIZE);
                     if (currentSize < minSize) {
