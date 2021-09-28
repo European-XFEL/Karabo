@@ -11,13 +11,15 @@
 
 #include "Validator_Test.hh"
 
-#include "karabo/util/Schema.hh"
-#include "karabo/util/Hash.hh"
-#include "karabo/util/Validator.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/TableElement.hh"
 #include "karabo/util/AlarmConditionElement.hh"
+#include "karabo/util/Hash.hh"
+#include "karabo/util/Schema.hh"
+#include "karabo/util/SimpleElement.hh"
 #include "karabo/util/StateElement.hh"
+#include "karabo/util/StringTools.hh"
+#include "karabo/util/TableElement.hh"
+#include "karabo/util/Validator.hh"
+#include "karabo/util/VectorElement.hh"
 
 using namespace karabo;
 using util::TABLE_ELEMENT;
@@ -25,6 +27,8 @@ using util::INT32_ELEMENT;
 using util::STRING_ELEMENT;
 using util::STATE_ELEMENT;
 using util::ALARM_ELEMENT;
+using util::VECTOR_CHAR_ELEMENT;
+using util::VECTOR_UINT8_ELEMENT;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Validator_Test);
 
@@ -331,6 +335,66 @@ void Validator_Test::testColumnMinMaxAttrs() {
     validated.clear();
 }
 
+
+void Validator_Test::testVectorCharVectorByteSize() {
+    using std::vector;
+    using util::toString;
+
+    util::Validator validator;
+    util::Hash validated;
+
+    util::Schema vecSchValid;
+    VECTOR_CHAR_ELEMENT(vecSchValid).key("MinSizeVectChar")
+        .description("VectorChar that respects MinSize")
+        .minSize(2)
+        .readOnly()
+        .initialValue({'A', 'B'})
+        .commit();
+    std::pair<bool, std::string> res =
+        validator.validate(vecSchValid, util::Hash(), validated);
+    // vecSchValid should be valid, res.first == true,  with no error message.
+    CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+            "Value of 'MinSizeVectChar' should be equal to provided 'initialValue'.",
+            toString(vector<char>({'A', 'B'})),
+            toString(validated.get<vector<char>>("MinSizeVectChar")));
+
+    util::Schema vecSchInvalid;
+    CPPUNIT_ASSERT_THROW(
+        VECTOR_CHAR_ELEMENT(vecSchInvalid).key("MinSizeVectChar")
+            .description("VectorChar with less than MinSize elements")
+            .minSize(1)
+            .readOnly()
+            .initialValue({})
+            .commit(),
+        karabo::util::ParameterException);
+
+    util::Schema vecByteSchValid;
+    VECTOR_UINT8_ELEMENT(vecByteSchValid).key("MinSizeVectByte")
+        .description("VectorByte that respects MinSize")
+        .minSize(2)
+        .readOnly()
+        .initialValue({0xFF, 0xA2})
+        .commit();
+    res = validator.validate(vecByteSchValid, util::Hash(), validated);
+    // vecByteSchValid must be valid, res.first == true, with no error message.
+    CPPUNIT_ASSERT_MESSAGE(res.second, res.first);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+            "Value of 'MinSizeVectByte' should be equal to provided 'initialValue'.",
+            toString(vector<unsigned char>({0xFF, 0xA2})),
+            toString(validated.get<vector<unsigned char>>("MinSizeVectByte")));
+
+    util::Schema vecByteSchInvalid;
+    CPPUNIT_ASSERT_THROW(
+        VECTOR_UINT8_ELEMENT(vecByteSchValid).key("MaxSizeVectByte")
+            .description("VectorByte that doesn't respect MaxSize")
+            .minSize(1)
+            .maxSize(2)
+            .readOnly()
+            .initialValue({0xFF, 0xA2, 0x16})
+            .commit(),
+        karabo::util::ParameterException);
+}
 
 void Validator_Test::testState() {
 
