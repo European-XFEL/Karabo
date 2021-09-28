@@ -130,6 +130,9 @@ else:
             'PPReceiverDevice=karabo.integration_tests.pipeline_processing_test.ppreceiver:PPReceiverDevice',
             'UnstoppedThreadDevice=karabo.integration_tests.device_comm_test.unstoppedThreadDevice:UnstoppedThreadDevice',
         ],
+        'karabo.bound_broken_device_test': [
+            'BrokenTestDevice=karabo.bound_api.tests.brokenBoundDevice:BrokenTestDevice',
+        ],
         'karabo.project_db': [
             'file_db=karabo.project_db.file_db.node:DbConnectionNode',
         ],
