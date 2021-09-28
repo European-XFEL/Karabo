@@ -107,7 +107,7 @@ class SceneLinkWidget(KaraboSceneWidget, QPushButton):
     @Slot()
     def edit_label(self):
         dialog = TextDialog(self.model, parent=self)
-        if dialog.exec_() == QDialog.Rejected:
+        if dialog.exec() == QDialog.Rejected:
             return
 
         # Set all at once!
@@ -126,7 +126,7 @@ class SceneLinkWidget(KaraboSceneWidget, QPushButton):
 
     def edit(self, scene_view=None):
         dialog = SceneLinkDialog(self.model, parent=self)
-        if dialog.exec_() == QDialog.Rejected:
+        if dialog.exec() == QDialog.Rejected:
             return
 
         self.model.target = dialog.selectedScene
