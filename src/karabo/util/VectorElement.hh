@@ -110,7 +110,7 @@ namespace karabo {
                             this->m_node->template getAttribute<unsigned int>(KARABO_SCHEMA_MIN_SIZE);
                         if (defaultVal.size() < minSizeVal) {
                             std::ostringstream oss;
-                            oss << "Default value has less elements, '"
+                            oss << "Value has less elements, '"
                                 << defaultVal.size() << "' than allowed by "
                                 << "minSize, '" << minSizeVal << "', for parameter '"
                                 << this->m_node->getKey() << "'.";
@@ -122,7 +122,7 @@ namespace karabo {
                             this->m_node->template getAttribute<unsigned int>(KARABO_SCHEMA_MAX_SIZE);
                         if (defaultVal.size() > maxSizeVal) {
                             std::ostringstream oss;
-                            oss << "Default value has more elements, '"
+                            oss << "Value has more elements, '"
                                 << defaultVal.size() << "' than allowed by "
                                 << "maxSize, '" << maxSizeVal << "', for parameter '"
                                 << this->m_node->getKey() << "'.";
