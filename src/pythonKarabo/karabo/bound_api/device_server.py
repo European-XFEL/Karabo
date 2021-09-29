@@ -12,13 +12,12 @@ import sys
 import threading
 from subprocess import Popen, TimeoutExpired
 
+from karabo.common.states import State
 from karathon import (
     CHOICE_ELEMENT, INT32_ELEMENT, LIST_ELEMENT, NODE_ELEMENT,
     OVERWRITE_ELEMENT, STRING_ELEMENT, VECTOR_STRING_ELEMENT, AccessLevel,
     Broker, EventLoop, Hash, Logger, Schema, SignalSlotable, Validator,
     saveToFile)
-
-from karabo.common.states import State
 
 from .configurator import Configurator
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
