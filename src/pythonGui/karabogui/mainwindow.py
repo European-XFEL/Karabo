@@ -99,8 +99,10 @@ SETTINGS_TITLE = '&Settings'
 PANEL_MENU_TITLE = '&Panels'
 GEOMETRY_TITLE = "&Window Geometry"
 GRAFANA_LINK = "https://ctrend.xfel.eu/"
-RTD_GUI_LINK = "https://rtd.xfel.eu/docs/howtogui/en/latest/"
-RTD_FW_LINK = "https://rtd.xfel.eu/docs/karabo/en/latest/"
+RTD_LINK = "https://rtd.xfel.eu/docs"
+RTD_GUI_LINK = f"{RTD_LINK}/howtogui/en/latest/"
+RTD_FW_LINK = f"{RTD_LINK}/docs/karabo/en/latest/"
+RTD_MACRO_LINK = f"{RTD_LINK}/howtomacro/en/latest/"
 
 
 class MainWindow(QMainWindow):
@@ -418,6 +420,12 @@ class MainWindow(QMainWindow):
             self.onKaraboDocumentation)
         self.acKaraboDocumentation.setCheckable(False)
 
+        self.acMacroDocumentation = QAction(
+            icons.logo, "HowToMacro Documentation", self)
+        self.acMacroDocumentation.triggered.connect(
+            self.onMacroDocumentation)
+        self.acMacroDocumentation.setCheckable(False)
+
     def _setupMenuBar(self):
         menuBar = self.menuBar()
 
@@ -465,6 +473,7 @@ class MainWindow(QMainWindow):
         mHelpMenu = menuBar.addMenu("&Links")
         mHelpMenu.addAction(self.acGrafana)
         mHelpMenu.addAction(self.acGuiDocumentation)
+        mHelpMenu.addAction(self.acMacroDocumentation)
         mHelpMenu.addAction(self.acKaraboDocumentation)
 
         mViewMenu = menuBar.addMenu("&View")
@@ -644,6 +653,12 @@ class MainWindow(QMainWindow):
         if name == LOG_TITLE:
             get_network().onSubscribeLogs(True)
 
+    def _open_link(self, link):
+        try:
+            webbrowser.open_new(link)
+        except webbrowser.Error:
+            messagebox.show_error("No web browser available!", parent=self)
+
     # --------------------------------------
     # Qt slots
 
@@ -696,24 +711,19 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def onGrafana(self):
-        try:
-            webbrowser.open_new(GRAFANA_LINK)
-        except webbrowser.Error:
-            messagebox.show_error("No web browser available!", parent=self)
+        self._open_link(GRAFANA_LINK)
 
     @Slot()
     def onGuiDocumentation(self):
-        try:
-            webbrowser.open_new(RTD_GUI_LINK)
-        except webbrowser.Error:
-            messagebox.show_error("No web browser available!", parent=self)
+        self._open_link(RTD_GUI_LINK)
 
     @Slot()
     def onKaraboDocumentation(self):
-        try:
-            webbrowser.open_new(RTD_FW_LINK)
-        except webbrowser.Error:
-            messagebox.show_error("No web browser available!", parent=self)
+        self._open_link(RTD_FW_LINK)
+
+    @Slot()
+    def onMacroDocumentation(self):
+        self._open_link(RTD_MACRO_LINK)
 
     @Slot()
     def onWizard(self):
