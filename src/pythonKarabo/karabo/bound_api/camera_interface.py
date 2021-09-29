@@ -1,11 +1,10 @@
 from abc import ABCMeta, abstractmethod
 
+from karabo.common.states import State
 from karathon import (
     DOUBLE_ELEMENT, IMAGEDATA_ELEMENT, INT32_ELEMENT, NODE_ELEMENT,
     OUTPUT_CHANNEL, OVERWRITE_ELEMENT, SLOT_ELEMENT, VECTOR_STRING_ELEMENT,
     DaqDataType, Schema, Unit)
-
-from karabo.common.states import State
 
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .no_fsm import NoFsm

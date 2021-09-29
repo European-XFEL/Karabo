@@ -1,10 +1,9 @@
 from abc import ABCMeta, abstractmethod
 
+from karabo.common.states import State
 from karathon import (
     FLOAT_ELEMENT, INT32_ELEMENT, OVERWRITE_ELEMENT, SLOT_ELEMENT,
     MetricPrefix, Unit)
-
-from karabo.common.states import State
 
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from .no_fsm import NoFsm
