@@ -605,19 +605,22 @@ namespace karabo {
                 // and "fromString" specializations in "StringTools.hh" that
                 // use Base64 encoding.
                 //
-                // Calling specific specializations of "getValueAs" for the
+                // Calling specific specializations of "getValue" for the
                 // "vector<char>" and "vector<unsigned chars>" makes sure that
-                // the right specializations of "fromString" are used and that
-                // the resulting vector's is correct.
+                // no wrong specialization of "fromString" is used and that
+                // the resulting vector's is correct - before,
+                // "getValueAs<string, vector>" was called for all types and
+                // ended up using the wrong "fromString" specialization for the
+                // two mentioned types.
                 //
                 // Base64 enconding is the right way to handle those two types
                 // of vector. It would be possible to remove the Base64
                 // enconding for the "vector<unsigned char>", but that would
                 // break backward compatibility.
                 if (referenceType == Types::VECTOR_CHAR) {
-                    currentSize = workNode.getValueAs<char, vector>().size();
+                    currentSize = workNode.getValue<vector<char>>().size();
                 } else if (referenceType == Types::VECTOR_UINT8) {
-                    currentSize = workNode.getValueAs<unsigned char, vector>().size();
+                    currentSize = workNode.getValue<vector<unsigned char>>().size();
                 } else {
                     currentSize = workNode.getValueAs<string, vector>().size();
                 }
