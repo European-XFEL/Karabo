@@ -8,12 +8,12 @@ import time
 from urllib.parse import urlparse
 
 import numpy as np
-# we use karathon here to ensure serialization compatiblity between
-# the loggers running in C++ and the migration script
-from karathon import BinarySerializerSchema, TextSerializerSchema
 
 from karabo.influxdb.client import InfluxDbClient
 from karabo.influxdb.dlutils import device_id_from_path, escape_measurement
+# we use karathon here to ensure serialization compatiblity between
+# the loggers running in C++ and the migration script
+from karathon import BinarySerializerSchema, TextSerializerSchema
 
 PROCESSED_SCHEMAS_FILE_NAME = '.processed_schemas.txt'
 

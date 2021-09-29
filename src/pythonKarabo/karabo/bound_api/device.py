@@ -11,6 +11,9 @@ import threading
 import time
 import traceback
 
+from karabo import __version__ as karaboVersion
+from karabo.common.api import (
+    AlarmCondition, Capabilities, Interfaces, State, karabo_deprecated)
 from karathon import (
     ALARM_ELEMENT, BOOL_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT, MICROSEC,
     NODE_ELEMENT, OBSERVER, OVERWRITE_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT,
@@ -19,10 +22,6 @@ from karathon import (
     EventLoop, Hash, HashFilter, HashMergePolicy, LeafType, Logger,
     MetricPrefix, Schema, SignalSlotable, Timestamp, Trainstamp, Unit,
     Validator, ValidatorValidationRules, VectorHash, loadFromFile)
-
-from karabo import __version__ as karaboVersion
-from karabo.common.api import (
-    AlarmCondition, Capabilities, Interfaces, State, karabo_deprecated)
 
 from .configurator import Configurator
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
