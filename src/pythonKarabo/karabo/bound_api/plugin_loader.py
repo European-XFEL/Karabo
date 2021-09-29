@@ -1,5 +1,6 @@
 from karathon import STRING_ELEMENT
 from pkg_resources import WorkingSet
+import warnings
 
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
@@ -36,7 +37,18 @@ class PluginLoader(object):
 
     def update(self):
         ws = WorkingSet()
-        self._entrypoints = list(ws.iter_entry_points(self.pluginNamespace))
-        for ep in self._entrypoints:
-            ep.load()
+
+        def load(ep):
+            try:
+                ep.load()
+                return True
+            except Exception as e:
+                msg = f'Failed to load plugin {ep} for registry: {e}'
+                warnings.warn(msg, ImportWarning)
+                return False
+
+        self._entrypoints = [
+            ep for ep in ws.iter_entry_points(self.pluginNamespace)
+            if load(ep)
+        ]
         return self._entrypoints
