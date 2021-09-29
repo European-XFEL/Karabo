@@ -55,6 +55,9 @@ __lint_isort() {
     pushd $CI_PROJECT_DIR/src/pythonGui/
     __run_lint_command "isort . --check"
     popd
+    pushd $CI_PROJECT_DIR/src/pythonKarabo/
+    __run_lint_command "isort . --check"
+    popd
 }
 
 # -- main
