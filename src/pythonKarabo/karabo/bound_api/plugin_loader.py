@@ -1,6 +1,7 @@
+import warnings
+
 from karathon import STRING_ELEMENT
 from pkg_resources import WorkingSet
-import warnings
 
 from .decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
