@@ -98,6 +98,9 @@ class MyDevice(Device):
     async def onInitialization(self):
         self.state = State.ON
 
+    async def setState(self, state):
+        self.state = state
+
 
 class Tests(DeviceTest):
     @classmethod
@@ -255,17 +258,31 @@ class Tests(DeviceTest):
         self.assertEqual(self.myDevice.slotHasSlot("doesNotExist"), False)
 
     @async_tst
-    def test_output_information(self):
+    async def test_instance_info(self):
+        device = self.myDevice
+        self.assertEqual(device._ss.info["status"], "ok")
+        await device.setState(State.ERROR)
+        await sleep(0)
+        self.assertEqual(device._ss.info["status"], "error")
+        await device.setState(State.UNKNOWN)
+        await sleep(0)
+        self.assertEqual(device._ss.info["status"], "unknown")
+        await device.setState(State.ON)
+        await sleep(0)
+        self.assertEqual(device._ss.info["status"], "ok")
+
+    @async_tst
+    async def test_output_information(self):
         device = self.myDevice
         # Second argument processId is not used in MDL
-        success, data = yield from device.slotGetOutputChannelInformation(
+        success, data = await device.slotGetOutputChannelInformation(
             "output", None)
         self.assertEqual(success, True)
         self.assertEqual(data["connectionType"], "tcp")
         self.assertEqual(data["memoryLocation"], "remote")
         self.assertIsInstance(data["port"], np.uint32)
 
-        success, data = yield from device.slotGetOutputChannelInformation(
+        success, data = await device.slotGetOutputChannelInformation(
             "doesNotExist", None)
         self.assertEqual(success, False)
         self.assertEqual(data, Hash())
