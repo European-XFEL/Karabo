@@ -338,7 +338,8 @@ class SignalSlotable(Configurable):
             self.__initialized = False
             await get_event_loop().run_coroutine_or_thread(
                 self.onDestruction)
-        await self._ss.stop_tasks()
+        if self._ss is not None:
+            await self._ss.stop_tasks()
 
     def __del__(self):
         if self._ss is not None and self._ss.loop.is_running():
