@@ -1,8 +1,22 @@
 from asyncio import TimeoutError, wait_for
 
-from karabo.native import AccessMode, Assignment, KaraboError, String, isSet
+from karabo.native import (
+    AccessMode, Assignment, KaraboError, String, StringValue, get_timestamp,
+    isSet)
 
 from .device_client import getDevice, updateDevice
+
+
+class MetaProxy:
+
+    def __init__(self, deviceId):
+        self.deviceId = StringValue(
+            deviceId, timestamp=get_timestamp())
+        self.proxy = None
+
+    @property
+    def value(self):
+        return self.proxy or self.deviceId
 
 
 class DeviceNode(String):
@@ -36,10 +50,12 @@ class DeviceNode(String):
         super().__init__(**kwargs)
         self.timeout = timeout
 
-    def toDataAndAttrs(self, proxy):
-        deviceId = proxy.deviceId
-        data, attrs = super().toDataAndAttrs(deviceId)
-
+    def toDataAndAttrs(self, value):
+        if not isinstance(value, str):
+            # If we have a proxy connection, the value is the `Proxy`,
+            # otherwise we have a `StringValue`
+            value = value.__meta_deviceId
+        data, attrs = super().toDataAndAttrs(value)
         return data, attrs
 
     def checkedInit(self, instance, value=None):
@@ -59,6 +75,8 @@ class DeviceNode(String):
             return []
 
         async def inner():
+            meta_proxy = MetaProxy(value)
+            instance.__dict__[self.key] = meta_proxy
             try:
                 proxy = await wait_for(getDevice(value),
                                        timeout=self.timeout)
@@ -69,10 +87,20 @@ class DeviceNode(String):
                     'The DeviceNode with key "{}" timed out and could not '
                     'establish a proxy to "{}"'.format(self.key, value))
 
-            instance.__dict__[self.key] = proxy
+            proxy.__meta_deviceId = meta_proxy.deviceId
+            meta_proxy.proxy = proxy
             instance._ss.exitStack.enter_context((await updateDevice(proxy)))
 
         return [inner()]
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+
+        value = instance._getValue(self.key)
+        if isinstance(value, MetaProxy):
+            value = value.value
+        return value
 
     def toSchemaAndAttrs(self, device, state):
         h, attrs = super().toSchemaAndAttrs(device, state)
