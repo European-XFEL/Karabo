@@ -949,21 +949,48 @@ class Tests(DeviceTest):
     @async_tst
     async def test_devicenode(self):
         class A(Device):
-            dn = DeviceNode(timeout=15.0)
+            dn = DeviceNode(timeout=None)
 
-        a = A({"_deviceId_": "devicenode", "dn": "remote"})
+            async def onInitialization(self):
+                self.state = State.NORMAL
 
-        await a.startInstance()
+        class B(Device):
+            pass
+
+        a = A({"_deviceId_": "devicenode", "dn": "badwienix"})
+        b = B({"_deviceId_": "badwienix"})
+
+        a.startInstance()
         try:
             with (await getDevice("devicenode")) as d:
                 if not jms:
                     await updateDevice(d)
+                # A is started without awaiting, we have to wait for the
+                # device to come online, however it will not pass
+                # initialization, the device badwienix is not online.
+                await waitUntil(lambda: d.dn.value == "badwienix")
+                self.assertEqual(d.state, State.UNKNOWN)
                 self.assertEqual(d.lockedBy, "")
-                self.assertEqual(d.dn.value, "remote")
-                self.assertIsNotNone(d.dn.timestamp)
+                self.assertEqual(d.dn.value, "badwienix")
+                ts_before = d.dn.timestamp
+                self.assertIsNotNone(ts_before)
                 self.assertEqual(type(d).dn.displayType, "deviceNode")
+                await b.startInstance()
+                # wait until it is online, the device will pass
+                # the initialization phase
+                await waitUntil(lambda: d.state == State.NORMAL)
+                self.assertEqual(d.dn.value, "badwienix")
+                ts_after = d.dn.timestamp
+                self.assertIsNotNone(ts_after)
+                self.assertEqual(ts_after, ts_before)
+                self.assertEqual(d.state, State.NORMAL)
+                # Timestamp is not changed under hood, verify
+                await updateDevice(d)
+                ts_after = d.dn.timestamp
+                self.assertEqual(ts_after, ts_before)
         finally:
             await a.slotKillDevice()
+            await b.slotKillDevice()
 
     @async_tst
     async def test_devicenode_timeout(self):
