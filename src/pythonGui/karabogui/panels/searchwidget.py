@@ -4,7 +4,6 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-import os.path as op
 import weakref
 from collections import deque
 
@@ -14,11 +13,13 @@ from qtpy.QtWidgets import QWidget
 
 from karabogui import icons
 
+from .utils import get_panel_ui
+
 
 class SearchBar(QWidget):
     def __init__(self, parent=None):
         super(SearchBar, self).__init__(parent)
-        uic.loadUi(op.join(op.dirname(__file__), "search_widget.ui"), self)
+        uic.loadUi(get_panel_ui("project_filter.ui"), self)
 
         self.label_filter.textChanged.connect(self._filter_changed)
         self.label_filter.returnPressed.connect(self._arrow_right_clicked)
