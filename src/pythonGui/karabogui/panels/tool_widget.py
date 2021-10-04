@@ -2,7 +2,6 @@
 # Author: <dennis.goeries@xfel.eu>
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-import os.path as op
 import re
 import weakref
 
@@ -14,6 +13,8 @@ from qtpy.QtWidgets import QWidget
 import karabogui.icons as icons
 from karabo.common.enums import Interfaces
 from karabogui.util import wait_cursor
+
+from .utils import get_panel_ui
 
 
 class SearchValidator(QValidator):
@@ -37,7 +38,7 @@ class BaseSearchBar(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-        uic.loadUi(op.join(op.dirname(__file__), self.ui_file), self)
+        uic.loadUi(get_panel_ui(self.ui_file), self)
         self.ui_filter.returnPressed.connect(self._search_clicked)
         self.ui_search.clicked.connect(self._search_clicked)
         self.ui_clear.clicked.connect(self._clear_clicked)
@@ -114,7 +115,7 @@ class BaseSearchBar(QWidget):
 
 
 class SearchBar(BaseSearchBar):
-    ui_file = "filter_widget.ui"
+    ui_file = "status_filter.ui"
 
     def __init__(self, parent=None):
         super().__init__(parent=parent)
