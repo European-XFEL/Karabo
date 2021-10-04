@@ -11,6 +11,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
+# Creates file "compile_commands.json" in the build directory. It is useful
+# for integrating with external tools such as "clangd". Some IDEs, like
+# VSCode, also use information contained in this file to resolve pre-processor
+# includes and provide better code completion suggestions.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 if (NOT DEFINED ENV{KARABO} OR NOT EXISTS $ENV{KARABO})
   # KARABO env var not defined or invalid - try to infer the directory of a
   # Karabo installation.
