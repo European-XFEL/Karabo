@@ -26,8 +26,13 @@ def test_device_proxy_classes():
         prop = proxy.get_property_binding('foo')
         assert prop is binding.value.foo
 
+        prop = proxy['foo']
+        assert prop is binding.value.foo
+
         not_there = proxy.get_property_binding('nope.blah')
         assert not_there is None
+
+        assert proxy['nope.blah'] is None
 
 
 def test_device_class_proxy_status():
