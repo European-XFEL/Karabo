@@ -1,3 +1,5 @@
+import os.path as op
+
 from karabogui import icons
 
 from .alarmpanel import AlarmPanel
@@ -44,3 +46,9 @@ def format_property_details(binding, path, value=''):
     name = binding.displayed_name or path
     data_type = type(binding).__name__[:-len('binding')]
     return f"- {name} ({data_type}): {value}"
+
+
+def get_panel_ui(ui_name):
+    assert ui_name.endswith(".ui"), f"{ui_name} is not a `.ui` file"
+
+    return op.join(op.abspath(op.dirname(__file__)), "ui", ui_name)
