@@ -65,6 +65,9 @@ class BaseDeviceProxy(HasStrictTraits):
             prop = getattr(prop.value, part, None)
         return prop
 
+    def __getitem__(self, path):
+        return self.get_property_binding(path)
+
 
 class DeviceProxy(BaseDeviceProxy):
     """The proxy for device instances and project devices. Instances may come
