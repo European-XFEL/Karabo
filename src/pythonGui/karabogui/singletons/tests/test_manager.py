@@ -427,6 +427,18 @@ class TestManager(GuiTestCase):
                 {'items': ['new_stuff']}
             )
 
+    def test_handle_projectUpdate(self):
+        target = 'karabogui.singletons.manager.broadcast_event'
+        with patch(target) as broadcast_event:
+            manager = Manager()
+            client = "my_client"
+            uuids = ["123", "456"]
+            h = Hash('success', True, 'info', {"client": client,
+                                               "projects": uuids})
+            manager.handle_projectUpdate(**h)
+            broadcast_event.assert_called_with(
+                KaraboEvent.ProjectUpdated, {'uuids': ['123', '456']})
+
     def test_handle_set_log_reply(self):
         manager = Manager()
         target = 'karabogui.messagebox.show_error'
@@ -479,11 +491,42 @@ class TestManager(GuiTestCase):
             assert event_data['message'] == 'wubbalubbadubdub'
             assert isinstance(event_data['device'], DeviceProxy)
 
+        with patch('karabogui.singletons.manager.messagebox') as mbox:
+            info = {'deviceId': 'bob', 'message': 'mandatory key missing',
+                    'success': False}
+            manager = Manager()
+            manager.handle_initReply(**info)
+            mbox.show_error.assert_called_with(
+                'The instance <b>bob</b> could not be instantiated.. '
+                '<br><br>The reason is probably: <br><i>mandatory key '
+                'missing</i><br><br>Click "Show Details..." '
+                'for more information.', details='mandatory key missing')
+
+    def test_handle_log_messages(self):
+        target = 'karabogui.singletons.manager.broadcast_event'
+        with patch(target) as broadcast_event:
+            manager = Manager()
+            messages = [Hash(
+                "type", "error",
+                "category", "XFEL/MOTOR/1",
+                "message", "This is a test message",
+                "traceback", "",
+                "timestamp", Timestamp().toLocal())]
+            manager.handle_log(messages)
+            broadcast_event.assert_called_with(
+                KaraboEvent.LogMessages, {"messages": messages})
+
     def test_handle_broker_information(self):
         network = Mock()
         with singletons(network=network):
+            # New protocol
             manager = Manager()
             manager.handle_serverInformation(readOnly=True)
+            network.set_server_information.assert_called_once_with(
+                read_only=True)
+            # Old protocol
+            network.reset_mock()
+            manager.handle_brokerInformation(readOnly=True)
             network.set_server_information.assert_called_once_with(
                 read_only=True)
 
@@ -506,9 +549,177 @@ class TestManager(GuiTestCase):
         with singletons(topology=topology):
             topology.get_device.return_value = device_proxy
             manager = Manager()
-
             info = {'deviceId': 'bob', 'property': 'answer', 'data': [42],
                     'success': True}
             manager.handle_propertyHistory(**info)
             expected_call = call.publish_historic_data('answer', [42])
             assert device_proxy.method_calls[0] == expected_call
+
+    def test_handle_notification(self):
+        with patch('karabogui.singletons.manager.messagebox') as mbox:
+            info = {'message': 'hello'}
+            manager = Manager()
+            manager.handle_notification(**info)
+            mbox.show_warning.assert_called_with('hello')
+
+            info = {'nomessage': 'hello'}
+            manager.handle_notification(**info)
+            mbox.show_warning.assert_called_with(
+                'Notification from GUI Server is empty!')
+
+    def test_handle_executeReply(self):
+        target = 'karabogui.singletons.manager.messagebox'
+        with patch(target) as mbox:
+            manager = Manager()
+            info = Hash(
+                "success", False,
+                "input", Hash("deviceId", "XFEL/MOTOR/2",
+                              "command", "move"),
+                "reason", "timeout in gui server")
+            manager.handle_executeReply(**info)
+            mbox.show_error.assert_called_with(
+                'Execute slot <b>move</b> of device <b>XFEL/MOTOR/2</b> has '
+                'encountered an error!<br><br>The reason is probably: '
+                '<br><i>timeout in gui server</i><br><br>Click '
+                '"Show Details..." for more information.',
+                details='timeout in gui server')
+
+    def test_handle_deviceConfigurations(self):
+        topology = Mock()
+        with singletons(topology=topology):
+            manager = Manager()
+            configs = {"XFEL/MOTOR/1": Hash("state", "MOVING"),
+                       "XFEL/MOTOR/2": Hash("state", "OFF")}
+            manager.handle_deviceConfigurations(configs)
+            topology.device_config_updated.call_count == 2
+
+    def test_handle_configurationFromPast(self):
+        target = 'karabogui.singletons.manager.broadcast_event'
+        with patch(target) as broadcast_event:
+            manager = Manager()
+            config_time = Timestamp()
+            config = Hash("archive", False)
+            info = Hash(
+                "success", True,
+                "config", config,
+                "reason", "",
+                "deviceId", "XFEL/MOTOR/2",
+                "configTimepoint", config_time,
+                "configAtTimepoint", True,
+                "preview", True,
+                "time", config_time)
+
+            manager.handle_configurationFromPast(**info)
+            broadcast_event.assert_called_with(
+                KaraboEvent.ShowConfigurationFromPast,
+                {'deviceId': 'XFEL/MOTOR/2',
+                 'configuration': config,
+                 'time': config_time.toLocal(),
+                 'config_time': config_time.toLocal(),
+                 'preview': True, 'time_match': True})
+
+        target = 'karabogui.singletons.manager.messagebox'
+        with patch(target) as mbox:
+            manager = Manager()
+            timepoint = Timestamp()
+            info = Hash(
+                "success", False,
+                "deviceId", "XFEL/MOTOR/2",
+                "time", timepoint)
+            reason = "Device not logged"
+            info["reason"] = reason
+            manager.handle_configurationFromPast(**info)
+            mbox.show_error.assert_called_with(
+                'The configuration of `XFEL/MOTOR/2` requested at time point '
+                f'`{timepoint.toLocal()}` was not retrieved!',
+                details=reason)
+
+    def test_handle_listConfigurationFromName(self):
+        target = 'karabogui.singletons.manager.broadcast_event'
+        with patch(target) as broadcast_event:
+            manager = Manager()
+            items = ["a", "b", "c"]
+            args = Hash("deviceId", "XFEL/CAM/1")
+            info = Hash(
+                "success", True,
+                "reply", Hash("items", items),
+                "request", Hash("args", args),
+                "reason", "")
+
+            manager.handle_listConfigurationFromName(**info)
+            broadcast_event.assert_called_with(
+                KaraboEvent.ListConfigurationUpdated,
+                {'items': items, 'deviceId': 'XFEL/CAM/1'})
+
+        target = 'karabogui.singletons.manager.messagebox'
+        with patch(target) as mbox:
+            manager = Manager()
+            info["success"] = False
+            manager.handle_listConfigurationFromName(**info)
+            mbox.show_error.assert_called_with(
+                'Requesting a list of configurations for XFEL/CAM/1 failed!',
+                details='')
+
+    def test_handle_getConfigurationFromName(self):
+        target = 'karabogui.singletons.manager.broadcast_event'
+        with patch(target) as broadcast_event:
+            manager = Manager()
+            item = Hash("name", "devName",
+                        "config", Hash("state", "ON"))
+
+            args = Hash("deviceId", "XFEL/CAM/1")
+            info = Hash(
+                "success", True,
+                "reply", Hash("item", item),
+                "request", Hash("args", args, "preview", False),
+                "reason", "")
+
+            manager.handle_getConfigurationFromName(**info)
+            broadcast_event.assert_called_with(
+                KaraboEvent.ShowConfigurationFromName,
+                {'configuration': Hash("state", "ON"), 'preview': False,
+                 'name': 'devName', 'deviceId': 'XFEL/CAM/1'})
+
+        target = 'karabogui.singletons.manager.messagebox'
+        with patch(target) as mbox:
+            manager = Manager()
+            info["success"] = False
+            manager.handle_getConfigurationFromName(**info)
+            mbox.show_error.assert_called_with(
+                'Requesting a configuration for XFEL/CAM/1 failed!',
+                details='')
+
+    def test_handle_saveConfigurationFromName(self):
+        network = Mock()
+        with singletons(network=network):
+            manager = Manager()
+            item = Hash("name", "devName",
+                        "config", Hash("state", "ON"))
+
+            args = Hash("deviceIds", ["XFEL/CAM/1"])
+            info = Hash(
+                "success", True,
+                "reply", Hash("item", item),
+                "request", Hash("args", args, "preview", False,
+                                "update", True),
+                "reason", "")
+            manager.handle_saveConfigurationFromName(**info)
+            network.onListConfigurationFromName.assert_called_with(
+                'XFEL/CAM/1')
+
+        target = 'karabogui.singletons.manager.messagebox'
+        with patch(target) as mbox:
+            manager = Manager()
+            info["success"] = False
+            manager.handle_saveConfigurationFromName(**info)
+            mbox.show_error.assert_called_with(
+                'Saving a configuration for XFEL/CAM/1 failed!', details='')
+
+    def test_handle_subscribeLogsReply(self):
+        target = 'karabogui.singletons.manager.messagebox'
+        with patch(target) as mbox:
+            manager = Manager()
+            info = {"success": False}
+            manager.handle_subscribeLogsReply(**info)
+            mbox.show_error.assert_called_with(
+                'Could not reconfigure the logs for the gui server')
