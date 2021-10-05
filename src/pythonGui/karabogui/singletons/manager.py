@@ -537,7 +537,7 @@ class Manager(QObject):
         deviceId = request['args.deviceId']
         if not success:
             messagebox.show_error(f"Requesting a configuration for {deviceId} "
-                                  f"failed!", details=reason)
+                                  "failed!", details=reason)
             return
 
         item = reply['item']
@@ -719,23 +719,12 @@ class Manager(QObject):
         """Handle the arrival of the `AlarmService` device"""
         get_network().onRequestAlarms(instance_id)
 
-    def _broadcast_if_of_type(self, class_id, instance_id, event_type):
-        """If a device is of a particular type `class_id`, broadcast an event.
-        """
-        attrs = self._topology.get_attributes('device.' + instance_id)
-        if attrs is not None:
-            if class_id == attrs.get('classId', ''):
-                broadcast_event(event_type, {'instanceId': instance_id})
-                return True
-        return False
-
     def _set_server_information(self, info):
         read_only = info.get('readOnly', False)
         get_network().set_server_information(read_only=read_only)
         broadcast_event(KaraboEvent.ServerInformationUpdate, info)
 
-
-# ------------------------------------------------------------------
+    # ------------------------------------------------------------------
 
 
 def _extract_topology_devices(topo_hash):
