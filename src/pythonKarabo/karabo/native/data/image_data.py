@@ -1,13 +1,13 @@
 import numpy
 
-from karabo.native.data.basetypes import NoneValue, ImageData
-from karabo.native.data.enums import DaqDataType, EncodingType, NodeType, Unit
-from karabo.native.data.hash import (
-    AccessMode, Bool, Hash, HashElement, Int32, Simple, String, Type,
-    VectorInt32, VectorUInt64)
-from karabo.native.data.schema import Configurable
-from karabo.native.data.ndarray import NDArray
-from karabo.native.data.utils import dtype_from_number
+from .basetypes import NoneValue, ImageData
+from .enums import AccessMode, DaqDataType, EncodingType, NodeType, Unit
+from .hash import (
+    Bool, Int32, Hash, HashElement, Simple, String, Type, VectorInt32,
+    VectorUInt64)
+from .ndarray import NDArray
+from .schema import Configurable
+from .utils import dtype_from_number
 
 
 def convert_dtype(dtype):
@@ -174,7 +174,9 @@ class Image(Type):
 
     def toKaraboValue(self, data, strict=False):
         if isinstance(data, Hash) and not strict:
-            if data.empty() or len(data["pixels"]) == 0:
+            if (data.empty()
+                    or "pixels" not in data
+                    or len(data["pixels"]) == 0):
                 return NoneValue(descriptor=self)
 
             pixels = data["pixels"]
@@ -249,6 +251,16 @@ class Image(Type):
                            HashElement(data.shape, attrs))
         pixels._setelement("data",
                            HashElement(data.value.data, attrs))
-        h["pixels"] = pixels
 
-        return h, attrs
+        # set the `__classId` attribute to allow the C++ API to decode the
+        # `pixels` Hash as an NDArray object.
+        # XXX: This is a code duplication of NDArray.toDataAndAttrs
+        array_attrs = {"__classId": "NDArray"}
+        array_attrs.update(**attrs)
+        h._setelement("pixels", HashElement(pixels, array_attrs))
+
+        # set the `__classId` attribute to allow the C++ API to decode this
+        # Hash node into an ImageData Object.
+        image_attrs = {"__classId": "ImageData"}
+        image_attrs.update(**attrs)
+        return h, image_attrs
