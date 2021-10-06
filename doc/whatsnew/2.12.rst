@@ -2,12 +2,13 @@
 What's New in Karabo 2.12.0
 ***************************
 
-This section shows the new features in Karabo 2.12.0, compared to 2.11.0. The planned release date of Karabo 2.12 is November 5, 2021.
+This section shows the new features in Karabo 2.12.0, compared to 2.11.0. The release date of Karabo 2.12 was October 1, 2021.
 
 Summary – Release highlights
 ++++++++++++++++++++++++++++
 
 - GUI: Project devices can be moved up and down with a context menu action
+- GUI: Topology filtering based on device status (ERROR, UNKNOWN, OK)
 - GUI: Due to segmentation faults on Ubuntu 20, the library Qt is downgraded to 5.9
 - GUI: Added context menu action on the project device server to sort its devices alphabetically, or by either domain, type or member
 - GUI: Offline project devices are now loaded lazily giving a significant project loading boost
@@ -16,6 +17,18 @@ Summary – Release highlights
 - MDL: Forward slotInstanceUpdated signal to device children
 - GUI: State color field string formatting
 - GUI: Configurable horizontal label alignment
+- GUI: A tool to find the project containing a specific device from its deviceId (DOC inspired).
+  This last feature requires a projectManager of version 2.12 or higher to be deployed.
+
+- MDL: Forward slotInstanceUpdated signal to device children (relevant to monitoring devices) (backported to 2.10.X)
+- MDL: ImageData and NDArray generated from MDL devices can now be processed by C++ and Bound Processors (backported to 2.10.X)
+- C++: Moved the building system from netbeans to CMAKE
+
+All APIs:
+- instanceInfo allows the "unknown" status
+- Experimental support of Redis as a Broker
+- Experimental support of MQTT as a Broker
+
 
 Breaking Changes
 ++++++++++++++++
