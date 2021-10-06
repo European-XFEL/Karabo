@@ -1,0 +1,22 @@
+***************************
+What's New in Karabo 2.13.0
+***************************
+
+This section shows the new features in Karabo 2.13.0, compared to 2.12.0. The planned release date of Karabo 2.13 is November 5, 2021.
+
+Summary – Release highlights
+++++++++++++++++++++++++++++
+
+- MDL: DeviceNode always provides a value now. This removes the online to offline configuration problem for device nodes.
+
+
+Breaking Changes
+++++++++++++++++
+
+
+Change of behaviour
++++++++++++++++++++
+
+
+Detailed Merge-Log
+==================
