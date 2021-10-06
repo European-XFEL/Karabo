@@ -7,11 +7,9 @@ from functools import partial
 from inspect import signature
 from io import StringIO
 
-from karabo.common.enums import ONLINE_STATUSES
 from karabo.common.project.macro import read_macro
 from karabo.common.scenemodel.const import SceneTargetWindow
 from karabo.common.scenemodel.io import read_scene
-from karabo.common.services import KARABO_DAEMON_MANAGER
 from karabo.common.traits import walk_traits_object
 from karabo.native import Hash
 from karabogui import messagebox
@@ -109,7 +107,7 @@ def onSchemaUpdate(proxy, handler, request=False, remove=True):
 
     :param proxy: The DeviceProxy or PropertyProxy
     :param handler: The handler to be executed on update
-    :param request: Boolean to set if a schema should be requested
+    :param request: Boolean to set if a config should be requested
     :param remove: Boolean to set if the handler should be removed after
     """
     if not isinstance(proxy, DeviceProxy):
@@ -211,42 +209,3 @@ def handle_macro_from_server(dev_id, name, project, success, reply):
     project.macros.append(macro)
     # and then open it
     broadcast_event(KaraboEvent.ShowMacroView, {'model': macro})
-
-
-def request_daemon_action(serverId, hostId, action, parent):
-    """Request an action for the daemon manager
-
-    :param serverId: The targeted `serverId`
-    :param hostId: The `hostId` of the server with `serverId`
-    :param action: The action to be performed, e.g. `kill`, ...
-    """
-    device_id = KARABO_DAEMON_MANAGER
-    device = get_topology().get_device(device_id)
-    # XXX: Protect here if the device is offline. We share the same
-    # logic as the device scene link!
-    if device is not None and device.status not in ONLINE_STATUSES:
-        parent = parent()
-        messagebox.show_warning(f"Device <b>{device_id}</b> is not online!",
-                                "Warning", parent=parent)
-        return
-
-    handler = partial(handle_daemon_from_server, serverId, action, parent)
-    call_device_slot(handler, device_id, 'requestDaemonAction',
-                     serverId=serverId, hostId=hostId, action=action)
-
-
-def handle_daemon_from_server(serverId, action, parent, success, reply):
-    """Callback handler for a request the daemon manager"""
-    parent = parent()
-    if not success or not reply.get('payload.success', False):
-        msg = 'The command "{}" for the server "{}" was not successful!'
-        messagebox.show_warning(msg.format(action, serverId),
-                                title='Daemon Service Failed',
-                                parent=parent)
-        return
-    msg = 'The command "{}" for the server "{}" was successful!'
-    messagebox.show_information(msg.format(action, serverId),
-                                title='Daemon Service Success!',
-                                parent=parent)
-
-    return
