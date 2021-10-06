@@ -6,6 +6,7 @@
 import weakref
 from collections import namedtuple
 from contextlib import contextmanager
+from functools import partial
 
 from qtpy.QtCore import (
     QAbstractTableModel, QModelIndex, QSortFilterProxyModel, Qt)
@@ -16,11 +17,14 @@ from qtpy.QtWidgets import (
 from traits.api import Instance, WeakRef
 
 from karabo.common.scenemodel.api import DaemonManagerModel
+from karabo.common.services import KARABO_DAEMON_MANAGER
+from karabogui import messagebox
 from karabogui.binding.api import VectorHashBinding, get_editor_value
 from karabogui.controllers.api import (
     BaseBindingController, register_binding_controller, with_display_type)
 from karabogui.controllers.table.api import TableButtonDelegate
-from karabogui.request import request_daemon_action
+from karabogui.request import call_device_slot
+from karabogui.singletons.api import get_topology
 from karabogui.util import move_to_cursor
 
 SERVER_COLUMN = 0
@@ -53,6 +57,44 @@ ENTRY_LABELS = [text.lower() for column, text
                 in COLUMN_TEXT.items() if column < 5]
 
 serviceEntry = namedtuple('serviceEntry', ENTRY_LABELS)
+
+
+def request_daemon_action(serverId, hostId, action, parent):
+    """Request an action for the daemon manager
+
+    :param serverId: The targeted `serverId`
+    :param hostId: The `hostId` of the server with `serverId`
+    :param action: The action to be performed, e.g. `kill`, ...
+    """
+    device_id = KARABO_DAEMON_MANAGER
+    device = get_topology().get_device(device_id)
+    # XXX: Protect here if the device is offline. We share the same
+    # logic as the device scene link!
+    if device is not None and not device.online:
+        parent = parent()
+        messagebox.show_warning(f"Device <b>{device_id}</b> is not online!",
+                                "Warning", parent=parent)
+        return
+
+    def handle_daemon_from_server(serverId, action, parent, success, reply):
+        """Callback handler for a request the daemon manager"""
+        parent = parent()
+        if not success or not reply.get('payload.success', False):
+            msg = 'The command "{}" for the server "{}" was not successful!'
+            messagebox.show_warning(msg.format(action, serverId),
+                                    title='Daemon Service Failed',
+                                    parent=parent)
+            return
+        msg = 'The command "{}" for the server "{}" was successful!'
+        messagebox.show_information(msg.format(action, serverId),
+                                    title='Daemon Service Success!',
+                                    parent=parent)
+
+        return
+
+    handler = partial(handle_daemon_from_server, serverId, action, parent)
+    call_device_slot(handler, device_id, 'requestDaemonAction',
+                     serverId=serverId, hostId=hostId, action=action)
 
 
 def get_status_brush(service_status):
