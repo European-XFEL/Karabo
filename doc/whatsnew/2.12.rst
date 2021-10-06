@@ -14,20 +14,20 @@ Summary – Release highlights
 - GUI: Offline project devices are now loaded lazily giving a significant project loading boost
 - GUI: View of Karabo Clients added to the application menu (i.e. command line interfaces and DOOCS bridges).
 - GUI: It is now possible to format (weight, size) the device state string on the `StateColor Field`
-- MDL: Forward slotInstanceUpdated signal to device children
 - GUI: State color field string formatting
 - GUI: Configurable horizontal label alignment
 - GUI: A tool to find the project containing a specific device from its deviceId (DOC inspired).
-  This last feature requires a projectManager of version 2.12 or higher to be deployed.
+  This feature requires a projectManager of version 2.12 or higher to be deployed.
 
 - MDL: Forward slotInstanceUpdated signal to device children (relevant to monitoring devices) (backported to 2.10.X)
 - MDL: ImageData and NDArray generated from MDL devices can now be processed by C++ and Bound Processors (backported to 2.10.X)
+
 - C++: Moved the building system from netbeans to CMAKE
 
-All APIs:
-- instanceInfo allows the "unknown" status
-- Experimental support of Redis as a Broker
-- Experimental support of MQTT as a Broker
+- All APIs:
+    - instanceInfo allows the "unknown" status
+    - Experimental support of Redis as a Broker
+    - Experimental support of MQTT as a Broker
 
 
 Breaking Changes
