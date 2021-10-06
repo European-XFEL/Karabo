@@ -15,7 +15,7 @@ from karabo.common.services import KARABO_DAEMON_MANAGER
 from karabo.common.traits import walk_traits_object
 from karabo.native import Hash
 from karabogui import messagebox
-from karabogui.binding.api import extract_sparse_configurations
+from karabogui.binding.api import DeviceProxy, extract_sparse_configurations
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.fonts import substitute_font
 from karabogui.singletons.api import get_manager, get_network, get_topology
@@ -75,6 +75,60 @@ def send_property_changes(proxies):
         device_proxy = topology.get_device(device_id)
         manager.expect_properties(device_proxy, properties)
         network.onReconfigure(device_id, config)
+
+
+def onConfigurationUpdate(proxy, handler=None, request=False, remove=True):
+    """Execute on a config update of `proxy` and request if necessary
+
+    :param proxy: The DeviceProxy or PropertyProxy
+    :param handler: The handler to be executed on update
+    :param request: Boolean to set if a config should be requested
+    :param remove: Boolean to set if the handler should be removed after
+    """
+    if not isinstance(proxy, DeviceProxy):
+        root_proxy = proxy.root_proxy
+    else:
+        root_proxy = proxy
+
+    def config_handler():
+        if remove:
+            proxy.binding.on_trait_change(config_handler, "config_update",
+                                          remove=True)
+        handler()
+
+    proxy.binding.on_trait_change(config_handler, "config_update")
+    if request and root_proxy.online:
+        device_id = root_proxy.device_id
+        get_network().onGetDeviceConfiguration(device_id)
+
+    return config_handler
+
+
+def onSchemaUpdate(proxy, handler, request=False, remove=True):
+    """Execute on a schema update of `proxy` and `request` if necessary
+
+    :param proxy: The DeviceProxy or PropertyProxy
+    :param handler: The handler to be executed on update
+    :param request: Boolean to set if a schema should be requested
+    :param remove: Boolean to set if the handler should be removed after
+    """
+    if not isinstance(proxy, DeviceProxy):
+        root_proxy = proxy.root_proxy
+    else:
+        root_proxy = proxy
+
+    def schema_handler():
+        if remove:
+            root_proxy.on_trait_change(schema_handler, "schema_update",
+                                       remove=True)
+        handler()
+
+    root_proxy.on_trait_change(schema_handler, "schema_update")
+    if request and root_proxy.online:
+        device_id = root_proxy.device_id
+        get_network().onGetDeviceSchema(device_id)
+
+    return schema_handler
 
 
 def get_scene_from_server(device_id, scene_name, project=None,
