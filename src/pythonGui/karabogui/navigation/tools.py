@@ -10,7 +10,8 @@ from traits.api import ABCHasStrictTraits, Undefined
 from karabo.common.api import Capabilities
 from karabogui import messagebox
 from karabogui.itemtypes import NavigationItemTypes
-from karabogui.request import get_scene_from_server
+from karabogui.request import (
+    get_scene_from_server, onConfigurationUpdate, onSchemaUpdate)
 from karabogui.singletons.api import get_topology
 
 
@@ -48,11 +49,8 @@ class DeviceSceneHandler(NavigationHandler):
             return
 
         def _config_handler():
-            """Act on the arrival of the configuration
-            """
-            proxy.on_trait_change(_config_handler, 'config_update',
-                                  remove=True)
-            scenes = proxy.binding.value.availableScenes.value
+            """Act on the arrival of the configuration"""
+            scenes = proxy['availableScenes'].value
             if scenes is Undefined or not len(scenes):
                 messagebox.show_warning(
                     "The device <b>{}</b> does not specify a scene "
@@ -62,13 +60,10 @@ class DeviceSceneHandler(NavigationHandler):
                 get_scene_from_server(device_id, scene_name)
 
         def _schema_handler():
-            """Act on the arrival of the schema
-            """
-            proxy.on_trait_change(_schema_handler, 'schema_update',
-                                  remove=True)
-            scenes = proxy.binding.value.availableScenes.value
+            """Act on the arrival of the schema"""
+            scenes = proxy['availableScenes'].value
             if scenes is Undefined:
-                proxy.on_trait_change(_config_handler, 'config_update')
+                onConfigurationUpdate(proxy, _config_handler)
             elif not len(scenes):
                 messagebox.show_warning(
                     "The device <b>{}</b> does not specify a scene "
@@ -80,14 +75,11 @@ class DeviceSceneHandler(NavigationHandler):
         proxy = get_topology().get_device(device_id)
         if not len(proxy.binding.value):
             # We completely miss our schema and wait for it.
-            proxy.on_trait_change(_schema_handler, 'schema_update')
-        elif proxy.binding.value.availableScenes.value is Undefined:
-            # The configuration did not yet arrive and we cannot get
-            # a scene name from the availableScenes. We wait for the
-            # configuration to arrive and install a handler.
-            proxy.on_trait_change(_config_handler, 'config_update')
+            onSchemaUpdate(proxy, _schema_handler)
+        elif proxy['availableScenes'].value is Undefined:
+            onConfigurationUpdate(proxy, _config_handler)
         else:
-            scenes = proxy.binding.value.availableScenes.value
+            scenes = proxy['availableScenes'].value
             if not len(scenes):
                 # The device might not have a scene name in property
                 messagebox.show_warning(
