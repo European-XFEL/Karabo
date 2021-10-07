@@ -21,8 +21,7 @@ from karabogui.project.dialog.object_handle import ObjectEditDialog
 from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.utils import (
     check_device_server_exists, check_macro_exists)
-from karabogui.request import (
-    call_device_slot, get_scene_from_server, handle_macro_from_server)
+from karabogui.request import get_macro_from_server, get_scene_from_server
 from karabogui.singletons.api import get_config
 from karabogui.util import (
     VALID_PROJECT_OBJECT_NAME, getOpenFileName, move_to_cursor,
@@ -238,9 +237,8 @@ def _load_macro_from_device(project_controller, parent=None):
                                     parent=parent)
             return
 
-        handler = partial(handle_macro_from_server, device_id, macro_name,
-                          project)
-        call_device_slot(handler, device_id, 'requestMacro', name=macro_name)
+        get_macro_from_server(device_id, macro_name=macro_name,
+                              project=project)
 
 
 def _add_scene(project_controller, parent=None):
