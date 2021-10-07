@@ -30,8 +30,7 @@ from karabogui.project.dialog.device_handle import DeviceHandleDialog
 from karabogui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabogui.project.utils import (
     check_device_config_exists, check_device_instance_exists)
-from karabogui.request import (
-    call_device_slot, get_scene_from_server, handle_macro_from_server)
+from karabogui.request import get_macro_from_server, get_scene_from_server
 from karabogui.singletons.api import get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from karabogui.util import move_to_cursor, open_documentation_link
@@ -642,10 +641,8 @@ class DeviceInstanceController(BaseProjectGroupController):
                 messagebox.show_warning(msg, title='Cannot Load Macro')
                 return
 
-            handler = partial(handle_macro_from_server, device_id, macro_name,
-                              project)
-            call_device_slot(handler, device_id, 'requestMacro',
-                             name=macro_name)
+            get_macro_from_server(device_id, macro_name=macro_name,
+                                  project=project)
 
     def _load_scene_from_device(self, project_controller, parent=None):
         """Request a scene directly from a device

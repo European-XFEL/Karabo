@@ -184,27 +184,40 @@ def get_scene_from_server(device_id, scene_name, project=None,
                             name=scene_name, **kwargs)
 
 
-def handle_macro_from_server(dev_id, name, project, success, reply):
-    if not success or not reply.get('payload.success', False):
-        msg = 'Macro "{}" from device "{}" was not retrieved!'
-        messagebox.show_warning(msg.format(name, dev_id),
-                                title='Load Macro from Device Failed')
-        return
+def get_macro_from_server(device_id, macro_name, project):
+    """Get a macro from a device
 
-    data = reply.get('payload.data', '')
-    if not data:
-        msg = 'Macro "{}" from device "{}" contains no data!'
-        messagebox.show_warning(msg.format(name, dev_id),
-                                title='Load Macro from Device Failed')
-        return
+    :param device_id: The deviceId of the device
+    :param macro_name: The macro name
+    :param project: The project owner of the macro. Macros must have a project
+    """
 
-    with StringIO(data) as fp:
-        macro = read_macro(fp)
-        macro.initialized = macro.modified = True
-        macro.simple_name = '{}-{}'.format(dev_id, name)
-        macro.reset_uuid()
+    def macro_handler(dev_id, name, project, success, reply):
+        if not success or not reply.get('payload.success', False):
+            msg = 'Macro "{}" from device "{}" was not retrieved!'
+            messagebox.show_warning(msg.format(name, dev_id),
+                                    title='Load Macro from Device Failed')
+            return
 
-    # Macro's can only be added to project. Hence, add first to the project
-    project.macros.append(macro)
-    # and then open it
-    broadcast_event(KaraboEvent.ShowMacroView, {'model': macro})
+        data = reply.get('payload.data', '')
+        if not data:
+            msg = 'Macro "{}" from device "{}" contains no data!'
+            messagebox.show_warning(msg.format(name, dev_id),
+                                    title='Load Macro from Device Failed')
+            return
+
+        with StringIO(data) as fp:
+            macro = read_macro(fp)
+            macro.initialized = macro.modified = True
+            macro.simple_name = '{}-{}'.format(dev_id, name)
+            macro.reset_uuid()
+
+        # Macro's can only be added to project. Hence, add first to the project
+        project.macros.append(macro)
+        # and then open it
+        broadcast_event(KaraboEvent.ShowMacroView, {'model': macro})
+
+    handler = partial(macro_handler, device_id, macro_name, project)
+
+    return call_device_slot(handler, device_id, slot_name='requestMacro',
+                            name=macro_name)
