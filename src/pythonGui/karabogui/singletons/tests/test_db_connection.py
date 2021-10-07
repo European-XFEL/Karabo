@@ -169,9 +169,11 @@ class TestDBConnection(GuiTestCase):
             token = db_conn.get_database_scene("scene", scene_uuid, 1)
             network.onExecuteGeneric.assert_called_with(
                 KARABO_PROJECT_MANAGER, 'slotGetScene',
-                Hash("uuid", scene_uuid,
-                     "domain", "New",
-                     "db_token", "admin"), token=token)
+                Hash(
+                    "name", "scene",
+                    "uuid", scene_uuid,
+                    "domain", "New",
+                    "db_token", "admin"), token=token)
 
 
 if __name__ == "__main__":

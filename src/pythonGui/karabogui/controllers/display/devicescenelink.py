@@ -1,5 +1,3 @@
-from functools import partial
-
 from qtpy.QtCore import QPoint, QRect, QRectF, QSize, Qt, Slot
 from qtpy.QtGui import QColor, QPainter, QPen
 from qtpy.QtWidgets import QAction, QDialog, QPushButton, QSizePolicy
@@ -16,7 +14,7 @@ from karabogui.controllers.api import (
 from karabogui.dialogs.device_scenelink_dialog import DeviceSceneLinkDialog
 from karabogui.dialogs.textdialog import TextDialog
 from karabogui.fonts import get_qfont, substitute_font
-from karabogui.request import call_device_slot, handle_scene_from_server
+from karabogui.request import get_scene_from_server
 from karabogui.singletons.api import get_topology
 
 
@@ -110,10 +108,8 @@ class LinkWidget(QPushButton):
 
         scene_name = self.model.target
         target_window = self.model.target_window
-        handler = partial(handle_scene_from_server, device_id, scene_name,
-                          None, target_window)
-        call_device_slot(handler, device_id, 'requestScene',
-                         name=scene_name)
+        get_scene_from_server(device_id, scene_name=scene_name,
+                              target_window=target_window)
 
 
 @register_binding_controller(ui_name='Device Scene Link',
