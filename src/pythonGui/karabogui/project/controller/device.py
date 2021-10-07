@@ -31,8 +31,7 @@ from karabogui.project.dialog.object_handle import ObjectDuplicateDialog
 from karabogui.project.utils import (
     check_device_config_exists, check_device_instance_exists)
 from karabogui.request import (
-    call_device_slot, get_scene_from_server, handle_macro_from_server,
-    handle_scene_from_server)
+    call_device_slot, get_scene_from_server, handle_macro_from_server)
 from karabogui.singletons.api import get_manager, get_topology
 from karabogui.topology.api import ProjectDeviceInstance
 from karabogui.util import move_to_cursor, open_documentation_link
@@ -665,10 +664,8 @@ class DeviceInstanceController(BaseProjectGroupController):
                 messagebox.show_warning(msg, title='Cannot Load Scene')
                 return
 
-            handler = partial(handle_scene_from_server, device_id, scene_name,
-                              project, None)
-            call_device_slot(handler, device_id, 'requestScene',
-                             name=scene_name)
+            get_scene_from_server(device_id, scene_name=scene_name,
+                                  project=project)
 
     def _get_configuration_from_past(self, parent=None):
         """Request a configuration from the datalog reader

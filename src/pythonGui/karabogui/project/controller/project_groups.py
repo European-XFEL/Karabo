@@ -22,7 +22,7 @@ from karabogui.project.dialog.server_handle import ServerHandleDialog
 from karabogui.project.utils import (
     check_device_server_exists, check_macro_exists)
 from karabogui.request import (
-    call_device_slot, handle_macro_from_server, handle_scene_from_server)
+    call_device_slot, get_scene_from_server, handle_macro_from_server)
 from karabogui.singletons.api import get_config
 from karabogui.util import (
     VALID_PROJECT_OBJECT_NAME, getOpenFileName, move_to_cursor,
@@ -314,9 +314,8 @@ def _load_scene_from_device(project_controller, parent=None):
                                     parent=parent)
             return
 
-        handler = partial(handle_scene_from_server, device_id, scene_name,
-                          project, None)
-        call_device_slot(handler, device_id, 'requestScene', name=scene_name)
+        get_scene_from_server(device_id, scene_name=scene_name,
+                              project=project)
 
 
 def _create_cinema_link(project_model=None, parent=None):

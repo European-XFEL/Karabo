@@ -20,7 +20,7 @@ from karabogui.dialogs.api import (
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.itemtypes import NavigationItemTypes
 from karabogui.navigation.system_filter_model import TopologyFilterModel
-from karabogui.request import call_device_slot, handle_scene_from_server
+from karabogui.request import call_device_slot, get_scene_from_server
 from karabogui.singletons.api import (
     get_manager, get_network, get_selection_tracker)
 from karabogui.util import (
@@ -331,10 +331,7 @@ class SystemTreeView(QTreeView):
         if dialog.exec() == QDialog.Accepted:
             device_id = dialog.device_id
             scene_name = dialog.capa_name
-            handler = partial(handle_scene_from_server, device_id, scene_name,
-                              None, None)
-            call_device_slot(handler, device_id, 'requestScene',
-                             name=scene_name)
+            get_scene_from_server(device_id, scene_name=scene_name)
 
     @Slot(QPoint)
     def onCustomContextMenuRequested(self, pos):
