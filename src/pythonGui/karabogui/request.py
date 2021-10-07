@@ -130,59 +130,58 @@ def onSchemaUpdate(proxy, handler, request=False, remove=True):
 
 
 def get_scene_from_server(device_id, scene_name, project=None,
-                          target_window=SceneTargetWindow.Dialog):
+                          target_window=SceneTargetWindow.Dialog,
+                          slot_name='requestScene', **kwargs):
     """Get a scene from the a device
 
     :param device_id: The deviceId of the device
     :param scene_name: The scene name
     :param project: The project owner of the scene. Default is None.
     :param target_window: The target window option. Default is Dialog.
+    :param slot_name: The slot to be called to retrieve the scene
     """
 
-    handler = partial(handle_scene_from_server, device_id, scene_name,
-                      project, target_window)
-    call_device_slot(handler, device_id, 'requestScene',
-                     name=scene_name)
+    def scene_handler(dev_id, name, project, target_window, success, reply):
+        """Callback handler for a request to a device"""
+        if not success or not reply.get('payload.success', False):
+            msg = 'Scene "{}" from device "{}" was not retrieved!'
+            messagebox.show_warning(msg.format(name, dev_id),
+                                    title='Load Scene from Device Failed')
+            return
 
+        data = reply.get('payload.data', '')
+        if not data:
+            msg = 'Scene "{}" from device "{}" contains no data!'
+            messagebox.show_warning(msg.format(name, dev_id),
+                                    title='Load Scene from Device Failed')
+            return
 
-def handle_scene_from_server(dev_id, name, project, target_window, success,
-                             reply):
-    """Callback handler for a request to a device to load one of its scenes.
-    """
-    if not success or not reply.get('payload.success', False):
-        msg = 'Scene "{}" from device "{}" was not retrieved!'
-        messagebox.show_warning(msg.format(name, dev_id),
-                                title='Load Scene from Device Failed')
-        return
+        with StringIO(data) as fp:
+            scene = read_scene(fp)
+            scene.modified = True
+            scene.simple_name = '{}|{}'.format(dev_id, name)
+            scene.reset_uuid()
 
-    data = reply.get('payload.data', '')
-    if not data:
-        msg = 'Scene "{}" from device "{}" contains no data!'
-        messagebox.show_warning(msg.format(name, dev_id),
-                                title='Load Scene from Device Failed')
-        return
+        # Add to the project AND open it
+        event_type = KaraboEvent.ShowUnattachedSceneView
+        window = SceneTargetWindow.MainWindow
+        if target_window is not None:
+            window = target_window
+        if project is not None:
+            event_type = KaraboEvent.ShowSceneView
+            project.scenes.append(scene)
 
-    with StringIO(data) as fp:
-        scene = read_scene(fp)
-        scene.modified = True
-        scene.simple_name = '{}|{}'.format(dev_id, name)
-        scene.reset_uuid()
+        # TODO: Repair scene fonts here! 2.11.0, to be removed 2.13?
+        def visitor(model):
+            substitute_font(model)
 
-    # Add to the project AND open it
-    event_type = KaraboEvent.ShowUnattachedSceneView
-    window = SceneTargetWindow.MainWindow
-    if target_window is not None:
-        window = target_window
-    if project is not None:
-        event_type = KaraboEvent.ShowSceneView
-        project.scenes.append(scene)
+        walk_traits_object(scene, visitor_func=visitor)
+        broadcast_event(event_type, {'model': scene, 'target_window': window})
 
-    # TODO: Repair scene fonts here! 2.11.0, to be removed 2.13?
-    def visitor(model):
-        substitute_font(model)
-
-    walk_traits_object(scene, visitor_func=visitor)
-    broadcast_event(event_type, {'model': scene, 'target_window': window})
+    handler = partial(scene_handler, device_id, scene_name, project,
+                      target_window)
+    return call_device_slot(handler, device_id, slot_name=slot_name,
+                            name=scene_name, **kwargs)
 
 
 def handle_macro_from_server(dev_id, name, project, success, reply):

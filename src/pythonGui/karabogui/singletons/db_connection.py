@@ -3,7 +3,6 @@
 # Created on November 3, 2016
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from functools import partial
 
 from qtpy.QtCore import QObject
 
@@ -16,7 +15,7 @@ from karabo.native import (
 from karabogui import messagebox
 from karabogui.events import (
     KaraboEvent, broadcast_event, register_for_broadcasts)
-from karabogui.request import call_device_slot, handle_scene_from_server
+from karabogui.request import get_scene_from_server
 from karabogui.singletons.api import get_config, get_network
 
 # This matches the batch size used in the project database
@@ -220,10 +219,11 @@ class ProjectDatabaseConnection(QObject):
         device_id = self.project_manager
         domain = config['domain']
         db_token = config['db_token']
-        handler = partial(handle_scene_from_server, device_id, name, None,
-                          target_window)
-        return call_device_slot(handler, device_id, 'slotGetScene',
-                                uuid=uuid, domain=domain, db_token=db_token)
+
+        return get_scene_from_server(
+            device_id, scene_name=name, slot_name='slotGetScene',
+            target_window=target_window, uuid=uuid, domain=domain,
+            db_token=db_token)
 
     # -------------------------------------------------------------------
     # Broadcast event handlers
