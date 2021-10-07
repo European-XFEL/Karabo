@@ -38,8 +38,8 @@ class TestDisplayDeviceSceneLink(GuiTestCase):
         self.controller.model.target = 'Vinny'
         self.controller.model.target_window = SceneTargetWindow.Dialog
         self.controller.widget.model = self.controller.model
-        self.target = 'karabogui.controllers.display.' + \
-                      'devicescenelink.call_device_slot'
+        self.target = 'karabogui.controllers.display.devicescenelink.' \
+                      'get_scene_from_server'
         self.mbox = 'karabogui.controllers.display.devicescenelink.messagebox'
 
     def tearDown(self):
