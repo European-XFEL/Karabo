@@ -29,16 +29,19 @@ class DeviceWaiter(QObject):
         # track if scenes are open
         self.no_scenes = True
         self.not_capable_devices = []
-        ret = self.parse_scene_ids(scene_ids)
-        # no need to act if the return value is false
-        if ret:
-            self.start(timeout)
+        self.parse_scene_ids(scene_ids)
+        self.timeout = timeout
+
+        # Attach event to topology
+        topology = get_topology()
+        topology.system_tree.on_trait_change(
+            self._topo_update, 'initialized')
+
+    def is_valid(self):
+        return len(self.device_scenes) > 0
 
     def parse_scene_ids(self, scene_ids):
-        """parses the sceneIds
-
-        returns True if the sceneIds are available.
-        """
+        """parses the sceneIds and will provide a messagebox for errors"""
         for scene_id in scene_ids:
             match = DEVSCENE_PROG.match(scene_id)
             if match and all(match.groups()):
@@ -52,18 +55,13 @@ class DeviceWaiter(QObject):
                 ','.join([scene for scene in scene_ids]))
             messagebox.show_warning(msg, title='Theater')
             qApp.quit()
-        return len(self.device_scenes) > 0
 
-    def start(self, timeout):
-        topology = get_topology()
+    def start(self):
         self.timer = QTimer(self)
-        # start listening to topology
-        topology.system_tree.on_trait_change(
-            self._topo_update, 'initialized')
         # timeout in case devices are not found.
         self.timer.setSingleShot(True)
         self.timer.timeout.connect(self._timeout_handler)
-        self.timer.start(timeout * 1000)
+        self.timer.start(self.timeout * 1000)
 
     def open_scenes(self, device_id, scene_names):
         for scene_name in scene_names:
@@ -122,17 +120,17 @@ class DeviceWaiter(QObject):
 
         topology.visit_system_tree(alive_visitor)
 
+        # We specified devices that are not available in the topology, exit!
+        if self.no_scenes:
+            qApp.quit()
 
-def run_theatre(ns):
-    """
-    The theatre downloads and opens scenes provided by devices.
 
-    All scenes have the name deviceId|sceneName and are not editable!
-    """
+def create_theatre(ns):
     app = create_gui_app(sys.argv)
     init_gui(app, use_splash=not ns.nosplash)
 
     network = get_network()
+    waiter = DeviceWaiter(ns.scene_id, ns.timeout)
 
     @Slot()
     def _connect_handler(status):
@@ -143,6 +141,10 @@ def run_theatre(ns):
                                   f"<b>{ns.host}:{ns.port}</b>. "
                                   "Closing karabo theare.")
             app.quit()
+        else:
+            # We are connected and charge a timeout now!
+            waiter.start()
+            network.onSubscribeLogs(False)
 
     # We might want to connect directly to the gui server
     if ns.host and ns.port:
@@ -152,13 +154,18 @@ def run_theatre(ns):
     else:
         # Connect to the GUI Server via dialog
         success = network.connectToServer()
-    if not success:
-        app.quit()
-    else:
-        network.onSubscribeLogs(False)
 
-    waiter = DeviceWaiter(ns.scene_id, ns.timeout)
-    if waiter.device_scenes:
+    return success, waiter, app
+
+
+def run_theatre(ns):
+    """
+    The theatre downloads and opens scenes provided by devices.
+
+    All scenes have the name deviceId|sceneName and are not editable!
+    """
+    success, waiter, app = create_theatre(ns)
+    if success and waiter.is_valid():
         app.exec_()
         app.deleteLater()
         sys.exit()
