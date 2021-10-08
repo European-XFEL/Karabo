@@ -66,7 +66,7 @@ class Parser(object):
                 pos += QPointF(x, 0)
             else:
                 pos.setX(x)
-            self.lineTo(pos)
+            self.path.lineTo(pos)
 
     def v(self, relative):
         for y in self:
@@ -75,13 +75,13 @@ class Parser(object):
                 pos += QPointF(0, y)
             else:
                 pos.setY(y)
-            self.lineTo(pos)
+            self.path.lineTo(pos)
 
     def c(self, relative):
         p = self.points(relative)
         for a, b, c in zip(p, p, p):
             self.path.cubicTo(a, b, c)
-        self.lastcontrol = b
+            self.lastcontrol = b
 
     def s(self, relative):
         p = self.points(relative)
@@ -91,13 +91,13 @@ class Parser(object):
         for b, c in zip(p, p):
             self.path.cubicTo(a, b, c)
             a = 2 * c - b
-        self.lastcontrol = b
+            self.lastcontrol = b
 
     def q(self, relative):
         p = self.points(relative)
         for a, b in zip(p, p):
             self.path.quadTo(a, b)
-        self.lastcontrol = a
+            self.lastcontrol = a
 
     def t(self, relative):
         if self.lasttoken not in 'QqTt':
@@ -106,21 +106,16 @@ class Parser(object):
         for b in self.points(relative):
             self.path.quadTo(a, b)
             a = 2 * b - a
-        self.lastcontrol = b
+            self.lastcontrol = b
 
     def a(self, relative):
         c = None
         for rx, ry, phi, fa, fs, x, y in zip(*(self,) * 7):
             pp = (self.path.currentPosition() - QPointF(x, y)) / 2
             cp = (-1) ** (fa == fs) * sqrt(
-                 ((rx * ry) ** 2 - (rx * pp.y()) ** 2 - (ry * pp.x()) ** 2) /
-                 ((rx * pp.y()) ** 2 + (ry * pp.x()) ** 2)) * (
-                 QPointF(rx * pp.y() / ry, -ry * pp.x() / rx))
+                ((rx * ry) ** 2 - (rx * pp.y()) ** 2 - (ry * pp.x()) ** 2) /
+                ((rx * pp.y()) ** 2 + (ry * pp.x()) ** 2)) * (
+                     QPointF(rx * pp.y() / ry, -ry * pp.x() / rx))
             c = cp + (self.path.currentPosition() + QPointF(x, y)) / 2
         if c:
             self.lastcontrol = c
-
-
-if __name__ == '__main__':
-    p = Parser('c 100, 100, 0, 0 10, 10')
-    p.parse()
