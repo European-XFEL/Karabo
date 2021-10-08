@@ -223,6 +223,7 @@ parse                1.6.3             BSD                                      
 parso                0.7.1             MIT                                                         no                    no
 patchelf             0.8               GPLv3                                                       no                    no
 pexpect              4.8.0             ISC license (BSD like)                                      yes                   yes
+pg8000               1.21.2            BSD                                                         yes                   no
 pickleshare          0.7.5             MIT                                                         yes                   yes
 Pillow               2.5.3             PIL (MIT like)                                              no                    yes
 Pint                 0.7.1             BSD-3-Clause                                                yes                   yes
