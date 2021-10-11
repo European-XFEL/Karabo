@@ -285,7 +285,9 @@ class Hash(OrderedDict):
         ret = Cls.__new__(Cls)
         # let deepcopy know now about us!
         memo[id(self)] = ret
-        for key, value, attrs in Hash.flat_iterall(self, empty=True):
+        # Take a list for protection from threaded access
+        iterable = list(Hash.flat_iterall(self, empty=True))
+        for key, value, attrs in iterable:
             ret[key] = deepcopy(value, memo)
             ret[key, ...] = deepcopy(attrs, memo)
 
@@ -298,7 +300,9 @@ class Hash(OrderedDict):
         'simple' datastructures.
         """
         ret = Hash()
-        for key, value, attrs in Hash.flat_iterall(self, empty=True):
+        # Take a list for protection from threaded access
+        iterable = list(Hash.flat_iterall(self, empty=True))
+        for key, value, attrs in iterable:
             ret[key] = simple_deepcopy(value)
             copy_attr = {}
             for ak, av in attrs.items():
@@ -320,7 +324,9 @@ class Hash(OrderedDict):
         if h_paths != other_paths:
             return False
 
-        for key, value, attr in Hash.flat_iterall(other, empty=True):
+        # Take a list for protection from threaded access
+        iterable = list(Hash.flat_iterall(other, empty=True))
+        for key, value, attr in iterable:
             # We only have to compare values if we do not have a Hash. This
             # is accounted in the paths. But we must compare attributes!
             if not isinstance(value, Hash):
