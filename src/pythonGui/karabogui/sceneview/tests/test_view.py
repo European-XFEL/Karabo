@@ -568,7 +568,7 @@ class TestClipboardActions(BaseSceneViewTest):
         mapped_device_ids = {DEVICE_NAME: device_id}
 
         # patch replace dialog
-        exec_patch = mock.patch(REPLACE_DIALOG_PATH + ".exec_",
+        exec_patch = mock.patch(REPLACE_DIALOG_PATH + ".exec",
                                 return_value=QDialog.Accepted)
         mapped_patch = mock.patch(REPLACE_DIALOG_PATH + ".mappedDevices",
                                   return_value=mapped_device_ids)

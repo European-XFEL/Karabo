@@ -19,7 +19,7 @@ class ListEditMock(ListEditDialog):
     def values(self):
         return ['foo', 'bar']
 
-    def exec_(self):
+    def exec(self):
         return QDialog.Accepted
 
 

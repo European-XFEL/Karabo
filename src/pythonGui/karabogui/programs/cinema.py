@@ -67,7 +67,7 @@ def run_cinema(ns):
     """
     success, app = create_cinema(ns)
     if success:
-        app.exec_()
+        app.exec()
         app.deleteLater()
         sys.exit()
     else:

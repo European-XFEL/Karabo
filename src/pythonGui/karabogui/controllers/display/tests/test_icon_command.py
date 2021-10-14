@@ -100,7 +100,7 @@ class TestDisplayIconCommand(GuiTestCase):
         assert len(actions) == 1
 
         exec_path = ("karabogui.controllers.display.icon_command."
-                     "IconSelectionDialog.exec_")
+                     "IconSelectionDialog.exec")
         new_icon = 'Left'
 
         def exec_dialog(self):

@@ -124,7 +124,7 @@ class _BaseListController(BaseBindingController):
         list_edit = ListEditDialog(self.proxy, duplicates_ok=True,
                                    parent=self.widget)
         list_edit.set_texts("Add", "&Value", "Edit")
-        if list_edit.exec_() == QDialog.Accepted:
+        if list_edit.exec() == QDialog.Accepted:
             edit_value = ','.join(str(v) for v in list_edit.values)
             self._internal_widget.setText(edit_value)
             self._internal_widget.setCursorPosition(self.last_cursor_position)

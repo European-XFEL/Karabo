@@ -217,7 +217,7 @@ class WebLinkWidget(KaraboSceneWidget, QPushButton):
     @Slot()
     def edit_label(self):
         dialog = TextDialog(self.model, parent=self)
-        if dialog.exec_() == QDialog.Rejected:
+        if dialog.exec() == QDialog.Rejected:
             return
 
         # Set all at once!
@@ -236,7 +236,7 @@ class WebLinkWidget(KaraboSceneWidget, QPushButton):
 
     def edit(self, scene_view=None):
         dialog = WebDialog(self.model.target, parent=self)
-        if dialog.exec_() == QDialog.Rejected:
+        if dialog.exec() == QDialog.Rejected:
             return
 
         self.model.target = dialog.target
