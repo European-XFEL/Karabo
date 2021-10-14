@@ -80,7 +80,7 @@ class _BaseIcons(BaseBindingController):
         binding = self.proxy.binding
         dialog = self.dialog_klass(self.model.values, binding,
                                    parent=self.widget)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:
             self.model.values = dialog.items
             # The trait handler won't fire as are using a list, hence, we force
             # an update!

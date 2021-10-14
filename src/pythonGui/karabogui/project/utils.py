@@ -194,7 +194,7 @@ def load_project(is_subproject=False, parent=None):
     """
     from karabogui.project.dialog.project_handle import LoadProjectDialog
     dialog = LoadProjectDialog(is_subproject=is_subproject, parent=parent)
-    result = dialog.exec_()
+    result = dialog.exec()
     if result == QDialog.Accepted:
         domain, uuid = dialog.selected_item()
         if domain is not None and uuid is not None:
@@ -222,7 +222,7 @@ def load_project_with_device(parent=None):
     device_domain = get_config()["device_domain"]
     dialog = LoadProjectWithDeviceDialog(
         initial_domain=device_domain, parent=parent)
-    result = dialog.exec_()
+    result = dialog.exec()
     if result == QDialog.Accepted:
         domain = dialog.selected_domain()
         uuid = dialog.selected_project_id()

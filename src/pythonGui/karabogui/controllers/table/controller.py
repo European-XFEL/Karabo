@@ -247,7 +247,7 @@ class BaseTableController(BaseBindingController):
             add_action = menu.addAction(icons.add, 'Add Row below')
             add_action.triggered.connect(self._add_row)
 
-        menu.exec_(self._table_widget.viewport().mapToGlobal(pos))
+        menu.exec(self._table_widget.viewport().mapToGlobal(pos))
 
     # Private interface
     # ---------------------------------------------------------------------

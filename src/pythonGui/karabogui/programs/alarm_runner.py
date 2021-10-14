@@ -48,7 +48,7 @@ def run_alarm_panel(ns):
             wrangler.splash.close()
             wrangler.splash = None
 
-        app.exec_()
+        app.exec()
         app.deleteLater()
         sys.exit()
     else:

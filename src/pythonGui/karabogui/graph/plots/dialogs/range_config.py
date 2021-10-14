@@ -61,7 +61,7 @@ class RangeDialog(QDialog):
     @staticmethod
     def get(model, actual, axis=0, parent=None):
         dialog = RangeDialog(model, actual, axis, parent)
-        result = dialog.exec_() == QDialog.Accepted
+        result = dialog.exec() == QDialog.Accepted
         content = {}
         content.update(dialog.limits)
 
