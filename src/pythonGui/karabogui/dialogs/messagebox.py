@@ -112,4 +112,4 @@ class KaraboMessageBox(QDialog):
         copy_action.triggered.connect(widget.copy)
         enable_cp = not widget.textCursor().selection().isEmpty()
         copy_action.setEnabled(enable_cp)
-        menu.exec_(widget.viewport().mapToGlobal(pos))
+        menu.exec(widget.viewport().mapToGlobal(pos))

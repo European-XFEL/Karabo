@@ -142,7 +142,7 @@ This is a testbench gui viewer.
     get_manager()
     get_network().connectToServer()
 
-    app.exec_()
+    app.exec()
 
 
 if __name__ == '__main__':

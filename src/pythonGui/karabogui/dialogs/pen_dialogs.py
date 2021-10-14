@@ -134,8 +134,8 @@ class PenDialog(QDialog):
                 fillColor.setAlpha(self.slFillOpacity.value())
                 self.brush.setColor(fillColor)
 
-    def exec_(self):
-        result = QDialog.exec_(self)
+    def exec(self):
+        result = QDialog.exec(self)
         if result == QDialog.Accepted:
             self.on_dialog_accepted()
         return result

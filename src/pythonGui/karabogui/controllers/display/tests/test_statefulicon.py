@@ -23,7 +23,7 @@ class MockSvgWidget(QWidget):
 class MockDialog(QDialog):
     singleton = None
 
-    def exec_(self):
+    def exec(self):
         # Yeah... We need to break into the widget's code
         MockDialog.singleton = self
 
