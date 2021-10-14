@@ -45,7 +45,7 @@ class HistogramDialog(QDialog):
     @staticmethod
     def get(configuration, parent=None):
         dialog = HistogramDialog(configuration, parent)
-        result = dialog.exec_() == QDialog.Accepted
+        result = dialog.exec() == QDialog.Accepted
         content = {}
         content.update(dialog.settings)
 

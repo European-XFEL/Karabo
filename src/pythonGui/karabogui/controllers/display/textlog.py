@@ -102,4 +102,4 @@ class DisplayTextLog(BaseBindingController):
         copy_action.triggered.connect(self.log_widget.copy)
         enable_copy = not self.log_widget.textCursor().selection().isEmpty()
         copy_action.setEnabled(enable_copy)
-        menu.exec_(self.log_widget.viewport().mapToGlobal(pos))
+        menu.exec(self.log_widget.viewport().mapToGlobal(pos))

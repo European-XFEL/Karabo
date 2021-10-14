@@ -143,7 +143,7 @@ class LabelWidget(KaraboSceneWidget, QLabel):
 
     def edit(self, scene_view):
         dialog = TextDialog(self.model, alignment=True, parent=scene_view)
-        if dialog.exec_() == QDialog.Rejected:
+        if dialog.exec() == QDialog.Rejected:
             return
 
         self.set_model(dialog.label_model)

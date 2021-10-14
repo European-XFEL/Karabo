@@ -68,7 +68,7 @@ class SceneWidgetHandler(ABCHasStrictTraits):
         dialog = SceneItemDialog(x=rect.x(), y=rect.y(),
                                  title='Move Layout',
                                  max_x=max_x, max_y=max_y, parent=self.widget)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:
             x_coord = dialog.x - rect.x()
             y_coord = dialog.y - rect.y()
             offset = QPoint(x_coord, y_coord)
@@ -84,7 +84,7 @@ class SceneWidgetHandler(ABCHasStrictTraits):
         dialog = SceneItemDialog(x=rect.width(), y=rect.height(),
                                  title='Resize Layout',
                                  max_x=max_x, max_y=max_y, parent=self.widget)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:
             new_rect = QRect(rect.x(), rect.y(),
                              dialog.x, dialog.y)
             for c in selection_model:
@@ -124,7 +124,7 @@ class SceneToolHandler(SceneWidgetHandler):
         if self.widget.actions():
             menu.addSeparator()
             menu.addActions(self.widget.actions())
-        menu.exec_(event.globalPos())
+        menu.exec(event.globalPos())
 
 
 class SceneControllerHandler(SceneWidgetHandler):
@@ -148,7 +148,7 @@ class SceneControllerHandler(SceneWidgetHandler):
         if binding is None or status not in ONLINE_STATUSES:
             info = menu.addAction('No mutation for offline properties')
             info.setEnabled(False)
-            menu.exec_(event.globalPos())
+            menu.exec(event.globalPos())
             return
 
         # Add actions which are bound to the actual Qt widget
@@ -164,7 +164,7 @@ class SceneControllerHandler(SceneWidgetHandler):
         if len(controller.proxies) > 1:
             info = menu.addAction('No mutation for multiple properties')
             info.setEnabled(False)
-            menu.exec_(event.globalPos())
+            menu.exec(event.globalPos())
             return
 
         # We can finally mutate our widget!
@@ -186,7 +186,7 @@ class SceneControllerHandler(SceneWidgetHandler):
                 action.setCheckable(True)
                 action.setChecked(True)
 
-        menu.exec_(event.globalPos())
+        menu.exec(event.globalPos())
 
     # -------------------------------------------------
     # Private interface

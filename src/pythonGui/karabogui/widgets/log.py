@@ -233,7 +233,7 @@ class LogWidget(QWidget):
         if index.isValid():
             copy_action = menu.addAction("Copy to clipboard")
             copy_action.triggered.connect(self._copy_clipboard)
-            menu.exec_(self.table.viewport().mapToGlobal(pos))
+            menu.exec(self.table.viewport().mapToGlobal(pos))
 
     @Slot()
     def _copy_clipboard(self):

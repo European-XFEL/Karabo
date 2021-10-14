@@ -227,7 +227,7 @@ class DeviceServerController(BaseProjectGroupController):
     def _edit_server(self, parent=None):
         dialog = ServerHandleDialog(self.model, parent=parent)
         move_to_cursor(dialog)
-        result = dialog.exec_()
+        result = dialog.exec()
         if result == QDialog.Accepted:
             self.model.server_id = dialog.server_id
             self.model.description = dialog.description
