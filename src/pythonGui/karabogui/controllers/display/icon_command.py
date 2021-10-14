@@ -121,7 +121,7 @@ class DisplayIconCommand(BaseBindingController):
     def _change_icon(self):
         """Select the icon for the icon command widget"""
         dialog = IconSelectionDialog(parent=self.widget)
-        dialog.exec_()
+        dialog.exec()
 
         self._icon = dialog.icon
         self._button.setIcon(self._icon)
