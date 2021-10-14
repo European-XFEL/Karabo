@@ -113,7 +113,7 @@ class DeviceConfigurationController(BaseProjectController):
             name=model.simple_name, configuration=config,
             project_device=project_device, parent=parent)
         move_to_cursor(dialog)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:
             self.model.configuration = dialog.configuration
             project_device.set_project_config_hash(dialog.configuration)
             proxy = project_device.proxy

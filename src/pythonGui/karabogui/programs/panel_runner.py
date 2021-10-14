@@ -91,7 +91,7 @@ def run_panel(ns):
 
     # Connect to the GUI Server
     get_network().connectToServer()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 def main():
