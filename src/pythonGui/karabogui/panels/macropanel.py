@@ -180,7 +180,7 @@ class MacroPanel(BasePanelWidget):
         clear_action.triggered.connect(self.ui_console.clear)
         select_action = menu.addAction('Select All')
         select_action.triggered.connect(self.ui_console.selectAll)
-        menu.exec_(self.ui_console.viewport().mapToGlobal(pos))
+        menu.exec(self.ui_console.viewport().mapToGlobal(pos))
 
     @Slot()
     def on_run(self):

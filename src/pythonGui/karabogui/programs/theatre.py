@@ -166,7 +166,7 @@ def run_theatre(ns):
     """
     success, waiter, app = create_theatre(ns)
     if success and waiter.is_valid():
-        app.exec_()
+        app.exec()
         app.deleteLater()
         sys.exit()
     else:

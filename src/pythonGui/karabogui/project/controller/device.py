@@ -471,7 +471,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         msg_box.setModal(False)
         msg_box.setDefaultButton(QMessageBox.No)
         move_to_cursor(msg_box)
-        if msg_box.exec_() == QMessageBox.Yes:
+        if msg_box.exec() == QMessageBox.Yes:
             server_model = find_parent_object(device, project_controller.model,
                                               DeviceServerModel)
             if device in server_model.devices:
@@ -490,7 +490,7 @@ class DeviceInstanceController(BaseProjectGroupController):
                                     is_online=self.project_device.online,
                                     parent=parent)
         move_to_cursor(dialog)
-        result = dialog.exec_()
+        result = dialog.exec()
         if result == QDialog.Accepted:
             # Check for existing device
             renamed = device.instance_id != dialog.instance_id

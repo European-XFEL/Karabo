@@ -109,7 +109,7 @@ def getSaveFileName(parent=None, caption="", filter="", directory="",
     if filter:
         dialog.setNameFilter(filter)
 
-    if dialog.exec_() == QDialog.Rejected:
+    if dialog.exec() == QDialog.Rejected:
         return
     if len(dialog.selectedFiles()) == 1:
         return dialog.selectedFiles()[0]

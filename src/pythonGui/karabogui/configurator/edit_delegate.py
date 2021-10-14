@@ -194,7 +194,7 @@ class EditDelegate(QStyledItemDelegate):
                 state = ButtonState.PRESSED
             elif state == ButtonState.PRESSED:
                 dialog = TableDialog(proxy, allowed, parent=self.parent())
-                result = dialog.exec_()
+                result = dialog.exec()
                 # Only for editable table elements we do actions!
                 if allowed:
                     if result == QDialog.Accepted:

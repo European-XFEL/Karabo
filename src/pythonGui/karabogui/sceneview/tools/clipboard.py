@@ -178,7 +178,7 @@ class ScenePasteReplaceAction(BaseScenePasteAction):
 
         device_ids = sorted(set(k.split('.', 1)[0] for k in keys))
         dialog = ReplaceDialog(device_ids, parent=scene_view)
-        if dialog.exec_() != QDialog.Accepted:
+        if dialog.exec() != QDialog.Accepted:
             return
 
         mapped_device_ids = dialog.mappedDevices()

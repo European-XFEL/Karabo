@@ -57,7 +57,7 @@ class ColorBarWidget(GraphicsWidget):
                               image_range,
                               self.imageItem.auto_levels, self.parent())
         move_to_cursor(dialog)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:
             levels = dialog.levels
             self.set_levels(levels or image_range)
 

@@ -92,7 +92,7 @@ class ClientTopologyDialog(QDialog):
         shutdown_action.triggered.connect(self.onKillInstance)
         shutdown_action.setIcon(icons.delete)
 
-        menu.exec_(self.mapToGlobal(pos))
+        menu.exec(self.mapToGlobal(pos))
 
     @Slot()
     def onKillInstance(self):
