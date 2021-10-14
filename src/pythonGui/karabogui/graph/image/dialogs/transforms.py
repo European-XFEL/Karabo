@@ -52,7 +52,7 @@ class ImageTransformsDialog(QDialog):
     def get(transforms, aspect_ratio, show_legend, parent=None):
         dialog = ImageTransformsDialog(transforms, aspect_ratio,
                                        show_legend, parent)
-        result = dialog.exec_() == QDialog.Accepted
+        result = dialog.exec() == QDialog.Accepted
         content = {}
         content.update(dialog.transforms)
         content["show_scale"] = dialog.show_scale

@@ -13,7 +13,7 @@ def run_gui():
     broadcast_event(KaraboEvent.CreateMainWindow, {})
 
     # then start the event loop
-    app.exec_()
+    app.exec()
     app.deleteLater()
     sys.exit()
 
