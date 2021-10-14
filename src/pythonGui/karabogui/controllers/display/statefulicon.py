@@ -86,7 +86,7 @@ class StatefulIconWidget(BaseBindingController):
             dialog.close()
 
         iconlist.doubleClicked.connect(handleDoubleClick)
-        dialog.exec_()
+        dialog.exec()
         if self._icon is None:
             # Operator bailed out of the dialog! Set a default icon!
             self._icon = non_selection

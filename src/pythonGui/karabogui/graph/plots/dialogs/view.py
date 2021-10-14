@@ -56,7 +56,7 @@ class GraphViewDialog(QDialog):
     @staticmethod
     def get(configuration, parent=None):
         dialog = GraphViewDialog(configuration, parent)
-        result = dialog.exec_() == QDialog.Accepted
+        result = dialog.exec() == QDialog.Accepted
         content = {}
         content.update(dialog.settings)
 
