@@ -65,7 +65,7 @@ class StickerWidget(KaraboSceneWidget, QPlainTextEdit):
 
     def edit(self, scene_view):
         dialog = StickerDialog(self.model, parent=scene_view)
-        if dialog.exec_() == QDialog.Rejected:
+        if dialog.exec() == QDialog.Rejected:
             return
         model = dialog.model
         self.model.trait_set(text=model.text,

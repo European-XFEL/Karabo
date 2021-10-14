@@ -24,7 +24,7 @@ class TextSceneTool(BaseSceneTool):
         in the SceneView.
         """
         dialog = TextDialog(alignment=True, parent=scene_view)
-        if dialog.exec_() == QDialog.Rejected:
+        if dialog.exec() == QDialog.Rejected:
             return
 
         model = dialog.label_model
@@ -176,7 +176,7 @@ class SceneLinkTool(BaseSceneTool):
         model = SceneLinkModel(x=mouse_pos.x(), y=mouse_pos.y(),
                                width=100, height=30)
         dialog = SceneLinkDialog(model, parent=scene_view)
-        result = dialog.exec_()
+        result = dialog.exec()
         if result == QDialog.Accepted:
             model.target = dialog.selectedScene
             model.target_window = dialog.selectedTargetWindow
@@ -217,7 +217,7 @@ class WebLinkTool(BaseSceneTool):
         model = WebLinkModel(x=mouse_pos.x(), y=mouse_pos.y(),
                              width=100, height=30)
         dialog = WebDialog(parent=scene_view)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:
             model.target = dialog.target
             scene_view.add_models(model, initialize=True)
             scene_view.set_tool(None)

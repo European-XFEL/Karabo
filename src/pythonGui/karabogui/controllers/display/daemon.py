@@ -134,7 +134,7 @@ class DaemonServiceButton(TableButtonDelegate):
             msg_box.setDefaultButton(QMessageBox.Cancel)
             msg_box.setModal(False)
             move_to_cursor(msg_box)
-            if msg_box.exec_() != QMessageBox.Yes:
+            if msg_box.exec() != QMessageBox.Yes:
                 return
 
         parent = weakref.ref(self.parent())

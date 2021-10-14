@@ -73,7 +73,7 @@ class DisplayStateColor(BaseBindingController):
         dialog = FormatLabelDialog(font_size=self.model.font_size,
                                    font_weight=self.model.font_weight,
                                    parent=self.widget)
-        if dialog.exec_() == QDialog.Accepted:
+        if dialog.exec() == QDialog.Accepted:
             self.model.trait_set(font_size=dialog.font_size,
                                  font_weight=dialog.font_weight)
             self._apply_format()

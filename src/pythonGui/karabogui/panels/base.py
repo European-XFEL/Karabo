@@ -119,7 +119,7 @@ class BasePanelWidget(QFrame):
         dialog = QPrintPreviewDialog(printer, parent=self)
         dialog.setModal(False)
         dialog.paintRequested.connect(self.handle_paint_request)
-        dialog.exec_()
+        dialog.exec()
 
     @Slot(QPrinter)
     def handle_paint_request(self, printer):
