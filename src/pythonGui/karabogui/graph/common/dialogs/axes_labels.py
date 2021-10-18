@@ -5,19 +5,20 @@ from qtpy.QtWidgets import QDialog
 
 
 class AxesLabelsDialog(QDialog):
-
-    def __init__(self, config, parent=None):
-        super(AxesLabelsDialog, self).__init__(parent)
+    """This class dialog is responsible to provide editing of the axes labels
+    """
+    def __init__(self, config={}, parent=None):
+        super().__init__(parent)
         self.setModal(False)
         # load ui file
         ui_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                                'axes_labels.ui')
         uic.loadUi(ui_path, self)
 
-        self.ui_xlabel.setText(config['x_label'])
-        self.ui_ylabel.setText(config['y_label'])
-        self.ui_xunits.setText(config['x_units'])
-        self.ui_yunits.setText(config['y_units'])
+        self.ui_xlabel.setText(config.get('x_label', ''))
+        self.ui_ylabel.setText(config.get('y_label', ''))
+        self.ui_xunits.setText(config.get('x_units', ''))
+        self.ui_yunits.setText(config.get('y_units', ''))
 
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
