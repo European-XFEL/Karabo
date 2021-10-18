@@ -4,18 +4,21 @@ from unittest import TestCase, main
 from zlib import adler32
 
 import numpy
+import pytest
+from pint import DimensionalityError
 
 from karabo.common.states import State
 from karabo.native import (
     AccessLevel, AccessMode, ArchivePolicy, Assignment, Bool, ChoiceOfNodes,
     ComplexDouble, ComplexFloat, Configurable, DaqDataType, DaqPolicy, Double,
     Float, Hash, Image, ImageData, Int8, Int16, Int32, Int64, KaraboError,
-    ListOfNodes, MetricPrefix, Node, Overwrite, RegexString, Slot, String,
-    TypeHash, TypeSchema, UInt8, UInt16, UInt32, UInt64, Unit, VectorBool,
-    VectorChar, VectorComplexDouble, VectorComplexFloat, VectorDouble,
-    VectorFloat, VectorHash, VectorInt8, VectorInt16, VectorInt32, VectorInt64,
-    VectorRegexString, VectorString, VectorUInt8, VectorUInt16, VectorUInt32,
-    VectorUInt64, decodeBinary, encodeBinary, isSet, unit_registry as unit)
+    ListOfNodes, MetricPrefix, Node, Overwrite, QuantityValue, RegexString,
+    Slot, String, Timestamp, TypeHash, TypeSchema, UInt8, UInt16, UInt32,
+    UInt64, Unit, VectorBool, VectorChar, VectorComplexDouble,
+    VectorComplexFloat, VectorDouble, VectorFloat, VectorHash, VectorInt8,
+    VectorInt16, VectorInt32, VectorInt64, VectorRegexString, VectorString,
+    VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64, decodeBinary,
+    encodeBinary, isSet, unit_registry as unit)
 
 
 class RowSchema(Configurable):
@@ -215,6 +218,133 @@ class Tests(TestCase):
         run_coro(a.slotReconfigure(rehash(value=10, node=Hash("bvalue", 5))))
         self.assertEqual(a.value, 10 * unit.meter)
         self.assertEqual(a.node.bvalue, 5 * unit.meter)
+
+    def test_bulk_set_setter(self):
+        """Test the bulk setting of a full Hash on a configurable"""
+
+        class C(Configurable):
+            cvalue = Int32(accessMode=AccessMode.READONLY,
+                           minInc=-2,
+                           unitSymbol=Unit.METER)
+
+        class B(Configurable):
+            bvalue = Int32(accessMode=AccessMode.READONLY,
+                           unitSymbol=Unit.METER)
+            node = Node(C)
+
+        class A(Configurable):
+            state = String(enum=State, options=[State.ON, State.OFF])
+            value = Int32(accessMode=AccessMode.READONLY,
+                          unitSymbol=Unit.METER)
+            node = Node(B)
+
+        # 1. Test the basic node setting
+        a = A()
+        self.assertFalse(isSet(a.value))
+        self.assertFalse(isSet(a.node.bvalue))
+        self.assertFalse(isSet(a.node.node.cvalue))
+
+        h = Hash("value", 5)
+        a.set(h)
+        self.assertEqual(a.value, 5 * unit.meter)
+        self.assertEqual(a.value.dtype, numpy.int32)
+        self.assertFalse(isSet(a.node.bvalue))
+        self.assertFalse(isSet(a.node.node.cvalue))
+
+        h["value"] = 22
+        h["node.bvalue"] = 2
+        a.set(h)
+        self.assertEqual(a.value, 22 * unit.meter)
+        self.assertEqual(a.node.bvalue, 2 * unit.meter)
+        self.assertEqual(a.node.bvalue.dtype, numpy.int32)
+        self.assertFalse(isSet(a.node.node.cvalue))
+
+        h["node.node.cvalue"] = -1
+        a.set(h)
+        self.assertEqual(a.node.node.cvalue, -1 * unit.meter)
+        self.assertIsNotNone(a.value.timestamp)
+        self.assertIsNotNone(a.node.bvalue.timestamp)
+        self.assertIsNotNone(a.node.node.cvalue.timestamp)
+
+        # 2. Test exception case
+        a = A()
+        h = Hash("value", 12)
+        h["node.bvalue"] = 12
+
+        h["node.node.cvalue"] = -3
+        with pytest.raises(ValueError):
+            a.set(h)
+
+        # All values are not set
+        self.assertFalse(isSet(a.value))
+        self.assertFalse(isSet(a.node.bvalue))
+        self.assertFalse(isSet(a.node.node.cvalue))
+
+        # 3. Test KaraboValues in a Hash
+        a = A()
+        ts = Timestamp()
+        h = Hash("value", QuantityValue(5, timestamp=ts))
+        with pytest.raises(DimensionalityError):
+            a.set(h)
+        self.assertFalse(isSet(a.value))
+
+        h = Hash("value", QuantityValue(5, unit=Unit.METER, timestamp=ts))
+        a.set(h)
+        self.assertEqual(a.value, 5 * unit.meter)
+        self.assertEqual(a.value.timestamp, ts)
+
+        # 4. Test RuntimeErrors
+        a = A()
+        h = {"value", 5}
+        with pytest.raises(RuntimeError):
+            a.set(h)
+
+        h = Hash("value", 5)
+        # Not a Hash for a Node
+        h["node"] = {"bvalue": 12}
+        with pytest.raises(RuntimeError):
+            a.set(h)
+
+        # 5. Test a Hash with timestamp in attributes
+        a = A()
+        ts = Timestamp()
+        h = Hash("value", 15)
+        ts.toHashAttributes(h)
+        a.set(h)
+        self.assertEqual(a.value, 15 * unit.meter)
+        self.assertEqual(a.value.timestamp, ts)
+
+        # 5. Test a Hash with an Enum
+        a = A()
+        ts = Timestamp()
+        h = Hash("state", State.ON)
+        ts.toHashAttributes(h)
+        a.set(h)
+        self.assertEqual(a.state, State.ON)
+        self.assertEqual(a.state.timestamp, ts)
+
+        # 6. Invalid Option for string
+        a = A()
+        h = Hash("state", State.RUNNING)
+        with pytest.raises(ValueError):
+            a.set(h)
+        self.assertFalse(isSet(a.state))
+
+        h = Hash("state", State.RUNNING.value)
+        with pytest.raises(ValueError):
+            a.set(h)
+        self.assertFalse(isSet(a.state))
+
+        # 7. Back to None
+        a = A()
+        h = Hash("value", 5)
+        a.set(h)
+        self.assertEqual(a.value, 5 * unit.meter)
+        h = Hash("value", None)
+        with pytest.raises(TypeError):
+            # The check cannot compare None and Int
+            a.set(h)
+        self.assertEqual(a.value, 5 * unit.meter)
 
     def test_readonly(self):
         class B(Configurable):
@@ -1155,6 +1285,7 @@ class Tests(TestCase):
     def test_runtime_updates(self):
         """We cannot test and create overwrite schema injection in this test,
         but we can test the acceptance of the input"""
+
         class Nested(Configurable):
             integer = Int32(defaultValue=50,
                             warnHigh=100)
@@ -1290,9 +1421,11 @@ class Tests(TestCase):
         DO NOT USE THIS CODE SNIPPED AS EXAMPLE CODE. `ChoiceOfNodes` and
         `ListOfNodes` are not recommended in the middlelayer api (and in
         general)"""
+
         class Multi(Configurable):
             """`ChoiceOfNodes` and `ListOfNodes` are evil
             """
+
         class _NodeOne(Multi):
             zero = String(defaultValue='First')
 
