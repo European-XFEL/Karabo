@@ -4,7 +4,8 @@ from weakref import WeakKeyDictionary
 
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
-from karabo.native.data import AccessLevel, Hash, HashList, NodeType, Schema
+from karabo.native.data import (
+    AccessLevel, Hash, HashList, NodeType, Schema, Timestamp)
 from karabo.native.time_mixin import get_timestamp
 
 from .basetypes import KaraboValue, NoneValue, isSet
@@ -170,6 +171,35 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         setters = sum((t.checkedSet(self, v) for t, v in props), [])
         setters = (s() for s in setters)
         await gather(*[s for s in setters if s is not None])
+
+    def set(self, config):
+        """Internal handler to set a Hash on the Configurable"""
+
+        def _get_setters(instance, hsh):
+            if not isinstance(hsh, Hash):
+                raise RuntimeError("Value must be of type `Hash`, got "
+                                   f"{type(hsh).__name__} instead.")
+            setter = []
+            for k, v in hsh.items():
+                desc = getattr(instance.__class__, k)
+                if isinstance(desc, Node):
+                    node = getattr(instance, k)
+                    setter.extend(_get_setters(node, v))
+                else:
+                    v = desc.toKaraboValue(v)
+                    if v.timestamp is None:
+                        # If there is no timestamp, try to get it
+                        # from attributes
+                        v.timestamp = Timestamp.fromHashAttributes(
+                            hsh[k, ...])
+                    setter.append((desc, instance, v))
+            return setter
+
+        setters = _get_setters(self, config)
+        for desc, instance, value in setters:
+            # This is similar to descriptor's `__set__`
+            value._parent = instance
+            instance.setValue(desc, value)
 
     async def _run(self):
         """ post-initialization of a Configurable
