@@ -18,6 +18,7 @@ from karabogui.controllers.api import (
 @register_binding_controller(ui_name='Alarm Widget',
                              klassname='DisplayAlarm',
                              is_compatible=with_display_type('AlarmCondition'),
+                             priority=90,
                              binding_type=StringBinding)
 class DisplayAlarm(BaseBindingController):
     # The scene data model class for this controller
