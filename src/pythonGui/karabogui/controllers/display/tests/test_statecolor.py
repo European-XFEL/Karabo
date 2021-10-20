@@ -54,4 +54,4 @@ class TestStateColorModel(GuiTestCase):
         assert self.controller.widget.text() == ''
 
     def test_priority(self):
-        assert get_class_const_trait(self.controller, '_priority') == 20
+        assert get_class_const_trait(self.controller, '_priority') == 90
