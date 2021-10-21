@@ -13,7 +13,7 @@ dependencies:
   - gxx_linux-64  # [linux]
   - libstdcxx-ng  # [linux]
   - clangxx       # [osx]
-  - cmake>3.12
+  - cmake>=3.14
   - make
   - setuptools-scm
   - cogapp
@@ -31,4 +31,5 @@ dependencies:
   - pugixml=1.2=xfel
   - cppunit
   - mqtt_cpp
-  - redisclient
+  - redisclient=1.0.3=xfel
+  - amqp-cpp=4.3.12=xfel
