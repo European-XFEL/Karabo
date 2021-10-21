@@ -42,7 +42,8 @@ requirements:
     - pugixml=1.2=xfel
     - cppunit
     - mqtt_cpp
-    - redisclient
+    - redisclient=1.0.3=xfel
+    - amqp-cpp=4.3.12=xfel
   run:
     - python=3.8
     - numpy=1.13.3
@@ -59,7 +60,8 @@ requirements:
     - libtiff
     - pugixml=1.2=xfel
     - mqtt_cpp
-    - redisclient
+    - redisclient=1.0.3=xfel
+    - amqp-cpp=4.3.12=xfel
 
 test:
   commands:
