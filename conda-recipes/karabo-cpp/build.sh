@@ -14,7 +14,7 @@ cmake \
   -DBUILD_INTEGRATION_TESTING=0\
   -DBUILD_LONG_RUN_TESTING=0\
   -DCMAKE_BUILD_TYPE=Release\
-  ${SRC_DIR}
+  ${SRC_DIR}/src
 
 make -j${CPU_COUNT} || exit $?
 make install || exit $?
