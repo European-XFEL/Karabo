@@ -15,7 +15,7 @@ from karabogui import icons
 from karabogui.binding.api import (
     BoolBinding, FloatBinding, IntBinding, StringBinding)
 from karabogui.controllers.api import (
-    MAX_NUMBER_LIMIT, ONE_DAY, ONE_HOUR, ONE_WEEK, TEN_MINUTES, UPTIME,
+    HIDDEN, MAX_NUMBER_LIMIT, ONE_DAY, ONE_HOUR, ONE_WEEK, TEN_MINUTES, UPTIME,
     BaseBindingController, Curve, get_start_end_date_time,
     register_binding_controller, with_display_type)
 from karabogui.graph.common.api import AxisType, create_button, get_pen_cycler
@@ -38,6 +38,12 @@ class RequestTime(QDialog):
         uic.loadUi(op.join(FILE_PATH, 'ui_trendline_detail.ui'), self)
         self.dt_start.setDateTime(start)
         self.dt_end.setDateTime(end)
+
+    def get_start_and_end_time(self):
+        """Return the start and end time in seconds"""
+        start = self.dt_start.dateTime().toMSecsSinceEpoch() / 1000
+        end = self.dt_end.dateTime().toMSecsSinceEpoch() / 1000
+        return start, end
 
 
 def curve_to_axis(value):
@@ -64,12 +70,15 @@ class BaseSeriesGraph(BaseBindingController):
     # Our type of curve
     curve_type = Int(0)
 
+    _window_action = Instance(QAction)
+    _window = Int(1)
+
     def create_widget(self, parent):
         """Setup all widgets correctly"""
         widget = QWidget(parent)
         uic.loadUi(op.join(FILE_PATH, "ui_trendline.ui"), widget)
-
         self._start_time = QDateTime.currentDateTime()
+
         widget.dt_start.setDateTime(self._start_time)
         widget.dt_end.setDateTime(self._start_time)
 
@@ -78,7 +87,10 @@ class BaseSeriesGraph(BaseBindingController):
         self._x_axis_buttons[widget.bt_one_day] = ONE_DAY
         self._x_axis_buttons[widget.bt_one_hour] = ONE_HOUR
         self._x_axis_buttons[widget.bt_ten_minutes] = TEN_MINUTES
+        self._x_axis_buttons[widget.bt_window] = HIDDEN
         self._x_axis_buttons[widget.bt_uptime] = UPTIME
+        # Hide the hidden button for window mode
+        widget.bt_window.setVisible(False)
         widget.bg_x_axis.buttonClicked.connect(self._x_axis_btns_toggled)
 
         self._plot = KaraboPlotView(axis=curve_to_axis(self.curve_type),
@@ -109,6 +121,13 @@ class BaseSeriesGraph(BaseBindingController):
         dialog_ac = QAction(icons.clock, "Request Time", parent=widget)
         dialog_ac.triggered.connect(self._request_dialog)
         viewbox.add_action(dialog_ac, separator=False)
+
+        window_ac = QAction("Window Mode", parent=widget)
+        window_ac.triggered.connect(widget.bt_window.click)
+        window_ac.setCheckable(True)
+        viewbox.add_action(window_ac, separator=False)
+        self._window_action = window_ac
+
         # Update datetime widgets everytime range changes and limit zoom
         self._plot.plotItem.setLimits(xMin=MIN_TIMESTAMP, xMax=MAX_TIMESTAMP)
         self._plot.plotItem.sigXRangeChanged.connect(self._update_date_widgets)
@@ -172,8 +191,7 @@ class BaseSeriesGraph(BaseBindingController):
             # Convert to again to set the interval
             self._button_scale = False
             self._uncheck_button()
-            start = dialog.dt_start.dateTime().toMSecsSinceEpoch() / 1000
-            end = dialog.dt_end.dateTime().toMSecsSinceEpoch() / 1000
+            start, end = dialog.get_start_and_end_time()
             self.set_time_interval(start, end, force=True)
             self._plot.plotItem.setRange(xRange=(start, end))
 
@@ -219,6 +237,11 @@ class BaseSeriesGraph(BaseBindingController):
     def _x_axis_btns_toggled(self, button):
         """Update the x axis scale when a time button is clicked"""
         self._x_detail = self._x_axis_buttons[button]
+        window_mode = self._x_detail == HIDDEN
+        if window_mode:
+            x_axis = self._plot.plotItem.getAxis("bottom")
+            self._window = round(max(1, (x_axis.range[1] - x_axis.range[0])))
+        self._window_action.setChecked(window_mode)
         # We're updating the ranges via the buttons now
         self._button_scale = True
         if self._update_axis_scale():
@@ -230,7 +253,8 @@ class BaseSeriesGraph(BaseBindingController):
         self._update_x_range()
 
     def _uncheck_button(self):
-        """Uncheck any checked button"""
+        """Uncheck any checked button and the window mode"""
+        self._window_action.setChecked(False)
         button_group = self.widget.bg_x_axis
         checked_button = button_group.checkedButton()
         if checked_button is not None:
@@ -245,7 +269,7 @@ class BaseSeriesGraph(BaseBindingController):
         if not self._x_detail:
             return False
 
-        if self._x_detail != UPTIME:
+        if self._x_detail not in (UPTIME, HIDDEN):
             # Schedule an update for the intervals
             start_secs, end_secs = self._get_start_end_date_secs()
             # On button update we always trigger!
@@ -270,6 +294,9 @@ class BaseSeriesGraph(BaseBindingController):
         if self._x_detail == UPTIME:
             start = self._start_time
             end = self._get_last_timestamp()
+        elif self._x_detail == HIDDEN:
+            end = self._get_last_timestamp()
+            start = end.addSecs(-self._window)
         else:
             start, end = get_start_end_date_time(self._x_detail)
 
