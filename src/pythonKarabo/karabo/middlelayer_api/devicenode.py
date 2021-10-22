@@ -1,3 +1,4 @@
+import warnings
 from asyncio import TimeoutError, wait_for
 
 from karabo.native import (
@@ -49,6 +50,11 @@ class DeviceNode(String):
     def __init__(self, timeout=None, **kwargs):
         super().__init__(**kwargs)
         self.timeout = timeout
+        warnings.warn(
+            "A `DeviceNode` has known issues and its usage is therefore "
+            "discouraged. Please look at the documentation for help and "
+            "consider using a `connectDevice` based solution in the future.",
+            UserWarning, stacklevel=2)
 
     def toDataAndAttrs(self, value):
         if not isinstance(value, str):
