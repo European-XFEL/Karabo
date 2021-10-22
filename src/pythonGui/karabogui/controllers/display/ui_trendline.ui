@@ -245,6 +245,30 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="bt_window">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>17</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Window</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">bg_x_axis</string>
+       </attribute>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="bt_uptime">
        <property name="maximumSize">
         <size>
