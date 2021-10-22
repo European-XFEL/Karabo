@@ -50,6 +50,12 @@ Middlelayer API
 ===============
 
 - The MDL API cannot set ``Attributes`` on runtime in elements which are in ``Nodes``.
+- The ``DeviceNode`` comes with a few limitations:
+  Technically, a ``DeviceNode`` represents network related code in a schema. A
+  device developer will only end up in onInitialization when ALL
+  deviceNodes are connected. Schema initialization happens before and device nodes
+  are part of schema. There is no feedback if you are connected or not.
+  The proxy misses schema injections of the connected Device.
 
 Tools
 =====
