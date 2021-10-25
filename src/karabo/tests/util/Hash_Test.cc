@@ -1186,19 +1186,6 @@ void Hash_Test::testFind() {
 
     }
 
-    {
-        // This does not really test Hash::find, but Hash::Node::set and
-        // the possible type change introduced by that.
-        // But since there are no direct unit tests for that, keep it here...
-        Hash h("a.b.c", "1");
-        CPPUNIT_ASSERT(h.get<std::string>("a.b.c") == "1");
-        CPPUNIT_ASSERT(h.getAs<int>("a.b.c") == 1);
-        boost::optional<Hash::Node&> node = h.find("a.b.c");
-        if (node) node->setValue(2);
-        CPPUNIT_ASSERT(h.get<int>("a.b.c") == 2);
-        CPPUNIT_ASSERT(h.getAs<std::string>("a.b.c") == "2");
-
-    }
 }
 
 
@@ -2850,5 +2837,114 @@ void Hash_Test::testNode() {
 
         CPPUNIT_ASSERT_EQUAL(0ul, node1.getAttributes().size());
         CPPUNIT_ASSERT_EQUAL(0ul, node2.getAttributes().size());
+    }
+    {
+        // Test Hash::Node::setValue and the possible type change introduced by that.
+        Hash h("a.b.c", "1");
+        CPPUNIT_ASSERT(h.get<std::string>("a.b.c") == "1");
+        CPPUNIT_ASSERT(h.getAs<int>("a.b.c") == 1);
+        boost::optional<Hash::Node&> node = h.find("a.b.c");
+        if (node) node->setValue(2);
+        CPPUNIT_ASSERT(h.get<int>("a.b.c") == 2);
+        CPPUNIT_ASSERT(h.getAs<std::string>("a.b.c") == "2");
+
+    }
+    {
+        // Setting a Hash::Node is setting its value (due to Element::setValue(..) template specification).
+        // Question arising: Why? h.set(node.getValueAsAny()) already does that...
+        // But we keep backward compatibility here, i.e. this test succeeds in 2.11.4, but fails in 2.12.0,
+        // see also https://git.xfel.eu/Karabo/Framework/-/merge_requests/5940.
+        Hash::Node node("a", 1);
+        CPPUNIT_ASSERT_EQUAL(static_cast<int>(Types::ReferenceType::INT32), static_cast<int>(node.getType()));
+        const Hash::Node constNode(node);
+
+        // Test setting for all cases: normal object, rvalue reference and const object
+        Hash h;
+        h.set("normal", node);
+        h.set("moved", std::move(node));
+        h.set("const", constNode);
+
+        CPPUNIT_ASSERT_EQUAL(static_cast<int>(Types::ReferenceType::INT32), static_cast<int>(h.getType("moved")));
+        CPPUNIT_ASSERT_EQUAL(1, h.get<int>("moved"));
+
+        CPPUNIT_ASSERT_EQUAL(static_cast<int>(Types::ReferenceType::INT32), static_cast<int>(h.getType("const")));
+        CPPUNIT_ASSERT_EQUAL(1, h.get<int>("const"));
+
+        CPPUNIT_ASSERT_EQUAL(static_cast<int>(Types::ReferenceType::INT32), static_cast<int>(h.getType("normal")));
+        CPPUNIT_ASSERT_EQUAL(1, h.get<int>("normal"));
+    }
+    {
+        // Similar as before, but now testing also move semantics (i.e. would not succeed in 2.11.4).
+        Hash::Node node("a", TraceCopies(2));
+        const Hash::Node constNode("a", TraceCopies(3));
+        TraceCopies::reset();
+
+        // Test setting for all cases: normal object, rvalue reference and const object
+        Hash h;
+        h.set("normal", node);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("normal").value);
+        CPPUNIT_ASSERT_EQUAL(2, node.getValue<TraceCopies>().value); // i.e. not -1 as for a 'moved away' TraceCopies instance
+
+        // Moving the node means move-assignment of its m_value member (which is a boost::any) to the new node inside h.
+        // That leaves node's m_value in a valid, but undefined state, so better do not use it (e.g. by node.getValue) anymore.
+        h.set("moved", std::move(node));
+        CPPUNIT_ASSERT_EQUAL(2, h.get<TraceCopies>("moved").value);
+        // Next line would throw (see comment above) since node::m_value has an unknown type (void?) that cannot be cast to TraceCopies
+        // CPPUNIT_ASSERT_EQUAL(-1, node.getValue<TraceCopies>().value);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr); // There was no copy!
+        // Next line succeeds, i.e. no move assignment either. Looks like since the move-assignment of boost::any just swaps between
+        // source and target instead of moving. But that is an implementation detail we should not tests.
+        // CPPUNIT_ASSERT_EQUAL(0, TraceCopies::countMoveConstr);
+
+        h.set("const", constNode);
+        CPPUNIT_ASSERT_EQUAL(2, TraceCopies::countCopyConstr); // another copy now
+        CPPUNIT_ASSERT_EQUAL(3, h.get<TraceCopies>("const").value);
+        CPPUNIT_ASSERT_EQUAL(3, constNode.getValue<TraceCopies>().value); // i.e. not -1 as for a 'moved away' TraceCopies instance
+
+        TraceCopies::reset();
+    }
+    {
+        // Tests of Hash::Node constructors with move semantics from ValueType
+        const TraceCopies a(1);
+        Hash::Node nodeA("a", a);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(0, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(1, nodeA.getValue<TraceCopies>().value);
+        CPPUNIT_ASSERT_EQUAL(1, a.value); // not -1 as for a moved away object
+
+        TraceCopies b(2);
+        TraceCopies&& bRval = std::move(b); // std::move is in fact just a cast
+        Hash::Node nodeB("b", std::move(bRval));
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(2, nodeB.getValue<TraceCopies>().value);
+        CPPUNIT_ASSERT_EQUAL(-1, b.value); // -1 as for a moved away object
+
+        TraceCopies::reset();
+    }
+    {
+        // Tests of Hash::Node constructors with move semantics from boost::any
+        const boost::any a(TraceCopies(1));
+        TraceCopies::reset(); // Whatever the line before did does not matter...
+        Hash::Node nodeA("a", a);
+        CPPUNIT_ASSERT_EQUAL(1, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(0, TraceCopies::countMoveConstr);
+        CPPUNIT_ASSERT_EQUAL(1, nodeA.getValue<TraceCopies>().value);
+        CPPUNIT_ASSERT_EQUAL(1, boost::any_cast<TraceCopies>(a).value); // not -1 as for a moved away object
+
+        boost::any b(TraceCopies(2));
+        TraceCopies::reset(); // Whatever the line before did does not matter...
+        boost::any&& bRval = std::move(b); // std::move is in fact just a cast
+        Hash::Node nodeB("b", std::move(bRval));
+        // Not copied - in fact it is not moved either (since boost::any is moved which seems to swap),
+        // but that is an implementation detail we better do not test against.
+        CPPUNIT_ASSERT_EQUAL(0, TraceCopies::countCopyConstr);
+        CPPUNIT_ASSERT_EQUAL(2, nodeB.getValue<TraceCopies>().value);
+        // Next line would throw again due to access to moved-away b
+        // CPPUNIT_ASSERT_EQUAL(-1, boost::any_cast<TraceCopies>(b).value);
+
+        TraceCopies::reset();
+
     }
 }

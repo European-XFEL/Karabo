@@ -251,10 +251,22 @@ namespace karabo {
             void setValue(boost::any&& value);
 
             /**
-             * Set the value and key of another element to this Element
-             * @param value
+             * Set the value of another element to this Element, key and attributes are unchanged.
+             *
+             * Kept for backward compatibility, better use setValue(other.getValueAsAny()) instead.
+             *
+             * @param other
              */
-            void setValue(const Element<KeyType, AttributesType>& value);
+            void setValue(const Element<KeyType, AttributesType>& other);
+
+            /**
+             * Set the value of another element to this Element, key and attributes are unchanged.
+             *
+             * Kept for backward compatibility, better use setValue(std::move(other.getValueAsAny())) instead.
+             *
+             * @param other
+             */
+            void setValue(Element<KeyType, AttributesType>&& other);
 
             /**
              * Return the first successful cast to one of the ValueTypes
@@ -544,7 +556,7 @@ namespace karabo {
         }
 
         template<class KeyType, typename AttributeType>
-        Element<KeyType, AttributeType>::Element(const KeyType& key, boost::any&& value) : m_key(key), m_value(value) {
+        Element<KeyType, AttributeType>::Element(const KeyType& key, boost::any&& value) : m_key(key), m_value(std::move(value)) {
         }
 
         template <class KeyType, typename AttributeType>
@@ -556,7 +568,7 @@ namespace karabo {
         template <class KeyType, typename AttributeType>
         template <class ValueType>
         Element<KeyType, AttributeType>::Element(const KeyType& key, ValueType&& value) : m_key(key) {
-            this->setValue(value);
+            this->setValue(std::forward<ValueType>(value));
         }
 
         template<class KeyType, typename AttributesType>
@@ -618,7 +630,6 @@ namespace karabo {
 
         template<class KeyType, typename AttributeType>
         template<class ValueType>
-
         inline void Element<KeyType, AttributeType>::setValue(const boost::shared_ptr<ValueType>& value) {
             this->setValue < boost::shared_ptr<ValueType>, typename boost::is_base_of<Hash, ValueType>::type > (value);
         }
@@ -685,6 +696,13 @@ namespace karabo {
         inline void Element<KeyType, AttributeType>::setValue(const Element<KeyType, AttributeType>& other) {
             if (this != &other) {
                 this->m_value = other.m_value;
+            }
+        }
+
+        template<class KeyType, typename AttributeType>
+        inline void Element<KeyType, AttributeType>::setValue(Element<KeyType, AttributeType>&& other) {
+            if (this != &other) {
+                this->m_value = std::move(other.m_value);
             }
         }
 
