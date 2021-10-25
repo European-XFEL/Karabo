@@ -174,6 +174,18 @@ class KaraboImagePlot(PlotItem):
         if not default:
             self._apply_transform()
 
+    def set_translation(self, x_translate=None, y_translate=None, update=True):
+        """Public method to translate the image. Used by extensions"""
+        if x_translate is None and y_translate is None:
+            return
+
+        if x_translate is not None:
+            self._transform[TF_TRANSLATION][0] = x_translate
+        if y_translate is not None:
+            self._transform[TF_TRANSLATION][1] = y_translate
+
+        self._apply_transform(update)
+
     def set_colormap(self, cmap):
         """Sets the colormap of the image by setting the image item LUT.
             Also updates the information of the selected pixel.
