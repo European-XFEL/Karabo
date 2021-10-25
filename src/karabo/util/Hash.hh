@@ -790,7 +790,7 @@ namespace karabo {
 
         template<>
         inline Hash::Node& Hash::set(const std::string& path, Hash& value, const char separator) {
-            // Avoid that the 'ValueType&&' code path is taken
+            // Special overload for 'Hash&' to avoid that the 'ValueType&&' code path is taken for a non-const Hash
             return set(path, const_cast<const Hash&>(value), separator);
         }
 
