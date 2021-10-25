@@ -288,6 +288,9 @@ namespace karabo {
             inline Node& set(const KeyType& key, const T& value);
 
             template<class T>
+            inline Node& set(const KeyType& key, T& value);
+
+            template<class T>
             inline Node& set(const KeyType& key, T&& value);
 
             /**
@@ -605,6 +608,14 @@ namespace karabo {
                 m_listNodes.push_back(&node);
                 return node;
             }
+        }
+
+        template<class KeyType, class MappedType>
+        template<class T>
+        inline MappedType& OrderedMap<KeyType, MappedType>::set(const KeyType& key, T& value) {
+            // This is an overload for T& to avoid to take the set(const KeyType& key, T&& value) code path
+            // as seems to be needed to catch the correct overlaod for MappedType::setValue(MappedType&)
+            return set(key, const_cast<const T&>(value));
         }
 
         template<class KeyType, class MappedType>
