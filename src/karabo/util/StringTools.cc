@@ -22,7 +22,14 @@ namespace karabo {
 
         std::string createCastFailureMessage(const std::string& key, const std::type_info& src, const std::type_info& tgt) {
             std::string srcType = Types::convert<FromTypeInfo, ToCppString > (src);
+            if (Types::from<FromTypeInfo>(src) == Types::ReferenceType::UNKNOWN) {
+                // type_info::name() is implementation dependent - but is at least a hint
+                ((srcType += " (std::type_info: ") += src.name()) += ")";
+            }
             std::string tgtType = Types::convert<FromTypeInfo, ToCppString > (tgt);
+            if (Types::from<FromTypeInfo>(tgt) == Types::ReferenceType::UNKNOWN) {
+                ((tgtType += " (std::type_info: ") += tgt.name()) += ")";
+            }
             return "Failed conversion from \"" + srcType + "\" into \"" + tgtType + "\" on key \"" + key + "\"";
         }
 
