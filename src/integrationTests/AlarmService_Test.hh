@@ -37,6 +37,7 @@ private:
 
     void appTestRunner();
     void testDeviceRegistration();
+    void testRetrieve();
     void testAlarmPassing();
     void testAcknowledgement();
     void testFlushing();
@@ -77,4 +78,3 @@ private:
 };
 
 #endif	/* ALARMSERVICE_TEST_HH */
-
