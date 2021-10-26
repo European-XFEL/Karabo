@@ -28,23 +28,23 @@ namespace karabo {
 
         /**
          * @class AlarmService
-         * @brief The AlarmService device keeps track of alarms raised in the distributed system. 
-         * 
+         * @brief The AlarmService device keeps track of alarms raised in the distributed system.
+         *
          * The AlarmService device keeps track of alarms raised in the distributed system.
          * It registers itself to the alarm signals and maintains a list of currently known alarms,
          * when they were first and last raised, their severity, additional information and whether
          * they need acknowledging before they disappear.
-         * 
-         * The device provides interfaces for clients to query this information and interact with 
-         * the alarms known to the system. Specifically, clients may send requests to acknowledge 
+         *
+         * The device provides interfaces for clients to query this information and interact with
+         * the alarms known to the system. Specifically, clients may send requests to acknowledge
          * a pending alarm.
-         * 
+         *
          * Additionally, the alarm service periodically saves alarms it manages to disk. This is done
          * to allow for quick recovery from system wide errors: if the alarm service for which-ever
-         * reason needs to be restarted, it will query only the differences of the last persisted 
+         * reason needs to be restarted, it will query only the differences of the last persisted
          * alarms from the distributed system. For this purpose a storagePath and flushIntervall may
          * be configured in the device's expected parameters.
-         *  
+         *
          */
         class AlarmService : public karabo::core::Device<> {
 
@@ -170,7 +170,17 @@ namespace karabo {
              * Request a dump of all alarms currently managed by this alarm service device
              */
             void slotRequestAlarmDump();
-            
+
+            /**
+             * Request a dump of all alarms currently managed by this alarm service device generically
+             */
+            void slotRequestAlarms(const karabo::util::Hash& info);
+
+            /**
+             * Implementation method to reply the alarmInformation for `slotRequestAlarms` and `slotRequestAlarms`
+             */
+            void sendAlarmInformation();
+
             /**
              * This device may not be locked
              * @return false
@@ -200,10 +210,10 @@ namespace karabo {
 
             std::map<std::string, karabo::util::Hash> m_registeredDevices;
             karabo::util::Hash m_alarms; //base data container, organized hierarchically
-            
+
             /*
              These two maps contain the indexing and addressing information for alarms
-             * in m_alarms. The index (key in the first map, value in the second for 
+             * in m_alarms. The index (key in the first map, value in the second for
              * reverse look-up) uniquely counts upwards. Hence, newly incoming alarms
              * are always added to the end of the map. The value of the first map,
              * key of the second is a pointer to the entry for this alarm in m_alarms.
@@ -229,4 +239,3 @@ namespace karabo {
 }
 
 #endif	/* KARABO_ALARMSERVICE_HH */
-
