@@ -487,7 +487,7 @@ if [ "$BUILD_UNIT_TESTING" = "1" ] || [ "$BUILD_INTEGRATION_TESTING" = "1" ] || 
     # Activate the karabo environment to allow tests to be run from the
     # build tree.
     source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
-    ctest -VV
+    safeRunCommand ctest -VV
     deactivateKarabo
 fi
 

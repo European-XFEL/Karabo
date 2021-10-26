@@ -2160,9 +2160,12 @@ namespace karabo {
         void GuiServerDevice::forwardHashReply(bool success, WeakChannelPointer channel, const Hash& info, const Hash& reply) {
             const std::string replyType(info.has("replyType") ? info.get<std::string>("replyType") : "requestGeneric");
             Hash request;
-            if (info.has("empty") && info.get<bool>("empty") == true && info.has("token")) {
-                const std::string & token = info.get<std::string>("token");
-                request.set("token", token);
+            if (info.has("empty") && info.get<bool>("empty") == true ) {
+                if (info.has("token")) {
+                    // if the request has a token return it.
+                    const std::string & token = info.get<std::string>("token");
+                    request.set("token", token);
+                }
             } else {
                 request = info;
             }
