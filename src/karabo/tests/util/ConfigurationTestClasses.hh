@@ -475,7 +475,7 @@ namespace configurationTest {
             PATH_ELEMENT(expected)
                     .key("testfile")
                     .isInputFile()
-                    .readOnly().initialValue("initFile")
+                    .readOnly().defaultValue("initFile") // (now) for readOnly it's the same as initialValue
                     .alarmHigh("a").needsAcknowledging(false)
                     .alarmLow("b").needsAcknowledging(false)
                     .warnHigh("c").needsAcknowledging(false)

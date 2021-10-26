@@ -5,7 +5,8 @@ from karabo.bound import (
     NDARRAY_ELEMENT, NODE_ELEMENT, OVERWRITE_ELEMENT, READ, STATE_ELEMENT,
     WRITE, AccessLevel, AccessType, AlarmCondition, ArchivePolicy,
     AssemblyRules, AssignmentType, Configurator, DaqDataType, DAQPolicy, Hash,
-    Logger, MetricPrefix, NodeType, Schema, State, Types, Unit, Validator)
+    Logger, MetricPrefix, NodeType, Schema, State, Types, Unit, Validator,
+    fullyEqual)
 
 from .configuration_example_classes import (
     ArrayContainer, Base, GraphicsRenderer, GraphicsRenderer1,
@@ -25,6 +26,11 @@ class Schema_TestCase(unittest.TestCase):
             allowedStates = schema.getOptions("state")
             self.assertEqual(allowedStates, ['INIT', 'ERROR', 'NORMAL'])
             self.assertEqual(schema.getDefaultValue("state"), 'INIT')
+            self.assertEqual(schema.getDefaultValue("stateN"), 'NORMAL')
+            self.assertEqual(schema.getDefaultValue("stateE"), 'ERROR')
+            self.assertEqual(schema.getDefaultValue("alarmW"), 'warn')
+            self.assertEqual(schema.getDefaultValue("alarmA"), 'alarm')
+
             allowedStates = schema.getOptions("status")
             self.assertEqual(allowedStates, ['a', 'b', 'c'])
             self.assertEqual(schema.getDefaultValue("status"), 'a')
@@ -375,6 +381,13 @@ class Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getDefaultValue("exampleIntKey"), 20)
 
             self.assertEqual(schema.getDefaultValue("exampleKey5"), 1442244)
+
+            self.assertEqual(schema.getDefaultValue("exampleKey7"), [1, 2, 3])
+
+            # readOnly default specified by 'defaultValue'. not 'initialValue':
+            self.assertEqual(schema.getDefaultValue("exampleKey5b"), 42)
+            self.assertEqual(schema.getDefaultValue("exampleKey7b"),
+                             [11, 22, 33])
 
         except Exception as e:
             self.fail("test_getDefaultValue exception: " + str(e))
@@ -986,6 +999,19 @@ class Schema_TestCase(unittest.TestCase):
         self.assertEqual(schema.getDAQPolicy("state1"), DAQPolicy.UNSPECIFIED)
         self.assertEqual(schema.getDAQPolicy("state2"), DAQPolicy.SAVE)
         self.assertEqual(schema.getDAQPolicy("state3"), DAQPolicy.OMIT)
+
+    def test_table_element(self):
+        schema = TestStruct1.getSchema("TestStruct1")
+
+        # Both, defaultValue and initialValue should work for read-only tables
+        default = schema.getDefaultValue("tableI")
+        self.assertEqual(len(default), 1)
+        self.assertTrue(fullyEqual(default[0], Hash("int", 2)))
+        default = schema.getDefaultValue("tableD")
+        self.assertEqual(len(default), 1)
+        self.assertTrue(fullyEqual(default[0], Hash("int", 3)))
+
+        # There are more tests of tables in the integration tests...
 
     def test_overwrite_restrictions_for_options(self):
         schema = Schema()
