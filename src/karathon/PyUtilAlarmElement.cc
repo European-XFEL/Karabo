@@ -66,6 +66,9 @@ void exportPyUtilAlarmConditionElement() {
                      , (AlarmConditionElement & (AlarmConditionElement::*)(std::vector<std::string> const &))(&AlarmConditionElement::tags)
                      , (bp::arg("tags"))
                      , bp::return_internal_reference<> ())
+                .def("defaultValue", &AlarmConditionElementWrap::initialValuePy
+                     , (bp::arg("value"))
+                     , bp::return_internal_reference<> ())
                 .def("initialValue", &AlarmConditionElementWrap::initialValuePy
                      , (bp::arg("value"))
                      , bp::return_internal_reference<> ());
