@@ -7,9 +7,10 @@ from karabo.bound import (
     INT32_ELEMENT, INT64_ELEMENT, KARABO_CLASSINFO,
     KARABO_CONFIGURATION_BASE_CLASS, LIST_ELEMENT, METER, MILLI,
     NDARRAY_ELEMENT, NO_ARCHIVING, NODE_ELEMENT, OVERWRITE_ELEMENT,
-    PATH_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, UINT32_ELEMENT,
-    UINT64_ELEMENT, VECTOR_DOUBLE_ELEMENT, VECTOR_INT32_ELEMENT,
-    VECTOR_STRING_ELEMENT, MetricPrefix, Unit)
+    PATH_ELEMENT, SLOT_ELEMENT, STATE_ELEMENT, STRING_ELEMENT, TABLE_ELEMENT,
+    UINT32_ELEMENT, UINT64_ELEMENT, VECTOR_DOUBLE_ELEMENT,
+    VECTOR_INT32_ELEMENT, VECTOR_STRING_ELEMENT, AlarmCondition, Hash,
+    MetricPrefix, Schema, Unit)
 from karabo.common.states import State
 
 
@@ -58,7 +59,23 @@ class Circle(Shape):
             STATE_ELEMENT(expected).key("state")
             .commit(),
 
+            STATE_ELEMENT(expected).key("stateN")
+            .defaultValue(State.NORMAL)
+            .commit(),
+
+            STATE_ELEMENT(expected).key("stateE")
+            .initialValue(State.ERROR)
+            .commit(),
+
             ALARM_ELEMENT(expected).key("alarm")
+            .commit(),
+
+            ALARM_ELEMENT(expected).key("alarmW")
+            .initialValue(AlarmCondition.WARN)
+            .commit(),
+
+            ALARM_ELEMENT(expected).key("alarmA")
+            .defaultValue(AlarmCondition.ALARM)
             .commit(),
 
             STRING_ELEMENT(expected).key("status")
@@ -331,6 +348,10 @@ class TestStruct1(object):
             .archivePolicy(EVERY_EVENT)
             .commit(),
 
+            INT64_ELEMENT(expected).key("exampleKey5b")
+            .readOnly().defaultValue(42)
+            .commit(),
+
             DOUBLE_ELEMENT(expected).key("exampleKey6")
             .alias([0x00123456, 0x0000aacc])
             .displayedName("Example key 6")
@@ -348,6 +369,10 @@ class TestStruct1(object):
             .allowedStates(State.STARTED, State.NORMAL)
             .readOnly().initialValue([1, 2, 3])
             .archivePolicy(EVERY_1S)
+            .commit(),
+
+            VECTOR_INT32_ELEMENT(expected).key("exampleKey7b")
+            .readOnly().initialValue([11, 22, 33])
             .commit(),
 
             VECTOR_DOUBLE_ELEMENT(expected).key("exampleKey8")
@@ -470,6 +495,21 @@ class TestStruct1(object):
             .displayedName("myImage")
             .description("Image Element")
             .operatorAccess()
+            .commit(),
+        )
+        row = Schema()
+        INT32_ELEMENT(row).key("int").readOnly().initialValue(0).commit()
+        (
+            TABLE_ELEMENT(expected).key("tableI")
+            .setColumns(row)
+            .readOnly()
+            .initialValue([Hash("int", 2)])
+            .commit(),
+
+            TABLE_ELEMENT(expected).key("tableD")
+            .setColumns(row)
+            .readOnly()
+            .defaultValue([Hash("int", 3)])
             .commit(),
 
             NODE_ELEMENT(expected).key("myNode")

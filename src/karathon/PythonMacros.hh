@@ -335,6 +335,9 @@ bp::class_< ReadOnlySpec, boost::noncopyable >( "ReadOnlySpecific"#e, bp::no_ini
 .def("initialValue"\
 , (ReadOnlySpec & (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::initialValue)\
 , bp::return_internal_reference<> () )\
+.def("defaultValue"\
+, (ReadOnlySpec & (ReadOnlySpec::*)(EType const &))( &ReadOnlySpec::initialValue)\
+, bp::return_internal_reference<> () )\
 .def("archivePolicy"\
 , (ReadOnlySpec & (ReadOnlySpec::*)(karabo::util::Schema::ArchivePolicy const &))( &ReadOnlySpec::archivePolicy)\
 , bp::return_internal_reference<> () )\
@@ -352,6 +355,10 @@ typedef karabo::util::AlarmSpecific< U, VType, ReadOnlySpecVec > AlarmSpecVec;\
 typedef RollingStatsSpecific< U, VType > RollingStatsSpecArr;\
 bp::class_< ReadOnlySpecVec, boost::noncopyable > ("ReadOnlySpecificVector"#e, bp::no_init)\
 .def("initialValue"\
+, &ReadOnlySpecificVectorWrap<T>::initialValue\
+, (bp::arg("self"), bp::arg("pyList"))\
+, bp::return_internal_reference<> () )\
+.def("defaultValue"\
 , &ReadOnlySpecificVectorWrap<T>::initialValue\
 , (bp::arg("self"), bp::arg("pyList"))\
 , bp::return_internal_reference<> () )\
