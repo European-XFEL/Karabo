@@ -435,8 +435,17 @@ namespace karabo {
             }
 
             /**
+             * The <b>defaultValue</b> method is the same as <b>initialValue</b>
+             * @param val  Initial value
+             * @return reference to the Element for proper methods chaining
+             */
+            ReadOnlySpecific& defaultValue(const ValueType& initialValue) {
+                return this->initialValue(initialValue);
+            }
+
+            /**
              * The <b>initialValueFromString</b> method enables setting up a default value in a form of a string.
-             * This may, for example, be convenient for vector elements.
+             * DEPRECATED! For vectors use list initialisation: initialValue({1, 2, 3})
              * @param defaultValue A string representation of the default value
              * @return reference to the Element for proper methods chaining
              */
