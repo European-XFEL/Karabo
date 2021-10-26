@@ -2353,6 +2353,10 @@ void exportPyUtilSchema() {
                      , &ReadOnlySpecificTableWrap::initialValueTable
                      , (bp::arg("self"), bp::arg("pyList"))
                      , bp::return_internal_reference<> ())
+                .def("defaultValue"
+                     , &ReadOnlySpecificTableWrap::initialValueTable
+                     , (bp::arg("self"), bp::arg("pyList"))
+                     , bp::return_internal_reference<> ())
                 .def("archivePolicy"
                      , (ReadOnlySpec & (ReadOnlySpec::*)(karabo::util::Schema::ArchivePolicy const &))(&ReadOnlySpec::archivePolicy)
                      , bp::return_internal_reference<> ())
