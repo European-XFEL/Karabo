@@ -159,7 +159,7 @@ namespace karabo {
             KARABO_SYSTEM_SIGNAL("signalAlarmServiceUpdate", std::string, std::string, karabo::util::Hash)
             registerSlot<karabo::util::Hash > (boost::bind(&AlarmService::slotAcknowledgeAlarm, this, _1), "slotAcknowledgeAlarm");
             registerSlot(boost::bind(&AlarmService::slotRequestAlarmDump, this), "slotRequestAlarmDump");
-
+            KARABO_SLOT(slotRequestAlarms, karabo::util::Hash);
         }
 
 
@@ -495,7 +495,6 @@ namespace karabo {
 
 
         void AlarmService::slotAcknowledgeAlarm(const karabo::util::Hash& acknowledgedRows) {
-
             Hash rowUpdates;
             for (Hash::const_iterator it = acknowledgedRows.begin(); it != acknowledgedRows.end(); ++it) {
                 try {
@@ -537,11 +536,22 @@ namespace karabo {
                 emit("signalAlarmServiceUpdate", getInstanceId(), std::string("alarmUpdate"), m_updateHash);
                 m_updateHash.clear();
             }
+            // Reply that the command has been executed successfully
+            reply(Hash("instanceId", getInstanceId(), "success", true, "reason", ""));
         }
 
 
         void AlarmService::slotRequestAlarmDump() {
+            this->sendAlarmInformation();
+        }
 
+
+        void AlarmService::slotRequestAlarms(const karabo::util::Hash& info) {
+            this->sendAlarmInformation();
+        }
+
+
+        void AlarmService::sendAlarmInformation() {
             Hash rowInits;
             boost::shared_lock<boost::shared_mutex> lock(m_alarmChangeMutex);
             for (auto it = m_alarmsMap.begin(); it != m_alarmsMap.end(); ++it) {
@@ -550,9 +560,7 @@ namespace karabo {
                 rowInits.set(boost::lexical_cast<std::string>(entry.get<unsigned long long>("id")), addRowUpdate("init", entry));
 
             }
-
-            reply(Hash("instanceId", getInstanceId(), "alarms", rowInits));
-
+            reply(Hash("instanceId", getInstanceId(), "alarms", rowInits, "success", true, "reason", ""));
         }
 
 
@@ -589,4 +597,3 @@ namespace karabo {
         }
     }
 }
-
