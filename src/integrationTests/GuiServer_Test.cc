@@ -546,6 +546,33 @@ void GuiVersion_Test::testRequestGeneric() {
 
         std::clog << "requestGeneric: OK with online device and empty request" << std::endl;
     }
+    {
+        Hash h("type", "requestGeneric",
+               "instanceId", "testGuiServerDevice",
+               "timeout", 1,
+               "replyType", "debug",
+               "empty", true,
+               "token", "here is a token of my appreciation",
+               "slot", "slotDumpDebugInfo");
+        h.set("args", Hash("clients", true));
+
+        karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("debug", 1, [&] {
+            m_tcpAdapter->sendMessage(h);
+        }, messageTimeout);
+        Hash replyMessage;
+        messageQ->pop(replyMessage);
+        CPPUNIT_ASSERT_EQUAL(true, replyMessage.get<bool>("success"));
+        CPPUNIT_ASSERT_EQUAL(std::string("debug"), replyMessage.get<std::string>("type"));
+        const Hash& request = replyMessage.get<Hash>("request");
+        CPPUNIT_ASSERT_EQUAL(1ul, request.size());
+        CPPUNIT_ASSERT(request.has("token"));
+        CPPUNIT_ASSERT_EQUAL(std::string("here is a token of my appreciation"), request.get<std::string>("token"));
+        const Hash& clients = replyMessage.get<Hash>("reply");
+        const int number_clients = clients.size();
+        CPPUNIT_ASSERT_EQUAL(1, number_clients);
+
+        std::clog << "requestGeneric: OK with online device and empty request and a token" << std::endl;
+    }
 }
 
 
