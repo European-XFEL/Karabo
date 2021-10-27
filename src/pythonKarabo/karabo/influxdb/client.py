@@ -245,14 +245,17 @@ class InfluxDbClient():
             matching a line protocol
         """
         uri = self.get_url("write")
-        args = {"db": self.db}
+        args = {
+            "db": self.db,
+            "precision": "u"
+        }
         if len(self.user) > 0:
             args["u"] = self.user
         if len(self.password) > 0:
             args["p"] = self.password
         query = urlencode(args)
         future = to_asyncio_future(
-            self.client.fetch(f"{uri}?{query}&precision=u", body=data,
+            self.client.fetch(f"{uri}?{query}", body=data,
                               headers=self.basic_auth_header,
                               method="POST",
                               request_timeout=self.request_timeout))
