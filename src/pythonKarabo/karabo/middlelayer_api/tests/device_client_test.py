@@ -6,10 +6,9 @@ from unittest import main, mock
 
 from karabo.middlelayer import (
     Device, DeviceClientBase, Hash, KaraboError, Schema, coslot,
-    getConfigurationFromPast, getSchemaFromPast, getTopology)
+    getConfigurationFromPast, getInstanceInfo, getSchemaFromPast, getTopology)
 from karabo.middlelayer_api.synchronization import background, synchronize
-from karabo.middlelayer_api.tests.eventloop import (
-    DeviceTest, async_tst, sync_tst)
+from karabo.middlelayer_api.tests.eventloop import DeviceTest, async_tst
 
 DEVICE_ID = "data_logger_device_id"
 
@@ -25,6 +24,11 @@ def _getLogReaderId(device):
 
 
 class DataLogReader(Device):
+
+    def _initInfo(self):
+        info = super()._initInfo()
+        info["TestInfo"] = "This is a karabo test info"
+        return info
 
     @coslot
     async def slotGetConfigurationFromPast(self, deviceId, timepoint):
@@ -62,6 +66,12 @@ class TestDeviceClient(DeviceTest):
             s = await getSchemaFromPast("aDeviceInHistory", time)
             self.assertIsInstance(s, Schema)
             self.assertEqual(s.name, DEVICE_ID)
+
+    @async_tst
+    async def test_getInstanceInfo(self):
+        info = await getInstanceInfo(DEVICE_ID)
+        self.assertEqual(info["TestInfo"], "This is a karabo test info")
+        self.assertEqual(info["classId"], "DataLogReader")
 
 
 class TestDeviceClientBase(DeviceTest):
