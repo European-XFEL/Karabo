@@ -92,6 +92,33 @@ class TestKaraboImageItem(_BaseImageItemTest):
         self.assert_rgb_image(rgb_image)
         self.assert_indexed_image(indexed_image, downsampling=1.5)
 
+    def test_translation(self):
+        """Test the translation of an image which is used by external clients
+        """
+        received = False
+
+        def slotTransform():
+            nonlocal received
+            received = True
+
+        dims = (800, 600)
+        image = np.random.randint(0, 256, dims + (3,), dtype=np.uint8)
+        self.assert_rgb_image(image)
+
+        plotItem = self.imageView.plot()
+        plotItem.imageTransformed.connect(slotTransform)
+
+        np.testing.assert_array_equal(self.imageItem._origin,
+                                      np.array([0, 0]))
+        plotItem.set_translation(x_translate=10, y_translate=20)
+        self.process_qt_events()
+
+        np.testing.assert_array_equal(self.imageItem._origin,
+                                      np.array([10, 20]))
+        self.assertTrue(received)
+        self.assert_rgb_image(image)
+        plotItem.imageTransformed.disconnect(slotTransform)
+
 
 class Test2DImageItem(_BaseImageItemTest):
 
