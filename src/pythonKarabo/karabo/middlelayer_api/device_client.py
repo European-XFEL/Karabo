@@ -102,6 +102,17 @@ class OneShotQueue(asyncio.Future):
 
 
 @synchronize
+async def getInstanceInfo(device):
+    """ Get the `instanceInfo` Hash of a device"""
+    if isinstance(device, ProxyBase):
+        device = device._deviceId
+    rand_ping = 1
+    track = True  # Not used, kept for backward compatibility
+    return await get_instance().call(device, "slotPing", device,
+                                     rand_ping, track)
+
+
+@synchronize
 async def waitUntilNew(*props):
     """Wait until new futures provide a result
 
