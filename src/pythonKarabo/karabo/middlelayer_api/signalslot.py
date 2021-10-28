@@ -310,8 +310,10 @@ class SignalSlotable(Configurable):
 
     def _initInfo(self):
         """return the info hash at initialization time"""
-        return Hash("heartbeatInterval", self.heartbeatInterval.value,
-                    "karaboVersion", get_karabo_version())
+        return Hash(
+            "type", "unknown",
+            "heartbeatInterval", self.heartbeatInterval.value,
+            "karaboVersion", get_karabo_version())
 
     def _register_slots(self):
         """Register all available slots on the broker
