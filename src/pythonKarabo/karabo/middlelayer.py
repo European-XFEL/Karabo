@@ -46,11 +46,12 @@ from .middlelayer_api.device_client import (
     executeNoWait, filterByTags, findDevices, findServers, getClasses,
     getClients, getConfiguration, getConfigurationFromName,
     getConfigurationFromPast, getDescriptors, getDevice, getDevices,
-    getHistory, getLastConfiguration, getSchema, getSchemaFromPast, getServers,
-    getTopology, instantiate, instantiateFromName, instantiateNoWait, isAlive,
-    listConfigurationFromName, listDevicesWithConfiguration, lock,
-    saveConfigurationFromName, setNoWait, setWait, shutdown, shutdownNoWait,
-    updateDevice, waitUntil, waitUntilNew, waitWhile)
+    getHistory, getInstanceInfo, getLastConfiguration, getSchema,
+    getSchemaFromPast, getServers, getTopology, instantiate,
+    instantiateFromName, instantiateNoWait, isAlive, listConfigurationFromName,
+    listDevicesWithConfiguration, lock, saveConfigurationFromName, setNoWait,
+    setWait, shutdown, shutdownNoWait, updateDevice, waitUntil, waitUntilNew,
+    waitWhile)
 from .middlelayer_api.devicenode import DeviceNode
 from .middlelayer_api.eventloop import KaraboFuture
 from .middlelayer_api.injectable import Injectable
@@ -85,7 +86,7 @@ def _create_cli_submodule():
         getConfiguration, getConfigurationFromPast, getSchemaFromPast,
         getConfigurationFromName, getLastConfiguration, getDevice,
         listConfigurationFromName, listDevicesWithConfiguration, getDevices,
-        getHistory, getSchema, getServers, getTopology,
+        getHistory, getInstanceInfo, getSchema, getServers, getTopology,
         get_timestamp, Hash, hoursAgo, instantiate, instantiateFromName,
         instantiateNoWait, isSet, karabo, minutesAgo,
         saveConfigurationFromName, setWait, setNoWait, shutdown,
