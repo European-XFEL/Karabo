@@ -562,10 +562,10 @@ class TestManager(GuiTestCase):
             manager.handle_notification(**info)
             mbox.show_warning.assert_called_with('hello')
 
+            mbox.reset_mock()
             info = {'nomessage': 'hello'}
             manager.handle_notification(**info)
-            mbox.show_warning.assert_called_with(
-                'Notification from GUI Server is empty!')
+            mbox.show_warning.assert_not_called()
 
     def test_handle_executeReply(self):
         target = 'karabogui.singletons.manager.messagebox'
