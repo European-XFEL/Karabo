@@ -45,7 +45,7 @@ private:
     void testRequestFailProtocol();
     void testRequestFailOldVersion();
     void testLogMute();
-
+    void testSlotNotify();
     /**
      * Checks that messages of type 'deviceConfigurations' sent by
      * the GUI Server contain all the expected config updates for
