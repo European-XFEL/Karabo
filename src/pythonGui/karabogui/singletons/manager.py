@@ -648,7 +648,10 @@ class Manager(QObject):
     def handle_notification(self, **info):
         """Handle notification events from the GUI server
         """
-        message = info.get('message', 'Notification from GUI Server is empty!')
+        message = info.get('message', '')
+        if not message:
+            # Might clear message in future
+            return
         messagebox.show_warning(message)
 
     def handle_networkData(self, name, data, meta=None):
