@@ -89,6 +89,7 @@ void GuiVersion_Test::appTestRunner() {
     testRequestFailProtocol();
     testRequestFailOldVersion();
     testLogMute();
+    testSlotNotify();
 
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
@@ -1159,5 +1160,48 @@ void GuiVersion_Test::testLogMute() {
         success = m_deviceClient->killDevice("PropTest_LOG", KRB_TEST_MAX_TIMEOUT);
         CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
     }
+    std::clog << "OK" << std::endl;
+}
+
+
+void GuiVersion_Test::testSlotNotify() {
+
+    std::clog << "testSlotNotify: " << std::flush;
+    const std::string messageToSend("Banner for everyone!");
+    const Hash arg("message", messageToSend,
+                   "contentType", "banner");
+    Hash reply;
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&reply, &arg, this] {
+            m_deviceServer->request("testGuiServerDevice", "slotNotify", arg).timeout(1000).receive(reply);
+    }, 1000);
+    CPPUNIT_ASSERT_MESSAGE(toString(reply), reply.empty());
+
+    // Test that client received the notification
+    Hash messageReceived;
+    messageQ->pop(messageReceived);
+    CPPUNIT_ASSERT(messageReceived.has("message"));
+    CPPUNIT_ASSERT_EQUAL(messageToSend, messageReceived.get<std::string>("message"));
+    CPPUNIT_ASSERT_EQUAL(std::string("banner"), messageReceived.get<std::string>("contentType"));
+
+    // Since it is type "banner", GUI server device stores message as "bannerMessage":
+    // Note: Better wait to ensure that deviceClient received update - no guarantee since server sent the message...
+    waitForCondition([this, &messageToSend](){
+        return messageToSend == m_deviceClient->get<std::string>("testGuiServerDevice", "bannerMessage");
+    }, KRB_TEST_MAX_TIMEOUT * 1000);
+    CPPUNIT_ASSERT_EQUAL(messageToSend, m_deviceClient->get<std::string>("testGuiServerDevice", "bannerMessage"));
+
+    // Create second adapter that connects - it should receive the stored notification "banner"
+    auto tcpAdapter2 = boost::make_shared<karabo::TcpAdapter>(Hash("port", 44450u/*, "debug", true*/));
+    int timeout = 5000;
+    while (!tcpAdapter2->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+    CPPUNIT_ASSERT(tcpAdapter2->connected());
+    const std::vector<Hash> messages(tcpAdapter2->getAllMessages("notification"));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(messages), 1ul, messages.size());
+    CPPUNIT_ASSERT_EQUAL(messageToSend, messages[0].get<std::string>("message"));
+    CPPUNIT_ASSERT_EQUAL(std::string("banner"), messages[0].get<std::string>("contentType"));
+
     std::clog << "OK" << std::endl;
 }
