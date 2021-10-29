@@ -755,6 +755,18 @@ namespace karabo {
 
             void slotDumpDebugInfo(const karabo::util::Hash& info);
 
+            /**
+             * Slot to send a notification message to all clients connected - replies empty Hash
+             *
+             * @param info a Hash with following keys
+             *              * "message": a string containing the notification type
+             *              * "contentType": a string defining the type of notification as the GUI client understands it
+             *                               - "banner" means message will go to the GUI banner. Therefore it will be stored
+             *                                          in the "bannerMessage" property of the GuiServerDevice and sent to
+             *                                          any client that connects.
+             *                               - other types will likely just be shown in a pop-up window of the client
+             */
+            void slotNotify(const karabo::util::Hash& info);
 
             /**
              * Helper for 'slotDumpToLog' and 'slotDumpDebugInfo'
