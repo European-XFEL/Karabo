@@ -228,6 +228,13 @@ namespace karabo {
                     .adminAccess()
                     .commit();
 
+            STRING_ELEMENT(expected).key("bannerMessage")
+            .displayedName("Banner Message")
+            .description("Banner message for connecting clients, provided by slotNotify")
+            .readOnly().initialValue(std::string())
+            .expertAccess()
+            .commit();
+
             SLOT_ELEMENT(expected).key("slotDumpToLog")
                     .displayedName("Dump Debug to Log")
                     .description("Dumps info about connections to log file (care - can be huge)")
@@ -251,6 +258,7 @@ namespace karabo {
             KARABO_SLOT(slotDumpToLog);
             KARABO_SLOT(slotDumpDebugInfo, karabo::util::Hash);
             KARABO_SLOT(slotDisconnectClient, std::string);
+            KARABO_SLOT(slotNotify, karabo::util::Hash);
 
             Hash h;
             h.set("port", config.get<unsigned int>("port"));
@@ -494,6 +502,14 @@ namespace karabo {
                 systemInfo.set("version", version);
 
                 channel->writeAsync(systemInfo);
+
+                // Forward banner info if some:
+                const std::string banner(get<std::string>("bannerMessage"));
+                if (!banner.empty()) {
+                    channel->writeAsync(Hash("type", "notification",
+                                             "contentType", "banner",
+                                             "message", banner));
+                }
 
                 // Re-register acceptor socket (allows handling multiple clients)
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
@@ -1952,6 +1968,17 @@ namespace karabo {
             reply(found);
         }
 
+        void GuiServerDevice::slotNotify(const karabo::util::Hash& info) {
+            const std::string& message = info.get<std::string>("message");
+            const std::string contentTypeStr("contentType");
+            const std::string& type = info.get<std::string>(contentTypeStr);
+            if (type == "banner") {
+                set("bannerMessage", message);
+            }
+            safeAllClientsWrite(Hash("type", "notification", "message", message, contentTypeStr, type));
+
+            reply(Hash()); // Hash to comply with generic slot call protocol, i.e. Hash-in, Hash-out.
+        }
 
         void GuiServerDevice::tryToUpdateNewInstanceAttributes(const std::string& deviceId, const int callerMask) {
             try {
