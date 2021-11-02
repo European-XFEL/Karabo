@@ -96,6 +96,12 @@ protected:
     void testDropFutureData();
 
     /**
+     * Checks that the InfluxLogger is properly dropping values
+     * that are too large for influxdb.
+     */
+    void testDropBigData();
+
+    /**
      * Sets PropertyTestDevice Schema
      *
      * circumvent min/max limits and vector size specification
