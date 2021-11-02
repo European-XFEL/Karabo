@@ -67,6 +67,11 @@ public:
                 .initialValue(0)
                 .commit();
 
+        STRING_ELEMENT(expected).key("largeString")
+                .readOnly()
+                .initialValue("Could be larger")
+                .commit();
+
         SLOT_ELEMENT(expected).key("slotIncreaseValue")
                 .commit();
 
@@ -646,6 +651,66 @@ void BaseLogging_Test::testDropFutureData() {
         CPPUNIT_ASSERT_MESSAGE("'value' has wrong time stamp: " + received.toIso8601() + " - difference is : " + toString(dt),
                                dt < 1e-6);
         CPPUNIT_ASSERT_EQUAL(cfg.get<int>("value"), originalValue);
+    }
+    std::clog << "... OK" << std::endl;
+}
+
+void BaseLogging_Test::testDropBigData() {
+    std::clog << "Testing that the logger drops large data ... " << std::flush;
+
+    const std::string deviceId(getDeviceIdPrefix() + "deviceWithLargeStrings");
+    const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    auto success = m_deviceClient->instantiate(m_server, "DataLogTestDevice", Hash("deviceId", deviceId),
+                                               KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    CPPUNIT_ASSERT_MESSAGE("Test device missing from 'devicesToBeLogged' :" + toString(m_deviceClient->get<std::vector<std::string>>(loggerId, "devicesToBeLogged")),
+                           waitForCondition([this, &loggerId, &deviceId]() {
+                               auto loggedIds = m_deviceClient->get<std::vector < std::string >> (loggerId, "devicesToBeLogged");
+                                            return (std::find(loggedIds.begin(), loggedIds.end(), deviceId) != loggedIds.end());
+                           },
+                                            KRB_TEST_MAX_TIMEOUT * 1000)
+                           );
+
+    const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+    unsigned int numCycles = 5;
+    Hash cfg;
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
+    CPPUNIT_ASSERT_MESSAGE("'value' is missing from the configuration", cfg.has("largeString"));
+    const Epochstamp originalEpoch = Epochstamp::fromHashAttributes(cfg.getAttributes("largeString"));
+    const std::string originalValue = cfg.get<std::string>("largeString");
+
+    for (unsigned int i = 0; i < numCycles; ++i) {
+        std::ostringstream ostr;
+        for (int j = 0; j < 65000; j++) {
+            ostr << i;
+        }
+        const std::string tooBig(ostr.str());
+        // Get configuration, check expected values, check (static) time stamp of "oldValue" and store stamp of "value"
+        CPPUNIT_ASSERT_NO_THROW(
+            m_sigSlot->request(deviceId, "slotUpdateConfigGeneric", Hash("largeString", tooBig))
+                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive());
+        CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
+        CPPUNIT_ASSERT_MESSAGE("'largeString' is missing from the configuration", cfg.has("largeString"));
+        CPPUNIT_ASSERT_EQUAL(tooBig, cfg.get<std::string>("largeString"));
+        // Flush Data
+        CPPUNIT_ASSERT_NO_THROW(m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+                                .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+        // small sleep to make sure the data is on the DB
+        boost::this_thread::sleep(boost::posix_time::milliseconds(250));
+
+        Schema schema;
+        bool configAtTimepoint;
+        std::string configTimepoint;
+        try {
+            m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
+                            deviceId, Epochstamp().toIso8601())
+                    .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+                    .receive(cfg, schema, configAtTimepoint, configTimepoint);
+        } catch (const std::exception& e) {
+            CPPUNIT_ASSERT_MESSAGE(string("Unexpected exception: ") += e.what(), false);
+        }
+        CPPUNIT_ASSERT_MESSAGE("'value' is missing from the configuration", cfg.has("largeString"));
+        CPPUNIT_ASSERT_EQUAL(originalValue, cfg.get<std::string>("largeString"));
     }
     std::clog << "... OK" << std::endl;
 }
