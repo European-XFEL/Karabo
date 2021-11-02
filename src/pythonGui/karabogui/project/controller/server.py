@@ -5,6 +5,7 @@
 #############################################################################
 from functools import partial
 
+import natsort
 from qtpy.QtWidgets import QAction, QDialog, QMenu, QMessageBox
 from traits.api import Bool, Instance, Property, on_trait_change
 
@@ -278,7 +279,8 @@ class DeviceServerController(BaseProjectGroupController):
     def _sort_alphabetically(self, parent=None):
         server_model = self.model
         devices = list(server_model.devices)
-        devices = sorted(devices, key=lambda device: device.instance_id)
+        devices = natsort.natsorted(devices,
+                                    key=lambda device: device.instance_id)
         del server_model.devices[:]
         server_model.devices.extend(devices)
 
@@ -291,7 +293,7 @@ class DeviceServerController(BaseProjectGroupController):
             karabo_name = device_id.split("/")
             return device_id if len(karabo_name) != 3 else karabo_name[level]
 
-        devices = sorted(devices, key=sort_func)
+        devices = natsort.natsorted(devices, key=sort_func)
         del server_model.devices[:]
         server_model.devices.extend(devices)
 
