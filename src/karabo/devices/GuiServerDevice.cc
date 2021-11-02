@@ -228,12 +228,13 @@ namespace karabo {
                     .adminAccess()
                     .commit();
 
-            STRING_ELEMENT(expected).key("bannerMessage")
-            .displayedName("Banner Message")
-            .description("Banner message for connecting clients, provided by slotNotify")
-            .readOnly().initialValue(std::string())
-            .expertAccess()
-            .commit();
+            VECTOR_STRING_ELEMENT(expected).key("bannerData")
+                    .displayedName("Banner Data")
+                    .description("Banner message for connecting clients, provided by slotNotify. "
+                                 "Three elements are expected: Message, background color, foreground color.")
+                    .readOnly().initialValue({})
+                    .expertAccess()
+                    .commit();
 
             SLOT_ELEMENT(expected).key("slotDumpToLog")
                     .displayedName("Dump Debug to Log")
@@ -504,11 +505,16 @@ namespace karabo {
                 channel->writeAsync(systemInfo);
 
                 // Forward banner info if some:
-                const std::string banner(get<std::string>("bannerMessage"));
-                if (!banner.empty()) {
-                    channel->writeAsync(Hash("type", "notification",
-                                             "contentType", "banner",
-                                             "message", banner));
+                const std::vector<std::string> banner_data(get<std::vector<std::string>>("bannerData"));
+                if (banner_data.size() == 3ul) {
+                    Hash banner("type", "notification", "contentType", "banner", "message", banner_data[0]);
+                    if (!banner_data[1].empty()) {
+                        banner.set("background", banner_data[1]);
+                    }
+                    if (!banner_data[2].empty()) {
+                        banner.set("foreground", banner_data[2]);
+                    }
+                    channel->writeAsync(banner);
                 }
 
                 // Re-register acceptor socket (allows handling multiple clients)
@@ -1973,9 +1979,36 @@ namespace karabo {
             const std::string contentTypeStr("contentType");
             const std::string& type = info.get<std::string>(contentTypeStr);
             if (type == "banner") {
-                set("bannerMessage", message);
+                Hash banner("type", "notification", "message", message, contentTypeStr, type);
+                std::vector<std::string> bannerData;
+                if (!message.empty()) {
+                    bannerData.push_back(message);
+                    const std::string bgColorKey("background");
+                    if (!info.has(bgColorKey)) {
+                        bannerData.push_back(std::string());
+                    } else {
+                        const std::string bgColor(info.get<std::string>(bgColorKey));
+                        banner.set(bgColorKey, bgColor);
+                        bannerData.push_back(bgColor);
+                    }
+
+                    const std::string fgColorKey("foreground");
+                    if (!info.has(fgColorKey)) {
+                        bannerData.push_back(std::string());
+                    } else {
+                        const std::string fgColor(info.get<std::string>(fgColorKey));
+                        banner.set(fgColorKey, fgColor);
+                        bannerData.push_back(fgColor);
+                    }
+                }
+                set("bannerData", bannerData);
+                safeAllClientsWrite(banner);
+            } else {
+                Hash announcement(info);
+                announcement.set("type", "notification");
+                KARABO_LOG_FRAMEWORK_INFO << "Sending custom notification message to all clients: " << announcement;
+                safeAllClientsWrite(announcement);
             }
-            safeAllClientsWrite(Hash("type", "notification", "message", message, contentTypeStr, type));
 
             reply(Hash()); // Hash to comply with generic slot call protocol, i.e. Hash-in, Hash-out.
         }
