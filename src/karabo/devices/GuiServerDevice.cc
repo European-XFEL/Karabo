@@ -122,6 +122,16 @@ namespace karabo {
                     .minInc(500).maxInc(5000)
                     .commit();
 
+            INT32_ELEMENT(expected).key("checkConnectionsInterval")
+                    .displayedName("Check Connections Interval")
+                    .description("Time interval between checking client connections. Clients with an increasing backlog "
+                    "of more than 1000 pending messages will be disconnected after two consecutive checks.")
+                    .unit(Unit::SECOND)
+                    .assignmentOptional().defaultValue(300)
+                    .reconfigurable()
+                    .minInc(1).maxInc(24 * 3600) // at least once per day
+                    .commit();
+
             UINT32_ELEMENT(expected).key("connectedClientCount")
                     .displayedName("Connected clients count")
                     .description("The number of clients currently connected to the server.")
@@ -249,6 +259,7 @@ namespace karabo {
         , m_deviceInitTimer(EventLoop::getIOService())
         , m_networkStatsTimer(EventLoop::getIOService())
         , m_forwardLogsTimer(EventLoop::getIOService())
+        , m_checkConnectionTimer(EventLoop::getIOService())
         , m_timeout(config.get<int>("timeout")) {
 
             KARABO_INITIAL_FUNCTION(initialize)
@@ -335,6 +346,8 @@ namespace karabo {
                 startDeviceInstantiation();
                 startNetworkMonitor();
                 startForwardingLogs();
+                startMonitorConnectionQueues(karabo::util::Hash());
+
                 // TODO: remove this once "fast slot reply policy" is enforced
                 const std::vector<std::string>& timingOutClasses = get<std::vector<std::string>>("ignoreTimeoutClasses");
                 recalculateTimingOutDevices(remote().getSystemTopology(), timingOutClasses, false);
@@ -413,6 +426,14 @@ namespace karabo {
         void GuiServerDevice::startForwardingLogs() {
             m_forwardLogsTimer.expires_from_now(boost::posix_time::milliseconds(get<int>("forwardLogInterval")));
             m_forwardLogsTimer.async_wait(bind_weak(&karabo::devices::GuiServerDevice::forwardLogs, this, boost::asio::placeholders::error));
+        }
+
+
+        void GuiServerDevice::startMonitorConnectionQueues(const Hash& currentSuspects) {
+            const int interval = get<int>("checkConnectionsInterval");
+            m_checkConnectionTimer.expires_from_now(boost::posix_time::seconds(interval));
+            m_checkConnectionTimer.async_wait(bind_weak(&GuiServerDevice::monitorConnectionQueues, this,
+                                                        boost::asio::placeholders::error, currentSuspects));
         }
 
         void GuiServerDevice::collectNetworkStats(const boost::system::error_code& error) {
@@ -1932,6 +1953,52 @@ namespace karabo {
             }
 
             return data;
+        }
+
+
+        void GuiServerDevice::monitorConnectionQueues(const boost::system::error_code& err, const Hash& lastCheckSuspects) {
+            KARABO_LOG_FRAMEWORK_INFO << "monitorConnectionQueues - last suspects: " << lastCheckSuspects;
+
+            // Get queue infos from mutex protected list of channels
+            Hash queueInfos;
+            {
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    const std::string clientAddr = getChannelAddress(it->first);
+                    TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel>(it->first);
+                    queueInfos.set(clientAddr, tcpChannel->queueInfo());
+                }
+            }
+
+            // Loop, check pending messages per client, and trigger disconnection if
+            // - client is 'bad',
+            // - was already 'bad' last round,
+            // - and "badness" got worse.
+            Hash currentSuspects;
+            for (const Hash::Node& infoNode : queueInfos) {
+                const std::string& clientAddr = infoNode.getKey();
+                unsigned long long sumPending = 0ull;
+                for (const Hash::Node& queueInfoNode : infoNode.getValue<Hash>()) {
+                    sumPending += queueInfoNode.getValue<Hash>().get<unsigned long long>("pendingCount");
+                }
+                if (sumPending > 1000ull) {
+                    if (lastCheckSuspects.has(clientAddr) // Already suspicious last time...
+                        && sumPending > lastCheckSuspects.get<unsigned long long>(clientAddr)) { // ...and worse now!
+                        KARABO_LOG_FRAMEWORK_ERROR << "Client '" << clientAddr << "' has " << sumPending << " messages queued, were "
+                        << lastCheckSuspects.get<unsigned long long>(clientAddr) << " during last check. Trigger disconnection!";
+                        // Self message (fire and forget) to disconnect (note it will be a delayed disconnect anyway).
+                        // This should save us from memory problems as in redmine ticket https://in.xfel.eu/redmine/issues/107136
+                        call("", "slotDisconnectClient", clientAddr);
+                    } else {
+                        // Add to suspects
+                        KARABO_LOG_FRAMEWORK_WARN << "Client '" << clientAddr << "' has " << sumPending << " messages queued!";
+                        currentSuspects.set(clientAddr, sumPending);
+                    }
+                }
+            }
+
+            // Trigger next check with info from current one
+            startMonitorConnectionQueues(currentSuspects);
         }
 
 

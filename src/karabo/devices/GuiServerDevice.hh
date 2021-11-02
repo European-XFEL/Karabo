@@ -109,6 +109,7 @@ namespace karabo {
             boost::asio::deadline_timer m_deviceInitTimer;
             boost::asio::deadline_timer m_networkStatsTimer;
             boost::asio::deadline_timer m_forwardLogsTimer;
+            boost::asio::deadline_timer m_checkConnectionTimer;
 
             karabo::net::Broker::Pointer m_loggerConsumer;
             std::map<std::string, int> m_monitoredDevices;
@@ -175,6 +176,13 @@ namespace karabo {
              * Starts the deadline timer which forwards the cached log messages
              */
             void startForwardingLogs();
+
+            /**
+             * Starts the deadline timer which monitors connection queues
+             *
+             * @param currentSuspects Hash with pending message counts - keys are bad client addresses
+             */
+            void startMonitorConnectionQueues(const karabo::util::Hash& currentSuspects);
 
             /**
              * Perform network stats collection
@@ -787,6 +795,8 @@ namespace karabo {
              * Helper for 'slotDumpToLog' and 'slotDumpDebugInfo'
              */
             karabo::util::Hash getDebugInfo(const karabo::util::Hash& info);
+
+            void monitorConnectionQueues(const boost::system::error_code& err, const karabo::util::Hash& lastCheckSuspects);
 
             /**
              * Slot to force disconnection of client. Reply is whether specified client found.
