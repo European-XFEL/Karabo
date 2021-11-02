@@ -1169,7 +1169,9 @@ void GuiVersion_Test::testSlotNotify() {
     std::clog << "testSlotNotify: " << std::flush;
     const std::string messageToSend("Banner for everyone!");
     const Hash arg("message", messageToSend,
-                   "contentType", "banner");
+                   "contentType", "banner",
+                   "foreground", "red");
+    const std::vector<string> expectedMessageData = {messageToSend, "", "red"};
     Hash reply;
     karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&reply, &arg, this] {
             m_deviceServer->request("testGuiServerDevice", "slotNotify", arg).timeout(1000).receive(reply);
@@ -1180,15 +1182,23 @@ void GuiVersion_Test::testSlotNotify() {
     Hash messageReceived;
     messageQ->pop(messageReceived);
     CPPUNIT_ASSERT(messageReceived.has("message"));
+    CPPUNIT_ASSERT(messageReceived.has("contentType"));
+    CPPUNIT_ASSERT(messageReceived.has("foreground"));
+    CPPUNIT_ASSERT(!messageReceived.has("background"));
     CPPUNIT_ASSERT_EQUAL(messageToSend, messageReceived.get<std::string>("message"));
     CPPUNIT_ASSERT_EQUAL(std::string("banner"), messageReceived.get<std::string>("contentType"));
+    CPPUNIT_ASSERT_EQUAL(std::string("red"), messageReceived.get<std::string>("foreground"));
 
-    // Since it is type "banner", GUI server device stores message as "bannerMessage":
+    // Since it is type "banner", GUI server device stores message as "bannerData":
     // Note: Better wait to ensure that deviceClient received update - no guarantee since server sent the message...
     waitForCondition([this, &messageToSend](){
-        return messageToSend == m_deviceClient->get<std::string>("testGuiServerDevice", "bannerMessage");
+        return 3ul == m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData").size();
     }, KRB_TEST_MAX_TIMEOUT * 1000);
-    CPPUNIT_ASSERT_EQUAL(messageToSend, m_deviceClient->get<std::string>("testGuiServerDevice", "bannerMessage"));
+    const std::vector<std::string> messageData(m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData"));
+    CPPUNIT_ASSERT_EQUAL(expectedMessageData.size(), messageData.size());
+    for (int i = 0; i < 3; i++) {
+        CPPUNIT_ASSERT_EQUAL(expectedMessageData[i], messageData[i]);
+    }
 
     // Create second adapter that connects - it should receive the stored notification "banner"
     auto tcpAdapter2 = boost::make_shared<karabo::TcpAdapter>(Hash("port", 44450u/*, "debug", true*/));
@@ -1198,10 +1208,47 @@ void GuiVersion_Test::testSlotNotify() {
         timeout -= 5;
     }
     CPPUNIT_ASSERT(tcpAdapter2->connected());
-    const std::vector<Hash> messages(tcpAdapter2->getAllMessages("notification"));
+    std::vector<Hash> messages(tcpAdapter2->getAllMessages("notification"));
     CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(messages), 1ul, messages.size());
+
+    CPPUNIT_ASSERT(messages[0].has("message"));
+    CPPUNIT_ASSERT(messages[0].has("contentType"));
+    CPPUNIT_ASSERT(messages[0].has("foreground"));
+    CPPUNIT_ASSERT(!messages[0].has("background"));
     CPPUNIT_ASSERT_EQUAL(messageToSend, messages[0].get<std::string>("message"));
     CPPUNIT_ASSERT_EQUAL(std::string("banner"), messages[0].get<std::string>("contentType"));
+    CPPUNIT_ASSERT_EQUAL(std::string("red"), messages[0].get<std::string>("foreground"));
+
+    tcpAdapter2->disconnect();
+
+    const Hash clear_arg("message", "",
+                         "contentType", "banner");
+    messageQ = m_tcpAdapter->getNextMessages("notification", 1, [&reply, &clear_arg, this] {
+            m_deviceServer->request("testGuiServerDevice", "slotNotify", clear_arg).timeout(1000).receive(reply);
+    }, 1000);
+    CPPUNIT_ASSERT_MESSAGE(toString(reply), reply.empty());
+    // Banner data is cleared
+    CPPUNIT_ASSERT_EQUAL(0ul, m_deviceClient->get<std::vector<std::string>>("testGuiServerDevice", "bannerData").size());
+
+    messageQ->pop(messageReceived);
+    CPPUNIT_ASSERT(messageReceived.has("message"));
+    CPPUNIT_ASSERT(messageReceived.has("contentType"));
+    CPPUNIT_ASSERT(!messageReceived.has("foreground"));
+    CPPUNIT_ASSERT(!messageReceived.has("background"));
+    CPPUNIT_ASSERT_EQUAL(std::string(), messageReceived.get<std::string>("message"));
+    CPPUNIT_ASSERT_EQUAL(std::string("banner"), messageReceived.get<std::string>("contentType"));
+
+    // new clients do not get the banner
+    auto tcpAdapter3 = boost::make_shared<karabo::TcpAdapter>(Hash("port", 44450u/*, "debug", true*/));
+    timeout = 5000;
+    while (!tcpAdapter2->connected() && timeout > 0) {
+        boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+        timeout -= 5;
+    }
+    CPPUNIT_ASSERT(tcpAdapter3->connected());
+    messages = tcpAdapter3->getAllMessages("notification");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(toString(messages), 0ul, messages.size());
+    tcpAdapter3->disconnect();
 
     std::clog << "OK" << std::endl;
 }
