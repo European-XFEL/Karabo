@@ -260,6 +260,7 @@ namespace karabo {
             KARABO_SLOT(slotDumpDebugInfo, karabo::util::Hash);
             KARABO_SLOT(slotDisconnectClient, std::string);
             KARABO_SLOT(slotNotify, karabo::util::Hash);
+            KARABO_SLOT(slotBroadcast, karabo::util::Hash);
 
             Hash h;
             h.set("port", config.get<unsigned int>("port"));
@@ -1952,7 +1953,7 @@ namespace karabo {
             }
 
             if (found) {
-                const auto& senderInfo = getSenderInfo("slotDisconnectClient");
+                const karabo::xms::SignalSlotable::SlotInstancePointer& senderInfo = getSenderInfo("slotDisconnectClient");
                 const std::string& user = senderInfo->getUserIdOfSender();
                 const std::string& senderId = senderInfo->getInstanceIdOfSender();
                 std::ostringstream ostr;
@@ -2011,6 +2012,31 @@ namespace karabo {
             }
 
             reply(Hash()); // Hash to comply with generic slot call protocol, i.e. Hash-in, Hash-out.
+        }
+
+        void GuiServerDevice::slotBroadcast(const karabo::util::Hash& info) {
+            Hash result("success", false);
+            const std::string clientAddress(info.get<std::string>("clientAddress"));
+            const karabo::xms::SignalSlotable::SlotInstancePointer& senderInfo = getSenderInfo("slotBroadcast");
+            const std::string& user = senderInfo->getUserIdOfSender();
+            const std::string& senderId = senderInfo->getInstanceIdOfSender();
+            // This slot is potentially dangerous. For traceability, we log here the requestor.
+            KARABO_LOG_FRAMEWORK_INFO << "Received broadcast request from : '" << senderId << "', user: " << user << ", content :" << info;
+            if (clientAddress.empty()) {
+                safeAllClientsWrite(info.get<Hash>("message"));
+                result.set("success", true);
+            } else {
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                for (auto it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    const std::string channelAddress = getChannelAddress(it->first);
+                    if (clientAddress == channelAddress) {
+                        it->first->writeAsync(info.get<Hash>("message"), LOSSLESS);
+                        result.set("success", true);
+                        break;
+                    }
+                }
+            }
+            reply(result);
         }
 
         void GuiServerDevice::tryToUpdateNewInstanceAttributes(const std::string& deviceId, const int callerMask) {

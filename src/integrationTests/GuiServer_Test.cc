@@ -90,6 +90,7 @@ void GuiVersion_Test::appTestRunner() {
     testRequestFailOldVersion();
     testLogMute();
     testSlotNotify();
+    testSlotBroadcast();
 
     if (m_tcpAdapter->connected()) {
         m_tcpAdapter->disconnect();
@@ -1251,4 +1252,68 @@ void GuiVersion_Test::testSlotNotify() {
     tcpAdapter3->disconnect();
 
     std::clog << "OK" << std::endl;
+}
+
+void GuiVersion_Test::testSlotBroadcast() {
+
+    std::clog << "testSlotBroadcast: " << std::flush;
+    const Hash message("isSkookum", true,
+                       "type", "unimplementedDangerousCall");
+    const Hash arg("message", message, "clientAddress", "");
+    Hash reply;
+    karabo::TcpAdapter::QueuePtr messageQ = m_tcpAdapter->getNextMessages("unimplementedDangerousCall", 1, [&reply, &arg, this] {
+            m_deviceServer->request("testGuiServerDevice", "slotBroadcast", arg).timeout(1000).receive(reply);
+    }, 1000);
+    CPPUNIT_ASSERT_EQUAL(true, reply.get<bool>("success"));
+    CPPUNIT_ASSERT_EQUAL(1ul, reply.size());
+
+    // Test that client received the notification
+    Hash messageReceived;
+    messageQ->pop(messageReceived);
+    CPPUNIT_ASSERT_MESSAGE(toString(messageReceived), message.fullyEquals(messageReceived));
+    std::clog << "." << std::flush;
+
+    // A message should have a type
+    const Hash bad_arg("isSkookum", false);
+    CPPUNIT_ASSERT_THROW(
+        m_deviceServer->request("testGuiServerDevice", "slotBroadcast", bad_arg).timeout(1000).receive(reply),
+        std::exception);
+    std::clog << "." << std::flush;
+
+    const Hash bad_msg("isSkookum", false,
+                       "type", "unimplementedDangerousCall");
+    const Hash bad_client_arg("message", bad_msg, "clientAddress", "pinneberg");
+
+    m_deviceServer->request("testGuiServerDevice", "slotBroadcast", bad_client_arg).timeout(1000).receive(reply);
+
+    // success is false since we did not send the message to anybody
+    CPPUNIT_ASSERT_EQUAL(false, reply.get<bool>("success"));
+    CPPUNIT_ASSERT_EQUAL(1ul, reply.size());
+    std::clog << "." << std::flush;
+
+    // now send a message to a specific client.
+
+    std::string clientAddress;
+    Hash debugInfo;
+    m_deviceServer->request("testGuiServerDevice", "slotDumpDebugInfo", Hash("clients", true)).timeout(1000).receive(debugInfo);
+    CPPUNIT_ASSERT_EQUAL(1ul, debugInfo.size());
+    clientAddress = debugInfo.begin()->getKey();
+
+    const Hash client_msg("skookumFactor", 42,
+                          "type", "unimplementedDangerousCall");
+    const Hash client_arg("clientAddress", clientAddress, "message", client_msg);
+
+    // Test that client received the notification
+    messageQ = m_tcpAdapter->getNextMessages("unimplementedDangerousCall", 1, [&reply, &client_arg, this] {
+            m_deviceServer->request("testGuiServerDevice", "slotBroadcast", client_arg).timeout(1000).receive(reply);
+    }, 1000);
+
+    CPPUNIT_ASSERT_EQUAL(true, reply.get<bool>("success"));
+    CPPUNIT_ASSERT_EQUAL(1ul, reply.size());
+    // Test that client received the notification
+    messageQ->pop(messageReceived);
+    CPPUNIT_ASSERT_MESSAGE(toString(messageReceived), client_msg.fullyEquals(messageReceived));
+    std::clog << "." << std::flush;
+
+    std::clog << " OK" << std::endl;
 }
