@@ -8,10 +8,11 @@ import webbrowser
 from enum import Enum
 from functools import partial
 
-from qtpy.QtCore import QSize, Qt, Slot
+from qtpy.QtCore import QPoint, QSize, Qt, Slot
+from qtpy.QtGui import QColor
 from qtpy.QtWidgets import (
     QAction, QActionGroup, QFrame, QLabel, QMainWindow, QMenu, QMessageBox,
-    QSizePolicy, QSplitter, QToolButton, QWidget, qApp)
+    QSizePolicy, QSplitter, QTextBrowser, QToolButton, qApp)
 
 import karabogui.access as krb_access
 from karabo.common.project.api import get_project_models
@@ -49,6 +50,62 @@ _PANEL_TITLE_CONFIG = {
     LOG_TITLE: 'log_panel',
     AlARM_TITLE: 'alarm_panel'
 }
+
+
+class MainWindowBanner(QTextBrowser):
+    """The MainWindow Banner"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setReadOnly(True)
+        self.setFixedHeight(40)
+        self.setFrameStyle(QFrame.NoFrame)
+        self.setSizePolicy(QSizePolicy.Expanding,
+                           QSizePolicy.Fixed)
+        self.setAlignment(Qt.AlignCenter)
+        self.setTextInteractionFlags(
+            Qt.LinksAccessibleByMouse | Qt.TextSelectableByMouse)
+        self.setOpenExternalLinks(True)
+
+        self.setObjectName(generateObjectName(self))
+        self.setFocusPolicy(Qt.NoFocus)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(
+            self._show_context_menu)
+        self.setLineWidth(1)
+        self.set_banner("")
+
+    def set_banner(self, text="", foreground="black",
+                   background="transparent"):
+        """Set the banner of the main window"""
+        if text:
+            text = f'<p align="center">{text}</p>'
+            style = QFrame.Box
+        else:
+            background = "transparent"
+            style = QFrame.NoFrame
+
+        self.setStyleSheet(f"QAbstractScrollArea#{self.objectName()} "
+                           f"{{ color: {foreground};"
+                           f"background-color: {background}; }}")
+        # text
+        self.setFrameStyle(style)
+        self.setHtml(text)
+
+    @Slot(QPoint)
+    def _show_context_menu(self, pos):
+        """Show a context menu"""
+        menu = QMenu(self)
+        select_action = menu.addAction("Select All")
+        select_action.triggered.connect(self.selectAll)
+        enable_select = len(self.toPlainText()) > 0
+        select_action.setEnabled(enable_select)
+
+        copy_action = menu.addAction("Copy Selected")
+        copy_action.triggered.connect(self.copy)
+        enable_copy = not self.textCursor().selection().isEmpty()
+        copy_action.setEnabled(enable_copy)
+        menu.exec(self.viewport().mapToGlobal(pos))
 
 
 class PanelAreaEnum(Enum):
@@ -166,7 +223,8 @@ class MainWindow(QMainWindow):
             KaraboEvent.MinimizePanel: self._event_container_minimized,
             KaraboEvent.LoginUserChanged: self._event_access_level,
             KaraboEvent.NetworkConnectStatus: self._event_network,
-            KaraboEvent.ProjectUpdated: self._event_project_updated
+            KaraboEvent.ProjectUpdated: self._event_project_updated,
+            KaraboEvent.ServerNotification: self._event_server_notification,
         }
         register_for_broadcasts(event_map)
 
@@ -236,6 +294,12 @@ class MainWindow(QMainWindow):
         for area_enum, area_container in self._panel_areas.items():
             if area_container is not panel_container:
                 area_container.minimize(False)
+
+    def _event_server_notification(self, data):
+        text = data.get('message', '')
+        foreground = QColor(data.get('foreground', 'black')).name()
+        background = QColor(data.get('background', 'white')).name()
+        self.notification_banner.set_banner(text, foreground, background)
 
     def _event_access_level(self, data):
         self.onUpdateAccessLevel()
@@ -497,17 +561,18 @@ class MainWindow(QMainWindow):
 
         toolbar.addWidget(self.tbAccessLevel)
 
+        self.notification_banner = MainWindowBanner()
+
         # Add a widget (on the right side) for displaying network performance
-        expander = QWidget()
-        expander.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.ui_big_data = QLabel()
-        self.ui_big_data.setFixedWidth(600)
-        self.ui_big_data.setAlignment(Qt.AlignCenter)
+        self.ui_big_data.setMaximumWidth(600)
+        self.ui_big_data.setAlignment(Qt.AlignRight)
         self.ui_lamp = QLabel()
         self.ui_lamp.setFixedWidth(60)
         self.ui_lamp.setAlignment(Qt.AlignCenter)
         self.ui_lamp.setFrameStyle(QFrame.Box)
-        toolbar.addWidget(expander)
+
+        toolbar.addWidget(self.notification_banner)
         toolbar.addWidget(self.ui_big_data)
         toolbar.addWidget(self.ui_lamp)
 
@@ -787,6 +852,7 @@ class MainWindow(QMainWindow):
             self.ui_lamp.setStyleSheet("")
             self.ui_lamp.clear()
             self.ui_big_data.setText("")
+            self.notification_banner.set_banner("")
 
         if isConnected:
             text = "Disconnect from server"
