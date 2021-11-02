@@ -769,6 +769,21 @@ namespace karabo {
             void slotNotify(const karabo::util::Hash& info);
 
             /**
+             * Slot to send a Hash to the GUI clients connected - replies empty Hash
+             *
+             * WARNING: No checks are performed on this slot. This slot can possibly disconnect all clients.
+             *          Do not use it unless you understand the risks.
+             *
+             * @param info a Hash with at least the following keys.
+             *              * "message": a Hash that will be sent to the client(s).
+             *                           It should contain a "type" string.
+             *              * "clientAddress": a string containing the GUI client address as coded in the
+             *                                 `slotDumpDebugInfo` results.
+             *                                 If the value for this key is an empty string, all clients will be notified.
+             */
+            void slotBroadcast(const karabo::util::Hash& info);
+
+            /**
              * Helper for 'slotDumpToLog' and 'slotDumpDebugInfo'
              */
             karabo::util::Hash getDebugInfo(const karabo::util::Hash& info);
