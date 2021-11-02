@@ -556,7 +556,9 @@ class TestManager(GuiTestCase):
             assert device_proxy.method_calls[0] == expected_call
 
     def test_handle_notification(self):
-        with patch('karabogui.singletons.manager.messagebox') as mbox:
+        m_path = 'karabogui.singletons.manager.messagebox'
+        b_path = 'karabogui.singletons.manager.broadcast_event'
+        with patch(m_path) as mbox, patch(b_path) as broadcast:
             info = {'message': 'hello'}
             manager = Manager()
             manager.handle_notification(**info)
@@ -566,6 +568,13 @@ class TestManager(GuiTestCase):
             info = {'nomessage': 'hello'}
             manager.handle_notification(**info)
             mbox.show_warning.assert_not_called()
+
+            mbox.reset_mock()
+            info = {'message': 'hello', 'contentType': 'banner'}
+            manager.handle_notification(**info)
+            mbox.show_warning.assert_not_called()
+            broadcast.assert_called_with(
+                KaraboEvent.ServerNotification, info)
 
     def test_handle_executeReply(self):
         target = 'karabogui.singletons.manager.messagebox'
