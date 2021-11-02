@@ -649,10 +649,11 @@ class Manager(QObject):
         """Handle notification events from the GUI server
         """
         message = info.get('message', '')
-        if not message:
-            # Might clear message in future
-            return
-        messagebox.show_warning(message)
+        content_type = info.get('contentType', '')
+        if content_type == "banner":
+            broadcast_event(KaraboEvent.ServerNotification, info)
+        elif message:
+            messagebox.show_warning(message)
 
     def handle_networkData(self, name, data, meta=None):
         """This method handles the big data chunks coming from Karabo
