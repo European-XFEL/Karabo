@@ -83,26 +83,47 @@ guidelines are suggested:
 - We currently do not encourage to use newly introduced numerical types, e.g. 
   `uint64_t` as the Karabo type system has not been fully prepared for them.
 
+
 Python
 ======
 
-Tools
------
+General - Tools
+---------------
 
-We program *PEP8* conform. Tools like *flake8* help in writing clean code.
+- Per convention, `strings` should be created with `"`.
+- Per convention, `lists` and `dicts` should should be created with [], {}, respectively.
+- First and foremost, programming should be done *PEP8* conform. 
+  Tools like *flake8* can help in writing clean code.
+- Import ordering is done using *isort -m4*. A corresponding *isort* configuration file
+  is provided in `src/pythonKarabo` and `src/pythonGui`
+- Every new feature must be supplied with a unit-test and if necessary, with an integration
+  test.
 
 Documentation
 -------------
 
- * Use double backticks (\`\`name\`\`) to document variables inside a method
+- Use double backticks (\`\`name\`\`) to document variables inside a method
+
 
 Python Classes
 --------------
 
- * Per convention, deriving from a super class and call methods should be done
-   like this:
+- Per convention, deriving from a super class and call methods should be done
+  like this (>= Python 3.6):
  
-       `super(className, self)`
+       `super()`
    
- * Do not use names of builtins for variables (e.g. `object`)
+- Do not use names of builtins for variables (e.g. `object`)
 
+
+Karabo GUI
+==========
+
+- By design, we sort out functionality to controllers based on *traits* package for type checking, 
+  user interface library independent testing and event signals.
+- New style features of Qt > 5.9 should not be used until further notice.
+- The `Karabo GUI` must run on different OS: MacOS, Windows and Unix system. 
+  Hence, the library *pathlib* should be used whenever os path functionality has to be used.
+- The Qt version of the `Karabo GUI` is provided by the community, e.g. we use packages like *qtpy* and the conda qt-feedstock
+  to run. However, only the *PyQt* package is tested and supported. *PySide* is best-effort.
+- Plot features should be implemented using *PyQtGraph*.
