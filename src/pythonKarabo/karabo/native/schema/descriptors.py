@@ -39,6 +39,9 @@ __all__ = [
 
 def get_instance_parent(instance):
     """Find the parent of the instance"""
+    import warnings
+    warnings.warn("This function has been deprecated, use "
+                  "`instance.get_root()` instead", stacklevel=2)
     parent = instance
     while True:
         try:
@@ -556,7 +559,7 @@ class Descriptor(object):
             msg = 'property "{}" is not reconfigurable'.format(self.key)
             raise KaraboError(msg)
         elif self.allowedStates is not None:
-            parent = get_instance_parent(instance)
+            parent = instance.get_root()
             if parent.state not in self.allowedStates:
                 msg = 'Setting "{}" is not allowed in state "{}"'.format(
                     self.key, parent.state)
