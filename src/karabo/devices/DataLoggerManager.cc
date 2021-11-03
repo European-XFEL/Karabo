@@ -204,15 +204,6 @@ namespace karabo {
                     .init()
                     .commit();
 
-            UINT32_ELEMENT(expected).key("logger.InfluxDataLogger.maxStringSize")
-                    .displayedName("Max String Size")
-                    .description("Maximum size of a value serialized as a string. "
-                                 "Influxdb has a limit of 64kB defined in its documentation. "
-                                 "Hence the default value. 0 means no limit.")
-                    .assignmentOptional().defaultValue(64000)
-                    .init()
-                    .commit();
-
             VECTOR_STRING_ELEMENT(expected).key("serverList")
                     .displayedName("Server list")
                     .description("List of device server IDs where the DataLogger instance run. "
