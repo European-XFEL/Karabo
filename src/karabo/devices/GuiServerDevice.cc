@@ -82,7 +82,7 @@ namespace karabo {
                     "about its readiness to receive new data. Lowering this delay adds load to the output channel the GUI server connects to.")
                     .assignmentOptional().defaultValue(500)
                     .reconfigurable()
-                    .minInc(200) // Max 5 Hz
+                    .minInc(0)
                     .unit(Unit::SECOND)
                     .metricPrefix(MetricPrefix::MILLI)
                     .commit();
