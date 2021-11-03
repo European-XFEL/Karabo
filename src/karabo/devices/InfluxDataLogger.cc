@@ -32,7 +32,6 @@ namespace karabo {
             , m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin"))
             , m_archive()
             , m_maxTimeAdvance(input.get<int>("maxTimeAdvance"))
-            , m_maxStringSize(input.get<unsigned int>("maxStringSize"))
             , m_hasRejectedData(false) {
         }
 
@@ -78,7 +77,7 @@ namespace karabo {
 
             // store the local unix timestamp to compare the time difference w.r.t. incoming data.
             Epochstamp nowish;
-            std::ostringstream rejectionStream;
+            std::vector<std::string> rejectedPaths;
             // To write log I need schema - but that has arrived before connecting signal[State]Changed to slotChanged
             // and thus before any data can arrive here in handleChanged.
             std::vector<std::string> paths;
@@ -120,10 +119,10 @@ namespace karabo {
 
                 // no check needed if the maxTimeDifference is negative or 0
                 if (m_maxTimeAdvance > 0 && t.getEpochstamp() > nowish) {
-                    // substract the Epochstamps to get a TimeDuration.
+                    // substract the 2 Epochstamp to get a TimeDuration.
                     const double dt = t.getEpochstamp() - nowish;
                     if ( dt > m_maxTimeAdvance) {
-                        rejectionStream << "path '" << path << "' rejected due to being too much in the future : current " << dt << " - max "<< m_maxTimeAdvance;
+                        rejectedPaths.push_back(path);
                         continue;
                     }
                 }
@@ -213,20 +212,15 @@ namespace karabo {
                     m_dbClientWrite->enqueueQuery(ss.str());
                 }
 
-                // no check needed if the m_maxStringSize is 0
-                if (m_maxStringSize > 0 && value.size() > m_maxStringSize) {
-                    rejectionStream << "path '" << path << "' rejected due to being larger than the size limit : current " << value.size()<< " - max "<< m_maxStringSize;
-                    continue;
-                }
                 // isFinite matters only for FLOAT/DOUBLE
                 logValue(query, deviceId, path, value, leafNode.getType(), isFinite);
             }
 
-            const std::string rejectionMessage = rejectionStream.str();
-            if (!m_hasRejectedData && rejectionMessage.size() != 0ul) {
-                KARABO_LOG_FRAMEWORK_WARN << rejectionMessage;
+            if (!m_hasRejectedData && rejectedPaths.size() != 0ul) {
+                KARABO_LOG_FRAMEWORK_WARN << "Skip properties '" << toString(rejectedPaths) << "' of '" << deviceId
+                    << "' - Since they are too far in the future.";
             }
-            m_hasRejectedData = rejectionMessage.size() != 0ul;
+            m_hasRejectedData = rejectedPaths.size() != 0ul;
 
             terminateQuery(query, lineTimestamp);
 
@@ -465,23 +459,13 @@ namespace karabo {
                     .init()
                     .commit();
 
-            UINT32_ELEMENT(expected).key("maxStringSize")
-                    .displayedName("Max String Size")
-                    .description("Maximum size of a value serialized as a string. "
-                                 "Influxdb has a limit of 64kB defined in its documentation. "
-                                 "Hence the default value. 0 means no limit.")
-                    .assignmentOptional().defaultValue(64000)
-                    .init()
-                    .commit();
-
         }
 
 
         InfluxDataLogger::InfluxDataLogger(const karabo::util::Hash& input)
             : DataLogger(input)
             , m_dbName(input.get<std::string>("dbname"))
-            , m_maxTimeAdvance(input.get<int>("maxTimeAdvance"))
-            , m_maxStringSize(input.get<unsigned int>("maxStringSize")) {
+            , m_maxTimeAdvance(input.get<int>("maxTimeAdvance")) {
 
             // We have to work in cluster environment where we have 2 nodes and proxy
             // that runs 'telegraf' working as a proxy and load balancer
@@ -575,7 +559,6 @@ namespace karabo {
             config.set("dbClientReadPointer", m_clientRead);
             config.set("dbClientWritePointer", m_clientWrite);
             config.set("maxTimeAdvance", m_maxTimeAdvance);
-            config.set("maxStringSize", m_maxStringSize);
             DeviceData::Pointer deviceData =
                     Factory<DeviceData>::create<karabo::util::Hash>("InfluxDataLoggerDeviceData", config);
             return deviceData;
