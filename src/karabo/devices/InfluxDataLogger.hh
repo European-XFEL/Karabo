@@ -53,7 +53,6 @@ namespace karabo {
 
             std::vector<char> m_archive;
             int m_maxTimeAdvance;
-            unsigned int m_maxStringSize;
             bool m_hasRejectedData;
         };
 
@@ -104,7 +103,6 @@ namespace karabo {
             std::string m_urlWrite;
             std::string m_urlQuery;
             int m_maxTimeAdvance;
-            unsigned int m_maxStringSize;
             static const unsigned int k_httpResponseTimeoutMs;
 
         };
