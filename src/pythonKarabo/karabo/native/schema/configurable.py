@@ -108,6 +108,17 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                     schema.hash.setElement(attr, sub_schema, attrs)
         return schema
 
+    def get_root(self):
+        """Return the root instance of this Configurable"""
+        root = self
+        while True:
+            try:
+                root = next(iter(root._parents))
+            except StopIteration:
+                break
+
+        return root
+
     def getDeviceSchema(self, state=None):
         return self.getClassSchema(self, state)
 
