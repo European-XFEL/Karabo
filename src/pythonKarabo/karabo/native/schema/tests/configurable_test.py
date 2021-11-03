@@ -346,6 +346,35 @@ class Tests(TestCase):
             a.set(h)
         self.assertEqual(a.value, 5 * unit.meter)
 
+        # 8.1 Test the only changes for leafs
+        a = A()
+        h = Hash("value", 5)
+        a.set(h, True)
+        self.assertEqual(a.value, 5 * unit.meter)
+        ts = a.value.timestamp
+        self.assertIsNotNone(ts)
+        run_coro(asyncio.sleep(0.01))
+        a.set(h, True)
+        self.assertEqual(a.value.timestamp, ts)
+        run_coro(asyncio.sleep(0.01))
+        a.set(h, False)
+        self.assertNotEqual(a.value.timestamp, ts)
+
+        # 8.2 Test the only changes for nodes
+        a = A()
+        h = Hash("value", 5)
+        h["node.node.cvalue"] = -1
+        a.set(h, True)
+        self.assertEqual(a.node.node.cvalue, -1 * unit.meter)
+        ts = a.node.node.cvalue.timestamp
+        self.assertIsNotNone(ts)
+        run_coro(asyncio.sleep(0.01))
+        a.set(h, True)
+        self.assertEqual(ts, a.node.node.cvalue.timestamp)
+        run_coro(asyncio.sleep(0.01))
+        a.set(h, False)
+        self.assertNotEqual(ts, a.node.node.cvalue.timestamp)
+
     def test_readonly(self):
         class B(Configurable):
             bvalue = Int32(accessMode=AccessMode.READONLY,
