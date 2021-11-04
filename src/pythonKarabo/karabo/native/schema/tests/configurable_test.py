@@ -1442,6 +1442,26 @@ class Tests(TestCase):
         self.assertEqual(schema.hash["con", "displayedName"], "Choice")
         self.assertEqual(schema.hash["lon", "displayedName"], "LoN")
 
+    def test_get_root(self):
+        """Test the root retrieval of the configurable"""
+
+        class Sub(Configurable):
+            integer = Int32()
+
+        class SubNode(Configurable):
+            node = Node(Sub)
+
+        class Root(Configurable):
+            node = Node(SubNode)
+
+        root = Root()
+        suspect = root.get_root()
+        self.assertEqual(suspect, root)
+        suspect = root.node.get_root()
+        self.assertEqual(suspect, root)
+        suspect = root.node.node.get_root()
+        self.assertEqual(suspect, root)
+
 
 if __name__ == "__main__":
     main()
