@@ -158,7 +158,7 @@ GEOMETRY_TITLE = "&Window Geometry"
 GRAFANA_LINK = "https://ctrend.xfel.eu/"
 RTD_LINK = "https://rtd.xfel.eu/docs"
 RTD_GUI_LINK = f"{RTD_LINK}/howtogui/en/latest/"
-RTD_FW_LINK = f"{RTD_LINK}/docs/karabo/en/latest/"
+RTD_FW_LINK = f"{RTD_LINK}/karabo/en/latest/"
 RTD_MACRO_LINK = f"{RTD_LINK}/howtomacro/en/latest/"
 
 
