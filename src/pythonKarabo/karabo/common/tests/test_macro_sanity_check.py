@@ -26,7 +26,13 @@ class Macro(Macro):
     name = String()
     @Slot()
     def execute(self):
-        print("Hello {}!".format(self.name))
+        try:
+            print("Hello {}!".format(self.name))
+        except Exception:
+            # this is bad practice! but in python 3.8 is not a problem
+            # the CancelledError will not be caught by this macro.
+            pass
+
 """
 
 TIME_CONFLICT_MACRO = """
@@ -74,6 +80,44 @@ class Macro(Macro):
     name = String()
     async def register(self):
         pass
+"""
+
+UNSTOPPABLE_MACRO = """
+from karabo.middlelayer import Macro
+class Macro(Macro):
+    name = String()
+    async def run(self):
+        try:
+            print(f"{self.name}")
+        except:
+            # this macro will catch the CancelledError and never stop.
+            pass
+"""
+
+
+UNSTOPPABLE_MACRO_BASE_EXC = """
+from karabo.middlelayer import Macro
+class Macro(Macro):
+    name = String()
+    async def run(self):
+        try:
+            print(f"{self.name}")
+        except BaseException:
+            # this macro will catch the CancelledError and never stop.
+            pass
+"""
+
+STOPPABLE_MACRO_CANCELLED_EXC = """
+from asyncio import CancelledError
+from karabo.middlelayer import Macro
+class Macro(Macro):
+    name = String()
+    async def run(self):
+        try:
+            print(f"{self.name}")
+        except CancelledError as e:
+            print("do something")
+            raise e
 """
 
 
@@ -171,3 +215,13 @@ class Tests(TestCase):
         self.assertEqual(len(res), 1)
         res = validate_macro(ASYNC_REGISTER_MACRO)
         self.assertEqual(len(res), 1)
+
+    def test_unstoppable_macro(self):
+        res = validate_macro(UNSTOPPABLE_MACRO)
+        self.assertEqual(len(res), 1, "\n".join(res))
+        res = validate_macro(UNSTOPPABLE_MACRO_BASE_EXC)
+        self.assertEqual(len(res), 1, "\n".join(res))
+        # this code is dangerous.
+        # But we will allow it for the moment
+        res = validate_macro(STOPPABLE_MACRO_CANCELLED_EXC)
+        self.assertEqual(len(res), 0, "\n".join(res))
