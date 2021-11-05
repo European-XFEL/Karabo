@@ -21,6 +21,12 @@ def validate_macro(code):
     if lines:
         ret.extend(lines)
 
+    # filter out `except` handlers catching base exception to launching
+    # unstoppable macros on the macro server.
+    lines = _has_base_exceptions(tree)
+    if lines:
+        ret.extend(lines)
+
     return ret
 
 
@@ -104,4 +110,27 @@ def _has_methods(tree, *methods):
                 if node.name == method:
                     reports.append("Found forbidden method `{}` in "
                                    "line {}".format(method, node.lineno))
+    return reports
+
+
+def _has_base_exceptions(tree):
+    reports = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ExceptHandler):
+            # catch the `except:`
+            explanation = (
+                " Use `except Exception as e:`"
+                " or catch the specific exceptions."
+                " This behaviour will likely result in a macro"
+                " that cannot be stopped"
+            )
+            if node.type is None:
+                reports.append(f"Found `except:` clause in line {node.lineno}:"
+                               " {explanation}")
+            elif node.type.id == "BaseException":
+                # catch the `except BaseException:`
+                # XXX: the CancelledError is dangerous as well,
+                # but we chose to allow it here
+                reports.append(f"Found `except {node.type.id}:`"
+                               f" clause in line {node.lineno}: {explanation}")
     return reports
