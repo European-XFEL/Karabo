@@ -66,11 +66,6 @@ namespace karabo {
                     .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
                     .commit();
 
-            // Slow beats on GuiServer
-            OVERWRITE_ELEMENT(expected).key("heartbeatInterval")
-                    .setNewDefaultValue(60)
-                    .commit();
-
             // Monitor performance of this system relevant device
             OVERWRITE_ELEMENT(expected).key("performanceStatistics.enable")
                     .setNewDefaultValue(true)
