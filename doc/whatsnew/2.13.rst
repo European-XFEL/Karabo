@@ -26,76 +26,77 @@ Change of behaviour
 None
 
 Detailed Merge-Log
-==================
+++++++++++++++++++
 
 Bound/cpp core
-++++++++++++++
-C++: Better fix for size validation of vector elements of char and unsigned char. !5902
-C++: Fix to re-enable special node treatment in Hash::set(key, Hash::Node). !5940  RM- 108699
-C++/bound: Allow also specification of defaultValue for read-only. !5941
-Core Devices: Support a generic protocol on the alarm service. !5893
-GuiServerDevice monitors client queues. !5942 RM-#107136
-GuiServerDevice: remove delayOnInput minimum. !5961
-GuiServerDevice: GuiServer with slotNotify and client banner  feature. !5945
-GuiServerDevice: GuiServer's slotNotify color options. !5955
-GuiServerDevice: Add a client broadcast slot for the GUI Server. !5954
+==============
+
+- C++: Better fix for size validation of vector elements of char and unsigned char. !5902
+- C++: Fix to re-enable special node treatment in Hash::set(key, Hash::Node). !5940  RM- 108699
+- C++/bound: Allow also specification of defaultValue for read-only. !5941
+- Core Devices: Support a generic protocol on the alarm service. !5893
+- GuiServerDevice monitors client queues. !5942 RM-#107136
+- GuiServerDevice: remove delayOnInput minimum. !5961
+- GuiServerDevice: GuiServer with slotNotify and client banner  feature. !5945
+- GuiServerDevice: GuiServer's slotNotify color options. !5955
+- GuiServerDevice: Add a client broadcast slot for the GUI Server. !5954
 
 MDL/Native core
-+++++++++++++++
-MDL: MetaProxy for deviceNode to supply always a value. k!5908
-MDL: Provide a bulk set for the Configurable. !5928
-MDL: Device template now runs tests. !5936
-MDL: UserWarning for DeviceNode. !5932
-INFLUX: cleanup python client. !5943
-MDL: Provide function for getInstanceInfo. !5948
-MACRO: Block unstoppable macros. !5969
-MDL: Provide get_root on the Configurable. !5964
-Native: Protect against threaded access for hash deepcopy. !5919
+===============
+
+- MDL: MetaProxy for deviceNode to supply always a value. !5908
+- MDL: Provide a bulk set for the Configurable. !5928
+- MDL: Device template now runs tests. !5936
+- MDL: UserWarning for DeviceNode. !5932
+- INFLUX: cleanup python client. !5943
+- MDL: Provide function for getInstanceInfo. !5948
+- MACRO: Block unstoppable macros. !5969
+- MDL: Provide get_root on the Configurable. !5964
+- Native: Protect against threaded access for hash deepcopy. !5919
 
 Dependencies and deployment
-+++++++++++++++++++++++++++
+===========================
 
-DEPS: Allow Debian as distro for nss builiding. !5926
-"compile_commands.json" for C++ CMake devices. ".gitignore" fix.. !5911
-DEPS: Add pg8000 (pure Python Postgres Db Driver) to Karabo Framework dependencies.. !5923
-DEPS: Adds amqp-cpp Conda package to the karabo-cpp dependencies. !5885
+- DEPS: Allow Debian as distro for nss builiding. !5926
+- "compile_commands.json" for C++ CMake devices. ".gitignore" fix.. !5911
+- DEPS: Add pg8000 (pure Python Postgres Db Driver) to Karabo Framework dependencies.. !5923
+- DEPS: Adds amqp-cpp Conda package to the karabo-cpp dependencies. !5885
 
 Documentation
-+++++++++++++
+=============
 
-Document 2.12.0 more. !5917
-DOC: Document 2.10.X onwards. !5870
-DOC: Expose 2.13 changes and formatting of 2.12. !5918
+- Document 2.12.0 more. !5917
+- DOC: Document 2.10.X onwards. !5870
+- DOC: Expose 2.13 changes and formatting of 2.12. !5918
 
 Tests
-+++++
+=====
 
-FIX: Raise error on tests failure plus gui server device fix. !5944
+- FIX: Raise error on tests failure plus gui server device fix. !5944
 
 
 Graphical User Interface
-++++++++++++++++++++++++
+========================
 
-GUI: Test the textedit dialog. !5907
-GUI: Move panel uis into a folder and cleanup. !5896
-GUI: Enable dict like proxy access. !5912
-GUI: Test more carefully the manager singleton. !5897
-GUI: Provide public config and schema handlers. !5913
-GUI: Clean daemon controller action. !5914
-GUI: Remove the handle scene from server handler. !5915
-GUI: Provide a get macro function and cleanup... add tests for requests. !5920
-GUI: Add test for theatre. !5921
-GUI: Test the karabo cinema. !5922
-GUI: Basic path parser test. !5924
-GUI: Exec compatiblity with future qt versions. !5929
-GUI: Test the common axes dialog. !5933
-GUI: Increase priority of default controllers for alarm and state. !5935
-GUI: Provide a WindowMode for the trendline. !5927
-GUI: Fix the translation of the images for external clients. !5939
-GUI: Add missing translation test for images. !5947
-GUI: no popup if no message is received. !5951
-GUI: Provide a banner interface for the server. !5952
-GUI: Use natsort for sorting devices. !5956
-GUI: A bit for the contributing. !5962
-GUI: fix karabo documentation link. !5968
-
+- GUI: Test the textedit dialog. !5907
+- GUI: Move panel uis into a folder and cleanup. !5896
+- GUI: Enable dict like proxy access. !5912
+- GUI: Test more carefully the manager singleton. !5897
+- GUI: Provide public config and schema handlers. !5913
+- GUI: Clean daemon controller action. !5914
+- GUI: Remove the handle scene from server handler. !5915
+- GUI: Provide a get macro function and cleanup... add tests for requests. !5920
+- GUI: Add test for theatre. !5921
+- GUI: Test the karabo cinema. !5922
+- GUI: Basic path parser test. !5924
+- GUI: Exec compatiblity with future qt versions. !5929
+- GUI: Test the common axes dialog. !5933
+- GUI: Increase priority of default controllers for alarm and state. !5935
+- GUI: Provide a WindowMode for the trendline. !5927
+- GUI: Fix the translation of the images for external clients. !5939
+- GUI: Add missing translation test for images. !5947
+- GUI: no popup if no message is received. !5951
+- GUI: Provide a banner interface for the server. !5952
+- GUI: Use natsort for sorting devices. !5956
+- GUI: A bit for the contributing. !5962
+- GUI: fix karabo documentation link. !5968
