@@ -1334,6 +1334,8 @@ void Device_Test::testNodedSlot() {
 
 
 void Device_Test::testGetconfigReconfig() {
+    std::clog << "Start testGetconfigReconfig: " << std::flush;
+
     const int timeoutInMs = 10000;
     const std::string deviceId("TestDevice");
 
@@ -1364,6 +1366,27 @@ void Device_Test::testGetconfigReconfig() {
                             .timeout(timeoutInMs).receive());
     CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
     CPPUNIT_ASSERT_EQUAL(true, hash.get<bool>("performanceStatistics.enable"));
+
+    // Now try to set performanceStatistics again, but with an old timestamp - that should not be taken!
+    const Timestamp enableTimestamp(Timestamp::fromHashAttributes(hash.getAttributes("performanceStatistics.enable")));
+    const Epochstamp pastEpochstamp(enableTimestamp.getSeconds() - 3ull * 3600ull, // 3 hours back: no CET/CEST vs UTC confusion
+                                    enableTimestamp.getFractionalSeconds());
+    const Timestamp pastTimestamp(pastEpochstamp, enableTimestamp.getTrainstamp());
+    Hash hToSet;
+    Hash::Attributes& attrs = hToSet.set("performanceStatistics.enable", false).getAttributes();
+    pastTimestamp.toHashAttributes(attrs);
+    hash.clear();
+    const Timestamp beforeSetStamp;
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotReconfigure", hToSet).timeout(timeoutInMs).receive());
+    CPPUNIT_ASSERT_NO_THROW(m_deviceServer->request(deviceId, "slotGetConfiguration").timeout(timeoutInMs).receive(hash));
+
+    const Timestamp receivedStamp(Timestamp::fromHashAttributes(hash.getAttributes("performanceStatistics.enable")));
+    CPPUNIT_ASSERT_MESSAGE(receivedStamp.toIso8601Ext() += " " + pastTimestamp.toIso8601Ext(),
+                           receivedStamp != pastTimestamp);
+    CPPUNIT_ASSERT_MESSAGE(receivedStamp.toIso8601Ext() += " " + beforeSetStamp.toIso8601Ext(),
+                           receivedStamp.getEpochstamp() > beforeSetStamp.getEpochstamp()); // cannot compare Timestamps
+
+    std::clog << "OK." << std::endl;
 }
 
 
