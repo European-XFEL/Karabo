@@ -106,7 +106,7 @@ namespace karabo {
         void DataLoggerManager::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("state")
-                    .setNewOptions(State::INIT, State::NORMAL, State::MONITORING)
+                    .setNewOptions(State::INIT, State::ON, State::MONITORING)
                     .setNewDefaultValue(State::INIT)
                     .commit();
 
@@ -234,7 +234,7 @@ namespace karabo {
             SLOT_ELEMENT(expected).key("topologyCheck.slotForceCheck")
                     .displayedName("Force check")
                     .description("Immediately launch a check")
-                    .allowedStates(State::NORMAL)
+                    .allowedStates(State::ON)
                     .commit();
 
             INT8_ELEMENT(expected).key("topologyCheck.loggingProblem")
@@ -291,7 +291,7 @@ namespace karabo {
                     .reconfigurable()
                     .minInc(1).maxInc(600)
                     .commit();
-            
+
             STRING_ELEMENT(expected).key("loggermap")
                     .displayedName("Logger map file")
                     .assignmentOptional().defaultValue("loggermap.xml")
@@ -363,7 +363,7 @@ namespace karabo {
                 emit<Hash>("signalLoggerMap", m_loggerMap);
             }
 
-            // Start regular topology checks (and update State to NORMAL)
+            // Start regular topology checks (and update State to ON)
             m_strand->post(bind_weak(&Self::launchTopologyCheck, this));
 
         }
@@ -407,7 +407,7 @@ namespace karabo {
                                                "lastCheckResult", badAndStatus.second)));
             }
 
-            updateState(State::NORMAL);
+            updateState(State::ON);
             m_topologyCheckTimer.expires_from_now(boost::posix_time::minutes(get<unsigned int>("topologyCheck.interval")));
             m_topologyCheckTimer.async_wait(bind_weak(&Self::topologyCheck, this, boost::asio::placeholders::error));
         }
