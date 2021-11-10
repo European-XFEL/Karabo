@@ -191,6 +191,9 @@ class CameraFsm(base.BaseFsm):
     def readyStateOnExit(self):
         """Actions executed on exit from 'Ready' state"""
 
+    def errorFoundAction(self, shortMessage, detailedMessage):
+        """Action executed when an error is found """
+
     def connectAction(self):
         """Actions executed at 'connect' event"""
 
