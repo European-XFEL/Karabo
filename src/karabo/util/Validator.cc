@@ -31,6 +31,7 @@ namespace karabo {
             , m_allowAdditionalKeys(false)
             , m_allowMissingKeys(false)
             , m_injectTimestamps(false)
+            , m_forceInjectedTimestamp(false)
             , m_hasReconfigurableParameter(false) {
         }
 
@@ -54,6 +55,7 @@ namespace karabo {
             m_allowMissingKeys = rules.allowMissingKeys;
             m_allowUnrootedConfiguration = rules.allowUnrootedConfiguration;
             m_injectTimestamps = rules.injectTimestamps;
+            m_forceInjectedTimestamp = rules.forceInjectedTimestamp;
         }
 
 
@@ -64,6 +66,7 @@ namespace karabo {
             rules.allowMissingKeys = m_allowMissingKeys;
             rules.allowUnrootedConfiguration = m_allowUnrootedConfiguration;
             rules.injectTimestamps = m_injectTimestamps;
+            rules.forceInjectedTimestamp = m_forceInjectedTimestamp;
             return rules;
         }
 
@@ -177,7 +180,7 @@ namespace karabo {
                             this->validateLeaf(*it, node, report, currentScope);
                         }
                     } else { // Node IS provided
-                        Hash::Node& node = working.setNode(user.getNode(key));
+                        Hash::Node& node = working.setNode(user.getNode(key)); // copies also attributes, i.e. timestamp!
                         if (hasRowSchema) node.setAttribute(KARABO_SCHEMA_ROW_SCHEMA, it->getAttribute<Schema>(KARABO_SCHEMA_ROW_SCHEMA));
                         if (user.hasAttribute(key, KARABO_SCHEMA_CLASS_ID)) {
                             const std::string &classId = user.getAttribute<std::string>(key, KARABO_SCHEMA_CLASS_ID);
@@ -703,7 +706,7 @@ namespace karabo {
         void Validator::attachTimestampIfNotAlreadyThere(Hash::Node& node) {
             if (m_injectTimestamps) {
                 Hash::Attributes& attributes = node.getAttributes();
-                if (!Timestamp::hashAttributesContainTimeInformation(attributes)) {
+                if (m_forceInjectedTimestamp || !Timestamp::hashAttributesContainTimeInformation(attributes)) {
                     m_timestamp.toHashAttributes(attributes);
                 }
             }
