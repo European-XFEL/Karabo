@@ -77,3 +77,13 @@ class BaseFsm(NoFsm):
                 finally:
                     state = fsm.get_state()
                     self.updateState(state)
+
+    def exceptionFound(self, userFriendlyMessage, detailedMessage):
+        """Hook for when an exception is encountered.
+
+        Catch exceptions where they can occur instead, e.g.
+        when calling a slot or requesting a value!
+
+        :param shortMessage: exception message
+        :param detailedMessage: detailed exception message
+        """
