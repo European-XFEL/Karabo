@@ -50,6 +50,7 @@ namespace karabo {
             bool m_allowAdditionalKeys;
             bool m_allowMissingKeys;
             bool m_injectTimestamps;
+            bool m_forceInjectedTimestamp;
 
             karabo::util::Hash m_parametersInWarnOrAlarm;
             karabo::util::Timestamp m_timestamp;
@@ -80,7 +81,12 @@ namespace karabo {
             * - allowMissingKeys: allow for keys missing in the input Hash even if an element for
             *                     this key is present in the schema
             *
-            * - injectTimestamps: inject time information if no information is present for a given key.
+            * - injectTimestamps for leaf elements:
+            *    - if injectTimestamps is false: no injection
+            *    - if injectTimestamps is true and forceInjectedTimestamp is false:
+            *                                    timestamp is injected, but timestamp attributes present are not overwritten
+            *    - if injectTimestamps and forceInjectedTimestamp are both true:
+            *                                    timestamp is injected and may overwrite previous timestamp attributes
             *
             * If any of the above scenarios are encountered during validation and the option is not
             * set to true, i.e. the Validator is not allowed to resolve the issue, validation will
@@ -100,15 +106,16 @@ namespace karabo {
                     :
                     injectDefaults(true), allowUnrootedConfiguration(true),
                     allowAdditionalKeys(true), allowMissingKeys(true),
-                    injectTimestamps(true) {
+                    injectTimestamps(true), forceInjectedTimestamp(false) {
                 }
 
                 ValidationRules(bool injectDefaults_, bool allowUnrootedConfiguration_,
-                                bool allowAdditionalKeys_, bool allowMissingKeys_, bool injectTimestamps_)
+                                bool allowAdditionalKeys_, bool allowMissingKeys_, bool injectTimestamps_,
+                                bool forceInjectedTimestamp_ = false)
                     :
                     injectDefaults(injectDefaults_), allowUnrootedConfiguration(allowUnrootedConfiguration_),
                     allowAdditionalKeys(allowAdditionalKeys_), allowMissingKeys(allowMissingKeys_),
-                    injectTimestamps(injectTimestamps_) {
+                    injectTimestamps(injectTimestamps_), forceInjectedTimestamp(forceInjectedTimestamp_) {
                 }
 
                 bool injectDefaults;
@@ -116,6 +123,7 @@ namespace karabo {
                 bool allowAdditionalKeys;
                 bool allowMissingKeys;
                 bool injectTimestamps;
+                bool forceInjectedTimestamp;
             };
 
             /**
@@ -179,7 +187,15 @@ namespace karabo {
              *  - for sequence values validate that they fulfill their minimum and maximum size requirements if defined by
              *    the Schema
              *
-             *  - inject timestamps if none are present for an element
+             *  - inject timestamps for leaf elements of validatedOutput - details depending on ValidationRules:
+             *    - if injectTimestamps is false: no injection, but timestamp attributes present in unvalidatedInput
+             *                                    are transferred to validatedOutput
+             *    - if injectTimestamps is true and forceInjectedTimestamp is false:
+             *                                    timestamp is injected, but timestamp attributes present in unvalidatedInput
+             *                                    are not overwritten, but are transferred to validatedOutput
+             *    - if injectTimestamps and forceInjectedTimestamp are both true:
+             *                                    timestamp is injected even if another timestamp is in attributes
+             *                                    of unvalidatedInput
              */
             std::pair<bool, std::string> validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp& timestamp = Timestamp());
 
