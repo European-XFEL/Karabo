@@ -181,8 +181,9 @@ namespace karabo {
         template <class FSM = NoFsm>
         class Device : public BaseDevice, public FSM {
 
-            karabo::util::Validator m_validatorIntern;
-            karabo::util::Validator m_validatorExtern;
+            /// Validators to validate...
+            karabo::util::Validator m_validatorIntern; /// ...internal updates via 'Device::set'
+            karabo::util::Validator m_validatorExtern; /// ...external updates via 'Device::slotReconfigure'
 
             boost::shared_ptr<DeviceClient> m_deviceClient;
 
@@ -480,6 +481,7 @@ namespace karabo {
                 rules.injectDefaults = false;
                 rules.injectTimestamps = true;
                 m_validatorIntern.setValidationRules(rules);
+                rules.forceInjectedTimestamp = true; // no externally contributed timestamp!
                 m_validatorExtern.setValidationRules(rules);
 
                 // Setup device logger
