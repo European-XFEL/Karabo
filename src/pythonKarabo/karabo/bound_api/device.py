@@ -1274,17 +1274,6 @@ class PythonDevice(NoFsm):
 
         return self._ss.getAvailableInstances()
 
-    @karabo_deprecated
-    def errorFoundAction(self, shortMessage, detailedMessage):
-        """A function to overwrite for error handling.
-
-        This method is DEPRECATED!
-        :param shortMessage:
-        :param detailedMessage:
-        :return:
-        """
-        self.log.ERROR("{} -- {}".format(shortMessage, detailedMessage))
-
     def preReconfigure(self, incomingReconfiguration):
         """
         Use this hook to alter a configuration Hash before it gets applied to
@@ -1336,26 +1325,6 @@ class PythonDevice(NoFsm):
                     self._ss.updateInstanceInfo(Hash("status", "ok"))
         # reply new state to interested event initiators
         self._ss.reply(stateName)
-
-    @karabo_deprecated
-    def onStateUpdate(self, currentState):
-        """This method is DEPRECATED, use updateState() instead"""
-        assert isinstance(currentState, State)
-        self.updateState(currentState)
-
-    @karabo_deprecated
-    def exceptionFound(self, shortMessage, detailedMessage):
-        """Hook for when an exception is encountered.
-
-        This method is DEPRECATED and will be removed.
-
-        Catch exceptions where they can occur instead, e.g.
-        when calling a slot or requesting a value!
-
-        :param shortMessage: exception message
-        :param detailedMessage: detailed exception message
-        """
-        self.log.ERROR(shortMessage + " -- " + detailedMessage)
 
     def noStateTransition(self, currentState, currentEvent):
         """
@@ -1582,11 +1551,6 @@ class PythonDevice(NoFsm):
         self._inputChannelHandlers.setdefault(channelName, [None] * 3)
         self._inputChannelHandlers[channelName][2] = handler
         self._ss.registerEndOfStreamHandler(channelName, handler)
-
-    @karabo_deprecated
-    def triggerError(self, s, d):
-        """This method is deprecated, use execute() instead"""
-        self.exceptionFound(s, d)
 
     def execute(self, command, *args):
         if len(args) == 0:
@@ -1841,11 +1805,6 @@ class PythonDevice(NoFsm):
                                           epochLastReceived.toIso8601(),
                                           self._timeId, self._timePeriod))
         return Timestamp(epoch, Trainstamp(resultId))
-
-    @karabo_deprecated
-    def _getActualTimestamp(self):
-        """This method is DEPRECATED, use getActualTimestamp() instead"""
-        return self.getActualTimestamp()
 
     def _getStateDependentSchema(self, state):
         with self._stateChangeLock:
