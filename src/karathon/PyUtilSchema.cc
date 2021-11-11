@@ -2564,6 +2564,7 @@ void exportPyUtilSchema() {
                 .def_readwrite("allowAdditionalKeys", &Validator::ValidationRules::allowAdditionalKeys)
                 .def_readwrite("allowMissingKeys", &Validator::ValidationRules::allowMissingKeys)
                 .def_readwrite("injectTimestamps", &Validator::ValidationRules::injectTimestamps)
+                .def_readwrite("forceInjectedTimestamp", &Validator::ValidationRules::forceInjectedTimestamp)
                 ;
 
         bp::class_<Validator>("Validator", bp::init<>())
