@@ -2,7 +2,8 @@ import os
 from time import sleep
 
 from karabo import __version__ as karaboVersion
-from karabo.bound import AccessLevel, Hash, SignalSlotable
+from karabo.bound import (
+    AccessLevel, Epochstamp, Hash, SignalSlotable, Timestamp, Trainstamp)
 from karabo.common.states import State
 from karabo.integration_tests.utils import BoundDeviceTestCase
 
@@ -360,11 +361,39 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             self.assertRaises(RuntimeError, self.dc.set,
                               "testComm1", "vectorInt32", [4]*9)  # not OK now!
 
-        with self.subTest(msg="Test non-reconfigurables cannot be modified"):
+        with self.subTest(msg="Test slotReconfigure"):
+            # Non-reconfigurables cannot be modified:
             request = sigSlotA.request("testComm1", "slotReconfigure",
                                        Hash("archive", False))
             with self.assertRaises(RuntimeError):
                 request.waitForReply(30000)  # in ms
+
+            # Cannot define timestamp:
+            request = sigSlotA.request("testComm1", "slotGetConfiguration")
+            cfg = request.waitForReply(30000)[0]
+            attrs = cfg.getAttributes("someString")
+            tsBefore = Timestamp.fromHashAttributes(attrs)
+            epochPast = Epochstamp(tsBefore.getSeconds() - 3 * 3600, 0)
+            tsPast = Timestamp(epochPast, Trainstamp(tsBefore.getTrainId()))
+            arg = Hash("someString", "reconfiguredWithStamp")
+            tsPast.toHashAttributes(arg.getAttributes("someString"))
+            epochBeforeSet = Epochstamp()
+            request = sigSlotA.request("testComm1", "slotReconfigure", arg)
+            request.waitForReply(30000)  # in ms
+            request = sigSlotA.request("testComm1", "slotGetConfiguration")
+            cfg = request.waitForReply(30000)[0]
+            self.assertEqual("reconfiguredWithStamp", cfg["someString"])
+            attrs = cfg.getAttributes("someString")
+            tsReceived = Timestamp.fromHashAttributes(attrs)
+            epochReceived = Epochstamp.fromHashAttributes(attrs)
+            # Timestamp has actually changed
+            self.assertNotEqual(tsReceived, tsBefore,
+                                tsReceived.toIso8601Ext() + " "
+                                + tsBefore.toIso8601Ext())
+            # ...and is larger than when calling slotReconfigure
+            self.assertTrue(epochReceived > epochBeforeSet,
+                            epochReceived.toIso8601Ext() + " "
+                            + epochBeforeSet.toIso8601Ext())
 
         with self.subTest(msg="Test killing 'deviceNotGoingDownCleanly'"):
             # Check that the device goes down although thread not stopped
