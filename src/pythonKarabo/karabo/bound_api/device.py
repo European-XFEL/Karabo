@@ -338,16 +338,19 @@ class PythonDevice(NoFsm):
         self._timePeriod = 0
 
         # Setup the validation classes
-        self.validatorIntern = Validator()
-        self.validatorExtern = Validator()
         rules = ValidatorValidationRules()
         rules.allowAdditionalKeys = False
         rules.allowMissingKeys = True
         rules.allowUnrootedConfiguration = True
         rules.injectDefaults = False
         rules.injectTimestamps = True
-        self.validatorIntern.setValidationRules(rules)
-        self.validatorExtern.setValidationRules(rules)
+        rules.forceInjectedTimestamp = False  # allows to specify case-by-case
+        # Internal validator for set(..)
+        self.validatorIntern = Validator(rules)
+        rules.forceInjectedTimestamp = True
+        # External validator for slotReconfigure(..)
+        self.validatorExtern = Validator(rules)
+
         # actual global alarm condition and all accumulated ones
         self.globalAlarmCondition = AlarmCondition.NONE
         # key, value will be AlarmCondition, info tuple
