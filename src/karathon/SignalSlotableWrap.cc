@@ -177,42 +177,41 @@ namespace karathon {
 
 
     void SignalSlotableWrap::AsyncReplyWrap::replyPy1(const bp::object& a1) const {
-        ScopedGILRelease nogil;
         // Convert Python object to boost::any - may involve a copy :-(
         boost::any a1Any;
         Wrapper::toAny(a1, a1Any);
         // Call inherited operator(..):
+        ScopedGILRelease nogil;
         (*this)(a1Any);
     }
 
 
     void SignalSlotableWrap::AsyncReplyWrap::replyPy2(const bp::object& a1, const bp::object& a2) const {
-        ScopedGILRelease nogil;
         // Convert Python objects to boost::any - may involve copies :-(
         boost::any a1Any, a2Any;
         Wrapper::toAny(a1, a1Any);
         Wrapper::toAny(a2, a2Any);
         // Call inherited operator(..):
+        ScopedGILRelease nogil;
         (*this)(a1Any, a2Any);
     }
 
 
     void SignalSlotableWrap::AsyncReplyWrap::replyPy3(const bp::object& a1, const bp::object& a2,
                                                       const bp::object& a3) const {
-        ScopedGILRelease nogil;
         // Convert Python objects to boost::any - may involve copies :-(
         boost::any a1Any, a2Any, a3Any;
         Wrapper::toAny(a1, a1Any);
         Wrapper::toAny(a2, a2Any);
         Wrapper::toAny(a3, a3Any);
         // Call inherited operator(..):
+        ScopedGILRelease nogil;
         (*this)(a1Any, a2Any, a3Any);
     }
 
 
     void SignalSlotableWrap::AsyncReplyWrap::replyPy4(const bp::object& a1, const bp::object& a2,
                                                       const bp::object& a3, const bp::object& a4) const {
-        ScopedGILRelease nogil;
         // Convert Python objects to boost::any - may involve copies :-(
         boost::any a1Any, a2Any, a3Any, a4Any;
         Wrapper::toAny(a1, a1Any);
@@ -220,6 +219,7 @@ namespace karathon {
         Wrapper::toAny(a3, a3Any);
         Wrapper::toAny(a4, a4Any);
         // Call inherited operator(..):
+        ScopedGILRelease nogil;
         (*this)(a1Any, a2Any, a3Any, a4Any);
     }
 
