@@ -20,6 +20,10 @@ __check_existence() {
     fi
 }
 
+__tests_build() {
+    bash ./cmake_auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --buildAllTests
+}
+
 __release_build() {
     case "$2" in
         nightly)
@@ -111,5 +115,6 @@ case "$JOB_SCOPE" in
     prerelease) __release_build $TARGET_OS $JOB_SCOPE ;;
     nightly) __release_build $TARGET_OS $JOB_SCOPE ;;
     deps) __deps_build $JOB_TYPE ;;
+    tests) __tests_build $JOB_TYPE ;;
     *) echo "unknow job scope: $JOB_SCOPE" ;;
 esac
