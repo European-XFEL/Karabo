@@ -10,7 +10,7 @@ __cmake_tests() {
 }
 
 __unit_tests() {
-    bash ./cmake_auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runTests --quiet
+    bash ./cmake_auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runTests
 }
 
 __integration_tests() {
