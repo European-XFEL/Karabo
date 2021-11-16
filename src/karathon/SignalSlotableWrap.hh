@@ -80,24 +80,13 @@ namespace karathon {
 
             void receiveAsyncPy0(const bp::object& replyCallback);
 
-            void proxyReceiveAsync0(const bp::object& replyCallback);
-
             void receiveAsyncPy1(const bp::object& replyCallback);
-
-            void proxyReceiveAsync1(const bp::object& replyCallback, const boost::any& a1);
 
             void receiveAsyncPy2(const bp::object& replyCallback);
 
-            void proxyReceiveAsync2(const bp::object& replyCallback, const boost::any& a1, const boost::any& a2);
-
             void receiveAsyncPy3(const bp::object& replyCallback);
 
-            void proxyReceiveAsync3(const bp::object& replyCallback, const boost::any& a1, const boost::any& a2, const boost::any& a3);
-
             void receiveAsyncPy4(const bp::object& replyCallback);
-
-            void proxyReceiveAsync4(const bp::object& replyCallback,
-                                    const boost::any& a1, const boost::any& a2, const boost::any& a3, const boost::any& a4);
 
             bp::tuple receivePy0();
 
