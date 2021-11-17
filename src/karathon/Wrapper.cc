@@ -689,6 +689,57 @@ namespace karathon {
         }
     }
 
+    void HandlerWrapAny1::operator() (const boost::any& a1) {
+        ScopedGILAcquire gil;
+        try {
+            if (*m_handler) {
+                (*m_handler)(Wrapper::toObject(a1));
+            }
+        } catch (const bp::error_already_set& e) {
+            karathon::detail::treatError_already_set(*m_handler, m_where);
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
+
+    void HandlerWrapAny2::operator() (const boost::any& a1, const boost::any& a2) {
+        ScopedGILAcquire gil;
+        try {
+            if (*m_handler) {
+                (*m_handler)(Wrapper::toObject(a1), Wrapper::toObject(a2));
+            }
+        } catch (const bp::error_already_set& e) {
+            karathon::detail::treatError_already_set(*m_handler, m_where);
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
+
+    void HandlerWrapAny3::operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3) {
+        ScopedGILAcquire gil;
+        try {
+            if (*m_handler) {
+                (*m_handler)(Wrapper::toObject(a1), Wrapper::toObject(a2), Wrapper::toObject(a3));
+            }
+        } catch (const bp::error_already_set& e) {
+            karathon::detail::treatError_already_set(*m_handler, m_where);
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
+
+    void HandlerWrapAny4::operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3, const boost::any& a4) {
+        ScopedGILAcquire gil;
+        try {
+            if (*m_handler) {
+                (*m_handler)(Wrapper::toObject(a1), Wrapper::toObject(a2), Wrapper::toObject(a3), Wrapper::toObject(a4));
+            }
+        } catch (const bp::error_already_set& e) {
+            karathon::detail::treatError_already_set(*m_handler, m_where);
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
 
     namespace detail {
         void treatError_already_set(const bp::object& handler, const char* where) {

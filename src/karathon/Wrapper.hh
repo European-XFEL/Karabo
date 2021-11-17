@@ -545,8 +545,63 @@ namespace karathon {
         protected: // not private - needed for InputChannelWrap::DataHandlerWrap::operator()
             std::shared_ptr<bp::object> m_handler;
             char const * const m_where;
-        };
+    };
 
+    /**
+     * Specialisation of HandlerWrap for one boost::any argument
+     *
+     * The argument is converted to boost::object before passed to the Python handler.
+     */
+    class HandlerWrapAny1 : public HandlerWrap<const boost::any&> {
+        public:
+            HandlerWrapAny1(const bp::object& handler, char const * const where)
+                : HandlerWrap<const boost::any&>(handler, where) {
+            }
+
+            void operator() (const boost::any& a1);
+    };
+
+    /**
+     * Specialisation of HandlerWrap for two boost::any arguments
+     *
+     * The arguments are converted to boost::object before passed to the Python handler.
+     */
+    class HandlerWrapAny2 : public HandlerWrap<const boost::any&, const boost::any&> {
+        public:
+            HandlerWrapAny2(const bp::object& handler, char const * const where)
+                : HandlerWrap<const boost::any&, const boost::any&>(handler, where) {
+            }
+
+            void operator() (const boost::any& a1, const boost::any& a2);
+    };
+
+    /**
+     * Specialisation of HandlerWrap for three boost::any arguments
+     *
+     * The arguments are converted to boost::object before passed to the Python handler.
+     */
+    class HandlerWrapAny3 : public HandlerWrap<const boost::any&, const boost::any&, const boost::any&> {
+        public:
+            HandlerWrapAny3(const bp::object& handler, char const * const where)
+                : HandlerWrap<const boost::any&, const boost::any&, const boost::any&>(handler, where) {
+            }
+
+            void operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3);
+    };
+
+    /**
+     * Specialisation of HandlerWrap for four boost::any arguments
+     *
+     * The arguments are converted to boost::object before passed to the Python handler.
+     */
+    class HandlerWrapAny4 : public HandlerWrap<const boost::any&, const boost::any&, const boost::any&, const boost::any&> {
+        public:
+            HandlerWrapAny4(const bp::object& handler, char const * const where)
+                : HandlerWrap<const boost::any&, const boost::any&, const boost::any&, const boost::any&>(handler, where) {
+            }
+
+            void operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3, const boost::any& a4);
+    };
 
     // Specializations
     template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<bool>& v, bool numpyFlag);
