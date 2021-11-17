@@ -20,92 +20,68 @@ namespace karathon {
 
 
     void SignalSlotableWrap::RequestorWrap::receiveAsyncPy0(const bp::object& replyCallback) {
-        if (!PyCallable_Check(replyCallback.ptr()))
-            throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         try {
+            // Do everthing (incl. copying) on boost::object with GIL.
+            boost::function<void ()> handler(HandlerWrap<>(replyCallback, "receiveAsyncPy0"));
+            // Release GIL since receiveAsync(..) in fact synchronously writes the message.
             ScopedGILRelease nogil;
-            receiveAsync(boost::bind(&SignalSlotableWrap::RequestorWrap::proxyReceiveAsync0, this, replyCallback));
+            receiveAsync(std::move(handler)); // Hopefully this 'move' avoids copy of replyCallback.
         } catch (...) {
             KARABO_RETHROW
         }
-    }
-
-
-    void SignalSlotableWrap::RequestorWrap::proxyReceiveAsync0(const bp::object& replyCallback) {
-        ScopedGILAcquire gil;
-        replyCallback();
     }
 
 
     void SignalSlotableWrap::RequestorWrap::receiveAsyncPy1(const bp::object& replyCallback) {
-        if (!PyCallable_Check(replyCallback.ptr()))
-            throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         try {
+            // Do everthing (incl. copying) on boost::object with GIL.
+            boost::function<void (const boost::any&)> handler(HandlerWrapAny1(replyCallback, "receiveAsyncPy1"));
+            // Release GIL since receiveAsync<..>(..) in fact synchronously writes the message.
             ScopedGILRelease nogil;
-            receiveAsync<boost::any>(boost::bind(&SignalSlotableWrap::RequestorWrap::proxyReceiveAsync1, this, replyCallback, _1));
+            receiveAsync<boost::any>(std::move(handler)); // Hopefully this 'move' avoids copy of replyCallback.
         } catch (...) {
             KARABO_RETHROW
         }
-    }
-
-
-    void SignalSlotableWrap::RequestorWrap::proxyReceiveAsync1(const bp::object& replyCallback, const boost::any& a1) {
-        ScopedGILAcquire gil;
-        replyCallback(Wrapper::toObject(a1));
     }
 
 
     void SignalSlotableWrap::RequestorWrap::receiveAsyncPy2(const bp::object& replyCallback) {
-        if (!PyCallable_Check(replyCallback.ptr()))
-            throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         try {
+            // Do everthing (incl. copying) on boost::object with GIL.
+            boost::function<void (const boost::any&, const boost::any&)> handler(HandlerWrapAny2(replyCallback, "receiveAsyncPy2"));
+            // Release GIL since receiveAsync<..>(..) in fact synchronously writes the message.
             ScopedGILRelease nogil;
-            receiveAsync<boost::any, boost::any>(boost::bind(&SignalSlotableWrap::RequestorWrap::proxyReceiveAsync2, this, replyCallback, _1, _2));
+            receiveAsync<boost::any, boost::any>(std::move(handler)); // Hopefully this 'move' avoids copy of replyCallback.
         } catch (...) {
             KARABO_RETHROW
         }
-    }
-
-
-    void SignalSlotableWrap::RequestorWrap::proxyReceiveAsync2(const bp::object& replyCallback, const boost::any& a1, const boost::any& a2) {
-        ScopedGILAcquire gil;
-        replyCallback(Wrapper::toObject(a1), Wrapper::toObject(a2));
     }
 
 
     void SignalSlotableWrap::RequestorWrap::receiveAsyncPy3(const bp::object& replyCallback) {
-        if (!PyCallable_Check(replyCallback.ptr()))
-            throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         try {
+            // Do everthing (incl. copying) on boost::object with GIL.
+            boost::function<void (const boost::any&, const boost::any&, const boost::any&)> handler(HandlerWrapAny3(replyCallback, "receiveAsyncPy3"));
+            // Release GIL since receiveAsync<..>(..) in fact synchronously writes the message.
             ScopedGILRelease nogil;
-            receiveAsync<boost::any, boost::any, boost::any>(boost::bind(&SignalSlotableWrap::RequestorWrap::proxyReceiveAsync3, this, replyCallback, _1, _2, _3));
+            receiveAsync<boost::any, boost::any, boost::any>(std::move(handler)); // Hopefully this 'move' avoids copy of replyCallback.
         } catch (...) {
             KARABO_RETHROW
         }
-    }
-
-
-    void SignalSlotableWrap::RequestorWrap::proxyReceiveAsync3(const bp::object& replyCallback, const boost::any& a1, const boost::any& a2, const boost::any& a3) {
-        ScopedGILAcquire gil;
-        replyCallback(Wrapper::toObject(a1), Wrapper::toObject(a2), Wrapper::toObject(a3));
     }
 
 
     void SignalSlotableWrap::RequestorWrap::receiveAsyncPy4(const bp::object& replyCallback) {
-        if (!PyCallable_Check(replyCallback.ptr()))
-            throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         try {
+            // Do everthing (incl. copying) on boost::object with GIL.
+            boost::function<void (const boost::any&, const boost::any&, const boost::any&, const boost::any&)>
+                handler(HandlerWrapAny4(replyCallback, "receiveAsyncPy4"));
+            // Release GIL since receiveAsync<..>(..) in fact synchronously writes the message.
             ScopedGILRelease nogil;
-            receiveAsync<boost::any, boost::any, boost::any, boost::any>(boost::bind(&SignalSlotableWrap::RequestorWrap::proxyReceiveAsync4, this, replyCallback, _1, _2, _3, _4));
+            receiveAsync<boost::any, boost::any, boost::any, boost::any>(std::move(handler)); // Hopefully this 'move' avoids copy of replyCallback.
         } catch (...) {
             KARABO_RETHROW
         }
-    }
-
-
-    void SignalSlotableWrap::RequestorWrap::proxyReceiveAsync4(const bp::object& replyCallback, const boost::any& a1, const boost::any& a2, const boost::any& a3, const boost::any& a4) {
-        ScopedGILAcquire gil;
-        replyCallback(Wrapper::toObject(a1), Wrapper::toObject(a2), Wrapper::toObject(a3), Wrapper::toObject(a4));
     }
 
 
