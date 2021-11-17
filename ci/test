@@ -2,7 +2,7 @@
 
 __deps_build_tests() {
     export FORCED_DEPS_TAG=$CI_COMMIT_REF_SLUG
-    bash ./cmake_auto_build_all.sh Debug --runTests --runIntegrationTests --quiet
+    bash ./cmake_auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runTests --runIntegrationTests --quiet
 }
 
 __cmake_tests() {
@@ -10,11 +10,11 @@ __cmake_tests() {
 }
 
 __unit_tests() {
-    bash ./cmake_auto_build_all.sh Debug --runTests --quiet
+    bash ./cmake_auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runTests --quiet
 }
 
 __integration_tests() {
-    bash ./cmake_auto_build_all.sh Debug --runIntegrationTests --quiet
+    bash ./cmake_auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runIntegrationTests --quiet
 }
 
 __long_tests() {
@@ -23,7 +23,7 @@ __long_tests() {
         echo "Not a 'long-tests' job. Skipping."
         exit 0
     fi
-    bash ./cmake_auto_build_all.sh Debug --runLongTests --quiet
+    bash ./cmake_auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runLongTests --quiet
 }
 
 __coverage_tests() {
@@ -32,7 +32,7 @@ __coverage_tests() {
         echo "Not a 'coverage-tests' job. Skipping."
         exit 0
     fi
-    bash ./cmake_auto_build_all.sh CodeCoverage --quiet
+    bash ./cmake_auto_build_all.sh CodeCoverage --numJobs $NUM_COMPILE_JOBS --quiet
 }
 
 echo "Start to testing job: {$1}"
