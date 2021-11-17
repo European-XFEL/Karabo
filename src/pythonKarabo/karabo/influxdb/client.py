@@ -355,7 +355,7 @@ class InfluxDbClient():
         try:
             return await self.query(kwargs, method=method)
         except HTTPError as e:
-            raise RuntimeError(f"{e.response.body} for query {query}")
+            raise RuntimeError(f"{e} for query {query}")
 
     async def get_results(self, query, measurement, **kwargs):
         """Queries the database
