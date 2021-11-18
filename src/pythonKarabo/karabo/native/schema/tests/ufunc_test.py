@@ -8,14 +8,11 @@ from pint import DimensionalityError
 from karabo.native.data import MetricPrefix, Timestamp, Unit
 from karabo.native.schema import (
     Int32, QuantityValue as QV, VectorComplexDouble, VectorDouble, VectorInt32)
-from karabo.native.schema.tests.compat import PINT_INCOMPATIBLE, PINT_REASON
+from karabo.native.schema.compat import PINT_INCOMPATIBLE
 
 
 class Tests(TestCase):
     def setUp(self):
-        if PINT_INCOMPATIBLE:
-            self.skipTest(reason=PINT_REASON)
-
         self.N = 4
         self.mm_10 = QV(1, unit='mm', timestamp=10)
         self.m_100 = QV(1, unit='m', timestamp=100)
@@ -162,8 +159,14 @@ class Tests(TestCase):
             # the result is still Karabo's `QuantityValue`
             self.assertArrayEqual(C, expected, msg=msg)
 
-            # check that the result has the newest timestamp:
-            newest_ts = max(A.timestamp, B.timestamp)
+            # Check that the result has the newest timestamp, but take
+            # care that there might be a `None` timestamp
+            if getattr(A, "timestamp", None) is None:
+                newest_ts = B.timestamp
+            elif getattr(B, "timestamp", None) is None:
+                newest_ts = A.timestamp
+            else:
+                newest_ts = max(A.timestamp, B.timestamp)
             self.assertEqual(newest_ts, C.timestamp, msg=msg)
 
         elif isinstance(C, np.ndarray):
@@ -215,12 +218,9 @@ class Tests(TestCase):
         if isinstance(C, QV):
             self.assertArrayEqual(C, expected, msg=msg)
             self.assertEqual(C.timestamp, expected.timestamp, msg=msg)
-
         elif isinstance(C, np.ndarray):
-
             self.np_array_func.update([ufunc.__name__])
             np.testing.assert_allclose(C, expected)
-
         else:
             raise TypeError(msg)
 
@@ -285,8 +285,7 @@ class Tests(TestCase):
             self.assertBinaryUfunc(ufunc, self.s1, self.v0, self.s1)
 
         # Timestamp is missing
-        with self.assertRaises(TypeError):
-            self.assertBinaryUfunc(ufunc, self.v1, self.v1_noTS, self.v0)
+        self.assertBinaryUfunc(ufunc, self.v1, self.v1_noTS, self.v0)
 
     def test_multiply(self):
         """
@@ -303,8 +302,7 @@ class Tests(TestCase):
         self.assertBinaryUfunc(ufunc, one_dimless, self.v2, self.v2)
 
         # Timestamp is missing
-        with self.assertRaises(TypeError):
-            self.assertBinaryUfunc(ufunc, self.v2, self.v1_noTS, v2_m2)
+        self.assertBinaryUfunc(ufunc, self.v2, self.v1_noTS, v2_m2)
 
         # Compatible units
         v4 = QV([1, 1, 1], unit='mm', timestamp=self.ts3)
@@ -354,8 +352,7 @@ class Tests(TestCase):
                                QV([0, 2, 4], unit='m / s', timestamp=self.ts1))
 
         # Timestamp is missing
-        with self.assertRaises(TypeError):
-            self.assertBinaryUfunc(ufunc, self.v2, self.v1_noTS, v2_nodim)
+        self.assertBinaryUfunc(ufunc, self.v2, self.v1_noTS, v2_nodim)
 
     def test_logaddexp(self):
         """Logarithm of the sum of exponentiations of the inputs.
@@ -371,7 +368,7 @@ class Tests(TestCase):
         ufunc = np.logaddexp
 
         ret = np.log(2 * np.exp(1))
-        v_ret = np.array([ret, ret, ret])
+        v_ret = QV(np.array([ret, ret, ret]), timestamp=self.one.timestamp)
 
         self.assertBinaryUfunc(ufunc, self.one, self.one, v_ret)
 
@@ -395,7 +392,7 @@ class Tests(TestCase):
         """
         ufunc = np.logaddexp2
 
-        v_ret = np.array([2, 2, 2])
+        v_ret = QV(np.array([2, 2, 2]), timestamp=self.one.timestamp)
 
         self.assertBinaryUfunc(ufunc, self.one, self.one, v_ret)
 
@@ -458,8 +455,7 @@ class Tests(TestCase):
                                QV([0, 2, 4], unit='m / s', timestamp=self.ts1))
 
         # Timestamp is missing
-        with self.assertRaises(TypeError):
-            self.assertBinaryUfunc(ufunc, self.v2, self.v1_noTS, v2_nodim)
+        self.assertBinaryUfunc(ufunc, self.v2, self.v1_noTS, v2_nodim)
 
     def test_negative(self):
         # - (1 [m]) = (-1 [m])
@@ -475,17 +471,17 @@ class Tests(TestCase):
 
         XXX: Returns numpy.array
         """
-        if np.__version__ >= '1.13.0':
-            self.assertUnaryUfunc(np.positive, self.v1, self.v1)
-            self.assertUnaryUfunc(np.positive, self.v0, self.v0)
-        else:
-            pass
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertUnaryUfunc(np.positive, self.v1, self.v1)
+            return
+
+        self.assertUnaryUfunc(np.positive, self.v1, self.v1)
+        self.assertUnaryUfunc(np.positive, self.v0, self.v0)
 
     def test_power(self):
         """
         First array elements raised to powers from second array, element-wise.
-
-        XXX: Returns numpy.array
 
         Raise each base in `a` to the positionally-corresponding power in `b`.
         `a` and `b` must be broadcastable to the same shape. Note that an
@@ -493,39 +489,32 @@ class Tests(TestCase):
         """
         ufunc = np.power
         # [0, 2, 4] * [2] = [0, 4, 16]
-        self.assertBinaryUfunc(ufunc, self.v2, 2, np.array([0, 4, 16]))
+        # units change according to the power
+        r = QV(np.array([0, 4, 16]), "m^2", timestamp=self.v2.timestamp)
+        self.assertBinaryUfunc(ufunc, self.v2, 2, r)
+
         # [0, 2, 4] * [2, 3] => error
-        with self.assertRaises(ValueError):
-            self.assertBinaryUfunc(ufunc, self.v2, np.array([2, 3]),
-                                   np.array([0, 4, 16]))
-        # [0, -2, -4] * [1, 2, 3] => [0, 4, -64]
-        self.assertBinaryUfunc(ufunc, -1 * self.v2, np.array([1, 2, 3]),
-                               np.array([0, 4, -64]))
+        if not PINT_INCOMPATIBLE:
+            with self.assertRaises(ValueError):
+                self.assertBinaryUfunc(ufunc, self.v2, np.array([2, 3]),
+                                       np.array([0, 4, 16]))
+
+            # Integers to negative integer powers are not allowed
+            with self.assertRaises(ValueError):
+                self.assertBinaryUfunc(ufunc, self.one, np.array([-10]),
+                                       np.array([]))
+        else:
+            # Exponent has no unit
+            with self.assertRaises(DimensionalityError):
+                self.assertBinaryUfunc(ufunc, self.v2, np.array([2, 3]),
+                                       np.array([0, 4, 16]))
+            with self.assertRaises(ValueError):
+                self.assertBinaryUfunc(ufunc, self.one, -10, np.array([]))
 
         # TODO:
         # [[1, 2, 3], [1, 1, 1]] * [2] => [[1, 4, 9], [0, 1, 4]]
         # [[1, 2, 3], [0, 1, 2]] * [1, 2] => error
         # [[1, 2, 3], [0, 1, 2]] * [2, 1, 0] => [[1, 2, 1], [0, 1, 2]]
-
-        # Integers to negative integer powers are not allowed
-        with self.assertRaises(ValueError):
-            self.assertBinaryUfunc(ufunc, self.one, np.array([-10]),
-                                   np.array([]))
-
-        # Units:
-
-        # units change according to the power
-        # TODO: logically, it should be like this: [1 m] ** [2] = [1 m²]
-        # TODO: but returned value is np.array, so no way to check units
-        # meter = QV([1], unit='m', timestamp=self.ts1)
-        # self.assertBinaryUfunc(ufunc, meter, np.array([2]),
-        #                        QV([1], unit='m**2', timestamp=self.ts1))
-
-        # The power is dimensionless
-        # [1 m, 1 m, 1m], [2 m] => error
-        # FIXME: should raise, but it doesn't
-        # with self.assertRaises(ValueError):
-        #     self.assertBinaryUfunc(ufunc, self.v1, QV(2, unit='m'), self.one)
 
     @skipIf(system() == "Darwin",
             reason="No RuntimeWarning raised on Mac OS")
@@ -639,29 +628,29 @@ class Tests(TestCase):
         but faster because it avoids redundant work. It is used to implement
         the Python built-in function `divmod` on NumPy arrays.
 
-        New in version 1.13.0.
-
         XXX: Returns a tuple of `numpy.array`s
         """
-        if np.__version__ >= '1.13.0':
-            ufunc = np.divmod
-            # [0m, 2m, 4m] / [1, 2, 3] = ([0, 1, 1], [0, 0, 1])
-            numerator = self.v2
-            denominator = QV([1, 2, 3], timestamp=self.ts2)
+        ufunc = np.divmod
+        # [0m, 2m, 4m] / [1, 2, 3] = ([0, 1, 1], [0, 0, 1])
+        numerator = self.v2
+        denominator = QV([1, 2, 3], timestamp=self.ts2)
 
-            inp = ufunc(numerator, denominator)
-            res = (np.array([0, 1, 1]), np.array([0, 0, 1]))
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                ufunc(numerator, denominator)
+            return
 
-            np.testing.assert_allclose(inp[0], res[0])
-            np.testing.assert_allclose(inp[1], res[1])
+        inp = ufunc(numerator, denominator)
+        res = (np.array([0, 1, 1]), np.array([0, 0, 1]))
 
-            # we could also check:
-            # [0m,   2m,  4m] / [-1, -2, -3] = ([0, -1, -2], [0, 0, -2])
-            # [-0m, -2m, -4m] / [ 1,  2,  3] = ([0, -1, -2], [0, 0,  2])
-            # [-0m, -2m, -4m] / [-1, -2, -3] = ([0,  1,  1], [0, 0, -1])
-            # but there's nothing to do with Karabo
-        else:
-            pass
+        np.testing.assert_allclose(inp[0], res[0])
+        np.testing.assert_allclose(inp[1], res[1])
+
+        # we could also check:
+        # [0m,   2m,  4m] / [-1, -2, -3] = ([0, -1, -2], [0, 0, -2])
+        # [-0m, -2m, -4m] / [ 1,  2,  3] = ([0, -1, -2], [0, 0,  2])
+        # [-0m, -2m, -4m] / [-1, -2, -3] = ([0,  1,  1], [0, 0, -1])
+        # but there's nothing to do with Karabo
 
     def test_absolute(self):
         """
@@ -736,6 +725,11 @@ class Tests(TestCase):
         XXX: Returns numpy.array
         """
         ufunc = np.sign
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertUnaryUfunc(ufunc, self.v0, self.zero)
+            return
+
         self.assertUnaryUfunc(ufunc, self.v0, self.zero)
         self.assertUnaryUfunc(ufunc, self.v1, self.one)
 
@@ -754,17 +748,19 @@ class Tests(TestCase):
 
         XXX: Returns numpy.array
         """
-        if np.__version__ >= '1.13.0':
-            ufunc = np.heaviside
-            # θ([-1.5, 0, 2.0], 0.5) = [0., 0.5, 1.]
-            a = QV([-1.5, 0, 2.0], unit='m', timestamp=self.ts1)
-            r = np.array([0., 0.5, 1.])
-            self.assertBinaryUfunc(ufunc, a, 0.5, r)
-            # θ([-1.5, 0, 2.0], 1) = [0., 1., 1.]
-            r = np.array([0., 1., 1.])
-            self.assertBinaryUfunc(ufunc, a, 1, r)
-        else:
-            pass
+        ufunc = np.heaviside
+        # θ([-1.5, 0, 2.0], 0.5) = [0., 0.5, 1.]
+        a = QV([-1.5, 0, 2.0], unit='m', timestamp=self.ts1)
+        r = np.array([0., 0.5, 1.])
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertBinaryUfunc(ufunc, a, 0.5, r)
+            return
+
+        self.assertBinaryUfunc(ufunc, a, 0.5, r)
+        # θ([-1.5, 0, 2.0], 1) = [0., 1., 1.]
+        r = np.array([0., 1., 1.])
+        self.assertBinaryUfunc(ufunc, a, 1, r)
 
     def test_conj(self):
         """
@@ -782,12 +778,16 @@ class Tests(TestCase):
         # e⁰ = 1
         self.assertUnaryUfunc(ufunc, self.zero, self.one)
         # e¹ = e
-        r = np.array([e, e, e])
+        # Note: Before we were comparing with a simple ndarray.
+        # However, a simple ndarray does not have units and timestamps. This
+        # function itself works
+        r = QV(np.array([e, e, e]), timestamp=self.one.timestamp)
         self.assertUnaryUfunc(ufunc, self.one, r)
 
         # [exp(iπ), exp(-iπ/2), exp(iπ/4)] = [-1, -i, (1+i)sqrt(2)/2]
         a = QV(np.array([1j * pi, -1j * pi / 2, 1j * pi / 4]))
-        r = np.array([-1., -1j, (1 + 1j) * np.sqrt(2) / 2])
+        r = QV(np.array([-1., -1j, (1 + 1j) * np.sqrt(2) / 2]),
+               timestamp=a.timestamp)
         self.assertUnaryUfunc(ufunc, a, r)
 
         with self.assertRaises(DimensionalityError):
@@ -804,13 +804,13 @@ class Tests(TestCase):
         # 2⁰ = 1
         self.assertUnaryUfunc(ufunc, self.zero, self.one)
         # 2¹ = 2
-        r = np.array([2, 2, 2])
+        r = QV(np.array([2, 2, 2]), timestamp=self.one.timestamp)
         self.assertUnaryUfunc(ufunc, self.one, r)
 
         # [2^(iπ), -1, 0.5] = [cos(π log(2)) +i sin(π log(2)) , 0.5, sqrt(2)]
         a = QV(np.array([1j * pi, -1, 0.5]))
-        r = np.array([np.cos(pi * np.log(2)) + 1j * np.sin(pi * np.log(2)),
-                      0.5, np.sqrt(2)])
+        r = QV(np.array([np.cos(pi * np.log(2)) + 1j * np.sin(pi * np.log(2)),
+                         0.5, np.sqrt(2)]), timestamp=a.timestamp)
         self.assertUnaryUfunc(ufunc, a, r)
 
         with self.assertRaises(DimensionalityError):
@@ -1015,7 +1015,13 @@ class Tests(TestCase):
             return
 
         # GCD(1, 1) = 1
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertBinaryUfunc(ufunc, self.v1, self.v1, self.v1)
+            return
+
         self.assertBinaryUfunc(ufunc, self.v1, self.v1, self.v1)
+
         # GCD([0, 2, 4], [1, 1, 1]) = [1, 1, 1]
         self.assertBinaryUfunc(ufunc, self.v2, self.v1, self.v1)
 
@@ -1041,6 +1047,11 @@ class Tests(TestCase):
             ufunc = np.lcm
         except AttributeError:
             # some versions of numpy do not have this ufunc
+            return
+
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertBinaryUfunc(ufunc, self.v1, self.v1, self.v1)
             return
 
         self.assertBinaryUfunc(ufunc, self.v1, self.v1, self.v1)
@@ -1368,8 +1379,13 @@ class Tests(TestCase):
         a = QV([11, 1], unit='m', timestamp=self.ts1)
         b = QV([4, 25], unit='s', timestamp=self.ts2)
         r = QV([0, 1], timestamp=self.ts2)
-        self.assertBinaryUfunc(ufunc, a, b, r)
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertBinaryUfunc(ufunc, a, b, r)
+            # Stop after first
+            return
 
+        self.assertBinaryUfunc(ufunc, a, b, r)
         # XXX: Though booleans are supported in the `numpy` itself,
         #      they don't work here:
         a = QV([True, True], timestamp=self.ts1)
@@ -1397,8 +1413,13 @@ class Tests(TestCase):
         a = QV([2, 5, 255], unit='m', timestamp=self.ts1)
         b = QV([4, 4, 4], unit='s', timestamp=self.ts2)
         r = QV([6, 5, 255], timestamp=self.ts2)
-        self.assertBinaryUfunc(ufunc, a, b, r)
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertBinaryUfunc(ufunc, a, b, r)
+            # Stop after first
+            return
 
+        self.assertBinaryUfunc(ufunc, a, b, r)
         # Big numbers:
         a = QV([2, 5, 255, 2147483647], timestamp=self.ts1)
         b = QV([4, 4, 4, 2147483647], timestamp=self.ts2)
@@ -1432,8 +1453,13 @@ class Tests(TestCase):
         a = QV([31, 3], unit='m', timestamp=self.ts1)
         b = QV([5, 6], unit='s', timestamp=self.ts2)
         r = QV([26, 5], timestamp=self.ts2)
-        self.assertBinaryUfunc(ufunc, a, b, r)
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertBinaryUfunc(ufunc, a, b, r)
+            # Stop after first
+            return
 
+        self.assertBinaryUfunc(ufunc, a, b, r)
         # XXX: Though booleans are supported in the `numpy` itself,
         #      they don't work here:
         a = QV([True, True], timestamp=self.ts1)
@@ -1458,7 +1484,12 @@ class Tests(TestCase):
         a = QV(np.array([0, 2, 13], dtype=np.int8), unit='m',
                timestamp=self.ts1)
         r = QV(np.array([-1, -3, -14], dtype=np.int8), timestamp=self.ts2)
-        self.assertUnaryUfunc(ufunc, a, r)
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertUnaryUfunc(ufunc, a, r)
+            return
+        else:
+            self.assertUnaryUfunc(ufunc, a, r)
 
         # XXX: Though booleans are supported in the `numpy` itself,
         #      they don't work here:
@@ -1485,8 +1516,13 @@ class Tests(TestCase):
         # XXX: units measurements are ignored!
         a = QV([1, 2, 3], unit='m', timestamp=self.ts1)
         r = QV([2, 4, 8], timestamp=self.ts2)
-        self.assertBinaryUfunc(ufunc, self.v1, a, r)
 
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertBinaryUfunc(ufunc, self.v1, a, r)
+            return
+
+        self.assertBinaryUfunc(ufunc, self.v1, a, r)
         # only accepts integers as arguments
         with self.assertRaises(TypeError):
             self.assertBinaryUfunc(ufunc, self.f1, self.f1)
@@ -1506,8 +1542,13 @@ class Tests(TestCase):
         a = QV([10, 10, 10], unit='m', timestamp=self.ts1)
         b = QV([1, 2, 3], unit='s', timestamp=self.ts1)
         r = QV([5, 2, 1], timestamp=self.ts2)
-        self.assertBinaryUfunc(ufunc, a, b, r)
 
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertBinaryUfunc(ufunc, a, b, r)
+            return
+
+        self.assertBinaryUfunc(ufunc, a, b, r)
         # only accepts integers as arguments
         with self.assertRaises(TypeError):
             self.assertBinaryUfunc(ufunc, self.f1, self.f1)
@@ -1690,8 +1731,13 @@ class Tests(TestCase):
         x1 = QV([True, False], unit='s')
         x2 = QV([False, False], unit='m')
         xr = QV([False, False], unit='mm')
-        self.assertBinaryUfunc(ufunc, x1, x2, xr)
 
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertBinaryUfunc(ufunc, x1, x2, xr)
+            return
+
+        self.assertBinaryUfunc(ufunc, x1, x2, xr)
         # Numbers are reduced to boolean:
         # [1, 1, 1] AND [0, 2, 4] = [False, True, True]
         r = QV([False, True, True], unit='s')
@@ -1718,8 +1764,12 @@ class Tests(TestCase):
         x1 = QV([True, False], unit='s')
         x2 = QV([False, False], unit='m')
         xr = QV([True, False], unit='mm')
-        self.assertBinaryUfunc(ufunc, x1, x2, xr)
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertBinaryUfunc(ufunc, x1, x2, xr)
+            return
 
+        self.assertBinaryUfunc(ufunc, x1, x2, xr)
         # Numbers are reduced to boolean:
         # [1, 1, 1] OR [0, 2, 4] = [True, True, True]
         r = QV([True] * 3, unit='s')
@@ -1746,8 +1796,13 @@ class Tests(TestCase):
         x1 = QV([True, False], unit='s')
         x2 = QV([False, False], unit='m')
         xr = QV([True, False], unit='mm')
-        self.assertBinaryUfunc(ufunc, x1, x2, xr)
 
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertBinaryUfunc(ufunc, x1, x2, xr)
+            return
+
+        self.assertBinaryUfunc(ufunc, x1, x2, xr)
         # Numbers are reduced to boolean:
         # [1, 1, 1] XOR [0, 2, 4] = [True, False, False]
         r = QV([True, False, False], unit='s')
@@ -1773,8 +1828,12 @@ class Tests(TestCase):
         #      arbitrarily!
         x1 = QV([True, False], unit='s')
         xr = QV([False, True], unit='mm')
-        self.assertUnaryUfunc(ufunc, x1, xr)
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertUnaryUfunc(ufunc, x1, xr)
+            return
 
+        self.assertUnaryUfunc(ufunc, x1, xr)
         # Numbers are reduced to boolean:
         # NOT [0, 2, 4] = [True, False, False]
         r = QV([True, False, False], unit='s')
@@ -2100,6 +2159,11 @@ class Tests(TestCase):
         """
         ufunc = np.spacing
         eps = QV([np.finfo(np.float64).eps] * 3, unit=self.v1.u)
+        if PINT_INCOMPATIBLE:
+            with self.assertRaises(NotImplementedError):
+                self.assertUnaryUfunc(ufunc, self.v1, eps)
+            return
+
         self.assertUnaryUfunc(ufunc, self.v1, eps)
 
     def test_modf(self):
