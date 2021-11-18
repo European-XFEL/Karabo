@@ -13,19 +13,16 @@ namespace karathon {
     }
 
 
-    SignalSlotableWrap::RequestorWrap SignalSlotableWrap::RequestorWrap::timeoutPy(const int& milliseconds) {
-        this->karabo::xms::SignalSlotable::Requestor::timeout(milliseconds);
-        return *this;
-    }
-
-
     void SignalSlotableWrap::RequestorWrap::receiveAsyncPy0(const bp::object& replyCallback) {
         try {
             // Do everthing (incl. copying) on boost::object with GIL.
             boost::function<void ()> handler(HandlerWrap<>(replyCallback, "receiveAsyncPy0"));
             // Release GIL since receiveAsync(..) in fact synchronously writes the message.
             ScopedGILRelease nogil;
-            receiveAsync(std::move(handler)); // Hopefully this 'move' avoids copy of replyCallback.
+            // There is no move semantics for receiveAsync (yet?), but 'handler' holds the
+            // Python object for the replyCallback as a shared_ptr. So when 'handler' gets copied,
+            // the Python object itself is not ==> fine to run this without GIL.
+            receiveAsync(std::move(handler));
         } catch (...) {
             KARABO_RETHROW
         }
@@ -38,7 +35,10 @@ namespace karathon {
             boost::function<void (const boost::any&)> handler(HandlerWrapAny1(replyCallback, "receiveAsyncPy1"));
             // Release GIL since receiveAsync<..>(..) in fact synchronously writes the message.
             ScopedGILRelease nogil;
-            receiveAsync<boost::any>(std::move(handler)); // Hopefully this 'move' avoids copy of replyCallback.
+            // There is no move semantics for receiveAsync (yet?), but 'handler' holds the
+            // Python object for the replyCallback as a shared_ptr. So when 'handler' gets copied,
+            // the Python object itself is not ==> fine to run this without GIL.
+            receiveAsync<boost::any>(std::move(handler));
         } catch (...) {
             KARABO_RETHROW
         }
@@ -51,7 +51,10 @@ namespace karathon {
             boost::function<void (const boost::any&, const boost::any&)> handler(HandlerWrapAny2(replyCallback, "receiveAsyncPy2"));
             // Release GIL since receiveAsync<..>(..) in fact synchronously writes the message.
             ScopedGILRelease nogil;
-            receiveAsync<boost::any, boost::any>(std::move(handler)); // Hopefully this 'move' avoids copy of replyCallback.
+            // There is no move semantics for receiveAsync (yet?), but 'handler' holds the
+            // Python object for the replyCallback as a shared_ptr. So when 'handler' gets copied,
+            // the Python object itself is not ==> fine to run this without GIL.
+            receiveAsync<boost::any, boost::any>(std::move(handler));
         } catch (...) {
             KARABO_RETHROW
         }
@@ -64,7 +67,10 @@ namespace karathon {
             boost::function<void (const boost::any&, const boost::any&, const boost::any&)> handler(HandlerWrapAny3(replyCallback, "receiveAsyncPy3"));
             // Release GIL since receiveAsync<..>(..) in fact synchronously writes the message.
             ScopedGILRelease nogil;
-            receiveAsync<boost::any, boost::any, boost::any>(std::move(handler)); // Hopefully this 'move' avoids copy of replyCallback.
+            // There is no move semantics for receiveAsync (yet?), but 'handler' holds the
+            // Python object for the replyCallback as a shared_ptr. So when 'handler' gets copied,
+            // the Python object itself is not ==> fine to run this without GIL.
+            receiveAsync<boost::any, boost::any, boost::any>(std::move(handler));
         } catch (...) {
             KARABO_RETHROW
         }
@@ -78,7 +84,10 @@ namespace karathon {
                 handler(HandlerWrapAny4(replyCallback, "receiveAsyncPy4"));
             // Release GIL since receiveAsync<..>(..) in fact synchronously writes the message.
             ScopedGILRelease nogil;
-            receiveAsync<boost::any, boost::any, boost::any, boost::any>(std::move(handler)); // Hopefully this 'move' avoids copy of replyCallback.
+            // There is no move semantics for receiveAsync (yet?), but 'handler' holds the
+            // Python object for the replyCallback as a shared_ptr. So when 'handler' gets copied,
+            // the Python object itself is not ==> fine to run this without GIL.
+            receiveAsync<boost::any, boost::any, boost::any, boost::any>(std::move(handler));
         } catch (...) {
             KARABO_RETHROW
         }
@@ -161,6 +170,66 @@ namespace karathon {
         bp::object a3 = Wrapper::deepCopyHashLike(HashWrap::get(body, "a3"));
         bp::object a4 = Wrapper::deepCopyHashLike(HashWrap::get(body, "a4"));
         return bp::make_tuple(a1, a2, a3, a4);
+    }
+
+
+    SignalSlotableWrap::AsyncReplyWrap::AsyncReplyWrap(SignalSlotable* signalSlotable)
+        : karabo::xms::SignalSlotable::AsyncReply(signalSlotable) {
+    }
+
+
+    void SignalSlotableWrap::AsyncReplyWrap::replyPy0() const {
+        ScopedGILRelease nogil;
+        // Call inherited operator(..) - no GIL since that synchronously sends a message:
+        (*this)();
+    }
+
+
+    void SignalSlotableWrap::AsyncReplyWrap::replyPy1(const bp::object& a1) const {
+        // Convert Python object to boost::any - may involve a copy :-(
+        boost::any a1Any;
+        Wrapper::toAny(a1, a1Any);
+        // Call inherited operator(..) - no GIL since that synchronously sends a message:
+        ScopedGILRelease nogil;
+        (*this)(a1Any);
+    }
+
+
+    void SignalSlotableWrap::AsyncReplyWrap::replyPy2(const bp::object& a1, const bp::object& a2) const {
+        // Convert Python objects to boost::any - may involve copies :-(
+        boost::any a1Any, a2Any;
+        Wrapper::toAny(a1, a1Any);
+        Wrapper::toAny(a2, a2Any);
+        // Call inherited operator(..) - no GIL since that synchronously sends a message:
+        ScopedGILRelease nogil;
+        (*this)(a1Any, a2Any);
+    }
+
+
+    void SignalSlotableWrap::AsyncReplyWrap::replyPy3(const bp::object& a1, const bp::object& a2,
+                                                      const bp::object& a3) const {
+        // Convert Python objects to boost::any - may involve copies :-(
+        boost::any a1Any, a2Any, a3Any;
+        Wrapper::toAny(a1, a1Any);
+        Wrapper::toAny(a2, a2Any);
+        Wrapper::toAny(a3, a3Any);
+        // Call inherited operator(..) - no GIL since that synchronously sends a message:
+        ScopedGILRelease nogil;
+        (*this)(a1Any, a2Any, a3Any);
+    }
+
+
+    void SignalSlotableWrap::AsyncReplyWrap::replyPy4(const bp::object& a1, const bp::object& a2,
+                                                      const bp::object& a3, const bp::object& a4) const {
+        // Convert Python objects to boost::any - may involve copies :-(
+        boost::any a1Any, a2Any, a3Any, a4Any;
+        Wrapper::toAny(a1, a1Any);
+        Wrapper::toAny(a2, a2Any);
+        Wrapper::toAny(a3, a3Any);
+        Wrapper::toAny(a4, a4Any);
+        // Call inherited operator(..) - no GIL since that synchronously sends a message:
+        ScopedGILRelease nogil;
+        (*this)(a1Any, a2Any, a3Any, a4Any);
     }
 
 
