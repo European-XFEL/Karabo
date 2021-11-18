@@ -6,8 +6,8 @@ import numpy
 import pint
 
 from karabo.native import (
-    BoolValue, EncodingType, EnumValue, Float, Hash, ImageData, Int32,
-    KaraboValue, MetricPrefix, NoneValue, QuantityValue, StringValue,
+    BoolValue, EncodingType, EnumValue, Float, Hash, HashList, ImageData,
+    Int32, KaraboValue, MetricPrefix, NoneValue, QuantityValue, StringValue,
     TableValue, Timestamp, Unit, VectorCharValue, VectorFloat,
     VectorStringValue, encodeBinary, isSet, unit_registry as unit, wrap)
 from karabo.native.schema.tests.compat import PINT_INCOMPATIBLE, PINT_REASON
@@ -281,6 +281,25 @@ class Tests(TestCase):
         self.assertEqual(next(iter(t))["integer"], 3 * unit.millimeter)
         self.assertEqual(next(iter(t["integer"])), 3 * unit.millimeter)
         self.assertEqual(next(iter(t)).timestamp, self.t2)
+
+        hl = t.to_hashlist()
+
+        h = hl[0]
+        self.assertEqual(len(h), 2)
+        self.assertEqual(h["integer"], 3)
+        self.assertEqual(h["object"], "asdf")
+
+        h = hl[1]
+        self.assertEqual(h["integer"], 2)
+        numpy.testing.assert_array_equal(
+            h["object"], numpy.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]))
+        self.assertIsInstance(hl, HashList)
+
+        # Empty table
+        t = TableValue(numpy.array([], dtype=dtype), units)
+        hl = t.to_hashlist()
+        self.assertEqual(len(hl), 0)
+        self.assertIsInstance(hl, HashList)
 
     def test_unit(self):
         for u, p in product(Unit, MetricPrefix):
