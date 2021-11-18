@@ -10,7 +10,7 @@ from karabo.native import (
     Int32, KaraboValue, MetricPrefix, NoneValue, QuantityValue, StringValue,
     TableValue, Timestamp, Unit, VectorCharValue, VectorFloat,
     VectorStringValue, encodeBinary, isSet, unit_registry as unit, wrap)
-from karabo.native.schema.tests.compat import PINT_INCOMPATIBLE, PINT_REASON
+from karabo.native.schema.compat import PINT_INCOMPATIBLE, PINT_REASON
 
 
 class Tests(TestCase):
@@ -363,7 +363,6 @@ class Tests(TestCase):
         descriptor.displayType = "bin|0:a,1:b,2:c,3:d"
         self.assertEqual(str(a), "{a|b|d}")
 
-    @skipIf(PINT_INCOMPATIBLE, reason=PINT_REASON)
     def test_special(self):
         vps = QuantityValue(1, Unit.VOLT_PER_SECOND)
         aps = QuantityValue(1, Unit.AMPERE_PER_SECOND)
@@ -376,7 +375,9 @@ class Tests(TestCase):
         number = QuantityValue(1, Unit.NUMBER)
 
         self.assertEqual(vps / aps, QuantityValue("1 V/A"))
-        self.assertEqual(10 * percent, 0.1 * pixel)
+        if PINT_INCOMPATIBLE:
+            # Percent and pixel are the same
+            self.assertNotEqual(10 * percent, 0.1 * pixel)
         self.assertEqual(1 * degC + QuantityValue("1 K"), 2 * degC)
         self.assertEqual(2 * number, 2)
         self.assertEqual(pixel, 1 * unit.pixel)
@@ -420,7 +421,6 @@ class Tests(TestCase):
         self.assertEqual(w, ["bla"])
         self.assertEqual(w.descriptor, None)
 
-    @skipIf(PINT_INCOMPATIBLE, reason=PINT_REASON)
     def test_timestamp(self):
         a = QuantityValue("1 m", timestamp=self.t1)
         b = QuantityValue("2 m", timestamp=self.t2)
@@ -429,13 +429,6 @@ class Tests(TestCase):
         self.assertEqual((3 * b).timestamp, self.t2)
         self.assertEqual((a == b).timestamp, self.t1)
         self.assertEqual(numpy.sin(a / b).timestamp, self.t1)
-
-        c = a + 1j * b
-        self.assertEqual(c.timestamp, self.t1)
-        self.assertEqual(c.imag.timestamp, self.t1)
-        self.assertEqual(c.real.timestamp, self.t1)
-
-        self.assertEqual(c.to("mm").timestamp, self.t1)
 
         a = QuantityValue(numpy.arange(10), "m", timestamp=self.t1)
         self.assertEqual(a[3].timestamp, self.t1)
@@ -455,6 +448,11 @@ class Tests(TestCase):
         self.assertEqual(numpy.sin(c).timestamp, self.t2)
         self.assertEqual(numpy.arctan2(d, c).timestamp, self.t1)
         self.assertEqual(numpy.arctan2(c, d).timestamp, self.t1)
+
+        # ValueError: operands could not be broadcast together with shapes
+        # (10,) (2,5)
+        with self.assertRaises(ValueError):
+            c = a + 1j * b
 
     def test_vector(self):
         v = QuantityValue([2, 3, 4], "m", timestamp=self.t1)
@@ -502,6 +500,16 @@ class Tests(TestCase):
         m = numpy.std([a, b])
         self.assertEqual(m, 1 * unit.m)
         self.assertEqual(m.timestamp, self.t1)
+
+    def test_numpy_std_nodim(self):
+        a = QuantityValue(3, timestamp=self.t1)
+        b = QuantityValue(1000, timestamp=self.t2)
+        m = numpy.std([a, b])
+        self.assertEqual(m, 498.5)
+        if numpy.__version__ <= '1.15.4':
+            self.assertTrue(hasattr(m, "timestamp"))
+        else:
+            self.assertFalse(hasattr(m, "timestamp"))
 
     def test_timeout(self):
         time = QuantityValue(200, Unit.SECOND,
