@@ -13,7 +13,7 @@ from xml.sax.saxutils import escape
 import numpy
 import pint
 
-from karabo.native.data import EncodingType, MetricPrefix, Unit
+from karabo.native.data import EncodingType, Hash, HashList, MetricPrefix, Unit
 
 from ..weak import Weak
 
@@ -541,6 +541,14 @@ class TableValue(KaraboValue):
         """Clear the table element with a single message"""
         self.value = numpy.array([], dtype=self.value.dtype)
         self.descriptor.__set__(self._parent, self.value)
+
+    def to_hashlist(self):
+        """Convert the TableValue as `Hashlist` but lose the attributes
+        """
+        ret = HashList(Hash({key: value for key, value in
+                             zip(self.value.dtype.names, row)})
+                       for row in self.value)
+        return ret
 
     def __len__(self):
         return len(self.value)
