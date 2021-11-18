@@ -88,18 +88,9 @@ namespace karathon {
 
             void receiveAsyncPy4(const bp::object& replyCallback);
 
-            bp::tuple receivePy0();
-
-            bp::tuple receivePy1();
-
-            bp::tuple receivePy2();
-
-            bp::tuple receivePy3();
-
-            bp::tuple receivePy4();
-
             bp::tuple waitForReply(const int& milliseconds);
 
+        private:
             bp::tuple prepareTuple0(const karabo::util::Hash & body);
 
             bp::tuple prepareTuple1(const karabo::util::Hash & body);
@@ -111,6 +102,26 @@ namespace karathon {
             bp::tuple prepareTuple4(const karabo::util::Hash & body);
         };
 
+        class AsyncReplyWrap : public karabo::xms::SignalSlotable::AsyncReply {
+
+        public:
+
+            explicit AsyncReplyWrap(SignalSlotable* signalSlotable);
+
+            void replyPy0() const;
+
+            void replyPy1(const bp::object& a1) const;
+
+            void replyPy2(const bp::object& a1, const bp::object& a2) const;
+
+            void replyPy3(const bp::object& a1, const bp::object& a2, const bp::object& a3) const;
+
+            void replyPy4(const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) const;
+        };
+
+        AsyncReplyWrap createAsyncReply() {
+            return SignalSlotableWrap::AsyncReplyWrap(this);
+        }
     public:
 
         SignalSlotableWrap(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
