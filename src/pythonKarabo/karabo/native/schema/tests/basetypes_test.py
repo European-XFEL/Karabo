@@ -486,6 +486,7 @@ class Tests(TestCase):
         b = Hash('v', (4, 5, 6))
         self.assertEqual(a, b)
 
+    @skipIf(PINT_INCOMPATIBLE, reason=PINT_REASON)
     def test_mean(self):
         a = QuantityValue(3, "m", timestamp=self.t1)
         b = QuantityValue(1000, "mm", timestamp=self.t2)
