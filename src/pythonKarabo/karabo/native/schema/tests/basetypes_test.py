@@ -1,6 +1,6 @@
 from enum import Enum
 from itertools import product
-from unittest import TestCase, main, skip, skipIf
+from unittest import TestCase, main, skip
 
 import numpy
 import pint
@@ -10,7 +10,7 @@ from karabo.native import (
     Int32, KaraboValue, MetricPrefix, NoneValue, QuantityValue, StringValue,
     TableValue, Timestamp, Unit, VectorCharValue, VectorFloat,
     VectorStringValue, encodeBinary, isSet, unit_registry as unit, wrap)
-from karabo.native.schema.compat import PINT_INCOMPATIBLE, PINT_REASON
+from karabo.native.schema.compat import PINT_INCOMPATIBLE
 
 
 class Tests(TestCase):
