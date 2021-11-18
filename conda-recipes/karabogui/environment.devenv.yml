@@ -42,11 +42,7 @@ dependencies:
   - python-dateutil=2.8.1
   - jupyter_client=6.0.0
   - conda=4.9.2
-  # Pint should come from native, but we require a higher pint version due
-  # to a numpy upgrade. Since, we cannot upgrade pint for native, we
-  # run with a different defined pint version here. The GUI does not rely
-  # on KaraboValues from native.
-  - pint=0.16.1
+  - pint=0.17
 
 environment:
   PYTHONPATH:
