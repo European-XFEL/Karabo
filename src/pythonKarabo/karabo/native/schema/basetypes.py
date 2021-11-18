@@ -14,6 +14,7 @@ import numpy
 import pint
 
 from karabo.native.data import EncodingType, Hash, HashList, MetricPrefix, Unit
+from karabo.native.schema.compat import PINT_INCOMPATIBLE, PINT_VERSION
 
 from ..weak import Weak
 
@@ -89,7 +90,8 @@ def wrap_methods(cls):
                  "__float__", "__index__", "__bool__", "__getattribute__",
                  "__getattr__", "__init__", "__new__", "__setattr__",
                  "__array_prepare__", "__hash__", "__str__", "__repr__",
-                 "__array_wrap__", "register"}
+                 "__array_wrap__", "register", "__array_ufunc__", "__array__",
+                 "m_as"}
 
     attrs = [a for a in dir(cls)
              if pattern.fullmatch(a) and a not in blacklist]
@@ -114,7 +116,7 @@ class KaraboValue(object):
       This contains all the details of the datatype we have. It
       is an object of :class:`~karabo.middlelayer.Descriptor`, look there for
       what it contains.
-
+/
       The descriptor is only available when accessing the device attributes
       directly. Values calulated from a :class:`KaraboValue` lose their
       descriptor, as it does not apply to them anymore.
@@ -674,6 +676,17 @@ class QuantityValue(KaraboValue, Quantity):
             return wrap_function(ret, self.timestamp)
         return ret
 
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        ret = super().__array_ufunc__(ufunc, method, *inputs, **kwargs)
+        if ret is NotImplemented:
+            raise NotImplementedError(
+                f"Cannot compute the ufunc {ufunc.__name__}. It is "
+                f"currently not supported by pint {PINT_VERSION}.")
+        if not isinstance(ret, QuantityValue):
+            return ret
+        ret.timestamp = newest_timestamp(inputs)
+        return ret
+
     @property
     def __array_interface__(self):
         if isinstance(self.magnitude, numpy.ndarray):
@@ -798,6 +811,9 @@ class QuantityValue(KaraboValue, Quantity):
             pass
         return self._format(self)
 
+
+if not PINT_INCOMPATIBLE:
+    del QuantityValue.__array_ufunc__
 
 # Whenever Pint does calculations, it returns the results as an objecti
 # of the registries' Quantity class. We set that to our own class so
