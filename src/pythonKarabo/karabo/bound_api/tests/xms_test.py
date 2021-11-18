@@ -3,7 +3,7 @@ import time
 import unittest
 from functools import partial
 
-from karabo.bound import EventLoop, SignalSlotable
+from karabo.bound import EventLoop, SignalSlotable, Worker
 
 # To switch on debugging, also import these:
 # from karabo.bound import Logger, Hash
@@ -262,8 +262,9 @@ class Xms_TestCase(unittest.TestCase):
 
     def setUpAliceBob(self):
 
-        # setup bob SignalSlotable with slots for 0-4 arguments
+        # setup bob SignalSlotable with slots and asyncSlots for 0-4 arguments
         # that also reply 0-4 values
+        # (asyncSlots 'delay' their response using AsyncReply)
         self.called = -1
         self.bob = SignalSlotable(self.bob_id)
         self.bob.start()
@@ -292,6 +293,77 @@ class Xms_TestCase(unittest.TestCase):
             self.called = i + j + k + l1
             self.bob.reply(i, j, k, l1)
         self.bob.registerSlot(slot4)
+
+        def asyncSlot0():
+            aReply = self.bob.createAsyncReply()
+
+            def replyer():
+                self.called = 0
+                aReply()
+
+            # Call replyer in another thread after 100 ms
+            w = Worker(replyer, 100, 1)
+            w.start()
+        self.bob.registerSlot(asyncSlot0)
+
+        def asyncSlot1(i):
+            aReply = self.bob.createAsyncReply()
+
+            def replyer():
+                self.called = i
+                aReply(i)
+
+            # Call replyer in another thread after 100 ms
+            w = Worker(replyer, 100, 1)
+            w.start()
+        self.bob.registerSlot(asyncSlot1)
+
+        def asyncSlot2(i, j):
+            aReply = self.bob.createAsyncReply()
+
+            def replyer():
+                self.called = i + j
+                aReply(i, j)
+
+            # Call replyer in another thread after 100 ms
+            w = Worker(replyer, 100, 1)
+            w.start()
+        self.bob.registerSlot(asyncSlot2)
+
+        def asyncSlot3(i, j, k):
+            aReply = self.bob.createAsyncReply()
+
+            def replyer():
+                self.called = i + j + k
+                aReply(i, j, k)
+
+            # Call replyer in another thread after 100 ms
+            w = Worker(replyer, 100, 1)
+            w.start()
+        self.bob.registerSlot(asyncSlot3)
+
+        def asyncSlot4(i, j, k, l1):
+            aReply = self.bob.createAsyncReply()
+
+            def replyer():
+                self.called = i + j + k + l1
+                aReply(i, j, k, l1)
+
+            # Call replyer in another thread after 100 ms
+            w = Worker(replyer, 100, 1)
+            w.start()
+        self.bob.registerSlot(asyncSlot4)
+
+        def asyncSlotError(errorMessage):
+            aReply = self.bob.createAsyncReply()
+
+            def replyer():
+                aReply.error(errorMessage)
+
+            # Call replyer in another thread after 100 ms
+            w = Worker(replyer, 100, 1)
+            w.start()
+        self.bob.registerSlot(asyncSlotError)
 
         # setup other SignalSlotable to call the slots
         self.alice = SignalSlotable(self.alice_id)
@@ -426,4 +498,51 @@ class Xms_TestCase(unittest.TestCase):
 
             del req
             self.called = -1
+
+        with self.subTest(msg="wait for AsyncReply"):
+            self.assertEqual(-1, self.called)  # initial value
+            to = 2000  # timeout in ms
+            req = self.alice.request(self.bob_id, "asyncSlot0")
+            res = req.waitForReply(to)
+            self.assertEqual(0, len(res))
+            self.assertEqual(0, self.called)
+
+            req = self.alice.request(self.bob_id, "asyncSlot1", 5)
+            res = req.waitForReply(to)
+            self.assertEqual(1, len(res))
+            self.assertEqual(5, res[0])
+            self.assertEqual(5, self.called)
+
+            req = self.alice.request(self.bob_id, "asyncSlot2", 5, 7)
+            res = req.waitForReply(to)
+            self.assertEqual(2, len(res))
+            self.assertEqual(5, res[0])
+            self.assertEqual(7, res[1])
+            self.assertEqual(12, self.called)
+
+            req = self.alice.request(self.bob_id, "asyncSlot3", 5, 7, 11)
+            res = req.waitForReply(to)
+            self.assertEqual(3, len(res))
+            self.assertEqual(5, res[0])
+            self.assertEqual(7, res[1])
+            self.assertEqual(11, res[2])
+            self.assertEqual(23, self.called)
+
+            req = self.alice.request(self.bob_id, "asyncSlot4", 5, 7, 11, 13)
+            res = req.waitForReply(to)
+            self.assertEqual(4, len(res))
+            self.assertEqual(5, res[0])
+            self.assertEqual(7, res[1])
+            self.assertEqual(11, res[2])
+            self.assertEqual(13, res[3])
+            self.assertEqual(36, self.called)
+
+            msg = "Bad things happen!"
+            req = self.alice.request(self.bob_id, "asyncSlotError", msg)
+            with self.assertRaisesRegex(RuntimeError, msg):
+                req.waitForReply(to)
+
+            del req
+            self.called = -1
+
         self.tearDownAliceBob()

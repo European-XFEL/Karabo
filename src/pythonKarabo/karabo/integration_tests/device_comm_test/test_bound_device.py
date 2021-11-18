@@ -243,6 +243,13 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             res = self.dc.get("testComm1", "someString")
             self.assertEqual(res, "one")
 
+        with self.subTest(msg="Test request-asyncreply"):
+            # Same as above, but testing a slot that uses an AsyncReply
+            self.dc.execute("testComm1", "slotRequestArgsAsync")
+            self.waitUntilEqual("testComm1", "someString", "two", 30)
+            res = self.dc.get("testComm1", "someString")
+            self.assertEqual(res, "two")
+
         with self.subTest(msg="Test call"):
             self.dc.execute("testComm2", "slotCallSomething")
             self.waitUntilEqual("testComm1", "someString",
@@ -342,7 +349,7 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
             # But 12 is still too long
             self.assertRaises(RuntimeError, self.dc.set,
-                              "testComm1", "vectorInt32", [2]*12)  # still not OK!
+                              "testComm1", "vectorInt32", [2]*12)
             self.dc.setAttribute("testComm1", "vectorInt32",
                                  KARABO_SCHEMA_MAX_SIZE, 11)
             # Now make empty vec to be fine
