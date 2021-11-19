@@ -8,13 +8,11 @@ from pint import DimensionalityError
 from karabo.native.data import MetricPrefix, Timestamp, Unit
 from karabo.native.schema import (
     Int32, QuantityValue as QV, VectorComplexDouble, VectorDouble, VectorInt32)
-from karabo.native.schema.compat import PINT_INCOMPATIBLE, PINT_REASON
+from karabo.native.schema.compat import PINT_INCOMPATIBLE
 
 
 class Tests(TestCase):
     def setUp(self):
-        if PINT_INCOMPATIBLE:
-            self.skipTest(PINT_REASON)
         self.N = 4
         self.mm_10 = QV(1, unit='mm', timestamp=10)
         self.m_100 = QV(1, unit='m', timestamp=100)
