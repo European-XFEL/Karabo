@@ -188,6 +188,8 @@ Usage: $0 Debug|Release|CodeCoverage|Clean|Clean-All [flags]
 Available flags:
   --bundle     - Installs Karabo and creates the software bundle. Default: no bundle is created!
   --pyDevelop  - Install Python packages in development mode
+  --buildAllTests
+               - Build all test executables, but do not execute them
   --runTests   - Run unit tests after building (useful for Debug|Release)
   --runIntegrationTests
                - Run integration tests after building (for Debug|Release)
@@ -271,6 +273,7 @@ shift
 
 # Parse the commandline flags
 BUNDLE="n"
+BUILDALLTESTS="n"
 RUNTESTS="n"
 RUNINTEGRATIONTESTS="n"
 RUNLONGTESTS="n"
@@ -286,6 +289,10 @@ while [ -n "$1" ]; do
         --pyDevelop)
             # Build Python packages in development mode
             PYOPT="develop"
+            ;;
+        --buildAllTests)
+            # Build all tests
+            BUILDALLTESTS="y"
             ;;
         --runTests)
             # Run all the unit tests too
@@ -353,6 +360,13 @@ if [ "$RUNLONGTESTS" = "y" ]; then
 else
     BUILD_LONG_RUN_TESTING="0"
 fi
+
+if [ "$BUILDALLTESTS" = "y" ]; then
+    BUILD_UNIT_TESTING="1"
+    BUILD_INTEGRATION_TESTING="1"
+    BUILD_LONG_RUN_TESTING="1"
+fi
+
 if [ "$CODECOVERAGE" = "y" ]; then
     GEN_CODE_COVERAGE="1"
     # For CodeCoverage, the long running tests are disabled due to the Telegraf
@@ -480,7 +494,7 @@ if [ "$GEN_CODE_COVERAGE" = "1" ]; then
     exit 0
 fi
 
-if [ "$BUILD_UNIT_TESTING" = "1" ] || [ "$BUILD_INTEGRATION_TESTING" = "1" ] || [ "$BUILD_LONG_RUN_TESTING" = "1" ]; then
+if [ "$RUNTESTS" = "y" ] || [ "$RUNINTEGRATIONTESTS" = "y" ] || [ "$RUNLONGTESTS" = "y" ]; then
     echo
     echo Running Karabo C++ tests ...
     echo
