@@ -188,7 +188,7 @@ safeRunTests() {
         _OLD_ACCEPT=$ACCEPT_FAILURES
         ACCEPT_FAILURES=true
         PYTHON_TESTS="py.test -v --pyargs"
-        JUNIT_RESULT_FILE="junit.${MODULE_SPEC}${2}.xml"
+        JUNIT_RESULT_FILE="junit.${MODULE_SPEC}_${BROKER_NAME}.xml"
         rm -f $JUNIT_RESULT_FILE
         JUNIT_OUTPUT="--junitxml=$JUNIT_RESULT_FILE"
         safeRunCommand "$PYTHON_TESTS $JUNIT_OUTPUT $MODULE_SPEC"
@@ -197,120 +197,61 @@ safeRunTests() {
     fi
 }
 
+_runPythonUnitTests() {
+    # mandatory argument: the name of the broker "technology"
+    # mandatory argument: the address of the broker
+    BROKER_NAME=$1
+    export KARABO_BROKER=$2
+    echo
+    echo
+    echo "*************************************************************************************************"
+    echo "*************************************************************************************************"
+    echo "**"
+    echo "**   Running Karabo Python unit tests with ${BROKER_NAME^^} broker  ... $KARABO_BROKER"
+    echo "**"
+    echo "*************************************************************************************************"
+    echo "*************************************************************************************************"
+    echo
+    echo
+
+    safeRunTests "karabo.bound_api"
+    safeRunTests "karabo.bound_devices"
+    safeRunTests "karabo.middlelayer_api"
+    safeRunTests "karabo.middlelayer_devices"
+    safeRunTests "karabo.common"
+    safeRunTests "karabo.macro_api"
+    safeRunTests "karabo.macro_devices"
+    safeRunTests "karabo.influxdb"
+    safeRunTests "karabo.native"
+    safeRunTests "karabo.project_db"
+    safeRunTests "karabo.config_db"
+    safeRunTests "karabo.tests"
+    safeRunTests "karabo.interactive"
+}
+
+runPythonUnitTestsCI() {
+    IFS=';' read -r -a BROKERS <<< "$KARABO_CI_BROKERS"
+    for BROKER in "${BROKERS[@]}"
+    do
+        PREFIX=$(echo $BROKER | sed -E "s|(.+)://(.+)|\1|g")
+        if [ "${PREFIX}" == "tcp" ]; then
+            PREFIX="jms"
+        fi
+        _runPythonUnitTests $PREFIX $BROKER
+    done
+}
+
 runPythonUnitTests() {
-
     savedBroker=${KARABO_BROKER}
-    export KARABO_BROKER="tcp://exflbkr02n0:7777"
 
-    echo
-    echo
-    echo "*************************************************************************************************"
-    echo "*************************************************************************************************"
-    echo "**"
-    echo "**   Running Karabo Python unit tests with JMS broker  ... $KARABO_BROKER"
-    echo "**"
-    echo "*************************************************************************************************"
-    echo "*************************************************************************************************"
-    echo
-    echo
-
-    safeRunTests "karabo.bound_api" "_jms"
-    safeRunTests "karabo.bound_devices" "_jms"
-    safeRunTests "karabo.middlelayer_api" "_jms"
-    safeRunTests "karabo.middlelayer_devices" "_jms"
-    safeRunTests "karabo.common" "_jms"
-    safeRunTests "karabo.macro_api" "_jms"
-    safeRunTests "karabo.macro_devices" "_jms"
-    safeRunTests "karabo.influxdb" "_jms"
-    safeRunTests "karabo.native" "_jms"
-    safeRunTests "karabo.project_db" "_jms"
-    safeRunTests "karabo.config_db" "_jms"
-    safeRunTests "karabo.tests" "_jms"
-    safeRunTests "karabo.interactive" "_jms"
-
-    export KARABO_BROKER="mqtt://exfldl02n0:1883"
-
-    echo
-    echo
-    echo "*************************************************************************************************"
-    echo "*************************************************************************************************"
-    echo "**"
-    echo "**   Running Karabo Python unit tests with MQTT broker ... $KARABO_BROKER"
-    echo "**"
-    echo "*************************************************************************************************"
-    echo "*************************************************************************************************"
-    echo
-    echo
-
-    safeRunTests "karabo.bound_api" "_mqtt"
-    safeRunTests "karabo.bound_devices" "_mqtt"
-    safeRunTests "karabo.middlelayer_api" "_mqtt"
-    safeRunTests "karabo.middlelayer_devices" "_mqtt"
-    safeRunTests "karabo.common" "_mqtt"
-    safeRunTests "karabo.macro_api" "_mqtt"
-    safeRunTests "karabo.macro_devices" "_mqtt"
-    safeRunTests "karabo.influxdb" "_mqtt"
-    safeRunTests "karabo.native" "_mqtt"
-    safeRunTests "karabo.project_db" "_mqtt"
-    safeRunTests "karabo.config_db" "_mqtt"
-    safeRunTests "karabo.tests" "_mqtt"
-    safeRunTests "karabo.interactive" "_mqtt"
-
-    export KARABO_BROKER="amqp://xfel:karabo@exflctrl01:5672"
-
-    echo
-    echo
-    echo "*************************************************************************************************"
-    echo "*************************************************************************************************"
-    echo "**"
-    echo "**   Running Python unit tests with RabbitMQ (AMQP) broker ... $KARABO_BROKER"
-    echo "**"
-    echo "*************************************************************************************************"
-    echo "*************************************************************************************************"
-    echo
-    echo
-
-    safeRunTests "karabo.bound_api" "_amqp"
-    safeRunTests "karabo.bound_devices" "_amqp"
-    safeRunTests "karabo.middlelayer_api" "_amqp"
-    safeRunTests "karabo.middlelayer_devices" "_amqp"
-    safeRunTests "karabo.common" "_amqp"
-    safeRunTests "karabo.macro_api" "_amqp"
-    safeRunTests "karabo.macro_devices" "_amqp"
-    safeRunTests "karabo.influxdb" "_amqp"
-    safeRunTests "karabo.native" "_amqp"
-    safeRunTests "karabo.project_db" "_amqp"
-    safeRunTests "karabo.config_db" "_amqp"
-    safeRunTests "karabo.tests" "_amqp"
-    safeRunTests "karabo.interactive" "_amqp"
-
-    export KARABO_BROKER="redis://exflctrl01:6379"
-
-    echo
-    echo
-    echo "*************************************************************************************************"
-    echo "*************************************************************************************************"
-    echo "**"
-    echo "**   Running Python unit tests with REDIS broker (server) ... ${KARABO_BROKER}"
-    echo "**"
-    echo "*************************************************************************************************"
-    echo "*************************************************************************************************"
-    echo
-    echo
-
-    safeRunTests "karabo.bound_api" "_redis"
-    safeRunTests "karabo.bound_devices" "_redis"
-    safeRunTests "karabo.middlelayer_api" "_redis"
-    safeRunTests "karabo.middlelayer_devices" "_redis"
-    safeRunTests "karabo.common" "_redis"
-    safeRunTests "karabo.macro_api" "_redis"
-    safeRunTests "karabo.macro_devices" "_redis"
-    safeRunTests "karabo.influxdb" "_redis"
-    safeRunTests "karabo.native" "_redis"
-    safeRunTests "karabo.project_db" "_redis"
-    safeRunTests "karabo.config_db" "_redis"
-    safeRunTests "karabo.tests" "_redis"
-    safeRunTests "karabo.interactive" "_redis"
+    if [ ! -z "$KARABO_CI_BROKERS" ]; then
+        runPythonUnitTestsCI
+    else
+        _runPythonUnitTests "jms" "tcp://exflbkr02n0:7777"
+        _runPythonUnitTests "mqtt" "mqtt://exfldl02n0:1883"
+        _runPythonUnitTests "amqp" "amqp://xfel:karabo@exflctrl01:5672"
+        _runPythonUnitTests "redis" "redis://exflctrl01:6379"
+    fi
 
     export KARABO_BROKER=${savedBroker}
 
