@@ -56,7 +56,7 @@ fi
 
 REL_OS_NAME=$(lsb_release -is)
 __lang_setting $REL_OS_NAME
-git clean -fdx
+#git clean -fdx
 if [ "$TARGET_OS" = "miniconda" ]; then
     __start_Xvfb $REL_OS_NAME
 fi
