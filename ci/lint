@@ -98,7 +98,7 @@ case $SCANNAME in
         ;;
     *)
         echo "Running a scan with default settings.."
-        __lint_cpp_fast && \
+        #__lint_cpp_fast && \
         __lint_flake8 && \
         __lint_isort
         ;;
