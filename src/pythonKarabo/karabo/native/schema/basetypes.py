@@ -14,7 +14,6 @@ import numpy
 import pint
 
 from karabo.native.data import EncodingType, Hash, HashList, MetricPrefix, Unit
-from karabo.native.schema.compat import PINT_INCOMPATIBLE, PINT_VERSION
 
 from ..weak import Weak
 
@@ -681,7 +680,7 @@ class QuantityValue(KaraboValue, Quantity):
         if ret is NotImplemented:
             raise NotImplementedError(
                 f"Cannot compute the ufunc {ufunc.__name__}. It is "
-                f"currently not supported by pint {PINT_VERSION}.")
+                f"currently not supported by pint.")
         if not isinstance(ret, QuantityValue):
             return ret
         ret.timestamp = newest_timestamp(inputs)
@@ -811,9 +810,6 @@ class QuantityValue(KaraboValue, Quantity):
             pass
         return self._format(self)
 
-
-if not PINT_INCOMPATIBLE:
-    del QuantityValue.__array_ufunc__
 
 # Whenever Pint does calculations, it returns the results as an objecti
 # of the registries' Quantity class. We set that to our own class so
