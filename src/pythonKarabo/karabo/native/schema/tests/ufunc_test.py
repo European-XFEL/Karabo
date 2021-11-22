@@ -725,11 +725,6 @@ class Tests(TestCase):
         XXX: Returns numpy.array
         """
         ufunc = np.sign
-        if PINT_INCOMPATIBLE:
-            with self.assertRaises(NotImplementedError):
-                self.assertUnaryUfunc(ufunc, self.v0, self.zero)
-            return
-
         self.assertUnaryUfunc(ufunc, self.v0, self.zero)
         self.assertUnaryUfunc(ufunc, self.v1, self.one)
 
