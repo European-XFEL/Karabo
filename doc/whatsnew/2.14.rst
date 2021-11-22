@@ -1,0 +1,56 @@
+***************************
+What's New in Karabo 2.14.0
+***************************
+
+This major Karabo release has an important dependency update: numpy and pint. The new ufunc protocol is utilized and a few functions are
+currently not supported by pint. Please have a look in the breaking changes.
+
+Summary – Release highlights
+++++++++++++++++++++++++++++
+
+- Numpy (1.19.5) and pint (0.17) upgrade
+
+Breaking Changes
+++++++++++++++++
+
+- The following functions are not supported with KaraboValues: np.positive, np.divmod, np.heaviside, np.gcd, np.lcm, np.bitwise_and, np.bitwise_xor, np.bitwise_or, np.invert,
+  np.left_shift, np.right_shift, np.logical_and, np.logical_or, np.logical_xor, np.logical_not, np.spacing
+
+Change of behaviour
++++++++++++++++++++
+
+- TBD
+
+Detailed Merge-Log
+++++++++++++++++++
+
+Bound/cpp core
+==============
+
+- TBD
+
+MDL/Native core
+===============
+
+- TBD
+
+Dependencies and deployment
+===========================
+
+- TBD
+
+Documentation
+=============
+
+- TBD
+
+
+Tests
+=====
+
+- TBD
+
+Graphical User Interface
+========================
+
+- TBD
