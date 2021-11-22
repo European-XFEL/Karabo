@@ -10,7 +10,6 @@ from karabo.native import (
     Int32, KaraboValue, MetricPrefix, NoneValue, QuantityValue, StringValue,
     TableValue, Timestamp, Unit, VectorCharValue, VectorFloat,
     VectorStringValue, encodeBinary, isSet, unit_registry as unit, wrap)
-from karabo.native.schema.compat import PINT_INCOMPATIBLE
 
 
 class Tests(TestCase):
@@ -375,9 +374,7 @@ class Tests(TestCase):
         number = QuantityValue(1, Unit.NUMBER)
 
         self.assertEqual(vps / aps, QuantityValue("1 V/A"))
-        if PINT_INCOMPATIBLE:
-            # Percent and pixel are the same
-            self.assertNotEqual(10 * percent, 0.1 * pixel)
+        self.assertNotEqual(10 * percent, 0.1 * pixel)
         self.assertEqual(1 * degC + QuantityValue("1 K"), 2 * degC)
         self.assertEqual(2 * number, 2)
         self.assertEqual(pixel, 1 * unit.pixel)
