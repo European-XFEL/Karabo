@@ -7,13 +7,13 @@ import re
 import sys
 import weakref
 from asyncio import (
-    CancelledError, TimeoutError, coroutine, ensure_future, get_event_loop,
-    iscoroutinefunction, wait_for)
+    CancelledError, TimeoutError, coroutine, ensure_future, gather,
+    get_event_loop, iscoroutinefunction, wait_for)
 from collections import defaultdict
 
 from karabo.native import (
     AccessLevel, AccessMode, Assignment, Configurable, DaqPolicy, Descriptor,
-    Hash, Int32, KaraboError, Slot, String, TypeHash)
+    Hash, Int32, KaraboError, Node, Slot, String, TypeHash)
 
 from .pipeline import NetworkOutput, OutputChannel
 from .proxy import DeviceClientProxyFactory
@@ -110,6 +110,25 @@ class BoundSignal(object):
     def __call__(self, *args):
         args = [d.cast(v) for d, v in zip(self.args, args)]
         self.device._ss.emit(self.name, self.connected, *args)
+
+
+def get_device_node_initializers(instance):
+    """Returns a list of initializers for the DeviceNodes in a configurable.
+    """
+    ret = []
+    klass = instance.__class__
+    for key in instance._allattrs:
+        descr = getattr(klass, key, None)
+        if descr is None:
+            # NOTE: This protection is solely for the unsupported
+            # NodeTypes, e.g. ListOfNodes
+            continue
+        if descr.displayType == "deviceNode":
+            ret.append(descr.finalize_init(instance))
+        elif isinstance(descr, Node):  # recurse Nodes
+            descr_klass = getattr(instance, descr.key)
+            ret.extend(get_device_node_initializers(descr_klass))
+    return ret
 
 
 class SignalSlotable(Configurable):
@@ -315,9 +334,9 @@ class SignalSlotable(Configurable):
                 # add deviceId to the instance map of the server
                 server.addChild(self.deviceId, self)
             await super(SignalSlotable, self)._run(**kwargs)
+            # TODO: launch this task into a background task
             await get_event_loop().run_coroutine_or_thread(
-                self.onInitialization)
-            self.__initialized = True
+                self._initialize_instance)
         except CancelledError:
             pass
             # NOTE: onInitialization might still be active and creating proxies
@@ -331,6 +350,15 @@ class SignalSlotable(Configurable):
         except Exception:
             await self.slotKillDevice()
             raise
+
+    async def _initialize_instance(self):
+        initializers = get_device_node_initializers(self)
+        if initializers:
+            await gather(*initializers)
+        # do not simply await because some `onInitialization` could still be
+        # not a coroutine, e.g. for Macros.
+        await get_event_loop().run_coroutine_or_thread(self.onInitialization)
+        self.__initialized = True
 
     @coslot
     async def slotKillDevice(self):
