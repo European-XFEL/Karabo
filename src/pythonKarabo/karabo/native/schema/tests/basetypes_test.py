@@ -1,6 +1,6 @@
 from enum import Enum
 from itertools import product
-from unittest import TestCase, main, skip
+from unittest import TestCase, main
 
 import numpy
 import pint
@@ -483,31 +483,47 @@ class Tests(TestCase):
         b = Hash('v', (4, 5, 6))
         self.assertEqual(a, b)
 
-    @skip
     def test_mean(self):
         a = QuantityValue(3, "m", timestamp=self.t1)
         b = QuantityValue(1000, "mm", timestamp=self.t2)
+        # Needs unit less values
+        with self.assertRaises(ValueError):
+            numpy.mean([a, b])
+
+    def test_mean_no_dim(self):
+        a = QuantityValue(3, timestamp=self.t1)
+        b = QuantityValue(1000, timestamp=self.t2)
+        # unit less values works
         m = numpy.mean([a, b])
-        self.assertEqual(m, 2 * unit.m)
+        self.assertEqual(m, 501.5)
+        # We have a float now, no timestamp
+        self.assertIsInstance(m, float)
+
+    def test_mean_array(self):
+        a = QuantityValue(numpy.array([1, 2, 3, 4]), timestamp=self.t1)
+        m = numpy.mean(a)
+        self.assertEqual(m, 2.5 * unit.dimensionless)
         self.assertEqual(m.timestamp, self.t1)
 
-    @skip
+        b = QuantityValue(numpy.array([1, 2, 3, 4]), "m",
+                          timestamp=self.t1)
+        m = numpy.mean(b)
+        self.assertEqual(m, 2.5 * unit.meter)
+        self.assertEqual(m.timestamp, self.t1)
+
     def test_numpy_std(self):
         a = QuantityValue(3, "m", timestamp=self.t1)
         b = QuantityValue(1000, "mm", timestamp=self.t2)
-        m = numpy.std([a, b])
-        self.assertEqual(m, 1 * unit.m)
-        self.assertEqual(m.timestamp, self.t1)
+        # Needs unit less values
+        with self.assertRaises(ValueError):
+            numpy.std([a, b])
 
     def test_numpy_std_nodim(self):
         a = QuantityValue(3, timestamp=self.t1)
         b = QuantityValue(1000, timestamp=self.t2)
         m = numpy.std([a, b])
         self.assertEqual(m, 498.5)
-        if numpy.__version__ <= '1.15.4':
-            self.assertTrue(hasattr(m, "timestamp"))
-        else:
-            self.assertFalse(hasattr(m, "timestamp"))
+        self.assertIsInstance(m, float)
 
     def test_timeout(self):
         time = QuantityValue(200, Unit.SECOND,
