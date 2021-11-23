@@ -4,7 +4,7 @@
  *
  * Created on August 26, 2012, 6:22 PM
  * 
- * © Copyright 2012 Burkhard C. Heisen
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #ifndef FOOCONBAR_FACTORY_H
