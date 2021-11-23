@@ -436,12 +436,20 @@ class Tests(TestCase):
 
         # first argument is of type `float`
         one_float_vec = QV([1., 1., 1.], unit='m', timestamp=self.ts1)
-        with self.assertWarns(RuntimeWarning):
-            self.assertBinaryUfunc(ufunc, one_float_vec, self.zero,
-                                   self.nan_vec)
+        if np.__version__ == "1.19.5":
+            with self.assertWarns(RuntimeWarning):
+                self.assertBinaryUfunc(ufunc, one_float_vec, self.zero,
+                                       self.nan_vec)
+        else:
+            with self.assertRaises(AssertionError):
+                self.assertBinaryUfunc(ufunc, one_float_vec, self.zero,
+                                       self.nan_vec)
 
         # [0, 2, 4] // [0, 0, 0 ] = [0, 0, 0]
-        with self.assertWarns(RuntimeWarning):
+        if np.__version__ == "1.19.5":
+            with self.assertWarns(RuntimeWarning):
+                self.assertBinaryUfunc(ufunc, self.v2, self.v0, self.zero)
+        else:
             self.assertBinaryUfunc(ufunc, self.v2, self.v0, self.zero)
 
         # Compatible units:
