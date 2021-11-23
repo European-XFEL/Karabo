@@ -1,15 +1,13 @@
 import warnings
-from asyncio import TimeoutError, wait_for
 
 from karabo.native import (
-    AccessMode, Assignment, KaraboError, String, StringValue, get_timestamp,
-    isSet)
+    AccessMode, Assignment, Attribute, KaraboError, String, StringValue,
+    get_timestamp, isSet)
 
 from .device_client import getDevice, updateDevice
 
 
 class MetaProxy:
-
     def __init__(self, deviceId):
         self.deviceId = StringValue(
             deviceId, timestamp=get_timestamp())
@@ -35,25 +33,18 @@ class DeviceNode(String):
     Then the motor can be acessed under ``self.motor``. Before
     instantiation, a device node just looks like a string, where the
     id of the target device can be entered.
-
-    A timeout in seconds can be specified via::
-
-        class Stage(Device):
-            motor = DeviceNode(timeout=2.5)
-
-    The DeviceNode will try to connect to the device within this time frame.
-    If the connection could not be established within the time interval,
-    an error is raised. The default timeout is `None` and the DeviceNode will
-    wait until the proxy connectiion has been established!
     """
+    accessMode = Attribute(AccessMode.INITONLY, dtype=AccessMode)
+    assignment = Attribute(Assignment.MANDATORY, dtype=Assignment)
+    displayType = Attribute("deviceNode", dtype=str)
 
-    def __init__(self, timeout=None, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.timeout = timeout
         warnings.warn(
             "A `DeviceNode` has known issues and its usage is therefore "
             "discouraged. Please look at the documentation for help and "
-            "consider using a `connectDevice` based solution in the future.",
+            "consider using a `connectDevice` based solution in the "
+            "future.",
             UserWarning, stacklevel=2)
 
     def toDataAndAttrs(self, value):
@@ -74,30 +65,29 @@ class DeviceNode(String):
                 self.key))
         return self._initialize(instance, value)
 
+    async def finalize_init(self, klass):
+        """Sets a real proxy to the MetaProxy
+
+        implements the BlockingDescriptorMixin interface"""
+        meta_proxy = klass._getValue(self.key)
+        assert isinstance(meta_proxy, MetaProxy)
+        assert meta_proxy.proxy is None, "proxy already initialized"
+
+        value = meta_proxy.deviceId
+        proxy = await getDevice(value)
+        proxy.__meta_deviceId = meta_proxy.deviceId
+        meta_proxy.proxy = proxy
+        klass._ss.exitStack.enter_context((await updateDevice(proxy)))
+
     def _initialize(self, instance, value):
         # This should not happen as we are mandatory, but we never know
         if not isSet(value):
             instance.__dict__[self.key] = None
             return []
-
-        async def inner():
-            meta_proxy = MetaProxy(value)
-            instance.__dict__[self.key] = meta_proxy
-            try:
-                proxy = await wait_for(getDevice(value),
-                                       timeout=self.timeout)
-            except TimeoutError:
-                # We can accept a connection attempt only for a limited time,
-                # after that, the device will go offline
-                raise KaraboError(
-                    'The DeviceNode with key "{}" timed out and could not '
-                    'establish a proxy to "{}"'.format(self.key, value))
-
-            proxy.__meta_deviceId = meta_proxy.deviceId
-            meta_proxy.proxy = proxy
-            instance._ss.exitStack.enter_context((await updateDevice(proxy)))
-
-        return [inner()]
+        meta_proxy = MetaProxy(value)
+        instance.__dict__[self.key] = meta_proxy
+        # return an half instantiated deviceNode
+        return []
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -107,11 +97,3 @@ class DeviceNode(String):
         if isinstance(value, MetaProxy):
             value = value.value
         return value
-
-    def toSchemaAndAttrs(self, device, state):
-        h, attrs = super().toSchemaAndAttrs(device, state)
-        attrs["accessMode"] = AccessMode.INITONLY.value
-        attrs["assignment"] = Assignment.MANDATORY.value
-        attrs["displayType"] = "deviceNode"
-
-        return h, attrs
