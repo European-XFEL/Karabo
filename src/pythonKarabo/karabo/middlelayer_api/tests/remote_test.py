@@ -949,7 +949,7 @@ class Tests(DeviceTest):
     @async_tst
     async def test_devicenode(self):
         class A(Device):
-            dn = DeviceNode(timeout=None)
+            dn = DeviceNode()
 
             async def onInitialization(self):
                 self.state = State.NORMAL
@@ -991,15 +991,6 @@ class Tests(DeviceTest):
         finally:
             await a.slotKillDevice()
             await b.slotKillDevice()
-
-    @async_tst
-    async def test_devicenode_timeout(self):
-        class A(Device):
-            dn = DeviceNode(timeout=0.0)
-
-        a = A({"_deviceId_": "devicenode", "dn": "nodevice"})
-        with self.assertRaises(KaraboError):
-            await a.startInstance()
 
     @async_tst
     async def test_devicenode_novalue(self):

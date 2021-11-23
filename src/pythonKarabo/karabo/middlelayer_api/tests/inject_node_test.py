@@ -40,8 +40,6 @@ class Tests(TestCase):
                          Assignment.MANDATORY.value)
         self.assertEqual(schema.hash['node', 'defaultValue'],
                          "remote")
-        # Becomes a node!
-        self.assertEqual(a.node, None)
 
     def test_overwrite_inject(self):
         class Mandy(InjectMixin):
