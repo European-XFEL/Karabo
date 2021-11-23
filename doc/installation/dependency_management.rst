@@ -148,10 +148,10 @@ development directly from the distributed platform:
 ==================== ================= =========================================================== ===================== =========================
 **library**          **version**       **license**                                                 **Karabo depends**    **KaraboGUI depends**
 ==================== ================= =========================================================== ===================== =========================
-aio-pika             6.8.0             APL2.0                                                      yes                   no
+aio-pika             6.8.0             Apache-2.0                                                  yes                   no
 aioredis             1.3.1             MIT                                                         yes                   no
-aiormq               3.3.1             APL2.0                                                      yes                   no
-AMQP-CPP             4.3.12            APL2.0                                                      yes                   no
+aiormq               3.3.1             Apache-2.0                                                  yes                   no
+AMQP-CPP             4.3.12            Apache-2.0                                                  yes                   no
 asyncio-mqtt         0.8.1             BSD-3                                                       yes                   yes
 atomicwrites         1.4.0             MIT                                                         yes                   yes
 attrs                20.3.0            MIT                                                         yes                   yes
@@ -163,19 +163,19 @@ bzip2                1.0.6             BSD                                      
 certifi              2018.4.16         MPL2.0                                                      no                    no
 chardet              3.0.4             LGPL                                                        yes                   no
 colorama             0.4.4             BSD                                                         yes                   yes
-coverage             4.5.1             APL2.0                                                      no                    no
+coverage             4.5.1             Apache-2.0                                                  no                    no
 cppunit              1.14.0            LGPL                                                        no                    no
 cycler               0.10.0            BSD-3                                                       no                    yes
-Cython               0.29.21           APL2.0                                                      no                    no
+Cython               0.29.21           Apache-2.0                                                  no                    no
 daemontools-encore   1.10-karabo3      MIT                                                         no                    no
 dateutil             2.8.1             apache/BSD                                                  no                    yes
 decorator            4.4.2             BSDv2                                                       yes                   yes
 dill                 0.2.5             BSD-3                                                       yes                   yes
-eulexistdb           0.21.1            APL2.0                                                      no                    no
-eulxml               1.1.3             APL2.0                                                      no                    no
+eulexistdb           0.21.1            Apache-2.0                                                  no                    no
+eulxml               1.1.3             Apache-2.0                                                  no                    no
 eXistDB              2.2               LGPL                                                        no                    no
 flake8               3.8.4             MIT                                                         no                    no
-flaky                3.7.0             APL2.0                                                      no                    no
+flaky                3.7.0             Apache-2.0                                                  no                    no
 freetype             2.5.2             FTL/GPLv2                                                   no                    yes
 gmock                1.7.0             BSD                                                         no                    no
 hdf5                 1.8.12            BSD                                                         yes                   no
@@ -209,7 +209,7 @@ more-itertools       8.6.0             MIT                                      
 mqtt_cpp             10.0.0            Boost SL 1                                                  yes                   no
 msgpack              0.5.6             APL2                                                        no                    no
 msgpack-numpy        0.4.3             BSD                                                         no                    no
-multidict            1.5.0             APL2.0                                                      yes                   no
+multidict            1.5.0             Apache-2.0                                                  yes                   no
 nbformat             4.1.0             BSD                                                         yes                   yes
 nose                 1.3.0             LGPL                                                        no                    no
 notebook             4.2.2             BSD                                                         yes                   yes
@@ -242,14 +242,16 @@ pyelftools           0.24              Public Domain                            
 pyflakes             2.2.0             MIT                                                         no                    no
 Pygments             2.7.4             BSD                                                         yes                   yes
 pyparsing            2.4.7             MIT                                                         no                    yes
+pyqt                 5.9.2             GPLv3/Commercial                                            no                    yes
 pyqtgraph            0.11.0            MIT                                                         no                    yes
-PythonQwt            0.5.5             LGPL                                                        no                    yes
 pytest               6.2.1             MIT                                                         no                    no
 pytest-runner        2.11.1            MIT                                                         no                    no
 pytz                 2013.9            MIT                                                         no                    yes
 PyYAML               3.12              MIT                                                         no                    no
 pyzmq                17.0.0            LGPL+BSD                                                    yes                   yes
 qtconsole            4.2.1             BSD                                                         yes                   yes
+qt                   5.9.7             GPLv3/Commercial                                            no                    yes
+qtpy                 1.9               MIT                                                         no                    yes
 redisclient          1.0.2dev          MIT                                                         yes                   no
 requests             2.19.1            APLv2                                                       no                    no
 rpathology           0.0.1             MIT                                                         no                    no
@@ -268,7 +270,7 @@ tzlocal              1.1.1             MIT                                      
 urllib3              1.23              MIT                                                         yes                   no
 wcwidth              0.2.5             MIT                                                         yes                   yes
 wheel                0.24.0            MIT                                                         yes                   yes
-yarl                 1.6.3             APL2.0                                                      yes                   no
+yarl                 1.6.3             Apache-2.0                                                  yes                   no
 zipp                 1.0.0             MIT                                                         yes                   no
 ==================== ================= =========================================================== ===================== =========================
 
@@ -571,3 +573,57 @@ If it doesn't, it might be a bug generated by an update on the conda package.
 Try downgrading it:
 
     conda install -n base conda=<lower_version>
+
+Remarks on Licensing
+====================
+
+For the Karabo Framework, excluding the GUI, we plan to use a Mozilla Public License
+version 2.0 , which foresees as weak form of copy-left.
+
+for more information:
+https://www.mozilla.org/en-US/MPL/2.0/FAQ/
+
+The GUI would be released initially as GPLv3, which is required by the PyQt5
+library the GUI uses.
+A future more permissive license is possible, but would require factoring out
+the GPLv3 dependency, which we do not deem necessary as of now.
+
+A note on the General Public License
+------------------------------------
+
+Licensing the framework with stricter copy-left licenses like the General Public
+License (GPL) is not possible due to conflicts between the software license of
+some of the dependencies used. The OpenMQ C library is dual licensed with the
+Eclipse Public License version 2.0 (EPL-2.0) and the GPL version 2.0 (GPL-2.0).
+GPL-2.0 is in conflict with the Apache Software License version 2 (Apache-2.0)
+that is used by multiple libraries and this precludes
+the use of GPL-2.0 and the strict definition of the GPL included in OpenMQ precludes
+the use of other GPL versions.
+
+For more information regarding the EPL-2.0 dual licensing:
+https://www.eclipse.org/legal/epl-2.0/faq.php
+
+License for the Karabo GUI
+--------------------------
+
+The Karabo GUI depends from a library that has a strong copyleft license.
+The PyQT5 graphical user interface library is licensed under GPLv3 or Commercial.
+This limits the licenses usable for the Karabo GUI to GPLv3.
+
+The Karabo GUI is however currently using an abstraction layer that will allow
+the use of a less strictly licensed library and if the need arises or we wish to,
+the Karabo GUI code could be relicensed using a more permissive license.
+
+A note regarding Karabo Plugins (Devices)
+-----------------------------------------
+
+The Mozilla Public License (MPL) extends to all files containing code licensed
+under the MPL. As a consequence of this, all code using plugins can be licensed
+and released with a license of the choice of the authors as long as the distribution
+of such code and binaries complies with the license of Karabo and its dependencies.
+
+A Note on Copyright
+===================
+
+The European XFEL GmbH is the copyright owner of the code. All contributions must
+include this copyright notice.
