@@ -197,8 +197,8 @@ class SignalSlotable(Configurable):
         self._new_device_futures = FutureDict()
 
     @property
-    def online(self):
-        """Check if the device is online and has passed onInitialization"""
+    def is_initialized(self):
+        """Check if the signal slotable is online and initialized"""
         return self._ss is not None and self.__initialized
 
     def startInstance(self, server=None, *, loop=None, broadcast=True):
