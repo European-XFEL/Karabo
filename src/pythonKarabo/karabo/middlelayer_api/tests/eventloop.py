@@ -1,5 +1,5 @@
 import uuid
-from asyncio import gather, get_event_loop, set_event_loop, wait_for
+from asyncio import gather, get_event_loop, set_event_loop, sleep, wait_for
 from contextlib import ExitStack, contextmanager
 from functools import partial, wraps
 from unittest import TestCase
@@ -34,6 +34,7 @@ def sync_tst(f=None, *, timeout=None):
 
 
 class DeviceTest(TestCase):
+
     @classmethod
     def setUpClass(cls):
         with ExitStack() as cls.exit_stack:
@@ -66,6 +67,7 @@ class DeviceTest(TestCase):
         cls.lead._ss = Mock()
         cls.lead._ss.loop = cls.loop
         cls.lead._ss.tasks = set()
+        cls.lead.online = True
         yield
 
     @classmethod
@@ -81,6 +83,12 @@ class DeviceTest(TestCase):
         cls.loop.run_until_complete(
             gather(*(d.startInstance() for d in devices)))
         cls.lead = lead
+        while True:
+            onlines = [d.online for d in devices]
+            if all(onlines):
+                break
+            else:
+                cls.loop.run_until_complete(sleep(0.1))
         yield
         cls.loop.run_until_complete(
             gather(*(d.slotKillDevice() for d in devices)))
