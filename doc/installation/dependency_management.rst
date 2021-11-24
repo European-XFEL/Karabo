@@ -166,7 +166,7 @@ colorama             0.4.4             BSD                                      
 coverage             4.5.1             Apache-2.0                                                  no                    no
 cppunit              1.14.0            LGPL                                                        no                    no
 cycler               0.10.0            BSD-3                                                       no                    yes
-Cython               0.29.21           Apache-2.0                                                  no                    no
+cython               0.29.24           Apache-2.0                                                  no                    no
 daemontools-encore   1.10-karabo3      MIT                                                         no                    no
 dateutil             2.8.1             apache/BSD                                                  no                    yes
 decorator            4.4.2             BSDv2                                                       yes                   yes
@@ -214,7 +214,7 @@ nbformat             4.1.0             BSD                                      
 nose                 1.3.0             LGPL                                                        no                    no
 notebook             4.2.2             BSD                                                         yes                   yes
 nss                  ?                 MPL                                                         yes                   no
-numpy                01.11.01          BSD                                                         yes                   yes
+numpy                1.21.4            BSD                                                         yes                   yes
 openmq               5.0.1             EPL/GPLv2                                                   yes                   yes
 paho.mqtt.python     1.5.1             EPLv1/EDLv1                                                 yes                   no
 packaging            20.8              apache/BSD                                                  yes                   no
@@ -226,7 +226,7 @@ pexpect              4.8.0             ISC license (BSD like)                   
 pg8000               1.21.2            BSD                                                         yes                   no
 pickleshare          0.7.5             MIT                                                         yes                   yes
 Pillow               2.5.3             PIL (MIT like)                                              no                    yes
-Pint                 0.7.1             BSD-3-Clause                                                yes                   yes
+Pint                 0.17              BSD-3-Clause                                                yes                   yes
 pip                  7.1               MIT                                                         yes                   yes
 pkgconfig            1.2.2             MIT                                                         yes                   yes
 pluggy               0.13.1            MIT                                                         yes                   no
@@ -248,7 +248,7 @@ pytest               6.2.1             MIT                                      
 pytest-runner        2.11.1            MIT                                                         no                    no
 pytz                 2013.9            MIT                                                         no                    yes
 PyYAML               3.12              MIT                                                         no                    no
-pyzmq                17.0.0            LGPL+BSD                                                    yes                   yes
+pyzmq                22.3.0            LGPL+BSD                                                    yes                   yes
 qtconsole            4.2.1             BSD                                                         yes                   yes
 qt                   5.9.7             GPLv3/Commercial                                            no                    yes
 qtpy                 1.9               MIT                                                         no                    yes
@@ -256,7 +256,7 @@ redisclient          1.0.2dev          MIT                                      
 requests             2.19.1            APLv2                                                       no                    no
 rpathology           0.0.1             MIT                                                         no                    no
 scikit-learn         0.14.1            BSD                                                         no                    no
-scipy                1.5.4             BSD                                                         no                    no
+scipy                1.6.3             BSD                                                         no                    no
 setuptools           39.1.0            MIT                                                         yes                   yes
 setuptools-scm       1.15.6            MIT                                                         yes                   yes
 simplegeneric        0.8.1             ZPLv2.1 (BSD plus trademark)                                yes                   yes
