@@ -144,6 +144,11 @@ class Device(InjectMixin, AlarmMixin, SignalSlotable):
     signalStateChanged = Signal(TypeHash(), String())
     signalSchemaUpdated = Signal(TypeSchema(), String())
 
+    @property
+    def is_initialized(self):
+        """Check if the device is online and has passed onInitialization"""
+        return super().is_initialized
+
     def __init__(self, configuration):
         self.__timeServerId = configuration.pop("__timeServerId", "None")
         super(Device, self).__init__(configuration)
