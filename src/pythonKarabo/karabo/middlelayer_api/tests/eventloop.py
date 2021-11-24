@@ -84,7 +84,7 @@ class DeviceTest(TestCase):
             gather(*(d.startInstance() for d in devices)))
         cls.lead = lead
         while True:
-            onlines = [d.online for d in devices]
+            onlines = [d.is_initialized for d in devices]
             if all(onlines):
                 break
             else:
