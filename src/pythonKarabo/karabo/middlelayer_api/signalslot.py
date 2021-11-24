@@ -196,6 +196,11 @@ class SignalSlotable(Configurable):
         self.__initialized = False
         self._new_device_futures = FutureDict()
 
+    @property
+    def online(self):
+        """Check if the device is online and has passed onInitialization"""
+        return self._ss is not None and self.__initialized
+
     def startInstance(self, server=None, *, loop=None, broadcast=True):
         """Start this (device) instance
 
