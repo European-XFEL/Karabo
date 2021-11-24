@@ -74,10 +74,44 @@ keep track of all other running devices:
 .. autofunction:: karabo.middlelayer.getTopology
 
 
+Working with devices
+--------------------
+
+Functions are provided to work with devices or device proxies
+
+.. autofunction:: karabo.middlelayer.getConfiguration
+
+.. autofunction:: karabo.middlelayer.getSchema
+
+.. autofunction:: karabo.middlelayer.getInstanceInfo
+
+
 Working with Configurations and Timestamps
 ------------------------------------------
 
-The command line provides functions to compare device configurations:
+Retrieve historic configuration information about a device:
+
+.. autofunction:: karabo.middlelayer.getConfigurationFromPast
+
+.. autofunction:: karabo.middlelayer.getSchemaFromPast
+
+
+Working with named configurations:
+
+.. autofunction:: karabo.middlelayer.getConfigurationFromName
+
+.. autofunction:: karabo.middlelayer.getLastConfiguration
+
+.. autofunction:: karabo.middlelayer.listConfigurationFromName
+
+.. autofunction:: karabo.middlelayer.listDevicesWithConfiguration
+
+.. autofunction:: karabo.middlelayer.instantiateFromName
+
+.. autofunction:: karabo.middlelayer.saveConfigurationFromName
+
+
+The command line also provides functions to compare device configurations:
 
 .. autofunction:: karabo.middlelayer.compareDeviceWithPast
 
