@@ -8,7 +8,13 @@ currently not supported by pint. Please have a look in the breaking changes.
 Summary – Release highlights
 ++++++++++++++++++++++++++++
 
-- Numpy (1.19.5) and pint (0.17) upgrade
+Several important python packages have been updated.
+
+- numpy 1.15.4 -> 1.21.4
+- pint 0.7.1 -> 0.17
+- scipy 1.5.4 -> 1.6.3
+- pyzmq 18.1.0 -> 22.3.0
+- cython 0.29.21 -> 0.29.24
 
 Breaking Changes
 ++++++++++++++++
