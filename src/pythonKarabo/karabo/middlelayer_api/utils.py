@@ -53,6 +53,11 @@ def build_karabo_value(device, path, value, timestamp):
     :param value: The value to be set
     :param timestamp: The timestamp to be applied
     """
+    import warnings
+    warnings.warn("This function is deprecated, please set a `Hash` via the "
+                  "``Configurable.set(h: Hash)`` in the future.",
+                  stacklevel=2)
+
     prop = reduce(lambda obj, key: getattr(obj, key),
                   path.split('.'), device)
 
