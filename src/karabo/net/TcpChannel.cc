@@ -34,8 +34,11 @@ namespace karabo {
         }
 
 
-        TcpChannel::TcpChannel(Connection::Pointer connection)
-            : m_connectionPointer(boost::dynamic_pointer_cast<TcpConnection>(connection))
+        TcpChannel::TcpChannel(const TcpConnection::Pointer& connection)
+            : m_connectionPointer(connection)
+            , m_sizeofLength(connection->getSizeofLength())
+            , m_lengthIsText(connection->lengthIsText())
+            , m_manageAsyncData(connection->m_manageAsyncData)
             , m_socket(EventLoop::getIOService())
             , m_activeHandler(TcpChannel::NONE)
             , m_readHeaderFirst(false)
@@ -55,7 +58,7 @@ namespace karabo {
             m_queue[2] = Queue::Pointer(new RemoveOldestQueue(kDefaultQueueCapacity));
             m_queue[0] = Queue::Pointer(new RejectNewestQueue(kDefaultQueueCapacity));
 
-            if (m_connectionPointer->m_serializationType == "binary") {
+            if (connection->m_serializationType == "binary") {
                 m_binarySerializer = karabo::io::BinarySerializer<Hash>::create("Bin");
             } else {
                 m_textSerializer = karabo::io::TextSerializer<Hash>::create("Xml", Hash("indentation", -1));
@@ -68,9 +71,8 @@ namespace karabo {
         }
 
 #define _KARABO_VECTOR_TO_SIZE(x, v) {\
-                size_t sizeofLength = m_connectionPointer->getSizeofLength();\
-                assert((x).size() == sizeofLength);\
-                if (m_connectionPointer->lengthIsText()) {\
+                assert((x).size() == m_sizeofLength);\
+                if (m_lengthIsText) {\
                     try {\
                         v = boost::lexical_cast<size_t>(std::string((x).begin(), (x).end()));\
                     } catch(const boost::bad_lexical_cast& e) {\
@@ -78,11 +80,11 @@ namespace karabo {
                                 + std::string((x).begin(), (x).end()) + "', source_type=" + e.source_type().name()\
                                 + " and target_type=" + e.target_type().name() + " )");\
                     }\
-                } else if (sizeofLength == sizeof (uint8_t)) {\
+                } else if (m_sizeofLength == sizeof (uint8_t)) {\
                     v = *reinterpret_cast<uint8_t*> (&(x)[0]);\
-                } else if (sizeofLength == sizeof (uint16_t)) {\
+                } else if (m_sizeofLength == sizeof (uint16_t)) {\
                     v = *reinterpret_cast<uint16_t*> (&(x)[0]);\
-                } else if (sizeofLength == sizeof (uint64_t)) {\
+                } else if (m_sizeofLength == sizeof (uint64_t)) {\
                     v = *reinterpret_cast<uint64_t*> (&(x)[0]);\
                 } else {\
                     v = *reinterpret_cast<uint32_t*> (&(x)[0]);\
@@ -90,27 +92,24 @@ namespace karabo {
         }
 
 #define _KARABO_SIZE_TO_VECTOR(x, v) {\
-                size_t sizeofLength = m_connectionPointer->getSizeofLength();\
-                bool lengthIsText = m_connectionPointer->lengthIsText();\
-                if (lengthIsText) {\
+                if (m_lengthIsText) {\
                     ostringstream oss;\
                     oss.fill('0');\
-                    oss.width(sizeofLength);\
+                    oss.width(m_sizeofLength);\
                     oss << v;\
                     string slen = oss.str();\
                     (x).assign(slen.begin(), slen.end());\
                 } else {\
                     const char* p = reinterpret_cast<const char*> (&v);\
-                    (x).assign(p, p + sizeofLength);\
+                    (x).assign(p, p + m_sizeofLength);\
                 }\
                 }
 
 
         size_t TcpChannel::readSizeInBytes() {
-            size_t sizeofLength = m_connectionPointer->getSizeofLength();
-            if (sizeofLength > 0) {
+            if (m_sizeofLength > 0) {
                 ErrorCode error; //in case of error
-                m_inboundMessagePrefix.resize(sizeofLength);
+                m_inboundMessagePrefix.resize(m_sizeofLength);
                 m_readBytes += boost::asio::read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(), error);
                 if (error) throw KARABO_NETWORK_EXCEPTION("code #" + toString(error.value()) + " -- " + error.message());
                 // prefix[0] - message length (body)
@@ -216,11 +215,10 @@ namespace karabo {
 
 
         void TcpChannel::readAsyncSizeInBytesImpl(const ReadSizeInBytesHandler& handler, bool allowNonAsync) {
-            size_t sizeofLength = m_connectionPointer->getSizeofLength();
-            if (sizeofLength == 0) throw KARABO_LOGIC_EXCEPTION("Message's sizeTag size was configured to be 0. Thus, registration of this function does not make sense!");
-            m_inboundMessagePrefix.resize(sizeofLength);
+            if (m_sizeofLength == 0) throw KARABO_LOGIC_EXCEPTION("Message's sizeTag size was configured to be 0. Thus, registration of this function does not make sense!");
+            m_inboundMessagePrefix.resize(m_sizeofLength);
             boost::mutex::scoped_lock lock(m_socketMutex);
-            if (allowNonAsync && m_socket.available() >= sizeofLength) {
+            if (allowNonAsync && m_socket.available() >= m_sizeofLength) {
                 m_syncCounter++;
                 boost::system::error_code ec;
                 boost::asio::read(m_socket, buffer(m_inboundMessagePrefix), transfer_all(), ec);
@@ -383,7 +381,7 @@ namespace karabo {
         void TcpChannel::readAsyncVectorBufferSetPointerImpl(const std::vector<karabo::io::BufferSet::Pointer>& buffers,
                                                              const ReadVectorBufferSetPointerHandler& handler) {
             m_inboundMessagePrefix.clear();
-            m_inboundMessagePrefix.resize(m_connectionPointer->getSizeofLength());
+            m_inboundMessagePrefix.resize(m_sizeofLength);
             std::vector<boost::asio::mutable_buffer> boostBuffers;
             boostBuffers.push_back(buffer(m_inboundMessagePrefix));
             karabo::io::BufferSet::appendTo(boostBuffers, buffers);
@@ -697,8 +695,7 @@ namespace karabo {
             try {
                 boost::system::error_code error; //in case of error
                 vector<const_buffer> buf;
-                size_t sizeofLength = m_connectionPointer->getSizeofLength();
-                if (sizeofLength > 0) {
+                if (m_sizeofLength > 0) {
                     _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, size); // m_outboundMessagePrefix = size;
                     buf.push_back(buffer(m_outboundMessagePrefix)); // size of the prefix
                 }
@@ -746,8 +743,7 @@ namespace karabo {
             }
 
             try {
-                size_t sizeofLength = m_connectionPointer->getSizeofLength();
-                if (sizeofLength == 0) {
+                if (m_sizeofLength == 0) {
                     throw KARABO_PARAMETER_EXCEPTION("With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const size_t& size) instead.");
                 }
                 if (m_textSerializer) {
@@ -804,8 +800,7 @@ namespace karabo {
 
         void TcpChannel::write(const karabo::util::Hash& header, const char* data, const size_t& size) {
             try {
-                size_t sizeofLength = m_connectionPointer->getSizeofLength();
-                if (sizeofLength == 0) {
+                if (m_sizeofLength == 0) {
                     throw KARABO_PARAMETER_EXCEPTION("With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const size_t& size) instead.");
                 }
                 if (m_textSerializer) {
@@ -827,8 +822,7 @@ namespace karabo {
             try {
                 boost::system::error_code error; //in case of error
 
-                size_t sizeofLength = m_connectionPointer->getSizeofLength();
-                if (sizeofLength == 0) {
+                if (m_sizeofLength == 0) {
                     throw KARABO_PARAMETER_EXCEPTION("With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const size_t& size) instead.");
                 }
                 _KARABO_SIZE_TO_VECTOR(m_outboundHeaderPrefix, headerSize);
@@ -857,8 +851,7 @@ namespace karabo {
             try {
                 boost::system::error_code error; //in case of error
 
-                size_t sizeofLength = m_connectionPointer->getSizeofLength();
-                if (sizeofLength == 0) {
+                if (m_sizeofLength == 0) {
                     throw KARABO_PARAMETER_EXCEPTION("With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const size_t& size) instead.");
                 }
                 _KARABO_SIZE_TO_VECTOR(m_outboundHeaderPrefix, headerSize);
@@ -895,8 +888,7 @@ namespace karabo {
             try {
                 boost::system::error_code error; //in case of error
 
-                size_t sizeofLength = m_connectionPointer->getSizeofLength();
-                if (sizeofLength == 0) {
+                if (m_sizeofLength == 0) {
                     throw KARABO_PARAMETER_EXCEPTION("With sizeofLength=0 you cannot use this interface.  Use write(const char* data, const size_t& size) instead.");
                 }
                 _KARABO_SIZE_TO_VECTOR(m_outboundHeaderPrefix, headerSize);
@@ -934,9 +926,8 @@ namespace karabo {
 
         void TcpChannel::managedWriteAsync(const WriteCompleteHandler& handler) {
             try {
-                size_t sizeofLength = m_connectionPointer->getSizeofLength();
                 vector<const_buffer> buf;
-                if (sizeofLength > 0) {
+                if (m_sizeofLength > 0) {
                     size_t s = m_outboundData->size();
                     _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, s);
                     buf.push_back(buffer(m_outboundMessagePrefix));
@@ -978,8 +969,7 @@ namespace karabo {
         void TcpChannel::unmanagedWriteAsync(const char* data, const size_t& size, const WriteCompleteHandler& handler) {
             try {
                 vector<const_buffer> buf;
-                size_t sizeofLength = m_connectionPointer->getSizeofLength();
-                if (sizeofLength > 0) {
+                if (m_sizeofLength > 0) {
                     _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, size);
                     buf.push_back(buffer(m_outboundMessagePrefix));
                 }
@@ -1070,7 +1060,7 @@ namespace karabo {
 
         void TcpChannel::writeAsyncRaw(const char* data, const size_t& size, const WriteCompleteHandler& handler) {
             try {
-                if (m_connectionPointer->m_manageAsyncData) {
+                if (m_manageAsyncData) {
                     m_outboundData->resize(size);
                     std::memcpy(&(*m_outboundData)[0], data, size);
                     this->managedWriteAsync(handler);
@@ -1098,8 +1088,7 @@ namespace karabo {
                 if (!dataPtr)
                     throw KARABO_PARAMETER_EXCEPTION("Input parameter dataPtr is uninitialized shared pointer.");
                 vector<const_buffer> buf;
-                size_t sizeofLength = m_connectionPointer->getSizeofLength();
-                if (sizeofLength > 0) {
+                if (m_sizeofLength > 0) {
                     const size_t size = dataPtr->size();
                     _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, size);
                     buf.push_back(buffer(m_outboundMessagePrefix));
@@ -1131,7 +1120,7 @@ namespace karabo {
                                            const size_t& size, const WriteCompleteHandler& handler) {
             try {
                 this->prepareHeaderFromHash(header);
-                if (m_connectionPointer->m_manageAsyncData) {
+                if (m_manageAsyncData) {
                     m_outboundData->resize(size);
                     std::memcpy(&(*m_outboundData)[0], data, size);
                     this->managedWriteAsyncWithHeader(handler);
