@@ -1523,5 +1523,20 @@ namespace karabo {
         void OutputChannel::write(const karabo::util::Hash::Pointer& data) {
             write(*data, true);
         }
+
+
+        void OutputChannel::disable() {
+            {
+                boost::mutex::scoped_lock lock(m_inputNetChannelsMutex);
+                for (const Channel::Pointer& channel : m_inputNetChannels) {
+                    // Be sure to close, even if shared_ptr still around somewhere and thus destructor won't be called by clear() below.
+                    if (channel) channel->close();
+                }
+                m_inputNetChannels.clear();
+            }
+            // Also here ensure it is stopped in case clearing the shared_ptr does not call the destructor.
+            if (m_dataConnection) m_dataConnection->stop();
+            m_dataConnection.reset();
+        }
     }
 }

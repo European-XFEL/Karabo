@@ -2250,7 +2250,12 @@ namespace karabo {
             }
             {
                 boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
-                m_outputChannels[channelName] = channel;
+                OutputChannel::Pointer& previous = m_outputChannels[channelName];
+                if (previous) {
+                    // Disable and thus disconnect other ends - in case user code still holds a shared pointer somewhere
+                    previous->disable();
+                }
+                previous = channel; // overwrite what is in m_outputChannels
             }
             return channel;
         }
@@ -2259,7 +2264,15 @@ namespace karabo {
         bool SignalSlotable::removeOutputChannel(const std::string& channelName) {
 
             boost::mutex::scoped_lock lock(m_pipelineChannelsMutex);
-            return (m_outputChannels.erase(channelName) > 0);
+            auto it = m_outputChannels.find(channelName);
+            if (it == m_outputChannels.end()) {
+                return false;
+            } else {
+                // Disable and thus disconnect other ends - in case user code still holds a shared pointer somewhere.
+                it->second->disable();
+                m_outputChannels.erase(it);
+                return true;
+            }
         }
 
 
@@ -2373,6 +2386,13 @@ namespace karabo {
                     if (status == ConnectionStatus::DISCONNECTED) {
                         KARABO_LOG_FRAMEWORK_DEBUG << getInstanceId() << " Try connecting '" << channelName << "' to '" << outputChannel << "'";
                     } else {
+                        if (status != ConnectionStatus::CONNECTED) { // log the rare cases
+                            const std::string statusTxt(status == ConnectionStatus::CONNECTING ? "CONNECTING" :
+                                                        (status == ConnectionStatus::DISCONNECTING ? "DISCONNECTING" :
+                                                         toString(static_cast<int>(status))));
+                            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << " Skip connecting '" << channelName << "' to '" << outputChannel
+                                                      << "' since connection status is '" << statusTxt << "'";
+                        }
                         outputsToIgnore.push_back(outputChannel);
                     }
                 }
