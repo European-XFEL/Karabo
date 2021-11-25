@@ -318,6 +318,13 @@ namespace karabo {
 
             void registerShowStatisticsHandler(const ShowStatisticsHandler& handler);
 
+            /**
+             * Shut down all underlying connections, object will not be usable afterwards.
+             *
+             * Needed if stray shared pointers may be kept somewhere.
+             */
+            void disable();
+
         private:
 
             void initializeServerConnection(int countdown);
