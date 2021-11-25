@@ -107,7 +107,8 @@ class UnknownWidget(PlaceholderWidget):
         klassname = type(self.model).__name__
         if hasattr(self.model, 'klass'):
             klassname = self.model.klass
-        self.setToolTip('Unsupported widget type: ' + klassname)
+        keys = ', '.join(self.model.keys)
+        self.setToolTip(f'{keys}: --- Unsupported widget type: {klassname}')
         self.setGeometry(QRect(model.x, model.y, model.width, model.height))
 
     def add_proxies(self, proxies):
