@@ -40,7 +40,10 @@ namespace karabo {
                 HASH_VECTOR_BUFFERSET_POINTER
             };
 
-            TcpConnection::Pointer m_connectionPointer;
+            TcpConnection::WeakPointer m_connectionPointer;
+            const size_t m_sizeofLength;
+            const bool m_lengthIsText;
+            const bool m_manageAsyncData;
             mutable boost::mutex m_socketMutex;
             boost::asio::ip::tcp::socket m_socket;
             HandlerType m_activeHandler;
@@ -78,12 +81,13 @@ namespace karabo {
 
             KARABO_CLASSINFO(TcpChannel, "TcpChannel", "1.0")
 
-            TcpChannel(Connection::Pointer connection);
-
             virtual ~TcpChannel();
 
+            /**
+             * Pointer to connection of this channel - empty if that is not alive anymore
+             */
             Connection::Pointer getConnection() const {
-                return m_connectionPointer;
+                return m_connectionPointer.lock();
             }
 
             /**
@@ -368,6 +372,9 @@ namespace karabo {
             
         private:
 
+            // Private - only for friend TcpConnection::createChannel
+            TcpChannel(const TcpConnection::Pointer& connection);
+
             karabo::util::Hash _getChannelInfo();
 
             void onBytesAvailable(const ErrorCode& error, const size_t length, const ReadRawHandler& handler);
@@ -509,6 +516,7 @@ namespace karabo {
             friend Channel::Pointer TcpConnection::startClient(); // for socketConnect(..)
             friend void TcpConnection::resolveHandler(const ErrorCode& e, boost::asio::ip::tcp::resolver::iterator it,
                                                       const TcpConnection::ConnectionHandler& handler); // for asyncSocketConnect(..))
+            friend ChannelPointer TcpConnection::createChannel(); // constructing TcpChannel
 
             void acceptSocket(boost::asio::ip::tcp::acceptor& acceptor);
 
