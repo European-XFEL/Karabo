@@ -341,11 +341,27 @@ class SignalSlotable(Configurable):
                 # add deviceId to the instance map of the server
                 server.addChild(self.deviceId, self)
             await super(SignalSlotable, self)._run(**kwargs)
-            # TODO: launch this task into a background task
             await get_event_loop().run_coroutine_or_thread(
-                self._initialize_instance)
+                self.preInitialization)
         except CancelledError:
+            # Cancellation is caught here.
             pass
+        except Exception:
+            await self.slotKillDevice()
+            raise
+        else:
+            ensure_future(self._initialize_instance())
+
+    async def _initialize_instance(self):
+        try:
+            initializers = get_device_node_initializers(self)
+            if initializers:
+                await gather(*initializers)
+            # do not simply await because some `onInitialization`
+            # could be not a coroutine in Macros.
+            await get_event_loop().run_coroutine_or_thread(
+                self.onInitialization)
+        except CancelledError:
             # NOTE: onInitialization might still be active and creating proxies
             # and we simply catch the CancelledError. There is no need
             # to additionally kill the device, as this will be called
@@ -354,17 +370,10 @@ class SignalSlotable(Configurable):
             #
             # NOTE: Initializers for device nodes might still be active and the
             # Cancellation is caught here.
+            return
         except Exception:
             await self.slotKillDevice()
             raise
-
-    async def _initialize_instance(self):
-        initializers = get_device_node_initializers(self)
-        if initializers:
-            await gather(*initializers)
-        # do not simply await because some `onInitialization` could still be
-        # not a coroutine, e.g. for Macros.
-        await get_event_loop().run_coroutine_or_thread(self.onInitialization)
         self.__initialized = True
 
     @coslot
@@ -517,6 +526,16 @@ class SignalSlotable(Configurable):
         if proxy is not None:
             proxy._notify_gone()
         get_event_loop().something_changed()
+
+    async def preInitialization(self):
+        """This method is called before a device is instantiated
+
+        Subclass this method to validate the `instance` behavior.
+        Throwing an exception will shutdown the `instance`.
+        NOTE: No network depent tasks should be executed here.
+        e.g. no device connection, no pipeline connection,
+        DeviceNodes will not be connected yet to the devices.
+        """
 
     async def onInitialization(self):
         """This method is called just after instance is running"""
