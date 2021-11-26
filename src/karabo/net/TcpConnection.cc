@@ -222,6 +222,11 @@ namespace karabo {
             try {
                 Channel::Pointer channel = this->createChannel();
                 TcpChannel::Pointer tcpChannel = boost::static_pointer_cast<TcpChannel > (channel);
+                // Caveat - cyclic shared_ptr to 'this' TcpConnection if 'channel' would have a shared_ptr to its TcpConnection:
+                // Then 'channel' is bound to the callback created by boost::bind and asyncAcceptSocket will call
+                // 'm_acceptor.async_accept(aSocket, callback)' and that certainly has to store the callback somewhere.
+                // So the datamember 'm_acceptor' holds a shared_ptr to this - if now the callback is never called (why?),
+                // the TcpConnection lives forever even if nothing outside keeps a pointer to it.
                 tcpChannel->asyncAcceptSocket(m_acceptor, boost::bind(handler, boost::asio::placeholders::error, channel));
             } catch (...) {
                 KARABO_RETHROW
@@ -281,7 +286,7 @@ namespace karabo {
 
 
         ChannelPointer TcpConnection::createChannel() {
-            ChannelPointer channel(new TcpChannel(this->getConnectionPointer()));
+            ChannelPointer channel(new TcpChannel(boost::dynamic_pointer_cast<TcpConnection>(this->getConnectionPointer())));
             return channel;
         }
     }
