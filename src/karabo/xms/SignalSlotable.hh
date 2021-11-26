@@ -466,12 +466,27 @@ namespace karabo {
              */
             virtual bool removeInputChannel(const std::string& channelName);
 
+            /**
+             * Create an OutputChannel under the given name
+             *
+             * If there is already one for than name, that one (and thus all other copies of its shared_ptr)
+             * will be disabled to disconnect any connection.
+             *
+             * @param channelName the name for the channel
+             * @param config must have a Hash at key channelName - that is passed (after removeal of the "schema" key)
+             *                                                     to Configurator<OutputChannel>::create
+             * @param onOutputPossibleHandler ?
+             * @return pointer to created channel - do not store anywhere!
+             *        If needed, retrieve again via getOutputChannel(channelName).
+             */
             virtual OutputChannel::Pointer createOutputChannel(const std::string& channelName,
                                                                const karabo::util::Hash& config,
                                                                const OutputHandler& onOutputPossibleHandler = OutputHandler());
 
             /**
              * Remove the OutputChannel created via createOutputChannel
+             *
+             * Before removal, it (and thus all other copies of its shared_ptr) will be disabled to disconnect any connection.
              *
              * @param channelName identifies the channel (first argument that was given to createOutputChannel)
              * @return true if such a channel existed and could be removed
