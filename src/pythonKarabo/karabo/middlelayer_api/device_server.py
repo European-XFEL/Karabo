@@ -131,6 +131,7 @@ class DeviceServerBase(SignalSlotable):
         info["host"] = self.hostName
         info["visibility"] = self.visibility.value
         info["lang"] = "python"
+        info["log"] = self.log.level
         info.merge(self.deviceClassesHash())
         return info
 
@@ -428,6 +429,8 @@ class MiddleLayerDeviceServer(HeartBeatMixin, DeviceServerBase):
         self.log.level = level
         for device in self.deviceInstanceMap.values():
             device.log.level = level
+        self.updateInstanceInfo(
+            Hash("log", level))
 
     async def scanPluginsOnce(self):
         changes = await super(
