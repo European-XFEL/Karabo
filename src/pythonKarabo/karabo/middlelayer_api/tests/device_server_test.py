@@ -6,8 +6,10 @@ from unittest import TestCase, main, skipIf
 from unittest.mock import Mock
 
 from karabo.middlelayer_api.compat import amqp
+from karabo.middlelayer_api.device_client import getInstanceInfo
 from karabo.middlelayer_api.device_server import DeviceServer
 from karabo.middlelayer_api.eventloop import EventLoop
+from karabo.middlelayer_api.signalslot import SignalSlotable
 from karabo.middlelayer_api.tests.eventloop import async_tst
 from karabo.native import Hash, Schema, Timestamp
 
@@ -37,17 +39,22 @@ class ServerTest(TestCase):
     @classmethod
     @contextmanager
     def createComm(cls):
-        cls.lead = Mock()
-        cls.lead.deviceId = "test-mdlserver-{}".format(uuid.uuid4())
-        cls.lead._ss = Mock()
-        cls.lead._ss.loop = cls.loop
-        cls.lead._ss.tasks = set()
+
+        loop = cls.loop
+        sigslot = SignalSlotable(
+            {"_deviceId_": "test-mdlserver-{}".format(uuid.uuid4())})
+        sigslot.startInstance(loop=loop)
+        cls.lead = sigslot
+
+        loop.instance = lambda: sigslot
         yield
+        loop.run_until_complete(sigslot.slotKillDevice())
 
     @async_tst
     async def test_device_server_noplugins_time(self):
         """Test that we can instantiate a server without plugins"""
-        configuration = {"serverId": "testMDLServer",
+        serverId = f"testMDLServer-{uuid.uuid4()}"
+        configuration = {"serverId": serverId,
                          "timeServerId": "KaraboTimeServer",
                          "scanPlugins": False}
         server = DeviceServer(configuration)
@@ -83,7 +90,8 @@ class ServerTest(TestCase):
     @async_tst
     async def test_device_server_plugin_device_logs(self):
         """Test to instantiate a server with plugins and instantiate"""
-        configuration = {"serverId": "testMDLServer",
+        serverId = f"testMDLServer-{uuid.uuid4()}"
+        configuration = {"serverId": serverId,
                          "deviceClasses": ["PropertyTestMDL"],
                          "timeServerId": "KaraboTimeServer",
                          "scanPlugins": False}
@@ -103,12 +111,14 @@ class ServerTest(TestCase):
             vis = server.getVisibilities()
             self.assertEqual(vis, {"PropertyTestMDL": 4})
 
-            schema, classId, serverId = server.slotGetClassSchema(
+            schema, classId, serv_id = server.slotGetClassSchema(
                 "PropertyTestMDL")
-            self.assertEqual(serverId, "testMDLServer")
+            self.assertEqual(serv_id, serverId)
             self.assertEqual(classId, "PropertyTestMDL")
             self.assertIsInstance(schema, Schema)
 
+            info = await getInstanceInfo(serverId)
+            self.assertEqual(info["log"], "INFO")
             self.assertEqual(server.log.level, "INFO")
             device = list(server.deviceInstanceMap.values())[0]
             self.assertEqual(device.log.level, "INFO")
@@ -116,6 +126,9 @@ class ServerTest(TestCase):
             server.slotLoggerPriority("ERROR")
             self.assertEqual(server.log.level, "ERROR")
             self.assertEqual(device.log.level, "ERROR")
+
+            info = await getInstanceInfo(serverId)
+            self.assertEqual(info["log"], "ERROR")
         finally:
             await self._shutdown_server(server)
 
@@ -123,11 +136,12 @@ class ServerTest(TestCase):
     async def test_device_server_autostart(self):
         """Test that we can autostart a server"""
         deviceId = "test-prop-{}".format(uuid.uuid4())
+        serverId = f"testMDLServer-{uuid.uuid4()}"
 
         init = {deviceId: {"classId": "PropertyTestMDL"}}
         init = json.dumps(init)
 
-        configuration = {"serverId": "testMDLServer",
+        configuration = {"serverId": serverId,
                          "deviceClasses": ["PropertyTestMDL"],
                          "timeServerId": "KaraboTimeServer"}
         server = DeviceServer(configuration)
