@@ -963,6 +963,7 @@ namespace karabo {
                                                << deviceId << "\" on server \"" << serverId << "\"";
                     // initReply both as success and failure handler, identified by boolean flag as last argument
                     request(serverId, "slotStartDevice", inst.hash)
+                        .timeout(15000) // 15 seconds
                         .receiveAsync<bool, string>(bind_weak(&karabo::devices::GuiServerDevice::initReply,
                                                               this, inst.channel, deviceId, inst.hash, _1, _2, false),
                                                     bind_weak(&karabo::devices::GuiServerDevice::initReply,
