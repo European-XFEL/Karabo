@@ -300,10 +300,12 @@ class SystemTreeView(QTreeView):
 
     @Slot()
     def onLoggerPriority(self):
+        info = self.indexInfo()
         levels = ["DEBUG", "INFO", "WARN", "ERROR"]
-        level, ok = QInputDialog.getItem(self, "", "", levels, 1, False)
+        index = levels.index(info.get("log"))
+        level, ok = QInputDialog.getItem(self, "Set the logger level", "",
+                                         levels, index, False)
         if ok:
-            info = self.indexInfo()
             serverId = info.get('serverId')
             network = get_network()
             network.onSetLogPriority(serverId, level)
