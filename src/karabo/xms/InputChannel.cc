@@ -512,7 +512,8 @@ namespace karabo {
             // Should never come here:
             KARABO_LOG_FRAMEWORK_ERROR << "onTcpChannelError on \"" << m_instanceId << "\"  for untracked connection: "
                     << "code #" << error.value() << " -- \"" << error.message() << "\".  Stop connection.";
-            channel->getConnection()->stop();
+            auto connectionPtr = channel->getConnection();
+            if (connectionPtr) connectionPtr->stop();
         }
 
 
