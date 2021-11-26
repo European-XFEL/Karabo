@@ -48,6 +48,10 @@ class ChannelNode(Configurable):
 class MyDevice(Device):
     __version__ = "1.2.3"
 
+    preInitError = Bool(
+        defaultValue=False,
+        description="Decide if this device's preInitialization should raise")
+
     initError = Bool(
         defaultValue=False,
         description="Decide if this device should throw an error in "
@@ -56,7 +60,7 @@ class MyDevice(Device):
     isDown = Bool(
         defaultValue=False,
         description="Indicator if this device went down. This is set"
-                    "on onDestruction")
+                    "on slotKillDevice")
 
     integer = Int32(
         defaultValue=0,
@@ -102,6 +106,10 @@ class MyDevice(Device):
     @Slot(displayedName="start")
     async def start(self):
         return 5
+
+    async def preInitialization(self):
+        if self.preInitError:
+            raise RuntimeError("I am going down")
 
     async def onInitialization(self):
         self.state = State.ON
@@ -374,9 +382,27 @@ class Tests(DeviceTest):
 
     @async_tst
     async def test_initialization(self):
+        # this will not throw in the preInitialization
+        bob = MyDevice({"_deviceId_": "bob", "preInitError": True})
+        # fails in preInitialization -> instantiation will throw
+        with self.assertRaisesRegex(RuntimeError, "I am going down"):
+            await bob.startInstance()
+        self.assertTrue(bob.isDown)
+        self.assertFalse(bob.is_initialized)
+
+        # this will not throw in the onInitialization
         alice = MyDevice({"_deviceId_": "alice", "initError": True})
-        with self.assertRaises(RuntimeError):
-            await alice.startInstance()
+        await alice.startInstance()
+        # for backward compatibility, we kill the device on initError.
+        self.assertTrue(alice.isDown)
+        self.assertFalse(alice.is_initialized)
+
+        # this will succeed
+        charlie = MyDevice({"_deviceId_": "charlie"})
+        await charlie.startInstance()
+        self.assertFalse(charlie.isDown)
+        self.assertTrue(charlie.is_initialized)
+        await charlie.slotKillDevice()
 
 
 if __name__ == '__main__':

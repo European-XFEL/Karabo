@@ -66,9 +66,7 @@ class DeviceNode(String):
         return self._initialize(instance, value)
 
     async def finalize_init(self, klass):
-        """Sets a real proxy to the MetaProxy
-
-        implements the BlockingDescriptorMixin interface"""
+        """Sets a real proxy to the MetaProxy"""
         meta_proxy = klass._getValue(self.key)
         assert isinstance(meta_proxy, MetaProxy)
         assert meta_proxy.proxy is None, "proxy already initialized"
