@@ -57,6 +57,7 @@ def test_tree_node_levels():
     level_1_info = level_1.info()
     assert level_1_info['type'] == NavigationItemTypes.SERVER
     assert level_1_info['serverId'] == 'level_1'
+    assert level_1_info['log'] == 'INFO'
     level_2_info = level_2.info()
     assert level_2_info['type'] == NavigationItemTypes.CLASS
     assert level_2_info['serverId'] == 'level_1'
