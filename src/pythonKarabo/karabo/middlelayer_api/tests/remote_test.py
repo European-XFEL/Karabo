@@ -1099,12 +1099,18 @@ class Tests(DeviceTest):
         class A(Device):
             dn = DeviceNode()
 
+            async def onInitialization(self):
+                self.state = State.ON
+
         node_device = A({"_deviceId_": "devicenode", "dn": "scratchy"})
         scratchy = Local({"_deviceId_": "scratchy"})
         try:
             await scratchy.startInstance()
             await node_device.startInstance()
-            await waitUntil(lambda: isAlive(node_device.dn))
+            while True:
+                if node_device.state == State.ON:
+                    break
+                await sleep(0.1)
             self.assertTrue(isAlive(node_device.dn))
             background(scratchy.slotKillDevice())
             await waitUntil(lambda: not isAlive(node_device.dn))
