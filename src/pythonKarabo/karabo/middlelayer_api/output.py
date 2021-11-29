@@ -22,7 +22,9 @@ class KaraboStream:
     def flush(self):
         try:
             get_event_loop().instance().update()
-        except AttributeError:
+        except (RuntimeError, AttributeError):
+            # RuntimeError can appear when no local loop has been set anymore.
+            # We simply flush to keep going.
             self.base.flush()
 
     @property
