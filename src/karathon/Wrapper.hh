@@ -528,7 +528,7 @@ namespace karathon {
             }
 
 
-            void operator()(Args... args) {
+            void operator() (Args... args) const {
                 ScopedGILAcquire gil;
                 try {
                     if (*m_handler) {
@@ -542,7 +542,7 @@ namespace karathon {
                 }
             }
 
-        protected: // not private - needed for InputChannelWrap::DataHandlerWrap::operator()
+        protected: // not private - needed by HandlerWrapAny<N> and InputChannelWrap::DataHandlerWrap
             std::shared_ptr<bp::object> m_handler;
             char const * const m_where;
     };
@@ -558,7 +558,7 @@ namespace karathon {
                 : HandlerWrap<const boost::any&>(handler, where) {
             }
 
-            void operator() (const boost::any& a1);
+            void operator() (const boost::any& a1) const;
     };
 
     /**
@@ -572,7 +572,7 @@ namespace karathon {
                 : HandlerWrap<const boost::any&, const boost::any&>(handler, where) {
             }
 
-            void operator() (const boost::any& a1, const boost::any& a2);
+            void operator() (const boost::any& a1, const boost::any& a2) const;
     };
 
     /**
@@ -586,7 +586,7 @@ namespace karathon {
                 : HandlerWrap<const boost::any&, const boost::any&, const boost::any&>(handler, where) {
             }
 
-            void operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3);
+            void operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3) const;
     };
 
     /**
@@ -600,7 +600,7 @@ namespace karathon {
                 : HandlerWrap<const boost::any&, const boost::any&, const boost::any&, const boost::any&>(handler, where) {
             }
 
-            void operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3, const boost::any& a4);
+            void operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3, const boost::any& a4) const;
     };
 
     // Specializations
