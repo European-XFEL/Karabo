@@ -326,7 +326,7 @@ namespace karathon {
     }
 
 
-    void InputChannelWrap::DataHandlerWrap::operator() (const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) {
+    void InputChannelWrap::DataHandlerWrap::operator() (const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) const {
         ScopedGILAcquire gil;
         try {
             if (*m_handler) {

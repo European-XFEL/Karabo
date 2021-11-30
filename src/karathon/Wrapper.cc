@@ -689,7 +689,7 @@ namespace karathon {
         }
     }
 
-    void HandlerWrapAny1::operator() (const boost::any& a1) {
+    void HandlerWrapAny1::operator() (const boost::any& a1) const {
         ScopedGILAcquire gil;
         try {
             if (*m_handler) {
@@ -702,7 +702,7 @@ namespace karathon {
         }
     }
 
-    void HandlerWrapAny2::operator() (const boost::any& a1, const boost::any& a2) {
+    void HandlerWrapAny2::operator() (const boost::any& a1, const boost::any& a2) const {
         ScopedGILAcquire gil;
         try {
             if (*m_handler) {
@@ -715,7 +715,7 @@ namespace karathon {
         }
     }
 
-    void HandlerWrapAny3::operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3) {
+    void HandlerWrapAny3::operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3) const {
         ScopedGILAcquire gil;
         try {
             if (*m_handler) {
@@ -728,7 +728,7 @@ namespace karathon {
         }
     }
 
-    void HandlerWrapAny4::operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3, const boost::any& a4) {
+    void HandlerWrapAny4::operator() (const boost::any& a1, const boost::any& a2, const boost::any& a3, const boost::any& a4) const {
         ScopedGILAcquire gil;
         try {
             if (*m_handler) {
