@@ -159,7 +159,7 @@ namespace karathon {
         public:
             DataHandlerWrap(const bp::object& handler, char const * const where);
 
-            void operator() (const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta);
+            void operator() (const karabo::util::Hash& data, const karabo::xms::InputChannel::MetaData& meta) const;
         };
 
         static void registerDataHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler);
