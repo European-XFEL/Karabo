@@ -341,12 +341,13 @@ class SignalSlotable(Configurable):
                 # add deviceId to the instance map of the server
                 server.addChild(self.deviceId, self)
             await super(SignalSlotable, self)._run(**kwargs)
-            await get_event_loop().run_coroutine_or_thread(
-                self.preInitialization)
+            await wait_for(get_event_loop().run_coroutine_or_thread(
+                self.preInitialization), timeout=5)
         except CancelledError:
             # Cancellation is caught here.
             pass
-        except Exception:
+        except (TimeoutError, Exception):
+            # TimeoutError accounts the preInitialization
             await self.slotKillDevice()
             raise
         else:
