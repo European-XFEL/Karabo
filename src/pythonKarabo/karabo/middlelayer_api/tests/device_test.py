@@ -1,4 +1,4 @@
-from asyncio import sleep
+from asyncio import TimeoutError, sleep
 from contextlib import contextmanager
 from unittest import main, skipIf
 
@@ -7,8 +7,8 @@ import numpy as np
 from karabo import __version__ as karaboVersion
 from karabo.common.states import State
 from karabo.middlelayer import (
-    AccessMode, KaraboError, background, getDevice, setWait, waitUntil,
-    waitWhile)
+    AccessMode, KaraboError, background, getDevice, setWait, sleep as mdlsleep,
+    waitUntil, waitWhile)
 from karabo.middlelayer_api.compat import jms, mqtt, redis
 from karabo.middlelayer_api.device import Device
 from karabo.middlelayer_api.device_client import call, getSchema, updateDevice
@@ -403,6 +403,39 @@ class Tests(DeviceTest):
         self.assertFalse(charlie.isDown)
         self.assertTrue(charlie.is_initialized)
         await charlie.slotKillDevice()
+
+    @async_tst
+    async def test_preinitialization(self):
+        """Test the preinitialization taking too long"""
+        class ASlowInitDevice(Device):
+
+            async def preInitialization(self):
+                await sleep(10)
+
+            async def slotKillDevice(self):
+                self.isDown = True
+                await super().slotKillDevice()
+
+        charlie = ASlowInitDevice({"_deviceId_": "charlie"})
+        with self.assertRaises(TimeoutError):
+            await charlie.startInstance()
+        self.assertTrue(charlie.isDown)
+        self.assertFalse(charlie.is_initialized)
+
+        class SlowInitDevice(Device):
+
+            def preInitialization(self):
+                mdlsleep(10)
+
+            async def slotKillDevice(self):
+                self.isDown = True
+                await super().slotKillDevice()
+
+        echo = SlowInitDevice({"_deviceId_": "echo"})
+        with self.assertRaises(TimeoutError):
+            await echo.startInstance()
+        self.assertTrue(echo.isDown)
+        self.assertFalse(echo.is_initialized)
 
 
 if __name__ == '__main__':
