@@ -33,8 +33,15 @@ namespace karabo {
             void handleChanged(const karabo::util::Hash& config, const std::string& user) override;
 
             void logValue(std::stringstream &query, const std::string& deviceId, const std::string& path,
-                          const std::string& value, karabo::util::Types::ReferenceType type,
-                          bool isFinite);
+                          const std::string& value, karabo::util::Types::ReferenceType type, bool isFinite);
+
+            /**
+             * Helper to store logging start event
+             *
+             * @param configuration full device configuration received when logging starts
+             * @param sortedPaths full paths of configuration, sorted by increasing timestamp
+             */
+            void login(const karabo::util::Hash& configuration, const std::vector<std::string>& sortedPaths);
 
             void terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp);
 
@@ -54,6 +61,8 @@ namespace karabo {
             std::vector<char> m_archive;
             int m_maxTimeAdvance;
             bool m_hasRejectedData;
+
+            karabo::util::Timestamp m_loggingStartStamp;
         };
 
 

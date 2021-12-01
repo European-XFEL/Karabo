@@ -57,6 +57,17 @@ namespace karabo {
         };
 
 
+        struct  PropFromPastInfo {
+            PropFromPastInfo(const std::string& name,
+                             const karabo::util::Types::ReferenceType type,
+                             bool infiniteOrNan);
+
+            std::string name;
+            karabo::util::Types::ReferenceType type;
+            bool infiniteOrNan;
+        };
+
+
         // Context of an ongoing slotGetConfigurationFromPast process.
         struct ConfigFromPastContext {
             ConfigFromPastContext(const std::string &deviceId,
@@ -70,9 +81,14 @@ namespace karabo {
             unsigned long long lastLogoutBeforeTime;
             karabo::util::Schema configSchema;
             karabo::util::Hash configHash;
+            // Log format version: version 1 introduces truncation of property
+            // timestamps in the past - those past timestamp are replaced with
+            // the timestamp of the start of the current lifetime of the device
+            // (or the lifetime of the data logger that is logging the device).
+            int logFormatVersion;
 
-            // Pairs with the names and types of the properties that will be returned in the configuration.
-            std::deque<std::pair<std::string, karabo::util::Types::ReferenceType>> propNamesAndTypes;
+            // Properties to be returned in the past configuration.
+            std::deque<PropFromPastInfo> propsInfo;
 
             karabo::xms::SignalSlotable::AsyncReply aReply;
         };
@@ -177,11 +193,11 @@ namespace karabo {
 
             void asyncLastLogoutBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
             void onLastLogoutBeforeTime(const karabo::net::HttpResponse &valueResp,
-                                        const boost::shared_ptr<ConfigFromPastContext> &ctxt);
+                                            const boost::shared_ptr<ConfigFromPastContext> &ctxt);
 
-            void asyncLastLoginBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
-            void onLastLoginBeforeTime(const karabo::net::HttpResponse &valueResp,
-                                       const boost::shared_ptr<ConfigFromPastContext> &ctxt);
+            void asyncLastLoginFormatBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
+            void onLastLoginFormatBeforeTime(const karabo::net::HttpResponse &valueResp,
+                                         const boost::shared_ptr<ConfigFromPastContext> &ctxt);
 
             void asyncLastSchemaDigestBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
             void onLastSchemaDigestBeforeTime(const karabo::net::HttpResponse &valueResp,
@@ -192,10 +208,9 @@ namespace karabo {
             void onSchemaForDigest(const karabo::net::HttpResponse &schemaResp,
                                    const boost::shared_ptr<ConfigFromPastContext> &ctxt);
 
-            void asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt, bool infinite);
-            void onPropValueBeforeTime(const std::string &propName,
-                                       const karabo::util::Types::ReferenceType &propType,
-                                       bool infinite,
+
+            void asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt);
+            void onPropValueBeforeTime(const PropFromPastInfo& propInfo,
                                        const karabo::net::HttpResponse &propValueResp,
                                        const boost::shared_ptr<ConfigFromPastContext> &ctxt);
 
@@ -239,6 +254,11 @@ namespace karabo {
              */
             bool handleHttpResponseError(const karabo::net::HttpResponse &httpResponse,
                                          const karabo::xms::SignalSlotable::AsyncReply &asyncReply);
+
+            /**
+             * Convert a time point from influx to karabo Epochstamp
+             */
+            karabo::util::Epochstamp toEpoch(unsigned long long timeFromInflux) const;
 
             karabo::net::InfluxDbClient::Pointer m_influxClient;
             std::string m_durationUnit;
