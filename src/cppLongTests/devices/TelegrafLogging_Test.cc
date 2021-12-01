@@ -288,7 +288,7 @@ void TelegrafLogging_Test::influxAllTestRunnerWithTelegraf() {
 
     // These deal with their own devices, so comment above about using the PropertyTest instance
     // in m_deviceId is not applicable.
-    testCfgFromPastRestart();
+    testCfgFromPastRestart(false); // in influx logging, old, past device incarnation stamps are logged as start of device logging
     testSchemaEvolution();
     testNans();
 
