@@ -8,11 +8,13 @@
 #include "PythonFactoryMacros.hh"
 #include "ConnectionWrap.hh"
 #include "ChannelWrap.hh"
+#include "Wrapper.hh"
 
 #include "karabo/net/Broker.hh"
 #include "karabo/net/Connection.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/utils.hh"
+#include <boost/asio/deadline_timer.hpp>
 #include <boost/python.hpp>
 
 namespace bp = boost::python;
@@ -120,6 +122,7 @@ void exportp2p() {
     {
         void EventLoopWorkWrap();
         void EventLoopRunWrap();
+        void EventLoopServicePostWrap(const bp::object& callable, const bp::object& delay);
         bp::class_<EventLoop, boost::noncopyable >("EventLoop", "EventLoop is a singleton class wrapping Boost ASIO functionality.",
                                                    bp::no_init)
                 .def("work", &EventLoopWorkWrap).staticmethod("work")
@@ -128,6 +131,10 @@ void exportp2p() {
                 .def("addThread", (void (*)(const int)) & EventLoop::addThread, (bp::arg("nThreads") = 1)).staticmethod("addThread")
                 .def("removeThread", (void(*)(const int)) & EventLoop::removeThread, (bp::arg("nThreads") = 1)).staticmethod("removeThread")
                 .def("getNumberOfThreads", (size_t(*)()) & EventLoop::getNumberOfThreads).staticmethod("getNumberOfThreads")
+                .def("post", &EventLoopServicePostWrap, (bp::arg("callable"), bp::arg("delay") = bp::object()),
+                     "Post 'callable' for execution in background. Needs EventLoop to run/work.\n"
+                     "If 'delay' is not None, execution is postponed by given seconds."
+                     ).staticmethod("post")
                 ;
     }
 }
@@ -142,5 +149,27 @@ void EventLoopWorkWrap() {
 void EventLoopRunWrap() {
     ScopedGILRelease nogil;
     EventLoop::run();
+}
+
+void EventLoopServicePostWrap(const bp::object& callable, const bp::object& delay) {
+    // Wrap with GIL since func's reference count will increase:
+    HandlerWrap<> wrapped(callable, "EventLoop.post");
+    if (delay.ptr() == Py_None) {
+        // No GIL when entering pure C++:
+        ScopedGILRelease nogil;
+        EventLoop::getIOService().post(std::move(wrapped)); // move in case 'post' supports rvalue reference
+    } else {
+        const double delaySeconds = bp::extract<double>(delay); // needs GIL
+        // No GIL when entering pure C++:
+        ScopedGILRelease nogil;
+        auto timer = boost::make_shared<boost::asio::deadline_timer>(EventLoop::getIOService());
+        const int delayMicrosec = static_cast<int>(delaySeconds * 1.e6);
+        timer->expires_from_now(boost::posix_time::microseconds(delayMicrosec));
+        // Bind timer shared_ptr to lambda to keep it alive as long as needed
+        timer->async_wait([wrapped, timer](const boost::system::error_code& e){
+            if (e) return;
+            wrapped(); // BTW: Compiler tells me that 'wrapped' is a const object - why?
+        });
+    }
 }
 
