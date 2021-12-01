@@ -51,6 +51,8 @@ void DataLogging_Test::fileAllTestRunner() {
     testVectorLongLong();
     testVectorUnsignedLongLong();
     testTable();
+
+    testUnchangedNoDefaultProperties();
     // This must be the last test case that relies on the device in m_deviceId (the logged
     // PropertyTest instance) being available at the start of the test case.
     // 'testLastKnownConfiguration' stops the device being logged to make sure that the
@@ -59,7 +61,7 @@ void DataLogging_Test::fileAllTestRunner() {
 
     // These deal with their own devices, so comment above about using the PropertyTest instance
     // in m_deviceId is not applicable.
-    testCfgFromPastRestart();
+    testCfgFromPastRestart(true); // old, past device incarnation stamps are lept in file based logging
 
     // TODO: Uncomment test below as soon as FileLogReader::slotGetPropertyHistoryImpl is fixed.
     //       Currently it is failing to retrieve all the logged entries (see comment on discussions of
@@ -158,7 +160,7 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
     //       Framework source tree, which is not true when the tests are run in a Conda
     //       environment with the Framework installed as a package. As a temporary workaround,
     //       we skip the test if we are not inside the source tree.
-    // TODO: Provide a more robust and Conda/CI friendly solution and get rid of this klundge.
+    // TODO: Provide a more robust and Conda/CI friendly solution and get rid of this coupling.
     //       One possible approach: separate the file logger from the influx logger tests. The file logger
     //       test can be run on a job that belongs to a pipeline stage prior to the one that contains
     //       the influx logger test. The generated file logging tests would them be temporary
@@ -191,6 +193,8 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
     testVectorUnsignedLongLong(false);
     testTable(false);
 
+    testUnchangedNoDefaultProperties();
+
     // This must be the last test case that relies on the device in m_deviceId (the logged
     // PropertyTest instance) being available at the start of the test case.
     // 'testLastKnownConfiguration' stops the device being logged to make sure that the
@@ -199,7 +203,7 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
 
     // These deal with their own devices, so comment above about using the PropertyTest instance
     // in m_deviceId is not applicable.
-    testCfgFromPastRestart();
+    testCfgFromPastRestart(false); // in influx logging, old, past device incarnation stamps are logged as start of device logging
     testSchemaEvolution();
     testNans();
 }

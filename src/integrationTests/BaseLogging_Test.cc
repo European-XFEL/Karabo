@@ -67,6 +67,18 @@ public:
                 .initialValue(0)
                 .commit();
 
+        INT32_ELEMENT(expected).key("int32Property")
+                .displayedName("Int32 property")
+                .reconfigurable()
+                .assignmentOptional().defaultValue(32000000)
+                .commit();
+
+        INT32_ELEMENT(expected).key("Int32NoDefault")
+                .displayedName("Int32 without default")
+                .reconfigurable()
+                .assignmentOptional().noDefaultValue()
+                .commit();
+
         SLOT_ELEMENT(expected).key("slotIncreaseValue")
                 .commit();
 
@@ -442,8 +454,6 @@ void BaseLogging_Test::testMaxNumDataHistory() {
             << "Check if InfluxLogReader is properly enforcing the 'maxNumData' parameter for slot 'getPropertyHistory' ..."
             << std::endl;
 
-    bool envResponsive = false;
-
     // Instantiates a DataLogTestDevice for performing the check.
     const std::string deviceId(getDeviceIdPrefix() + "MaxNumDataHistory");
     const std::string loggerId = karabo::util::DATALOGGER_PREFIX + m_server;
@@ -598,6 +608,11 @@ void BaseLogging_Test::testDropFutureData() {
     const Epochstamp inAlmostAFortnite = Epochstamp() + TimeDuration(13,0,0,0,0);
     const Epochstamp inAFortnite = inAlmostAFortnite + TimeDuration(1,0,0,0,0);
     const Trainstamp noTrainId;
+
+    // Getting original timestamp of 'value' to compare with later
+    // We first change the property once - otherwise, what we get back from influx is the start of logging time
+    // and not the timestamp on device
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->execute(deviceId, "slotIncreaseValue", KRB_TEST_MAX_TIMEOUT));
     Hash cfg;
     CPPUNIT_ASSERT_NO_THROW(m_deviceClient->get(deviceId, cfg));
     CPPUNIT_ASSERT_MESSAGE("'value' is missing from the configuration", cfg.has("value"));
@@ -848,7 +863,7 @@ void BaseLogging_Test::testLastKnownConfiguration(karabo::util::Epochstamp fileM
 }
 
 
-void BaseLogging_Test::testCfgFromPastRestart() {
+void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
     std::clog << "Testing past configuration retrieval with stamp older than device..." << std::flush;
 
     // Start device and take care that the logger is ready for it
@@ -867,10 +882,11 @@ void BaseLogging_Test::testCfgFromPastRestart() {
                                             KRB_TEST_MAX_TIMEOUT * 1000)
                            );
 
-    // few cycles: increase value, stop and increase logging
+    // few cycles: increase value, stop and restart logging
     const unsigned int numCycles = 5;
     std::vector<Epochstamp> stampsAfter; // stamps after increasing value
     std::vector<Epochstamp> valueStamps; // stamps of the updated values
+    std::vector<Epochstamp> stampsAfterRestart; // stamps after restart logging
     const Epochstamp oldStamp = threeDaysBack;
     for (unsigned int i = 0; i < numCycles; ++i) {
         // Increase "variable" value and store after increasing it
@@ -913,6 +929,7 @@ void BaseLogging_Test::testCfgFromPastRestart() {
                                },
                                                 KRB_TEST_MAX_TIMEOUT * 1000)
                                );
+        stampsAfterRestart.push_back(Epochstamp());
     }
 
     // Again flush - at the end of the last cycle we started logging again and archive_index.txt and archive_<N>.txt
@@ -972,19 +989,141 @@ void BaseLogging_Test::testCfgFromPastRestart() {
         CPPUNIT_ASSERT_EQUAL(99, conf.get<int>("oldValue"));
         CPPUNIT_ASSERT_EQUAL(static_cast<int> (i + 1), conf.get<int>("value")); // +1: stamp is after update
 
-        // Check received stamps: The one of "oldValue is always the same, for "value" be aware that we store with
+        // Check received stamps: For "value" be aware that we store with
         // microsec precision only: we might be 1 off since we cut off digits instead of rounding
-        const Epochstamp stampOldFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("oldValue"));
-        std::string oldFromPastStr = stampOldFromPast.toIso8601();  // convert to microsecond precision
-        std::string oldStr = oldStamp.toIso8601();                  // convert to microsecond precision
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("'oldValue' from past has wrong time stamp", oldStr, oldFromPastStr);
         const Epochstamp stampValueFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("value"));
         CPPUNIT_ASSERT_MESSAGE(stampValueFromPast.toIso8601() + " vs " + valueStamps[i].toIso8601(),
                                (stampValueFromPast - valueStamps[i]).getFractions(TIME_UNITS::MICROSEC) <= 1ull);
-
+        // The stamp for "oldValue" differs bewteen backends
+        const Epochstamp stampOldFromPast = Epochstamp::fromHashAttributes(conf.getAttributes("oldValue"));
+        std::string oldFromPastStr = stampOldFromPast.toIso8601();  // convert to microsecond precision
+        if (pastConfigStaysPast) {
+            // The stamp of "oldValue" is always the same
+            CPPUNIT_ASSERT_EQUAL_MESSAGE("'oldValue' from past has wrong time stamp", oldStamp.toIso8601(), oldFromPastStr);
+        } else {
+            // Timestamps older than start of device logging are stored as stamp "start of device logging".
+            // Stamp stampsAfterRestart[i] is after we are sure that logging runs again, so that is after
+            // "start of device logging" - but the difference is not too large.
+            CPPUNIT_ASSERT_MESSAGE("received '" + stampOldFromPast.toIso8601() += "', after restart '" + stampsAfterRestart[i].toIso8601(),
+                                   stampOldFromPast < stampsAfterRestart[i]);
+            const double dt = stampOldFromPast - stampsAfterRestart[i]; // Has no sign due to the intermediate TimeDuration object
+            CPPUNIT_ASSERT_MESSAGE("'oldValue' has wrong time stamp: " + stampOldFromPast.toIso8601() += " - difference is : " + toString(dt),
+                                   dt < 0.6); // seen 0.5 in tests with local influxDB
+        }
     }
 
     std::clog << "OK" << std::endl;
+}
+
+
+void BaseLogging_Test::testUnchangedNoDefaultProperties() {
+    using namespace std;
+    clog << "Testing past config retrieval of properties with no default value ..."
+         << flush;
+
+    const string noDefaultProp = "Int32NoDefault";
+    const string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
+
+    // Start test device and take care that the logger is ready for it
+    // Use platform-dependent name for the device: concurrent tests in CI
+    // operate on the same InfluxDB database ...
+    const string deviceId(getDeviceIdPrefix() + "deviceWithNoDefaultValueProp");
+    const string logId = karabo::util::DATALOGGER_PREFIX + m_server;
+    auto success = m_deviceClient->instantiate(m_server, "DataLogTestDevice",
+                                               Hash("deviceId", deviceId),
+                                               KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    waitForCondition([this, &logId, &deviceId]() {
+        auto ids = m_deviceClient->get<vector<string>>(logId, "devicesToBeLogged");
+        return (find(ids.begin(), ids.end(), deviceId) != ids.end());
+    }, KRB_TEST_MAX_TIMEOUT * 1000);
+    auto ids = m_deviceClient->get<vector<string>>(logId, "devicesToBeLogged");
+    CPPUNIT_ASSERT_MESSAGE(
+        deviceId + " not among devicesToBeLogged: " + toString(ids),
+        find(ids.begin(), ids.end(), deviceId) != ids.end());
+
+    // Set the value of the test device's property with no default value.
+    CPPUNIT_ASSERT_NO_THROW(m_deviceClient->set(deviceId, noDefaultProp, 12));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+
+    // Save this instant as a iso string
+    Epochstamp es_afterPropSet;
+    string afterPropSet = es_afterPropSet.toIso8601();
+
+    // Flushes the datalogger to guarantee that setting of the property will be
+    // in the log.
+    CPPUNIT_ASSERT_NO_THROW(
+        m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+        .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+    boost::this_thread::sleep(boost::posix_time::milliseconds(150));
+
+    // Assert that getConfigurationFromPast retrieves the non default value
+    // when given a timepoint right after the setting.
+    Hash conf;
+    Schema schema;
+    bool configAtTimepoint;
+    string configTimepoint;
+    CPPUNIT_ASSERT_NO_THROW(
+        m_sigSlot->request(
+            dlreader0, "slotGetConfigurationFromPast",deviceId, afterPropSet)
+            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+            .receive(conf, schema, configAtTimepoint, configTimepoint)
+    );
+    CPPUNIT_ASSERT(conf.has(noDefaultProp));
+    CPPUNIT_ASSERT_EQUAL_MESSAGE(
+        "Value for '" +  noDefaultProp + "' differs from expected.",
+        12, conf.get<int>(noDefaultProp));
+
+    // Shutdown the PropertyTest device
+    success = m_deviceClient->killDevice(deviceId);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    // Reinstantiate the PropertyTest device, but this time do not set its
+    // no default value property.
+    success = m_deviceClient->instantiate(m_server, "DataLogTestDevice",
+                                          Hash("deviceId", deviceId),
+                                          KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+    waitForCondition([this, &logId, &deviceId]() {
+        auto logIds = m_deviceClient->get<vector<string>>(logId, "devicesToBeLogged");
+        return (find(logIds.begin(), logIds.end(), deviceId) != logIds.end());
+    }, KRB_TEST_MAX_TIMEOUT * 1000);
+    ids = m_deviceClient->get<vector<string>>(logId, "devicesToBeLogged");
+    CPPUNIT_ASSERT_MESSAGE(
+        deviceId + " not among devicesToBeLogged: " + toString(ids),
+        find(ids.begin(), ids.end(), deviceId) != ids.end());
+
+    // Flush the data logger to make sure there's no logging pendency
+    CPPUNIT_ASSERT_NO_THROW(
+        m_sigSlot->request(karabo::util::DATALOGGER_PREFIX + m_server, "flush")
+        .timeout(FLUSH_REQUEST_TIMEOUT_MILLIS).receive());
+    // Wait some time for the data just flushed to be available for reading.
+    boost::this_thread::sleep(boost::posix_time::milliseconds(150));
+
+    // Save this instant as a iso string
+    Epochstamp es_afterDeviceReinst;
+    string afterDeviceReinst = es_afterDeviceReinst.toIso8601();
+
+    // Assert that getConfigurationFromPast for a timepoint after the second
+    // instantiation of the PropertyTest device does not have the no default
+    // value property.
+    CPPUNIT_ASSERT_NO_THROW(
+        m_sigSlot->request(
+            dlreader0, "slotGetConfigurationFromPast", deviceId, afterDeviceReinst)
+            .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+            .receive(conf, schema, configAtTimepoint, configTimepoint)
+    );
+    CPPUNIT_ASSERT_MESSAGE(
+        "Property '" + noDefaultProp +
+        "' should not be in retrieved configuration.",
+        !conf.has(noDefaultProp)
+    );
+
+    // Shutdown the testing device.
+    success = m_deviceClient->killDevice(deviceId);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    clog << "OK" << endl;
 }
 
 
@@ -1226,7 +1365,7 @@ void BaseLogging_Test::testHistory(const std::string& key, const std::function<T
                            "\n\tNumber of Exceptions: " + toString(numExceptions) +
                            "\n\tRemote Errors:\n" + boost::algorithm::join(exceptionsMsgs, "\n"),
                            conf.size() > 0);
-    // One needs to check only the content here, therefore only the leaves are examined
+    // One needs to check only the content here, therefore only the leaves are examined.
     leaves.clear();
     getLeaves(afterWritesCfg, schema, leaves, '.');
     confLeaves.clear();
@@ -1322,7 +1461,6 @@ void BaseLogging_Test::testVectorString(bool testPastConf) {
 
 void BaseLogging_Test::testVectorChar(bool testPastConf) {
     auto lambda = [] (int i) -> vector<char> {
-
         return {i & 0xFF, i & 0xFF, i & 0xFF, i & 0xFF, i & 0xFF, 0};
     };
     testHistory<vector<char> >("vectors.charProperty", lambda, testPastConf);
@@ -1588,7 +1726,7 @@ void BaseLogging_Test::testNans() {
         }
 
         Epochstamp afterLastCheck;
-        if (static_cast<size_t> (property_pair.second), history.size()) {
+        if (static_cast<size_t> (property_pair.second) == history.size()) {
             std::clog << "\ntestNans: History size check for property '"
                     << property_pair.first << "' succeeded after " << numChecks << " attempt(s) ranging from "
                     << beforeFirstCheck.toIso8601() << " to " << afterLastCheck.toIso8601()
