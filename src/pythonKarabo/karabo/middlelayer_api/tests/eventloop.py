@@ -67,7 +67,6 @@ class DeviceTest(TestCase):
         cls.lead._ss = Mock()
         cls.lead._ss.loop = cls.loop
         cls.lead._ss.tasks = set()
-        cls.lead.online = True
         yield
 
     @classmethod
@@ -83,12 +82,17 @@ class DeviceTest(TestCase):
         cls.loop.run_until_complete(
             gather(*(d.startInstance() for d in devices)))
         cls.lead = lead
-        while True:
+
+        # Make sure that we definately release here with a total
+        # sleep time. All times in seconds
+        sleep_time = 0.1
+        total_time = 20
+        while total_time >= 0:
             onlines = [d.is_initialized for d in devices]
             if all(onlines):
                 break
-            else:
-                cls.loop.run_until_complete(sleep(0.1))
+            total_time -= sleep_time
+            cls.loop.run_until_complete(sleep(sleep_time))
         yield
         cls.loop.run_until_complete(
             gather(*(d.slotKillDevice() for d in devices)))
