@@ -3,7 +3,7 @@ import time
 import unittest
 from functools import partial
 
-from karabo.bound import EventLoop, SignalSlotable, Worker
+from karabo.bound import EventLoop, SignalSlotable
 
 # To switch on debugging, also import these:
 # from karabo.bound import Logger, Hash
@@ -301,9 +301,8 @@ class Xms_TestCase(unittest.TestCase):
                 self.called = 0
                 aReply()
 
-            # Call replyer in another thread after 100 ms
-            w = Worker(replyer, 100, 1)
-            w.start()
+            # Call replyer on event loop after 100 ms
+            EventLoop.post(replyer, 0.1)
         self.bob.registerSlot(asyncSlot0)
 
         def asyncSlot1(i):
@@ -313,9 +312,8 @@ class Xms_TestCase(unittest.TestCase):
                 self.called = i
                 aReply(i)
 
-            # Call replyer in another thread after 100 ms
-            w = Worker(replyer, 100, 1)
-            w.start()
+            # Call replyer on event loop after 10 ms
+            EventLoop.post(replyer, 0.01)
         self.bob.registerSlot(asyncSlot1)
 
         def asyncSlot2(i, j):
@@ -325,9 +323,8 @@ class Xms_TestCase(unittest.TestCase):
                 self.called = i + j
                 aReply(i, j)
 
-            # Call replyer in another thread after 100 ms
-            w = Worker(replyer, 100, 1)
-            w.start()
+            # Call replyer on event loop
+            EventLoop.post(replyer)
         self.bob.registerSlot(asyncSlot2)
 
         def asyncSlot3(i, j, k):
@@ -337,9 +334,8 @@ class Xms_TestCase(unittest.TestCase):
                 self.called = i + j + k
                 aReply(i, j, k)
 
-            # Call replyer in another thread after 100 ms
-            w = Worker(replyer, 100, 1)
-            w.start()
+            # Call replyer on event loop
+            EventLoop.post(replyer)
         self.bob.registerSlot(asyncSlot3)
 
         def asyncSlot4(i, j, k, l1):
@@ -349,9 +345,8 @@ class Xms_TestCase(unittest.TestCase):
                 self.called = i + j + k + l1
                 aReply(i, j, k, l1)
 
-            # Call replyer in another thread after 100 ms
-            w = Worker(replyer, 100, 1)
-            w.start()
+            # Call replyer on event loop
+            EventLoop.post(replyer)
         self.bob.registerSlot(asyncSlot4)
 
         def asyncSlotError(errorMessage):
@@ -360,9 +355,8 @@ class Xms_TestCase(unittest.TestCase):
             def replyer():
                 aReply.error(errorMessage)
 
-            # Call replyer in another thread after 100 ms
-            w = Worker(replyer, 100, 1)
-            w.start()
+            # Call replyer on event loop
+            EventLoop.post(replyer)
         self.bob.registerSlot(asyncSlotError)
 
         # setup other SignalSlotable to call the slots
