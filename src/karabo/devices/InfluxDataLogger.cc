@@ -32,7 +32,8 @@ namespace karabo {
             , m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin"))
             , m_archive()
             , m_maxTimeAdvance(input.get<int>("maxTimeAdvance"))
-            , m_hasRejectedData(false) {
+            , m_hasRejectedData(false)
+            , m_loggingStartStamp(Epochstamp(0ull, 0ull), 0ull) {
         }
 
 
@@ -103,7 +104,19 @@ namespace karabo {
                     continue;
                 }
 
+                if (m_pendingLogin) {
+                    login(configuration, paths);
+                    m_pendingLogin = false;
+                }
+
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
+                if (t.getEpochstamp() < m_loggingStartStamp.getEpochstamp()) {
+                    // Stamp is older than logging start time. To avoid confusion, especially for properties with no default value
+                    // i.e. which may not exist at some points in time) we overwrite the stamp with time when device logging started.
+                    // See discussions at https://git.xfel.eu/Karabo/config-and-recovery/-/issues/20
+                    // and https://in.xfel.eu/redmine/projects/karabo-library/wiki/InfluxNoDefaultValue
+                    t = m_loggingStartStamp;
+                }
                 {
                     // Update time stamp for updates of property "lastUpdatesUtc"
                     // Since the former is accessing it when not posted on m_strand, need mutex protection:
@@ -198,19 +211,6 @@ namespace karabo {
                     terminateQuery(query, lineTimestamp);
                     lineTimestamp = t;
                 }
-                if (m_pendingLogin) {
-                    // TRICK: 'configuration' is the one requested at the beginning. For devices which have
-                    // properties with older timestamps than the time of their instantiation (as e.g. read from
-                    // hardware), we can claim that logging is active only from the most recent update we receive here.
-                    const auto& attrsOfPathWithMostRecentStamp = configuration.getAttributes(paths.back());
-                    const Epochstamp t = Epochstamp::fromHashAttributes(attrsOfPathWithMostRecentStamp);
-                    const unsigned long long ts = t.toTimestamp() * PRECISION_FACTOR;
-                    std::stringstream ss;
-                    ss << deviceId << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\" " << ts << "\n";
-
-                    m_pendingLogin = false;
-                    m_dbClientWrite->enqueueQuery(ss.str());
-                }
 
                 // isFinite matters only for FLOAT/DOUBLE
                 logValue(query, deviceId, path, value, leafNode.getType(), isFinite);
@@ -227,9 +227,32 @@ namespace karabo {
         }
 
 
+        void InfluxDeviceData::login(const karabo::util::Hash& configuration, const std::vector<std::string>& sortedPaths) {
+            // TRICK: 'configuration' is the one requested at the beginning. For devices which have
+            // properties with older timestamps than the time of their instantiation (as e.g. read from
+            // hardware), we can claim that logging is active only from the most recent update we receive here.
+            const auto& attrsOfPathWithMostRecentStamp = configuration.getAttributes(sortedPaths.back());
+            m_loggingStartStamp = Timestamp::fromHashAttributes(attrsOfPathWithMostRecentStamp);
+            const unsigned long long ts = m_loggingStartStamp.toTimestamp() * PRECISION_FACTOR;
+            std::stringstream ss;
+            ss << m_deviceToBeLogged << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\""
+               << ",format=1i"; // Older data (where timestamps were not ensured to be not older than 'ts') has no format specified.
+            auto deviceIdNode = configuration.find("_deviceId_"); // _deviceId_ as in DataLogger::slotChanged
+            if (deviceIdNode) { // Should always exist in case of m_pendingLogin
+                const Epochstamp devStartStamp = Epochstamp::fromHashAttributes(deviceIdNode->getAttributes());
+                // Difference between when device instantiated and when logging starts - precision as defined by PRECISION_FACTOR
+                const long long diff = static_cast<double>(m_loggingStartStamp.getEpochstamp() - devStartStamp) * PRECISION_FACTOR;
+                ss << ",deviceAge=" << diff << "i";
+            } else { // Should never happen!
+                KARABO_LOG_FRAMEWORK_WARN << "Cannot store device age of '" << m_deviceToBeLogged << "', device lacks key '_deviceId_'.";
+            }
+            ss << " " << ts << "\n";
+            m_dbClientWrite->enqueueQuery(ss.str());
+        }
+
+
         void InfluxDeviceData::logValue(std::stringstream& query, const std::string& deviceId, const std::string& path,
-                                        const std::string& value, karabo::util::Types::ReferenceType type,
-                                        bool isFinite) {
+                                        const std::string& value, karabo::util::Types::ReferenceType type, bool isFinite) {
             std::string field_value;
             switch (type) {
                 case Types::BOOL:
