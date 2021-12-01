@@ -68,7 +68,9 @@ class ColorBarWidget(GraphicsWidget):
     # Qt Events
 
     def mouseDoubleClickEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        if (event.button() == Qt.LeftButton
+                and self.imageItem.levels is not None):
+            # Note: Protect against `None` levels at the beginning
             self._show_levels_dialog()
             event.accept()
             return
@@ -93,14 +95,6 @@ class ColorBarWidget(GraphicsWidget):
 
         self.grid_layout.setContentsMargins(0, top, 0, bottom)
 
-    # ---------------------------------------------------------------------
-    # Private methods
-
-    def _create_menu(self):
-        menu = QMenu()
-        menu.addAction("Set levels...", self._show_levels_dialog)
-        return menu
-
     def set_levels(self, image_range):
         # Check if levels and range are almost equal.
         # Only change y-range values if not.
@@ -122,6 +116,14 @@ class ColorBarWidget(GraphicsWidget):
         self.barItem.setTransform(transform)
         self.vb.setYRange(image_min, image_max, padding=0)
         self.levels = image_range
+
+    # ---------------------------------------------------------------------
+    # Private methods
+
+    def _create_menu(self):
+        menu = QMenu()
+        menu.addAction("Set levels...", self._show_levels_dialog)
+        return menu
 
 
 class ColorViewBox(ViewBox):
