@@ -39,9 +39,9 @@
 
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice,
-                                    karabo::core::Device<karabo::core::OkErrorFsm>,
-                                    karabo::devices::DataLogReader,
-                                    karabo::devices::InfluxLogReader)
+                                  karabo::core::Device<karabo::core::OkErrorFsm>,
+                                  karabo::devices::DataLogReader,
+                                  karabo::devices::InfluxLogReader)
 
 namespace karabo {
 
@@ -72,11 +72,21 @@ namespace karabo {
             return std::round(static_cast<double>(d) / maxDataPoints * 1'000'000);
         }
 
+
+
+        PropFromPastInfo::PropFromPastInfo(const std::string& name,
+                                           const karabo::util::Types::ReferenceType type,
+                                           bool infiniteOrNan):
+            name(name), type(type), infiniteOrNan(infiniteOrNan) { }
+
+
+
         ConfigFromPastContext::ConfigFromPastContext(const std::string &deviceId,
                                                      const karabo::util::Epochstamp &atTime,
-                                                     const karabo::xms::SignalSlotable::AsyncReply &aReply) :
+                                                     const karabo::xms::SignalSlotable::AsyncReply &aReply):
             deviceId(deviceId), atTime(atTime), configTimePoint(Epochstamp(0, 0)),
-            lastLoginBeforeTime(0UL), lastLogoutBeforeTime(0UL), aReply(aReply) {
+            lastLoginBeforeTime(0ull), lastLogoutBeforeTime(0ull),
+            logFormatVersion(0), aReply(aReply) {
         };
 
 
@@ -126,8 +136,6 @@ namespace karabo {
                     Types::to<ToLiteral>(Types::FLOAT),
                     Types::to<ToLiteral>(Types::DOUBLE)})
         {
-            // TODO: Use more appropriate names for the env var names - the names below are the ones currently used by
-            //       the CI environment.
             std::string dbUser;
             if (getenv("KARABO_INFLUXDB_QUERY_USER")) {
                 dbUser = getenv("KARABO_INFLUXDB_QUERY_USER");
@@ -488,23 +496,25 @@ namespace karabo {
 
             ConfigFromPastContext ctxt(deviceId, atTime, aReply);
 
-            asyncLastLoginBeforeTime(boost::make_shared<ConfigFromPastContext>(ctxt));
+            asyncLastLoginFormatBeforeTime(boost::make_shared<ConfigFromPastContext>(ctxt));
         }
 
 
-        void InfluxLogReader::asyncLastLoginBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::asyncLastLoginFormatBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
 
             std::ostringstream iqlQuery;
 
-            iqlQuery << "SELECT LAST(karabo_user) FROM \""
-                    << ctxt->deviceId << "__EVENTS\" WHERE \"type\" = '\"+LOG\"' AND time <= "
-                    << epochAsMicrosecString(ctxt->atTime) << m_durationUnit;
+            iqlQuery << "SELECT karabo_user, format FROM \""
+                    << ctxt->deviceId
+                    << "__EVENTS\" WHERE \"type\" = '\"+LOG\"' AND time <= "
+                    << epochAsMicrosecString(ctxt->atTime) << m_durationUnit
+                    << " ORDER BY DESC LIMIT 1";
 
             const std::string queryStr = iqlQuery.str();
 
             try {
-                m_influxClient->queryDb(queryStr,
-                                        bind_weak(&InfluxLogReader::onLastLoginBeforeTime, this, _1, ctxt));
+                m_influxClient->queryDb(
+                    queryStr, bind_weak(&InfluxLogReader::onLastLoginFormatBeforeTime, this, _1, ctxt));
             } catch (const std::exception &e) {
                 const std::string &errMsg = std::string("Error querying last login before time: ") + e.what();
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
@@ -520,8 +530,8 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::onLastLoginBeforeTime(const karabo::net::HttpResponse &valueResp,
-                                                    const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::onLastLoginFormatBeforeTime(const karabo::net::HttpResponse &valueResp,
+                                                      const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
 
             bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
 
@@ -532,18 +542,28 @@ namespace karabo {
             }
 
             try {
-                unsigned long long lastLoginBeforeTime = 0UL;
+                unsigned long long loginBeforeTime = 0ull;
+                int logFormatVersion = 0;
 
                 nl::json respObj = nl::json::parse(valueResp.payload);
-                auto value = respObj["results"][0]["series"][0]["values"][0][0];
-                if (!value.is_null()) {
+                // values will have just one record, values[0] (due to LIMIT 1 in the query)
+                // values[0][0] - timestamp
+                // values[0][1] - karabo_user
+                // values[0][2] - format (can be null)
+                auto loginVal = respObj["results"][0]["series"][0]["values"][0][0];
+                if (!loginVal.is_null()) {
                     // Db has a Login event before time.
-                    lastLoginBeforeTime = value.get<unsigned long long>();
+                    loginBeforeTime = loginVal.get<unsigned long long>();
                 }
-                ctxt->lastLoginBeforeTime = lastLoginBeforeTime;
+                ctxt->lastLoginBeforeTime = loginBeforeTime;
+                auto formatVal = respObj["results"][0]["series"][0]["values"][0][2];
+                if (!formatVal.is_null()) {
+                    logFormatVersion = formatVal.get<int>();
+                }
+                ctxt->logFormatVersion = logFormatVersion;
             } catch (const std::exception &e) {
                 std::ostringstream oss;
-                oss << "Error retrieving timestamp of last instantiation of device '"
+                oss << "Error retrieving timestamp and log format for last instantiation of device '"
                     << ctxt->deviceId << "' before '" << ctxt->atTime.toIso8601Ext()
                     << "' as part of operation getConfigurationFromPast: "
                     << e.what();
@@ -557,29 +577,34 @@ namespace karabo {
         }
 
 
-        void InfluxLogReader::asyncLastLogoutBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::asyncLastLogoutBeforeTime(
+                        const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
 
             std::ostringstream iqlQuery;
 
             iqlQuery << "SELECT LAST(karabo_user) FROM \""
-                    << ctxt->deviceId << "__EVENTS\" WHERE \"type\" = '\"-LOG\"' AND time <= "
+                    << ctxt->deviceId << "__EVENTS\""
+                    << " WHERE \"type\" = '\"-LOG\"' AND time <= "
                     << epochAsMicrosecString(ctxt->atTime) << m_durationUnit;
 
             const std::string queryStr = iqlQuery.str();
 
             try {
-                m_influxClient->queryDb(queryStr,
-                                        bind_weak(&InfluxLogReader::onLastLogoutBeforeTime, this, _1, ctxt));
+                m_influxClient->queryDb(
+                    queryStr,
+                    bind_weak(&InfluxLogReader::onLastLogoutBeforeTime, this, _1, ctxt));
             } catch (const std::exception &e) {
-                const std::string &errMsg = std::string("Error querying last logout before time: ") + e.what();
+                const std::string &errMsg =
+                    std::string("Error querying last logout before time: ") + e.what();
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                 ctxt->aReply.error(errMsg);
             }
         }
 
 
-        void InfluxLogReader::onLastLogoutBeforeTime(const karabo::net::HttpResponse &valueResp,
-                                                     const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+        void InfluxLogReader::onLastLogoutBeforeTime(
+                const karabo::net::HttpResponse &valueResp,
+                const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
 
             bool errorHandled = handleHttpResponseError(valueResp, ctxt->aReply);
 
@@ -590,18 +615,27 @@ namespace karabo {
             }
 
             try {
-                unsigned long long lastLogoutBeforeTime = 0UL;
+                unsigned long long lastLogoutBeforeTime = 0ull;
 
-               nl::json respObj = nl::json::parse(valueResp.payload);
-                auto value = respObj["results"][0]["series"][0]["values"][0][0];
+                // Note: all the accesses to keys or indexes of the deserialized
+                //       JSON object sent by Influx do not throw any exception
+                //       if the key or index doesn't exist. This is an intended
+                //       feature of the nlohmann JSON library. Further details
+                //       at https://json.nlohmann.me/features/element_access/unchecked_access/.
+                //       The "unchecked" accesses made to the paths inside the
+                //       deserialized JSON object are therefore safe, as long as
+                //       the deserialized object is not declared as const.
+                nl::json respObj = nl::json::parse(valueResp.payload);
+                auto values = respObj["results"][0]["series"][0]["values"];
+                auto value = values[0][0];
                 if (!value.is_null()) {
-                    // Db has a Logout event before time.
+                    // Db has a last Logout event before time.
                     lastLogoutBeforeTime = value.get<unsigned long long>();
                 }
                 ctxt->lastLogoutBeforeTime = lastLogoutBeforeTime;
             } catch (const std::exception &e) {
                 std::ostringstream oss;
-                oss << "Error retrieving timestamp of last deactivation of device '"
+                oss << "Error retrieving timestamp of last end of logging for device '"
                     << ctxt->deviceId << "' before '" << ctxt->atTime.toIso8601Ext()
                     << "' as part of operation getConfigurationFromPast: "
                     << e.what();
@@ -738,7 +772,7 @@ namespace karabo {
                 const Schema &schema = ctxt->configSchema;
 
                 // Stores the properties keys and types in the context.
-                ctxt->propNamesAndTypes.clear();
+                ctxt->propsInfo.clear();
                 std::vector<std::string> schPaths = schema.getDeepPaths();
                 for (const std::string &path : schPaths) {
                     if (schema.isLeaf(path) &&
@@ -746,7 +780,12 @@ namespace karabo {
                         // Current path is for a leaf node that set is to archive (more literally, not set to not
                         // archive).
                         const Types::ReferenceType valType = schema.getValueType(path);
-                        ctxt->propNamesAndTypes.push_back(make_pair(path, valType));
+                        ctxt->propsInfo.emplace_back(path, valType, false);
+                        if (valType == Types::FLOAT || valType == Types::DOUBLE) {
+                            // For floating point properties we also "schedule"
+                            // their infinite or Nan potencial values for retrieval
+                            ctxt->propsInfo.emplace_back(path, valType, true);
+                        }
                     }
                 }
             } catch (const std::exception &e) {
@@ -762,51 +801,60 @@ namespace karabo {
 
             // Triggers the sequence of configuration value retrievals. The configuration
             // values retrievals are an interplay between asyncPropValueBeforeTime and
-            // onAsyncPropValueBeforeTime - they will both consume the propNamesAndTypes
+            // onAsyncPropValueBeforeTime - they will both consume the propsInfo
             // vector, sending a response back to the slotGetConfigurationFromPast caller
             // when the last property value is retrieved.
-            asyncPropValueBeforeTime(ctxt, false);
-
+            asyncPropValueBeforeTime(ctxt);
         }
 
 
-        void InfluxLogReader::asyncPropValueBeforeTime(const boost::shared_ptr<ConfigFromPastContext> &ctxt, bool infinite) {
-            const auto nameAndType = ctxt->propNamesAndTypes.front();
-            // A 'SELECT LAST(/^dProp-DOUBLE|dProp-DOUBLE_INF/) ...' query returns the last values of both fields,
-            // but with a zero timestamp! So we have to request individually both. We start with the 'normal' field.
-            std::string fieldKey = nameAndType.first + "-" + Types::to<ToLiteral>(nameAndType.second);
-            if (infinite) {
-                // query the special field for nan and inf (only for DOUBLE or FLOAT)
+        void InfluxLogReader::asyncPropValueBeforeTime(
+                const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
+
+            const PropFromPastInfo propInfo = ctxt->propsInfo.front();
+            ctxt->propsInfo.pop_front();
+
+            std::string fieldKey{propInfo.name};
+
+            fieldKey +=  "-" + Types::to<ToLiteral>(propInfo.type);
+            if (propInfo.infiniteOrNan) {
+                // We are supposed to retrieve a potential NAN or INF value
+                // for the property.
                 fieldKey += "_INF";
             }
-            if (infinite || (nameAndType.second != Types::FLOAT && nameAndType.second != Types::DOUBLE)) {
-                // 'infinite' marks the 2nd query for a floating point variable, for normal types there is only one query:
-                // Drop - i.e. pop - from list of properties still to query!
-                ctxt->propNamesAndTypes.pop_front();
-            }
-            std::ostringstream iqlQuery;
 
+            std::ostringstream iqlQuery;
             iqlQuery << "SELECT LAST(\"" << fieldKey << "\") FROM \""
                     << ctxt->deviceId
                     << "\" WHERE time <= "
                     << epochAsMicrosecString(ctxt->atTime) << m_durationUnit;
+
+            if (ctxt->lastLoginBeforeTime != 0ull && ctxt->logFormatVersion > 0) {
+               // This is possible since in the new format timestamps older than the start of logging are
+               // replaced by start of logging. The restricted search in the past ensures that for unset
+               // properties with `noDefaultValue`, our query here does not return old values from previous
+               // incarnations of the device. For old data we need to keep the old behaviour since otherwise
+               // properties would be lost that had timestamps shortly before start of logging.
+                iqlQuery << " AND time >= " << ctxt->lastLoginBeforeTime
+                         << m_durationUnit;
+            }
+
             const std::string queryStr = iqlQuery.str();
 
             try {
-                m_influxClient->queryDb(queryStr,
-                                    bind_weak(&InfluxLogReader::onPropValueBeforeTime,
-                                              this, nameAndType.first, nameAndType.second, infinite, _1, ctxt));
-            } catch (const std::exception &e) {
-                const std::string &errMsg = std::string("Error querying property value before time: ") + e.what();
+                m_influxClient->queryDb(
+                    queryStr,
+                    bind_weak(&InfluxLogReader::onPropValueBeforeTime, this, propInfo, _1, ctxt));
+            } catch (const std::exception& e) {
+                const auto& errMsg = std::string("Error querying property value before time: ")
+                                     + e.what();
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                 ctxt->aReply.error(errMsg);
             }
         }
 
 
-        void InfluxLogReader::onPropValueBeforeTime(const std::string &propName,
-                                                    const karabo::util::Types::ReferenceType &propType,
-                                                    bool infinite,
+        void InfluxLogReader::onPropValueBeforeTime(const PropFromPastInfo& propInfo,
                                                     const karabo::net::HttpResponse &propValueResp,
                                                     const boost::shared_ptr<ConfigFromPastContext> &ctxt) {
 
@@ -818,15 +866,15 @@ namespace karabo {
                 return;
             }
 
+            const std::string& propName = propInfo.name;
+            const karabo::util::Types::ReferenceType& propType = propInfo.type;
+
             try {
                 nl::json respObj = nl::json::parse(propValueResp.payload);
                 const auto &value = respObj["results"][0]["series"][0]["values"][0][1];
                 if (!value.is_null()) {
                     auto timeObj = respObj["results"][0]["series"][0]["values"][0][0];
-                    unsigned long long time = timeObj.get<unsigned long long>();
-                    unsigned long long timeSec = time / kSecConversionFactor;
-                    unsigned long long timeFrac = (time % kSecConversionFactor) * kFracConversionFactor;
-                    Epochstamp timeEpoch(timeSec, timeFrac);
+                    const Epochstamp timeEpoch(toEpoch(timeObj.get<unsigned long long>()));
                     if (timeEpoch > ctxt->configTimePoint) {
                         ctxt->configTimePoint = timeEpoch;
                     }
@@ -835,27 +883,21 @@ namespace karabo {
                         if (!ctxt->configHash.has(propName)) {
                             // The normal case - the result is not yet there
                             addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, *valueAsString);
-                            if (propType == Types::DOUBLE || propType == Types::FLOAT) {
-                                // Query again query for the special field for nan and inf
-                                asyncPropValueBeforeTime(ctxt, true);
-                                return;
-                            }
                         } else {
-                            // Second query for field for nan and inf of FLOAT and DOUBLE
-                            const Epochstamp stampQuery1(Epochstamp::fromHashAttributes(ctxt->configHash.getAttributes(propName)));
-                            if (stampQuery1 < timeEpoch) {
-                                // This (i.e. the 2nd query) has more recent result
-                                addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, *valueAsString);
+                            // Second query for field corresponding to property that
+                            // has already been queried.
+                            if (propInfo.infiniteOrNan) {
+                                const Epochstamp stampQuery1(
+                                    Epochstamp::fromHashAttributes(ctxt->configHash.getAttributes(propName)));
+                                if (stampQuery1 < timeEpoch) {
+                                    // This (i.e. the 2nd query) has more recent result
+                                    addNodeToHash(ctxt->configHash, propName, propType, 0, timeEpoch, *valueAsString);
+                                }
+                            } else {
+                                throw KARABO_LOGIC_EXCEPTION(
+                                    "Unexpected case of multiple metric retrieval for a property.");
                             }
                         }
-                    }
-                } else {
-                    // No value means the query returns "empty" result ...
-                    // FLOAT and DOUBLE should be tested for nan and +-inf if not tested yet...
-                    // ... if tested already (infinite==true) then just skip and go for the next parameter
-                    if (!infinite && (propType == Types::DOUBLE || propType == Types::FLOAT)) {
-                        asyncPropValueBeforeTime(ctxt, true);
-                        return;
                     }
                 }
             } catch (std::exception &e) {
@@ -864,15 +906,15 @@ namespace karabo {
                     << "' of type '" << Types::to<ToLiteral>(propType)
                     << "' for device '" << ctxt->deviceId << "': " << e.what()
                     << "\nRemaining property value(s) to retrieve: "
-                    << ctxt->propNamesAndTypes.size() << ".";
+                    << ctxt->propsInfo.size() << ".";
                 const std::string &errMsg = oss.str();
                 KARABO_LOG_FRAMEWORK_ERROR << errMsg;
                 // Go on with the remaining properties.
             }
 
-            if (ctxt->propNamesAndTypes.size() > 0) {
+            if (ctxt->propsInfo.size() > 0) {
                 // There is at least one more property whose value should be retrieved.
-                asyncPropValueBeforeTime(ctxt, false);
+                asyncPropValueBeforeTime(ctxt);
             } else {
                 // All properties have been retrieved. Reply to the slot caller.
                 bool configAtTimePoint = ctxt->lastLogoutBeforeTime < ctxt->lastLoginBeforeTime;
@@ -1130,6 +1172,12 @@ namespace karabo {
             }
 
             return errorHandled;
+        }
+
+        karabo::util::Epochstamp InfluxLogReader::toEpoch(unsigned long long timeFromInflux) const {
+            const unsigned long long timeSec = timeFromInflux / kSecConversionFactor;
+            const unsigned long long timeFrac = (timeFromInflux % kSecConversionFactor) * kFracConversionFactor;
+            return Epochstamp(timeSec, timeFrac);
         }
 
     } // namespace devices

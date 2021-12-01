@@ -52,7 +52,7 @@ protected:
 
     void testLastKnownConfiguration(karabo::util::Epochstamp fileMigratedDataEndsBefore = karabo::util::Epochstamp(),
                                     bool dataWasMigrated = false);
-    void testCfgFromPastRestart();
+    void testCfgFromPastRestart(bool pastStampStaysPast);
 
     /**
      * Checks that the DataLoggers handle NaN floats and doubles.
@@ -101,6 +101,18 @@ protected:
      * circumvent min/max limits and vector size specification
      */
     void setPropertyTestSchema();
+
+    /**
+     * @brief Checks that getConfigurationFromPast does not retrieve properties
+     * with no default value that have not been set during the instantiation
+     * of the device that is closest to the requested timepoint.
+     *
+     * "Instantiation of the device that is closest to the requested timepoint"
+     * means either the last instantion of the device before the requested
+     * timepoint, if the device was not active at the timepoint, or the
+     * instantiation of the device that was active at the timepoint.
+     */
+    void testUnchangedNoDefaultProperties();
 
     std::string getDeviceIdPrefix();
 
