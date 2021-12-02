@@ -595,19 +595,17 @@ namespace karabo {
         template<class T>
         inline MappedType& OrderedMap<KeyType, MappedType>::set(const KeyType& key, const T& value) {
             // Take care - any code change is likely to be done to the overload with 'T&& value' argument as well.
-            map_iterator it;
-            if (((it = find(key)) != m_mapNodes.end())) {
-                MappedType& node = it->second;
-                node.setValue(value);
-                return node;
+            MappedType* nodePtr = nullptr;
+            map_iterator it = find(key);
+            if (it != m_mapNodes.end()) {
+                nodePtr = &(it->second);
             } else {
-                static MappedType local;
-                MappedType& node = (m_mapNodes[/*hash*/(key)] = local);
-                node.setKey(key);
-                node.setValue(value);
-                m_listNodes.push_back(&node);
-                return node;
+                nodePtr = &(m_mapNodes[/*hash*/(key)]);
+                nodePtr->setKey(key);
+                m_listNodes.push_back(nodePtr);
             }
+            nodePtr->setValue(value);
+            return *nodePtr;
         }
 
         template<class KeyType, class MappedType>
@@ -622,19 +620,17 @@ namespace karabo {
         template<class T>
         inline MappedType& OrderedMap<KeyType, MappedType>::set(const KeyType& key, T&& value) {
             // Take care - any code change is likely to be done to the overload with 'const T& value' argument as well.
-            map_iterator it;
-            if (((it = find(key)) != m_mapNodes.end())) {
-                MappedType& node = it->second;
-                node.setValue(std::forward<T>(value));
-                return node;
+            MappedType* nodePtr = nullptr;
+            map_iterator it = find(key);
+            if (it != m_mapNodes.end()) {
+                nodePtr = &(it->second);
             } else {
-                static MappedType local;
-                MappedType& node = (m_mapNodes[/*hash*/(key)] = local);
-                node.setKey(key);
-                node.setValue(std::forward<T>(value));
-                m_listNodes.push_back(&node);
-                return node;
+                nodePtr = &(m_mapNodes[/*hash*/(key)]);
+                nodePtr->setKey(key);
+                m_listNodes.push_back(nodePtr);
             }
+            nodePtr->setValue(std::forward<T>(value));
+            return *nodePtr;
         }
 
         template<class KeyType, class MappedType>
