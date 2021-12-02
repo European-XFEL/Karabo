@@ -133,12 +133,33 @@ karabo.native.exceptions.KaraboError: Fauly Slot cannot be executed
 }
 """
 
+
+KARABO_ERROR_MESSAGE_WITH_TAGGY_TEXT = """
+Failure on request to execute 'loadFromTime' on device 'Princess', details:
+1. Exception =====>  {
+    Exception Type....:  Remote Exception from Princess
+    Message...........:  Traceback (most recent call last):
+  File "/path/to/work/Framework/src/pythonKarabo/karabo/native/schema/descriptors.py", line 669, in wrapper
+    ret = await coro
+  File "/path/to/work/Framework/src/pythonKarabo/karabo/middlelayer_api/eventloop.py", line 400, in run_coroutine_or_thread
+    return (await f(*args, **kwargs))
+  File "/path/to/work/Framework/src/pythonKarabo/karabo/native/schema/descriptors.py", line 636, in wrapper
+    return await self.method(device)
+  File "/path/to/work/Framework/src/pythonKarabo/karabo/native/schema/basetypes.py", line 44, in wrap
+    raise TypeError('cannot wrap "{}" into Karabo type'.format(type(data)))
+TypeError: cannot wrap "<class 'numpy.bool_'>" into Karabo type
+    Timestamp.........:  2021-Dec-02 14:29:59.046236
+}
+"""
+
+
 EXPECTED_MESSAGE = {
-    CPP_SLOT_ERROR_MESSAGE: 'Command "move" is not allowed in current state "ERROR" of device "MOV_TEST/MOTOR/SERVO_1".',
+    CPP_SLOT_ERROR_MESSAGE: 'Command &quot;move&quot; is not allowed in current state &quot;ERROR&quot; of device &quot;MOV_TEST/MOTOR/SERVO_1&quot;.',
     PYTHON_SLOT_ERROR_MESSAGE: 'RuntimeError: Problematic execute: ProblematicSlot',
     PYTHON_MULTIPLE_ERROR_MESSAGE: 'RuntimeError: Something went wrong.',
     SIMPLE_ERROR_MESSAGE: SIMPLE_ERROR_MESSAGE,
     KARABO_ERROR_MESSAGE: "Fauly Slot cannot be executed",
+    KARABO_ERROR_MESSAGE_WITH_TAGGY_TEXT: 'TypeError: cannot wrap &quot;&lt;class &#x27;numpy.bool_&#x27;&gt;&quot; into Karabo type',
     UNKNOWN_ERROR_MESSAGE: "Unknown exception",
 }
 
@@ -149,6 +170,7 @@ def test_get_error_message():
     _assert_error_message(PYTHON_MULTIPLE_ERROR_MESSAGE)
     _assert_error_message(SIMPLE_ERROR_MESSAGE)
     _assert_error_message(KARABO_ERROR_MESSAGE)
+    _assert_error_message(KARABO_ERROR_MESSAGE_WITH_TAGGY_TEXT)
     _assert_error_message(UNKNOWN_ERROR_MESSAGE)
 
 
