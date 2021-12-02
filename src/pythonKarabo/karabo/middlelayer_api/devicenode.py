@@ -38,9 +38,11 @@ class DeviceNode(String):
     assignment = Attribute(Assignment.MANDATORY, dtype=Assignment)
     displayType = Attribute("deviceNode", dtype=str)
 
-    def __init__(self, **kwargs):
+    def __init__(self, timeout=None, **kwargs):
+        # timeout for backward compatiblity
         super().__init__(**kwargs)
         warnings.warn(
+            "The `timeout` argument for a `DeviceNode` has been deprecated. "
             "A `DeviceNode` has known issues and its usage is therefore "
             "discouraged. Please look at the documentation for help and "
             "consider using a `connectDevice` based solution in the "
@@ -65,9 +67,9 @@ class DeviceNode(String):
                 self.key))
         return self._initialize(instance, value)
 
-    async def finalize_init(self, klass):
+    async def finalize_init(self, instance):
         """Sets a real proxy to the MetaProxy"""
-        meta_proxy = klass._getValue(self.key)
+        meta_proxy = instance._getValue(self.key)
         assert isinstance(meta_proxy, MetaProxy)
         assert meta_proxy.proxy is None, "proxy already initialized"
 
@@ -75,7 +77,9 @@ class DeviceNode(String):
         proxy = await getDevice(value)
         proxy.__meta_deviceId = meta_proxy.deviceId
         meta_proxy.proxy = proxy
-        klass._ss.exitStack.enter_context((await updateDevice(proxy)))
+
+        root = instance.get_root()
+        root._ss.exitStack.enter_context((await updateDevice(proxy)))
 
     def _initialize(self, instance, value):
         # This should not happen as we are mandatory, but we never know
