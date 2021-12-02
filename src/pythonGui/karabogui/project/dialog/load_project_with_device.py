@@ -29,13 +29,13 @@ class LoadProjectWithDeviceDialog(QDialog):
         self.setWindowTitle("Find and Load Project with Device")
         self.initial_domain = initial_domain
         self.txt_device_id.setPlaceholderText(
-            f'Enter DeviceID part (at least {MIN_DEVICE_ID_SIZE} '
-            'characters)')
+            f"Enter DeviceID part (at least {MIN_DEVICE_ID_SIZE} "
+            "characters)")
         self.button_box.button(QDialogButtonBox.Ok).setText("Load")
         flags = Qt.WindowCloseButtonHint
         self.setWindowFlags(self.windowFlags() | flags)
 
-        self.spin_widget = get_spin_widget(icon='wait-black',
+        self.spin_widget = get_spin_widget(icon="wait-black",
                                            scaled_size=QSize(16, 16))
         self.spin_widget.setVisible(False)
         self.bottom_horizontal_layout.insertWidget(0, self.spin_widget)
@@ -50,7 +50,7 @@ class LoadProjectWithDeviceDialog(QDialog):
         self.setup_table()
         self.connect_widgets_events()
 
-        self.search_domain = ""     # domain used by last project search
+        self.search_domain = ""  # domain used by last project search
         self.search_device_id = ""  # device_id used by last project search
         self.loading_domains = False
         self.finding_projects = False
@@ -88,7 +88,7 @@ class LoadProjectWithDeviceDialog(QDialog):
     # Karabo Event Handlers
 
     def _event_domain_list(self, data):
-        self._domains_updated(data.get('items', []))
+        self._domains_updated(data.get("items", []))
 
     def _event_find_with_device(self, data):
         if self.finding_projects:
@@ -109,7 +109,7 @@ class LoadProjectWithDeviceDialog(QDialog):
             if domain_to_select:
                 domain_idx = self.cmb_domain.findText(domain_to_select)
             if domain_idx == -1:
-                current_topic = get_config()['broker_topic']
+                current_topic = get_config()["broker_topic"]
                 topic_idx = self.cmb_domain.findText(current_topic)
                 if topic_idx >= 0:
                     # The topic is among the domains
@@ -122,12 +122,12 @@ class LoadProjectWithDeviceDialog(QDialog):
 
     def _projects_with_device_updated(self, data):
         self.finding_projects = False
-        if data['error'] is not None:
+        if data["error"] is not None:
             self.update_dialog_state()
-            messagebox.show_error('Find projects with device failed!',
-                                  details=data['error'])
+            messagebox.show_error("Find projects with device failed!",
+                                  details=data["error"])
         else:
-            self.populate_projects_table(data['projects'])
+            self.populate_projects_table(data["projects"])
             self.update_dialog_state()
 
     # -----------------------------------------------------------------------
@@ -182,7 +182,7 @@ class LoadProjectWithDeviceDialog(QDialog):
     # UI Setup and Updating
 
     def setup_table(self):
-        cols = ['Project', 'Last Modified', 'Matching Devices']
+        cols = ["Project", "Last Modified", "Matching Devices"]
         self.tbl_projects.verticalHeader().setVisible(False)
         self.tbl_projects.setColumnCount(len(cols))
         self.tbl_projects.setHorizontalHeaderLabels(cols)
@@ -203,13 +203,15 @@ class LoadProjectWithDeviceDialog(QDialog):
         self.tbl_projects.setUpdatesEnabled(False)
         self.tbl_projects.setRowCount(len(data))
         for row, rec in enumerate(data):
-            prj_name = QTableWidgetItem(rec['name'])
-            prj_name.setData(Qt.UserRole, rec['uuid'])
+            prj_name = QTableWidgetItem(rec["name"])
+            prj_name.setData(Qt.UserRole, rec["uuid"])
             self.tbl_projects.setItem(row, 0, prj_name)
             self.tbl_projects.setItem(
-                row, 1, QTableWidgetItem(rec['last_modified']))
-            self.tbl_projects.setItem(
-                row, 2, QTableWidgetItem(", ".join(sorted(rec['devices']))))
+                row, 1, QTableWidgetItem(rec["last_modified"]))
+            devices = ", ".join(sorted(rec["devices"]))
+            device_item = QTableWidgetItem(devices)
+            device_item.setToolTip(devices)
+            self.tbl_projects.setItem(row, 2, device_item)
         self.tbl_projects.setUpdatesEnabled(True)
         self.tbl_projects.setSortingEnabled(True)
         # The last column is not resized to avoid conflict with its stretch
@@ -222,33 +224,30 @@ class LoadProjectWithDeviceDialog(QDialog):
         loading_data = self.loading_domains or self.finding_projects
 
         self.cmb_domain.setEnabled(not loading_data)
-        self.btn_find_projects.setEnabled(
-            not loading_data and
-            len(self.txt_device_id.text()) >= MIN_DEVICE_ID_SIZE)
+        enabled = (not loading_data and len(
+            self.txt_device_id.text()) >= MIN_DEVICE_ID_SIZE)
+        self.btn_find_projects.setEnabled(enabled)
         self.button_box.button(QDialogButtonBox.Ok).setEnabled(
             len(self.tbl_projects.selectedItems()) > 0)
 
         if self.search_domain and self.search_device_id and not loading_data:
             if self.tbl_projects.rowCount() == 0:
                 self.lbl_status.setText(
-                    f'No project with "{self.search_device_id}" in '
-                    f'"{self.search_domain}"'
-                )
+                    f"No project with {self.search_device_id} in "
+                    f"{self.search_domain}")
             elif self.tbl_projects.rowCount() == 1:
                 self.lbl_status.setText(
-                    f'1 project with "{self.search_device_id}" in '
-                    f'"{self.search_domain}"'
-                )
+                    f"1 project with {self.search_device_id} in "
+                    f"{self.search_domain}")
             else:
                 self.lbl_status.setText(
-                    f'{self.tbl_projects.rowCount()} projects with '
-                    f'"{self.search_device_id}" in "{self.search_domain}"'
-                )
+                    f"{self.tbl_projects.rowCount()} projects with "
+                    f"{self.search_device_id} in {self.search_domain}")
         elif self.loading_domains:
-            self.lbl_status.setText('Loading domains ...')
+            self.lbl_status.setText("Loading domains ...")
         elif self.finding_projects:
-            self.lbl_status.setText('Finding projects ...')
+            self.lbl_status.setText("Finding projects ...")
         else:
-            self.lbl_status.setText('')
+            self.lbl_status.setText("")
 
         self.spin_widget.setVisible(loading_data)
