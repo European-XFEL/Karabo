@@ -376,11 +376,7 @@ class EventLoop(SelectorEventLoop):
         task = super().create_task(coro, name=name)
         try:
             if instance is None:
-                try:
-                    instance = get_event_loop().instance()
-                except RuntimeError:
-                    # No event loop for current thread:
-                    return task
+                instance = get_event_loop().instance()
             instance._ss.tasks.add(task)
             task.add_done_callback(instance._ss.tasks.remove)
             task.instance = weakref.ref(instance)
