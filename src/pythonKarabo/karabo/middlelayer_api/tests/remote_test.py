@@ -1096,15 +1096,22 @@ class Tests(DeviceTest):
     async def test_device_node_alive(self):
         await sleep(0.1)
 
+        class Sub(Configurable):
+            dn = DeviceNode()
+
         class A(Device):
             dn = DeviceNode()
+            sub = Node(Sub)
 
             async def onInitialization(self):
                 self.state = State.ON
 
-        node_device = A({"_deviceId_": "devicenode", "dn": "scratchy"})
+        node_device = A({"_deviceId_": "devicenode",
+                        "dn": "scratchy", "sub": {"dn": "itchy"}})
         scratchy = Local({"_deviceId_": "scratchy"})
+        itchy = Local({"_deviceId_": "itchy"})
         try:
+            await itchy.startInstance()
             await scratchy.startInstance()
             await node_device.startInstance()
             while True:
@@ -1112,9 +1119,13 @@ class Tests(DeviceTest):
                     break
                 await sleep(0.1)
             self.assertTrue(isAlive(node_device.dn))
+            self.assertTrue(isAlive(node_device.sub.dn))
             background(scratchy.slotKillDevice())
+            background(itchy.slotKillDevice())
             await waitUntil(lambda: not isAlive(node_device.dn))
             self.assertFalse(isAlive(node_device.dn))
+            await waitUntil(lambda: not isAlive(node_device.sub.dn))
+            self.assertFalse(isAlive(node_device.sub.dn))
         finally:
             await node_device.slotKillDevice()
 
