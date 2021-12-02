@@ -126,8 +126,8 @@ def get_device_node_initializers(instance):
         if descr.displayType == "deviceNode":
             ret.append(descr.finalize_init(instance))
         elif isinstance(descr, Node):  # recurse Nodes
-            descr_klass = getattr(instance, descr.key)
-            ret.extend(get_device_node_initializers(descr_klass))
+            node = getattr(instance, descr.key)
+            ret.extend(get_device_node_initializers(node))
     return ret
 
 
