@@ -1,3 +1,4 @@
+import html
 import re
 
 import natsort
@@ -51,7 +52,7 @@ def get_error_message(failure_reason):
                 # XXX: No exception found ...
                 verbose_message = "Unknown exception"
 
-    return verbose_message
+    return html.escape(verbose_message)
 
 
 def realign_topo_hash(topo_hash, attr):
