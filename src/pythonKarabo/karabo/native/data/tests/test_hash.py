@@ -1,7 +1,8 @@
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from karabo.native import Hash, HashByte, HashElement, HashList, Schema
+from karabo.native import (
+    Hash, HashByte, HashElement, HashList, Schema, is_equal)
 
 
 def check_array(array, expected):
@@ -442,6 +443,25 @@ def test_hash_fully_equal():
     # Now modify an attribute
     hh["hca", "minInc"] = 5
     assert not h.fullyEqual(hh)
+
+
+def test_is_equal():
+    """Test the is_equal comparing function"""
+    assert not is_equal(None, 2)
+    assert is_equal(None, None)
+    assert is_equal(1, 1)
+    assert is_equal(1, 1.0)
+    assert not is_equal(1.00001, 1.0)
+    assert is_equal(1e-10, 1.0e-10)
+    assert is_equal("foo", "foo")
+    assert not is_equal("bar", "foo")
+    assert is_equal([1, 2, 3, 7, 8], [1, 2, 3, 7, 8])
+    assert not is_equal([1, 2, 3, 8], [1, 2, 3, 9])
+    h = Hash("value", "None")
+    assert is_equal(Schema(name="foo", hash=h), Schema(name="foo", hash=h))
+    assert not is_equal(Schema(name="bar", hash=h), Schema(name="foo", hash=h))
+    assert not is_equal(Schema(name="foo", hash=h),
+                        Schema(name="foo", hash=Hash()))
 
 
 def test_merge():
