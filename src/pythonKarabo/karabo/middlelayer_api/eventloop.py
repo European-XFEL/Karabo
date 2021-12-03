@@ -488,10 +488,6 @@ class EventLoop(SelectorEventLoop):
     def close(self):
         for t in asyncio.all_tasks(loop=self):
             t.cancel()
-        self._ready.extend(self._scheduled)
-        self._scheduled.clear()
-        while self._ready:
-            self._run_once()
         if self.connection is not None:
             self.connection.close()
         super().close()
