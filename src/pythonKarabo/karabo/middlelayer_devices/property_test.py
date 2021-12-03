@@ -79,8 +79,8 @@ class VectorNode(Configurable):
 
     uint64Property = VectorUInt64(
         displayedName="UInt64 Vector",
-        description="Vector uint64 values",
-        defaultValue=[-10, -10],
+        description="Vector Uint64 values",
+        defaultValue=[10, 10],
         minSize=1,
         maxSize=VECTOR_MAX_SIZE)
 
