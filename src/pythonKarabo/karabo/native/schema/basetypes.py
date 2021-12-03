@@ -116,7 +116,6 @@ class KaraboValue(object):
       This contains all the details of the datatype we have. It
       is an object of :class:`~karabo.middlelayer.Descriptor`, look there for
       what it contains.
-/
       The descriptor is only available when accessing the device attributes
       directly. Values calulated from a :class:`KaraboValue` lose their
       descriptor, as it does not apply to them anymore.
