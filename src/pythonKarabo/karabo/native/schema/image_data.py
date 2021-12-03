@@ -97,12 +97,13 @@ class Image(Type):
 
     This special hash `Type` contains an NDArray element and is constructed::
 
-    class Device(Configurable):
+        class Device(Configurable):
 
-        image = Image(
-            data=ImageData(np.zeros(shape=(10, 10), dtype=np.uint64),
-                           encoding=ENCODING.GRAY),
-            displayedName="Image")
+            data = ImageData(np.zeros(shape=(10, 10), dtype=np.uint64),
+                             encoding=ENCODING.GRAY)
+            image = Image(
+                data=image_data,
+                displayedName="Image")
 
     Hence, the `Image` element can be initialized with an `ImageData`
     KaraboValue.
