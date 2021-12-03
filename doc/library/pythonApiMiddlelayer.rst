@@ -289,18 +289,21 @@ Karabo data types
 .. autofunction:: karabo.middlelayer.isSet
 
 .. autoclass:: karabo.middlelayer.QuantityValue()
+   :members:
 
 .. autoclass:: karabo.middlelayer.StringValue()
 
 .. autoclass:: karabo.middlelayer.VectorStringValue()
 
 .. autoclass:: karabo.middlelayer.TableValue()
+   :members:
 
 .. autoclass:: karabo.middlelayer.EnumValue()
 
 .. autoclass:: karabo.middlelayer.BoolValue()
 
 .. autoclass:: karabo.middlelayer.ImageData()
+   :members:
 
 .. autoclass:: karabo.middlelayer.NoneValue()
 
