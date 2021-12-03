@@ -68,6 +68,10 @@ void DataLogging_Test::fileAllTestRunner() {
     //       https://git.xfel.eu/gitlab/Karabo/Framework/merge_requests/4455).
     //testSchemaEvolution();
     testNans();
+
+    // At the end we shutdown the logger manager and try to bring it back in a bad state
+    // Needs that the working logger was there before.
+    testFailingManager();
 }
 
 void DataLogging_Test::testMigrateFileLoggerData() {
@@ -279,4 +283,39 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     // server not available condition - the host of the Influx logger is the same process that runs this test.
 
     std::clog << "OK" << std::endl;
+}
+
+
+void DataLogging_Test::testFailingManager()  {
+    std::clog << "Testing logger manager goes to ERROR with inconsistent config ..." << std::flush;
+    const std::string dataLogManagerId("loggerManager");
+    std::pair<bool, std::string> success = m_deviceClient->killDevice(dataLogManagerId, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    const Hash conf("deviceId", dataLogManagerId,
+                    // Place list that is inconsistent with existing loggermap.xml (i.e. server in loggerMap is missing),
+                    // this will be noticed by the logger and bring it to ERROR.
+                    "serverList", std::vector<std::string>{"garbageServer"});
+
+    success = m_deviceClient->instantiate(m_server, "DataLoggerManager", conf, KRB_TEST_MAX_TIMEOUT);
+    CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
+
+    karabo::util::State loggerState = karabo::util::State::UNKNOWN;
+    const std::string &dataLoggerId = karabo::util::DATALOGGER_PREFIX + m_server;
+    int timeout = KRB_TEST_MAX_TIMEOUT * 1000;
+    while (timeout > 0) {
+        loggerState = m_deviceClient->get<karabo::util::State>(dataLogManagerId, "state");
+        if (loggerState == karabo::util::State::ERROR) {
+            break;
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(25));
+        timeout -= 25;
+    }
+
+    const std::string status = m_deviceClient->get<std::string>(dataLogManagerId, "status");
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Missed ERROR state - status: " + status,
+                                 karabo::util::State::ERROR, loggerState);
+    CPPUNIT_ASSERT_MESSAGE(status, status.find("Failure in initialize(), likely a restart is needed:") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(status, status.find("An error has occured: Inconsistent 'loggermap.xml' and 'serverList' configuration:") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(status, status.find("'DataLoggingTestServer' is in map, but not in list.") != std::string::npos);
 }
