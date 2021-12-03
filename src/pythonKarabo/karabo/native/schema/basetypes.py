@@ -103,9 +103,10 @@ def wrap_methods(cls):
 
 
 class KaraboValue(object):
-    """This is the base class for all Karabo values. All attributes of
-    a Karabo device contain objects of these types, as they are the only
-    ones we know how to transport over the network.
+    """This is the base class for all Karabo values.
+
+    All attributes of a Karabo device contain objects of these types, as they
+    are the only ones we know how to transport over the network.
 
     A :class:`KaraboValue` contains attributes that describe the value
     further:
@@ -129,6 +130,10 @@ class KaraboValue(object):
       newest timestamp of the values operated on. So for the example
       ``2 * x + y``, the newest timestamp of ``x`` and ``y`` is taken,
       if both have a timestamp.
+
+    .. attribute:: tid
+
+      This is the macro id number attached to the timestamp.
 
     .. attribute:: value
 
@@ -158,7 +163,7 @@ class KaraboValue(object):
     def has_tid(self):
         """Property to indicate whether our KaraboValue has a valid trainId
         """
-        return (self.timestamp.tid > 0)
+        return self.timestamp.tid > 0
 
     @property
     def tid(self):
@@ -520,12 +525,15 @@ class TableValue(KaraboValue):
         self[item] = []
 
     def insert(self, index, value):
+        """Insert a `value` into the TableValue at `index`"""
         self[index:index] = value
 
     def extend(self, value):
+        """Extend the `TableValue` by a `value`"""
         self[len(self.value):] = value
 
     def append(self, value):
+        """Append `value` to the `TableValue`"""
         self.extend(value)
 
     def pop(self, index=-1):
@@ -544,8 +552,7 @@ class TableValue(KaraboValue):
         self.descriptor.__set__(self._parent, self.value)
 
     def to_hashlist(self):
-        """Convert the TableValue as `Hashlist` but lose the attributes
-        """
+        """Convert the TableValue as `Hashlist` but lose the attributes"""
         ret = HashList(Hash({key: value for key, value in
                              zip(self.value.dtype.names, row)})
                        for row in self.value)
