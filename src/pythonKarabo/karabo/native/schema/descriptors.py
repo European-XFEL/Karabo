@@ -1096,7 +1096,7 @@ class String(Enumable, Type):
 class RegexString(String):
     """The `RegexString` descriptor is used as follows::
 
-        data = RegexString(regex="0|1")
+            data = RegexString(regex="0|1")
 
         A corresponding displayType is automatically set.
         The descriptor validates value input on set.
@@ -1145,7 +1145,7 @@ class VectorString(Vector):
 class VectorRegexString(VectorString):
     """The `VectorRegexString` descriptor is used as follows::
 
-        data = VectorRegexString(regex="0|1")
+            data = VectorRegexString(regex="0|1")
 
         A corresponding displayType is automatically set.
         The descriptor validates value input on set.
@@ -1219,8 +1219,18 @@ class VectorHash(Vector):
     - list of tuples: [(value1, value2), ...]
     - list of Hashes: [Hash('key1', value1, 'key2', value2), ...]
 
+    A VectorHash can be initialized via::
+
+        class RowSchema(Configurable):
+            deviceId = String()
+            classId = String()
+
+        table = VectorHash(
+            displayedName="Table",
+            rows=RowSchema)
+
     :param row: The structure of each row. This is a :class:`Configurable`
-    class.
+                class.
     """
     basetype = TypeHash
     number = 31

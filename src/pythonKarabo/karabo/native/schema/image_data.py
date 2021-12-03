@@ -102,7 +102,7 @@ class Image(Type):
             data = ImageData(np.zeros(shape=(10, 10), dtype=np.uint64),
                              encoding=ENCODING.GRAY)
             image = Image(
-                data=image_data,
+                data=data,
                 displayedName="Image")
 
     Hence, the `Image` element can be initialized with an `ImageData`
