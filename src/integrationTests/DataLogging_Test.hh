@@ -39,6 +39,13 @@ private:
      */
     void testNoInfluxServerHandling();
 
+    /**
+     * Test that manager goes to ERROR if server list and loggermap.xml are inconsistent
+     *
+     * Requires that a loggermap.xml is present from previous manager
+     */
+    void testFailingManager();
+
     bool m_dataWasMigrated = false;
     karabo::util::Epochstamp m_fileMigratedDataEndsBefore;
 

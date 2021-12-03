@@ -106,7 +106,7 @@ namespace karabo {
         void DataLoggerManager::expectedParameters(Schema& expected) {
 
             OVERWRITE_ELEMENT(expected).key("state")
-                    .setNewOptions(State::INIT, State::ON, State::MONITORING)
+                    .setNewOptions(State::INIT, State::ON, State::MONITORING, State::ERROR)
                     .setNewDefaultValue(State::INIT)
                     .commit();
 
@@ -329,43 +329,55 @@ namespace karabo {
 
 
         void DataLoggerManager::initialize() {
+            std::string exceptTxt;
+            try {
+                checkLoggerMap(); // throws if loggerMap and serverList are inconsistent
 
-            checkLoggerMap(); // throws if loggerMap and serverList are inconsistent
+                // Setup m_loggerData from server list
+                const Hash data("state", LoggerState::OFFLINE,
+                                "backlog", std::unordered_set<std::string>(),
+                                "beingAdded", std::unordered_set<std::string>(),
+                                "devices", std::unordered_set<std::string>());
+                for (const std::string& server : m_serverList) {
+                    m_loggerData.set(server, data);
+                }
 
-            // Setup m_loggerData from server list
-            const Hash data("state", LoggerState::OFFLINE,
-                            "backlog", std::unordered_set<std::string>(),
-                            "beingAdded", std::unordered_set<std::string>(),
-                            "devices", std::unordered_set<std::string>());
-            for (const std::string& server : m_serverList) {
-                m_loggerData.set(server, data);
+                if (m_logger == "InfluxDataLogger" && get<std::string>("logger.InfluxDataLogger.dbname").empty()) {
+                    // Initialise DB name from broker topic
+                    const std::string dbName(getTopic());
+                    KARABO_LOG_FRAMEWORK_INFO << "Switch to Influx DB name '" << dbName << "'";
+                    set("logger.InfluxDataLogger.dbname", dbName);
+                }
+
+                // Register handlers here
+                remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::instanceNewHandler, this, _1));
+                remote().registerInstanceGoneMonitor(boost::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
+
+                // Switch on instance tracking - which is blocking a while.
+                // Note that instanceNew(..) will be called for all instances already in the game.
+                remote().enableInstanceTracking();
+
+                // Publish logger map read from disc. Do that as late as possible in the initialization procedure
+                // to give those interested the chance to register their slots after we sent signalInstanceNew.
+                {
+                    boost::mutex::scoped_lock lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
+                    emit<Hash>("signalLoggerMap", m_loggerMap);
+                }
+
+                // Start regular topology checks (and update State to ON)
+                m_strand->post(bind_weak(&Self::launchTopologyCheck, this));
+
+            } catch (const karabo::util::Exception& ke) {
+                exceptTxt = ke.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                exceptTxt = e.what();
             }
-
-            if (m_logger == "InfluxDataLogger" && get<std::string>("logger.InfluxDataLogger.dbname").empty()) {
-                // Initialise DB name from broker topic
-                const std::string dbName(getTopic());
-                KARABO_LOG_FRAMEWORK_INFO << "Switch to Influx DB name '" << dbName << "'";
-                set("logger.InfluxDataLogger.dbname", dbName);
+            if (!exceptTxt.empty()) {
+                std::string msg("Failure in initialize(), likely a restart is needed: ");
+                msg += exceptTxt;
+                KARABO_LOG_FRAMEWORK_ERROR << msg;
+                updateState(State::ERROR, Hash("status", msg));
             }
-
-            // Register handlers here
-            remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::instanceNewHandler, this, _1));
-            remote().registerInstanceGoneMonitor(boost::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
-
-            // Switch on instance tracking - which is blocking a while.
-            // Note that instanceNew(..) will be called for all instances already in the game.
-            remote().enableInstanceTracking();
-
-            // Publish logger map read from disc. Do that as late as possible in the initialization procedure
-            // to give those interested the chance to register their slots after we sent signalInstanceNew.
-            {
-                boost::mutex::scoped_lock lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
-                emit<Hash>("signalLoggerMap", m_loggerMap);
-            }
-
-            // Start regular topology checks (and update State to ON)
-            m_strand->post(bind_weak(&Self::launchTopologyCheck, this));
-
         }
 
 
@@ -383,7 +395,7 @@ namespace karabo {
             // Now loop and check that all from logger map are also in configured server list
             for (const std::string& serverInMap : serversInMap) {
                 if (find(m_serverList.begin(), m_serverList.end(), serverInMap) == m_serverList.end()) {
-                    throw KARABO_LOGIC_EXCEPTION("Inconsistent '" + m_loggerMapFile + "' and \"serverList\" configuration: '"
+                    throw KARABO_LOGIC_EXCEPTION("Inconsistent '" + m_loggerMapFile + "' and 'serverList' configuration: '"
                             + serverInMap + "' is in map, but not in list.");
                 }
             }
