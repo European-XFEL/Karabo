@@ -8,7 +8,7 @@ from .config import (
     apply_configuration, apply_default_configuration, apply_fast_data,
     apply_project_configuration, extract_attribute_modifications,
     extract_configuration, extract_edits, extract_init_configuration,
-    extract_sparse_configurations)
+    extract_online_edits, extract_sparse_configurations)
 from .proxy import (
     BaseDeviceProxy, DeviceClassProxy, DeviceProxy, ProjectDeviceProxy,
     PropertyProxy)
