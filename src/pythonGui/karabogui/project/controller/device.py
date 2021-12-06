@@ -13,7 +13,8 @@ from traits.api import Instance, Property, Undefined, on_trait_change
 
 import karabogui.icons as icons
 from karabo.common.api import (
-    NO_CLASS_STATUSES, NO_CONFIG_STATUSES, Capabilities)
+    NO_CLASS_STATUSES, NO_CONFIG_STATUSES, ONLINE_CONFIG_STATUSES,
+    Capabilities)
 from karabo.common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     find_parent_object)
@@ -21,8 +22,8 @@ from karabo.native import Hash, read_project_model, write_project_model
 from karabogui import messagebox
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.dialogs.api import (
-    ConfigurationFromNameDialog, ConfigurationFromPastDialog,
-    DeviceCapabilityDialog)
+    ConfigComparisonDialog, ConfigurationFromNameDialog,
+    ConfigurationFromPastDialog, DeviceCapabilityDialog)
 from karabogui.events import KaraboEvent, broadcast_event
 from karabogui.indicators import get_project_device_status_icon
 from karabogui.itemtypes import ProjectItemTypes
@@ -119,7 +120,15 @@ class DeviceInstanceController(BaseProjectGroupController):
         show_action.triggered.connect(self._show_device)
         show_action.setVisible(proj_device_online)
 
+        set_conf_action = QAction('Store online configuration', menu)
+        set_can_get_conf = (server_online and proj_device_status
+                            in ONLINE_CONFIG_STATUSES)
+        set_conf_action.setEnabled(set_can_get_conf)
+        set_conf_action.triggered.connect(partial(
+            self._store_online_configuration, parent=parent))
+
         instantiate_action = QAction(icons.run, 'Instantiate', menu)
+
         can_instantiate = (server_online and not proj_device_online and
                            proj_device_status not in NO_CLASS_STATUSES)
         instantiate_action.triggered.connect(partial(self._instantiate_device,
@@ -160,6 +169,7 @@ class DeviceInstanceController(BaseProjectGroupController):
         menu.addAction(conf_action)
         menu.addAction(conf_action_name)
         menu.addAction(show_action)
+        menu.addAction(set_conf_action)
         menu.addSeparator()
         menu.addAction(instantiate_action)
         menu.addAction(shutdown_action)
@@ -696,6 +706,50 @@ class DeviceInstanceController(BaseProjectGroupController):
         dialog.show()
         dialog.raise_()
         dialog.activateWindow()
+
+    def _store_online_configuration(self, parent=None):
+        """Set the online to offline configuration of this project device"""
+        if not self.project_device.online:
+            return
+
+        device = self.project_device
+
+        def _set_device_configuration():
+            success, config = device.get_user_edited_config_hash_online()
+            if success:
+                title = f"Device configuration for {device.device_id}"
+                old = self.active_config.configuration
+                dialog = ConfigComparisonDialog(title, old, config,
+                                                parent=parent)
+                if dialog.exec() == QDialog.Accepted:
+                    # Note: Make sure the active config is stored and
+                    # apply the configuration to the online system!
+                    self.active_config.configuration = config
+                    self.project_device.set_project_config_hash_online(config)
+            else:
+                messagebox.show_error(
+                    "The device has elements of type <b>ChoiceOfNodes</b>, "
+                    "<b>ListOfNodes</b> or <b>DeviceNode</b> in the existing "
+                    "<b>Schema</b>. Online to offline configuration is "
+                    "forbidden.", parent=parent)
+
+        # Note: The device is online, but we require an offline schema
+        # to compare for online to offline config extraction
+        proxy = device._offline_proxy
+        has_offline = len(proxy.binding.value) > 0
+        if has_offline:
+            _set_device_configuration()
+        else:
+
+            def _schema_handler():
+                proxy.on_trait_change(_schema_handler, "schema_update",
+                                      remove=True)
+                _set_device_configuration()
+
+            # There must be a class schema, since we are online. Hence,
+            # we can safely wait here for the class schema of the server!
+            proxy.on_trait_change(_schema_handler, "schema_update")
+            proxy.ensure_class_schema()
 
     def instantiate(self, server, parent=None):
         """ Instantiate this device instance on the given `server`
