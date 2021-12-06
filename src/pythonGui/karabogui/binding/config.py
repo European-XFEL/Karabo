@@ -2,9 +2,10 @@ from traits.api import TraitError, Undefined
 
 from karabo.common import const
 from karabo.native import (
-    AccessMode, DaqPolicy, Hash, MetricPrefix, Timestamp, Unit, is_equal)
+    AccessMode, Assignment, DaqPolicy, Hash, MetricPrefix, Timestamp, Unit,
+    is_equal)
 
-from .compare import attr_fast_deepcopy
+from .compare import attr_fast_deepcopy, has_changes
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
@@ -336,6 +337,99 @@ def extract_edits(schema, binding):
             retval[key, ...] = attr_changes
 
     return retval
+
+
+def extract_online_edits(schema, binding):
+    """Extract all user edited (non default) online values on a binding into a
+    Hash object.
+
+    This function takes a class schema as reference to extract the online
+    edits and compares them to the default of the schema.
+    Only values are considered which are different from the default.
+
+    :param schema: The class schema
+    :param binding: The binding of the online device
+
+    :returns success: Boolean to indicate if we have a successful online to
+                      offline transition, e.g. no DeviceNodes, ChoiceOfNodes,
+                      ListOfNodes.
+
+    """
+    assert isinstance(binding, BindingRoot)
+
+    # Backward compatibility protection for difficult keys. Reconsider
+    # in Karabo 2.13 FIXME
+    BLACKLIST_KEYS = ["_deviceId_", "_serverId_", "hostName"]
+    BLACKLIST_NODE = ["Logger."]  # Of course Bound!
+
+    def _get_binding_default(binding):
+        value = binding.attributes.get(const.KARABO_SCHEMA_DEFAULT_VALUE)
+        if value is None and len(binding.options) > 0:
+            return binding.options[0]
+        return value
+
+    def _iter_binding(node, base=''):
+        namespace = node.value
+        base = base + '.' if base else ''
+        for name in namespace:
+            if base in BLACKLIST_NODE:
+                continue
+
+            subname = base + name
+            subnode = getattr(namespace, name)
+            if isinstance(subnode, (ChoiceOfNodesBinding, ListOfNodesBinding)):
+                yield subname, subnode
+            elif isinstance(subnode, NodeBinding):
+                yield from _iter_binding(subnode, base=subname)
+            elif not isinstance(subnode, SlotBinding):
+                # All rest binding types
+                yield subname, subnode
+
+    def not_writable(key):
+        """Check if a property is writable from external"""
+        attributes = schema.hash[key, ...]
+        read_only = attributes['accessMode'] == AccessMode.READONLY.value
+        internal = attributes['assignment'] == Assignment.INTERNAL.value
+        # Note: One can define tags such as `plc` here to filter out.
+        return read_only or internal
+
+    config = Hash()
+    success = True
+    for key, node in _iter_binding(binding):
+        # Injected properties are not considered! Blacklisted keys are
+        # filtered out as well!
+        if key not in schema.hash or key in BLACKLIST_KEYS:
+            continue
+
+        if isinstance(node, (ChoiceOfNodesBinding, ListOfNodesBinding)):
+            # ChoiceOfNodes and ListOfNodes cannot be properly compared nor
+            # validated and are deprecated.
+            success = False
+            continue
+
+        value = node.value
+        if node.display_type == "deviceNode":
+            # DeviceNode may not be successful, until ~2.15 or forever ...
+            # Future versions of the device node always have a value
+            if not value or value is Undefined:
+                success = False
+                continue
+
+        if value is Undefined:
+            # Note: This did happen for output channels if they don't have
+            # clients! (C++ / Bound). Fixed now ...
+            # Other examples?
+            continue
+
+        # We take the online defaults to account schema injection. If a default
+        # value from the online device is_equal, it should not go into the
+        # configuration
+        default_val = _get_binding_default(node)
+        if not has_changes(None, default_val, value) or not_writable(key):
+            continue
+        config[key] = value
+
+    return success, config
 
 
 def extract_sparse_configurations(proxies, devices=None):
