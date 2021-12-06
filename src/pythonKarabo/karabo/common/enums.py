@@ -54,7 +54,7 @@ class ProxyStatus(Enum):
     UNKNOWN = 'unknown'
 
 
-# The device is online in these status
+# The device is online in these statuses
 ONLINE_STATUSES = (
     ProxyStatus.OK, ProxyStatus.ONLINE, ProxyStatus.ALIVE,
     ProxyStatus.ONLINEREQUESTED, ProxyStatus.MONITORING,
@@ -72,4 +72,10 @@ NO_CONFIG_STATUSES = (
 
 NO_CLASS_STATUSES = (
     ProxyStatus.NOPLUGIN, ProxyStatus.NOSERVER
+)
+
+# The device can perform an online to offline configuration
+ONLINE_CONFIG_STATUSES = (
+    ProxyStatus.MONITORING, ProxyStatus.ALIVE, ProxyStatus.ERROR,
+    ProxyStatus.UNKNOWN
 )

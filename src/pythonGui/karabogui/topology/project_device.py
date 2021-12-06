@@ -12,7 +12,8 @@ from karabo.common.api import KARABO_SCHEMA_DEFAULT_VALUE, ProxyStatus
 from karabo.native import Hash
 from karabogui.binding.api import (
     BaseDeviceProxy, DeviceProxy, ProjectDeviceProxy,
-    apply_default_configuration, apply_project_configuration, extract_edits)
+    apply_default_configuration, apply_project_configuration, extract_edits,
+    extract_online_edits)
 from karabogui.logger import get_logger
 from karabogui.singletons.api import get_topology
 
@@ -82,6 +83,28 @@ class ProjectDeviceInstance(HasStrictTraits):
             return new_config
         return Hash()
 
+    def get_user_edited_config_hash_online(self):
+        """Extract user edited values from the online proxy
+
+        This method requires that the proxy has both an offline and online
+        schema.
+
+        returns: success boolean and configuration Hash
+
+                 For more information see `extract_online_edits` of the config
+                 module.
+        """
+        has_offline = len(self._offline_proxy.binding.value) > 0
+        has_online = len(self._online_proxy.binding.value) > 0
+        if has_offline and has_online:
+            topology = get_topology()
+            schema = topology.get_schema(self.server_id, self.class_id)
+            success, config = extract_online_edits(
+                schema, self._online_proxy.binding)
+            return success, config
+        else:
+            return False, Hash()
+
     def get_class_proxy(self):
         """Retrieve a class schema for this project device instance"""
         topology = get_topology()
@@ -133,6 +156,14 @@ class ProjectDeviceInstance(HasStrictTraits):
             apply_default_configuration(self._offline_proxy.binding)
             # Do not report here...
             apply_project_configuration(config, self._offline_proxy.binding)
+
+    def set_project_config_hash_online(self, config):
+        if config is None or not self.online:
+            return
+
+        self._offline_config = config
+        apply_default_configuration(self._offline_proxy.binding)
+        apply_project_configuration(config, self._offline_proxy.binding)
 
     def start_monitoring(self):
         """Enable monitoring of the online device (when it is online).
