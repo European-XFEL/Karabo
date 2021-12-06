@@ -2,6 +2,7 @@
 from .about import AboutDialog
 from .client_topology import ClientTopologyDialog
 from .configuration import ConfigurationDialog
+from .configuration_comparison import ConfigComparisonDialog
 from .configuration_from_name import (
     ConfigurationFromNameDialog, SaveConfigurationDialog)
 from .configuration_from_past import ConfigurationFromPastDialog

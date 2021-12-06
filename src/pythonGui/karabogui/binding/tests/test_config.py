@@ -7,17 +7,17 @@ from traits.api import Undefined
 
 from karabo.common.api import KARABO_ALARM_LOW, KARABO_SCHEMA_DAQ_POLICY, State
 from karabo.native import (
-    AccessLevel, AccessMode, Assignment, Hash, HashList, Schema, Timestamp,
-    decodeBinary)
+    AccessLevel, AccessMode, Assignment, Configurable, Hash, HashList, Schema,
+    String, Timestamp, decodeBinary)
 
 from ..api import (
     apply_configuration, apply_default_configuration, apply_fast_data,
     apply_project_configuration, build_binding,
     extract_attribute_modifications, extract_configuration, extract_edits,
-    extract_init_configuration)
+    extract_init_configuration, extract_online_edits)
 from .schema import (
     ALL_PROPERTIES_MAP, get_all_props_schema, get_simple_props_schema,
-    get_vectorattr_schema)
+    get_simple_schema, get_vectorattr_schema)
 
 TEST_DATA_DIR = op.join(op.dirname(__file__), 'data')
 
@@ -209,6 +209,66 @@ def test_extract_edit():
     apply_project_configuration(config, binding)
 
     extracted = extract_edits(schema, binding)
+    assert extracted == config
+
+
+def test_extract_online_edit():
+    schema = get_all_props_schema()
+    binding = build_binding(schema)
+    apply_default_configuration(binding)
+
+    # 'a' has default value == True
+    # `j1` is ListOfNodes
+    config = Hash('a', False, 'e', 0.0, 'j1', [])
+    apply_project_configuration(config, binding)
+
+    success, extracted = extract_online_edits(schema, binding)
+    assert extracted == Hash('a', False, 'e', 0.0)
+    assert success is False
+
+    schema = get_simple_schema()
+    binding = build_binding(schema)
+
+    # New round
+    apply_default_configuration(binding)
+    config = Hash('foo', False, 'bar', 'now', 'charlie', 21)
+    apply_project_configuration(config, binding)
+    success, extracted = extract_online_edits(schema, binding)
+    assert success is True
+    # Charlie is not writable
+    assert extracted == Hash('foo', False, 'bar', 'now')
+
+    # New round, no changes
+    apply_default_configuration(binding)
+    success, extracted = extract_online_edits(schema, binding)
+    assert success is True
+    assert extracted == Hash()
+
+    # New round, change foo
+    apply_default_configuration(binding)
+    config = Hash('foo', False, 'bar', 'default')
+    apply_project_configuration(config, binding)
+    success, extracted = extract_online_edits(schema, binding)
+    assert success is True
+    assert extracted == Hash('foo', False)
+
+
+def test_extract_online_devicenode():
+    class Device(Configurable):
+        dn = String(displayType="deviceNode")
+
+    schema = Device.getClassSchema()
+    binding = build_binding(schema)
+    apply_default_configuration(binding)
+    success, extracted = extract_online_edits(schema, binding)
+    assert success is False
+    assert extracted == Hash()
+
+    # DeviceNodes with a value are successful
+    config = Hash('dn', "XHQ_EG_CTRL/MDL/1")
+    apply_project_configuration(config, binding)
+    success, extracted = extract_online_edits(schema, binding)
+    assert success is True
     assert extracted == config
 
 
