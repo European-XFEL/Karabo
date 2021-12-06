@@ -81,6 +81,12 @@ def test_has_changes():
     assert has_changes(binding, np.array([1, 2, 7]), np.array([1, 2, 3]))
     assert not has_changes(binding, np.array([1, 2, 3]), np.array([1, 2, 3]))
 
+    # List of Hashes
+    assert has_changes(None, [Hash("float", 2.0)],
+                       [Hash("float", 2.0 + 3e-7)])
+    assert not has_changes(None, [Hash("float", 2.0)],
+                           [Hash("float", 2.0 + 3e-8)])
+
 
 class TableRow(Configurable):
     stringProperty = String()

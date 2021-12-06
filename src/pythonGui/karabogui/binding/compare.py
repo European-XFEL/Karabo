@@ -101,13 +101,35 @@ def has_array_changes(old, new, dtype=False):
     return changes
 
 
+def has_hash_changes(old, new):
+    """Compare if two Hashes have changes in values with `has_changes`"""
+    old_paths = sorted(old.paths(intermediate=True))
+    new_paths = sorted(new.paths(intermediate=True))
+    if old_paths != new_paths:
+        return True
+
+    iterable = Hash.flat_iterall(new, empty=True)
+    for key, value, _ in iterable:
+        old_value = old[key]
+        if has_changes(None, old_value, value):
+            return True
+    return False
+
+
 def has_list_changes(old, new):
-    """Compare if lists have changes with `is_equal`"""
+    """Compare if lists have changes with `is_equal` or `has_hash_changes` for
+    vector hashes"""
     if len(old) != len(new):
         return True
     changes = False
     for i in range(len(old)):
-        if not is_equal(old[i], new[i]):
+        new_value = new[i]
+        old_value = old[i]
+        if isinstance(old_value, Hash) and isinstance(new_value, Hash):
+            if has_hash_changes(old_value, new_value):
+                changes = True
+                break
+        elif not is_equal(old_value, new_value):
             changes = True
             break
     return changes
