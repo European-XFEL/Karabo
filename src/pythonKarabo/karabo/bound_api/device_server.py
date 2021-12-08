@@ -10,13 +10,14 @@ import signal
 import socket
 import sys
 import threading
+import time
 from subprocess import Popen, TimeoutExpired
 
 from karabo.common.states import State
 from karathon import (
     CHOICE_ELEMENT, INT32_ELEMENT, LIST_ELEMENT, NODE_ELEMENT,
     OVERWRITE_ELEMENT, STRING_ELEMENT, VECTOR_STRING_ELEMENT, AccessLevel,
-    Broker, EventLoop, Hash, Logger, Schema, SignalSlotable, Validator,
+    Broker, EventLoop, Hash, Logger, Schema, SignalSlotable, Unit, Validator,
     saveToFile)
 
 from .configurator import Configurator
@@ -129,6 +130,13 @@ class DeviceServer(object):
             .assignmentOptional().defaultValue("")
             .commit(),
 
+            INT32_ELEMENT(expected).key("instantiationTimeout")
+            .displayedName("Instantiation Timeout")
+            .description("How long to wait for device coming up before "
+                         "slotStartDevice fails")
+            .unit(Unit.SECOND)
+            .assignmentOptional().defaultValue(10)
+            .commit(),
         )
 
     def setupFsm(self):
@@ -189,7 +197,9 @@ class DeviceServer(object):
         self.ss = self.log = None
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
+        self._startingDevices = dict()  # needs protection by lock below
         self.deviceInstanceMapLock = threading.RLock()
+        self.instantiationTimeout = config["instantiationTimeout"]
         if config.get('hostName') is not None:
             self.hostname = config['hostName']
         else:
@@ -286,6 +296,7 @@ class DeviceServer(object):
     def _registerAndConnectSignalsAndSlots(self):
         self.ss.registerSlot(self.slotStartDevice)
         self.ss.registerSlot(self.slotKillServer)
+        self.ss.registerSlot(self.slotDeviceUp)
         self.ss.registerSlot(self.slotDeviceGone)
         self.ss.registerSlot(self.slotGetClassSchema)
         self.ss.registerSlot(self.slotLoggerPriority)
@@ -438,74 +449,99 @@ class DeviceServer(object):
         for appender in ["ostream", "file", "network"]:
             config["_logger_." + appender] = self.loggerParameters[appender]
 
+        reply = self.ss.createAsyncReply()
+
         try:
-            if "_deviceId_" in config:
-                deviceid = config["_deviceId_"]
-            else:
-                msg = "Access to {}._deviceId_ failed".format(classid)
-                raise RuntimeError(msg)
-
-            modname = self.availableDevices[classid]["module"]
-
-            # Create unique filename in /tmp - without '/' from deviceid...
-            fn_tmpl = "/tmp/{mod}.{cls}.{dev}.configuration_{pid}_{num}.xml"
-            filename_data = {'mod': modname, 'cls': classid, 'pid': self.pid,
-                             'dev': deviceid.replace(os.path.sep, '_')}
-            while True:
-                filename = fn_tmpl.format(num=self.seqnum, **filename_data)
-                if os.path.isfile(filename):
-                    self.seqnum += 1
-                else:
-                    break
-
-            saveToFile(config, filename, Hash("format.Xml.indentation", 2))
-            params = [modname, classid, filename]
-
-            with self.deviceInstanceMapLock:
-                if deviceid in self.deviceInstanceMap:
-                    # Already there! Check whether previous process is alive:
-                    prevLauncher = self.deviceInstanceMap[deviceid]
-                    if prevLauncher.child.poll() is None:
-                        # Process still up. Check Karabo communication by ping:
-                        request = self.ss.request(deviceid, "slotPing",
-                                                  deviceid, 1, False)
-                        try:
-                            # Badly blocking here: We lack AsyncReply in bound!
-                            request.waitForReply(2000)  # in milliseconds
-                        except RuntimeError as innerE:
-                            if "Reply timed out" in str(innerE):
-                                # Indeed dead Karabo-wise:
-                                self.log.WARN("Kill previous incarnation of "
-                                              f"'{deviceid}' since reply to "
-                                              "ping timed out.")
-                                prevLauncher.kill()
-                            else:
-                                self.log.ERROR("Should never come here! "
-                                               "Unexpected exception when "
-                                               "trying to communicate with "
-                                               f"'{deviceid}': {innerE}")
-                                # Let outer 'try:' treat this:
-                                raise innerE
-                        else:
-                            # Technically, it could be alive on another server,
-                            # but who cares about that detail...
-                            self.ss.reply(False, f"{deviceid} already "
-                                          "instantiated and alive")
-                            return
-                launcher = Launcher(params)
-                launcher.start()
-                self.deviceInstanceMap[deviceid] = launcher
-
-            # Would be better to postpone the reply until device really gets
-            # "online". But to avoid blocking inside the slot we need an
-            # AsyncReply mechanism, something listening for instanceNew and
-            # something to check for when to reply final failure.
-            self.ss.reply(True, deviceid)
+            self._launchDevice(config, classid, reply)
         except Exception as e:
-            self.log.WARN("Device '{}' could not be started because:"
-                          " {}".format(classid, e))
-            self.ss.reply(False, "Device '{}' could not be started because:"
-                                 " {}".format(classid, e))
+            msg = f"Device '{classid}' could not be started because: {e}"
+            self.log.WARN(msg)
+            # Cannot call AsyncReply object directly in slot, so post:
+            EventLoop.post(lambda: reply(False, msg))
+
+    def _launchDevice(self, config, classid, reply):
+
+        deviceid = config["_deviceId_"]  # exists, see instantiateDevice
+
+        modname = self.availableDevices[classid]["module"]
+
+        # Create unique filename in /tmp - without '/' from deviceid...
+        fn_tmpl = "/tmp/{mod}.{cls}.{dev}.configuration_{pid}_{num}.xml"
+        filename_data = {'mod': modname, 'cls': classid, 'pid': self.pid,
+                         'dev': deviceid.replace(os.path.sep, '_')}
+        while True:
+            filename = fn_tmpl.format(num=self.seqnum, **filename_data)
+            if os.path.isfile(filename):
+                self.seqnum += 1
+            else:
+                break
+
+        saveToFile(config, filename, Hash("format.Xml.indentation", 2))
+        params = [modname, classid, filename]
+
+        with self.deviceInstanceMapLock:
+            if deviceid in self.deviceInstanceMap:
+                # Already there! Check whether previous process is alive:
+                prevLauncher = self.deviceInstanceMap[deviceid]
+                if prevLauncher.child.poll() is None:
+                    # Process still up. Check Karabo communication by ping:
+                    request = self.ss.request(deviceid, "slotPing",
+                                              deviceid, 1, False)
+                    try:
+                        # Blocking here: No async error handling in bound!
+                        request.waitForReply(2000)  # in milliseconds
+                    except RuntimeError as innerE:
+                        if "Reply timed out" in str(innerE):
+                            # Indeed dead Karabo-wise:
+                            self.log.WARN("Kill previous incarnation of "
+                                          f"'{deviceid}' since reply to "
+                                          "ping timed out.")
+                            prevLauncher.kill()
+                        else:
+                            self.log.ERROR("Should never come here! "
+                                           "Unexpected exception when "
+                                           "trying to communicate with "
+                                           f"'{deviceid}': {innerE}")
+                            # Let outer 'try:' treat this:
+                            raise innerE
+                    else:
+                        # Technically, it could be alive on another server,
+                        # but who cares about that detail...
+                        # Cannot call AsyncReply() directly in slot, so post:
+                        EventLoop.post(lambda: reply(False,
+                                                     f"{deviceid} already "
+                                                     "instantiated and alive"))
+                        return
+            launcher = Launcher(params)
+            launcher.start()
+            self.deviceInstanceMap[deviceid] = launcher
+            # Keep track of being starting to reply when succeeded (or timeout)
+            self._startingDevices[deviceid] = (reply, time.time())
+            if len(self._startingDevices) == 1:  # otherwise already running
+                EventLoop.post(self._checkStartingDevices, 1)
+
+    def _checkStartingDevices(self):
+        failed = []
+        somethingLeft = False
+        with self.deviceInstanceMapLock:
+            for devId, (reply, startedAt) in self._startingDevices.items():
+                if (time.time() - startedAt) > self.instantiationTimeout:
+                    failed.append((devId, reply))
+            for devId, _ in failed:
+                del self._startingDevices[devId]
+                # But don't touch self.deviceInstanceMap - device may be "late"
+            if self._startingDevices:
+                somethingLeft = True
+
+        # Reply without lock since sending messages is blocking:
+        for devId, reply in failed:
+            msg = (f"Timeout of instantiation: {devId} did not confirm it is "
+                   f"up within {self.instantiationTimeout} seconds")
+            self.log.WARN(msg)
+            reply(False, msg)
+
+        if somethingLeft:
+            EventLoop.post(self._checkStartingDevices, 0.5)
 
     def noStateTransition(self):
         self.log.WARN("DeviceServer \"{}\" does not allow the transition for"
@@ -517,6 +553,8 @@ class DeviceServer(object):
         else:  # might get killed by signal handler before setting up logging
             print("Received kill signal")
         with self.deviceInstanceMapLock:
+            # Break "loop" to check for starting devices
+            self._startingDevices.clear()
             # Loop twice: First to quickly tell all devices to go down and then
             #             to wait until they are indeed down (or need killing)
             for deviceid in self.deviceInstanceMap:
@@ -540,6 +578,18 @@ class DeviceServer(object):
                 self.log.ERROR(msg)
         finally:
             self.stopDeviceServer()
+
+    def slotDeviceUp(self, instanceId):
+        "Slot for device to tell us that it managed to get alive"
+        awaited = None
+        with self.deviceInstanceMapLock:
+            awaited = self._startingDevices.pop(instanceId, None)
+        if awaited:
+            asyncReply = awaited[0]
+            asyncReply(True, instanceId)
+        else:
+            self.log.WARN(f"Unexpected slotDeviceUp for {instanceId}")
+            # No need to inform caller about failure via raising an exception
 
     def slotDeviceGone(self, instanceId):
         # Would prefer a self.log.FRAMEWORK_INFO as in C++ instead of
