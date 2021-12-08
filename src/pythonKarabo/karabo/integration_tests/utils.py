@@ -59,7 +59,7 @@ class BoundDeviceTestCase(TestCase):
     dc = None
 
     def start_server(self, api, server_id, class_ids, plugin_dir='',
-                     logLevel='FATAL', namespace=None):
+                     logLevel='FATAL', namespace=None, **kw_server_args):
         """
         Start a server in its own process.
         api: "bound", "cpp" or "mdl"
@@ -68,6 +68,9 @@ class BoundDeviceTestCase(TestCase):
         logLevel: log level of server (default: 'FATAL', i.e. no logging)
         namespace: if not None, it will set the `pluginNamespace` option
                    in the `bound` and `mdl` apis.
+
+        Further arguments to the server can be given via kw_server_args and
+        will be passed as "<key>=str(<value>)" to the server command line.
         """
 
         if server_id in self.serverProcesses:
@@ -82,6 +85,9 @@ class BoundDeviceTestCase(TestCase):
             'deviceClasses=' + ','.join(class_ids),
             'visibility=1'
         ]
+        for k, v in kw_server_args.items():
+            server_args.append(k + "=" + str(v))
+
         if api == "bound":
             if namespace is not None:
                 server_args = [f"pluginNamespace={namespace}"] + server_args
