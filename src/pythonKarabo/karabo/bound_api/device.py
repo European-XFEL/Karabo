@@ -466,9 +466,12 @@ class PythonDevice(NoFsm):
                                "SignalSlotable Exception -- {0}"
                                .format(str(e)))
 
-        pid = os.getpid()
+        pid = self["pid"]
         self.log.INFO("'{0.classid}' with deviceId '{0.deviceid}' got started "
                       "on server '{0.serverid}', pid '{1}'.".format(self, pid))
+
+        # Inform server that we are up - fire-and-forget is sufficient.
+        self._ss.call(self.serverid, "slotDeviceUp", self.deviceid)
 
         # Connect input channels
         self._ss.connectInputChannels()
@@ -476,6 +479,10 @@ class PythonDevice(NoFsm):
         # TODO 1: A Failing FSM start (e.g. calling the registered
         #         initialisation methods) should not stop the device,
         #         i.e. we should post this on the event loop...
+        # Note:
+        # As long as startFsm() is not posted on the event loop, any exceptions
+        # raised by it will shutdown the device again, so the slotDeviceUp call
+        # is too early.
         self.startFsm()
 
         if self.timeServerId:
