@@ -278,7 +278,14 @@ void BaseLogging_Test::tearDown() {
     m_deviceServer.reset();
     m_sigSlot.reset();
     EventLoop::stop();
-    m_eventLoopThread.join();
+    if (m_eventLoopThread.joinable()) {
+        bool joined = m_eventLoopThread.try_join_for(boost::chrono::seconds(10));
+        if (!joined) {
+            std::clog << "\nWARNING: Event loop thread join timed out.\n"
+                      << "Thread(s) in the event loop: "
+                      << EventLoop::getNumberOfThreads() << std::endl;
+        }
+    }
 
     // Clean up directory - you may want to comment out these lines for debugging
     boost::filesystem::remove("loggermap.xml");
