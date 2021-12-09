@@ -36,17 +36,18 @@ class MouseWheelEventBlocker(QObject):
         return event.type() == QEvent.Wheel and obj is self.widget
 
 
-class SignalBlocker(object):
-    """Block signals from a QWidget in a with statement"""
+class SignalBlocker:
+    """Block signals from QWidgets in a with statement"""
 
-    def __init__(self, object):
-        self.object = object
+    def __init__(self, *objects):
+        self.objects = objects
 
     def __enter__(self):
-        self.state = self.object.blockSignals(True)
+        self.states = [obj.blockSignals(True) for obj in self.objects]
 
     def __exit__(self, a, b, c):
-        self.object.blockSignals(self.state)
+        for obj, state in zip(self.objects, self.states):
+            obj.blockSignals(state)
 
 
 class WeakMethodRef(object):
