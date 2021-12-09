@@ -933,6 +933,23 @@ class Tests(TestCase):
         self._min_max_desc(
             Int64(), -9223372036854775808, 9223372036854775807)
 
+        # Test that specials will raise
+        for desc in [Double, Int64]:
+            with self.assertRaises(ValueError):
+                desc(maxInc=np.inf)
+            with self.assertRaises(ValueError):
+                desc(minInc=-np.inf)
+
+        with self.assertRaises(ValueError):
+            Int64(maxInc=np.nan)
+        with self.assertRaises(ValueError):
+            Int64(minInc=-np.nan)
+
+        d = Double(minInc=-np.nan)
+        self.assertIsNotNone(d)
+        d = Double(maxInc=np.nan)
+        self.assertIsNotNone(d)
+
     def test_slot(self):
         """Test the slot descriptor"""
         d = Slot()
