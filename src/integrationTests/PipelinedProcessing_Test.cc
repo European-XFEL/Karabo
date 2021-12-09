@@ -52,7 +52,14 @@ void PipelinedProcessing_Test::tearDown() {
     m_deviceServer.reset();
 
     EventLoop::stop();
-    m_eventLoopThread.join();
+    if (m_eventLoopThread.joinable()) {
+        bool joined = m_eventLoopThread.try_join_for(boost::chrono::seconds(10));
+        if (!joined) {
+            std::clog << "\nWARNING: Event loop thread join timed out.\n"
+                      << "Thread(s) in the event loop: "
+                      << EventLoop::getNumberOfThreads() << std::endl;
+        }
+    }
 }
 
 
