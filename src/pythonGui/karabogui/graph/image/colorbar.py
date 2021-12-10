@@ -1,5 +1,6 @@
 import numpy as np
-from pyqtgraph import AxisItem, ColorMap, GraphicsWidget, ImageItem, ViewBox
+from pyqtgraph import (
+    AxisItem, ColorMap, GraphicsWidget, ImageItem, SignalProxy, ViewBox)
 from qtpy.QtCore import QPoint, Qt, Signal, Slot
 from qtpy.QtGui import QTransform
 from qtpy.QtWidgets import QDialog, QGraphicsGridLayout, QMenu
@@ -50,19 +51,40 @@ class ColorBarWidget(GraphicsWidget):
     # ---------------------------------------------------------------------
     # PyQt slots
 
+    @Slot(object)
+    def dynamic_event_throttle(self, event):
+        levels = event[0]
+        if levels is None:
+            bar_level = self.imageItem.image.min(), self.imageItem.image.max()
+        else:
+            bar_level = levels
+
+        # Set the bar levels different, global levels can be `None` for
+        # auto scale
+        self.set_levels(bar_level)
+        self.levelsChanged.emit(levels)
+
     @Slot()
     def _show_levels_dialog(self):
+        levels = self.imageItem.levels
         image_range = self.imageItem.image.min(), self.imageItem.image.max()
-        dialog = LevelsDialog(self.imageItem.levels,
-                              image_range,
-                              self.imageItem.auto_levels, self.parent())
-        move_to_cursor(dialog)
-        if dialog.exec() == QDialog.Accepted:
-            levels = dialog.levels
-            self.set_levels(levels or image_range)
+        auto_levels = self.imageItem.auto_levels
+        default = None if auto_levels else levels
 
-            # Request changing of levels
-            self.levelsChanged.emit(levels)
+        dialog = LevelsDialog(levels, image_range, auto_levels, self.parent())
+        move_to_cursor(dialog)
+        proxy = SignalProxy(dialog.levelsPreview, rateLimit=10,
+                            slot=self.dynamic_event_throttle)
+        accepted = dialog.exec() == QDialog.Accepted
+        proxy.disconnect()
+        if accepted:
+            levels = dialog.levels
+        else:
+            levels = default
+
+        bar_levels = image_range if levels is None else levels
+        self.set_levels(bar_levels)
+        self.levelsChanged.emit(levels)
 
     # ---------------------------------------------------------------------
     # Qt Events
@@ -100,7 +122,6 @@ class ColorBarWidget(GraphicsWidget):
         # Only change y-range values if not.
         if levels_almost_equal(self.levels, image_range):
             return
-
         # Transform the bar item according to the range
         image_min, image_max = image_range
         if image_min == image_max:
