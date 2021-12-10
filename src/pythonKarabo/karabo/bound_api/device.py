@@ -473,17 +473,22 @@ class PythonDevice(NoFsm):
         # Inform server that we are up - fire-and-forget is sufficient.
         self._ss.call(self.serverid, "slotDeviceUp", self.deviceid)
 
-        # Connect input channels
+        # Trigger connection of input channels
         self._ss.connectInputChannels()
 
-        # TODO 1: A Failing FSM start (e.g. calling the registered
-        #         initialisation methods) should not stop the device,
-        #         i.e. we should post this on the event loop...
-        # Note:
-        # As long as startFsm() is not posted on the event loop, any exceptions
-        # raised by it will shutdown the device again, so the slotDeviceUp call
-        # is too early.
-        self.startFsm()
+        # A Failing FSM start (e.g. calling the registered initialisation
+        # methods) should not stop the device, so we post it on the event
+        # loop and take care of exceptions.
+        def wrapStartFsm():
+            try:
+                self.startFsm()
+            except Exception as e:
+                msg = f"{repr(e)} in initialisation"
+                self.log.WARN(msg)
+                # Can't self.updateState(ERROR) - no clue which FSM we are...
+                self.set("status", msg)
+
+        EventLoop.post(wrapStartFsm)
 
         if self.timeServerId:
             self.log.DEBUG("Connecting to time server : \"{}\""
