@@ -201,7 +201,7 @@ class RangeSlider(QSlider):
                 style_option.subControls = QStyle.SC_SliderHandle
                 style_option.sliderPosition = value
                 if handle is self.pressedHandle:
-                    style_option.state |= QStyle.State_Raised
+                    style_option.state |= QStyle.State_Sunken
                 self.style().drawComplexControl(QStyle.CC_Slider, style_option,
                                                 painter, self)
 
@@ -319,18 +319,3 @@ class RangeSlider(QSlider):
                 self.update()
         else:
             super().triggerAction(action)
-
-
-if __name__ == "__main__":
-    from qtpy.QtWidgets import QApplication, QHBoxLayout, QWidget
-
-    app = QApplication([])
-    w = QWidget()
-    layout = QHBoxLayout()
-    w.setLayout(layout)
-    slider = RangeSlider()
-    slider.initialize(0, 100)
-    slider.setSliderPosition(0, 20)
-    w.layout().addWidget(slider)
-    w.show()
-    app.exec_()
