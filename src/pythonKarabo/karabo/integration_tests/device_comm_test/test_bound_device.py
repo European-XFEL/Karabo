@@ -4,7 +4,6 @@ from time import sleep
 from karabo import __version__ as karaboVersion
 from karabo.bound import (
     AccessLevel, Epochstamp, Hash, SignalSlotable, Timestamp, Trainstamp)
-from karabo.common.states import State
 from karabo.integration_tests.utils import BoundDeviceTestCase
 
 
@@ -155,7 +154,8 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
     def test_in_sequence(self):
         SERVER_ID = "testServer"
-        class_ids = ['CommTestDevice', 'UnstoppedThreadDevice']
+        class_ids = ['CommTestDevice', 'UnstoppedThreadDevice',
+                     'RaiseInitializationDevice']
         self.start_server("bound", SERVER_ID, class_ids,
                           namespace="karabo.bound_device_test")
         # Complete setup - do not do it in setup to ensure that even in case of
@@ -188,25 +188,6 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
 
         ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
         self.assertTrue(ok, msg)
-
-        # wait for device to init
-        state1 = None
-        state2 = None
-        state3 = None
-        nTries = 0
-        while (state1 != State.NORMAL or
-               state2 != State.NORMAL or
-               state3 != State.MONITORING):
-            try:
-                state1 = self.dc.get("testComm1", "state")
-                state2 = self.dc.get("testComm2", "state")
-                state3 = self.dc.get("deviceNotGoingDownCleanly", "state")
-            # A RuntimeError will be raised up to device init
-            except RuntimeError:
-                sleep(self._waitTime)
-                if nTries > self._retries:
-                    raise RuntimeError("Waiting for device to init timed out")
-                nTries += 1
 
         # Some sub-tests need a helper to call slots with arguments:
         sigSlotA = SignalSlotable("sigSlotA")
@@ -431,6 +412,20 @@ class TestDeviceDeviceComm(BoundDeviceTestCase):
             #    produce an error
             ok, msg = self.dc.instantiate(SERVER_ID, classConfig3, 30)
             self.assertTrue(ok, msg)
+
+        with self.subTest(msg="Test exception in initialisation()"):
+            devId = "raiseInInitDevice"
+            classConfig = Hash("classId", "RaiseInitializationDevice",
+                               "deviceId", devId, "configuration", Hash())
+            # Device with failing initialisation() could be started:
+            ok, msg = self.dc.instantiate(SERVER_ID, classConfig, 30)
+            self.assertTrue(ok, msg)
+
+            # Problem is tracked in "status" field
+            status = ("RuntimeError('Stupidly failed in initialise') "
+                      "in initialisation")
+            self.waitUntilEqual(devId, "status", status, 30)
+            self.assertEqual(self.dc.get(devId, "status"), status)
 
         with self.subTest(msg="Test slotGetTime"):
             ret = sigSlotA.request("testComm1", "slotGetTime", Hash()
