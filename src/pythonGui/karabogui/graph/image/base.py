@@ -433,8 +433,8 @@ class KaraboImageView(QWidget):
             self._picker.update()
 
         if self._aux_plots is not None:
-            self._aux_plots.set_config(plot=AuxPlots.Histogram,
-                                       levels=levels or self._colorbar.levels)
+            levels = levels if levels is not None else self._colorbar.levels
+            self._aux_plots.set_config(plot=AuxPlots.Histogram, levels=levels)
 
     @Slot(MouseMode)
     def set_mouse_mode(self, mode):
