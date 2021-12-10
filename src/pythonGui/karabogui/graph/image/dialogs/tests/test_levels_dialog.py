@@ -1,21 +1,83 @@
 import numpy as np
+from qtpy.QtCore import Slot
 
+from karabogui.graph.image.dialogs.levels import LevelsDialog
 from karabogui.graph.image.plot import KaraboImagePlot
 from karabogui.testing import GuiTestCase
-
-from ..levels import LevelsDialog
 
 
 class TestLevelsDialog(GuiTestCase):
 
     def setUp(self):
-        super(TestLevelsDialog, self).setUp()
+        super().setUp()
         self.plotItem = KaraboImagePlot()
         self.imageItem = self.plotItem.imageItem
 
     def tearDown(self):
+        super().tearDown()
         self.imageItem.deleteLater()
         self.imageItem = None
+
+    def test_image_preview_signal(self):
+        image = np.random.randint(-100, 100, (100, 100))
+        image_range = image.min(), image.max()
+
+        self.imageItem.setImage(image)
+        image_levels = self.imageItem.levels
+        auto_levels = self.imageItem.auto_levels
+        self.assertTrue(auto_levels)
+        dialog = LevelsDialog(image_levels, image_range, auto_levels)
+
+        # ----------------------------------------------------------------
+        # Change auto level and cross check with a slot
+
+        self.assertTrue(dialog.automatic_checkbox.isChecked())
+        self.assertFalse(dialog.min_spinbox.isEnabled())
+        self.assertFalse(dialog.max_spinbox.isEnabled())
+
+        received = None
+        count = 0
+
+        @Slot()
+        def levelUpdate(levels):
+            nonlocal received, count
+            received = levels
+            count += 1
+
+        dialog.levelsPreview.connect(levelUpdate)
+
+        # Now change the auto levels
+        self.assertIsNone(received, None)
+        dialog.automatic_checkbox.setChecked(False)
+        self.assertIsNotNone(dialog.levels, None)
+        self.assertEqual(count, 1)
+        self.assertIsNotNone(received)
+        dialog.automatic_checkbox.setChecked(True)
+        self.assertEqual(dialog.levels, None)
+        self.assertEqual(count, 2)
+        self.assertIsNone(received)
+
+        # ----------------------------------------------------------------
+        # Change spin boxes
+
+        dialog.automatic_checkbox.setChecked(False)
+        self.assertTrue(dialog.min_spinbox.isEnabled())
+        self.assertTrue(dialog.max_spinbox.isEnabled())
+        count = 0
+
+        dialog.min_spinbox.setValue(2)
+        self.assertEqual(count, 1)
+        self.assertEqual(received, [2.0, 99.0])
+        dialog.max_spinbox.setValue(55)
+        self.assertEqual(count, 2)
+        self.assertEqual(received, [2.0, 55.0])
+
+        # For now, `slider.setValue` does not emit
+        dialog.slider.setValue((13, 44))
+        self.assertEqual(count, 2)
+
+        # Finally disconnect
+        dialog.levelsPreview.disconnect(levelUpdate)
 
     def test_image_autolevel(self):
         """Tests the dialog initialization for imageItems with autolevels"""
