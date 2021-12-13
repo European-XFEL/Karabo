@@ -4,7 +4,8 @@ from qtpy.QtCore import QSize
 from qtpy.QtWidgets import QDialog
 
 from karabo.common.scenemodel.api import SceneModel
-from karabogui.testing import GuiTestCase
+from karabogui.singletons.mediator import Mediator
+from karabogui.testing import GuiTestCase, singletons
 
 from ..scenepanel import ScenePanel
 
@@ -14,20 +15,25 @@ DIALOG_PATH = "karabogui.panels.scenepanel.ResizeSceneDialog"
 class TestScenePanel(GuiTestCase):
 
     def setUp(self):
-        super(TestScenePanel, self).setUp()
+        super().setUp()
         self.model = SceneModel()
-        self.panel = ScenePanel(self.model, connected_to_server=True)
-        container = mock.MagicMock()
-        container.maximized.new = False
-        self.panel.attach_to_container(container)
-        self.panel.show()
+        self.mediator = Mediator()
+        # Use own mediator as closure will send signals
+        with singletons(mediator=self.mediator):
+            self.panel = ScenePanel(self.model, connected_to_server=True)
+            container = mock.MagicMock()
+            container.maximized.new = False
+            self.panel.attach_to_container(container)
+            self.panel.show()
 
     def tearDown(self):
-        super(TestScenePanel, self).tearDown()
-        self.panel.close()
-        self.panel.destroy()
-        self.model = None
-        self.panel = None
+        super().tearDown()
+        with singletons(mediator=self.mediator):
+            self.panel.close()
+            self.panel.destroy()
+            self.model = None
+            self.panel = None
+        self.mediator = None
 
     def test_resize_scene(self):
         panel_size = self.panel.size()
