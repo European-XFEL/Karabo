@@ -5,7 +5,7 @@ from weakref import WeakKeyDictionary
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
 from karabo.native.data import (
-    AccessLevel, Hash, HashList, NodeType, Schema, Timestamp)
+    AccessLevel, Hash, HashList, NodeType, Schema, Timestamp, is_equal)
 from karabo.native.time_mixin import get_timestamp
 
 from .basetypes import KaraboValue, NoneValue, isSet
@@ -183,8 +183,12 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         setters = (s() for s in setters)
         await gather(*[s for s in setters if s is not None])
 
-    def set(self, config):
-        """Internal handler to set a Hash on the Configurable"""
+    def set(self, config, only_changes=False):
+        """Internal handler to set a Hash on the Configurable
+
+        :param only_changes: Boolean to check if only changed values should
+                             be set, the default is `False`.
+        """
 
         def _get_setters(instance, hsh):
             if not isinstance(hsh, Hash):
@@ -203,6 +207,10 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                         # from attributes
                         v.timestamp = Timestamp.fromHashAttributes(
                             hsh[k, ...])
+                    if only_changes:
+                        old = getattr(instance, k)
+                        if is_equal(old.value, v.value):
+                            continue
                     setter.append((desc, instance, v))
             return setter
 
