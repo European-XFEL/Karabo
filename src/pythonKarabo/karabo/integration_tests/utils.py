@@ -134,11 +134,17 @@ class BoundDeviceTestCase(TestCase):
             serverProcess.terminate()
         self.serverProcesses.clear()
 
+        # Get rid of client
+        self.dc = None
+
         # Stop the event loop
         EventLoop.stop()
-        self._eventLoopThread.join()
-
-        self.dc = None
+        # Simple join() hung e.g. in
+        # https://git.xfel.eu/Karabo/Framework/-/jobs/264237
+        self._eventLoopThread.join(timeout=10)
+        if self._eventLoopThread.is_alive():
+            print("Joining event loop thread failed, event loop keeps "
+                  f"{EventLoop.getNumberOfThreads()} threads.")
 
     def waitUntilTrue(self, condition, maxTimeoutSec, maxTries=20):
         """
