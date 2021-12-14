@@ -3,9 +3,9 @@ from traits.api import TraitError, Undefined
 from karabo.common import const
 from karabo.native import (
     AccessMode, Assignment, DaqPolicy, Hash, MetricPrefix, Timestamp, Unit,
-    is_equal)
+    has_changes, is_equal)
 
-from .compare import attr_fast_deepcopy, has_changes
+from .compare import attr_fast_deepcopy
 from .proxy import PropertyProxy
 from .recursive import ChoiceOfNodesBinding, ListOfNodesBinding
 from .types import (
@@ -425,7 +425,7 @@ def extract_online_edits(schema, binding):
         # value from the online device is_equal, it should not go into the
         # configuration
         default_val = _get_binding_default(node)
-        if not has_changes(None, default_val, value) or not_writable(key):
+        if not has_changes(default_val, value) or not_writable(key):
             continue
         config[key] = value
 
