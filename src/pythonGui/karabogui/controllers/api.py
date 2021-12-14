@@ -14,4 +14,4 @@ from .unitlabel import add_unit_label
 from .util import (
     axis_label, get_class_const_trait, has_options, is_proxy_allowed,
     populate_controller_registry, with_display_type)
-from .validators import ListValidator
+from .validators import BindingValidator, ListValidator, SimpleValidator
