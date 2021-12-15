@@ -1015,7 +1015,7 @@ void BaseLogging_Test::testCfgFromPastRestart(bool pastConfigStaysPast) {
                                    stampOldFromPast < stampsAfterRestart[i]);
             const double dt = stampOldFromPast - stampsAfterRestart[i]; // Has no sign due to the intermediate TimeDuration object
             CPPUNIT_ASSERT_MESSAGE("'oldValue' has wrong time stamp: " + stampOldFromPast.toIso8601() += " - difference is : " + toString(dt),
-                                   dt < 0.6); // seen 0.5 in tests with local influxDB
+                                   dt < 0.9); // seen 0.681398408 in telegraf test https://git.xfel.eu/Karabo/Framework/-/jobs/262561
         }
     }
 
