@@ -124,6 +124,22 @@ The command line also provides functions to compare device configurations:
 .. autofunction:: karabo.middlelayer.daysAgo
 
 
+Util functions
+--------------
+
+Utility functions are provided for convenience.
+
+.. autofunction:: karabo.middlelayer.get_property
+
+.. autofunction:: karabo.middlelayer.set_property
+
+.. autofunction:: karabo.middlelayer.maximum
+
+.. autofunction:: karabo.middlelayer.minimum
+
+.. autofunction:: karabo.middlelayer.removeQuantity
+
+
 Writing a device
 ----------------
 
