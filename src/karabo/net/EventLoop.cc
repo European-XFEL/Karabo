@@ -152,19 +152,23 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_threadPoolMutex);
             ThreadMap::iterator it = m_threadMap.find(id);
             if (it != m_threadMap.end()) {
-                it->second->join();
-                m_threadPool.remove_thread(it->second);
-                delete it->second;
+                boost::thread* thread = it->second;
                 m_threadMap.erase(it);
-                if (m_threadPool.size() > 1) { // Failed to print the last thread: SIGSEGV
+                m_threadPool.remove_thread(thread);
+                const size_t poolSize = m_threadPool.size();
+                if (poolSize > 1) { // Failed to print the last thread: SIGSEGV
                     // An attempt to use Logger API here may result in SIGSEGV: we are depending on
                     // life time of this object (that's bad!!!).  We depend on the answer to the following questions:
                     // 1. How does the order of static's initialization (and the corresponding destruction order) work?
                     // 2. How does the static'c re-initialization influence on such order?
                     KARABO_LOG_FRAMEWORK_DEBUG << "Removed thread (id: " << id
                             << ") from event-loop, now running: "
-                            << m_threadPool.size() << " threads in total";
+                            << poolSize << " threads in total";
                 }
+                // Join without lock - though thread should already be returned from before we get here?
+                lock.unlock();
+                thread->join();
+                delete thread;
             }
         }
 
@@ -210,6 +214,7 @@ namespace karabo {
                             m_ioService.post(&asyncInjectException);
                             // We kindly ask the scheduler to put us on the back of the threads queue, avoiding we will
                             // eat the just posted exception again
+                            lock.unlock(); // Just in case yield() could block...
                             boost::this_thread::yield();
                         }
                     }
