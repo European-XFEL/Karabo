@@ -107,22 +107,23 @@ class TestDeviceClientBase(DeviceTest):
             count = 0
             while True:
                 num_devices = len(getTopology()["device"])
-                seen = num_devices > 0
                 count += 1
-                if seen:
+                if num_devices == NUMBER_DEVICES:
+                    # release test
+                    finished = True
+                    break
+                elif count > 25:
+                    # Max 25 seconds until a device appears
+                    finished = True
+                    break
+                elif num_devices > 0:
                     # Devices appear in topology, start
                     # checking topology from this thread
                     for _ in range(100):
                         getTopology()
                         time.sleep(0.01)
-                    # release test
-                    finished = True
-                    break
-                if count > 100:
-                    # Max 10 seconds until a device appears
-                    finished = True
-                    break
-                time.sleep(0.1)
+                else:
+                    time.sleep(1)
 
         # Start a thread in the background
         loop = get_event_loop()
