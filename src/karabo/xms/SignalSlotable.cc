@@ -2908,7 +2908,7 @@ namespace karabo {
 
             // Remove the slot with function name replyId, as the message took too long
             removeSlot(replyId);
-            std::string msg("Asynchronous request with id '" + replyId + "' timed out");
+            std::string msg("Timeout of asynchronous request with id '" + replyId + "'");
             if (errorHandler) {
                 try {
                     throw KARABO_TIMEOUT_EXCEPTION(msg);
