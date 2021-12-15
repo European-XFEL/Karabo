@@ -68,7 +68,8 @@ from .middlelayer_api.synchronization import (
     processEvents, sleep, synchronous)
 from .middlelayer_api.unitutil import (
     StateSignifier, maximum, minimum, removeQuantity)
-from .middlelayer_api.utils import build_karabo_value, get_property
+from .middlelayer_api.utils import (
+    build_karabo_value, get_property, set_property)
 
 
 def _create_cli_submodule():
