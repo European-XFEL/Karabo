@@ -31,21 +31,36 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
     bp::class_<SignalSlotableWrap::RequestorWrap > ("Requestor", bp::no_init)
             .def("waitForReply", (&SignalSlotableWrap::RequestorWrap::waitForReply), (bp::arg("milliseconds")))
 
+            .def("receiveAsync"
+                 , &SignalSlotableWrap::RequestorWrap::receiveAsyncPy
+                 , (bp::arg("replyCallback"), bp::arg("errorCallback") = bp::object(), bp::arg("timeoutMs") = bp::object(), bp::arg("numCallbackArgs") = bp::object())
+                 , "Asynchronously receive the reply to the requested slot via a callback\n\n"
+                   "replyCallback   - called when slot reply arrives, argument number must match number replied by slot\n"
+                   "errorCallback   - if specified, called when the slot replies an error or the reply times out,\n"
+                   "                  single argument is a str describing the problem\n"
+                   "timeoutMs       - specify timeout in milliseconds (otherwise a long default is used)\n"
+                   "numCallbackArgs - only needed to specify if number of arguments cannot be deduced from replyCallback")
+            // Keep the following (with number of return arguments in function name, but without error handling) for backward compatibility
             .def("receiveAsync0"
-                 , (void(SignalSlotableWrap::RequestorWrap::*)(const bp::object&))(&SignalSlotableWrap::RequestorWrap::receiveAsyncPy0)
-                 , (bp::arg("replyCallback")))
+                 , &SignalSlotableWrap::RequestorWrap::receiveAsyncPy0
+                 , (bp::arg("replyCallback"))
+                 , "Use receiveAsync instead")
             .def("receiveAsync1"
-                 , (void(SignalSlotableWrap::RequestorWrap::*)(const bp::object&))(&SignalSlotableWrap::RequestorWrap::receiveAsyncPy1)
-                 , (bp::arg("replyCallback")))
+                 , &SignalSlotableWrap::RequestorWrap::receiveAsyncPy1
+                 , (bp::arg("replyCallback"))
+                 , "Use receiveAsync instead")
             .def("receiveAsync2"
-                 , (void(SignalSlotableWrap::RequestorWrap::*)(const bp::object&))(&SignalSlotableWrap::RequestorWrap::receiveAsyncPy2)
-                 , (bp::arg("replyCallback")))
+                 , &SignalSlotableWrap::RequestorWrap::receiveAsyncPy2
+                 , (bp::arg("replyCallback"))
+                 , "Use receiveAsync instead")
             .def("receiveAsync3"
-                 , (void(SignalSlotableWrap::RequestorWrap::*)(const bp::object&))(&SignalSlotableWrap::RequestorWrap::receiveAsyncPy3)
-                 , (bp::arg("replyCallback")))
+                 , &SignalSlotableWrap::RequestorWrap::receiveAsyncPy3
+                 , (bp::arg("replyCallback"))
+                 , "Use receiveAsync instead")
             .def("receiveAsync4"
-                 , (void(SignalSlotableWrap::RequestorWrap::*)(const bp::object&))(&SignalSlotableWrap::RequestorWrap::receiveAsyncPy4)
-                 , (bp::arg("replyCallback")))
+                 , &SignalSlotableWrap::RequestorWrap::receiveAsyncPy4
+                 , (bp::arg("replyCallback"))
+                 , "Use receiveAsync instead")
             ;
 
     bp::class_<SignalSlotableWrap::AsyncReplyWrap> ("AsyncReply", bp::no_init)
