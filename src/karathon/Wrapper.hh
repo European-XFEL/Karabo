@@ -456,7 +456,16 @@ namespace karathon {
         static karabo::util::NDArray fromPyArrayToNDArray(PyArrayObject* arr);
 
         static bp::object fromNDArrayToPyArray(const karabo::util::NDArray& ndarray);
-        
+
+        /**
+         * How many non-keyword arguments does 'callable' expect?
+         *
+         * Works for free functions, member methods and objects with simple __call__ method (even with @staticmethod),
+         * but not for functools.partial objects.
+         *
+         */
+        static size_t numArgs(const bp::object& callable);
+
         /**
          * Inner recursive copier for deepCopy
          * @param h
