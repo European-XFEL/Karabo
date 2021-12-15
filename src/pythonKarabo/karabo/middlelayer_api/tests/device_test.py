@@ -15,7 +15,7 @@ from karabo.middlelayer_api.device_client import call, getSchema, updateDevice
 from karabo.middlelayer_api.pipeline import InputChannel, OutputChannel
 from karabo.middlelayer_api.tests.eventloop import (
     DeviceTest, async_tst, sync_tst)
-from karabo.middlelayer_api.utils import get_property
+from karabo.middlelayer_api.utils import get_property, set_property
 from karabo.native import (
     Bool, Configurable, Float, Hash, Int32, Node, Slot, Timestamp, VectorHash)
 
@@ -357,15 +357,26 @@ class Tests(DeviceTest):
         self.assertFalse(reply['success'])
 
     @async_tst
-    async def test_get_property(self):
+    async def test_get_property_set_property(self):
         prop = get_property(self.myDevice, "integer")
         self.assertEqual(prop, 0)
+        set_property(self.myDevice, "integer", 2)
+        prop = get_property(self.myDevice, "integer")
+        self.assertEqual(prop, 2)
         prop = get_property(self.myDevice, "noded.floatProperty")
         self.assertEqual(prop, 10)
+        set_property(self.myDevice, "noded.floatProperty", 15)
+        self.assertIsNot(prop, self.myDevice.noded.floatProperty)
+        prop = get_property(self.myDevice, "noded.floatProperty")
+        self.assertEqual(prop, 15)
         with self.assertRaises(AttributeError):
             get_property(self.myDevice, "noded.notthere")
         with self.assertRaises(AttributeError):
             get_property(self.myDevice, "notthere")
+        with self.assertRaises(AttributeError):
+            set_property(self.myDevice, "notthere", 25)
+        with self.assertRaises(AttributeError):
+            set_property(self.myDevice, "noded.notthere", 2)
 
     @async_tst
     async def test_slot_time(self):

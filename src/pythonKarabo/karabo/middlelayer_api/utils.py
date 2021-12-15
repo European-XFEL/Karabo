@@ -37,6 +37,33 @@ def get_property(device, path):
     return reduce(lambda obj, key: getattr(obj, key), path.split('.'), device)
 
 
+def set_property(device, path, value):
+    """Set a property value on a proxy or device
+
+    :param device: The device instance or proxy object
+    :param path: The full path of the property as string
+    :param value: The value to be set
+
+    This function is similar to python's builtin ``setattr`` and used with::
+
+        set_property(proxy, 'node.subnode.property', 5)
+
+    which is equivalent to::
+
+        proxy.node.subnode.property = 5
+    """
+    obj = device
+    paths = path.split(".")
+    for name in paths[:-1]:
+        if not hasattr(obj, name):
+            raise AttributeError(
+                f"Property {path} is not available on device.")
+        obj = getattr(obj, name)
+    if not hasattr(obj, paths[-1]):
+        raise AttributeError(f"Property {path} is not available on device.")
+    setattr(obj, paths[-1], value)
+
+
 def build_karabo_value(device, path, value, timestamp):
     """Build a karabo value for property value from a proxy or device
 
