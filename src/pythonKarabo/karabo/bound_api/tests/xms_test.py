@@ -87,7 +87,7 @@ class Xms_TestCase(unittest.TestCase):
             self.assertEqual(0, nArg)  # i.e. input argument ignored!
 
             # We can register '*args' function with fixed number
-            # (Also test that '_' can be requested as '.' as needed
+            # (Also test that '_' can be requested as '.' is needed
             #  for nested slots in Schema)
             sigSlot.registerSlot(funcVarArgs, "func_varArgs1", 1)
             req = sigSlot.request("", "func.varArgs1", "no_matter2")
@@ -269,6 +269,11 @@ class Xms_TestCase(unittest.TestCase):
         self.bob = SignalSlotable(self.bob_id)
         self.bob.start()
 
+        def slotError():
+            self.called = 42
+            raise RuntimeError("What's the universe and the rest?")
+        self.bob.registerSlot(slotError)
+
         def slot0():
             self.called = 0
             self.bob.reply()
@@ -369,6 +374,7 @@ class Xms_TestCase(unittest.TestCase):
 
     def test_xms_request(self):
         self.setUpAliceBob()
+
         with self.subTest(msg="async receive"):
             self.assertEqual(-1, self.called)  # initial value
 
@@ -389,6 +395,13 @@ class Xms_TestCase(unittest.TestCase):
             req.receiveAsync0(handle0)
             wait_for_handled()
             self.assertEqual(0, self.called)
+            # test again via return-argument-generic receiveAsync
+            handled = False
+            self.called = -1
+            req = self.alice.request(self.bob_id, "slot0")
+            req.receiveAsync(handle0)
+            wait_for_handled()
+            self.assertEqual(0, self.called)
 
             # Test one argument
             handled = False
@@ -400,6 +413,15 @@ class Xms_TestCase(unittest.TestCase):
                 i = ii
             req = self.alice.request(self.bob_id, "slot1", 5)
             req.receiveAsync1(handle1)
+            wait_for_handled()
+            self.assertEqual(5, self.called)
+            self.assertEqual(5, i)
+            # test again via return-argument-generic receiveAsync
+            handled = False
+            i = 0
+            self.called = -1
+            req = self.alice.request(self.bob_id, "slot1", 5)
+            req.receiveAsync(handle1)
             wait_for_handled()
             self.assertEqual(5, self.called)
             self.assertEqual(5, i)
@@ -418,6 +440,16 @@ class Xms_TestCase(unittest.TestCase):
             self.assertEqual(12, self.called)
             self.assertEqual(5, i)
             self.assertEqual(7, j)
+            # test again via return-argument-generic receiveAsync
+            handled = False
+            i = j = 0
+            self.called = -1
+            req = self.alice.request(self.bob_id, "slot2", 5, 7)
+            req.receiveAsync(handle2)
+            wait_for_handled()
+            self.assertEqual(12, self.called)
+            self.assertEqual(5, i)
+            self.assertEqual(7, j)
 
             # Test three arguments
             handled = False
@@ -429,6 +461,17 @@ class Xms_TestCase(unittest.TestCase):
                 i, j, k = ii, jj, kk
             req = self.alice.request(self.bob_id, "slot3", 5, 7, 11)
             req.receiveAsync3(handle3)
+            wait_for_handled()
+            self.assertEqual(23, self.called)
+            self.assertEqual(5, i)
+            self.assertEqual(7, j)
+            self.assertEqual(11, k)
+            # test again via return-argument-generic receiveAsync
+            handled = False
+            i = j = k = 0
+            self.called = -1
+            req = self.alice.request(self.bob_id, "slot3", 5, 7, 11)
+            req.receiveAsync(handle3)
             wait_for_handled()
             self.assertEqual(23, self.called)
             self.assertEqual(5, i)
@@ -451,6 +494,109 @@ class Xms_TestCase(unittest.TestCase):
             self.assertEqual(7, j)
             self.assertEqual(11, k)
             self.assertEqual(13, l1)
+            # test again via return-argument-generic receiveAsync
+            handled = False
+            i = j = k = l1, 0
+            self.called = -1
+            req = self.alice.request(self.bob_id, "slot4", 5, 7, 11, 13)
+            req.receiveAsync(handle4)
+            wait_for_handled()
+            self.assertEqual(36, self.called)
+            self.assertEqual(5, i)
+            self.assertEqual(7, j)
+            self.assertEqual(11, k)
+            self.assertEqual(13, l1)
+
+            # Test error handling
+            handled = False
+            errorMsg = ""
+
+            def handleError(msg):
+                nonlocal errorMsg, handled
+                handled = True
+                errorMsg = msg
+
+            req = self.alice.request(self.bob_id, "slotError")
+            req.receiveAsync(lambda: None, handleError)
+            wait_for_handled()
+            self.assertEqual(42, self.called)
+            self.assertIn("What's the universe and the rest?", errorMsg)
+
+            # Test timeout handling
+            handled = False
+            errorMsg = ""
+
+            req = self.alice.request("non/existing/id", "slotNoMatter")
+            req.receiveAsync(lambda: None, handleError, timeoutMs=1)
+            wait_for_handled()
+            self.assertIn("Timeout of asynchronous request", errorMsg)
+
+            # Forbidden number of return values
+            req = self.alice.request("doesnt/matter/id", "slotNoMatter")
+            try:
+                req.receiveAsync(lambda: None, numCallbackArgs=5)
+            except RuntimeError as e:
+                self.assertIn("Detected/specified 5 (> 4) arguments", str(e))
+            else:
+                self.assertTrue(False, "Did not catch RuntimeError")
+
+            # So far we registered local funcs and lambda, now check
+            # member funcs and objects with __call__
+            # 1) Object with ordinary __call__ member
+            handled = False
+            i = 0
+
+            class Handler1:
+                def __call__(self, ii):
+                    nonlocal handled, i
+                    handled, i = True, ii
+
+            handle1 = Handler1()
+            req = self.alice.request(self.bob_id, "slot1", 5)
+            # Number of arguments is properly detected:
+            req.receiveAsync(handle1)
+            wait_for_handled()
+            self.assertEqual(5, self.called)
+            self.assertEqual(5, i)
+
+            # 2) Object with static __call__ member
+            handled = False
+            i = 0
+
+            class Handler1a:
+                @staticmethod
+                def __call__(ii):
+                    nonlocal handled, i
+                    handled, i = True, ii
+
+            handle1 = Handler1a()
+            req = self.alice.request(self.bob_id, "slot1", 6)
+            # Also here number of arguments is properly detected:
+            req.receiveAsync(handle1)
+            wait_for_handled()
+            self.assertEqual(6, self.called)
+            self.assertEqual(6, i)
+
+            # 3) Just a method of an object
+            handled = False
+            i = 0
+
+            req = self.alice.request(self.bob_id, "slot1", 7)
+            # re-use __call__ member of object from above
+            req.receiveAsync(handle1.__call__)
+            wait_for_handled()
+            self.assertEqual(7, self.called)
+            self.assertEqual(7, i)
+
+            # 4) Bad handler with a non-callable __call__ attribute
+            class HandlerBad:
+                def __init__(self):
+                    self.__call__ = None
+
+            handleBad = HandlerBad()
+            req = self.alice.request("doesnt/matter/id", "slotNoMatter")
+            with self.assertRaises(RuntimeError):
+                req.receiveAsync(handleBad)
 
             self.called = -1  # reset for next test
 
