@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   EventLoop.hh
  * Author: heisenb
  *
@@ -6,14 +6,14 @@
  */
 
 #ifndef KARABO_NET_EVENTLOOP_HH
-#define	KARABO_NET_EVENTLOOP_HH
+#define KARABO_NET_EVENTLOOP_HH
 
-#include <map>
-#include <mutex>
-#include <memory>
-#include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/function/function_fwd.hpp>
+#include <boost/thread.hpp>
+#include <map>
+#include <memory>
+#include <mutex>
 
 #include "karabo/util/ClassInfo.hh"
 
@@ -24,19 +24,15 @@ namespace karabo {
          * An exception that is thrown if a thread cannot be removed from the
          * EventLoop
          */
-        struct RemoveThreadException : public std::exception {
-
-        };
+        struct RemoveThreadException : public std::exception {};
 
         /**
          * @class EventLoop
          * @brief Karabo's central event loop. Asynchronous events are passed throughout
-         *        the distributed system by posting to the loop. 
+         *        the distributed system by posting to the loop.
          */
         class EventLoop : private boost::noncopyable {
-
-        public:
-
+          public:
             KARABO_CLASSINFO(EventLoop, "EventLoop", "1.0")
 
             virtual ~EventLoop() = default;
@@ -49,7 +45,7 @@ namespace karabo {
             static void addThread(const int nThreads = 1);
 
             /**
-             * Remove a number of threads from the event loop, reducing the 
+             * Remove a number of threads from the event loop, reducing the
              * number of threads available to handle events posted to the loop
              * @param nThreads
              */
@@ -57,7 +53,7 @@ namespace karabo {
 
             /**
              * Return the Eventloop's underlying boost::asio::io_service
-             * @return 
+             * @return
              */
             static boost::asio::io_service& getIOService();
 
@@ -71,9 +67,9 @@ namespace karabo {
 
             /** Start the event loop and block until all work posted to its io service is
              *  completed or until EventLoop::stop() is called.
-             *   
+             *
              *  Frequently, this function should be called in a separate thread, which
-             *  blocks upon joining until all work has been processed or stop has been 
+             *  blocks upon joining until all work has been processed or stop has been
              *  called.
              */
             static void run();
@@ -87,11 +83,11 @@ namespace karabo {
             /**
              * Return the number of threads currently available to the event loop
              * for distributing work
-             * @return 
+             * @return
              */
             static size_t getNumberOfThreads();
 
-            typedef boost::function<void (int /*signal*/) > SignalHandler;
+            typedef boost::function<void(int /*signal*/)> SignalHandler;
             /** Set the handler to be called if a system signal is caught.
              *
              * See work() about which signals are caught.
@@ -100,8 +96,7 @@ namespace karabo {
              */
             static void setSignalHandler(const SignalHandler& handler);
 
-        private:
-
+          private:
             EventLoop() = default;
 
             // Delete copy constructor and assignment operator since EventLoop is a singleton:
@@ -123,7 +118,7 @@ namespace karabo {
             void asyncDestroyThread(const boost::thread::id& id);
 
             void clearThreadPool();
-            
+
             size_t _getNumberOfThreads() const;
 
             void _setSignalHandler(const SignalHandler& handler);
@@ -141,10 +136,8 @@ namespace karabo {
             boost::mutex m_signalHandlerMutex;
             SignalHandler m_signalHandler;
         };
-    }
-}
+    } // namespace net
+} // namespace karabo
 
 
-
-#endif	/* EVENTLOOP_HH */
-
+#endif /* EVENTLOOP_HH */

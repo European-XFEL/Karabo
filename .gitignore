@@ -98,3 +98,6 @@ src/cmake/resolve-karabo-lib-target.cmake
 # coverage
 htmlcov/
 coverage.xml
+# Don't ignore linting and formatting config files
+!.clang-format
+!.clang-tidy

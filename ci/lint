@@ -1,17 +1,20 @@
+#!/usr/bin/env bash
+
 # -- variables definitions for cppcheck
 CPPBASEOPTIONS="--error-exitcode=0 --inconclusive --enable=all --force"
 
 # don't undef: -U_WIN32 -U__MACH__ -U__linux__
-CPPUNDEFINES="-UKARABO_ENABLE_TRACE_LOG -UKARABO_IO_TRACE -UKARABO_USE_PROFILER_SCALARFILTERBUFFER1 "
-CPPUNDEFINES+="-U_MSC_VER -U__DLL__ -U__CYGWIN__ -U__sun -Usun "
-CPPUNDEFINES+="-U__DragonFly__ -U__FreeBSD__ -U__NetBSD__ -U__OpenBSD__ "
-CPPUNDEFINES+="-U__MACOSX__ -UBSD -U__APPLE__ -U__unix -U__unix__ -Uunix "
-CPPUNDEFINES+="-U__SO__ -U__sgi -Usgi -U__GNUC__ -U__GLIBC__ -U__linux -Ulinux "
+CPPUNDEFINES="-UKARABO_ENABLE_TRACE_LOG -UKARABO_IO_TRACE \
+-UKARABO_USE_PROFILER_SCALARFILTERBUFFER1 \
+-U_MSC_VER -U__DLL__ -U__CYGWIN__ -U__sun -Usun \
+-U__DragonFly__ -U__FreeBSD__ -U__NetBSD__ -U__OpenBSD__ \
+-U__MACOSX__ -UBSD -U__APPLE__ -U__unix -U__unix__ -Uunix \
+-U__SO__ -U__sgi -Usgi -U__GNUC__ -U__GLIBC__ -U__linux -Ulinux "
 
 # -- functions definitions
 
 __run_lint_command() {
-    command="time $1"
+    command="$1"
     echo $command
     eval $command
     local status=$?
@@ -45,6 +48,35 @@ __lint_cpp_fast() {
     __run_lint_command "cppcheck $CPPCHECKOPTIONS $SCANNEDFOLDER"
 }
 
+__lint_clang_format() {
+
+    SCAN_DIRS="$CI_PROJECT_DIR/src/karabo $CI_PROJECT_DIR/src/brokerMessageLogger \
+    $CI_PROJECT_DIR/src/cppLongTests $CI_PROJECT_DIR/src/deviceServer \
+    $CI_PROJECT_DIR/src/integrationTests $CI_PROJECT_DIR/src/karathon \
+    $CI_PROJECT_DIR/src/tools"
+
+    SRC_FILES=($(find $SCAN_DIRS \( -name "*.cc" -o -name "*.hh" \)))
+    local -i ok_files=0
+    local -i err_files=0
+    local file_check_code
+    for SRC_FILE in "${SRC_FILES[@]}"; do
+        eval "clang-format -n -i --Werror --ferror-limit=1 $SRC_FILE"
+        file_check_code=$?
+        if [[ $file_check_code != 0 ]]; then
+            ((err_files+=1))
+        else
+            echo "--- OK for format of '$SRC_FILE'"
+            ((ok_files+=1))
+        fi
+    done
+    if [[ $err_files -gt 0 ]]; then
+        echo "--- $err_files file(s) (out of $((err_files+ok_files))) failed verification for formatting compliance."
+        exit 1
+    else
+        echo "--- $ok_files file(s) successfully verified for formatting compliance."
+    fi
+}
+
 __lint_flake8() {
     FLAKE8OPTIONS="--exclude=*tests* --tee"
     __run_lint_command "flake8 $FLAKE8OPTIONS $CI_PROJECT_DIR/src/pythonKarabo/karabo"
@@ -72,15 +104,14 @@ fi
 
 # -- usage
 # lint <SCANNAME>
-# where <SCANNAME> is FULLCPPCHECK FASTCPPCHECK FLAKE8
-# or a user-defined name.
-# if no name provided, SCANNAME will be set to "DEFAULTSCAN"
-# and default settings will be applied
+# where <SCANNAME> is FULLCPPCHECK FASTCPPCHECK FLAKE8 ISORT CLANG_FORMAT
+# if no name provided, SCANNAME will be set to "ALL" and all scan types will
+# be performed.
 
 SCANNAME=$1
 # a variable is unset or set to the empty string
-if [[ -z "${SCANNAME}" ]]; then
-  SCANNAME="DEFAULTSCAN"
+if [ -z "${SCANNAME}" ]; then
+  SCANNAME="ALL"
 fi
 
 case $SCANNAME in
@@ -90,17 +121,31 @@ case $SCANNAME in
     "FASTCPPCHECK")
         __lint_cpp_fast
         ;;
+    "CLANG_FORMAT")
+        __lint_clang_format
+        ;;
     "FLAKE8")
         __lint_flake8
         ;;
     "ISORT")
         __lint_isort
         ;;
-    *)
-        echo "Running a scan with default settings.."
+    "ALL")
+        echo "Running all scan types..."
         #__lint_cpp_fast && \
+        #__lint_clang_format && \
         __lint_flake8 && \
         __lint_isort
+        ;;
+    *)
+        echo "${SCANNAME} is not a supported scan type specifier."
+        echo "Supported scan types specifiers (use one of them):"
+        echo "    ALL"
+        # echo "    FULLCPPCHECK"
+        # echo "    FASTCPPCHECK"
+        echo "    CLANG_FORMAT"
+        echo "    FLAKE8"
+        echo "    ISORT"
         ;;
 esac
 echo "Linter scan complete"
