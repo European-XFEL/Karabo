@@ -3,18 +3,18 @@
  */
 
 #ifndef KARABO_LOGCONFIG_LOGGER_HH
-#define	KARABO_LOGCONFIG_LOGGER_HH
+    #define KARABO_LOGCONFIG_LOGGER_HH
 
-#include "karabo/util/Hash.hh"
-#include "karabo/util/Configurator.hh"
-#include <krb_log4cpp/Priority.hh>
-#include <krb_log4cpp/Category.hh>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
-#include <boost/type_index.hpp>
-#include <unordered_map>
-#include <unordered_set>
+    #include <boost/shared_ptr.hpp>
+    #include <boost/thread.hpp>
+    #include <boost/type_index.hpp>
+    #include <krb_log4cpp/Category.hh>
+    #include <krb_log4cpp/Priority.hh>
+    #include <unordered_map>
+    #include <unordered_set>
 
+    #include "karabo/util/Configurator.hh"
+    #include "karabo/util/Hash.hh"
 
 namespace karabo {
 
@@ -25,9 +25,7 @@ namespace karabo {
          * Configures log4cpp logging system
          */
         class Logger {
-
-        public:
-
+          public:
             KARABO_CLASSINFO(Logger, "Logger", "")
 
             virtual ~Logger() = default;
@@ -145,12 +143,11 @@ namespace karabo {
             /**
              * Check if category name is found in the category name set
              * @param category name
-             * @return true if found else false 
+             * @return true if found else false
              */
             static bool isInCategoryNameSet(const std::string& category);
 
-        private:
-
+          private:
             static void useAppender(const std::string& category, bool inheritAppenders, krb_log4cpp::Appender*);
 
             Logger() = default;
@@ -172,19 +169,32 @@ namespace karabo {
         krb_log4cpp::Category& Logger::getCategory() {
             return getCategory_(T::classInfo().getLogCategory());
         }
-    }
-}
+    } // namespace log
+} // namespace karabo
 #endif
 
 // Convenient logging
 #ifdef KARABO_ENABLE_TRACE_LOG
-#define KARABO_LOG_FRAMEWORK_TRACE KARABO_LOG_FRAMEWORK_DEBUG
-#define KARABO_LOG_FRAMEWORK_TRACE_C(category) KARABO_LOG_FRAMEWORK_DEBUG_C(category)
-#define KARABO_LOG_FRAMEWORK_TRACE_CF KARABO_LOG_FRAMEWORK_DEBUG_C(Self::classInfo().getLogCategory() + "." + __func__)
+    #define KARABO_LOG_FRAMEWORK_TRACE             KARABO_LOG_FRAMEWORK_DEBUG
+    #define KARABO_LOG_FRAMEWORK_TRACE_C(category) KARABO_LOG_FRAMEWORK_DEBUG_C(category)
+    #define KARABO_LOG_FRAMEWORK_TRACE_CF \
+        KARABO_LOG_FRAMEWORK_DEBUG_C(Self::classInfo().getLogCategory() + "." + __func__)
 #else
-#define KARABO_LOG_FRAMEWORK_TRACE if(1); else std::cerr
-#define KARABO_LOG_FRAMEWORK_TRACE_C(category) if(1); else std::cerr
-#define KARABO_LOG_FRAMEWORK_TRACE_CF if(1); else std::cerr
+    #define KARABO_LOG_FRAMEWORK_TRACE \
+        if (1)                         \
+            ;                          \
+        else                           \
+            std::cerr
+    #define KARABO_LOG_FRAMEWORK_TRACE_C(category) \
+        if (1)                                     \
+            ;                                      \
+        else                                       \
+            std::cerr
+    #define KARABO_LOG_FRAMEWORK_TRACE_CF \
+        if (1)                            \
+            ;                             \
+        else                              \
+            std::cerr
 #endif
 
 #define KARABO_LOG_FRAMEWORK_DEBUG karabo::log::Logger::getCategory<Self>() << krb_log4cpp::Priority::DEBUG
@@ -192,8 +202,9 @@ namespace karabo {
 #define KARABO_LOG_FRAMEWORK_WARN  karabo::log::Logger::getCategory<Self>() << krb_log4cpp::Priority::WARN
 #define KARABO_LOG_FRAMEWORK_ERROR karabo::log::Logger::getCategory<Self>() << krb_log4cpp::Priority::ERROR
 
-#define KARABO_LOG_FRAMEWORK_DEBUG_C(category) karabo::log::Logger::getCategory_(category) << krb_log4cpp::Priority::DEBUG
-#define KARABO_LOG_FRAMEWORK_INFO_C(category)  karabo::log::Logger::getCategory_(category) << krb_log4cpp::Priority::INFO
-#define KARABO_LOG_FRAMEWORK_WARN_C(category)  karabo::log::Logger::getCategory_(category) << krb_log4cpp::Priority::WARN
-#define KARABO_LOG_FRAMEWORK_ERROR_C(category) karabo::log::Logger::getCategory_(category) << krb_log4cpp::Priority::ERROR
-
+#define KARABO_LOG_FRAMEWORK_DEBUG_C(category) \
+    karabo::log::Logger::getCategory_(category) << krb_log4cpp::Priority::DEBUG
+#define KARABO_LOG_FRAMEWORK_INFO_C(category) karabo::log::Logger::getCategory_(category) << krb_log4cpp::Priority::INFO
+#define KARABO_LOG_FRAMEWORK_WARN_C(category) karabo::log::Logger::getCategory_(category) << krb_log4cpp::Priority::WARN
+#define KARABO_LOG_FRAMEWORK_ERROR_C(category) \
+    karabo::log::Logger::getCategory_(category) << krb_log4cpp::Priority::ERROR
