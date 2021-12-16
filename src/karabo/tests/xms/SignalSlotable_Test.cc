@@ -363,6 +363,8 @@ void SignalSlotable_Test::_testReceiveAsync() {
     greeter->request("responder", "slotAnswer", "Hello").timeout(200)
             .receiveAsync(badSuccessHandler, errHandler);
     waitEqual(receivedIgnoringReplyValue, true);
+    // Sleep > 200 ms (the timeout used) so that any wrong call to error handler due to timeout would have happened
+    boost::this_thread::sleep(boost::posix_time::milliseconds(210));
     CPPUNIT_ASSERT_EQUAL(calledErrorHandler, false);
     CPPUNIT_ASSERT_EQUAL(receivedIgnoringReplyValue, true);
 }
@@ -438,8 +440,12 @@ void SignalSlotable_Test::_testReceiveAsyncError() {
     greeter->request("responder", "slotAnswer", "Hello").timeout(50)
             .receiveAsync<std::string>(successHandler, errHandler);
     waitEqual(ExceptionType::timeout, caughtType);
+    // Wait furher (timeout + sleep > 100 ms that slotAnswer sleeps) to check that successHandler is
+    // not called when delayed reply finnaly comes:
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+
     CPPUNIT_ASSERT_EQUAL(int(ExceptionType::timeout), int(caughtType));
-    CPPUNIT_ASSERT_EQUAL(std::string("some"), result);
+    CPPUNIT_ASSERT_EQUAL(std::string("some"), result); // Would be "Hello, world!" if successHandler called
 
     caughtType = ExceptionType::none;
     greeter->request("responder", "slotAnswer", "Please, throw!").timeout(50) // short timeout: should immediately throw
