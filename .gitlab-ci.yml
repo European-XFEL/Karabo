@@ -284,7 +284,7 @@ lint:
   stage: lint
   image: europeanxfel/karabo-ci:miniconda-3lint
   script:
-    - source ci/lint "$CI_BUILD_NAME"
+    - source ci/lint ALL
   only:
     refs:
       - merge_requests

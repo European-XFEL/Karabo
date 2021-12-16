@@ -4,10 +4,11 @@
 
 
 #ifndef KARABO_LOG_ROLLINGFILEAPPENDER_HH
-#define	KARABO_LOG_ROLLINGFILEAPPENDER_HH
+#define KARABO_LOG_ROLLINGFILEAPPENDER_HH
+
+#include <boost/filesystem.hpp>
 
 #include "karabo/util/Configurator.hh"
-#include <boost/filesystem.hpp>
 
 // Forward
 namespace krb_log4cpp {
@@ -30,24 +31,21 @@ namespace karabo {
          * of the Logger!!
          */
         class RollingFileAppender {
-
-        public:
-
+          public:
             KARABO_CLASSINFO(RollingFileAppender, "RollingFileAppender", "")
 
             static void expectedParameters(karabo::util::Schema& expected);
 
             RollingFileAppender(const karabo::util::Hash& input);
-            virtual ~RollingFileAppender() {}
+            virtual ~RollingFileAppender() {
+            }
 
             krb_log4cpp::Appender* getAppender();
 
-        private:
-
+          private:
             krb_log4cpp::Appender* m_appender;
-
         };
-    }
-}
+    } // namespace log
+} // namespace karabo
 
 #endif
