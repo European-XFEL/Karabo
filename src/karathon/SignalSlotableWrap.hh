@@ -78,6 +78,9 @@ namespace karathon {
                 return *this;
             }
 
+            void receiveAsyncPy(const bp::object& replyCallback, const bp::object& errorCallback = bp::object(),
+                                const bp::object& timeoutMs = bp::object(), const bp::object& numCallbackArgs = bp::object());
+
             void receiveAsyncPy0(const bp::object& replyCallback);
 
             void receiveAsyncPy1(const bp::object& replyCallback);
