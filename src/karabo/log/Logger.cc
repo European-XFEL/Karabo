@@ -4,14 +4,16 @@
 
 
 #include "Logger.hh"
+
+#include <karabo/util/ListElement.hh>
+#include <karabo/util/SimpleElement.hh>
+
+#include "NetworkAppender.hh"
 #include "OstreamAppender.hh"
 #include "RollingFileAppender.hh"
-#include "NetworkAppender.hh"
-#include <karabo/util/SimpleElement.hh>
-#include <karabo/util/ListElement.hh>
 #include "karabo/util/NodeElement.hh"
-#include "krb_log4cpp/Category.hh"
 #include "krb_log4cpp/Appender.hh"
+#include "krb_log4cpp/Category.hh"
 
 
 using namespace karabo::util;
@@ -33,26 +35,21 @@ namespace karabo {
 
 
         void Logger::expectedParameters(Schema& s) {
-
             // Take care to keep this priority in sync with "Logger.priority" of the Python karabo/bound_api/device.py
-            STRING_ELEMENT(s).key("priority")
-                    .displayedName("Priority")
-                    .description("The default log priority")
-                    .options("DEBUG INFO WARN ERROR FATAL")
-                    .assignmentOptional().defaultValue("INFO")
-                    .commit();
+            STRING_ELEMENT(s)
+                .key("priority")
+                .displayedName("Priority")
+                .description("The default log priority")
+                .options("DEBUG INFO WARN ERROR FATAL")
+                .assignmentOptional()
+                .defaultValue("INFO")
+                .commit();
 
-            NODE_ELEMENT(s).key("ostream")
-                    .appendParametersOf<OstreamAppender>()
-                    .commit();
+            NODE_ELEMENT(s).key("ostream").appendParametersOf<OstreamAppender>().commit();
 
-            NODE_ELEMENT(s).key("file")
-                    .appendParametersOf<RollingFileAppender>()
-                    .commit();
+            NODE_ELEMENT(s).key("file").appendParametersOf<RollingFileAppender>().commit();
 
-            NODE_ELEMENT(s).key("network")
-                    .appendParametersOf<NetworkAppender>()
-                    .commit();
+            NODE_ELEMENT(s).key("network").appendParametersOf<NetworkAppender>().commit();
         }
 
 
@@ -167,5 +164,5 @@ namespace karabo {
             boost::shared_lock<boost::shared_mutex> lock(m_frameworkLogMutex);
             return (m_frameworkCategories.find(category) != m_frameworkCategories.end());
         }
-    }
-}
+    } // namespace log
+} // namespace karabo
