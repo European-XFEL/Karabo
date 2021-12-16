@@ -589,6 +589,49 @@ namespace karathon {
         return karabo::util::NDArray(dataPtr, krbType, nelems, karabo::util::Dims(dims));
     }
 
+
+    size_t Wrapper::numArgs(const bp::object& callable) {
+
+        size_t result = 0ul;
+        size_t numSelfArgs = 0ul;
+
+        PyObject* function_object = NULL;
+        // We expect either
+        // * standalone function
+        // * member method
+        // * object with __call__ attribute
+        if (PyFunction_Check(callable.ptr())) {
+            function_object = callable.ptr();
+        } else if (PyMethod_Check(callable.ptr())) {
+            function_object = PyMethod_Function(callable.ptr());
+            numSelfArgs = 1ul;
+        } else if (Wrapper::hasattr(callable, "__call__")) {
+            bp::object call = callable.attr("__call__");
+            if (PyFunction_Check(call.ptr())) {
+                function_object = call.ptr();
+            } else if (PyMethod_Check(call.ptr())) {
+                function_object = PyMethod_Function(call.ptr());
+                numSelfArgs = 1ul;
+            } else {
+                // For a functools.partial objects we end up here...
+                throw KARABO_PARAMETER_EXCEPTION("Attribute __call__ is neither function nor method, try to specify number of arguments.");
+            }
+        } else {
+            throw KARABO_PARAMETER_EXCEPTION("Cannot deduce number of arguments, please specify explicitely.");
+        }
+        PyCodeObject* pycode = reinterpret_cast<PyCodeObject*> (PyFunction_GetCode(function_object));
+        if (pycode) {
+            // Note: co_argcount includes arguments with defaults, see nice figure from 'Hzzkygcs' at
+            // https://stackoverflow.com/questions/847936/how-can-i-find-the-number-of-arguments-of-a-python-function
+            result = pycode->co_argcount - numSelfArgs; // Subtract "self" if any
+        } else { // Can we get here?
+            throw KARABO_PARAMETER_EXCEPTION("Failed to access PyCode object to deduce number of arguments.");
+        }
+
+        return result;
+    }
+
+
     karabo::util::Hash Wrapper::deepCopy_r(const karabo::util::Hash& h) {
         karabo::util::Hash r;
         // iterate through all entries of the Hash. If the value of the Hash::Node at it
