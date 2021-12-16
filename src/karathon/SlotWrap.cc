@@ -13,7 +13,7 @@ namespace karathon {
 
 
     SlotWrap::~SlotWrap() {
-        ScopedGILAcquire gil; // for bp:object destructor
+        ScopedGILAcquire gil; // for bp::object destructor
         m_slotFunction.reset();
     }
 
@@ -32,26 +32,7 @@ namespace karathon {
             m_arity = numArgs;
         } else {
             // Undefined number of arguments, try to figure out
-            size_t numSelfArgs = 0ul;
-
-            PyObject* function_object = NULL;
-            // We expect either the function or the method to be given...
-            if (PyFunction_Check(m_slotFunction->ptr())) {
-                function_object = m_slotFunction->ptr();
-            } else if (PyMethod_Check(m_slotFunction->ptr())) {
-                function_object = PyMethod_Function(m_slotFunction->ptr());
-                numSelfArgs = 1;
-            } else {
-                throw KARABO_PARAMETER_EXCEPTION("The argument is neither function nor method, please specify number of arguments.");
-            }
-            PyCodeObject* pycode = reinterpret_cast<PyCodeObject*> (PyFunction_GetCode(function_object));
-            if (pycode) {
-                // Note: co_argcount includes arguments with defaults, see nice figure from 'Hzzkygcs' at
-                // https://stackoverflow.com/questions/847936/how-can-i-find-the-number-of-arguments-of-a-python-function
-                m_arity = pycode->co_argcount - numSelfArgs; // Subtract "self" if any
-            } else { // Can we get here?
-                throw KARABO_PARAMETER_EXCEPTION("Failed to access PyCode object to deduce number of arguments.");
-            }
+            m_arity = Wrapper::numArgs(*m_slotFunction);
         }
     }
 
