@@ -190,6 +190,10 @@ Available flags:
   --pyDevelop  - Install Python packages in development mode
   --buildAllTests
                - Build all test executables, but do not execute them
+  --skipCppTests
+               - Skips C++ tests
+  --skipPythonTests
+               - Skips Python tests
   --runTests   - Run unit tests after building (useful for Debug|Release)
   --runIntegrationTests
                - Run integration tests after building (for Debug|Release)
@@ -277,6 +281,8 @@ BUILDALLTESTS="n"
 RUNTESTS="n"
 RUNINTEGRATIONTESTS="n"
 RUNLONGTESTS="n"
+SKIP_PYTHON_TESTS="n"
+SKIP_CPP_TESTS="n"
 PYOPT="normal"
 NUM_JOBS=0
 CODECOVERAGE="n"
@@ -304,6 +310,12 @@ while [ -n "$1" ]; do
             ;;
         --runLongTests)
             RUNLONGTESTS="y"
+            ;;
+        --skipPythonTests)
+            SKIP_PYTHON_TESTS="y"
+            ;;
+        --skipCppTests)
+            SKIP_CPP_TESTS="y"
             ;;
         --numJobs)
             # Limit the numbers of jobs for make runs
@@ -375,6 +387,9 @@ if [ "$CODECOVERAGE" = "y" ]; then
     BUILD_UNIT_TESTING="1"
     BUILD_INTEGRATION_TESTING="1"
     BUILD_LONG_RUN_TESTING="0"
+    RUNINTEGRATIONTESTS="y"
+    RUNTESTS="y"
+    RUNLONGTESTS="n"
 else
     GEN_CODE_COVERAGE="0"
 fi
@@ -494,7 +509,7 @@ if [ "$GEN_CODE_COVERAGE" = "1" ]; then
     exit 0
 fi
 
-if [ "$RUNTESTS" = "y" ] || [ "$RUNINTEGRATIONTESTS" = "y" ] || [ "$RUNLONGTESTS" = "y" ]; then
+if [ "$SKIP_CPP_TESTS" = "n" ] && { [ "$RUNTESTS" = "y" ] || [ "$RUNINTEGRATIONTESTS" = "y" ] || [ "$RUNLONGTESTS" = "y" ];}; then
     echo
     echo Running Karabo C++ tests ...
     echo
@@ -505,15 +520,15 @@ if [ "$RUNTESTS" = "y" ] || [ "$RUNINTEGRATIONTESTS" = "y" ] || [ "$RUNLONGTESTS
     deactivateKarabo
 fi
 
-if [ "$RUNTESTS" = "y" ]; then
+if [ "$RUNTESTS" = "y" ] && [ "$SKIP_PYTHON_TESTS" = "n" ] ; then
     runPythonUnitTests
 fi
 
-if [ "$RUNINTEGRATIONTESTS" = "y" ]; then
+if [ "$RUNINTEGRATIONTESTS" = "y" ] && [ "$SKIP_PYTHON_TESTS" = "n" ]; then
     runPythonIntegrationTests
 fi
 
-if [ "$RUNLONGTESTS" = "y" ]; then
+if [ "$RUNLONGTESTS" = "y" ] && [ "$SKIP_PYTHON_TESTS" = "n" ]; then
     runPythonLongTests
 fi
 
