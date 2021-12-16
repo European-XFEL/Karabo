@@ -1,31 +1,32 @@
-/* 
+/*
  * File:   EventLoop.cc
  * Author: heisenb
- * 
+ *
  * Created on July 27, 2016, 4:21 PM
  */
+
+#include "EventLoop.hh"
 
 #include <csignal>
 #include <iostream>
 
-#include "EventLoop.hh"
 #include "karabo/log/Logger.hh"
 
 #if defined(__GNUC__) || defined(__clang__)
-#include <cxxabi.h>
+    #include <cxxabi.h>
 #endif
 
 namespace karabo {
     namespace net {
 
 
-        boost::shared_ptr<EventLoop> EventLoop::m_instance {nullptr};
+        boost::shared_ptr<EventLoop> EventLoop::m_instance{nullptr};
         boost::once_flag EventLoop::m_initInstanceFlag = BOOST_ONCE_INIT;
 
 
         void EventLoop::init() {
             m_instance.reset(new EventLoop);
-        } 
+        }
 
 
         boost::shared_ptr<EventLoop> EventLoop::instance() {
@@ -39,34 +40,34 @@ namespace karabo {
         }
 
 
-      void EventLoop::work() {
-
+        void EventLoop::work() {
             boost::asio::signal_set signals(getIOService(), SIGINT, SIGTERM);
             auto loop = instance();
             // TODO: Consider to use ordinary function instead of this lengthy lambda.
-            boost::function<void(boost::system::error_code ec, int signo) > signalHandler
-                    = [&loop](boost::system::error_code ec, int signo) {
-                        if (ec == boost::asio::error::operation_aborted) {
-                            KARABO_LOG_FRAMEWORK_ERROR << "*** EventLoop::work() signalHandler: signal_set cancelled. signal: " << signo;
-                        }
-                        if (ec) return;
+            boost::function<void(boost::system::error_code ec, int signo)> signalHandler =
+                [&loop](boost::system::error_code ec, int signo) {
+                    if (ec == boost::asio::error::operation_aborted) {
+                        KARABO_LOG_FRAMEWORK_ERROR
+                            << "*** EventLoop::work() signalHandler: signal_set cancelled. signal: " << signo;
+                    }
+                    if (ec) return;
 
-                        {
-                            boost::mutex::scoped_lock lock(loop->m_signalHandlerMutex);
-                            if (loop->m_signalHandler) {
-                                loop->m_signalHandler(signo);
-                            }
+                    {
+                        boost::mutex::scoped_lock lock(loop->m_signalHandlerMutex);
+                        if (loop->m_signalHandler) {
+                            loop->m_signalHandler(signo);
                         }
-                        // Some time to do all actions possibly triggered by handler.
-                        boost::this_thread::sleep(boost::posix_time::seconds(1));
-                        // Finally go down, i.e. leave work()
-                        EventLoop::stop();
-                        // TODO (check!):
-                        // Once we have no thread running for the DeviceServer, but only the EventLoop,
-                        // we could stop() without sleep and then run().
-                        // If the main in deviceServer.cc registers a handler that resets the DeviceServer::Pointer,
-                        // the DeviceServer destructor will stop all re-registrations and thus let run() fade out.
-                    };
+                    }
+                    // Some time to do all actions possibly triggered by handler.
+                    boost::this_thread::sleep(boost::posix_time::seconds(1));
+                    // Finally go down, i.e. leave work()
+                    EventLoop::stop();
+                    // TODO (check!):
+                    // Once we have no thread running for the DeviceServer, but only the EventLoop,
+                    // we could stop() without sleep and then run().
+                    // If the main in deviceServer.cc registers a handler that resets the DeviceServer::Pointer,
+                    // the DeviceServer destructor will stop all re-registrations and thus let run() fade out.
+                };
             signals.async_wait(signalHandler);
 
             boost::asio::io_service::work work(getIOService());
@@ -125,8 +126,8 @@ namespace karabo {
                 boost::thread* thread = m_threadPool.create_thread(boost::bind(&EventLoop::runProtected, loop));
                 m_threadMap[thread->get_id()] = thread;
                 KARABO_LOG_FRAMEWORK_DEBUG << "A thread (id: " << thread->get_id()
-                        << ") was added to the event-loop, now running: "
-                        << m_threadPool.size() << " threads in total";
+                                           << ") was added to the event-loop, now running: " << m_threadPool.size()
+                                           << " threads in total";
             }
         }
 
@@ -162,8 +163,7 @@ namespace karabo {
                     // 1. How does the order of static's initialization (and the corresponding destruction order) work?
                     // 2. How does the static'c re-initialization influence on such order?
                     KARABO_LOG_FRAMEWORK_DEBUG << "Removed thread (id: " << id
-                            << ") from event-loop, now running: "
-                            << poolSize << " threads in total";
+                                               << ") from event-loop, now running: " << poolSize << " threads in total";
                 }
                 // Join without lock - though thread should already be returned from before we get here?
                 lock.unlock();
@@ -204,7 +204,8 @@ namespace karabo {
                     // As we can not kill ourselves we will ask another thread to kindly do so
                     boost::mutex::scoped_lock lock(m_threadPoolMutex);
                     if (m_threadPool.is_this_thread_in()) {
-                        m_ioService.post(boost::bind(&EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));
+                        m_ioService.post(
+                            boost::bind(&EventLoop::asyncDestroyThread, this, boost::this_thread::get_id()));
                         return; // No more while, we want to die
                     } else {
                         // We are in the main blocking thread here, which we never want to kill
@@ -225,7 +226,8 @@ namespace karabo {
                 } catch (...) {
                     std::string extraInfo;
 #if defined(__GNUC__) || defined(__clang__)
-                    // See https://stackoverflow.com/questions/561997/determining-exception-type-after-the-exception-is-caught
+                    // See
+                    // https://stackoverflow.com/questions/561997/determining-exception-type-after-the-exception-is-caught
                     int status = 42; // Better init with a non-zero value...
                     char* txt = abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), 0, 0, &status);
                     if (status == 0 && txt) {
@@ -239,8 +241,5 @@ namespace karabo {
                 boost::this_thread::sleep(boost::posix_time::milliseconds(100));
             }
         }
-    }
-}
-
-
-
+    } // namespace net
+} // namespace karabo
