@@ -9,8 +9,12 @@ __cmake_tests() {
     source build_conda_env.sh clean install karabo-cpp
 }
 
-__unit_tests() {
-    bash ./cmake_auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runTests
+__cpp_unit_tests() {
+    bash ./cmake_auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runTests --skipPythonTests
+}
+
+__python_unit_tests() {
+    bash ./cmake_auto_build_all.sh Debug --numJobs $NUM_COMPILE_JOBS --runTests --skipCppTests
 }
 
 __integration_tests() {
@@ -72,7 +76,8 @@ if [ "$TARGET_OS" = "miniconda-cmake" ]; then
 else
     case "$JOB_SCOPE" in
         deps) __deps_build_tests ;;
-        unit) __unit_tests ;;
+        python_unit) __python_unit_tests ;;
+        cpp_unit) __cpp_unit_tests ;;
         integration) __integration_tests ;;
         long) __long_tests ;;
         coverage) __coverage_tests ;;
