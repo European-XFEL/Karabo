@@ -1,0 +1,139 @@
+---
+Checks:          'clang-diagnostic-*,clang-analyzer-*'
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+AnalyzeTemporaryDtors: false
+FormatStyle:     google
+CheckOptions:
+  - key:             cert-dcl16-c.NewSuffixes
+    value:           'L;LL;LU;LLU'
+  - key:             cert-oop54-cpp.WarnOnlyIfThisHasSuspiciousField
+    value:           '0'
+  - key:             cppcoreguidelines-explicit-virtual-functions.IgnoreDestructors
+    value:           '1'
+  - key:             cppcoreguidelines-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value:           '1'
+  - key:             google-readability-braces-around-statements.ShortStatementLines
+    value:           '1'
+  - key:             google-readability-function-size.StatementThreshold
+    value:           '800'
+  - key:             google-readability-namespace-comments.ShortNamespaceLines
+    value:           '10'
+  - key:             google-readability-namespace-comments.SpacesBeforeComments
+    value:           '2'
+  - key:             modernize-loop-convert.MaxCopySize
+    value:           '16'
+  - key:             modernize-loop-convert.MinConfidence
+    value:           reasonable
+  - key:             modernize-loop-convert.NamingStyle
+    value:           CamelCase
+  - key:             modernize-pass-by-value.IncludeStyle
+    value:           llvm
+  - key:             modernize-replace-auto-ptr.IncludeStyle
+    value:           llvm
+  - key:             modernize-use-nullptr.NullMacros
+    value:           'NULL'
+  - key:             bugprone-assert-side-effect
+    value:           '1'
+  - key:             bugprone-bad-signal-to-kill-thread
+    value:           '1'
+  - key:             bugprone-bool-pointer-implicit-conversion
+    value:           '1'
+  - key:             bugprone-branch-clone
+    value:           '1'
+  - key:             bugprone-copy-constructor-init
+    value:           '1'
+  - key:             bugprone-dangling-handle
+    value:           '1'
+  - key:             bugprone-dynamic-static-initializers
+    value:           '1'
+  - key:             bugprone-exception-escape
+    value:           '1'
+  - key:             bugprone-fold-init-type
+    value:           '1'
+  - key:             bugprone-forward-declaration-namespace
+    value:           '1'
+  - key:             bugprone-forwarding-reference-overload
+    value:           '1'
+  - key:             bugprone-implicit-widening-of-multiplication-result
+    value:           '1'
+  - key:             bugprone-inaccurate-erase
+    value:           '1'
+  - key:             bugprone-incorrect-roundings
+    value:           '1'
+  - key:             bugprone-infinite-loop
+    value:           '1'
+  - key:             bugprone-integer-division
+    value:           '1'
+  - key:             bugprone-lambda-function-name
+    value:           '1'
+  - key:             bugprone-macro-parentheses
+    value:           '1'
+  - key:             bugprone-macro-repeated-side-effects
+    value:           '1'
+  - key:             bugprone-misplaced-widening-cast
+    value:           '1'
+  - key:             bugprone-move-forwarding-reference
+    value:           '1'
+  - key:             bugprone-multiple-statement-macro
+    value:           '1'
+  - key:             bugprone-no-escape
+    value:           '1'
+  - key:             bugprone-parent-virtual-call
+    value:           '1'
+  - key:             bugprone-posix-return
+    value:           '1'
+  - key:             bugprone-redundant-branch-condition
+    value:           '1'
+  - key:             bugprone-reserved-identifier
+    value:           '1'
+  - key:             bugprone-signed-char-misuse
+    value:           '1'
+  - key:             bugprone-sizeof-container
+    value:           '1'
+  - key:             bugprone-sizeof-expression
+    value:           '1'
+  - key:             bugprone-spuriously-wake-up-functions
+    value:           '1'
+  - key:             bugprone-string-constructor
+    value:           '1'
+  - key:             bugprone-string-integer-assignment
+    value:           '1'
+  - key:             bugprone-string-literal-with-embedded-nul
+    value:           '1'
+  - key:             bugprone-stringview-nullptr
+    value:           '1'
+  - key:             bugprone-suspicious-enum-usage
+    value:           '1'
+  - key:             bugprone-suspicious-include
+    value:           '1'
+  - key:             bugprone-suspicious-missing-comma
+    value:           '1'
+  - key:             bugprone-suspicious-semicolon
+    value:           '1'
+  - key:             bugprone-suspicious-string-compare
+    value:           '1'
+  - key:             bugprone-swapped-arguments
+    value:           '1'
+  - key:             bugprone-terminating-continue
+    value:           '1'
+  - key:             bugprone-throw-keyword-missing
+    value:           '1'
+  - key:             bugprone-too-small-loop-variable
+    value:           '1'
+  - key:             bugprone-undefined-memory-manipulation
+    value:           '1'
+  - key:             bugprone-undelegated-constructor
+    value:           '1'
+  - key:             bugprone-unhandled-exception-at-new
+    value:           '1'
+  - key:             bugprone-unhandled-self-assignment
+    value:           '1'
+  - key:             bugprone-unused-raii
+    value:           '1'
+  - key:             bugprone-unused-return-value
+    value:           '1'
+  - key:             bugprone-use-after-move
+    value:           '1'
+  - key:             bugprone-virtual-near-miss
+    value:           '1'
