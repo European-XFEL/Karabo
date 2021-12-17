@@ -56,12 +56,16 @@ def timeit(func):
 def validate_args(func):
     """A decorator to be used to validate arguments with their annotations
 
-    ## Usage examples ##
-    @validate
+    Usage examples
+    --------------
+
+    @validate_args
     def my_func(param1: str, param2: (float, int)):
         pass
 
-    NOTE: Booleans are also valid for integers!
+    The decorator will raise if the function is called with wrong type input.
+
+    Note: Booleans are also valid for integers!
     """
 
     @wraps(func)
