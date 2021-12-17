@@ -109,7 +109,7 @@ def test_svg_arrow():
         """<svg:line x1="295" y1="50" x2="95" y2="75" stroke="#000" stroke-width="5" marker-end="url(#arrow)"/>"""  # noqa
         """<svg:defs>"""
             """<svg:marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">"""  # noqa
-                """<svg:path d="M0,0 L0,6 L9,3 z" fill="#f00"/>"""
+                """<svg:path d="M0,0 L0,6 L9,3 z" fill="#f00"/>"""  # noqa
             """</svg:marker>"""
         """</svg:defs>"""
         """</svg>"""
@@ -148,7 +148,7 @@ def test_svg_defs():
         """<svg xmlns:svg="http://www.w3.org/2000/svg" width="600" height="100">"""  # noqa
         """<svg:defs id="arrow" style="foo">"""
             """<svg:marker markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">"""  # noqa
-                """<svg:path d="M0,0 L0,6 L9,3 z" fill="#f00"/>"""
+                """<svg:path d="M0,0 L0,6 L9,3 z" fill="#f00"/>""" # noqa
             """</svg:marker>"""
         """</svg:defs>"""
         """</svg>"""
