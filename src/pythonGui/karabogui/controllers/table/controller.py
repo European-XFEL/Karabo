@@ -1,6 +1,6 @@
 from qtpy.QtCore import QModelIndex, Qt
 from qtpy.QtWidgets import QAbstractItemView, QMenu
-from traits.api import Bool, Dict, Undefined, WeakRef
+from traits.api import Bool, Dict, Type, Undefined, WeakRef
 
 import karabogui.icons as icons
 from karabo.common.api import KARABO_SCHEMA_MAX_SIZE, KARABO_SCHEMA_MIN_SIZE
@@ -23,6 +23,8 @@ class BaseTableController(BaseBindingController):
     # Does the controller have an own menu. Subclass method `custom_menu`
     # if this is set to `True`
     hasCustomMenu = Bool(False)
+    # Overwrite tableModel to specify a custom type of `TableModel`
+    tableModelClass = Type(TableModel)
 
     # Internal traits
     _bindings = Dict
@@ -144,7 +146,14 @@ class BaseTableController(BaseBindingController):
         """
 
     def createModel(self, item_model):
-        """Subclass the `createModel` to create a filter model"""
+        """Subclass the `createModel` to create a filter model
+
+        Note: This method will fade out and stays for backward compatibility
+        """
+        return self.createFilterModel(item_model)
+
+    def createFilterModel(self, item_model):
+        """Subclass the `createFilterModel` to create a filter model"""
         return item_model
 
     # ---------------------------------------------------------------------
@@ -266,10 +275,12 @@ class BaseTableController(BaseBindingController):
             self._item_model = None
 
         self._bindings = binding.bindings
-        self._item_model = TableModel(binding, self._on_user_edit,
-                                      parent=self._table_widget)
+
+        source_model = self.tableModelClass(binding, self._on_user_edit,
+                                            self._table_widget)
+        self._item_model = source_model
         self._item_model.set_readonly(self._readonly)
-        model = self.createModel(self._item_model)
+        model = self.createFilterModel(self._item_model)
         self._table_widget.setModel(model)
         self._table_widget.set_bindings(binding.bindings)
         self.create_delegates()
