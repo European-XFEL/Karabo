@@ -1,5 +1,7 @@
+import asyncio
 import os
-from functools import reduce
+from functools import reduce, wraps
+from time import perf_counter
 
 import numpy as np
 
@@ -109,3 +111,56 @@ def build_karabo_value(device, path, value, timestamp):
         ret = ktype(value, timestamp=timestamp)
 
     return ret
+
+
+class profiler:
+    """A versatile profiling class
+
+    Use this class either as a context manager or as decorator::
+
+        with profiler():
+            # classic context manager
+
+        with profiler("Long computation 1"):
+            # do something but provide a name for the context
+
+        The class can also be used for decoration of functions (async works)
+
+        profiler()
+        async def do_something()
+            # do something
+
+    """
+
+    def __init__(self, name=None):
+        self.name = name
+
+    def __enter__(self):
+        self.t_start = perf_counter()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        elapsed = perf_counter() - self.t_start
+        name = f"{self.name}:" if self.name is not None else ":"
+        print(f"With block {name} time elapsed {elapsed}")
+
+    def __call__(self, func):
+        """Decorate a function to profile the execution time"""
+        name = func.__name__ if self.name is None else self.name
+        if not asyncio.iscoroutine(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                t_start = perf_counter()
+                ret = func(*args, **kwargs)
+                elapsed = perf_counter() - t_start
+                print(f"{name} took {elapsed}")
+                return ret
+        else:
+            @wraps(func)
+            async def wrapper(*args, **kwargs):
+                t_start = perf_counter()
+                ret = await func(*args, **kwargs)
+                elapsed = perf_counter() - t_start
+                print(f"{name} took {elapsed}")
+                return ret
+
+        return wrapper

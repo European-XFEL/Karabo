@@ -139,6 +139,10 @@ Utility functions are provided for convenience.
 
 .. autofunction:: karabo.middlelayer.removeQuantity
 
+.. autofunction:: karabo.middlelayer.profiler
+
+.. autofunction:: karabo.middlelayer.validate_args
+
 
 Writing a device
 ----------------
