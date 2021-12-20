@@ -29,6 +29,7 @@ from karabo.native import (
 
 # Common api
 from .common.alarm_conditions import AlarmCondition
+from .common.decorators import validate_args
 from .common.project.api import (
     DeviceConfigurationModel, DeviceInstanceModel, DeviceServerModel,
     MacroModel, ProjectModel)
@@ -69,7 +70,7 @@ from .middlelayer_api.synchronization import (
 from .middlelayer_api.unitutil import (
     StateSignifier, maximum, minimum, removeQuantity)
 from .middlelayer_api.utils import (
-    build_karabo_value, get_property, set_property)
+    build_karabo_value, get_property, profiler, set_property)
 
 
 def _create_cli_submodule():

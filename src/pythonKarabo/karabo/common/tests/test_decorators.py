@@ -1,6 +1,7 @@
-from unittest import TestCase
+import time
+from unittest import TestCase, main
 
-from ..decorators import validate_args
+from karabo.common.decorators import timeit, validate_args
 
 
 class Tests(TestCase):
@@ -31,3 +32,20 @@ class Tests(TestCase):
         # test p1 as bool
         with self.assertRaises(ValueError):
             test_func(True, 0, 20.0, 5)
+
+    def test_timeit(self):
+        sleep_time = 0.1
+
+        @timeit
+        def slow_func():
+            time.sleep(sleep_time)
+
+        before = time.time()
+        slow_func()
+        after = time.time()
+        diff = after - before
+        self.assertAlmostEqual(diff, sleep_time, delta=0.2)
+
+
+if __name__ == "__main__":
+    main()
