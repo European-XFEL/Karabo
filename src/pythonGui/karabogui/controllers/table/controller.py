@@ -153,11 +153,32 @@ class BaseTableController(BaseBindingController):
         return self.createFilterModel(item_model)
 
     def createFilterModel(self, item_model):
-        """Subclass the `createFilterModel` to create a filter model"""
+        """Subclass the `createFilterModel` to create a filter model
+
+        Note: Function added with Karabo > 2.13.X
+        """
         return item_model
 
     # ---------------------------------------------------------------------
     # Public interface
+
+    def getModelData(self, row, column, role=Qt.DisplayRole):
+        """Get data from the sourceModel with `row` and `column`
+
+        :param row: row of the data
+        :param column: column of the data
+        :param role: Role to be looked up. Default is Qt.DisplayRole
+
+        Note: Function added with Karabo > 2.13.X
+        """
+        return self.sourceModel().index(row, column).data(role=role)
+
+    def getInstanceId(self):
+        """Retrieve the `instanceId` of the root proxy of this controller
+
+        Note: Function added with Karabo > 2.13.X
+        """
+        return self.proxy.root_proxy.device_id
 
     def currentIndex(self):
         """Convenience method to get the currentIndex of the selection"""

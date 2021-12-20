@@ -101,6 +101,10 @@ class TestTableModelView(GuiTestCase):
         if size is not None:
             self.assertEqual(data, size)
 
+    def test_deviceId(self):
+        deviceId = self.controller.getInstanceId()
+        self.assertEqual(deviceId, "TestDevice")
+
     def test_set_value(self):
         self.assertModelRow(0, "a", True, "ACTIVE", 1, 2.0, ["a"])
         self.assertModelRow(1, "b", False, "ERROR", 3, 4.0, ["b"])
@@ -209,6 +213,17 @@ class TestTableModelView(GuiTestCase):
                   "dog", 1.0, "eagle", ["c"])])
         apply_configuration(h, self.proxy.root_proxy.binding)
         self.assertEqual(model.rowCount(QModelIndex()), 3)
+
+        # Test model data
+        value = self.controller.getModelData(0, 0)
+        self.assertEqual(value, "a")
+        value = self.controller.getModelData(0, 1)
+        self.assertEqual(value, "True")
+        value = self.controller.getModelData(0, 2)
+        self.assertEqual(value, "ACTIVE")
+
+        value = self.controller.getModelData(1, 0)
+        self.assertEqual(value, "b")
 
     def test_background_value(self):
         model = self.controller._item_model
