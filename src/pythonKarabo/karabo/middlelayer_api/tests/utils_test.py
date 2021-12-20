@@ -1,17 +1,28 @@
+import asyncio
+import time
 from unittest import TestCase, main
 
 import numpy as np
 
 from karabo.common.states import State
+from karabo.middlelayer_api.unitutil import (
+    StateSignifier, maximum, minimum, removeQuantity)
+from karabo.middlelayer_api.utils import build_karabo_value, profiler
 from karabo.native import (
     Bool, BoolValue, Configurable, Float, Int32, MetricPrefix, QuantityValue,
     String, StringValue, Timestamp, Unit, VectorDouble, unit_registry as unit)
 
-from ..unitutil import StateSignifier, maximum, minimum, removeQuantity
-from ..utils import build_karabo_value
+
+def run_coro(coro):
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(coro)
 
 
-class Tests(TestCase):
+class UtilsTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        asyncio.set_event_loop(asyncio.new_event_loop())
+
     def setUp(self):
         self.timestamp_1 = 1
         self.timestamp_2 = 2
@@ -241,6 +252,50 @@ class Tests(TestCase):
         self.assertEqual(value.value, 12)
         self.assertEqual(value.timestamp, ts)
         self.assertEqual(value.units, unit.second)
+
+    def test_profiler(self):
+        sleep_time = 0.1
+
+        @profiler()
+        def slow_func(param, more_param=4):
+            time.sleep(sleep_time)
+            return param + more_param
+
+        @profiler()
+        async def slow_func_async(param, more_param=4):
+            await asyncio.sleep(sleep_time)
+            return param + more_param
+
+        def slow_func_no_deco():
+            time.sleep(sleep_time)
+
+        before = time.time()
+        ret = slow_func(5, more_param=3)
+        self.assertEqual(ret, 8)
+        after = time.time()
+        diff = after - before
+        self.assertAlmostEqual(diff, sleep_time, delta=0.2)
+
+        before = time.time()
+        ret = run_coro(slow_func_async(2, more_param=1))
+        self.assertEqual(ret, 3)
+        after = time.time()
+        diff = after - before
+        self.assertAlmostEqual(diff, sleep_time, delta=0.2)
+
+        with profiler():
+            before = time.time()
+            slow_func_no_deco()
+            after = time.time()
+            diff = after - before
+            self.assertAlmostEqual(diff, sleep_time, delta=0.2)
+
+        with profiler("AName"):
+            before = time.time()
+            slow_func_no_deco()
+            after = time.time()
+            diff = after - before
+            self.assertAlmostEqual(diff, sleep_time, delta=0.2)
 
 
 if __name__ == "__main__":
