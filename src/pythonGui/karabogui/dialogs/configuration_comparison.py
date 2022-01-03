@@ -8,8 +8,7 @@ from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import QDialog, QDialogButtonBox
 
 import karabogui.icons as icons
-from karabo.native import Hash, create_html_hash
-from karabogui.binding.api import has_changes
+from karabo.native import Hash, create_html_hash, has_changes
 
 from .utils import get_dialog_ui
 
@@ -22,7 +21,7 @@ def config_changes(a, b):
             changes[key] = "Value was removed ..."
             continue
         b_value = b[key]
-        if has_changes(None, a_value, b_value):
+        if has_changes(a_value, b_value):
             changes[key] = b_value
     for key, b_value, _ in Hash.flat_iterall(b):
         if key not in a:

@@ -10,14 +10,14 @@ from qtpy.QtWidgets import (
     QTreeView, QVBoxLayout, QWidget)
 
 import karabogui.access as krb_access
-from karabo.native import AccessMode, Hash
+from karabo.native import AccessMode, Hash, has_changes
 from karabogui import icons, messagebox
 from karabogui.access import AccessRole, access_role_allowed
 from karabogui.binding.api import (
     ChoiceOfNodesBinding, DeviceClassProxy, DeviceProxy, ListOfNodesBinding,
     ProjectDeviceProxy, VectorHashBinding, apply_configuration,
-    attr_fast_deepcopy, get_binding_value, has_changes, has_table_changes,
-    validate_table_value, validate_value)
+    attr_fast_deepcopy, get_binding_value, validate_table_value,
+    validate_value)
 from karabogui.configurator.api import ConfigurationTreeView
 from karabogui.dialogs.configuration_preview import ConfigPreviewDialog
 from karabogui.events import KaraboEvent, register_for_broadcasts
@@ -383,16 +383,16 @@ class ConfigurationPanel(BasePanelWidget):
                     and prop_binding.is_allowed(state)):
                 if isinstance(prop_binding, VectorHashBinding):
                     valid, invalid = validate_table_value(prop_binding, value)
-                    if (valid and has_table_changes(
-                            prop_binding, prop_value, valid)):
+                    if (valid and has_changes(
+                            prop_value, valid)):
                         edit_value = valid
                     if invalid:
                         invalid_prop[path] = invalid
-                elif has_changes(prop_binding, prop_value, value):
+                elif has_changes(prop_value, value):
                     valid = validate_value(prop_binding, value)
                     if valid is None:
                         invalid_prop[path] = value
-                    elif has_changes(prop_binding, prop_value, valid):
+                    elif has_changes(prop_value, valid):
                         edit_value = valid
             prop_proxy.edit_value = edit_value
         # NOTE: We tell the model directly to send dataChanged signal and
@@ -457,8 +457,7 @@ class ConfigurationPanel(BasePanelWidget):
                     invalid[path] = invalid_vhash
                 if valid_vhash:
                     old_value = get_binding_value(binding)
-                    if has_table_changes(
-                            binding, old_value, valid_vhash):
+                    if has_changes(old_value, valid_vhash):
                         valid[path] = valid_vhash
             else:
                 validated_value = validate_value(binding, value)

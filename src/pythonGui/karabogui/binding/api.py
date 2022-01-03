@@ -1,9 +1,6 @@
 # flake8: noqa
 from .builder import build_binding
-from .compare import (
-    attr_fast_deepcopy, get_table_changes, has_array_changes, has_changes,
-    has_floating_changes, has_list_changes, has_table_changes, is_equal,
-    is_nonintegral_number, realign_hash, table_row_changes)
+from .compare import attr_fast_deepcopy, is_equal, realign_hash
 from .config import (
     apply_configuration, apply_default_configuration, apply_fast_data,
     apply_project_configuration, extract_attribute_modifications,

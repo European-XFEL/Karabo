@@ -4,8 +4,8 @@ import numpy as np
 from traits.api import TraitError
 
 from karabo.common import const
-from karabo.native import Hash, HashList
-from karabogui.binding.compare import has_array_changes, realign_hash
+from karabo.native import Hash, HashList, has_changes
+from karabogui.binding.compare import realign_hash
 from karabogui.binding.recursive import (
     ChoiceOfNodesBinding, ListOfNodesBinding)
 from karabogui.binding.types import (
@@ -96,7 +96,7 @@ def validate_value(binding, value):
             casted_value = binding.check(value)
             if isinstance(binding, VECTOR_FLOAT_BINDINGS):
                 value = np.array(value, dtype=casted_value.dtype)
-            if not has_array_changes(value, casted_value):
+            if not has_changes(value, casted_value):
                 value = casted_value
             else:
                 value = None
