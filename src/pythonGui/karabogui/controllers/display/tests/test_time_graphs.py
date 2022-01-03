@@ -36,6 +36,13 @@ class TestDisplayTrendGraph(GuiTestCase):
     def test_initial_state(self):
         self.assertEqual(self.controller._x_detail, UPTIME)
 
+    def test_actions(self):
+        actions = self.controller.widget.actions()
+        texts = [action.text() for action in actions]
+        self.assertEqual(len(actions), 7)
+        self.assertIn("Range Y", texts)
+        self.assertIn("View", texts)
+
     def test_historic_data(self):
         data = build_historic_data_float()
         t0 = data[0]['v', ...]['sec']
