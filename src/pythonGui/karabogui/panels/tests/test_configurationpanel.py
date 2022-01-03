@@ -282,13 +282,13 @@ class TestSetProxyConfiguration(GuiTestCase):
 
         # Check with a reconfigurable table element with a read-only column
         # by setting a changed data on the read-only column and unchanged on
-        # the reconfigurable column. Shouldn't trigger changes.
+        # the reconfigurable column. This WILL trigger changes!
         value = [Hash('uintProperty', 4,  # changed, but read only
                       'floatProperty', 5.0)]  # not changed
         self._assert_config(
             vectorHashReadOnlyColumn={"value": value,
                                       "valid": True,
-                                      "changed": False})
+                                      "changed": True})
 
         # Check with a reconfigurable table element with a read-only column
         # by setting a changed data on both the read-only and reconfigurable
