@@ -12,12 +12,12 @@ import karabogui.access as krb_access
 from karabo.common.api import (
     KARABO_ALARM_HIGH, KARABO_ALARM_LOW, KARABO_WARN_HIGH, KARABO_WARN_LOW,
     State)
-from karabo.native import AccessLevel, AccessMode, Assignment
+from karabo.native import AccessLevel, AccessMode, Assignment, has_changes
 from karabogui.binding.api import (
     BaseBinding, BindingRoot, ChoiceOfNodesBinding, DeviceClassProxy,
     DeviceProxy, ImageBinding, ListOfNodesBinding, NDArrayBinding, NodeBinding,
     ProjectDeviceProxy, PropertyProxy, SlotBinding, StringBinding,
-    WidgetNodeBinding, get_binding_value, has_changes)
+    WidgetNodeBinding, get_binding_value)
 from karabogui.fonts import get_qfont
 from karabogui.indicators import (
     ERROR_COLOR_ALPHA, LOCKED_COLOR, OK_COLOR, PROPERTY_ALARM_COLOR,
@@ -479,7 +479,7 @@ class ConfigurationTreeModel(QAbstractItemModel):
             old_value = None if proxy.edit_value is None else proxy.value
             if isinstance(binding, ChoiceOfNodesBinding):
                 old_value = binding.choice  # ChoiceOfNodes is "special"
-            changes = has_changes(binding, old_value, value)
+            changes = has_changes(old_value, value)
             allowed = binding.is_allowed(state) or not online_device
             if allowed and changes:
                 if online_device:

@@ -9,9 +9,9 @@ from qtpy import uic
 from qtpy.QtCore import Qt, Slot
 from qtpy.QtWidgets import QDialog, QDialogButtonBox
 
-from karabo.native import Hash, create_html_hash, writeXML
+from karabo.native import Hash, create_html_hash, has_changes, writeXML
 from karabogui import icons, messagebox
-from karabogui.binding.api import extract_configuration, has_changes
+from karabogui.binding.api import extract_configuration
 from karabogui.singletons.api import get_config
 from karabogui.util import getSaveFileName
 
@@ -27,7 +27,7 @@ def get_config_changes(reference, new):
         if key not in new:
             continue
         new_value = new[key]
-        if has_changes(None, ref_value, new_value):
+        if has_changes(ref_value, new_value):
             changes_ref[key] = ref_value
             changes_new[key] = new_value
 
