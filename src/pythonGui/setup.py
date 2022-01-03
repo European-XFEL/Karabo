@@ -21,7 +21,7 @@ if __name__ == '__main__':
         'package_data': {
             "karabogui.binding.tests": ["data/*.config", "data/*.schema"],
             "karabogui.configurator.dialog": ["*.ui"],
-            "karabogui.controllers": ["*.ui"],
+            "karabogui.controllers": ["*.ui", "display/ui/*.ui"],
             "karabogui.controllers.display": ["*.svg", "*.ui"],
             "karabogui.graph.plots.dialogs": ["*.ui"],
             "karabogui.graph.common.dialogs": ["*.ui"],
