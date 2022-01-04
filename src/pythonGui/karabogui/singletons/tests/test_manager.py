@@ -13,6 +13,7 @@ from karabogui.testing import GuiTestCase, alarm_data, singletons, system_hash
 from karabogui.topology.system_topology import SystemTopology
 
 from ..manager import Manager, project_db_handler
+from ..mediator import Mediator
 
 TEST_SERVER_ID = 'swerver'
 TEST_CLASS_ID = 'PrettyDevice'
@@ -133,7 +134,8 @@ class TestManager(GuiTestCase):
     def test_handle_system_topology(self):
         topo_hash = system_hash()
         topology = Mock()
-        with singletons(topology=topology):
+        mediator = Mediator()
+        with singletons(topology=topology, mediator=mediator):
             manager = Manager()
             manager.handle_systemTopology(topo_hash)
             topology.initialize.assert_called_with(topo_hash)
@@ -194,7 +196,8 @@ class TestManager(GuiTestCase):
 
     def test_handle_instance_updated(self):
         topology = Mock()
-        with singletons(topology=topology):
+        mediator = Mediator()
+        with singletons(topology=topology, mediator=mediator):
             topology.topology_update.return_value = [], []
             manager = Manager()
             changes = Hash("new", Hash(), "update", Hash(),
@@ -215,7 +218,8 @@ class TestManager(GuiTestCase):
 
     def test_handle_device_schema(self):
         network, topology = Mock(), Mock()
-        with singletons(network=network, topology=topology):
+        mediator = Mediator()
+        with singletons(network=network, topology=topology, mediator=mediator):
             manager = Manager()
 
             schema = Schema()
@@ -339,14 +343,15 @@ class TestManager(GuiTestCase):
                     {'status': True}
                 )
 
-            # Check that handlers are all called when network disconnects
-            with patch.object(manager, 'handle_requestGeneric'):
-                manager._request_handlers = {'bob': 'super_request'}
-                manager.onServerConnectionChanged(False)
-                manager.handle_requestGeneric.assert_called_with(
-                    False, request=Hash('token', 'bob'),
-                    reason='Karabo GUI Client disconnect. Erasing request.')
-            topology.clear.assert_called_with()
+                # Check that handlers are all called when network disconnects
+                with patch.object(manager, 'handle_requestGeneric'):
+                    manager._request_handlers = {'bob': 'super_request'}
+                    manager.onServerConnectionChanged(False)
+                    manager.handle_requestGeneric.assert_called_with(
+                        False, request=Hash('token', 'bob'),
+                        reason='Karabo GUI Client disconnect. '
+                               'Erasing request.')
+                topology.clear.assert_called_with()
 
     def test_handle_device_configuration(self):
         topology = Mock()
@@ -491,16 +496,16 @@ class TestManager(GuiTestCase):
             assert event_data['message'] == 'wubbalubbadubdub'
             assert isinstance(event_data['device'], DeviceProxy)
 
-        with patch('karabogui.singletons.manager.messagebox') as mbox:
-            info = {'deviceId': 'bob', 'message': 'mandatory key missing',
-                    'success': False}
-            manager = Manager()
-            manager.handle_initReply(**info)
-            mbox.show_error.assert_called_with(
-                'The instance <b>bob</b> could not be instantiated.. '
-                '<br><br>The reason is probably: <br><i>mandatory key '
-                'missing</i><br><br>Click "Show Details..." '
-                'for more information.', details='mandatory key missing')
+            with patch('karabogui.singletons.manager.messagebox') as mbox:
+                info = {'deviceId': 'bob', 'message': 'mandatory key missing',
+                        'success': False}
+                manager = Manager()
+                manager.handle_initReply(**info)
+                mbox.show_error.assert_called_with(
+                    'The instance <b>bob</b> could not be instantiated.. '
+                    '<br><br>The reason is probably: <br><i>mandatory key '
+                    'missing</i><br><br>Click "Show Details..." '
+                    'for more information.', details='mandatory key missing')
 
     def test_handle_log_messages(self):
         target = 'karabogui.singletons.manager.broadcast_event'
@@ -518,7 +523,8 @@ class TestManager(GuiTestCase):
 
     def test_handle_broker_information(self):
         network = Mock()
-        with singletons(network=network):
+        mediator = Mediator()
+        with singletons(network=network, mediator=mediator):
             # New protocol
             manager = Manager()
             manager.handle_serverInformation(readOnly=True)
