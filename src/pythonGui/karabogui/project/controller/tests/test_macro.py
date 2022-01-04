@@ -3,14 +3,15 @@ from unittest.mock import patch
 from traits.api import pop_exception_handler, push_exception_handler
 
 from karabo.common.project.api import MacroModel, ProjectModel
+from karabogui.singletons.mediator import Mediator
 from karabogui.singletons.project_model import ProjectViewItemModel
-from karabogui.testing import GuiTestCase
+from karabogui.testing import GuiTestCase, singletons
 
 
 class MacroControllerTestCase(GuiTestCase):
 
     def setUp(self):
-        super(MacroControllerTestCase, self).setUp()
+        super().setUp()
         push_exception_handler(lambda *args: None, reraise_exceptions=True)
         self.qt_model = ProjectViewItemModel(parent=None)
 
@@ -23,15 +24,16 @@ class MacroControllerTestCase(GuiTestCase):
         self.macro_model.initialized = self.macro_model.modified = True
 
     def tearDown(self):
-        super(MacroControllerTestCase, self).tearDown()
+        super().tearDown()
         pop_exception_handler()
         self.qt_model = None
 
     def test_macro_validity(self):
-        self._assert_macro(VALID_MACRO, is_valid=True)
-        self._assert_macro(SYNTAX_ERROR_MACRO, is_valid=False)
-        self._assert_macro(IMPORT_ERROR_MACRO, is_valid=False)
-        self._assert_macro(INDENTATION_ERROR_MACRO, is_valid=False)
+        with singletons(mediator=Mediator()):
+            self._assert_macro(VALID_MACRO, is_valid=True)
+            self._assert_macro(SYNTAX_ERROR_MACRO, is_valid=False)
+            self._assert_macro(IMPORT_ERROR_MACRO, is_valid=False)
+            self._assert_macro(INDENTATION_ERROR_MACRO, is_valid=False)
 
     def _assert_macro(self, code, is_valid):
         macro_controllers = self._create_controllers("macros",
@@ -108,7 +110,6 @@ class InvalidMacro(Macro)
     def execute(self):
         print("Hello {{}}!".format(self.name))
 """
-
 
 IMPORT_ERROR_MACRO = """
 from karabo.middlelayer import Macro123, Slot, String
