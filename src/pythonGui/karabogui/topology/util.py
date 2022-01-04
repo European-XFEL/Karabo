@@ -8,22 +8,21 @@ from collections import Counter
 from karabogui.singletons.api import get_topology
 
 
-def is_server_online(serverId):
-    """ Walk the system topology and return online server status
-    """
+def _is_online(prefix, name):
     topology = get_topology()
-    success = False
+    path = prefix + "." + name
+    attrs = topology.get_attributes(path)
+    return True if attrs else False
 
-    def visitor(node):
-        nonlocal success
-        if (node.attributes.get('type') == 'server'
-                and node.node_id == serverId):
-            success = True
-            return True
 
-    topology.visit_system_tree(visitor)
+def is_server_online(serverId):
+    """Check the system topology and return online server status"""
+    return _is_online("server", serverId)
 
-    return success
+
+def is_device_online(deviceId):
+    """Check the system topology and return online device status"""
+    return _is_online("device", deviceId)
 
 
 def get_macro_servers():
@@ -45,7 +44,7 @@ def get_macro_servers():
                 and attrs.get('lang', '') == 'macro'):
             macro_servers[node.node_id] += 1
         elif (attrs.get('type') == 'server'
-                and node.node_id == 'karabo/macroServer'):
+              and node.node_id == 'karabo/macroServer'):
             # TODO: remove this elif clause after deprecation
             #       karabo/macroServer as hardcoded identifier
             from warnings import warn
@@ -53,8 +52,8 @@ def get_macro_servers():
             warn(msg, DeprecationWarning)
             macro_servers[node.node_id] += 1
         elif (attrs.get('type') == 'macro'
-                and attrs.get('serverId') is not None
-                and attrs.get('serverId') != '__none__'):
+              and attrs.get('serverId') is not None
+              and attrs.get('serverId') != '__none__'):
             macro_servers[attrs['serverId']] += 1
 
     topology.visit_system_tree(visitor)
