@@ -5,7 +5,6 @@ from traits.api import TraitError
 
 from karabo.common import const
 from karabo.native import Hash, HashList, has_changes
-from karabogui.binding.compare import realign_hash
 from karabogui.binding.recursive import (
     ChoiceOfNodesBinding, ListOfNodesBinding)
 from karabogui.binding.types import (
@@ -13,7 +12,7 @@ from karabogui.binding.types import (
     FloatBinding, IntBinding, NodeBinding, SlotBinding, StringBinding,
     VectorBinding, VectorDoubleBinding, VectorFloatBinding, VectorHashBinding,
     VectorNumberBinding, VectorStringBinding)
-from karabogui.binding.util import get_numpy_binding
+from karabogui.binding.util import get_numpy_binding, realign_hash
 
 VECTOR_FLOAT_BINDINGS = (VectorFloatBinding, VectorDoubleBinding)
 NODE_BINDINGS = (NodeBinding, ListOfNodesBinding,
