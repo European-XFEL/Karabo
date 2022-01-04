@@ -83,6 +83,12 @@ def _define_binding_classes():
         def add_proxy(self, proxy):
             return True
 
+        def remove_proxy(self, proxy):
+            return True
+
+        def binding_update(self, proxy):
+            return True
+
         def create_widget(self, parent):
             return QLabel(parent)
 
@@ -100,6 +106,9 @@ def _define_binding_classes():
         def add_proxy(self, proxy):
             return True
 
+        def binding_update(self, proxy):
+            return True
+
         def create_widget(self, parent):
             return QLabel(parent)
 
@@ -112,6 +121,9 @@ def _define_binding_classes():
 
         def create_widget(self, parent):
             return QLabel(parent)
+
+        def binding_update(self, proxy):
+            return True
 
         def value_update(self, proxy):
             self.widget.setText(proxy.binding.value.second.value)
@@ -214,17 +226,45 @@ class TestBaseBindingController(GuiTestCase):
 
         # Use a temporary controller which won't affect other tests
         model = UniqueWidgetModel(keys=['first'])
-        controller = self.MultiBindingController(proxy=self.first, model=model)
-        # Adding an already watched property doesn't work
-        assert not controller.visualize_additional_property(self.first)
-        assert controller.model.keys == ['first']
+        with mock.patch.object(self.MultiBindingController, "binding_update") \
+                as binding_update:
+            controller = self.MultiBindingController(proxy=self.first,
+                                                     model=model)
+            controller.create(None)
+            # Adding an already watched property doesn't work
+            assert not controller.visualize_additional_property(self.first)
+            assert controller.model.keys == ['first']
 
-        assert controller.visualize_additional_property(self.second)
-        assert controller.model.keys == ['first', 'second']
+            binding_update.assert_called_once()
+            binding_update.reset_mock()
 
-        assert not controller.visualize_additional_property(self.second)
-        assert not controller.visualize_additional_property(self.unsupported)
-        assert controller.model.keys == ['first', 'second']
+            assert controller.visualize_additional_property(self.second)
+            assert controller.model.keys == ['first', 'second']
+
+            binding_update.assert_not_called()
+
+            assert not controller.visualize_additional_property(
+                self.second)
+            assert not controller.visualize_additional_property(
+                self.unsupported)
+            assert controller.model.keys == ['first', 'second']
+            binding_update.assert_not_called()
+
+            # Remove an additional proxy
+            assert self.second in controller.proxies
+            controller.remove_additional_property_path(self.second.path)
+            binding_update.assert_not_called()
+
+            assert controller.model.keys == ['first']
+            assert self.second not in controller.proxies
+
+            # Already removed!
+            assert not controller.remove_additional_property_path(
+                self.second.path)
+
+            # Value update is not effective anymore
+            set_proxy_value(self.second, self.second.path, "NoUpdateShould")
+            self.assertNotEqual(controller.widget.text(), "NoUpdateShould")
 
     def test_single_value_update(self):
         set_proxy_value(self.first, 'first', 'Foo')
