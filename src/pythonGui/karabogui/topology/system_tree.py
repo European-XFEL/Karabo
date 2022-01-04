@@ -57,7 +57,8 @@ class SystemTreeNode(HasStrictTraits):
             return {'type': NavigationItemTypes.HOST}
         elif level == SERVER_LEVEL:
             return {'type': NavigationItemTypes.SERVER,
-                    'serverId': self.node_id}
+                    'serverId': self.node_id,
+                    'log': self.attributes.get("log", "INFO")}
         elif level == CLASS_LEVEL:
             return {'type': NavigationItemTypes.CLASS,
                     'serverId': self.parent.node_id,
