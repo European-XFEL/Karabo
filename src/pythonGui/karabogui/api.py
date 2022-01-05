@@ -49,7 +49,7 @@ from karabogui.singletons.api import (
     get_project_model, get_topology)
 from karabogui.topology.api import (
     SystemTopology, SystemTree, SystemTreeNode, get_macro_servers,
-    is_server_online)
+    is_device_online, is_server_online)
 from karabogui.util import (
     SignalBlocker, WeakMethodRef, generateObjectName, get_spin_widget,
     show_wait_cursor, wait_cursor)
