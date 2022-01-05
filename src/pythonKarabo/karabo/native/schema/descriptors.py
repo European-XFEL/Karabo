@@ -740,8 +740,8 @@ class Type(Descriptor, Registry):
 
     def check(self, ret):
         if self.options is not None and ret not in self.options:
-            raise ValueError("value {} not in options {}"
-                             .format(ret, self.options))
+            raise ValueError(f"value {ret} not in options {self.options}"
+                             f" for key {self.key}")
 
     @classmethod
     def fromstring(cls, s):
