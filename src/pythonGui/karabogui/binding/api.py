@@ -1,6 +1,5 @@
 # flake8: noqa
 from .builder import build_binding
-from .compare import attr_fast_deepcopy, is_equal, realign_hash
 from .config import (
     apply_configuration, apply_default_configuration, apply_fast_data,
     apply_project_configuration, extract_attribute_modifications,
@@ -25,9 +24,9 @@ from .types import (
     VectorUint8Binding, VectorUint16Binding, VectorUint32Binding,
     VectorUint64Binding, WidgetNodeBinding)
 from .util import (
-    REFERENCE_TYPENUM_TO_DTYPE, get_binding_array_value, get_binding_value,
-    get_editor_value, get_min_max, get_min_max_size, get_native_min_max,
-    has_min_max_attributes)
+    REFERENCE_TYPENUM_TO_DTYPE, attr_fast_deepcopy, get_binding_array_value,
+    get_binding_value, get_editor_value, get_min_max, get_min_max_size,
+    get_native_min_max, has_min_max_attributes, realign_hash)
 from .validate import (
     convert_string, get_default_value, validate_binding_configuration,
     validate_table_value, validate_value)
