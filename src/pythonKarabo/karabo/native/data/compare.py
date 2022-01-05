@@ -11,19 +11,18 @@ __all__ = ["has_changes"]
 
 
 def has_changes(old_value, new_value):
-    """Compare old/new values to determine if there is a real difference.
-    """
+    """Compare old/new values to determine if there is a real difference"""
     try:
         if old_value is None:
             changes = True
         elif _is_nonintegral_number(old_value):
-            changes = has_floating_changes(old_value, new_value)
+            changes = _has_floating_changes(old_value, new_value)
         elif isinstance(old_value, np.ndarray):
-            changes = has_array_changes(old_value, new_value)
+            changes = _has_array_changes(old_value, new_value)
         elif isinstance(old_value, list):
-            changes = has_list_changes(old_value, new_value)
+            changes = _has_list_changes(old_value, new_value)
         else:
-            changes = (str(old_value) != str(new_value))
+            changes = str(old_value) != str(new_value)
     except TypeError:
         # When old_value and new_value have different types and cannot be
         # operated/compared together, it signifies that there are changes.
@@ -39,7 +38,7 @@ def _is_nonintegral_number(value):
     return is_floating and not is_integer
 
 
-def has_floating_changes(old, new):
+def _has_floating_changes(old, new):
     """Check if there are floating point differences between `old` and `new`
 
     This function complies to the `IEEE 754` specification.
@@ -47,14 +46,14 @@ def has_floating_changes(old, new):
     difference = abs(old - new)
     if not old:
         # Note: In case of a previous 0 value we must ask differently
-        changes = (difference >= ZERO_FLOAT_TOLERANCE)
+        changes = difference >= ZERO_FLOAT_TOLERANCE
     else:
-        changes = (difference >= abs(old * FLOAT_TOLERANCE))
+        changes = difference >= abs(old * FLOAT_TOLERANCE)
 
     return changes
 
 
-def has_array_changes(old, new, dtype=False):
+def _has_array_changes(old, new, dtype=False):
     """Compare if arrays are equal with a floating point tolerance (IEEE 754)
     """
     if len(old) != len(new):
@@ -63,12 +62,10 @@ def has_array_changes(old, new, dtype=False):
     if dtype and old.dtype != new.dtype:
         return True
 
-    changes = not np.allclose(old, new, atol=FLOAT_TOLERANCE)
-
-    return changes
+    return not np.allclose(old, new, atol=FLOAT_TOLERANCE)
 
 
-def has_hash_changes(old, new):
+def _has_hash_changes(old, new):
     """Compare if two Hashes have changes in values with `has_changes`"""
     old_paths = sorted(old.paths(intermediate=True))
     new_paths = sorted(new.paths(intermediate=True))
@@ -80,23 +77,23 @@ def has_hash_changes(old, new):
         old_value = old[key]
         if has_changes(old_value, value):
             return True
+
     return False
 
 
-def has_list_changes(old, new):
-    """Compare if lists have changes with `is_equal` or `has_hash_changes` for
+def _has_list_changes(old, new):
+    """Compare if lists have changes with `is_equal` or `_has_hash_changes` for
     vector hashes"""
     if len(old) != len(new):
         return True
-    changes = False
+
     for i in range(len(old)):
         new_value = new[i]
         old_value = old[i]
         if isinstance(old_value, Hash) and isinstance(new_value, Hash):
-            if has_hash_changes(old_value, new_value):
-                changes = True
-                break
+            if _has_hash_changes(old_value, new_value):
+                return True
         elif not is_equal(old_value, new_value):
-            changes = True
-            break
-    return changes
+            return True
+
+    return False
