@@ -2,8 +2,8 @@ from traits.api import Dict, Instance, List, Property, Trait, TraitHandler
 
 from karabo.native import Hash
 
-from .compare import attr_fast_deepcopy
 from .types import BaseBinding, BindingNamespace, BindingRoot, NodeBinding
+from .util import attr_fast_deepcopy
 
 
 class ChoiceOfNodesBinding(BaseBinding):
