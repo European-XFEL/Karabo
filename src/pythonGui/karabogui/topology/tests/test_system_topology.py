@@ -7,7 +7,8 @@ from karabo.native import Hash
 from karabogui.testing import (
     GuiTestCase, get_device_schema, singletons, system_hash)
 from karabogui.topology.system_topology import SystemTopology
-from karabogui.topology.util import get_macro_servers, is_server_online
+from karabogui.topology.util import (
+    get_macro_servers, is_device_online, is_server_online)
 
 
 def setUp():
@@ -256,6 +257,8 @@ class TestSystemTopology(GuiTestCase):
             topology.visit_device_tree(member_visitor)
             assert len(members) == 1
             assert members[0].node_id == "EG/RR/VIEW"
+
+            assert is_device_online("EG/RR/VIEW")
 
     def test_topology_utils(self):
         topology = SystemTopology()
