@@ -7,6 +7,7 @@ from karabo.common.project.server import DeviceServerModel
 from karabo.native import Hash
 from karabogui.project.controller.device import DeviceInstanceController
 from karabogui.project.controller.server import DeviceServerController
+from karabogui.singletons.mediator import Mediator
 from karabogui.testing import singletons, system_hash
 from karabogui.topology.system_topology import SystemTopology
 
@@ -21,9 +22,10 @@ class TestDeviceInstanceController(TestCase):
     def test_empty_fields_configurator(self, patch_get_device_icon):
         patch_get_device_icon.return_value = None
         network = Mock()
+        mediator = Mediator()
         topology = SystemTopology()
         topology.initialize(system_hash())
-        with singletons(network=network, topology=topology):
+        with singletons(network=network, topology=topology, mediator=mediator):
             foo_config = Hash()
             foo_config['test1'] = 'value1'
             foo_config['test2'] = 'value2'
