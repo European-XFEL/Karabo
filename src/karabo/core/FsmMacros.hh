@@ -7,6 +7,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+// clang-format off
+
 #ifndef FSMMACROSDEVEL_HH
 #define	FSMMACROSDEVEL_HH
 
@@ -1439,3 +1441,4 @@ virtual void exitFunc()  = 0;
 
 #endif
 
+// clang-format on
