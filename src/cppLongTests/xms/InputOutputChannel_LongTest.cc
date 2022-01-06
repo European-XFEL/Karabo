@@ -1,30 +1,30 @@
-/* 
+/*
  * File:   InputOutputChannel_LongTest.cc
  * Author: gero.flucke@xfel.eu
- * 
+ *
  * Created on May 2019
  */
 
-#include <future>
-
 #include "InputOutputChannel_LongTest.hh"
 
-#include "karabo/xms/InputChannel.hh"
-#include "karabo/xms/OutputChannel.hh"
+#include <future>
+
+#include "karabo/net/EventLoop.hh"
 #include "karabo/util/Configurator.hh"
 #include "karabo/util/Hash.hh"
-#include "karabo/net/EventLoop.hh"
+#include "karabo/xms/InputChannel.hh"
+#include "karabo/xms/OutputChannel.hh"
 
 using namespace karabo;
-using xms::InputChannel;
-using xms::OutputChannel;
 using util::Configurator;
 using util::Hash;
+using xms::InputChannel;
+using xms::OutputChannel;
 
 /// A class that adds threads following the RAII principle
 /// to safely (exceptions!) remove them when going out of scope.
 class ThreadAdder {
-public:
+   public:
     ThreadAdder(int nThreads) : m_nThreads(nThreads) {
         karabo::net::EventLoop::addThread(m_nThreads);
     }
@@ -32,7 +32,8 @@ public:
     ~ThreadAdder() {
         karabo::net::EventLoop::removeThread(m_nThreads);
     }
-private:
+
+   private:
     const int m_nThreads;
 };
 
@@ -40,8 +41,7 @@ private:
 CPPUNIT_TEST_SUITE_REGISTRATION(InputOutputChannel_LongTest);
 
 
-InputOutputChannel_LongTest::InputOutputChannel_LongTest() {
-}
+InputOutputChannel_LongTest::InputOutputChannel_LongTest() {}
 
 
 void InputOutputChannel_LongTest::setUp() {
@@ -49,8 +49,7 @@ void InputOutputChannel_LongTest::setUp() {
 }
 
 
-void InputOutputChannel_LongTest::tearDown() {
-}
+void InputOutputChannel_LongTest::tearDown() {}
 
 
 // copy case - sender is irrelevant, so keep its defaults
@@ -108,41 +107,39 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending9() {
 
 
 void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::string& sender_dataDistribution,
-                                                              const std::string& sender_onSlowness,
-                                                              const std::string& receiver_distributionMode,
-                                                              const std::string& receiver_noInputShared) {
+                                                                  const std::string& sender_onSlowness,
+                                                                  const std::string& receiver_distributionMode,
+                                                                  const std::string& receiver_noInputShared) {
     std::clog << "\ntestDisconnectWhileSending: sender " << sender_dataDistribution << "/" << sender_onSlowness
-            << ", receiver (for shared sender) "
-            << receiver_distributionMode << "/" << receiver_noInputShared << std::endl;
+              << ", receiver (for shared sender) " << receiver_distributionMode << "/" << receiver_noInputShared
+              << std::endl;
 
     const unsigned int numData = 100000; // overall number of data items the output channel sends
-    const int processTime = 1; // ms that receiving input channel will block on data
-    const int writeIntervall = 0; // ms in between output channel writing data
-    const int reconnectCycle = 4; // ms between dis- and reconnect trials
-    const int maxDuration = 300; // s of maximum test duration
+    const int processTime = 1;           // ms that receiving input channel will block on data
+    const int writeIntervall = 0;        // ms in between output channel writing data
+    const int reconnectCycle = 4;        // ms between dis- and reconnect trials
+    const int maxDuration = 300;         // s of maximum test duration
 
     ThreadAdder extraThreads(3); // 3 for sender, receiver's callback, dis-/reconnection
 
     // Setup output channel - configure only for "shared" InputChannel
-    OutputChannel::Pointer output = Configurator<OutputChannel>::create("OutputChannel",
-                                                                        Hash("distributionMode", receiver_distributionMode,
-                                                                             "noInputShared", receiver_noInputShared),
-                                                                        0);
+    OutputChannel::Pointer output = Configurator<OutputChannel>::create(
+          "OutputChannel", Hash("distributionMode", receiver_distributionMode, "noInputShared", receiver_noInputShared),
+          0);
     output->setInstanceIdAndName("outputChannel", "output");
     output->initialize(); // required due to additional '0' argument passed to create(..) above
 
     // Setup input channel
     const std::string outputChannelId(output->getInstanceId() + ":output");
-    const Hash cfg("connectedOutputChannels", std::vector<std::string>(1, outputChannelId),
-                   "dataDistribution", sender_dataDistribution,
-                   "onSlowness", sender_onSlowness);
+    const Hash cfg("connectedOutputChannels", std::vector<std::string>(1, outputChannelId), "dataDistribution",
+                   sender_dataDistribution, "onSlowness", sender_onSlowness);
 
     InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", cfg);
     input->setInstanceId("inputChannel");
     unsigned int calls = 0;
-    input->registerDataHandler([&calls, processTime](const Hash& data, const InputChannel::MetaData & meta) {
+    input->registerDataHandler([&calls, processTime](const Hash& data, const InputChannel::MetaData& meta) {
         ++calls;
-                               boost::this_thread::sleep(boost::posix_time::milliseconds(processTime));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(processTime));
     });
 
     Hash outputInfo = output->getInformation();
@@ -157,14 +154,12 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
     // Setup connection handler
     std::promise<karabo::net::ErrorCode> connectErrorCode;
     auto connectFuture = connectErrorCode.get_future();
-    auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode& ec) {
-        connectErrorCode.set_value(ec);
-    };
+    auto connectHandler = [&connectErrorCode](const karabo::net::ErrorCode& ec) { connectErrorCode.set_value(ec); };
     // initiate connect and block until done (fail test if timeout)
     karabo::net::ErrorCode ec;
     input->connect(outputInfo, connectHandler);
     CPPUNIT_ASSERT_EQUAL(std::future_status::ready, connectFuture.wait_for(std::chrono::milliseconds(1000)));
-    ec = connectFuture.get(); // Can get() only once...
+    ec = connectFuture.get();                                                 // Can get() only once...
     CPPUNIT_ASSERT_EQUAL_MESSAGE(ec.message(), karabo::net::ErrorCode(), ec); // i.e. no error
 
     //
@@ -200,14 +195,14 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
     std::promise<void> disReconnectDone;
     auto disReconnectFuture = disReconnectDone.get_future();
     unsigned int disconCounter = 0;
-    auto disReconnect = [input, output, outputInfo, &disreconnectFailure, &disReconnectDone,
-            &doGoOn, &disconCounter, reconnectCycle]() {
+    auto disReconnect = [input, output, outputInfo, &disreconnectFailure, &disReconnectDone, &doGoOn, &disconCounter,
+                         reconnectCycle]() {
         while (doGoOn) {
             input->disconnect(outputInfo.get<std::string>("outputChannelString"));
             ++disconCounter;
             std::promise<karabo::net::ErrorCode> connectErrorCode;
             auto connectFuture = connectErrorCode.get_future();
-            auto connectHandler = [&connectErrorCode, &doGoOn](const karabo::net::ErrorCode & ec) {
+            auto connectHandler = [&connectErrorCode, &doGoOn](const karabo::net::ErrorCode& ec) {
                 if (doGoOn) connectErrorCode.set_value(ec); // protect since connectErrorCode could be gone!
             };
             // initiate connect and block until done
@@ -232,7 +227,8 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
             }
             const karabo::net::ErrorCode ec = connectFuture.get(); // Can get only once...
             if (ec != karabo::net::ErrorCode()) {
-                disreconnectFailure = "Failed reconnection: " + (ec.message() += " -- ") += karabo::util::toString(disconCounter);
+                disreconnectFailure = "Failed reconnection: " + (ec.message() += " -- ") +=
+                      karabo::util::toString(disconCounter);
                 doGoOn = false;
                 break;
             }
@@ -257,7 +253,7 @@ void InputOutputChannel_LongTest::testDisconnectWhileSending_impl(const std::str
 
     const unsigned int totalSent = numSentFuture.get();
     std::clog << "DONE: output sent " << totalSent << " data items out of which only " << calls << " reached input "
-            << "since input disconnected " << disconCounter << " times" << std::endl;
+              << "since input disconnected " << disconCounter << " times" << std::endl;
     // Finally do all the necessary asserts:
     CPPUNIT_ASSERT_MESSAGE(exceptionText, exceptionText.empty());
     CPPUNIT_ASSERT_EQUAL(numData, totalSent);
