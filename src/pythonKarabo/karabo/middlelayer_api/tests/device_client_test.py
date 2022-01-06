@@ -23,6 +23,13 @@ def _getLogReaderId(device):
     return DEVICE_ID
 
 
+class HiddenDeviceClient(DeviceClientBase):
+    def _initInfo(self):
+        info = super()._initInfo()
+        info["type"] = "client"
+        return info
+
+
 class DataLogReader(Device):
 
     def _initInfo(self):
@@ -79,7 +86,7 @@ class TestDeviceClientBase(DeviceTest):
     @classmethod
     @contextmanager
     def lifetimeManager(cls):
-        cls.dev = DeviceClientBase(conf)
+        cls.dev = HiddenDeviceClient(conf)
         with cls.deviceManager(lead=cls.dev):
             yield
 
@@ -89,7 +96,8 @@ class TestDeviceClientBase(DeviceTest):
         class DefaultDevice(Device):
             __version__ = "1.2.3"
 
-        self.assertEqual(len(getTopology()["device"]), 0)
+        self.assertEqual(len(getTopology()["device"]), 0,
+                         f"Topology not empty: {getTopology()['device']}")
 
         devices = []
 
