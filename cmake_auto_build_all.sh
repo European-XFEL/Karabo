@@ -43,46 +43,30 @@ activateKarabo() {
 }
 
 checkCppUnitTestResults() {
-    local testDir="$1"
-    local testNames="$2"
+    # activate karabo to get a python environment
+    activateKarabo
     local mergeArgs=""
-    safeRunCommand "python -m pip install --upgrade $scriptDir/ci/utils/cppunitxmlparser/."
-    for name in $testNames; do
-        local path=$(printf "%s/testresults/%sTest.xml" $testDir $name)
-        mergeArgs="${mergeArgs} ${path}"
+    safeRunCommand "python -m pip install --upgrade ${scriptDir}/ci/utils/cppunitxmlparser/."
+    for name in $(ls ${FRAMEWORK_BUILD_DIR}/karabo/*/testresults/*.xml); do
+        mergeArgs="${mergeArgs} ${name}"
     done
-    cppunitxml-check -f${mergeArgs} -o cpp.junit.xml
-    ret_code=$?
-    if [ $ret_code != 0 ]; then
-        # the output file is expected to be 'junitoutput.xml'
-        # by the CI application, if we do not fail here, the python
-        # tests will aggreagate this file into a global result file.
-        mv cpp.junit.xml junitoutput.xml
-        exit $ret_code
-    fi
-    # Fail when new test suites are added and we don't expect them
-    pushd $testDir/testresults/ &> /dev/null
-    local actualNames=$(ls *.xml | cut -d'.' -f1 | tr '\n' ' ')
-    popd &> /dev/null
-
-    local expectedCount=$(echo $testNames | wc -w)
-    local actualCount=$(echo $actualNames | wc -w)
-    if [ "$expectedCount" != "$actualCount" ]; then
-        echo "Test result files in '$testDir/testresults' don't match expectation:"
-        echo "    Expected: $testNames"
-        echo "    Got: $actualNames"
-        echo
-        echo
+    if [[ ${mergeArgs} = "" ]]; then
+        echo "ERROR! No XML output file was generated!"
         exit 1
     fi
+    # process the cppunit report files into a junit compatible file
+    cppunitxml-check -f${mergeArgs} -o $scriptDir/junit.cpp.xml
+    # this should have a non-zero return value if errors are present.
+    ret_code=$?
+    if [ $ret_code != 0 ]; then
+        exit $ret_code
+    fi
+    deactivate
 }
 
 
 runPythonUnitTests() {
     activateKarabo
-
-    local testNames=$(ls $scriptDir/src/karabo/tests --ignore=CMakeLists.txt)
-    local testDir=$scriptDir/build/netbeans/karabo
 
     echo
     echo Running Karabo Python unit tests ...
@@ -101,6 +85,7 @@ runPythonUnitTests() {
             --runUnitTests \
             --rootDir $scriptDir
     fi
+    deactivate
 }
 
 runPythonIntegrationTests() {
@@ -123,6 +108,7 @@ runPythonIntegrationTests() {
             --runIntegrationTests \
             --rootDir $scriptDir
     fi
+    deactivate
 }
 
 runPythonLongTests() {
@@ -143,6 +129,7 @@ runPythonLongTests() {
            --runLongTests \
            --rootDir $scriptDir
     fi
+    deactivate
 }
 
 producePythonCodeCoverageReport() {
@@ -170,6 +157,7 @@ producePythonCodeCoverageReport() {
         --reportDir $scriptDir/ci/coverage
 
     echo
+    deactivate
 }
 
 # Make sure the script runs in the correct directory
@@ -404,7 +392,7 @@ FRAMEWORK_BUILD_DIR="$scriptDir/build_$LOWER_CMAKE_CONF"
 mkdir -p $FRAMEWORK_BUILD_DIR
 FRAMEWORK_INSTALL_DIR="$scriptDir/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/karabo"
 
-cd $FRAMEWORK_BUILD_DIR
+pushd $FRAMEWORK_BUILD_DIR
 
 if [ -d $FRAMEWORK_INSTALL_DIR ]; then
     # Preserve any installed device, plugin and all contents under var dir.
@@ -515,10 +503,29 @@ if [ "$SKIP_CPP_TESTS" = "n" ] && { [ "$RUNTESTS" = "y" ] || [ "$RUNINTEGRATIONT
     echo
     # Activate the karabo environment to allow tests to be run from the
     # build tree.
+    typeset tests_ret_code
     source $FRAMEWORK_BUILD_DIR/activateKarabo.sh
-    safeRunCommand ctest -VV
+    # clear previous tests
+    for name in $(ls ${FRAMEWORK_BUILD_DIR}/karabo/*/testresults/*.xml); do
+        rm -f ${name}
+    done
+    # NOTE: the tests are not executed inside a `safeRunCommand` function.
+    #       this is to give us the chance to process the result files.
+    ctest -VV
+    tests_ret_code=$?
+    # deactivate the environment where C++ tests are run
     deactivateKarabo
+    # Parse the XML test outputs
+    checkCppUnitTestResults
+    if [ $tests_ret_code != 0 ]; then
+        echo "Test execution FAILED"
+        echo "Report files processing did not find errors..."
+        echo "A test file is likely missing due to a segmentation fault in tests."
+        exit $tests_ret_code
+    fi
 fi
+
+popd
 
 if [ "$RUNTESTS" = "y" ] && [ "$SKIP_PYTHON_TESTS" = "n" ] ; then
     runPythonUnitTests
