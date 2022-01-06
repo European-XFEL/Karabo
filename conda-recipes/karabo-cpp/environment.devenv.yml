@@ -14,6 +14,7 @@ dependencies:
   - libstdcxx-ng  # [linux]
   - clangxx       # [osx]
   - cmake>=3.14
+  - clang-tools=13.0.0
   - make
   - setuptools-scm
   - cogapp
