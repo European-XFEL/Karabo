@@ -55,12 +55,23 @@ __lint_clang_format() {
     $CI_PROJECT_DIR/src/integrationTests $CI_PROJECT_DIR/src/karathon \
     $CI_PROJECT_DIR/src/tools"
 
-    SRC_FILES=($(find $SCAN_DIRS \( -name "*.cc" -o -name "*.hh" \)))
+    echo "Linting format with `clang-format --version` ..."
+
+    # TODO: Uncomment the line below
+    # SRC_FILES=($(find $SCAN_DIRS -type f \( -name "*.cc" -o -name "*.hh" -o -name "*.hpp" \)))
+
+    # TODO: Delete the assignment of hardcoded list of files below. These are the corner cases to clear out before going for the full batch.
+    SRC_FILES=("$CI_PROJECT_DIR/src/karabo/util/Configurator.hh" \
+    "$CI_PROJECT_DIR/src/karabo/core/FsmMacros.hh" \
+    "$CI_PROJECT_DIR/src/karathon/PyCoreDeviceClient.cc" \
+    "$CI_PROJECT_DIR/src/karathon/PyH5Tools.cc" \
+    "$CI_PROJECT_DIR/src/karathon/PyXmsSignalSlotable.cc" \
+    "$CI_PROJECT_DIR/src/cppLongTests/xms/InputOutputChannel_LongTest.cc")
     local -i ok_files=0
     local -i err_files=0
     local file_check_code
     for SRC_FILE in "${SRC_FILES[@]}"; do
-        eval "clang-format -n -i --Werror --ferror-limit=1 $SRC_FILE"
+        eval "clang-format -n -i --Werror $SRC_FILE"
         file_check_code=$?
         if [[ $file_check_code != 0 ]]; then
             ((err_files+=1))
@@ -93,14 +104,6 @@ __lint_isort() {
 }
 
 # -- main
-# if not run in the gitlab CI environment, one must set this env. variable.
-if [ "$CI_PROJECT_DIR" = "" ]; then
-    export CI_PROJECT_DIR=$(echo $(git rev-parse --show-toplevel))
-else
-    # call manually if not CI:
-    # if non-CI it causes a warning: Could not find conda environment
-    source activate && conda activate
-fi
 
 # -- usage
 # lint <SCANNAME>
@@ -112,6 +115,15 @@ SCANNAME=$1
 # a variable is unset or set to the empty string
 if [ -z "${SCANNAME}" ]; then
   SCANNAME="ALL"
+fi
+
+# if not run in the gitlab CI environment, one must set this env. variable.
+if [ "$CI_PROJECT_DIR" = "" ]; then
+    export CI_PROJECT_DIR=$(echo $(git rev-parse --show-toplevel))
+else
+    # if the environment variable CI_PROJECT_DIR is already set, we are
+    # running on the CI environment.
+    source activate ""
 fi
 
 case $SCANNAME in
@@ -133,7 +145,7 @@ case $SCANNAME in
     "ALL")
         echo "Running all scan types..."
         #__lint_cpp_fast && \
-        #__lint_clang_format && \
+        __lint_clang_format && \
         __lint_flake8 && \
         __lint_isort
         ;;
