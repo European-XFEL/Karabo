@@ -33,40 +33,7 @@ The following additional extensions are not required, just recommended:
 * CMake from twxs - https://marketplace.visualstudio.com/items?itemName=twxs.cmake.
 * Git Lens - https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens.
 
-1.3. Install clang-format
--------------------------
-
-Karabo's Continuous Integration (CI) checks C++ source code formatting
-compliance with the settings in a `.clang-format` file in the root of the
-Karabo Framework repository. To have a smooth workflow with
-Karabo's CI, make sure `clang-format` (version 12 or newer) is installed
-on your development system. For Ubuntu, `clang-format` can be installed via:
-
-```
-sudo apt install clang-format-12
-```
-
-or, if you are using a green desktop:
-
-```
-pkcon install clang-format-12
-```
-
-The VSCode settings below, all related to source code formatting, should also be
-set. You can either append them to the set of workspace-scoped settings in
-section 1.8, "Configure the VSCode CMake Extension for the Karabo Framework Project"
-or append them to the settings in the user-scoped VSCode settings file, at
-`$HOME/.vscode/settings.json`:
-
-```
-"editor.defaultFormatter": null
-"editor.formatOnPaste": true
-"editor.formatOnSave": true
-"editor.formatOnSaveMode": "file"
-"C_Cpp.formatting": "clangFormat"
-```
-
-1.4. Configure GDB Pretty printing
+1.3. Configure GDB Pretty printing
 ----------------------------------
 
 *This step may not be needed on your system*. Please test your VSCode with a simple
@@ -117,7 +84,7 @@ string and vector highlighted by the yellow rectangles in the image below).
 
 .. image:: img/vscode_pretty_print.png
 
-1.5. Clone the Karabo Framework repository
+1.4. Clone the Karabo Framework repository
 ------------------------------------------
 
 Clone the Karabo Framework git repository into your local system with::
@@ -131,7 +98,7 @@ or with::
 depending on the access mode you have configured for the remote
 Karabo git repository.
 
-1.6. Install Miniconda
+1.5. Install Miniconda
 ----------------------
 
 The `cmake` build of the Karabo Framework library requires all the build dependencies
@@ -145,7 +112,7 @@ To install Miniconda, please follow the instructions at
 https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html.
 
 
-1.7. Create the Conda Environment with the Karabo Framework dependencies
+1.6. Create the Conda Environment with the Karabo Framework dependencies
 ------------------------------------------------------------------------
 
 Once Conda is installed, an XFEL hosted Conda channel will be needed to get
@@ -180,8 +147,8 @@ package is needed::
 Replace [KARABO_FRAMEWORK_DIR] with the path of the directory where you cloned
 the `Framework` repository to in step 1.4.
 
-1.8. Configure the VSCode CMake Extension for the Karabo Framework Project
---------------------------------------------------------------------------
+1.7. Configure the VSCode for the Karabo Framework Workspace
+------------------------------------------------------------
 
 Go to the directory where you cloned the Karabo Framework in the previous
 step and create a `.vscode` sub-directory in there - do not worry, `.vscode`
@@ -198,7 +165,18 @@ directory, create a `settings.json` file with the following content::
          "BUILD_UNIT_TESTING": 1,
          "BUILD_INTEGRATION_TESTING": 1,
       }
+      "editor.defaultFormatter": null,
+      "editor.formatOnPaste": true,
+      "editor.formatOnSave": true,
+      "editor.formatOnSaveMode": "file",
+      "C_Cpp.formatting": "clangFormat",
+      "C_Cpp.clang_format_path": "[CONDA_ENV_DIR]/bin/clang-format",
    }
+
+The set of options above configure both the CMake extension and the automatic formatting
+of C++ source files using the `clang-format` utility included in the Karabo Framework
+Conda environment (it is important to use the utility instance in the Conda environment
+to avoid any incompatibility with the `clang-format` used by the CI pipelines).
 
 For the `cmake.buildDirectory` parameter, replace [BUILD_DIR] with any valid
 directory name of your preference, e.g., "build_debug_karaboCpp". The `${workspaceFolder}`
@@ -238,6 +216,12 @@ An example of a configured `settings.json`::
             "BUILD_UNIT_TESTING": 1,
             "BUILD_INTEGRATION_TESTING": 1
       }
+      "editor.defaultFormatter": null,
+      "editor.formatOnPaste": true,
+      "editor.formatOnSave": true,
+      "editor.formatOnSaveMode": "file",
+      "C_Cpp.formatting": "clangFormat",
+      "C_Cpp.clang_format_path": "/home/bob/miniconda3/envs/karabo-cpp/bin/clang-format",
    }
 
 The `settings.json` file above will be scoped for the VSCode workspace. All the
