@@ -25,6 +25,12 @@ def _getLogReaderId(device):
 
 class HiddenDeviceClient(DeviceClientBase):
     def _initInfo(self):
+        """Hide this device in the `client` section of the topology
+
+        DeviceClientBase is a device, and this will influence the
+        topology that the test `TestDeviceClientBase` expects
+        in a non-trivial and time-dependent way.
+        """
         info = super()._initInfo()
         info["type"] = "client"
         return info
