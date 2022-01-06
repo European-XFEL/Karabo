@@ -7,15 +7,9 @@ import os
 import pickle
 import socket
 
-try:
-    from ipykernel.inprocess.client import InProcessKernelClient
-    from qtconsole import inprocess, kernel_mixins
-    from qtconsole.rich_jupyter_widget import RichJupyterWidget
-except ImportError:
-    from IPython.kernel.inprocess.client import InProcessKernelClient
-    from IPython.qt.console.rich_ipython_widget import RichIPythonWidget \
-        as RichJupyterWidget
-    from IPython.qt import kernel_mixins, inprocess
+from ipykernel.inprocess.client import InProcessKernelClient
+from qtconsole import inprocess, kernel_mixins
+from qtconsole.rich_jupyter_widget import RichJupyterWidget
 
 from karabo.common.states import State
 from karabo.native import Hash
@@ -36,8 +30,8 @@ class IPythonWidget(RichJupyterWidget):
         self.kernel_manager.start_kernel()
         self.kernel_client = self.kernel_manager.client()
 
-        session_start_cb = call_backs.get('start_ch')
-        session_stop_cb = call_backs.get('stop_ch')
+        session_start_cb = call_backs.get("start_ch")
+        session_stop_cb = call_backs.get("stop_ch")
         if session_start_cb:
             self.kernel_client.started_channels.connect(session_start_cb)
         if session_stop_cb:
@@ -52,7 +46,7 @@ class IPythonWidget(RichJupyterWidget):
         self.kernel_client.started_channels.disconnect()
         self.kernel_client.stopped_channels.disconnect()
         self.deleteLater()
-        super(IPythonWidget, self).destroy()
+        super().destroy()
 
 
 class Channel(inprocess.QtInProcessChannel):
@@ -82,7 +76,7 @@ class KernelManager(kernel_mixins.QtKernelManagerMixin):
 
         hostname = socket.gethostname().replace(".", "_")
         network = get_network()
-        self.name = "CLI-{}-{}".format(hostname, os.getpid())
+        self.name = f"CLI-{hostname}-{os.getpid()}"
         serverId = macro_servers[0]
         network.onInitDevice(serverId, "IPythonKernel", self.name, Hash())
 
@@ -106,28 +100,28 @@ class KernelClient(inprocess.QtInProcessKernelClient):
     hb_channel_class = inprocess.QtInProcessHBChannel
 
     def __init__(self, name):
-        super(KernelClient, self).__init__()
+        super().__init__()
         self.alive = False
         self.started = False
         self.name = name
 
         device = get_topology().get_device(self.name)
         self.device = device
-        self.interrupt = PropertyProxy(root_proxy=device, path='interrupt')
-        self._iopub = PropertyProxy(root_proxy=device, path='iopub')
-        self._shell = PropertyProxy(root_proxy=device, path='shell')
-        self._stdin = PropertyProxy(root_proxy=device, path='stdin')
+        self.interrupt = PropertyProxy(root_proxy=device, path="interrupt")
+        self._iopub = PropertyProxy(root_proxy=device, path="iopub")
+        self._shell = PropertyProxy(root_proxy=device, path="shell")
+        self._stdin = PropertyProxy(root_proxy=device, path="stdin")
 
         device.on_trait_change(self._state_update,
-                               'state_binding.config_update')
+                               "state_binding.config_update")
         for prop in (self._iopub, self._shell, self._stdin):
-            prop.on_trait_change(self._proxy_update, 'binding.config_update')
+            prop.on_trait_change(self._proxy_update, "binding.config_update")
             # The device is killed when closing. No need to stop_monitoring()
             prop.start_monitoring()
 
     def _proxy_update(self, binding, name, event):
-        # This is bound to 'binding.config_update' notifications
-        if name != 'config_update':
+        # This is bound to "binding.config_update" notifications
+        if name != "config_update":
             return
         mapping = {
             self._iopub: self.iopub_channel,
@@ -142,7 +136,7 @@ class KernelClient(inprocess.QtInProcessKernelClient):
                 break
 
     def _state_update(self, binding, name, event):
-        if name != 'config_update':
+        if name != "config_update":
             return
 
         value = get_binding_value(binding, State.UNKNOWN)
@@ -158,10 +152,10 @@ class KernelClient(inprocess.QtInProcessKernelClient):
         send_property_changes([self._shell])
 
     def start_channels(self):
-        # magic: skip InProcessKernelClient, does stuff we don't want
+        # magic: skip InProcessKernelClient, does stuff we don"t want
         super(InProcessKernelClient, self).start_channels()
 
     def input(self, string):
-        msg = self.session.msg('input_reply', {'value': string})
+        msg = self.session.msg("input_reply", {"value": string})
         self._stdin.edit_value = pickle.dumps(msg)
         send_property_changes([self._stdin])
