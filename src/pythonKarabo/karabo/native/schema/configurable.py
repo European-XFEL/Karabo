@@ -5,7 +5,7 @@ from weakref import WeakKeyDictionary
 from karabo.common.alarm_conditions import AlarmCondition
 from karabo.common.api import KARABO_RUNTIME_ATTRIBUTES_MDL
 from karabo.native.data import (
-    AccessLevel, Hash, HashList, NodeType, Schema, Timestamp, is_equal)
+    AccessLevel, Hash, HashList, NodeType, Schema, Timestamp, has_changes)
 from karabo.native.time_mixin import get_timestamp
 
 from .basetypes import KaraboValue, NoneValue, isSet
@@ -209,7 +209,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                             hsh[k, ...])
                     if only_changes:
                         old = getattr(instance, k)
-                        if is_equal(old.value, v.value):
+                        if not has_changes(old.value, v.value):
                             continue
                     setter.append((desc, instance, v))
             return setter
