@@ -143,7 +143,7 @@ namespace karabo {
                 }
 
             } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in sendAlarmUpdates(): " << e.userFriendlyMsg();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in sendAlarmUpdates(): " << e.detailedMsg();
             }
 
             // Always restart the timer!

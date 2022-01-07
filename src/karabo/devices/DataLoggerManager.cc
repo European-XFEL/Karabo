@@ -368,7 +368,7 @@ namespace karabo {
                 m_strand->post(bind_weak(&Self::launchTopologyCheck, this));
 
             } catch (const karabo::util::Exception& ke) {
-                exceptTxt = ke.userFriendlyMsg();
+                exceptTxt = ke.userFriendlyMsg(true);
             } catch (const std::exception& e) {
                 exceptTxt = e.what();
             }

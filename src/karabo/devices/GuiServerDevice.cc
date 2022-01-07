@@ -352,10 +352,10 @@ namespace karabo {
                 // Produce some information
                 KARABO_LOG_INFO << "GUI Server is up and listening on port: " << get<unsigned int>("port");
 
-            } catch (const Exception& e) {
+            } catch (const std::exception& e) {
                 updateState(State::ERROR);
 
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in initialize(): " << e.userFriendlyMsg();
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in initialize(): " << e.what();
             }
         }
 
@@ -538,8 +538,8 @@ namespace karabo {
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
 
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onConnect(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onConnect(): " << e.what();
                 m_dataConnection->startAsync(bind_weak(&karabo::devices::GuiServerDevice::onConnect, this, _1, _2));
             }
         }
@@ -608,8 +608,8 @@ namespace karabo {
                 timer->expires_from_now(boost::posix_time::milliseconds(500));
                 timer->async_wait(bind_weak(&GuiServerDevice::deferredDisconnect, this,
                                             boost::asio::placeholders::error, weakChannel, timer));
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onLogin(): " << e.what();
             }
         }
 
@@ -762,8 +762,8 @@ namespace karabo {
                 Hash::Pointer body = boost::make_shared<Hash>(hash);
                 m_guiDebugProducer->write("karaboGuiDebug", hdr, body, 0, 0);
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGuiError(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGuiError(): " << e.what();
             }
         }
 
@@ -939,8 +939,8 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_pendingInstantiationsMutex);
                     m_pendingDeviceInstantiations.push(inst);
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInitDevice(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInitDevice(): " << e.what();
             }
         }
 
@@ -972,8 +972,8 @@ namespace karabo {
                     m_pendingDeviceInstantiations.pop();
                 }
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in initSingleDevice(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in initSingleDevice(): " << e.what();
             }
 
             // Always restart the timer!
@@ -1061,8 +1061,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onKillServer : \"" << serverId << "\"";
                 // TODO Supply user specific context
                 call(serverId, "slotKillServer");
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onKillServer(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onKillServer(): " << e.what();
             }
         }
 
@@ -1072,8 +1072,8 @@ namespace karabo {
                 string deviceId = info.get<string > ("deviceId");
                 KARABO_LOG_FRAMEWORK_DEBUG << "onKillDevice : \"" << deviceId << "\"";
                 call(deviceId, "slotKillDevice");
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onKillDevice(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onKillDevice(): " << e.what();
             }
         }
 
@@ -1171,8 +1171,8 @@ namespace karabo {
                     }
                     KARABO_LOG_FRAMEWORK_DEBUG << "onGetClassSchema : serverId=\"" << serverId << "\", classId=\"" << classId << "\": expect later answer";
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetClassSchema(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onGetClassSchema(): " << e.what();
             }
         }
 
@@ -1543,8 +1543,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << remote().getSystemTopology();
                 Hash h("type", "systemTopology", "systemTopology", remote().getSystemTopology());
                 safeClientWrite(channel, h);
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in sendSystemTopology(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in sendSystemTopology(): " << e.what();
             }
         }
 
@@ -1580,8 +1580,8 @@ namespace karabo {
                     connectPotentialAlarmService(topologyEntry);
                     registerPotentialProjectManager(topologyEntry);
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceNewHandler(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in instanceNewHandler(): " << e.what();
             }
         }
 
@@ -1732,8 +1732,8 @@ namespace karabo {
                         }
                     }
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in classSchemaHandler(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in classSchemaHandler(): " << e.what();
             }
         }
 
@@ -1763,8 +1763,8 @@ namespace karabo {
                 }
 
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in schemaUpdatedHandler(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in schemaUpdatedHandler(): " << e.what();
             }
         }
 
@@ -1782,8 +1782,8 @@ namespace karabo {
                     }
                 }
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in logHandler(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in logHandler(): " << e.what();
             }
         }
 
@@ -2125,8 +2125,8 @@ namespace karabo {
                         bind_weak(&GuiServerDevice::onUpdateNewInstanceAttributesHandler, this, deviceId, _1));
                 }
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in sending attribute update " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in sending attribute update " << e.what();
             }
         }
 
@@ -2141,8 +2141,8 @@ namespace karabo {
                 if (m_pendingAttributeUpdates.erase(deviceId) == 0) {
                    KARABO_LOG_ERROR<<"Received non-requested attribute update response from: "<< deviceId;
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in receiving attribute update response: " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in receiving attribute update response: " << e.what();
             }
         }
 
@@ -2158,8 +2158,8 @@ namespace karabo {
                 Hash h("type", type, "instanceId", alarmServiceId, "rows", updateRows);
                 // Broadcast to all GUIs
                 safeAllClientsWrite(h, LOSSLESS);
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in broad casting alarms(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in broad casting alarms(): " << e.what();
             }
         }
 
@@ -2169,8 +2169,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onAcknowledgeAlarm : info ...\n" << info;
                 const std::string& alarmServiceId = info.get<std::string>("alarmInstanceId");
                 call(alarmServiceId, "slotAcknowledgeAlarm", info.get<Hash>("acknowledgedRows"));
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onAcknowledgeAlarm(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onAcknowledgeAlarm(): " << e.what();
             }
         };
 
@@ -2183,8 +2183,8 @@ namespace karabo {
                 request(requestedInstance, "slotRequestAlarmDump")
                         .receiveAsync<karabo::util::Hash>(bind_weak(&GuiServerDevice::onRequestedAlarmsReply, this, channel, _1, replyToAllClients));
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestAlarms(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestAlarms(): " << e.what();
             }
         };
 
@@ -2203,8 +2203,8 @@ namespace karabo {
                 } else {
                     safeClientWrite(channel, h, LOSSLESS);
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAlarmsReply(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAlarmsReply(): " << e.what();
             }
         }
 
@@ -2216,8 +2216,8 @@ namespace karabo {
                 const std::vector<Hash>& updates = info.get<std::vector<Hash> >("updates");
                 request(instanceId, "slotUpdateSchemaAttributes", updates)
                         .receiveAsync<Hash>(bind_weak(&GuiServerDevice::onRequestedAttributeUpdate, this, channel, _1));
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onUpdateAttributes(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onUpdateAttributes(): " << e.what();
             }
         }
 
@@ -2227,8 +2227,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRequestedAttributeUpdate : success ...\n" << reply.get<bool>("success");
                 Hash h("type", "attributesUpdated", "reply", reply);
                 safeClientWrite(channel, h, LOSSLESS);
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAttributeUpdate(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequestedAttributeUpdate(): " << e.what();
             }
         }
 
@@ -2361,8 +2361,8 @@ namespace karabo {
                 const std::string& token = info.get<std::string>("token");
                 request(projectManager, "slotBeginUserSession", token)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectBeginUserSession", _1));
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectBeginUserSession(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectBeginUserSession(): " << e.what();
             }
         }
 
@@ -2375,8 +2375,8 @@ namespace karabo {
                 const std::string& token = info.get<std::string>("token");
                 request(projectManager, "slotEndUserSession", token)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectEndUserSession", _1));
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectEndUserSession(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectEndUserSession(): " << e.what();
             }
         }
 
@@ -2392,8 +2392,8 @@ namespace karabo {
                 request(projectManager, "slotSaveItems", token, items, client)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectSaveItems", _1));
 
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectSaveItems(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectSaveItems(): " << e.what();
             }
         }
 
@@ -2407,8 +2407,8 @@ namespace karabo {
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
                 request(projectManager, "slotLoadItems", token, items)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectLoadItems", _1));
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectLoadItems(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectLoadItems(): " << e.what();
             }
         }
 
@@ -2417,8 +2417,8 @@ namespace karabo {
             try {
                 Hash h("type", "projectListProjectManagers", "reply", getKnownProjectManagers());
                 safeClientWrite(channel, h, LOSSLESS);
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListProjectManagers(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListProjectManagers(): " << e.what();
             }
         }
 
@@ -2433,8 +2433,8 @@ namespace karabo {
                 const std::vector<std::string>& item_types = info.get<std::vector < std::string >> ("item_types");
                 request(projectManager, "slotListItems", token, domain, item_types)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListItems", _1));
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListItems(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListItems(): " << e.what();
             }
         }
 
@@ -2447,8 +2447,8 @@ namespace karabo {
                 const std::string& token = info.get<std::string>("token");
                 request(projectManager, "slotListDomains", token)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectListDomains", _1));
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListDomains(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectListDomains(): " << e.what();
             }
         }
 
@@ -2462,8 +2462,8 @@ namespace karabo {
                 const std::vector<Hash>& items = info.get<std::vector<Hash> >("items");
                 request(projectManager, "slotUpdateAttribute", token, items)
                         .receiveAsync<Hash>(util::bind_weak(&GuiServerDevice::forwardReply, this, channel, "projectUpdateAttribute", _1));
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectUpdateAttribute(): " << e.userFriendlyMsg();
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onProjectUpdateAttribute(): " << e.what();
             }
         }
 
@@ -2474,8 +2474,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "forwardReply : " << replyType;
                 Hash h("type", replyType, "reply", reply);
                 safeClientWrite(channel, h, LOSSLESS);
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in forwarding reply of type '" << replyType << "': " << e;
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in forwarding reply of type '" << replyType << "': " << e.what();
             }
         }
 
@@ -2484,8 +2484,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "forwardRequestReply for token : "<< token;
                 Hash h("reply", reply, "token", token, "success", true, "type", "requestFromSlot");
                 safeClientWrite(channel, h, LOSSLESS);
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in forwarding request reply for token '" << token << "': " << e;
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in forwarding request reply for token '" << token << "': " << e.what();
             }
         }
 
@@ -2515,7 +2515,8 @@ namespace karabo {
                 request(deviceId, slot, arg_hash).template receiveAsync<Hash>(bind_weak(&GuiServerDevice::forwardRequestReply, this, channel, _1, token),
                                                                               bind_weak(&GuiServerDevice::onRequestFromSlotErrorHandler, this, channel, failureInfo, token));
             } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequest() with args: "<<hash<<": " << e.userFriendlyMsg();
+                // TODO: Less details to GUI, more on log
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onRequest() with args: "<<hash<<": " << e.userFriendlyMsg(false);
                 failureInfo.set("replied_error", e.what());
                 Hash reply("success", false, "info", failureInfo, "token", (hash.has("token")? hash.get<std::string>("token"): "undefined"), "type", "requestFromSlot");
                 safeClientWrite(channel, reply, LOSSLESS);
@@ -2527,16 +2528,18 @@ namespace karabo {
                 throw;
             } catch (const TimeoutException& te) {
                 // act on timeout, e.g.
-                KARABO_LOG_FRAMEWORK_ERROR << te.what();
+                const std::string msg = te.detailedMsg();
+                KARABO_LOG_FRAMEWORK_ERROR << msg;
                 Hash failureInfo(info);
-                failureInfo.set("replied_error", te.what());
+                failureInfo.set("replied_error", msg);
                 Hash reply("success", false, "info", failureInfo, "token", token, "type", "requestFromSlot");
                 safeClientWrite(channel, reply, LOSSLESS);
             } catch (const RemoteException& re) {
                 // act on remote error, e.g.
-                KARABO_LOG_FRAMEWORK_ERROR << re.what();
+                const std::string msg = re.detailedMsg();
+                KARABO_LOG_FRAMEWORK_ERROR << msg;
                 Hash failureInfo(info);
-                failureInfo.set("replied_error", re.what());
+                failureInfo.set("replied_error", msg);
                 Hash reply("success", false, "info", failureInfo, "token", token, "type", "requestFromSlot");
                 safeClientWrite(channel, reply, LOSSLESS);
             }

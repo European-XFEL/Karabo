@@ -37,7 +37,7 @@ namespace karabo {
 
         public:
 
-            typedef boost::function<void (const Exception&) > ExceptionHandler;
+            typedef boost::function<void (const Exception&) > ExceptionHandler; // unused - remove?
 
 
             /**
@@ -109,20 +109,33 @@ namespace karabo {
 
             /**
              * Overrides std::exception.
-             * Only the current exception is printed (i.e. no-trace)
+             *
+             * Same as detailedMsg() except returning 'const char*', not 'std::string'.
+             * The returned pointer is valid as long as exception object is alive or until what() is called again.
+             * Also clears the exception stack.
              */
             virtual const char* what() const throw ();
 
             /**
              * This function is intended to be used for example in GUIs.
+             *
+             * @param clearTrace Whether to clear the exception stack, default is true.
              */
-            std::string userFriendlyMsg() const;
+            std::string userFriendlyMsg(bool clearTrace = true) const;
 
             /**
              * This function returns the full error stack with all information.
-             * @return The stack of exception as string
+             *
+             * Clears the exception stack.
+             *
+             * @return The stack of exceptions as string, incl. source code line number.
              */
             std::string detailedMsg() const;
+
+            /**
+             * The type of the exception
+             */
+            const std::string& type() const;
 
         protected:
 
@@ -162,11 +175,9 @@ namespace karabo {
             static void addToTrace(const ExceptionInfo& value);
 
             ExceptionInfo m_exceptionInfo;
-            std::string m_exceptionText;
             mutable std::string m_detailedMsg;
             static boost::mutex m_mutex;
             static boost::circular_buffer<ExceptionInfo> m_trace;
-            static std::map<void*, ExceptionHandler> m_exceptionHandlers;
             static bool m_hasUnhandled;
         };
 
