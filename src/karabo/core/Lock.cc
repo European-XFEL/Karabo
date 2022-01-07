@@ -52,7 +52,7 @@ namespace karabo {
                             throw KARABO_LOCK_EXCEPTION("Could not acquire lock on " + m_deviceId + ", it is locked by " + lockHolder);
                         }
                     } catch (const karabo::util::ParameterException& e) {
-                        throw KARABO_LOCK_EXCEPTION("Could not acquire lock on " + m_deviceId + ": " + e.userFriendlyMsg());
+                        KARABO_RETHROW_AS(KARABO_LOCK_EXCEPTION("Could not acquire lock on " + m_deviceId));
                     }
                 }
                 // try setting
