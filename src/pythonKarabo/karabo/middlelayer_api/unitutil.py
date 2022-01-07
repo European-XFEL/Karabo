@@ -1,11 +1,13 @@
 import copy
+from asyncio import iscoroutinefunction
 from collections.abc import Iterable
 from functools import wraps
 
 import numpy as np
 
 from karabo.common.states import StateSignifier as SignifierBase
-from karabo.native import QuantityValue, newest_timestamp, wrap, wrap_function
+from karabo.native import (
+    KaraboValue, QuantityValue, newest_timestamp, wrap, wrap_function)
 
 
 @wraps(np.linspace)
@@ -96,19 +98,39 @@ class StateSignifier(SignifierBase):
 
 
 def removeQuantity(func):
-    """Decorate a function to remove QuantityValue input
+    """Decorate a function to remove QuantityValue/KaraboValue input
 
-    NOTE: This decorator does not cast to base units!
+    This function works as well with async declarations and can be used as::
+
+    @removeQuantity
+    def calculate(x, y):
+        assert not isinstance(x, KaraboValue)
+        assert not isinstance(y, KaraboValue)
+        return x, y
+
+    Note: This decorator does not cast to base units! In case of booleans,
+          they can be compared by identity.
     """
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        new_args = []
-        new_kwargs = {}
-        for value in tuple(args):
-            value = value.value if isinstance(value, QuantityValue) else value
-            new_args.append(value)
-        for name, value in kwargs.items():
-            value = value.value if isinstance(value, QuantityValue) else value
-            new_kwargs.update({name: value})
-        return func(*new_args, **new_kwargs)
+
+    def _convert_input(args, kwargs):
+        n_args = [
+            value.value if isinstance(value, KaraboValue) else value
+            for value in tuple(args)]
+        n_kwargs = {
+            key: value.value if isinstance(value, KaraboValue) else value
+            for key, value in kwargs.items()}
+        return n_args, n_kwargs
+
+    if iscoroutinefunction(func):
+
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            n_args, n_kwargs = _convert_input(args, kwargs)
+            return await func(*n_args, **n_kwargs)
+    else:
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            n_args, n_kwargs = _convert_input(args, kwargs)
+            return func(*n_args, **n_kwargs)
+
     return wrapper
