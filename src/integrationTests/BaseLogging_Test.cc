@@ -426,7 +426,7 @@ void BaseLogging_Test::testMaxNumDataRange() {
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(replyDevice, replyProperty, history);
 
     } catch (karabo::util::RemoteException& e) {
-        const std::string& errMsg = e.userFriendlyMsg();
+        const std::string& errMsg = e.userFriendlyMsg(true);
         CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg) != std::string::npos);
     }
 
@@ -437,7 +437,7 @@ void BaseLogging_Test::testMaxNumDataRange() {
                 .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(replyDevice, replyProperty, history);
 
     } catch (karabo::util::RemoteException& e) {
-        const std::string& errMsg = e.userFriendlyMsg();
+        const std::string& errMsg = e.userFriendlyMsg(true);
         CPPUNIT_ASSERT(errMsg.find(outOfRangeErrMsg) != std::string::npos);
     }
 

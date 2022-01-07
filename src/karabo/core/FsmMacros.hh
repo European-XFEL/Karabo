@@ -1,5 +1,4 @@
 /*
- * $Id$
  *
  * Author: esenov
  * Modified by: <burkhard.heisen@xfel.eu>
@@ -179,7 +178,10 @@ struct name { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             f.getContext()->func(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            /* Order of calls to userFriendlyMsg(false) and detailedMsg() matters since the latter clears the stack,*/ \
+            /* but C++ does not guarantee order of argument evaluation. Therefore cache user friendly message.*/ \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -207,7 +209,8 @@ struct name { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             f.getContext()->func(e.a1); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -232,7 +235,8 @@ struct name { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             f.getContext()->func(static_cast<t1>(e.a1), static_cast<t2>(e.a2)); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -257,7 +261,8 @@ struct name { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             f.getContext()->func(static_cast<t1>(e.a1), static_cast<t2>(e.a2), static_cast<t3>(e.a3)); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -282,7 +287,8 @@ struct name { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             f.getContext()->func(static_cast<t1>(e.a1), static_cast<t2>(e.a2), static_cast<t3>(e.a3), static_cast<t4>(e.a4)); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -311,7 +317,8 @@ struct name { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             return f.getContext()->func(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -337,7 +344,8 @@ struct name { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             return f.getContext()->func(static_cast<t1>(e.a1)); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -363,7 +371,8 @@ struct name { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             return f.getContext()->func(static_cast<t1>(e.a1), static_cast<t2>(e.a2)); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -389,7 +398,8 @@ struct name { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             return f.getContext()->func(static_cast<t1>(e.a1), e.a2, e.a3); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -415,7 +425,8 @@ struct name { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name; \
             return f.getContext()->func(static_cast<t1>(e.a1), static_cast<t2>(e.a2), static_cast<t3>(e.a3), static_cast<t4>(e.a4)); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -481,7 +492,8 @@ template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
         KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
     } catch(karabo::util::Exception const& e) { \
-        _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+        const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+        _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
     } catch(...) { \
         _onError<Fsm>(f); \
     }\
@@ -502,7 +514,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
             _ta.setContext(f.getContext()); \
             _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -514,7 +527,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             _worker->stop().join(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -533,7 +547,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -564,7 +579,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
             _ta.setContext(f.getContext()); \
             _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -576,7 +592,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             _worker->stop().join(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -604,7 +621,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(static_cast<t1>(e.a1)); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -631,7 +649,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(static_cast<t1>(e.a1), static_cast<t2>(e.a2)); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -657,7 +676,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(static_cast<t1>(e.a1), static_cast<t2>(e.a2), static_cast<t3>(e.a3)); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -685,7 +705,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(static_cast<t1>(e.a1), static_cast<t2>(e.a2), static_cast<t3>(e.a3), static_cast<t4>(e.a4)); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -713,7 +734,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -725,7 +747,8 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             f.getContext()->exitFunc(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -760,7 +783,8 @@ public: \
             _ta.setContext(f.getContext()); \
             _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -773,7 +797,8 @@ public: \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             f.getContext()->exitFunc(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -802,7 +827,8 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
             /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -820,7 +846,8 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -847,7 +874,8 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -859,7 +887,8 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             f.getContext()->exitFunc();  \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -888,7 +917,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
             /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -909,7 +939,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
             _ta.setContext(f.getContext()); \
             _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -921,7 +952,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             _worker->stop().join(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -940,7 +972,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -971,7 +1004,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
             _ta.setContext(f.getContext()); \
             _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -983,7 +1017,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             _worker->stop().join(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -1011,7 +1046,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -1023,7 +1059,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             f.getContext()->exitFunc(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -1057,7 +1094,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
             _ta.setContext(f.getContext()); \
             _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -1070,7 +1108,8 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             f.getContext()->exitFunc(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -1099,7 +1138,8 @@ template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
         KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
     } catch(karabo::util::Exception const& e) { \
-        _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+        const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+        _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
     } catch(...) { \
         _onError<Fsm>(f); \
     }\
@@ -1116,7 +1156,8 @@ struct name : public boost::msm::front::exit_pseudo_state<event, karabo::core::F
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -1144,7 +1185,8 @@ struct name : public boost::msm::front::exit_pseudo_state<event, karabo::core::F
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -1156,7 +1198,8 @@ struct name : public boost::msm::front::exit_pseudo_state<event, karabo::core::F
             KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
             f.getContext()->exitFunc(); \
         } catch(karabo::util::Exception const& e) { \
-            _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+            const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+            _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
@@ -1190,7 +1233,8 @@ virtual void exitFunc()  = 0;
                     /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
                     KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
                 } catch(karabo::util::Exception const& e) { \
-                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+                    _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
                 } catch(...) { \
                     _onError<Fsm>(f); \
                 }\
@@ -1217,7 +1261,8 @@ virtual void exitFunc()  = 0;
                     _ta.setContext(f.getContext()); \
                     _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
                 } catch(karabo::util::Exception const& e) { \
-                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+                    _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
                 } catch(...) { \
                     _onError<Fsm>(f); \
                 }\
@@ -1228,7 +1273,8 @@ virtual void exitFunc()  = 0;
                     /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
                     KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
                 } catch(karabo::util::Exception const& e) { \
-                _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+                    _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
                 } catch(...) { \
                 _onError<Fsm>(f); \
                 }\
@@ -1257,7 +1303,8 @@ virtual void exitFunc()  = 0;
                     KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
                     f.getContext()->entryFunc(); \
                 } catch(karabo::util::Exception const& e) { \
-                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+                    _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
                 } catch(...) { \
                     _onError<Fsm>(f); \
                 }\
@@ -1295,7 +1342,8 @@ virtual void entryFunc() = 0;
                     _ta.setContext(f.getContext()); \
                     _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
                 } catch(karabo::util::Exception const& e) { \
-                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+                    _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
                 } catch(...) { \
                     _onError<Fsm>(f); \
                 }\
@@ -1306,7 +1354,8 @@ virtual void entryFunc() = 0;
                     /* Context inherits from BaseFsm that inherits from SignalSlotable: */ \
                     KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
                 } catch(karabo::util::Exception const& e) { \
-                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+                    _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
                 } catch(...) { \
                     _onError<Fsm>(f); \
                 }\
@@ -1345,7 +1394,8 @@ virtual void entryFunc() = 0;
                     KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": entry"; \
                     f.getContext()->entryFunc(); \
                 } catch(karabo::util::Exception const& e) { \
-                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+                    _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
                 } catch(...) { \
                     _onError<Fsm>(f); \
                 }\
@@ -1356,7 +1406,8 @@ virtual void entryFunc() = 0;
                     KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
                     f.getContext()->exitFunc(); \
                 } catch(karabo::util::Exception const& e) { \
-                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+                    _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
                 } catch(...) { \
                     _onError<Fsm>(f); \
                 }\
@@ -1396,7 +1447,8 @@ virtual void exitFunc()  = 0;
                     _ta.setContext(f.getContext()); \
                     _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
                 } catch(karabo::util::Exception const& e) { \
-                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+                    _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
                 } catch(...) { \
                     _onError<Fsm>(f); \
                 }\
@@ -1408,7 +1460,8 @@ virtual void exitFunc()  = 0;
                     KARABO_LOG_FRAMEWORK_DEBUG << f.getContext()->getInstanceId() << " " << #name << ": exit"; \
                     f.getContext()->exitFunc(); \
                 } catch(karabo::util::Exception const& e) { \
-                    _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
+                    const std::string friendlyMsg(e.userFriendlyMsg(false)); \
+                    _onError<Fsm>(f, friendlyMsg, e.detailedMsg()); \
                 } catch(...) { \
                     _onError<Fsm>(f); \
                 }\

@@ -397,8 +397,7 @@ namespace karathon {
 
                 } catch (const karabo::util::LockException& e) {
                     if (nTries++ > timeout / waitTime && timeout != -1) {
-                        //rethrow
-                        throw KARABO_LOCK_EXCEPTION(e.userFriendlyMsg());
+                        KARABO_RETHROW;
                     }
                     //otherwise pass through and try again
                     boost::this_thread::sleep(boost::posix_time::seconds(waitTime));
@@ -461,7 +460,7 @@ namespace karathon {
                             }
 
                         } catch (const karabo::util::Exception& e) {
-                            std::cout << e.userFriendlyMsg();
+                            std::cout << e.detailedMsg();
                         }
                     }
                 }

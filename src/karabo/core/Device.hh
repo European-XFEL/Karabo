@@ -883,8 +883,7 @@ namespace karabo {
 
                     return m_parameters.get<T>(key);
                 } catch (const karabo::util::Exception& e) {
-                    KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device:" +
-                                                                 e.userFriendlyMsg()));
+                    KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Error whilst retrieving parameter (" + key + ") from device"));
                 }
                 return *static_cast<T*> (NULL); // never reached. Keep it to make the compiler happy.
             }
@@ -1911,7 +1910,7 @@ namespace karabo {
                                                                });
                     }
                 } catch (const karabo::util::NetworkException& e) {
-                    KARABO_LOG_ERROR << e.userFriendlyMsg();
+                    KARABO_LOG_ERROR << e.detailedMsg();
                 }
             }
 
