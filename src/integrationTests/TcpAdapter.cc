@@ -109,7 +109,7 @@ namespace karabo {
              
             if (channel->isOpen()) channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
         } catch (const Exception& e) {
-            std::cerr  << "Problem in onRead(): " << e.userFriendlyMsg() << std::endl;
+            std::cerr  << "Problem in onRead(): " << e.userFriendlyMsg(true) << std::endl;
             if (channel->isOpen()) channel->readAsyncHash(boost::bind(&karabo::TcpAdapter::onRead, this, _1, channel, _2));
            
         }
@@ -120,8 +120,6 @@ namespace karabo {
 
             if (m_debug) std::clog  << "onError : TCP socket got error : " << errorCode.value() << " -- \"" << errorCode.message() << "\",  Close connection to GuiServerDevice" <<std::endl;
 
-        } catch (const Exception& e) {
-            std::cerr << "Problem in onError(): " << e.userFriendlyMsg() << std::endl;
         } catch (const std::exception& se) {
             std::cerr << "Standard exception in onError(): " << se.what() << std::endl;
         }

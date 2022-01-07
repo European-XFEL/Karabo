@@ -29,7 +29,15 @@ typedef karabo::util::Element<std::string, karabo::util::OrderedMap<std::string,
 
 
 void translator(const karabo::util::Exception& e) {
-    PyErr_SetString(PyExc_RuntimeError, (e.userFriendlyMsg() + " -- " + e.detailedMsg()).c_str());
+    // TODO: Do we really want both, user friendly msg and the full trace with line numbers etc.?
+    //       The latter could just be printed to 'cerr' instead of becoming part of the Python exception text
+    // Note: Order of calls to userFriendlyMsg(false) and detailedMsg() matters since the latter clears the stack.
+
+    // Assemble message and then pass C-pointer to Python
+    std::string msg(e.userFriendlyMsg(false));
+    msg += " -- ";
+    msg += e.detailedMsg();
+    PyErr_SetString(PyExc_RuntimeError, msg.c_str());
 }
 
 
