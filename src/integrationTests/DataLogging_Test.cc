@@ -316,6 +316,6 @@ void DataLogging_Test::testFailingManager()  {
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Missed ERROR state - status: " + status,
                                  karabo::util::State::ERROR, loggerState);
     CPPUNIT_ASSERT_MESSAGE(status, status.find("Failure in initialize(), likely a restart is needed:") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(status, status.find("An error has occured: Inconsistent 'loggermap.xml' and 'serverList' configuration:") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(status, status.find("An error has occurred: Inconsistent 'loggermap.xml' and 'serverList' configuration:") != std::string::npos);
     CPPUNIT_ASSERT_MESSAGE(status, status.find("'DataLoggingTestServer' is in map, but not in list.") != std::string::npos);
 }

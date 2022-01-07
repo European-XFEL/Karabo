@@ -916,7 +916,7 @@ namespace karabo {
             try {
                 m_signalSlotable.lock()->request(serverInstanceId, "slotStartDevice", configuration).timeout(timeoutInMillis).receive(ok, reply);
             } catch (const karabo::util::Exception& e) {
-                reply = e.userFriendlyMsg();
+                reply = e.userFriendlyMsg(true);
                 ok = false;
                 return std::make_pair(ok, reply);
             }
@@ -987,7 +987,7 @@ namespace karabo {
                 // TODO Add error text to response
                 m_signalSlotable.lock()->request(serverId, "slotKillServer").timeout(timeoutInSeconds * 1000).receive(reply);
             } catch (const karabo::util::Exception& e) {
-                reply = e.userFriendlyMsg();
+                reply = e.userFriendlyMsg(true);
                 ok = false;
             }
             // Wait until this server is gone
@@ -2182,8 +2182,7 @@ if (nodeData) {\
                     return karabo::core::Lock(m_signalSlotable, deviceId, recursive);
                 } catch (const karabo::util::LockException& e) {
                     if (nTries++ > timeout / waitTime && timeout != -1) {
-                        //rethrow
-                        throw KARABO_LOCK_EXCEPTION(e.userFriendlyMsg());
+                        KARABO_RETHROW;
                     }
                     //otherwise pass through and try again
                     boost::this_thread::sleep(boost::posix_time::seconds(waitTime));
