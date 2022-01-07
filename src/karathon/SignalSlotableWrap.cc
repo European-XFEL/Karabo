@@ -24,7 +24,7 @@ namespace karathon {
                 } catch (karabo::util::Exception& e) {
                     // TODO: Optimise on the string content!
                     //       E.g. just type and message from ExceptionInfo
-                    msg = e.userFriendlyMsg();
+                    msg = e.userFriendlyMsg(true);
                 } catch (const std::exception& e) {
                     msg = e.what();
                 }
