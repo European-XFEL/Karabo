@@ -43,7 +43,8 @@ Bound Python API
 ================
 
 - Failure on instantiation generates an exception in all 3 APIs.
-  In the Bounnd Pyhon API, this exception is not reported to the caller.
+  In the Bound Python API, this exception is not reported to the caller.
+  With Karabo >= 2.14 the exceptions are reported to the caller.
 - Bound API does not support CHAR_ELEMENT, (U)INT8_ELEMENT, (U)INT16_ELEMENT
 
 Middlelayer API
@@ -87,6 +88,4 @@ Karabo GUI
 - It can happen that devices crash and do not send their ``instanceGone`` signal
   to the gui servers. Hence, in rare situations, devices are visible in the
   GUI client although they are not online.
-- When all instances of a device class has been shutdown/removed, the class is
-  not removed from the topology. This behavior is opposed to device classes
-  without instances not being shown upon loading.
+
