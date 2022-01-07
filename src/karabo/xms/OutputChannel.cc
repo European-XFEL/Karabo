@@ -716,7 +716,7 @@ namespace karabo {
                 OutputChannel::Pointer self = shared_from_this();
                 if (m_ioEventHandler) m_ioEventHandler(self);
             } catch (karabo::util::Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" Exception code #" << e.userFriendlyMsg() << " -- " << e.detailedMsg();
+                KARABO_LOG_FRAMEWORK_ERROR << "\"triggerIOEvent\" Exception code #" << e.detailedMsg();
                 KARABO_RETHROW;
             } catch (const boost::bad_weak_ptr& e) {
                 KARABO_LOG_FRAMEWORK_INFO << "\"triggerIOEvent\" call is too late: OutputChannel destroyed already -- " << e.what();

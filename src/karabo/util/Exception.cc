@@ -29,7 +29,6 @@ namespace karabo {
         boost::mutex Exception::m_mutex;
         // circular buffer to avoid leakage if trace is never cleared
         boost::circular_buffer<Exception::ExceptionInfo> Exception::m_trace(100);
-        std::map<void*, Exception::ExceptionHandler> Exception::m_exceptionHandlers;
         bool Exception::m_hasUnhandled = false;
 
 
@@ -193,25 +192,40 @@ namespace karabo {
         }
 
 
-        string Exception::userFriendlyMsg() const {
-            string err = "An error has occured: ";
-            if (!m_exceptionInfo.message.empty() && m_exceptionInfo.message != "Propagation") {
-                string s = m_exceptionInfo.message + "\n";
-                err += s;
+        string Exception::userFriendlyMsg(bool clearTrace) const {
+            stringstream err;
+            err << "An error has occurred: ";
+            bool hasMsg = false;
+            if (!m_exceptionInfo.message.empty()) {
+                err << m_exceptionInfo.message;
+                hasMsg = true;
             }
             {
                 boost::mutex::scoped_lock lock(Exception::m_mutex);
+                unsigned int j = 0;
                 for (unsigned int i = 0; i < Exception::m_trace.size(); ++i) {
                     const Exception::ExceptionInfo& myException = Exception::m_trace[i];
-                    if (!myException.message.empty() && myException.message != "Propagation") {
-                        string s = myException.message + "\n";
-                        err += s;
+                    if (!myException.message.empty()) {
+                        if (hasMsg) {
+                            err << "\n";
+                            const unsigned int indentLevel = ++j;
+                            for (unsigned int k = 0; k < indentLevel; ++k) err << "  "; // 2 spaces per level
+                            err << "because: ";
+                        } else {
+                            hasMsg = true;
+                        }
+                        err << myException.message;
                     }
                 }
             }
-            Exception::clearTrace();
+            if (!hasMsg) {
+                // Happens e.g. for KARABO_RETHROW (i.e. PropagatedException with empty message) after clearing of trace
+                // or for other exceptions with empty message - then at least give type info:
+                err << type();
+            }
+            if (clearTrace) Exception::clearTrace();
 
-            return err;
+            return err.str();
         }
 
 
@@ -219,6 +233,10 @@ namespace karabo {
             std::ostringstream os;
             os << *this;
             return os.str();
+        }
+
+        const std::string& Exception::type() const {
+            return m_exceptionInfo.type;
         }
     } // namespace util
 } // namespace karabo
