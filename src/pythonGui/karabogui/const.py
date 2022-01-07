@@ -6,13 +6,9 @@
 import socket
 from os import environ, getpid, path
 from platform import system
-from sys import platform
-from xml.etree import ElementTree
 
 from karabo.common.packaging import utils
 from karabo.common.scenemodel.api import SCENE_DEFAULT_DPI, SCENE_MAC_DPI
-
-ElementTree.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 
 # WIDGET PROPERTIES
 WIDGET_MIN_WIDTH = 40
@@ -21,13 +17,17 @@ WIDGET_MIN_HEIGHT = 18
 # COMMUNICATION
 REQUEST_REPLY_TIMEOUT = 5  # in seconds
 
+# Presentation
 GUI_DPI_FACTOR = (
     SCENE_DEFAULT_DPI / SCENE_MAC_DPI if system() == "Darwin" else 1)
 
-IS_MAC_SYSTEM = system() == "Darwin"
+# Operating System relevant
+OS_SYSTEM = system()
+IS_MAC_SYSTEM = OS_SYSTEM == "Darwin"
+IS_WINDOWS_SYSTEM = OS_SYSTEM == "Windows"
 
 # Hidden karabo folder which includes certain karabo related files
-if platform.startswith('win'):
+if IS_WINDOWS_SYSTEM:
     HIDDEN_KARABO_FOLDER = path.join(environ['APPDATA'], 'karabo')
 else:
     HIDDEN_KARABO_FOLDER = path.join(environ['HOME'], '.karabo')
