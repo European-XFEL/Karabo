@@ -297,6 +297,17 @@ class UtilsTests(TestCase):
             diff = after - before
             self.assertAlmostEqual(diff, sleep_time, delta=0.2)
 
+        async def inner():
+            async with profiler("Test Async with") as p:
+                before = time.time()
+                slow_func_no_deco()
+                after = time.time()
+                diff = after - before
+                self.assertAlmostEqual(diff, sleep_time, delta=0.2)
+                self.assertIsNotNone(p.t_start)
+
+        run_coro(inner())
+
 
 if __name__ == "__main__":
     main()
