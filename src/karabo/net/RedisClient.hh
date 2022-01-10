@@ -35,7 +35,7 @@ namespace karabo {
 
 
 	using ReadHashHandler = std::function<void(const boost::system::error_code, const std::string& /*topic*/, const util::Hash::Pointer /*readHash*/)>;
-        using TopicSubOptions = std::vector<std::tuple<std::string, ReadHashHandler> >;
+        using RedisTopicSubOptions = std::vector<std::tuple<std::string, ReadHashHandler> >;
 
 
         class RedisClient : public boost::enable_shared_from_this<RedisClient> {
@@ -127,7 +127,7 @@ namespace karabo {
              * @return boost::system::error_code 
              */
             virtual boost::system::error_code
-            subscribe(const TopicSubOptions& params);
+            subscribe(const RedisTopicSubOptions& params);
 
             /**
              * Asynchronous multiple topics subscription.
@@ -137,7 +137,7 @@ namespace karabo {
              * @param onComplete handler with signature "void (boost::system::error_code)"
              */
             virtual void
-            subscribeAsync(const TopicSubOptions& params, const AsyncHandler& onComplete);
+            subscribeAsync(const RedisTopicSubOptions& params, const AsyncHandler& onComplete);
 
             /**
              * Request Redis broker to un-subscribe the topic.
