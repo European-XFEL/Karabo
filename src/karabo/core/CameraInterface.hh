@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   CameraInterface.hh
  * Author: heisenb
  *
@@ -6,17 +6,15 @@
  */
 
 #ifndef KARABO_CORE_CAMERAINTERFACE_HH
-#define	KARABO_CORE_CAMERAINTERFACE_HH
+#define KARABO_CORE_CAMERAINTERFACE_HH
 
 #include "Device.hh"
-
-#include "karabo/util/OverwriteElement.hh"
 #include "karabo/util/NodeElement.hh"
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/VectorElement.hh"
-
+#include "karabo/util/OverwriteElement.hh"
 #include "karabo/util/Schema.hh"
+#include "karabo/util/SimpleElement.hh"
 #include "karabo/util/State.hh"
+#include "karabo/util/VectorElement.hh"
 #include "karabo/xms/ImageData.hh"
 #include "karabo/xms/OutputChannel.hh"
 #include "karabo/xms/SignalSlotable.hh"
@@ -30,92 +28,93 @@ namespace karabo {
          * @brief suggested interface to work on top of a karabo::core::CameraFsm
          */
         class CameraInterface : public virtual karabo::xms::SignalSlotable {
-
-            public:
-
+           public:
             KARABO_CLASSINFO(CameraInterface, "CameraInterface", "1.4")
 
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::xms;
                 using namespace karabo::util;
 
-                
-                OVERWRITE_ELEMENT(expected).key("state")
-                        .setNewOptions(State::INIT, State::UNKNOWN, State::ERROR, State::ACQUIRING, State::ON)
-                        .setNewDefaultValue(State::INIT)
-                        .commit();
 
-                SLOT_ELEMENT(expected).key("connectCamera")
-                        .displayedName("Connect")
-                        .description("Connects to the hardware")
-                        .allowedStates(State::UNKNOWN)
-                        .commit();
+                OVERWRITE_ELEMENT(expected)
+                      .key("state")
+                      .setNewOptions(State::INIT, State::UNKNOWN, State::ERROR, State::ACQUIRING, State::ON)
+                      .setNewDefaultValue(State::INIT)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("acquire")
-                        .displayedName("Acquire")
-                        .description("Instructs camera to go into acquisition state")
-                        .allowedStates(State::ON)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("connectCamera")
+                      .displayedName("Connect")
+                      .description("Connects to the hardware")
+                      .allowedStates(State::UNKNOWN)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("trigger")
-                        .displayedName("Trigger")
-                        .description("Sends a software trigger to the camera")
-                        .allowedStates(State::ACQUIRING)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("acquire")
+                      .displayedName("Acquire")
+                      .description("Instructs camera to go into acquisition state")
+                      .allowedStates(State::ON)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("stop")
-                        .displayedName("Stop")
-                        .description("Instructs camera to stop current acquisition")
-                        .allowedStates(State::ACQUIRING)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("trigger")
+                      .displayedName("Trigger")
+                      .description("Sends a software trigger to the camera")
+                      .allowedStates(State::ACQUIRING)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("resetHardware")
-                        .displayedName("Reset")
-                        .description("Resets the camera in case of an error")
-                        .allowedStates(State::ERROR)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("stop")
+                      .displayedName("Stop")
+                      .description("Instructs camera to stop current acquisition")
+                      .allowedStates(State::ACQUIRING)
+                      .commit();
+
+                SLOT_ELEMENT(expected)
+                      .key("resetHardware")
+                      .displayedName("Reset")
+                      .description("Resets the camera in case of an error")
+                      .allowedStates(State::ERROR)
+                      .commit();
 
                 Schema data;
-                NODE_ELEMENT(data).key("data")
-                        .displayedName("Data")
-                        .setDaqDataType(DaqDataType::TRAIN)
-                        .commit();
+                NODE_ELEMENT(data).key("data").displayedName("Data").setDaqDataType(DaqDataType::TRAIN).commit();
 
-                IMAGEDATA_ELEMENT(data).key("data.image")
-                        .commit();
+                IMAGEDATA_ELEMENT(data).key("data.image").commit();
 
-                OUTPUT_CHANNEL(expected).key("output")
-                        .displayedName("Output")
-                        .dataSchema(data)
-                        .commit();
+                OUTPUT_CHANNEL(expected).key("output").displayedName("Output").dataSchema(data).commit();
 
-                DOUBLE_ELEMENT(expected).key("exposureTime")
-                        .displayedName("Exposure Time")
-                        .description("The requested exposure time in seconds")
-                        .unit(Unit::SECOND)
-                        .assignmentOptional().defaultValue(1.0)
-                        .minInc(0.02)
-                        .maxInc(5.0)
-                        .reconfigurable()
-                        .commit();
+                DOUBLE_ELEMENT(expected)
+                      .key("exposureTime")
+                      .displayedName("Exposure Time")
+                      .description("The requested exposure time in seconds")
+                      .unit(Unit::SECOND)
+                      .assignmentOptional()
+                      .defaultValue(1.0)
+                      .minInc(0.02)
+                      .maxInc(5.0)
+                      .reconfigurable()
+                      .commit();
 
-                VECTOR_STRING_ELEMENT(expected).key("interfaces")
-                        .displayedName("Interfaces")
-                        .description("Describes the interfaces of this device")
-                        .readOnly()
-                        .initialValue({"Camera"})
-                        .commit();
+                VECTOR_STRING_ELEMENT(expected)
+                      .key("interfaces")
+                      .displayedName("Interfaces")
+                      .description("Describes the interfaces of this device")
+                      .readOnly()
+                      .initialValue({"Camera"})
+                      .commit();
 
-                INT32_ELEMENT(expected).key("pollInterval")
-                        .displayedName("Poll Interval")
-                        .description("The interval with which the camera should be polled")
-                        .unit(Unit::SECOND)
-                        .minInc(1)
-                        .assignmentOptional().defaultValue(10)
-                        .reconfigurable()
-                        .allowedStates(State::ERROR, State::ON, State::ACQUIRING)
-                        .commit();
-
+                INT32_ELEMENT(expected)
+                      .key("pollInterval")
+                      .displayedName("Poll Interval")
+                      .description("The interval with which the camera should be polled")
+                      .unit(Unit::SECOND)
+                      .minInc(1)
+                      .assignmentOptional()
+                      .defaultValue(10)
+                      .reconfigurable()
+                      .allowedStates(State::ERROR, State::ON, State::ACQUIRING)
+                      .commit();
             }
 
             void initFsmSlots() {
@@ -163,11 +162,9 @@ namespace karabo {
                 this->initialize();
             }
 
-            void stopFsm() {
-            }
+            void stopFsm() {}
         };
     } // namespace core
 } // namespace karabo
 
-#endif	/* KARABO_CORE_CAMERAINTERFACE_HH */
-
+#endif /* KARABO_CORE_CAMERAINTERFACE_HH */

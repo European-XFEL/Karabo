@@ -8,16 +8,14 @@
 #include "ToType.hh"
 
 #ifndef KARABO_UTIL_TOSIZE_HH
-#define	KARABO_UTIL_TOSIZE_HH
+#define KARABO_UTIL_TOSIZE_HH
 
 namespace karabo {
 
     namespace util {
 
         class ToSize {
-
-        public:
-
+           public:
             typedef size_t ReturnType;
 
             template <int RefType>
@@ -26,22 +24,21 @@ namespace karabo {
             }
         };
 
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, BOOL, sizeof (bool))
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, CHAR, sizeof (char))
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, INT8, sizeof (int8_t))
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, UINT8, sizeof (uint8_t))
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, INT16, sizeof (int16_t))
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, UINT16, sizeof (uint16_t))
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, INT32, sizeof (int32_t))
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, UINT32, sizeof (uint32_t))
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, INT64, sizeof (long long)) // TODO: To be replaced with int64_t
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, UINT64, sizeof (unsigned long long)) // TODO: To be replaced with uint64_t
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, FLOAT, sizeof (float))
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, DOUBLE, sizeof (double))
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, COMPLEX_FLOAT, sizeof (std::complex<float>))
-        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, COMPLEX_DOUBLE, sizeof (std::complex<double>))
-    }
-}
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, BOOL, sizeof(bool))
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, CHAR, sizeof(char))
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, INT8, sizeof(int8_t))
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, UINT8, sizeof(uint8_t))
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, INT16, sizeof(int16_t))
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, UINT16, sizeof(uint16_t))
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, INT32, sizeof(int32_t))
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, UINT32, sizeof(uint32_t))
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, INT64, sizeof(long long))           // TODO: To be replaced with int64_t
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, UINT64, sizeof(unsigned long long)) // TODO: To be replaced with uint64_t
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, FLOAT, sizeof(float))
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, DOUBLE, sizeof(double))
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, COMPLEX_FLOAT, sizeof(std::complex<float>))
+        KARABO_MAP_TO_REFERENCE_TYPE(ToSize, COMPLEX_DOUBLE, sizeof(std::complex<double>))
+    } // namespace util
+} // namespace karabo
 
-#endif	/* TOSIZE_HH */
-
+#endif /* TOSIZE_HH */

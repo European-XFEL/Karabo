@@ -9,7 +9,7 @@
  */
 
 #ifndef KARABO_XMS_SLOT_HH
-#define	KARABO_XMS_SLOT_HH
+#define KARABO_XMS_SLOT_HH
 
 #include "karabo/util/Hash.hh"
 #include "karabo/util/PackParameters.hh"
@@ -28,11 +28,9 @@ namespace karabo {
         class SignalSlotable;
 
         class Slot {
-
             friend class SignalSlotable;
 
-        public:
-
+           public:
             const std::string& getInstanceIdOfSender() const;
 
             const std::string& getUserIdOfSender() const;
@@ -44,13 +42,11 @@ namespace karabo {
             /// Return message header that triggered calling this slot
             /// Valid while callRegisteredSlotFunctions is processed.
             karabo::util::Hash::Pointer getHeaderOfSender() const;
-        protected:
 
-            Slot(const std::string& slotFunction) : m_slotFunction(slotFunction) {
-            }
+           protected:
+            Slot(const std::string& slotFunction) : m_slotFunction(slotFunction) {}
 
-            virtual ~Slot() {
-            }
+            virtual ~Slot() {}
 
             std::string m_slotFunction;
 
@@ -64,8 +60,7 @@ namespace karabo {
 
             virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) = 0;
 
-        private:
-
+           private:
             std::string m_instanceIdOfSender;
             std::string m_userIdOfSender;
             std::string m_accessLevelOfSender;
@@ -73,23 +68,19 @@ namespace karabo {
             karabo::util::Hash::Pointer m_headerOfSender;
         };
 
-        template <typename Ret, typename ...Args>
+        template <typename Ret, typename... Args>
         class SlotN : public Slot {
-
-        public:
-
-            typedef typename boost::function<Ret(Args...) > SlotHandler;
+           public:
+            typedef typename boost::function<Ret(Args...)> SlotHandler;
 
             void registerSlotFunction(const SlotHandler& slotHandler) {
                 boost::mutex::scoped_lock lock(m_registeredSlotFunctionsMutex);
                 m_slotHandlers.push_back(slotHandler);
             }
 
-            SlotN(const std::string& slotFunction) : Slot(slotFunction) {
-            }
+            SlotN(const std::string& slotFunction) : Slot(slotFunction) {}
 
-            virtual ~SlotN() {
-            }
+            virtual ~SlotN() {}
 
             /**
              * To be called under protection of m_registeredSlotFunctionsMutex
@@ -97,16 +88,14 @@ namespace karabo {
              */
             virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
                 for (const auto& handler : m_slotHandlers) {
-                    karabo::util::call(handler, karabo::util::unpack < Args...>(body));
+                    karabo::util::call(handler, karabo::util::unpack<Args...>(body));
                 }
             }
 
-        private:
-
+           private:
             typename std::vector<SlotHandler> m_slotHandlers;
-
         };
-    }
-}
+    } // namespace xms
+} // namespace karabo
 
 #endif

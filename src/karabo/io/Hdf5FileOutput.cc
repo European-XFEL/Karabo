@@ -10,4 +10,5 @@
 
 #include "Hdf5FileOutput.hh"
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::util::Hash>, karabo::io::Hdf5FileOutput<karabo::util::Hash>)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<karabo::util::Hash>,
+                                  karabo::io::Hdf5FileOutput<karabo::util::Hash>)

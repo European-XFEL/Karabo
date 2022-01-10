@@ -17,6 +17,5 @@ namespace karabo {
 
         unsigned int Statics::m_serverPorts = 0;
 
-    }
-}
-
+    } // namespace xms
+} // namespace karabo

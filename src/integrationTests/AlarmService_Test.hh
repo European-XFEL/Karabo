@@ -6,20 +6,20 @@
  */
 
 #ifndef ALARMSERVICE_TEST_HH
-#define	ALARMSERVICE_TEST_HH
+#define ALARMSERVICE_TEST_HH
 
-#include "karabo/karabo.hpp"
-#include "karabo/devices/AlarmService.hh"
-#include "karabo/core/DeviceServer.hh"
-#include "karabo/core/DeviceClient.hh"
-#include <boost/shared_ptr.hpp>
 #include <cppunit/extensions/HelperMacros.h>
+
+#include <boost/shared_ptr.hpp>
 
 #include "AlarmTesterDevice.hh"
 #include "TcpAdapter.hh"
+#include "karabo/core/DeviceClient.hh"
+#include "karabo/core/DeviceServer.hh"
+#include "karabo/devices/AlarmService.hh"
+#include "karabo/karabo.hpp"
 
 class AlarmService_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(AlarmService_Test);
 
     CPPUNIT_TEST(appTestRunner);
@@ -27,14 +27,13 @@ class AlarmService_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     AlarmService_Test();
     virtual ~AlarmService_Test();
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     void appTestRunner();
     void testDeviceRegistration();
     void testRetrieve();
@@ -61,10 +60,10 @@ private:
      * @return true if the condition has been reached; false if time expired before
      *         the condition could have been reached.
      */
-    bool waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis);
+    bool waitForCondition(boost::function<bool()> checker, unsigned int timeoutMillis);
 
 
-    //alarm service device
+    // alarm service device
     const std::string m_alarmServiceId;
     karabo::core::DeviceServer::Pointer m_deviceServer;
     boost::thread m_eventLoopThread;
@@ -74,7 +73,6 @@ private:
     std::string m_killedDeviceRow;
 
     std::string m_rowForDevice1;
-
 };
 
-#endif	/* ALARMSERVICE_TEST_HH */
+#endif /* ALARMSERVICE_TEST_HH */

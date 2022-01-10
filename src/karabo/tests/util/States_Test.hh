@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   States_Test.hh
  * Author: haufs
  *
@@ -6,12 +6,11 @@
  */
 
 #ifndef KARABO_STATES_TEST_HH
-#define	KARABO_STATES_TEST_HH
+#define KARABO_STATES_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
 class States_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(States_Test);
     CPPUNIT_TEST(testStringRoundTrip);
     CPPUNIT_TEST(testSignifier);
@@ -35,13 +34,13 @@ class States_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 
-public:
+   public:
     States_Test();
     virtual ~States_Test();
     void setUp();
     void tearDown();
 
-private:
+   private:
     void testStringRoundTrip();
     void testSignifier();
     void testSignifierInitTrump();
@@ -63,5 +62,4 @@ private:
     void testStatesSignifierNonDefList();
 };
 
-#endif	/* SKARABO_TATES_TEST_HH */
-
+#endif /* SKARABO_TATES_TEST_HH */

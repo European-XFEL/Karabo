@@ -6,12 +6,12 @@
  */
 
 #ifndef KARABO_CORE_NOFSM_HH
-#define	KARABO_CORE_NOFSM_HH
+#define KARABO_CORE_NOFSM_HH
 
-#include <vector>
-#include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <boost/function.hpp>
 #include <karabo/util/ClassInfo.hh>
+#include <vector>
 
 namespace karabo {
 
@@ -27,27 +27,21 @@ namespace karabo {
          *        rather a simple state machine with in device state updates.
          */
         class NoFsm {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(NoFsm, "NoFsm", "1.3")
 
-            static void expectedParameters(karabo::util::Schema& expected) {
-            }
+            static void expectedParameters(karabo::util::Schema& expected) {}
 
-            void initFsmSlots() {
-            }
+            void initFsmSlots() {}
 
-            virtual ~NoFsm() {
-            }
+            virtual ~NoFsm() {}
 
             void startFsm() {
                 // Call second constructors in the same order as first constructors were called
                 for (size_t i = 0; i < m_initialFunc.size(); ++i) m_initialFunc[i]();
             }
 
-            virtual void stopFsm() {
-            }
+            virtual void stopFsm() {}
 
             void registerInitialFunction(const boost::function<void()>& func) {
                 m_initialFunc.push_back(func);
@@ -55,13 +49,10 @@ namespace karabo {
 
 #define KARABO_INITIAL_FUNCTION(function) this->registerInitialFunction(boost::bind(&Self::function, this));
 
-        private:
-
-            std::vector<boost::function<void() > > m_initialFunc;
-
+           private:
+            std::vector<boost::function<void()> > m_initialFunc;
         };
-    }
-}
+    } // namespace core
+} // namespace karabo
 
-#endif	/* KARABO_CORE_NOFSM_HH */
-
+#endif /* KARABO_CORE_NOFSM_HH */

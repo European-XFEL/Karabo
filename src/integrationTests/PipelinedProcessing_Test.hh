@@ -8,13 +8,15 @@
  */
 
 #ifndef PIPELINEDPROCESSING_TEST_HH
-#define	PIPELINEDPROCESSING_TEST_HH
+#define PIPELINEDPROCESSING_TEST_HH
 
-#include "karabo/karabo.hpp"
-#include "karabo/core/DeviceServer.hh"
-#include "karabo/core/DeviceClient.hh"
-#include <boost/shared_ptr.hpp>
 #include <cppunit/extensions/HelperMacros.h>
+
+#include <boost/shared_ptr.hpp>
+
+#include "karabo/core/DeviceClient.hh"
+#include "karabo/core/DeviceServer.hh"
+#include "karabo/karabo.hpp"
 
 
 static const int m_numRunsPerTest = 5;
@@ -22,22 +24,20 @@ static const int m_maxTestTimeOut = 20;
 
 
 class PipelinedProcessing_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(PipelinedProcessing_Test);
 
     CPPUNIT_TEST(appTestRunner);
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     PipelinedProcessing_Test();
     virtual ~PipelinedProcessing_Test();
 
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     void appTestRunner();
 
     void testInputConnectionTracking();
@@ -51,14 +51,12 @@ private:
     void testPipeTwoSharedReceiversDrop();
     void printSenderOutputChannelConnections(const std::string& name);
     void testSenderOutputChannelConnections(size_t tableSize = 0,
-                                            const std::vector<std::string>& receivers1=std::vector<std::string>(),
-                                            const std::string& distrib1="",
-                                            const std::string& slowness1="",
-                                            const std::string& mloc1="",
-                                            const std::vector<std::string>& receivers2=std::vector<std::string>(),
-                                            const std::string& distrib2="",
-                                            const std::string& slowness2="",
-                                            const std::string& mloc2="");
+                                            const std::vector<std::string>& receivers1 = std::vector<std::string>(),
+                                            const std::string& distrib1 = "", const std::string& slowness1 = "",
+                                            const std::string& mloc1 = "",
+                                            const std::vector<std::string>& receivers2 = std::vector<std::string>(),
+                                            const std::string& distrib2 = "", const std::string& slowness2 = "",
+                                            const std::string& mloc2 = "");
 
     /**
      * Tests pipe with two receivers with 'shared' value for their 'input.dataDistribution' setting
@@ -112,15 +110,11 @@ private:
      */
     void testPipeQueue(unsigned int processingTime, unsigned int delayTime);
 
-    void testPipeQueueAtLimit(unsigned int processingTime, unsigned int delayTime,
-                              const std::string& queueOption,
-                              unsigned int activeQueueLimit,
-                              bool expectDataLoss, bool slowReceiver);
+    void testPipeQueueAtLimit(unsigned int processingTime, unsigned int delayTime, const std::string& queueOption,
+                              unsigned int activeQueueLimit, bool expectDataLoss, bool slowReceiver);
 
     // roundRobin = true means that sender is supposed to be configured round-robin - extra tests of fair share are done
-    void testPipeTwoSharedReceivers(unsigned int processingTime1,
-                                    unsigned int processingTime2,
-                                    unsigned int delayTime,
+    void testPipeTwoSharedReceivers(unsigned int processingTime1, unsigned int processingTime2, unsigned int delayTime,
                                     bool dataLoss,
                                     bool roundRobin); // else load-balanced, i.e. the default
 
@@ -177,9 +171,7 @@ private:
     void testProfileTransferTimes(bool noShortCut, bool copy);
 
     template <typename T>
-    bool pollDeviceProperty(const std::string& deviceId,
-                            const std::string& propertyName,
-                            const T& expected,
+    bool pollDeviceProperty(const std::string& deviceId, const std::string& propertyName, const T& expected,
                             bool checkForEqual = true, // if false, wait until not equal anymore
                             const int maxTimeout = m_maxTestTimeOut) const;
 
@@ -194,11 +186,11 @@ private:
     const unsigned int m_nPots = 2; // number of local buffers
     unsigned int m_nDataPerRun;
 
-    const std::string m_server = "testServerPP"; // server instance ID
+    const std::string m_server = "testServerPP";       // server instance ID
     const std::string m_receiver = "pipeTestReceiver"; // receiver instance ID
     const std::string m_receiver1 = "pipeTestReceiver1";
     const std::string m_receiver2 = "pipeTestReceiver2";
-    const std::string m_sender = "p2pTestSender"; // sender instance ID
+    const std::string m_sender = "p2pTestSender";                               // sender instance ID
     const std::vector<std::string> m_senderOutput1 = {"p2pTestSender:output1"}; // sender output channel 1
     const std::vector<std::string> m_senderOutput2 = {"p2pTestSender:output2"}; // sender output channel 2
 
@@ -206,4 +198,4 @@ private:
                                                   "input2.connectedOutputChannels", m_senderOutput2};
 };
 
-#endif	/* PIPELINEDPROCESSING_TEST_HH */
+#endif /* PIPELINEDPROCESSING_TEST_HH */

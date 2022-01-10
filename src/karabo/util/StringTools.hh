@@ -11,32 +11,29 @@
 
 
 #ifndef KARABO_UTIL_STRING_HH
-#define	KARABO_UTIL_STRING_HH
+#define KARABO_UTIL_STRING_HH
 
-#include "Base64.hh"
-
-
-#include <string>
-#include <vector>
-#include <deque>
-#include <set>
-#include <unordered_set>
-#include <map>
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <complex>
-#include <cstdlib>
 #include <bitset>
-
+#include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/foreach.hpp>
-#include <boost/algorithm/string.hpp>
+#include <complex>
+#include <cstdlib>
+#include <deque>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <set>
+#include <sstream>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
-#include "Types.hh"
+#include "Base64.hh"
 #include "Exception.hh"
 #include "State.hh"
+#include "Types.hh"
 
 namespace karabo {
     namespace util {
@@ -50,17 +47,19 @@ namespace karabo {
          * @param tgt typeinfo of target type, i.e. type to which the cast failed
          * @return the failure message
          */
-        std::string createCastFailureMessage(const std::string& key, const std::type_info& src, const std::type_info& tgt);
-        std::string createCastFailureMessage(const std::string& key, const Types::ReferenceType& src, const Types::ReferenceType& tgt);
+        std::string createCastFailureMessage(const std::string& key, const std::type_info& src,
+                                             const std::type_info& tgt);
+        std::string createCastFailureMessage(const std::string& key, const Types::ReferenceType& src,
+                                             const Types::ReferenceType& tgt);
 
         /**
          * Return a string representation of a value of type T. Overloads for
          * common value types exist. In general std::ostream is used for output
-         * so it will work for any type supporting the "<<" operator or supported by 
+         * so it will work for any type supporting the "<<" operator or supported by
          * std::ostream
-         * 
+         *
          * @param value
-         * @return 
+         * @return
          */
         template <class T>
         inline std::string toString(const T& value) {
@@ -72,7 +71,7 @@ namespace karabo {
         /**
          * Floats are output to their maximum precision of 7 digits
          * @param value
-         * @return 
+         * @return
          */
         inline std::string toString(const float& value) {
             std::ostringstream s;
@@ -83,7 +82,7 @@ namespace karabo {
         /**
          * Doubles are output to their maximum precision of 15 digits
          * @param value
-         * @return 
+         * @return
          */
         inline std::string toString(const double& value) {
             std::ostringstream s;
@@ -91,10 +90,10 @@ namespace karabo {
             return s.str();
         }
 
-         /**
+        /**
          * Complex floats are output to their maximum precision of 7 digits
          * @param value
-         * @return 
+         * @return
          */
         inline std::string toString(const std::complex<float>& value) {
             std::ostringstream s;
@@ -105,7 +104,7 @@ namespace karabo {
         /**
          * Complex doubles are output to their maximum precision of 15 digits
          * @param value
-         * @return 
+         * @return
          */
         inline std::string toString(const std::complex<double>& value) {
             std::ostringstream s;
@@ -123,13 +122,13 @@ namespace karabo {
 
         inline std::string toString(const unsigned char value) {
             std::ostringstream s;
-            s << static_cast<unsigned int> (value);
+            s << static_cast<unsigned int>(value);
             return s.str();
         }
 
         inline std::string toString(const signed char value) {
             std::ostringstream s;
-            s << static_cast<int> (value);
+            s << static_cast<int>(value);
             return s.str();
         }
 
@@ -153,7 +152,7 @@ namespace karabo {
          * @param value is the vector to be converted
          * @param maxElementsShown is the maximum number of vector elements treated. If value.size() is larger,
          *                         skip elements in the middle. Default is 0 which means _no_ skipping of elements.
-         * @return 
+         * @return
          */
         template <typename T>
         inline std::string toString(const std::vector<T>& value, size_t maxElementsShown = 0) {
@@ -168,7 +167,7 @@ namespace karabo {
             // If size > maxElementsShown, show only a few less than first and last (maxElementsShown / 2) values.
             // Otherwise string for (maxElementsShown - 1) elements is longer than for maxElementsShown elements,
             // due to adding how many elements are skipped.
-            const size_t numElementsBeginEnd = std::max(maxElementsShown / 2, static_cast<size_t> (6)) - 5;
+            const size_t numElementsBeginEnd = std::max(maxElementsShown / 2, static_cast<size_t>(6)) - 5;
             size_t index = 1;
             for (; index < size; ++index) {
                 // If vector is too long, jump to last elements, but state how many we skip:
@@ -182,7 +181,7 @@ namespace karabo {
         }
 
         /**
-         * Byte array is output as a hexadecimal string (short) 
+         * Byte array is output as a hexadecimal string (short)
          * @param value   ByteArray object
          * @param maxBytesShown  max. number of bytes to be presented
          * @return string representation of ByteArray
@@ -194,13 +193,15 @@ namespace karabo {
          * may not contain comma (,) separators, e.g. an element "Hello, World" is not allowed as it would
          * yield a representation ambiguous with two elements "Hello" and "World" -> "Hello, World".
          * @param value
-         * @return 
+         * @return
          */
         inline std::string toString(const std::vector<std::string>& value) {
             if (value.empty()) return "";
             std::ostringstream s;
             std::vector<std::string>::const_iterator it = value.begin();
-            if (it->find_first_of(',') != std::string::npos) throw KARABO_NOT_SUPPORTED_EXCEPTION("Comma separator within in string array element is not supported during casting");
+            if (it->find_first_of(',') != std::string::npos)
+                throw KARABO_NOT_SUPPORTED_EXCEPTION(
+                      "Comma separator within in string array element is not supported during casting");
             s << *it;
             ++it;
             for (; it != value.end(); ++it) {
@@ -223,14 +224,14 @@ namespace karabo {
         }
 
         inline std::string toString(const std::vector<char>& value) {
-            return karabo::util::base64Encode(reinterpret_cast<const unsigned char*> (&value[0]), value.size());
+            return karabo::util::base64Encode(reinterpret_cast<const unsigned char*>(&value[0]), value.size());
         }
 
         /**
          * Pointers with size information given as a std::pair of pointer and size are output like
          * vectors (see StringTools::toString(const std::vector<T>&) )
          * @param value
-         * @return 
+         * @return
          */
         template <typename T>
         inline std::string toString(const std::pair<const T*, size_t>& value) {
@@ -252,13 +253,14 @@ namespace karabo {
 
         inline std::string toString(const std::pair<const char*, size_t>& value) {
             if (value.second == 0) return "";
-            return karabo::util::base64Encode(reinterpret_cast<const unsigned char*> (value.first), value.second);
+            return karabo::util::base64Encode(reinterpret_cast<const unsigned char*>(value.first), value.second);
         }
 
         /**
-         * An NDArray is output in a flattened representation using StringTools::toString(const std::pair<const T*, size_t>&)
+         * An NDArray is output in a flattened representation using StringTools::toString(const std::pair<const T*,
+         * size_t>&)
          * @param value
-         * @return 
+         * @return
          */
         std::string toString(const karabo::util::NDArray& value);
 
@@ -301,7 +303,7 @@ namespace karabo {
         /**
          * A std::deque is output as a list of comman (,) separated values
          * @param value
-         * @return 
+         * @return
          */
         template <typename T>
         inline std::string toString(const std::deque<T>& value) {
@@ -319,7 +321,7 @@ namespace karabo {
         /**
          * A std::map is output in the form { key1 : value1, key2: value2, ... }
          * @param value
-         * @return 
+         * @return
          */
         template <typename KeyType, typename ValueType>
         inline std::string toString(const std::map<KeyType, ValueType>& value) {
@@ -338,7 +340,7 @@ namespace karabo {
         /**
          * States are output using their stringified name
          * @param value
-         * @return 
+         * @return
          */
         inline std::string toString(const karabo::util::State& value) {
             return value.name();
@@ -348,37 +350,37 @@ namespace karabo {
          * The generic fromString method tries to obtain a value of type T using a
          * boost::lexical_cast of the passed value.
          * @param value
-         * @return 
+         * @return
          */
         template <class T>
         inline T fromString(const std::string& value) {
-            return boost::lexical_cast<T > (value);
+            return boost::lexical_cast<T>(value);
         }
 
         /**
          * For integer return values the lowever overhead method strtol is used
          * @param value
-         * @return 
+         * @return
          */
-        template<>
+        template <>
         inline int fromString(const std::string& value) {
             int val = strtol(value.c_str(), NULL, 0);
             return val;
         }
 
-        template<>
+        template <>
         inline unsigned int fromString(const std::string& value) {
             unsigned int val = strtoul(value.c_str(), NULL, 0);
             return val;
         }
 
-        template<>
+        template <>
         inline long long fromString(const std::string& value) {
             long long val = strtoll(value.c_str(), NULL, 0);
             return val;
         }
 
-        template<>
+        template <>
         inline unsigned long long fromString(const std::string& value) {
             unsigned long long val = strtoull(value.c_str(), NULL, 0);
             return val;
@@ -388,14 +390,13 @@ namespace karabo {
          * A string "None" can be cast to karabo::util::CppNone. Any other
          * string representation may not!
          * @param value
-         * @return 
+         * @return
          */
-        template<>
+        template <>
         inline karabo::util::CppNone fromString(const std::string& value) {
             std::string tmp(value);
             boost::trim(tmp);
-            if (tmp != "None")
-                throw KARABO_CAST_EXCEPTION("Cannot interprete \"" + value + "\" as None.");
+            if (tmp != "None") throw KARABO_CAST_EXCEPTION("Cannot interprete \"" + value + "\" as None.");
             return karabo::util::CppNone();
         }
 
@@ -403,33 +404,33 @@ namespace karabo {
          * Bytearrays can be constructed from strings where each character in the string represents
          * a byte (char) in the array
          * @param value
-         * @return 
+         * @return
          */
-        template<>
+        template <>
         inline karabo::util::ByteArray fromString(const std::string& value) {
             std::vector<unsigned char> array;
             karabo::util::base64Decode(value, array);
 
             const size_t byteSize = array.size();
-            boost::shared_ptr<char> data(new char [byteSize], &karabo::util::byteArrayDeleter);
+            boost::shared_ptr<char> data(new char[byteSize], &karabo::util::byteArrayDeleter);
             std::memcpy(data.get(), reinterpret_cast<char*>(&array[0]), byteSize);
             return karabo::util::ByteArray(data, byteSize);
         }
 
         /**
          * Sequence type elements can be constructed from strings of the form
-         * 
+         *
          *  [ value1, value2, ..., valueN ]
-         * 
-         * where the enclosing brackets ([]) are optional and other separators may be specified. 
-         * The sequence elements must have a StringTools:fromString method for their type T 
+         *
+         * where the enclosing brackets ([]) are optional and other separators may be specified.
+         * The sequence elements must have a StringTools:fromString method for their type T
          * and each element must be castable to T using this method.
          * @param value
          * @param separator if separator other than the comma (,) is used
-         * @return 
+         * @return
          */
-        template<typename T,
-        template <typename ELEM, typename = std::allocator<ELEM> > class CONT> // e.g. for vector container
+        template <typename T,
+                  template <typename ELEM, typename = std::allocator<ELEM> > class CONT> // e.g. for vector container
         inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {
             try {
                 if (value.empty()) return CONT<T>();
@@ -444,9 +445,9 @@ namespace karabo {
                 size_t size = elements.size();
                 CONT<T> resultArray(size);
                 for (size_t i = 0; i < size; ++i) {
-                    std::string & element(elements[i]);
+                    std::string& element(elements[i]);
                     boost::trim(element);
-                    resultArray[i] = util::fromString<T > (element);
+                    resultArray[i] = util::fromString<T>(element);
                 }
                 return resultArray;
             } catch (...) {
@@ -459,8 +460,8 @@ namespace karabo {
          * Vectors of unsigned char elements can be constructed directly from strings where character of the
          * string represents a byte of the vector. The second argument should be set to ""
          * @param value
-         * @param 
-         * @return 
+         * @param
+         * @return
          */
         template <>
         inline std::vector<unsigned char> fromString(const std::string& value, const std::string&) {
@@ -470,9 +471,9 @@ namespace karabo {
         }
 
         /**
-         * XXX: This function is working around the surprising behavior of fromstring<unsigned char>(value, sep) seen above.
-           The long-term solution should be to remove the base64 encoding/decoding in toString/fromString. However, we
-           need to discover which code is expecting that behavior before making such a change.
+         * XXX: This function is working around the surprising behavior of fromstring<unsigned char>(value, sep) seen
+         above. The long-term solution should be to remove the base64 encoding/decoding in toString/fromString. However,
+         we need to discover which code is expecting that behavior before making such a change.
 
            In the meantime, we can use this simple version for schema options parsing.
          */
@@ -493,19 +494,19 @@ namespace karabo {
          * Vectors of char elements can be constructed directly from strings where character of the
          * string represents a byte of the vector. The second argument should be set to ""
          * @param value
-         * @param 
-         * @return 
+         * @param
+         * @return
          */
         template <>
         inline std::vector<char> fromString(const std::string& value, const std::string&) {
             std::vector<char> tmp;
-            std::vector<unsigned char>* casted = reinterpret_cast<std::vector<unsigned char>*> (&tmp);
+            std::vector<unsigned char>* casted = reinterpret_cast<std::vector<unsigned char>*>(&tmp);
             karabo::util::base64Decode(value, *casted);
             return tmp;
         }
 
-        template<typename T,
-        template <typename ELEM, typename = std::less<ELEM>, typename = std::allocator<ELEM> > class CONT> // e.g. for set
+        template <typename T, template <typename ELEM, typename = std::less<ELEM>, typename = std::allocator<ELEM> >
+                              class CONT> // e.g. for set
         inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {
             try {
                 if (value.empty()) return CONT<T>();
@@ -521,7 +522,7 @@ namespace karabo {
                 for (auto it = elements.begin(); it != elements.end(); ++it) {
                     std::string element(*it);
                     boost::trim(element);
-                    resultArray.insert(util::fromString<T > (element));
+                    resultArray.insert(util::fromString<T>(element));
                 }
                 return resultArray;
             } catch (...) {
@@ -545,7 +546,7 @@ namespace karabo {
                 std::vector<int> resultArray;
                 resultArray.reserve(elements.size());
                 for (std::vector<std::string>::iterator it = elements.begin(); it != elements.end(); ++it) {
-                    std::string & element(*it);
+                    std::string& element(*it);
                     boost::trim(element);
                     int val = strtol(element.c_str(), NULL, 0);
                     resultArray.push_back(val);
@@ -599,7 +600,7 @@ namespace karabo {
                 std::vector<long long> resultArray;
                 resultArray.reserve(elements.size());
                 for (std::vector<std::string>::iterator it = elements.begin(); it != elements.end(); ++it) {
-                    std::string & element(*it);
+                    std::string& element(*it);
                     boost::trim(element);
                     long long val = strtoll(element.c_str(), NULL, 0);
                     resultArray.push_back(val);
@@ -626,7 +627,7 @@ namespace karabo {
                 std::vector<unsigned long long> resultArray;
                 resultArray.reserve(elements.size());
                 for (std::vector<std::string>::iterator it = elements.begin(); it != elements.end(); ++it) {
-                    std::string & element(*it);
+                    std::string& element(*it);
                     boost::trim(element);
                     unsigned long long val = strtoull(element.c_str(), NULL, 0);
                     resultArray.push_back(val);
@@ -638,32 +639,35 @@ namespace karabo {
             }
         }
 
-        template<> inline unsigned char fromString<unsigned char>(const std::string& value) {
+        template <>
+        inline unsigned char fromString<unsigned char>(const std::string& value) {
             return boost::numeric_cast<unsigned char>(boost::lexical_cast<int>(value));
         }
 
-        template<> inline signed char fromString<signed char>(const std::string& value) {
+        template <>
+        inline signed char fromString<signed char>(const std::string& value) {
             return boost::numeric_cast<signed char>(boost::lexical_cast<int>(value));
         }
 
-        template<> inline float fromString<float>(const std::string& value) {
+        template <>
+        inline float fromString<float>(const std::string& value) {
             if (value == "nan" || value == "-nan") return std::numeric_limits<float>::quiet_NaN();
             else return boost::lexical_cast<float>(value);
         }
 
-        template<> inline double fromString<double>(const std::string& value) {
+        template <>
+        inline double fromString<double>(const std::string& value) {
             if (value == "nan" || value == "-nan") return std::numeric_limits<double>::quiet_NaN();
             else return boost::lexical_cast<double>(value);
         }
 
-        template<> inline bool fromString<bool>(const std::string& value) {
+        template <>
+        inline bool fromString<bool>(const std::string& value) {
             std::string val = boost::to_lower_copy(value);
             bool boolVal;
-            if (val == "n" || val == "no" || val == "false" ||
-                val == "0") {
+            if (val == "n" || val == "no" || val == "false" || val == "0") {
                 boolVal = false;
-            } else if (val == "y" || val == "yes" || val == "1" ||
-                       val == "true") {
+            } else if (val == "y" || val == "yes" || val == "1" || val == "true") {
                 boolVal = true;
             } else {
                 throw KARABO_CAST_EXCEPTION("Cannot interprete \"" + val + "\" as boolean.");
@@ -674,14 +678,9 @@ namespace karabo {
         /**
          * This class is taken from http://www.c-plusplus.de/forum/168607
          */
-        template<class E,
-        class T = std::char_traits<E>,
-        class Sub1 = std::allocator<E> >
+        template <class E, class T = std::char_traits<E>, class Sub1 = std::allocator<E> >
 
-        class Widen : public std::unary_function<
-        const std::string&, std::basic_string<E, T, Sub1> > {
-
-
+        class Widen : public std::unary_function<const std::string&, std::basic_string<E, T, Sub1> > {
             std::locale loc_;
             const std::ctype<E>* pCType_;
 
@@ -689,7 +688,7 @@ namespace karabo {
             Widen(const Widen&);
             Widen& operator=(const Widen&);
 
-        public:
+           public:
             // Constructor...
 
             Widen(const std::locale& loc = std::locale()) : loc_(loc) {
@@ -704,13 +703,12 @@ namespace karabo {
             // Conversion...
 
             std::basic_string<E, T, Sub1> operator()(const std::string& str) const {
-                typename std::basic_string<E, T, Sub1>::size_type srcLen =
-                        str.length();
+                typename std::basic_string<E, T, Sub1>::size_type srcLen = str.length();
                 const char* pSrcBeg = str.c_str();
                 std::vector<E> tmp(srcLen);
 
                 pCType_->widen(pSrcBeg, pSrcBeg + srcLen, &tmp[0]);
-                return std::basic_string<E, T, Sub1 > (&tmp[0], srcLen);
+                return std::basic_string<E, T, Sub1>(&tmp[0], srcLen);
             }
         };
 
@@ -725,7 +723,7 @@ namespace karabo {
          * @param tokens output container - will never be empty
          * @param delimiters each char in this C-style string indicates the end of a substring
          */
-        template<typename container>
+        template <typename container>
         inline void tokenize(const std::string& inputString, container& tokens, char const* delimiters) {
             //-----------------------------------------------------------------------------------------------
             //
@@ -735,7 +733,7 @@ namespace karabo {
             //-----------------------------------------------------------------------------------------------
             container output;
 
-            std::bitset < 255 > delims;
+            std::bitset<255> delims;
             while (*delimiters) {
                 unsigned char code = *delimiters++;
                 delims[code] = true;
@@ -773,17 +771,13 @@ namespace karabo {
         // TODO Move to other file
 
         inline bool isBigEndian() {
-
             union {
-
-
                 unsigned int i;
                 char c[4];
             } bint = {0x01020304};
             return bint.c[0] == 1;
         }
-    }
-}
+    } // namespace util
+} // namespace karabo
 
-#endif	/* KARABO_UTIL_STRING_HH */
-
+#endif /* KARABO_UTIL_STRING_HH */

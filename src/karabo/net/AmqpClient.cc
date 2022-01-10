@@ -1,10 +1,12 @@
+#include "AmqpClient.hh"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/core/null_deleter.hpp>
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/VectorElement.hh"
+
 #include "karabo/log/Logger.hh"
 #include "karabo/util/Schema.hh"
-#include "AmqpClient.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
 
 
 using namespace karabo::util;
@@ -43,12 +45,11 @@ namespace karabo {
 
 
         TcpConnector::TcpConnector(const std::vector<std::string>& urls)
-        : m_thread()
-        , m_loop(std::make_shared<boost::asio::io_context>())
-        , m_handler(*m_loop)
-        , m_connection()
-        , m_url("") {
-
+            : m_thread(),
+              m_loop(std::make_shared<boost::asio::io_context>()),
+              m_handler(*m_loop),
+              m_connection(),
+              m_url("") {
             for (const auto& url : urls) {
                 auto prom = std::make_shared<std::promise<bool> >();
                 auto fut = prom->get_future();
@@ -75,40 +76,40 @@ namespace karabo {
 
 
         void TcpConnector::run() {
-            m_thread = std::make_shared<std::thread>(
-                [this]
-                () {
-                    if (m_connection) {
-                        boost::asio::io_context::work work(*m_loop);
-                        m_loop->run();
-                        m_connection->close();
-                        m_connection.reset();
-                    }
+            m_thread = std::make_shared<std::thread>([this]() {
+                if (m_connection) {
+                    boost::asio::io_context::work work(*m_loop);
+                    m_loop->run();
+                    m_connection->close();
+                    m_connection.reset();
                 }
-            );
+            });
         }
 
 
         void AmqpClient::expectedParameters(Schema& expected) {
+            VECTOR_STRING_ELEMENT(expected)
+                  .key("brokers")
+                  .displayedName("Broker URLs")
+                  .description("Vector of URLs {\"amqp://user:pass@hostname:port\",...}")
+                  .assignmentMandatory()
+                  .minSize(1)
+                  .commit();
 
-            VECTOR_STRING_ELEMENT(expected).key("brokers")
-                    .displayedName("Broker URLs")
-                    .description("Vector of URLs {\"amqp://user:pass@hostname:port\",...}")
-                    .assignmentMandatory()
-                    .minSize(1)
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("instanceId")
+                  .displayedName("Instance ID")
+                  .description("Instance ID")
+                  .assignmentOptional()
+                  .defaultValue("none")
+                  .commit();
 
-            STRING_ELEMENT(expected).key("instanceId")
-                    .displayedName("Instance ID")
-                    .description("Instance ID")
-                    .assignmentOptional().defaultValue("none")
-                    .commit();
-
-            STRING_ELEMENT(expected).key("domain")
-                    .displayedName("Domain")
-                    .description("Domain is root topic (former JMS topic)")
-                    .assignmentMandatory()
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("domain")
+                  .displayedName("Domain")
+                  .description("Domain is root topic (former JMS topic)")
+                  .assignmentMandatory()
+                  .commit();
 
             unsigned int defTimeout = 10;
             const char* env = getenv("KARABO_AMQP_TIMEOUT");
@@ -118,31 +119,32 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_INFO << "AMQP timeout from environment: " << defTimeout;
             }
 
-            UINT32_ELEMENT(expected).key("amqpRequestTimeout")
-                    .displayedName("AMQP request timeout")
-                    .description("AMQP request timeout in seconds")
-                    .assignmentOptional().defaultValue(defTimeout)
-                    .unit(Unit::SECOND)
-                    .commit();
+            UINT32_ELEMENT(expected)
+                  .key("amqpRequestTimeout")
+                  .displayedName("AMQP request timeout")
+                  .description("AMQP request timeout in seconds")
+                  .assignmentOptional()
+                  .defaultValue(defTimeout)
+                  .unit(Unit::SECOND)
+                  .commit();
         }
 
 
         AmqpClient::AmqpClient(const karabo::util::Hash& input)
-        : m_strand(boost::make_shared<Strand>(EventLoop::getIOService()))
-        , m_brokerUrls(input.get<std::vector<std::string> >("brokers"))
-        , m_binarySerializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin"))
-        , m_domain(input.get<std::string>("domain"))
-        , m_instanceId(input.get<std::string>("instanceId"))
-        , m_amqpRequestTimeout(input.get<unsigned int>("amqpRequestTimeout"))
-        , m_subscriptions()
-        , m_subscriptionsMutex()
-        , m_connector()
-        , m_channel()
-        , m_reliable()
-        , m_queue("")
-        , m_consumerTag("")
-        , m_onRead()
-        {
+            : m_strand(boost::make_shared<Strand>(EventLoop::getIOService())),
+              m_brokerUrls(input.get<std::vector<std::string> >("brokers")),
+              m_binarySerializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")),
+              m_domain(input.get<std::string>("domain")),
+              m_instanceId(input.get<std::string>("instanceId")),
+              m_amqpRequestTimeout(input.get<unsigned int>("amqpRequestTimeout")),
+              m_subscriptions(),
+              m_subscriptionsMutex(),
+              m_connector(),
+              m_channel(),
+              m_reliable(),
+              m_queue(""),
+              m_consumerTag(""),
+              m_onRead() {
             EventLoop::addThread();
         }
 
@@ -165,9 +167,7 @@ namespace karabo {
             auto prom = std::make_shared<std::promise<boost::system::error_code> >();
             auto fut = prom->get_future();
             // Calls connectAsycn passing as argument a lambda that sets the promise value
-            connectAsync([prom] (const boost::system::error_code & ec) {
-                prom->set_value(ec);
-            });
+            connectAsync([prom](const boost::system::error_code& ec) { prom->set_value(ec); });
 
             // Wait on the future for the operation completion or a specified timeout
             auto status = fut.wait_for(std::chrono::seconds(m_amqpRequestTimeout));
@@ -180,7 +180,6 @@ namespace karabo {
 
 
         std::shared_ptr<AMQP::TcpConnection> AmqpClient::createClientForUrls(const std::vector<std::string>& urls) {
-
             KARABO_LOG_FRAMEWORK_INFO << "Attempt to connect to RabbitMQ broker : \"" << toString(urls) << "\"";
 
             // Create connector (singleton) that carries a connection
@@ -190,7 +189,8 @@ namespace karabo {
                 m_connector = TcpConnector::create(urls);
                 connection = m_connector->native();
                 if (!connection) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "Connection to KARABO_BROKER list fails: " << m_connector->getStatus();
+                    KARABO_LOG_FRAMEWORK_ERROR << "Connection to KARABO_BROKER list fails: "
+                                               << m_connector->getStatus();
                     m_connector.reset();
                 }
             }
@@ -199,28 +199,24 @@ namespace karabo {
 
 
         void AmqpClient::createChannel(std::shared_ptr<AMQP::TcpConnection> connection, const AsyncHandler& onConnect) {
-            dispatch
-            (
-                [this, connection, onConnect]
-                () {
-                    // make a channel
-                    {
-                        std::lock_guard<std::mutex> lock(amqpMutex);
-                        m_channel = std::make_shared<AMQP::TcpChannel>(&(*connection));
-                    }
-                    // Do this in case of errors ...
-                    m_channel->onError(bind_weak(&AmqpClient::onConnectError, this, _1, onConnect));
-                    // Do this in success ...
-                    m_channel->onReady(bind_weak(&AmqpClient::onConnectReady, this, onConnect));
+            dispatch([this, connection, onConnect]() {
+                // make a channel
+                {
+                    std::lock_guard<std::mutex> lock(amqpMutex);
+                    m_channel = std::make_shared<AMQP::TcpChannel>(&(*connection));
                 }
-            );
+                // Do this in case of errors ...
+                m_channel->onError(bind_weak(&AmqpClient::onConnectError, this, _1, onConnect));
+                // Do this in success ...
+                m_channel->onReady(bind_weak(&AmqpClient::onConnectReady, this, onConnect));
+            });
         }
 
 
         void AmqpClient::onConnectError(const char* message, const AsyncHandler& onConnect) {
             m_connector.reset();
             KARABO_LOG_FRAMEWORK_ERROR << "The whole KARABO_BROKER list failed"
-                    << " : " << message;
+                                       << " : " << message;
             onConnect(KARABO_ERROR_CODE_CONNECT_REFUSED);
         }
 
@@ -229,16 +225,15 @@ namespace karabo {
             std::lock_guard<std::mutex> lock(amqpMutex);
             m_reliable.reset(new AMQP::Reliable<>(*m_channel));
             m_channel->declareQueue(AMQP::exclusive)
-                .onSuccess(
-                    // TODO by Gero: consider to use `bind_weak' here
-                    [this, wptr{weak_from_this()}, onConnect]
-                    (const std::string& name, std::uint32_t messageCount, std::uint32_t consumerCount) {
-                        auto guard = wptr.lock();
-                        if (!guard) return;
-                        onDeclareQueueSuccess(name, messageCount, consumerCount, onConnect);
-                    })
-                .onError(
-                    bind_weak(&AmqpClient::onDeclareQueueError, this, _1, onConnect));
+                  .onSuccess(
+                        // TODO by Gero: consider to use `bind_weak' here
+                        [this, wptr{weak_from_this()}, onConnect](const std::string& name, std::uint32_t messageCount,
+                                                                  std::uint32_t consumerCount) {
+                            auto guard = wptr.lock();
+                            if (!guard) return;
+                            onDeclareQueueSuccess(name, messageCount, consumerCount, onConnect);
+                        })
+                  .onError(bind_weak(&AmqpClient::onDeclareQueueError, this, _1, onConnect));
         }
 
 
@@ -248,25 +243,19 @@ namespace karabo {
         }
 
 
-        void AmqpClient::onDeclareQueueSuccess(const std::string& name,
-                                               uint32_t messageCount,
-                                               uint32_t consumerCount,
+        void AmqpClient::onDeclareQueueSuccess(const std::string& name, uint32_t messageCount, uint32_t consumerCount,
                                                const AsyncHandler& onConnect) {
             m_queue = name;
             std::lock_guard<std::mutex> lock(amqpMutex);
             m_channel->consume(name)
-                .onReceived(
-                    bind_weak(&AmqpClient::onMessageReceived, this, _1, _2, _3))
-                .onSuccess(
-                   [this, wptr{weak_from_this()}, onConnect]
-                    (const std::string& tag) {
-                        auto guard = wptr.lock();
-                        if (!guard) return;
-                        m_consumerTag = tag;
-                        onConnect(KARABO_ERROR_CODE_SUCCESS);
-                    })
-                .onError(
-                    bind_weak(&AmqpClient::onConsumerConnectError, this, _1, onConnect));
+                  .onReceived(bind_weak(&AmqpClient::onMessageReceived, this, _1, _2, _3))
+                  .onSuccess([this, wptr{weak_from_this()}, onConnect](const std::string& tag) {
+                      auto guard = wptr.lock();
+                      if (!guard) return;
+                      m_consumerTag = tag;
+                      onConnect(KARABO_ERROR_CODE_SUCCESS);
+                  })
+                  .onError(bind_weak(&AmqpClient::onConsumerConnectError, this, _1, onConnect));
         }
 
 
@@ -276,7 +265,7 @@ namespace karabo {
         }
 
 
-        void AmqpClient::onMessageReceived(const AMQP::Message &m, uint64_t deliveryTag, bool /*redelivered*/) {
+        void AmqpClient::onMessageReceived(const AMQP::Message& m, uint64_t deliveryTag, bool /*redelivered*/) {
             {
                 std::lock_guard<std::mutex> lock(amqpMutex);
                 m_channel->ack(deliveryTag);
@@ -284,8 +273,7 @@ namespace karabo {
             if (!m_onRead) return;
             karabo::util::Hash::Pointer msg = boost::make_shared<Hash>();
             m_binarySerializer->load(*msg, m.body(), m.bodySize());
-            m_strand->post(boost::bind(m_onRead, KARABO_ERROR_CODE_SUCCESS,
-                                       m.exchange(), m.routingkey(), msg));
+            m_strand->post(boost::bind(m_onRead, KARABO_ERROR_CODE_SUCCESS, m.exchange(), m.routingkey(), msg));
         }
 
 
@@ -322,9 +310,7 @@ namespace karabo {
             auto fut = prom->get_future();
 
             // Calls disconnectAsycn passing as argument a lambda that sets the promise value
-            disconnectAsync([prom] (const boost::system::error_code & ec) {
-                prom->set_value(ec);
-            });
+            disconnectAsync([prom](const boost::system::error_code& ec) { prom->set_value(ec); });
 
             // Wait on the future for the operation completion or a specified timeout
             auto status = fut.wait_for(std::chrono::seconds(m_amqpRequestTimeout));
@@ -343,9 +329,7 @@ namespace karabo {
         boost::system::error_code AmqpClient::close() {
             auto prom = std::make_shared<std::promise<boost::system::error_code> >();
             auto future = prom->get_future();
-            closeAsync([prom] (const boost::system::error_code& ec) {
-                prom->set_value(ec);
-            });
+            closeAsync([prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             auto status = future.wait_for(std::chrono::seconds(m_amqpRequestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
@@ -358,10 +342,8 @@ namespace karabo {
             std::lock_guard<std::mutex> lock(amqpMutex);
             m_channel->cancel(m_consumerTag);
             m_channel->close()
-                .onError(
-                    bind_weak(&AmqpClient::onCloseError, this, _1, onComplete))
-                .onSuccess(
-                    bind_weak(&AmqpClient::onCloseSuccess, this, onComplete));
+                  .onError(bind_weak(&AmqpClient::onCloseError, this, _1, onComplete))
+                  .onSuccess(bind_weak(&AmqpClient::onCloseSuccess, this, onComplete));
         }
 
 
@@ -381,17 +363,12 @@ namespace karabo {
         }
 
 
-        boost::system::error_code
-        AmqpClient::subscribe(const std::string& exchange, const std::string& bindingKey) {
+        boost::system::error_code AmqpClient::subscribe(const std::string& exchange, const std::string& bindingKey) {
             if (isSubscribed(exchange, bindingKey)) return KARABO_ERROR_CODE_SUCCESS;
             auto prom = std::make_shared<std::promise<boost::system::error_code> >();
             auto future = prom->get_future();
 
-            subscribeAsync(exchange, bindingKey,
-            [prom]
-            (const boost::system::error_code & ec) {
-                prom->set_value(ec);
-            });
+            subscribeAsync(exchange, bindingKey, [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
 
             auto status = future.wait_for(std::chrono::seconds(m_amqpRequestTimeout));
             if (status == std::future_status::timeout) {
@@ -401,8 +378,7 @@ namespace karabo {
         }
 
 
-        void AmqpClient::subscribeAsync(const std::string& exchange,
-                                        const std::string& bindingKey,
+        void AmqpClient::subscribeAsync(const std::string& exchange, const std::string& bindingKey,
                                         const AsyncHandler& onComplete) {
             using namespace boost::algorithm;
             if (isSubscribed(exchange, bindingKey)) {
@@ -412,10 +388,8 @@ namespace karabo {
 
             std::lock_guard<std::mutex> lock(amqpMutex);
             m_channel->declareExchange(exchange, AMQP::topic, 0)
-                .onError(
-                    bind_weak(&AmqpClient::onDeclareExchangeError, this, _1, exchange, onComplete))
-                .onSuccess(
-                    bind_weak(&AmqpClient::onDeclareExchangeSuccess, this, exchange, bindingKey, onComplete));
+                  .onError(bind_weak(&AmqpClient::onDeclareExchangeError, this, _1, exchange, onComplete))
+                  .onSuccess(bind_weak(&AmqpClient::onDeclareExchangeSuccess, this, exchange, bindingKey, onComplete));
         }
 
 
@@ -426,32 +400,25 @@ namespace karabo {
         }
 
 
-        void AmqpClient::onDeclareExchangeSuccess(const std::string& exchange,
-                                                  const std::string& bindingKey,
+        void AmqpClient::onDeclareExchangeSuccess(const std::string& exchange, const std::string& bindingKey,
                                                   const AsyncHandler& onComplete) {
             std::lock_guard<std::mutex> lock(amqpMutex);
             m_registeredExchanges.insert(exchange);
             m_channel->bindQueue(exchange, m_queue, bindingKey)
-                .onError(
-                    bind_weak(&AmqpClient::onBindQueueError, this, _1, exchange, bindingKey, onComplete))
-                .onSuccess(
-                    bind_weak(&AmqpClient::onBindQueueSuccess, this, exchange, bindingKey, onComplete));
+                  .onError(bind_weak(&AmqpClient::onBindQueueError, this, _1, exchange, bindingKey, onComplete))
+                  .onSuccess(bind_weak(&AmqpClient::onBindQueueSuccess, this, exchange, bindingKey, onComplete));
         }
 
 
-        void AmqpClient::onBindQueueError(const char* message,
-                                          const std::string& exchange,
-                                          const std::string& bindingKey,
-                                          const AsyncHandler& onComplete) {
-            KARABO_LOG_FRAMEWORK_ERROR << "Bind exchange \"" << exchange << "\" to internal queue \""
-                << m_queue << "\" with binding key->\"" << bindingKey
-                << "\" failed : " << message;
+        void AmqpClient::onBindQueueError(const char* message, const std::string& exchange,
+                                          const std::string& bindingKey, const AsyncHandler& onComplete) {
+            KARABO_LOG_FRAMEWORK_ERROR << "Bind exchange \"" << exchange << "\" to internal queue \"" << m_queue
+                                       << "\" with binding key->\"" << bindingKey << "\" failed : " << message;
             m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
         }
 
 
-        void AmqpClient::onBindQueueSuccess(const std::string& exchange,
-                                            const std::string& bindingKey,
+        void AmqpClient::onBindQueueSuccess(const std::string& exchange, const std::string& bindingKey,
                                             const AsyncHandler& onComplete) {
             {
                 std::lock_guard<std::mutex> lock(m_subscriptionsMutex);
@@ -461,16 +428,14 @@ namespace karabo {
         }
 
 
-        boost::system::error_code
-        AmqpClient::unsubscribe(const std::string& exchange, const std::string& routingKey) {
+        boost::system::error_code AmqpClient::unsubscribe(const std::string& exchange, const std::string& routingKey) {
             if (!isSubscribed(exchange, routingKey)) return KARABO_ERROR_CODE_SUCCESS;
 
             auto prom = std::make_shared<std::promise<boost::system::error_code> >();
             auto future = prom->get_future();
 
-            unsubscribeAsync(exchange, routingKey, [prom] (const boost::system::error_code & ec) {
-                prom->set_value(ec);
-            });
+            unsubscribeAsync(exchange, routingKey,
+                             [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
 
             auto status = future.wait_for(std::chrono::seconds(m_amqpRequestTimeout));
             if (status == std::future_status::timeout) {
@@ -480,9 +445,8 @@ namespace karabo {
         }
 
 
-        void 
-        AmqpClient::unsubscribeAsync(const std::string& exchange, const std::string& routingKey,
-                                     const AsyncHandler& onComplete) {
+        void AmqpClient::unsubscribeAsync(const std::string& exchange, const std::string& routingKey,
+                                          const AsyncHandler& onComplete) {
             if (!isConnected()) {
                 if (onComplete) m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
                 return;
@@ -504,21 +468,15 @@ namespace karabo {
 
             std::lock_guard<std::mutex> lk(amqpMutex);
             m_channel->unbindQueue(exchange, m_queue, routingKey)
-                .onSuccess(
-                    bind_weak(&AmqpClient::onUnbindQueueSuccess, this, onComplete))
-                .onError(
-                    bind_weak(&AmqpClient::onUnbindQueueError, this,
-                              _1, exchange, routingKey, onComplete));
+                  .onSuccess(bind_weak(&AmqpClient::onUnbindQueueSuccess, this, onComplete))
+                  .onError(bind_weak(&AmqpClient::onUnbindQueueError, this, _1, exchange, routingKey, onComplete));
         }
 
 
-        void AmqpClient::onUnbindQueueError(const char* message,
-                                            const std::string& exchange,
-                                            const std::string& routingKey,
-                                            const AsyncHandler& onComplete){
-            KARABO_LOG_FRAMEWORK_ERROR << "Unbind exchange->\"" << exchange
-                    << "\", internal queue->\"" << m_queue << "\", routing key->\""
-                    << routingKey << "\" failed: " << message;
+        void AmqpClient::onUnbindQueueError(const char* message, const std::string& exchange,
+                                            const std::string& routingKey, const AsyncHandler& onComplete) {
+            KARABO_LOG_FRAMEWORK_ERROR << "Unbind exchange->\"" << exchange << "\", internal queue->\"" << m_queue
+                                       << "\", routing key->\"" << routingKey << "\" failed: " << message;
             if (onComplete) m_strand->post(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
         }
 
@@ -536,16 +494,13 @@ namespace karabo {
         }
 
 
-        boost::system::error_code
-        AmqpClient::publish(const std::string& exchange,
-                            const std::string& routingKey,
-                            const karabo::util::Hash::Pointer& msg) {
+        boost::system::error_code AmqpClient::publish(const std::string& exchange, const std::string& routingKey,
+                                                      const karabo::util::Hash::Pointer& msg) {
             auto prom = std::make_shared<std::promise<boost::system::error_code> >();
             auto future = prom->get_future();
 
-            publishAsync(exchange, routingKey, msg, [prom] (const boost::system::error_code & ec) {
-                prom->set_value(ec);
-            });
+            publishAsync(exchange, routingKey, msg,
+                         [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
 
             auto status = future.wait_for(std::chrono::seconds(m_amqpRequestTimeout));
             if (status == std::future_status::timeout) {
@@ -555,10 +510,8 @@ namespace karabo {
         }
 
 
-        void AmqpClient::publishAsync(const std::string& exchange,
-                                      const std::string& routingKey,
-                                      const karabo::util::Hash::Pointer& msg,
-                                      const AsyncHandler& onComplete) {
+        void AmqpClient::publishAsync(const std::string& exchange, const std::string& routingKey,
+                                      const karabo::util::Hash::Pointer& msg, const AsyncHandler& onComplete) {
             std::shared_ptr<std::vector<char> > payload(new std::vector<char>());
             if (msg) m_binarySerializer->save(*msg, *payload); // msg -> payload
             std::lock_guard<std::mutex> lock(amqpMutex);
@@ -566,18 +519,14 @@ namespace karabo {
                 m_channel->declareExchange(exchange, AMQP::topic);
                 m_registeredExchanges.insert(exchange);
             }
-            //AMQP::Reliable<> reliable(*m_channel);
+            // AMQP::Reliable<> reliable(*m_channel);
             m_reliable->publish(exchange, routingKey, payload->data(), payload->size())
-                .onAck(
-                    [this, payload, onComplete]() {
-                        onComplete(KARABO_ERROR_CODE_SUCCESS);
-                    })
-                .onError(
-                    [this, exchange, routingKey, onComplete](const char* message) {
-                        KARABO_LOG_FRAMEWORK_ERROR << "Publish error: exchange->\"" << exchange
-                            << "\", routing key->\"" << routingKey << "\" failed: " << message;
-                        if (onComplete) onComplete(KARABO_ERROR_CODE_IO_ERROR);
-                    });
+                  .onAck([this, payload, onComplete]() { onComplete(KARABO_ERROR_CODE_SUCCESS); })
+                  .onError([this, exchange, routingKey, onComplete](const char* message) {
+                      KARABO_LOG_FRAMEWORK_ERROR << "Publish error: exchange->\"" << exchange << "\", routing key->\""
+                                                 << routingKey << "\" failed: " << message;
+                      if (onComplete) onComplete(KARABO_ERROR_CODE_IO_ERROR);
+                  });
         }
 
 
@@ -585,6 +534,5 @@ namespace karabo {
             std::lock_guard<std::mutex> lock(amqpMutex);
             return m_connector->url();
         }
-    }
-}
-
+    } // namespace net
+} // namespace karabo

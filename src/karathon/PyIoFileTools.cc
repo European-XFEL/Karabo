@@ -7,23 +7,22 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include <boost/pointer_cast.hpp>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
-#include <boost/pointer_cast.hpp>
-
-#include <karabo/io/Output.hh>
-#include <karabo/io/Input.hh>
-#include <karabo/io/TextSerializer.hh>
 #include <karabo/io/BinarySerializer.hh>
 #include <karabo/io/FileTools.hh>
+#include <karabo/io/Input.hh>
 #include <karabo/io/InputElement.hh>
+#include <karabo/io/Output.hh>
 #include <karabo/io/OutputElement.hh>
+#include <karabo/io/TextSerializer.hh>
 
 #include "PythonFactoryMacros.hh"
 #include "PythonMacros.hh"
-#include "Wrapper.hh"
 #include "ScopedGILAcquire.hh"
 #include "ScopedGILRelease.hh"
+#include "Wrapper.hh"
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -34,8 +33,6 @@ namespace karathon {
 
 
     struct AbstractInputWrap {
-
-
         static void reconfigure(AbstractInput::Pointer self, const karabo::util::Hash& configuration) {
             self->reconfigure(configuration);
         }
@@ -51,7 +48,8 @@ namespace karathon {
         }
 
 
-        static void setInputHandlerType(AbstractInput::Pointer self, const std::string& language, const std::string& inputType) {
+        static void setInputHandlerType(AbstractInput::Pointer self, const std::string& language,
+                                        const std::string& inputType) {
             self->setInputHandlerType(language, inputType);
         }
 
@@ -96,8 +94,6 @@ namespace karathon {
 
     template <class T>
     struct OutputWrap {
-
-
         static void update(const boost::shared_ptr<karabo::io::Output<T> >& self) {
             ScopedGILRelease nogil;
             self->update();
@@ -107,14 +103,14 @@ namespace karathon {
 
     template <class T>
     struct InputWrap {
-
-
-        static void registerIOEventHandler(const boost::shared_ptr<karabo::io::Input<T> >& self, const bp::object& handler) {
+        static void registerIOEventHandler(const boost::shared_ptr<karabo::io::Input<T> >& self,
+                                           const bp::object& handler) {
             self->registerIOEventHandler(handler);
         }
 
 
-        static void registerEndOfStreamEventHandler(const boost::shared_ptr<karabo::io::Input<T> >& self, const bp::object& handler) {
+        static void registerEndOfStreamEventHandler(const boost::shared_ptr<karabo::io::Input<T> >& self,
+                                                    const bp::object& handler) {
             self->registerEndOfStreamEventHandler(handler);
         }
     };
@@ -122,8 +118,6 @@ namespace karathon {
 
     template <class T>
     struct loadFromFileWrap {
-
-
         static bp::object loadWrap(const bp::object& fileNameObj, const bp::object& conf) {
             if (PyUnicode_Check(fileNameObj.ptr())) {
                 string fileName = bp::extract<string>(fileNameObj);
@@ -135,7 +129,8 @@ namespace karathon {
                 }
                 return bp::object(t);
             } else {
-                throw KARABO_PYTHON_EXCEPTION("Python first argument in 'loadFromFile' must be a string, second optional argument is a Hash");
+                throw KARABO_PYTHON_EXCEPTION(
+                      "Python first argument in 'loadFromFile' must be a string, second optional argument is a Hash");
             }
         }
     };
@@ -143,8 +138,6 @@ namespace karathon {
 
     template <class T>
     struct TextSerializerWrap {
-
-
         static bp::object save(karabo::io::TextSerializer<T>& s, const T& object) {
             std::string archive;
             s.save(object, archive);
@@ -175,25 +168,24 @@ namespace karathon {
             throw KARABO_PYTHON_EXCEPTION("Python object must be either of type bytes, bytearray or string");
         }
     };
-}
+} // namespace karathon
 
 
 void exportPyIo() {
     {
         bp::class_<AbstractInput, boost::shared_ptr<AbstractInput>, boost::noncopyable>("AbstractInput", bp::init<>())
-                .def("reconfigure", &karathon::AbstractInputWrap::reconfigure, (bp::arg("input")))
-                .def("setInstanceId", &karathon::AbstractInputWrap::setInstanceId, (bp::arg("instanceId")))
-                .def("getInstanceId", &karathon::AbstractInputWrap::getInstanceId)
-                .def("setInputHandlerType", &karathon::AbstractInputWrap::setInputHandlerType, (bp::arg("type")))
-                .def("needsDeviceConnection", &karathon::AbstractInputWrap::needsDeviceConnection)
-                .def("getConnectedOutputChannels", &karathon::AbstractInputWrap::getConnectedOutputChannels)
-                .def("connectNow", &karathon::AbstractInputWrap::connectNow, (bp::arg("outputChannelInfo")))
-                .def("canCompute", &karathon::AbstractInputWrap::canCompute)
-                .def("update", &karathon::AbstractInputWrap::update)
-                .def("registerIOEventHandler", &karathon::AbstractInputWrap::registerIOEventHandler, (bp::arg("handler")))
-                .def("registerEndOfStreamEventHandler", &karathon::AbstractInputWrap::registerEndOfStreamEventHandler, (bp::arg("handler")))
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(AbstractInput)
-                ;
+              .def("reconfigure", &karathon::AbstractInputWrap::reconfigure, (bp::arg("input")))
+              .def("setInstanceId", &karathon::AbstractInputWrap::setInstanceId, (bp::arg("instanceId")))
+              .def("getInstanceId", &karathon::AbstractInputWrap::getInstanceId)
+              .def("setInputHandlerType", &karathon::AbstractInputWrap::setInputHandlerType, (bp::arg("type")))
+              .def("needsDeviceConnection", &karathon::AbstractInputWrap::needsDeviceConnection)
+              .def("getConnectedOutputChannels", &karathon::AbstractInputWrap::getConnectedOutputChannels)
+              .def("connectNow", &karathon::AbstractInputWrap::connectNow, (bp::arg("outputChannelInfo")))
+              .def("canCompute", &karathon::AbstractInputWrap::canCompute)
+              .def("update", &karathon::AbstractInputWrap::update)
+              .def("registerIOEventHandler", &karathon::AbstractInputWrap::registerIOEventHandler, (bp::arg("handler")))
+              .def("registerEndOfStreamEventHandler", &karathon::AbstractInputWrap::registerEndOfStreamEventHandler,
+                   (bp::arg("handler"))) KARABO_PYTHON_FACTORY_CONFIGURATOR(AbstractInput);
     }
 }
 
@@ -201,30 +193,20 @@ void exportPyIo() {
 
 
 void exportPyIoFileTools() {
+    bp::def("saveToFile", (void (*)(Schema const&, string const&, Hash const&))(&karabo::io::saveToFile),
+            (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash()));
 
-    bp::def("saveToFile"
-            , (void (*) (Schema const &, string const &, Hash const &))(&karabo::io::saveToFile)
-            , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
-            );
+    bp::def("saveToFile", (void (*)(Hash const&, string const&, Hash const&))(&karabo::io::saveToFile),
+            (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash()));
 
-    bp::def("saveToFile"
-            , (void (*) (Hash const &, string const &, Hash const &))(&karabo::io::saveToFile)
-            , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
-            );
+    bp::def("loadFromFile", &karathon::loadFromFileWrap<Hash>::loadWrap,
+            (bp::arg("filename"), bp::arg("config") = karabo::util::Hash()));
 
-    bp::def("loadFromFile", &karathon::loadFromFileWrap<Hash>::loadWrap
-            , (bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
-            );
+    bp::def("loadFromFile", (void (*)(Hash&, string const&, Hash const&))(&karabo::io::loadFromFile),
+            (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash()));
 
-    bp::def("loadFromFile"
-            , (void (*) (Hash &, string const &, Hash const &))(&karabo::io::loadFromFile)
-            , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
-            );
-
-    bp::def("loadFromFile"
-            , (void (*) (Schema &, string const &, Hash const &))(&karabo::io::loadFromFile)
-            , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
-            );
+    bp::def("loadFromFile", (void (*)(Schema&, string const&, Hash const&))(&karabo::io::loadFromFile),
+            (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash()));
 }
 
 
@@ -232,86 +214,70 @@ template <class T>
 void exportPyIOFileTools1() {
     string className = T::classInfo().getClassName();
 
-    bp::def(string("save" + className + "ToFile").c_str()
-            , (void (*) (T const &, string const &, Hash const &))(&karabo::io::saveToFile)
-            , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
-            );
+    bp::def(string("save" + className + "ToFile").c_str(),
+            (void (*)(T const&, string const&, Hash const&))(&karabo::io::saveToFile),
+            (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash()));
 
-    bp::def(string("load" + className + "FromFile").c_str(), &karathon::loadFromFileWrap<T>::loadWrap
-            , (bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
-            );
-
+    bp::def(string("load" + className + "FromFile").c_str(), &karathon::loadFromFileWrap<T>::loadWrap,
+            (bp::arg("filename"), bp::arg("config") = karabo::util::Hash()));
 }
 
 
 template <class T>
 void exportPyIoOutput() {
-
-    {//exposing karabo::io::Output<karabo::util::Hash>
+    { // exposing karabo::io::Output<karabo::util::Hash>
         typedef karabo::io::Output<T> SpecificOutput;
-        bp::class_<SpecificOutput, boost::shared_ptr<SpecificOutput>, boost::noncopyable >(string("Output" + T::classInfo().getClassName()).c_str(), bp::no_init)
-                .def("write"
-                     , (void (SpecificOutput::*)(T const &))(&SpecificOutput::write)
-                     , (bp::arg("data")))
-                .def("use_count", &boost::shared_ptr<SpecificOutput>::use_count)
-                .def("update", &karathon::OutputWrap<T>::update)
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificOutput)
-                ;
+        bp::class_<SpecificOutput, boost::shared_ptr<SpecificOutput>, boost::noncopyable>(
+              string("Output" + T::classInfo().getClassName()).c_str(), bp::no_init)
+              .def("write", (void(SpecificOutput::*)(T const&))(&SpecificOutput::write), (bp::arg("data")))
+              .def("use_count", &boost::shared_ptr<SpecificOutput>::use_count)
+              .def("update", &karathon::OutputWrap<T>::update) KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificOutput);
     }
 }
 
 
 template <class T>
 void exportPyIoInput() {
-
-    {//exposing karabo::io::Input<karabo::util::Hash>
+    { // exposing karabo::io::Input<karabo::util::Hash>
         typedef karabo::io::Input<T> SpecificInput;
-        bp::class_<SpecificInput, boost::shared_ptr<SpecificInput>, boost::noncopyable >(string("Input" + T::classInfo().getClassName()).c_str(), bp::no_init)
-                .def("read"
-                     , (void (SpecificInput::*)(T &, size_t))(&SpecificInput::read)
-                     , (bp::arg("data"), bp::arg("idx") = 0))
-                .def("size", (size_t(SpecificInput::*)() const) (&SpecificInput::size))
-                .def("update", (void (SpecificInput::*)()) (&SpecificInput::update))
-                .def("registerReadHandler", &karathon::InputWrap<T>::registerIOEventHandler)
-                .def("registerEndOfStreamHandler", &karathon::InputWrap<T>::registerEndOfStreamEventHandler)
-                .def("use_count", &boost::shared_ptr<SpecificInput>::use_count)
+        bp::class_<SpecificInput, boost::shared_ptr<SpecificInput>, boost::noncopyable>(
+              string("Input" + T::classInfo().getClassName()).c_str(), bp::no_init)
+              .def("read", (void(SpecificInput::*)(T&, size_t))(&SpecificInput::read),
+                   (bp::arg("data"), bp::arg("idx") = 0))
+              .def("size", (size_t(SpecificInput::*)() const)(&SpecificInput::size))
+              .def("update", (void(SpecificInput::*)())(&SpecificInput::update))
+              .def("registerReadHandler", &karathon::InputWrap<T>::registerIOEventHandler)
+              .def("registerEndOfStreamHandler", &karathon::InputWrap<T>::registerEndOfStreamEventHandler)
+              .def("use_count", &boost::shared_ptr<SpecificInput>::use_count)
 
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificInput)
-                ;
+                    KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificInput);
     }
 }
 
 
 template <class T>
 void exportPyIoTextSerializer() {
-
-    {//exposing karabo::io::TextSerializer<T>, where T :  karabo::util::Hash or karabo::util::Schema
+    { // exposing karabo::io::TextSerializer<T>, where T :  karabo::util::Hash or karabo::util::Schema
         typedef karabo::io::TextSerializer<T> SpecificSerializer;
-        bp::class_<SpecificSerializer, boost::noncopyable >(string("TextSerializer" + T::classInfo().getClassName()).c_str(), bp::no_init)
-                .def("save"
-                     , &karathon::TextSerializerWrap<T>().save
-                     , (bp::arg("object"))
-                     , "Saves an object as a string.\nExample:\n\t"
-                     "h = Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])\n\tser = TextSerializerHash()\n\tarchive = ser.save(h)\n\tassert archive.__class__.__name__ == 'str'")
-                .def("load"
-                     , &karathon::TextSerializerWrap<T>().load
-                     , (bp::arg("archive"))
-                     , "Loads \"bytearray\" or \"str\" archive and returns a new object.\nExample:\n\th = Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])\n\tser = TextSerializerHash()\n\t"
-                     "archive = ser.save(h)\n\th2 = ser.load(archive)\n\tassert similar(h, h2)")
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificSerializer)
-                ;
-        bp::register_ptr_to_python< boost::shared_ptr<SpecificSerializer> >();
+        bp::class_<SpecificSerializer, boost::noncopyable>(
+              string("TextSerializer" + T::classInfo().getClassName()).c_str(), bp::no_init)
+              .def("save", &karathon::TextSerializerWrap<T>().save, (bp::arg("object")),
+                   "Saves an object as a string.\nExample:\n\t"
+                   "h = Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])\n\tser = TextSerializerHash()\n\tarchive = "
+                   "ser.save(h)\n\tassert archive.__class__.__name__ == 'str'")
+              .def("load", &karathon::TextSerializerWrap<T>().load, (bp::arg("archive")),
+                   "Loads \"bytearray\" or \"str\" archive and returns a new object.\nExample:\n\th = "
+                   "Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])\n\tser = TextSerializerHash()\n\t"
+                   "archive = ser.save(h)\n\th2 = ser.load(archive)\n\tassert similar(h, h2)")
+                    KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificSerializer);
+        bp::register_ptr_to_python<boost::shared_ptr<SpecificSerializer> >();
     }
 }
 
 
 template <class T>
 class BinarySerializerWrap {
-
-
-public:
-
-
+   public:
     static bp::object save(karabo::io::BinarySerializer<T>& s, const T& object) {
         std::vector<char> v;
         s.save(object, v);
@@ -349,11 +315,7 @@ public:
 
 template <>
 class BinarySerializerWrap<Hash> {
-
-
-public:
-
-
+   public:
     static bp::object save(karabo::io::BinarySerializer<Hash>& s, const boost::shared_ptr<Hash>& object) {
         std::vector<char> v;
         s.save(object, v);
@@ -393,21 +355,19 @@ template <class T>
 void exportPyIoBinarySerializer() {
     bp::docstring_options docs(true, true, false);
     typedef karabo::io::BinarySerializer<T> SpecificSerializer;
-    bp::class_<SpecificSerializer, boost::noncopyable >(string("BinarySerializer" + T::classInfo().getClassName()).c_str(), bp::no_init)
-            .def("save"
-                 , &BinarySerializerWrap<T>().save
-                 , (bp::arg("object"))
-                 , "Saves an object as a bytearray.\nExample:\n\t"
-                 "h = Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])\n\tser = BinarySerializerHash()\n\tarchive = ser.save(h)\n\tassert archive.__class__.__name__ == 'bytearray'")
+    bp::class_<SpecificSerializer, boost::noncopyable>(
+          string("BinarySerializer" + T::classInfo().getClassName()).c_str(), bp::no_init)
+          .def("save", &BinarySerializerWrap<T>().save, (bp::arg("object")),
+               "Saves an object as a bytearray.\nExample:\n\t"
+               "h = Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])\n\tser = BinarySerializerHash()\n\tarchive = "
+               "ser.save(h)\n\tassert archive.__class__.__name__ == 'bytearray'")
 
-            .def("load"
-                 , &BinarySerializerWrap<T>().load
-                 , (bp::arg("archive"))
-                 , "Loads \"bytearray\" archive and returns new object.\nExample:\n\th = Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])\n\tser = BinarySerializerHash()\n\t"
-                 "archive = ser.save(h)\n\th2 = ser.load(archive)\n\tassert similar(h, h2)")
-            KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificSerializer)
-            ;
-    bp::register_ptr_to_python< boost::shared_ptr<SpecificSerializer> >();
+          .def("load", &BinarySerializerWrap<T>().load, (bp::arg("archive")),
+               "Loads \"bytearray\" archive and returns new object.\nExample:\n\th = "
+               "Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7])\n\tser = BinarySerializerHash()\n\t"
+               "archive = ser.save(h)\n\th2 = ser.load(archive)\n\tassert similar(h, h2)")
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificSerializer);
+    bp::register_ptr_to_python<boost::shared_ptr<SpecificSerializer> >();
 }
 
 

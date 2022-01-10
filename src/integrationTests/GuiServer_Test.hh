@@ -1,19 +1,20 @@
 /*
  * File:   GuiVersion_Test.hh
  * Author: alessandro.silenzi@xfel.eu
- 
+
  */
 
 #ifndef GuiVersion_Test_HH
-#define	GuiVersion_Test_HH
+#define GuiVersion_Test_HH
 
-#include "karabo/karabo.hpp"
-#include "karabo/core/DeviceServer.hh"
-#include "karabo/core/DeviceClient.hh"
-#include <boost/shared_ptr.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <boost/shared_ptr.hpp>
+
 #include "TcpAdapter_5.hh"
+#include "karabo/core/DeviceClient.hh"
+#include "karabo/core/DeviceServer.hh"
+#include "karabo/karabo.hpp"
 
 
 class GuiVersion_Test : public CPPUNIT_NS::TestFixture {
@@ -23,13 +24,13 @@ class GuiVersion_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     GuiVersion_Test();
     virtual ~GuiVersion_Test();
     void setUp();
     void tearDown();
 
-private:
+   private:
     void appTestRunner();
     void testVersionControl();
     void resetTcpConnection();
@@ -64,5 +65,4 @@ private:
     static const karabo::util::Hash k_defaultLoginData;
 };
 
-#endif	/* GuiVersion_Test_HH */
-
+#endif /* GuiVersion_Test_HH */

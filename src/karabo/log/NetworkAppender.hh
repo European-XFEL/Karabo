@@ -3,15 +3,16 @@
  */
 
 #ifndef KARABO_LOGCONFIG_NETWORKAPPENDER_HH
-#define	KARABO_LOGCONFIG_NETWORKAPPENDER_HH
+#define KARABO_LOGCONFIG_NETWORKAPPENDER_HH
 
-#include "karabo/util/Hash.hh"
-#include "karabo/util/Configurator.hh"
-#include "karabo/net/Broker.hh"
+#include <boost/asio/deadline_timer.hpp>
 #include <krb_log4cpp/LayoutAppender.hh>
 #include <krb_log4cpp/PatternLayout.hh>
-#include <boost/asio/deadline_timer.hpp>
 #include <vector>
+
+#include "karabo/net/Broker.hh"
+#include "karabo/util/Configurator.hh"
+#include "karabo/util/Hash.hh"
 
 
 namespace karabo {
@@ -19,7 +20,7 @@ namespace karabo {
     namespace net {
         // Forward
         class Broker;
-    }
+    } // namespace net
 
     namespace log {
 
@@ -33,22 +34,18 @@ namespace karabo {
          * of the Logger!!
          */
         class NetworkAppender {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(NetworkAppender, "NetworkAppender", "");
 
             static void expectedParameters(karabo::util::Schema& s);
 
             NetworkAppender(const karabo::util::Hash& config);
 
-            virtual ~NetworkAppender() {
-            }
+            virtual ~NetworkAppender() {}
 
             krb_log4cpp::Appender* getAppender();
 
-        private:
-
+           private:
             Log4CppNetApp* m_appender;
         };
 
@@ -60,9 +57,7 @@ namespace karabo {
          * "timestamp", "type", "category" and "message".
          */
         class Log4CppNetApp : public krb_log4cpp::LayoutAppender {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(Log4CppNetApp, "Log4CppNetApp", "");
 
             Log4CppNetApp(const karabo::util::Hash& config);
@@ -75,19 +70,17 @@ namespace karabo {
 
             krb_log4cpp::Appender* getAppender();
 
-        protected: // functions
+           protected: // functions
             virtual void _append(const krb_log4cpp::LoggingEvent& event);
 
-        private: // functions
-
+           private: // functions
             void startLogWriting();
 
             void checkLogCache(const boost::system::error_code& e);
 
             void writeNow();
 
-        private: // members
-
+           private: // members
             boost::shared_ptr<karabo::net::Broker> m_producer;
             unsigned int m_interval;
             unsigned int m_maxMessages;
@@ -105,19 +98,15 @@ namespace karabo {
 
 
         class NetworkFilter : public krb_log4cpp::Filter {
-        public:
-
+           public:
             NetworkFilter();
 
             virtual ~NetworkFilter();
 
-        protected:
-
+           protected:
             krb_log4cpp::Filter::Decision _decide(const krb_log4cpp::LoggingEvent& event);
-
         };
-    }
-}
+    } // namespace log
+} // namespace karabo
 
 #endif
-

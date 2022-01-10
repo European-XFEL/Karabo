@@ -8,15 +8,15 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <iostream>
+#include "karabo/net/utils.hh"
 
 #include <boost/asio.hpp>
 #include <boost/regex.hpp>
+#include <iostream>
 
-#include "karabo/net/utils.hh"
+#include "karabo/log/Logger.hh"
 #include "karabo/util/Exception.hh"
 #include "karabo/util/StringTools.hh"
-#include "karabo/log/Logger.hh"
 
 using namespace std;
 using namespace boost;
@@ -33,9 +33,8 @@ std::string karabo::net::bareHostName() {
 }
 
 
-void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> service,
-                               const std::string& category, const std::string& errorMessage,
-                               unsigned int delayInMilliSec) {
+void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> service, const std::string& category,
+                               const std::string& errorMessage, unsigned int delayInMilliSec) {
     // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference/io_service.html:
     // "If an exception is thrown from a handler, the exception is allowed to propagate through the throwing
     //  thread's invocation of run(), run_one(), poll() or poll_one(). No other threads that are calling any of
@@ -46,7 +45,7 @@ void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> servic
     //  object's thread pool without impacting any other threads in the pool."
 
     const std::string fullMessage(" when running io_service (" + errorMessage + "), continue in " +
-                                  karabo::util::toString(delayInMilliSec) += " ms");
+                                        karabo::util::toString(delayInMilliSec) += " ms");
     while (true) {
         bool caught = true;
         try {
@@ -67,7 +66,8 @@ void karabo::net::runProtected(boost::shared_ptr<boost::asio::io_service> servic
 }
 
 
-boost::tuple<std::string, std::string, std::string, std::string, std::string> karabo::net::parseUrl(const std::string& url) {
+boost::tuple<std::string, std::string, std::string, std::string, std::string> karabo::net::parseUrl(
+      const std::string& url) {
     boost::regex ex("(.+)://([^/ :]+):?([^/ ]*)(/?[^ #?]*)\\x3f?([^ #]*)#?([^ ]*)");
     boost::cmatch what;
     string protocol;

@@ -17,22 +17,14 @@ CPPUNIT_TEST_SUITE_REGISTRATION(InstanceChangeThrottler_Test);
 
 //<editor-fold desc="Tests life-cycle methods">
 
-InstanceChangeThrottler_Test::InstanceChangeThrottler_Test() :
-    m_instIdServer("someServer/id"),
-    m_instInfoServer("type", "server",
-                     "version", "d9c9d93",
-                     "heartbeatInterval", 10,
-                     "visibility", 4),
-    m_instIdDevice("ONE/NINE/DEVICE"),
-    m_instInfoDevice("type", "device",
-                     "version", "d9c9d94",
-                     "heartbeatInterval", 20,
-                     "visibility", 4) {
-}
+InstanceChangeThrottler_Test::InstanceChangeThrottler_Test()
+    : m_instIdServer("someServer/id"),
+      m_instInfoServer("type", "server", "version", "d9c9d93", "heartbeatInterval", 10, "visibility", 4),
+      m_instIdDevice("ONE/NINE/DEVICE"),
+      m_instInfoDevice("type", "device", "version", "d9c9d94", "heartbeatInterval", 20, "visibility", 4) {}
 
 
-InstanceChangeThrottler_Test::~InstanceChangeThrottler_Test() {
-}
+InstanceChangeThrottler_Test::~InstanceChangeThrottler_Test() {}
 
 
 void InstanceChangeThrottler_Test::setUp() {
@@ -40,8 +32,7 @@ void InstanceChangeThrottler_Test::setUp() {
 }
 
 
-void InstanceChangeThrottler_Test::tearDown() {
-}
+void InstanceChangeThrottler_Test::tearDown() {}
 
 //</editor-fold>
 
@@ -53,7 +44,7 @@ void InstanceChangeThrottler_Test::testThrottleInterval() {
     auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
 
     boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
-            karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
+          karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // Sends an initial burst of events.
     throttler->submitInstanceNew(m_instIdServer, m_instInfoServer);
@@ -61,9 +52,7 @@ void InstanceChangeThrottler_Test::testThrottleInterval() {
 
     // Waits long enough for first burst of data to arrive.
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for first burst of instance changes to arrive.",
-                           waitForCondition([this]() {
-                               return m_instChangeObserver.numOfInstChanges() >= 2;
-                           }, 2500u));
+                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 2500u));
 
     auto fistBurstEndTime = m_instChangeObserver.newestInstChange().timePoint;
 
@@ -74,16 +63,14 @@ void InstanceChangeThrottler_Test::testThrottleInterval() {
 
     // Waits long enough for the second burst of data to arrive - there's no problem to wait much longer here.
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for second burst of instance changes to arrive.",
-                           waitForCondition([this]() {
-                               return m_instChangeObserver.numOfInstChanges() >= 1;
-                           }, 2500u));
+                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 2500u));
 
     auto secondBurstStartTime = m_instChangeObserver.oldestInstChange().timePoint;
     auto interval = secondBurstStartTime - fistBurstEndTime;
     auto intervalMilli = boost::chrono::duration_cast<boost::chrono::milliseconds>(interval);
 
-    CPPUNIT_ASSERT_MESSAGE("Spacing between throttler cycles, " + karabo::util::toString(intervalMilli.count())
-                           + ", much smaller than expected.",
+    CPPUNIT_ASSERT_MESSAGE("Spacing between throttler cycles, " + karabo::util::toString(intervalMilli.count()) +
+                                 ", much smaller than expected.",
                            intervalMilli.count() > 190);
 }
 
@@ -94,7 +81,7 @@ void InstanceChangeThrottler_Test::testNewGoneOptimization() {
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence to be optimized will be dispatched in the same cycle.
     boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
-            karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
+          karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // Sends a burst composed of a sequence that should be optimized and a sequence that
     // should not be optimized.
@@ -105,20 +92,15 @@ void InstanceChangeThrottler_Test::testNewGoneOptimization() {
 
     // Waits long enough for the burst to arrive.
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for burst of instance changes to arrive.",
-                           waitForCondition([this]() {
-                               return m_instChangeObserver.numOfInstChanges() >= 1;
-                           }, 250u));
+                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u));
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of total instance changes received.",
-                                 1,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of total instance changes received.", 1,
                                  m_instChangeObserver.numOfInstChanges());
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of new instance changes received.",
-                                 1,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of new instance changes received.", 1,
                                  m_instChangeObserver.numOfInstNewChanges());
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at new instance change received.",
-                                 m_instIdDevice,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at new instance change received.", m_instIdDevice,
                                  m_instChangeObserver.instNewChangeAt(0).instanceId);
 }
 
@@ -129,7 +111,7 @@ void InstanceChangeThrottler_Test::testUpdateOptimization() {
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence to be optimized will be dispatched in the same cycle.
     boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
-            karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
+          karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // InstanceInfo that will be the payload for the second update.
     karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoServer);
@@ -141,20 +123,15 @@ void InstanceChangeThrottler_Test::testUpdateOptimization() {
 
     // Waits long enough for the burst to arrive.
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for burst of instance changes to arrive.",
-                           waitForCondition([this]() {
-                               return m_instChangeObserver.numOfInstChanges() >= 1;
-                           }, 250u));
+                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u));
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.",
-                                 1,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 1,
                                  m_instChangeObserver.numOfInstChanges());
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.",
-                                 m_instIdServer,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdServer,
                                  m_instChangeObserver.instUpdateChangeAt(0).instanceId);
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance info payload at observation 1.",
-                                 true,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance info payload at observation 1.", true,
                                  m_instChangeObserver.instUpdateChangeAt(0).instanceInfo.get<bool>("UpdatedInfo"));
 }
 
@@ -165,7 +142,7 @@ void InstanceChangeThrottler_Test::testNewUpdateOptimization() {
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence to be optimized will be dispatched in the same cycle.
     boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
-            karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
+          karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // InstanceInfo that will be the payload for the second update.
     karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoServer);
@@ -177,20 +154,15 @@ void InstanceChangeThrottler_Test::testNewUpdateOptimization() {
 
     // Waits long enough for the burst to arrive.
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for burst of instance changes to arrive.",
-                           waitForCondition([this]() {
-                               return m_instChangeObserver.numOfInstChanges() >= 1;
-                           }, 250u));
+                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u));
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.",
-                                 1,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 1,
                                  m_instChangeObserver.numOfInstChanges());
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.",
-                                 m_instIdServer,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdServer,
                                  m_instChangeObserver.instNewChangeAt(0).instanceId);
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance info payload at observation 1.",
-                                 true,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance info payload at observation 1.", true,
                                  m_instChangeObserver.instNewChangeAt(0).instanceInfo.get<bool>("UpdatedInfo"));
 }
 
@@ -201,7 +173,7 @@ void InstanceChangeThrottler_Test::testUpdateNewOptimization() {
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence to be optimized will be dispatched in the same cycle.
     boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
-            karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
+          karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // Sends a sequence that should be optimized.
     throttler->submitInstanceUpdate(m_instIdServer, m_instInfoServer);
@@ -209,20 +181,15 @@ void InstanceChangeThrottler_Test::testUpdateNewOptimization() {
 
     // Waits long enough for the burst to arrive.
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for burst of instance changes to arrive.",
-                           waitForCondition([this]() {
-                               return m_instChangeObserver.numOfInstChanges() >= 1;
-                           }, 250u));
+                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u));
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong total number of instance changes received.",
-                                 1,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong total number of instance changes received.", 1,
                                  m_instChangeObserver.numOfInstChanges());
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong type of instance change at observation 0.",
-                                 1,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong type of instance change at observation 0.", 1,
                                  m_instChangeObserver.numOfInstNewChanges());
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.",
-                                 m_instIdServer,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdServer,
                                  m_instChangeObserver.instNewChangeAt(0).instanceId);
 }
 
@@ -233,7 +200,7 @@ void InstanceChangeThrottler_Test::testNewGoneOptimization2Cycles() {
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence that should not be optimized will be splitted in two different cycles.
     boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
-            karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
+          karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // Sends a first burst composed of a sequence that should not be optimized - but is
     // the "prefix" of a sequence to be optimized if in the same cycle.
@@ -242,22 +209,17 @@ void InstanceChangeThrottler_Test::testNewGoneOptimization2Cycles() {
 
     // Waits long enough for the first burst to arrive.
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for first burst of instance changes to arrive.",
-                           waitForCondition([this]() {
-                               return m_instChangeObserver.numOfInstChanges() >= 2;
-                           }, 250u));
+                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u));
 
     auto fistBurstEndTime = m_instChangeObserver.newestInstChange().timePoint;
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.",
-                                 2,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 2,
                                  m_instChangeObserver.numOfInstChanges());
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.",
-                                 m_instIdDevice,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdDevice,
                                  m_instChangeObserver.instNewChangeAt(0).instanceId);
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 1.",
-                                 m_instIdServer,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 1.", m_instIdServer,
                                  m_instChangeObserver.instNewChangeAt(1).instanceId);
 
     m_instChangeObserver.clearInstChanges();
@@ -269,20 +231,15 @@ void InstanceChangeThrottler_Test::testNewGoneOptimization2Cycles() {
 
     // Waits long enough for the second burst to arrive.
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for second burst with Gone changes to arrive.",
-                           waitForCondition([this]() {
-                               return m_instChangeObserver.numOfInstChanges() >= 2;
-                           }, 250u));
+                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u));
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.",
-                                 2,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 2,
                                  m_instChangeObserver.numOfInstChanges());
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.",
-                                 m_instIdDevice,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdDevice,
                                  m_instChangeObserver.instGoneChangeAt(0).instanceId);
-    
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 1.",
-                                 m_instIdServer,
+
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 1.", m_instIdServer,
                                  m_instChangeObserver.instGoneChangeAt(1).instanceId);
 
 
@@ -301,7 +258,7 @@ void InstanceChangeThrottler_Test::testUpdateOptimization2Cycles() {
     // Instantiates a throttler with an update that is long enough to guarantee that the
     // sequence that shoud not be optimized will be splitted in two different cycles.
     boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
-            karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
+          karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u);
 
     // InstanceInfo that will be the payload for the second update.
     karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoDevice);
@@ -314,22 +271,17 @@ void InstanceChangeThrottler_Test::testUpdateOptimization2Cycles() {
 
     // Waits long enough for the first burst to arrive.
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for first burst of instance changes to arrive.",
-                           waitForCondition([this]() {
-                               return m_instChangeObserver.numOfInstChanges() >= 2;
-                           }, 250u));
+                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u));
 
     auto fistBurstEndTime = m_instChangeObserver.newestInstChange().timePoint;
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.",
-                                 2,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 2,
                                  m_instChangeObserver.numOfInstChanges());
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.",
-                                 m_instIdDevice,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdDevice,
                                  m_instChangeObserver.instUpdateChangeAt(0).instanceId);
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 1.",
-                                 m_instIdServer,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 1.", m_instIdServer,
                                  m_instChangeObserver.instUpdateChangeAt(1).instanceId);
 
     m_instChangeObserver.clearInstChanges();
@@ -341,28 +293,21 @@ void InstanceChangeThrottler_Test::testUpdateOptimization2Cycles() {
 
     // Waits long enough for the second burst to arrive.
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for second burst with update changes to arrive.",
-                           waitForCondition([this]() {
-                               return m_instChangeObserver.numOfInstChanges() >= 2;
-                           }, 250u));
+                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u));
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.",
-                                 2,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 2,
                                  m_instChangeObserver.numOfInstChanges());
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.",
-                                 m_instIdDevice,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 0.", m_instIdDevice,
                                  m_instChangeObserver.instUpdateChangeAt(0).instanceId);
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance info payload at observation 0.",
-                                 true,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance info payload at observation 0.", true,
                                  m_instChangeObserver.instUpdateChangeAt(0).instanceInfo.get<bool>("UpdatedInfo"));
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 1.",
-                                 m_instIdServer,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance Id at observation 1.", m_instIdServer,
                                  m_instChangeObserver.instUpdateChangeAt(1).instanceId);
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance info payload at observation 1.",
-                                 true,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong instance info payload at observation 1.", true,
                                  m_instChangeObserver.instUpdateChangeAt(1).instanceInfo.get<bool>("UpdatedInfo"));
 
 
@@ -370,8 +315,9 @@ void InstanceChangeThrottler_Test::testUpdateOptimization2Cycles() {
     auto interval = secondBurstStartTime - fistBurstEndTime;
     auto intervalMilli = boost::chrono::duration_cast<boost::chrono::milliseconds>(interval);
 
-    CPPUNIT_ASSERT_MESSAGE("Could not verify that the second batch of update changes came in a different throttler cycle.",
-                           intervalMilli.count() > 190u);
+    CPPUNIT_ASSERT_MESSAGE(
+          "Could not verify that the second batch of update changes came in a different throttler cycle.",
+          intervalMilli.count() > 190u);
 }
 
 
@@ -379,7 +325,7 @@ void InstanceChangeThrottler_Test::testMaxChangesPerCycle() {
     auto instChangeHandler = boost::bind(&InstanceChangeThrottler_Test::handleInstChange, this, _1);
 
     boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
-            karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u, 2u);
+          karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, 200u, 2u);
 
     // InstanceInfo that will be the payload for the update.
     karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoDevice);
@@ -392,14 +338,11 @@ void InstanceChangeThrottler_Test::testMaxChangesPerCycle() {
 
     // Waits long enough for the first burst to arrive.
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for first burst of changes to arrive.",
-                           waitForCondition([this]() {
-                               return m_instChangeObserver.numOfInstChanges() >= 2;
-                           }, 250u));
+                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 2; }, 250u));
 
     auto fistBurstEndTime = m_instChangeObserver.newestInstChange().timePoint;
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.",
-                                 2,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 2,
                                  m_instChangeObserver.numOfInstChanges());
 
     m_instChangeObserver.clearInstChanges();
@@ -408,16 +351,12 @@ void InstanceChangeThrottler_Test::testMaxChangesPerCycle() {
     // would overwrite the one for the new change for the instance updated.
 
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for second burst of changes to arrive.",
-                           waitForCondition([this]() {
-                               return m_instChangeObserver.numOfInstChanges() >= 1;
-                           }, 250u));
+                           waitForCondition([this]() { return m_instChangeObserver.numOfInstChanges() >= 1; }, 250u));
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.",
-                                 1,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong number of instance changes received.", 1,
                                  m_instChangeObserver.numOfInstChanges());
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong payload contents of instance update change.",
-                                 true,
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Wrong payload contents of instance update change.", true,
                                  m_instChangeObserver.instUpdateChangeAt(0).instanceInfo.get<bool>("UpdatedInfo"));
 
     auto secondBurstStartTime = m_instChangeObserver.newestInstChange().timePoint;
@@ -426,7 +365,6 @@ void InstanceChangeThrottler_Test::testMaxChangesPerCycle() {
 
     CPPUNIT_ASSERT_MESSAGE("Could not verify that the second batch of changes came in a different throttler cycle.",
                            intervalMilli.count() > 190u);
-
 }
 
 
@@ -437,7 +375,8 @@ void InstanceChangeThrottler_Test::testBigUpdateSequence() {
     const unsigned int kThrottlerMaxChanges = 4500u;
 
     boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
-            karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, kThrottlerIntervalMs, kThrottlerMaxChanges);
+          karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, kThrottlerIntervalMs,
+                                                                 kThrottlerMaxChanges);
 
     auto startTimePoint = boost::chrono::high_resolution_clock::now();
 
@@ -452,14 +391,17 @@ void InstanceChangeThrottler_Test::testBigUpdateSequence() {
         throttler->submitInstanceUpdate(m_instIdDevice + std::string("_") + std::to_string(i), updatedInstInfo);
     }
 
-    // Waits long enough for the updates to arrive. 
+    // Waits long enough for the updates to arrive.
     // The test is considered successfull if all the instances are received - check is made on the hashCount which works
     // regardless of update optimizations (updates for same device in the same throttler cycle).
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for instance updates to arrive.",
-                           waitForCondition([this]() {
-                               int nReceived = m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
-                                            return nReceived == (kNumOfUpdateChanges - 1);
-                           }, 12000u));
+                           waitForCondition(
+                                 [this]() {
+                                     int nReceived =
+                                           m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
+                                     return nReceived == (kNumOfUpdateChanges - 1);
+                                 },
+                                 12000u));
 
     auto finishTimePoint = boost::chrono::high_resolution_clock::now();
     std::clog << "\ntestBigUpdateSequence parameters:" << std::endl;
@@ -475,8 +417,8 @@ void InstanceChangeThrottler_Test::testBigUpdateSequence() {
     std::clog << "\tThrottler bursts: " << m_instChangeObserver.numOfThrottlerBursts() << std::endl;
     auto testDuration = finishTimePoint - startTimePoint;
     std::clog << "\tTime to receive all updates: "
-            << boost::chrono::duration_cast<boost::chrono::milliseconds> (testDuration).count()
-            << " milliseconds" << std::endl;
+              << boost::chrono::duration_cast<boost::chrono::milliseconds>(testDuration).count() << " milliseconds"
+              << std::endl;
 }
 
 
@@ -488,7 +430,8 @@ void InstanceChangeThrottler_Test::testThrottlerLifecycle() {
     const unsigned int kThrottlerMaxChanges = 2000u;
 
     boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
-            karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, kThrottlerIntervalMs, kThrottlerMaxChanges);
+          karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, kThrottlerIntervalMs,
+                                                                 kThrottlerMaxChanges);
 
     // InstanceInfo that will be the payload for the updates.
     karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoDevice);
@@ -502,20 +445,22 @@ void InstanceChangeThrottler_Test::testThrottlerLifecycle() {
 
     // Makes sure the throttler didn't have time to send all the changes.
     CPPUNIT_ASSERT_MESSAGE("Throttler should not have sent any messages yet.",
-                           m_instChangeObserver.numOfInstChanges() < (int) kChangesPerInstantiation);
+                           m_instChangeObserver.numOfInstChanges() < (int)kChangesPerInstantiation);
 
     throttler.reset(); // Destructor should be called as we are the only owner.
 
     // Waits long enough for the updates to arrive.
     // The test is considered successfull if all the instance updates are received.
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for instance updates to arrive.",
-                           waitForCondition([this]() {
-                               int nReceived = m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
-                                            return nReceived == (kChangesPerInstantiation - 1);
-                           }, 15000u));
+                           waitForCondition(
+                                 [this]() {
+                                     int nReceived =
+                                           m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
+                                     return nReceived == (kChangesPerInstantiation - 1);
+                                 },
+                                 15000u));
 
     m_instChangeObserver.clearInstChanges();
-
 }
 
 
@@ -528,7 +473,8 @@ void InstanceChangeThrottler_Test::testChangesWithFlushes() {
     const unsigned int kThrottlerMaxChanges = 6000u;
 
     boost::shared_ptr<karabo::core::InstanceChangeThrottler> throttler =
-            karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, kThrottlerIntervalMs, kThrottlerMaxChanges);
+          karabo::core::InstanceChangeThrottler::createThrottler(instChangeHandler, kThrottlerIntervalMs,
+                                                                 kThrottlerMaxChanges);
 
     // InstanceInfo that will be the payload for the updates.
     karabo::util::Hash updatedInstInfo = karabo::util::Hash(m_instInfoDevice);
@@ -546,18 +492,21 @@ void InstanceChangeThrottler_Test::testChangesWithFlushes() {
     // Waits long enough for the updates to arrive.
     // The test is considered successfull if all the instance updates are received.
     CPPUNIT_ASSERT_MESSAGE("Timeout waiting for instance updates to arrive.",
-                           waitForCondition([this]() {
-                               int nReceived = m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
-                                            return nReceived == (kChangesToSubmit - 1);
-                           }, 15000u));
+                           waitForCondition(
+                                 [this]() {
+                                     int nReceived =
+                                           m_instChangeObserver.newestInstChange().instanceInfo.get<int>("hashCount");
+                                     return nReceived == (kChangesToSubmit - 1);
+                                 },
+                                 15000u));
 
     // Each flush should cause an immediate burst of the throttler.
-    CPPUNIT_ASSERT_MESSAGE(std::string("Number of throttler bursts inferior to the minimum expected of ") +
-                           karabo::util::toString(kChangesToSubmit / kIntervalBetweenFlushes) + std::string(" bursts."),
-                           m_instChangeObserver.numOfThrottlerBursts() >= static_cast<int> (kChangesToSubmit / kIntervalBetweenFlushes));
+    CPPUNIT_ASSERT_MESSAGE(
+          std::string("Number of throttler bursts inferior to the minimum expected of ") +
+                karabo::util::toString(kChangesToSubmit / kIntervalBetweenFlushes) + std::string(" bursts."),
+          m_instChangeObserver.numOfThrottlerBursts() >= static_cast<int>(kChangesToSubmit / kIntervalBetweenFlushes));
 
     m_instChangeObserver.clearInstChanges();
-
 }
 
 //</editor-fold>
@@ -571,10 +520,10 @@ void InstanceChangeThrottler_Test::handleInstChange(const karabo::util::Hash& ch
 }
 
 
-bool InstanceChangeThrottler_Test::waitForCondition(boost::function<bool() > checker, unsigned int timeoutMillis) {
+bool InstanceChangeThrottler_Test::waitForCondition(boost::function<bool()> checker, unsigned int timeoutMillis) {
     constexpr unsigned int sleepIntervalMillis = 5;
     unsigned int numOfWaits = 0;
-    const unsigned int maxNumOfWaits = static_cast<unsigned int> (std::ceil(timeoutMillis / sleepIntervalMillis));
+    const unsigned int maxNumOfWaits = static_cast<unsigned int>(std::ceil(timeoutMillis / sleepIntervalMillis));
     while (numOfWaits < maxNumOfWaits && !checker()) {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(sleepIntervalMillis));
         numOfWaits++;
@@ -645,9 +594,9 @@ InstanceChange InstanceChangeObserver::oldestInstChange() const {
     return m_oldestInstChange;
 }
 
-void InstanceChangeObserver::addInstChangesOfType(const karabo::util::Hash& srcInstTypeHash,
-                                                  const karabo::core::InstanceChangeThrottler::InstChangeType changeType,
-                                                  std::vector<InstanceChange>& destChangeVector) {
+void InstanceChangeObserver::addInstChangesOfType(
+      const karabo::util::Hash& srcInstTypeHash, const karabo::core::InstanceChangeThrottler::InstChangeType changeType,
+      std::vector<InstanceChange>& destChangeVector) {
     std::vector<std::string> instTypesKeys;
     srcInstTypeHash.getKeys(instTypesKeys);
 
@@ -665,9 +614,7 @@ void InstanceChangeObserver::addInstChangesOfType(const karabo::util::Hash& srcI
             // The instance info payload, when existing, is always transported as attributes; recomposing it.
             const karabo::util::Hash::Attributes& attrs = changesEntries.getAttributes(instIdKey);
             karabo::util::Hash instInfo;
-            for (karabo::util::Hash::Attributes::const_iterator attr = attrs.begin();
-                 attr != attrs.end();
-                 ++attr) {
+            for (karabo::util::Hash::Attributes::const_iterator attr = attrs.begin(); attr != attrs.end(); ++attr) {
                 instInfo.set<boost::any>(attr->getKey(), attr->getValueAsAny());
             }
             instChange.instanceInfo = instInfo;
@@ -696,14 +643,11 @@ void InstanceChangeObserver::addInstChanges(const karabo::util::Hash& changeInfo
     m_numOfThrottlerBursts++;
 
     addInstChangesOfType(changeInfo.get<karabo::util::Hash>("new"),
-                         karabo::core::InstanceChangeThrottler::InstChangeType::NEW,
-                         m_instNewChanges);
+                         karabo::core::InstanceChangeThrottler::InstChangeType::NEW, m_instNewChanges);
     addInstChangesOfType(changeInfo.get<karabo::util::Hash>("gone"),
-                         karabo::core::InstanceChangeThrottler::InstChangeType::GONE,
-                         m_instGoneChanges);
+                         karabo::core::InstanceChangeThrottler::InstChangeType::GONE, m_instGoneChanges);
     addInstChangesOfType(changeInfo.get<karabo::util::Hash>("update"),
-                         karabo::core::InstanceChangeThrottler::InstChangeType::UPDATE,
-                         m_instUpdateChanges);
+                         karabo::core::InstanceChangeThrottler::InstChangeType::UPDATE, m_instUpdateChanges);
 }
 
 //</editor-fold>

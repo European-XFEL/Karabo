@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   P2PSenderDeviceDevice.cc
  * Author: haufs
- * 
+ *
  * Created on September 20, 2016, 3:49 PM
  */
 
@@ -18,108 +18,92 @@ namespace karabo {
     KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, P2PSenderDevice)
 
     void P2PSenderDevice::expectedParameters(Schema& expected) {
+        OVERWRITE_ELEMENT(expected)
+              .key("state")
+              .setNewOptions(State::NORMAL, State::ACTIVE)
+              .setNewDefaultValue(State::NORMAL)
+              .commit();
 
-        OVERWRITE_ELEMENT(expected).key("state")
-                .setNewOptions(State::NORMAL, State::ACTIVE)
-                .setNewDefaultValue(State::NORMAL)
-                .commit();
+        SLOT_ELEMENT(expected)
+              .key("write")
+              .displayedName("Write")
+              .description("Write some data")
+              .allowedStates(State::NORMAL)
+              .commit();
 
-        SLOT_ELEMENT(expected).key("write")
-                .displayedName("Write")
-                .description("Write some data")
-                .allowedStates(State::NORMAL)
-                .commit();
+        SLOT_ELEMENT(expected)
+              .key("stop")
+              .displayedName("Stop")
+              .description("Stop writing data")
+              .allowedStates(State::ACTIVE)
+              .commit();
 
-        SLOT_ELEMENT(expected).key("stop")
-                .displayedName("Stop")
-                .description("Stop writing data")
-                .allowedStates(State::ACTIVE)
-                .commit();
- 
         Schema data;
-        INT32_ELEMENT(data).key("dataId")
-                .readOnly()
-                .commit();
+        INT32_ELEMENT(data).key("dataId").readOnly().commit();
 
-        STRING_ELEMENT(data).key("sha1")
-                .readOnly()
-                .commit();
+        STRING_ELEMENT(data).key("sha1").readOnly().commit();
 
-        STRING_ELEMENT(data).key("flow")
-                .readOnly()
-                .commit();
+        STRING_ELEMENT(data).key("flow").readOnly().commit();
 
-        VECTOR_INT64_ELEMENT(data).key("data")
-                .readOnly()
-                .commit();
-        
-        NDARRAY_ELEMENT(data).key("array")
-                .dtype(Types::DOUBLE)
-                .shape("100,200,0")
-                .commit();
+        VECTOR_INT64_ELEMENT(data).key("data").readOnly().commit();
 
-        OUTPUT_CHANNEL(expected).key("output1")
-                .displayedName("Output1")
-                .dataSchema(data)
-                .commit();
-        
+        NDARRAY_ELEMENT(data).key("array").dtype(Types::DOUBLE).shape("100,200,0").commit();
+
+        OUTPUT_CHANNEL(expected).key("output1").displayedName("Output1").dataSchema(data).commit();
+
         Schema data2;
-        
-        UINT64_ELEMENT(data2).key("inTime")
-                .readOnly()
-                .commit();
-        
-        NDARRAY_ELEMENT(data2).key("array")
-                .dtype(Types::DOUBLE)
-                .shape("256,256,512")
-                .commit();
 
-        OUTPUT_CHANNEL(expected).key("output2")
-                .displayedName("Output2")
-                .dataSchema(data2)
-                .commit();
-        
+        UINT64_ELEMENT(data2).key("inTime").readOnly().commit();
 
-        UINT32_ELEMENT(expected).key("nData")
-                .displayedName("Number of data")
-                .description("Number of data")
-                .assignmentOptional().defaultValue(12)
-                .reconfigurable()
-                .commit();
+        NDARRAY_ELEMENT(data2).key("array").dtype(Types::DOUBLE).shape("256,256,512").commit();
 
-        UINT32_ELEMENT(expected).key("delay")
-                .displayedName("Delay")
-                .description("Delay between writes")
-                .assignmentOptional().defaultValue(0u)
-                .unit(Unit::SECOND)
-                .metricPrefix(MetricPrefix::MILLI)
-                .reconfigurable()
-                .commit();
+        OUTPUT_CHANNEL(expected).key("output2").displayedName("Output2").dataSchema(data2).commit();
 
-        UINT32_ELEMENT(expected).key("currentDataId")
-                .displayedName("Current Data ID")
-                .description("Monitors the currently processed data token")
-                .readOnly()
-                .commit();
-        
-        STRING_ELEMENT(expected).key("scenario")
-                .options("test,profile")
-                .assignmentOptional().defaultValue("test")
-                .reconfigurable()
-                .commit();
 
-        UINT32_ELEMENT(expected).key("dataSize")
-                .description("Size of the INT64 'data' vector sent in 'test' scenario")
-                .assignmentOptional().defaultValue(1000000u)
-                .reconfigurable()
-                .commit();
+        UINT32_ELEMENT(expected)
+              .key("nData")
+              .displayedName("Number of data")
+              .description("Number of data")
+              .assignmentOptional()
+              .defaultValue(12)
+              .reconfigurable()
+              .commit();
 
-        BOOL_ELEMENT(expected).key("copyAllData")
-                .assignmentOptional().defaultValue(true)
-                .reconfigurable()
-                .commit();
-        
+        UINT32_ELEMENT(expected)
+              .key("delay")
+              .displayedName("Delay")
+              .description("Delay between writes")
+              .assignmentOptional()
+              .defaultValue(0u)
+              .unit(Unit::SECOND)
+              .metricPrefix(MetricPrefix::MILLI)
+              .reconfigurable()
+              .commit();
 
+        UINT32_ELEMENT(expected)
+              .key("currentDataId")
+              .displayedName("Current Data ID")
+              .description("Monitors the currently processed data token")
+              .readOnly()
+              .commit();
+
+        STRING_ELEMENT(expected)
+              .key("scenario")
+              .options("test,profile")
+              .assignmentOptional()
+              .defaultValue("test")
+              .reconfigurable()
+              .commit();
+
+        UINT32_ELEMENT(expected)
+              .key("dataSize")
+              .description("Size of the INT64 'data' vector sent in 'test' scenario")
+              .assignmentOptional()
+              .defaultValue(1000000u)
+              .reconfigurable()
+              .commit();
+
+        BOOL_ELEMENT(expected).key("copyAllData").assignmentOptional().defaultValue(true).reconfigurable().commit();
     }
 
 
@@ -183,17 +167,17 @@ namespace karabo {
             const int nData = get<unsigned int>("nData");
             const unsigned int delayInMs = get<unsigned int>("delay");
             const int noData[] = {}; // Also test an empty NDArray:
-            Hash data("data", std::vector<long long> (dataSize),
-                      "emptyArray", NDArray(noData, sizeof (noData) / sizeof (noData[0])));
+            Hash data("data", std::vector<long long>(dataSize), "emptyArray",
+                      NDArray(noData, sizeof(noData) / sizeof(noData[0])));
             auto& vec = data.get<std::vector<long long> >("data");
 
             KARABO_LOG_FRAMEWORK_DEBUG << "P2PSenderDevice::writing : nData = " << nData
-                    << ", delay in ms = " << delayInMs << ", vector<long long>.size = " << vec.size();
+                                       << ", delay in ms = " << delayInMs
+                                       << ", vector<long long>.size = " << vec.size();
             for (size_t i = 1; i <= vec.size(); ++i) vec[i - 1] = i;
 
             // Loop all the data to be send
             for (int iData = 0; iData < nData && !m_stopWriting; ++iData) {
-
                 // Fill the data object
                 data.set("dataId", iData);
                 vec[0] = -iData;
@@ -207,7 +191,7 @@ namespace karabo {
                     boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMs));
                 }
             }
-        } catch (const std::exception &eStd) {
+        } catch (const std::exception& eStd) {
             KARABO_LOG_ERROR << "Stop writing since:\n" << eStd.what();
         } catch (...) {
             KARABO_LOG_ERROR << "Stop writing since unknown exception";
@@ -219,7 +203,7 @@ namespace karabo {
 
         updateState(State::NORMAL);
     }
-    
+
     void P2PSenderDevice::writingProfile() {
         m_stopWriting = false;
 
@@ -243,22 +227,29 @@ namespace karabo {
 
             // Loop all the data to be send
             for (int iData = 0; iData < nData && !m_stopWriting; ++iData) {
-
                 // Fill the data object - for now only dataId.
                 data1.set("array", ndarr1);
-                data1.set("inTime", (unsigned long long) boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());
+                data1.set("inTime", (unsigned long long)boost::posix_time::microsec_clock::local_time()
+                                          .time_of_day()
+                                          .total_microseconds());
                 OutputChannel::MetaData meta1("source1", Timestamp());
 
                 data2.set("array", ndarr2);
-                data2.set("inTime", (unsigned long long) boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());
+                data2.set("inTime", (unsigned long long)boost::posix_time::microsec_clock::local_time()
+                                          .time_of_day()
+                                          .total_microseconds());
                 OutputChannel::MetaData meta2("source2", Timestamp());
 
                 data3.set("array", ndarr3);
-                data3.set("inTime", (unsigned long long) boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());
+                data3.set("inTime", (unsigned long long)boost::posix_time::microsec_clock::local_time()
+                                          .time_of_day()
+                                          .total_microseconds());
                 OutputChannel::MetaData meta3("source3", Timestamp());
 
                 data4.set("array", ndarr4);
-                data4.set("inTime", (unsigned long long) boost::posix_time::microsec_clock::local_time().time_of_day().total_microseconds());
+                data4.set("inTime", (unsigned long long)boost::posix_time::microsec_clock::local_time()
+                                          .time_of_day()
+                                          .total_microseconds());
                 OutputChannel::MetaData meta4("source2", Timestamp());
 
                 // Write
@@ -273,7 +264,7 @@ namespace karabo {
 
                 boost::this_thread::sleep(boost::posix_time::milliseconds(delayInMs));
             }
-        } catch (const std::exception &eStd) {
+        } catch (const std::exception& eStd) {
             KARABO_LOG_ERROR << "Stop writing since:\n" << eStd.what();
         } catch (...) {
             KARABO_LOG_ERROR << "Stop writing since unknown exception";
@@ -287,4 +278,4 @@ namespace karabo {
 
 #undef TEST_VECTOR_SIZE
 
-}
+} // namespace karabo

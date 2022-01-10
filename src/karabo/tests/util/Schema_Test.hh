@@ -6,18 +6,17 @@
  */
 
 #ifndef SCHEMA_TEST_HH
-#define	SCHEMA_TEST_HH
-#include <karabo/util/Configurator.hh>
-#include <karabo/log/Logger.hh>
-
+#define SCHEMA_TEST_HH
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "ConfigurationTestClasses.hh"
+#include <karabo/log/Logger.hh>
 #include <karabo/util.hpp>
+#include <karabo/util/Configurator.hh>
 #include <karabo/util/DataLogUtils.hh>
 
-class Schema_Test : public CPPUNIT_NS::TestFixture {
+#include "ConfigurationTestClasses.hh"
 
+class Schema_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(Schema_Test);
 
     CPPUNIT_TEST(testBuildUp);
@@ -80,8 +79,7 @@ class Schema_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
-
+   public:
     KARABO_CLASSINFO(Schema_Test, "Schema_Test", "1.0");
 
     Schema_Test();
@@ -89,11 +87,10 @@ public:
     void setUp();
 
 
-private: //members
+   private: // members
     karabo::util::Schema m_schema;
 
-private: //functions
-
+   private: // functions
     void testBuildUp();
 
     void testGetRootName();
@@ -194,4 +191,4 @@ private: //functions
     void testTableColWrongAccessMode();
 };
 
-#endif	/* SCHEMA_TEST_HH */
+#endif /* SCHEMA_TEST_HH */

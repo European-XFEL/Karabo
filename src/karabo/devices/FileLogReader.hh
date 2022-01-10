@@ -7,20 +7,18 @@
  */
 
 #ifndef FILELOGREADER_HH
-#define	FILELOGREADER_HH
-
-#include <string>
+#define FILELOGREADER_HH
 
 #include <boost/regex.hpp>
 #include <boost/thread/mutex.hpp>
+#include <string>
 
+#include "DataLogReader.hh"
 #include "karabo/io/TextSerializer.hh"
 #include "karabo/util/ClassInfo.hh"
 #include "karabo/util/Hash.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/Version.hh"
-
-#include "DataLogReader.hh"
 
 namespace karabo {
 
@@ -31,7 +29,6 @@ namespace karabo {
          * @brief A compound for representing indexes in text file logged data.
          */
         struct FileLoggerIndex {
-
             std::string m_event;
             karabo::util::Epochstamp m_epoch;
             unsigned long long m_train;
@@ -39,14 +36,7 @@ namespace karabo {
             std::string m_user;
             int m_fileindex;
 
-            FileLoggerIndex()
-                : m_event()
-                , m_epoch(0, 0)
-                , m_train(0)
-                , m_position(-1)
-                , m_user(".")
-                , m_fileindex(-1) {
-            }
+            FileLoggerIndex() : m_event(), m_epoch(0, 0), m_train(0), m_position(-1), m_user("."), m_fileindex(-1) {}
         };
 
         /**
@@ -60,8 +50,7 @@ namespace karabo {
             time_t lastwrite;
             std::vector<std::string> properties;
 
-            PropFileInfo() : filelock(), filesize(0), lastwrite(0), properties() {
-            }
+            PropFileInfo() : filelock(), filesize(0), lastwrite(0), properties() {}
         };
 
         /**
@@ -70,18 +59,14 @@ namespace karabo {
          *    karabo-idxbuild with a list of command line arguments
          */
         class IndexBuilderService : public boost::enable_shared_from_this<IndexBuilderService> {
-
-        public:
-
+           public:
             // Needed for 'Pointer' and KARABO_LOG_FRAMEWORK
             KARABO_CLASSINFO(IndexBuilderService, "IndexBuilderService", "1.4")
 
-        private:
-
+           private:
             IndexBuilderService();
 
-        public:
-
+           public:
             /**
              * Return a pointer to a singleton instance of IndexBuilderService.
              * If no instance exists one is created.
@@ -98,8 +83,7 @@ namespace karabo {
              */
             void buildIndexFor(const std::string& commandLineArguments);
 
-        private:
-
+           private:
             void build(const std::string& args);
 
             /**
@@ -122,37 +106,33 @@ namespace karabo {
          * karabo::devices::FileDataLogger.
          */
         class FileLogReader : public DataLogReader {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(FileLogReader, "FileLogReader", "karabo-" + karabo::util::Version::getVersion())
 
-            static void expectedParameters(karabo::util::Schema &expected);
+            static void expectedParameters(karabo::util::Schema& expected);
 
-            FileLogReader(const karabo::util::Hash &input);
+            FileLogReader(const karabo::util::Hash& input);
 
             virtual ~FileLogReader();
 
-        protected:
+           protected:
+            virtual void slotGetPropertyHistoryImpl(const std::string& deviceId, const std::string& property,
+                                                    const karabo::util::Hash& params) override;
 
-            virtual void slotGetPropertyHistoryImpl(const std::string &deviceId,
-                                                    const std::string &property,
-                                                    const karabo::util::Hash &params) override;
-
-            virtual void slotGetConfigurationFromPastImpl(const std::string &deviceId,
-                                                          const std::string &timepoint) override;
+            virtual void slotGetConfigurationFromPastImpl(const std::string& deviceId,
+                                                          const std::string& timepoint) override;
 
             void getConfigurationFromPast(const std::string& deviceId, const std::string& timepoint,
-                                                  SignalSlotable::AsyncReply& reply);
+                                          SignalSlotable::AsyncReply& reply);
 
-        private:
-
+           private:
             /**
              * Internal helper:
              * Place 'value' interpreted as 'type' (and with given 'timestamp') into 'hashOut' at 'path'.
              */
-            void readToHash(karabo::util::Hash& hashOut, const std::string& path, const karabo::util::Timestamp& timestamp,
-                            const std::string& type, const std::string& value) const;
+            void readToHash(karabo::util::Hash& hashOut, const std::string& path,
+                            const karabo::util::Timestamp& timestamp, const std::string& type,
+                            const std::string& value) const;
 
             /**
              * Retrieves, from the logger index, the event of type "device became online" that is closest, but not after
@@ -167,21 +147,26 @@ namespace karabo {
              * is the logger index of the given device that is the closest "device became online" event that is not
              * after the given timepoint.
              */
-            std::pair<bool, FileLoggerIndex> findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint);
+            std::pair<bool, FileLoggerIndex> findLoggerIndexTimepoint(const std::string& deviceId,
+                                                                      const std::string& timepoint);
 
             /// Find logger closest index from archive_index.txt file that is before/after (according to 'before')
             /// 'timepoint'. If there is none before (after) but that is asked for, take the one just after (before).
-            FileLoggerIndex findNearestLoggerIndex(const std::string& deviceId, const karabo::util::Epochstamp& timepoint, const bool before);
+            FileLoggerIndex findNearestLoggerIndex(const std::string& deviceId,
+                                                   const karabo::util::Epochstamp& timepoint, const bool before);
 
             int getFileIndex(const std::string& deviceId);
 
-            karabo::util::MetaSearchResult navigateMetaRange(const std::string& deviceId, size_t startnum, size_t endnum, const std::string& path,
-                                                             const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to);
+            karabo::util::MetaSearchResult navigateMetaRange(const std::string& deviceId, size_t startnum,
+                                                             size_t endnum, const std::string& path,
+                                                             const karabo::util::Epochstamp& from,
+                                                             const karabo::util::Epochstamp& to);
 
             /// Find index of that MetaData::Record in 'f' (between indices 'left' and 'right')
             /// that matches the Epochstamp 'stamp'. In case no exact match (within 1 ms) is found,
             /// 'preferBefore' decides whether the index with a smaller or larger time stamp is returned.
-            size_t findPositionOfEpochstamp(std::ifstream& f, double stamp, size_t left, size_t right, bool preferBefore);
+            size_t findPositionOfEpochstamp(std::ifstream& f, double stamp, size_t left, size_t right,
+                                            bool preferBefore);
 
             /// Helper to extract DataLoggerIndex values out of the tail of a line in archive_index.txt.
             /// The tail is everything after event, timestampAsIso8061 and timestampAsDouble.
@@ -192,7 +177,7 @@ namespace karabo {
 
 
             static boost::mutex m_propFileInfoMutex;
-            static std::map<std::string, PropFileInfo::Pointer > m_mapPropFileInfo;
+            static std::map<std::string, PropFileInfo::Pointer> m_mapPropFileInfo;
             IndexBuilderService::Pointer m_ibs;
             static const boost::regex m_lineRegex;
             static const boost::regex m_lineLogRegex;
@@ -201,12 +186,10 @@ namespace karabo {
             std::string m_ltype;
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer m_serializer;
             karabo::io::TextSerializer<karabo::util::Schema>::Pointer m_schemaSerializer;
-
         };
 
     } // namespace devices
 
 } // namespace karabo
 
-#endif	/* FILELOGREADER_HH */
-
+#endif /* FILELOGREADER_HH */

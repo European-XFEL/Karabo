@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   LockTestDevice.cc
  * Author: steffen
- * 
+ *
  * Created on October 2, 2016, 1:23 PM
  */
 
@@ -14,24 +14,17 @@ using namespace std;
 
 USING_KARABO_NAMESPACES
 
-        namespace karabo {
+namespace karabo {
 
 
     KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, LockTestDevice)
 
     void LockTestDevice::expectedParameters(Schema& expected) {
+        STRING_ELEMENT(expected).key("controlledDevice").assignmentOptional().defaultValue("").commit();
 
-        STRING_ELEMENT(expected).key("controlledDevice")
-                .assignmentOptional().defaultValue("")
-                .commit();
+        INT32_ELEMENT(expected).key("intProperty").assignmentOptional().defaultValue(0).reconfigurable().commit();
 
-        INT32_ELEMENT(expected).key("intProperty")
-                .assignmentOptional().defaultValue(0)
-                .reconfigurable()
-                .commit();
-
-        SLOT_ELEMENT(expected).key("lockAndWait")
-                .commit();
+        SLOT_ELEMENT(expected).key("lockAndWait").commit();
     }
 
 
@@ -42,17 +35,13 @@ USING_KARABO_NAMESPACES
         KARABO_SLOT(lockAndWaitRecursive);
         KARABO_SLOT(lockAndWaitRecursiveFail);
         KARABO_INITIAL_FUNCTION(initialize);
-
-
     }
 
 
-    LockTestDevice::~LockTestDevice() {
-    }
+    LockTestDevice::~LockTestDevice() {}
 
 
-    void LockTestDevice::initialize() {
-    }
+    void LockTestDevice::initialize() {}
 
 
     void LockTestDevice::lockAndWait() {
@@ -86,7 +75,8 @@ USING_KARABO_NAMESPACES
         const AsyncReply reply(this);
 
         // A slot should never do actions that take a significant amount of time, but just trigger them:
-        karabo::net::EventLoop::getIOService().post(util::bind_weak(&LockTestDevice::lockAndWaitLong_impl, this, reply));
+        karabo::net::EventLoop::getIOService().post(
+              util::bind_weak(&LockTestDevice::lockAndWaitLong_impl, this, reply));
     }
 
 
@@ -113,13 +103,12 @@ USING_KARABO_NAMESPACES
         const AsyncReply reply(this);
 
         // A slot should never do actions that take a significant amount of time, but just trigger them:
-        karabo::net::EventLoop::getIOService().post
-                (util::bind_weak(&LockTestDevice::lockAndWaitTimeout_impl, this, reply));
+        karabo::net::EventLoop::getIOService().post(
+              util::bind_weak(&LockTestDevice::lockAndWaitTimeout_impl, this, reply));
     }
 
 
     void LockTestDevice::lockAndWaitTimeout_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply) {
-
         try {
             Lock lk = remote().lock(get<std::string>("controlledDevice"), false, 1);
         } catch (const std::exception& e) {
@@ -135,8 +124,8 @@ USING_KARABO_NAMESPACES
         const AsyncReply reply(this);
 
         // A slot should never do actions that take a significant amount of time, but just trigger them:
-        karabo::net::EventLoop::getIOService().post
-                (util::bind_weak(&LockTestDevice::lockAndWaitRecursive_impl, this, reply));
+        karabo::net::EventLoop::getIOService().post(
+              util::bind_weak(&LockTestDevice::lockAndWaitRecursive_impl, this, reply));
     }
 
 
@@ -162,13 +151,13 @@ USING_KARABO_NAMESPACES
         const AsyncReply reply(this);
 
         // A slot should never do actions that take a significant amount of time, but just trigger them:
-        karabo::net::EventLoop::getIOService().post
-                (util::bind_weak(&LockTestDevice::lockAndWaitRecursiveFail_impl, this, reply));
+        karabo::net::EventLoop::getIOService().post(
+              util::bind_weak(&LockTestDevice::lockAndWaitRecursiveFail_impl, this, reply));
     }
 
 
     void LockTestDevice::lockAndWaitRecursiveFail_impl(const karabo::xms::SignalSlotable::AsyncReply& aReply) {
-    const std::string deviceId = get<std::string>("controlledDevice");
+        const std::string deviceId = get<std::string>("controlledDevice");
 
         try {
             Lock lk = remote().lock(deviceId, false, 1);
@@ -184,4 +173,4 @@ USING_KARABO_NAMESPACES
         }
         aReply();
     }
-}
+} // namespace karabo

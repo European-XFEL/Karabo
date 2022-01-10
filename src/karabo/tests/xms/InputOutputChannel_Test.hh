@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   InputOutputChannel_Test.hh
  * Author: flucke
  *
@@ -6,13 +6,12 @@
  */
 
 #ifndef INPUTOUTPUTCHANNEL_TEST_HH
-#define	INPUTOUTPUTCHANNEL_TEST_HH
+#define INPUTOUTPUTCHANNEL_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
 
 class InputOutputChannel_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(InputOutputChannel_Test);
     CPPUNIT_TEST(testOutputChannelElement);
     CPPUNIT_TEST(testConnectDisconnect);
@@ -20,18 +19,16 @@ class InputOutputChannel_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testConcurrentConnect);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     InputOutputChannel_Test();
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     void testOutputChannelElement();
     void testConnectDisconnect();
     void testManyToOne();
     void testConcurrentConnect();
 };
 
-#endif	/* INPUTOUTPUTCHANNEL_TEST_HH */
-
+#endif /* INPUTOUTPUTCHANNEL_TEST_HH */

@@ -1,7 +1,9 @@
 #include "karabo/net/JmsBroker.hh"
+
+#include <karabo/log/Logger.hh>
+
 #include "karabo/net/JmsConnection.hh"
 #include "karabo/net/utils.hh"
-#include <karabo/log/Logger.hh>
 
 
 using namespace karabo::util;
@@ -12,34 +14,31 @@ namespace karabo {
     namespace net {
 
 
-
-        void JmsBroker::expectedParameters(karabo::util::Schema& s) {
-        }
+        void JmsBroker::expectedParameters(karabo::util::Schema& s) {}
 
 
         JmsBroker::JmsBroker(const karabo::util::Hash& config)
-                : Broker(config)
-                , m_connection()
-                , m_producerChannel()
-                , m_consumerChannel()
-                , m_heartbeatConsumerChannel()
-                , m_logConsumerChannel() {
+            : Broker(config),
+              m_connection(),
+              m_producerChannel(),
+              m_consumerChannel(),
+              m_heartbeatConsumerChannel(),
+              m_logConsumerChannel() {
             Hash jmsConfig("brokers", m_availableBrokerUrls);
             m_connection = Configurator<JmsConnection>::create("JmsConnection", jmsConfig);
         }
 
 
-        JmsBroker::~JmsBroker() {
-        }
+        JmsBroker::~JmsBroker() {}
 
 
-        JmsBroker::JmsBroker(const JmsBroker& o, const std::string& newInstanceId) : Broker(o, newInstanceId),
-            m_connection(o.m_connection),
-            m_producerChannel(),
-            m_consumerChannel(),
-            m_heartbeatConsumerChannel(),
-            m_logConsumerChannel() {
-        }
+        JmsBroker::JmsBroker(const JmsBroker& o, const std::string& newInstanceId)
+            : Broker(o, newInstanceId),
+              m_connection(o.m_connection),
+              m_producerChannel(),
+              m_consumerChannel(),
+              m_heartbeatConsumerChannel(),
+              m_logConsumerChannel() {}
 
 
         Broker::Pointer JmsBroker::clone(const std::string& instanceId) {
@@ -57,8 +56,7 @@ namespace karabo {
         }
 
 
-        void JmsBroker::disconnect() {
-        }
+        void JmsBroker::disconnect() {}
 
 
         bool JmsBroker::isConnected() const {
@@ -71,27 +69,21 @@ namespace karabo {
         }
 
 
-        boost::system::error_code JmsBroker::subscribeToRemoteSignal(
-                const std::string& signalInstanceId,
-                const std::string& signalFunction) {
+        boost::system::error_code JmsBroker::subscribeToRemoteSignal(const std::string& signalInstanceId,
+                                                                     const std::string& signalFunction) {
             return boost::system::errc::make_error_code(boost::system::errc::success);
         }
 
 
-        boost::system::error_code JmsBroker::unsubscribeFromRemoteSignal(
-                const std::string& signalInstanceId,
-                const std::string& signalFunction) {
+        boost::system::error_code JmsBroker::unsubscribeFromRemoteSignal(const std::string& signalInstanceId,
+                                                                         const std::string& signalFunction) {
             return boost::system::errc::make_error_code(boost::system::errc::success);
         }
 
 
-        void JmsBroker::write(const std::string& target,
-                              const karabo::util::Hash::Pointer& header,
-                              const karabo::util::Hash::Pointer& body,
-                              const int priority, const int timeToLive) {
-
-            KARABO_LOG_FRAMEWORK_TRACE << "*** write TARGET = \"" << target
-                    << "\"...\n... and HEADER is \n" << *header;
+        void JmsBroker::write(const std::string& target, const karabo::util::Hash::Pointer& header,
+                              const karabo::util::Hash::Pointer& body, const int priority, const int timeToLive) {
+            KARABO_LOG_FRAMEWORK_TRACE << "*** write TARGET = \"" << target << "\"...\n... and HEADER is \n" << *header;
 
             if (!m_producerChannel) m_producerChannel = m_connection->createProducer();
 
@@ -111,8 +103,7 @@ namespace karabo {
         void JmsBroker::startReading(const consumer::MessageHandler& handler,
                                      const consumer::ErrorNotifier& errorNotifier) {
             if (!m_consumerChannel) {
-                std::string selector("slotInstanceIds LIKE '%|"
-                                     + m_instanceId + "|%'");
+                std::string selector("slotInstanceIds LIKE '%|" + m_instanceId + "|%'");
                 if (m_consumeBroadcasts) {
                     selector += " OR slotInstanceIds LIKE '%|*|%'";
                 }
@@ -120,7 +111,7 @@ namespace karabo {
             }
             m_messageHandler = handler;
             m_errorNotifier = errorNotifier;
-            m_consumerChannel->startReading(m_messageHandler, m_errorNotifier);            
+            m_consumerChannel->startReading(m_messageHandler, m_errorNotifier);
         }
 
 
@@ -151,7 +142,7 @@ namespace karabo {
         }
 
 
-/**
+        /**
          * JMS subscription.
          * 'selector' is SQL-like expression on properties (in header)
          *   "target = 'log'"
@@ -159,12 +150,13 @@ namespace karabo {
          * @param handler       - success handler
          * @param errorNotifier - error handler
          */
-        void JmsBroker::startReadingLogs(const consumer::MessageHandler& handler, const consumer::ErrorNotifier& errorNotifier) {
+        void JmsBroker::startReadingLogs(const consumer::MessageHandler& handler,
+                                         const consumer::ErrorNotifier& errorNotifier) {
             if (!m_logConsumerChannel) {
                 m_logConsumerChannel = m_connection->createConsumer(m_topic, "target = 'log'");
             }
             m_logConsumerChannel->startReading(handler, errorNotifier);
         }
 
-    }
-}
+    } // namespace net
+} // namespace karabo

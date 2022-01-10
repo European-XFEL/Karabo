@@ -6,7 +6,7 @@
  */
 
 #ifndef KARABO_SCHEMA_ALARMCONDITIONELEMENT_HH
-#define	KARABO_SCHEMA_ALARMCONDITIONELEMENT_HH
+#define KARABO_SCHEMA_ALARMCONDITIONELEMENT_HH
 
 #include "GenericElement.hh"
 
@@ -20,9 +20,7 @@ namespace karabo {
          * The AlarmConditionElement represents a leaf and needs to be of type AlarmCondition
          */
         class AlarmConditionElement : public GenericElement<AlarmConditionElement> {
-
-        public:
-
+           public:
             AlarmConditionElement(Schema& expected);
 
             /**
@@ -32,18 +30,15 @@ namespace karabo {
              */
             AlarmConditionElement& initialValue(const AlarmCondition& a);
 
-        protected:
-
+           protected:
             void beforeAddition();
-
         };
 
 
         typedef AlarmConditionElement ALARM_ELEMENT;
 
 
-    }
-}
+    } // namespace util
+} // namespace karabo
 
-#endif	/* KARABO_SCHEMA_ALARMCONDITIONELEMENT_HH */
-
+#endif /* KARABO_SCHEMA_ALARMCONDITIONELEMENT_HH */

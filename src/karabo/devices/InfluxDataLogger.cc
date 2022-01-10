@@ -1,10 +1,12 @@
-#include <iostream>
+#include "InfluxDataLogger.hh"
+
+#include <openssl/sha.h>
+
 #include <chrono>
 #include <future>
-#include <openssl/sha.h>
-#include "InfluxDataLogger.hh"
-#include <nlohmann/json.hpp>
+#include <iostream>
 #include <karabo/net/InfluxDbClient.hh>
+#include <nlohmann/json.hpp>
 
 // Precision is microseconds
 // for nanoseconds:  DUR is "ns",  PRECISION_FACTOR is 1000000000
@@ -12,7 +14,8 @@
 #define PRECISION_FACTOR 1000000
 
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogger, karabo::devices::InfluxDataLogger)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLogger,
+                                  karabo::devices::InfluxDataLogger)
 KARABO_REGISTER_IN_FACTORY_1(karabo::devices::DeviceData, karabo::devices::InfluxDeviceData, karabo::util::Hash)
 
 namespace karabo {
@@ -26,19 +29,17 @@ namespace karabo {
         const unsigned int InfluxDataLogger::k_httpResponseTimeoutMs = 1500u;
 
         InfluxDeviceData::InfluxDeviceData(const karabo::util::Hash& input)
-            : DeviceData(input)
-            , m_dbClientRead(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientReadPointer"))
-            , m_dbClientWrite(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientWritePointer"))
-            , m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin"))
-            , m_archive()
-            , m_maxTimeAdvance(input.get<int>("maxTimeAdvance"))
-            , m_hasRejectedData(false)
-            , m_loggingStartStamp(Epochstamp(0ull, 0ull), 0ull) {
-        }
+            : DeviceData(input),
+              m_dbClientRead(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientReadPointer")),
+              m_dbClientWrite(input.get<karabo::net::InfluxDbClient::Pointer>("dbClientWritePointer")),
+              m_serializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")),
+              m_archive(),
+              m_maxTimeAdvance(input.get<int>("maxTimeAdvance")),
+              m_hasRejectedData(false),
+              m_loggingStartStamp(Epochstamp(0ull, 0ull), 0ull) {}
 
 
-        InfluxDeviceData::~InfluxDeviceData() {
-        }
+        InfluxDeviceData::~InfluxDeviceData() {}
 
 
         void InfluxDeviceData::stopLogging() {
@@ -66,7 +67,6 @@ namespace karabo {
 
 
         void InfluxDeviceData::handleChanged(const karabo::util::Hash& configuration, const std::string& user) {
-
             m_dbClientWrite->connectDbIfDisconnected();
 
             if (user.empty()) {
@@ -89,9 +89,9 @@ namespace karabo {
                 const std::string& path = paths[i];
 
                 // Skip those elements which should not be archived
-                const bool noArchive = (!m_currentSchema.has(path)
-                                        || (m_currentSchema.hasArchivePolicy(path)
-                                            && (m_currentSchema.getArchivePolicy(path) == Schema::NO_ARCHIVING)));
+                const bool noArchive = (!m_currentSchema.has(path) ||
+                                        (m_currentSchema.hasArchivePolicy(path) &&
+                                         (m_currentSchema.getArchivePolicy(path) == Schema::NO_ARCHIVING)));
 
                 const Hash::Node& leafNode = configuration.getNode(path);
 
@@ -99,7 +99,7 @@ namespace karabo {
                 if (!Timestamp::hashAttributesContainTimeInformation(leafNode.getAttributes())) {
                     if (!noArchive) { // Lack of timestamp for non-archived properties does not harm logging
                         KARABO_LOG_FRAMEWORK_WARN << "Skip '" << path << "' of '" << deviceId
-                                << "' - it lacks time information attributes.";
+                                                  << "' - it lacks time information attributes.";
                     }
                     continue;
                 }
@@ -111,10 +111,11 @@ namespace karabo {
 
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
                 if (t.getEpochstamp() < m_loggingStartStamp.getEpochstamp()) {
-                    // Stamp is older than logging start time. To avoid confusion, especially for properties with no default value
-                    // i.e. which may not exist at some points in time) we overwrite the stamp with time when device logging started.
-                    // See discussions at https://git.xfel.eu/Karabo/config-and-recovery/-/issues/20
-                    // and https://in.xfel.eu/redmine/projects/karabo-library/wiki/InfluxNoDefaultValue
+                    // Stamp is older than logging start time. To avoid confusion, especially for properties with no
+                    // default value i.e. which may not exist at some points in time) we overwrite the stamp with time
+                    // when device logging started. See discussions at
+                    // https://git.xfel.eu/Karabo/config-and-recovery/-/issues/20 and
+                    // https://in.xfel.eu/redmine/projects/karabo-library/wiki/InfluxNoDefaultValue
                     t = m_loggingStartStamp;
                 }
                 {
@@ -134,26 +135,26 @@ namespace karabo {
                 if (m_maxTimeAdvance > 0 && t.getEpochstamp() > nowish) {
                     // substract the 2 Epochstamp to get a TimeDuration.
                     const double dt = t.getEpochstamp() - nowish;
-                    if ( dt > m_maxTimeAdvance) {
+                    if (dt > m_maxTimeAdvance) {
                         rejectedPaths.push_back(path);
                         continue;
                     }
                 }
-                std::string value; // "value" should be a string, so convert depending on type ...
+                std::string value;    // "value" should be a string, so convert depending on type ...
                 bool isFinite = true; // false for nan and inf DOUBLE/FLOAT
                 Types::ReferenceType type = leafNode.getType();
                 if (type == Types::VECTOR_HASH) {
                     // Represent any vector<Hash> as Base64 string
                     std::vector<char> archive;
-                    m_serializer->save(leafNode.getValue<std::vector < Hash >> (), archive);
-                    const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (archive.data());
+                    m_serializer->save(leafNode.getValue<std::vector<Hash>>(), archive);
+                    const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(archive.data());
                     value = base64Encode(uarchive, archive.size());
                 } else if (leafNode.getType() == Types::CHAR) {
-                    const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (&leafNode.getValue<char>());
+                    const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(&leafNode.getValue<char>());
                     value = base64Encode(uarchive, 1ul);
                 } else if (leafNode.getType() == Types::VECTOR_CHAR) {
-                    const std::vector<char> & v = leafNode.getValue<std::vector<char>>();
-                    const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (v.data());
+                    const std::vector<char>& v = leafNode.getValue<std::vector<char>>();
+                    const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(v.data());
                     value = base64Encode(uarchive, v.size());
                 } else if (type == Types::VECTOR_UINT8) {
                     // The generic vector code below uses toString(vector<unsigned char>) which
@@ -163,20 +164,20 @@ namespace karabo {
                     const std::vector<unsigned char>& vec = leafNode.getValue<std::vector<unsigned char>>();
                     if (!vec.empty()) {
                         std::ostringstream s;
-                        s << static_cast<unsigned int> (vec[0]);
+                        s << static_cast<unsigned int>(vec[0]);
                         for (size_t i = 1ul; i < vec.size(); ++i) {
-                            s << "," << static_cast<unsigned int> (vec[i]);
+                            s << "," << static_cast<unsigned int>(vec[i]);
                         }
                         value = s.str();
                     }
                 } else if (type == Types::VECTOR_STRING) {
                     // Special case: convert to JSON and then base64 ...
-                    const std::vector<std::string>& vecstr = leafNode.getValue<std::vector<std::string> >();
-                    nl::json j(vecstr);                     // convert to JSON
-                    const std::string str = j.dump();       // JSON as a string
+                    const std::vector<std::string>& vecstr = leafNode.getValue<std::vector<std::string>>();
+                    nl::json j(vecstr);               // convert to JSON
+                    const std::string str = j.dump(); // JSON as a string
                     const unsigned char* encoded = reinterpret_cast<const unsigned char*>(str.c_str());
                     const size_t length = str.length();
-                    value = base64Encode(encoded, length);  // encode to base64
+                    value = base64Encode(encoded, length); // encode to base64
                 } else if (Types::isVector(type)) {
                     // ... and treat  any other vectors as a comma separated text string of vector elements
                     value = toString(leafNode.getValueAs<std::string, std::vector>());
@@ -218,16 +219,16 @@ namespace karabo {
 
             if (!m_hasRejectedData && rejectedPaths.size() != 0ul) {
                 KARABO_LOG_FRAMEWORK_WARN << "Skip properties '" << toString(rejectedPaths) << "' of '" << deviceId
-                    << "' - Since they are too far in the future.";
+                                          << "' - Since they are too far in the future.";
             }
             m_hasRejectedData = rejectedPaths.size() != 0ul;
 
             terminateQuery(query, lineTimestamp);
-
         }
 
 
-        void InfluxDeviceData::login(const karabo::util::Hash& configuration, const std::vector<std::string>& sortedPaths) {
+        void InfluxDeviceData::login(const karabo::util::Hash& configuration,
+                                     const std::vector<std::string>& sortedPaths) {
             // TRICK: 'configuration' is the one requested at the beginning. For devices which have
             // properties with older timestamps than the time of their instantiation (as e.g. read from
             // hardware), we can claim that logging is active only from the most recent update we receive here.
@@ -236,15 +237,19 @@ namespace karabo {
             const unsigned long long ts = m_loggingStartStamp.toTimestamp() * PRECISION_FACTOR;
             std::stringstream ss;
             ss << m_deviceToBeLogged << "__EVENTS,type=\"+LOG\" karabo_user=\"" << m_user << "\""
-               << ",format=1i"; // Older data (where timestamps were not ensured to be not older than 'ts') has no format specified.
+               << ",format=1i"; // Older data (where timestamps were not ensured to be not older than 'ts') has no
+                                // format specified.
             auto deviceIdNode = configuration.find("_deviceId_"); // _deviceId_ as in DataLogger::slotChanged
-            if (deviceIdNode) { // Should always exist in case of m_pendingLogin
+            if (deviceIdNode) {                                   // Should always exist in case of m_pendingLogin
                 const Epochstamp devStartStamp = Epochstamp::fromHashAttributes(deviceIdNode->getAttributes());
-                // Difference between when device instantiated and when logging starts - precision as defined by PRECISION_FACTOR
-                const long long diff = static_cast<double>(m_loggingStartStamp.getEpochstamp() - devStartStamp) * PRECISION_FACTOR;
+                // Difference between when device instantiated and when logging starts - precision as defined by
+                // PRECISION_FACTOR
+                const long long diff =
+                      static_cast<double>(m_loggingStartStamp.getEpochstamp() - devStartStamp) * PRECISION_FACTOR;
                 ss << ",deviceAge=" << diff << "i";
             } else { // Should never happen!
-                KARABO_LOG_FRAMEWORK_WARN << "Cannot store device age of '" << m_deviceToBeLogged << "', device lacks key '_deviceId_'.";
+                KARABO_LOG_FRAMEWORK_WARN << "Cannot store device age of '" << m_deviceToBeLogged
+                                          << "', device lacks key '_deviceId_'.";
             }
             ss << " " << ts << "\n";
             m_dbClientWrite->enqueueQuery(ss.str());
@@ -252,17 +257,18 @@ namespace karabo {
 
 
         void InfluxDeviceData::logValue(std::stringstream& query, const std::string& deviceId, const std::string& path,
-                                        const std::string& value, karabo::util::Types::ReferenceType type, bool isFinite) {
+                                        const std::string& value, karabo::util::Types::ReferenceType type,
+                                        bool isFinite) {
             std::string field_value;
             switch (type) {
-                case Types::BOOL:
-                {
+                case Types::BOOL: {
                     if (value.empty()) {
                         // Should never happen! We try to save the line protocol by skipping
-                        KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '" << deviceId << "'";
+                        KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '"
+                                                   << deviceId << "'";
                         return;
                     }
-                    field_value = path + "-BOOL=" + ((value == "1") ? "t":"f");
+                    field_value = path + "-BOOL=" + ((value == "1") ? "t" : "f");
                     break;
                 }
                 case Types::INT8:
@@ -272,22 +278,22 @@ namespace karabo {
                 case Types::INT32:
                 case Types::UINT32:
                 case Types::INT64:
-                case Types::UINT64:
-                {
+                case Types::UINT64: {
                     if (value.empty()) {
                         // Should never happen! We try to save the line protocol by skipping
-                        KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '" << deviceId << "'";
+                        KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '"
+                                                   << deviceId << "'";
                         return;
                     }
                     field_value = path + "-" + Types::to<ToLiteral>(type) + "=" + value + "i";
                     break;
                 }
                 case Types::FLOAT:
-                case Types::DOUBLE:
-                {
+                case Types::DOUBLE: {
                     if (value.empty()) {
                         // Should never happen! We try to save the line protocol by skipping
-                        KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '" << deviceId << "'";
+                        KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '"
+                                                   << deviceId << "'";
                         return;
                     }
                     field_value = path + "-" + Types::to<ToLiteral>(type);
@@ -315,27 +321,25 @@ namespace karabo {
                 case Types::VECTOR_FLOAT:
                 case Types::VECTOR_DOUBLE:
                 case Types::VECTOR_COMPLEX_FLOAT:
-                case Types::VECTOR_COMPLEX_DOUBLE:
-                {
+                case Types::VECTOR_COMPLEX_DOUBLE: {
                     // empty strings shall be saved. They do not spoil the line protocol since they are between quotes
                     field_value = path + "-" + Types::to<ToLiteral>(type) + "=\"" + value + "\"";
                     break;
                 }
                 case Types::VECTOR_CHAR:
                 case Types::VECTOR_HASH:
-                case Types::CHAR:
-                {
+                case Types::CHAR: {
                     if (value.empty()) {
                         // Should never happen! These types are base64 encoded
-                        KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '" << deviceId << "'";
+                        KARABO_LOG_FRAMEWORK_ERROR << "Empty value for property '" << path << "' on device '"
+                                                   << deviceId << "'";
                         return;
                     }
                     field_value = path + "-" + Types::to<ToLiteral>(type) + "=\"" + value + "\"";
                     break;
                 }
                 case Types::STRING:
-                case Types::VECTOR_STRING:
-                {
+                case Types::VECTOR_STRING: {
                     std::string v = boost::replace_all_copy(value, "\\", "\\\\");
                     boost::replace_all(v, "\"", "\\\"");
                     field_value = path + "-" + Types::to<ToLiteral>(type) + "=\"" + v + "\"";
@@ -353,17 +357,15 @@ namespace karabo {
         }
 
 
-        void InfluxDeviceData::terminateQuery(std::stringstream& query,
-                                              const karabo::util::Timestamp& stamp) {
+        void InfluxDeviceData::terminateQuery(std::stringstream& query, const karabo::util::Timestamp& stamp) {
             if (!query.str().empty()) {
                 // There's data to be output to Influx.
 
                 const unsigned long long tid = stamp.getTrainId();
                 // influxDB integers are signed 64 bits. here we check that the we are within such limits
                 // Assuming a trainId rate of 10 Hz this limit will be surpassed in about 29 billion years
-                if (0 < tid &&
-                    tid <= static_cast<unsigned long long>(std::numeric_limits<long long>::max())) {
-                        query << ",_tid=" << tid << "i";
+                if (0 < tid && tid <= static_cast<unsigned long long>(std::numeric_limits<long long>::max())) {
+                    query << ",_tid=" << tid << "i";
                 }
                 const unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
                 if (ts > 0) {
@@ -388,10 +390,10 @@ namespace karabo {
             }
 
             // Use Binary serializer as soon as we encode into Base64:
-            karabo::io::BinarySerializer<karabo::util::Schema>::Pointer serializer
-                    = karabo::io::BinarySerializer<karabo::util::Schema>::create("Bin");
+            karabo::io::BinarySerializer<karabo::util::Schema>::Pointer serializer =
+                  karabo::io::BinarySerializer<karabo::util::Schema>::create("Bin");
             serializer->save(schema, m_archive);
-            const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (m_archive.data());
+            const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(m_archive.data());
 
             // Calculate 'digest' on serialized schema
             const std::size_t DIGEST_LENGTH = 20;
@@ -402,17 +404,16 @@ namespace karabo {
             std::string schDigest(dss.str());
 
             std::ostringstream oss;
-            oss << "SELECT COUNT(*) FROM \"" << m_deviceToBeLogged
-                    << "__SCHEMAS\" WHERE digest='\"" << schDigest << "\"'";
-            m_dbClientRead->queryDb(oss.str(), bind_weak(&InfluxDeviceData::checkSchemaInDb, this,
-                                                         stamp, schDigest, _1));
+            oss << "SELECT COUNT(*) FROM \"" << m_deviceToBeLogged << "__SCHEMAS\" WHERE digest='\"" << schDigest
+                << "\"'";
+            m_dbClientRead->queryDb(oss.str(),
+                                    bind_weak(&InfluxDeviceData::checkSchemaInDb, this, stamp, schDigest, _1));
         }
 
 
-        void InfluxDeviceData::checkSchemaInDb(const karabo::util::Timestamp& stamp,
-                                               const std::string& schDigest,
+        void InfluxDeviceData::checkSchemaInDb(const karabo::util::Timestamp& stamp, const std::string& schDigest,
                                                const HttpResponse& o) {
-            //TODO: Do error handling ...
+            // TODO: Do error handling ...
             //...
             const unsigned long long ts = stamp.toTimestamp() * PRECISION_FACTOR;
             std::stringstream ss;
@@ -423,11 +424,11 @@ namespace karabo {
             if (count.is_null()) {
                 // digest is not found:  json is '{"results":[{"statement_id":0}]}'
                 // Encode serialized schema into Base64
-                const unsigned char* uarchive = reinterpret_cast<const unsigned char*> (m_archive.data());
+                const unsigned char* uarchive = reinterpret_cast<const unsigned char*>(m_archive.data());
                 std::string base64Schema = base64Encode(uarchive, m_archive.size());
                 // and write to SCHEMAS table ...
-                ss << m_deviceToBeLogged << "__SCHEMAS," << "digest=\""
-                        << schDigest << "\" schema=\"" << base64Schema << "\"\n";
+                ss << m_deviceToBeLogged << "__SCHEMAS,"
+                   << "digest=\"" << schDigest << "\" schema=\"" << base64Schema << "\"\n";
                 // Flush what was accumulated before ...
                 m_dbClientWrite->flushBatch();
             }
@@ -439,57 +440,65 @@ namespace karabo {
 
 
         void InfluxDataLogger::expectedParameters(karabo::util::Schema& expected) {
+            OVERWRITE_ELEMENT(expected)
+                  .key("state")
+                  .setNewOptions(State::INIT, State::ON, State::ERROR)
+                  .setNewDefaultValue(State::INIT)
+                  .commit();
 
-            OVERWRITE_ELEMENT(expected).key("state")
-                    .setNewOptions(State::INIT, State::ON, State::ERROR)
-                    .setNewDefaultValue(State::INIT)
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("urlWrite")
+                  .displayedName("Influxdb URL (write)")
+                  .description("URL should be given in form: tcp://host:port. 'Write' interface")
+                  .assignmentOptional()
+                  .defaultValue("tcp://localhost:8086")
+                  .init()
+                  .commit();
 
-            STRING_ELEMENT(expected).key("urlWrite")
-                    .displayedName("Influxdb URL (write)")
-                    .description("URL should be given in form: tcp://host:port. 'Write' interface")
-                    .assignmentOptional().defaultValue("tcp://localhost:8086")
-                    .init()
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("urlQuery")
+                  .displayedName("Influxdb URL (query)")
+                  .description("URL should be given in form: tcp://host:port. 'Query' interface")
+                  .assignmentOptional()
+                  .defaultValue("tcp://localhost:8086")
+                  .init()
+                  .commit();
 
-            STRING_ELEMENT(expected).key("urlQuery")
-                    .displayedName("Influxdb URL (query)")
-                    .description("URL should be given in form: tcp://host:port. 'Query' interface")
-                    .assignmentOptional().defaultValue("tcp://localhost:8086")
-                    .init()
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("dbname")
+                  .displayedName("Database name")
+                  .description("Name of the database in which the data should be inserted")
+                  .assignmentMandatory()
+                  .commit();
 
-            STRING_ELEMENT(expected).key("dbname")
-                    .displayedName("Database name")
-                    .description("Name of the database in which the data should be inserted")
-                    .assignmentMandatory()
-                    .commit();
+            UINT32_ELEMENT(expected)
+                  .key("maxBatchPoints")
+                  .displayedName("Max. batch points")
+                  .description("Max number of InfluxDB points in batch")
+                  .assignmentOptional()
+                  .defaultValue(200)
+                  .init()
+                  .commit();
 
-            UINT32_ELEMENT(expected).key("maxBatchPoints")
-                    .displayedName("Max. batch points")
-                    .description("Max number of InfluxDB points in batch")
-                    .assignmentOptional().defaultValue(200)
-                    .init()
-                    .commit();
-
-            INT32_ELEMENT(expected).key("maxTimeAdvance")
-                    .displayedName("Max Time Advance")
-                    .description("Maximum time advance allowed for data. "
-                                 "Data too far ahead in the future will be dropped. "
-                                 "Negative values or 0 means no limit.")
-                    .assignmentOptional().defaultValue(7200)
-                    .unit(Unit::SECOND)
-                    .init()
-                    .commit();
-
+            INT32_ELEMENT(expected)
+                  .key("maxTimeAdvance")
+                  .displayedName("Max Time Advance")
+                  .description(
+                        "Maximum time advance allowed for data. "
+                        "Data too far ahead in the future will be dropped. "
+                        "Negative values or 0 means no limit.")
+                  .assignmentOptional()
+                  .defaultValue(7200)
+                  .unit(Unit::SECOND)
+                  .init()
+                  .commit();
         }
 
 
         InfluxDataLogger::InfluxDataLogger(const karabo::util::Hash& input)
-            : DataLogger(input)
-            , m_dbName(input.get<std::string>("dbname"))
-            , m_maxTimeAdvance(input.get<int>("maxTimeAdvance")) {
-
+            : DataLogger(input),
+              m_dbName(input.get<std::string>("dbname")),
+              m_maxTimeAdvance(input.get<int>("maxTimeAdvance")) {
             // We have to work in cluster environment where we have 2 nodes and proxy
             // that runs 'telegraf' working as a proxy and load balancer
             // All write requests should go to the load balancer
@@ -531,20 +540,16 @@ namespace karabo {
                 dbPasswordQuery = dbPasswordWrite;
             }
 
-            Hash configWrite("dbname", m_dbName,
-                             "url", m_urlWrite,
-                             "durationUnit", DUR,
-                             "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
+            Hash configWrite("dbname", m_dbName, "url", m_urlWrite, "durationUnit", DUR, "maxPointsInBuffer",
+                             input.get<unsigned int>("maxBatchPoints"));
 
             configWrite.set<std::string>("dbUser", dbUserWrite);
             configWrite.set<std::string>("dbPassword", dbPasswordWrite);
 
             m_clientWrite = Configurator<InfluxDbClient>::create("InfluxDbClient", configWrite);
 
-            Hash configRead("dbname", m_dbName,
-                            "url", m_urlQuery,
-                            "durationUnit", DUR,
-                            "maxPointsInBuffer", input.get<unsigned int>("maxBatchPoints"));
+            Hash configRead("dbname", m_dbName, "url", m_urlQuery, "durationUnit", DUR, "maxPointsInBuffer",
+                            input.get<unsigned int>("maxBatchPoints"));
 
             configRead.set<std::string>("dbUser", dbUserQuery);
             configRead.set<std::string>("dbPassword", dbPasswordQuery);
@@ -553,19 +558,15 @@ namespace karabo {
         }
 
 
-        InfluxDataLogger::~InfluxDataLogger() {
-        }
+        InfluxDataLogger::~InfluxDataLogger() {}
 
 
         void InfluxDataLogger::preDestruction() {
-
             DataLogger::preDestruction();
 
             auto prom = boost::make_shared<std::promise<void>>();
             std::future<void> fut = prom->get_future();
-            m_clientWrite->flushBatch([prom](const HttpResponse & resp) {
-                prom->set_value();
-            });
+            m_clientWrite->flushBatch([prom](const HttpResponse& resp) { prom->set_value(); });
 
             auto status = fut.wait_for(std::chrono::milliseconds(1500));
 
@@ -583,7 +584,7 @@ namespace karabo {
             config.set("dbClientWritePointer", m_clientWrite);
             config.set("maxTimeAdvance", m_maxTimeAdvance);
             DeviceData::Pointer deviceData =
-                    Factory<DeviceData>::create<karabo::util::Hash>("InfluxDataLoggerDeviceData", config);
+                  Factory<DeviceData>::create<karabo::util::Hash>("InfluxDataLoggerDeviceData", config);
             return deviceData;
         }
 
@@ -608,19 +609,19 @@ namespace karabo {
 
 
         void InfluxDataLogger::onCreateDatabase(const HttpResponse& o) {
-            if (o.code >= 300 ||
-                (o.code == 200 && o.payload.find("statement-id") == std::string::npos)) {
+            if (o.code >= 300 || (o.code == 200 && o.payload.find("statement-id") == std::string::npos)) {
                 // Database not available and could not be created. A response for an unsuccessful database creation
                 // can also have a 200 status code but will have the fixed payload '{"result":[]}'. A successful
                 // database creation will have a 200 status code, will have 'chunked' as transfer encoding and will
                 // have the payload '{"results:[{"statement-id":0}]}'.
                 KARABO_LOG_FRAMEWORK_ERROR << "Database '" << m_dbName << "' not available. "
-                        << "Tried to create it but got error with http status code '"
-                        << o.code << "' and message '" << o.message << "'. InfluxDataLogger going to ERROR state.";
+                                           << "Tried to create it but got error with http status code '" << o.code
+                                           << "' and message '" << o.message
+                                           << "'. InfluxDataLogger going to ERROR state.";
                 updateState(State::ERROR,
                             Hash("status",
-                                 std::string("Database '") + m_dbName + "' not available. Influx response to create database request:" +
-                                 o.toString()));
+                                 std::string("Database '") + m_dbName +
+                                       "' not available. Influx response to create database request:" + o.toString()));
             } else {
                 KARABO_LOG_FRAMEWORK_INFO << "Database " << m_dbName << " created";
                 startConnection();
@@ -652,7 +653,7 @@ namespace karabo {
                 }
             } catch (const nl::json::parse_error& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Failed to parse list of databases from '" << o.payload << "' ("
-                        << e.what() << ").";
+                                           << e.what() << ").";
                 updateState(State::ERROR, Hash("status", "Failed unpack list of databases."));
                 return;
             }
@@ -692,11 +693,11 @@ namespace karabo {
         void InfluxDataLogger::flushImpl(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) {
             karabo::net::InfluxResponseHandler handler;
             if (aReplyPtr) {
-                handler = [aReplyPtr](const HttpResponse & resp) {
+                handler = [aReplyPtr](const HttpResponse& resp) {
                     if (resp.code >= 300) {
                         std::ostringstream errMsg;
-                        errMsg << "Flush request failed - InfluxDb response code/message: " << resp.code
-                                << " '" << resp.message << "'";
+                        errMsg << "Flush request failed - InfluxDb response code/message: " << resp.code << " '"
+                               << resp.message << "'";
                         aReplyPtr->error(errMsg.str());
                     } else {
                         (*aReplyPtr)();
@@ -705,5 +706,5 @@ namespace karabo {
             }
             m_clientWrite->flushBatch(handler);
         }
-    }
-}
+    } // namespace devices
+} // namespace karabo

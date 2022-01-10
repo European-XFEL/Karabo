@@ -11,10 +11,10 @@
  */
 
 #ifndef KARABO_UTIL_GENERIC_ELEMENT_HH
-#define	KARABO_UTIL_GENERIC_ELEMENT_HH
+#define KARABO_UTIL_GENERIC_ELEMENT_HH
 
-#include "Schema.hh"
 #include "OverwriteElement.hh"
+#include "Schema.hh"
 
 namespace karabo {
     namespace util {
@@ -26,21 +26,15 @@ namespace karabo {
          */
         template <class Derived>
         class GenericElement {
-
-        protected:
-
+           protected:
             Schema* m_schema;
             boost::shared_ptr<Hash::Node> m_node;
 
-        public:
+           public:
+            GenericElement(Schema& expected)
+                : m_schema(&expected), m_node(boost::shared_ptr<Hash::Node>(new Hash::Node(std::string(), 0))) {}
 
-            GenericElement(Schema& expected) :
-                m_schema(&expected),
-                m_node(boost::shared_ptr<Hash::Node>(new Hash::Node(std::string(), 0))) {
-            }
-
-            virtual ~GenericElement() {
-            }
+            virtual ~GenericElement() {}
 
             /**
              * The <b>key</b> method serves for setting up a unique name for the element.
@@ -64,7 +58,7 @@ namespace karabo {
                     throw KARABO_PARAMETER_EXCEPTION("Bad (sub-)key '" + name + "': empty or with space.");
                 }
                 m_node->m_key = name;
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -75,10 +69,12 @@ namespace karabo {
              */
             template <class AliasType>
             Derived& alias(const AliasType& alias) {
-                m_node->setAttribute<AliasType > (KARABO_SCHEMA_ALIAS, alias);
-                if (m_node->getKey().empty()) throw KARABO_PARAMETER_EXCEPTION("You have to first assign a key to the expected parameter before you can set any alias");
+                m_node->setAttribute<AliasType>(KARABO_SCHEMA_ALIAS, alias);
+                if (m_node->getKey().empty())
+                    throw KARABO_PARAMETER_EXCEPTION(
+                          "You have to first assign a key to the expected parameter before you can set any alias");
                 m_schema->m_aliasToKey[karabo::util::toString(alias)] = m_node->getKey();
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -88,13 +84,13 @@ namespace karabo {
              */
             Derived& tags(const std::vector<std::string>& tags) {
                 m_node->setAttribute(KARABO_SCHEMA_TAGS, tags);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
              * The <b>tags/b> method allows to tag some expected parameters for later grouping/sorting
              * @param tags as a string separated by any of the characters in 'sep'
-             * @param sep a string interpreted as a list of separator characters 
+             * @param sep a string interpreted as a list of separator characters
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& tags(const std::string& tags, const std::string& sep = " ,;") {
@@ -118,7 +114,7 @@ namespace karabo {
              */
             Derived& displayedName(const std::string& name) {
                 m_node->setAttribute(KARABO_SCHEMA_DISPLAYED_NAME, name);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -137,16 +133,17 @@ namespace karabo {
              */
             Derived& description(const std::string& description) {
                 m_node->setAttribute(KARABO_SCHEMA_DESCRIPTION, description);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
-             * The <b>observerAccess</b> method serves for setting up the <i>required access level</i> attribute to be OBSERVER.
+             * The <b>observerAccess</b> method serves for setting up the <i>required access level</i> attribute to be
+             * OBSERVER.
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& observerAccess() {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OBSERVER);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -155,34 +152,37 @@ namespace karabo {
              */
             Derived& userAccess() {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::USER);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
-             * The <b>operatorAccess</b> method serves for setting up the <i>required access level</i> attribute to be OPERATOR.
+             * The <b>operatorAccess</b> method serves for setting up the <i>required access level</i> attribute to be
+             * OPERATOR.
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& operatorAccess() {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::OPERATOR);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
-             * The <b>expertAccess</b> method serves for setting up the <i>required access level</i> attribute to be EXPERT.
+             * The <b>expertAccess</b> method serves for setting up the <i>required access level</i> attribute to be
+             * EXPERT.
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& expertAccess() {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::EXPERT);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
-             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be ADMIN.
+             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be
+             * ADMIN.
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& adminAccess() {
                 m_node->setAttribute<int>(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL, Schema::ADMIN);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -192,15 +192,16 @@ namespace karabo {
              * After execution restrictions contains the new applicable restrictions, e.g. those resulting from merging
              * with previously existing restrictions. This means, one can add restrictions but not cancel existing ones.
              */
-            Derived& overwriteRestrictions(OverwriteElement::Restrictions & restrictions) {
+            Derived& overwriteRestrictions(OverwriteElement::Restrictions& restrictions) {
                 if (m_node->hasAttribute(KARABO_OVERWRITE_RESTRICTIONS)) {
                     OverwriteElement::Restrictions existing;
-                    existing.assignFromAttrVector(m_node->getAttribute < std::vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
-                    //now merge
+                    existing.assignFromAttrVector(
+                          m_node->getAttribute<std::vector<bool> >(KARABO_OVERWRITE_RESTRICTIONS));
+                    // now merge
                     restrictions.merge(existing);
                 }
                 m_node->setAttribute(KARABO_OVERWRITE_RESTRICTIONS, restrictions.toVectorAttribute());
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -218,20 +219,15 @@ namespace karabo {
 
             Hash::Node& getNode() {
                 return *m_node;
-
             }
 
-        protected:
-
-            virtual void beforeAddition() {
-            }
+           protected:
+            virtual void beforeAddition() {}
         };
 
 
-    }
-}
-
+    } // namespace util
+} // namespace karabo
 
 
 #endif
-

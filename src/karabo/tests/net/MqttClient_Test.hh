@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   MqttClient_Test.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
@@ -6,14 +6,14 @@
  */
 
 #ifndef MQTTCLIENT_TEST_HH
-#define	MQTTCLIENT_TEST_HH
+#define MQTTCLIENT_TEST_HH
+
+#include <cppunit/extensions/HelperMacros.h>
 
 #include <karabo/net/MqttClient.hh>
-#include <cppunit/extensions/HelperMacros.h>
 
 
 class MqttClient_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(MqttClient_Test);
     CPPUNIT_TEST(testTopicHasWildcard);
     CPPUNIT_TEST(testTopicMatch);
@@ -38,13 +38,11 @@ class MqttClient_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
-
+   public:
     MqttClient_Test();
     virtual ~MqttClient_Test();
 
-private:
-
+   private:
     void testTopicMatch();
     void testTopicHasWildcard();
     void testConnectSync();
@@ -78,12 +76,10 @@ private:
 
     std::string qos2operationString(const int qos);
 
-private:
-
+   private:
     std::string m_brokers;
     std::string m_domain;
 };
 
 
-#endif	/* MQTTCLIENT_TEST_HH */
-
+#endif /* MQTTCLIENT_TEST_HH */
