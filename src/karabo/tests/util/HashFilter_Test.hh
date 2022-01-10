@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   HashFilter_Test.hh
  * Author: <krzysztof.wrona@xfel.eu>
  *
@@ -6,17 +6,15 @@
  */
 
 #ifndef HASHFILTER_TEST_HH
-#define	HASHFILTER_TEST_HH
-#include <karabo/util/Configurator.hh>
-#include <karabo/log/Logger.hh>
-
+#define HASHFILTER_TEST_HH
 #include <cppunit/extensions/HelperMacros.h>
+
+#include <karabo/log/Logger.hh>
+#include <karabo/util/Configurator.hh>
 
 //#define HASHFILTER_HDF5TEST
 
 class HashFilter_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(HashFilter_Test);
     CPPUNIT_TEST(testFilterByTag);
     CPPUNIT_TEST(testFilterByAccessMode);
@@ -25,7 +23,7 @@ class HashFilter_Test : public CPPUNIT_NS::TestFixture {
 #endif
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     KARABO_CLASSINFO(HashFilter_Test, "HashFilter_Test", "1.0");
 
     HashFilter_Test();
@@ -33,7 +31,7 @@ public:
     void setUp();
     void tearDown();
 
-private:
+   private:
     void testFilterByTag();
     void testFilterByAccessMode();
 #ifdef HASHFILTER_HDF5TEST
@@ -41,5 +39,4 @@ private:
 #endif
 };
 
-#endif	/* FILTER_TEST_HH */
-
+#endif /* FILTER_TEST_HH */

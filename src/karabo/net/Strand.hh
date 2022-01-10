@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Strand.hh
  *
  * Author: gero.flucke@xfel.eu
@@ -9,17 +9,16 @@
  *
  */
 
-#include "karabo/util/ClassInfo.hh"
-
 #include <boost/asio/io_service.hpp>
 #include <boost/function.hpp>
 #include <boost/smart_ptr/enable_shared_from_this.hpp>
 #include <boost/thread/mutex.hpp>
-
 #include <queue>
 
+#include "karabo/util/ClassInfo.hh"
+
 #ifndef KARABO_NET_STRAND_HH
-#define	KARABO_NET_STRAND_HH
+#define KARABO_NET_STRAND_HH
 
 namespace karabo {
     namespace net {
@@ -48,10 +47,7 @@ namespace karabo {
          *
          */
         class Strand : public boost::enable_shared_from_this<Strand> {
-
-
-            public:
-
+           public:
             KARABO_CLASSINFO(Strand, "Strand", "2.1")
 
             explicit Strand(boost::asio::io_service& ioService);
@@ -76,7 +72,8 @@ namespace karabo {
              * Handlers posted on different Strands can always be run in parallel.
              * Note that, when a handler posted has not yet run when the Strand is destructed, it will never run.
              *
-             * @param handler function without arguments and return value as r-value reference - will be moved to avoid a copy
+             * @param handler function without arguments and return value as r-value reference - will be moved to avoid
+             * a copy
              */
             void post(boost::function<void()>&& handler);
 
@@ -92,7 +89,7 @@ namespace karabo {
              * @return A function object that, when invoked, passes the wrapped handler to
              * the Strand's post function.
              */
-            boost::function<void() > wrap(boost::function<void()> handler);
+            boost::function<void()> wrap(boost::function<void()> handler);
 
             /**
              * This function may be used to obtain the io_service object that the strand uses to post handlers.
@@ -103,15 +100,14 @@ namespace karabo {
                 return m_ioService;
             }
 
-        private:
-
+           private:
             /// Helper for post - to be called under protection of m_tasksMutex!
             void startRunningIfNeeded();
 
             /// Helper to run one task after another until tasks queue is empty
             void run();
 
-            void postWrapped(boost::function<void() > handler);
+            void postWrapped(boost::function<void()> handler);
 
             boost::asio::io_service& m_ioService;
 
@@ -120,7 +116,6 @@ namespace karabo {
             std::queue<boost::function<void()> > m_tasks;
         };
 
-    }
-}
-#endif	/* KARABO_NET_STRAND_HH */
-
+    } // namespace net
+} // namespace karabo
+#endif /* KARABO_NET_STRAND_HH */

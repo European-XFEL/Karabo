@@ -9,22 +9,20 @@
 
 
 #ifndef KARABO_UTIL_VALIDATOR_HH
-#define	KARABO_UTIL_VALIDATOR_HH
+#define KARABO_UTIL_VALIDATOR_HH
 
 #include <boost/foreach.hpp>
-#include "Schema.hh"
-#include "StringTools.hh"
-#include "ToLiteral.hh"
-#include "Units.hh"
-
-#include "karaboDll.hh"
-#include "Timestamp.hh"
-
-#include "RollingWindowStatistics.hh"
-#include <map>
-
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include <map>
+
+#include "RollingWindowStatistics.hh"
+#include "Schema.hh"
+#include "StringTools.hh"
+#include "Timestamp.hh"
+#include "ToLiteral.hh"
+#include "Units.hh"
+#include "karaboDll.hh"
 
 namespace karabo {
     namespace util {
@@ -43,7 +41,6 @@ namespace karabo {
          * the requirements specified in the schema, or fail.
          */
         class Validator {
-
             // Validation flags
             bool m_injectDefaults;
             bool m_allowUnrootedConfiguration;
@@ -59,64 +56,64 @@ namespace karabo {
             mutable boost::shared_mutex m_rollingStatMutex;
             std::map<std::string, RollingWindowStatistics::Pointer> m_parameterRollingStats;
 
-        public:
+           public:
             static const std::string kAlarmParamPathSeparator;
 
-        public:
-
+           public:
             /**
-            * ValidationRules specify the behavior of the Validator if
-            * it encounters differences between the input Hash and
-            * the Schema defining it. The following rules may be set
-            *
-            * - injectDefaults: inject default values if a value for an element
-            *                   defined in the Schema is missing from the input Hash.
-            *
-            * - allowUnrootedConfiguration: allow for unrooted input Hash, i.e. one that
-            *                   doesn't have a classId as the key of the root node
-            *
-            * - allowAdditionalKeys: allow additional keys in the input Hash that do not map
-            *                   to elements specified in the schema
-            *
-            * - allowMissingKeys: allow for keys missing in the input Hash even if an element for
-            *                     this key is present in the schema
-            *
-            * - injectTimestamps for leaf elements:
-            *    - if injectTimestamps is false: no injection
-            *    - if injectTimestamps is true and forceInjectedTimestamp is false:
-            *                                    timestamp is injected, but timestamp attributes present are not overwritten
-            *    - if injectTimestamps and forceInjectedTimestamp are both true:
-            *                                    timestamp is injected and may overwrite previous timestamp attributes
-            *
-            * If any of the above scenarios are encountered during validation and the option is not
-            * set to true, i.e. the Validator is not allowed to resolve the issue, validation will
-            * fail.
-            *
-            * The Validator additionally perform warning and alarm condition checks and maintains
-            * a record of parameters currently in a warning or alarm condition. For this it also tracks
-            * the rolling window statistics for a given element
-            */
+             * ValidationRules specify the behavior of the Validator if
+             * it encounters differences between the input Hash and
+             * the Schema defining it. The following rules may be set
+             *
+             * - injectDefaults: inject default values if a value for an element
+             *                   defined in the Schema is missing from the input Hash.
+             *
+             * - allowUnrootedConfiguration: allow for unrooted input Hash, i.e. one that
+             *                   doesn't have a classId as the key of the root node
+             *
+             * - allowAdditionalKeys: allow additional keys in the input Hash that do not map
+             *                   to elements specified in the schema
+             *
+             * - allowMissingKeys: allow for keys missing in the input Hash even if an element for
+             *                     this key is present in the schema
+             *
+             * - injectTimestamps for leaf elements:
+             *    - if injectTimestamps is false: no injection
+             *    - if injectTimestamps is true and forceInjectedTimestamp is false:
+             *                                    timestamp is injected, but timestamp attributes present are not
+             * overwritten
+             *    - if injectTimestamps and forceInjectedTimestamp are both true:
+             *                                    timestamp is injected and may overwrite previous timestamp attributes
+             *
+             * If any of the above scenarios are encountered during validation and the option is not
+             * set to true, i.e. the Validator is not allowed to resolve the issue, validation will
+             * fail.
+             *
+             * The Validator additionally perform warning and alarm condition checks and maintains
+             * a record of parameters currently in a warning or alarm condition. For this it also tracks
+             * the rolling window statistics for a given element
+             */
             struct ValidationRules {
-
                 /**
                  * The default constructor of validation rules is least restrictive, i.e. all
                  * resolution options are set to true.
                  */
                 ValidationRules()
-                    :
-                    injectDefaults(true), allowUnrootedConfiguration(true),
-                    allowAdditionalKeys(true), allowMissingKeys(true),
-                    injectTimestamps(true), forceInjectedTimestamp(false) {
-                }
+                    : injectDefaults(true),
+                      allowUnrootedConfiguration(true),
+                      allowAdditionalKeys(true),
+                      allowMissingKeys(true),
+                      injectTimestamps(true),
+                      forceInjectedTimestamp(false) {}
 
-                ValidationRules(bool injectDefaults_, bool allowUnrootedConfiguration_,
-                                bool allowAdditionalKeys_, bool allowMissingKeys_, bool injectTimestamps_,
-                                bool forceInjectedTimestamp_ = false)
-                    :
-                    injectDefaults(injectDefaults_), allowUnrootedConfiguration(allowUnrootedConfiguration_),
-                    allowAdditionalKeys(allowAdditionalKeys_), allowMissingKeys(allowMissingKeys_),
-                    injectTimestamps(injectTimestamps_), forceInjectedTimestamp(forceInjectedTimestamp_) {
-                }
+                ValidationRules(bool injectDefaults_, bool allowUnrootedConfiguration_, bool allowAdditionalKeys_,
+                                bool allowMissingKeys_, bool injectTimestamps_, bool forceInjectedTimestamp_ = false)
+                    : injectDefaults(injectDefaults_),
+                      allowUnrootedConfiguration(allowUnrootedConfiguration_),
+                      allowAdditionalKeys(allowAdditionalKeys_),
+                      allowMissingKeys(allowMissingKeys_),
+                      injectTimestamps(injectTimestamps_),
+                      forceInjectedTimestamp(forceInjectedTimestamp_) {}
 
                 bool injectDefaults;
                 bool allowUnrootedConfiguration;
@@ -135,7 +132,7 @@ namespace karabo {
              * Copy constructor
              * @param other
              */
-            Validator(const Validator & other);
+            Validator(const Validator& other);
 
             /**
              * Construct a Validator with given rules
@@ -169,35 +166,36 @@ namespace karabo {
              *
              * During validation the following input is checked to fulfill the following characteristics
              *
-             *  - all elements as defined by the Schema are present, if the validation rules do not allow for default injection
-             *    missing keys. In the first case validation of a missing element only passes if a default value for the element
-             *    has been defined in the schema
+             *  - all elements as defined by the Schema are present, if the validation rules do not allow for default
+             * injection missing keys. In the first case validation of a missing element only passes if a default value
+             * for the element has been defined in the schema
              *
-             *  - no elements in addition to those defined by the Schema are present, if the rules define that no additional keys
-             *    are allowed
+             *  - no elements in addition to those defined by the Schema are present, if the rules define that no
+             * additional keys are allowed
              *
-             *  - that the root element of the input Hash stands alone and represents the class id of a factorizable class
-             *    if an unrooted configuration is not allowed by the validation rules
+             *  - that the root element of the input Hash stands alone and represents the class id of a factorizable
+             * class if an unrooted configuration is not allowed by the validation rules
              *
              * In addition for the above "sanity" checks, the Validator performs the following tasks:
              *
-             *  - check scalar values against their alarm bounds. If rolling window statistics are enabled also check the
-             *    rolling window variance of the value
+             *  - check scalar values against their alarm bounds. If rolling window statistics are enabled also check
+             * the rolling window variance of the value
              *
-             *  - for sequence values validate that they fulfill their minimum and maximum size requirements if defined by
-             *    the Schema
+             *  - for sequence values validate that they fulfill their minimum and maximum size requirements if defined
+             * by the Schema
              *
              *  - inject timestamps for leaf elements of validatedOutput - details depending on ValidationRules:
              *    - if injectTimestamps is false: no injection, but timestamp attributes present in unvalidatedInput
              *                                    are transferred to validatedOutput
              *    - if injectTimestamps is true and forceInjectedTimestamp is false:
-             *                                    timestamp is injected, but timestamp attributes present in unvalidatedInput
-             *                                    are not overwritten, but are transferred to validatedOutput
+             *                                    timestamp is injected, but timestamp attributes present in
+             * unvalidatedInput are not overwritten, but are transferred to validatedOutput
              *    - if injectTimestamps and forceInjectedTimestamp are both true:
              *                                    timestamp is injected even if another timestamp is in attributes
              *                                    of unvalidatedInput
              */
-            std::pair<bool, std::string> validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp& timestamp = Timestamp());
+            std::pair<bool, std::string> validate(const Schema& schema, const Hash& unvalidatedInput,
+                                                  Hash& validatedOutput, const Timestamp& timestamp = Timestamp());
 
             /**
              * Check if the Validator is tracking any parameters in alarm.
@@ -229,32 +227,32 @@ namespace karabo {
              * @param scope
              * @return
              */
-            RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string & scope) const;
+            RollingWindowStatistics::ConstPointer getRollingStatistics(const std::string& scope) const;
 
-        private:
+           private:
+            void r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report,
+                            std::string scope = "");
 
-            void r_validate(
-                const Hash& master, const Hash& user, Hash& working,
-                std::ostringstream& report, std::string scope = "");
+            void validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report,
+                              std::string scope);
 
-            void validateLeaf(
-                const Hash::Node& masterNode, Hash::Node& workNode,
-                std::ostringstream& report, std::string scope);
-
-            void validateVectorOfHashesLeaf(
-                const Hash::Node& masterNode, Hash::Node& workNode,
-                std::ostringstream& report);
+            void validateVectorOfHashesLeaf(const Hash::Node& masterNode, Hash::Node& workNode,
+                                            std::ostringstream& report);
 
             void attachTimestampIfNotAlreadyThere(Hash::Node& node);
 
-            void assureRollingStatsInitialized(const std::string & scope, const unsigned int & evalInterval);
+            void assureRollingStatsInitialized(const std::string& scope, const unsigned int& evalInterval);
 
-            bool checkAndSetThresholdedAlarmCondition(const AlarmCondition& alarmCond, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
+            bool checkAndSetThresholdedAlarmCondition(const AlarmCondition& alarmCond, const Hash::Node& masterNode,
+                                                      Hash::Node& workNode, std::ostringstream& report,
+                                                      const std::string& scope, bool checkGreater);
 
-            bool checkAndSetThresholdedAlarmCondition(const AlarmCondition& alarmCond, double value, const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, const std::string & scope, bool checkGreater);
-
+            bool checkAndSetThresholdedAlarmCondition(const AlarmCondition& alarmCond, double value,
+                                                      const Hash::Node& masterNode, Hash::Node& workNode,
+                                                      std::ostringstream& report, const std::string& scope,
+                                                      bool checkGreater);
         };
-    }
-}
+    } // namespace util
+} // namespace karabo
 
-#endif	/* VALIDATOR_HH */
+#endif /* VALIDATOR_HH */

@@ -6,15 +6,15 @@
  */
 
 #ifndef DATALOGREADER_HH
-#define	DATALOGREADER_HH
+#define DATALOGREADER_HH
 
 #include <boost/filesystem.hpp>
 
 #include "karabo/core/Device.hh"
 #include "karabo/core/OkErrorFsm.hh"
+#include "karabo/net/Strand.hh"
 #include "karabo/util/DataLogUtils.hh"
 #include "karabo/util/Version.hh"
-#include "karabo/net/Strand.hh"
 
 /**
  * The main karabo namespace
@@ -38,9 +38,7 @@ namespace karabo {
          *
          */
         class DataLogReader : public karabo::core::Device<karabo::core::OkErrorFsm> {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(DataLogReader, "DataLogReader", "karabo-" + karabo::util::Version::getVersion())
 
             static void expectedParameters(karabo::util::Schema& schema);
@@ -49,8 +47,7 @@ namespace karabo {
 
             virtual ~DataLogReader();
 
-        protected:
-
+           protected:
             /**
              * Use this slot to get the history of a given property
              * @param deviceId for which to get the history for
@@ -64,8 +61,7 @@ namespace karabo {
              * of the property at timepoint signified in "v"'s attributes using a format compatible with
              * karabo::util::Timestamp::fromHashAttributes
              */
-            virtual void slotGetPropertyHistory(const std::string& deviceId,
-                                                const std::string& property,
+            virtual void slotGetPropertyHistory(const std::string& deviceId, const std::string& property,
                                                 const karabo::util::Hash& params);
 
             /**
@@ -89,26 +85,23 @@ namespace karabo {
              * the string form of the timepoint for the configuration returned and will be the latest timestamp among
              * the timestamps of the properties in the configuration returned.
              *
-             * An important note: if no configuration is found for the device at the timepoint (or before the timepoint),
-             * the third value in the reply will be false and the fourth will be the string form of the Epoch
-             * (01/01/1970 at 00:00:00).
+             * An important note: if no configuration is found for the device at the timepoint (or before the
+             * timepoint), the third value in the reply will be false and the fourth will be the string form of the
+             * Epoch (01/01/1970 at 00:00:00).
              */
             void slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
-        protected:
-            virtual void slotGetPropertyHistoryImpl(const std::string& deviceId,
-                                                    const std::string& property,
+           protected:
+            virtual void slotGetPropertyHistoryImpl(const std::string& deviceId, const std::string& property,
                                                     const karabo::util::Hash& params) = 0;
 
             virtual void slotGetConfigurationFromPastImpl(const std::string& deviceId,
                                                           const std::string& timepoint) = 0;
 
-        private: // Functions
-
+           private: // Functions
             void okStateOnEntry();
-
         };
-    }
-}
+    } // namespace devices
+} // namespace karabo
 
-#endif	/* DATALOGREADER_HH */
+#endif /* DATALOGREADER_HH */

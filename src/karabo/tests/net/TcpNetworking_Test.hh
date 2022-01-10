@@ -7,15 +7,13 @@
  */
 
 #ifndef TCPNETWORKING_TEST_HH
-#define	TCPNETWORKING_TEST_HH
-#include <karabo/util/Configurator.hh>
-#include <karabo/log/Logger.hh>
-
+#define TCPNETWORKING_TEST_HH
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <karabo/log/Logger.hh>
+#include <karabo/util/Configurator.hh>
+
 class TcpNetworking_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(TcpNetworking_Test);
     CPPUNIT_TEST(testClientServer);
     CPPUNIT_TEST(testWriteAsync);
@@ -23,7 +21,7 @@ class TcpNetworking_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testConsumeBytesAfterReadUntil);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     KARABO_CLASSINFO(TcpNetworking_Test, "TcpNetworking_Test", "1.0");
 
     TcpNetworking_Test();
@@ -31,7 +29,7 @@ public:
     void setUp();
     void tearDown();
 
-private:
+   private:
     void testClientServer();
 
     /**
@@ -49,5 +47,4 @@ private:
     void testConsumeBytesAfterReadUntil();
 };
 
-#endif	/* TCPNETWORKING_TEST_HH */
-
+#endif /* TCPNETWORKING_TEST_HH */

@@ -6,7 +6,7 @@
  */
 
 #ifndef SIGNALSLOTABLE_TEST_HH
-#define	SIGNALSLOTABLE_TEST_HH
+#define SIGNALSLOTABLE_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -15,7 +15,6 @@
 class SignalSlotDemo;
 
 class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(SignalSlotable_Test);
 
     CPPUNIT_TEST(testUniqueInstanceId);
@@ -37,13 +36,13 @@ class SignalSlotable_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     SignalSlotable_Test();
     virtual ~SignalSlotable_Test();
     void setUp();
     void tearDown();
 
-private:
+   private:
     void waitDemoOk(const boost::shared_ptr<SignalSlotDemo>& demo, int messageCalls, int trials = 10);
 
     void testUniqueInstanceId();
@@ -84,4 +83,4 @@ private:
     std::string m_amqpTimeoutBackup;
 };
 
-#endif	/* SIGNALSLOTABLE_TEST_HH */
+#endif /* SIGNALSLOTABLE_TEST_HH */

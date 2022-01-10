@@ -4,16 +4,16 @@ namespace karabo {
     namespace util {
 
 
-        RollingWindowStatistics::RollingWindowStatistics(unsigned int evalInterval) :
-            m_meanEstimate(0.), m_evalInterval(evalInterval), m_nvals(0),
-            m_s(0.), m_s2(0.),
-            m_vals(evalInterval, 0.) {
-        };
+        RollingWindowStatistics::RollingWindowStatistics(unsigned int evalInterval)
+            : m_meanEstimate(0.),
+              m_evalInterval(evalInterval),
+              m_nvals(0),
+              m_s(0.),
+              m_s2(0.),
+              m_vals(evalInterval, 0.){};
 
 
-        RollingWindowStatistics::~RollingWindowStatistics() {
-
-        }
+        RollingWindowStatistics::~RollingWindowStatistics() {}
 
 
         double RollingWindowStatistics::getRollingWindowVariance() const {
@@ -31,12 +31,10 @@ namespace karabo {
 
 
         void RollingWindowStatistics::update(double v) {
-
             const double varBeforeUpdate = getRollingWindowVariance();
             boost::unique_lock<boost::shared_mutex> lock(m_updateMutex);
             if (m_nvals == 0) {
                 m_meanEstimate = v;
-
             }
             const unsigned int index = m_nvals % m_evalInterval;
             const double vOldest = m_vals[index];
@@ -49,13 +47,13 @@ namespace karabo {
 
             lock.unlock();
             const double currentMean = getRollingWindowMean();
-            if ((currentMean - m_meanEstimate)*(currentMean - m_meanEstimate) / varBeforeUpdate > 25) updateEstimate(currentMean); // we update if we are 5sigma off
-
+            if ((currentMean - m_meanEstimate) * (currentMean - m_meanEstimate) / varBeforeUpdate > 25)
+                updateEstimate(currentMean); // we update if we are 5sigma off
         }
 
 
         void RollingWindowStatistics::updateEstimate(const double currentMean) {
-            //we need to go through all data in current estimate
+            // we need to go through all data in current estimate
             boost::unique_lock<boost::shared_mutex> lock(m_updateMutex);
             m_s = 0.;
             m_s2 = 0.;
@@ -67,15 +65,12 @@ namespace karabo {
                 m_s += diff;
                 m_s2 += diff * diff;
             }
-
         }
-        
-        unsigned long long RollingWindowStatistics::getInterval() const{
+
+        unsigned long long RollingWindowStatistics::getInterval() const {
             return m_evalInterval;
         }
 
 
-
-
-    }
-}
+    } // namespace util
+} // namespace karabo

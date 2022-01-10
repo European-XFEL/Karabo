@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Dims_Test.hh
  * Author: wrona
  *
@@ -6,30 +6,25 @@
  */
 
 #ifndef DIMS_TEST_HH
-#define	DIMS_TEST_HH
+#define DIMS_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
 
 class Dims_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(Dims_Test);
     CPPUNIT_TEST(testDims);
     CPPUNIT_TEST(testArrayTools);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     Dims_Test();
     virtual ~Dims_Test();
     void setUp();
     void tearDown();
 
-private:
-
+   private:
     void testDims();
     void testArrayTools();
-
 };
 
-#endif	/* DIMS_TEST_HH */
-
+#endif /* DIMS_TEST_HH */

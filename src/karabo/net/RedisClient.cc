@@ -1,8 +1,9 @@
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/VectorElement.hh"
+#include "karabo/net/RedisClient.hh"
+
 #include "karabo/log/Logger.hh"
 #include "karabo/net/EventLoop.hh"
-#include "karabo/net/RedisClient.hh"
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
 
 using namespace karabo::util;
 
@@ -14,25 +15,28 @@ namespace karabo {
 
 
         void RedisClient::expectedParameters(Schema& expected) {
+            VECTOR_STRING_ELEMENT(expected)
+                  .key("brokers")
+                  .displayedName("Broker URLs")
+                  .description("Vector of URLs {\"redis://hostname:port\",...}")
+                  .assignmentMandatory()
+                  .minSize(1)
+                  .commit();
 
-            VECTOR_STRING_ELEMENT(expected).key("brokers")
-                    .displayedName("Broker URLs")
-                    .description("Vector of URLs {\"redis://hostname:port\",...}")
-                    .assignmentMandatory()
-                    .minSize(1)
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("instanceId")
+                  .displayedName("Instance ID")
+                  .description("Instance ID")
+                  .assignmentOptional()
+                  .defaultValue("none")
+                  .commit();
 
-            STRING_ELEMENT(expected).key("instanceId")
-                    .displayedName("Instance ID")
-                    .description("Instance ID")
-                    .assignmentOptional().defaultValue("none")
-                    .commit();
-
-            STRING_ELEMENT(expected).key("domain")
-                    .displayedName("Domain")
-                    .description("Domain is root topic (former JMS topic)")
-                    .assignmentMandatory()
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("domain")
+                  .displayedName("Domain")
+                  .description("Domain is root topic (former JMS topic)")
+                  .assignmentMandatory()
+                  .commit();
 
             unsigned int defTimeout = 10;
             const char* env = getenv("KARABO_REDIS_TIMEOUT");
@@ -42,25 +46,27 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_INFO << "REDIS timeout from environment: " << defTimeout;
             }
 
-            UINT32_ELEMENT(expected).key("requestTimeout")
-                .displayedName("REDIS request timeout")
-                .description("REDIS request timeout in seconds")
-                .assignmentOptional().defaultValue(defTimeout)
-                .unit(Unit::SECOND)
-                .commit();
+            UINT32_ELEMENT(expected)
+                  .key("requestTimeout")
+                  .displayedName("REDIS request timeout")
+                  .description("REDIS request timeout in seconds")
+                  .assignmentOptional()
+                  .defaultValue(defTimeout)
+                  .unit(Unit::SECOND)
+                  .commit();
         }
 
 
         RedisClient::RedisClient(const karabo::util::Hash& input)
-                : m_ios(boost::make_shared<boost::asio::io_context>())
-                , m_thread()
-                , m_producer(boost::make_shared<redisclient::RedisAsyncClient>(*m_ios))
-                , m_consumer(boost::make_shared<redisclient::RedisAsyncClient>(*m_ios))
-                , m_resolver(*m_ios)
-                , m_brokerIndex(0)
-                , m_brokerUrls(input.get<std::vector<std::string> >("brokers"))
-                , m_binarySerializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin"))
-                , m_requestTimeout(input.get<std::uint32_t>("requestTimeout")) {
+            : m_ios(boost::make_shared<boost::asio::io_context>()),
+              m_thread(),
+              m_producer(boost::make_shared<redisclient::RedisAsyncClient>(*m_ios)),
+              m_consumer(boost::make_shared<redisclient::RedisAsyncClient>(*m_ios)),
+              m_resolver(*m_ios),
+              m_brokerIndex(0),
+              m_brokerUrls(input.get<std::vector<std::string> >("brokers")),
+              m_binarySerializer(karabo::io::BinarySerializer<karabo::util::Hash>::create("Bin")),
+              m_requestTimeout(input.get<std::uint32_t>("requestTimeout")) {
             run();
         }
 
@@ -79,12 +85,7 @@ namespace karabo {
             auto prom = std::make_shared<std::promise<boost::system::error_code> >();
             auto fut = prom->get_future();
             // Calls connectAsycn passing as argument a lambda that sets the promise value
-            connectAsync(
-                [prom]
-                (const boost::system::error_code& ec) {
-                    prom->set_value(ec);
-                }
-            );
+            connectAsync([prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             auto status = fut.wait_for(std::chrono::seconds(m_requestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
@@ -108,10 +109,9 @@ namespace karabo {
             // Resolve hostname in DNS ...
             try {
                 boost::asio::ip::tcp::resolver::query query(boost::asio::ip::tcp::v4(), host, sport);
-                m_resolver.async_resolve(query, bind_weak(&RedisClient::resolveHandler, this,
-                                                          boost::asio::placeholders::error,
-                                                          boost::asio::placeholders::iterator,
-                                                          onConnect));
+                m_resolver.async_resolve(query,
+                                         bind_weak(&RedisClient::resolveHandler, this, boost::asio::placeholders::error,
+                                                   boost::asio::placeholders::iterator, onConnect));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -119,49 +119,46 @@ namespace karabo {
 
 
         void RedisClient::resolveHandler(const boost::system::error_code& e,
-                                         boost::asio::ip::tcp::resolver::iterator it,
-                                         const AsyncHandler& onConnect) {
+                                         boost::asio::ip::tcp::resolver::iterator it, const AsyncHandler& onConnect) {
             try {
-                auto conHandler =
-                    [this, wptr{weak_from_this()}, onConnect{std::move(onConnect)}]
-                    (const boost::system::error_code& ec) {
-                        auto guard = wptr.lock();
-                        if (!guard) return;
-                        // 'this' is valid till end of this lambda
-                        if (ec) {
-                            m_producer->disconnect();
-                            // Failed to connect ... try next url
-                            if (m_brokerIndex < m_brokerUrls.size() - 1) {
-                                createClientForUrl(m_brokerUrls[++m_brokerIndex], onConnect);
-                                return;
-                            }
-                            // The whole list failed ... inform user via callback
-                        }
-                        onConnect(ec);
-                    };
-                
-                auto proHandler =
-                    [this, wptr{weak_from_this()}, it, conHandler{std::move(conHandler)}, onConnect{std::move(onConnect)}]
-                    (const boost::system::error_code& ec) {
-                        // attempt to convert to shared pointer
-                        auto guard = wptr.lock();
-                        if (!guard) return;
-                        // 'guard' prevents the destructor to be called, so ...
-                        // 'this' is valid till end of lambda and allows to refer
-                        // to class members directly
-                        if (ec) {
-                            // Failed to connect ... try next url
-                            if (m_brokerIndex < m_brokerUrls.size() - 1) {
-                                createClientForUrl(m_brokerUrls[++m_brokerIndex], onConnect);
-                                return;
-                            }
-                            // The whole list failed ... inform user via callback
-                            onConnect(ec);
+                auto conHandler = [this, wptr{weak_from_this()},
+                                   onConnect{std::move(onConnect)}](const boost::system::error_code& ec) {
+                    auto guard = wptr.lock();
+                    if (!guard) return;
+                    // 'this' is valid till end of this lambda
+                    if (ec) {
+                        m_producer->disconnect();
+                        // Failed to connect ... try next url
+                        if (m_brokerIndex < m_brokerUrls.size() - 1) {
+                            createClientForUrl(m_brokerUrls[++m_brokerIndex], onConnect);
                             return;
                         }
-                        // Producer is connected successfully. Connect consumer...
-                        m_consumer->connect(*it, conHandler);
-                    };
+                        // The whole list failed ... inform user via callback
+                    }
+                    onConnect(ec);
+                };
+
+                auto proHandler = [this, wptr{weak_from_this()}, it, conHandler{std::move(conHandler)},
+                                   onConnect{std::move(onConnect)}](const boost::system::error_code& ec) {
+                    // attempt to convert to shared pointer
+                    auto guard = wptr.lock();
+                    if (!guard) return;
+                    // 'guard' prevents the destructor to be called, so ...
+                    // 'this' is valid till end of lambda and allows to refer
+                    // to class members directly
+                    if (ec) {
+                        // Failed to connect ... try next url
+                        if (m_brokerIndex < m_brokerUrls.size() - 1) {
+                            createClientForUrl(m_brokerUrls[++m_brokerIndex], onConnect);
+                            return;
+                        }
+                        // The whole list failed ... inform user via callback
+                        onConnect(ec);
+                        return;
+                    }
+                    // Producer is connected successfully. Connect consumer...
+                    m_consumer->connect(*it, conHandler);
+                };
                 if (!e) {
                     // Call Redis connect... asynchronously
                     m_producer->connect(*it, proHandler);
@@ -183,7 +180,7 @@ namespace karabo {
                 }
                 return;
             }
-            //Concurrent calls to this function should be serialized
+            // Concurrent calls to this function should be serialized
             std::lock_guard<std::mutex> lock(m_connectionMutex);
 
             // If the client is already connected, calls the m_onConnect handler
@@ -194,7 +191,7 @@ namespace karabo {
                 return;
             }
 
-            m_brokerIndex = 0;  // start connection attempts using m_brokerUrls
+            m_brokerIndex = 0; // start connection attempts using m_brokerUrls
             createClientForUrl(m_brokerUrls[m_brokerIndex], onConnect);
         }
 
@@ -215,17 +212,13 @@ namespace karabo {
 
         void RedisClient::disconnectAsync(const AsyncHandler& onComplete) {
             // Run on event loop to make this function non-blocking ...
-            post
-            (
-                [this, wptr{weak_from_this()}, onComplete]
-                () {
-                    auto guard = wptr.lock();
-                    if (!guard) return;
-                    m_producer->disconnect();
-                    m_consumer->disconnect();
-                    onComplete(KARABO_ERROR_CODE_SUCCESS);
-                }
-            );
+            post([this, wptr{weak_from_this()}, onComplete]() {
+                auto guard = wptr.lock();
+                if (!guard) return;
+                m_producer->disconnect();
+                m_consumer->disconnect();
+                onComplete(KARABO_ERROR_CODE_SUCCESS);
+            });
         }
 
 
@@ -248,9 +241,7 @@ namespace karabo {
             if (!m_consumer->isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
             auto prom = std::make_shared<std::promise<boost::system::error_code> >();
             auto future = prom->get_future();
-            subscribeAsync(topic, onRead, [prom](const boost::system::error_code& ec) {
-                prom->set_value(ec);
-            });
+            subscribeAsync(topic, onRead, [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             auto status = future.wait_for(std::chrono::seconds(m_requestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
@@ -259,8 +250,7 @@ namespace karabo {
         }
 
 
-        void RedisClient::subscribeAsync(const std::string& topic,
-                                         const ReadHashHandler& onRead,
+        void RedisClient::subscribeAsync(const std::string& topic, const ReadHashHandler& onRead,
                                          const AsyncHandler& onComplete) {
             if (!m_consumer->isConnected()) {
                 if (onComplete) post(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
@@ -272,16 +262,16 @@ namespace karabo {
                 return;
             }
             // Subscribe to the requested topic
-            auto completionHandler = [this, onComplete{std::move(onComplete)}] (const redisclient::RedisValue& value) {
+            auto completionHandler = [this, onComplete{std::move(onComplete)}](const redisclient::RedisValue& value) {
                 if (value.isOk()) {
-                    if (onComplete)   post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                    if (onComplete) post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
                 } else {
                     KARABO_LOG_FRAMEWORK_ERROR << "subscribe error : \"" << value.toString() << "\"";
-                    if (onComplete)   post(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
+                    if (onComplete) post(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
                 }
             };
-            auto msgHandler = [this, wptr{weak_from_this()}, topic, onRead{std::move(onRead)}]
-                              (const std::vector<char>& payload) {
+            auto msgHandler = [this, wptr{weak_from_this()}, topic,
+                               onRead{std::move(onRead)}](const std::vector<char>& payload) {
                 auto guard = wptr.lock();
                 if (!guard) return;
                 // 'guard' prevents object destruction, so 'this' is valid
@@ -295,12 +285,12 @@ namespace karabo {
             if (found == std::string::npos) {
                 // topic -> normal channelName
                 redisclient::RedisAsyncClient::Handle handle =
-                        m_consumer->subscribe(topic, msgHandler, completionHandler);
+                      m_consumer->subscribe(topic, msgHandler, completionHandler);
                 m_subscriptionsMap.emplace(topic, std::make_tuple(false, handle));
             } else {
                 // topic -> pattern with wildcard character
                 redisclient::RedisAsyncClient::Handle handle =
-                        m_consumer->psubscribe(topic, msgHandler, completionHandler);
+                      m_consumer->psubscribe(topic, msgHandler, completionHandler);
                 m_subscriptionsMap.emplace(topic, std::make_tuple(true, handle));
             }
         }
@@ -310,9 +300,7 @@ namespace karabo {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
             auto prom = std::make_shared<std::promise<boost::system::error_code> >();
             auto fut = prom->get_future();
-            subscribeAsync(params, [prom] (boost::system::error_code ec) {
-                prom->set_value(ec);
-            });
+            subscribeAsync(params, [prom](boost::system::error_code ec) { prom->set_value(ec); });
             auto status = fut.wait_for(std::chrono::seconds(m_requestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
@@ -322,10 +310,11 @@ namespace karabo {
 
 
         void RedisClient::subscribeAsync(const RedisTopicSubOptions& params, const AsyncHandler& onComplete) {
-            // Let's restrict artificially the possible number of params.... 
-            if (params.size() >= 64) throw KARABO_PARAMETER_EXCEPTION("subscribeAsync: cannot handle too many subscriptions");
+            // Let's restrict artificially the possible number of params....
+            if (params.size() >= 64)
+                throw KARABO_PARAMETER_EXCEPTION("subscribeAsync: cannot handle too many subscriptions");
             if (!isConnected()) {
-                if (onComplete) post(boost::bind(onComplete,KARABO_ERROR_CODE_NOT_CONNECTED));
+                if (onComplete) post(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
                 return;
             }
 
@@ -338,16 +327,17 @@ namespace karabo {
                 std::string topic;
                 ReadHashHandler onRead;
                 std::tie(topic, onRead) = param;
-                subscribeAsync(topic, onRead, [this, wptr{weak_from_this()}, n, bits, onComplete{std::move(onComplete)}]
-                                              (const boost::system::error_code& e) {
-                    auto guard = wptr.lock();
-                    if (!guard) return;
-                    std::lock_guard<std::mutex> lock(m_subscribeMutex);
-                    *bits |= (1ULL << n);
-                    if (*bits == -1) {
-                        post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
-                    }
-                });
+                subscribeAsync(topic, onRead,
+                               [this, wptr{weak_from_this()}, n, bits,
+                                onComplete{std::move(onComplete)}](const boost::system::error_code& e) {
+                                   auto guard = wptr.lock();
+                                   if (!guard) return;
+                                   std::lock_guard<std::mutex> lock(m_subscribeMutex);
+                                   *bits |= (1ULL << n);
+                                   if (*bits == -1) {
+                                       post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                                   }
+                               });
                 n++;
             }
         }
@@ -357,36 +347,33 @@ namespace karabo {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
             auto prom = std::make_shared<std::promise<boost::system::error_code> >();
             auto future = prom->get_future();
-            unsubscribeAsync(topic, [prom] (const boost::system::error_code& ec) {
-                prom->set_value(ec);
-            });
+            unsubscribeAsync(topic, [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             auto status = future.wait_for(std::chrono::seconds(m_requestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
             }
             return future.get();
         }
-        
+
 
         void RedisClient::unsubscribeAsync(const std::string& topic, const AsyncHandler& onComplete) {
             if (!isConnected()) {
                 if (onComplete) post(boost::bind(onComplete, KARABO_ERROR_CODE_NOT_CONNECTED));
                 return;
             }
-            auto completionHandler =
-            [this, wptr{std::move(weak_from_this())}, onComplete{std::move(onComplete)}]
-            (const redisclient::RedisValue& value) {
+            auto completionHandler = [this, wptr{std::move(weak_from_this())},
+                                      onComplete{std::move(onComplete)}](const redisclient::RedisValue& value) {
                 auto guard = wptr.lock();
                 if (!guard) return;
                 if (value.isOk()) {
-                    if (onComplete)   post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
+                    if (onComplete) post(boost::bind(onComplete, KARABO_ERROR_CODE_SUCCESS));
                 } else {
                     KARABO_LOG_FRAMEWORK_ERROR << "unsubscribe error : \"" << value.toString() << "\"";
-                    if (onComplete)   post(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
+                    if (onComplete) post(boost::bind(onComplete, KARABO_ERROR_CODE_IO_ERROR));
                 }
             };
             std::lock_guard<std::mutex> lock(m_subscriptionsMutex);
-            // Check if there is a subscription to the topic 
+            // Check if there is a subscription to the topic
             auto it = m_subscriptionsMap.find(topic);
             if (it != m_subscriptionsMap.end()) {
                 bool pattern;
@@ -406,9 +393,7 @@ namespace karabo {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
             auto prom = std::make_shared<std::promise<boost::system::error_code> >();
             auto fut = prom->get_future();
-            unsubscribeAsync(topics, [prom] (const boost::system::error_code& ec) {
-                prom->set_value(ec);
-            });
+            unsubscribeAsync(topics, [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             auto status = fut.wait_for(std::chrono::seconds(m_requestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
@@ -435,8 +420,8 @@ namespace karabo {
                 redisclient::RedisAsyncClient::Handle handle;
                 std::tie(pattern, handle) = it->second;
                 m_subscriptionsMap.erase(it);
-                unsubscribeAsync(topic, [this, wptr{weak_from_this()}, n, bits, onComplete{std::move(onComplete)}]
-                                        (const boost::system::error_code& ec) {
+                unsubscribeAsync(topic, [this, wptr{weak_from_this()}, n, bits,
+                                         onComplete{std::move(onComplete)}](const boost::system::error_code& ec) {
                     auto guard = wptr.lock();
                     if (!guard) return;
                     std::lock_guard<std::mutex> lock(m_subscribeMutex);
@@ -455,9 +440,7 @@ namespace karabo {
             if (!isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
             auto prom = std::make_shared<std::promise<boost::system::error_code> >();
             auto fut = prom->get_future();
-            unsubscribeAllAsync([prom] (const boost::system::error_code& ec) {
-                prom->set_value(ec);
-            });
+            unsubscribeAllAsync([prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             auto status = fut.wait_for(std::chrono::seconds(m_requestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
@@ -489,14 +472,12 @@ namespace karabo {
         }
 
 
-        boost::system::error_code RedisClient::publish(
-                const std::string& topic, const karabo::util::Hash::Pointer& msg) {
+        boost::system::error_code RedisClient::publish(const std::string& topic,
+                                                       const karabo::util::Hash::Pointer& msg) {
             if (!m_producer->isConnected()) return KARABO_ERROR_CODE_NOT_CONNECTED;
             auto prom = std::make_shared<std::promise<boost::system::error_code> >();
             auto fut = prom->get_future();
-            publishAsync(topic, msg, [prom](const boost::system::error_code& ec) {
-                prom->set_value(ec);
-            });
+            publishAsync(topic, msg, [prom](const boost::system::error_code& ec) { prom->set_value(ec); });
             auto status = fut.wait_for(std::chrono::seconds(m_requestTimeout));
             if (status == std::future_status::timeout) {
                 return KARABO_ERROR_CODE_TIMED_OUT;
@@ -505,8 +486,7 @@ namespace karabo {
         }
 
 
-        void RedisClient::publishAsync(const std::string& topic,
-                                       const karabo::util::Hash::Pointer& msg,
+        void RedisClient::publishAsync(const std::string& topic, const karabo::util::Hash::Pointer& msg,
                                        const AsyncHandler& onComplete) {
             auto payload = std::vector<char>();
             if (msg) m_binarySerializer->save(*msg, payload); // msg -> payload
@@ -542,15 +522,11 @@ namespace karabo {
 
 
         void RedisClient::run() {
-
-            m_thread = boost::make_shared<boost::thread>(
-                    [this]
-                    () {
-                        boost::asio::io_context::work work(*m_ios);
-                        m_ios->run();
-                    });
+            m_thread = boost::make_shared<boost::thread>([this]() {
+                boost::asio::io_context::work work(*m_ios);
+                m_ios->run();
+            });
         }
 
-    }
-}
-
+    } // namespace net
+} // namespace karabo

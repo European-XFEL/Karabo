@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   TimeClasses_Test.hh
  * Author: boukhele
  *
@@ -6,15 +6,13 @@
  */
 
 #ifndef TIMECLASSES_TEST_HH
-#define	TIMECLASSES_TEST_HH
-#include <karabo/util/Configurator.hh>
-#include <karabo/log/Logger.hh>
-
+#define TIMECLASSES_TEST_HH
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <karabo/log/Logger.hh>
+#include <karabo/util/Configurator.hh>
+
 class TimeClasses_Test : public CPPUNIT_NS::TestFixture {
-
-
     CPPUNIT_TEST_SUITE(TimeClasses_Test);
     CPPUNIT_TEST(testEpochstamp);
     CPPUNIT_TEST(testEpochstampConversion);
@@ -25,8 +23,7 @@ class TimeClasses_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testTimestamp);
     CPPUNIT_TEST_SUITE_END();
 
-public:
-
+   public:
     KARABO_CLASSINFO(TimeClasses_Test, "TimeClasses_Test", "1.0");
 
     TimeClasses_Test();
@@ -34,7 +31,7 @@ public:
     void setUp();
     void tearDown();
 
-private:
+   private:
     void testEpochstamp();
     void testEpochstampConversion();
     void testTimePeriod();
@@ -44,5 +41,4 @@ private:
     void testTimestamp();
 };
 
-#endif	/* TIMECLASSES_TEST_HH */
-
+#endif /* TIMECLASSES_TEST_HH */

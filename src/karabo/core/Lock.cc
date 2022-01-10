@@ -4,7 +4,8 @@ namespace karabo {
     namespace core {
 
 
-        Lock::Lock(boost::weak_ptr<karabo::xms::SignalSlotable> sigSlot, const std::string& deviceId, bool recursive) : m_sigSlot(sigSlot), m_deviceId(deviceId), m_valid(true) {
+        Lock::Lock(boost::weak_ptr<karabo::xms::SignalSlotable> sigSlot, const std::string& deviceId, bool recursive)
+            : m_sigSlot(sigSlot), m_deviceId(deviceId), m_valid(true) {
             lock_impl(recursive);
         }
 
@@ -39,17 +40,18 @@ namespace karabo {
             boost::shared_ptr<karabo::xms::SignalSlotable> p = m_sigSlot.lock();
             if (p) {
                 const std::string& ownInstance = p->getInstanceId();
-                //check that lock is empty
+                // check that lock is empty
                 {
                     try {
-
                         karabo::util::Hash hash;
 
                         p->request(m_deviceId, "slotGetConfiguration").timeout(m_lockQueryTimeout).receive(hash);
 
                         const std::string& lockHolder = hash.get<std::string>("lockedBy");
-                        if ((!recursive && lockHolder != "") || (recursive && lockHolder != ownInstance && lockHolder != "")) {
-                            throw KARABO_LOCK_EXCEPTION("Could not acquire lock on " + m_deviceId + ", it is locked by " + lockHolder);
+                        if ((!recursive && lockHolder != "") ||
+                            (recursive && lockHolder != ownInstance && lockHolder != "")) {
+                            throw KARABO_LOCK_EXCEPTION("Could not acquire lock on " + m_deviceId +
+                                                        ", it is locked by " + lockHolder);
                         }
                     } catch (const karabo::util::ParameterException& e) {
                         KARABO_RETHROW_AS(KARABO_LOCK_EXCEPTION("Could not acquire lock on " + m_deviceId));
@@ -57,22 +59,22 @@ namespace karabo {
                 }
                 // try setting
 
-                p->request(m_deviceId, "slotReconfigure", karabo::util::Hash("lockedBy", ownInstance)).timeout(m_lockQueryTimeout).receive();
+                p->request(m_deviceId, "slotReconfigure", karabo::util::Hash("lockedBy", ownInstance))
+                      .timeout(m_lockQueryTimeout)
+                      .receive();
 
-                //check result
+                // check result
                 {
                     karabo::util::Hash hash;
                     p->request(m_deviceId, "slotGetConfiguration").timeout(m_lockQueryTimeout).receive(hash);
                     const std::string& lockHolder = hash.get<std::string>("lockedBy");
                     if (ownInstance != lockHolder) {
-                        throw KARABO_LOCK_EXCEPTION("Could not acquire lock on " + m_deviceId + ", it is locked by " + lockHolder);
+                        throw KARABO_LOCK_EXCEPTION("Could not acquire lock on " + m_deviceId + ", it is locked by " +
+                                                    lockHolder);
                     }
                 }
                 m_valid = true;
             }
-
-
-
         }
 
 
@@ -80,7 +82,7 @@ namespace karabo {
             if (m_valid) {
                 boost::shared_ptr<karabo::xms::SignalSlotable> p = m_sigSlot.lock();
                 if (p) {
-                    //now we can clear the lock
+                    // now we can clear the lock
                     p->call(m_deviceId, "slotClearLock");
                 }
             }
@@ -102,5 +104,5 @@ namespace karabo {
             return false;
         };
 
-    }
-}
+    } // namespace core
+} // namespace karabo

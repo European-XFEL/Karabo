@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   TimeProfiler.hh
  * Author: boukhelef
  *
@@ -6,7 +6,7 @@
  */
 
 #ifndef TIMEPROFILER_HH
-#define	TIMEPROFILER_HH
+#define TIMEPROFILER_HH
 
 #include <stack>
 #include <string>
@@ -18,11 +18,10 @@ namespace karabo {
     namespace util {
 
         class TimeProfiler {
-
-            public:
+           public:
             /**
              * Constructor creates a profiler with a given name
-             * @param name profiler's name 
+             * @param name profiler's name
              */
             TimeProfiler(const std::string& name);
             TimeProfiler(const karabo::util::Hash& hash);
@@ -51,7 +50,7 @@ namespace karabo {
             void startPeriod();
 
             /**
-             * Start an new period with the given name. Named periods can be nested, 
+             * Start an new period with the given name. Named periods can be nested,
              * i.e. named periods can cover other named and anonymous periods
              * @param periodname period's name
              */
@@ -103,36 +102,37 @@ namespace karabo {
              * Serialize the profiler into string using specific time format.
              * @param format time format
              * @param level deepest level
-             * @return string object holding the string representation 
+             * @return string object holding the string representation
              */
             std::string format(const std::string& fmt, int level = std::numeric_limits<int>::max()) const;
 
             /**
              * Serialize the profiler as SQL insert query, in preparation to be inserted into database.
-             * @return string object holding the SQL query string 
+             * @return string object holding the SQL query string
              */
             std::string sql() const;
 
             /**
-             * Serialize the profiler into ostream object using default time format, 
+             * Serialize the profiler into ostream object using default time format,
              * i.e X.Y (where X is total seconds, and Y is fraction in nanoseconds)
              * @param os output stream object
              * @param format time format
              * @param level deepest level
              */
             void serialize(std::ostream& os, int level = std::numeric_limits<int>::max()) const;
-            friend std::ostream& operator<<(std::ostream& os, const TimeProfiler & profiler);
+            friend std::ostream& operator<<(std::ostream& os, const TimeProfiler& profiler);
 
-        private:
+           private:
             std::string m_name;
             karabo::util::Hash m_periods;
             std::stack<karabo::util::Hash*> m_stack;
 
-            static void sql(std::ostream& os, const std::string& name, const karabo::util::Hash& period, const int parent_key);
+            static void sql(std::ostream& os, const std::string& name, const karabo::util::Hash& period,
+                            const int parent_key);
 
             static void compact(karabo::util::Hash& period);
         };
-    }
-}
+    } // namespace util
+} // namespace karabo
 
-#endif	/* TIMEPROFILER_HH */
+#endif /* TIMEPROFILER_HH */

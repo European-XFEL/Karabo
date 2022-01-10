@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   PythonInputHandler.hh
  * Author: esenov
  *
@@ -6,15 +6,16 @@
  */
 
 #ifndef KARATHON_PYTHONINPUTHANDLER_HH
-#define	KARATHON_PYTHONINPUTHANDLER_HH
+#define KARATHON_PYTHONINPUTHANDLER_HH
 
-#include <boost/python.hpp>
 #include <boost/any.hpp>
-#include <karabo/util/Configurator.hh>
+#include <boost/python.hpp>
 #include <karabo/io/AbstractInput.hh>
 #include <karabo/io/InputHandler.hh>
-#include "Wrapper.hh"
+#include <karabo/util/Configurator.hh>
+
 #include "ScopedGILAcquire.hh"
+#include "Wrapper.hh"
 
 namespace bp = boost::python;
 
@@ -22,19 +23,15 @@ namespace karathon {
 
     template <class InputType>
     class PythonInputHandler : public karabo::io::InputHandler {
+       public:
+        KARABO_CLASSINFO(PythonInputHandler, "PythonInputHandler" + std::string(typeid(InputType).name()), "1.0")
 
-        public:
+        PythonInputHandler() {}
 
-        KARABO_CLASSINFO(PythonInputHandler, "PythonInputHandler" + std::string(typeid (InputType).name()), "1.0")
+        PythonInputHandler(const karabo::io::AbstractInput::Pointer& input)
+            : m_input(boost::static_pointer_cast<InputType>(input)) {}
 
-        PythonInputHandler() {
-        }
-
-        PythonInputHandler(const karabo::io::AbstractInput::Pointer& input) : m_input(boost::static_pointer_cast<InputType>(input)) {
-        }
-
-        virtual ~PythonInputHandler() {
-        }
+        virtual ~PythonInputHandler() {}
 
         void registerIOEventHandler(const boost::any& ioEventHandler) {
             bp::object handler = boost::any_cast<bp::object>(ioEventHandler);
@@ -70,16 +67,14 @@ namespace karathon {
 
         void triggerEndOfStreamEvent() {
             ScopedGILAcquire gil;
-            if (m_endOfStreamEventHandler != bp::object())
-                m_endOfStreamEventHandler();
+            if (m_endOfStreamEventHandler != bp::object()) m_endOfStreamEventHandler();
         }
 
-    private:
+       private:
         boost::weak_ptr<InputType> m_input;
         bp::object m_ioEventHandler;
         bp::object m_endOfStreamEventHandler;
     };
-}
+} // namespace karathon
 
-#endif	/* KARATHON_PYTHONINPUTHANDLER_HH */
-
+#endif /* KARATHON_PYTHONINPUTHANDLER_HH */

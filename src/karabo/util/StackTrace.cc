@@ -17,8 +17,8 @@
 #endif
 
 #ifdef _HAVE_EXECINFO_H_
-#include <execinfo.h>
 #include <cxxabi.h>
+#include <execinfo.h>
 #endif
 
 #endif
@@ -35,21 +35,20 @@ namespace karabo {
             int status;
             char temp[256];
             char* demangled;
-            //Try to demangle a c++ name
+            // Try to demangle a c++ name
             if (1 == sscanf(symbol, "%*[^(]%*[^_]%127[^)+]", temp)) {
                 if (NULL != (demangled = abi::__cxa_demangle(temp, NULL, &size, &status))) {
                     std::string result(demangled);
                     free(demangled);
                     return result;
                 }
-
             }
-            //if that fails, try to get a regular c symbol
+            // if that fails, try to get a regular c symbol
             if (sscanf(symbol, "%250s", temp) == 1) {
                 return temp;
             }
 
-            //if all doesn't work, just return the symbol
+            // if all doesn't work, just return the symbol
             return symbol;
         }
 
@@ -57,11 +56,11 @@ namespace karabo {
         void StackTrace::print(std::ostream& os) {
             const size_t TRACE_SIZE = 128;
 
-            void * array[TRACE_SIZE];
-            int trace_size = backtrace(array, (sizeof (array) / sizeof (array[0])));
-            char ** symbols = backtrace_symbols(array, trace_size);
+            void* array[TRACE_SIZE];
+            int trace_size = backtrace(array, (sizeof(array) / sizeof(array[0])));
+            char** symbols = backtrace_symbols(array, trace_size);
             for (int i = 0; i < trace_size; ++i) {
-                //TODO: demangle symbols from other libraries
+                // TODO: demangle symbols from other libraries
                 os << demangle(symbols[i]) << endl;
             }
 
@@ -78,5 +77,5 @@ namespace karabo {
             trace.print(os);
             return os;
         }
-    }
-}
+    } // namespace util
+} // namespace karabo

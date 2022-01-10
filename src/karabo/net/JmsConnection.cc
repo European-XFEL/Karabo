@@ -1,20 +1,22 @@
-/* 
+/*
  * File:   JmsConnection.cc
  * Author: heisenb
- * 
+ *
  * Created on July 15, 2016, 4:08 PM
  */
 
-#include "karabo/util/SimpleElement.hh"
-#include "karabo/util/VectorElement.hh"
+#include "JmsConnection.hh"
+
+#include <openmqc/mqcrt.h>
+
 #include <karabo/log/Logger.hh>
 
-#include "utils.hh"
-#include "JmsConnection.hh"
+#include "EventLoop.hh"
 #include "JmsConsumer.hh"
 #include "JmsProducer.hh"
-#include "EventLoop.hh"
-#include <openmqc/mqcrt.h>
+#include "karabo/util/SimpleElement.hh"
+#include "karabo/util/VectorElement.hh"
+#include "utils.hh"
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::net::JmsConnection)
 
@@ -25,31 +27,29 @@ namespace karabo {
         using namespace boost;
 
         void JmsConnection::expectedParameters(Schema& s) {
-
-            VECTOR_STRING_ELEMENT(s).key("brokers")
-                    .displayedName("Brokers")
-                    .description("Brokers must be provided as URLs of format: tcp://<host>:<port>. Extra URLs serve as fallback.")
-                    .assignmentOptional().defaultValueFromString("tcp://exfl-broker.desy.de:7777")
-                    .minSize(1ul)
-                    .commit();
+            VECTOR_STRING_ELEMENT(s)
+                  .key("brokers")
+                  .displayedName("Brokers")
+                  .description(
+                        "Brokers must be provided as URLs of format: tcp://<host>:<port>. Extra URLs serve as "
+                        "fallback.")
+                  .assignmentOptional()
+                  .defaultValueFromString("tcp://exfl-broker.desy.de:7777")
+                  .minSize(1ul)
+                  .commit();
         }
 
 
-        JmsConnection::JmsConnection(const karabo::util::Hash& config) :
-            JmsConnection(config.get<std::vector<std::string>>("brokers")) {
-        }
+        JmsConnection::JmsConnection(const karabo::util::Hash& config)
+            : JmsConnection(config.get<std::vector<std::string>>("brokers")) {}
 
 
         JmsConnection::JmsConnection(const std::string& brokerUrls)
-            : JmsConnection(fromString<std::string, std::vector>(brokerUrls)) {
-
-        }
+            : JmsConnection(fromString<std::string, std::vector>(brokerUrls)) {}
 
 
         JmsConnection::JmsConnection(const std::vector<std::string>& brokerUrls)
-            : m_availableBrokerUrls(brokerUrls),
-            m_reconnectStrand(EventLoop::getIOService()) {
-
+            : m_availableBrokerUrls(brokerUrls), m_reconnectStrand(EventLoop::getIOService()) {
             this->setFlagDisconnected();
 
             parseBrokerUrl();
@@ -61,7 +61,6 @@ namespace karabo {
 
             MQSetLoggingFunc(&karabo::net::JmsConnection::onOpenMqLog, 0);
             MQSetStdErrLogLevel(MQ_LOG_OFF);
-
         }
 
 
@@ -71,7 +70,6 @@ namespace karabo {
 
 
         void JmsConnection::parseBrokerUrl() {
-
             using std::string;
 
 
@@ -83,10 +81,8 @@ namespace karabo {
 
 
         void JmsConnection::connect() {
-
             MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
             while (true) {
-
                 if (m_brokerAddresses.empty()) {
                     throw KARABO_NETWORK_EXCEPTION("No JMS broker address given.");
                 }
@@ -100,7 +96,8 @@ namespace karabo {
                     // Set all properties
                     setConnectionProperties(scheme, host, port, propertiesHandle);
                     MQStatus status;
-                    status = MQCreateConnection(propertiesHandle, "guest", "guest", NULL /*clientID*/, &onException, this, &m_connectionHandle);
+                    status = MQCreateConnection(propertiesHandle, "guest", "guest", NULL /*clientID*/, &onException,
+                                                this, &m_connectionHandle);
                     if (MQStatusIsError(status) == MQ_TRUE) {
                         KARABO_LOG_FRAMEWORK_WARN << "Failed to open TCP connection to broker " << url;
                         MQFreeProperties(propertiesHandle);
@@ -119,10 +116,8 @@ namespace karabo {
         }
 
 
-        void JmsConnection::setConnectionProperties(const std::string& scheme, const std::string& host,
-                                                    const int port,
+        void JmsConnection::setConnectionProperties(const std::string& scheme, const std::string& host, const int port,
                                                     const MQPropertiesHandle& propertiesHandle) const {
-
             MQ_SAFE_CALL(MQSetStringProperty(propertiesHandle, MQ_CONNECTION_TYPE_PROPERTY, scheme.c_str()));
             MQ_SAFE_CALL(MQSetStringProperty(propertiesHandle, MQ_BROKER_HOST_PROPERTY, host.c_str()));
             MQ_SAFE_CALL(MQSetInt32Property(propertiesHandle, MQ_BROKER_PORT_PROPERTY, port));
@@ -134,8 +129,9 @@ namespace karabo {
         }
 
 
-        void JmsConnection::onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData) {
-            JmsConnection* that = reinterpret_cast<JmsConnection*> (callbackData);
+        void JmsConnection::onException(const MQConnectionHandle connectionHandle, MQStatus status,
+                                        void* callbackData) {
+            JmsConnection* that = reinterpret_cast<JmsConnection*>(callbackData);
             KARABO_LOG_FRAMEWORK_ERROR << "Lost TCP connection to broker " << that->m_connectedBrokerUrl;
             that->setFlagDisconnected();
             // Try to reconnect
@@ -162,7 +158,6 @@ namespace karabo {
 
 
         void JmsConnection::disconnect() {
-
             MQ_SAFE_CALL(MQStopConnection(m_connectionHandle));
 
             MQ_SAFE_CALL(MQCloseConnection(m_connectionHandle));
@@ -204,8 +199,8 @@ namespace karabo {
         boost::shared_ptr<JmsConsumer> JmsConnection::createConsumer(const std::string& topic,
                                                                      const std::string& selector,
                                                                      bool skipSerialisation) {
-            return boost::shared_ptr<JmsConsumer>(new JmsConsumer(shared_from_this(), topic, selector,
-                                                                  skipSerialisation));
+            return boost::shared_ptr<JmsConsumer>(
+                  new JmsConsumer(shared_from_this(), topic, selector, skipSerialisation));
         }
 
 
@@ -228,9 +223,8 @@ namespace karabo {
                     karabo::log::Logger::logInfo("openMq") << logMessage;
                     break;
                 default:
-                    break; // do nothing                    
+                    break; // do nothing
             }
         }
-    }
-}
-
+    } // namespace net
+} // namespace karabo

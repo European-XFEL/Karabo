@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   Runner_Test.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
@@ -6,21 +6,20 @@
  */
 
 #ifndef RUNNER_TEST_HH
-#define	RUNNER_TEST_HH
+#define RUNNER_TEST_HH
 
-#include <karabo/karabo.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
+#include <karabo/karabo.hpp>
+
 class RunnerDerived : public karabo::core::Runner {
-public:
-    
+   public:
     static void parseCmd(int argc, const char** argv, karabo::util::Hash& configuration) {
         karabo::core::Runner::parseCommandLine(argc, argv, configuration);
     }
 };
 
 class Runner_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(Runner_Test);
     CPPUNIT_TEST(testRunnerSuccess);
     CPPUNIT_TEST(testRunnerSuccess2);
@@ -30,13 +29,13 @@ class Runner_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testRunnerFailure4);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     Runner_Test();
     virtual ~Runner_Test();
     void setUp();
     void tearDown();
 
-private:
+   private:
     RunnerDerived* m_runner;
     void testRunnerSuccess();
     void testRunnerSuccess2();
@@ -46,5 +45,4 @@ private:
     void testRunnerFailure4();
 };
 
-#endif	/* RUNNER_TEST_HH */
-
+#endif /* RUNNER_TEST_HH */

@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   JmsBroker.hh
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  * Created on June 27, 2020, 9:10 PM
@@ -7,34 +7,30 @@
 #ifndef KARABO_NET_JMSBROKER_HH
 #define KARABO_NET_JMSBROKER_HH
 
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
 #include <list>
 #include <vector>
-#include <boost/thread.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
 
-#include "karabo/util/ClassInfo.hh"
-#include "karabo/util/Configurator.hh"
-#include "karabo/util/Schema.hh"
-#include "utils.hh"
+#include "EventLoop.hh"
 #include "karabo/net/Broker.hh"
 #include "karabo/net/JmsConnection.hh"
 #include "karabo/net/JmsConsumer.hh"
 #include "karabo/net/JmsProducer.hh"
-#include "EventLoop.hh"
-
+#include "karabo/util/ClassInfo.hh"
+#include "karabo/util/Configurator.hh"
+#include "karabo/util/Schema.hh"
+#include "utils.hh"
 
 
 namespace karabo {
     namespace net {
 
         class JmsBroker : public Broker {
-
-
-        public:
-
+           public:
             KARABO_CLASSINFO(JmsBroker, "jms", "1.0")
-            
+
             static void expectedParameters(karabo::util::Schema& s);
 
             explicit JmsBroker(const karabo::util::Hash& configuration);
@@ -51,7 +47,9 @@ namespace karabo {
 
             std::string getBrokerUrl() const override;
 
-            std::string getBrokerType() const override { return getClassInfo().getClassId(); }
+            std::string getBrokerType() const override {
+                return getClassInfo().getClassId();
+            }
 
 
             /**
@@ -63,9 +61,8 @@ namespace karabo {
              * @param signalFunction
              * @return boost error code
              */
-            boost::system::error_code subscribeToRemoteSignal(
-                    const std::string& signalInstanceId,
-                    const std::string& signalFunction) override;
+            boost::system::error_code subscribeToRemoteSignal(const std::string& signalInstanceId,
+                                                              const std::string& signalFunction) override;
 
             /**
              * There is no need to un-subscribe in OpenMQBroker case.
@@ -74,9 +71,8 @@ namespace karabo {
              * @param signalFunction
              * @return boost error code
              */
-            boost::system::error_code unsubscribeFromRemoteSignal(
-                    const std::string& signalInstanceId,
-                    const std::string& signalFunction) override;
+            boost::system::error_code unsubscribeFromRemoteSignal(const std::string& signalInstanceId,
+                                                                  const std::string& signalFunction) override;
 
             /**
              * There is no need to subscribe in OpenMQBroker case.  "Subscription"
@@ -87,13 +83,10 @@ namespace karabo {
              * @param signalFunction
              * @param completionHandler  called when subscribing is done
              */
-            void subscribeToRemoteSignalAsync(
-                    const std::string& signalInstanceId,
-                    const std::string& signalFunction,
-                    const AsyncHandler& completionHandler) override {
+            void subscribeToRemoteSignalAsync(const std::string& signalInstanceId, const std::string& signalFunction,
+                                              const AsyncHandler& completionHandler) override {
                 EventLoop::getIOService().post(boost::bind(
-                        completionHandler,
-                        boost::system::errc::make_error_code(boost::system::errc::success)));
+                      completionHandler, boost::system::errc::make_error_code(boost::system::errc::success)));
             }
 
             /**
@@ -104,11 +97,10 @@ namespace karabo {
              * @param completionHandler
              */
             void unsubscribeFromRemoteSignalAsync(const std::string& signalInstanceId,
-                                    const std::string& signalFunction,
-                                    const AsyncHandler& completionHandler) override {
+                                                  const std::string& signalFunction,
+                                                  const AsyncHandler& completionHandler) override {
                 EventLoop::getIOService().post(boost::bind(
-                        completionHandler,
-                        boost::system::errc::make_error_code(boost::system::errc::success)));
+                      completionHandler, boost::system::errc::make_error_code(boost::system::errc::success)));
             }
 
             /**
@@ -135,8 +127,9 @@ namespace karabo {
              * @param handler       - success handler
              * @param errorNotifier - error handler
              */
-            void startReadingHeartbeats(const consumer::MessageHandler& handler,
-                                const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
+            void startReadingHeartbeats(
+                  const consumer::MessageHandler& handler,
+                  const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
 
             /**
              * JMS subscription.
@@ -147,16 +140,12 @@ namespace karabo {
              * @param errorNotifier - error handler
              */
             void startReadingLogs(const consumer::MessageHandler& messageHandler,
-                          const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
+                                  const consumer::ErrorNotifier& errorNotifier = consumer::ErrorNotifier()) override;
 
-            void write(const std::string& topic,
-                       const karabo::util::Hash::Pointer& header,
-                       const karabo::util::Hash::Pointer& body,
-                       const int priority,
-                       const int timeToLive) override;
+            void write(const std::string& topic, const karabo::util::Hash::Pointer& header,
+                       const karabo::util::Hash::Pointer& body, const int priority, const int timeToLive) override;
 
-        private:
-
+           private:
             JmsBroker(const JmsBroker& o) = delete;
             JmsBroker(const JmsBroker& o, const std::string& newInstanceId);
 
@@ -167,8 +156,7 @@ namespace karabo {
             karabo::net::JmsConsumer::Pointer m_logConsumerChannel;
         };
 
-    }
-}
+    } // namespace net
+} // namespace karabo
 
-#endif	/* KARABO_NET_JMSBROKER_HH */
-
+#endif /* KARABO_NET_JMSBROKER_HH */

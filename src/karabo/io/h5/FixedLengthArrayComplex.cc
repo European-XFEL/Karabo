@@ -9,5 +9,7 @@
 
 #include "FixedLengthArrayComplex.hh"
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::FloatArrayComplexElement)
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset, karabo::io::h5::DoubleArrayComplexElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset,
+                                  karabo::io::h5::FloatArrayComplexElement)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::Element, karabo::io::h5::Dataset,
+                                  karabo::io::h5::DoubleArrayComplexElement)

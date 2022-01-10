@@ -9,20 +9,18 @@
  */
 
 #ifndef KARABO_XMS_NETWORKOUTPUT_HH
-#define	KARABO_XMS_NETWORKOUTPUT_HH
+#define KARABO_XMS_NETWORKOUTPUT_HH
 
 #include <boost/asio.hpp>
 #include <boost/shared_ptr.hpp>
-
 #include <unordered_set>
 #include <vector>
 
-#include "karabo/util/Hash.hh"
-#include "karabo/util/NodeElement.hh"
+#include "Memory.hh"
 #include "karabo/net/Channel.hh"
 #include "karabo/net/Connection.hh"
-
-#include "Memory.hh"
+#include "karabo/util/Hash.hh"
+#include "karabo/util/NodeElement.hh"
 
 
 /**
@@ -33,8 +31,8 @@ namespace karabo {
     namespace xms {
 
         typedef boost::function<void(const std::vector<karabo::util::Hash>&)> ShowConnectionsHandler;
-        typedef boost::function<void(const std::vector<unsigned long long>&,
-                                     const std::vector<unsigned long long>&)> ShowStatisticsHandler;
+        typedef boost::function<void(const std::vector<unsigned long long>&, const std::vector<unsigned long long>&)>
+              ShowStatisticsHandler;
 
         /**
          * @class OutputChannel
@@ -78,8 +76,6 @@ namespace karabo {
          * @endcode
          */
         class OutputChannel : public boost::enable_shared_from_this<OutputChannel> {
-
-
             /*
              * InputChannelInfo (karabo::util::Hash)
              *
@@ -92,11 +88,12 @@ namespace karabo {
              */
             typedef karabo::util::Hash InputChannelInfo;
 
-            // With C++14, can use unordered map (since then standard allows to erase items while looping on unordered_map)
+            // With C++14, can use unordered map (since then standard allows to erase items while looping on
+            // unordered_map)
             typedef std::map<std::string, InputChannelInfo> InputChannels; // input channel id is key
 
             // Callback on available input
-            boost::function<void (const boost::shared_ptr<OutputChannel>&) > m_ioEventHandler;
+            boost::function<void(const boost::shared_ptr<OutputChannel>&)> m_ioEventHandler;
 
             std::string m_instanceId;
             std::string m_channelName;
@@ -152,11 +149,10 @@ namespace karabo {
             boost::asio::deadline_timer m_updateDeadline;
             int m_period;
 
-        public:
+           public:
             typedef Memory::MetaData MetaData;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(OutputChannel, "OutputChannel", "1.0");
 
             /**
@@ -189,7 +185,8 @@ namespace karabo {
              * output->initialize();
              *
              * Caveat: Make sure you do not pass a 'bool' instead of an 'int' as argument to create(..) since then the
-             *         other constructor is chosen and the value of the 'bool' determines whether to validate cfg or not.
+             *         other constructor is chosen and the value of the 'bool' determines whether to validate cfg or
+             * not.
              *
              * @param config Validated (@see expectedParameters) and default-filled configuration
              * @param autoInit If set to 0 (strongly recommended), the constructor does not yet try to initiate the
@@ -241,7 +238,7 @@ namespace karabo {
              */
             bool hasRegisteredSharedInputChannel(const std::string& instanceId) const;
 
-            void registerIOEventHandler(const boost::function<void (const OutputChannel::Pointer&)>& ioEventHandler);
+            void registerIOEventHandler(const boost::function<void(const OutputChannel::Pointer&)>& ioEventHandler);
 
 
             karabo::util::Hash getInformation() const;
@@ -258,7 +255,7 @@ namespace karabo {
              * Thread safety:
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
              */
-            void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool copyAllData=true);
+            void write(const karabo::util::Hash& data, const Memory::MetaData& metaData, bool copyAllData = true);
 
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
@@ -273,7 +270,7 @@ namespace karabo {
              * Thread safety:
              * All the 'write(..)' methods, 'update()' and 'signalEndOfStream()' must not be called in concurrently.
              */
-            void write(const karabo::util::Hash& data, bool copyAllData=true);
+            void write(const karabo::util::Hash& data, bool copyAllData = true);
 
             /**
              * Writes a Hash containing data to the output channel. Sending to the network happens asynchronously.
@@ -325,18 +322,20 @@ namespace karabo {
              */
             void disable();
 
-        private:
-
+           private:
             void initializeServerConnection(int countdown);
 
             void onTcpConnect(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
             void onTcpChannelError(const karabo::net::ErrorCode& ec, const karabo::net::Channel::Pointer& channel);
 
-            void onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::WeakPointer& channel, const karabo::util::Hash& message);
+            void onTcpChannelRead(const karabo::net::ErrorCode& ec, const karabo::net::Channel::WeakPointer& channel,
+                                  const karabo::util::Hash& message);
 
-            /// Erase instance with 'instanceId' from 'channelContainer' if existing - if same as 'newChannel', do not close
-            void eraseOldChannel(InputChannels& channelContainer, const std::string& instanceId, const karabo::net::Channel::Pointer& newChannel) const;
+            /// Erase instance with 'instanceId' from 'channelContainer' if existing - if same as 'newChannel', do not
+            /// close
+            void eraseOldChannel(InputChannels& channelContainer, const std::string& instanceId,
+                                 const karabo::net::Channel::Pointer& newChannel) const;
 
             void updateConnectionTable();
 
@@ -445,31 +444,31 @@ namespace karabo {
              *
              * Either uses sendLocal or sendRemote
              */
-            void sendOne(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
+            void sendOne(const unsigned int& chunkId, const InputChannelInfo& channelInfo);
 
-            void sendLocal(const unsigned int& chunkId, const InputChannelInfo & channelInfo, bool eos);
+            void sendLocal(const unsigned int& chunkId, const InputChannelInfo& channelInfo, bool eos);
 
-            void sendRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo, bool eos);
+            void sendRemote(const unsigned int& chunkId, const InputChannelInfo& channelInfo, bool eos);
 
             /// Provide a string identifying this output channel (useful in DEBUG logging)
             std::string debugId() const;
         };
 
         class OutputChannelElement {
-
             karabo::util::NodeElement m_outputChannel;
             karabo::util::NodeElement m_dataSchema;
 
-        public:
-
+           public:
             OutputChannelElement(karabo::util::Schema& s) : m_outputChannel(s), m_dataSchema(s) {
                 m_outputChannel.appendParametersOf<OutputChannel>();
             }
 
             OutputChannelElement& key(const std::string& key) {
                 if (key.find_first_of(":@") != std::string::npos) {
-                    // Input channel connections are configured with "<deviceId>:<outputChannelKey>" (or '@' instead of ':')
-                    throw KARABO_PARAMETER_EXCEPTION("Bad output channel key with device/channel id delimiter (':' '@') : " + key);
+                    // Input channel connections are configured with "<deviceId>:<outputChannelKey>" (or '@' instead of
+                    // ':')
+                    throw KARABO_PARAMETER_EXCEPTION(
+                          "Bad output channel key with device/channel id delimiter (':' '@') : " + key);
                 }
                 m_outputChannel.key(key);
                 m_dataSchema.key(key + ".schema");
@@ -495,13 +494,12 @@ namespace karabo {
                 m_outputChannel.commit();
                 m_dataSchema.commit();
             }
-
         };
 
         typedef OutputChannelElement OUTPUT_CHANNEL_ELEMENT;
         typedef OutputChannelElement OUTPUT_CHANNEL;
 
-    }
-}
+    } // namespace xms
+} // namespace karabo
 
 #endif

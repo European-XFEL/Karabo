@@ -10,15 +10,14 @@
  */
 
 #ifndef KARABO_IO_BINARYSERIALIZER_HH
-#define	KARABO_IO_BINARYSERIALIZER_HH
-
-#include <vector>
+#define KARABO_IO_BINARYSERIALIZER_HH
 
 #include <karabo/util/Configurator.hh>
+#include <vector>
 
 namespace karabo {
     namespace io {
-        
+
         class BufferSet;
 
         /*
@@ -29,9 +28,7 @@ namespace karabo {
          */
         template <class T>
         class BinarySerializer {
-
-            public:
-
+           public:
             KARABO_CLASSINFO(BinarySerializer, "BinarySerializer", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS;
 
@@ -57,7 +54,7 @@ namespace karabo {
             virtual void save(const T& object, karabo::io::BufferSet& archive) {
                 throw KARABO_NOT_IMPLEMENTED_EXCEPTION("save exception");
             }
-            
+
             /**
              * Load an object from a binary archive.
              * @param object to load data into
@@ -84,7 +81,7 @@ namespace karabo {
                 throw KARABO_NOT_IMPLEMENTED_EXCEPTION("load exception");
             }
 
-             /**
+            /**
              * Save an object to a binary archive
              * @param object to save
              * @param archive to save to
@@ -116,7 +113,7 @@ namespace karabo {
              * Return the serialized binary representation of an object, i.e. save into an empty
              * archive and return this
              * @param object
-             * @return 
+             * @return
              */
             std::vector<char> save(const T& object) {
                 std::vector<char> archive;
@@ -174,9 +171,8 @@ namespace karabo {
             void load(std::vector<T>& objects, const std::vector<char>& archive) {
                 load(objects, &archive[0], archive.size());
             }
-
         };
-    }
-}
+    } // namespace io
+} // namespace karabo
 
 #endif

@@ -10,12 +10,12 @@
  */
 
 #ifndef KARABO_UTIL_PLUGINLOADER_HH
-#define	KARABO_UTIL_PLUGINLOADER_HH
+#define KARABO_UTIL_PLUGINLOADER_HH
 
 #include <boost/filesystem.hpp>
 
-#include "Schema.hh"
 #include "Configurator.hh"
+#include "Schema.hh"
 
 
 /**
@@ -32,14 +32,11 @@ namespace karabo {
          * The PluginLoader class.
          */
         class PluginLoader {
-
-            public:
-
+           public:
             KARABO_CLASSINFO(PluginLoader, "PluginLoader", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            PluginLoader(const std::string& pluginDirectory) : m_pluginDirectory(pluginDirectory) {
-            }
+            PluginLoader(const std::string& pluginDirectory) : m_pluginDirectory(pluginDirectory) {}
 
             static std::string defaultPluginPath();
 
@@ -47,30 +44,26 @@ namespace karabo {
 
             PluginLoader(const karabo::util::Hash& input);
 
-            virtual ~PluginLoader() {
-            };
+            virtual ~PluginLoader(){};
 
             bool update();
 
             const boost::filesystem::path& getPluginDirectory() const;
-            
+
             std::vector<std::string> getKnownPlugins() const;
-            
+
             void updatePluginsToLoad(const std::vector<std::string>& pluginsToLoad);
 
-        protected:
-
-        private:
-
+           protected:
+           private:
             boost::filesystem::path m_pluginDirectory;
 
             static std::map<boost::filesystem::path, void*> m_loadedPlugins;
             static std::vector<std::string> m_failedPlugins;
             static std::set<std::string> m_knownPlugins;
             std::set<std::string> m_pluginsToLoad;
-
         };
     } // namespace util
 } // namespace karabo
 
-#endif	/* KARABO_PACKAGENAME_PLUGINLOADER_HH */
+#endif /* KARABO_PACKAGENAME_PLUGINLOADER_HH */

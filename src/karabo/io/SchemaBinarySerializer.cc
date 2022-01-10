@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   SchemaBinarySerializer.cc
  * Author: <djelloul.boukhelef@xfel.eu>
- * 
+ *
  * Created on July 9, 2013, 8:59 AM
  */
 
@@ -23,19 +23,16 @@ namespace karabo {
         }
 
 
-        SchemaBinarySerializer::~SchemaBinarySerializer() {
-        }
+        SchemaBinarySerializer::~SchemaBinarySerializer() {}
 
 
-        void SchemaBinarySerializer::expectedParameters(karabo::util::Schema& expected) {
-
-        }
+        void SchemaBinarySerializer::expectedParameters(karabo::util::Schema& expected) {}
 
         void SchemaBinarySerializer::save(const karabo::util::Schema& object, std::vector<char>& archive) try {
             ostringstream os;
             const string& rootName = object.getRootName();
             const unsigned char size = rootName.size();
-            os.write((char*) &size, sizeof (size));
+            os.write((char*)&size, sizeof(size));
             os.write(rootName.c_str(), size);
 
             string str = os.str();
@@ -51,19 +48,18 @@ namespace karabo {
 
         void SchemaBinarySerializer::load(karabo::util::Schema& object, const char* archive, const size_t nBytes) {
             std::stringstream is;
-            is.rdbuf()->pubsetbuf(const_cast<char*> (archive), nBytes);
+            is.rdbuf()->pubsetbuf(const_cast<char*>(archive), nBytes);
 
             unsigned char size;
-            is.read((char*) &size, sizeof (size));
+            is.read((char*)&size, sizeof(size));
             char rootName[256];
             is.read(rootName, size);
             rootName[size] = 0;
             object.setRootName(rootName);
             Hash hash;
-            m_serializer->load(hash, archive + sizeof (size) + size, nBytes - sizeof (size) - size);
+            m_serializer->load(hash, archive + sizeof(size) + size, nBytes - sizeof(size) - size);
             object.setParameterHash(std::move(hash));
             object.updateAliasMap();
         }
-    }
-}
-
+    } // namespace io
+} // namespace karabo

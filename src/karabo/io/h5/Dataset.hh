@@ -8,17 +8,15 @@
 
 
 #ifndef KARABO_IO_H5_DATASET_HH
-#define	KARABO_IO_H5_DATASET_HH
+#define KARABO_IO_H5_DATASET_HH
 
-#include <string>
-
+#include <karabo/log/Logger.hh>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/Dims.hh>
-#include <karabo/log/Logger.hh>
+#include <string>
 
 #include "Element.hh"
 #include "ErrorHandler.hh"
-
 #include "TypeTraits.hh"
 
 namespace karabo {
@@ -32,9 +30,7 @@ namespace karabo {
              * @brief The base class representing Datasets in an HDF5 file
              */
             class Dataset : public karabo::io::h5::Element {
-
-                public:
-
+               public:
                 KARABO_CLASSINFO(Dataset, "Dataset", "1.0")
 
                 static void expectedParameters(karabo::util::Schema& expected);
@@ -45,7 +41,8 @@ namespace karabo {
                  * @param d, pointer to the derived. Needed for type information only
                  */
                 template <class Derived>
-                Dataset(const karabo::util::Hash& input, Derived* d) : Element(input), m_numberAllocatedRecords(0), m_fileDataSpace(-1) {
+                Dataset(const karabo::util::Hash& input, Derived* d)
+                    : Element(input), m_numberAllocatedRecords(0), m_fileDataSpace(-1) {
                     if (input.has("compressionLevel")) {
                         m_compressionLevel = input.getAs<int>("compressionLevel");
                     } else {
@@ -60,8 +57,7 @@ namespace karabo {
                     configureDataDimensions(input, singleValueDims);
                 }
 
-                virtual ~Dataset() {
-                }
+                virtual ~Dataset() {}
 
 
                 virtual hid_t open(hid_t group);
@@ -81,17 +77,14 @@ namespace karabo {
                  */
                 virtual void write(const karabo::util::Hash& data, hsize_t recordId, hsize_t len);
 
-            protected:
-
+               protected:
                 /**
                  * Write a Hash::Node to a dataSet in an HDF5 data space
                  * @param data
                  * @param dataSet
                  * @param fileDataSpace
                  */
-                virtual void writeNode(const karabo::util::Hash::Node& data,
-                                       hid_t dataSet, hid_t fileDataSpace) {
-                }
+                virtual void writeNode(const karabo::util::Hash::Node& data, hid_t dataSet, hid_t fileDataSpace) {}
 
                 /**
                  * Batch write len Hash::Nodes to a dataSet in an HDF5 data space
@@ -99,12 +92,10 @@ namespace karabo {
                  * @param dataSet
                  * @param fileDataSpace
                  */
-                virtual void writeNode(const karabo::util::Hash::Node& data, hsize_t len,
-                                       hid_t dataSet, hid_t fileDataSpace) {
-                }
+                virtual void writeNode(const karabo::util::Hash::Node& data, hsize_t len, hid_t dataSet,
+                                       hid_t fileDataSpace) {}
 
-            public:
-
+               public:
                 /**
                  * Read data from record id
                  * @param recordId
@@ -118,8 +109,7 @@ namespace karabo {
                  */
                 void read(hsize_t recordId, hsize_t len);
 
-            protected:
-
+               protected:
                 /**
                  * Read a record identified by dataSet in an HDF5 dataspace
                  * @param dataSet
@@ -135,8 +125,7 @@ namespace karabo {
                  */
                 virtual void readRecords(hsize_t len, const hid_t& dataSet, const hid_t& fileDataSpace) = 0;
 
-            public:
-
+               public:
                 /**
                  * Get info on the HDF5 dataspace
                  * @param dataSpace
@@ -147,14 +136,14 @@ namespace karabo {
                 /**
                  * Return a dataspace with size of dims
                  * @param dims
-                 * @return 
+                 * @return
                  */
                 static hid_t dataSpace(const karabo::util::Dims& dims);
 
                 /**
                  * Return a 1D-dataspace with the only dimension set to len size
                  * @param len
-                 * @return 
+                 * @return
                  */
                 static hid_t dataSpaceOneDim(hsize_t len);
 
@@ -173,7 +162,7 @@ namespace karabo {
 
                 /**
                  * Check if this Dataset identifies an HDF5 dataset
-                 * @return 
+                 * @return
                  */
                 bool isDataset() const {
                     return true;
@@ -181,7 +170,7 @@ namespace karabo {
 
                 /**
                  * Check if this Dataset identifies an HDF5 group
-                 * @return 
+                 * @return
                  */
                 bool isGroup() const {
                     return false;
@@ -189,7 +178,7 @@ namespace karabo {
 
                 /**
                  * Get the dimensions of this dataset
-                 * @return 
+                 * @return
                  */
                 karabo::util::Dims getDims() const {
                     return m_dims;
@@ -204,8 +193,7 @@ namespace karabo {
                 }
 
 
-            protected:
-
+               protected:
                 const karabo::util::Dims& dims() const {
                     return m_dims;
                 }
@@ -233,11 +221,8 @@ namespace karabo {
                 }
 
 
-
-
-
-                //private:
-            protected:
+                // private:
+               protected:
                 int m_compressionLevel;
                 hsize_t m_numberAllocatedRecords;
 
@@ -249,12 +234,13 @@ namespace karabo {
 
                 hsize_t m_chunkSize;
 
-            protected:
+               protected:
                 hid_t m_fileDataSpace;
 
                 // private:
 
-                void configureDataDimensions(const karabo::util::Hash& input, const karabo::util::Dims& singleValueDims);
+                void configureDataDimensions(const karabo::util::Hash& input,
+                                             const karabo::util::Dims& singleValueDims);
                 hid_t configureFileDataSpace();
                 hid_t createDataSetProperties();
 
@@ -277,7 +263,7 @@ namespace karabo {
                 static hid_t m_linkCreateProperties;
 
                 static hid_t initDataSetProperties() {
-                    return 0; //H5Pcreate(H5P_DATASET_CREATE);
+                    return 0; // H5Pcreate(H5P_DATASET_CREATE);
                 }
 
                 static hid_t initLinkCreateProperties() {
@@ -286,13 +272,11 @@ namespace karabo {
                     KARABO_CHECK_HDF5_STATUS(H5Pset_create_intermediate_group(lid, 1));
                     return lid;
                 }
-
             };
 
 
+        } // namespace h5
+    }     // namespace io
+} // namespace karabo
 
-        }
-    }
-}
-
-#endif	
+#endif

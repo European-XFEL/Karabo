@@ -4,10 +4,11 @@
 
 
 #include "OstreamAppender.hh"
+
+#include <iostream>
 #include <karabo/util/SimpleElement.hh>
 #include <krb_log4cpp/OstreamAppender.hh>
 #include <krb_log4cpp/PatternLayout.hh>
-#include <iostream>
 #include <string>
 
 
@@ -20,28 +21,33 @@ namespace karabo {
     namespace log {
 
         void OstreamAppender::expectedParameters(Schema& s) {
+            STRING_ELEMENT(s)
+                  .key("output")
+                  .description("Output Stream")
+                  .displayedName("OutputStream")
+                  .options("STDERR,STDOUT")
+                  .assignmentOptional()
+                  .defaultValue("STDERR")
+                  .commit();
 
-            STRING_ELEMENT(s).key("output")
-                    .description("Output Stream")
-                    .displayedName("OutputStream")
-                    .options("STDERR,STDOUT")
-                    .assignmentOptional().defaultValue("STDERR")
-                    .commit();
+            STRING_ELEMENT(s)
+                  .key("pattern")
+                  .description("Formatting pattern for the logstream")
+                  .displayedName("Pattern")
+                  .assignmentOptional()
+                  .defaultValue("%p  %c  : %m%n")
+                  .commit();
 
-            STRING_ELEMENT(s).key("pattern")
-                    .description("Formatting pattern for the logstream")
-                    .displayedName("Pattern")
-                    .assignmentOptional().defaultValue("%p  %c  : %m%n")
-                    .commit();
-
-            STRING_ELEMENT(s).key("threshold")
-                    .description("The Appender will not appended log events with a priority lower than the threshold.\
+            STRING_ELEMENT(s)
+                  .key("threshold")
+                  .description(
+                        "The Appender will not appended log events with a priority lower than the threshold.\
                                   Use Priority::NOTSET to disable threshold checking.")
-                    .displayedName("Threshold")
-                    .options("NOTSET DEBUG INFO WARN ERROR")
-                    .assignmentOptional().defaultValue("NOTSET")
-                    .commit();
-
+                  .displayedName("Threshold")
+                  .options("NOTSET DEBUG INFO WARN ERROR")
+                  .assignmentOptional()
+                  .defaultValue("NOTSET")
+                  .commit();
         }
 
 
@@ -65,5 +71,5 @@ namespace karabo {
         krb_log4cpp::Appender* OstreamAppender::getAppender() {
             return m_appender;
         }
-    }
-}
+    } // namespace log
+} // namespace karabo

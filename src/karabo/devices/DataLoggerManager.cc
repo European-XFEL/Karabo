@@ -54,26 +54,26 @@
  *   as "topologyCheck.lastCheckResult" and the procedure is triggered again in "topologyCheck.interval" minutes.
  */
 
-#include <vector>
-#include <set>
-#include <unordered_set>
-#include <string>
-#include <algorithm>    // std::find, std::max
-#include <string.h>     // strlen
+#include "DataLoggerManager.hh"
 
+#include <string.h> // strlen
+
+#include <algorithm> // std::find, std::max
 #include <boost/asio/deadline_timer.hpp>
+#include <set>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 #include "karabo/io/FileTools.hh"
-#include "karabo/util/DataLogUtils.hh"
-#include "karabo/util/StringTools.hh"
-#include "karabo/util/Epochstamp.hh"
+#include "karabo/net/EventLoop.hh"
 #include "karabo/util/ChoiceElement.hh"
+#include "karabo/util/DataLogUtils.hh"
+#include "karabo/util/Epochstamp.hh"
 #include "karabo/util/PathElement.hh"
 #include "karabo/util/SimpleElement.hh"
+#include "karabo/util/StringTools.hh"
 #include "karabo/util/VectorElement.hh"
-#include "karabo/net/EventLoop.hh"
-
-#include "DataLoggerManager.hh"
 
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<>, karabo::devices::DataLoggerManager)
 
@@ -91,221 +91,267 @@ namespace karabo {
          * Helper function used below:
          * Add object to set<T> at key's position in h - if no such key exists, create one
          */
-        template<class T>
+        template <class T>
         void addToSetOrCreate(Hash& h, const std::string& key, const T& object) {
             if (h.has(key)) {
-                h.get<std::set<T> >(key).insert(object);
+                h.get<std::set<T>>(key).insert(object);
             } else {
                 h.set(key, std::set<T>({object}));
             }
         }
 
 
-
-
         void DataLoggerManager::expectedParameters(Schema& expected) {
+            OVERWRITE_ELEMENT(expected)
+                  .key("state")
+                  .setNewOptions(State::INIT, State::ON, State::MONITORING, State::ERROR)
+                  .setNewDefaultValue(State::INIT)
+                  .commit();
 
-            OVERWRITE_ELEMENT(expected).key("state")
-                    .setNewOptions(State::INIT, State::ON, State::MONITORING, State::ERROR)
-                    .setNewDefaultValue(State::INIT)
-                    .commit();
+            OVERWRITE_ELEMENT(expected).key("performanceStatistics.enable").setNewDefaultValue(true).commit();
 
-            OVERWRITE_ELEMENT(expected).key("performanceStatistics.enable")
-                    .setNewDefaultValue(true)
-                    .commit();
+            OVERWRITE_ELEMENT(expected).key("visibility").setNewDefaultValue<int>(Schema::AccessLevel::ADMIN).commit();
 
-            OVERWRITE_ELEMENT(expected).key("visibility")
-                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
-                    .commit();
+            OVERWRITE_ELEMENT(expected).key("deviceId").setNewDefaultValue("Karabo_DataLoggerManager_0").commit();
 
-            OVERWRITE_ELEMENT(expected).key("deviceId")
-                    .setNewDefaultValue("Karabo_DataLoggerManager_0")
-                    .commit();
+            INT32_ELEMENT(expected)
+                  .key("flushInterval")
+                  .displayedName("Flush interval")
+                  .description("The interval after which the memory accumulated data is made persistent")
+                  .unit(Unit::SECOND)
+                  .assignmentOptional()
+                  .defaultValue(40)
+                  .minInc(1)
+                  .reconfigurable()
+                  .commit();
 
-            INT32_ELEMENT(expected).key("flushInterval")
-                    .displayedName("Flush interval")
-                    .description("The interval after which the memory accumulated data is made persistent")
-                    .unit(Unit::SECOND)
-                    .assignmentOptional().defaultValue(40).minInc(1)
-                    .reconfigurable()
-                    .commit();
+            BOOL_ELEMENT(expected)
+                  .key("enablePerformanceStats")
+                  .displayedName("Performance stats on/off")
+                  .description("Value of 'performanceStatistics.enable' used when instantiating loggers")
+                  .reconfigurable()
+                  .assignmentOptional()
+                  .defaultValue(true) // true will cause alarms when loggers are too slow
+                  .commit();
 
-            BOOL_ELEMENT(expected).key("enablePerformanceStats")
-                    .displayedName("Performance stats on/off")
-                    .description("Value of 'performanceStatistics.enable' used when instantiating loggers")
-                    .reconfigurable()
-                    .assignmentOptional().defaultValue(true) // true will cause alarms when loggers are too slow
-                    .commit();
+            CHOICE_ELEMENT(expected)
+                  .key("logger")
+                  .displayedName("Logger type")
+                  .assignmentOptional()
+                  .defaultValue("FileDataLogger")
+                  .commit();
 
-            CHOICE_ELEMENT(expected).key("logger")
-                    .displayedName("Logger type")
-                    .assignmentOptional().defaultValue("FileDataLogger")
-                    .commit();
+            NODE_ELEMENT(expected)
+                  .key("logger.FileDataLogger")
+                  .displayedName("FileDataLogger")
+                  .description("File based data logging")
+                  .commit();
 
-            NODE_ELEMENT(expected).key("logger.FileDataLogger")
-                    .displayedName("FileDataLogger")
-                    .description("File based data logging")
-                    .commit();
+            PATH_ELEMENT(expected)
+                  .key("logger.FileDataLogger.directory")
+                  .displayedName("Directory")
+                  .description("The directory where the log files should be placed")
+                  .assignmentOptional()
+                  .defaultValue("karaboHistory")
+                  .commit();
 
-            PATH_ELEMENT(expected).key("logger.FileDataLogger.directory")
-                    .displayedName("Directory")
-                    .description("The directory where the log files should be placed")
-                    .assignmentOptional().defaultValue("karaboHistory")
-                    .commit();
+            INT32_ELEMENT(expected)
+                  .key("logger.FileDataLogger.maximumFileSize")
+                  .displayedName("Maximum file size")
+                  .description(
+                        "After any archived file has reached this size it will be time-stamped and not appended "
+                        "anymore")
+                  .unit(Unit::BYTE)
+                  .metricPrefix(MetricPrefix::MEGA)
+                  .assignmentOptional()
+                  .defaultValue(100)
+                  .commit();
 
-            INT32_ELEMENT(expected).key("logger.FileDataLogger.maximumFileSize")
-                    .displayedName("Maximum file size")
-                    .description("After any archived file has reached this size it will be time-stamped and not appended anymore")
-                    .unit(Unit::BYTE)
-                    .metricPrefix(MetricPrefix::MEGA)
-                    .assignmentOptional().defaultValue(100)
-                    .commit();
+            NODE_ELEMENT(expected)
+                  .key("logger.InfluxDataLogger")
+                  .displayedName("InfluxDataLogger")
+                  .description("Influxdb based data logging")
+                  .commit();
 
-            NODE_ELEMENT(expected).key("logger.InfluxDataLogger")
-                    .displayedName("InfluxDataLogger")
-                    .description("Influxdb based data logging")
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("logger.InfluxDataLogger.urlWrite")
+                  .displayedName("Logger influxdb URL")
+                  .description("URL should be given in form: tcp://host:port")
+                  .assignmentOptional()
+                  .defaultValue("tcp://localhost:8086")
+                  .init()
+                  .commit();
 
-            STRING_ELEMENT(expected).key("logger.InfluxDataLogger.urlWrite")
-                    .displayedName("Logger influxdb URL")
-                    .description("URL should be given in form: tcp://host:port")
-                    .assignmentOptional().defaultValue("tcp://localhost:8086")
-                    .init()
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("logger.InfluxDataLogger.urlRead")
+                  .displayedName("Reader influxdb URL")
+                  .description("URL should be given in form: tcp://host:port")
+                  .assignmentOptional()
+                  .defaultValue("tcp://localhost:8086")
+                  .init()
+                  .commit();
 
-            STRING_ELEMENT(expected).key("logger.InfluxDataLogger.urlRead")
-                    .displayedName("Reader influxdb URL")
-                    .description("URL should be given in form: tcp://host:port")
-                    .assignmentOptional().defaultValue("tcp://localhost:8086")
-                    .init()
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("logger.InfluxDataLogger.dbname")
+                  .displayedName("Database name")
+                  .description("Name of the database of the data. If empty, fall back to broker topic.")
+                  .assignmentOptional()
+                  .defaultValue("")
+                  .init()
+                  .commit();
 
-            STRING_ELEMENT(expected).key("logger.InfluxDataLogger.dbname")
-                    .displayedName("Database name")
-                    .description("Name of the database of the data. If empty, fall back to broker topic.")
-                    .assignmentOptional().defaultValue("")
-                    .init()
-                    .commit();
+            UINT32_ELEMENT(expected)
+                  .key("logger.InfluxDataLogger.maxBatchPoints")
+                  .displayedName("Max batch points")
+                  .description("Max number of InfluxDB points in the batch")
+                  .assignmentOptional()
+                  .defaultValue(200)
+                  .init()
+                  .commit();
 
-            UINT32_ELEMENT(expected).key("logger.InfluxDataLogger.maxBatchPoints")
-                    .displayedName("Max batch points")
-                    .description("Max number of InfluxDB points in the batch")
-                    .assignmentOptional().defaultValue(200)
-                    .init()
-                    .commit();
+            INT32_ELEMENT(expected)
+                  .key("logger.InfluxDataLogger.maxTimeAdvance")
+                  .displayedName("Max Time Advance")
+                  .description(
+                        "Maximum time advance allowed for data. "
+                        "Data too far ahead in the future will be dropped. "
+                        "Negative values or 0 means no limit.")
+                  .assignmentOptional()
+                  .defaultValue(7200)
+                  .unit(Unit::SECOND)
+                  .init()
+                  .commit();
 
-            INT32_ELEMENT(expected).key("logger.InfluxDataLogger.maxTimeAdvance")
-                    .displayedName("Max Time Advance")
-                    .description("Maximum time advance allowed for data. "
-                                 "Data too far ahead in the future will be dropped. "
-                                 "Negative values or 0 means no limit.")
-                    .assignmentOptional().defaultValue(7200)
-                    .unit(Unit::SECOND)
-                    .init()
-                    .commit();
+            VECTOR_STRING_ELEMENT(expected)
+                  .key("serverList")
+                  .displayedName("Server list")
+                  .description(
+                        "List of device server IDs where the DataLogger instance run. "
+                        "The load balancing is round-robin. Must not be empty")
+                  .init()
+                  .minSize(1)
+                  .assignmentMandatory()
+                  .commit();
 
-            VECTOR_STRING_ELEMENT(expected).key("serverList")
-                    .displayedName("Server list")
-                    .description("List of device server IDs where the DataLogger instance run. "
-                                 "The load balancing is round-robin. Must not be empty")
-                    .init()
-                    .minSize(1)
-                    .assignmentMandatory()
-                    .commit();
+            UINT32_ELEMENT(expected)
+                  .key("timeout")
+                  .displayedName("Timeout")
+                  .description("Timeout of requests to DataLogger's or during checks")
+                  .unit(Unit::SECOND)
+                  .metricPrefix(MetricPrefix::MILLI)
+                  // Defaults to 15 s.
+                  // 2 s. lead to many timeouts. During tests, 4 s. latencies have been observed.
+                  // 15 s. adds an extra safety margin.
+                  .assignmentOptional()
+                  .defaultValue(15000)
+                  .reconfigurable()
+                  .minInc(100)
+                  .maxInc(60000) // 100 ms to 1 minute
+                  .commit();
 
-            UINT32_ELEMENT(expected).key("timeout")
-                    .displayedName("Timeout")
-                    .description("Timeout of requests to DataLogger's or during checks")
-                    .unit(Unit::SECOND)
-                    .metricPrefix(MetricPrefix::MILLI)
-                    // Defaults to 15 s.
-                    // 2 s. lead to many timeouts. During tests, 4 s. latencies have been observed.
-                    // 15 s. adds an extra safety margin.
-                    .assignmentOptional().defaultValue(15000)
-                    .reconfigurable()
-                    .minInc(100).maxInc(60000) // 100 ms to 1 minute
-                    .commit();
+            NODE_ELEMENT(expected)
+                  .key("topologyCheck")
+                  .displayedName("Topology check")
+                  .description("Status and parameters of regular topology checks")
+                  .commit();
 
-            NODE_ELEMENT(expected).key("topologyCheck")
-                    .displayedName("Topology check")
-                    .description("Status and parameters of regular topology checks")
-                    .commit();
+            SLOT_ELEMENT(expected)
+                  .key("topologyCheck.slotForceCheck")
+                  .displayedName("Force check")
+                  .description("Immediately launch a check")
+                  .allowedStates(State::ON)
+                  .commit();
 
-            SLOT_ELEMENT(expected).key("topologyCheck.slotForceCheck")
-                    .displayedName("Force check")
-                    .description("Immediately launch a check")
-                    .allowedStates(State::ON)
-                    .commit();
+            INT8_ELEMENT(expected)
+                  .key("topologyCheck.loggingProblem")
+                  .displayedName("Logging problem")
+                  .description("Non-zero if topology check discovered a problem")
+                  .readOnly()
+                  .initialValue(0)
+                  .alarmHigh(0) // i.e. alarm if value > 0... (grr, should be >= 1)
+                  .info("Likely something not logged, see 'Check result' field and contact experts.")
+                  .needsAcknowledging(false)
+                  .commit();
 
-            INT8_ELEMENT(expected).key("topologyCheck.loggingProblem")
-                    .displayedName("Logging problem")
-                    .description("Non-zero if topology check discovered a problem")
-                    .readOnly().initialValue(0)
-                    .alarmHigh(0) // i.e. alarm if value > 0... (grr, should be >= 1)
-                    .info("Likely something not logged, see 'Check result' field and contact experts.")
-                    .needsAcknowledging(false)
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("topologyCheck.lastCheckStartedUtc")
+                  .displayedName("Check started (UTC)")
+                  .description("Last time a check was initiated")
+                  .readOnly()
+                  .initialValue("")
+                  .commit();
 
-            STRING_ELEMENT(expected).key("topologyCheck.lastCheckStartedUtc")
-                    .displayedName("Check started (UTC)")
-                    .description("Last time a check was initiated")
-                    .readOnly().initialValue("")
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("topologyCheck.lastCheckDoneUtc")
+                  .displayedName("Check finished (UTC)")
+                  .description("Last time a check was finished")
+                  .readOnly()
+                  .initialValue("")
+                  .commit();
 
-            STRING_ELEMENT(expected).key("topologyCheck.lastCheckDoneUtc")
-                    .displayedName("Check finished (UTC)")
-                    .description("Last time a check was finished")
-                    .readOnly().initialValue("")
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("topologyCheck.lastCheckResult")
+                  .displayedName("Check result")
+                  .description("Result of last running check")
+                  .readOnly()
+                  .initialValue("")
+                  .commit();
 
-            STRING_ELEMENT(expected).key("topologyCheck.lastCheckResult")
-                    .displayedName("Check result")
-                    .description("Result of last running check")
-                    .readOnly().initialValue("")
-                    .commit();
+            UINT32_ELEMENT(expected)
+                  .key("topologyCheck.interval")
+                  .displayedName("Check interval")
+                  .description(
+                        "Interval in between regular checks on the topology whether "
+                        "everything is logged as it should")
+                  .unit(Unit::MINUTE)
+                  .assignmentOptional()
+                  .defaultValue(30)
+                  .reconfigurable()
+                  .minInc(1)
+                  .maxInc(1440) // min every minute, max every 24 h
+                  .commit();
 
-            UINT32_ELEMENT(expected).key("topologyCheck.interval")
-                    .displayedName("Check interval")
-                    .description("Interval in between regular checks on the topology whether "
-                                 "everything is logged as it should")
-                    .unit(Unit::MINUTE)
-                    .assignmentOptional().defaultValue(30)
-                    .reconfigurable()
-                    .minInc(1).maxInc(1440) // min every minute, max every 24 h
-                    .commit();
+            UINT32_ELEMENT(expected)
+                  .key("topologyCheck.toleranceLogged")
+                  .displayedName("Tolerance logged")
+                  .description("How old last logged update may be")
+                  .unit(Unit::MINUTE)
+                  .assignmentOptional()
+                  .defaultValue(10)
+                  .reconfigurable()
+                  .minInc(1)
+                  .maxInc(60)
+                  .commit();
 
-            UINT32_ELEMENT(expected).key("topologyCheck.toleranceLogged")
-                    .displayedName("Tolerance logged")
-                    .description("How old last logged update may be")
-                    .unit(Unit::MINUTE)
-                    .assignmentOptional().defaultValue(10)
-                    .reconfigurable()
-                    .minInc(1).maxInc(60)
-                    .commit();
+            UINT32_ELEMENT(expected)
+                  .key("topologyCheck.toleranceDiff")
+                  .displayedName("Tolerance diff")
+                  .description(
+                        "Tolerated difference between logged data and latest update when last logged data is old")
+                  .unit(Unit::SECOND)
+                  .assignmentOptional()
+                  .defaultValue(30)
+                  .reconfigurable()
+                  .minInc(1)
+                  .maxInc(600)
+                  .commit();
 
-            UINT32_ELEMENT(expected).key("topologyCheck.toleranceDiff")
-                    .displayedName("Tolerance diff")
-                    .description("Tolerated difference between logged data and latest update when last logged data is old")
-                    .unit(Unit::SECOND)
-                    .assignmentOptional().defaultValue(30)
-                    .reconfigurable()
-                    .minInc(1).maxInc(600)
-                    .commit();
-
-            STRING_ELEMENT(expected).key("loggermap")
-                    .displayedName("Logger map file")
-                    .assignmentOptional().defaultValue("loggermap.xml")
-                    .commit();
+            STRING_ELEMENT(expected)
+                  .key("loggermap")
+                  .displayedName("Logger map file")
+                  .assignmentOptional()
+                  .defaultValue("loggermap.xml")
+                  .commit();
         }
 
         DataLoggerManager::DataLoggerManager(const Hash& input)
-            : karabo::core::Device<>(input)
-            , m_serverList(input.get<vector<string> >("serverList"))
-            , m_serverIndex(0), m_loggerMapFile(input.get<string>("loggermap"))
-            , m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService()))
-            , m_topologyCheckTimer(karabo::net::EventLoop::getIOService())
-            , m_logger("Unsupported") {
-
+            : karabo::core::Device<>(input),
+              m_serverList(input.get<vector<string>>("serverList")),
+              m_serverIndex(0),
+              m_loggerMapFile(input.get<string>("loggermap")),
+              m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())),
+              m_topologyCheckTimer(karabo::net::EventLoop::getIOService()),
+              m_logger("Unsupported") {
             if (input.has("logger.FileDataLogger")) {
                 m_logger = "FileDataLogger";
             } else if (input.has("logger.InfluxDataLogger")) {
@@ -324,8 +370,7 @@ namespace karabo {
             KARABO_INITIAL_FUNCTION(initialize);
         }
 
-        DataLoggerManager::~DataLoggerManager() {
-        }
+        DataLoggerManager::~DataLoggerManager() {}
 
 
         void DataLoggerManager::initialize() {
@@ -334,10 +379,9 @@ namespace karabo {
                 checkLoggerMap(); // throws if loggerMap and serverList are inconsistent
 
                 // Setup m_loggerData from server list
-                const Hash data("state", LoggerState::OFFLINE,
-                                "backlog", std::unordered_set<std::string>(),
-                                "beingAdded", std::unordered_set<std::string>(),
-                                "devices", std::unordered_set<std::string>());
+                const Hash data("state", LoggerState::OFFLINE, "backlog", std::unordered_set<std::string>(),
+                                "beingAdded", std::unordered_set<std::string>(), "devices",
+                                std::unordered_set<std::string>());
                 for (const std::string& server : m_serverList) {
                     m_loggerData.set(server, data);
                 }
@@ -351,7 +395,8 @@ namespace karabo {
 
                 // Register handlers here
                 remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::instanceNewHandler, this, _1));
-                remote().registerInstanceGoneMonitor(boost::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
+                remote().registerInstanceGoneMonitor(
+                      boost::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
 
                 // Switch on instance tracking - which is blocking a while.
                 // Note that instanceNew(..) will be called for all instances already in the game.
@@ -360,7 +405,8 @@ namespace karabo {
                 // Publish logger map read from disc. Do that as late as possible in the initialization procedure
                 // to give those interested the chance to register their slots after we sent signalInstanceNew.
                 {
-                    boost::mutex::scoped_lock lock(m_loggerMapMutex); // m_loggerMap must not be changed while we process it
+                    boost::mutex::scoped_lock lock(
+                          m_loggerMapMutex); // m_loggerMap must not be changed while we process it
                     emit<Hash>("signalLoggerMap", m_loggerMap);
                 }
 
@@ -395,8 +441,9 @@ namespace karabo {
             // Now loop and check that all from logger map are also in configured server list
             for (const std::string& serverInMap : serversInMap) {
                 if (find(m_serverList.begin(), m_serverList.end(), serverInMap) == m_serverList.end()) {
-                    throw KARABO_LOGIC_EXCEPTION("Inconsistent '" + m_loggerMapFile + "' and 'serverList' configuration: '"
-                            + serverInMap + "' is in map, but not in list.");
+                    throw KARABO_LOGIC_EXCEPTION("Inconsistent '" + m_loggerMapFile +
+                                                 "' and 'serverList' configuration: '" + serverInMap +
+                                                 "' is in map, but not in list.");
                 }
             }
         }
@@ -414,13 +461,14 @@ namespace karabo {
             if (getState() != State::INIT) {
                 const std::pair<bool, std::string> badAndStatus(checkSummary());
                 KARABO_LOG_FRAMEWORK_INFO << "Check finished - " << badAndStatus.second;
-                set(Hash("topologyCheck", Hash("lastCheckDoneUtc", Epochstamp().toFormattedString(),
-                                               "loggingProblem", static_cast<signed char> (badAndStatus.first),
-                                               "lastCheckResult", badAndStatus.second)));
+                set(Hash("topologyCheck",
+                         Hash("lastCheckDoneUtc", Epochstamp().toFormattedString(), "loggingProblem",
+                              static_cast<signed char>(badAndStatus.first), "lastCheckResult", badAndStatus.second)));
             }
 
             updateState(State::ON);
-            m_topologyCheckTimer.expires_from_now(boost::posix_time::minutes(get<unsigned int>("topologyCheck.interval")));
+            m_topologyCheckTimer.expires_from_now(
+                  boost::posix_time::minutes(get<unsigned int>("topologyCheck.interval")));
             m_topologyCheckTimer.async_wait(bind_weak(&Self::topologyCheck, this, boost::asio::placeholders::error));
         }
 
@@ -431,7 +479,8 @@ namespace karabo {
 
             bool bad = false;
             if (m_checkStatus.has("offline")) {
-                checkResult << "   Offline logger servers: " << toString(m_checkStatus.get<std::set<std::string> >("offline")) << "\n";
+                checkResult << "   Offline logger servers: "
+                            << toString(m_checkStatus.get<std::set<std::string>>("offline")) << "\n";
                 m_checkStatus.erase("offline"); // skip it from loop below!
                 bad = true;
             }
@@ -447,7 +496,7 @@ namespace karabo {
                     continue;
                 }
                 if (serverHash.has("emptyTimestamp")) {
-                    const auto& devs = serverHash.get<std::set<std::string> >("emptyTimestamp");
+                    const auto& devs = serverHash.get<std::set<std::string>>("emptyTimestamp");
                     checkResult << "\n      Empty time stamps for " << toString(devs);
                     // Keep info for next round, but with new key to check next time whether still empty timestamp:
                     newCheckStatus.set(serverId, Hash("emptyTimestampLast", devs));
@@ -458,29 +507,30 @@ namespace karabo {
                 // - or appears in "forced" below
 
                 if (serverHash.has("forced")) {
-                    const auto& devs = serverHash.get<std::set<std::string> >("forced");
+                    const auto& devs = serverHash.get<std::set<std::string>>("forced");
                     checkResult << "\n      Re-enforced logging for " << devs.size() << " devices: " << toString(devs);
                     bad = true;
                 }
                 if (serverHash.has("detailsRequested")) {
-                    const auto& devs = serverHash.get<std::set<std::string> >("detailsRequested");
+                    const auto& devs = serverHash.get<std::set<std::string>>("detailsRequested");
                     if (devs.size() > 5) {
                         // Prints the first three and the total number of devices.
-                        checkResult << "\n      Details requested for "
-                                << *std::next(devs.begin(), 0) << ", " << *std::next(devs.begin(), 1) << ", "
-                                << *std::next(devs.begin(), 2) << " (and " << devs.size() - 3 << " more devices...)";
+                        checkResult << "\n      Details requested for " << *std::next(devs.begin(), 0) << ", "
+                                    << *std::next(devs.begin(), 1) << ", " << *std::next(devs.begin(), 2) << " (and "
+                                    << devs.size() - 3 << " more devices...)";
                     } else {
                         checkResult << "\n      Details requested for " << toString(devs);
                     }
                 }
                 if (serverHash.has("deviceQueryFailed")) {
-                    const auto& devs = serverHash.get<std::set<std::string> >("deviceQueryFailed");
+                    const auto& devs = serverHash.get<std::set<std::string>>("deviceQueryFailed");
                     checkResult << "\n      " << devs.size() << " device queries failed: " << toString(devs);
                     bad = true; // Could just being shutdown and logger was not yet aware...
                 }
                 if (serverHash.has("stopped")) {
-                    const auto& devs = serverHash.get<std::set<std::string> >("stopped");
-                    checkResult << "\n      " << devs.size() << " devices now offline, logging stopped: " << toString(devs);
+                    const auto& devs = serverHash.get<std::set<std::string>>("stopped");
+                    checkResult << "\n      " << devs.size()
+                                << " devices now offline, logging stopped: " << toString(devs);
                 }
             }
             // Clear check status, but keep what is needed for next check
@@ -508,7 +558,7 @@ namespace karabo {
         void DataLoggerManager::topologyCheckOnStrand() {
             printLoggerData();
 
-            auto loggerCounter = boost::make_shared<std::atomic<size_t> >(m_loggerData.size());
+            auto loggerCounter = boost::make_shared<std::atomic<size_t>>(m_loggerData.size());
             const unsigned int timeout = get<unsigned int>("timeout");
             for (const Hash::Node& serverNode : m_loggerData) {
                 const std::string& serverId = serverNode.getKey();
@@ -524,8 +574,9 @@ namespace karabo {
                 call(loggerId, "flush"); // Force flushing and thus update of "lastUpdatesUtc"
                 auto okHandler = bind_weak(&Self::checkLoggerConfig, this, true, loggerCounter, _1, _2);
                 auto failHandler = bind_weak(&Self::checkLoggerConfig, this, false, loggerCounter, Hash(), loggerId);
-                request(loggerId, "slotGetConfiguration").timeout(timeout)
-                        .receiveAsync<Hash, std::string>(okHandler, failHandler);
+                request(loggerId, "slotGetConfiguration")
+                      .timeout(timeout)
+                      .receiveAsync<Hash, std::string>(okHandler, failHandler);
             }
             if (0 == *loggerCounter) { // All loggers are not (yet) running
                 m_strand->post(bind_weak(&Self::launchTopologyCheck, this));
@@ -539,27 +590,28 @@ namespace karabo {
                 const Hash& serverHash = serverNode.getValue<Hash>();
                 const LoggerState state = serverHash.get<LoggerState>("state");
                 out << "\n  Server " << serverNode.getKey() << " is "
-                    << (state == LoggerState::OFFLINE ? "offline" : (state == LoggerState::RUNNING ? "running" : "instantiating"));
+                    << (state == LoggerState::OFFLINE ? "offline"
+                                                      : (state == LoggerState::RUNNING ? "running" : "instantiating"));
                 for (const std::string& key : std::vector<std::string>({"devices", "backlog", "beingAdded"})) {
-                out << "\n    " << key << ": ";
-                size_t nChars = 0;
-                for (const std::string& id : serverHash.get<std::unordered_set<std::string> >(key)) {
-                    // If line gets too long, start a new one - but at least print one id per line:
-                    if ((nChars += (id.size())) > 55 && nChars != id.size()) {
-                        out << "\n             ";
-                        nChars = 0;
+                    out << "\n    " << key << ": ";
+                    size_t nChars = 0;
+                    for (const std::string& id : serverHash.get<std::unordered_set<std::string>>(key)) {
+                        // If line gets too long, start a new one - but at least print one id per line:
+                        if ((nChars += (id.size())) > 55 && nChars != id.size()) {
+                            out << "\n             ";
+                            nChars = 0;
+                        }
+                        out << id << ", ";
+                        nChars += 2; // for comma and space
                     }
-                    out << id << ", ";
-                    nChars += 2; // for comma and space
                 }
-            }
             }
 
             KARABO_LOG_FRAMEWORK_INFO << "Internal logger info:" << out.str();
         }
 
 
-        void DataLoggerManager::checkLoggerConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+        void DataLoggerManager::checkLoggerConfig(bool ok, const boost::shared_ptr<std::atomic<size_t>>& loggerCounter,
                                                   const Hash& config, const std::string& loggerId) {
             // Put on strand to be sequential, but take care that the re-throw trick for exception details
             // will not work anymore.
@@ -571,18 +623,21 @@ namespace karabo {
                     errorTxt = e.what();
                 }
             }
-            m_strand->post(bind_weak(&Self::checkLoggerConfigOnStrand, this, errorTxt, loggerCounter, config, loggerId));
+            m_strand->post(
+                  bind_weak(&Self::checkLoggerConfigOnStrand, this, errorTxt, loggerCounter, config, loggerId));
         }
 
 
-        void DataLoggerManager::checkLoggerConfigOnStrand(const std::string& errorTxt, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+        void DataLoggerManager::checkLoggerConfigOnStrand(const std::string& errorTxt,
+                                                          const boost::shared_ptr<std::atomic<size_t>>& loggerCounter,
                                                           const Hash& config, const std::string& loggerId) {
             Epochstamp now;
             const std::string serverId(loggerIdToServerId(loggerId));
             if (errorTxt.empty()) {
-                const TimeDuration tolerance(0, 0, get<unsigned int>("topologyCheck.toleranceLogged"), 0ull, 0ull); // from minutes
-                const std::vector<Hash>& updates = config.get<std::vector < Hash >> ("lastUpdatesUtc");
-                auto loggedDevCounter = boost::make_shared<std::atomic<size_t> >(updates.size());
+                const TimeDuration tolerance(0, 0, get<unsigned int>("topologyCheck.toleranceLogged"), 0ull,
+                                             0ull); // from minutes
+                const std::vector<Hash>& updates = config.get<std::vector<Hash>>("lastUpdatesUtc");
+                auto loggedDevCounter = boost::make_shared<std::atomic<size_t>>(updates.size());
                 const unsigned int timeout = get<unsigned int>("timeout");
                 std::vector<std::string> idsWithoutTimestamp;
                 for (const Hash& row : updates) {
@@ -590,17 +645,19 @@ namespace karabo {
                     const std::string& lastUpdateStr = lastUpdateNode.getValue<std::string>();
                     const std::string& deviceId = row.get<std::string>("deviceId");
 
-                    if (lastUpdateStr.empty() || !Epochstamp::hashAttributesContainTimeInformation(lastUpdateNode.getAttributes())) {
-                        // No update yet, so DataLogging for that device likely being started - book-keeping to check next time:
+                    if (lastUpdateStr.empty() ||
+                        !Epochstamp::hashAttributesContainTimeInformation(lastUpdateNode.getAttributes())) {
+                        // No update yet, so DataLogging for that device likely being started - book-keeping to check
+                        // next time:
                         idsWithoutTimestamp.push_back(deviceId);
                         // Check the last try:
                         const std::string keyEmpty(serverId + ".emptyTimestampLast");
                         if (m_checkStatus.has(keyEmpty)) {
-                            std::set<std::string>& emptyLast = m_checkStatus.get<std::set<std::string> >(keyEmpty);
+                            std::set<std::string>& emptyLast = m_checkStatus.get<std::set<std::string>>(keyEmpty);
                             auto it = std::find(emptyLast.begin(), emptyLast.end(), deviceId);
                             if (it != emptyLast.end()) {
                                 KARABO_LOG_FRAMEWORK_WARN << "Device '" << deviceId << "' logged by '" << loggerId
-                                        << "' still has no last update stamp - force logging";
+                                                          << "' still has no last update stamp - force logging";
                                 forceDeviceToBeLogged(deviceId);
                                 addToSetOrCreate(m_checkStatus, serverId + ".forced", deviceId);
                             }
@@ -608,9 +665,10 @@ namespace karabo {
                         continue;
                     }
                     const Epochstamp lastUpdate(Epochstamp::fromHashAttributes(lastUpdateNode.getAttributes()));
-                    if (now > lastUpdate && now.elapsed(lastUpdate) > tolerance) { // Caveat: TimeDuration is always positive!
+                    if (now > lastUpdate &&
+                        now.elapsed(lastUpdate) > tolerance) { // Caveat: TimeDuration is always positive!
                         KARABO_LOG_FRAMEWORK_DEBUG << loggerId << " logged last data from '" << deviceId
-                                << "' rather long ago: " << lastUpdateStr << " (UTC)";
+                                                   << "' rather long ago: " << lastUpdateStr << " (UTC)";
                         addToSetOrCreate(m_checkStatus, serverId + ".detailsRequested", deviceId);
 
                         const unsigned int toleranceSec = std::max(get<unsigned int>("topologyCheck.toleranceDiff"),
@@ -619,17 +677,19 @@ namespace karabo {
                                                    toleranceSec, loggedDevCounter, lastUpdate, _1, _2);
                         auto failHandler = bind_weak(&Self::checkDeviceConfig, this, false, loggerCounter, loggerId,
                                                      toleranceSec, loggedDevCounter, lastUpdate, Hash(), deviceId);
-                        request(deviceId, "slotGetConfiguration").timeout(timeout)
-                                .receiveAsync<Hash, std::string>(okHandler, failHandler);
+                        request(deviceId, "slotGetConfiguration")
+                              .timeout(timeout)
+                              .receiveAsync<Hash, std::string>(okHandler, failHandler);
                     } else {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Device '" << deviceId << "' OK according to logger '"
-                                << loggerId << "': " << *loggedDevCounter - 1 << " left ";
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Device '" << deviceId << "' OK according to logger '" << loggerId
+                                                   << "': " << *loggedDevCounter - 1 << " left ";
                         --(*loggedDevCounter);
                     }
                 }
                 if (!idsWithoutTimestamp.empty()) {
                     (*loggedDevCounter) -= idsWithoutTimestamp.size();
-                    KARABO_LOG_FRAMEWORK_INFO << "Logger " << loggerId << " lacks last update timestamp of " << toString(idsWithoutTimestamp);
+                    KARABO_LOG_FRAMEWORK_INFO << "Logger " << loggerId << " lacks last update timestamp of "
+                                              << toString(idsWithoutTimestamp);
                     m_checkStatus.set(serverId + ".emptyTimestamp",
                                       std::set<std::string>(idsWithoutTimestamp.begin(), idsWithoutTimestamp.end()));
                 }
@@ -642,7 +702,7 @@ namespace karabo {
             } else {
                 // Failure handler
                 KARABO_LOG_FRAMEWORK_INFO << "Failed to query configuration of " << loggerId << ": " << errorTxt
-                            << "\n logger left: " << *loggerCounter - 1;
+                                          << "\n logger left: " << *loggerCounter - 1;
                 m_checkStatus.set(serverId + ".loggerQueryFailed", true);
                 --(*loggerCounter);
             }
@@ -659,10 +719,11 @@ namespace karabo {
         }
 
 
-        void DataLoggerManager::checkDeviceConfig(bool ok, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
+        void DataLoggerManager::checkDeviceConfig(bool ok, const boost::shared_ptr<std::atomic<size_t>>& loggerCounter,
                                                   const std::string& loggerId, unsigned int toleranceSec,
-                                                  const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
-                                                  Epochstamp lastUpdateLogger, const Hash& config, const std::string& deviceId) {
+                                                  const boost::shared_ptr<std::atomic<size_t>>& loggedDevCounter,
+                                                  Epochstamp lastUpdateLogger, const Hash& config,
+                                                  const std::string& deviceId) {
             std::string errorTxt;
             if (!ok) {
                 // Note that this can e.g. happen when 'deviceId' went down when the manager was offline and then
@@ -675,28 +736,30 @@ namespace karabo {
                     errorTxt = e.what();
                 }
             }
-            m_strand->post(bind_weak(&Self::checkDeviceConfigOnStrand, this, errorTxt, loggerCounter, loggerId, toleranceSec,
-                                     loggedDevCounter, lastUpdateLogger, config, deviceId));
+            m_strand->post(bind_weak(&Self::checkDeviceConfigOnStrand, this, errorTxt, loggerCounter, loggerId,
+                                     toleranceSec, loggedDevCounter, lastUpdateLogger, config, deviceId));
         }
 
 
-        void DataLoggerManager::checkDeviceConfigOnStrand(const std::string& errorTxt, const boost::shared_ptr<std::atomic<size_t> >& loggerCounter,
-                                                          const std::string& loggerId, unsigned int toleranceSec,
-                                                          const boost::shared_ptr<std::atomic<size_t> >& loggedDevCounter,
-                                                          Epochstamp lastUpdateLogger, const Hash& config, const std::string& deviceId) {
+        void DataLoggerManager::checkDeviceConfigOnStrand(
+              const std::string& errorTxt, const boost::shared_ptr<std::atomic<size_t>>& loggerCounter,
+              const std::string& loggerId, unsigned int toleranceSec,
+              const boost::shared_ptr<std::atomic<size_t>>& loggedDevCounter, Epochstamp lastUpdateLogger,
+              const Hash& config, const std::string& deviceId) {
             if (errorTxt.empty()) {
                 const Epochstamp lastDeviceUpdate = mostRecentEpochstamp(config);
                 const TimeDuration tolerance(0, 0, 0, toleranceSec, 0ull);
                 if (lastDeviceUpdate > lastUpdateLogger && lastDeviceUpdate.elapsed(lastUpdateLogger) > tolerance) {
-                    KARABO_LOG_FRAMEWORK_WARN << deviceId << " had last update at " << lastDeviceUpdate.toFormattedString()
-                            << ", but most recent data logged by " << loggerId << " is from "
-                            << lastUpdateLogger.toFormattedString() << " - force logging to start again";
+                    KARABO_LOG_FRAMEWORK_WARN
+                          << deviceId << " had last update at " << lastDeviceUpdate.toFormattedString()
+                          << ", but most recent data logged by " << loggerId << " is from "
+                          << lastUpdateLogger.toFormattedString() << " - force logging to start again";
                     forceDeviceToBeLogged(deviceId);
                     const std::string serverId(loggerIdToServerId(loggerId));
                     addToSetOrCreate(m_checkStatus, serverId + ".forced", deviceId);
                 } else {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Last update of " << deviceId << " at " << lastDeviceUpdate.toFormattedString()
-                            << ": logger not behind.";
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Last update of " << deviceId << " at "
+                                               << lastDeviceUpdate.toFormattedString() << ": logger not behind.";
                 }
             } else {
                 // Failure handler:
@@ -707,10 +770,10 @@ namespace karabo {
                 // it was down at that time and restarted later. In that case the device should not be in the logger
                 // data - so better check that!
                 // But do not trust remote().getSystemInformation() - it is not synchronised with our m_strand.
-                const auto& knownDevs = m_loggerData.get<std::unordered_set<std::string> >(serverId + ".devices");
+                const auto& knownDevs = m_loggerData.get<std::unordered_set<std::string>>(serverId + ".devices");
                 if (knownDevs.find(deviceId) == knownDevs.end()) {
-                    KARABO_LOG_FRAMEWORK_WARN << "Device " << deviceId << " not known for logger "
-                            << loggerId << " - stop logging it!";
+                    KARABO_LOG_FRAMEWORK_WARN << "Device " << deviceId << " not known for logger " << loggerId
+                                              << " - stop logging it!";
                     addToSetOrCreate(m_checkStatus, serverId + ".stopped", deviceId);
                     call(loggerId, "slotTagDeviceToBeDiscontinued", "D", deviceId);
                 }
@@ -726,8 +789,8 @@ namespace karabo {
         }
 
 
-        karabo::util::Epochstamp DataLoggerManager::mostRecentEpochstamp(const Hash& config, Epochstamp oldStamp) const {
-
+        karabo::util::Epochstamp DataLoggerManager::mostRecentEpochstamp(const Hash& config,
+                                                                         Epochstamp oldStamp) const {
             for (const Hash::Node& node : config) {
                 if (Epochstamp::hashAttributesContainTimeInformation(node.getAttributes())) {
                     const Epochstamp stamp(Epochstamp::fromHashAttributes(node.getAttributes()));
@@ -763,9 +826,8 @@ namespace karabo {
                     }
                     hash.set("configuration", config);
                     const std::string& xLogReader = hash.get<std::string>("classId");
-                    KARABO_LOG_FRAMEWORK_INFO
-                            << "Trying to instantiate '" << readerId << "' "
-                            << "of type '" << xLogReader << "' on server '" << serverId << "'";
+                    KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << readerId << "' "
+                                              << "of type '" << xLogReader << "' on server '" << serverId << "'";
 
                     remote().instantiateNoWait(serverId, hash);
                 }
@@ -781,15 +843,17 @@ namespace karabo {
         std::string DataLoggerManager::loggerServerId(const std::string& deviceId, bool addIfNotYetInMap) {
             std::string serverId;
 
-            const std::string & deviceIdInMap(DATALOGGER_PREFIX + deviceId); // DATALOGGER_PREFIX for xml files from < 2.6.0
+            const std::string& deviceIdInMap(DATALOGGER_PREFIX +
+                                             deviceId); // DATALOGGER_PREFIX for xml files from < 2.6.0
             boost::mutex::scoped_lock lock(m_loggerMapMutex);
             if (m_loggerMap.has(deviceIdInMap)) {
                 serverId = m_loggerMap.get<string>(deviceIdInMap);
             } else if (addIfNotYetInMap) {
                 if (m_serverList.empty()) {
                     // Cannot happen but for better diagnostics in case it does:
-                    throw KARABO_PARAMETER_EXCEPTION("List of servers for data logging is empty."
-                                                     " You have to define one data logger server, at least!");
+                    throw KARABO_PARAMETER_EXCEPTION(
+                          "List of servers for data logging is empty."
+                          " You have to define one data logger server, at least!");
                 }
                 m_serverIndex %= m_serverList.size();
                 serverId = m_serverList[m_serverIndex++];
@@ -811,10 +875,10 @@ namespace karabo {
         void DataLoggerManager::instanceNewOnStrand(const karabo::util::Hash& topologyEntry) {
             const std::string& type = topologyEntry.begin()->getKey(); // fails if empty...
             // const ref is fine even for temporary std::string
-            const std::string& instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type) ?
-                                             topologyEntry.get<Hash>(type).begin()->getKey() : std::string("?"));
-            KARABO_LOG_FRAMEWORK_INFO << "instanceNew --> instanceId: '" << instanceId
-                        << "', type: '" << type << "'";
+            const std::string& instanceId = (topologyEntry.has(type) && topologyEntry.is<Hash>(type)
+                                                   ? topologyEntry.get<Hash>(type).begin()->getKey()
+                                                   : std::string("?"));
+            KARABO_LOG_FRAMEWORK_INFO << "instanceNew --> instanceId: '" << instanceId << "', type: '" << type << "'";
 
             if (type == "device") {
                 const Hash& entry = topologyEntry.begin()->getValue<Hash>();
@@ -823,7 +887,7 @@ namespace karabo {
                     newDeviceToLog(instanceId);
                 }
                 if (entry.hasAttribute(instanceId, "classId") &&
-                        entry.getAttribute<std::string>(instanceId, "classId") == m_logger) {
+                    entry.getAttribute<std::string>(instanceId, "classId") == m_logger) {
                     // A new logger has started - check whether there is more work for it to do
                     newLogger(instanceId);
                 }
@@ -837,13 +901,12 @@ namespace karabo {
 
 
         void DataLoggerManager::newDeviceToLog(const std::string& deviceId) {
-
             // Figure out which server and thus which logger this runs:
             const std::string serverId(loggerServerId(deviceId, true));
 
             // Put deviceId to backlog - independent of state:
             Hash& data = m_loggerData.get<Hash>(serverId);
-            data.get<std::unordered_set<std::string> >("backlog").insert(deviceId);
+            data.get<std::unordered_set<std::string>>("backlog").insert(deviceId);
 
             // If logger is already running, transfer the (likely new and size-1-) backlog to it
             if (data.get<LoggerState>("state") == LoggerState::RUNNING) {
@@ -872,11 +935,11 @@ namespace karabo {
 
 
         void DataLoggerManager::addDevicesToBeLogged(const std::string& loggerId, Hash& serverData) {
-
-            std::unordered_set<std::string>& backlog = serverData.get<std::unordered_set<std::string> >("backlog");
+            std::unordered_set<std::string>& backlog = serverData.get<std::unordered_set<std::string>>("backlog");
             if (!backlog.empty()) {
                 // Keep track of what is being added
-                std::unordered_set<std::string>& beingAdded = serverData.get<std::unordered_set<std::string> >("beingAdded");
+                std::unordered_set<std::string>& beingAdded =
+                      serverData.get<std::unordered_set<std::string>>("beingAdded");
                 beingAdded.insert(backlog.begin(), backlog.end());
                 KARABO_LOG_FRAMEWORK_INFO << "For '" << loggerId << "', adding devices: '" << toString(backlog);
                 auto successHandler = bind_weak(&DataLoggerManager::addDevicesDone, this, true, loggerId, backlog, _1);
@@ -884,7 +947,8 @@ namespace karabo {
                                                 std::vector<std::string>());
                 const unsigned int timeout = get<unsigned int>("timeout");
                 request(loggerId, "slotAddDevicesToBeLogged", std::vector<std::string>(backlog.begin(), backlog.end()))
-                        .timeout(timeout).receiveAsync<std::vector<std::string> >(successHandler, failureHandler);
+                      .timeout(timeout)
+                      .receiveAsync<std::vector<std::string>>(successHandler, failureHandler);
 
                 backlog.clear();
             }
@@ -918,29 +982,30 @@ namespace karabo {
             if (errorTxt.empty()) {
                 if (alreadyLoggedDevices.empty()) {
                     KARABO_LOG_FRAMEWORK_INFO << "For '" << loggerId << "', added devices to be logged: '"
-                            << toString(calledDevices) << "'";
+                                              << toString(calledDevices) << "'";
                 } else {
                     // Can happen when, during initialising, a logger is discovered that was running since before
                     // DataLoggerManager was instantiated.
                     KARABO_LOG_FRAMEWORK_WARN << "Added '" << toString(calledDevices) << "' to be logged by '"
-                            << loggerId << "', but '" << toString(alreadyLoggedDevices) << "' were already logged.";
+                                              << loggerId << "', but '" << toString(alreadyLoggedDevices)
+                                              << "' were already logged.";
                 }
                 // Remove from "beingAdded" and add to "devices" since done, even those that were already logged:
                 // We just did not yet know about it (see above).
-                std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string> >("beingAdded");
+                std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string>>("beingAdded");
                 for (const std::string& calledDevice : calledDevices) {
                     beingAdded.erase(calledDevice);
                 }
-                data.get<std::unordered_set<std::string> >("devices").insert(calledDevices.begin(), calledDevices.end());
+                data.get<std::unordered_set<std::string>>("devices").insert(calledDevices.begin(), calledDevices.end());
             } else {
                 // Can happen as timeout when logger just shutdown
                 KARABO_LOG_FRAMEWORK_ERROR << "For '" << loggerId << "', failed to add '" << toString(calledDevices)
-                        << "' to be logged since: " << errorTxt;
+                                           << "' to be logged since: " << errorTxt;
 
                 // Put devices to log back to backlog,
                 // but only those "beingAdded" (others could have shutdown meanwhile)
-                std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string> >("beingAdded");
-                std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string> >("backlog");
+                std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string>>("beingAdded");
+                std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string>>("backlog");
                 for (const std::string& calledDevice : calledDevices) {
                     auto it = beingAdded.find(calledDevice);
                     if (it != beingAdded.end()) {
@@ -956,7 +1021,6 @@ namespace karabo {
         }
 
         void DataLoggerManager::newLoggerServer(const std::string& serverId) {
-
             instantiateLogger(serverId);
             instantiateReaders(serverId);
         }
@@ -988,37 +1052,37 @@ namespace karabo {
             config.set("performanceStatistics.enable", get<bool>("enablePerformanceStats"));
 
             const std::string loggerId(serverIdToLoggerId(serverId));
-            const Hash hash("classId", m_logger,
-                            "deviceId", loggerId,
-                            "configuration", config);
+            const Hash hash("classId", m_logger, "deviceId", loggerId, "configuration", config);
 
-            KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' of type '"
-                    << m_logger << "' on server '" << serverId << "'";
+            KARABO_LOG_FRAMEWORK_INFO << "Trying to instantiate '" << loggerId << "' of type '" << m_logger
+                                      << "' on server '" << serverId << "'";
             remote().instantiateNoWait(serverId, hash);
         }
 
 
-        void DataLoggerManager::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+        void DataLoggerManager::instanceGoneHandler(const std::string& instanceId,
+                                                    const karabo::util::Hash& instanceInfo) {
             m_strand->post(bind_weak(&DataLoggerManager::instanceGoneOnStrand, this, instanceId, instanceInfo));
         }
 
 
-        void DataLoggerManager::instanceGoneOnStrand(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-
+        void DataLoggerManager::instanceGoneOnStrand(const std::string& instanceId,
+                                                     const karabo::util::Hash& instanceInfo) {
             // const ref is fine even for temporary std::string
-            const std::string& type = (instanceInfo.has("type") && instanceInfo.is<std::string>("type") ?
-                                       instanceInfo.get<std::string>("type") : std::string("unknown"));
-            const std::string& serverId = (instanceInfo.has("serverId") && instanceInfo.is<std::string>("serverId") ?
-                                           instanceInfo.get<string>("serverId") : std::string("?"));
+            const std::string& type = (instanceInfo.has("type") && instanceInfo.is<std::string>("type")
+                                             ? instanceInfo.get<std::string>("type")
+                                             : std::string("unknown"));
+            const std::string& serverId = (instanceInfo.has("serverId") && instanceInfo.is<std::string>("serverId")
+                                                 ? instanceInfo.get<string>("serverId")
+                                                 : std::string("?"));
 
-            KARABO_LOG_FRAMEWORK_INFO << "instanceGoneHandler -->  instanceId : '"
-                    << instanceId << "', type : " << type << " on server '" << serverId << "'";
+            KARABO_LOG_FRAMEWORK_INFO << "instanceGoneHandler -->  instanceId : '" << instanceId << "', type : " << type
+                                      << " on server '" << serverId << "'";
 
             if (type == "device") {
                 // Figure out who logs and tell to stop
                 goneDeviceToLog(instanceId);
-                if (instanceInfo.has("classId") &&
-                        instanceInfo.get<std::string>("classId") == m_logger) {
+                if (instanceInfo.has("classId") && instanceInfo.get<std::string>("classId") == m_logger) {
                     goneLogger(instanceId);
                 }
             } else if (type == "server") {
@@ -1035,9 +1099,9 @@ namespace karabo {
             if (!serverId.empty()) { // else device not in map and thus neither logged
                 // Remove from any tracking:
                 Hash& data = m_loggerData.get<Hash>(serverId);
-                std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string> >("backlog");
-                std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string> >("beingAdded");
-                std::unordered_set<std::string>& loggedIds = data.get<std::unordered_set<std::string> >("devices");
+                std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string>>("backlog");
+                std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string>>("beingAdded");
+                std::unordered_set<std::string>& loggedIds = data.get<std::unordered_set<std::string>>("devices");
                 backlog.erase(deviceId);
                 beingAdded.erase(deviceId);
                 loggedIds.erase(deviceId);
@@ -1050,7 +1114,7 @@ namespace karabo {
                         // Add a consistency check:
                         if (!backlog.empty()) {
                             KARABO_LOG_FRAMEWORK_WARN << "Backlog for running server '" << serverId
-                                    << "' not empty, but contains '" << toString(backlog) << "'";
+                                                      << "' not empty, but contains '" << toString(backlog) << "'";
                         }
                         break;
                     case LoggerState::OFFLINE:
@@ -1058,8 +1122,9 @@ namespace karabo {
                         // Add a consistency check:
                         if (!loggedIds.empty()) {
                             KARABO_LOG_FRAMEWORK_WARN << "Logged devices for "
-                                    << (state == LoggerState::OFFLINE ? "offline" : "instantiating")
-                                    << "  server '" << serverId << "' not empty, but contains " << toString(loggedIds);
+                                                      << (state == LoggerState::OFFLINE ? "offline" : "instantiating")
+                                                      << "  server '" << serverId << "' not empty, but contains "
+                                                      << toString(loggedIds);
                         }
                         break;
                 }
@@ -1068,19 +1133,18 @@ namespace karabo {
 
 
         void DataLoggerManager::goneLogger(const std::string& loggerId) {
-
             const std::string serverId(loggerIdToServerId(loggerId));
             if (serverId.empty()) {
                 // E.g. a logger started by hand by someone
                 KARABO_LOG_FRAMEWORK_WARN << "Discovered shutdown of logger with unexpected id '" << loggerId
-                        << "', will not treat.";
+                                          << "', will not treat.";
                 return;
             }
 
             Hash& data = m_loggerData.get<Hash>(serverId);
-            std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string> >("backlog");
-            std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string> >("beingAdded");
-            std::unordered_set<std::string>& loggedIds = data.get<std::unordered_set<std::string> >("devices");
+            std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string>>("backlog");
+            std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string>>("beingAdded");
+            std::unordered_set<std::string>& loggedIds = data.get<std::unordered_set<std::string>>("devices");
 
             switch (data.get<LoggerState>("state")) {
                 case LoggerState::OFFLINE:
@@ -1109,29 +1173,30 @@ namespace karabo {
 
             switch (data.get<LoggerState>("state")) {
                 case LoggerState::OFFLINE:
-                    KARABO_LOG_FRAMEWORK_ERROR << "Server '" << serverId << "' gone, but it was already gone before: " << data;
+                    KARABO_LOG_FRAMEWORK_ERROR << "Server '" << serverId
+                                               << "' gone, but it was already gone before: " << data;
                     // Weird situation - move "devices"/"beingAdded" to "backlog" as in other cases...
                     break;
                 case LoggerState::INSTANTIATING:
                     // Expected nice behaviour: Already took note that logger is gone and so tried to start again.
                     // Nothing to do.
-                    KARABO_LOG_FRAMEWORK_INFO << "Server '" << serverId
-                            << "' gone while instantiating " << m_logger << ".";
+                    KARABO_LOG_FRAMEWORK_INFO << "Server '" << serverId << "' gone while instantiating " << m_logger
+                                              << ".";
                     break;
                 case LoggerState::RUNNING:
                     // Looks like a non-graceful shutdown of the server that is detected by lack of heartbeats where
                     // the DeviceClient currently (Karabo 2.6.0) often sends the "gone" signal for the server before
                     // the one of the DataLogger.
-                    KARABO_LOG_FRAMEWORK_WARN << "Server '" << serverId
-                            << "' gone while " << m_logger << " still alive.";
+                    KARABO_LOG_FRAMEWORK_WARN << "Server '" << serverId << "' gone while " << m_logger
+                                              << " still alive.";
                     // Also then we have to move "devices"/"beingAdded" to "backlog".
                     break;
             }
 
             // Append logged and "being added" devices to backlog - better do for all situations...
-            std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string> >("backlog");
-            std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string> >("beingAdded");
-            std::unordered_set<std::string>& loggedIds = data.get<std::unordered_set<std::string> >("devices");
+            std::unordered_set<std::string>& backlog = data.get<std::unordered_set<std::string>>("backlog");
+            std::unordered_set<std::string>& beingAdded = data.get<std::unordered_set<std::string>>("beingAdded");
+            std::unordered_set<std::string>& loggedIds = data.get<std::unordered_set<std::string>>("devices");
             backlog.insert(loggedIds.begin(), loggedIds.end());
             loggedIds.clear();
             backlog.insert(beingAdded.begin(), beingAdded.end());
@@ -1139,6 +1204,5 @@ namespace karabo {
 
             data.set("state", LoggerState::OFFLINE);
         }
-    }
-}
-
+    } // namespace devices
+} // namespace karabo

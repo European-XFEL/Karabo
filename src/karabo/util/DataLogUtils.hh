@@ -6,11 +6,11 @@
  */
 
 #ifndef DATALOGGERSTRUCTS_HH
-#define	DATALOGGERSTRUCTS_HH
+#define DATALOGGERSTRUCTS_HH
 
-#include <vector>
-#include <nlohmann/json.hpp>
 #include <boost/optional.hpp>
+#include <nlohmann/json.hpp>
+#include <vector>
 
 #include "Epochstamp.hh"
 #include "Hash.hh"
@@ -20,9 +20,9 @@
 namespace karabo {
     namespace util {
 
-        char const * const DATALOGMANAGER_ID = "Karabo_DataLoggerManager_0";
-        char const * const DATALOGGER_PREFIX = "DataLogger-";
-        char const * const DATALOGREADER_PREFIX = "DataLogReader";
+        char const* const DATALOGMANAGER_ID = "Karabo_DataLoggerManager_0";
+        char const* const DATALOGGER_PREFIX = "DataLogger-";
+        char const* const DATALOGREADER_PREFIX = "DataLogReader";
         //    ts=timestamp
         //    tsAsIso8601 : numbers, dot and uppercase letters (timezone)
         //    tsAsDouble  : numbers and a dot (positive double)
@@ -33,12 +33,17 @@ namespace karabo {
         //    user        : 0 or more lower case letters, numbers and underscores
         //    flag        : one or more uppercase letters
         //
-        //                                          tsAsIso8601  | tsAsDouble  | trainId  | path |    type           | value|   user       |flag
-        char const * const DATALOG_LINE_REGEX = "^([TZ0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|(.+)\\|([A-Z][0-9A-Z_]+)\\|(.*)\\|([a-z0-9_]*)\\|([A-Z]+)$";
+        //                                          tsAsIso8601  | tsAsDouble  | trainId  | path |    type           |
+        //                                          value|   user       |flag
+        char const* const DATALOG_LINE_REGEX =
+              "^([TZ0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|(.+)\\|([A-Z][0-9A-Z_]+)\\|(.*)\\|([a-z0-9_]*)\\|([A-Z]+)$";
 
-        // this will match logout lines. Needed because the single regex expression used in the python migration script does not reliably work with boost
-        //                                            tsAsIso8601  | tsAsDouble  | trainId  |path*|    type**   | value|   user       |flag
-        char const * const DATALOG_LOGOUT_REGEX = "^([TZ0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|\\.\\|(![\\s\\S])\\|(.*)\\|([a-z0-9_]*)\\|([A-Z]+)$";
+        // this will match logout lines. Needed because the single regex expression used in the python migration script
+        // does not reliably work with boost
+        //                                            tsAsIso8601  | tsAsDouble  | trainId  |path*|    type**   | value|
+        //                                            user       |flag
+        char const* const DATALOG_LOGOUT_REGEX =
+              "^([TZ0-9\\.]+)\\|([0-9\\.]+)\\|([0-9]+)\\|\\.\\|(![\\s\\S])\\|(.*)\\|([a-z0-9_]*)\\|([A-Z]+)$";
         // *  path: always ".""
         // ** type: always empty
 
@@ -48,37 +53,34 @@ namespace karabo {
         //    tsAsDouble  : numbers and a dot (positive double)
         //    tail        : whatever comes afterwards
         //                                                 event      tsAsIso8601    tsAsDouble tail
-        char const * const DATALOG_INDEX_LINE_REGEX = "^([A-Z=\\+\\-]+)[\\s]+([TZ0-9\\.]+)[\\s]+([0-9\\.]+)[\\s]+(.+)$";
+        char const* const DATALOG_INDEX_LINE_REGEX = "^([A-Z=\\+\\-]+)[\\s]+([TZ0-9\\.]+)[\\s]+([0-9\\.]+)[\\s]+(.+)$";
 
         //    trainId     : numbers (non-negative integer)
         //    position    : numbers (positive integer)
         //    user        : lowercase letters, numbers and underscores (can also be a point)
         //    fileIndex   : numbers (positive integer)
         //                                             trainId       position user            fileIndex
-        char const * const DATALOG_INDEX_TAIL_REGEX = "^([0-9]+)[\\s]+([0-9]+)[\\s]+([a-z0-9_\\.]*)[\\s]+([0-9]+)$";
+        char const* const DATALOG_INDEX_TAIL_REGEX = "^([0-9]+)[\\s]+([0-9]+)[\\s]+([a-z0-9_\\.]*)[\\s]+([0-9]+)$";
 
         unsigned int const DATALOGREADERS_PER_SERVER = 2;
 
         // replacement for '\n' in data logger files
-        char const * const DATALOG_NEWLINE_MANGLE = ".KRB_NEWLINE.";
+        char const* const DATALOG_NEWLINE_MANGLE = ".KRB_NEWLINE.";
 
         /**
          * A structure defining meta data as used by the data loggers
          */
         struct MetaData {
-
             typedef boost::shared_ptr<MetaData> Pointer;
 
             struct Record {
-
                 double epochstamp;
                 unsigned long long trainId;
                 unsigned long long positionInRaw;
                 unsigned int extent1;
                 unsigned int extent2;
 
-                Record() : epochstamp(0.0), trainId(0), positionInRaw(0), extent1(0), extent2(0) {
-                }
+                Record() : epochstamp(0.0), trainId(0), positionInRaw(0), extent1(0), extent2(0) {}
             };
 
             std::string idxFile;
@@ -86,23 +88,20 @@ namespace karabo {
             Record record;
             bool marker; // flag that tells should be current record to be marked
 
-            MetaData() : idxFile(), idxStream(), record(), marker(true) {
-            }
+            MetaData() : idxFile(), idxStream(), record(), marker(true) {}
         };
 
-         /**
+        /**
          * A structure defining meta data as used by the data logger's search results
          */
         struct MetaSearchResult {
-
             size_t fromFileNumber;
             size_t toFileNumber;
             size_t fromRecord;
             size_t toRecord;
             std::vector<size_t> nrecList;
 
-            MetaSearchResult() : fromFileNumber(0), toFileNumber(0), fromRecord(0), toRecord(0) {
-            }
+            MetaSearchResult() : fromFileNumber(0), toFileNumber(0), fromRecord(0), toRecord(0) {}
         };
 
         /**
@@ -110,12 +109,13 @@ namespace karabo {
          * to an Epochstamp
          */
         util::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble);
-        
-        void getLeaves(const karabo::util::Hash& configuration, const karabo::util::Schema& schema,
-                       std::vector<std::string>& result, const char separator='.');
 
-        void getLeaves_r(const karabo::util::Hash& hash, const karabo::util::Schema& schema, std::vector<std::string>& result,
-                         std::string prefix, const char separator, const bool fullPaths);
+        void getLeaves(const karabo::util::Hash& configuration, const karabo::util::Schema& schema,
+                       std::vector<std::string>& result, const char separator = '.');
+
+        void getLeaves_r(const karabo::util::Hash& hash, const karabo::util::Schema& schema,
+                         std::vector<std::string>& result, std::string prefix, const char separator,
+                         const bool fullPaths);
 
         /**
          * Utility function to convert a json object.
@@ -128,11 +128,9 @@ namespace karabo {
         // InfluxResultSet is a pair with a vector of column names in its first position and
         // a vector of rows of values represented as optional strings in its second position.
         // The optional strings have no value when they correspond to nulls returned by Influx.
-        using InfluxResultSet =
-                std::pair<
-                /* first  */ std::vector<std::string>,
-                /* second */ std::vector<std::vector<boost::optional<std::string>>>
-                >;
+        using InfluxResultSet = std::pair<
+              /* first  */ std::vector<std::string>,
+              /* second */ std::vector<std::vector<boost::optional<std::string>>>>;
 
         /**
          * Utility function to convert a string into an InfluxResultSet
@@ -149,14 +147,11 @@ namespace karabo {
          * @throw  karabo::util::NotSupportedException in case the column mismatch
          *         nlohmann::json exceptions in case of malformatted JSON objects.
          */
-        void jsonResultsToInfluxResultSet(const std::string &jsonResult,
-                                          InfluxResultSet &influxResult,
-                                          const std::string &columnPrefixToRemove);
+        void jsonResultsToInfluxResultSet(const std::string& jsonResult, InfluxResultSet& influxResult,
+                                          const std::string& columnPrefixToRemove);
 
-    }
-}
-
+    } // namespace util
+} // namespace karabo
 
 
-#endif	/* DATALOGGERSTRUCTS_HH */
-
+#endif /* DATALOGGERSTRUCTS_HH */

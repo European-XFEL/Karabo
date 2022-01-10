@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   TrainStamp.cc
  * Author: WP76
- * 
+ *
  * Created on June 19, 2013, 3:22 PM
  */
 
@@ -11,16 +11,13 @@ namespace karabo {
     namespace util {
 
 
-        Trainstamp::Trainstamp() : m_trainId(0) {
-        }
+        Trainstamp::Trainstamp() : m_trainId(0) {}
 
 
-        Trainstamp::Trainstamp(const unsigned long long trainId) : m_trainId(trainId) {
-        }
+        Trainstamp::Trainstamp(const unsigned long long trainId) : m_trainId(trainId) {}
 
 
-        Trainstamp::~Trainstamp() {
-        }
+        Trainstamp::~Trainstamp() {}
 
 
         bool Trainstamp::hashAttributesContainTimeInformation(const Hash::Attributes& attributes) {
@@ -37,7 +34,8 @@ namespace karabo {
                 return tid;
 
             } catch (const Exception& e) {
-                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Provided attributes do not contain proper trainId information"));
+                KARABO_RETHROW_AS(
+                      KARABO_PARAMETER_EXCEPTION("Provided attributes do not contain proper trainId information"));
             }
             return Trainstamp(tid);
         }
@@ -51,5 +49,5 @@ namespace karabo {
             out << trainstamp.getTrainId();
             return out;
         }
-    }
-}
+    } // namespace util
+} // namespace karabo

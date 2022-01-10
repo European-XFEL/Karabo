@@ -7,15 +7,15 @@
  */
 
 #ifndef KARABO_XMS_IMAGEDATA_HH
-#define	KARABO_XMS_IMAGEDATA_HH
+#define KARABO_XMS_IMAGEDATA_HH
 
-#include <karabo/util/Hash.hh>
-#include <karabo/util/Dims.hh>
-#include <karabo/util/Validator.hh>
-#include <karabo/util/NDArray.hh>
-#include <karabo/util/DetectorGeometry.hh>
 #include <karabo/util/ByteSwap.hh>
 #include <karabo/util/CustomNodeElement.hh>
+#include <karabo/util/DetectorGeometry.hh>
+#include <karabo/util/Dims.hh>
+#include <karabo/util/Hash.hh>
+#include <karabo/util/NDArray.hh>
+#include <karabo/util/Validator.hh>
 
 namespace karabo {
     namespace xms {
@@ -52,7 +52,7 @@ namespace karabo {
             };
             /// True if encoding is such that one can index the underlying array
             bool isIndexable(int encoding);
-        }
+        } // namespace Encoding
 
         typedef Encoding::EncodingType EncodingType;
 
@@ -88,9 +88,7 @@ namespace karabo {
          *
          */
         class ImageData : protected karabo::util::Hash {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(ImageData, "ImageData", "1.5")
 
             static void expectedParameters(karabo::util::Schema& s);
@@ -114,8 +112,7 @@ namespace karabo {
              *                     the size in bytes of the type used in the NDArray 'data'. If zero (default) or
              *                     negative, a value matching the NDArray type will be calculated (8, 16, ...).
              */
-            ImageData(const karabo::util::NDArray& data,
-                      const EncodingType encoding = Encoding::GRAY,
+            ImageData(const karabo::util::NDArray& data, const EncodingType encoding = Encoding::GRAY,
                       const int bitsPerPixel = 0);
 
             /**
@@ -124,22 +121,20 @@ namespace karabo {
              *
              * @param data NDArray - note that the copy of the NDArray kept inside ImageData will refer to the same raw
              *                       memory as this input
-             * @param dims The dimensions of the image data - if 'empty' and encoding is indexable, will be deduced from data
+             * @param dims The dimensions of the image data - if 'empty' and encoding is indexable, will be deduced from
+             * data
              * @param encoding The encoding of the bytes - defaults to GRAY.
              *                 If UNDEFINED, anything matching GRAY, RGB or RGBA will be identified as such.
              * @param bitsPerPixel The number of bits used in the original data. Can be smaller than 8 times
              *                     the size in bytes of the type used in the NDArray 'data'. If zero (default) or
              *                     negative, a value matching the NDArray type will be calculated (8, 16, ...).
              */
-            ImageData(const karabo::util::NDArray& data,
-                      const karabo::util::Dims& dims,
-                      const EncodingType encoding = Encoding::GRAY,
-                      const int bitsPerPixel = 0);
+            ImageData(const karabo::util::NDArray& data, const karabo::util::Dims& dims,
+                      const EncodingType encoding = Encoding::GRAY, const int bitsPerPixel = 0);
 
             ImageData(const ImageData& other) = default;
 
-            virtual ~ImageData() {
-            }
+            virtual ~ImageData() {}
 
             /**
              * Get a reference to the underlying image data structure.
@@ -231,15 +226,15 @@ namespace karabo {
 
             void setDimensionScales(const std::string& scales);
 
-            void setGeometry(const karabo::util::DetectorGeometry & geometry);
+            void setGeometry(const karabo::util::DetectorGeometry& geometry);
 
             karabo::util::DetectorGeometry getGeometry() const;
 
             const karabo::util::Hash& getHeader() const;
 
-            void setHeader(const karabo::util::Hash & header);
+            void setHeader(const karabo::util::Hash& header);
 
-        private:
+           private:
             static int defaultBitsPerPixel(int encoding, const karabo::util::NDArray& data);
         };
 
@@ -247,14 +242,11 @@ namespace karabo {
          * Declaration ImageDataElement
          **********************************************************************/
 
-        class ImageDataElement : public karabo::util::CustomNodeElement<ImageDataElement, ImageData > {
+        class ImageDataElement : public karabo::util::CustomNodeElement<ImageDataElement, ImageData> {
+            typedef karabo::util::CustomNodeElement<ImageDataElement, ImageData> ParentType;
 
-            typedef karabo::util::CustomNodeElement<ImageDataElement, ImageData > ParentType;
-
-        public:
-
-            ImageDataElement(karabo::util::Schema& s) : ParentType(s) {
-            }
+           public:
+            ImageDataElement(karabo::util::Schema& s) : ParentType(s) {}
 
             ImageDataElement& setDimensionScales(const std::string& scales) {
                 return ParentType::setDefaultValue("dimScales", scales);
@@ -264,7 +256,8 @@ namespace karabo {
                 // It is up to the user to explicitly specify the number of channels for RGB cameras.
                 // i.e. for monochrome image it's "480,640" and for color image it must be "480,640,3"
                 // Encoding should be set accordingly (but not necessary)
-                std::vector<unsigned long long> tmp = karabo::util::fromString<unsigned long long, std::vector>(dimensions);
+                std::vector<unsigned long long> tmp =
+                      karabo::util::fromString<unsigned long long, std::vector>(dimensions);
 
                 // Setting shapes
                 ImageDataElement& ret = ParentType::setDefaultValue("dims", tmp);
@@ -279,11 +272,11 @@ namespace karabo {
             }
 
             ImageDataElement& setType(const karabo::util::Types::ReferenceType type) {
-                return ParentType::setDefaultValue("pixels.type", static_cast<int> (type));
+                return ParentType::setDefaultValue("pixels.type", static_cast<int>(type));
             }
 
             ImageDataElement& setEncoding(const EncodingType& encoding) {
-                return ParentType::setDefaultValue("encoding", (int) encoding);
+                return ParentType::setDefaultValue("encoding", (int)encoding);
             }
 
             // TODO Make Geometry a serializable object, too
@@ -298,13 +291,11 @@ namespace karabo {
                 readOnly();
                 ParentType::commit();
             }
-
         };
 
         typedef ImageDataElement IMAGEDATA_ELEMENT; // TODO Discuss whether to support or not the _ELEMENT noise
         typedef ImageDataElement IMAGEDATA;
-    }
-}
+    } // namespace xms
+} // namespace karabo
 
-#endif	/* KARABO_XMS_IMAGEDATA_HH */
-
+#endif /* KARABO_XMS_IMAGEDATA_HH */

@@ -2,15 +2,16 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include "karabo/util/Exception.hh"
-#include "karabo/util/MetaTools.hh"
-#include "karabo/net/EventLoop.hh"
 #include "karabo/core/DeviceServer.hh"
+
+#include <future>
+#include <iostream>
+
 #include "karabo/core/Runner.hh"
 #include "karabo/log/Logger.hh"
-
-#include <iostream>
-#include <future>
+#include "karabo/net/EventLoop.hh"
+#include "karabo/util/Exception.hh"
+#include "karabo/util/MetaTools.hh"
 
 using namespace karabo::util;
 using namespace karabo::log;
@@ -19,9 +20,7 @@ using namespace karabo::core;
 
 
 int main(int argc, const char** argv) {
-
     try {
-
         // We always change the directory to $KARABO/var/data
         boost::filesystem::current_path(boost::filesystem::path(Version::getPathToKaraboInstallation() + "/var/data"));
 
@@ -33,16 +32,15 @@ int main(int argc, const char** argv) {
         Hash runnerConfig;
         Runner::parseCommandLine(argc, argv, runnerConfig, true);
         const Hash& pluginConfig = (runnerConfig.has("pluginDirectory")
-                                    ? Hash("pluginDirectory", runnerConfig.get<std::string>("pluginDirectory"))
-                                    : Hash());
+                                          ? Hash("pluginDirectory", runnerConfig.get<std::string>("pluginDirectory"))
+                                          : Hash());
         PluginLoader::create("PluginLoader", pluginConfig)->update();
 
         // Instantiate device server
         DeviceServer::Pointer deviceServer = Runner::instantiate(argc, argv);
-        
+
         // Empty pointer will be returned in case of "-h" or "--help"
         if (deviceServer) {
-
             // Handle signals using the event-loop
             EventLoop::setSignalHandler([&deviceServer](int signo) {
                 deviceServer.reset(); // triggers the destructor

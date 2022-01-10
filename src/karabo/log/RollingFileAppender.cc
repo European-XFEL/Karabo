@@ -22,65 +22,65 @@ namespace karabo {
 
         void RollingFileAppender::expectedParameters(Schema& s) {
             STRING_ELEMENT(s)
-                .key("category")
-                .description("Category")
-                .displayedName("Category")
-                .assignmentOptional()
-                .defaultValue("")
-                .commit();
+                  .key("category")
+                  .description("Category")
+                  .displayedName("Category")
+                  .assignmentOptional()
+                  .defaultValue("")
+                  .commit();
 
             PATH_ELEMENT(s)
-                .key("filename")
-                .description("Filename")
-                .displayedName("Filename")
-                .isOutputFile()
-                .assignmentOptional()
-                .defaultValue("karabo.log")
-                .commit();
+                  .key("filename")
+                  .description("Filename")
+                  .displayedName("Filename")
+                  .isOutputFile()
+                  .assignmentOptional()
+                  .defaultValue("karabo.log")
+                  .commit();
 
             UINT32_ELEMENT(s)
-                .description("Access mode")
-                .key("mode")
-                .displayedName("AccessMode")
-                .assignmentOptional()
-                .defaultValue((unsigned int)00644)
-                .commit();
+                  .description("Access mode")
+                  .key("mode")
+                  .displayedName("AccessMode")
+                  .assignmentOptional()
+                  .defaultValue((unsigned int)00644)
+                  .commit();
 
             UINT32_ELEMENT(s)
-                .key("maxFileSize")
-                .description("Maximum file size")
-                .displayedName("MaxFileSize")
-                .unit(Unit::BYTE)
-                .assignmentOptional()
-                .defaultValue(10 * 1024 * 1024)
-                .commit();
+                  .key("maxFileSize")
+                  .description("Maximum file size")
+                  .displayedName("MaxFileSize")
+                  .unit(Unit::BYTE)
+                  .assignmentOptional()
+                  .defaultValue(10 * 1024 * 1024)
+                  .commit();
 
             UINT32_ELEMENT(s)
-                .key("maxBackupIndex")
-                .description("Maximum backup index (rolling file index)")
-                .displayedName("MaxBackupIndex")
-                .assignmentOptional()
-                .defaultValue(10)
-                .commit();
+                  .key("maxBackupIndex")
+                  .description("Maximum backup index (rolling file index)")
+                  .displayedName("MaxBackupIndex")
+                  .assignmentOptional()
+                  .defaultValue(10)
+                  .commit();
 
             STRING_ELEMENT(s)
-                .key("pattern")
-                .description("Formatting pattern for the logstream")
-                .displayedName("Pattern")
-                .assignmentOptional()
-                .defaultValue("%d{%F %H:%M:%S} %p  %c  : %m%n")
-                .commit();
+                  .key("pattern")
+                  .description("Formatting pattern for the logstream")
+                  .displayedName("Pattern")
+                  .assignmentOptional()
+                  .defaultValue("%d{%F %H:%M:%S} %p  %c  : %m%n")
+                  .commit();
 
             STRING_ELEMENT(s)
-                .key("threshold")
-                .description(
-                    "The Appender will not appended log events with a priority lower than the threshold.\
+                  .key("threshold")
+                  .description(
+                        "The Appender will not appended log events with a priority lower than the threshold.\
                                   Use Priority::NOTSET to disable threshold checking.")
-                .displayedName("Threshold")
-                .options("NOTSET DEBUG INFO WARN ERROR")
-                .assignmentOptional()
-                .defaultValue("NOTSET")
-                .commit();
+                  .displayedName("Threshold")
+                  .options("NOTSET DEBUG INFO WARN ERROR")
+                  .assignmentOptional()
+                  .defaultValue("NOTSET")
+                  .commit();
         }
 
 

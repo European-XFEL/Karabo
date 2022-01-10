@@ -27,6 +27,6 @@ namespace karabo {
             KARABO_REGISTER_FOR_CONFIGURATION(Attribute, FloatArrayAttribute)
             KARABO_REGISTER_FOR_CONFIGURATION(Attribute, DoubleArrayAttribute)
 
-        }
-    }
-}
+        } // namespace h5
+    }     // namespace io
+} // namespace karabo

@@ -6,25 +6,23 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <streambuf>
+#include "DataLogger.hh"
 
 #include <algorithm>
 #include <boost/filesystem.hpp>
+#include <streambuf>
 
 #include "karabo/io/Input.hh"
 #include "karabo/io/TextSerializer.hh"
-#include "karabo/net/Strand.hh"
 #include "karabo/net/EventLoop.hh"
 #include "karabo/net/Strand.hh"
+#include "karabo/util/MetaTools.hh"
 #include "karabo/util/OverwriteElement.hh"
 #include "karabo/util/Schema.hh"
 #include "karabo/util/SimpleElement.hh"
 #include "karabo/util/TableElement.hh"
 #include "karabo/util/VectorElement.hh"
-#include "karabo/util/MetaTools.hh"
 #include "karabo/xms/SlotElement.hh"
-
-#include "DataLogger.hh"
 
 namespace karabo {
     namespace devices {
@@ -37,89 +35,92 @@ namespace karabo {
 
 
         void DataLogger::expectedParameters(Schema& expected) {
+            OVERWRITE_ELEMENT(expected)
+                  .key("state")
+                  .setNewOptions(State::INIT, State::ON)
+                  .setNewDefaultValue(State::INIT)
+                  .commit();
 
-            OVERWRITE_ELEMENT(expected).key("state")
-                    .setNewOptions(State::INIT, State::ON)
-                    .setNewDefaultValue(State::INIT)
-                    .commit();
+            VECTOR_STRING_ELEMENT(expected)
+                  .key("devicesToBeLogged")
+                  .displayedName("Devices to be logged")
+                  .description("The devices that should be logged by this logger instance")
+                  .assignmentOptional()
+                  .defaultValue(std::vector<std::string>())
+                  .commit();
 
-            VECTOR_STRING_ELEMENT(expected).key("devicesToBeLogged")
-                    .displayedName("Devices to be logged")
-                    .description("The devices that should be logged by this logger instance")
-                    .assignmentOptional()
-                    .defaultValue(std::vector<std::string>())
-                    .commit();
-
-            VECTOR_STRING_ELEMENT(expected).key("devicesNotLogged")
-                    .displayedName("Devices not logged")
-                    .description("The devices that are not (yet or due to connection failures) logged")
-                    .readOnly()
-                    .initialValue(std::vector<std::string>())
-                    .commit();
+            VECTOR_STRING_ELEMENT(expected)
+                  .key("devicesNotLogged")
+                  .displayedName("Devices not logged")
+                  .description("The devices that are not (yet or due to connection failures) logged")
+                  .readOnly()
+                  .initialValue(std::vector<std::string>())
+                  .commit();
 
             Schema lastUpdateSchema;
-            STRING_ELEMENT(lastUpdateSchema).key("deviceId")
-                    .displayedName("Device")
-                    .readOnly()
-                    .initialValue(std::string())
-                    .commit();
+            STRING_ELEMENT(lastUpdateSchema)
+                  .key("deviceId")
+                  .displayedName("Device")
+                  .readOnly()
+                  .initialValue(std::string())
+                  .commit();
 
-            STRING_ELEMENT(lastUpdateSchema).key("lastUpdateUtc")
-                    .displayedName("Last Update (UTC)")
-                    .readOnly()
-                    .initialValue(std::string())
-                    .commit();
+            STRING_ELEMENT(lastUpdateSchema)
+                  .key("lastUpdateUtc")
+                  .displayedName("Last Update (UTC)")
+                  .readOnly()
+                  .initialValue(std::string())
+                  .commit();
 
-            TABLE_ELEMENT(expected).key("lastUpdatesUtc")
-                    .displayedName("Last Updates (UTC)")
-                    .description("Timestamps of last recorded parameter update in UTC (updated in flush interval)")
-                    .setColumns(lastUpdateSchema)
-                    .readOnly()
-                    .initialValue(std::vector<Hash>())
-                    .commit();
+            TABLE_ELEMENT(expected)
+                  .key("lastUpdatesUtc")
+                  .displayedName("Last Updates (UTC)")
+                  .description("Timestamps of last recorded parameter update in UTC (updated in flush interval)")
+                  .setColumns(lastUpdateSchema)
+                  .readOnly()
+                  .initialValue(std::vector<Hash>())
+                  .commit();
 
-            UINT32_ELEMENT(expected).key("flushInterval")
-                    .displayedName("Flush interval")
-                    .description("The interval after which the memory accumulated data is made persistent")
-                    .unit(Unit::SECOND)
-                    .assignmentOptional().defaultValue(60).minInc(1)
-                    .commit();
+            UINT32_ELEMENT(expected)
+                  .key("flushInterval")
+                  .displayedName("Flush interval")
+                  .description("The interval after which the memory accumulated data is made persistent")
+                  .unit(Unit::SECOND)
+                  .assignmentOptional()
+                  .defaultValue(60)
+                  .minInc(1)
+                  .commit();
 
             // Hide the loggers from the standard view in clients
-            OVERWRITE_ELEMENT(expected).key("visibility")
-                    .setNewDefaultValue<int>(Schema::AccessLevel::ADMIN)
-                    .commit();
+            OVERWRITE_ELEMENT(expected).key("visibility").setNewDefaultValue<int>(Schema::AccessLevel::ADMIN).commit();
 
-            SLOT_ELEMENT(expected).key("flush")
-                    .displayedName("Flush")
-                    .description("Persist buffered data")
-                    .allowedStates(State::ON)
-                    .commit();
+            SLOT_ELEMENT(expected)
+                  .key("flush")
+                  .displayedName("Flush")
+                  .description("Persist buffered data")
+                  .allowedStates(State::ON)
+                  .commit();
         }
 
 
         DeviceData::DeviceData(const karabo::util::Hash& input)
-            : m_deviceToBeLogged(input.get<std::string>("deviceToBeLogged"))
-            , m_initLevel(InitLevel::NONE)
-            , m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService()))
-            , m_currentSchema()
-            , m_user(".")
-            , m_lastTimestampMutex()
-            , m_lastDataTimestamp(Epochstamp(0ull, 0ull), Trainstamp())
-            , m_updatedLastTimestamp(false)
-            , m_pendingLogin(true)
-            , m_onDataBeforeComplete(0u) {
-        }
+            : m_deviceToBeLogged(input.get<std::string>("deviceToBeLogged")),
+              m_initLevel(InitLevel::NONE),
+              m_strand(boost::make_shared<karabo::net::Strand>(karabo::net::EventLoop::getIOService())),
+              m_currentSchema(),
+              m_user("."),
+              m_lastTimestampMutex(),
+              m_lastDataTimestamp(Epochstamp(0ull, 0ull), Trainstamp()),
+              m_updatedLastTimestamp(false),
+              m_pendingLogin(true),
+              m_onDataBeforeComplete(0u) {}
 
 
-        DeviceData::~DeviceData() {
-        }
+        DeviceData::~DeviceData() {}
 
 
         DataLogger::DataLogger(const Hash& input)
-            : karabo::core::Device<>(input)
-            , m_flushDeadline(karabo::net::EventLoop::getIOService()) {
-
+            : karabo::core::Device<>(input), m_flushDeadline(karabo::net::EventLoop::getIOService()) {
             // start "flush" actor ...
             input.get("flushInterval", m_flushInterval); // in seconds
 
@@ -134,8 +135,7 @@ namespace karabo {
         }
 
 
-        DataLogger::~DataLogger() {
-        }
+        DataLogger::~DataLogger() {}
 
 
         void DataLogger::preDestruction() {
@@ -158,9 +158,8 @@ namespace karabo {
 
 
         void DataLogger::initialize() {
-
             // Validate that devicesToBeLogged does not contain duplicates
-            const auto devsToLog(get<std::vector < std::string >> ("devicesToBeLogged"));
+            const auto devsToLog(get<std::vector<std::string>>("devicesToBeLogged"));
             const std::set<std::string> tester(devsToLog.begin(), devsToLog.end());
             if (tester.size() < devsToLog.size()) {
                 throw KARABO_INIT_EXCEPTION("Duplicated ids in configured devicesToBeLogged: " + toString(devsToLog));
@@ -201,10 +200,8 @@ namespace karabo {
                     // Influx server availability.
                     updateState(State::ON);
                 } else {
-                    KARABO_LOG_ERROR << "DataLogger '" << m_instanceId
-                        << "' in ERROR state and cannot goto ON state. "
-                        << "Current status is '"
-                        << this->get<string>("status") << "'";
+                    KARABO_LOG_ERROR << "DataLogger '" << m_instanceId << "' in ERROR state and cannot goto ON state. "
+                                     << "Current status is '" << this->get<string>("status") << "'";
                 }
             } else {
                 for (DeviceDataMap::value_type& pair : m_perDeviceData) {
@@ -215,13 +212,13 @@ namespace karabo {
 
             // Start the flushing
             m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
-            m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
+            m_flushDeadline.async_wait(
+                  util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
         }
 
 
         void DataLogger::initConnection(const DeviceData::Pointer& data,
-                                        const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
-
+                                        const boost::shared_ptr<std::atomic<unsigned int>>& counter) {
             const std::string& deviceId = data->m_deviceToBeLogged;
 
             // Connect to schema updates and afterwards request Schema (in other order we might miss an update).
@@ -230,7 +227,8 @@ namespace karabo {
             asyncConnect(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated",
                          util::bind_weak(&DataLogger::handleSchemaConnected, this, data, counter),
                          util::bind_weak(&DataLogger::handleFailure, this, "connecting to schema for", data, counter));
-            // Final steps until DataLogger is properly initialised for this device are treated in a chain of async handlers:
+            // Final steps until DataLogger is properly initialised for this device are treated in a chain of async
+            // handlers:
             // - If signalSchemaUpdated connected, request current schema;
             // - if that arrived, connect to both signal(State)Changed;
             // - if these two are connected, request initial configuration, start flushing and update state.
@@ -238,8 +236,7 @@ namespace karabo {
 
 
         void DataLogger::handleFailure(const std::string& reason, const DeviceData::Pointer& data,
-                                       const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
-
+                                       const boost::shared_ptr<std::atomic<unsigned int>>& counter) {
             const std::string& deviceId = data->m_deviceToBeLogged;
             try {
                 throw; // This will tell us which exception triggered the call to this error handler.
@@ -252,51 +249,51 @@ namespace karabo {
 
 
         void DataLogger::handleSchemaConnected(const DeviceData::Pointer& data,
-                                               const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
+                                               const boost::shared_ptr<std::atomic<unsigned int>>& counter) {
             const std::string& deviceId = data->m_deviceToBeLogged;
-            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting slotGetSchema (receiveAsync) for " << deviceId;
+            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting slotGetSchema (receiveAsync) for "
+                                      << deviceId;
 
             request(deviceId, "slotGetSchema", false)
-                    .receiveAsync<karabo::util::Schema, std::string>
-                    (util::bind_weak(&DataLogger::handleSchemaReceived, this, _1, _2, data, counter),
-                     util::bind_weak(&DataLogger::handleFailure, this, "receiving schema from", data, counter));
+                  .receiveAsync<karabo::util::Schema, std::string>(
+                        util::bind_weak(&DataLogger::handleSchemaReceived, this, _1, _2, data, counter),
+                        util::bind_weak(&DataLogger::handleFailure, this, "receiving schema from", data, counter));
         }
 
 
         void DataLogger::handleSchemaReceived(const karabo::util::Schema& schema, const std::string& deviceId,
                                               const DeviceData::Pointer& data,
-                                              const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
+                                              const boost::shared_ptr<std::atomic<unsigned int>>& counter) {
             // We need to store the received schema and then connect to configuration updates.
             // Since the first should not be done concurrently, we just post to the strand here,
             // adding the best timestamp we can get for this change - 'now' (better would be to receive the stamp
             // from the sender - possibly from the broker message header?):
-            data->m_strand->post(util::bind_weak(&DataLogger::handleSchemaReceived2, this, schema, Timestamp(),
-                                                 data, counter));
+            data->m_strand->post(
+                  util::bind_weak(&DataLogger::handleSchemaReceived2, this, schema, Timestamp(), data, counter));
         }
 
 
         void DataLogger::handleSchemaReceived2(const karabo::util::Schema& schema, const karabo::util::Timestamp& stamp,
                                                const DeviceData::Pointer& data,
-                                               const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
-
+                                               const boost::shared_ptr<std::atomic<unsigned int>>& counter) {
             // Set initial Schema - needed for receiving properly in slotChanged
             data->handleSchemaUpdated(schema, stamp);
 
             // Now connect concurrently both, signalStateChanged and signalChanged, to the same slot.
             asyncConnect({SignalSlotConnection(data->m_deviceToBeLogged, "signalStateChanged", "", "slotChanged"),
-                         SignalSlotConnection(data->m_deviceToBeLogged, "signalChanged", "", "slotChanged")},
+                          SignalSlotConnection(data->m_deviceToBeLogged, "signalChanged", "", "slotChanged")},
                          util::bind_weak(&DataLogger::handleConfigConnected, this, data, counter),
-                         util::bind_weak(&DataLogger::handleFailure, this, "connecting to configuration updates",
-                                         data, counter));
+                         util::bind_weak(&DataLogger::handleFailure, this, "connecting to configuration updates", data,
+                                         counter));
         }
 
 
         void DataLogger::handleConfigConnected(const DeviceData::Pointer& data,
-                                               const boost::shared_ptr<std::atomic<unsigned int> >& counter) {
-
+                                               const boost::shared_ptr<std::atomic<unsigned int>>& counter) {
             const std::string& deviceId = data->m_deviceToBeLogged;
             data->m_initLevel = DeviceData::InitLevel::CONNECTED;
-            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting " << deviceId << ".slotGetConfiguration (no wait)";
+            KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Requesting " << deviceId
+                                      << ".slotGetConfiguration (no wait)";
             requestNoWait(deviceId, "slotGetConfiguration", "", "slotChanged");
 
             if (counter) checkReady(*counter);
@@ -313,20 +310,17 @@ namespace karabo {
                     // InfluxServer availabilty.
                     updateState(State::ON);
                 } else {
-                    KARABO_LOG_ERROR << "DataLogger '" << m_instanceId
-                        << "' in ERROR state and cannot goto ON state. "
-                        << "Current status is '"
-                        << this->get<string>("status") << "'";
+                    KARABO_LOG_ERROR << "DataLogger '" << m_instanceId << "' in ERROR state and cannot goto ON state. "
+                                     << "Current status is '" << this->get<string>("status") << "'";
                 }
             }
         }
 
 
         bool DataLogger::stopLogging(const std::string& deviceId, bool retry) {
-
             auto disconnectCounter = boost::make_shared<std::atomic<int>>(3); // three signals to disconnect below
-            auto genericHandler = bind_weak(&DataLogger::disconnectHandler, this, _1, deviceId, _2,
-                                            retry, disconnectCounter);
+            auto genericHandler =
+                  bind_weak(&DataLogger::disconnectHandler, this, _1, deviceId, _2, retry, disconnectCounter);
             // Use the very long default timeout for the disconnection:
             // If we shall retry to connect, a long timeout gives a better chance that the other end is now capable to
             // accept connections (in the situation that this failed before due to overload).
@@ -351,7 +345,7 @@ namespace karabo {
 
 
         void DataLogger::disconnectHandler(bool isFailure, const std::string& devId, const std::string& signal,
-                                           bool retry, const boost::shared_ptr<std::atomic<int>>&counter) {
+                                           bool retry, const boost::shared_ptr<std::atomic<int>>& counter) {
             if (isFailure) {
                 try {
                     throw;
@@ -359,18 +353,18 @@ namespace karabo {
                     // Silence the expected timeout if stopLogging was called since device went offline
                     karabo::util::Exception::clearTrace();
                 } catch (const std::exception& se) {
-                    KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect from " << devId << "." << signal
-                            << ": " << se.what();
+                    KARABO_LOG_FRAMEWORK_WARN << "Failed to disconnect from " << devId << "." << signal << ": "
+                                              << se.what();
                 }
             }
 
             // If retry requested, wait until all signals are disconnected (do not bother if that failed);
             if (retry && 0 >= --(*counter)) {
-                const std::vector<std::string> devsToLog = get<std::vector < std::string >> ("devicesToBeLogged");
+                const std::vector<std::string> devsToLog = get<std::vector<std::string>>("devicesToBeLogged");
                 if (std::find(devsToLog.begin(), devsToLog.end(), devId) == devsToLog.end()) {
                     return; // lost interest in this device
                 }
-                const std::vector<std::string> devsNotLogged = get<std::vector < std::string >> ("devicesNotLogged");
+                const std::vector<std::string> devsNotLogged = get<std::vector<std::string>>("devicesNotLogged");
                 if (std::find(devsNotLogged.begin(), devsNotLogged.end(), devId) == devsNotLogged.end()) {
                     // Maybe some other path was taken to connect, e.g. from outside while the attempt to connect
                     // "this time" ran into time out.
@@ -386,15 +380,14 @@ namespace karabo {
                 m_nonTreatedSlotChanged.erase(devId); // Just in case we received unwanted data before...
 
                 // Init connection to device
-                initConnection(data, boost::shared_ptr<std::atomic<unsigned int> >());
+                initConnection(data, boost::shared_ptr<std::atomic<unsigned int>>());
             }
-
         }
 
 
         void DataLogger::slotTagDeviceToBeDiscontinued(const std::string& reason, const std::string& deviceId) {
             KARABO_LOG_FRAMEWORK_INFO << getInstanceId() << ": Stop logging '" << deviceId
-                    << "' requested since: " << reason;
+                                      << "' requested since: " << reason;
 
             removeFrom(deviceId, "devicesToBeLogged");
             removeFrom(deviceId, "devicesNotLogged"); // just in case it was a problematic one
@@ -427,8 +420,9 @@ namespace karabo {
                 m_nonTreatedSlotChanged.erase(deviceId);
 
                 // Init connection to device,
-                // using an empty pointer to counter since addition of logged devices at runtime shall not influence State.
-                initConnection(data, boost::shared_ptr<std::atomic<unsigned int> >());
+                // using an empty pointer to counter since addition of logged devices at runtime shall not influence
+                // State.
+                initConnection(data, boost::shared_ptr<std::atomic<unsigned int>>());
             }
 
             reply(badIds);
@@ -436,15 +430,13 @@ namespace karabo {
 
 
         void DataLogger::slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId) {
-
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             DeviceDataMap::iterator it = m_perDeviceData.find(deviceId);
             if (it != m_perDeviceData.end()) {
                 DeviceData::Pointer& data = it->second;
                 if (data->m_initLevel == DeviceData::InitLevel::COMPLETE) {
                     // normal case, nothing to do but just log
-                } else if (data->m_initLevel == DeviceData::InitLevel::CONNECTED
-                           && configuration.has("_deviceId_")) {
+                } else if (data->m_initLevel == DeviceData::InitLevel::CONNECTED && configuration.has("_deviceId_")) {
                     // configuration is the requested full configuration at the beginning
                     data->m_initLevel = DeviceData::InitLevel::COMPLETE;
 
@@ -454,15 +446,18 @@ namespace karabo {
                     data->m_onDataBeforeComplete = 0ul; // reset in case - should not matter
                 } else {
                     // connected, but requested full configuration not yet arrived - ignore these updates
-                    // Log only 1st, 2nd, 3rd, ..., 9th, 10th, 20th, ..., 90th, 100th, 200th, ..., 900th, 1000th, 2000th, ...
+                    // Log only 1st, 2nd, 3rd, ..., 9th, 10th, 20th, ..., 90th, 100th, 200th, ..., 900th, 1000th,
+                    // 2000th, ...
                     //          and finally every millionth time:
                     const unsigned int numLogs = ++(data->m_onDataBeforeComplete);
                     unsigned int modulo = 1'000'000; // a million using C++14 digit separators
                     do {
                         if (numLogs % modulo == 0) {
-                            const char* th = (numLogs > 3ul ? "th" : (numLogs == 3ul ? "rd" : (numLogs == 2ul ? "nd" : "st")));
+                            const char* th =
+                                  (numLogs > 3ul ? "th" : (numLogs == 3ul ? "rd" : (numLogs == 2ul ? "nd" : "st")));
                             KARABO_LOG_FRAMEWORK_INFO << "Ignore slotChanged for " << deviceId << " the " << numLogs
-                                    << th << " time - not connected or initial full config not yet arrived";
+                                                      << th
+                                                      << " time - not connected or initial full config not yet arrived";
                             break;
                         }
                         if (numLogs > modulo) break;
@@ -473,16 +468,18 @@ namespace karabo {
                 const std::string& user = getSenderInfo("slotChanged")->getUserIdOfSender();
                 // See DataLogger::slotSchemaUpdated for  a consideration about using boost::bind with 'data' instead
                 // of bind_weak with bare pointer
-                data->m_strand->post(karabo::util::bind_weak(&DeviceData::handleChanged, data.get(),
-                                                             configuration, user));
+                data->m_strand->post(
+                      karabo::util::bind_weak(&DeviceData::handleChanged, data.get(), configuration, user));
             } else {
                 // Throttled logging, see above.
                 const unsigned int numLogs = ++m_nonTreatedSlotChanged[deviceId]; // prefix increment
                 unsigned int modulo = 1'000'000;
                 do {
                     if (numLogs % modulo == 0) {
-                        const char* th = (numLogs > 3ul ? "th" : (numLogs == 3ul ? "rd" : (numLogs == 2ul ? "nd" : "st")));
-                        KARABO_LOG_FRAMEWORK_WARN << "slotChanged called the " << numLogs << th << " time from non-treated device " << deviceId << ".";
+                        const char* th =
+                              (numLogs > 3ul ? "th" : (numLogs == 3ul ? "rd" : (numLogs == 2ul ? "nd" : "st")));
+                        KARABO_LOG_FRAMEWORK_WARN << "slotChanged called the " << numLogs << th
+                                                  << " time from non-treated device " << deviceId << ".";
                         break;
                     }
                     if (numLogs > modulo) break;
@@ -494,7 +491,7 @@ namespace karabo {
         bool DataLogger::removeFrom(const std::string& str, const std::string& vectorProp) {
             // lock mutex to avoid that another thread interferes in between get and set
             boost::mutex::scoped_lock lock(m_changeVectorPropMutex);
-            std::vector<std::string> vec = get<std::vector < std::string >> (vectorProp);
+            std::vector<std::string> vec = get<std::vector<std::string>>(vectorProp);
             const auto it = std::find(vec.begin(), vec.end(), str);
             if (it != vec.end()) {
                 vec.erase(it);
@@ -509,7 +506,7 @@ namespace karabo {
         bool DataLogger::appendTo(const std::string& str, const std::string& vectorProp) {
             // lock mutex to avoid that another thread interferes in between get and set
             boost::mutex::scoped_lock lock(m_changeVectorPropMutex);
-            std::vector<std::string> vec = get<std::vector < std::string >> (vectorProp);
+            std::vector<std::string> vec = get<std::vector<std::string>>(vectorProp);
             const auto it = std::find(vec.begin(), vec.end(), str);
             if (it == vec.end()) {
                 vec.push_back(str);
@@ -532,9 +529,9 @@ namespace karabo {
 
                 // Sort the paths by ascending order of their corresponding nodes Epochstamps.
                 std::sort(paths.begin(), paths.end(),
-                          [&configuration](const std::string &firstPath, const std::string &secondPath) {
-                              const Hash::Node &firstNode = configuration.getNode(firstPath);
-                              const Hash::Node &secondNode = configuration.getNode(secondPath);
+                          [&configuration](const std::string& firstPath, const std::string& secondPath) {
+                              const Hash::Node& firstNode = configuration.getNode(firstPath);
+                              const Hash::Node& secondNode = configuration.getNode(secondPath);
                               Epochstamp firstTime(0, 0);
                               Epochstamp secondTime(0, 0);
                               if (Epochstamp::hashAttributesContainTimeInformation(firstNode.getAttributes())) {
@@ -558,7 +555,8 @@ namespace karabo {
                 if (m_flushDeadline.cancel()) {
                     updateTableAndFlush(boost::make_shared<SignalSlotable::AsyncReply>(this));
                     m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
-                    m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
+                    m_flushDeadline.async_wait(
+                          util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
                     return;
                 }
                 boost::this_thread::sleep(boost::posix_time::milliseconds(1));
@@ -575,12 +573,12 @@ namespace karabo {
             updateTableAndFlush(boost::shared_ptr<SignalSlotable::AsyncReply>());
             // arm timer again
             m_flushDeadline.expires_from_now(boost::posix_time::seconds(m_flushInterval));
-            m_flushDeadline.async_wait(util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
+            m_flushDeadline.async_wait(
+                  util::bind_weak(&DataLogger::flushActor, this, boost::asio::placeholders::error));
         }
 
 
         void DataLogger::updateTableAndFlush(const boost::shared_ptr<SignalSlotable::AsyncReply>& aReplyPtr) {
-
             // Update lastUpdatesUtc
             std::vector<Hash> lastStamps;
             bool updatedAnyStamp = false;
@@ -607,8 +605,7 @@ namespace karabo {
                 }
             }
 
-            if (updatedAnyStamp
-                || (lastStamps.size() != get<std::vector < Hash >> ("lastUpdatesUtc").size())) {
+            if (updatedAnyStamp || (lastStamps.size() != get<std::vector<Hash>>("lastUpdatesUtc").size())) {
                 // If sizes are equal, but devices have changed, then at least one time stamp must have changed as well.
                 set("lastUpdatesUtc", lastStamps);
             }
@@ -624,17 +621,19 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_perDeviceDataMutex);
             DeviceDataMap::iterator it = m_perDeviceData.find(deviceId);
             if (it != m_perDeviceData.end()) {
-                Timestamp stamp; // Best time stamp we can get for this schema change (or take it from broker message header?)
+                Timestamp stamp; // Best time stamp we can get for this schema change (or take it from broker message
+                                 // header?)
                 DeviceData::Pointer data = it->second;
                 // Or boost::bind the shared pointer instead of bind_weak with this?
                 // That would create a potentially dangerous cyclic reference: data has a strand that has a queue that
                 // contains a handler that has a pointer to data until processed.
                 // The advantage would be a kind of guarantee that our update will be processed,
                 // even if data is removed from m_perDeviceData
-                data->m_strand->post(karabo::util::bind_weak(&DeviceData::handleSchemaUpdated, data.get(), schema, stamp));
+                data->m_strand->post(
+                      karabo::util::bind_weak(&DeviceData::handleSchemaUpdated, data.get(), schema, stamp));
             } else {
                 KARABO_LOG_FRAMEWORK_WARN << "slotSchemaUpdated called from non-treated device " << deviceId << ".";
             }
         }
-    }
-}
+    } // namespace devices
+} // namespace karabo
