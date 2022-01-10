@@ -47,7 +47,7 @@ void Exception_Test::testMethod() {
         throw KARABO_SIGNALSLOT_EXCEPTION("A nasty problem");
     } catch (const karabo::util::Exception& e) {
         CPPUNIT_ASSERT_EQUAL(std::string("SignalSlot Exception"), e.type());
-        CPPUNIT_ASSERT_EQUAL(std::string("An error has occurred: A nasty problem"), e.userFriendlyMsg());
+        CPPUNIT_ASSERT_EQUAL(std::string("A nasty problem"), e.userFriendlyMsg());
         const std::string details(e.detailedMsg());
         // Detailed message looks like this:
         // 1. Exception =====>  {
@@ -82,7 +82,7 @@ void Exception_Test::testMethod() {
         // Outer most rethrow without extra message
         // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an
         // indented "because: " prefix
-        CPPUNIT_ASSERT_EQUAL(std::string("An error has occurred: A casting problem\n  because: Propagated"),
+        CPPUNIT_ASSERT_EQUAL(std::string("A casting problem\n  because: Propagated"),
                              e.userFriendlyMsg(false));
 
         const std::string details = e.detailedMsg();
@@ -278,11 +278,11 @@ void Exception_Test::testMethod() {
         // Outer most rethrow without extra message
         // User friendly message skips message-less exceptions, but otherwise we get a new line for each with an
         // indented "because: " prefix
-        CPPUNIT_ASSERT_EQUAL(std::string("An error has occurred: A casting problem\n  because: Propagated"),
+        CPPUNIT_ASSERT_EQUAL(std::string("A casting problem\n  because: Propagated"),
                              e.userFriendlyMsg(true));
         // Previous call to userFriendlyMsg(true) cleared the stack trace, so a further call has only the most recent
         // exception Since that was triggered by a simple KARABO_RETHROW it has an empty message, so the exception type
         // is printed.
-        CPPUNIT_ASSERT_EQUAL(std::string("An error has occurred: Propagated Exception"), e.userFriendlyMsg());
+        CPPUNIT_ASSERT_EQUAL(std::string("Propagated Exception"), e.userFriendlyMsg());
     }
 }
