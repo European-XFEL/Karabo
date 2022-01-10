@@ -20,12 +20,12 @@ from karabo.native import (
     VectorStringValue, VectorUInt8, VectorUInt16, VectorUInt32, VectorUInt64,
     Weak, convert_old_project, daysAgo, decodeBinary, decodeXML, dictToHash,
     dtype_from_number, encodeBinary, encodeXML, get_array_data,
-    get_default_value, get_hash_type_from_data, get_image_data,
-    get_instance_parent, get_timestamp, hashToDict, hashtype_from_string,
-    hoursAgo, is_equal, isSet, loadFromFile, minutesAgo, newest_timestamp,
-    read_project_model, sanitize_table_schema, saveToFile, simple_deepcopy,
-    string_from_hashtype, unit_registry as unit, write_project_model,
-    writeBinary, writeXML)
+    get_default_value, get_descriptor_from_data, get_hash_type_from_data,
+    get_image_data, get_instance_parent, get_timestamp, has_changes,
+    hashToDict, hashtype_from_string, hoursAgo, is_equal, isSet, loadFromFile,
+    minutesAgo, newest_timestamp, read_project_model, sanitize_table_schema,
+    saveToFile, simple_deepcopy, string_from_hashtype, unit_registry as unit,
+    write_project_model, writeBinary, writeXML)
 
 # Common api
 from .common.alarm_conditions import AlarmCondition
@@ -83,7 +83,7 @@ def _create_cli_submodule():
     # NOTE: This is the middlelayer part of the ikarabo namespace
     symbols = (
         call, callNoWait, connectDevice, compareDeviceConfiguration,
-        compareDeviceWithPast, daysAgo, disconnectDevice, execute,
+        compareDeviceWithPast, daysAgo, disconnectDevice, execute, has_changes,
         executeNoWait, findDevices, findServers, getClasses, getClients,
         getConfiguration, getConfigurationFromPast, getSchemaFromPast,
         getConfigurationFromName, getLastConfiguration, getDevice,

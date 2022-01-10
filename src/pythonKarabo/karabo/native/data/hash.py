@@ -106,7 +106,8 @@ class Hash(OrderedDict):
         """This is a direct way of getting `value` and `attrs` of the `Hash`
         in a `HashElement` object.
 
-        :returns: A value and attributes belonging to `path`
+        :returns: A tuple of value and attributes belonging to `path`, e.g.
+                  data, attrs = hash.getElement(key)
         """
         path = str(path)
         if SEPARATOR not in path:
@@ -157,6 +158,11 @@ class Hash(OrderedDict):
                 OrderedDict.__setitem__(s, p, HashElement(value, attrs))
 
     def __getitem__(self, item):
+        """Get an item from the Hash. Specifit either a single `key` or both
+        key and attribute with [`key`, `attribute`] to retrieve data.
+
+        To retrieve the full attribute dictionary for a specific key, use
+        the `Ellipsis` with [`key`, ...]"""
         if isinstance(item, tuple):
             key, attr = item
             if attr is Ellipsis:
@@ -169,6 +175,7 @@ class Hash(OrderedDict):
             return self._get(item).data
 
     def __delitem__(self, item):
+        """Delete an `item` from the Hash"""
         if isinstance(item, tuple):
             key, attr = item
             del self._get(key).attrs[attr]
@@ -176,6 +183,10 @@ class Hash(OrderedDict):
             OrderedDict.__delitem__(*self._path(item))
 
     def __contains__(self, key):
+        """Retrieve if a key is contained in the Hash
+
+        :returns: True or False
+        """
         try:
             self._get(key)
             return True
@@ -197,6 +208,7 @@ class Hash(OrderedDict):
             yield k, elem.data, elem.attrs
 
     def items(self):
+        """Iterate over key and values of the Hash container"""
         for k in self:
             yield k, OrderedDict.__getitem__(self, k).data
 
@@ -220,6 +232,11 @@ class Hash(OrderedDict):
                 self[k, ...] = other[k, ...].copy()
 
     def get(self, item, default=None):
+        """The graceful item getter function of the Hash
+
+        :param item: The item key for the element
+        :param default: The return value if the item is not available
+        """
         try:
             return self[item]
         except KeyError:
@@ -235,9 +252,11 @@ class Hash(OrderedDict):
         return self[item, key]
 
     def getAttributes(self, item):
+        """Retrieve all attributes related to `item`"""
         return self[item, ...]
 
     def has(self, item):
+        """Check if the `item` is contained in the Hash"""
         return item in self
 
     def getKeys(self, keys=None):
@@ -246,16 +265,20 @@ class Hash(OrderedDict):
         return keys.extend(list(self.keys()))
 
     def hasAttribute(self, item, key):
+        """Check if the attribute associated with `item` and `key` is
+        contained the Hash"""
         return key in self[item, ...]
 
     def erase(self, key):
+        """Erase an item associated with `key` from the Hash"""
         del self[key]
 
     def paths(self, *, intermediate=True):
         """Returns all root-to-leaves paths
 
         :param intermediate: If `True` include all intermediate path from
-        roots to leafs, i.e. ['a.b.c', 'a.b', 'a'] instead of ['a.b.c']
+                             roots to leafs, i.e. ['a.b.c', 'a.b', 'a']
+                             instead of ['a.b.c']
         """
 
         def full_paths(hsh):
@@ -278,6 +301,10 @@ class Hash(OrderedDict):
         return full_paths(self) if intermediate else leaf_paths(self)
 
     def empty(self):
+        """Check if the hash is empty or not
+
+        :returns: True or False
+        """
         return len(self) == 0
 
     def __deepcopy__(self, memo):
@@ -469,6 +496,11 @@ NUMPY_TO_HASH_TYPE_SIMPLE = {
 
 
 def get_hash_type_from_data(data):
+    """Get a `HashType` enum corresponding to `data`
+
+    :param data: Any kind of data typically used in the control network
+    :returns: HashType Enum
+    """
     try:
         if data.ndim == 1 and isinstance(data, np.ndarray):
             return NUMPY_TO_HASH_TYPE_VECTOR[data.dtype.type]

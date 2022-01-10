@@ -42,6 +42,8 @@ def get_property(device, path):
 def set_property(device, path, value):
     """Set a property value on a proxy or device
 
+    This function has been added in Karabo >= 2.14.
+
     :param device: The device instance or proxy object
     :param path: The full path of the property as string
     :param value: The value to be set
@@ -126,7 +128,7 @@ class profiler:
 
         The class can also be used for decoration of functions (async works)
 
-        profiler()
+        @profiler()
         async def do_something()
             # do something
 
