@@ -8,10 +8,10 @@
 
 
 #ifndef KARABO_IO_H5_FORMATDISCOVERYPOLICY_HH
-#define	KARABO_IO_H5_FORMATDISCOVERYPOLICY_HH
+#define KARABO_IO_H5_FORMATDISCOVERYPOLICY_HH
 
-#include <string>
 #include <karabo/util/Configurator.hh>
+#include <string>
 
 
 namespace karabo {
@@ -25,9 +25,7 @@ namespace karabo {
              * @brief This class specifies default to be used durng Format discovery
              */
             class FormatDiscoveryPolicy {
-
-            public:
-
+               public:
                 KARABO_CLASSINFO(FormatDiscoveryPolicy, "Policy", "1.0")
                 KARABO_CONFIGURATION_BASE_CLASS
 
@@ -43,11 +41,9 @@ namespace karabo {
 
                 FormatDiscoveryPolicy(const karabo::util::Hash& input);
 
-                virtual ~FormatDiscoveryPolicy() {
-                }
+                virtual ~FormatDiscoveryPolicy() {}
 
-                virtual void discover() {
-                }
+                virtual void discover() {}
 
                 /**
                  * Return the default compression level
@@ -65,15 +61,14 @@ namespace karabo {
                     return m_defaultChunkSize;
                 }
 
-            private:
+               private:
                 int m_defaultCompressionLevel;
                 unsigned long long m_defaultChunkSize;
-
             };
 
 
-        }
-    }
-}
+        } // namespace h5
+    }     // namespace io
+} // namespace karabo
 
 #endif

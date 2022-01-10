@@ -6,7 +6,7 @@
  */
 
 #ifndef KARABO_CORE_STATESIGNIFIER_HH
-#define	KARABO_CORE_STATESIGNIFIER_HH
+#define KARABO_CORE_STATESIGNIFIER_HH
 
 #include <iostream>
 
@@ -17,15 +17,16 @@ namespace karabo {
 
         /**
          * @class StateSignifier
-         * @brief The StateSignifier is used to evaluate the most significant State from a set of States 
+         * @brief The StateSignifier is used to evaluate the most significant State from a set of States
          */
         struct StateSignifier {
-
             /**
              * Create a StateSignifier
              * @param trumpList if set use this list to deviate from the standard signification order
-             * @param staticMoreSignificant identify if in the State::STATIC regime State::PASSIVE or State::ACTIVE is more significant
-             * @param changingMoreSignificant identify if in the State::CHANGING regime State::INCREASING or State::DECREASING is more significant
+             * @param staticMoreSignificant identify if in the State::STATIC regime State::PASSIVE or State::ACTIVE is
+             * more significant
+             * @param changingMoreSignificant identify if in the State::CHANGING regime State::INCREASING or
+             * State::DECREASING is more significant
              */
             StateSignifier(const std::vector<karabo::util::State>& trumpList = std::vector<karabo::util::State>(),
                            const karabo::util::State& staticMoreSignificant = karabo::util::State::PASSIVE,
@@ -33,8 +34,10 @@ namespace karabo {
 
             /**
              * Create a StateSignifier
-             * @param staticMoreSignificant identify if in the State::STATIC regime State::PASSIVE or State::ACTIVE is more 
-             * @param changingMoreSignificant identify if in the State::CHANGING regime State::INCREASING or State::DECREASING is more significant
+             * @param staticMoreSignificant identify if in the State::STATIC regime State::PASSIVE or State::ACTIVE is
+             * more
+             * @param changingMoreSignificant identify if in the State::CHANGING regime State::INCREASING or
+             * State::DECREASING is more significant
              */
             StateSignifier(const karabo::util::State& staticMoreSignificant,
                            const karabo::util::State& changingMoreSignificant);
@@ -42,12 +45,11 @@ namespace karabo {
             /**
              * Return the most significant State from a list of States
              * @param listOfStates
-             * @return 
+             * @return
              */
             karabo::util::State returnMostSignificant(const std::vector<karabo::util::State>& listOfStates);
 
-        private:
-
+           private:
             size_t rankedAt(const karabo::util::State& sp);
 
             /**
@@ -59,7 +61,7 @@ namespace karabo {
             void fillAncestorNames(const karabo::util::State& s, std::vector<std::string>& all);
 
 
-            const bool inList(const std::vector<karabo::util::State> & list, const karabo::util::State & s) const;
+            const bool inList(const std::vector<karabo::util::State>& list, const karabo::util::State& s) const;
 
             void initTrumpList(const std::vector<karabo::util::State>& trumpList,
                                const karabo::util::State& staticMoreSignificant,
@@ -71,7 +73,7 @@ namespace karabo {
             /**
              * Completes a non default trump list with some substates of CHANGING if that
              * list contains CHANGING.
-             * 
+             *
              * @param changingMoreSignificant which CHANGING substate is more significant between
              * INCREASING and DECREASING?
              */
@@ -80,7 +82,7 @@ namespace karabo {
             /**
              * Completes a non default trump list with some substates of STATIC if that
              * list contains STATIC.
-             * 
+             *
              * @param staticMoreSignificant which STATIC substate is more significant between
              * ACTIVE and PASSIVE?
              */
@@ -89,7 +91,7 @@ namespace karabo {
             /**
              * Completes a non default trump list with some substates of KNOWN if that
              * list contains KNOWN.
-             * 
+             *
              * @param staticgMoreSignificant which STATIC substate is more significant between
              * ACTIVE and PASSIVE?
              * @param changingMoreSignificant which CHANGING substate is more significant between
@@ -98,13 +100,12 @@ namespace karabo {
             void completeKnownSubstates(const karabo::util::State& staticMoreSignificant,
                                         const karabo::util::State& changingMoreSignificant);
 
-        protected:
+           protected:
             std::vector<karabo::util::State> m_trumpList;
         };
 
-    }
-}
+    } // namespace util
+} // namespace karabo
 
 
-#endif	/* KARABO_CORE_STATESIGNIFIER_HH */
-
+#endif /* KARABO_CORE_STATESIGNIFIER_HH */

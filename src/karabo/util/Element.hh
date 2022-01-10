@@ -7,24 +7,22 @@
  */
 
 #ifndef KARABO_UTIL_NODE_HH
-#define	KARABO_UTIL_NODE_HH
-
-#include <typeinfo>
-#include <string>
-#include <complex>
-#include <vector>
-#include <type_traits>
+#define KARABO_UTIL_NODE_HH
 
 #include <boost/any.hpp>
 #include <boost/cast.hpp>
 #include <boost/type_traits/is_base_of.hpp>
+#include <complex>
+#include <string>
+#include <type_traits>
+#include <typeinfo>
+#include <vector>
 
-#include "MetaTools.hh"
-#include "Types.hh"
 #include "Exception.hh"
 #include "FromTypeInfo.hh"
-
+#include "MetaTools.hh"
 #include "ToCppString.hh"
+#include "Types.hh"
 
 
 namespace karabo {
@@ -36,22 +34,22 @@ namespace karabo {
 
 #define KARABO_HASH_CLASS_ID "__classId"
 
-        template <class T> class GenericElement;
+        template <class T>
+        class GenericElement;
 
         /**
          * @class Element
          * @brief Class representing leaf elements in a Hash which may have
          *        attributes
          */
-        template<typename KeyType, typename AttributesType = bool>
+        template <typename KeyType, typename AttributesType = bool>
         class Element {
-
             // Grant friendship to container
-            template<typename T, typename U>
+            template <typename T, typename U>
             friend class OrderedMap;
 
             // Grant friendship to GenericElement (needs to setKey)
-            template<class T>
+            template <class T>
             friend class GenericElement;
 
             // Members
@@ -81,17 +79,16 @@ namespace karabo {
                  */
                 void resetHashDerivedMoved(ValueType&& value) {
                     // Where SetClassIdAttribute was used, 'value' got moved from as a Hash. The Hash move semantics
-                    // clears the Hash - which leaves the Hash-derived ValueType likely in an invalid state (missing keys).
-                    // Cure that here by (move-)assigning a default contructed object.
-                    // (Which means that Hash-derived objects have to have a default constructor...)
+                    // clears the Hash - which leaves the Hash-derived ValueType likely in an invalid state (missing
+                    // keys). Cure that here by (move-)assigning a default contructed object. (Which means that
+                    // Hash-derived objects have to have a default constructor...)
                     value = ValueType();
                 }
 
                 /**
                  * No-op for lvalue reference
                  */
-                void resetHashDerivedMoved(ValueType& value) {
-                }
+                void resetHashDerivedMoved(ValueType& value) {}
             };
 
             /**
@@ -111,8 +108,7 @@ namespace karabo {
                 /**
                  * No-op
                  */
-                void resetHashDerivedMoved(const ValueType& value) {
-                }
+                void resetHashDerivedMoved(const ValueType& value) {}
             };
 
             /**
@@ -120,7 +116,6 @@ namespace karabo {
              */
             template <typename isHashTheBase>
             struct SetClassIdAttribute<Hash, isHashTheBase> {
-
                 /**
                  * For the Hash itself (i.e. where boost::is_base_of<Hash, Hash>::type is not boost::false_type),
                  * this is a no-op as well.
@@ -131,12 +126,10 @@ namespace karabo {
                     // Do nothing on purpose!
                 }
 
-                void resetHashDerivedMoved(const Hash& value) {
-                }
+                void resetHashDerivedMoved(const Hash& value) {}
             };
 
-        public:
-
+           public:
             /**
              * Construct an empty Hash element
              */
@@ -178,7 +171,7 @@ namespace karabo {
 
             /**
              * Return the key identifying this Element
-             * @return 
+             * @return
              */
             const KeyType& getKey() const;
 
@@ -186,21 +179,21 @@ namespace karabo {
              * Set a value of arbitrary type to this Element
              * @param value
              */
-            template<class ValueType>
+            template <class ValueType>
             inline void setValue(const ValueType& value);
 
             /**
              * Set a value of arbitrary type to this Element
              * @param value
              */
-            template<class ValueType>
+            template <class ValueType>
             inline void setValue(ValueType&& value);
 
             /**
              * Set the value to a boost::shared_ptr of ValueType
              * @param value
              */
-            template<class ValueType>
+            template <class ValueType>
             inline void setValue(const boost::shared_ptr<ValueType>& value);
 
             /**
@@ -276,55 +269,54 @@ namespace karabo {
              * of inserted value (or implicitly castable)
              * @return DestValueType by "copy". Candidate for Return Value Optimization through copy elision.
              */
-            template<class DestValueType, class SourceValueType, class ...SourceValueTypes>
+            template <class DestValueType, class SourceValueType, class... SourceValueTypes>
             inline DestValueType getValue() const;
 
             /**
              * Return the value cast to ValueType. Strict casting is applied,
              * i.e. the ValueType needs to be of the exact type of inserted
              * value (or implicitly castable)
-             * @return 
+             * @return
              */
-            template<class ValueType>
+            template <class ValueType>
             inline const ValueType& getValue() const;
 
             /**
              * Return the value cast to ValueType. Strict casting is applied,
              * i.e. the ValueType needs to be of the exact type of inserted
              * value (or implicitly castable)
-             * @return 
+             * @return
              */
-            template<class ValueType>
+            template <class ValueType>
             inline ValueType& getValue();
 
             /**
              * Return the value as boost::any. Does not throw
-             * @return 
+             * @return
              */
             boost::any& getValueAsAny();
 
             /**
              * Return the value as boost::any. Does not throw
-             * @return 
+             * @return
              */
             const boost::any& getValueAsAny() const;
 
             /**
              * Return the value cast to ValueType. Casting is performed via
              * string literal casts, i.e. less strict.
-             * @return 
+             * @return
              */
-            template <typename ValueType >
+            template <typename ValueType>
             ValueType getValueAs() const;
 
             /**
              * Return the value cast to ValueType. Casting is performed via
              * string literal casts, i.e. less strict. Overload for vector-type
              * values
-             * @return 
+             * @return
              */
-            template<typename T,
-            template <typename Elem, typename = std::allocator<Elem> > class Cont >
+            template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
             Cont<T> getValueAs() const;
 
             /**
@@ -343,7 +335,7 @@ namespace karabo {
              * @param key
              * @param value
              */
-            template<class T>
+            template <class T>
             inline void setAttribute(const std::string& key, const T& value);
 
             /**
@@ -351,7 +343,7 @@ namespace karabo {
              * @param key
              * @param value
              */
-            template<class T>
+            template <class T>
             inline void setAttribute(const std::string& key, T&& value);
 
             /**
@@ -359,9 +351,9 @@ namespace karabo {
              * i.e. the T needs to be of the exact type of inserted
              * vale (or implicitly castable)
              * @param key identifying the attribute
-             * @return 
+             * @return
              */
-            template<class T>
+            template <class T>
             inline T& getAttribute(const std::string& key);
 
             /**
@@ -370,9 +362,9 @@ namespace karabo {
              * vale (or implicitly castable)
              * @param key identifying the attribute
              * @param value reference to insert value in
-             * @return 
+             * @return
              */
-            template<class T>
+            template <class T>
             inline void getAttribute(const std::string& key, T& value) const;
 
             /**
@@ -380,9 +372,9 @@ namespace karabo {
              * i.e. the T needs to be of the exact type of inserted
              * vale (or implicitly castable)
              * @param key identifying the attribute
-             * @return 
+             * @return
              */
-            template<class T>
+            template <class T>
             inline const T& getAttribute(const std::string& key) const;
 
             /**
@@ -391,30 +383,30 @@ namespace karabo {
              * vale (or implicitly castable)
              * @param key identifying the attribute
              * @param value reference to insert value in
-             * @return 
+             * @return
              */
-            template<class T>
+            template <class T>
             inline void getAttribute(const std::string& key, const T& value) const;
 
             /**
              * Return the value as boost::any. Does not throw
              * @param key identifying the attribute
-             * @return 
+             * @return
              */
             inline const boost::any& getAttributeAsAny(const std::string& key) const;
-            
+
             /**
              * Return the value as boost::any. Does not throw
              * @param key identifying the attribute
-             * @return 
+             * @return
              */
             inline boost::any& getAttributeAsAny(const std::string& key);
 
             /**
              * Return the attribute cast to ValueType. Casting is performed via
-             * string literal casts, i.e. less strict. 
+             * string literal casts, i.e. less strict.
              * param key identifying the attribute
-             * @return 
+             * @return
              */
             template <class T>
             inline T getAttributeAs(const std::string& key) const;
@@ -424,22 +416,22 @@ namespace karabo {
              * string literal casts, i.e. less strict. Overload for vector-type
              * values
              * param key identifying the attribute
-             * @return 
+             * @return
              */
-            template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
+            template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
             inline Cont<T> getAttributeAs(const std::string& key) const;
 
             /**
              * Return an attribute as a Node, e.g. an Element<T>
              * @param key
-             * @return 
+             * @return
              */
             Element<KeyType>& getAttributeNode(const std::string& key);
 
             /**
              * Return an attribute as a Node, e.g. an Element<T>
              * @param key
-             * @return 
+             * @return
              */
             const Element<KeyType>& getAttributeNode(const std::string& key) const;
 
@@ -464,13 +456,13 @@ namespace karabo {
 
             /**
              * Batch get attributes of this element
-             * @return 
+             * @return
              */
             inline const AttributesType& getAttributes() const;
 
             /**
              * Batch get attributes of this element
-             * @return 
+             * @return
              */
             inline AttributesType& getAttributes();
 
@@ -483,13 +475,13 @@ namespace karabo {
 
             /**
              * Return the type of this element as a Karabo reference type
-             * @return 
+             * @return
              */
             Types::ReferenceType getType() const;
 
             /**
              * Return the std::type_info struct for this element' type
-             * @return 
+             * @return
              */
             const std::type_info& type() const;
 
@@ -502,41 +494,39 @@ namespace karabo {
             void setType(const Types::ReferenceType& tgtType);
 
             /**
-             * Compare two elements for equality: Checks if the elements have 
+             * Compare two elements for equality: Checks if the elements have
              * the same key
              * @param other
-             * @return 
+             * @return
              */
             bool operator==(const Element<KeyType, AttributesType>& other) const;
 
             /**
-             * Compare two elements for inequality: Checks if the elements have 
+             * Compare two elements for inequality: Checks if the elements have
              * the same key
              * @param other
-             * @return 
+             * @return
              */
             bool operator!=(const Element<KeyType, AttributesType>& other) const;
 
-        private:
-
-            template<class ValueType, typename is_hash_the_base>
+           private:
+            template <class ValueType, typename is_hash_the_base>
             void setValue(const ValueType& value);
 
 
-            template<class ValueType, typename is_hash_the_base>
+            template <class ValueType, typename is_hash_the_base>
             void setValue(ValueType&& value);
 
 
-            template<class ValueType>
+            template <class ValueType>
             inline const ValueType& getValue(boost::true_type /*is_hash_the_base*/) const;
 
-            template<class ValueType>
+            template <class ValueType>
             inline const ValueType& getValue(boost::false_type /*is_hash_the_base*/) const;
 
             inline void setKey(const KeyType& key);
 
             inline std::string getValueAsString() const;
-
         };
 
         /**********************************************************************
@@ -547,17 +537,16 @@ namespace karabo {
 
         // TODO This should be implemented in a cleaner way
 
-        template<class KeyType, typename AttributeType>
-        Element<KeyType, AttributeType>::Element() {
-        }
+        template <class KeyType, typename AttributeType>
+        Element<KeyType, AttributeType>::Element() {}
 
-        template<class KeyType, typename AttributeType>
-        Element<KeyType, AttributeType>::Element(const KeyType& key, const boost::any& value) : m_key(key), m_value(value) {
-        }
+        template <class KeyType, typename AttributeType>
+        Element<KeyType, AttributeType>::Element(const KeyType& key, const boost::any& value)
+            : m_key(key), m_value(value) {}
 
-        template<class KeyType, typename AttributeType>
-        Element<KeyType, AttributeType>::Element(const KeyType& key, boost::any&& value) : m_key(key), m_value(std::move(value)) {
-        }
+        template <class KeyType, typename AttributeType>
+        Element<KeyType, AttributeType>::Element(const KeyType& key, boost::any&& value)
+            : m_key(key), m_value(std::move(value)) {}
 
         template <class KeyType, typename AttributeType>
         template <class ValueType>
@@ -571,71 +560,72 @@ namespace karabo {
             this->setValue(std::forward<ValueType>(value));
         }
 
-        template<class KeyType, typename AttributesType>
-        Element<KeyType, AttributesType>::~Element() {
-        }
+        template <class KeyType, typename AttributesType>
+        Element<KeyType, AttributesType>::~Element() {}
 
-        template<class KeyType, typename AttributeType>
-        inline const KeyType & Element<KeyType, AttributeType>::getKey() const {
+        template <class KeyType, typename AttributeType>
+        inline const KeyType& Element<KeyType, AttributeType>::getKey() const {
             return m_key;
         }
 
-        template<class KeyType, typename AttributeType>
+        template <class KeyType, typename AttributeType>
         void Element<KeyType, AttributeType>::setKey(const KeyType& key) {
             // could overload for 'KeyType&& key'
             m_key = key;
         }
 
-        template<class KeyType, typename AttributeType>
+        template <class KeyType, typename AttributeType>
         bool Element<KeyType, AttributeType>::operator==(const Element<KeyType, AttributeType>& other) const {
             return this->m_key == other.m_key;
         }
 
-        template<class KeyType, typename AttributeType>
+        template <class KeyType, typename AttributeType>
         bool Element<KeyType, AttributeType>::operator!=(const Element<KeyType, AttributeType>& other) const {
             return this->m_key != other.m_key;
         }
 
-        template<class KeyType, typename AttributeType>
+        template <class KeyType, typename AttributeType>
         template <typename T>
         inline bool Element<KeyType, AttributeType>::is() const {
-            return m_value.type() == typeid (T);
+            return m_value.type() == typeid(T);
         }
 
-        template<class KeyType, typename AttributeType>
+        template <class KeyType, typename AttributeType>
         Types::ReferenceType Element<KeyType, AttributeType>::getType() const {
             return FromType<FromTypeInfo>::from(m_value.type());
         }
 
-        template<class KeyType, typename AttributeType>
+        template <class KeyType, typename AttributeType>
         const std::type_info& Element<KeyType, AttributeType>::type() const {
             return m_value.type();
         }
 
-        template<class KeyType, typename AttributeType>
-        template<class ValueType>
+        template <class KeyType, typename AttributeType>
+        template <class ValueType>
         inline void Element<KeyType, AttributeType>::setValue(const ValueType& value) {
-            this->setValue<ValueType, typename boost::is_base_of<Hash, ValueType>::type > (value);
+            this->setValue<ValueType, typename boost::is_base_of<Hash, ValueType>::type>(value);
         }
 
-        template<class KeyType, typename AttributeType>
-        template<class ValueType>
-        inline void Element<KeyType, AttributeType>::setValue(ValueType&& value) { // 'ValueType&&' is a universal reference!
+        template <class KeyType, typename AttributeType>
+        template <class ValueType>
+        inline void Element<KeyType, AttributeType>::setValue(
+              ValueType&& value) { // 'ValueType&&' is a universal reference!
             // forward returns either 'ValueType&&', 'ValueType&', or 'const ValueType&'
             using removed_reference = typename std::remove_reference<ValueType>::type;
             using removed_const_and_ref = typename std::remove_const<removed_reference>::type;
             this->setValue<decltype(std::forward<ValueType>(value)),
-                           typename boost::is_base_of<Hash, removed_const_and_ref>::type>(std::forward<ValueType>(value));
+                           typename boost::is_base_of<Hash, removed_const_and_ref>::type>(
+                  std::forward<ValueType>(value));
         }
 
-        template<class KeyType, typename AttributeType>
-        template<class ValueType>
+        template <class KeyType, typename AttributeType>
+        template <class ValueType>
         inline void Element<KeyType, AttributeType>::setValue(const boost::shared_ptr<ValueType>& value) {
-            this->setValue < boost::shared_ptr<ValueType>, typename boost::is_base_of<Hash, ValueType>::type > (value);
+            this->setValue<boost::shared_ptr<ValueType>, typename boost::is_base_of<Hash, ValueType>::type>(value);
         }
 
-        template<class KeyType, typename AttributeType>
-        template<class ValueType, typename is_hash_the_base>
+        template <class KeyType, typename AttributeType>
+        template <class ValueType, typename is_hash_the_base>
         void Element<KeyType, AttributeType>::setValue(const ValueType& value) {
             m_value = conditional_hash_cast<is_hash_the_base>::cast(value);
             // When ValueType is derived from Hash, this sets the attribute __classId to the class id name.
@@ -643,8 +633,8 @@ namespace karabo {
             SetClassIdAttribute<typename std::remove_reference<ValueType>::type, is_hash_the_base>(value, *this);
         }
 
-        template<class KeyType, typename AttributeType>
-        template<class ValueType, typename is_hash_the_base>
+        template <class KeyType, typename AttributeType>
+        template <class ValueType, typename is_hash_the_base>
         void Element<KeyType, AttributeType>::setValue(ValueType&& value) {
             m_value = conditional_hash_cast<is_hash_the_base>::cast(std::forward<ValueType>(value));
             // When ValueType is derived from Hash, this sets the attribute __classId to the class id name.
@@ -657,81 +647,80 @@ namespace karabo {
             helper.resetHashDerivedMoved(std::forward<ValueType>(value));
         }
 
-        template<class KeyType, class AttributeType>
+        template <class KeyType, class AttributeType>
         inline void Element<KeyType, AttributeType>::setValue(const boost::shared_ptr<Hash>& value) {
             m_value = value;
         }
 
-        template<class KeyType, class AttributeType>
+        template <class KeyType, class AttributeType>
         inline void Element<KeyType, AttributeType>::setValue(const char* value) {
             m_value = std::string(value ? value : "");
         }
 
-        template<class KeyType, class AttributeType>
+        template <class KeyType, class AttributeType>
         inline void Element<KeyType, AttributeType>::setValue(char* value) {
             m_value = std::string(value ? value : "");
         }
 
-        template<class KeyType, class AttributeType>
+        template <class KeyType, class AttributeType>
         inline void Element<KeyType, AttributeType>::setValue(const wchar_t* value) {
             m_value = std::wstring(value);
         }
 
-        template<class KeyType, class AttributeType>
+        template <class KeyType, class AttributeType>
         inline void Element<KeyType, AttributeType>::setValue(wchar_t* value) {
             m_value = std::wstring(value);
         }
 
-        template<class KeyType, class AttributeType>
+        template <class KeyType, class AttributeType>
         inline void Element<KeyType, AttributeType>::setValue(const boost::any& value) {
             m_value = value;
         }
 
-        template<class KeyType, class AttributeType>
+        template <class KeyType, class AttributeType>
         inline void Element<KeyType, AttributeType>::setValue(boost::any&& value) {
             m_value = std::move(value);
         }
 
-        template<class KeyType, typename AttributeType>
+        template <class KeyType, typename AttributeType>
         inline void Element<KeyType, AttributeType>::setValue(const Element<KeyType, AttributeType>& other) {
             if (this != &other) {
                 this->m_value = other.m_value;
             }
         }
 
-        template<class KeyType, typename AttributeType>
+        template <class KeyType, typename AttributeType>
         inline void Element<KeyType, AttributeType>::setValue(Element<KeyType, AttributeType>&& other) {
             if (this != &other) {
                 this->m_value = std::move(other.m_value);
             }
         }
 
-        template<class KeyType, typename AttributeType>
-        template<class ValueType>
+        template <class KeyType, typename AttributeType>
+        template <class ValueType>
         inline const ValueType& Element<KeyType, AttributeType>::getValue() const {
             return getValue<ValueType>(typename boost::is_base_of<Hash, ValueType>::type());
         }
 
-        template<class KeyType, typename AttributeType>
-        template<class DestValueType, class SourceValueType, class ...SourceValueTypes>
+        template <class KeyType, typename AttributeType>
+        template <class DestValueType, class SourceValueType, class... SourceValueTypes>
         inline DestValueType Element<KeyType, AttributeType>::getValue() const {
             // First try to cast from boost::any to the destination type
             const SourceValueType* ptr = boost::any_cast<SourceValueType>(&m_value);
 
             if (ptr) {
-             if (std::is_arithmetic<DestValueType>::value 
-                 && std::is_arithmetic<SourceValueType>::value) {
-                 // Use boost::numeric_cast to filter out losses of range
-                 // and reject conversions from negative value to unsigned types
-                 try {
-                    return boost::numeric_cast<DestValueType>(*ptr);
-                 } catch (boost::numeric::bad_numeric_cast& e) {
-                    KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(),
-                                                                                    typeid (DestValueType))));
-                 }
-             }
-             // Not arithmetic types, try a implicit static cast.
-             return *ptr;
+                if (std::is_arithmetic<DestValueType>::value && std::is_arithmetic<SourceValueType>::value) {
+                    // Use boost::numeric_cast to filter out losses of range
+                    // and reject conversions from negative value to unsigned types
+                    try {
+                        return boost::numeric_cast<DestValueType>(*ptr);
+                    } catch (boost::numeric::bad_numeric_cast& e) {
+                        KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(
+                              karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid(DestValueType))));
+                    }
+                }
+                // Not arithmetic types, try a implicit static cast.
+                return *ptr;
             }
 
             // The current source type is not the right one, proceed with the rest of the list
@@ -739,97 +728,102 @@ namespace karabo {
         }
 
 
-        template<class KeyType, typename AttributeType>
-        template<class ValueType>
+        template <class KeyType, typename AttributeType>
+        template <class ValueType>
         inline ValueType& Element<KeyType, AttributeType>::getValue() {
-            return const_cast<ValueType&>
-                    (static_cast<const Element*> (this)->getValue<ValueType>(typename boost::is_base_of<Hash, ValueType>::type()));
-
+            return const_cast<ValueType&>(static_cast<const Element*>(this)->getValue<ValueType>(
+                  typename boost::is_base_of<Hash, ValueType>::type()));
         }
 
-        template<class KeyType, typename AttributeType>
-        template<class ValueType>
+        template <class KeyType, typename AttributeType>
+        template <class ValueType>
         inline const ValueType& Element<KeyType, AttributeType>::getValue(boost::true_type /*is_hash_the_base*/) const {
-            const Hash* ptr = boost::any_cast<Hash> (&m_value);
-            if (ptr) return reinterpret_cast<const ValueType&> (*ptr);
-            throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid (ValueType)));
-
+            const Hash* ptr = boost::any_cast<Hash>(&m_value);
+            if (ptr) return reinterpret_cast<const ValueType&>(*ptr);
+            throw KARABO_CAST_EXCEPTION(
+                  karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid(ValueType)));
         }
 
-        template<class KeyType, typename AttributeType>
-        template<class ValueType>
-        inline const ValueType& Element<KeyType, AttributeType>::getValue(boost::false_type /*is_hash_the_base*/) const {
-            const ValueType* ptr = boost::any_cast<ValueType > (&m_value);
+        template <class KeyType, typename AttributeType>
+        template <class ValueType>
+        inline const ValueType& Element<KeyType, AttributeType>::getValue(
+              boost::false_type /*is_hash_the_base*/) const {
+            const ValueType* ptr = boost::any_cast<ValueType>(&m_value);
             if (ptr) return *ptr;
-            throw KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid (ValueType)));
+            throw KARABO_CAST_EXCEPTION(
+                  karabo::util::createCastFailureMessage(m_key, m_value.type(), typeid(ValueType)));
         }
 
-        template<class KeyType, typename AttributeType>
-        template <typename ValueType >
+        template <class KeyType, typename AttributeType>
+        template <typename ValueType>
         inline ValueType Element<KeyType, AttributeType>::getValueAs() const {
-            if (m_value.type() == typeid (ValueType)) return this->getValue<ValueType > ();
+            if (m_value.type() == typeid(ValueType)) return this->getValue<ValueType>();
 
             Types::ReferenceType srcType = this->getType();
-            Types::ReferenceType tgtType = Types::from<ValueType > ();
+            Types::ReferenceType tgtType = Types::from<ValueType>();
 
-            if (srcType == Types::UNKNOWN) throw KARABO_CAST_EXCEPTION("Unknown source type for key: \"" + m_key + "\". Cowardly refusing to cast.");
+            if (srcType == Types::UNKNOWN)
+                throw KARABO_CAST_EXCEPTION("Unknown source type for key: \"" + m_key +
+                                            "\". Cowardly refusing to cast.");
 
             try {
-                return ValueType(karabo::util::fromString<ValueType > (this->getValueAsString()));
+                return ValueType(karabo::util::fromString<ValueType>(this->getValueAsString()));
             } catch (...) {
-                KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType)
-                                                        += " (string '" + this->getValueAsString() += "')"));
+                KARABO_RETHROW_AS(
+                      KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType) +=
+                                            " (string '" + this->getValueAsString() += "')"));
             }
             return ValueType();
         }
 
-        template<class KeyType, typename AttributeType>
-        template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
+        template <class KeyType, typename AttributeType>
+        template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
         inline Cont<T> Element<KeyType, AttributeType>::getValueAs() const {
-
             Types::ReferenceType srcType = this->getType();
             Types::ReferenceType tgtType = Types::from<Cont<T> >();
 
-            if (tgtType == srcType) return this->getValue<Cont<T> > ();
-            if (srcType == Types::UNKNOWN) throw KARABO_CAST_EXCEPTION("Unknown source type for key: \"" + m_key + "\". Cowardly refusing to cast.");
+            if (tgtType == srcType) return this->getValue<Cont<T> >();
+            if (srcType == Types::UNKNOWN)
+                throw KARABO_CAST_EXCEPTION("Unknown source type for key: \"" + m_key +
+                                            "\". Cowardly refusing to cast.");
 
             try {
                 std::string value = this->getValueAsString();
 
                 if (value.empty()) return Cont<T>();
 
-                return karabo::util::fromString<T, Cont > (value);
+                return karabo::util::fromString<T, Cont>(value);
             } catch (...) {
-                KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType)
-                                                        += " (string '" + this->getValueAsString() += "')"));
+                KARABO_RETHROW_AS(
+                      KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType) +=
+                                            " (string '" + this->getValueAsString() += "')"));
                 return Cont<T>(); // Make the compiler happy
             }
         }
 
-        template<class KeyType, typename AttributeType>
+        template <class KeyType, typename AttributeType>
         std::string Element<KeyType, AttributeType>::getValueAsShortString(size_t maxNumVectorElements) const {
-
 #define CASE_RETURN_VECTOR(VectorRefType, ElementCppType, maxSize) \
-       case Types::ReferenceType::VectorRefType: \
-           return karabo::util::toString(this->getValueAs <ElementCppType, std::vector>(), maxSize);
+    case Types::ReferenceType::VectorRefType:                      \
+        return karabo::util::toString(this->getValueAs<ElementCppType, std::vector>(), maxSize);
 
             switch (this->getType()) {
-                    // Not treating (VECTOR_CHAR, char) here: That is our raw data container treated elsewhere.
-                    CASE_RETURN_VECTOR(VECTOR_INT8, signed char, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_INT16, short, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_INT32, int, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_INT64, long long, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_UINT8, unsigned char, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_UINT16, unsigned short, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_UINT32, unsigned int, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_UINT64, unsigned long long, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_FLOAT, float, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_DOUBLE, double, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_BOOL, bool, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_STRING, std::string, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_COMPLEX_FLOAT, std::complex<float>, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_COMPLEX_DOUBLE, std::complex<double>, maxNumVectorElements)
-                    CASE_RETURN_VECTOR(VECTOR_NONE, CppNone, maxNumVectorElements) // for completeness
+                // Not treating (VECTOR_CHAR, char) here: That is our raw data container treated elsewhere.
+                CASE_RETURN_VECTOR(VECTOR_INT8, signed char, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_INT16, short, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_INT32, int, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_INT64, long long, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_UINT8, unsigned char, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_UINT16, unsigned short, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_UINT32, unsigned int, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_UINT64, unsigned long long, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_FLOAT, float, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_DOUBLE, double, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_BOOL, bool, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_STRING, std::string, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_COMPLEX_FLOAT, std::complex<float>, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_COMPLEX_DOUBLE, std::complex<double>, maxNumVectorElements)
+                CASE_RETURN_VECTOR(VECTOR_NONE, CppNone, maxNumVectorElements) // for completeness
                 case Types::ReferenceType::BYTE_ARRAY:
                     return karabo::util::toString(this->getValue<ByteArray>(), maxNumVectorElements);
                 default:
@@ -839,122 +833,121 @@ namespace karabo {
         }
 
 
-        template<class KeyType, typename AttributeType>
+        template <class KeyType, typename AttributeType>
         boost::any& Element<KeyType, AttributeType>::getValueAsAny() {
             return m_value;
         }
 
-        template<class KeyType, typename AttributeType>
+        template <class KeyType, typename AttributeType>
         const boost::any& Element<KeyType, AttributeType>::getValueAsAny() const {
             return m_value;
         }
 
-        template<class KeyType, typename AttributeType>
-        inline const AttributeType&
-        Element<KeyType, AttributeType>::getAttributes() const {
+        template <class KeyType, typename AttributeType>
+        inline const AttributeType& Element<KeyType, AttributeType>::getAttributes() const {
             return m_attributes;
         }
 
-        template<class KeyType, typename AttributeType>
-        inline AttributeType&
-        Element<KeyType, AttributeType>::getAttributes() {
+        template <class KeyType, typename AttributeType>
+        inline AttributeType& Element<KeyType, AttributeType>::getAttributes() {
             return m_attributes;
         }
 
-        template<class KeyType, typename AttributeType>
+        template <class KeyType, typename AttributeType>
         inline void Element<KeyType, AttributeType>::setAttributes(const AttributeType& attributes) {
             m_attributes = attributes;
         }
 
-        template<class KeyType, typename AttributeType>
+        template <class KeyType, typename AttributeType>
         inline void Element<KeyType, AttributeType>::setAttributes(AttributeType&& attributes) {
             m_attributes = std::move(attributes);
         }
 
-        template<typename KeyType, typename AttributeType>
-        template<class T>
+        template <typename KeyType, typename AttributeType>
+        template <class T>
         inline void Element<KeyType, AttributeType>::setAttribute(const std::string& key, const T& value) {
             m_attributes.template set<T>(key, value);
         }
 
-        template<typename KeyType, typename AttributeType>
-        template<class T>
+        template <typename KeyType, typename AttributeType>
+        template <class T>
         inline void Element<KeyType, AttributeType>::setAttribute(const std::string& key, T&& value) {
             m_attributes.set(key, std::forward<T>(value));
         }
 
-        template<typename KeyType, typename AttributeType>
-        template<class T>
+        template <typename KeyType, typename AttributeType>
+        template <class T>
         inline T& Element<KeyType, AttributeType>::getAttribute(const std::string& key) {
-            return m_attributes.template get<T > (key);
+            return m_attributes.template get<T>(key);
         }
 
-        template<typename KeyType, typename AttributeType>
-        template<class T>
+        template <typename KeyType, typename AttributeType>
+        template <class T>
         inline void Element<KeyType, AttributeType>::getAttribute(const std::string& key, T& value) const {
             m_attributes.template get(key, value);
         }
 
-        template<typename KeyType, typename AttributeType>
-        template<class T>
+        template <typename KeyType, typename AttributeType>
+        template <class T>
         inline const T& Element<KeyType, AttributeType>::getAttribute(const std::string& key) const {
-            return m_attributes.template get<T > (key);
+            return m_attributes.template get<T>(key);
         }
 
-        template<typename KeyType, typename AttributeType>
-        template<class T>
+        template <typename KeyType, typename AttributeType>
+        template <class T>
         inline void Element<KeyType, AttributeType>::getAttribute(const std::string& key, const T& value) const {
             m_attributes.template get(key, value);
         }
 
-        template<typename KeyType, typename AttributeType>
+        template <typename KeyType, typename AttributeType>
         inline const boost::any& Element<KeyType, AttributeType>::getAttributeAsAny(const std::string& key) const {
             return m_attributes.getAny(key);
         }
 
-        template<typename KeyType, typename AttributeType>
+        template <typename KeyType, typename AttributeType>
         inline boost::any& Element<KeyType, AttributeType>::getAttributeAsAny(const std::string& key) {
             return m_attributes.getAny(key);
         }
 
-        template<typename KeyType, typename AttributeType>
-        template<class T>
+        template <typename KeyType, typename AttributeType>
+        template <class T>
         inline T Element<KeyType, AttributeType>::getAttributeAs(const std::string& key) const {
             return m_attributes.template getAs<T>(key);
         }
 
-        template<typename KeyType, typename AttributeType>
-        template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
+        template <typename KeyType, typename AttributeType>
+        template <typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont>
         inline Cont<T> Element<KeyType, AttributeType>::getAttributeAs(const std::string& key) const {
-            return m_attributes.template getAs<T, Cont >(key);
+            return m_attributes.template getAs<T, Cont>(key);
         }
 
-        template<typename KeyType, typename AttributeType>
+        template <typename KeyType, typename AttributeType>
         inline Element<KeyType>& Element<KeyType, AttributeType>::getAttributeNode(const std::string& key) {
             return m_attributes.getNode(key);
         }
 
-        template<typename KeyType, typename AttributeType>
+        template <typename KeyType, typename AttributeType>
         inline const Element<KeyType>& Element<KeyType, AttributeType>::getAttributeNode(const std::string& key) const {
             return m_attributes.getNode(key);
         }
 
-        template<typename KeyType, typename AttributeType>
+        template <typename KeyType, typename AttributeType>
         bool Element<KeyType, AttributeType>::hasAttribute(const std::string& key) const {
             return m_attributes.has(key);
         }
 
-        template<typename KeyType, typename AttributeType>
+        template <typename KeyType, typename AttributeType>
         struct SetType {
-            inline SetType(Element<KeyType, AttributeType>& element, boost::any& value): m_element(element), m_value(value) { }
+            inline SetType(Element<KeyType, AttributeType>& element, boost::any& value)
+                : m_element(element), m_value(value) {}
 
             template <class T>
-            inline void operator () (T*) {
+            inline void operator()(T*) {
                 m_value = m_element.template getValueAs<T>();
             }
 
             template <class T>
-            inline void operator () (std::vector<T>*) {
+            inline void operator()(std::vector<T>*) {
                 m_value = m_element.template getValueAs<T, std::vector>();
             }
 
@@ -962,8 +955,8 @@ namespace karabo {
             boost::any& m_value;
         };
 
-        template<typename KeyType, typename AttributeType>
-        void Element<KeyType, AttributeType>::setType(const Types::ReferenceType & tgtType) {
+        template <typename KeyType, typename AttributeType>
+        void Element<KeyType, AttributeType>::setType(const Types::ReferenceType& tgtType) {
             Types::ReferenceType srcType = this->getType();
             if (tgtType == srcType) return;
             SetType<KeyType, AttributeType> processor(*this, m_value);
@@ -980,28 +973,29 @@ namespace karabo {
                         m_value = this->getValueAs<karabo::util::ByteArray>();
                         break;
                     default:
-                        throw KARABO_CAST_EXCEPTION("Casting of '" + Types::to<ToCppString>(srcType) += "' to '"
-                                                    + Types::to<ToCppString>(tgtType) += "' is not supported");
+                        throw KARABO_CAST_EXCEPTION("Casting of '" + Types::to<ToCppString>(srcType) +=
+                                                    "' to '" + Types::to<ToCppString>(tgtType) += "' is not supported");
                 }
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Problems with casting"));
             }
         }
 
-        template<typename KeyType, typename AttributeType>
+        template <typename KeyType, typename AttributeType>
         struct GetValueAsString {
-            inline GetValueAsString(const Element<KeyType, AttributeType>& element, std::string& result) : m_element(element), m_result(result) { }
+            inline GetValueAsString(const Element<KeyType, AttributeType>& element, std::string& result)
+                : m_element(element), m_result(result) {}
 
             template <class T>
-            inline void operator () (T*) {
+            inline void operator()(T*) {
                 m_result = karabo::util::toString(m_element.template getValue<T>());
             }
 
             const Element<KeyType, AttributeType>& m_element;
-            std::string &m_result;
+            std::string& m_result;
         };
 
-        template<typename KeyType, typename AttributeType>
+        template <typename KeyType, typename AttributeType>
         inline std::string Element<KeyType, AttributeType>::getValueAsString() const {
             Types::ReferenceType type = this->getType();
             std::string result;
@@ -1009,7 +1003,7 @@ namespace karabo {
             if (templatize(type, processor)) {
                 return result;
             }
-            switch(type) {
+            switch (type) {
                 case Types::HASH:
                     return karabo::util::toString(getValue<Hash>());
                 case Types::VECTOR_HASH:
@@ -1022,14 +1016,13 @@ namespace karabo {
                     return karabo::util::toString(getValue<Schema>());
                 case Types::BYTE_ARRAY: {
                     const karabo::util::ByteArray& array = getValue<karabo::util::ByteArray>();
-                    const unsigned char* data = reinterpret_cast<unsigned char*> (array.first.get());
+                    const unsigned char* data = reinterpret_cast<unsigned char*>(array.first.get());
                     return karabo::util::base64Encode(data, array.second);
                 }
                 default:
                     throw KARABO_CAST_EXCEPTION("Could not convert value of key \"" + m_key + "\" to string");
             }
         }
-    }
-}
+    } // namespace util
+} // namespace karabo
 #endif
-

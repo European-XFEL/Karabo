@@ -5,20 +5,20 @@
  */
 
 #ifndef BASELOGGING_TEST_HH
-#define	BASELOGGING_TEST_HH
+#define BASELOGGING_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
+
 #include "karabo/karabo.hpp"
 
 class BaseLogging_Test : public CPPUNIT_NS::TestFixture {
-
-public:
+   public:
     BaseLogging_Test();
     virtual ~BaseLogging_Test();
     void setUp();
     void tearDown();
 
-protected:
+   protected:
     static int KRB_TEST_MAX_TIMEOUT;
     static int SLOT_REQUEST_TIMEOUT_MILLIS;
     static int FLUSH_REQUEST_TIMEOUT_MILLIS;
@@ -59,10 +59,10 @@ protected:
      */
     void testNans();
 
-    template <class T> void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
+    template <class T>
+    void testHistory(const std::string& key, const std::function<T(int)>& f, const bool testConf);
 
-    std::pair<bool, std::string> startDataLoggerManager(const std::string& loggerType,
-                                                        bool useInvalidInfluxUrl = false,
+    std::pair<bool, std::string> startDataLoggerManager(const std::string& loggerType, bool useInvalidInfluxUrl = false,
                                                         bool useInvalidDbName = false);
 
     /**
@@ -116,8 +116,7 @@ protected:
 
     std::string getDeviceIdPrefix();
 
-    bool waitForCondition(boost::function<bool() > checker,
-                          unsigned int timeoutMillis);
+    bool waitForCondition(boost::function<bool()> checker, unsigned int timeoutMillis);
 
     const std::string m_server;
     const std::string m_deviceId;
@@ -134,4 +133,4 @@ protected:
     bool m_keepLoggerDirectory = true;
 };
 
-#endif	/* BASELOGGING_TEST_HH */
+#endif /* BASELOGGING_TEST_HH */

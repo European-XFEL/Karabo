@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   BufferSet.hh
  * Author: haufs
  *
@@ -6,16 +6,16 @@
  */
 
 #ifndef KARABO_IO_BUFFERSET_HH
-#define	KARABO_IO_BUFFERSET_HH
+#define KARABO_IO_BUFFERSET_HH
 
-#include <ostream>                                          //std::ostream
-#include <vector>                                           //std::vector
-#include <boost/shared_ptr.hpp>                             //boost::shared_ptr<T>
-#include <boost/asio/buffer.hpp>                            //boost::asio::const_buffer
-#include <boost/core/null_deleter.hpp>                      //boost::null_delter
-#include <karabo/util/Types.hh>                             //karabo::util::ByteArray
-#include <karabo/util/ClassInfo.hh>                         //BufferSet::Pointer
-#include <karabo/util/Exception.hh>                         //KARABO_LOGIC_EXCEPTION
+#include <boost/asio/buffer.hpp>       //boost::asio::const_buffer
+#include <boost/core/null_deleter.hpp> //boost::null_delter
+#include <boost/shared_ptr.hpp>        //boost::shared_ptr<T>
+#include <karabo/util/ClassInfo.hh>    //BufferSet::Pointer
+#include <karabo/util/Exception.hh>    //KARABO_LOGIC_EXCEPTION
+#include <karabo/util/Types.hh>        //karabo::util::ByteArray
+#include <ostream>                     //std::ostream
+#include <vector>                      //std::vector
 
 /**
  * The main European XFEL namespace
@@ -26,43 +26,37 @@ namespace karabo {
 
         /*
          * @class BufferSet
-         * @brief The BufferSet implements a set of buffers to be used for binary Hash serialization. It can be 
+         * @brief The BufferSet implements a set of buffers to be used for binary Hash serialization. It can be
          * configured to always copy all data, or when possible only hold shared pointers to data.
          */
         class BufferSet {
-            
-        public:
-
+           public:
             KARABO_CLASSINFO(karabo::io::BufferSet, "BufferSet", "1.0");
 
             typedef std::vector<char> BufferType;
 
             /*
-            * @enum BufferContents
-            * @brief An enumerator qualifying the contants of a given buffer in a BufferSet
-            */
-            enum BufferContents {
-                COPY = 0,
-                NO_COPY_BYTEARRAY_CONTENTS
-            };
+             * @enum BufferContents
+             * @brief An enumerator qualifying the contants of a given buffer in a BufferSet
+             */
+            enum BufferContents { COPY = 0, NO_COPY_BYTEARRAY_CONTENTS };
 
-        private:
-
+           private:
             /*
-            * @class Buffer
-            * @brief The Buffer can contain data in either of two ways
-            *
-            * - either data in a shared_ptr to a BufferType (member 'vec')
-            * - or shared_ptr to BufferType::value_type ('ptr') where the length of the data is
-            *   given by member 'size' (useful to keep ByteArray data).
-            *
-            * If the data is kept in the first way, it is the responsibility of the user of the
-            * Buffer to synchronize 'size' and 'vec.size()'. To synchronize its current Buffer,
-            * the BufferSet provides the method updateSize().
-            *
-            * The member 'contentType' shall take values of the enum BufferSetContents only
-            * to indicate which kind of buffer we have.
-            */
+             * @class Buffer
+             * @brief The Buffer can contain data in either of two ways
+             *
+             * - either data in a shared_ptr to a BufferType (member 'vec')
+             * - or shared_ptr to BufferType::value_type ('ptr') where the length of the data is
+             *   given by member 'size' (useful to keep ByteArray data).
+             *
+             * If the data is kept in the first way, it is the responsibility of the user of the
+             * Buffer to synchronize 'size' and 'vec.size()'. To synchronize its current Buffer,
+             * the BufferSet provides the method updateSize().
+             *
+             * The member 'contentType' shall take values of the enum BufferSetContents only
+             * to indicate which kind of buffer we have.
+             */
             struct Buffer {
                 boost::shared_ptr<BufferType::value_type> ptr;
                 boost::shared_ptr<BufferType> vec;
@@ -74,16 +68,16 @@ namespace karabo {
                     ptr = boost::shared_ptr<BufferType::value_type>(vec->data(), boost::null_deleter());
                 }
 
-                Buffer(boost::shared_ptr<BufferType> v, boost::shared_ptr<BufferType::value_type> p, std::size_t s, BufferContents cType) {
+                Buffer(boost::shared_ptr<BufferType> v, boost::shared_ptr<BufferType::value_type> p, std::size_t s,
+                       BufferContents cType) {
                     ptr = p;
                     vec = v;
                     size = s;
-                    contentType = cType;  
+                    contentType = cType;
                 }
             };
 
-        public:
-
+           public:
             /**
              * Construct a BufferSet
              * @param copyAllData, set to true if data should always be copied
@@ -103,7 +97,8 @@ namespace karabo {
              * Add a buffer to the BufferSet
              * @param size - size of buffer
              * @param type - BufferContents::COPY means buffer is COPY type
-             *               BufferContents::NO_COPY_BYTEARRAY_CONTENTS means buffer where space allocated in char array (NO_COPY_BYTEARRAY_CONTENTS type)
+             *               BufferContents::NO_COPY_BYTEARRAY_CONTENTS means buffer where space allocated in char array
+             * (NO_COPY_BYTEARRAY_CONTENTS type)
              */
             void add(std::size_t size, int type);
 
@@ -112,7 +107,7 @@ namespace karabo {
              */
             void updateSize() {
                 if (m_buffers.size()) {
-                    if(m_buffers.back().contentType == BufferContents::COPY) {
+                    if (m_buffers.back().contentType == BufferContents::COPY) {
                         m_buffers.back().size = m_buffers.back().vec->size();
                     }
                 }
@@ -127,7 +122,7 @@ namespace karabo {
 
             /**
              * Return the current buffer in the BufferSet
-             * @return 
+             * @return
              */
             BufferType& current() const {
                 return *(m_buffers[m_currentBuffer].vec);
@@ -149,7 +144,7 @@ namespace karabo {
             /**
              * Emplace a ByteArray at the back of the BufferSet
              */
-            void emplaceBack(const karabo::util::ByteArray& array, bool writeSize=true);
+            void emplaceBack(const karabo::util::ByteArray& array, bool writeSize = true);
 
             /**
              * Emplace a shared pointer to a vector at the end of the BufferSet
@@ -165,7 +160,7 @@ namespace karabo {
 
             /**
              * Return the current buffer as a ByteArray
-             * @return 
+             * @return
              */
             karabo::util::ByteArray currentAsByteArray() const;
 
@@ -176,7 +171,7 @@ namespace karabo {
 
             /**
              * Return the combined byte size of all buffers in the BufferSet.
-             * @return 
+             * @return
              */
             size_t totalSize() const;
 
@@ -187,7 +182,7 @@ namespace karabo {
              */
             inline bool containsNonCopies() const {
                 for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it) {
-                    if(it->contentType != BufferContents::COPY) {
+                    if (it->contentType != BufferContents::COPY) {
                         return true;
                     }
                 }
@@ -195,10 +190,10 @@ namespace karabo {
             }
 
             /**
-            * Append the buffers of this BufferSet to, for instance, a vector of boost asio buffers, const or mutable
-            * @param boost_buffers to a append to
-            */
-            template<typename BufferSequenceType>
+             * Append the buffers of this BufferSet to, for instance, a vector of boost asio buffers, const or mutable
+             * @param boost_buffers to a append to
+             */
+            template <typename BufferSequenceType>
             void appendTo(BufferSequenceType& boost_buffers) const {
                 for (auto it = m_buffers.begin(); it != m_buffers.end(); ++it) {
                     if (it->size) {
@@ -216,7 +211,7 @@ namespace karabo {
 
             /**
              * Returns true if the current buffer is a copy of a ByteArray
-             * @return 
+             * @return
              */
             bool currentIsByteArrayCopy() const {
                 return m_buffers[m_currentBuffer].contentType == BufferContents::COPY;
@@ -236,7 +231,7 @@ namespace karabo {
             }
 
             /**
-             * @return Returns vector of buffer types for this BufferSet 
+             * @return Returns vector of buffer types for this BufferSet
              */
             std::vector<int> types() const {
                 std::vector<int> v;
@@ -253,15 +248,12 @@ namespace karabo {
                 }
             }
 
-        private:
-
+           private:
             std::vector<Buffer> m_buffers;
             mutable size_t m_currentBuffer;
             bool m_copyAllData;
-
         };
-    }
-}
+    } // namespace io
+} // namespace karabo
 
-#endif	/* KARABO_IO_BUFFERSET_HH */
-
+#endif /* KARABO_IO_BUFFERSET_HH */

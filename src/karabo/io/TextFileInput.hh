@@ -9,16 +9,15 @@
  */
 
 #ifndef KARABO_IO_TEXTFILEINPUT_HH
-#define	KARABO_IO_TEXTFILEINPUT_HH
+#define KARABO_IO_TEXTFILEINPUT_HH
 
-#include <iosfwd>
-#include <fstream>
-#include <sstream>
 #include <boost/filesystem.hpp>
-
+#include <fstream>
+#include <iosfwd>
+#include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/PathElement.hh>
-#include <karabo/util/ChoiceElement.hh>
+#include <sstream>
 
 #include "Input.hh"
 #include "TextSerializer.hh"
@@ -33,7 +32,7 @@ namespace karabo {
      */
     namespace io {
 
-         /**
+        /**
          * @class TextFileInput
          * @brief The text file input specializes the Input class to read
          *        data from a text file types T have been serialized to. The actual
@@ -42,37 +41,36 @@ namespace karabo {
          */
         template <class T>
         class TextFileInput : public Input<T> {
-
-
             typename TextSerializer<T>::Pointer m_serializer;
 
             boost::filesystem::path m_filename;
             std::vector<T> m_sequenceBuffer;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(TextFileInput<T>, "TextFile", "1.0");
 
             static void expectedParameters(karabo::util::Schema& expected) {
-
                 using namespace karabo::util;
 
-                PATH_ELEMENT(expected).key("filename")
-                        .description("Name of the file to be read")
-                        .displayedName("Filename")
-                        .assignmentMandatory()
-                        .commit();
+                PATH_ELEMENT(expected)
+                      .key("filename")
+                      .description("Name of the file to be read")
+                      .displayedName("Filename")
+                      .assignmentMandatory()
+                      .commit();
 
-                CHOICE_ELEMENT(expected).key("format")
-                        .displayedName("Format")
-                        .description("Select the format which should be used to interprete the data")
-                        .appendNodesOfConfigurationBase<TextSerializer<T> >()
-                        .assignmentOptional().noDefaultValue()
-                        .commit();
+                CHOICE_ELEMENT(expected)
+                      .key("format")
+                      .displayedName("Format")
+                      .description("Select the format which should be used to interprete the data")
+                      .appendNodesOfConfigurationBase<TextSerializer<T> >()
+                      .assignmentOptional()
+                      .noDefaultValue()
+                      .commit();
             }
 
             TextFileInput(const karabo::util::Hash& config) : Input<T>(config) {
-                m_filename = config.get<std::string > ("filename");
+                m_filename = config.get<std::string>("filename");
                 if (config.has("format")) {
                     m_serializer = TextSerializer<T>::createChoice("format", config);
                 } else {
@@ -92,10 +90,8 @@ namespace karabo {
                 return m_sequenceBuffer.size();
             }
 
-        private:
-
+           private:
             void guessAndSetFormat() {
-
                 using namespace std;
                 using namespace karabo::util;
 
@@ -115,7 +111,6 @@ namespace karabo {
             }
 
             void readFile(std::stringstream& buffer) {
-
                 using namespace std;
 
                 ifstream file(m_filename.string().c_str());
@@ -127,7 +122,7 @@ namespace karabo {
                 }
             }
         };
-    }
-}
+    } // namespace io
+} // namespace karabo
 
-#endif	
+#endif

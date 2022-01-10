@@ -6,24 +6,24 @@
  */
 
 #include "DataLogging_Test.hh"
-#include <karabo/net/EventLoop.hh>
-#include <karabo/util/Hash.hh>
-#include <karabo/util/Schema.hh>
-#include "karabo/util/DataLogUtils.hh"
 
 #include <boost/filesystem.hpp>
 #include <cstdlib>
-#include <sstream>
+#include <karabo/net/EventLoop.hh>
+#include <karabo/util/Hash.hh>
+#include <karabo/util/Schema.hh>
 #include <karabo/util/StringTools.hh>
+#include <sstream>
+
+#include "karabo/util/DataLogUtils.hh"
 
 USING_KARABO_NAMESPACES;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DataLogging_Test);
 
 void DataLogging_Test::fileAllTestRunner() {
-    std::pair<bool, std::string> success = m_deviceClient->instantiate(m_server, "PropertyTest",
-                                                                       Hash("deviceId", m_deviceId),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success =
+          m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     setPropertyTestSchema();
@@ -66,7 +66,7 @@ void DataLogging_Test::fileAllTestRunner() {
     // TODO: Uncomment test below as soon as FileLogReader::slotGetPropertyHistoryImpl is fixed.
     //       Currently it is failing to retrieve all the logged entries (see comment on discussions of
     //       https://git.xfel.eu/gitlab/Karabo/Framework/merge_requests/4455).
-    //testSchemaEvolution();
+    // testSchemaEvolution();
     testNans();
 
     // At the end we shutdown the logger manager and try to bring it back in a bad state
@@ -75,23 +75,32 @@ void DataLogging_Test::fileAllTestRunner() {
 }
 
 void DataLogging_Test::testMigrateFileLoggerData() {
-
     // launch the migration script onto the logged path
 
-    const std::string influxUrlWrite = (getenv("KARABO_INFLUXDB_WRITE_URL") ? getenv("KARABO_INFLUXDB_WRITE_URL") : "http://localhost:8086");
-    const std::string influxUrlRead = (getenv("KARABO_INFLUXDB_QUERY_URL") ? getenv("KARABO_INFLUXDB_QUERY_URL") : "http://localhost:8086");
-    const std::string influxDbName = (getenv("KARABO_INFLUXDB_DBNAME") ? getenv("KARABO_INFLUXDB_DBNAME") : (getenv("KARABO_BROKER_TOPIC") ? getenv("KARABO_BROKER_TOPIC") : getenv("USER")));
-    const std::string influxUserWrite = (getenv("KARABO_INFLUXDB_WRITE_USER") ? getenv("KARABO_INFLUXDB_WRITE_USER") : std::string("infadm"));
-    const std::string influxPwdWrite = (getenv("KARABO_INFLUXDB_WRITE_PASSWORD") ? getenv("KARABO_INFLUXDB_WRITE_PASSWORD") : std::string("admpwd"));
-    const std::string influxUserRead = (getenv("KARABO_INFLUXDB_QUERY_USER") ? getenv("KARABO_INFLUXDB_QUERY_USER") : influxUserWrite);
-    const std::string influxPwdRead = (getenv("KARABO_INFLUXDB_QUERY_PASSWORD") ? getenv("KARABO_INFLUXDB_QUERY_PASSWORD") : influxPwdWrite);
-    const std::string absLoggerPath =  boost::filesystem::absolute("./"  + m_fileLoggerDirectory).string();
+    const std::string influxUrlWrite =
+          (getenv("KARABO_INFLUXDB_WRITE_URL") ? getenv("KARABO_INFLUXDB_WRITE_URL") : "http://localhost:8086");
+    const std::string influxUrlRead =
+          (getenv("KARABO_INFLUXDB_QUERY_URL") ? getenv("KARABO_INFLUXDB_QUERY_URL") : "http://localhost:8086");
+    const std::string influxDbName =
+          (getenv("KARABO_INFLUXDB_DBNAME")
+                 ? getenv("KARABO_INFLUXDB_DBNAME")
+                 : (getenv("KARABO_BROKER_TOPIC") ? getenv("KARABO_BROKER_TOPIC") : getenv("USER")));
+    const std::string influxUserWrite =
+          (getenv("KARABO_INFLUXDB_WRITE_USER") ? getenv("KARABO_INFLUXDB_WRITE_USER") : std::string("infadm"));
+    const std::string influxPwdWrite =
+          (getenv("KARABO_INFLUXDB_WRITE_PASSWORD") ? getenv("KARABO_INFLUXDB_WRITE_PASSWORD") : std::string("admpwd"));
+    const std::string influxUserRead =
+          (getenv("KARABO_INFLUXDB_QUERY_USER") ? getenv("KARABO_INFLUXDB_QUERY_USER") : influxUserWrite);
+    const std::string influxPwdRead =
+          (getenv("KARABO_INFLUXDB_QUERY_PASSWORD") ? getenv("KARABO_INFLUXDB_QUERY_PASSWORD") : influxPwdWrite);
+    const std::string absLoggerPath = boost::filesystem::absolute("./" + m_fileLoggerDirectory).string();
     const std::string migrationResultsPath = absLoggerPath + std::string("/migrationresults");
     std::ostringstream cmd;
     cmd << "cd ../../../src/pythonKarabo; ../../karabo/extern/bin/python3 ";
     cmd << "karabo/influxdb/dl_migrator.py ";
 
-    cmd << influxDbName << " " << absLoggerPath << "/karaboHistory/" << " " << migrationResultsPath << " ";
+    cmd << influxDbName << " " << absLoggerPath << "/karaboHistory/"
+        << " " << migrationResultsPath << " ";
     cmd << "--write-url " << boost::algorithm::replace_first_copy(influxUrlWrite, "tcp://", "http://") << " ";
     cmd << "--write-user " << influxUserWrite << " ";
     cmd << "--write-pwd " << influxPwdWrite << " ";
@@ -103,27 +112,25 @@ void DataLogging_Test::testMigrateFileLoggerData() {
     const int ret = system(cmd.str().c_str());
     CPPUNIT_ASSERT_EQUAL(0, ret);
 
-    boost::filesystem::path p(migrationResultsPath + "/processed/"+m_deviceId+"/");
-    if(boost::filesystem::is_directory(p)) {
-        for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(p), {})) {
+    boost::filesystem::path p(migrationResultsPath + "/processed/" + m_deviceId + "/");
+    if (boost::filesystem::is_directory(p)) {
+        for (auto &entry : boost::make_iterator_range(boost::filesystem::directory_iterator(p), {})) {
             std::ostringstream msg;
-            msg << "Check if " << entry << " was migrated OK: "<<boost::filesystem::extension(entry);
-            std::clog<<msg.str()<<std::endl;
+            msg << "Check if " << entry << " was migrated OK: " << boost::filesystem::extension(entry);
+            std::clog << msg.str() << std::endl;
             CPPUNIT_ASSERT_MESSAGE(msg.str(), boost::filesystem::extension(entry) == ".ok");
-
         }
     }
 
     unsigned int errorCount = 0;
-    boost::filesystem::path perr(migrationResultsPath + "/part_processed/"+m_deviceId+"/");
-    if(boost::filesystem::is_directory(perr)) {
-        for (auto& entry : boost::make_iterator_range(boost::filesystem::directory_iterator(perr), {})) {
+    boost::filesystem::path perr(migrationResultsPath + "/part_processed/" + m_deviceId + "/");
+    if (boost::filesystem::is_directory(perr)) {
+        for (auto &entry : boost::make_iterator_range(boost::filesystem::directory_iterator(perr), {})) {
             // print out the error
             std::ostringstream cmd;
-            cmd << "cat "<<entry;
+            cmd << "cat " << entry;
             system(cmd.str().c_str());
             errorCount++;
-
         }
     }
 
@@ -143,16 +150,14 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
 
     boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 
-    std::pair<bool, std::string> success = m_deviceClient->instantiate(m_server, "PropertyTest",
-                                                                       Hash("deviceId", m_deviceId),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success =
+          m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     setPropertyTestSchema();
 
     // Starts the same set of tests with InfluxDb logging instead of text-file based logging
-    std::clog << "\n==== Starting sequence of Influx Logging tests on \""
-            << m_deviceId << "\" ====" << std::endl;
+    std::clog << "\n==== Starting sequence of Influx Logging tests on \"" << m_deviceId << "\" ====" << std::endl;
     success = startDataLoggerManager("InfluxDataLogger");
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
@@ -207,19 +212,18 @@ void DataLogging_Test::influxAllTestRunnerWithDataMigration() {
 
     // These deal with their own devices, so comment above about using the PropertyTest instance
     // in m_deviceId is not applicable.
-    testCfgFromPastRestart(false); // in influx logging, old, past device incarnation stamps are logged as start of device logging
+    testCfgFromPastRestart(
+          false); // in influx logging, old, past device incarnation stamps are logged as start of device logging
     testSchemaEvolution();
     testNans();
 }
 
 
 void DataLogging_Test::testNoInfluxServerHandling() {
-
     std::clog << "Testing handling of no Influx Server available scenarios ..." << std::endl;
 
-    std::pair<bool, std::string> success = m_deviceClient->instantiate(m_server, "PropertyTest",
-                                                                       Hash("deviceId", m_deviceId),
-                                                                       KRB_TEST_MAX_TIMEOUT);
+    std::pair<bool, std::string> success =
+          m_deviceClient->instantiate(m_server, "PropertyTest", Hash("deviceId", m_deviceId), KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     // Starts the logger and readers with invalid InfluxDB (or Telegraf) URLs.
@@ -252,7 +256,7 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     const std::string dlreader0 = karabo::util::DATALOGREADER_PREFIX + ("0-" + m_server);
     Epochstamp withNoServer;
     std::clog << "Requested config at '" << withNoServer.toIso8601() << "' with an invalid server url ... "
-            << std::endl;
+              << std::endl;
 
     Schema schema;
     Hash conf;
@@ -260,16 +264,16 @@ void DataLogging_Test::testNoInfluxServerHandling() {
     std::string cfgTime;
     bool remoteExceptionCaught = false;
     try {
-        m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast",
-                           m_deviceId, withNoServer.toIso8601())
-                .timeout(SLOT_REQUEST_TIMEOUT_MILLIS).receive(conf, schema, cfgAtTime, cfgTime);
+        m_sigSlot->request(dlreader0, "slotGetConfigurationFromPast", m_deviceId, withNoServer.toIso8601())
+              .timeout(SLOT_REQUEST_TIMEOUT_MILLIS)
+              .receive(conf, schema, cfgAtTime, cfgTime);
     } catch (const karabo::util::RemoteException &exc) {
-        bool condition = (exc.detailedMsg().find("Could not connect to InfluxDb at") != std::string::npos)
-                || (exc.detailedMsg().find("Reading from InfluxDB failed") != std::string::npos)
-                || (exc.detailedMsg().find("Connection reset by peer"));
-        CPPUNIT_ASSERT_MESSAGE(std::string("Unexpected RemoteException while handling no Influx server:\n'")
-                               + exc.detailedMsg() + "'\n",
-                               condition);
+        bool condition = (exc.detailedMsg().find("Could not connect to InfluxDb at") != std::string::npos) ||
+                         (exc.detailedMsg().find("Reading from InfluxDB failed") != std::string::npos) ||
+                         (exc.detailedMsg().find("Connection reset by peer"));
+        CPPUNIT_ASSERT_MESSAGE(
+              std::string("Unexpected RemoteException while handling no Influx server:\n'") + exc.detailedMsg() + "'\n",
+              condition);
         remoteExceptionCaught = true;
     }
 
@@ -286,15 +290,15 @@ void DataLogging_Test::testNoInfluxServerHandling() {
 }
 
 
-void DataLogging_Test::testFailingManager()  {
+void DataLogging_Test::testFailingManager() {
     std::clog << "Testing logger manager goes to ERROR with inconsistent config ..." << std::flush;
     const std::string dataLogManagerId("loggerManager");
     std::pair<bool, std::string> success = m_deviceClient->killDevice(dataLogManagerId, KRB_TEST_MAX_TIMEOUT);
     CPPUNIT_ASSERT_MESSAGE(success.second, success.first);
 
     const Hash conf("deviceId", dataLogManagerId,
-                    // Place list that is inconsistent with existing loggermap.xml (i.e. server in loggerMap is missing),
-                    // this will be noticed by the logger and bring it to ERROR.
+                    // Place list that is inconsistent with existing loggermap.xml (i.e. server in loggerMap is
+                    // missing), this will be noticed by the logger and bring it to ERROR.
                     "serverList", std::vector<std::string>{"garbageServer"});
 
     success = m_deviceClient->instantiate(m_server, "DataLoggerManager", conf, KRB_TEST_MAX_TIMEOUT);
@@ -313,9 +317,12 @@ void DataLogging_Test::testFailingManager()  {
     }
 
     const std::string status = m_deviceClient->get<std::string>(dataLogManagerId, "status");
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Missed ERROR state - status: " + status,
-                                 karabo::util::State::ERROR, loggerState);
-    CPPUNIT_ASSERT_MESSAGE(status, status.find("Failure in initialize(), likely a restart is needed:") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(status, status.find("An error has occurred: Inconsistent 'loggermap.xml' and 'serverList' configuration:") != std::string::npos);
-    CPPUNIT_ASSERT_MESSAGE(status, status.find("'DataLoggingTestServer' is in map, but not in list.") != std::string::npos);
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Missed ERROR state - status: " + status, karabo::util::State::ERROR, loggerState);
+    CPPUNIT_ASSERT_MESSAGE(status,
+                           status.find("Failure in initialize(), likely a restart is needed:") != std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(
+          status, status.find("An error has occurred: Inconsistent 'loggermap.xml' and 'serverList' configuration:") !=
+                        std::string::npos);
+    CPPUNIT_ASSERT_MESSAGE(status,
+                           status.find("'DataLoggingTestServer' is in map, but not in list.") != std::string::npos);
 }

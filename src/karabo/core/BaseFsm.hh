@@ -6,19 +6,18 @@
  */
 
 #ifndef KARABO_CORE_FSMBASE_HH_hh
-#define	KARABO_CORE_FSMBASE_HH_hh
+#define KARABO_CORE_FSMBASE_HH_hh
 
 #include <karabo/core/FsmMacros.hh>
-#include <karabo/xms/SignalSlotable.hh>
 #include <karabo/util/karaboDll.hh>
-
+#include <karabo/xms/SignalSlotable.hh>
 #include <string>
 
 namespace karabo {
     namespace util {
         class Schema;
         class State;
-    }
+    } // namespace util
     namespace core {
 
         /**
@@ -27,17 +26,12 @@ namespace karabo {
          *        derive.
          */
         class BaseFsm : public virtual karabo::xms::SignalSlotable {
+           public:
+            virtual ~BaseFsm() {}
 
-        public:
+            static void expectedParameters(const karabo::util::Schema&) {}
 
-            virtual ~BaseFsm() {
-            }
-
-            static void expectedParameters(const karabo::util::Schema&) {
-            }
-
-            virtual void initFsmSlots() {
-            }
+            virtual void initFsmSlots() {}
 
             virtual void exceptionFound(const std::string&, const std::string&) const = 0;
 
@@ -51,16 +45,12 @@ namespace karabo {
 
             KARABO_FSM_ON_NO_STATE_TRANSITION(onNoStateTransition);
 
-            virtual void preStartFsm() {
-            }
+            virtual void preStartFsm() {}
 
-            virtual void startFsm() {
-            }
+            virtual void startFsm() {}
 
-            virtual void stopFsm() {
-            }
-
+            virtual void stopFsm() {}
         };
-    }
-}
+    } // namespace core
+} // namespace karabo
 #endif

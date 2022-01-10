@@ -20,5 +20,5 @@ namespace karabo {
             }
         }
 
-    }
-}
+    } // namespace core
+} // namespace karabo

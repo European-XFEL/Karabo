@@ -9,15 +9,15 @@
  */
 
 #ifndef KARABO_XMS_SIGNAL_HH
-#define	KARABO_XMS_SIGNAL_HH
+#define KARABO_XMS_SIGNAL_HH
 
-#include <vector>
-#include <tuple>
 #include <boost/asio.hpp>
-#include <karabo/util/Factory.hh>
 #include <karabo/net/Broker.hh>
-#include <typeinfo>
+#include <karabo/util/Factory.hh>
+#include <tuple>
 #include <typeindex>
+#include <typeinfo>
+#include <vector>
 
 /**
  * The main Karabo namespace
@@ -49,27 +49,24 @@ namespace karabo {
         class SignalSlotable;
 
         class Signal {
-
             typedef std::map<std::string, std::set<std::string> > SlotMap;
 
-        public:
-
+           public:
             KARABO_CLASSINFO(Signal, "Signal", "1.0")
 
             Signal(const SignalSlotable* signalSlotable, const karabo::net::Broker::Pointer& channel,
-                   const std::string& signalInstanceId, const std::string& signalFunction,
-                   const int priority, const int messageTimeToLive);
+                   const std::string& signalInstanceId, const std::string& signalFunction, const int priority,
+                   const int messageTimeToLive);
 
-            virtual ~Signal() {
-            }
+            virtual ~Signal() {}
 
             /**
-             * Use like setSignature<int, util::Hash, std::string>() to ensure that any emitted signal 
+             * Use like setSignature<int, util::Hash, std::string>() to ensure that any emitted signal
              * has to take arguments of these three types in that order.
              */
-            template <typename ...Args>
+            template <typename... Args>
             void setSignature() {
-                m_argsType = std::type_index(typeid (std::tuple < Args...>));
+                m_argsType = std::type_index(typeid(std::tuple<Args...>));
             }
 
             void registerSlot(const std::string& slotInstanceId, const std::string& slotFunction);
@@ -107,9 +104,8 @@ namespace karabo {
             }
              */
 
-            template <typename ...Args>
+            template <typename... Args>
             void emit(const karabo::util::Hash::Pointer& message) {
-
                 doEmit(message);
                 // Remove above line and uncomment this once type issue is solved
                 /*
@@ -130,18 +126,15 @@ namespace karabo {
              */
             void setTopic(const std::string& topic);
 
-        protected:
-
+           protected:
             void setSlotStrings(const SlotMap& slots, karabo::util::Hash& header) const;
 
             karabo::util::Hash::Pointer prepareHeader(const SlotMap& slots) const;
 
-        private:
-
+           private:
             void doEmit(const karabo::util::Hash::Pointer& message);
 
-        protected:
-
+           protected:
             SignalSlotable* m_signalSlotable;
             const karabo::net::Broker::Pointer& m_channel;
             const std::string m_signalInstanceId;
@@ -154,8 +147,7 @@ namespace karabo {
             int m_messageTimeToLive;
             std::string m_topic;
 
-        private:
-
+           private:
             std::type_index m_argsType;
         };
     } // namespace xms

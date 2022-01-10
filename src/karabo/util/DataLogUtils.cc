@@ -6,24 +6,25 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <boost/iostreams/stream.hpp>
-#include "StringTools.hh"
-
 #include "DataLogUtils.hh"
+
+#include <boost/iostreams/stream.hpp>
+
+#include "StringTools.hh"
 
 namespace karabo {
     namespace util {
         namespace nl = nlohmann;
 
 
-        util::Epochstamp stringDoubleToEpochstamp(const std::string& timestampAsDouble) {
+        util::Epochstamp stringDoubleToEpochstamp(const std::string &timestampAsDouble) {
             std::vector<std::string> tparts;
             boost::split(tparts, timestampAsDouble, boost::is_any_of("."));
             const unsigned long long seconds = util::fromString<unsigned long long>(tparts[0]);
             unsigned long long fractions = 0ULL;
             // If by chance we hit a full second without fractions, we have no ".":
             if (tparts.size() >= 2) {
-                std::string& fracString = tparts[1];
+                std::string &fracString = tparts[1];
                 // We read in all after the dot. If coming from the raw data logger files, we should have exactly
                 // 6 digits (e.g. ms), even with trailing zeros, but one never knows.
                 unsigned long long factorToAtto = 1000000000000ULL;
@@ -50,13 +51,14 @@ namespace karabo {
         }
 
 
-        void getLeaves(const util::Hash& configuration, const util::Schema& schema, std::vector<std::string>& result, const char separator) {
+        void getLeaves(const util::Hash &configuration, const util::Schema &schema, std::vector<std::string> &result,
+                       const char separator) {
             if (configuration.empty() || schema.empty()) return;
-            getLeaves_r(configuration, schema, result, "", separator, false);            
+            getLeaves_r(configuration, schema, result, "", separator, false);
         }
 
 
-        void getLeaves_r(const util::Hash& hash, const util::Schema& schema, std::vector<std::string>& result,
+        void getLeaves_r(const util::Hash &hash, const util::Schema &schema, std::vector<std::string> &result,
                          std::string prefix, const char separator, const bool fullPaths) {
             if (hash.empty()) {
                 return;
@@ -69,17 +71,19 @@ namespace karabo {
                     char separators[] = {separator, 0};
                     currentKey = prefix + separators + currentKey;
                 }
-                if (it->is<util::Hash > () && (fullPaths || !it->hasAttribute(KARABO_HASH_CLASS_ID))) { // Recursion, but no hash sub classes
-                    getLeaves_r(it->getValue<util::Hash > (), schema, result, currentKey, separator, fullPaths);
-                } else if (it->is<std::vector<util::Hash> > ()) { // Recursion for vector
-                    //if this is a LEAF then don't go to recurse further ... leaf!
+                if (it->is<util::Hash>() &&
+                    (fullPaths || !it->hasAttribute(KARABO_HASH_CLASS_ID))) { // Recursion, but no hash sub classes
+                    getLeaves_r(it->getValue<util::Hash>(), schema, result, currentKey, separator, fullPaths);
+                } else if (it->is<std::vector<util::Hash>>()) { // Recursion for vector
+                    // if this is a LEAF then don't go to recurse further ... leaf!
                     if (schema.has(currentKey) && schema.isLeaf(currentKey)) {
                         result.push_back(currentKey);
                     } else {
-                        for (size_t i = 0; i < it->getValue<std::vector<util::Hash> > ().size(); ++i) {
+                        for (size_t i = 0; i < it->getValue<std::vector<util::Hash>>().size(); ++i) {
                             std::ostringstream os;
                             os << currentKey << "[" << i << "]";
-                            getLeaves_r(it->getValue<std::vector<util::Hash> > ().at(i), schema, result, os.str(), separator, fullPaths);
+                            getLeaves_r(it->getValue<std::vector<util::Hash>>().at(i), schema, result, os.str(),
+                                        separator, fullPaths);
                         }
                     }
                 } else {
@@ -90,9 +94,8 @@ namespace karabo {
 
 
         // helper function for `jsonResultsToInfluxResultSet`
-        void parseSingleJsonResult(const nl::json &respObj,
-                                           InfluxResultSet &influxResult,
-                                           const std::string &columnPrefixToRemove) {
+        void parseSingleJsonResult(const nl::json &respObj, InfluxResultSet &influxResult,
+                                   const std::string &columnPrefixToRemove) {
             const auto &columns = respObj["results"][0]["series"][0]["columns"];
             std::vector<std::string> columnTitles;
             for (const auto &column : columns) {
@@ -104,7 +107,7 @@ namespace karabo {
                     columnTitles.push_back(columnStr.substr(columnPrefixToRemove.size()));
                 }
             }
-            
+
             if (influxResult.first.empty()) {
                 influxResult.first = std::move(columnTitles);
             } else {
@@ -124,10 +127,8 @@ namespace karabo {
             }
         }
 
-        void jsonResultsToInfluxResultSet(const std::string &jsonResult,
-                                                           InfluxResultSet &influxResult,
-                                                           const std::string &columnPrefixToRemove) {
-
+        void jsonResultsToInfluxResultSet(const std::string &jsonResult, InfluxResultSet &influxResult,
+                                          const std::string &columnPrefixToRemove) {
             nl::json respObj;
             // use boost::iostreams::stream for copy-less stream access of the jsonResult string
             boost::iostreams::stream<boost::iostreams::array_source> inputStream(jsonResult.c_str(), jsonResult.size());
@@ -140,9 +141,9 @@ namespace karabo {
                 const auto &result0 = respObj["results"][0];
                 auto it = result0.find("partial");
                 if (it != result0.end()) {
-                    const auto& partial = *it;
+                    const auto &partial = *it;
                     // continue only if partial == true, break otherwise
-                    if (partial.is_boolean() && partial == true) continue;  
+                    if (partial.is_boolean() && partial == true) continue;
                 }
                 break;
             }
@@ -173,6 +174,5 @@ namespace karabo {
         }
 
 
-    } // end of karabo::util
-}
-
+    } // namespace util
+} // namespace karabo

@@ -13,9 +13,7 @@
 namespace karabo {
 
     class P2PSenderDevice : public karabo::core::Device<> {
-
-    public:
-
+       public:
         KARABO_CLASSINFO(P2PSenderDevice, "P2PSenderDevice", "2.0")
 
         /**
@@ -28,8 +26,7 @@ namespace karabo {
 
         virtual ~P2PSenderDevice();
 
-    private:
-
+       private:
         // slot for write command
         void write();
         // slot for stopping the writing activity
@@ -43,8 +40,7 @@ namespace karabo {
 
         bool m_stopWriting;
     };
-}
+} // namespace karabo
 
 
 #endif /* P2P_SENDER_DEVICE_HH */
-

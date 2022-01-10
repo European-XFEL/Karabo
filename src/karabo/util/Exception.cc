@@ -8,10 +8,10 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include "Exception.hh"
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
-
-#include "Exception.hh"
 
 #if defined(__GNUC__) || defined(__clang__)
 #include <cxxabi.h>
@@ -32,7 +32,8 @@ namespace karabo {
         bool Exception::m_hasUnhandled = false;
 
 
-        Exception::Exception(const string& message, const string& type, const string& filename, const string& function, int lineNumber) {
+        Exception::Exception(const string& message, const string& type, const string& filename, const string& function,
+                             int lineNumber) {
             m_exceptionInfo.message = message;
             m_exceptionInfo.type = type;
             m_exceptionInfo.function = function;
@@ -80,14 +81,14 @@ namespace karabo {
 
 
         void Exception::memorize() {
-
-#define KARABO_EXCEPTION(CLASS) Exception::ExceptionInfo myException; \
-  myException.type = CLASS; \
-  myException.message = string(e.what()); \
-  myException.filename = ""; \
-  myException.function = ""; \
-  myException.lineNumber = ""; \
-  Exception::addToTrace(myException);
+#define KARABO_EXCEPTION(CLASS)             \
+    Exception::ExceptionInfo myException;   \
+    myException.type = CLASS;               \
+    myException.message = string(e.what()); \
+    myException.filename = "";              \
+    myException.function = "";              \
+    myException.lineNumber = "";            \
+    Exception::addToTrace(myException);
 
             try {
                 // This forwards any expession
@@ -128,7 +129,8 @@ namespace karabo {
                 myException.function = "";
                 myException.lineNumber = "";
 #if defined(__GNUC__) || defined(__clang__)
-                // See https://stackoverflow.com/questions/561997/determining-exception-type-after-the-exception-is-caught
+                // See
+                // https://stackoverflow.com/questions/561997/determining-exception-type-after-the-exception-is-caught
                 int status = 42; // Better init with a non-zero value...
                 char* txt = abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), 0, 0, &status);
                 if (status == 0 && txt) {
@@ -156,12 +158,12 @@ namespace karabo {
         }
 
 
-        ostream & operator<<(ostream& os, const Exception& exception) {
+        ostream& operator<<(ostream& os, const Exception& exception) {
             Exception::showTrace(os); // no-op if m_trace is empty
 
             {
                 boost::mutex::scoped_lock lock(Exception::m_mutex);
-                string fill(Exception::m_trace.size()*3, ' ');
+                string fill(Exception::m_trace.size() * 3, ' ');
                 os << fill << Exception::m_trace.size() + 1 << ". Exception " << string(5, '=') << ">  {" << endl;
                 Exception::format(os, exception.m_exceptionInfo, fill);
                 os << fill << "}" << endl << endl;
@@ -173,11 +175,16 @@ namespace karabo {
 
         void Exception::format(ostream& os, const ExceptionInfo& exceptionInfo, const string& spacing) {
             if (!exceptionInfo.type.empty()) os << spacing << "    Exception Type....:  " << exceptionInfo.type << endl;
-            if (!exceptionInfo.message.empty()) os << spacing << "    Message...........:  " << exceptionInfo.message << endl;
-            if (!exceptionInfo.filename.empty()) os << spacing << "    File..............:  " << exceptionInfo.filename << endl;
-            if (!exceptionInfo.function.empty()) os << spacing << "    Function..........:  " << exceptionInfo.function << endl;
-            if (!exceptionInfo.lineNumber.empty()) os << spacing << "    Line Number.......:  " << exceptionInfo.lineNumber << endl;
-            if (!exceptionInfo.timestamp.empty()) os << spacing << "    Timestamp.........:  " << exceptionInfo.timestamp << endl;
+            if (!exceptionInfo.message.empty())
+                os << spacing << "    Message...........:  " << exceptionInfo.message << endl;
+            if (!exceptionInfo.filename.empty())
+                os << spacing << "    File..............:  " << exceptionInfo.filename << endl;
+            if (!exceptionInfo.function.empty())
+                os << spacing << "    Function..........:  " << exceptionInfo.function << endl;
+            if (!exceptionInfo.lineNumber.empty())
+                os << spacing << "    Line Number.......:  " << exceptionInfo.lineNumber << endl;
+            if (!exceptionInfo.timestamp.empty())
+                os << spacing << "    Timestamp.........:  " << exceptionInfo.timestamp << endl;
         }
 
 
@@ -186,7 +193,7 @@ namespace karabo {
         }
 
 
-        const char* Exception::what() const throw () {
+        const char* Exception::what() const throw() {
             m_detailedMsg = detailedMsg();
             return m_detailedMsg.c_str();
         }

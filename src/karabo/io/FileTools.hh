@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   FileTools.hh
  * Author: <burkhard.heisen@xfel.eu>
  *
@@ -6,15 +6,15 @@
  */
 
 #include <boost/filesystem.hpp>
+#include <karabo/log/Logger.hh>
 #include <ostream>
 
-#include <karabo/log/Logger.hh>
+#include "BinaryFileInput.hh"
 #include "Input.hh"
 #include "Output.hh"
-#include "BinaryFileInput.hh"
 
 #ifndef KARABO_IO_FILETOOLS_HH
-#define	KARABO_IO_FILETOOLS_HH
+#define KARABO_IO_FILETOOLS_HH
 
 #include <karabo/util/karaboDll.hh>
 
@@ -23,7 +23,7 @@ namespace karabo {
     namespace io {
 
         /**
-         * Load an object of class T from a file. The configuration determines which 
+         * Load an object of class T from a file. The configuration determines which
          * access and de-serialzation methods to use.
          * @param object to load data into
          * @param filename of the file to load from. The input chose depends on the file
@@ -34,7 +34,8 @@ namespace karabo {
          * @param config for the Input class that will be used
          */
         template <class T>
-        inline void loadFromFile(T& object, const std::string& filename, const karabo::util::Hash& config = karabo::util::Hash()) {
+        inline void loadFromFile(T& object, const std::string& filename,
+                                 const karabo::util::Hash& config = karabo::util::Hash()) {
             boost::filesystem::path filepath(filename);
             std::string extension = filepath.extension().string().substr(1);
             boost::to_lower(extension);
@@ -53,7 +54,7 @@ namespace karabo {
         }
 
         /**
-         * Save an object of class T to a file. The configuration determines which 
+         * Save an object of class T to a file. The configuration determines which
          * access and serialzation methods to use.
          * @param object to save
          * @param filename of the file to load from. The input chose depends on the file
@@ -64,7 +65,8 @@ namespace karabo {
          * @param config for the Output class that will be used
          */
         template <class T>
-        inline void saveToFile(const T& object, const std::string& filename, const karabo::util::Hash& config = karabo::util::Hash()) {
+        inline void saveToFile(const T& object, const std::string& filename,
+                               const karabo::util::Hash& config = karabo::util::Hash()) {
             boost::filesystem::path filepath(filename);
             std::string extension = filepath.extension().string().substr(1);
             boost::filesystem::path directory = filepath.parent_path();
@@ -74,8 +76,9 @@ namespace karabo {
                 boost::system::error_code ec;
                 boost::filesystem::create_directories(directory, ec);
                 if (ec) {
-                    KARABO_LOG_FRAMEWORK_ERROR_C("karabo::io::saveToFile") << "Failed to create directories: "
-                            << directory << ". code = " << ec.value() << " -- " << ec.message();
+                    KARABO_LOG_FRAMEWORK_ERROR_C("karabo::io::saveToFile")
+                          << "Failed to create directories: " << directory << ". code = " << ec.value() << " -- "
+                          << ec.message();
                 }
             }
 
@@ -102,7 +105,7 @@ namespace karabo {
          */
         inline void saveToFile(const std::vector<char>& buffer, const std::string& filename) {
             std::ofstream file(filename.c_str(), std::ios::binary);
-            file.write(const_cast<const char*> (&buffer[0]), buffer.size());
+            file.write(const_cast<const char*>(&buffer[0]), buffer.size());
             file.close();
         }
 
@@ -113,13 +116,13 @@ namespace karabo {
          */
         inline void loadFromFile(std::vector<char>& buffer, const std::string& filename) {
             std::ifstream file(filename.c_str(), std::ios::binary);
-            //fileContents.reserve(10000);
+            // fileContents.reserve(10000);
             buffer.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
         }
 
         /**
          * Get the I/O datatype for type T in terms of the Karabo class id
-         * @return 
+         * @return
          */
         template <class T>
         inline std::string getIODataType() {
@@ -127,20 +130,27 @@ namespace karabo {
             return T::classInfo().getClassId();
         }
 
-        template<>
+        template <>
         inline std::string getIODataType<std::vector<char> >() {
             return "Raw";
         }
 
-    }
-}
+    } // namespace io
+} // namespace karabo
 
 #ifndef __SO__
-extern template void karabo::io::loadFromFile<karabo::util::Hash>(karabo::util::Hash& object, const std::string& filename, const karabo::util::Hash& config = karabo::util::Hash());
-extern template void karabo::io::saveToFile<karabo::util::Hash>(const karabo::util::Hash& object, const std::string& filename, const karabo::util::Hash& config = karabo::util::Hash());
+extern template void karabo::io::loadFromFile<karabo::util::Hash>(
+      karabo::util::Hash& object, const std::string& filename, const karabo::util::Hash& config = karabo::util::Hash());
+extern template void karabo::io::saveToFile<karabo::util::Hash>(
+      const karabo::util::Hash& object, const std::string& filename,
+      const karabo::util::Hash& config = karabo::util::Hash());
 extern template std::string karabo::io::getIODataType<karabo::util::Hash>();
-extern template void karabo::io::loadFromFile<karabo::util::Schema>(karabo::util::Schema& object, const std::string& filename, const karabo::util::Hash& config = karabo::util::Hash());
-extern template void karabo::io::saveToFile<karabo::util::Schema>(const karabo::util::Schema& object, const std::string& filename, const karabo::util::Hash& config = karabo::util::Hash());
+extern template void karabo::io::loadFromFile<karabo::util::Schema>(
+      karabo::util::Schema& object, const std::string& filename,
+      const karabo::util::Hash& config = karabo::util::Hash());
+extern template void karabo::io::saveToFile<karabo::util::Schema>(
+      const karabo::util::Schema& object, const std::string& filename,
+      const karabo::util::Hash& config = karabo::util::Hash());
 extern template std::string karabo::io::getIODataType<karabo::util::Schema>();
 #endif
 

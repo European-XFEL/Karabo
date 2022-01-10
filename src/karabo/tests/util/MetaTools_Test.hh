@@ -6,72 +6,58 @@
  */
 
 #ifndef METATOOLS_TEST_HH
-#define	METATOOLS_TEST_HH
+#define METATOOLS_TEST_HH
 
-#include <karabo/util/Hash.hh>
 #include <cppunit/extensions/HelperMacros.h>
-#include <karabo/util/MetaTools.hh>
-#include <karabo/net/EventLoop.hh>
 
-
-
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
 #include <boost/asio.hpp>
-#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 #include <boost/enable_shared_from_this.hpp>
-
-#include <unordered_map>
+#include <boost/function.hpp>
+#include <boost/thread.hpp>
 #include <iostream>
+#include <karabo/net/EventLoop.hh>
+#include <karabo/util/Hash.hh>
+#include <karabo/util/MetaTools.hh>
+#include <unordered_map>
 
-struct MyPublicHash : public karabo::util::Hash {
+struct MyPublicHash : public karabo::util::Hash {};
 
-};
+struct MyProtectedHash : protected karabo::util::Hash {};
 
-struct MyProtectedHash : protected karabo::util::Hash {
-
-};
-
-struct MyPrivateHash : private karabo::util::Hash {
-
-};
+struct MyPrivateHash : private karabo::util::Hash {};
 
 struct PointerTest {
-
-    template<class T>
+    template <class T>
     static bool isSharedPointer() {
         return isSharedPointer<T>(karabo::util::is_shared_ptr<T>());
     }
 
-    template<class T>
+    template <class T>
     static bool isSharedPointer(boost::true_type) {
         return true;
     }
 
-    template<class T>
+    template <class T>
     static bool isSharedPointer(boost::false_type) {
         return false;
     }
 };
 
-struct BindWeakTest : public boost::enable_shared_from_this<BindWeakTest>{
+struct BindWeakTest : public boost::enable_shared_from_this<BindWeakTest> {
     int add(const int a, const int b) {
-	return a+b;
+        return a + b;
     }
     int dummyFunction(const int a) const {
-	return a;
+        return a;
     }
 };
 
 struct Test_SignalSlotable : public boost::enable_shared_from_this<Test_SignalSlotable> {
-
-    virtual ~Test_SignalSlotable() {
-    }
-
+    virtual ~Test_SignalSlotable() {}
 };
 
 struct Test_Device : public virtual Test_SignalSlotable {
-
     boost::asio::deadline_timer m_timer;
     std::vector<std::string>* m_messages;
 
@@ -84,42 +70,42 @@ struct Test_Device : public virtual Test_SignalSlotable {
         // This is just testing that binding a const member function compiles - both with a this which is const or not:
         m_timer.expires_from_now(boost::posix_time::millisec(100));
         m_timer.async_wait(karabo::util::bind_weak(&Test_Device::dummyConstFunction, this, 0, _1));
-        m_timer.async_wait(karabo::util::bind_weak(&Test_Device::dummyConstFunction,
-                                                   const_cast<const Test_Device*> (this), 0, _1));
+        m_timer.async_wait(
+              karabo::util::bind_weak(&Test_Device::dummyConstFunction, const_cast<const Test_Device*>(this), 0, _1));
         m_timer.cancel();
 
-	// This is just testing that binding a member function that returns a value works
-	{
-	    boost::shared_ptr<BindWeakTest> bindWeakTest = boost::make_shared<BindWeakTest>();
-	    
-	    auto f1 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), _1, _2);
-	    int v = f1(1,1);
-	    CPPUNIT_ASSERT(v==2);
-	    
-	    auto f2 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), 1, _1);
-	    v = f2(1);
-	    CPPUNIT_ASSERT(v==2);
-	    
-	    auto f3 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), _1, 1);
-	    v = f3(1);
-	    CPPUNIT_ASSERT(v==2);
+        // This is just testing that binding a member function that returns a value works
+        {
+            boost::shared_ptr<BindWeakTest> bindWeakTest = boost::make_shared<BindWeakTest>();
 
-	    auto f4 = karabo::util::bind_weak(&BindWeakTest::dummyFunction, 
-					     const_cast<const BindWeakTest*>(bindWeakTest.get()), _1);
-	    v = f4(1);
-	    CPPUNIT_ASSERT(v==1);
+            auto f1 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), _1, _2);
+            int v = f1(1, 1);
+            CPPUNIT_ASSERT(v == 2);
 
-	    auto f5 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), 1, 1);
-	    v = f5();
-	    CPPUNIT_ASSERT(v==2);
+            auto f2 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), 1, _1);
+            v = f2(1);
+            CPPUNIT_ASSERT(v == 2);
 
-	    // Since the object was destroyed, the f5 return value should be the function return type default value
-	    // (in this case 0, since the return type is int)
-	    bindWeakTest.reset();
-	    v = f5();
-	    CPPUNIT_ASSERT(v==0);
-	}
-	
+            auto f3 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), _1, 1);
+            v = f3(1);
+            CPPUNIT_ASSERT(v == 2);
+
+            auto f4 = karabo::util::bind_weak(&BindWeakTest::dummyFunction,
+                                              const_cast<const BindWeakTest*>(bindWeakTest.get()), _1);
+            v = f4(1);
+            CPPUNIT_ASSERT(v == 1);
+
+            auto f5 = karabo::util::bind_weak(&BindWeakTest::add, bindWeakTest.get(), 1, 1);
+            v = f5();
+            CPPUNIT_ASSERT(v == 2);
+
+            // Since the object was destroyed, the f5 return value should be the function return type default value
+            // (in this case 0, since the return type is int)
+            bindWeakTest.reset();
+            v = f5();
+            CPPUNIT_ASSERT(v == 0);
+        }
+
         // Now the real test starts:
         m_timer.expires_from_now(boost::posix_time::millisec(100));
         m_timer.async_wait(karabo::util::bind_weak(&Test_Device::executeStepFunction, this, 5, _1));
@@ -152,7 +138,6 @@ struct Test_Device : public virtual Test_SignalSlotable {
 };
 
 struct Test_DeviceServer {
-
     boost::asio::deadline_timer m_deviceDestructTimer;
     std::map<std::string, boost::shared_ptr<Test_Device> > m_devices;
 
@@ -171,7 +156,6 @@ struct Test_DeviceServer {
 };
 
 class MetaTools_Test : public CPPUNIT_NS::TestFixture {
-
     CPPUNIT_TEST_SUITE(MetaTools_Test);
     CPPUNIT_TEST(testMethod);
     CPPUNIT_TEST(testWeakBind);
@@ -179,18 +163,15 @@ class MetaTools_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testCallFromTuple);
     CPPUNIT_TEST_SUITE_END();
 
-public:
+   public:
     MetaTools_Test();
     virtual ~MetaTools_Test();
 
-private:
-
+   private:
     void testMethod();
     void testWeakBind();
     void testCastResolvers();
     void testCallFromTuple();
-
 };
 
-#endif	/* METATOOLS_TEST_HH */
-
+#endif /* METATOOLS_TEST_HH */

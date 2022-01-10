@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   MqttClient.hh
  * Author: Sergey Esenov <serguei.essenov at xfel.eu>
  *
@@ -6,27 +6,34 @@
  */
 
 #ifndef KARABO_NET_MQTTCLIENT_HH
-#define	KARABO_NET_MQTTCLIENT_HH
+#define KARABO_NET_MQTTCLIENT_HH
 
-#include <vector>
-#include <tuple>
 #include <algorithm>
 #include <boost/asio.hpp>
-#include <boost/uuid/uuid_generators.hpp>   // generators
-#include <boost/uuid/uuid_io.hpp>           //  streaming operators etc.
-#include "karabo/util/Configurator.hh"      // KARABO_CONFIGURATION_BASE_CLASS
+#include <boost/uuid/uuid_generators.hpp> // generators
+#include <boost/uuid/uuid_io.hpp>         //  streaming operators etc.
+#include <tuple>
+#include <vector>
+
+#include "karabo/util/Configurator.hh" // KARABO_CONFIGURATION_BASE_CLASS
 #include "utils.hh"
 
-#define KARABO_ERROR_CODE_SUCCESS           boost::system::errc::make_error_code(boost::system::errc::success)
-#define KARABO_ERROR_CODE_IO_ERROR          boost::system::errc::make_error_code(boost::system::errc::io_error)
-#define KARABO_ERROR_CODE_OP_CANCELLED      boost::system::errc::make_error_code(boost::system::errc::operation_canceled)
-#define KARABO_ERROR_CODE_NOT_CONNECTED     boost::system::errc::make_error_code(boost::system::errc::not_connected)
+#define KARABO_ERROR_CODE_SUCCESS boost::system::errc::make_error_code(boost::system::errc::success)
+#define KARABO_ERROR_CODE_IO_ERROR boost::system::errc::make_error_code(boost::system::errc::io_error)
+#define KARABO_ERROR_CODE_OP_CANCELLED boost::system::errc::make_error_code(boost::system::errc::operation_canceled)
+#define KARABO_ERROR_CODE_NOT_CONNECTED boost::system::errc::make_error_code(boost::system::errc::not_connected)
 #define KARABO_ERROR_CODE_ALREADY_CONNECTED boost::system::errc::make_error_code(boost::system::errc::already_connected)
-#define KARABO_ERROR_CODE_TIMED_OUT         boost::system::errc::make_error_code(boost::system::errc::timed_out)
-#define KARABO_ERROR_CODE_STREAM_TIMEOUT    boost::system::errc::make_error_code(boost::system::errc::stream_timeout)
-#define KARABO_ERROR_CODE_RESOURCE_BUSY     boost::system::errc::make_error_code(boost::system::errc::device_or_resource_busy)
+#define KARABO_ERROR_CODE_TIMED_OUT boost::system::errc::make_error_code(boost::system::errc::timed_out)
+#define KARABO_ERROR_CODE_STREAM_TIMEOUT boost::system::errc::make_error_code(boost::system::errc::stream_timeout)
+#define KARABO_ERROR_CODE_RESOURCE_BUSY \
+    boost::system::errc::make_error_code(boost::system::errc::device_or_resource_busy)
 
-#define KARABO_ASSERT(expr) { std::ostringstream oss; oss << __FILE__ << ':' << __LINE__; assert((expr)&&(oss.str().c_str())); }
+#define KARABO_ASSERT(expr)                    \
+    {                                          \
+        std::ostringstream oss;                \
+        oss << __FILE__ << ':' << __LINE__;    \
+        assert((expr) && (oss.str().c_str())); \
+    }
 
 
 namespace karabo {
@@ -41,28 +48,29 @@ namespace karabo {
              * @return true or false
              */
             bool topicHasWildcard(const std::string& topic);
-        }
+        } // namespace mqtttools
 
 
-	using ReadHashHandler = std::function<void(const boost::system::error_code, const std::string& /*topic*/, const util::Hash::Pointer /*readHash*/)>;
+        using ReadHashHandler = std::function<void(const boost::system::error_code, const std::string& /*topic*/,
+                                                   const util::Hash::Pointer /*readHash*/)>;
 
         //********    PUBLISH Options    *********
         // See: https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#_Toc3901101
 
         enum class PubQos : std::uint8_t {
-            AtMostOnce  = 0b00000000,                  // qos = 0
-            AtLeastOnce = 0b00000010,                  // qos = 1
-            ExactlyOnce = 0b00000100,                  // qos = 2
+            AtMostOnce = 0b00000000,  // qos = 0
+            AtLeastOnce = 0b00000010, // qos = 1
+            ExactlyOnce = 0b00000100, // qos = 2
         };
 
         enum class PubRetain : std::uint8_t {
-            no  = 0b00000000,
-            yes = 0b00000001,                          // retain flag
+            no = 0b00000000,
+            yes = 0b00000001, // retain flag
         };
 
         enum class PubDup : std::uint8_t {
-            no  = 0b00000000,
-            yes = 0b00001000,                          // Duplicate (re-transmission)
+            no = 0b00000000,
+            yes = 0b00001000, // Duplicate (re-transmission)
         };
 
         struct PubOpts final {
@@ -75,92 +83,114 @@ namespace karabo {
 
             explicit constexpr PubOpts(std::uint8_t value) : m_data(value) {}
 
-            constexpr PubOpts(PubQos    value) : m_data(static_cast<std::uint8_t>(value)) {}
+            constexpr PubOpts(PubQos value) : m_data(static_cast<std::uint8_t>(value)) {}
             constexpr PubOpts(PubRetain value) : m_data(static_cast<std::uint8_t>(value)) {}
-            constexpr PubOpts(PubDup    value) : m_data(static_cast<std::uint8_t>(value)) {}
+            constexpr PubOpts(PubDup value) : m_data(static_cast<std::uint8_t>(value)) {}
 
-            constexpr PubOpts operator|(const PubOpts&   rhs) const { return PubOpts(m_data | rhs.m_data); }
-            constexpr PubOpts operator|(const PubQos&    rhs) const { return *this | PubOpts(rhs); }
-            constexpr PubOpts operator|(const PubRetain& rhs) const { return *this | PubOpts(rhs); }
-            constexpr PubOpts operator|(const PubDup&    rhs) const { return *this | PubOpts(rhs); }
-
-            constexpr PubOpts operator|=(const PubOpts&   rhs) { return (*this = (*this | rhs)); }
-            constexpr PubOpts operator|=(const PubQos&    rhs) { return (*this = (*this | rhs)); }
-            constexpr PubOpts operator|=(const PubRetain& rhs) { return (*this = (*this | rhs)); }
-            constexpr PubOpts operator|=(const PubDup&    rhs) { return (*this = (*this | rhs)); }
-
-            constexpr PubQos
-            getPubQos() const {
-                return static_cast<PubQos>(m_data &    0b00000110);
+            constexpr PubOpts operator|(const PubOpts& rhs) const {
+                return PubOpts(m_data | rhs.m_data);
+            }
+            constexpr PubOpts operator|(const PubQos& rhs) const {
+                return *this | PubOpts(rhs);
+            }
+            constexpr PubOpts operator|(const PubRetain& rhs) const {
+                return *this | PubOpts(rhs);
+            }
+            constexpr PubOpts operator|(const PubDup& rhs) const {
+                return *this | PubOpts(rhs);
             }
 
-            constexpr PubRetain
-            getPubRetain() const {
+            constexpr PubOpts operator|=(const PubOpts& rhs) {
+                return (*this = (*this | rhs));
+            }
+            constexpr PubOpts operator|=(const PubQos& rhs) {
+                return (*this = (*this | rhs));
+            }
+            constexpr PubOpts operator|=(const PubRetain& rhs) {
+                return (*this = (*this | rhs));
+            }
+            constexpr PubOpts operator|=(const PubDup& rhs) {
+                return (*this = (*this | rhs));
+            }
+
+            constexpr PubQos getPubQos() const {
+                return static_cast<PubQos>(m_data & 0b00000110);
+            }
+
+            constexpr PubRetain getPubRetain() const {
                 return static_cast<PubRetain>(m_data & 0b00000001);
             }
 
-            constexpr PubDup
-            getPubDup() const {
-                return static_cast<PubDup>(m_data    & 0b00001000);
+            constexpr PubDup getPubDup() const {
+                return static_cast<PubDup>(m_data & 0b00001000);
             }
 
-            explicit constexpr operator std::uint8_t() const { return m_data; }
+            explicit constexpr operator std::uint8_t() const {
+                return m_data;
+            }
 
-        private:
+           private:
             std::uint8_t m_data = 0;
         };
 
 
-        constexpr PubOpts operator|(PubQos lhs, PubRetain rhs) { return PubOpts(lhs) | rhs; }
-        constexpr PubOpts operator|(PubQos lhs, PubDup rhs)    { return PubOpts(lhs) | rhs; }
-
-        constexpr PubOpts operator|(PubRetain lhs, PubQos rhs) { return PubOpts(lhs) | rhs; }
-        constexpr PubOpts operator|(PubRetain lhs, PubDup rhs) { return PubOpts(lhs) | rhs; }
-
-        constexpr PubOpts operator|(PubDup lhs, PubRetain rhs) { return PubOpts(lhs) | rhs; }
-        constexpr PubOpts operator|(PubDup lhs, PubQos rhs)    { return PubOpts(lhs) | rhs; }
-
-        constexpr char const* pubQosToString(PubQos v) {
-            return (v == PubQos::AtMostOnce ? "at_most_once" : (
-                    v == PubQos::AtLeastOnce ? "at_least_once" : (
-                    v == PubQos::ExactlyOnce ? "exactly_once" : "invalid_PubQos"
-                    )));
+        constexpr PubOpts operator|(PubQos lhs, PubRetain rhs) {
+            return PubOpts(lhs) | rhs;
+        }
+        constexpr PubOpts operator|(PubQos lhs, PubDup rhs) {
+            return PubOpts(lhs) | rhs;
         }
 
-        template<typename Stream>
-        Stream & operator<<(Stream & os, PubQos val) {
+        constexpr PubOpts operator|(PubRetain lhs, PubQos rhs) {
+            return PubOpts(lhs) | rhs;
+        }
+        constexpr PubOpts operator|(PubRetain lhs, PubDup rhs) {
+            return PubOpts(lhs) | rhs;
+        }
+
+        constexpr PubOpts operator|(PubDup lhs, PubRetain rhs) {
+            return PubOpts(lhs) | rhs;
+        }
+        constexpr PubOpts operator|(PubDup lhs, PubQos rhs) {
+            return PubOpts(lhs) | rhs;
+        }
+
+        constexpr char const* pubQosToString(PubQos v) {
+            return (v == PubQos::AtMostOnce ? "at_most_once"
+                                            : (v == PubQos::AtLeastOnce
+                                                     ? "at_least_once"
+                                                     : (v == PubQos::ExactlyOnce ? "exactly_once" : "invalid_PubQos")));
+        }
+
+        template <typename Stream>
+        Stream& operator<<(Stream& os, PubQos val) {
             os << pubQosToString(val);
             return os;
         }
 
         constexpr char const* pubRetainToString(PubRetain v) {
-            return (v == PubRetain::no ? "no" : (
-                    v == PubRetain::yes ? "yes" : "invalid_PubRetain"
-                    ));
+            return (v == PubRetain::no ? "no" : (v == PubRetain::yes ? "yes" : "invalid_PubRetain"));
         }
 
-        template<typename Stream>
-        Stream & operator<<(Stream & os, PubRetain val) {
+        template <typename Stream>
+        Stream& operator<<(Stream& os, PubRetain val) {
             os << pubRetainToString(val);
             return os;
         }
 
         constexpr char const* pubDupToString(PubDup v) {
-            return (v == PubDup::no ? "no" : (
-                    v == PubDup::yes ? "yes" : "invalid_PubDup"
-                    ));
+            return (v == PubDup::no ? "no" : (v == PubDup::yes ? "yes" : "invalid_PubDup"));
         }
 
-        template<typename Stream>
-        Stream & operator<<(Stream & os, PubDup val) {
+        template <typename Stream>
+        Stream& operator<<(Stream& os, PubDup val) {
             os << pubDupToString(val);
             return os;
         }
 
-        template<typename Stream>
-        Stream & operator<<(Stream & os, PubOpts val) {
-            os << "{qos=" << val.getPubQos() << ", retain=" << val.getPubRetain()
-                    << ", dup=" << val.getPubDup() << "}";
+        template <typename Stream>
+        Stream& operator<<(Stream& os, PubOpts val) {
+            os << "{qos=" << val.getPubQos() << ", retain=" << val.getPubRetain() << ", dup=" << val.getPubDup() << "}";
             return os;
         }
 
@@ -170,28 +200,28 @@ namespace karabo {
 
         // SUBSCRIBE Option: Quality Of Service
         enum class SubQos : std::uint8_t {
-            AtMostOnce  = 0b00000000,                  // qos = 0
-            AtLeastOnce = 0b00000001,                  // qos = 1
-            ExactlyOnce = 0b00000010,                  // qos = 2
+            AtMostOnce = 0b00000000,  // qos = 0
+            AtLeastOnce = 0b00000001, // qos = 1
+            ExactlyOnce = 0b00000010, // qos = 2
         };
 
         // SUBSCRIBE Option: No Local
         enum class SubNoLocal : std::uint8_t {
-            no  = 0b00000000,
-            yes = 0b00000100,                          // No Local option
+            no = 0b00000000,
+            yes = 0b00000100, // No Local option
         };
 
         // SUBSCRIBE Option: Retain As Published
         enum class SubRetainAsPublished : std::uint8_t {
-            no  = 0b00000000,
-            yes = 0b00001000,                          // Retain As Published option
+            no = 0b00000000,
+            yes = 0b00001000, // Retain As Published option
         };
 
         // SUBSCRIBE Option: Retain Handling
         enum class SubRetainHandling : std::uint8_t {
-            send                    = 0b00000000,       // send
-            sendOnlyNewSubscription = 0b00010000,       // retain handling
-            notSend                 = 0b00100000        // retain handling
+            send = 0b00000000,                    // send
+            sendOnlyNewSubscription = 0b00010000, // retain handling
+            notSend = 0b00100000                  // retain handling
         };
 
         struct SubOpts final {
@@ -204,121 +234,161 @@ namespace karabo {
 
             explicit constexpr SubOpts(std::uint8_t value) : m_data(value) {}
 
-            constexpr SubOpts(SubQos     value) : m_data(static_cast<std::uint8_t>(value)) {}
+            constexpr SubOpts(SubQos value) : m_data(static_cast<std::uint8_t>(value)) {}
             constexpr SubOpts(SubNoLocal value) : m_data(static_cast<std::uint8_t>(value)) {}
             constexpr SubOpts(SubRetainAsPublished value) : m_data(static_cast<std::uint8_t>(value)) {}
-            constexpr SubOpts(SubRetainHandling  value) : m_data(static_cast<std::uint8_t>(value)) {}
+            constexpr SubOpts(SubRetainHandling value) : m_data(static_cast<std::uint8_t>(value)) {}
 
-            constexpr SubOpts operator|(SubOpts    rhs)           const { return SubOpts(m_data | rhs.m_data); }
-            constexpr SubOpts operator|(SubQos     rhs)           const { return *this | SubOpts(rhs); }
-            constexpr SubOpts operator|(SubNoLocal rhs)           const { return *this | SubOpts(rhs); }
-            constexpr SubOpts operator|(SubRetainAsPublished rhs) const { return *this | SubOpts(rhs); }
-            constexpr SubOpts operator|(SubRetainHandling  rhs)   const { return *this | SubOpts(rhs); }
+            constexpr SubOpts operator|(SubOpts rhs) const {
+                return SubOpts(m_data | rhs.m_data);
+            }
+            constexpr SubOpts operator|(SubQos rhs) const {
+                return *this | SubOpts(rhs);
+            }
+            constexpr SubOpts operator|(SubNoLocal rhs) const {
+                return *this | SubOpts(rhs);
+            }
+            constexpr SubOpts operator|(SubRetainAsPublished rhs) const {
+                return *this | SubOpts(rhs);
+            }
+            constexpr SubOpts operator|(SubRetainHandling rhs) const {
+                return *this | SubOpts(rhs);
+            }
 
-            constexpr SubOpts operator|=(const SubOpts&    rhs)           { return (*this = (*this | rhs)); }
-            constexpr SubOpts operator|=(const SubQos&     rhs)           { return (*this = (*this | rhs)); }
-            constexpr SubOpts operator|=(const SubNoLocal& rhs)           { return (*this = (*this | rhs)); }
-            constexpr SubOpts operator|=(const SubRetainAsPublished& rhs) { return (*this = (*this | rhs)); }
-            constexpr SubOpts operator|=(const SubRetainHandling&  rhs)   { return (*this = (*this | rhs)); }
+            constexpr SubOpts operator|=(const SubOpts& rhs) {
+                return (*this = (*this | rhs));
+            }
+            constexpr SubOpts operator|=(const SubQos& rhs) {
+                return (*this = (*this | rhs));
+            }
+            constexpr SubOpts operator|=(const SubNoLocal& rhs) {
+                return (*this = (*this | rhs));
+            }
+            constexpr SubOpts operator|=(const SubRetainAsPublished& rhs) {
+                return (*this = (*this | rhs));
+            }
+            constexpr SubOpts operator|=(const SubRetainHandling& rhs) {
+                return (*this = (*this | rhs));
+            }
 
-            constexpr SubQos
-            getSubQos() const {
+            constexpr SubQos getSubQos() const {
                 return static_cast<SubQos>(m_data & 0b00000011);
             }
 
-            constexpr SubNoLocal
-            getSubNoLocal() const {
+            constexpr SubNoLocal getSubNoLocal() const {
                 return static_cast<SubNoLocal>(m_data & 0b00000100);
             }
 
-            constexpr SubRetainAsPublished
-            getSubRetainAsPublished() const {
+            constexpr SubRetainAsPublished getSubRetainAsPublished() const {
                 return static_cast<SubRetainAsPublished>(m_data & 0b00001000);
             }
 
-            constexpr SubRetainHandling
-            getSubRetainHandling() const {
+            constexpr SubRetainHandling getSubRetainHandling() const {
                 return static_cast<SubRetainHandling>(m_data & 0b00110000);
             }
 
-            explicit constexpr operator std::uint8_t() const { return m_data; }
+            explicit constexpr operator std::uint8_t() const {
+                return m_data;
+            }
 
-        private:
+           private:
             std::uint8_t m_data;
         };
 
 
-        constexpr SubOpts operator|(SubQos lhs, SubNoLocal rhs)               { return SubOpts(lhs) | rhs; }
-        constexpr SubOpts operator|(SubQos lhs, SubRetainAsPublished rhs)     { return SubOpts(lhs) | rhs; }
-        constexpr SubOpts operator|(SubQos lhs, SubRetainHandling  rhs)       { return SubOpts(lhs) | rhs; }
-
-        constexpr SubOpts operator|(SubNoLocal lhs, SubQos rhs)               { return SubOpts(lhs) | rhs; }
-        constexpr SubOpts operator|(SubNoLocal lhs, SubRetainAsPublished rhs) { return SubOpts(lhs) | rhs; }
-        constexpr SubOpts operator|(SubNoLocal lhs, SubRetainHandling rhs)    { return SubOpts(lhs) | rhs; }
-
-        constexpr SubOpts operator|(SubRetainAsPublished lhs, SubQos rhs)     { return SubOpts(lhs) | rhs; }
-        constexpr SubOpts operator|(SubRetainAsPublished lhs, SubNoLocal rhs) { return SubOpts(lhs) | rhs; }
-        constexpr SubOpts operator|(SubRetainAsPublished lhs, SubRetainHandling rhs)  { return SubOpts(lhs) | rhs; }
-
-        constexpr SubOpts operator|(SubRetainHandling lhs, SubQos rhs)                { return SubOpts(lhs) | rhs; }
-        constexpr SubOpts operator|(SubRetainHandling lhs, SubNoLocal rhs)            { return SubOpts(lhs) | rhs; }
-        constexpr SubOpts operator|(SubRetainHandling lhs, SubRetainAsPublished rhs)  { return SubOpts(lhs) | rhs; }
-
-        constexpr char const* subRetainToString(SubRetainHandling v) {
-            return (v == SubRetainHandling::send ? "send" : (
-                    v == SubRetainHandling::sendOnlyNewSubscription ? "send_only_new_subscription" : (
-                    v == SubRetainHandling::notSend ? "not_send" : "invalid_SubRetainHandling"
-                    )));
+        constexpr SubOpts operator|(SubQos lhs, SubNoLocal rhs) {
+            return SubOpts(lhs) | rhs;
+        }
+        constexpr SubOpts operator|(SubQos lhs, SubRetainAsPublished rhs) {
+            return SubOpts(lhs) | rhs;
+        }
+        constexpr SubOpts operator|(SubQos lhs, SubRetainHandling rhs) {
+            return SubOpts(lhs) | rhs;
         }
 
-        template<typename Stream>
-        Stream & operator<<(Stream & os, SubRetainHandling val) {
+        constexpr SubOpts operator|(SubNoLocal lhs, SubQos rhs) {
+            return SubOpts(lhs) | rhs;
+        }
+        constexpr SubOpts operator|(SubNoLocal lhs, SubRetainAsPublished rhs) {
+            return SubOpts(lhs) | rhs;
+        }
+        constexpr SubOpts operator|(SubNoLocal lhs, SubRetainHandling rhs) {
+            return SubOpts(lhs) | rhs;
+        }
+
+        constexpr SubOpts operator|(SubRetainAsPublished lhs, SubQos rhs) {
+            return SubOpts(lhs) | rhs;
+        }
+        constexpr SubOpts operator|(SubRetainAsPublished lhs, SubNoLocal rhs) {
+            return SubOpts(lhs) | rhs;
+        }
+        constexpr SubOpts operator|(SubRetainAsPublished lhs, SubRetainHandling rhs) {
+            return SubOpts(lhs) | rhs;
+        }
+
+        constexpr SubOpts operator|(SubRetainHandling lhs, SubQos rhs) {
+            return SubOpts(lhs) | rhs;
+        }
+        constexpr SubOpts operator|(SubRetainHandling lhs, SubNoLocal rhs) {
+            return SubOpts(lhs) | rhs;
+        }
+        constexpr SubOpts operator|(SubRetainHandling lhs, SubRetainAsPublished rhs) {
+            return SubOpts(lhs) | rhs;
+        }
+
+        constexpr char const* subRetainToString(SubRetainHandling v) {
+            return (v == SubRetainHandling::send
+                          ? "send"
+                          : (v == SubRetainHandling::sendOnlyNewSubscription
+                                   ? "send_only_new_subscription"
+                                   : (v == SubRetainHandling::notSend ? "not_send" : "invalid_SubRetainHandling")));
+        }
+
+        template <typename Stream>
+        Stream& operator<<(Stream& os, SubRetainHandling val) {
             os << subRetainToString(val);
             return os;
         }
 
         constexpr char const* subNoLocalToString(SubNoLocal v) {
-            return (v == SubNoLocal::no ? "no" : (
-                    v == SubNoLocal::yes ? "yes" : "invalid_SubNoLocal"
-                    ));
+            return (v == SubNoLocal::no ? "no" : (v == SubNoLocal::yes ? "yes" : "invalid_SubNoLocal"));
         }
 
-        template<typename Stream>
-        Stream & operator<<(Stream & os, SubNoLocal val) {
+        template <typename Stream>
+        Stream& operator<<(Stream& os, SubNoLocal val) {
             os << subNoLocalToString(val);
             return os;
         }
 
         constexpr char const* subRetainAsPublishedToString(SubRetainAsPublished v) {
-            return (v == SubRetainAsPublished::no ? "no" : (
-                    v == SubRetainAsPublished::yes ? "yes" : "invalid_SubRetainAsPublished"
-                    ));
+            return (v == SubRetainAsPublished::no
+                          ? "no"
+                          : (v == SubRetainAsPublished::yes ? "yes" : "invalid_SubRetainAsPublished"));
         }
 
-        template<typename Stream>
-        Stream & operator<<(Stream & os, SubRetainAsPublished val) {
+        template <typename Stream>
+        Stream& operator<<(Stream& os, SubRetainAsPublished val) {
             os << subRetainAsPublishedToString(val);
             return os;
         }
 
         constexpr char const* subQosToString(SubQos v) {
-            return (v == SubQos::AtMostOnce ? "at_most_once" : (
-                    v == SubQos::AtLeastOnce ? "at_least_once" : (
-                    v == SubQos::ExactlyOnce ? "exactly_once" : "invalid_SubQos"
-                    )));
+            return (v == SubQos::AtMostOnce ? "at_most_once"
+                                            : (v == SubQos::AtLeastOnce
+                                                     ? "at_least_once"
+                                                     : (v == SubQos::ExactlyOnce ? "exactly_once" : "invalid_SubQos")));
         }
 
-        template<typename Stream>
-        Stream & operator<<(Stream & os, SubQos val) {
+        template <typename Stream>
+        Stream& operator<<(Stream& os, SubQos val) {
             os << subQosToString(val);
             return os;
         }
 
-        template<typename Stream>
-        Stream & operator<<(Stream & os, SubOpts val) {
+        template <typename Stream>
+        Stream& operator<<(Stream& os, SubOpts val) {
             os << "{qos=" << val.getSubQos() << ", nl=" << val.getSubNoLocal()
-                    << ", rap=" << val.getSubRetainAsPublished() << ", rh="
-                    << val.getSubRetainHandling() << "}";
+               << ", rap=" << val.getSubRetainAsPublished() << ", rh=" << val.getSubRetainHandling() << "}";
             return os;
         }
 
@@ -328,16 +398,14 @@ namespace karabo {
         /**
          * @class MqClient
          * @brief This class implements a MQTT client-to-broker (c2b) messaging interface for Karabo
-         * 
-         * This class implements a MQ client-to-broker (p2p) messaging interface for Karabo. 
+         *
+         * This class implements a MQ client-to-broker (p2p) messaging interface for Karabo.
          * The client side can be both producer and consumer simultaneously: it can get messages from
          * other client via broker (minimum 2-hops communication) or send messages to other clients.
          * We are trying to hide all implementation details and 'mqtt_cpp' API in .cc file
          */
         class MqttClient : public boost::enable_shared_from_this<MqttClient> {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(MqttClient, "MqttClient", "2.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
@@ -350,13 +418,13 @@ namespace karabo {
             /**
              * Establish physical and logical connection with external MQTT broker (server)
              */
-	    virtual boost::system::error_code connect() = 0;
+            virtual boost::system::error_code connect() = 0;
 
             /**
              * Establish physical and logical connection with external MQTT broker (server)
              * @param onComplete handler with signature "void (boost::system::error_code)"
              */
-            virtual void connectAsync(const AsyncHandler& onComplete = [](const boost::system::error_code&){}) = 0;
+            virtual void connectAsync(const AsyncHandler& onComplete = [](const boost::system::error_code&) {}) = 0;
 
             /**
              * Check if the client is connected to the broker
@@ -375,7 +443,7 @@ namespace karabo {
              * Disconnect from a broker (server) by sending special message via asynchronous write.
              * @param onComplete handler with signature "void (boost::system::error_code)"
              */
-            virtual void disconnectAsync(const AsyncHandler& onComplete = [](const boost::system::error_code&){}) = 0;
+            virtual void disconnectAsync(const AsyncHandler& onComplete = [](const boost::system::error_code&) {}) = 0;
 
             /**
              * Force disconnect. It is not a clean disconnect sequence.<BR>
@@ -400,10 +468,10 @@ namespace karabo {
              * @param topic to be subscribed
              * @param quality of service for such subscription
              * @param read handler called when the message associated with this topic arrived
-             * @return boost::system::error_code 
+             * @return boost::system::error_code
              */
-            boost::system::error_code
-            subscribe(const std::string& topic, SubOpts subopts, const ReadHashHandler& slotFunc) {
+            boost::system::error_code subscribe(const std::string& topic, SubOpts subopts,
+                                                const ReadHashHandler& slotFunc) {
                 return subscribe(topic, std::uint8_t(subopts), slotFunc);
             }
 
@@ -416,24 +484,21 @@ namespace karabo {
              * @param slotFunction - handler called when a message associated with topic arrived
              * @param onComplete handler with signature "void (boost::system::error_code)"
              */
-            void
-            subscribeAsync(const std::string& topic, SubOpts subopts,
-                           const ReadHashHandler& slotFunc,
-                           const AsyncHandler& onComplete) {
+            void subscribeAsync(const std::string& topic, SubOpts subopts, const ReadHashHandler& slotFunc,
+                                const AsyncHandler& onComplete) {
                 subscribeAsync(topic, std::uint8_t(subopts), slotFunc, onComplete);
             }
 
             /**
-             * Synchronous multiple topics subscription. 
+             * Synchronous multiple topics subscription.
              * Subscriptions are represented as vector of tuples of topic name, quality-of-service and
              * read callback.  The topic names can be with or without wildcards. It allows to do single call
              * to subscribe to many topics. No special handling of overlapped subscriptions. No special
              * rules about order of topics in the list.
              * @param params  multiple tuples of 'topic', 'qos', 'slotFunction' to subscribe
-             * @return boost::system::error_code 
+             * @return boost::system::error_code
              */
-            virtual boost::system::error_code
-            subscribe(const TopicSubOptions& params) = 0;
+            virtual boost::system::error_code subscribe(const TopicSubOptions& params) = 0;
 
             /**
              * Asynchronous multiple topics subscription.
@@ -442,8 +507,7 @@ namespace karabo {
              * @param params   multiple tuples of 'topic', 'qos', 'slotName', 'slotFunction' to subscribe
              * @param onComplete handler with signature "void (boost::system::error_code)"
              */
-            virtual void
-            subscribeAsync(const TopicSubOptions& params, const AsyncHandler& onComplete) = 0;
+            virtual void subscribeAsync(const TopicSubOptions& params, const AsyncHandler& onComplete) = 0;
 
             /**
              * Request broker to un-subscribe the topic.
@@ -453,32 +517,32 @@ namespace karabo {
              * @param topic to un-subscribe
              * @return boost::system::error_code indicating if un-subscription is successful
              */
-            virtual boost::system::error_code
-            unsubscribe(const std::string& topic) = 0;
+            virtual boost::system::error_code unsubscribe(const std::string& topic) = 0;
 
             /**
              * Request broker to un-subscribe topic.
              * @param topic to un-subscribe
              * @param onComplete handler with signature "void (boost::system::error_code)"
              */
-            virtual void
-            unsubscribeAsync(const std::string& topic, const AsyncHandler& onComplete = [](const boost::system::error_code&){}) = 0;
+            virtual void unsubscribeAsync(
+                  const std::string& topic,
+                  const AsyncHandler& onComplete = [](const boost::system::error_code&) {}) = 0;
 
             /**
              * Request broker to un-subscribe multiple topics
              * @param multiple topic-handlerName tuples to un-subscribe
-             * @return boost::system::error_code indicating if un-subscription is successful (all or none) 
+             * @return boost::system::error_code indicating if un-subscription is successful (all or none)
              */
-            virtual boost::system::error_code
-            unsubscribe(const std::vector<std::string>& topics) = 0;
+            virtual boost::system::error_code unsubscribe(const std::vector<std::string>& topics) = 0;
 
             /**
              * Request broker to un-subscribe many topics
              * @param multiple topics to un-subscribe
              * @param onComplete handler with signature "void (boost::system::error_code)"
              */
-            virtual void
-            unsubscribeAsync(const std::vector<std::string>& topics, const AsyncHandler& onComplete = [](const boost::system::error_code&){}) = 0;
+            virtual void unsubscribeAsync(
+                  const std::vector<std::string>& topics,
+                  const AsyncHandler& onComplete = [](const boost::system::error_code&) {}) = 0;
 
             /**
              * Un-subscribe from all subscriptions made by this client upto now (blocking call)
@@ -491,7 +555,8 @@ namespace karabo {
              * @param onUnSubAck acknowledgment callback will be called at the end
              * @param callback after network completion (send operation was successful)
              */
-            virtual void unsubscribeAllAsync(const AsyncHandler& onComplete = [](const boost::system::error_code&){}) = 0;
+            virtual void unsubscribeAllAsync(const AsyncHandler& onComplete = [](const boost::system::error_code&) {
+            }) = 0;
 
             /**
              * Check if the topic is subscribed already.
@@ -510,11 +575,9 @@ namespace karabo {
              * @return true or false
              */
             virtual bool isMatched(const std::string& topic) = 0;
-            
-            boost::system::error_code
-            publish(const std::string& topic,
-                    const karabo::util::Hash::Pointer& msg,
-                    PubOpts pubopts) {
+
+            boost::system::error_code publish(const std::string& topic, const karabo::util::Hash::Pointer& msg,
+                                              PubOpts pubopts) {
                 return publish(topic, msg, std::uint8_t(pubopts));
             }
 
@@ -525,19 +588,20 @@ namespace karabo {
              * @param pubopts Example: PubQos::ExactlyOnce | PubRetain::yes
              * @param onComplete
              */
-            void
-            publishAsync(const std::string& topic,
-                         const karabo::util::Hash::Pointer& msg,
-                         PubOpts pubopts,
-                         const AsyncHandler& onComplete = AsyncHandler()) {
+            void publishAsync(const std::string& topic, const karabo::util::Hash::Pointer& msg, PubOpts pubopts,
+                              const AsyncHandler& onComplete = AsyncHandler()) {
                 publishAsync(topic, msg, std::uint8_t(pubopts), onComplete);
             }
 
             virtual ReadHashHandler getReadHashHandler(const std::string& topic) const = 0;
 
-            void setInstanceId(const std::string& instanceId) { m_instanceId = instanceId; }
+            void setInstanceId(const std::string& instanceId) {
+                m_instanceId = instanceId;
+            }
 
-            void setDomain(const std::string& domain) { m_domain = domain; }
+            void setDomain(const std::string& domain) {
+                m_domain = domain;
+            }
 
             virtual std::string getClientId() const = 0;
 
@@ -560,15 +624,13 @@ namespace karabo {
 
             static std::string getUuidAsString();
 
-        protected:
+           protected:
+            virtual boost::system::error_code subscribe(const std::string& topic, std::uint8_t subopts,
+                                                        const ReadHashHandler& slotFunc) = 0;
 
-            virtual boost::system::error_code
-            subscribe(const std::string& topic, std::uint8_t subopts, const ReadHashHandler& slotFunc) = 0;
-
-            virtual void
-            subscribeAsync(const std::string& topic, std::uint8_t subopts,
-                           const ReadHashHandler& slotFunc,
-			   const AsyncHandler& onComplete = [](const boost::system::error_code&){}) = 0;
+            virtual void subscribeAsync(
+                  const std::string& topic, std::uint8_t subopts, const ReadHashHandler& slotFunc,
+                  const AsyncHandler& onComplete = [](const boost::system::error_code&) {}) = 0;
 
             /**
              * Publish a message (Hash) on the topic (blocking call) with QoS (Quality of Service) equal
@@ -579,10 +641,9 @@ namespace karabo {
              * @param qos     quality of service
              * @param msg     shared pointer to Hash
              * @param retain  flag enabling message persistence
-             * @return boost::system::error_code 
+             * @return boost::system::error_code
              */
-            boost::system::error_code publish(const std::string& topic, int qos,
-                                              const karabo::util::Hash::Pointer& msg,
+            boost::system::error_code publish(const std::string& topic, int qos, const karabo::util::Hash::Pointer& msg,
                                               bool retain = false) {
                 PubOpts options;
                 if (qos == 0) options |= PubQos::AtMostOnce;
@@ -597,18 +658,13 @@ namespace karabo {
              * @param topic
              * @param msg
              * @param pubopts
-             * @return 
+             * @return
              */
-            virtual boost::system::error_code
-            publish(const std::string& topic,
-                    const karabo::util::Hash::Pointer& msg,
-                    std::uint8_t pubopts) = 0;
+            virtual boost::system::error_code publish(const std::string& topic, const karabo::util::Hash::Pointer& msg,
+                                                      std::uint8_t pubopts) = 0;
 
-            virtual void
-            publishAsync(const std::string& topic,
-                         const karabo::util::Hash::Pointer& msg,
-                         std::uint8_t pubopts,
-                         const AsyncHandler& onComplete = AsyncHandler()) = 0;
+            virtual void publishAsync(const std::string& topic, const karabo::util::Hash::Pointer& msg,
+                                      std::uint8_t pubopts, const AsyncHandler& onComplete = AsyncHandler()) = 0;
 
             /**
              * Publish a message (Hash) on the topic (nonblocking call) with QoS (Quality of Service) equal
@@ -621,8 +677,7 @@ namespace karabo {
              * @param onComplete handler with signature "void (boost::system::error_code)"
              * @param retain  flag enabling message persistence
              */
-            void publishAsync(const std::string& topic, int qos,
-                              const karabo::util::Hash::Pointer& msg,
+            void publishAsync(const std::string& topic, int qos, const karabo::util::Hash::Pointer& msg,
                               const AsyncHandler& onComplete, bool retain = false) {
                 PubOpts options;
                 if (qos == 0) options |= PubQos::AtMostOnce;
@@ -636,33 +691,29 @@ namespace karabo {
              * Dispatch functor on MQTT event loop
              * @param token
              */
-            template<typename CompletionToken>
+            template <typename CompletionToken>
             void dispatch(CompletionToken&& token) {
                 m_ios->dispatch(token);
             }
 
-            template<typename CompletionToken>
+            template <typename CompletionToken>
             void post(CompletionToken&& token) {
                 m_ios->post(token);
             }
 
 
-        private:
-
+           private:
             void run();
 
-        protected:
-
+           protected:
             boost::shared_ptr<boost::asio::io_context> m_ios;
             boost::shared_ptr<boost::thread> m_thread;
             std::vector<std::string> m_brokerUrls;
             std::string m_domain;
             std::string m_instanceId;
-
         };
-    }
-}
+    } // namespace net
+} // namespace karabo
 
 
-#endif	/* KARABO_NET_MQTTCLIENT_HH */
-
+#endif /* KARABO_NET_MQTTCLIENT_HH */

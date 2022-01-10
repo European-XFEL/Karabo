@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   TimePeriod.hh
  * Author: boukhelef
  *
@@ -6,10 +6,10 @@
  */
 
 #ifndef TIMEPERIOD_HH
-#define	TIMEPERIOD_HH
+#define TIMEPERIOD_HH
 
-#include "Hash.hh"
 #include "Epochstamp.hh"
+#include "Hash.hh"
 #include "TimeDuration.hh"
 
 namespace karabo {
@@ -17,13 +17,12 @@ namespace karabo {
 
         /**
          * This class models a time period expressed by two time points, i.e. start and stop.
-         * 
+         *
          * The default constructor create a time period of length zero, i.e. start=stop.
          */
 
         class TimePeriod {
-
-            public:
+           public:
             /**
              * Default constructor creates and empty time period
              */
@@ -80,7 +79,7 @@ namespace karabo {
             bool after(const Epochstamp& tm) const;
 
             /**
-             * Serialize time period to and from Hash object. 
+             * Serialize time period to and from Hash object.
              * @param hash Hash object
              */
             void fromHash(const karabo::util::Hash& hash);
@@ -92,13 +91,12 @@ namespace karabo {
                 return hash;
             }
 
-        private:
+           private:
             bool m_Open;
             Epochstamp m_Start;
             Epochstamp m_Stop;
         };
 
-    }
-}
-#endif	/* TIMEPERIOD_HH */
-
+    } // namespace util
+} // namespace karabo
+#endif /* TIMEPERIOD_HH */

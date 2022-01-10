@@ -5,55 +5,59 @@
  * Created on February 4, 2019, 9:58 AM
  */
 #include "DataLogUtils_Test.hh"
+
 #include <karabo/util/DataLogUtils.hh>
+
 #include "karabo/util/Exception.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(DataLogUtils_Test);
 
 namespace nl = nlohmann;
 
-DataLogUtils_Test::DataLogUtils_Test() :
-    m_indexRegex(karabo::util::DATALOG_INDEX_LINE_REGEX, boost::regex::extended),
-    m_indexTailRegex(karabo::util::DATALOG_INDEX_TAIL_REGEX, boost::regex::extended) {
-
-}
+DataLogUtils_Test::DataLogUtils_Test()
+    : m_indexRegex(karabo::util::DATALOG_INDEX_LINE_REGEX, boost::regex::extended),
+      m_indexTailRegex(karabo::util::DATALOG_INDEX_TAIL_REGEX, boost::regex::extended) {}
 
 
-void DataLogUtils_Test::setUp() {
-}
+void DataLogUtils_Test::setUp() {}
 
 
-void DataLogUtils_Test::tearDown() {
-}
+void DataLogUtils_Test::tearDown() {}
 
 
 void DataLogUtils_Test::testValidIndexLines() {
+    std::vector<std::pair<std::string, std::vector<std::string>>> resultTable{
+          std::make_pair(
+                "+LOG 20190204T094210.961209Z 1549273330.961209 0 0 . 0",
+                std::vector<std::string>{"+LOG", "20190204T094210.961209Z", "1549273330.961209", "0", "0", ".", "0"}),
 
-    std::vector<std::pair<std::string, std::vector < std::string>>> resultTable
-    {
-        std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 0 0 . 0",
-                       std::vector<std::string>{"+LOG", "20190204T094210.961209Z", "1549273330.961209", "0", "0", ".", "0"}),
+          std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 12345677 0 . 0", // tranId > 0
+                         std::vector<std::string>{"+LOG", "20190204T094210.961209Z", "1549273330.961209", "12345677",
+                                                  "0", ".", "0"}),
 
-        std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 12345677 0 . 0", // tranId > 0
-                       std::vector<std::string>{"+LOG", "20190204T094210.961209Z", "1549273330.961209", "12345677", "0", ".", "0"}),
+          std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 0 0 real_user 0", // defined user name
+                         std::vector<std::string>{"+LOG", "20190204T094210.961209Z", "1549273330.961209", "0", "0",
+                                                  "real_user", "0"}),
 
-        std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 0 0 real_user 0", // defined user name
-                       std::vector<std::string>{"+LOG", "20190204T094210.961209Z", "1549273330.961209", "0", "0", "real_user", "0"}),
+          std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 0 0 . 1230", // non-0 file index
+                         std::vector<std::string>{"+LOG", "20190204T094210.961209Z", "1549273330.961209", "0", "0", ".",
+                                                  "1230"}),
 
-        std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 0 0 . 1230", // non-0 file index
-                       std::vector<std::string>{"+LOG", "20190204T094210.961209Z", "1549273330.961209", "0", "0", ".", "1230"}),
+          std::make_pair("+LOG 20190204T094210.961209Z 1549273330 0 0 . 0", // full second, no microseconds
+                         std::vector<std::string>{"+LOG", "20190204T094210.961209Z", "1549273330", "0", "0", ".", "0"}),
 
-        std::make_pair("+LOG 20190204T094210.961209Z 1549273330 0 0 . 0", // full second, no microseconds
-                       std::vector<std::string>{"+LOG", "20190204T094210.961209Z", "1549273330", "0", "0", ".", "0"}),
+          std::make_pair(
+                "-LOG 20190204T094210.961209Z 1549273330.961209 0 0 . 0", // -LOG
+                std::vector<std::string>{"-LOG", "20190204T094210.961209Z", "1549273330.961209", "0", "0", ".", "0"}),
 
-        std::make_pair("-LOG 20190204T094210.961209Z 1549273330.961209 0 0 . 0", // -LOG
-                       std::vector<std::string>{"-LOG", "20190204T094210.961209Z", "1549273330.961209", "0", "0", ".", "0"}),
+          std::make_pair(
+                "=NEW 20190204T094210.961209Z 1549273330.961209 0 0 . 0", // =NEW
+                std::vector<std::string>{"=NEW", "20190204T094210.961209Z", "1549273330.961209", "0", "0", ".", "0"}),
 
-        std::make_pair("=NEW 20190204T094210.961209Z 1549273330.961209 0 0 . 0", // =NEW
-                       std::vector<std::string>{"=NEW", "20190204T094210.961209Z", "1549273330.961209", "0", "0", ".", "0"}),
-
-        std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 0 987654 . 0", // non-zero position in index file
-                       std::vector<std::string>{"+LOG", "20190204T094210.961209Z", "1549273330.961209", "0", "987654", ".", "0"}),
+          std::make_pair(
+                "+LOG 20190204T094210.961209Z 1549273330.961209 0 987654 . 0", // non-zero position in index file
+                std::vector<std::string>{"+LOG", "20190204T094210.961209Z", "1549273330.961209", "0", "987654", ".",
+                                         "0"}),
     };
 
     for (auto& aPair : resultTable) {
@@ -75,26 +79,26 @@ void DataLogUtils_Test::testValidIndexLines() {
 
 
 void DataLogUtils_Test::testInvalidIndexLines() {
+    std::vector<std::pair<std::string, int>> resultsTable{
+          // The int which is the second element of the pair indicates whether the regex that didn't match was the
+          // one for the whole line (value 1) or was the one for the regex for the line tail (value 2).
+          std::make_pair("+LOG 20190204+LOG 20190204T094210.961209Z 1549273330.961209 0 0 . 0",
+                         1), // intermingled contents
 
-    std::vector<std::pair<std::string, int>> resultsTable
-    {
-        // The int which is the second element of the pair indicates whether the regex that didn't match was the
-        // one for the whole line (value 1) or was the one for the regex for the line tail (value 2).
-        std::make_pair("+LOG 20190204+LOG 20190204T094210.961209Z 1549273330.961209 0 0 . 0", 1), // intermingled contents
+          std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 -1 0 . 0", 2), // negative tranId
 
-        std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 -1 0 . 0", 2), // negative tranId 
+          std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 0 0 0", 2), // missing user name
 
-        std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 0 0 0", 2), // missing user name
+          std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 0 0 . -1", 2), // negative file index
 
-        std::make_pair("+LOG 20190204T094210.961209Z 1549273330.961209 0 0 . -1", 2), // negative file index
+          std::make_pair("+LOG 2AD0190204T094210.961209Z 1549273330 0 0 . 0", 1), // invalid Iso8061 timestamp
 
-        std::make_pair("+LOG 2AD0190204T094210.961209Z 1549273330 0 0 . 0", 1), // invalid Iso8061 timestamp
+          std::make_pair("*LOG 20190204T094210.961209Z 1549273330.961209 0 0 . 0", 1), // invalid event specifier
 
-        std::make_pair("*LOG 20190204T094210.961209Z 1549273330.961209 0 0 . 0", 1), // invalid event specifier
+          std::make_pair("=NEW 20190204T094210.961209Z 1549273330.961209 0 -21 . -1", 2), // invalid file position
 
-        std::make_pair("=NEW 20190204T094210.961209Z 1549273330.961209 0 -21 . -1", 2), // invalid file position
-
-        std::make_pair("+LOG 20190204T094210.961209Z 15492AB73330.961209 0 987654 . 0", 1), // invalid numeric timestamp
+          std::make_pair("+LOG 20190204T094210.961209Z 15492AB73330.961209 0 987654 . 0",
+                         1), // invalid numeric timestamp
     };
 
     int invalidTestIdx = 0;
@@ -112,15 +116,15 @@ void DataLogUtils_Test::testInvalidIndexLines() {
             }
         }
         CPPUNIT_ASSERT_MESSAGE("For invalid test #" + karabo::util::toString(invalidTestIdx) +
-                               " a faillingRegEx value of " + karabo::util::toString(aPair.second) +
-                               " was expected, but got " + karabo::util::toString(faillingRegEx),
+                                     " a faillingRegEx value of " + karabo::util::toString(aPair.second) +
+                                     " was expected, but got " + karabo::util::toString(faillingRegEx),
                                aPair.second == faillingRegEx);
         invalidTestIdx++;
     }
 }
 
 
-void DataLogUtils_Test::testValueFromJSON(){
+void DataLogUtils_Test::testValueFromJSON() {
     boost::optional<std::string> value;
     nl::json j = nl::json::parse(std::string("null"));
     value = karabo::util::jsonValueAsString(j);
@@ -140,64 +144,68 @@ void DataLogUtils_Test::testValueFromJSON(){
 }
 
 
-void DataLogUtils_Test::testMultipleJSONObjects(){
-    std::string simple = ""
-    "{\"results\":"
-        "[{"
-        "\"statement_id\":0,"
-        "\"series\":[{"
-            "\"name\":\"prop_name\","
-            "\"columns\":[\"time\",\"value\"],"
-            "\"values\":["
-                "[1597043525897755,40],"
-                "[1597043525897855,null]"
-            "]}]"
-        "}]"
-    "}";
+void DataLogUtils_Test::testMultipleJSONObjects() {
+    std::string simple =
+          ""
+          "{\"results\":"
+          "[{"
+          "\"statement_id\":0,"
+          "\"series\":[{"
+          "\"name\":\"prop_name\","
+          "\"columns\":[\"time\",\"value\"],"
+          "\"values\":["
+          "[1597043525897755,40],"
+          "[1597043525897855,null]"
+          "]}]"
+          "}]"
+          "}";
 
     karabo::util::InfluxResultSet simpleInfluxResult;
     karabo::util::jsonResultsToInfluxResultSet(simple, simpleInfluxResult, "");
 
-    CPPUNIT_ASSERT_EQUAL(2ul, simpleInfluxResult.first.size()); // check the number of columns
-    CPPUNIT_ASSERT_EQUAL(std::string("time"), simpleInfluxResult.first[0]); // check the column title
+    CPPUNIT_ASSERT_EQUAL(2ul, simpleInfluxResult.first.size());              // check the number of columns
+    CPPUNIT_ASSERT_EQUAL(std::string("time"), simpleInfluxResult.first[0]);  // check the column title
     CPPUNIT_ASSERT_EQUAL(std::string("value"), simpleInfluxResult.first[1]); // check the column title
-    CPPUNIT_ASSERT_EQUAL(2ul, simpleInfluxResult.second.size()); // check the number of rows
-    CPPUNIT_ASSERT(simpleInfluxResult.second[0][0]);                                         // 1st row, 1st column is not null
-    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897755"), *simpleInfluxResult.second[0][0]); // 1st row, 1st column: check value
-    CPPUNIT_ASSERT(simpleInfluxResult.second[0][1]);                                         // 1st row, 2nd column is not null
-    CPPUNIT_ASSERT_EQUAL(std::string("40"), *simpleInfluxResult.second[0][1]);               // 1st row, 2nd column: check value
-    CPPUNIT_ASSERT(simpleInfluxResult.second[1][0]);                                         // 2nd row, 1st column is not null
-    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897855"), *simpleInfluxResult.second[1][0]); // 2nd row, 1st column: check value
-    CPPUNIT_ASSERT(!simpleInfluxResult.second[1][1]);                                        // 2nd row, 2nd column **is** null
-    std::string complex = ""
-        "{\"results\":"
-        "[{"
-        "\"statement_id\":0,"
-        "\"series\":[{"
-            "\"name\":\"prop_name\","
-            "\"columns\":[\"time\",\"value\"],"
-            "\"values\":[[1597043525897755,40],[1597043525897855,42]],"
-            "\"partial\":true"
-            "}],"
-        "\"partial\":true"
-        "}]"
-        "}\n{\"results\":"
-        "[{"
-        "\"statement_id\":0,"
-        "\"series\":[{"
-            "\"name\":\"prop_name\","
-            "\"columns\":[\"time\",\"value\"],"
-            "\"values\":[[1597043525897955,44],[1597043525898055,46]]"
-            "}]"
-        "}]}";
+    CPPUNIT_ASSERT_EQUAL(2ul, simpleInfluxResult.second.size());             // check the number of rows
+    CPPUNIT_ASSERT(simpleInfluxResult.second[0][0]);                         // 1st row, 1st column is not null
+    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897755"),
+                         *simpleInfluxResult.second[0][0]);                    // 1st row, 1st column: check value
+    CPPUNIT_ASSERT(simpleInfluxResult.second[0][1]);                           // 1st row, 2nd column is not null
+    CPPUNIT_ASSERT_EQUAL(std::string("40"), *simpleInfluxResult.second[0][1]); // 1st row, 2nd column: check value
+    CPPUNIT_ASSERT(simpleInfluxResult.second[1][0]);                           // 2nd row, 1st column is not null
+    CPPUNIT_ASSERT_EQUAL(std::string("1597043525897855"),
+                         *simpleInfluxResult.second[1][0]); // 2nd row, 1st column: check value
+    CPPUNIT_ASSERT(!simpleInfluxResult.second[1][1]);       // 2nd row, 2nd column **is** null
+    std::string complex =
+          ""
+          "{\"results\":"
+          "[{"
+          "\"statement_id\":0,"
+          "\"series\":[{"
+          "\"name\":\"prop_name\","
+          "\"columns\":[\"time\",\"value\"],"
+          "\"values\":[[1597043525897755,40],[1597043525897855,42]],"
+          "\"partial\":true"
+          "}],"
+          "\"partial\":true"
+          "}]"
+          "}\n{\"results\":"
+          "[{"
+          "\"statement_id\":0,"
+          "\"series\":[{"
+          "\"name\":\"prop_name\","
+          "\"columns\":[\"time\",\"value\"],"
+          "\"values\":[[1597043525897955,44],[1597043525898055,46]]"
+          "}]"
+          "}]}";
 
     karabo::util::InfluxResultSet complexInfluxResult;
 
     karabo::util::jsonResultsToInfluxResultSet(complex, complexInfluxResult, "");
-    CPPUNIT_ASSERT_EQUAL(2ul, complexInfluxResult.first.size()); // check the number of columns
-    CPPUNIT_ASSERT_EQUAL(std::string("time"), complexInfluxResult.first[0]); // check the column title
+    CPPUNIT_ASSERT_EQUAL(2ul, complexInfluxResult.first.size());              // check the number of columns
+    CPPUNIT_ASSERT_EQUAL(std::string("time"), complexInfluxResult.first[0]);  // check the column title
     CPPUNIT_ASSERT_EQUAL(std::string("value"), complexInfluxResult.first[1]); // check the column title
-    CPPUNIT_ASSERT_EQUAL(4ul, complexInfluxResult.second.size()); // check the number of rows
+    CPPUNIT_ASSERT_EQUAL(4ul, complexInfluxResult.second.size());             // check the number of rows
     CPPUNIT_ASSERT_EQUAL(std::string("1597043525897755"), *complexInfluxResult.second[0][0]);
     CPPUNIT_ASSERT_EQUAL(std::string("40"), *complexInfluxResult.second[0][1]);
     CPPUNIT_ASSERT_EQUAL(std::string("1597043525897855"), *complexInfluxResult.second[1][0]);
@@ -208,27 +216,29 @@ void DataLogUtils_Test::testMultipleJSONObjects(){
     CPPUNIT_ASSERT_EQUAL(std::string("46"), *complexInfluxResult.second[3][1]);
 
 
-    std::string mixed = ""
-        "{\"results\":"
-        "[{"
-        "\"statement_id\":0,"
-        "\"series\":[{"
-            "\"name\":\"prop_name\","
-            "\"columns\":[\"time\",\"value\"],"
-            "\"values\":[[1597043525897755,40],[1597043525897855,42]],"
-            "\"partial\":true"
-            "}],"
-        "\"partial\":true"
-        "}]"
-        "}\n{\"results\":"
-        "[{"
-        "\"statement_id\":0,"
-        "\"series\":[{"
-            "\"name\":\"prop_name\","
-            "\"columns\":[\"time\",\"ANOTHER_ONE!\"],"
-            "\"values\":[[1597043525897955,44],[1597043525898055,46]]"
-            "}]"
-        "}]}";
+    std::string mixed =
+          ""
+          "{\"results\":"
+          "[{"
+          "\"statement_id\":0,"
+          "\"series\":[{"
+          "\"name\":\"prop_name\","
+          "\"columns\":[\"time\",\"value\"],"
+          "\"values\":[[1597043525897755,40],[1597043525897855,42]],"
+          "\"partial\":true"
+          "}],"
+          "\"partial\":true"
+          "}]"
+          "}\n{\"results\":"
+          "[{"
+          "\"statement_id\":0,"
+          "\"series\":[{"
+          "\"name\":\"prop_name\","
+          "\"columns\":[\"time\",\"ANOTHER_ONE!\"],"
+          "\"values\":[[1597043525897955,44],[1597043525898055,46]]"
+          "}]"
+          "}]}";
 
-    CPPUNIT_ASSERT_THROW(karabo::util::jsonResultsToInfluxResultSet(mixed, complexInfluxResult, ""), karabo::util::NotSupportedException);
+    CPPUNIT_ASSERT_THROW(karabo::util::jsonResultsToInfluxResultSet(mixed, complexInfluxResult, ""),
+                         karabo::util::NotSupportedException);
 }

@@ -10,10 +10,9 @@
 
 
 #ifndef KARABO_CORE_CAMERAFSM_HH
-#define	KARABO_CORE_CAMERAFSM_HH
+#define KARABO_CORE_CAMERAFSM_HH
 
 #include "Device.hh"
-
 #include "karabo/core/BaseFsm.hh"
 #include "karabo/util/State.hh"
 #include "karabo/util/VectorElement.hh"
@@ -28,61 +27,65 @@ namespace karabo {
         /**
          * @class CameraFsm
          * @brief A finite state machine designed to be used for camera-type devices
-         * 
+         *
          * A finite state machine designed to be used for camera-type devices. It uses
-         * an ERROR-NORMAL state machine (karabo::core::OkErrorFsm type). 
+         * an ERROR-NORMAL state machine (karabo::core::OkErrorFsm type).
          * In the NORMAL region the following state transition table is used:
-         * 
+         *
          * ON (AcquireEvent) -> (AcquireAction) ACQUIRING
          * ACQUIRING (StopEvent) -> (StopAction) ON
-         * ACQUIRING (TriggerEvent) -> (TriggerAction) ACQUIRING 
+         * ACQUIRING (TriggerEvent) -> (TriggerAction) ACQUIRING
          */
         class CameraFsm : public BaseFsm {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(CameraFsm, "CameraFsm", "1.0")
 
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::xms;
                 using namespace karabo::util;
 
-                SLOT_ELEMENT(expected).key("connectCamera")
-                        .displayedName("Connect")
-                        .description("Connects to the hardware")
-                        .allowedStates(State::UNKNOWN)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("connectCamera")
+                      .displayedName("Connect")
+                      .description("Connects to the hardware")
+                      .allowedStates(State::UNKNOWN)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("acquire")
-                        .displayedName("Acquire")
-                        .description("Instructs camera to go into acquisition state")
-                        .allowedStates(State::ON)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("acquire")
+                      .displayedName("Acquire")
+                      .description("Instructs camera to go into acquisition state")
+                      .allowedStates(State::ON)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("trigger")
-                        .displayedName("Trigger")
-                        .description("Sends a software trigger to the camera")
-                        .allowedStates(State::ACQUIRING)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("trigger")
+                      .displayedName("Trigger")
+                      .description("Sends a software trigger to the camera")
+                      .allowedStates(State::ACQUIRING)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("stop")
-                        .displayedName("Stop")
-                        .description("Instructs camera to stop current acquisition")
-                        .allowedStates(State::ACQUIRING)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("stop")
+                      .displayedName("Stop")
+                      .description("Instructs camera to stop current acquisition")
+                      .allowedStates(State::ACQUIRING)
+                      .commit();
 
-                SLOT_ELEMENT(expected).key("reset")
-                        .displayedName("Reset")
-                        .description("Resets the camera in case of an error")
-                        .allowedStates(State::ERROR)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("reset")
+                      .displayedName("Reset")
+                      .description("Resets the camera in case of an error")
+                      .allowedStates(State::ERROR)
+                      .commit();
 
-                VECTOR_STRING_ELEMENT(expected).key("interfaces")
-                        .displayedName("Interfaces")
-                        .description("Describes the interfaces of this device")
-                        .readOnly()
-                        .initialValue({"Camera"})
-                        .commit();
+                VECTOR_STRING_ELEMENT(expected)
+                      .key("interfaces")
+                      .displayedName("Interfaces")
+                      .description("Describes the interfaces of this device")
+                      .readOnly()
+                      .initialValue({"Camera"})
+                      .commit();
             }
 
             void initFsmSlots() {
@@ -95,10 +98,8 @@ namespace karabo {
             }
 
 
-        public:
-
-            virtual ~CameraFsm() {
-            }
+           public:
+            virtual ~CameraFsm() {}
 
             /**************************************************************/
             /*                        Events                              */
@@ -158,45 +159,39 @@ namespace karabo {
 
             KARABO_FSM_TABLE_BEGIN(OkStateTransitionTable)
             // Source-State, Event, Target-State, Action, Guard
-            Row< ON, AcquireEvent, ACQUIRING, AcquireAction, none >,
-            Row< ACQUIRING, StopEvent, ON, StopAction, none >,
-            Row< ACQUIRING, TriggerEvent, none, TriggerAction, none >
-            KARABO_FSM_TABLE_END
+            Row<ON, AcquireEvent, ACQUIRING, AcquireAction, none>, Row<ACQUIRING, StopEvent, ON, StopAction, none>,
+                  Row<ACQUIRING, TriggerEvent, none, TriggerAction, none> KARABO_FSM_TABLE_END
 
-            // Name, Transition-Table, Initial-State, Context
-            KARABO_FSM_STATE_MACHINE(NORMAL, OkStateTransitionTable, ON, Self)
+                  // Name, Transition-Table, Initial-State, Context
+                  KARABO_FSM_STATE_MACHINE(NORMAL, OkStateTransitionTable, ON, Self)
 
-            /**************************************************************/
-            /*                     KnownState Machine                     */
-            /**************************************************************/
+                  /**************************************************************/
+                  /*                     KnownState Machine                     */
+                  /**************************************************************/
 
-            // Source-State, Event, Target-State, Action, Guard
-            KARABO_FSM_TABLE_BEGIN(KnownTransitionTable)
-            Row< NORMAL, ErrorFoundEvent, ERROR, ErrorFoundAction, none >,
-            Row< ERROR, ResetEvent, NORMAL, ResetAction, none >
-            KARABO_FSM_TABLE_END
+                  // Source-State, Event, Target-State, Action, Guard
+                  KARABO_FSM_TABLE_BEGIN(
+                        KnownTransitionTable) Row<NORMAL, ErrorFoundEvent, ERROR, ErrorFoundAction, none>,
+                  Row<ERROR, ResetEvent, NORMAL, ResetAction, none> KARABO_FSM_TABLE_END
 
-            // Name, Transition-Table, Initial-State, Context
-            KARABO_FSM_STATE_MACHINE(KNOWN, KnownTransitionTable, NORMAL, Self)
+                  // Name, Transition-Table, Initial-State, Context
+                  KARABO_FSM_STATE_MACHINE(KNOWN, KnownTransitionTable, NORMAL, Self)
 
-            /**************************************************************/
-            /*                      Top Machine                         */
-            /**************************************************************/
+                  /**************************************************************/
+                  /*                      Top Machine                         */
+                  /**************************************************************/
 
-            // Source-State, Event, Target-State, Action, Guard
-            KARABO_FSM_TABLE_BEGIN(TransitionTable)
-            Row< INIT, none, UNKNOWN, none, none >,
-            Row< UNKNOWN, ConnectEvent, KNOWN, ConnectAction, ConnectGuard >,
-            Row< KNOWN, DisconnectEvent, UNKNOWN, DisconnectAction, none >
-            KARABO_FSM_TABLE_END
+                  // Source-State, Event, Target-State, Action, Guard
+                  KARABO_FSM_TABLE_BEGIN(TransitionTable) Row<INIT, none, UNKNOWN, none, none>,
+                  Row<UNKNOWN, ConnectEvent, KNOWN, ConnectAction, ConnectGuard>,
+                  Row<KNOWN, DisconnectEvent, UNKNOWN, DisconnectAction, none> KARABO_FSM_TABLE_END
 
 
-            // Name, Transition-Table, Initial-State, Context
-            KARABO_FSM_STATE_MACHINE(StateMachine, TransitionTable, INIT, Self)
+                  // Name, Transition-Table, Initial-State, Context
+                  KARABO_FSM_STATE_MACHINE(StateMachine, TransitionTable, INIT, Self)
 
 
-            void startFsm() {
-
+                        void startFsm() {
                 KARABO_FSM_CREATE_MACHINE(StateMachine, m_fsm)
                 KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
                 KARABO_FSM_SET_CONTEXT_SUB1(this, m_fsm, KNOWN)
@@ -204,13 +199,10 @@ namespace karabo {
                 KARABO_FSM_START_MACHINE(m_fsm)
             }
 
-        private:
-
+           private:
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
-
         };
-    }
-}
+    } // namespace core
+} // namespace karabo
 
 #endif
-

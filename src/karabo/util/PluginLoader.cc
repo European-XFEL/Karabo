@@ -14,8 +14,8 @@
 #endif
 
 #include "PathElement.hh"
-#include "VectorElement.hh"
 #include "PluginLoader.hh"
+#include "VectorElement.hh"
 #include "Version.hh"
 
 
@@ -40,23 +40,23 @@ namespace karabo {
 
 
         void PluginLoader::expectedParameters(Schema& expected) {
-
-
             PATH_ELEMENT(expected)
-                    .key("pluginDirectory")
-                    .displayedName("Plugin Directory")
-                    .description("Directory to search for plugins")
-                    .assignmentOptional().defaultValue(defaultPluginPath())
-                    .isDirectory()
-                    .expertAccess()
-                    .commit();
+                  .key("pluginDirectory")
+                  .displayedName("Plugin Directory")
+                  .description("Directory to search for plugins")
+                  .assignmentOptional()
+                  .defaultValue(defaultPluginPath())
+                  .isDirectory()
+                  .expertAccess()
+                  .commit();
 
             VECTOR_STRING_ELEMENT(expected)
-                    .key("pluginsToLoad")
-                    .displayedName("Plugins to load")
-                    .assignmentOptional().defaultValue(std::vector<std::string>(1, "*"))
-                    .expertAccess()
-                    .commit();
+                  .key("pluginsToLoad")
+                  .displayedName("Plugins to load")
+                  .assignmentOptional()
+                  .defaultValue(std::vector<std::string>(1, "*"))
+                  .expertAccess()
+                  .commit();
         }
 
 
@@ -84,13 +84,11 @@ namespace karabo {
 
 
         bool PluginLoader::update() {
-
             bool hasNewPlugins = false;
 
 #ifndef _WIN32
 
             if (exists(m_pluginDirectory)) {
-
                 unsigned long fileCount = 0;
                 unsigned long dirCount = 0;
                 unsigned long otherCount = 0;
@@ -100,10 +98,10 @@ namespace karabo {
                     try {
                         if (is_directory(it->status())) {
                             ++dirCount;
-                            //cout << it->path().filename() << " [directory]\n";
+                            // cout << it->path().filename() << " [directory]\n";
                         } else if (is_regular_file(it->status())) {
                             ++fileCount;
-                            //cout << it->path().filename() << "\n";
+                            // cout << it->path().filename() << "\n";
 
                             string plugin = it->path().string();
                             bool faultyPlugin = false;
@@ -112,7 +110,7 @@ namespace karabo {
                                     faultyPlugin = true;
                                     break;
                                 }
-                            //add to known plugins
+                            // add to known plugins
                             m_knownPlugins.insert(it->path().stem().string());
 
                             if (faultyPlugin) continue;
@@ -126,22 +124,20 @@ namespace karabo {
                                     // Using plain output here as KARABO_LOG_[...] is potentially
                                     // not active at the time this message is generated and anyway comes from
                                     // karabo/log/... which should not be included here in karabo/util/...
-                                    cerr << "ERROR Trouble loading plugin "
-                                            << it->path().filename()
-                                            << ":\n\t" << string(dlerror()) << endl; // dlerror() != 0 since dlopen above failed
+                                    cerr << "ERROR Trouble loading plugin " << it->path().filename() << ":\n\t"
+                                         << string(dlerror()) << endl; // dlerror() != 0 since dlopen above failed
                                     m_failedPlugins.push_back(plugin);
                                 } else {
                                     m_loadedPlugins[it->path()] = libHandle;
-                                    cerr << "INFO  Successfully loaded plugin: "
-                                            << it->path().filename() << endl;
+                                    cerr << "INFO  Successfully loaded plugin: " << it->path().filename() << endl;
                                     hasNewPlugins = true;
                                 }
                             } else {
-                                //cout << "has already been loaded, skipping" << endl;><>
+                                // cout << "has already been loaded, skipping" << endl;><>
                             }
                         } else {
                             ++otherCount;
-                            //cout << it->path().filename() << " [other]\n";
+                            // cout << it->path().filename() << " [other]\n";
                         }
                     } catch (...) {
                         KARABO_RETHROW;

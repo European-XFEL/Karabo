@@ -6,35 +6,31 @@
  */
 
 #include "AlarmCondition_Test.hh"
-#include <karabo/util/AlarmConditions.hh>
-#include <vector>
-#include <string>
-#include <boost/aligned_storage.hpp>
 
-#include <karabo/util/TimePeriod.hh>
-#include <karabo/util/TimeDuration.hh>
-#include <karabo/util/TimeProfiler.hh>
-#include <karabo/util/Validator.hh>
+#include <boost/aligned_storage.hpp>
+#include <karabo/util/AlarmConditions.hh>
 #include <karabo/util/Schema.hh>
 #include <karabo/util/SimpleElement.hh>
+#include <karabo/util/TimeDuration.hh>
+#include <karabo/util/TimePeriod.hh>
+#include <karabo/util/TimeProfiler.hh>
+#include <karabo/util/Validator.hh>
+#include <string>
+#include <vector>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(AlarmCondition_Test);
 
 
-AlarmCondition_Test::AlarmCondition_Test() {
-}
+AlarmCondition_Test::AlarmCondition_Test() {}
 
 
-AlarmCondition_Test::~AlarmCondition_Test() {
-}
+AlarmCondition_Test::~AlarmCondition_Test() {}
 
 
-void AlarmCondition_Test::setUp() {
-}
+void AlarmCondition_Test::setUp() {}
 
 
-void AlarmCondition_Test::tearDown() {
-}
+void AlarmCondition_Test::tearDown() {}
 
 
 void AlarmCondition_Test::testOperators() {
@@ -54,7 +50,6 @@ void AlarmCondition_Test::testStringAssignmentRoundTrip() {
 
 
 void AlarmCondition_Test::testSignificanceEvaluation() {
-    
     std::vector<karabo::util::AlarmCondition> v;
     karabo::util::AlarmCondition ms = karabo::util::AlarmCondition::returnMostSignificant(v);
     CPPUNIT_ASSERT(ms.isSameCriticality(karabo::util::AlarmCondition::NONE));
@@ -70,12 +65,10 @@ void AlarmCondition_Test::testSignificanceEvaluation() {
     v.push_back(karabo::util::AlarmCondition::WARN);
     ms = karabo::util::AlarmCondition::returnMostSignificant(v);
     CPPUNIT_ASSERT(ms.isSameCriticality(karabo::util::AlarmCondition::ALARM));
-
 }
 
 
 void AlarmCondition_Test::testValidation() {
-
     using namespace karabo::util;
 
     TimeProfiler profiler("TestProfiler");
@@ -88,33 +81,48 @@ void AlarmCondition_Test::testValidation() {
     for (int i = 0; i < 50; i++) {
         std::ostringstream key_s;
         key_s << i;
-        INT8_ELEMENT(schema).key("i8_" + key_s.str())
-                .readOnly().initialValue(0)
-                .commit();
-        UINT16_ELEMENT(schema).key("ui16_" + key_s.str())
-                .readOnly().initialValue(5 + i)
-                .alarmLow(5 + i).needsAcknowledging(true)
-                .alarmHigh(50 + i).needsAcknowledging(true)
-                .commit();
-        FLOAT_ELEMENT(schema).key("f_" + key_s.str())
-                .readOnly().initialValue(5 + i)
-                .warnLow(5 + i).needsAcknowledging(true)
-                .warnHigh(50 + i).needsAcknowledging(true)
-                .commit();
-        DOUBLE_ELEMENT(schema).key("d_" + key_s.str())
-                .readOnly().initialValue(5 + i)
-                .alarmLow(5 + i).needsAcknowledging(true)
-                .alarmHigh(50 + i).needsAcknowledging(true)
-                .commit();
-        UINT64_ELEMENT(schema).key("ui64_" + key_s.str())
-                .readOnly().initialValue(15 + i)
-                .warnLow(15 + i).needsAcknowledging(true)
-                .warnHigh(50 + i).needsAcknowledging(true)
-                .alarmLow(i).needsAcknowledging(true)
-                .alarmHigh(75 + i).needsAcknowledging(true)
-                .commit();
+        INT8_ELEMENT(schema).key("i8_" + key_s.str()).readOnly().initialValue(0).commit();
+        UINT16_ELEMENT(schema)
+              .key("ui16_" + key_s.str())
+              .readOnly()
+              .initialValue(5 + i)
+              .alarmLow(5 + i)
+              .needsAcknowledging(true)
+              .alarmHigh(50 + i)
+              .needsAcknowledging(true)
+              .commit();
+        FLOAT_ELEMENT(schema)
+              .key("f_" + key_s.str())
+              .readOnly()
+              .initialValue(5 + i)
+              .warnLow(5 + i)
+              .needsAcknowledging(true)
+              .warnHigh(50 + i)
+              .needsAcknowledging(true)
+              .commit();
+        DOUBLE_ELEMENT(schema)
+              .key("d_" + key_s.str())
+              .readOnly()
+              .initialValue(5 + i)
+              .alarmLow(5 + i)
+              .needsAcknowledging(true)
+              .alarmHigh(50 + i)
+              .needsAcknowledging(true)
+              .commit();
+        UINT64_ELEMENT(schema)
+              .key("ui64_" + key_s.str())
+              .readOnly()
+              .initialValue(15 + i)
+              .warnLow(15 + i)
+              .needsAcknowledging(true)
+              .warnHigh(50 + i)
+              .needsAcknowledging(true)
+              .alarmLow(i)
+              .needsAcknowledging(true)
+              .alarmHigh(75 + i)
+              .needsAcknowledging(true)
+              .commit();
     }
-
 
 
     profiler.startPeriod("validator");
@@ -133,10 +141,10 @@ void AlarmCondition_Test::testValidation() {
             h.set("ui64_" + key_s.str(), t);
             std::pair<bool, std::string> r = val.validate(schema, h, h_out);
 
-            const karabo::util::Hash & alarmParms = val.getParametersInWarnOrAlarm();
+            const karabo::util::Hash& alarmParms = val.getParametersInWarnOrAlarm();
             for (karabo::util::Hash::const_iterator it = alarmParms.begin(); it != alarmParms.end(); ++it) {
-                const std::string & scope = it->getKey();
-                const std::string & type = it->getValue<Hash>().get<std::string>("type");
+                const std::string& scope = it->getKey();
+                const std::string& type = it->getValue<Hash>().get<std::string>("type");
 
                 if (scope.find("i8_") != std::string::npos) {
                     CPPUNIT_ASSERT(false); // should not occur
@@ -190,8 +198,6 @@ void AlarmCondition_Test::testValidation() {
                     }
                 }
             }
-
-
         }
     }
     profiler.stopPeriod("validator");
@@ -199,14 +205,15 @@ void AlarmCondition_Test::testValidation() {
 
     profiler.close();
 
-    KARABO_LOG_FRAMEWORK_DEBUG << "Validation time 250 properties: " << profiler.getPeriod("validator").getDuration() / 10 << " [s/per validation]";
+    KARABO_LOG_FRAMEWORK_DEBUG << "Validation time 250 properties: "
+                               << profiler.getPeriod("validator").getDuration() / 10 << " [s/per validation]";
 }
 
 
 void AlarmCondition_Test::testValidationConditionalRoundTrip() {
     using namespace karabo::util;
-    karabo::util::Validator::ValidationRules rules; //same rules as the internal validator of device. 
-    //It will fail if defaults are injected but this is not relevant
+    karabo::util::Validator::ValidationRules rules; // same rules as the internal validator of device.
+    // It will fail if defaults are injected but this is not relevant
     rules.allowAdditionalKeys = true;
     rules.allowMissingKeys = true;
     rules.allowUnrootedConfiguration = true;
@@ -217,17 +224,26 @@ void AlarmCondition_Test::testValidationConditionalRoundTrip() {
     Schema schema;
 
 
-    FLOAT_ELEMENT(schema).key("f1")
-            .readOnly().initialValue(5)
-            .warnLow(5).info("This is an optional description").needsAcknowledging(true)
-            .warnHigh(50).needsAcknowledging(true)
-            .commit();
+    FLOAT_ELEMENT(schema)
+          .key("f1")
+          .readOnly()
+          .initialValue(5)
+          .warnLow(5)
+          .info("This is an optional description")
+          .needsAcknowledging(true)
+          .warnHigh(50)
+          .needsAcknowledging(true)
+          .commit();
 
-    FLOAT_ELEMENT(schema).key("f2")
-            .readOnly().initialValue(5)
-            .warnLow(5).needsAcknowledging(true)
-            .warnHigh(50).needsAcknowledging(true)
-            .commit();
+    FLOAT_ELEMENT(schema)
+          .key("f2")
+          .readOnly()
+          .initialValue(5)
+          .warnLow(5)
+          .needsAcknowledging(true)
+          .warnHigh(50)
+          .needsAcknowledging(true)
+          .commit();
 
     Hash h1, h2, h_out;
     h1.set("f1", 3);
@@ -239,7 +255,7 @@ void AlarmCondition_Test::testValidationConditionalRoundTrip() {
     CPPUNIT_ASSERT(alarmParms.has("f1"));
     CPPUNIT_ASSERT(alarmParms.get<Hash>("f1").get<std::string>("type") == AlarmCondition::WARN_LOW.asString());
 
-    //f1 should still be in alarm, additionally, f2
+    // f1 should still be in alarm, additionally, f2
     h2.set("f2", 4);
     r = val.validate(schema, h2, h_out);
     alarmParms = val.getParametersInWarnOrAlarm();
@@ -248,7 +264,7 @@ void AlarmCondition_Test::testValidationConditionalRoundTrip() {
     CPPUNIT_ASSERT(alarmParms.has("f2"));
     CPPUNIT_ASSERT(alarmParms.get<Hash>("f2").get<std::string>("type") == AlarmCondition::WARN_LOW.asString());
 
-    //now only f2 in alarm
+    // now only f2 in alarm
     h1.set("f1", 6);
     r = val.validate(schema, h1, h_out);
     alarmParms = val.getParametersInWarnOrAlarm();
@@ -259,5 +275,4 @@ void AlarmCondition_Test::testValidationConditionalRoundTrip() {
 
     CPPUNIT_ASSERT(schema.getInfoForAlarm("f1", AlarmCondition::WARN_LOW) == "This is an optional description");
     CPPUNIT_ASSERT(schema.getInfoForAlarm("f1", AlarmCondition::WARN_HIGH) == "");
-
 }

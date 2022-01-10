@@ -12,51 +12,29 @@
 #include <sstream>
 #include <utility>
 
-#include "Types.hh"
 #include "ToLiteral.hh"
+#include "Types.hh"
 
-const karabo::util::Validator::ValidationRules
-karabo::util::tableValidationRules(
-                                   /* injectDefaults */ true,
-                                   /* allowUnrootedConfiguration */ true,
-                                   /* allowAdditionalKeys */ false,
-                                   /* allowMissingKeys */ false,
-                                   /* injectTimestamps */ false
-                                   );
+const karabo::util::Validator::ValidationRules karabo::util::tableValidationRules(
+      /* injectDefaults */ true,
+      /* allowUnrootedConfiguration */ true,
+      /* allowAdditionalKeys */ false,
+      /* allowMissingKeys */ false,
+      /* injectTimestamps */ false);
 namespace karabo {
     namespace util {
 
         // Types supported for table element columns.
         const std::set<Types::ReferenceType> SUPPORTED_TBL_COL_TYPES = {
-            Types::BOOL,
-            Types::INT8,
-            Types::UINT8,
-            Types::INT16,
-            Types::UINT16,
-            Types::INT32,
-            Types::UINT32,
-            Types::INT64,
-            Types::UINT64,
-            Types::FLOAT,
-            Types::DOUBLE,
-            Types::STRING,
-            Types::VECTOR_BOOL,
-            Types::VECTOR_INT8,
-            Types::VECTOR_UINT8,
-            Types::VECTOR_INT16,
-            Types::VECTOR_UINT16,
-            Types::VECTOR_INT32,
-            Types::VECTOR_UINT32,
-            Types::VECTOR_INT64,
-            Types::VECTOR_UINT64,
-            Types::VECTOR_FLOAT,
-            Types::VECTOR_DOUBLE,
-            Types::VECTOR_STRING
-        };
+              Types::BOOL,          Types::INT8,         Types::UINT8,         Types::INT16,
+              Types::UINT16,        Types::INT32,        Types::UINT32,        Types::INT64,
+              Types::UINT64,        Types::FLOAT,        Types::DOUBLE,        Types::STRING,
+              Types::VECTOR_BOOL,   Types::VECTOR_INT8,  Types::VECTOR_UINT8,  Types::VECTOR_INT16,
+              Types::VECTOR_UINT16, Types::VECTOR_INT32, Types::VECTOR_UINT32, Types::VECTOR_INT64,
+              Types::VECTOR_UINT64, Types::VECTOR_FLOAT, Types::VECTOR_DOUBLE, Types::VECTOR_STRING};
 
 
         void TableElement::beforeAddition() {
-
             this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
             this->m_node->setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::PROPERTY);
             this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Table");
@@ -64,7 +42,7 @@ namespace karabo {
             if (m_nodeSchema.empty()) {
                 std::stringstream s;
                 s << "Table element '" << this->m_node->getKey() << "' has an empty row schema, "
-                        << "likely a call to setColumns(..) is missing.";
+                  << "likely a call to setColumns(..) is missing.";
                 throw KARABO_LOGIC_EXCEPTION(s.str());
             }
             this->m_node->setAttribute(KARABO_SCHEMA_ROW_SCHEMA, m_nodeSchema);
@@ -75,30 +53,27 @@ namespace karabo {
             const auto& unsupCol = findUnsupportedColumnType(m_nodeSchema);
             if (!unsupCol.first.empty()) {
                 std::ostringstream oss;
-                oss << "Table element '" << m_node->getKey()
-                    << "' has a column, '" << unsupCol.first
-                    << "', of unsupported type '"
-                    << Types::to<ToLiteral>(unsupCol.second) << "'.";
+                oss << "Table element '" << m_node->getKey() << "' has a column, '" << unsupCol.first
+                    << "', of unsupported type '" << Types::to<ToLiteral>(unsupCol.second) << "'.";
                 throw KARABO_PARAMETER_EXCEPTION(oss.str());
             }
 
             if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
 
             if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) {
-
-                //for init, reconfigurable elements - set default value of requiredAccessLevel to USER
-                if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) || //init element
-                    this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT || //init element
-                    this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE) { //reconfigurable element
+                // for init, reconfigurable elements - set default value of requiredAccessLevel to USER
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) ||              // init element
+                    this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT ||  // init element
+                    this->m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE) { // reconfigurable element
 
                     this->userAccess();
 
-                } else { //else set default value of requiredAccessLevel to OBSERVER
+                } else { // else set default value of requiredAccessLevel to OBSERVER
                     this->observerAccess();
                 }
             }
 
-            //protect setting options etc to table element via overwrite
+            // protect setting options etc to table element via overwrite
             OverwriteElement::Restrictions restrictions;
             restrictions.options = true;
             restrictions.minInc = true;
@@ -111,9 +86,7 @@ namespace karabo {
         }
 
 
-        std::pair<std::string, Types::ReferenceType>
-            TableElement::findUnsupportedColumnType(const Schema& rowSchema) {
-
+        std::pair<std::string, Types::ReferenceType> TableElement::findUnsupportedColumnType(const Schema& rowSchema) {
             auto res = std::make_pair<std::string, Types::ReferenceType>("", Types::UNKNOWN);
             const std::vector<std::string>& columns = rowSchema.getPaths();
             for (const std::string& col : columns) {
@@ -136,8 +109,7 @@ namespace karabo {
 
 
         void TableElement::sanitizeColumnsAccessModes(Schema& rowSchema) {
-            const int tblAccessMode =
-                m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE);
+            const int tblAccessMode = m_node->getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE);
             const std::vector<std::string>& columns = rowSchema.getPaths();
             if (tblAccessMode == READ) {
                 // For read-only tables, all columns should be read-only.
@@ -145,10 +117,9 @@ namespace karabo {
                     const int colAccessMode = rowSchema.getAccessMode(col);
                     if (colAccessMode != READ) {
                         rowSchema.setAccessMode(col, READ);
-                        std::cerr << "\nTABLE SANITIZE (" << m_node->getKey()
-                            << "): Non read-only column '" << col
-                            << "' of read-only table had its access mode "
-                            << "adjusted to read-only." << std::endl;
+                        std::cerr << "\nTABLE SANITIZE (" << m_node->getKey() << "): Non read-only column '" << col
+                                  << "' of read-only table had its access mode "
+                                  << "adjusted to read-only." << std::endl;
                     }
                 }
             } else {
@@ -159,10 +130,9 @@ namespace karabo {
                     const int colAccessMode = rowSchema.getAccessMode(col);
                     if (colAccessMode == INIT) {
                         rowSchema.setAccessMode(col, WRITE);
-                        std::cerr << "\nTABLE SANITIZE (" << m_node->getKey()
-                            << "): init-only column '" << col
-                            << "' of non read-only table had its access mode "
-                            << "adjusted to reconfigurable." << std::endl;
+                        std::cerr << "\nTABLE SANITIZE (" << m_node->getKey() << "): init-only column '" << col
+                                  << "' of non read-only table had its access mode "
+                                  << "adjusted to reconfigurable." << std::endl;
                     }
                 }
             }
@@ -173,22 +143,18 @@ namespace karabo {
             const std::vector<std::string>& columns = rowSchema.getPaths();
             for (const std::string& col : columns) {
                 if (!rowSchema.hasDefaultValue(col)) {
-                    const Types::ReferenceType colType =
-                        rowSchema.getValueType(col);
+                    const Types::ReferenceType colType = rowSchema.getValueType(col);
                     setDefaultValueForColumn(col, colType, rowSchema);
                     std::cerr << "\nTABLE SANITIZE (" << m_node->getKey() << "):"
-                        << "column '" << col << "' lacked a default value. "
-                        << "A zero or empty default value was added."
-                        << std::endl;
+                              << "column '" << col << "' lacked a default value. "
+                              << "A zero or empty default value was added." << std::endl;
                 }
             }
         }
 
 
-        void TableElement::setDefaultValueForColumn(
-            const std::string& colName, const Types::ReferenceType& colType,
-            Schema& rowSchema) {
-
+        void TableElement::setDefaultValueForColumn(const std::string& colName, const Types::ReferenceType& colType,
+                                                    Schema& rowSchema) {
             if (Types::isVector(colType) && rowSchema.hasMinSize(colName)) {
                 // Checks if the default value for vectors, which is the empty
                 // vector, doesn't violate any existing minSize attr in the row
@@ -196,8 +162,7 @@ namespace karabo {
                 const int minVecSize = rowSchema.getMinSize(colName);
                 if (minVecSize > 0) {
                     std::ostringstream oss;
-                    oss << "Cannot generate default value for column '"
-                        << colName << "': the minimum vector size, '"
+                    oss << "Cannot generate default value for column '" << colName << "': the minimum vector size, '"
                         << minVecSize << "', is greater than '0', the size of "
                         << "the default vector.";
                     throw KARABO_PARAMETER_EXCEPTION(oss.str());
@@ -210,11 +175,10 @@ namespace karabo {
             }
 
             switch (colType) {
-
-#define SET_DEFAULT_VALUE(K_TYPE, CPP_TYPE, DEFAULT_VALUE) \
-            case Types::ReferenceType::K_TYPE: \
-                rowSchema.setDefaultValue<CPP_TYPE>(colName, DEFAULT_VALUE); \
-                break; \
+#define SET_DEFAULT_VALUE(K_TYPE, CPP_TYPE, DEFAULT_VALUE)           \
+    case Types::ReferenceType::K_TYPE:                               \
+        rowSchema.setDefaultValue<CPP_TYPE>(colName, DEFAULT_VALUE); \
+        break;
 
                 SET_DEFAULT_VALUE(BOOL, bool, false);
                 SET_DEFAULT_VALUE(INT8, signed char, 0);
@@ -245,18 +209,15 @@ namespace karabo {
 
                 default:
                     std::ostringstream oss;
-                    oss << "Column '" << colName
-                        << "' lacks a default value and is of an unsupported type, '"
+                    oss << "Column '" << colName << "' lacks a default value and is of an unsupported type, '"
                         << Types::to<ToLiteral>(colType) << "'.";
                     throw KARABO_PARAMETER_EXCEPTION(oss.str());
             }
         }
 
 
-        void TableElement::checkSimpleDefaultInOptions(
-            const std::string& colName, const Types::ReferenceType& colType,
-            const Schema& rowSchema) {
-
+        void TableElement::checkSimpleDefaultInOptions(const std::string& colName, const Types::ReferenceType& colType,
+                                                       const Schema& rowSchema) {
             if (!rowSchema.hasOptions(colName)) {
                 return;
             }
@@ -264,40 +225,34 @@ namespace karabo {
             const Hash::Node& colNode = rowSchemaHash.getNode(colName);
             bool isDefaultInOptions = true;
 
-            switch(colType) {
+            switch (colType) {
+#define CHECK_DEFAULT_IN_OPTIONS(K_TYPE, C_TYPE, DEFAULT_VALUE)                                      \
+    case Types::ReferenceType::K_TYPE: {                                                             \
+        const auto& opVals = colNode.getAttribute<std::vector<C_TYPE>>(KARABO_SCHEMA_OPTIONS);       \
+        isDefaultInOptions = std::find(opVals.begin(), opVals.end(), DEFAULT_VALUE) != opVals.end(); \
+        break;                                                                                       \
+    }
 
-#define CHECK_DEFAULT_IN_OPTIONS(K_TYPE, C_TYPE, DEFAULT_VALUE) \
-                case Types::ReferenceType::K_TYPE:  \
-                  { \
-                    const auto& opVals = \
-                        colNode.getAttribute<std::vector<C_TYPE>>(KARABO_SCHEMA_OPTIONS); \
-                    isDefaultInOptions = \
-                        std::find(opVals.begin(), opVals.end(), DEFAULT_VALUE) != opVals.end(); \
-                    break; \
-                  } \
-
-                 // Unlikely, but possible, for a BOOL_ELEMENT to specify
-                 // options.
-                 CHECK_DEFAULT_IN_OPTIONS(BOOL, bool, false);
-                 CHECK_DEFAULT_IN_OPTIONS(INT8, signed char, 0);
-                 CHECK_DEFAULT_IN_OPTIONS(INT16, signed short, 0);
-                 CHECK_DEFAULT_IN_OPTIONS(INT32, int, 0);
-                 CHECK_DEFAULT_IN_OPTIONS(INT64, long long, 0ll);
-                 CHECK_DEFAULT_IN_OPTIONS(UINT8, unsigned char, 0);
-                 CHECK_DEFAULT_IN_OPTIONS(UINT16, unsigned short, 0);
-                 CHECK_DEFAULT_IN_OPTIONS(UINT32, unsigned int, 0u);
-                 CHECK_DEFAULT_IN_OPTIONS(UINT64, unsigned long long, 0ull);
-                 CHECK_DEFAULT_IN_OPTIONS(FLOAT, float, 0.0f);
-                 CHECK_DEFAULT_IN_OPTIONS(DOUBLE, double, 0.0);
-                 CHECK_DEFAULT_IN_OPTIONS(STRING, std::string, "");
+                // Unlikely, but possible, for a BOOL_ELEMENT to specify
+                // options.
+                CHECK_DEFAULT_IN_OPTIONS(BOOL, bool, false);
+                CHECK_DEFAULT_IN_OPTIONS(INT8, signed char, 0);
+                CHECK_DEFAULT_IN_OPTIONS(INT16, signed short, 0);
+                CHECK_DEFAULT_IN_OPTIONS(INT32, int, 0);
+                CHECK_DEFAULT_IN_OPTIONS(INT64, long long, 0ll);
+                CHECK_DEFAULT_IN_OPTIONS(UINT8, unsigned char, 0);
+                CHECK_DEFAULT_IN_OPTIONS(UINT16, unsigned short, 0);
+                CHECK_DEFAULT_IN_OPTIONS(UINT32, unsigned int, 0u);
+                CHECK_DEFAULT_IN_OPTIONS(UINT64, unsigned long long, 0ull);
+                CHECK_DEFAULT_IN_OPTIONS(FLOAT, float, 0.0f);
+                CHECK_DEFAULT_IN_OPTIONS(DOUBLE, double, 0.0);
+                CHECK_DEFAULT_IN_OPTIONS(STRING, std::string, "");
 
 #undef CHECK_DEFAULT_IN_OPTIONS
 
-                default:
-                {
+                default: {
                     std::ostringstream oss;
-                    oss << "Column '" << colName
-                        << "' lacks a default value and is of an unsupported type, '"
+                    oss << "Column '" << colName << "' lacks a default value and is of an unsupported type, '"
                         << Types::to<ToLiteral>(colType) << "'.";
                     throw KARABO_PARAMETER_EXCEPTION(oss.str());
                 }
@@ -305,15 +260,13 @@ namespace karabo {
 
             if (!isDefaultInOptions) {
                 std::ostringstream oss;
-                oss << "Default value to be generated for column '"
-                    << colName << "' is not among the valid options.";
+                oss << "Default value to be generated for column '" << colName << "' is not among the valid options.";
                 throw KARABO_PARAMETER_EXCEPTION(oss.str());
             }
         }
 
 
-        void TableElement::checkNumericDefaultInRange(
-            const std::string& colName, const Schema& rowSchema) {
+        void TableElement::checkNumericDefaultInRange(const std::string& colName, const Schema& rowSchema) {
             // Checks if the default value is not outside any range
             // specified by at least one of minInc, mixExc, maxInc, and
             // maxExc.
@@ -323,9 +276,8 @@ namespace karabo {
                 double minExc = colNode.getAttributeAs<double>(KARABO_SCHEMA_MIN_EXC);
                 if (0.0 <= minExc) {
                     std::ostringstream oss;
-                    oss <<  "Default value to be generated for column '"
-                        << colName << "' would be outside of lower bound '"
-                        << minExc << "'.";
+                    oss << "Default value to be generated for column '" << colName
+                        << "' would be outside of lower bound '" << minExc << "'.";
                     throw KARABO_PARAMETER_EXCEPTION(oss.str());
                 }
             }
@@ -333,9 +285,8 @@ namespace karabo {
                 double minInc = colNode.getAttributeAs<double>(KARABO_SCHEMA_MIN_INC);
                 if (0.0 < minInc) {
                     std::ostringstream oss;
-                    oss <<  "Default value to be generated for column '"
-                        << colName << "' would be outside of lower bound '"
-                        << minInc << "'.";
+                    oss << "Default value to be generated for column '" << colName
+                        << "' would be outside of lower bound '" << minInc << "'.";
                     throw KARABO_PARAMETER_EXCEPTION(oss.str());
                 }
             }
@@ -343,9 +294,8 @@ namespace karabo {
                 double maxExc = colNode.getAttributeAs<double>(KARABO_SCHEMA_MAX_EXC);
                 if (0.0 >= maxExc) {
                     std::ostringstream oss;
-                    oss <<  "Default value to be generated for column '"
-                        << colName << "' would be outside of upper bound '"
-                        << maxExc << "'.";
+                    oss << "Default value to be generated for column '" << colName
+                        << "' would be outside of upper bound '" << maxExc << "'.";
                     throw KARABO_PARAMETER_EXCEPTION(oss.str());
                 }
             }
@@ -353,14 +303,13 @@ namespace karabo {
                 double maxInc = colNode.getAttributeAs<double>(KARABO_SCHEMA_MAX_INC);
                 if (0.0 > maxInc) {
                     std::ostringstream oss;
-                    oss <<  "Default value to be generated for column '"
-                        << colName << "' would be outside of upper bound '"
-                        << maxInc << "'.";
+                    oss << "Default value to be generated for column '" << colName
+                        << "' would be outside of upper bound '" << maxInc << "'.";
                     throw KARABO_PARAMETER_EXCEPTION(oss.str());
                 }
             }
         }
 
 
-    }
-}
+    } // namespace util
+} // namespace karabo

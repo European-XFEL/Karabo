@@ -6,7 +6,7 @@
  */
 
 #ifndef KARABO_UTIL_CUSTOMNODEELMENT_HH
-#define	KARABO_UTIL_CUSTOMNODEELMENT_HH
+#define KARABO_UTIL_CUSTOMNODEELMENT_HH
 
 #include "NodeElement.hh"
 #include "OverwriteElement.hh"
@@ -45,14 +45,12 @@ namespace karabo {
          */
         template <class Derived, class Described>
         class CustomNodeElement {
-
             std::string m_key;
 
-        protected:
+           protected:
             karabo::util::Schema& m_schema;
 
-        public:
-
+           public:
             CustomNodeElement(karabo::util::Schema& s) : m_schema(s) {
                 m_key = Described::classInfo().getClassId();
             }
@@ -73,11 +71,9 @@ namespace karabo {
             Derived& key(const std::string& key) {
                 using namespace karabo::util;
                 m_key = key;
-                NODE_ELEMENT(m_schema).key(m_key)
-                        .template appendParametersOf<Described>()
-                        .commit();
+                NODE_ELEMENT(m_schema).key(m_key).template appendParametersOf<Described>().commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -97,11 +93,9 @@ namespace karabo {
              */
             Derived& displayedName(const std::string& name) {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key)
-                        .setNewDisplayedName(name)
-                        .commit();
+                OVERWRITE_ELEMENT(m_schema).key(m_key).setNewDisplayedName(name).commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -120,11 +114,9 @@ namespace karabo {
              */
             Derived& description(const std::string& desc) {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key)
-                        .setNewDescription(desc)
-                        .commit();
+                OVERWRITE_ELEMENT(m_schema).key(m_key).setNewDescription(desc).commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -134,11 +126,9 @@ namespace karabo {
              */
             Derived& init() {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key)
-                        .setNowInit()
-                        .commit();
+                OVERWRITE_ELEMENT(m_schema).key(m_key).setNowInit().commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -148,11 +138,9 @@ namespace karabo {
              */
             Derived& reconfigurable() {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key)
-                        .setNowReconfigurable()
-                        .commit();
+                OVERWRITE_ELEMENT(m_schema).key(m_key).setNowReconfigurable().commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -162,24 +150,21 @@ namespace karabo {
              */
             Derived& readOnly() {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key)
-                        .setNowReadOnly()
-                        .commit();
+                OVERWRITE_ELEMENT(m_schema).key(m_key).setNowReadOnly().commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
-             * The <b>observerAccess</b> method serves for setting up the <i>required access level</i> attribute to be OBSERVER.
+             * The <b>observerAccess</b> method serves for setting up the <i>required access level</i> attribute to be
+             * OBSERVER.
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& observerAccess() {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key)
-                        .setNowObserverAccess()
-                        .commit();
+                OVERWRITE_ELEMENT(m_schema).key(m_key).setNowObserverAccess().commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
@@ -188,53 +173,48 @@ namespace karabo {
              */
             Derived& userAccess() {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key)
-                        .setNowUserAccess()
-                        .commit();
+                OVERWRITE_ELEMENT(m_schema).key(m_key).setNowUserAccess().commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
-             * The <b>operatorAccess</b> method serves for setting up the <i>required access level</i> attribute to be OPERATOR.
+             * The <b>operatorAccess</b> method serves for setting up the <i>required access level</i> attribute to be
+             * OPERATOR.
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& operatorAccess() {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key)
-                        .setNowOperatorAccess()
-                        .commit();
+                OVERWRITE_ELEMENT(m_schema).key(m_key).setNowOperatorAccess().commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
-             * The <b>expertAccess</b> method serves for setting up the <i>required access level</i> attribute to be EXPERT.
+             * The <b>expertAccess</b> method serves for setting up the <i>required access level</i> attribute to be
+             * EXPERT.
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& expertAccess() {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key)
-                        .setNowExpertAccess()
-                        .commit();
+                OVERWRITE_ELEMENT(m_schema).key(m_key).setNowExpertAccess().commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
-             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be ADMIN.
+             * The <b>adminAccess</b> method serves for setting up the <i>required access level</i> attribute to be
+             * ADMIN.
              * @return reference to the Element (to allow method's chaining)
              */
             Derived& adminAccess() {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key)
-                        .setNowAdminAccess()
-                        .commit();
+                OVERWRITE_ELEMENT(m_schema).key(m_key).setNowAdminAccess().commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
-/**
+            /**
              * Specify one or more actions that are allowed on this node.
              *
              * If a Karabo device specifies allowed actions for a node, that means that it offers a specific slot
@@ -244,41 +224,37 @@ namespace karabo {
              */
             Derived& setAllowedActions(const std::vector<std::string>& actions) {
                 m_schema.setAllowedActions(m_key, actions);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
 
             /**
              * Skip this element during validation of configuration against a Schema
-             * @return 
+             * @return
              */
             Derived& skipValidation() {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key)
-                        .setNowSkipValidation()
-                        .commit();
+                OVERWRITE_ELEMENT(m_schema).key(m_key).setNowSkipValidation().commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
              * Set the default value for a subkey of the CustomNodeElement
              * @param subKey
              * @param defaultValue
-             * @return 
+             * @return
              */
             template <class T>
             Derived& setDefaultValue(const std::string& subKey, const T& defaultValue) {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key + "." + subKey)
-                        .setNewDefaultValue(defaultValue)
-                        .commit();
+                OVERWRITE_ELEMENT(m_schema).key(m_key + "." + subKey).setNewDefaultValue(defaultValue).commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
-            
+
             /**
-             * Set the maximum size of a subkey of the CustomNodeElement. This is required by the DAQ for all vector 
+             * Set the maximum size of a subkey of the CustomNodeElement. This is required by the DAQ for all vector
              * attributes if its not assigned automatically or just to use a different value then the DAQ's default
              * length of 1000.
              *
@@ -288,44 +264,45 @@ namespace karabo {
              */
             Derived& setMaxSize(const std::string& subKey, const unsigned int maxSize) {
                 using namespace karabo::util;
-                OVERWRITE_ELEMENT(m_schema).key(m_key + "." + subKey)
-                        .template setNewMaxSize<unsigned int>(maxSize)
-                        .commit();
+                OVERWRITE_ELEMENT(m_schema)
+                      .key(m_key + "." + subKey)
+                      .template setNewMaxSize<unsigned int>(maxSize)
+                      .commit();
 
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
              * Set the unit for a subkey of the CustomNodeElement
              * @param subKey
              * @param unit
-             * @return 
+             * @return
              */
             Derived& setUnit(const std::string& subKey, const UnitType& unit) {
                 m_schema.setUnit(m_key + "." + subKey, unit);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
              * Set the metric prefix for a subkey of the CustomNodeElement
              * @param subKey
              * @param metricPrefix
-             * @return 
+             * @return
              */
             Derived& setMetricPrefix(const std::string& subKey, const MetricPrefixType& metricPrefix) {
                 m_schema.setMetricPrefix(m_key + "." + subKey, metricPrefix);
-                return *(static_cast<Derived*> (this));
+                return *(static_cast<Derived*>(this));
             }
 
             /**
              * Registers this element into the Schema
              */
             void commit() {
-                m_schema.getParameterHash().setAttribute(m_key, KARABO_SCHEMA_CLASS_ID, Described::classInfo().getClassId());
+                m_schema.getParameterHash().setAttribute(m_key, KARABO_SCHEMA_CLASS_ID,
+                                                         Described::classInfo().getClassId());
             }
         };
-    }
-}
+    } // namespace util
+} // namespace karabo
 
 #endif
-

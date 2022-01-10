@@ -1,26 +1,27 @@
-/* 
+/*
  * File:   Broker_Test.cc
  * Author: Sergey Esenov serguei.essenov@xfel.eu
- * 
+ *
  * Created on February 19, 2021, 3:09 PM
  */
 
-#include <tuple>
-#include <stack>
 #include "Broker_Test.hh"
-#include <karabo/util/Hash.hh>
-#include <karabo/util/StringTools.hh>
+
 #include <karabo/net/EventLoop.hh>
 #include <karabo/net/MqttBroker.hh>
+#include <karabo/util/Hash.hh>
+#include <karabo/util/StringTools.hh>
+#include <stack>
+#include <tuple>
 
 
-#define MQTT_BROKER   "mqtt://exfldl02n0:1883"
-#define JMS_BROKER    "tcp://exflbkr02n0:7777"
-#define AMQP_BROKER   "amqp://xfel:karabo@exflctrl01:5672"
-#define REDIS_BROKER  "redis://exflctrl01:6379"
-#define INVALID_MQTT  "mqtt://invalid.example.org:1883"
-#define INVALID_JMS   "tcp://invalid.example.org:7777"
-#define INVALID_AMQP  "amqp://invalid.example.org:5672"
+#define MQTT_BROKER "mqtt://exfldl02n0:1883"
+#define JMS_BROKER "tcp://exflbkr02n0:7777"
+#define AMQP_BROKER "amqp://xfel:karabo@exflctrl01:5672"
+#define REDIS_BROKER "redis://exflctrl01:6379"
+#define INVALID_MQTT "mqtt://invalid.example.org:1883"
+#define INVALID_JMS "tcp://invalid.example.org:7777"
+#define INVALID_AMQP "amqp://invalid.example.org:5672"
 #define INVALID_REDIS "redis://invalid.example.org:6379"
 
 constexpr uint32_t TEST_EXPIRATION_TIME_IN_SECONDS = 3;
@@ -33,8 +34,7 @@ namespace karabo {
 
 
         class MqttBrokerOrderTest : public MqttBroker {
-        public:
-
+           public:
             KARABO_CLASSINFO(MqttBrokerOrderTest, "MqttBrokerOrderTest", "1.0")
 
             MqttBrokerOrderTest(const karabo::util::Hash& input)
@@ -42,15 +42,13 @@ namespace karabo {
 
             virtual ~MqttBrokerOrderTest() {}
 
-        protected:
+           protected:
+            void publish(const std::string& topic, const karabo::util::Hash::Pointer& msg, PubOpts options) override;
 
-            void publish(const std::string& topic,
-                         const karabo::util::Hash::Pointer& msg,
-                         PubOpts options) override;
-
-        private:
+           private:
             void report(const boost::system::error_code& ec, const std::string& t, PubOpts o);
-        private:
+
+           private:
             std::unordered_set<std::string> m_firstMsgSent;
             std::uint32_t m_maxStackSize;
             std::stack<PubMessageTuple> m_stack;
@@ -58,15 +56,15 @@ namespace karabo {
 
 
         KARABO_REGISTER_FOR_CONFIGURATION(Broker, MqttBroker, MqttBrokerOrderTest);
-        
+
         void MqttBrokerOrderTest::report(const boost::system::error_code& ec, const std::string& t, PubOpts o) {
             std::ostringstream oss;
-            oss << "Failed to publish to \"" << t << "\", pubopts=" << o << " : code #" << ec.value() << " -- " << ec.message();
+            oss << "Failed to publish to \"" << t << "\", pubopts=" << o << " : code #" << ec.value() << " -- "
+                << ec.message();
             throw KARABO_NETWORK_EXCEPTION(oss.str());
         }
 
-        void MqttBrokerOrderTest::publish(const std::string& topic,
-                                          const karabo::util::Hash::Pointer& msg,
+        void MqttBrokerOrderTest::publish(const std::string& topic, const karabo::util::Hash::Pointer& msg,
                                           PubOpts option) {
             using namespace karabo::util;
             boost::system::error_code ec = KARABO_ERROR_CODE_SUCCESS;
@@ -81,14 +79,14 @@ namespace karabo {
             if (!msg->has("body.stop")) {
                 // Push message to the stack first ...
                 m_stack.push(std::make_tuple(topic, msg, option));
-                if (m_stack.size() < m_maxStackSize) return;   // just accumulate
+                if (m_stack.size() < m_maxStackSize) return; // just accumulate
             } else {
                 stop = true;
             }
 
             // publish accumulated messages in reverse order ...
 
-            while(!m_stack.empty()) {
+            while (!m_stack.empty()) {
                 std::string t;
                 Hash::Pointer m;
                 PubOpts o;
@@ -111,8 +109,8 @@ namespace karabo {
                 if (ec) report(ec, topic, option);
             }
         }
-    }
-}
+    } // namespace net
+} // namespace karabo
 
 
 using namespace karabo::util;
@@ -123,15 +121,10 @@ using boost::system::error_code;
 CPPUNIT_TEST_SUITE_REGISTRATION(Broker_Test);
 
 
-Broker_Test::Broker_Test()
-        : m_domain(Broker::brokerDomainFromEnv())
-        , m_thread()
-        , m_config() {
-}
+Broker_Test::Broker_Test() : m_domain(Broker::brokerDomainFromEnv()), m_thread(), m_config() {}
 
 
-Broker_Test::~Broker_Test() {
-}
+Broker_Test::~Broker_Test() {}
 
 
 void Broker_Test::setUp() {
@@ -139,9 +132,7 @@ void Broker_Test::setUp() {
     auto fut = prom.get_future();
     m_thread = boost::make_shared<boost::thread>([&prom]() {
         // postpone promise setting until EventLoop is activated
-        EventLoop::getIOService().post([&prom]() {
-            prom.set_value();
-        });
+        EventLoop::getIOService().post([&prom]() { prom.set_value(); });
         EventLoop::work();
     });
     fut.get(); // block here until promise is set
@@ -198,10 +189,8 @@ void Broker_Test::_testConnectDisconnect() {
 
     CPPUNIT_ASSERT(broker->isConnected());
     CPPUNIT_ASSERT(broker->getBrokerType() == classId);
-    CPPUNIT_ASSERT(broker->getBrokerUrl() == JMS_BROKER  ||
-                   broker->getBrokerUrl() == MQTT_BROKER ||
-                   broker->getBrokerUrl() == AMQP_BROKER ||
-                   broker->getBrokerUrl() == REDIS_BROKER);
+    CPPUNIT_ASSERT(broker->getBrokerUrl() == JMS_BROKER || broker->getBrokerUrl() == MQTT_BROKER ||
+                   broker->getBrokerUrl() == AMQP_BROKER || broker->getBrokerUrl() == REDIS_BROKER);
     CPPUNIT_ASSERT(broker->getInstanceId() == m_config.get<std::string>(classId + ".instanceId"));
 
     // Clone configuration and create new instance
@@ -220,7 +209,6 @@ void Broker_Test::_testConnectDisconnect() {
 
 
 void Broker_Test::testPublishSubscribe() {
-
     std::string urls = JMS_BROKER;
     std::clog << "\n\t" << __FUNCTION__ << " " << urls << std::endl;
     m_config.clear();
@@ -252,7 +240,6 @@ void Broker_Test::testPublishSubscribe() {
 
 
 void Broker_Test::_testPublishSubscribe() {
-
     std::string classId = m_config.begin()->getKey();
     m_config.set(classId + ".instanceId", "alice");
 
@@ -261,27 +248,22 @@ void Broker_Test::_testPublishSubscribe() {
     CPPUNIT_ASSERT_NO_THROW(alice->connect());
     CPPUNIT_ASSERT(alice->isConnected());
     CPPUNIT_ASSERT(alice->getBrokerType() == classId);
-    CPPUNIT_ASSERT(alice->getBrokerUrl() == JMS_BROKER  ||
-                   alice->getBrokerUrl() == MQTT_BROKER ||
-                   alice->getBrokerUrl() == AMQP_BROKER ||
-                   alice->getBrokerUrl() == REDIS_BROKER);
+    CPPUNIT_ASSERT(alice->getBrokerUrl() == JMS_BROKER || alice->getBrokerUrl() == MQTT_BROKER ||
+                   alice->getBrokerUrl() == AMQP_BROKER || alice->getBrokerUrl() == REDIS_BROKER);
     CPPUNIT_ASSERT(alice->getInstanceId() == "alice");
 
-    auto prom = std::make_shared<std::promise<bool> >();
+    auto prom = std::make_shared<std::promise<bool>>();
     auto fut = prom->get_future();
 
     constexpr int maxLoop = 10;
 
     // Ensure the subscriber is receiving messages
-    alice->startReading([prom, &maxLoop]
-                        (Hash::Pointer h, Hash::Pointer data) {
-                            int loop = h->get<int>("count");
-                            if (loop >= maxLoop) prom->set_value(true);
-                        },
-                        [prom]
-                        (consumer::Error err, const std::string & msg) {
-                            prom->set_value(false);
-                        });
+    alice->startReading(
+          [prom, &maxLoop](Hash::Pointer h, Hash::Pointer data) {
+              int loop = h->get<int>("count");
+              if (loop >= maxLoop) prom->set_value(true);
+          },
+          [prom](consumer::Error err, const std::string& msg) { prom->set_value(false); });
 
     error_code ec = alice->subscribeToRemoteSignal("bob", "signalFromBob");
     CPPUNIT_ASSERT(!ec);
@@ -295,17 +277,15 @@ void Broker_Test::_testPublishSubscribe() {
     CPPUNIT_ASSERT(bob->getBrokerUrl() == alice->getBrokerUrl());
     CPPUNIT_ASSERT(bob->getDomain() == alice->getDomain());
 
-    auto hdr = boost::make_shared<Hash>("signalInstanceId", "bob",
-                                        "signalFunction", "signalFromBob",
-                                        "slotInstanceIds", "|alice|",
-                                        "slotFunctions", "|alice:aliceSlot");
+    auto hdr = boost::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob", "slotInstanceIds",
+                                        "|alice|", "slotFunctions", "|alice:aliceSlot");
     auto body = boost::make_shared<Hash>("a.b.c", 42);
 
     for (int i = 0; i < maxLoop; ++i) {
         hdr->set("count", i + 1);
         CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, hdr, body, 4, 0));
     }
-    
+
     // Wait on future ...
     bool result = fut.get();
     CPPUNIT_ASSERT(result);
@@ -319,7 +299,6 @@ void Broker_Test::_testPublishSubscribe() {
 
 
 void Broker_Test::testPublishSubscribeAsync() {
-
     std::string urls = JMS_BROKER;
     std::clog << "\n\t" << __FUNCTION__ << " " << urls << std::endl;
     m_config.clear();
@@ -351,7 +330,6 @@ void Broker_Test::testPublishSubscribeAsync() {
 
 
 void Broker_Test::_testPublishSubscribeAsync() {
-
     std::string classId = m_config.begin()->getKey();
     m_config.set(classId + ".instanceId", "alice");
 
@@ -360,42 +338,30 @@ void Broker_Test::_testPublishSubscribeAsync() {
     CPPUNIT_ASSERT_NO_THROW(alice->connect());
     CPPUNIT_ASSERT(alice->isConnected());
     CPPUNIT_ASSERT(alice->getBrokerType() == classId);
-    CPPUNIT_ASSERT(alice->getBrokerUrl() == JMS_BROKER  ||
-                   alice->getBrokerUrl() == MQTT_BROKER ||
-                   alice->getBrokerUrl() == AMQP_BROKER ||
-                   alice->getBrokerUrl() == REDIS_BROKER);
+    CPPUNIT_ASSERT(alice->getBrokerUrl() == JMS_BROKER || alice->getBrokerUrl() == MQTT_BROKER ||
+                   alice->getBrokerUrl() == AMQP_BROKER || alice->getBrokerUrl() == REDIS_BROKER);
     CPPUNIT_ASSERT(alice->getInstanceId() == "alice");
 
-    auto prom = std::make_shared<std::promise<bool> >();
+    auto prom = std::make_shared<std::promise<bool>>();
     auto fut = prom->get_future();
 
     constexpr int maxLoop = 10;
 
     // Ensure the subscriber is receiving messages
     alice->startReading(
-        [prom, &maxLoop]
-        (Hash::Pointer h, Hash::Pointer data) {
-            int loop = data->get<int>("c");
-            if (loop >= maxLoop) prom->set_value(true);
-        },
-        [prom]
-        (consumer::Error err, const std::string & msg) {
-            prom->set_value(false);
-        }
-    );
+          [prom, &maxLoop](Hash::Pointer h, Hash::Pointer data) {
+              int loop = data->get<int>("c");
+              if (loop >= maxLoop) prom->set_value(true);
+          },
+          [prom](consumer::Error err, const std::string& msg) { prom->set_value(false); });
 
     // NOTE:  MQTT: make sure that subscribing to signals is done AFTER startReading
     //        JMS:  doesn't matter
     {
-        auto p = std::make_shared<std::promise<boost::system::error_code> >();
+        auto p = std::make_shared<std::promise<boost::system::error_code>>();
         auto f = p->get_future();
-        alice->subscribeToRemoteSignalAsync(
-            "bob", "signalFromBob",
-            [p]
-            (const boost::system::error_code& ec) {
-                p->set_value(ec);
-            }
-        );
+        alice->subscribeToRemoteSignalAsync("bob", "signalFromBob",
+                                            [p](const boost::system::error_code& ec) { p->set_value(ec); });
         auto ec = f.get();
         CPPUNIT_ASSERT(!ec);
     }
@@ -411,21 +377,16 @@ void Broker_Test::_testPublishSubscribeAsync() {
         CPPUNIT_ASSERT(bob->getInstanceId() == "bob");
         CPPUNIT_ASSERT(bob->getDomain() == alice->getDomain());
 
-        Hash::Pointer header = boost::make_shared<Hash>(
-                "signalInstanceId", "bob",
-                "signalFunction", "signalFromBob",
-                "slotInstanceIds", "|alice|",
-                "slotFunctions", "|alice:aliceSlot|");
+        Hash::Pointer header =
+              boost::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob", "slotInstanceIds",
+                                       "|alice|", "slotFunctions", "|alice:aliceSlot|");
 
-        Hash::Pointer data = boost::make_shared<Hash>(
-                "a", std::string("free text"),
-                "b", 3.1415F);
+        Hash::Pointer data = boost::make_shared<Hash>("a", std::string("free text"), "b", 3.1415F);
 
         for (int i = 0; i < maxLoop; ++i) {
             data->set<int>("c", i + 1);
             CPPUNIT_ASSERT_NO_THROW(bob->write(bob->getDomain(), header, data, 4, 0));
         }
-
     });
 
     // Wait on future ... when Alice reads all maxLoop messages or failure happens...
@@ -434,15 +395,10 @@ void Broker_Test::_testPublishSubscribeAsync() {
     t.join(); // join thread ... otherwise application is terminated
 
     {
-        auto p = std::make_shared<std::promise<boost::system::error_code> >();
+        auto p = std::make_shared<std::promise<boost::system::error_code>>();
         auto f = p->get_future();
-        alice->unsubscribeFromRemoteSignalAsync(
-            "bob", "signalFromBob",
-            [p]
-            (const boost::system::error_code& ec) {
-                p->set_value(ec);
-            }
-        );
+        alice->unsubscribeFromRemoteSignalAsync("bob", "signalFromBob",
+                                                [p](const boost::system::error_code& ec) { p->set_value(ec); });
         auto ec = f.get();
         CPPUNIT_ASSERT(!ec);
     }
@@ -453,7 +409,6 @@ void Broker_Test::_testPublishSubscribeAsync() {
 
 
 void Broker_Test::testReadingHeartbeatsAndLogs() {
-
     std::string urls = JMS_BROKER;
     std::clog << "\n\t" << __FUNCTION__ << " " << urls << std::endl;
     m_config.clear();
@@ -485,7 +440,6 @@ void Broker_Test::testReadingHeartbeatsAndLogs() {
 
 
 void Broker_Test::_testReadingHeartbeatsAndLogs() {
-
     //    'signalInstanceId' => bob STRING
     //    'signalFunction' => signalHeartbeat STRING
     //    'slotInstanceIds' => __none__ STRING
@@ -515,78 +469,65 @@ void Broker_Test::_testReadingHeartbeatsAndLogs() {
     CPPUNIT_ASSERT_NO_THROW(alice->connect());
     CPPUNIT_ASSERT(alice->isConnected());
     CPPUNIT_ASSERT(alice->getBrokerType() == classId);
-    CPPUNIT_ASSERT(alice->getBrokerUrl() == JMS_BROKER  ||
-                   alice->getBrokerUrl() == MQTT_BROKER ||
-                   alice->getBrokerUrl() == AMQP_BROKER ||
-                   alice->getBrokerUrl() == REDIS_BROKER);
+    CPPUNIT_ASSERT(alice->getBrokerUrl() == JMS_BROKER || alice->getBrokerUrl() == MQTT_BROKER ||
+                   alice->getBrokerUrl() == AMQP_BROKER || alice->getBrokerUrl() == REDIS_BROKER);
     CPPUNIT_ASSERT(alice->getInstanceId() == "alice");
 
-    auto prom = std::make_shared<std::promise<bool> >();
+    auto prom = std::make_shared<std::promise<bool>>();
     auto fut = prom->get_future();
 
     constexpr int maxLoop = 10;
 
     // Ensure the subscriber is receiving messages
     alice->startReading(
-        [prom]
-        (Hash::Pointer h, Hash::Pointer data) {
-            try {
-                CPPUNIT_ASSERT(h->get<std::string>("signalInstanceId") == "bob");
-                CPPUNIT_ASSERT(h->get<std::string>("signalFunction") == "signalFromBob");
-                CPPUNIT_ASSERT(data->get<int>("c") == 1);
-            } catch(const std::exception& e) {
-                std::clog << __FILE__ << ":" << __LINE__ << " " << e.what() << std::endl;
-                prom->set_value(false);
-                return;
-            }
-            prom->set_value(true);
-        },
-        [prom]
-        (consumer::Error err, const std::string & msg) {
-            prom->set_value(false);
-        }
-    );
+          [prom](Hash::Pointer h, Hash::Pointer data) {
+              try {
+                  CPPUNIT_ASSERT(h->get<std::string>("signalInstanceId") == "bob");
+                  CPPUNIT_ASSERT(h->get<std::string>("signalFunction") == "signalFromBob");
+                  CPPUNIT_ASSERT(data->get<int>("c") == 1);
+              } catch (const std::exception& e) {
+                  std::clog << __FILE__ << ":" << __LINE__ << " " << e.what() << std::endl;
+                  prom->set_value(false);
+                  return;
+              }
+              prom->set_value(true);
+          },
+          [prom](consumer::Error err, const std::string& msg) { prom->set_value(false); });
 
     alice->startReadingHeartbeats(
-        [prom]
-        (Hash::Pointer h, Hash::Pointer d) {
-            try {
-                CPPUNIT_ASSERT(h->get<std::string>("signalFunction") == "signalHeartbeat");
-                CPPUNIT_ASSERT(h->get<std::string>("signalInstanceId") == "bob");
-                CPPUNIT_ASSERT(d->has("a1"));
-                CPPUNIT_ASSERT(d->has("a2"));
-                CPPUNIT_ASSERT(d->has("a3"));
-            } catch(const std::exception& e) {
-                std::clog << __FILE__ << ":" << __LINE__ << " " << e.what() << std::endl;
-                prom->set_value(false);
-            }
-        },
-        [prom]
-        (karabo::net::consumer::Error ec, const std::string& message) {
-            std::clog << "Heartbeat error: " << message << std::endl;
-            prom->set_value(false);
-        }
-    );
+          [prom](Hash::Pointer h, Hash::Pointer d) {
+              try {
+                  CPPUNIT_ASSERT(h->get<std::string>("signalFunction") == "signalHeartbeat");
+                  CPPUNIT_ASSERT(h->get<std::string>("signalInstanceId") == "bob");
+                  CPPUNIT_ASSERT(d->has("a1"));
+                  CPPUNIT_ASSERT(d->has("a2"));
+                  CPPUNIT_ASSERT(d->has("a3"));
+              } catch (const std::exception& e) {
+                  std::clog << __FILE__ << ":" << __LINE__ << " " << e.what() << std::endl;
+                  prom->set_value(false);
+              }
+          },
+          [prom](karabo::net::consumer::Error ec, const std::string& message) {
+              std::clog << "Heartbeat error: " << message << std::endl;
+              prom->set_value(false);
+          });
 
     alice->startReadingLogs(
-        [prom]
-        (Hash::Pointer h, Hash::Pointer d) {
-            try {
-                CPPUNIT_ASSERT(h->get<std::string>("target") == "log");
-                CPPUNIT_ASSERT(d->has("message"));
-                const std::string& cache = d->get<std::string>("message");
-                CPPUNIT_ASSERT(cache.find("test message") != std::string::npos);
-            } catch(const std::exception& e) {
-                std::clog << __FILE__ << ":" << __LINE__ << "  " << e.what() << std::endl;
-                prom->set_value(false);
-            }
-        },
-        [prom]
-        (karabo::net::consumer::Error ec, const std::string& message) {
-            std::clog << "LogError: " << message << std::endl;
-            prom->set_value(false);
-        }
-    );
+          [prom](Hash::Pointer h, Hash::Pointer d) {
+              try {
+                  CPPUNIT_ASSERT(h->get<std::string>("target") == "log");
+                  CPPUNIT_ASSERT(d->has("message"));
+                  const std::string& cache = d->get<std::string>("message");
+                  CPPUNIT_ASSERT(cache.find("test message") != std::string::npos);
+              } catch (const std::exception& e) {
+                  std::clog << __FILE__ << ":" << __LINE__ << "  " << e.what() << std::endl;
+                  prom->set_value(false);
+              }
+          },
+          [prom](karabo::net::consumer::Error ec, const std::string& message) {
+              std::clog << "LogError: " << message << std::endl;
+              prom->set_value(false);
+          });
 
     {
         boost::system::error_code ec = alice->subscribeToRemoteSignal("bob", "signalFromBob");
@@ -604,22 +545,12 @@ void Broker_Test::_testReadingHeartbeatsAndLogs() {
         CPPUNIT_ASSERT(bob->getInstanceId() == "bob");
         CPPUNIT_ASSERT(bob->getDomain() == alice->getDomain());
 
-        Hash::Pointer header = boost::make_shared<Hash>(
-                "signalInstanceId", "bob",
-                "signalFunction", "signalHeartbeat",
-                "slotInstanceIds", "__none__",
-                "slotFunctions", "__none__");
+        Hash::Pointer header = boost::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalHeartbeat",
+                                                        "slotInstanceIds", "__none__", "slotFunctions", "__none__");
 
         Hash::Pointer data = boost::make_shared<Hash>(
-                "a1", std::string("bob"),
-                "a2", 1,
-                "a3", Hash(
-                    "type", "device",
-                    "classId", "Broker",
-                    "serverId", "__none__",
-                    "visibilty", 4,
-                    "lang", "cpp"
-                ));
+              "a1", std::string("bob"), "a2", 1, "a3",
+              Hash("type", "device", "classId", "Broker", "serverId", "__none__", "visibilty", 4, "lang", "cpp"));
 
         for (int i = 0; i < maxLoop; ++i) {
             // Bob sends heartbeat
@@ -627,19 +558,15 @@ void Broker_Test::_testReadingHeartbeatsAndLogs() {
             CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain + "_beats", header, data, 0, 0));
             // write 'log' message
             std::ostringstream oss;
-            oss << "test message " << (i+1);
-            auto h1 = boost::make_shared<Hash>("target","log");
+            oss << "test message " << (i + 1);
+            auto h1 = boost::make_shared<Hash>("target", "log");
             auto d1 = boost::make_shared<Hash>("message", oss.str());
             CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, h1, d1, 0, 0));
         }
 
-        Hash::Pointer h2 = boost::make_shared<Hash>(
-                "signalInstanceId", "bob",
-                "signalFunction", "signalFromBob",
-                "slotInstanceIds", "|alice|",
-                "slotFunctions", "|alice:someSlot");
-        Hash::Pointer d2 = boost::make_shared<Hash>(
-                "c", 1);
+        Hash::Pointer h2 = boost::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalFromBob",
+                                                    "slotInstanceIds", "|alice|", "slotFunctions", "|alice:someSlot");
+        Hash::Pointer d2 = boost::make_shared<Hash>("c", 1);
 
         // Trigger the end of the test
         CPPUNIT_ASSERT_NO_THROW(bob->write(m_domain, h2, d2, 4, 0));
@@ -648,7 +575,7 @@ void Broker_Test::_testReadingHeartbeatsAndLogs() {
     // Wait on future ... when Alice reads all maxLoop messages or failure happens...
     bool result = fut.get();
     CPPUNIT_ASSERT(result);
-    t.join();        // join  ... otherwise terminate() called
+    t.join(); // join  ... otherwise terminate() called
 
     CPPUNIT_ASSERT_NO_THROW(alice->stopReading()); // unsubscribeAll
     CPPUNIT_ASSERT_NO_THROW(bob->disconnect());
@@ -666,13 +593,10 @@ void Broker_Test::testReadingGlobalCalls() {
 
 
 void Broker_Test::_testReadingGlobalCalls(const std::string& brokerAddress) {
-
     std::string type = Broker::brokerTypeFrom({brokerAddress});
     std::clog << "\t" << __FUNCTION__ << " " << type << " (" << brokerAddress << "): " << std::flush;
 
-    Hash cfg("brokers", std::vector<std::string>({brokerAddress}),
-             "domain", m_domain,
-             "instanceId", "listenGlobal");
+    Hash cfg("brokers", std::vector<std::string>({brokerAddress}), "domain", m_domain, "instanceId", "listenGlobal");
     Broker::Pointer listenGlobal = Configurator<Broker>::create(type, cfg);
 
     cfg.set("instanceId", "notListenGlobal");
@@ -686,9 +610,9 @@ void Broker_Test::_testReadingGlobalCalls(const std::string& brokerAddress) {
     CPPUNIT_ASSERT_NO_THROW(notListenGlobal->connect());
     CPPUNIT_ASSERT_NO_THROW(sender->connect());
 
-    auto promGlobal1 = std::make_shared<std::promise < std::string >> ();
+    auto promGlobal1 = std::make_shared<std::promise<std::string>>();
     auto futGlobal1 = promGlobal1->get_future();
-    auto promNonGlobal1 = std::make_shared<std::promise < std::string >> ();
+    auto promNonGlobal1 = std::make_shared<std::promise<std::string>>();
     auto futNonGlobal1 = promNonGlobal1->get_future();
 
     auto readHandlerBoth1 = [promGlobal1, promNonGlobal1](Hash::Pointer hdr, Hash::Pointer body) {
@@ -702,15 +626,15 @@ void Broker_Test::_testReadingGlobalCalls(const std::string& brokerAddress) {
             promNonGlobal1->set_value(toString(body));
         }
     };
-    auto errorHandlerBoth1 = [promGlobal1, promNonGlobal1] (consumer::Error err, const std::string & msg) {
+    auto errorHandlerBoth1 = [promGlobal1, promNonGlobal1](consumer::Error err, const std::string& msg) {
         // unexpected - invalidate both
         promGlobal1->set_value(msg);
         promNonGlobal1->set_value(msg);
     };
 
-    auto promGlobal2 = std::make_shared<std::promise<std::string> >();
+    auto promGlobal2 = std::make_shared<std::promise<std::string>>();
     auto futGlobal2 = promGlobal2->get_future();
-    auto promNonGlobal2 = std::make_shared<std::promise<std::string> >();
+    auto promNonGlobal2 = std::make_shared<std::promise<std::string>>();
     auto futNonGlobal2 = promNonGlobal2->get_future();
 
     auto readHandlerBoth2 = [promGlobal2, promNonGlobal2](Hash::Pointer hdr, Hash::Pointer body) {
@@ -724,7 +648,7 @@ void Broker_Test::_testReadingGlobalCalls(const std::string& brokerAddress) {
             promNonGlobal2->set_value(toString(body));
         }
     };
-    auto errorHandlerBoth2 = [promGlobal2, promNonGlobal2] (consumer::Error err, const std::string & msg) {
+    auto errorHandlerBoth2 = [promGlobal2, promNonGlobal2](consumer::Error err, const std::string& msg) {
         // unexpected - "invalidate" both
         promGlobal2->set_value(msg);
         promNonGlobal2->set_value(msg);
@@ -735,10 +659,9 @@ void Broker_Test::_testReadingGlobalCalls(const std::string& brokerAddress) {
     notListenGlobal->startReading(readHandlerBoth2, errorHandlerBoth2);
 
     // Prepare and send global message
-    auto hdr = boost::make_shared<Hash>("signalInstanceId", sender->getInstanceId(),
-                                        "signalFunction", "__call__",
-                                        "slotInstanceIds", "|*|",
-                                        "slotFunctions", "|*:aSlot|"); // MQTT global message needs to know the slot
+    auto hdr = boost::make_shared<Hash>("signalInstanceId", sender->getInstanceId(), "signalFunction", "__call__",
+                                        "slotInstanceIds", "|*|", "slotFunctions",
+                                        "|*:aSlot|"); // MQTT global message needs to know the slot
     auto bodyGlobal = boost::make_shared<Hash>("msgToAll", "A global message");
     sender->write(m_domain, hdr, bodyGlobal, 4, 0);
 
@@ -769,9 +692,8 @@ void Broker_Test::_testReadingGlobalCalls(const std::string& brokerAddress) {
 
 
 void Broker_Test::testReverseOrderedPublishSubscribe() {
-
     std::vector<std::string> urls = {MQTT_BROKER};
-    //NOTE: use "deadline" setting for stack size >= 4: Alice has to wait for message with order #1!!!
+    // NOTE: use "deadline" setting for stack size >= 4: Alice has to wait for message with order #1!!!
     Hash input("brokers", urls, "domain", m_domain, "instanceId", "alice", "deadline", 300);
 
     auto alice = Configurator<Broker>::create("mqtt", input);
@@ -782,7 +704,7 @@ void Broker_Test::testReverseOrderedPublishSubscribe() {
     CPPUNIT_ASSERT_EQUAL(std::string("alice"), alice->getInstanceId());
 
     constexpr unsigned int maxLoop = 20;
-    auto prom = std::make_shared<std::promise<bool> >();
+    auto prom = std::make_shared<std::promise<bool>>();
     auto fut = prom->get_future();
 
     std::vector<unsigned int> monotonic;
@@ -806,7 +728,7 @@ void Broker_Test::testReverseOrderedPublishSubscribe() {
             monotonic.push_back(n);
             // Uncomment next line to see the reading order ...
             // std::clog << "*** Alice: n -> " << n << std::endl;
-        } catch(const std::exception& e) {
+        } catch (const std::exception& e) {
             std::clog << "Exception in 'parseMessage' lambda: " << e.what() << std::endl;
             prom->set_value(false);
         }
@@ -855,7 +777,7 @@ void Broker_Test::testReverseOrderedPublishSubscribe() {
 
     // wait for reader to reach maxLoop
     bool result = fut.get();
-    t.join();   // join otherwise terminate() is called
+    t.join(); // join otherwise terminate() is called
     CPPUNIT_ASSERT(result);
 
     ec = alice->unsubscribeFromRemoteSignal("bob", "signalFromBob");
@@ -864,14 +786,13 @@ void Broker_Test::testReverseOrderedPublishSubscribe() {
     CPPUNIT_ASSERT_NO_THROW(alice->disconnect());
 
     CPPUNIT_ASSERT_EQUAL(std::size_t(maxLoop), monotonic.size());
-    for(unsigned int i = 0; i < monotonic.size(); ++i) {
-        CPPUNIT_ASSERT_EQUAL(i+1, monotonic[i]);
-    } 
+    for (unsigned int i = 0; i < monotonic.size(); ++i) {
+        CPPUNIT_ASSERT_EQUAL(i + 1, monotonic[i]);
+    }
 }
 
 
 void Broker_Test::testProducerRestartConsumerContinues() {
-
     std::string urls = JMS_BROKER;
     std::clog << "\n\t" << __FUNCTION__ << " " << urls << std::endl;
     m_config.clear();
@@ -907,7 +828,7 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
     Hash aliceConfig = m_config;
     aliceConfig.set(classId + ".instanceId", "alice");
 
-    auto prom = std::make_shared<std::promise<bool> >();
+    auto prom = std::make_shared<std::promise<bool>>();
     auto fut = prom->get_future();
 
     std::vector<int> bottle1;
@@ -922,9 +843,7 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
         std::clog << "Alice: Error ==> " << int(err) << " -- " << desc << std::endl;
         prom->set_value(false);
     };
-    auto parseMessage =
-        [prom, &bottle1, &bottle2, &bottle3]
-        (Hash::Pointer h, Hash::Pointer d) {
+    auto parseMessage = [prom, &bottle1, &bottle2, &bottle3](Hash::Pointer h, Hash::Pointer d) {
         try {
             if (d->has("stop")) {
                 prom->set_value(true);
@@ -940,7 +859,7 @@ void Broker_Test::_testProducerRestartConsumerContinues() {
             } else {
                 bottle3.push_back(n);
             }
-        } catch(const std::exception& e) {
+        } catch (const std::exception& e) {
             std::clog << "Exception in Alice lambda: " << e.what() << std::endl;
             prom->set_value(false);
         }
@@ -1069,7 +988,7 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
     Hash::Pointer header = boost::make_shared<Hash>("signalInstanceId", "bob", "signalFunction", "signalBob");
     header->set("slotInstanceIds", "|alice|");
     header->set("slotFunctions", "|alice:aliceSlot|");
-    Hash::Pointer data = boost::make_shared<Hash>();                // data container
+    Hash::Pointer data = boost::make_shared<Hash>(); // data container
 
     Broker::Pointer alice;
 
@@ -1077,7 +996,7 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
     CPPUNIT_ASSERT_NO_THROW(alice->connect());
     CPPUNIT_ASSERT(alice->isConnected());
 
-    auto p1 = std::make_shared<std::promise<bool> >();
+    auto p1 = std::make_shared<std::promise<bool>>();
     auto f1 = p1->get_future();
 
     auto error1 = [p1](consumer::Error err, const std::string& desc) {
@@ -1124,22 +1043,20 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
 
     // Restart Alice ...
 
-    auto p2 = std::make_shared<std::promise<bool> >();
+    auto p2 = std::make_shared<std::promise<bool>>();
     auto f2 = p2->get_future();
 
     alice = Configurator<Broker>::create(aliceConfig);
     CPPUNIT_ASSERT_NO_THROW(alice->connect());
     CPPUNIT_ASSERT(alice->isConnected());
 
-    auto error2 = [p2](consumer::Error err, const std::string& desc) {
-        p2->set_value(false);
-    };
+    auto error2 = [p2](consumer::Error err, const std::string& desc) { p2->set_value(false); };
 
     constexpr int maxLoop2 = 20;
     int loopCount2 = maxLoop2;
     auto parse2 = [p2, &bottle, &loopCount2](Hash::Pointer h, Hash::Pointer d) {
         int n = d->get<int>("c");
-        bottle.push_back(n);  // fill the "bottle"
+        bottle.push_back(n); // fill the "bottle"
         if (--loopCount2 == 0) p2->set_value(true);
     };
 
@@ -1147,8 +1064,8 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
     alice->startReading(parse2, error2);
     ec = alice->subscribeToRemoteSignal("bob", "signalBob");
     CPPUNIT_ASSERT(!ec);
-    
-    // Bob continues ... 
+
+    // Bob continues ...
     // send negative numbers ...
     for (int i = 1; i <= maxLoop2; ++i) {
         data->set("c", -i);
@@ -1170,5 +1087,4 @@ void Broker_Test::_testProducerContinuesConsumerRestart() {
 
     CPPUNIT_ASSERT_EQUAL(maxLoop2, int(bottle.size()));
     for (int i = 1; i <= int(bottle.size()); ++i) CPPUNIT_ASSERT_EQUAL(-i, bottle[i - 1]);
-
 }

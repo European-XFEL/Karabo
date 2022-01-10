@@ -6,17 +6,16 @@
  */
 
 #ifndef KARABO_CORE_OK_ERROR_FSM_HH
-#define	KARABO_CORE_OK_ERROR_FSM_HH
+#define KARABO_CORE_OK_ERROR_FSM_HH
 
-
-#include "karabo/util/Configurator.hh"
-#include "karabo/xms/SignalSlotable.hh"  // for SLOT_ELEMENT
-#include "karabo/xms/SlotElement.hh"
-#include "karabo/core/BaseFsm.hh"
-#include "karabo/util/karaboDll.hh"
-#include "karabo/util/State.hh"
 
 #include "BaseFsm.hh"
+#include "karabo/core/BaseFsm.hh"
+#include "karabo/util/Configurator.hh"
+#include "karabo/util/State.hh"
+#include "karabo/util/karaboDll.hh"
+#include "karabo/xms/SignalSlotable.hh" // for SLOT_ELEMENT
+#include "karabo/xms/SlotElement.hh"
 
 namespace karabo {
     namespace util {
@@ -28,14 +27,12 @@ namespace karabo {
         /**
          * @class OkErrorFsm
          * @brief A simple finite state machine knowing either NORMAL or ERROR States
-         * 
+         *
          * NORMAL (ErrorFoundEvent) -> (ErrorFoundAction) ERROR
-         * ERROR (ResetEvent) -> (ResetAction) NORMAL 
+         * ERROR (ResetEvent) -> (ResetAction) NORMAL
          */
         class OkErrorFsm : public BaseFsm {
-
-        public:
-
+           public:
             KARABO_CLASSINFO(OkErrorFsm, "OkErrorFsm", "0.1")
 
 
@@ -43,11 +40,12 @@ namespace karabo {
                 using namespace karabo::xms;
                 using namespace karabo::util;
 
-                SLOT_ELEMENT(expected).key("reset")
-                        .displayedName("Reset")
-                        .description("Resets the device in case of an error")
-                        .allowedStates(State::ERROR)
-                        .commit();
+                SLOT_ELEMENT(expected)
+                      .key("reset")
+                      .displayedName("Reset")
+                      .description("Resets the device in case of an error")
+                      .allowedStates(State::ERROR)
+                      .commit();
             }
 
             void initFsmSlots() {
@@ -55,10 +53,8 @@ namespace karabo {
                 KARABO_SLOT(errorFound, std::string, std::string)
             }
 
-        public:
-
-            virtual ~OkErrorFsm() {
-            }
+           public:
+            virtual ~OkErrorFsm() {}
 
             /**************************************************************/
             /*                        Events                              */
@@ -91,30 +87,25 @@ namespace karabo {
             //  Source-State    Event        Target-State    Action         Guard
 
             KARABO_FSM_TABLE_BEGIN(StateMachineTransitionTable)
-            Row< NORMAL, ErrorFoundEvent, ERROR, ErrorFoundAction, none >,
-            Row< ERROR, ResetEvent, NORMAL, ResetAction, none >
-            KARABO_FSM_TABLE_END
+            Row<NORMAL, ErrorFoundEvent, ERROR, ErrorFoundAction, none>,
+                  Row<ERROR, ResetEvent, NORMAL, ResetAction, none> KARABO_FSM_TABLE_END
 
 
-            //                       Name          Transition-Table             Initial-State Context
-            KARABO_FSM_STATE_MACHINE(StateMachine, StateMachineTransitionTable, NORMAL, Self)
+                  //                       Name          Transition-Table             Initial-State Context
+                  KARABO_FSM_STATE_MACHINE(StateMachine, StateMachineTransitionTable, NORMAL, Self)
 
 
-            void startFsm() {
-
+                        void startFsm() {
                 KARABO_FSM_CREATE_MACHINE(StateMachine, m_fsm);
                 KARABO_FSM_SET_CONTEXT_TOP(this, m_fsm)
                 KARABO_FSM_START_MACHINE(m_fsm)
             }
 
-        private: // members
-
+           private: // members
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
-
-
         };
 
 
-    }
-}
+    } // namespace core
+} // namespace karabo
 #endif

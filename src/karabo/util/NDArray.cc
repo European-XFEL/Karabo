@@ -6,61 +6,63 @@
  */
 
 #include "NDArray.hh"
-#include "ToSize.hh"
-#include "Types.hh"
+
 #include "ByteArrayElement.hh"
 #include "SimpleElement.hh"
+#include "ToSize.hh"
+#include "Types.hh"
 #include "VectorElement.hh"
 
 namespace karabo {
     namespace util {
 
         void NDArray::expectedParameters(karabo::util::Schema& s) {
-
-            BYTEARRAY_ELEMENT(s).key("data")
-                    .displayedName("Data")
-                    .description("The data of the array as an untyped buffer of bytes")
-                    .readOnly()
-                    .commit();
-            VECTOR_UINT64_ELEMENT(s).key("shape")
-                    .displayedName("Shape")
-                    .description("The shape of the array reflects total dimensionality and each element the extension in its dimension (0: any extension)")
-                    .readOnly()
-                    .commit();
-            INT32_ELEMENT(s).key("type")
-                    .displayedName("Data Type")
-                    .description("The type of the contained array data")
-                    .readOnly().initialValue(util::Types::UNKNOWN)
-                    .commit();
-            BOOL_ELEMENT(s).key("isBigEndian")
-                    .displayedName("Is big-endian")
-                    .description("A boolean flag which is true if the data is big-endian")
-                    .readOnly()
-                    .commit();
+            BYTEARRAY_ELEMENT(s)
+                  .key("data")
+                  .displayedName("Data")
+                  .description("The data of the array as an untyped buffer of bytes")
+                  .readOnly()
+                  .commit();
+            VECTOR_UINT64_ELEMENT(s)
+                  .key("shape")
+                  .displayedName("Shape")
+                  .description(
+                        "The shape of the array reflects total dimensionality and each element the extension in its "
+                        "dimension (0: any extension)")
+                  .readOnly()
+                  .commit();
+            INT32_ELEMENT(s)
+                  .key("type")
+                  .displayedName("Data Type")
+                  .description("The type of the contained array data")
+                  .readOnly()
+                  .initialValue(util::Types::UNKNOWN)
+                  .commit();
+            BOOL_ELEMENT(s)
+                  .key("isBigEndian")
+                  .displayedName("Is big-endian")
+                  .description("A boolean flag which is true if the data is big-endian")
+                  .readOnly()
+                  .commit();
         }
 
 
-
-        NDArray::NDArray(const Dims& shape,
-                         const karabo::util::Types::ReferenceType& type,
-                         const bool isBigEndian) {
+        NDArray::NDArray(const Dims& shape, const karabo::util::Types::ReferenceType& type, const bool isBigEndian) {
             const size_t byteSize = shape.size() * Types::to<ToSize>(type);
             char* buffer = new char[byteSize];
             set("data", std::make_pair(DataPointer(buffer, &NDArray::deallocator), byteSize));
-            set("type", static_cast<int> (type));
+            set("type", static_cast<int>(type));
             setShape(shape);
             setBigEndian(isBigEndian);
         }
 
 
-        NDArray::NDArray(const DataPointer& ptr,
-                         const karabo::util::Types::ReferenceType& type,
-                         const size_t& numElems, const Dims& shape,
-                         const bool isBigEndian) {
+        NDArray::NDArray(const DataPointer& ptr, const karabo::util::Types::ReferenceType& type, const size_t& numElems,
+                         const Dims& shape, const bool isBigEndian) {
             const size_t itemSize = Types::to<ToSize>(type);
-            const size_t byteSize = numElems * itemSize;          
+            const size_t byteSize = numElems * itemSize;
             set("data", std::make_pair(ptr, byteSize));
-            set("type", static_cast<int> (type));
+            set("type", static_cast<int>(type));
             setShape(shape);
             setBigEndian(isBigEndian);
         }
@@ -86,7 +88,7 @@ namespace karabo {
 
 
         karabo::util::Types::ReferenceType NDArray::getType() const {
-            return static_cast<karabo::util::Types::ReferenceType> (get<int>("type"));
+            return static_cast<karabo::util::Types::ReferenceType>(get<int>("type"));
         }
 
 
@@ -142,27 +144,24 @@ namespace karabo {
                 case 1:
                     // No swap needed.
                     break;
-                case 2:
-                {
-                    unsigned short* data = reinterpret_cast<unsigned short*> (get<ByteArray>("data").first.get());
+                case 2: {
+                    unsigned short* data = reinterpret_cast<unsigned short*>(get<ByteArray>("data").first.get());
                     for (size_t i = 0; i < size(); ++i) {
                         data[i] = karabo::util::byteSwap16(data[i]);
                     }
                     break;
                 }
-                case 4:
-                {
-                    unsigned int* data = reinterpret_cast<unsigned int*> (get<ByteArray>("data").first.get());
+                case 4: {
+                    unsigned int* data = reinterpret_cast<unsigned int*>(get<ByteArray>("data").first.get());
                     for (size_t i = 0; i < size(); ++i) {
                         data[i] = karabo::util::byteSwap32(data[i]);
                     }
                     break;
                 }
-                case 8:
-                {
-                    unsigned long long* data = reinterpret_cast<unsigned long long*> (get<ByteArray>("data").first.get());
+                case 8: {
+                    unsigned long long* data =
+                          reinterpret_cast<unsigned long long*>(get<ByteArray>("data").first.get());
                     for (size_t i = 0; i < size(); ++i) {
-
                         data[i] = karabo::util::byteSwap64(data[i]);
                     }
                     break;
@@ -174,8 +173,8 @@ namespace karabo {
 
 
         void NDArray::deallocator(const char* p) {
-            delete [] p;
+            delete[] p;
         }
 
-    }
-}
+    } // namespace util
+} // namespace karabo

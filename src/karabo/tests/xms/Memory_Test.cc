@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   Memory_Test.cc
  * Author: wigginsj
- * 
+ *
  * Created on September 26, 2016, 9:28 AM
  */
 
@@ -14,12 +14,10 @@ using namespace karabo::xms;
 CPPUNIT_TEST_SUITE_REGISTRATION(Memory_Test);
 
 
-Memory_Test::Memory_Test() {
-}
+Memory_Test::Memory_Test() {}
 
 
-Memory_Test::~Memory_Test() {
-}
+Memory_Test::~Memory_Test() {}
 
 
 void Memory_Test::setUp() {
@@ -34,7 +32,6 @@ void Memory_Test::tearDown() {
 
 
 void Memory_Test::testSimpleReadAndWrite() {
-
     const Hash data("a", 42, "b", 3.14, "c", "Karabo");
     Hash readData;
 

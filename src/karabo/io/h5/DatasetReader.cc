@@ -24,5 +24,5 @@ KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<float>)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<std::string>)
 KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<bool>)
 
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader< std::complex<float> >)
-KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader< std::complex<double> >)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<std::complex<float> >)
+KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::h5::DatasetReader<std::complex<double> >)
